@@ -114,6 +114,7 @@ namespace Octopus.Tentacle.Client
                     return rpcCallExecutor.Execute(
                         RpcCall.Create<IClientFileTransferService>(nameof(IClientFileTransferService.UploadFile)),
                         UploadFileAction,
+                        abandonActionOnCancellation: false,
                         operationMetricsBuilder,
                         cancellationToken);
                 }
@@ -159,6 +160,7 @@ namespace Octopus.Tentacle.Client
                     return rpcCallExecutor.Execute(
                         RpcCall.Create<IClientFileTransferService>(nameof(IClientFileTransferService.DownloadFile)),
                         DownloadFileAction,
+                        abandonActionOnCancellation: false,
                         operationMetricsBuilder,
                         cancellationToken);
                 }

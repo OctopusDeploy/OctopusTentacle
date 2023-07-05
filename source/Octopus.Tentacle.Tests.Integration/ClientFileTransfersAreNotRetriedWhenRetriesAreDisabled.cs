@@ -1,10 +1,9 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Halibut;
 using NUnit.Framework;
-using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
 using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
@@ -12,14 +11,16 @@ using Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers;
 
 namespace Octopus.Tentacle.Tests.Integration
 {
-    public class ClientFileTransfersAreRetried : IntegrationTest
+    [IntegrationTestTimeout]
+    public class ClientFileTransfersAreNotRetriedWhenRetriesAreDisabled : IntegrationTest
     {
         [Test]
         [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
-        public async Task FailedUploadsAreRetriedAndIsEventuallySuccessful(TentacleType tentacleType, string version)
+        public async Task FailedUploadsAreNotRetriedAndFail(TentacleType tentacleType, string version)
         {
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithTentacleVersion(version)
+                .WithRetriesDisabled()
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
@@ -31,6 +32,8 @@ namespace Octopus.Tentacle.Tests.Integration
                         b.BeforeUploadFile((service, _, ds) =>
                         {
                             service.EnsureTentacleIsConnectedToServer(Logger);
+                            // Only kill the connection the first time, causing the upload
+                            // to succeed - and therefore failing the test - if retries are attempted
                             if (fileTransferServiceException.UploadLatestException == null)
                             {
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
@@ -42,21 +45,22 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var remotePath = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "UploadFile.txt");
 
-            var res = await clientTentacle.TentacleClient.UploadFile(remotePath, DataStream.FromString("Hello"), CancellationToken);
-            res.Length.Should().Be(5);
+            var uploadFileTask = clientTentacle.TentacleClient.UploadFile(remotePath, DataStream.FromString("Hello"), CancellationToken);
+            
+            Func<Task> action = async () => await uploadFileTask;
+            await action.Should().ThrowAsync<HalibutClientException>();
+            
             fileTransferServiceException.UploadLatestException.Should().NotBeNull();
-            fileTransferServiceCallCounts.UploadFileCallCountStarted.Should().Be(2);
-
-            var actuallySent = (await clientTentacle.TentacleClient.DownloadFile(remotePath, CancellationToken)).GetUtf8String();
-            actuallySent.Should().Be("Hello");
+            fileTransferServiceCallCounts.UploadFileCallCountStarted.Should().Be(1);
         }
 
         [Test]
         [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
-        public async Task FailedDownloadsAreRetriedAndIsEventuallySuccessful(TentacleType tentacleType, string version)
+        public async Task FailedDownloadsAreNotRetriedAndFail(TentacleType tentacleType, string version)
         {
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithTentacleVersion(version)
+                .WithRetriesDisabled()
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
@@ -68,6 +72,8 @@ namespace Octopus.Tentacle.Tests.Integration
                         b.BeforeDownloadFile((service, _) =>
                         {
                             service.EnsureTentacleIsConnectedToServer(Logger);
+                            // Only kill the connection the first time, causing the download
+                            // to succeed - and therefore failing the test - if retries are attempted
                             if (fileTransferServiceException.DownloadFileLatestException == null)
                             {
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
@@ -78,13 +84,15 @@ namespace Octopus.Tentacle.Tests.Integration
                 .Build(CancellationToken);
 
             var remotePath = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "UploadFile.txt");
-
+            
             await clientTentacle.TentacleClient.UploadFile(remotePath, DataStream.FromString("Hello"), CancellationToken);
-            var actuallySent = (await clientTentacle.TentacleClient.DownloadFile(remotePath, CancellationToken)).GetUtf8String();
+            var downloadFileTask = clientTentacle.TentacleClient.DownloadFile(remotePath, CancellationToken);
+
+            Func<Task> action = async () => await downloadFileTask;
+            await action.Should().ThrowAsync<HalibutClientException>();
 
             fileTransferServiceException.DownloadFileLatestException.Should().NotBeNull();
-            fileTransferServiceCallCounts.DownloadFileCallCountStarted.Should().Be(2);
-            actuallySent.Should().Be("Hello");
+            fileTransferServiceCallCounts.DownloadFileCallCountStarted.Should().Be(1);
         }
     }
 }

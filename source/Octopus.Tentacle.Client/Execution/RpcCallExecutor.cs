@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Reflection.Emit;
 using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Diagnostics;
@@ -11,6 +10,8 @@ namespace Octopus.Tentacle.Client.Execution
 {
     internal class RpcCallExecutor
     {
+        private static readonly TimeSpan AbandonAfter = TimeSpan.FromSeconds(5);
+        
         private readonly RpcCallRetryHandler rpcCallRetryHandler;
         private readonly ITentacleClientObserver tentacleClientObserver;
 
@@ -67,7 +68,7 @@ namespace Octopus.Tentacle.Client.Execution
                             logger.Info($"Could not communicate with Tentacle after retrying for {timeoutDuration.TotalSeconds} seconds. No more retries will be attempted.");
                         },
                         abandonActionOnCancellation,
-                        abandonAfter: TimeSpan.FromSeconds(5),
+                        abandonAfter: AbandonAfter,
                         cancellationToken)
                     .ConfigureAwait(false);
                 return response;
@@ -88,24 +89,14 @@ namespace Octopus.Tentacle.Client.Execution
         public T Execute<T>(
             RpcCall rpcCall,
             Func<CancellationToken, T> action,
-            ClientOperationMetricsBuilder clientOperationMetricsBuilder,
-            CancellationToken cancellationToken)
-        {
-            return Execute(rpcCall, action, abandonActionOnCancellation: false, clientOperationMetricsBuilder, cancellationToken);
-        }
-
-        public T Execute<T>(
-            RpcCall rpcCall,
-            Func<CancellationToken, T> action,
             bool abandonActionOnCancellation,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
         {
             var rpcCallMetricsBuilder = RpcCallMetricsBuilder.StartWithoutRetries(rpcCall);
             var start = DateTimeOffset.UtcNow;
-            var abandonAfter = TimeSpan.FromSeconds(5);
 
-            T ExecuteAction(Action<Exception> exceptionHandler)
+            T ExecuteAction(Action<Exception>? exceptionHandler = null)
             {
                 try
                 {
@@ -119,7 +110,7 @@ namespace Octopus.Tentacle.Client.Execution
                     rpcCallMetricsBuilder.WithAttempt(TimedOperation.Failure(start, e, cancellationToken));
                     rpcCallMetricsBuilder.Failure(e, cancellationToken);
 
-                    exceptionHandler(e);
+                    exceptionHandler?.Invoke(e);
 
                     throw;
                 }
@@ -133,41 +124,24 @@ namespace Octopus.Tentacle.Client.Execution
 
             if (!abandonActionOnCancellation)
             {
-                return ExecuteAction(_ =>
-                {
-                });
+                return ExecuteAction();
             }
 
             using var abandonCancellationTokenSource = new CancellationTokenSource();
             using (cancellationToken.Register(() =>
                    {
-                       abandonCancellationTokenSource.TryCancelAfter(abandonAfter);
+                       abandonCancellationTokenSource.TryCancelAfter(AbandonAfter);
                    }))
             {
                 return ExecuteAction(e =>
                 {
                     if (e is OperationCanceledException && abandonCancellationTokenSource.IsCancellationRequested)
                     {
-                        throw new OperationAbandonedException(e, abandonAfter);
+                        throw new OperationAbandonedException(e, AbandonAfter);
                     }
                 });
             }
         }
-
-        public void Execute(
-            RpcCall rpcCall,
-            Action<CancellationToken> action,
-            ClientOperationMetricsBuilder clientOperationMetricsBuilder,
-            CancellationToken cancellationToken)
-        {
-            Execute(
-                rpcCall,
-                action,
-                abandonActionOnCancellation: false,
-                clientOperationMetricsBuilder,
-                cancellationToken);
-        }
-
         public void Execute(
             RpcCall rpcCall,
             Action<CancellationToken> action,
@@ -177,9 +151,8 @@ namespace Octopus.Tentacle.Client.Execution
         {
             var rpcCallMetricsBuilder = RpcCallMetricsBuilder.StartWithoutRetries(rpcCall);
             var start = DateTimeOffset.UtcNow;
-            var abandonAfter = TimeSpan.FromSeconds(5);
 
-            void ExecuteAction(Action<Exception> exceptionHandler)
+            void ExecuteAction(Action<Exception>? exceptionHandler = null)
             {
                 try
                 {
@@ -192,7 +165,7 @@ namespace Octopus.Tentacle.Client.Execution
                     rpcCallMetricsBuilder.WithAttempt(TimedOperation.Failure(start, e, cancellationToken));
                     rpcCallMetricsBuilder.Failure(e, cancellationToken);
 
-                    exceptionHandler(e);
+                    exceptionHandler?.Invoke(e);
 
                     throw;
                 }
@@ -206,25 +179,24 @@ namespace Octopus.Tentacle.Client.Execution
 
             if (!abandonActionOnCancellation)
             {
-                ExecuteAction(_ => { });
+                ExecuteAction();
                 return;
             }
             
             using var abandonCancellationTokenSource = new CancellationTokenSource();
             using (cancellationToken.Register(() =>
                    {
-                       abandonCancellationTokenSource.TryCancelAfter(abandonAfter);
+                       abandonCancellationTokenSource.TryCancelAfter(AbandonAfter);
                    }))
             {
                 ExecuteAction(e =>
                 {
                     if (e is OperationCanceledException && abandonCancellationTokenSource.IsCancellationRequested)
                     {
-                        throw new OperationAbandonedException(e, abandonAfter);
+                        throw new OperationAbandonedException(e, AbandonAfter);
                     }
                 });
             }
-            
         }
     }
 }
