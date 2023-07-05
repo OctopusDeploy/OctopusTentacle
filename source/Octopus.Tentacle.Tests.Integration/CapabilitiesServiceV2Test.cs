@@ -51,7 +51,7 @@ namespace Octopus.Tentacle.Tests.Integration
             capabilities.Should().Contain("IFileTransferService");
             if (version == null)
             {
-                capabilities.Should().Contain("IScriptServiceV2Alpha");
+                capabilities.Should().Contain("IScriptServiceV2");
                 capabilities.Count.Should().Be(3);
             }
             else
