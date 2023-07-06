@@ -49,8 +49,18 @@ namespace Octopus.Tentacle.Client
             IHalibutRuntime halibutRuntime,
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
             ITentacleClientObserver tentacleClientObserver,
-            ITentacleServiceDecorator? tentacleServicesDecorator,
-            RpcRetrySettings rpcRetrySettings)
+            RpcRetrySettings rpcRetrySettings
+        ) : this(serviceEndPoint, halibutRuntime, scriptObserverBackOffStrategy, tentacleClientObserver, rpcRetrySettings, null)
+        {
+        }
+        
+        internal TentacleClient(
+            ServiceEndPoint serviceEndPoint,
+            IHalibutRuntime halibutRuntime,
+            IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
+            ITentacleClientObserver tentacleClientObserver,
+            RpcRetrySettings rpcRetrySettings,
+            ITentacleServiceDecorator? tentacleServicesDecorator)
         {
             this.scriptObserverBackOffStrategy = scriptObserverBackOffStrategy;
             this.tentacleClientObserver = tentacleClientObserver;

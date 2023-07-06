@@ -181,8 +181,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 server.ServerHalibutRuntime,
                 scriptObserverBackoffStrategy,
                 tentacleClientObserver,
-                tentacleServiceDecorator,
-                new RpcRetrySettings(retriesEnabled, retryDuration));
+                new RpcRetrySettings(retriesEnabled, retryDuration),
+                tentacleServiceDecorator);
 
             return new ClientAndTentacle(server.ServerHalibutRuntime, tentacleEndPoint, server, portForwarder, runningTentacle, tentacleClient, temporaryDirectory);
         }
