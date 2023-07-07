@@ -24,7 +24,7 @@ using Octopus.TestPortForwarder;
 namespace Octopus.Tentacle.Tests.Integration
 {
     /// <summary>
-    /// These tests make sure that we can cancel the ExecuteScript operation when using Tentacle Client.
+    /// These tests make sure that we can cancel the ExecuteScript operation when using Tentacle Client with RPC retries disabled.
     /// </summary>
     [IntegrationTestTimeout]
     public class ClientScriptExecutionCanBeCancelledWhenRetriesAreDisabled : IntegrationTest
@@ -60,7 +60,6 @@ namespace Octopus.Tentacle.Tests.Integration
                             {
                                 if (!hasPausedOrStoppedPortForwarder)
                                 {
-                                    
                                     hasPausedOrStoppedPortForwarder = true;
                                     scriptServiceV2.EnsureTentacleIsConnectedToServer(Logger);
                                     PauseOrStopPortForwarder(rpcCallStage, portForwarder.Value, responseMessageTcpKiller, rpcCallHasStarted);
@@ -121,11 +120,11 @@ namespace Octopus.Tentacle.Tests.Integration
         }
         
         [Test]
-        [TestCase(TentacleType.Polling, RpcCallStage.Connecting, RpcCall.FirstCall, ExpectedFlow.CancelRpcAndExitImmediately)]
-        [TestCase(TentacleType.Listening, RpcCallStage.Connecting, RpcCall.FirstCall, ExpectedFlow.CancelRpcAndExitImmediately)]
-        [TestCase(TentacleType.Polling, RpcCallStage.InFlight, RpcCall.FirstCall, ExpectedFlow.AbandonRpcThenCancelScriptThenCompleteScript)]
-        [TestCase(TentacleType.Listening, RpcCallStage.InFlight, RpcCall.FirstCall, ExpectedFlow.AbandonRpcThenCancelScriptThenCompleteScript)]
-        public async Task DuringStartScript_ScriptExecutionCanBeCancelled(TentacleType tentacleType, RpcCallStage rpcCallStage, RpcCall rpcCall, ExpectedFlow expectedFlow)
+        [TestCase(TentacleType.Polling, RpcCallStage.Connecting, ExpectedFlow.CancelRpcAndExitImmediately)]
+        [TestCase(TentacleType.Listening, RpcCallStage.Connecting, ExpectedFlow.CancelRpcAndExitImmediately)]
+        [TestCase(TentacleType.Polling, RpcCallStage.InFlight, ExpectedFlow.AbandonRpcThenCancelScriptThenCompleteScript)]
+        [TestCase(TentacleType.Listening, RpcCallStage.InFlight, ExpectedFlow.AbandonRpcThenCancelScriptThenCompleteScript)]
+        public async Task DuringStartScript_ScriptExecutionCanBeCancelled(TentacleType tentacleType, RpcCallStage rpcCallStage, ExpectedFlow expectedFlow)
         {
             // ARRANGE
             var rpcCallHasStarted = new Reference<bool>(false);
@@ -136,10 +135,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithPendingRequestQueueFactory(new CancellationObservingPendingRequestQueueFactory()) // Partially works around disconnected polling tentacles take work from the queue
-                .WithServiceEndpointModifier(point =>
-                {
-                    if (rpcCall == RpcCall.FirstCall) KeepTryingToConnectToAListeningTentacleForever(point);
-                })
+                .WithServiceEndpointModifier(KeepTryingToConnectToAListeningTentacleForever)
                 .WithRetriesDisabled()
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
@@ -153,14 +149,6 @@ namespace Octopus.Tentacle.Tests.Integration
                             ensureCancellationOccursDuringAnRpcCall.Release();
                             try
                             {
-                                if (rpcCall == RpcCall.RetryingCall && scriptServiceV2Exceptions.StartScriptLatestException == null)
-                                {
-                                    service.EnsureTentacleIsConnectedToServer(Logger);
-                                    // Kill the first StartScript call to force the rpc call into retries
-                                    responseMessageTcpKiller.KillConnectionOnNextResponse();
-                                }
-                                else
-                                {
                                     if (!hasPausedOrStoppedPortForwarder)
                                     {
                                         hasPausedOrStoppedPortForwarder = true;
@@ -168,7 +156,6 @@ namespace Octopus.Tentacle.Tests.Integration
                                         PauseOrStopPortForwarder(rpcCallStage, portForwarder.Value, responseMessageTcpKiller, rpcCallHasStarted);
                                         if (rpcCallStage == RpcCallStage.Connecting) service.EnsurePollingQueueWontSendMessageToDisconnectedTentacles(Logger);
                                     }
-                                }
 
                                 var timer = Stopwatch.StartNew();
                                 try
@@ -228,15 +215,14 @@ namespace Octopus.Tentacle.Tests.Integration
             // If the rpc call could be cancelled we cancelled quickly
             if (expectedFlow == ExpectedFlow.CancelRpcThenCancelScriptThenCompleteScript)
             {
-                lastCallDuration.Should().BeLessOrEqualTo(TimeSpan.FromSeconds((rpcCall == RpcCall.RetryingCall ? 6 : 12) + 2)); // + 2 seconds for some error of margin
+                lastCallDuration.Should().BeLessOrEqualTo(TimeSpan.FromSeconds(12 + 2)); // + 2 seconds for some error of margin
             }
 
             // Or if the rpc call could not be cancelled it cancelled fairly quickly e.g. we are not waiting for an rpc call to timeout
             cancellationDuration.Should().BeLessOrEqualTo(TimeSpan.FromSeconds(30));
 
             // The expected RPC calls were made - this also verifies the integrity of the test
-            if (rpcCall == RpcCall.FirstCall) scriptServiceV2CallCounts.StartScriptCallCountStarted.Should().Be(1);
-            else scriptServiceV2CallCounts.StartScriptCallCountStarted.Should().BeGreaterOrEqualTo(2);
+            scriptServiceV2CallCounts.StartScriptCallCountStarted.Should().Be(1);
 
             scriptServiceV2CallCounts.GetStatusCallCountStarted.Should().Be(0, "Test should not have not proceeded past StartScript before being Cancelled");
 
@@ -257,11 +243,11 @@ namespace Octopus.Tentacle.Tests.Integration
         }
         
         [Test]
-        [TestCase(TentacleType.Polling, RpcCallStage.Connecting, RpcCall.FirstCall, ExpectedFlow.CancelRpcThenCancelScriptThenCompleteScript)]
-        [TestCase(TentacleType.Listening, RpcCallStage.Connecting, RpcCall.FirstCall, ExpectedFlow.CancelRpcThenCancelScriptThenCompleteScript)]
-        [TestCase(TentacleType.Polling, RpcCallStage.InFlight, RpcCall.FirstCall, ExpectedFlow.AbandonRpcThenCancelScriptThenCompleteScript)]
-        [TestCase(TentacleType.Listening, RpcCallStage.InFlight, RpcCall.FirstCall, ExpectedFlow.AbandonRpcThenCancelScriptThenCompleteScript)]
-        public async Task DuringGetStatus_ScriptExecutionCanBeCancelled(TentacleType tentacleType, RpcCallStage rpcCallStage, RpcCall rpcCall, ExpectedFlow expectedFlow)
+        [TestCase(TentacleType.Polling, RpcCallStage.Connecting, ExpectedFlow.CancelRpcThenCancelScriptThenCompleteScript)]
+        [TestCase(TentacleType.Listening, RpcCallStage.Connecting, ExpectedFlow.CancelRpcThenCancelScriptThenCompleteScript)]
+        [TestCase(TentacleType.Polling, RpcCallStage.InFlight, ExpectedFlow.AbandonRpcThenCancelScriptThenCompleteScript)]
+        [TestCase(TentacleType.Listening, RpcCallStage.InFlight, ExpectedFlow.AbandonRpcThenCancelScriptThenCompleteScript)]
+        public async Task DuringGetStatus_ScriptExecutionCanBeCancelled(TentacleType tentacleType, RpcCallStage rpcCallStage, ExpectedFlow expectedFlow)
         {
             // ARRANGE
             var rpcCallHasStarted = new Reference<bool>(false);
@@ -272,10 +258,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithPendingRequestQueueFactory(new CancellationObservingPendingRequestQueueFactory()) // Partially works around disconnected polling tentacles take work from the queue
-                .WithServiceEndpointModifier(point =>
-                {
-                    if (rpcCall == RpcCall.FirstCall) KeepTryingToConnectToAListeningTentacleForever(point);
-                })
+                .WithServiceEndpointModifier(KeepTryingToConnectToAListeningTentacleForever)
                 .WithRetriesDisabled()
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
@@ -289,14 +272,6 @@ namespace Octopus.Tentacle.Tests.Integration
                             ensureCancellationOccursDuringAnRpcCall.Release();
                             try
                             {
-                                if (rpcCall == RpcCall.RetryingCall && scriptServiceV2Exceptions.GetStatusLatestException == null)
-                                {
-                                    service.EnsureTentacleIsConnectedToServer(Logger);
-                                    // Kill the first StartScript call to force the rpc call into retries
-                                    responseMessageTcpKiller.KillConnectionOnNextResponse();
-                                }
-                                else
-                                {
                                     if (!hasPausedOrStoppedPortForwarder)
                                     {
                                         hasPausedOrStoppedPortForwarder = true;
@@ -304,7 +279,6 @@ namespace Octopus.Tentacle.Tests.Integration
                                         PauseOrStopPortForwarder(rpcCallStage, portForwarder.Value, responseMessageTcpKiller, rpcCallHasStarted);
                                         if (rpcCallStage == RpcCallStage.Connecting) service.EnsurePollingQueueWontSendMessageToDisconnectedTentacles(Logger);
                                     }
-                                }
 
                                 var timer = Stopwatch.StartNew();
                                 try
@@ -364,7 +338,7 @@ namespace Octopus.Tentacle.Tests.Integration
             if (expectedFlow == ExpectedFlow.CancelRpcThenCancelScriptThenCompleteScript)
             {
                 // This last call includes the time it takes to cancel and hence is why I kept pushing it up
-                lastCallDuration.Should().BeLessOrEqualTo(TimeSpan.FromSeconds((rpcCall == RpcCall.RetryingCall ? 6 : 12) + 2)); // + 2 seconds for some error of margin
+                lastCallDuration.Should().BeLessOrEqualTo(TimeSpan.FromSeconds(12 + 2)); // + 2 seconds for some error of margin
             }
 
             // Or if the rpc call could not be cancelled it cancelled fairly quickly e.g. we are not waiting for an rpc call to timeout
@@ -373,8 +347,7 @@ namespace Octopus.Tentacle.Tests.Integration
             // The expected RPC calls were made - this also verifies the integrity of the test
             scriptServiceV2CallCounts.StartScriptCallCountStarted.Should().Be(1);
 
-            if (rpcCall == RpcCall.FirstCall) scriptServiceV2CallCounts.GetStatusCallCountStarted.Should().Be(1);
-            else scriptServiceV2CallCounts.GetStatusCallCountStarted.Should().BeGreaterOrEqualTo(2);
+            scriptServiceV2CallCounts.GetStatusCallCountStarted.Should().Be(1);
 
             scriptServiceV2CallCounts.CancelScriptCallCountStarted.Should().BeGreaterOrEqualTo(1);
             scriptServiceV2CallCounts.CompleteScriptCallCountStarted.Should().Be(1);
