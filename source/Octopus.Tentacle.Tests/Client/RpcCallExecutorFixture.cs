@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Halibut;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using NUnit.Framework;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Client.Execution;
@@ -172,7 +173,7 @@ namespace Octopus.Tentacle.Tests.Client
             metric.Exception?.GetType().Should().Be(typeof(TaskCanceledException));
             metric.HasException.Should().BeTrue();
             metric.WasCancelled.Should().BeTrue();
-            
+
             metric.Attempts.Should().HaveCount(2);
             ThenAttemptShouldHaveFailed(metric.Attempts.First(), exception);
 
@@ -208,7 +209,7 @@ namespace Octopus.Tentacle.Tests.Client
         }
 
         [Test]
-        public void Execute_WithResult_MetricsShouldBeFailed_WithExceptions()
+        public async Task Execute_WithResult_MetricsShouldBeFailed_WithExceptions()
         {
             // Arrange
             var rpcCallObserver = new TestTentacleClientObserver();
@@ -216,12 +217,14 @@ namespace Octopus.Tentacle.Tests.Client
             var clientOperationMetricsBuilder = new ClientOperationMetricsBuilder(DateTimeOffset.UtcNow);
 
             // Act
-            AssertionExtensions.Should(() => ExecuteResult(rpcCallObserver, ct =>
-                {
-                    DelayFor100MillisecondsAction(ct);
-                    throw exception;
-                },
-                        RetryDuration, clientOperationMetricsBuilder, CancellationToken.None)).ThrowAsync<Exception>();
+            await AssertionExtensions
+                .Should(() => ExecuteResult(rpcCallObserver, ct =>
+                    {
+                        DelayFor100MillisecondsAction(ct);
+                        throw exception;
+                    },
+                    RetryDuration, clientOperationMetricsBuilder, CancellationToken.None))
+                .ThrowAsync<Exception>();
 
             // Assert
             var metric = rpcCallObserver.RpcCallMetrics.Should().ContainSingle().Subject;
@@ -236,14 +239,14 @@ namespace Octopus.Tentacle.Tests.Client
         }
 
         [Test]
-        public void Execute_Void_MetricsShouldBeSuccessful_WhenNoRetries()
+        public async Task Execute_Void_MetricsShouldBeSuccessful_WhenNoRetries()
         {
             // Arrange
             var rpcCallObserver = new TestTentacleClientObserver();
             var clientOperationMetricsBuilder = new ClientOperationMetricsBuilder(DateTimeOffset.UtcNow);
 
             // Act
-            ExecuteVoid(rpcCallObserver, ct => DelayFor100MillisecondsAction(ct), RetryDuration, clientOperationMetricsBuilder, CancellationToken.None);
+            await ExecuteVoid(rpcCallObserver, ct => DelayFor100MillisecondsAction(ct), RetryDuration, clientOperationMetricsBuilder, CancellationToken.None);
 
             // Assert
             var metric = rpcCallObserver.RpcCallMetrics.Should().ContainSingle().Subject;
@@ -258,7 +261,7 @@ namespace Octopus.Tentacle.Tests.Client
         }
 
         [Test]
-        public void Execute_Void_MetricsShouldBeFailed_WithExceptions()
+        public async Task Execute_Void_MetricsShouldBeFailed_WithExceptions()
         {
             // Arrange
             var rpcCallObserver = new TestTentacleClientObserver();
@@ -266,12 +269,13 @@ namespace Octopus.Tentacle.Tests.Client
             var clientOperationMetricsBuilder = new ClientOperationMetricsBuilder(DateTimeOffset.UtcNow);
 
             // Act
-            AssertionExtensions.Should(() => ExecuteVoid(rpcCallObserver, ct =>
-                {
-                    DelayFor100MillisecondsAction(ct);
-                    throw exception;
-                },
-                RetryDuration, clientOperationMetricsBuilder, CancellationToken.None)).Throw<Exception>();
+            await AssertionExtensions.Should(() => ExecuteVoid(rpcCallObserver, ct =>
+                    {
+                        DelayFor100MillisecondsAction(ct);
+                        throw exception;
+                    },
+                    RetryDuration, clientOperationMetricsBuilder, CancellationToken.None))
+                .ThrowAsync<Exception>();
 
             // Assert
             var metric = rpcCallObserver.RpcCallMetrics.Should().ContainSingle().Subject;
@@ -286,8 +290,8 @@ namespace Octopus.Tentacle.Tests.Client
         }
 
         private static async Task ExecuteWithRetries(
-            ITentacleClientObserver tentacleClientObserver, 
-            Func<CancellationToken, Guid> action, 
+            ITentacleClientObserver tentacleClientObserver,
+            Func<CancellationToken, Guid> action,
             TimeSpan retryDuration,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
@@ -320,19 +324,23 @@ namespace Octopus.Tentacle.Tests.Client
                 cancellationToken);
         }
 
-        private static void ExecuteVoid(
+        private static async Task ExecuteVoid(
             ITentacleClientObserver tentacleClientObserver,
             Action<CancellationToken> action,
-            TimeSpan retryDuration, 
+            TimeSpan retryDuration,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
         {
             var sut = RpcCallExecutorFactory.Create(retryDuration, tentacleClientObserver);
 
-            sut.Execute(
+            await sut.Execute(
                 new RpcCall(RpcService, RpcCallName),
-                action,
-                // abandonActionOnCancellation: false,
+                ct =>
+                {
+                    action(ct);
+                    return true;
+                },
+                abandonActionOnCancellation: false,
                 clientOperationMetricsBuilder,
                 cancellationToken);
         }
@@ -343,7 +351,7 @@ namespace Octopus.Tentacle.Tests.Client
 
             return Guid.NewGuid();
         }
-        
+
         private static void ThenRpcCallMetricsShouldBeSuccessful(RpcCallMetrics metric, TimeSpan expectedRetryDuration, bool expectedWithRetries)
         {
             metric.Succeeded.Should().BeTrue();
@@ -401,7 +409,7 @@ namespace Octopus.Tentacle.Tests.Client
         }
 
         private static void ThenClientOperationMetricsShouldContainRpcCallMetrics(
-            ClientOperationMetrics clientOperationMetrics, 
+            ClientOperationMetrics clientOperationMetrics,
             RpcCallMetrics expectedRpcCallMetrics)
         {
             var rpcCall = clientOperationMetrics.RpcCalls.Should().ContainSingle().Subject;

@@ -10,7 +10,8 @@ namespace Octopus.Tentacle.Client.Execution
         internal static RpcCallExecutor Create(TimeSpan retryDuration, ITentacleClientObserver tentacleClientObserver)
         {
             var rpcCallRetryHandler = new RpcCallRetryHandler(retryDuration, TimeoutStrategy.Pessimistic);
-            var rpcCallExecutor = new RpcCallExecutor(rpcCallRetryHandler, tentacleClientObserver);
+            var rpcCallNoRetriesHandler = new RpcCallNoRetriesHandler();
+            var rpcCallExecutor = new RpcCallExecutor(rpcCallRetryHandler, rpcCallNoRetriesHandler, tentacleClientObserver);
 
             return rpcCallExecutor;
         }
