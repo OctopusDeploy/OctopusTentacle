@@ -121,10 +121,10 @@ namespace Octopus.Tentacle.Client
                 }
                 else
                 {
-                    return rpcCallExecutor.Execute(
+                    return await rpcCallExecutor.Execute(
                         RpcCall.Create<IClientFileTransferService>(nameof(IClientFileTransferService.UploadFile)),
                         UploadFileAction,
-                        // abandonActionOnCancellation: false,
+                        abandonActionOnCancellation: false,
                         operationMetricsBuilder,
                         cancellationToken);
                 }
@@ -167,10 +167,10 @@ namespace Octopus.Tentacle.Client
                 }
                 else
                 {
-                    return rpcCallExecutor.Execute(
+                    return await rpcCallExecutor.Execute(
                         RpcCall.Create<IClientFileTransferService>(nameof(IClientFileTransferService.DownloadFile)),
                         DownloadFileAction,
-                        // abandonActionOnCancellation: false,
+                        abandonActionOnCancellation: false,
                         operationMetricsBuilder,
                         cancellationToken);
                 }

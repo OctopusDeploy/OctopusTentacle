@@ -186,14 +186,14 @@ namespace Octopus.Tentacle.Tests.Client
         }
 
         [Test]
-        public void Execute_WithResult_MetricsShouldBeSuccessful_WhenNoRetries()
+        public async Task Execute_WithResult_MetricsShouldBeSuccessful_WhenNoRetries()
         {
             // Arrange
             var rpcCallObserver = new TestTentacleClientObserver();
             var clientOperationMetricsBuilder = new ClientOperationMetricsBuilder(DateTimeOffset.UtcNow);
 
             // Act
-            ExecuteResult(rpcCallObserver, DelayFor100MillisecondsAction, RetryDuration, clientOperationMetricsBuilder, CancellationToken.None);
+            await ExecuteResult(rpcCallObserver, DelayFor100MillisecondsAction, RetryDuration, clientOperationMetricsBuilder, CancellationToken.None);
 
             // Assert
             var metric = rpcCallObserver.RpcCallMetrics.Should().ContainSingle().Subject;
@@ -221,7 +221,7 @@ namespace Octopus.Tentacle.Tests.Client
                     DelayFor100MillisecondsAction(ct);
                     throw exception;
                 },
-                        RetryDuration, clientOperationMetricsBuilder, CancellationToken.None)).Throw<Exception>();
+                        RetryDuration, clientOperationMetricsBuilder, CancellationToken.None)).ThrowAsync<Exception>();
 
             // Assert
             var metric = rpcCallObserver.RpcCallMetrics.Should().ContainSingle().Subject;
@@ -303,7 +303,7 @@ namespace Octopus.Tentacle.Tests.Client
                 cancellationToken);
         }
 
-        private static Guid ExecuteResult(
+        private static async Task<Guid> ExecuteResult(
             ITentacleClientObserver tentacleClientObserver,
             Func<CancellationToken, Guid> action,
             TimeSpan retryDuration,
@@ -312,10 +312,10 @@ namespace Octopus.Tentacle.Tests.Client
         {
             var sut = RpcCallExecutorFactory.Create(retryDuration, tentacleClientObserver);
 
-            return sut.Execute(
+            return await sut.Execute(
                 new RpcCall(RpcService, RpcCallName),
                 action,
-                // abandonActionOnCancellation: false,
+                abandonActionOnCancellation: false,
                 clientOperationMetricsBuilder,
                 cancellationToken);
         }

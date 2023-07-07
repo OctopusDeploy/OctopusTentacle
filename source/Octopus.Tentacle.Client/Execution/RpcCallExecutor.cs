@@ -10,6 +10,8 @@ namespace Octopus.Tentacle.Client.Execution
 {
     internal class RpcCallExecutor
     {
+        private static readonly TimeSpan AbandonAfter = TimeSpan.FromSeconds(5);
+
         private readonly RpcCallRetryHandler rpcCallRetryHandler;
         private readonly ITentacleClientObserver tentacleClientObserver;
 
@@ -84,7 +86,26 @@ namespace Octopus.Tentacle.Client.Execution
             }
         }
 
-        public T Execute<T>(
+        public async Task<T> Execute<T>(
+            RpcCall rpcCall,
+            Func<CancellationToken, T> action,
+            bool abandonActionOnCancellation,
+            ClientOperationMetricsBuilder clientOperationMetricsBuilder,
+            CancellationToken cancellationToken)
+        {
+            var response = await rpcCallRetryHandler.ExecuteWithNoRetries(
+                async ct =>
+                {
+                    // Wrap the action in a task so it doesn't block on sync Halibut calls
+                    return await Task.Run(() => Execute(rpcCall, action, clientOperationMetricsBuilder, ct), ct);
+                },
+                abandonActionOnCancellation,
+                AbandonAfter,
+                cancellationToken);
+            return response;
+        }
+
+        private T Execute<T>(
             RpcCall rpcCall,
             Func<CancellationToken, T> action,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
