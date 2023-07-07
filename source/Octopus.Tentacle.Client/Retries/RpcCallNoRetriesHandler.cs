@@ -6,54 +6,86 @@ namespace Octopus.Tentacle.Client.Retries
 {
     public class RpcCallNoRetriesHandler
     {
-        public async Task<T> ExecuteWithNoRetries<T>(
-            Func<CancellationToken, Task<T>> action,
+        public async Task ExecuteWithNoRetries(
+            Func<CancellationToken, Task> action,
+            bool abandonActionOnCancellation,
+            TimeSpan abandonAfter,
             CancellationToken cancellationToken)
         {
-            return await action(cancellationToken).ConfigureAwait(false);
-        }
+            await ((Func<CancellationToken, Task>)(async ct =>
+            {
+                if (!abandonActionOnCancellation)
+                {
+                    await action(ct).ConfigureAwait(false);
+                }
 
+                using var abandonCancellationTokenSource = new CancellationTokenSource();
+                using (ct.Register(() =>
+                       {
+                           // Give the actionTask some time to cancel on it's own.
+                           // If it doesn't assume it does not co-operate with cancellationTokens and walk away.
+                           abandonCancellationTokenSource.TryCancelAfter(abandonAfter);
+                       }))
+                {
+                    var abandonTask = abandonCancellationTokenSource.Token.AsTask();
+
+                    try
+                    {
+                        var actionTask = action(ct);
+                        await (await Task.WhenAny(actionTask, abandonTask).ConfigureAwait(false)).ConfigureAwait(false);
+                    }
+                    catch (Exception e) when (e is OperationCanceledException)
+                    {
+                        if (abandonCancellationTokenSource.IsCancellationRequested)
+                        {
+                            throw new OperationAbandonedException(e, abandonAfter);
+                        }
+
+                        throw;
+                    }
+                }
+            }))(cancellationToken).ConfigureAwait(false);
+        }
+        
         public async Task<T> ExecuteWithNoRetries<T>(
             Func<CancellationToken, Task<T>> action,
             bool abandonActionOnCancellation,
             TimeSpan abandonAfter,
             CancellationToken cancellationToken)
         {
-            return await ExecuteWithNoRetries(
-                async ct =>
+            return await ((Func<CancellationToken, Task<T>>)(async ct =>
+            {
+                if (!abandonActionOnCancellation)
                 {
-                    if (!abandonActionOnCancellation)
+                    return await action(ct).ConfigureAwait(false);
+                }
+
+                using var abandonCancellationTokenSource = new CancellationTokenSource();
+                using (ct.Register(() =>
+                       {
+                           // Give the actionTask some time to cancel on it's own.
+                           // If it doesn't assume it does not co-operate with cancellationTokens and walk away.
+                           abandonCancellationTokenSource.TryCancelAfter(abandonAfter);
+                       }))
+                {
+                    var abandonTask = abandonCancellationTokenSource.Token.AsTask<T>();
+
+                    try
                     {
-                        return await action(ct).ConfigureAwait(false);
+                        var actionTask = action(ct);
+                        return await (await Task.WhenAny(actionTask, abandonTask).ConfigureAwait(false)).ConfigureAwait(false);
                     }
-
-                    using var abandonCancellationTokenSource = new CancellationTokenSource();
-                    using (ct.Register(() =>
-                           {
-                               // Give the actionTask some time to cancel on it's own.
-                               // If it doesn't assume it does not co-operate with cancellationTokens and walk away.
-                               abandonCancellationTokenSource.TryCancelAfter(abandonAfter);
-                           }))
+                    catch (Exception e) when (e is OperationCanceledException)
                     {
-                        var abandonTask = abandonCancellationTokenSource.Token.AsTask<T>();
-
-                        try
+                        if (abandonCancellationTokenSource.IsCancellationRequested)
                         {
-                            var actionTask = action(ct);
-                            return await (await Task.WhenAny(actionTask, abandonTask).ConfigureAwait(false)).ConfigureAwait(false);
+                            throw new OperationAbandonedException(e, abandonAfter);
                         }
-                        catch (Exception e) when (e is OperationCanceledException)
-                        {
-                            if (abandonCancellationTokenSource.IsCancellationRequested)
-                            {
-                                throw new OperationAbandonedException(e, abandonAfter);
-                            }
 
-                            throw;
-                        }
+                        throw;
                     }
-                },
-                cancellationToken);
+                }
+            }))(cancellationToken).ConfigureAwait(false);
         }
     }
 }

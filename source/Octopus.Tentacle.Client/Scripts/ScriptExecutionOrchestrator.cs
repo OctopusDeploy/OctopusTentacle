@@ -381,15 +381,13 @@ namespace Octopus.Tentacle.Client.Scripts
                 // Best effort cleanup of Tentacle
                 try
                 {
-                    var actionTask = Task.Run(() =>
-                    {
+                    var actionTask =
                         rpcCallExecutor.Execute(
                             RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.CompleteScript)),
                             ct => scriptServiceV2.CompleteScript(new CompleteScriptCommandV2(lastStatusResponse.Ticket), new HalibutProxyRequestOptions(ct)),
-                            // abandonActionOnCancellation: true,
+                            abandonActionOnCancellation: true,
                             clientOperationMetricsBuilder,
                             CancellationToken.None);
-                    }, CancellationToken.None);
 
                     var abandonCancellationTokenSource = new CancellationTokenSource();
 

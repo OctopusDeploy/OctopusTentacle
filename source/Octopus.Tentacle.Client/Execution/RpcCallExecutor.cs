@@ -11,6 +11,7 @@ namespace Octopus.Tentacle.Client.Execution
     internal class RpcCallExecutor
     {
         private static readonly TimeSpan AbandonAfter = TimeSpan.FromSeconds(5);
+        public TimeSpan RetryTimeout => rpcCallRetryHandler.RetryTimeout;
 
         private readonly RpcCallRetryHandler rpcCallRetryHandler;
         private readonly RpcCallNoRetriesHandler rpcCallNoRetriesHandler;
@@ -25,8 +26,6 @@ namespace Octopus.Tentacle.Client.Execution
             this.rpcCallNoRetriesHandler = rpcCallNoRetriesHandler;
             this.tentacleClientObserver = tentacleClientObserver;
         }
-
-        public TimeSpan RetryTimeout => rpcCallRetryHandler.RetryTimeout;
 
         public async Task<T> ExecuteWithRetries<T>(
             RpcCall rpcCall,
@@ -132,33 +131,40 @@ namespace Octopus.Tentacle.Client.Execution
                 cancellationToken);
         }
 
-        public void Execute(
+        public async Task Execute(
             RpcCall rpcCall,
             Action<CancellationToken> action,
+            bool abandonActionOnCancellation,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
         {
-            var rpcCallMetricsBuilder = RpcCallMetricsBuilder.StartWithoutRetries(rpcCall);
-            var start = DateTimeOffset.UtcNow;
+            await rpcCallNoRetriesHandler.ExecuteWithNoRetries(
+                async ct =>
+                {
+                    var rpcCallMetricsBuilder = RpcCallMetricsBuilder.StartWithoutRetries(rpcCall);
+                    var start = DateTimeOffset.UtcNow;
 
-            try
-            {
-                action(cancellationToken);
-
-                rpcCallMetricsBuilder.WithAttempt(TimedOperation.Success(start));
-            }
-            catch (Exception e)
-            {
-                rpcCallMetricsBuilder.WithAttempt(TimedOperation.Failure(start, e, cancellationToken));
-                rpcCallMetricsBuilder.Failure(e, cancellationToken);
-                throw;
-            }
-            finally
-            {
-                var rpcCallMetrics = rpcCallMetricsBuilder.Build();
-                clientOperationMetricsBuilder.WithRpcCall(rpcCallMetrics);
-                tentacleClientObserver.RpcCallCompleted(rpcCallMetrics);
-            }
+                    try
+                    {
+                        await Task.Run(() => action(ct), ct);
+                        rpcCallMetricsBuilder.WithAttempt(TimedOperation.Success(start));
+                    }
+                    catch (Exception e)
+                    {
+                        rpcCallMetricsBuilder.WithAttempt(TimedOperation.Failure(start, e, ct));
+                        rpcCallMetricsBuilder.Failure(e, ct);
+                        throw;
+                    }
+                    finally
+                    {
+                        var rpcCallMetrics = rpcCallMetricsBuilder.Build();
+                        clientOperationMetricsBuilder.WithRpcCall(rpcCallMetrics);
+                        tentacleClientObserver.RpcCallCompleted(rpcCallMetrics);
+                    }
+                },
+                abandonActionOnCancellation,
+                AbandonAfter,
+                cancellationToken);
         }
     }
 }
