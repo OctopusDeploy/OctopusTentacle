@@ -24,10 +24,10 @@ using Octopus.TestPortForwarder;
 namespace Octopus.Tentacle.Tests.Integration
 {
     /// <summary>
-    /// These tests make sure that we can cancel the ExecuteScript operation when using Tentacle Client.
+    /// These tests make sure that we can cancel the ExecuteScript operation when using Tentacle Client with RPC retries enabled.
     /// </summary>
     [IntegrationTestTimeout]
-    public class ClientScriptExecutionCanBeCancelled : IntegrationTest
+    public class ClientScriptExecutionCanBeCancelledWhenRetriesAreEnabled : IntegrationTest
     {
         [Test]
         [TestCase(TentacleType.Polling, RpcCallStage.InFlight, RpcCall.FirstCall)]
