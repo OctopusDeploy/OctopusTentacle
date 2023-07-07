@@ -44,10 +44,10 @@ namespace Octopus.Tentacle.Tests.Integration
 
             using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithPendingRequestQueueFactory(new CancellationObservingPendingRequestQueueFactory()) // Partially works around disconnected polling tentacles take work from the queue
-                // .WithServiceEndpointModifier(point =>
-                // {
-                //     if (rpcCall == RpcCall.FirstCall) KeepTryingToConnectToAListeningTentacleForever(point);
-                // })
+                .WithServiceEndpointModifier(point =>
+                {
+                    if (rpcCall == RpcCall.FirstCall) KeepTryingToConnectToAListeningTentacleForever(point);
+                })
                 .WithRetriesDisabled()
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)

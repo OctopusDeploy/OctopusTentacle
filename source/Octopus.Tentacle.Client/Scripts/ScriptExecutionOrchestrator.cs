@@ -104,7 +104,7 @@ namespace Octopus.Tentacle.Client.Scripts
                         scriptStatusResponse = rpcCallExecutor.Execute(
                             RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.StartScript)),
                             StartScriptAction,
-                            abandonActionOnCancellation: true,
+                            // abandonActionOnCancellation: true,
                             clientOperationMetricsBuilder,
                             scriptExecutionCancellationToken);
                     }
@@ -139,7 +139,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 var scriptTicket = rpcCallExecutor.Execute(
                     RpcCall.Create<IScriptService>(nameof(IScriptService.StartScript)),
                     ct => scriptServiceV1.StartScript(startScriptCommandV1, new HalibutProxyRequestOptions(ct)),
-                    abandonActionOnCancellation: true,
+                    // abandonActionOnCancellation: true,
                     clientOperationMetricsBuilder,
                     scriptExecutionCancellationToken);
 
@@ -179,7 +179,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 tentacleCapabilities = rpcCallExecutor.Execute(
                     RpcCall.Create<ICapabilitiesServiceV2>(nameof(ICapabilitiesServiceV2.GetCapabilities)),
                     ct => capabilitiesServiceV2.GetCapabilities(new HalibutProxyRequestOptions(ct)),
-                    abandonActionOnCancellation: true,
+                    // abandonActionOnCancellation: true,
                     clientOperationMetricsBuilder,
                     cancellationToken);
             }
@@ -298,7 +298,7 @@ namespace Octopus.Tentacle.Client.Scripts
                         return rpcCallExecutor.Execute(
                             RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.GetStatus)),
                             GetStatusAction,
-                            abandonActionOnCancellation: true,
+                            // abandonActionOnCancellation: true,
                             clientOperationMetricsBuilder,
                             cancellationToken);
                     }
@@ -314,7 +314,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 var scriptStatusResponseV1 = rpcCallExecutor.Execute(
                     RpcCall.Create<IScriptService>(nameof(IScriptService.GetStatus)),
                     ct => scriptServiceV1.GetStatus(new ScriptStatusRequest(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence), new HalibutProxyRequestOptions(ct)),
-                    abandonActionOnCancellation: true,
+                    // abandonActionOnCancellation: true,
                     clientOperationMetricsBuilder,
                     cancellationToken);
 
@@ -351,7 +351,7 @@ namespace Octopus.Tentacle.Client.Scripts
                     return rpcCallExecutor.Execute(
                         RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.CancelScript)),
                         CancelScriptAction,
-                        abandonActionOnCancellation: false,
+                        // abandonActionOnCancellation: false,
                         clientOperationMetricsBuilder,
                         cancellationToken);
                 }
@@ -361,7 +361,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 var scriptStatusResponseV1 = rpcCallExecutor.Execute(
                     RpcCall.Create<IScriptService>(nameof(IScriptService.CancelScript)),
                     ct => scriptServiceV1.CancelScript(new CancelScriptCommand(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence), new HalibutProxyRequestOptions(ct)),
-                    abandonActionOnCancellation: false,
+                    // abandonActionOnCancellation: false,
                     clientOperationMetricsBuilder,
                     cancellationToken);
 
@@ -386,7 +386,7 @@ namespace Octopus.Tentacle.Client.Scripts
                         rpcCallExecutor.Execute(
                             RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.CompleteScript)),
                             ct => scriptServiceV2.CompleteScript(new CompleteScriptCommandV2(lastStatusResponse.Ticket), new HalibutProxyRequestOptions(ct)),
-                            abandonActionOnCancellation: true,
+                            // abandonActionOnCancellation: true,
                             clientOperationMetricsBuilder,
                             CancellationToken.None);
                     }, CancellationToken.None);
@@ -423,7 +423,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 var completeStatusV1 = rpcCallExecutor.Execute(
                     RpcCall.Create<IScriptService>(nameof(IScriptService.CompleteScript)),
                     ct => scriptServiceV1.CompleteScript(new CompleteScriptCommand(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence), new HalibutProxyRequestOptions(ct)),
-                    abandonActionOnCancellation: true,
+                    // abandonActionOnCancellation: true,
                     clientOperationMetricsBuilder,
                     CancellationToken.None);
 

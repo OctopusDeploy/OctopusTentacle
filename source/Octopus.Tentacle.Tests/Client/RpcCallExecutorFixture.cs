@@ -315,7 +315,7 @@ namespace Octopus.Tentacle.Tests.Client
             return sut.Execute(
                 new RpcCall(RpcService, RpcCallName),
                 action,
-                abandonActionOnCancellation: false,
+                // abandonActionOnCancellation: false,
                 clientOperationMetricsBuilder,
                 cancellationToken);
         }
@@ -332,7 +332,7 @@ namespace Octopus.Tentacle.Tests.Client
             sut.Execute(
                 new RpcCall(RpcService, RpcCallName),
                 action,
-                abandonActionOnCancellation: false,
+                // abandonActionOnCancellation: false,
                 clientOperationMetricsBuilder,
                 cancellationToken);
         }
