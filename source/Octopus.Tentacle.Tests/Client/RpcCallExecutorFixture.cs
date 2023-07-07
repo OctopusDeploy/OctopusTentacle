@@ -316,7 +316,7 @@ namespace Octopus.Tentacle.Tests.Client
         {
             var sut = RpcCallExecutorFactory.Create(retryDuration, tentacleClientObserver);
 
-            return await sut.Execute(
+            return await sut.ExecuteWithNoRetries(
                 new RpcCall(RpcService, RpcCallName),
                 action,
                 abandonActionOnCancellation: false,
@@ -333,7 +333,7 @@ namespace Octopus.Tentacle.Tests.Client
         {
             var sut = RpcCallExecutorFactory.Create(retryDuration, tentacleClientObserver);
 
-            await sut.Execute(
+            await sut.ExecuteWithNoRetries(
                 new RpcCall(RpcService, RpcCallName),
                 ct =>
                 {

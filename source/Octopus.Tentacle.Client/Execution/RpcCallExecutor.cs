@@ -90,7 +90,7 @@ namespace Octopus.Tentacle.Client.Execution
             }
         }
 
-        public async Task<T> Execute<T>(
+        public async Task<T> ExecuteWithNoRetries<T>(
             RpcCall rpcCall,
             Func<CancellationToken, T> action,
             bool abandonActionOnCancellation,
@@ -131,7 +131,7 @@ namespace Octopus.Tentacle.Client.Execution
                 cancellationToken);
         }
 
-        public async Task Execute(
+        public async Task ExecuteWithNoRetries(
             RpcCall rpcCall,
             Action<CancellationToken> action,
             bool abandonActionOnCancellation,
