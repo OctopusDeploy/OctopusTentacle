@@ -27,6 +27,21 @@ namespace Octopus.Tentacle.Client
         readonly IClientFileTransferService fileTransferServiceV1;
         readonly IClientCapabilitiesServiceV2 capabilitiesServiceV2;
 
+        public static void CacheServiceWasNotFoundResponseMessages(IHalibutRuntime halibutRuntime)
+        {
+            var innerHandler = halibutRuntime.OverrideErrorResponseMessageCaching;
+            halibutRuntime.OverrideErrorResponseMessageCaching = response =>
+            {
+                if (BackwardsCompatibleCapabilitiesV2Helper.ExceptionTypeLooksLikeTheServiceWasNotFound(response.Error.HalibutErrorType) ||
+                    BackwardsCompatibleCapabilitiesV2Helper.ExceptionMessageLooksLikeTheServiceWasNotFound(response.Error.Message))
+                {
+                    return true;
+                }
+
+                return innerHandler?.Invoke(response) ?? false;
+            };
+        }
+
         public TentacleClient(
             ServiceEndPoint serviceEndPoint,
             IHalibutRuntime halibutRuntime,
@@ -50,18 +65,12 @@ namespace Octopus.Tentacle.Client
             this.scriptObserverBackOffStrategy = scriptObserverBackOffStrategy;
             this.tentacleClientObserver = tentacleClientObserver;
 
-            var innerHandler = halibutRuntime.OverrideErrorResponseMessageCaching;
-            halibutRuntime.OverrideErrorResponseMessageCaching = response =>
+            if (halibutRuntime.OverrideErrorResponseMessageCaching == null)
             {
-                if (BackwardsCompatibleCapabilitiesV2Helper.ExceptionTypeLooksLikeTheServiceWasNotFound(response.Error.HalibutErrorType) ||
-                    BackwardsCompatibleCapabilitiesV2Helper.ExceptionMessageLooksLikeTheServiceWasNotFound(response.Error.Message))
-                {
-                    return true;
-                }
-
-                // TentacleClient doesn't own the HalibutRuntime so allow other handlers to be configured that override the error caching behaviour
-                return innerHandler?.Invoke(response) ?? false;
-            };
+                // Best effort to make sure the HalibutRuntime has been configured to Cache ServiceNotFoundExceptions
+                // Do not configure the HalibutRuntime here as it should only be done once and configuring it here will result in it being performed a lot
+                throw new ArgumentException("Ensure that TentacleClient.CacheServiceWasNotFoundResponseMessages has been called for the HalibutRuntime", nameof(halibutRuntime));
+            }
 
             scriptServiceV1 = halibutRuntime.CreateClient<IScriptService, IClientScriptService>(serviceEndPoint);
             scriptServiceV2 = halibutRuntime.CreateClient<IScriptServiceV2, IClientScriptServiceV2>(serviceEndPoint);
