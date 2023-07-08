@@ -166,6 +166,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 serviceEndpointModifier(tentacleEndPoint);
             }
 
+            TentacleClient.CacheServiceWasNotFoundResponseMessages(server.ServerHalibutRuntime);
+
             var tentacleClient = new TentacleClient(
                 tentacleEndPoint,
                 server.ServerHalibutRuntime,
