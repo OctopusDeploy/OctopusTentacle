@@ -32,8 +32,9 @@ namespace Octopus.Tentacle.Client
             IHalibutRuntime halibutRuntime,
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
             TimeSpan retryDuration,
-            ITentacleClientObserver tentacleClientObserver) : 
-                this(serviceEndPoint, halibutRuntime, scriptObserverBackOffStrategy, retryDuration, tentacleClientObserver, null)
+            ITentacleClientObserver tentacleClientObserver,
+            bool useTaskCreationOptionsLongRunning) :
+                this(serviceEndPoint, halibutRuntime, scriptObserverBackOffStrategy, retryDuration, tentacleClientObserver, null, useTaskCreationOptionsLongRunning)
         {
         }
 
@@ -43,7 +44,8 @@ namespace Octopus.Tentacle.Client
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
             TimeSpan retryDuration,
             ITentacleClientObserver tentacleClientObserver,
-            ITentacleServiceDecorator? tentacleServicesDecorator)
+            ITentacleServiceDecorator? tentacleServicesDecorator,
+            bool useTaskCreationOptionsLongRunning)
         {
             this.scriptObserverBackOffStrategy = scriptObserverBackOffStrategy;
             this.tentacleClientObserver = tentacleClientObserver;
@@ -77,8 +79,8 @@ namespace Octopus.Tentacle.Client
                 fileTransferServiceV1 = tentacleServicesDecorator.Decorate(fileTransferServiceV1);
                 capabilitiesServiceV2 = tentacleServicesDecorator.Decorate(capabilitiesServiceV2);
             }
-            
-            rpcCallExecutor = RpcCallExecutorFactory.Create(retryDuration, tentacleClientObserver);
+
+            rpcCallExecutor = RpcCallExecutorFactory.Create(retryDuration, tentacleClientObserver, useTaskCreationOptionsLongRunning);
         }
 
         public TimeSpan OnCancellationAbandonCompleteScriptAfter { get; set; } = TimeSpan.FromMinutes(1);

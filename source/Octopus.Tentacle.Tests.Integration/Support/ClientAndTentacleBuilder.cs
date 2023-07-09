@@ -172,7 +172,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 scriptObserverBackoffStrategy,
                 retryDuration,
                 tentacleClientObserver,
-                tentacleServiceDecorator);
+                tentacleServiceDecorator,
+                true);
 
             return new ClientAndTentacle(server.ServerHalibutRuntime, tentacleEndPoint, server, portForwarder, runningTentacle, tentacleClient, temporaryDirectory);
         }

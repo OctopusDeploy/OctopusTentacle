@@ -12,11 +12,16 @@ namespace Octopus.Tentacle.Client.Execution
     {
         private readonly RpcCallRetryHandler rpcCallRetryHandler;
         private readonly ITentacleClientObserver tentacleClientObserver;
+        private readonly bool useTaskCreationOptionsLongRunning;
 
-        internal RpcCallExecutor(RpcCallRetryHandler rpcCallRetryHandler, ITentacleClientObserver tentacleClientObserver)
+        internal RpcCallExecutor(
+            RpcCallRetryHandler rpcCallRetryHandler,
+            ITentacleClientObserver tentacleClientObserver,
+            bool useTaskCreationOptionsLongRunning)
         {
             this.rpcCallRetryHandler = rpcCallRetryHandler;
             this.tentacleClientObserver = tentacleClientObserver;
+            this.useTaskCreationOptionsLongRunning = useTaskCreationOptionsLongRunning;
         }
 
         public TimeSpan RetryTimeout => rpcCallRetryHandler.RetryTimeout;
@@ -41,7 +46,11 @@ namespace Octopus.Tentacle.Client.Execution
                             try
                             {
                                 // Wrap the action in a task so it doesn't block on sync Halibut calls
-                                var actionTask = Task.Run(() => action(ct), ct);
+                                // Setting the TaskCreationOptions.LongRunning to stop the Halibut call executing on a Thread from the worker pool and causing Thread Pool Starvation
+                                // NOTE: Don't use TaskCreationOptions.LongRunning with async code as this will create a new thread which will be destroyed after first await
+                                var actionTask = useTaskCreationOptionsLongRunning ?
+                                                    StartNewLongRunningTask(action, ct) :
+                                                    Task.Run(() => action(ct), ct);
 
                                 var response = await actionTask.ConfigureAwait(false);
 
@@ -84,7 +93,7 @@ namespace Octopus.Tentacle.Client.Execution
             }
         }
 
-        public T Execute<T>(
+        public async Task<T> Execute<T>(
             RpcCall rpcCall,
             Func<CancellationToken, T> action,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
@@ -95,7 +104,16 @@ namespace Octopus.Tentacle.Client.Execution
 
             try
             {
-                var response = action(cancellationToken);
+                T? response;
+
+                if (useTaskCreationOptionsLongRunning)
+                {
+                    response = await StartNewLongRunningTask(action, cancellationToken).ConfigureAwait(false);
+                }
+                else
+                {
+                    response = action(cancellationToken);
+                }
 
                 rpcCallMetricsBuilder.WithAttempt(TimedOperation.Success(start));
                 return response;
@@ -114,7 +132,7 @@ namespace Octopus.Tentacle.Client.Execution
             }
         }
 
-        public void Execute(
+        public async Task Execute(
             RpcCall rpcCall,
             Action<CancellationToken> action,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
@@ -125,7 +143,14 @@ namespace Octopus.Tentacle.Client.Execution
 
             try
             {
-                action(cancellationToken);
+                if (useTaskCreationOptionsLongRunning)
+                {
+                    await StartNewLongRunningTask(action, cancellationToken).ConfigureAwait(false);
+                }
+                else
+                {
+                    action(cancellationToken);
+                }
 
                 rpcCallMetricsBuilder.WithAttempt(TimedOperation.Success(start));
             }
@@ -141,6 +166,16 @@ namespace Octopus.Tentacle.Client.Execution
                 clientOperationMetricsBuilder.WithRpcCall(rpcCallMetrics);
                 tentacleClientObserver.RpcCallCompleted(rpcCallMetrics);
             }
+        }
+
+        private static Task<T> StartNewLongRunningTask<T>(Func<CancellationToken, T> action, CancellationToken ct)
+        {
+            return Task.Factory.StartNew(() => action(ct), ct, TaskCreationOptions.DenyChildAttach | TaskCreationOptions.PreferFairness | TaskCreationOptions.LongRunning | TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default);
+        }
+
+        private static Task StartNewLongRunningTask(Action<CancellationToken> action, CancellationToken ct)
+        {
+            return Task.Factory.StartNew(() => action(ct), ct, TaskCreationOptions.DenyChildAttach | TaskCreationOptions.PreferFairness | TaskCreationOptions.LongRunning | TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default);
         }
     }
 }

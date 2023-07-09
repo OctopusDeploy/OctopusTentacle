@@ -7,10 +7,10 @@ namespace Octopus.Tentacle.Client.Execution
 {
     internal static class RpcCallExecutorFactory
     {
-        internal static RpcCallExecutor Create(TimeSpan retryDuration, ITentacleClientObserver tentacleClientObserver)
+        internal static RpcCallExecutor Create(TimeSpan retryDuration, ITentacleClientObserver tentacleClientObserver, bool useTaskCreationOptionsLongRunning)
         {
             var rpcCallRetryHandler = new RpcCallRetryHandler(retryDuration, TimeoutStrategy.Pessimistic);
-            var rpcCallExecutor = new RpcCallExecutor(rpcCallRetryHandler, tentacleClientObserver);
+            var rpcCallExecutor = new RpcCallExecutor(rpcCallRetryHandler, tentacleClientObserver, useTaskCreationOptionsLongRunning);
 
             return rpcCallExecutor;
         }

@@ -8,7 +8,7 @@ namespace Octopus.Tentacle.Client.Retries
     {
         public static Task<TResult> AsTask<TResult>(this CancellationToken cancellationToken)
         {
-            var tcs = new TaskCompletionSource<TResult>();
+            var tcs = new TaskCompletionSource<TResult>(TaskCreationOptions.RunContinuationsAsynchronously);
 
             IDisposable? registration = null;
             registration = cancellationToken.Register(() =>
@@ -22,7 +22,7 @@ namespace Octopus.Tentacle.Client.Retries
 
         public static Task AsTask(this CancellationToken cancellationToken)
         {
-            var tcs = new TaskCompletionSource<VoidResult>();
+            var tcs = new TaskCompletionSource<VoidResult>(TaskCreationOptions.RunContinuationsAsynchronously);
 
             IDisposable? registration = null;
             registration = cancellationToken.Register(() =>
