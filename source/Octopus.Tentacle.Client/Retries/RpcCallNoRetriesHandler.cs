@@ -32,7 +32,13 @@ namespace Octopus.Tentacle.Client.Retries
                     try
                     {
                         var actionTask = action(ct);
-                        await (await Task.WhenAny(actionTask, abandonTask).ConfigureAwait(false)).ConfigureAwait(false);
+                        var completedTask = await Task.WhenAny(actionTask, abandonTask).ConfigureAwait(false);
+                        if (actionTask != completedTask)
+                        {
+                            actionTask.IgnoreUnobservedExceptions();
+                        }
+
+                        await completedTask.ConfigureAwait(false);
                     }
                     catch (Exception e) when (e is OperationCanceledException)
                     {
@@ -46,7 +52,7 @@ namespace Octopus.Tentacle.Client.Retries
                 }
             }))(cancellationToken).ConfigureAwait(false);
         }
-        
+
         public async Task<T> ExecuteWithNoRetries<T>(
             Func<CancellationToken, Task<T>> action,
             bool abandonActionOnCancellation,
@@ -73,7 +79,13 @@ namespace Octopus.Tentacle.Client.Retries
                     try
                     {
                         var actionTask = action(ct);
-                        return await (await Task.WhenAny(actionTask, abandonTask).ConfigureAwait(false)).ConfigureAwait(false);
+                        var completedTask = await Task.WhenAny(actionTask, abandonTask).ConfigureAwait(false);
+                        if (actionTask != completedTask)
+                        {
+                            actionTask.IgnoreUnobservedExceptions();
+                        }
+
+                        return await completedTask.ConfigureAwait(false);
                     }
                     catch (Exception e) when (e is OperationCanceledException)
                     {
