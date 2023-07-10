@@ -126,7 +126,7 @@ namespace Octopus.Tentacle.Client
                         UploadFileAction,
                         abandonActionOnCancellation: false,
                         operationMetricsBuilder,
-                        cancellationToken);
+                        cancellationToken).ConfigureAwait(false);
                 }
             }
             catch (Exception e)
@@ -172,7 +172,7 @@ namespace Octopus.Tentacle.Client
                         DownloadFileAction,
                         abandonActionOnCancellation: false,
                         operationMetricsBuilder,
-                        cancellationToken);
+                        cancellationToken).ConfigureAwait(false);
                 }
             }
             catch (Exception e)

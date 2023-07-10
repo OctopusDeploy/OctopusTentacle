@@ -23,7 +23,6 @@ namespace Octopus.Tentacle.Client.Retries
 
         public TimeSpan RetryTimeout { get; }
 
-
         public async Task<T> ExecuteWithRetries<T>(
             Func<CancellationToken, Task<T>> action,
             OnRetyAction? onRetryAction,

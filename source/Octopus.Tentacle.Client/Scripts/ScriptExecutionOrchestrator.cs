@@ -106,7 +106,7 @@ namespace Octopus.Tentacle.Client.Scripts
                             StartScriptAction,
                             abandonActionOnCancellation: true,
                             clientOperationMetricsBuilder,
-                            scriptExecutionCancellationToken);
+                            scriptExecutionCancellationToken).ConfigureAwait(false);
                     }
                 }
                 catch (Exception e) when (e is OperationCanceledException && scriptExecutionCancellationToken.IsCancellationRequested)
@@ -141,7 +141,7 @@ namespace Octopus.Tentacle.Client.Scripts
                     ct => scriptServiceV1.StartScript(startScriptCommandV1, new HalibutProxyRequestOptions(ct)),
                     abandonActionOnCancellation: true,
                     clientOperationMetricsBuilder,
-                    scriptExecutionCancellationToken);
+                    scriptExecutionCancellationToken).ConfigureAwait(false);
 
                 scriptStatusResponse = Map(scriptTicket);
             }
@@ -181,7 +181,7 @@ namespace Octopus.Tentacle.Client.Scripts
                     ct => capabilitiesServiceV2.GetCapabilities(new HalibutProxyRequestOptions(ct)),
                     abandonActionOnCancellation: true,
                     clientOperationMetricsBuilder,
-                    cancellationToken);
+                    cancellationToken).ConfigureAwait(false);
             }
 
             logger.Verbose($"Discovered Tentacle capabilities: {string.Join(",", tentacleCapabilities.SupportedCapabilities)}");
@@ -300,7 +300,7 @@ namespace Octopus.Tentacle.Client.Scripts
                             GetStatusAction,
                             abandonActionOnCancellation: true,
                             clientOperationMetricsBuilder,
-                            cancellationToken);
+                            cancellationToken).ConfigureAwait(false);
                     }
                 }
                 catch (Exception e) when (e is OperationCanceledException && cancellationToken.IsCancellationRequested)
@@ -316,7 +316,7 @@ namespace Octopus.Tentacle.Client.Scripts
                     ct => scriptServiceV1.GetStatus(new ScriptStatusRequest(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence), new HalibutProxyRequestOptions(ct)),
                     abandonActionOnCancellation: true,
                     clientOperationMetricsBuilder,
-                    cancellationToken);
+                    cancellationToken).ConfigureAwait(false);
 
                 return Map(scriptStatusResponseV1);
             }
@@ -353,7 +353,7 @@ namespace Octopus.Tentacle.Client.Scripts
                         CancelScriptAction,
                         abandonActionOnCancellation: false,
                         clientOperationMetricsBuilder,
-                        cancellationToken);
+                        cancellationToken).ConfigureAwait(false);
                 }
             }
             else
@@ -363,7 +363,7 @@ namespace Octopus.Tentacle.Client.Scripts
                     ct => scriptServiceV1.CancelScript(new CancelScriptCommand(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence), new HalibutProxyRequestOptions(ct)),
                     abandonActionOnCancellation: false,
                     clientOperationMetricsBuilder,
-                    cancellationToken);
+                    cancellationToken).ConfigureAwait(false);
 
                 return Map(scriptStatusResponseV1);
             }
@@ -423,7 +423,7 @@ namespace Octopus.Tentacle.Client.Scripts
                     ct => scriptServiceV1.CompleteScript(new CompleteScriptCommand(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence), new HalibutProxyRequestOptions(ct)),
                     abandonActionOnCancellation: true,
                     clientOperationMetricsBuilder,
-                    CancellationToken.None);
+                    CancellationToken.None).ConfigureAwait(false);
 
                 completeStatus = Map(completeStatusV1);
                 onScriptStatusResponseReceived(completeStatus);
