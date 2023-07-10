@@ -165,7 +165,6 @@ namespace Octopus.Tentacle.Tests.Integration
 
             List<ProcessOutput> logs = new List<ProcessOutput>();
 
-            //Assert.CatchAsync(async () => await clientTentacle.TentacleClient.ExecuteScriptAssumingException(startScriptCommand, logs, cts.Token));
             Assert.ThrowsAsync<HalibutClientException>(async () => await clientTentacle.TentacleClient.ExecuteScriptAssumingException(startScriptCommand, logs, cts.Token));
 
             // Let the script finish.
