@@ -141,26 +141,29 @@ namespace Octopus.Tentacle.Client.Execution
             await rpcCallNoRetriesHandler.ExecuteWithNoRetries(
                 async ct =>
                 {
-                    var rpcCallMetricsBuilder = RpcCallMetricsBuilder.StartWithoutRetries(rpcCall);
-                    var start = DateTimeOffset.UtcNow;
+                    await Task.Run(() =>
+                    {
+                        var rpcCallMetricsBuilder = RpcCallMetricsBuilder.StartWithoutRetries(rpcCall);
+                        var start = DateTimeOffset.UtcNow;
 
-                    try
-                    {
-                        await Task.Run(() => action(ct), ct);
-                        rpcCallMetricsBuilder.WithAttempt(TimedOperation.Success(start));
-                    }
-                    catch (Exception e)
-                    {
-                        rpcCallMetricsBuilder.WithAttempt(TimedOperation.Failure(start, e, ct));
-                        rpcCallMetricsBuilder.Failure(e, ct);
-                        throw;
-                    }
-                    finally
-                    {
-                        var rpcCallMetrics = rpcCallMetricsBuilder.Build();
-                        clientOperationMetricsBuilder.WithRpcCall(rpcCallMetrics);
-                        tentacleClientObserver.RpcCallCompleted(rpcCallMetrics);
-                    }
+                        try
+                        {
+                            action(ct);
+                            rpcCallMetricsBuilder.WithAttempt(TimedOperation.Success(start));
+                        }
+                        catch (Exception e)
+                        {
+                            rpcCallMetricsBuilder.WithAttempt(TimedOperation.Failure(start, e, ct));
+                            rpcCallMetricsBuilder.Failure(e, ct);
+                            throw;
+                        }
+                        finally
+                        {
+                            var rpcCallMetrics = rpcCallMetricsBuilder.Build();
+                            clientOperationMetricsBuilder.WithRpcCall(rpcCallMetrics);
+                            tentacleClientObserver.RpcCallCompleted(rpcCallMetrics);
+                        }
+                    }, ct);
                 },
                 abandonActionOnCancellation,
                 AbandonAfter,
