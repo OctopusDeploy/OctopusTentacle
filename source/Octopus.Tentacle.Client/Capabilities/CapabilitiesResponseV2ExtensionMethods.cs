@@ -13,8 +13,7 @@ namespace Octopus.Tentacle.Client.Capabilities
                 return false;
             }
 
-            return capabilities.SupportedCapabilities.Contains($"{nameof(IScriptServiceV2)}Alpha") ||
-                capabilities.SupportedCapabilities.Contains($"{nameof(IScriptServiceV2)}");
+            return capabilities.SupportedCapabilities.Contains(nameof(IScriptServiceV2));
         }
     }
 }
