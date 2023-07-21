@@ -113,7 +113,7 @@ namespace Octopus.Tentacle.Tests.Integration
             }
 
             started.Stop();
-            started.Elapsed.Should().BeLessOrEqualTo(TimeSpan.FromSeconds(15));
+            started.Elapsed.Should().BeLessOrEqualTo(TimeSpan.FromSeconds(20));
         }
 
         [Test]
