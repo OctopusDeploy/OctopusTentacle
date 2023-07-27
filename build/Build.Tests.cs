@@ -233,6 +233,7 @@ partial class Build
 
         while (IsFileLocked(testResultsPath))
         {
+            Log.Warning("Test report file is still locked. Waiting 5s...");
             System.Threading.Thread.Sleep(5000);
         }
     }
@@ -266,6 +267,7 @@ partial class Build
         }
         catch (Exception e)
         {
+            Log.Warning("Test report file is still locked. Waiting 5s...");
             Log.Warning("{Message}: {Exception}", e.Message, e.ToString());
         }
         
