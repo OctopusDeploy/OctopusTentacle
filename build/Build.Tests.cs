@@ -210,7 +210,8 @@ partial class Build
                 DotNetTasks.DotNetTest(settings => settings
                     .SetProjectFile(Solution.Octopus_Tentacle_Tests)
                     .SetConfiguration(Configuration)
-                    .SetFramework(testFramework));
+                    .SetFramework(testFramework)
+                    .EnableNoBuild());
         }
         catch (Exception e)
         {
@@ -226,7 +227,8 @@ partial class Build
             DotNetTasks.DotNetTest(settings => settings
                 .SetProjectFile(Solution.Octopus_Tentacle_Tests_Integration)
                 .SetConfiguration(Configuration)
-                .SetFramework(testFramework));
+                .SetFramework(testFramework)
+                .EnableNoBuild());
         }
         catch (Exception e)
         {
