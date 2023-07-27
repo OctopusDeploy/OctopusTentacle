@@ -230,6 +230,11 @@ partial class Build
         {
             Log.Warning("{Message}: {Exception}", e.Message, e.ToString());
         }
+
+        while (IsFileLocked(testResultsPath))
+        {
+            System.Threading.Thread.Sleep(5000);
+        }
     }
 
     void RunIntegrationTests(string testFramework, string testRuntime)
@@ -263,5 +268,25 @@ partial class Build
         {
             Log.Warning("{Message}: {Exception}", e.Message, e.ToString());
         }
+        
+        while (IsFileLocked(testResultsPath))
+        {
+            System.Threading.Thread.Sleep(5000);
+        }
+    }
+    
+    protected virtual bool IsFileLocked(AbsolutePath? file)
+    {
+        try
+        {
+            using Stream stream = new FileStream("MyFilename.txt", FileMode.Open);
+            stream.Close();
+        }
+        catch (IOException)
+        {
+            return true;
+        }
+
+        return false;
     }
 }
