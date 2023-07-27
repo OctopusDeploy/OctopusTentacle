@@ -223,8 +223,7 @@ partial class Build
                     .SetProjectFile(projectPath)
                     .SetFramework(testFramework)
                     .SetLoggers($"trx;LogFileName={testResultsPath}")
-                    .EnableNoBuild()
-                    .EnableNoRestore())
+                    .EnableNoBuild())
             );
         }
         catch (Exception e)
@@ -257,8 +256,7 @@ partial class Build
                     .SetProjectFile(projectPath)
                     .SetFramework(testFramework)
                     .SetLoggers($"trx;LogFileName={testResultsPath}")
-                    .EnableNoBuild()
-                    .EnableNoRestore())
+                    .EnableNoBuild())
             );
         }
         catch (Exception e)
