@@ -16,6 +16,9 @@ using Serilog;
 
 partial class Build
 {
+    [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
+    readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
+    
     [PublicAPI]
     Target TestWindows => _ => _
         .Executes(() => RunTests(TestFramework, TestRuntime));
@@ -202,28 +205,12 @@ partial class Build
     void RunTests(string testFramework, string testRuntime)
     {
         Log.Information("Running test for Framework: {TestFramework} and Runtime: {TestRuntime}", testFramework, testRuntime);
-
-        FileSystemTasks.EnsureExistingDirectory(ArtifactsDirectory / "teamcity");
-            
-        // We call dotnet test against the assemblies directly here because calling it against the .sln requires
-        // the existence of the obj/* generated artifacts as well as the bin/* artifacts and we don't want to
-        // have to shunt them all around the place.
-        // By doing things this way, we can have a seamless experience between local and remote builds.
-        var octopusTentacleTestsDirectory = BuildDirectory / "Octopus.Tentacle.Tests" / testFramework / testRuntime;
-        var testAssembliesPath = octopusTentacleTestsDirectory.GlobFiles("*.Tests.dll");
-        var testResultsPath = ArtifactsDirectory / "teamcity" / $"TestResults-Tests-{testFramework}-{testRuntime}.xml";
-        
         try
         {
-            // NOTE: Configuration, NoRestore, NoBuild and Runtime parameters are meaningless here as they only apply
-            // when the test runner is being asked to build things, not when they're already built.
-            // Framework is still relevant because it tells dotnet which flavour of test runner to launch.
-            testAssembliesPath.ForEach(projectPath =>
                 DotNetTasks.DotNetTest(settings => settings
-                    .SetProjectFile(projectPath)
-                    .SetFramework(testFramework)
-                    .SetLoggers($"trx;LogFileName={testResultsPath}"))
-            );
+                    .SetProjectFile(Solution.Octopus_Tentacle_Tests)
+                    .SetConfiguration(Configuration)
+                    .SetFramework(testFramework));
         }
         catch (Exception e)
         {
@@ -234,28 +221,12 @@ partial class Build
     void RunIntegrationTests(string testFramework, string testRuntime)
     {
         Log.Information("Running test for Framework: {TestFramework} and Runtime: {TestRuntime}", testFramework, testRuntime);
-
-        FileSystemTasks.EnsureExistingDirectory(ArtifactsDirectory / "teamcity");
-
-        // We call dotnet test against the assemblies directly here because calling it against the .sln requires
-        // the existence of the obj/* generated artifacts as well as the bin/* artifacts and we don't want to
-        // have to shunt them all around the place.
-        // By doing things this way, we can have a seamless experience between local and remote builds.
-        var octopusTentacleTestsDirectory = BuildDirectory / "Octopus.Tentacle.Tests.Integration" / testFramework / testRuntime;
-        var testAssembliesPath = octopusTentacleTestsDirectory.GlobFiles("*.Tests*.dll");
-        var testResultsPath = ArtifactsDirectory / "teamcity" / $"TestResults-Tests-Integration-{testFramework}-{testRuntime}.xml";
-
         try
         {
-            // NOTE: Configuration, NoRestore, NoBuild and Runtime parameters are meaningless here as they only apply
-            // when the test runner is being asked to build things, not when they're already built.
-            // Framework is still relevant because it tells dotnet which flavour of test runner to launch.
-            testAssembliesPath.ForEach(projectPath =>
-                DotNetTasks.DotNetTest(settings => settings
-                    .SetProjectFile(projectPath)
-                    .SetFramework(testFramework)
-                    .SetLoggers($"trx;LogFileName={testResultsPath}"))
-            );
+            DotNetTasks.DotNetTest(settings => settings
+                .SetProjectFile(Solution.Octopus_Tentacle_Tests_Integration)
+                .SetConfiguration(Configuration)
+                .SetFramework(testFramework));
         }
         catch (Exception e)
         {
