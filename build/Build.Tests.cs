@@ -222,7 +222,9 @@ partial class Build
                 DotNetTasks.DotNetTest(settings => settings
                     .SetProjectFile(projectPath)
                     .SetFramework(testFramework)
-                    .SetLoggers($"trx;LogFileName={testResultsPath}"))
+                    .SetLoggers($"trx;LogFileName={testResultsPath}")
+                    .EnableNoBuild()
+                    .EnableNoRestore())
             );
         }
         catch (Exception e)
@@ -254,7 +256,9 @@ partial class Build
                 DotNetTasks.DotNetTest(settings => settings
                     .SetProjectFile(projectPath)
                     .SetFramework(testFramework)
-                    .SetLoggers($"trx;LogFileName={testResultsPath}"))
+                    .SetLoggers($"trx;LogFileName={testResultsPath}")
+                    .EnableNoBuild()
+                    .EnableNoRestore())
             );
         }
         catch (Exception e)
