@@ -279,9 +279,11 @@ partial class Build
     
     protected virtual bool IsFileLocked(AbsolutePath? file)
     {
+        if (file is null) return false;
+        
         try
         {
-            using Stream stream = new FileStream("MyFilename.txt", FileMode.Open);
+            using Stream stream = new FileStream(file, FileMode.Open);
             stream.Close();
         }
         catch (IOException)
