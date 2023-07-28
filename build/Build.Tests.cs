@@ -236,6 +236,10 @@ partial class Build
             Log.Warning("Test report file is still locked. Waiting 5s...");
             System.Threading.Thread.Sleep(5000);
         }
+        
+        var copiedReportPath = ArtifactsDirectory / "teamcity" / $"TestResults-Tests-{testFramework}-{testRuntime}--copy";
+        File.Copy(testResultsPath, copiedReportPath);
+        File.Delete(testResultsPath);
     }
 
     void RunIntegrationTests(string testFramework, string testRuntime)
