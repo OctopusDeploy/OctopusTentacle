@@ -211,7 +211,7 @@ partial class Build
         // By doing things this way, we can have a seamless experience between local and remote builds.
         var octopusTentacleTestsDirectory = BuildDirectory / "Octopus.Tentacle.Tests" / testFramework / testRuntime;
         var testAssembliesPath = octopusTentacleTestsDirectory.GlobFiles("*.Tests.dll");
-        var testResultsPath = ArtifactsDirectory / "teamcity" / $"TestResults-Tests-{testFramework}-{testRuntime}";
+        var testResultsPath = ArtifactsDirectory / "teamcity" / $"TempTestResults-Tests-{testFramework}-{testRuntime}";
         
         try
         {
@@ -225,7 +225,7 @@ partial class Build
                     .SetLoggers($"trx;LogFileName={testResultsPath}")
                     .EnableNoBuild())
             );
-            var copiedReportPath = ArtifactsDirectory / "teamcity" / $"TestResults-Tests-{testFramework}-{testRuntime}--copy";
+            var copiedReportPath = ArtifactsDirectory / "teamcity" / $"TestResults-Tests-{testFramework}-{testRuntime}";
             File.Copy(testResultsPath, copiedReportPath);
         }
         catch (Exception e)
@@ -238,8 +238,6 @@ partial class Build
             Log.Warning("Test report file is still locked. Waiting 5s...");
             System.Threading.Thread.Sleep(5000);
         }
-
-        File.Delete(testResultsPath);
     }
 
     void RunIntegrationTests(string testFramework, string testRuntime)
