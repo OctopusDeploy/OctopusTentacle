@@ -211,7 +211,6 @@ partial class Build
         // By doing things this way, we can have a seamless experience between local and remote builds.
         var octopusTentacleTestsDirectory = BuildDirectory / "Octopus.Tentacle.Tests" / testFramework / testRuntime;
         var testAssembliesPath = octopusTentacleTestsDirectory.GlobFiles("*.Tests.dll");
-        var testResultsPath = ArtifactsDirectory / "teamcity" / $"TestResults-Tests-{testFramework}-{testRuntime}.xml";
         
         try
         {
@@ -222,7 +221,7 @@ partial class Build
                 DotNetTasks.DotNetTest(settings => settings
                     .SetProjectFile(projectPath)
                     .SetFramework(testFramework)
-                    .SetLoggers($"trx;LogFileName={testResultsPath}"))
+                    .SetLoggers("console;verbosity=normal", "teamcity"))
             );
         }
         catch (Exception e)
@@ -243,7 +242,6 @@ partial class Build
         // By doing things this way, we can have a seamless experience between local and remote builds.
         var octopusTentacleTestsDirectory = BuildDirectory / "Octopus.Tentacle.Tests.Integration" / testFramework / testRuntime;
         var testAssembliesPath = octopusTentacleTestsDirectory.GlobFiles("*.Tests*.dll");
-        var testResultsPath = ArtifactsDirectory / "teamcity" / $"TestResults-Tests-Integration-{testFramework}-{testRuntime}.xml";
 
         try
         {
@@ -254,7 +252,7 @@ partial class Build
                 DotNetTasks.DotNetTest(settings => settings
                     .SetProjectFile(projectPath)
                     .SetFramework(testFramework)
-                    .SetLoggers($"trx;LogFileName={testResultsPath}"))
+                    .SetLoggers("console;verbosity=normal", "teamcity"))
             );
         }
         catch (Exception e)
