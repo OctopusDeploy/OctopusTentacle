@@ -225,6 +225,8 @@ partial class Build
                     .SetLoggers($"trx;LogFileName={testResultsPath}")
                     .EnableNoBuild())
             );
+            var copiedReportPath = ArtifactsDirectory / "teamcity" / $"TestResults-Tests-{testFramework}-{testRuntime}--copy";
+            File.Copy(testResultsPath, copiedReportPath);
         }
         catch (Exception e)
         {
@@ -236,9 +238,7 @@ partial class Build
             Log.Warning("Test report file is still locked. Waiting 5s...");
             System.Threading.Thread.Sleep(5000);
         }
-        
-        var copiedReportPath = ArtifactsDirectory / "teamcity" / $"TestResults-Tests-{testFramework}-{testRuntime}--copy";
-        File.Copy(testResultsPath, copiedReportPath);
+
         File.Delete(testResultsPath);
     }
 
