@@ -28,14 +28,14 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <PackageReference Include="Halibut" Version="6.0.258" />
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="..\Solution Items\SolutionInfo.cs">
       <Link>SolutionInfo.cs</Link>
     </Compile>
     <Compile Include="..\Solution Items\VersionInfo.cs">
       <Link>VersionInfo.cs</Link>
     </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Halibut" Version="6.0.740-pull-228" />
   </ItemGroup>
 </Project>
