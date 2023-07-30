@@ -36,6 +36,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Halibut" Version="6.0.740-pull-228" />
+    <PackageReference Include="Halibut" Version="6.0.742-pull-228" />
   </ItemGroup>
 </Project>
