@@ -114,54 +114,5 @@ namespace Octopus.Tentacle.Tests.Integration
             capabilitiesResponses.Should().HaveCount(2);
             capabilitiesResponses[0].Should().BeEquivalentTo(capabilitiesResponses[1]);
         }
-
-        [Test]
-        [TestCaseSource(typeof(TentacleTypesToTest))]
-        public async Task WhenNetworkFailureOccurs_DuringGetCapabilities_AndRetriesAreDisabled_TheCallIsNotRetried(TentacleType tentacleType)
-        {
-            IClientScriptServiceV2? scriptServiceV2 = null;
-            
-            using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
-                .WithRetriesDisabled()
-                .WithPortForwarderDataLogging()
-                .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
-                .WithRetryDuration(TimeSpan.FromMinutes(4))
-                .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .LogCallsToCapabilitiesServiceV2()
-                    .CountCallsToCapabilitiesServiceV2(out var capabilitiesServiceCallCounts)
-                    .RecordExceptionThrownInCapabilitiesServiceV2(out var capabilitiesServiceExceptions)
-                    .DecorateCapabilitiesServiceV2With(new CapabilitiesServiceV2DecoratorBuilder()
-                        .BeforeGetCapabilities(() =>
-                        {
-                            // Due to the GetCapabilities response getting cached, we must
-                            // use a different service to ensure Tentacle is connected to Server.
-                            // Otherwise, the response to the 'ensure connection' will get cached
-                            // and any subsequent calls will succeed w/o using the network.
-                            scriptServiceV2!.EnsureTentacleIsConnectedToServer(Logger);
-                            
-                            if (capabilitiesServiceExceptions.GetCapabilitiesLatestException == null)
-                            {
-                                responseMessageTcpKiller.KillConnectionOnNextResponse();
-                            }
-                        })
-                        .Build())
-                    .Build())
-                .Build(CancellationToken);
-            
-            scriptServiceV2 = clientTentacle.Server.ServerHalibutRuntime.CreateClient<IScriptServiceV2, IClientScriptServiceV2>(clientTentacle.ServiceEndPoint);
-            
-            var startScriptCommand = new StartScriptCommandV2Builder()
-                .WithScriptBody(new ScriptBuilder().Print("hello")).Build();
-
-            var logs = new List<ProcessOutput>();
-            Assert.ThrowsAsync<HalibutClientException>(async () => await clientTentacle.TentacleClient.ExecuteScriptAssumingException(startScriptCommand, logs, CancellationToken));
-
-            var allLogs = logs.JoinLogs();
-
-            allLogs.Should().NotContain("hello");
-            capabilitiesServiceExceptions.GetCapabilitiesLatestException.Should().NotBeNull();
-            capabilitiesServiceCallCounts.GetCapabilitiesCallCountStarted.Should().Be(1);
-            capabilitiesServiceCallCounts.GetCapabilitiesCallCountComplete.Should().Be(1);
-        }
     }
 }

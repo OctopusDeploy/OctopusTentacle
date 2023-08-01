@@ -118,7 +118,7 @@ namespace Octopus.Tentacle.Tests.Integration
             scriptServiceV2CallCounts.StartScriptCallCountStarted.Should().Be(0, "Should not have proceeded past GetCapabilities");
             scriptServiceV2CallCounts.CancelScriptCallCountStarted.Should().Be(0, "Should not have tried to call CancelScript");
         }
-        
+
         [Test]
         [TestCase(TentacleType.Polling, RpcCallStage.Connecting, ExpectedFlow.CancelRpcAndExitImmediately)]
         [TestCase(TentacleType.Listening, RpcCallStage.Connecting, ExpectedFlow.CancelRpcAndExitImmediately)]
@@ -149,13 +149,13 @@ namespace Octopus.Tentacle.Tests.Integration
                             ensureCancellationOccursDuringAnRpcCall.Release();
                             try
                             {
-                                    if (!hasPausedOrStoppedPortForwarder)
-                                    {
-                                        hasPausedOrStoppedPortForwarder = true;
-                                        service.EnsureTentacleIsConnectedToServer(Logger);
-                                        PauseOrStopPortForwarder(rpcCallStage, portForwarder.Value, responseMessageTcpKiller, rpcCallHasStarted);
-                                        if (rpcCallStage == RpcCallStage.Connecting) service.EnsurePollingQueueWontSendMessageToDisconnectedTentacles(Logger);
-                                    }
+                                if (!hasPausedOrStoppedPortForwarder)
+                                {
+                                    hasPausedOrStoppedPortForwarder = true;
+                                    service.EnsureTentacleIsConnectedToServer(Logger);
+                                    PauseOrStopPortForwarder(rpcCallStage, portForwarder.Value, responseMessageTcpKiller, rpcCallHasStarted);
+                                    if (rpcCallStage == RpcCallStage.Connecting) service.EnsurePollingQueueWontSendMessageToDisconnectedTentacles(Logger);
+                                }
 
                                 var timer = Stopwatch.StartNew();
                                 try
@@ -202,7 +202,6 @@ namespace Octopus.Tentacle.Tests.Integration
             switch (expectedFlow)
             {
                 case ExpectedFlow.CancelRpcAndExitImmediately:
-                case ExpectedFlow.CancelRpcThenCancelScriptThenCompleteScript:
                     scriptServiceV2Exceptions.StartScriptLatestException.Should().BeOfType<OperationCanceledException>().And.NotBeOfType<OperationAbandonedException>();
                     break;
                 case ExpectedFlow.AbandonRpcThenCancelScriptThenCompleteScript:
@@ -212,13 +211,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     throw new NotSupportedException();
             }
 
-            // If the rpc call could be cancelled we cancelled quickly
-            if (expectedFlow == ExpectedFlow.CancelRpcThenCancelScriptThenCompleteScript)
-            {
-                lastCallDuration.Should().BeLessOrEqualTo(TimeSpan.FromSeconds(12 + 2)); // + 2 seconds for some error of margin
-            }
-
-            // Or if the rpc call could not be cancelled it cancelled fairly quickly e.g. we are not waiting for an rpc call to timeout
+            // If the rpc call could not be cancelled it cancelled fairly quickly e.g. we are not waiting for an rpc call to timeout
             cancellationDuration.Should().BeLessOrEqualTo(TimeSpan.FromSeconds(30));
 
             // The expected RPC calls were made - this also verifies the integrity of the test
@@ -232,7 +225,6 @@ namespace Octopus.Tentacle.Tests.Integration
                     scriptServiceV2CallCounts.CancelScriptCallCountStarted.Should().Be(0);
                     scriptServiceV2CallCounts.CompleteScriptCallCountStarted.Should().Be(0);
                     break;
-                case ExpectedFlow.CancelRpcThenCancelScriptThenCompleteScript:
                 case ExpectedFlow.AbandonRpcThenCancelScriptThenCompleteScript:
                     scriptServiceV2CallCounts.CancelScriptCallCountStarted.Should().BeGreaterOrEqualTo(1);
                     scriptServiceV2CallCounts.CompleteScriptCallCountStarted.Should().Be(1);
@@ -241,7 +233,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     throw new NotSupportedException();
             }
         }
-        
+
         [Test]
         [TestCase(TentacleType.Polling, RpcCallStage.Connecting, ExpectedFlow.CancelRpcThenCancelScriptThenCompleteScript)]
         [TestCase(TentacleType.Listening, RpcCallStage.Connecting, ExpectedFlow.CancelRpcThenCancelScriptThenCompleteScript)]
@@ -272,13 +264,13 @@ namespace Octopus.Tentacle.Tests.Integration
                             ensureCancellationOccursDuringAnRpcCall.Release();
                             try
                             {
-                                    if (!hasPausedOrStoppedPortForwarder)
-                                    {
-                                        hasPausedOrStoppedPortForwarder = true;
-                                        service.EnsureTentacleIsConnectedToServer(Logger);
-                                        PauseOrStopPortForwarder(rpcCallStage, portForwarder.Value, responseMessageTcpKiller, rpcCallHasStarted);
-                                        if (rpcCallStage == RpcCallStage.Connecting) service.EnsurePollingQueueWontSendMessageToDisconnectedTentacles(Logger);
-                                    }
+                                if (!hasPausedOrStoppedPortForwarder)
+                                {
+                                    hasPausedOrStoppedPortForwarder = true;
+                                    service.EnsureTentacleIsConnectedToServer(Logger);
+                                    PauseOrStopPortForwarder(rpcCallStage, portForwarder.Value, responseMessageTcpKiller, rpcCallHasStarted);
+                                    if (rpcCallStage == RpcCallStage.Connecting) service.EnsurePollingQueueWontSendMessageToDisconnectedTentacles(Logger);
+                                }
 
                                 var timer = Stopwatch.StartNew();
                                 try
@@ -352,7 +344,7 @@ namespace Octopus.Tentacle.Tests.Integration
             scriptServiceV2CallCounts.CancelScriptCallCountStarted.Should().BeGreaterOrEqualTo(1);
             scriptServiceV2CallCounts.CompleteScriptCallCountStarted.Should().Be(1);
         }
-        
+
         [Test]
         [TestCase(TentacleType.Polling, RpcCallStage.Connecting)]
         [TestCase(TentacleType.Listening, RpcCallStage.Connecting)]

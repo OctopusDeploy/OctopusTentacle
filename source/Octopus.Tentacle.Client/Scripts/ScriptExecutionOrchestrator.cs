@@ -163,11 +163,13 @@ namespace Octopus.Tentacle.Client.Scripts
 
             CapabilitiesResponseV2 tentacleCapabilities;
 
+            CapabilitiesResponseV2 GetCapabilitiesFunc(CancellationToken ct) => capabilitiesServiceV2.GetCapabilities(new HalibutProxyRequestOptions(ct));
+
             if (rpcRetrySettings.RetriesEnabled)
             {
                 tentacleCapabilities = await rpcCallExecutor.ExecuteWithRetries(
                     RpcCall.Create<ICapabilitiesServiceV2>(nameof(ICapabilitiesServiceV2.GetCapabilities)),
-                    ct => capabilitiesServiceV2.GetCapabilities(new HalibutProxyRequestOptions(ct)),
+                    GetCapabilitiesFunc,
                     logger,
                     // We can abandon a call to Get Capabilities and walk away as this is not running anything that needs to be cancelled on Tentacle
                     abandonActionOnCancellation: true,
@@ -178,7 +180,7 @@ namespace Octopus.Tentacle.Client.Scripts
             {
                 tentacleCapabilities = await rpcCallExecutor.ExecuteWithNoRetries(
                     RpcCall.Create<ICapabilitiesServiceV2>(nameof(ICapabilitiesServiceV2.GetCapabilities)),
-                    ct => capabilitiesServiceV2.GetCapabilities(new HalibutProxyRequestOptions(ct)),
+                    GetCapabilitiesFunc,
                     abandonActionOnCancellation: true,
                     clientOperationMetricsBuilder,
                     cancellationToken).ConfigureAwait(false);

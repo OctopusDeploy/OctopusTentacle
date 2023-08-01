@@ -72,7 +72,7 @@ namespace Octopus.Tentacle.Client.Execution
                             logger.Info($"Could not communicate with Tentacle after retrying for {timeoutDuration.TotalSeconds} seconds. No more retries will be attempted.");
                         },
                         abandonActionOnCancellation,
-                        abandonAfter: TimeSpan.FromSeconds(5),
+                        AbandonAfter,
                         cancellationToken)
                     .ConfigureAwait(false);
                 return response;
