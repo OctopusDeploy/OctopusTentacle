@@ -15,6 +15,7 @@ namespace Octopus.Tentacle.Client.Retries
             if (!abandonActionOnCancellation)
             {
                 await action(ct).ConfigureAwait(false);
+                return;
             }
 
             using var abandonCancellationTokenSource = new CancellationTokenSource();
