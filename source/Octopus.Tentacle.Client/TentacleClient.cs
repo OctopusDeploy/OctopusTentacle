@@ -122,7 +122,7 @@ namespace Octopus.Tentacle.Client
                 else
                 {
                     return await rpcCallExecutor.ExecuteWithNoRetries(
-                        RpcCall.Create<IClientFileTransferService>(nameof(IClientFileTransferService.UploadFile)),
+                        RpcCall.Create<IFileTransferService>(nameof(IFileTransferService.UploadFile)),
                         UploadFileAction,
                         abandonActionOnCancellation: false,
                         operationMetricsBuilder,
@@ -168,7 +168,7 @@ namespace Octopus.Tentacle.Client
                 else
                 {
                     return await rpcCallExecutor.ExecuteWithNoRetries(
-                        RpcCall.Create<IClientFileTransferService>(nameof(IClientFileTransferService.DownloadFile)),
+                        RpcCall.Create<IFileTransferService>(nameof(IFileTransferService.DownloadFile)),
                         DownloadFileAction,
                         abandonActionOnCancellation: false,
                         operationMetricsBuilder,

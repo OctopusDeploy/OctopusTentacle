@@ -139,7 +139,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 var scriptTicket = await rpcCallExecutor.ExecuteWithNoRetries(
                     RpcCall.Create<IScriptService>(nameof(IScriptService.StartScript)),
                     ct => scriptServiceV1.StartScript(startScriptCommandV1, new HalibutProxyRequestOptions(ct)),
-                    abandonActionOnCancellation: true,
+                    abandonActionOnCancellation: false,
                     clientOperationMetricsBuilder,
                     scriptExecutionCancellationToken).ConfigureAwait(false);
 
@@ -316,7 +316,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 var scriptStatusResponseV1 = await rpcCallExecutor.ExecuteWithNoRetries(
                     RpcCall.Create<IScriptService>(nameof(IScriptService.GetStatus)),
                     ct => scriptServiceV1.GetStatus(new ScriptStatusRequest(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence), new HalibutProxyRequestOptions(ct)),
-                    abandonActionOnCancellation: true,
+                    abandonActionOnCancellation: false,
                     clientOperationMetricsBuilder,
                     cancellationToken).ConfigureAwait(false);
 
@@ -387,7 +387,7 @@ namespace Octopus.Tentacle.Client.Scripts
                         rpcCallExecutor.ExecuteWithNoRetries(
                             RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.CompleteScript)),
                             ct => scriptServiceV2.CompleteScript(new CompleteScriptCommandV2(lastStatusResponse.Ticket), new HalibutProxyRequestOptions(ct)),
-                            abandonActionOnCancellation: true,
+                            abandonActionOnCancellation: false,
                             clientOperationMetricsBuilder,
                             CancellationToken.None);
 
@@ -423,7 +423,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 var completeStatusV1 = await rpcCallExecutor.ExecuteWithNoRetries(
                     RpcCall.Create<IScriptService>(nameof(IScriptService.CompleteScript)),
                     ct => scriptServiceV1.CompleteScript(new CompleteScriptCommand(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence), new HalibutProxyRequestOptions(ct)),
-                    abandonActionOnCancellation: true,
+                    abandonActionOnCancellation: false,
                     clientOperationMetricsBuilder,
                     CancellationToken.None).ConfigureAwait(false);
 
