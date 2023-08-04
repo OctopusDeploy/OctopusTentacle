@@ -99,8 +99,10 @@ namespace Octopus.Tentacle.Client
         {
             var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
 
-            UploadResult UploadFileAction(CancellationToken ct)
+            async Task<UploadResult> UploadFileAction(CancellationToken ct)
             {
+                await Task.CompletedTask.ConfigureAwait(false);
+
                 logger.Info($"Beginning upload of {fileName} to Tentacle");
                 var result = fileTransferServiceV1.UploadFile(path, package, new HalibutProxyRequestOptions(ct));
                 logger.Info("Upload complete");
@@ -145,8 +147,10 @@ namespace Octopus.Tentacle.Client
         {
             var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
 
-            DataStream DownloadFileAction(CancellationToken ct)
+            async Task<DataStream> DownloadFileAction(CancellationToken ct)
             {
+                await Task.CompletedTask.ConfigureAwait(false);
+
                 logger.Info($"Beginning download of {Path.GetFileName(remotePath)} from Tentacle");
                 var result = fileTransferServiceV1.DownloadFile(remotePath, new HalibutProxyRequestOptions(ct));
                 logger.Info("Download complete");

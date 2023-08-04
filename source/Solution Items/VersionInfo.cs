@@ -1,5 +1,4 @@
 // This file will be updated by our build process at compile time.
-
 using System;
 using System.Reflection;
 

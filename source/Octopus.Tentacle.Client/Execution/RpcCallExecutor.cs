@@ -29,7 +29,7 @@ namespace Octopus.Tentacle.Client.Execution
 
         public async Task<T> ExecuteWithRetries<T>(
             RpcCall rpcCall,
-            Func<CancellationToken, T> action,
+            Func<CancellationToken, Task<T>> action,
             ILog logger,
             bool abandonActionOnCancellation,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
@@ -46,9 +46,8 @@ namespace Octopus.Tentacle.Client.Execution
 
                             try
                             {
-                                // Wrap the action in a task so it doesn't block on sync Halibut calls
-                                var actionTask = Task.Run(() => action(ct), ct);
-
+                                // Wrap the action in a task so it doesn't block on sync Halibut calls, and cancellation token is respected.
+                                var actionTask = Task.Run(async () => await action(ct), ct);
                                 var response = await actionTask.ConfigureAwait(false);
 
                                 rpcCallMetricsBuilder.WithAttempt(TimedOperation.Success(start));
@@ -92,82 +91,86 @@ namespace Octopus.Tentacle.Client.Execution
 
         public async Task<T> ExecuteWithNoRetries<T>(
             RpcCall rpcCall,
-            Func<CancellationToken, T> action,
+            Func<CancellationToken, Task<T>> action,
             bool abandonActionOnCancellation,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
         {
             return await rpcCallNoRetriesHandler.ExecuteWithNoRetries(
-                async ct =>
-                {
-                    // Wrap the action in a task so it doesn't block on sync Halibut calls
-                    return await Task.Run(() =>
+                    async ct =>
                     {
-                        var rpcCallMetricsBuilder = RpcCallMetricsBuilder.StartWithoutRetries(rpcCall);
-                        var start = DateTimeOffset.UtcNow;
+                        // Wrap the action in a task so it doesn't block on sync Halibut calls, and cancellation token is respected.
+                        return await Task.Run(async () => 
+                        {
+                            var rpcCallMetricsBuilder = RpcCallMetricsBuilder.StartWithoutRetries(rpcCall);
+                            var start = DateTimeOffset.UtcNow;
 
-                        try
-                        {
-                            var response = action(ct);
-                            rpcCallMetricsBuilder.WithAttempt(TimedOperation.Success(start));
-                            return response;
-                        }
-                        catch (Exception e)
-                        {
-                            rpcCallMetricsBuilder.WithAttempt(TimedOperation.Failure(start, e, ct));
-                            rpcCallMetricsBuilder.Failure(e, ct);
-                            throw;
-                        }
-                        finally
-                        {
-                            var rpcCallMetrics = rpcCallMetricsBuilder.Build();
-                            clientOperationMetricsBuilder.WithRpcCall(rpcCallMetrics);
-                            tentacleClientObserver.RpcCallCompleted(rpcCallMetrics);
-                        }
-                    }, ct);
-                },
-                abandonActionOnCancellation,
-                AbandonAfter,
-                cancellationToken);
+                            try
+                            {
+                                var response = await action(ct).ConfigureAwait(false);
+                                rpcCallMetricsBuilder.WithAttempt(TimedOperation.Success(start));
+                                return response;
+                            }
+                            catch (Exception e)
+                            {
+                                rpcCallMetricsBuilder.WithAttempt(TimedOperation.Failure(start, e, ct));
+                                rpcCallMetricsBuilder.Failure(e, ct);
+                                throw;
+                            }
+                            finally
+                            {
+                                var rpcCallMetrics = rpcCallMetricsBuilder.Build();
+                                clientOperationMetricsBuilder.WithRpcCall(rpcCallMetrics);
+                                tentacleClientObserver.RpcCallCompleted(rpcCallMetrics);
+                            }
+                        }, ct);
+                    },
+                    abandonActionOnCancellation,
+                    AbandonAfter,
+                    cancellationToken)
+                .ConfigureAwait(false);
         }
+
 
         public async Task ExecuteWithNoRetries(
             RpcCall rpcCall,
-            Action<CancellationToken> action,
+            Func<CancellationToken, Task> action,
             bool abandonActionOnCancellation,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
         {
             await rpcCallNoRetriesHandler.ExecuteWithNoRetries(
-                async ct =>
-                {
-                    await Task.Run(() =>
+                    async ct =>
                     {
-                        var rpcCallMetricsBuilder = RpcCallMetricsBuilder.StartWithoutRetries(rpcCall);
-                        var start = DateTimeOffset.UtcNow;
+                        // Wrap the action in a task so it doesn't block on sync Halibut calls, and cancellation token is respected.
+                        await Task.Run(async () =>
+                        {
+                            var rpcCallMetricsBuilder = RpcCallMetricsBuilder.StartWithoutRetries(rpcCall);
+                            var start = DateTimeOffset.UtcNow;
 
-                        try
-                        {
-                            action(ct);
-                            rpcCallMetricsBuilder.WithAttempt(TimedOperation.Success(start));
-                        }
-                        catch (Exception e)
-                        {
-                            rpcCallMetricsBuilder.WithAttempt(TimedOperation.Failure(start, e, ct));
-                            rpcCallMetricsBuilder.Failure(e, ct);
-                            throw;
-                        }
-                        finally
-                        {
-                            var rpcCallMetrics = rpcCallMetricsBuilder.Build();
-                            clientOperationMetricsBuilder.WithRpcCall(rpcCallMetrics);
-                            tentacleClientObserver.RpcCallCompleted(rpcCallMetrics);
-                        }
-                    }, ct);
-                },
-                abandonActionOnCancellation,
-                AbandonAfter,
-                cancellationToken);
+                            try
+                            {
+                                await action(ct).ConfigureAwait(false);
+                                rpcCallMetricsBuilder.WithAttempt(TimedOperation.Success(start));
+                            }
+                            catch (Exception e)
+                            {
+                                rpcCallMetricsBuilder.WithAttempt(TimedOperation.Failure(start, e, ct));
+                                rpcCallMetricsBuilder.Failure(e, ct);
+                                throw;
+                            }
+                            finally
+                            {
+                                var rpcCallMetrics = rpcCallMetricsBuilder.Build();
+                                clientOperationMetricsBuilder.WithRpcCall(rpcCallMetrics);
+                                tentacleClientObserver.RpcCallCompleted(rpcCallMetrics);
+                            }
+                        }, ct);
+                    },
+                    abandonActionOnCancellation,
+                    AbandonAfter,
+                    cancellationToken)
+                .ConfigureAwait(false);
         }
     }
 }
