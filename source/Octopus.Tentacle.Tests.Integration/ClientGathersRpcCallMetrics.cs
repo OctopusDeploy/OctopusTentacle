@@ -22,11 +22,12 @@ namespace Octopus.Tentacle.Tests.Integration
     {
         [Test]
         [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
-        public async Task ExecuteScriptShouldGatherMetrics_WhenSucceeds(TentacleType tentacleType, Version? tentacleVersion)
+        public async Task ExecuteScriptShouldGatherMetrics_WhenSucceeds(TentacleType tentacleType, Version? tentacleVersion, SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
             // Arrange
             var tentacleClientObserver = new TestTentacleClientObserver();
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithTentacleVersion(tentacleVersion)
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .Build(CancellationToken);
@@ -55,12 +56,13 @@ namespace Octopus.Tentacle.Tests.Integration
         
         [Test]
         [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
-        public async Task ExecuteScriptShouldGatherMetrics_WhenFails(TentacleType tentacleType, Version? tentacleVersion)
+        public async Task ExecuteScriptShouldGatherMetrics_WhenFails(TentacleType tentacleType, Version? tentacleVersion, SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
             // Arrange
             var tentacleClientObserver = new TestTentacleClientObserver();
             var exception = new HalibutClientException("Error");
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithTentacleVersion(tentacleVersion)
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .WithRetryDuration(TimeSpan.FromSeconds(1))
@@ -88,11 +90,12 @@ namespace Octopus.Tentacle.Tests.Integration
 
         [Test]
         [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
-        public async Task UploadFileShouldGatherMetrics_WhenSucceeds(TentacleType tentacleType, Version? tentacleVersion)
+        public async Task UploadFileShouldGatherMetrics_WhenSucceeds(TentacleType tentacleType, Version? tentacleVersion, SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
             // Arrange
             var tentacleClientObserver = new TestTentacleClientObserver();
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithTentacleVersion(tentacleVersion)
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .Build(CancellationToken);
@@ -115,12 +118,13 @@ namespace Octopus.Tentacle.Tests.Integration
 
         [Test]
         [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
-        public async Task UploadFileShouldGatherMetrics_WhenFails(TentacleType tentacleType, Version? tentacleVersion)
+        public async Task UploadFileShouldGatherMetrics_WhenFails(TentacleType tentacleType, Version? tentacleVersion, SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
             // Arrange
             var tentacleClientObserver = new TestTentacleClientObserver();
             var exception = new HalibutClientException("Error");
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithTentacleVersion(tentacleVersion)
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .WithRetryDuration(TimeSpan.FromSeconds(1))
@@ -146,11 +150,12 @@ namespace Octopus.Tentacle.Tests.Integration
 
         [Test]
         [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
-        public async Task DownloadFileShouldGatherMetrics_WhenSucceeds(TentacleType tentacleType, Version? tentacleVersion)
+        public async Task DownloadFileShouldGatherMetrics_WhenSucceeds(TentacleType tentacleType, Version? tentacleVersion, SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
             // Arrange
             var tentacleClientObserver = new TestTentacleClientObserver();
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithTentacleVersion(tentacleVersion)
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .Build(CancellationToken);
@@ -174,12 +179,13 @@ namespace Octopus.Tentacle.Tests.Integration
 
         [Test]
         [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
-        public async Task DownloadFileShouldGatherMetrics_WhenFails(TentacleType tentacleType, Version? tentacleVersion)
+        public async Task DownloadFileShouldGatherMetrics_WhenFails(TentacleType tentacleType, Version? tentacleVersion, SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
             // Arrange
             var tentacleClientObserver = new TestTentacleClientObserver();
             var exception = new HalibutClientException("Error");
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithTentacleVersion(tentacleVersion)
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .WithRetryDuration(TimeSpan.FromSeconds(1))

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using NUnit.Framework;
 using Octopus.Tentacle.Tests.Integration.Util;
@@ -9,16 +10,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     [FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
     public abstract class IntegrationTest
     {
-        static IntegrationTest()
-        {
-            // Required otherwise the test can struggle to run in parallel
-            ThreadPool.SetMaxThreads(2000, 2000);
-            ThreadPool.SetMinThreads(2000, 2000);
-        }
-
-        public static int TimeoutInMilliseconds = (int)TimeSpan.FromMinutes(1).TotalMilliseconds;
-
         CancellationTokenSource? cancellationTokenSource;
+        private CancellationTokenRegistration? cancellationTokenRegistration;
         public CancellationToken CancellationToken { get; private set; }
         public ILogger Logger { get; private set; } = null!;
 
@@ -27,10 +20,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         {
             Logger = new SerilogLoggerBuilder().Build().ForContext(GetType());
             Logger.Information("Test started");
-            cancellationTokenSource = new CancellationTokenSource(TimeoutInMilliseconds);
+            cancellationTokenSource = new CancellationTokenSource(IntegrationTestTimeout.TestTimeoutInMilliseconds() - (int)TimeSpan.FromSeconds(5).TotalMilliseconds);
             CancellationToken = cancellationTokenSource.Token;
-            CancellationToken.Register(() =>
+            cancellationTokenRegistration = CancellationToken.Register(() =>
             {
+                Logger.Error("The test timed out.");
                 Assert.Fail("The test timed out.");
             });
         }
@@ -39,18 +33,31 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public void TearDown()
         {
             Logger.Information("Tearing down");
-            if (cancellationTokenSource != null)
-            {
-                cancellationTokenSource.Dispose();
-                cancellationTokenSource = null;
-            }
+            
+            cancellationTokenRegistration?.Dispose();
+            cancellationTokenSource?.Dispose();
+            
         }
     }
 
     public class IntegrationTestTimeout : TimeoutAttribute
     {
-        public IntegrationTestTimeout() : base(IntegrationTest.TimeoutInMilliseconds)
+        public IntegrationTestTimeout(int timeoutInSeconds) : base((int)TimeSpan.FromSeconds(timeoutInSeconds).TotalMilliseconds)
         {
+        }
+
+        public IntegrationTestTimeout() : base(TestTimeoutInMilliseconds())
+        {
+        }
+
+        public static int TestTimeoutInMilliseconds()
+        {
+            if (Debugger.IsAttached)
+            {
+                return (int)TimeSpan.FromHours(1).TotalMilliseconds;
+            }
+
+            return (int)TimeSpan.FromMinutes(1).TotalMilliseconds;
         }
     }
 }

@@ -4,11 +4,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
 using Halibut.ServiceModel;
+using Halibut.Util;
 using Octopus.Tentacle.Client.Capabilities;
-using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Client.Execution;
 using Octopus.Tentacle.Client.Observability;
 using Octopus.Tentacle.Client.Retries;
+using Octopus.Tentacle.Client.Services;
+using Octopus.Tentacle.Client.Utils;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Capabilities;
 using Octopus.Tentacle.Contracts.Observability;
@@ -27,15 +29,17 @@ namespace Octopus.Tentacle.Client.Scripts
         readonly Func<CancellationToken, Task> onScriptCompleted;
         readonly TimeSpan onCancellationAbandonCompleteScriptAfter;
         readonly RpcRetrySettings rpcRetrySettings;
+        readonly AsyncHalibutFeature asyncHalibutFeature;
         readonly ILog logger;
-        readonly IClientScriptService scriptServiceV1;
-        readonly IClientScriptServiceV2 scriptServiceV2;
-        readonly IClientCapabilitiesServiceV2 capabilitiesServiceV2;
+        
+        readonly SyncAndAsyncClientScriptServiceV1 clientScriptServiceV1;
+        readonly SyncAndAsyncClientScriptServiceV2 clientScriptServiceV2;
+        readonly SyncAndAsyncClientCapabilitiesServiceV2 clientCapabilitiesServiceV2;
 
         public ScriptExecutionOrchestrator(
-            IClientScriptService scriptServiceV1,
-            IClientScriptServiceV2 scriptServiceV2,
-            IClientCapabilitiesServiceV2 capabilitiesServiceV2,
+            SyncAndAsyncClientScriptServiceV1 clientScriptServiceV1,
+            SyncAndAsyncClientScriptServiceV2 clientScriptServiceV2,
+            SyncAndAsyncClientCapabilitiesServiceV2 clientCapabilitiesServiceV2,
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
             RpcCallExecutor rpcCallExecutor,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
@@ -44,11 +48,12 @@ namespace Octopus.Tentacle.Client.Scripts
             Func<CancellationToken, Task> onScriptCompleted,
             TimeSpan onCancellationAbandonCompleteScriptAfter,
             RpcRetrySettings rpcRetrySettings,
+            AsyncHalibutFeature asyncHalibutFeature,
             ILog logger)
         {
-            this.scriptServiceV1 = scriptServiceV1;
-            this.scriptServiceV2 = scriptServiceV2;
-            this.capabilitiesServiceV2 = capabilitiesServiceV2;
+            this.clientScriptServiceV1 = clientScriptServiceV1;
+            this.clientScriptServiceV2 = clientScriptServiceV2;
+            this.clientCapabilitiesServiceV2 = clientCapabilitiesServiceV2;
             this.scriptObserverBackOffStrategy = scriptObserverBackOffStrategy;
             this.rpcCallExecutor = rpcCallExecutor;
             this.clientOperationMetricsBuilder = clientOperationMetricsBuilder;
@@ -57,6 +62,7 @@ namespace Octopus.Tentacle.Client.Scripts
             this.onScriptCompleted = onScriptCompleted;
             this.onCancellationAbandonCompleteScriptAfter = onCancellationAbandonCompleteScriptAfter;
             this.rpcRetrySettings = rpcRetrySettings;
+            this.asyncHalibutFeature = asyncHalibutFeature;
             this.logger = logger;
         }
 
@@ -81,9 +87,13 @@ namespace Octopus.Tentacle.Client.Scripts
                 {
                     async Task<ScriptStatusResponseV2> StartScriptAction(CancellationToken ct)
                     {
-                        await Task.CompletedTask.ConfigureAwait(false);
                         ++startScriptCallCount;
-                        return scriptServiceV2.StartScript(startScriptCommand, new HalibutProxyRequestOptions(ct));
+                        
+                        var result = await asyncHalibutFeature
+                            .WhenDisabled(() => clientScriptServiceV2.SyncService.StartScript(startScriptCommand, new HalibutProxyRequestOptions(ct, CancellationToken.None)))
+                            .WhenEnabled(async () => await clientScriptServiceV2.AsyncService.StartScriptAsync(startScriptCommand, new HalibutProxyRequestOptions(ct, CancellationToken.None)));
+
+                        return result;
                     }
 
                     if (rpcRetrySettings.RetriesEnabled)
@@ -141,8 +151,11 @@ namespace Octopus.Tentacle.Client.Scripts
                     RpcCall.Create<IScriptService>(nameof(IScriptService.StartScript)),
                     async ct =>
                     {
-                        await Task.CompletedTask.ConfigureAwait(false);
-                        return scriptServiceV1.StartScript(startScriptCommandV1, new HalibutProxyRequestOptions(ct));
+                        var result = await asyncHalibutFeature
+                            .WhenDisabled(() => clientScriptServiceV1.SyncService.StartScript(startScriptCommandV1, new HalibutProxyRequestOptions(ct, CancellationToken.None)))
+                            .WhenEnabled(async () => await clientScriptServiceV1.AsyncService.StartScriptAsync(startScriptCommandV1, new HalibutProxyRequestOptions(ct, CancellationToken.None)));
+
+                        return result;
                     },
                     abandonActionOnCancellation: false,
                     clientOperationMetricsBuilder,
@@ -170,8 +183,11 @@ namespace Octopus.Tentacle.Client.Scripts
 
             async Task<CapabilitiesResponseV2> GetCapabilitiesFunc(CancellationToken ct)
             {
-                await Task.CompletedTask.ConfigureAwait(false);
-                return capabilitiesServiceV2.GetCapabilities(new HalibutProxyRequestOptions(ct));
+                var result = await asyncHalibutFeature
+                    .WhenDisabled(() => clientCapabilitiesServiceV2.SyncService.GetCapabilities(new HalibutProxyRequestOptions(ct, CancellationToken.None)))
+                    .WhenEnabled(async () => await clientCapabilitiesServiceV2.AsyncService.GetCapabilitiesAsync(new HalibutProxyRequestOptions(ct, CancellationToken.None)));
+
+                return result;
             }
 
             if (rpcRetrySettings.RetriesEnabled)
@@ -290,8 +306,13 @@ namespace Octopus.Tentacle.Client.Scripts
                 {
                     async Task<ScriptStatusResponseV2> GetStatusAction(CancellationToken ct)
                     {
-                        await Task.CompletedTask.ConfigureAwait(false);
-                        return scriptServiceV2.GetStatus(new ScriptStatusRequestV2(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence), new HalibutProxyRequestOptions(ct));
+                        var request = new ScriptStatusRequestV2(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence);
+
+                        var result = await asyncHalibutFeature
+                            .WhenDisabled(() => clientScriptServiceV2.SyncService.GetStatus(request, new HalibutProxyRequestOptions(ct, CancellationToken.None)))
+                            .WhenEnabled(async () => await clientScriptServiceV2.AsyncService.GetStatusAsync(request, new HalibutProxyRequestOptions(ct, CancellationToken.None)));
+
+                        return result;
                     }
 
                     if (rpcRetrySettings.RetriesEnabled)
@@ -327,8 +348,13 @@ namespace Octopus.Tentacle.Client.Scripts
                     RpcCall.Create<IScriptService>(nameof(IScriptService.GetStatus)),
                     async ct =>
                     {
-                        await Task.CompletedTask.ConfigureAwait(false);
-                        return scriptServiceV1.GetStatus(new ScriptStatusRequest(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence), new HalibutProxyRequestOptions(ct));
+                        var request = new ScriptStatusRequest(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence);
+
+                        var result = await asyncHalibutFeature
+                            .WhenDisabled(() => clientScriptServiceV1.SyncService.GetStatus(request, new HalibutProxyRequestOptions(ct, CancellationToken.None)))
+                            .WhenEnabled(async () => await clientScriptServiceV1.AsyncService.GetStatusAsync(request, new HalibutProxyRequestOptions(ct, CancellationToken.None)));
+
+                        return result;
                     },
                     abandonActionOnCancellation: false,
                     clientOperationMetricsBuilder,
@@ -348,8 +374,13 @@ namespace Octopus.Tentacle.Client.Scripts
             {
                 async Task<ScriptStatusResponseV2> CancelScriptAction(CancellationToken ct)
                 {
-                    await Task.CompletedTask.ConfigureAwait(false);
-                    return scriptServiceV2.CancelScript(new CancelScriptCommandV2(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence), new HalibutProxyRequestOptions(ct));
+                    var request = new CancelScriptCommandV2(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence);
+
+                    var result = await asyncHalibutFeature
+                        .WhenDisabled(() => clientScriptServiceV2.SyncService.CancelScript(request, new HalibutProxyRequestOptions(ct, CancellationToken.None)))
+                        .WhenEnabled(async () => await clientScriptServiceV2.AsyncService.CancelScriptAsync(request, new HalibutProxyRequestOptions(ct, CancellationToken.None)));
+
+                    return result;
                 }
 
                 if (rpcRetrySettings.RetriesEnabled)
@@ -379,8 +410,13 @@ namespace Octopus.Tentacle.Client.Scripts
                     RpcCall.Create<IScriptService>(nameof(IScriptService.CancelScript)),
                     async ct =>
                     {
-                        await Task.CompletedTask.ConfigureAwait(false); 
-                        return scriptServiceV1.CancelScript(new CancelScriptCommand(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence), new HalibutProxyRequestOptions(ct));
+                        var request = new CancelScriptCommand(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence);
+
+                        var result = await asyncHalibutFeature
+                            .WhenDisabled(() => clientScriptServiceV1.SyncService.CancelScript(request, new HalibutProxyRequestOptions(ct, CancellationToken.None)))
+                            .WhenEnabled(async () => await clientScriptServiceV1.AsyncService.CancelScriptAsync(request, new HalibutProxyRequestOptions(ct, CancellationToken.None)));
+
+                        return result;
                     },
                     abandonActionOnCancellation: false,
                     clientOperationMetricsBuilder,
@@ -407,8 +443,11 @@ namespace Octopus.Tentacle.Client.Scripts
                             RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.CompleteScript)),
                             async ct =>
                             {
-                                await Task.CompletedTask.ConfigureAwait(false);
-                                scriptServiceV2.CompleteScript(new CompleteScriptCommandV2(lastStatusResponse.Ticket), new HalibutProxyRequestOptions(ct));
+                                var request = new CompleteScriptCommandV2(lastStatusResponse.Ticket);
+
+                                await asyncHalibutFeature
+                                    .WhenDisabled(() => clientScriptServiceV2.SyncService.CompleteScript(request, new HalibutProxyRequestOptions(ct, CancellationToken.None)))
+                                    .WhenEnabled(async () => await clientScriptServiceV2.AsyncService.CompleteScriptAsync(request, new HalibutProxyRequestOptions(ct, CancellationToken.None)));
                             },
                             abandonActionOnCancellation: false,
                             clientOperationMetricsBuilder,
@@ -447,8 +486,13 @@ namespace Octopus.Tentacle.Client.Scripts
                     RpcCall.Create<IScriptService>(nameof(IScriptService.CompleteScript)),
                     async ct =>
                     {
-                        await Task.CompletedTask.ConfigureAwait(false); 
-                        return scriptServiceV1.CompleteScript(new CompleteScriptCommand(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence), new HalibutProxyRequestOptions(ct));
+                        var request = new CompleteScriptCommand(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence);
+
+                        var result = await asyncHalibutFeature
+                            .WhenDisabled(() => clientScriptServiceV1.SyncService.CompleteScript(request, new HalibutProxyRequestOptions(ct, CancellationToken.None)))
+                            .WhenEnabled(async () => await clientScriptServiceV1.AsyncService.CompleteScriptAsync(request, new HalibutProxyRequestOptions(ct, CancellationToken.None)));
+
+                        return result;
                     },
                     abandonActionOnCancellation: false,
                     clientOperationMetricsBuilder,

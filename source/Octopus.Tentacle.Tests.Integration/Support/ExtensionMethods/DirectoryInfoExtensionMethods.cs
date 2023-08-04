@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace Octopus.Tentacle.Tests.Integration.Support
+namespace Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods
 {
     internal static class DirectoryInfoExtensionMethods
     {

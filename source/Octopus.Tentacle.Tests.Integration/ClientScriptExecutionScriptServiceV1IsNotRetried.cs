@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Halibut;
+using Halibut.Util;
 using NUnit.Framework;
 using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Contracts;
@@ -21,9 +22,10 @@ namespace Octopus.Tentacle.Tests.Integration
     {
         [Test]
         [TestCaseSource(typeof(TentacleTypesToTest))]
-        public async Task WhenANetworkFailureOccurs_DuringStartScript_WithATentacleThatOnlySupportsV1ScriptService_TheCallIsNotRetried(TentacleType tentacleType)
+        public async Task WhenANetworkFailureOccurs_DuringStartScript_WithATentacleThatOnlySupportsV1ScriptService_TheCallIsNotRetried(TentacleType tentacleType, SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithTentacleVersion(TentacleVersions.v6_3_451_NoCapabilitiesService)
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
@@ -78,11 +80,12 @@ namespace Octopus.Tentacle.Tests.Integration
 
         [Test]
         [TestCaseSource(typeof(TentacleTypesToTest))]
-        public async Task WhenANetworkFailureOccurs_DuringGetStatus_WithATentacleThatOnlySupportsV1ScriptService_TheCallIsNotRetried(TentacleType tentacleType)
+        public async Task WhenANetworkFailureOccurs_DuringGetStatus_WithATentacleThatOnlySupportsV1ScriptService_TheCallIsNotRetried(TentacleType tentacleType, SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
             ScriptStatusRequest? scriptStatusRequest = null;
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithTentacleVersion(TentacleVersions.v6_3_451_NoCapabilitiesService)
+                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithRetryDuration(TimeSpan.FromMinutes(4))
@@ -121,8 +124,17 @@ namespace Octopus.Tentacle.Tests.Integration
 
             // Let the script finish.
             File.WriteAllText(waitForFile, "");
-            var legacyTentacleClient = clientTentacle.LegacyTentacleClientBuilder().Build(CancellationToken);
-            await Wait.For(() => legacyTentacleClient.ScriptService.GetStatus(scriptStatusRequest).State == ProcessState.Complete, CancellationToken);
+            var legacyTentacleClient = clientTentacle.LegacyTentacleClientBuilder(syncOrAsyncHalibut.ToAsyncHalibutFeature()).Build(CancellationToken);
+
+            if (syncOrAsyncHalibut.ToAsyncHalibutFeature().IsDisabled())
+            {
+                await Wait.For(() => legacyTentacleClient.ScriptService.SyncService.GetStatus(scriptStatusRequest).State == ProcessState.Complete, CancellationToken);
+            }
+            else
+            {
+                await Wait.For(async () => (await legacyTentacleClient.ScriptService.AsyncService.GetStatusAsync(scriptStatusRequest, new(CancellationToken, null)))
+                    .State == ProcessState.Complete, CancellationToken);
+            }
 
             var allLogs = logs.JoinLogs();
 
@@ -135,33 +147,35 @@ namespace Octopus.Tentacle.Tests.Integration
 
         [Test]
         [TestCaseSource(typeof(TentacleTypesToTest))]
-        public async Task WhenANetworkFailureOccurs_DuringCancelScript_WithATentacleThatOnlySupportsV1ScriptService_TheCallIsNotRetried(TentacleType tentacleType)
+        public async Task WhenANetworkFailureOccurs_DuringCancelScript_WithATentacleThatOnlySupportsV1ScriptService_TheCallIsNotRetried(TentacleType tentacleType, SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
             ScriptStatusRequest? scriptStatusRequest = null;
             CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithTentacleVersion(TentacleVersions.v6_3_451_NoCapabilitiesService)
-                .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithRetryDuration(TimeSpan.FromMinutes(4))
+                .WithPortForwarderDataLogging()
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .LogCallsToScriptService()
                     .RecordExceptionThrownInScriptService(out var scriptServiceExceptions)
                     .CountCallsToScriptService(out var scriptServiceCallCounts)
                     .DecorateScriptServiceWith(new ScriptServiceDecoratorBuilder()
-                        .BeforeGetStatus(async (inner, request) =>
+                        .BeforeGetStatus(async (_, request) =>
                         {
                             await Task.CompletedTask;
 
                             cts.Cancel();
                             scriptStatusRequest = request;
                         })
-                        .BeforeCancelScript(async () =>
+                        .BeforeCancelScript(async (service, _) =>
                         {
                             await Task.CompletedTask;
 
                             if (scriptServiceExceptions.CancelScriptLatestException == null)
                             {
+                                await service.EnsureTentacleIsConnectedToServer(Logger);
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
                         })
@@ -182,25 +196,34 @@ namespace Octopus.Tentacle.Tests.Integration
             
             Assert.ThrowsAsync<HalibutClientException>(async () => await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, logs, cts.Token));
             
-            // Let the script finish.
-            File.WriteAllText(waitForFile, "");
-            var legacyTentacleClient = clientTentacle.LegacyTentacleClientBuilder().Build(CancellationToken);
-            await Wait.For(() => legacyTentacleClient.ScriptService.GetStatus(scriptStatusRequest).State == ProcessState.Complete, CancellationToken);
-
             var allLogs = logs.JoinLogs();
-
             allLogs.Should().NotContain("AllDone");
             scriptServiceExceptions.CancelScriptLatestException.Should().NotBeNull();
             scriptServiceCallCounts.StartScriptCallCountStarted.Should().Be(1);
             scriptServiceCallCounts.CancelScriptCallCountStarted.Should().Be(1);
             scriptServiceCallCounts.CompleteScriptCallCountStarted.Should().Be(0);
+
+            // Let the script finish.
+            File.WriteAllText(waitForFile, "");
+            var legacyTentacleClient = clientTentacle.LegacyTentacleClientBuilder(syncOrAsyncHalibut.ToAsyncHalibutFeature()).Build(CancellationToken);
+
+            if (syncOrAsyncHalibut.ToAsyncHalibutFeature().IsDisabled())
+            {
+                await Wait.For(() => legacyTentacleClient.ScriptService.SyncService.GetStatus(scriptStatusRequest).State == ProcessState.Complete, CancellationToken);
+            }
+            else
+            {
+                await Wait.For(async () => (await legacyTentacleClient.ScriptService.AsyncService.GetStatusAsync(scriptStatusRequest, new(CancellationToken, null)))
+                    .State == ProcessState.Complete, CancellationToken);
+            }
         }
 
         [Test]
         [TestCaseSource(typeof(TentacleTypesToTest))]
-        public async Task WhenANetworkFailureOccurs_DuringCompleteScript_WithATentacleThatOnlySupportsV1ScriptService_TheCallIsNotRetried(TentacleType tentacleType)
+        public async Task WhenANetworkFailureOccurs_DuringCompleteScript_WithATentacleThatOnlySupportsV1ScriptService_TheCallIsNotRetried(TentacleType tentacleType, SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithTentacleVersion(TentacleVersions.v6_3_451_NoCapabilitiesService)
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)

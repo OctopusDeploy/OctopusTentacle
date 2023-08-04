@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
 using Halibut.ServiceModel;
+using Halibut.Util;
 using Octopus.Tentacle.Client;
 using Octopus.Tentacle.Client.Retries;
 using Octopus.Tentacle.Client.Scripts;
@@ -28,6 +29,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         private IPendingRequestQueueFactory? queueFactory = null;
         private Reference<PortForwarder>? portForwarderReference;
         private ITentacleClientObserver tentacleClientObserver = new NoTentacleClientObserver();
+        private AsyncHalibutFeature asyncHalibutFeature = AsyncHalibutFeature.Disabled;
 
         public ClientAndTentacleBuilder(TentacleType tentacleType)
         {
@@ -107,6 +109,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             return this;
         }
 
+        public ClientAndTentacleBuilder WithAsyncHalibutFeature(AsyncHalibutFeature asyncHalibutFeature)
+        {
+            this.asyncHalibutFeature = asyncHalibutFeature;
+            return this;
+        }
+
         private PortForwarder? BuildPortForwarder(int localPort, int? listeningPort)
         {
             if (portForwarderModifiers.Count == 0) return null;
@@ -125,7 +133,17 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             var serverHalibutRuntimeBuilder = new HalibutRuntimeBuilder()
                 .WithServerCertificate(Certificates.Server)
                 .WithLegacyContractSupport();
-            if (queueFactory != null) serverHalibutRuntimeBuilder.WithPendingRequestQueueFactory(queueFactory);
+
+            if (asyncHalibutFeature.IsEnabled())
+            {
+                serverHalibutRuntimeBuilder.WithAsyncHalibutFeatureEnabled();
+            }
+
+            if (queueFactory != null)
+            {
+                serverHalibutRuntimeBuilder.WithPendingRequestQueueFactory(queueFactory);
+            }
+
             var serverHalibutRuntime = serverHalibutRuntimeBuilder.Build();
 
             serverHalibutRuntime.Trust(Certificates.TentaclePublicThumbprint);

@@ -17,12 +17,13 @@ namespace Octopus.Tentacle.Tests.Integration
     {
         [Test]
         [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
-        public async Task AdditionalScriptsWork(TentacleType tentacleType, Version? tentacleVersion)
+        public async Task AdditionalScriptsWork(TentacleType tentacleType, Version? tentacleVersion, SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
             using var tmp = new TemporaryDirectory();
             var path = Path.Combine(tmp.DirectoryPath, "file");
             
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithTentacleVersion(tentacleVersion)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .CountCallsToScriptServiceV2(out var scriptServiceV2CallCounts)
@@ -32,6 +33,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var scriptBuilder = new ScriptBuilder()
                 .CreateFile(path) // How files are made are different in bash and powershell, doing this ensures the client and tentacle really are using the correct script.
                 .Print("Hello");
+
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithAdditionalScriptTypes(ScriptType.Bash, scriptBuilder.BuildBashScript())
                 // Additional Scripts don't actually work on tentacle for anything other than bash.

@@ -12,24 +12,26 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
     internal class ScriptExecutionOrchestrator
     {
         private readonly LegacyTentacleClient tentacleClient;
+        private readonly SyncOrAsyncHalibut syncOrAsyncHalibut;
 
-        public ScriptExecutionOrchestrator(LegacyTentacleClient tentacleClient)
+        public ScriptExecutionOrchestrator(LegacyTentacleClient tentacleClient, SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
             this.tentacleClient = tentacleClient;
+            this.syncOrAsyncHalibut = syncOrAsyncHalibut;
         }
 
         public async Task<ScriptStatusResponse> ExecuteScript(string windowsScript, string nixScript, CancellationToken cancellationToken)
         {
-            var scriptTicket = StartScript(windowsScript, nixScript, cancellationToken);
+            var scriptTicket = await StartScript(windowsScript, nixScript, cancellationToken);
 
             var scriptStatusResponse = await ObserverUntilComplete(scriptTicket, cancellationToken);
 
-            scriptStatusResponse = CompleteScript(scriptStatusResponse, cancellationToken);
+            scriptStatusResponse = await CompleteScript(scriptStatusResponse, cancellationToken);
 
             return scriptStatusResponse;
         }
 
-        public ScriptTicket StartScript(string windowsScript, string nixScript, CancellationToken cancellationToken)
+        public async Task<ScriptTicket> StartScript(string windowsScript, string nixScript, CancellationToken cancellationToken)
         {
             var startScriptCommand = new StartScriptCommandBuilder()
                 .WithScriptBody(PlatformDetection.IsRunningOnWindows ? windowsScript : nixScript)
@@ -37,8 +39,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
 
             cancellationToken.ThrowIfCancellationRequested();
 
-            var scriptTicket = tentacleClient.ScriptService.StartScript(startScriptCommand);
-
+            var scriptTicket = await syncOrAsyncHalibut
+                .WhenSync(() => tentacleClient.ScriptService.SyncService.StartScript(startScriptCommand))
+                .WhenAsync(async () => await tentacleClient.ScriptService.AsyncService.StartScriptAsync(startScriptCommand, new(cancellationToken, null)));
+            
             return scriptTicket;
         }
 
@@ -51,7 +55,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                scriptStatusResponse = tentacleClient.ScriptService.GetStatus(new ScriptStatusRequest(scriptTicket, scriptStatusResponse.NextLogSequence));
+                scriptStatusResponse = await syncOrAsyncHalibut
+                    .WhenSync(() => tentacleClient.ScriptService.SyncService.GetStatus(new ScriptStatusRequest(scriptTicket, scriptStatusResponse.NextLogSequence)))
+                    .WhenAsync(async () => await tentacleClient.ScriptService.AsyncService.GetStatusAsync(
+                        new ScriptStatusRequest(scriptTicket, scriptStatusResponse.NextLogSequence), 
+                        new(cancellationToken, null)));
+                
                 logs.AddRange(scriptStatusResponse.Logs);
 
                 if (logs.Any(l => l.Text == output))
@@ -77,7 +86,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                scriptStatusResponse = tentacleClient.ScriptService.GetStatus(new ScriptStatusRequest(scriptTicket, scriptStatusResponse.NextLogSequence));
+                scriptStatusResponse = await syncOrAsyncHalibut
+                    .WhenSync(() => tentacleClient.ScriptService.SyncService.GetStatus(new ScriptStatusRequest(scriptTicket, scriptStatusResponse.NextLogSequence)))
+                    .WhenAsync(async () => await tentacleClient.ScriptService.AsyncService.GetStatusAsync(
+                        new ScriptStatusRequest(scriptTicket, scriptStatusResponse.NextLogSequence),
+                        new(cancellationToken, null)));
+                
                 logs.AddRange(scriptStatusResponse.Logs);
 
                 if (scriptStatusResponse.State != ProcessState.Complete)
@@ -89,12 +103,16 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
             return new ScriptStatusResponse(scriptStatusResponse.Ticket, scriptStatusResponse.State, scriptStatusResponse.ExitCode, logs, scriptStatusResponse.NextLogSequence);
         }
 
-        public ScriptStatusResponse CompleteScript(ScriptStatusResponse scriptStatusResponse, CancellationToken cancellationToken)
+        public async Task<ScriptStatusResponse> CompleteScript(ScriptStatusResponse scriptStatusResponse, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var finalStatus = tentacleClient.ScriptService.CompleteScript(new CompleteScriptCommand(scriptStatusResponse.Ticket, scriptStatusResponse.NextLogSequence));
-
+            var finalStatus = await syncOrAsyncHalibut
+                .WhenSync(() => tentacleClient.ScriptService.SyncService.CompleteScript(new CompleteScriptCommand(scriptStatusResponse.Ticket, scriptStatusResponse.NextLogSequence)))
+                .WhenAsync(async () => await tentacleClient.ScriptService.AsyncService.CompleteScriptAsync(
+                    new CompleteScriptCommand(scriptStatusResponse.Ticket, scriptStatusResponse.NextLogSequence),
+                    new(cancellationToken, null)));
+            
             var logs = new List<ProcessOutput>();
             logs.AddRange(scriptStatusResponse.Logs);
             logs.AddRange(finalStatus.Logs);

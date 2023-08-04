@@ -1,5 +1,6 @@
 ﻿using System;
 using Halibut;
+using Halibut.Util;
 using Octopus.Tentacle.Client;
 using Octopus.Tentacle.Tests.Integration.Support.Legacy;
 using Octopus.TestPortForwarder;
@@ -16,9 +17,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public TentacleClient TentacleClient { get; }
         public TemporaryDirectory TemporaryDirectory { get; }
 
-        public LegacyTentacleClientBuilder LegacyTentacleClientBuilder()
+        public LegacyTentacleClientBuilder LegacyTentacleClientBuilder(AsyncHalibutFeature asyncHalibutFeature)
         {
-            return new LegacyTentacleClientBuilder(halibutRuntime, ServiceEndPoint);
+            return new LegacyTentacleClientBuilder(halibutRuntime, ServiceEndPoint, asyncHalibutFeature);
         }
 
         public ClientAndTentacle(

@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Octopus.Tentacle.Tests.Integration.Support
+namespace Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods
 {
     internal static class CancellationTokenExtensionMethods
     {

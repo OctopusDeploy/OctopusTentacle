@@ -24,15 +24,13 @@ namespace Octopus.Tentacle.Tests.Integration
     {
         [Test]
         [TestCaseSource(typeof(TentacleTypesToTest))]
-        public async Task WhenNetworkFailureOccurs_DuringGetCapabilities_TheCallIsNotRetried(TentacleType tentacleType)
+        public async Task WhenNetworkFailureOccurs_DuringGetCapabilities_TheCallIsNotRetried(TentacleType tentacleType, SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
             IClientScriptServiceV2? scriptServiceV2 = null;
             IAsyncClientScriptServiceV2? asyncScriptServiceV2 = null;
 
-            // Temporarily hard code to Sync until tests are converted to both sync and async
-            var syncOrAsyncHalibut = SyncOrAsyncHalibut.Sync;
-
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithRetriesDisabled()
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
@@ -61,9 +59,9 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            syncOrAsyncHalibut.WhenSync(() => scriptServiceV2 = clientTentacle.Server.ServerHalibutRuntime.CreateClient<IScriptServiceV2, IClientScriptServiceV2>(clientTentacle.ServiceEndPoint));
-                //.IgnoreResult()
-                //.WhenAsync(() => asyncScriptServiceV2 = clientTentacle.Server.ServerHalibutRuntime.CreateAsyncClient<IScriptServiceV2, IAsyncClientScriptServiceV2>(clientTentacle.ServiceEndPoint));
+            syncOrAsyncHalibut.WhenSync(() => scriptServiceV2 = clientTentacle.Server.ServerHalibutRuntime.CreateClient<IScriptServiceV2, IClientScriptServiceV2>(clientTentacle.ServiceEndPoint))
+                .IgnoreResult()
+                .WhenAsync(() => asyncScriptServiceV2 = clientTentacle.Server.ServerHalibutRuntime.CreateAsyncClient<IScriptServiceV2, IAsyncClientScriptServiceV2>(clientTentacle.ServiceEndPoint));
 
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody(new ScriptBuilder().Print("hello")).Build();
@@ -85,9 +83,10 @@ namespace Octopus.Tentacle.Tests.Integration
         
         [Test]
         [TestCaseSource(typeof(TentacleTypesToTest))]
-        public async Task WhenANetworkFailureOccurs_DuringStartScript_TheCallIsNotRetried(TentacleType tentacleType)
+        public async Task WhenANetworkFailureOccurs_DuringStartScript_TheCallIsNotRetried(TentacleType tentacleType, SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithRetriesDisabled()
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
@@ -134,9 +133,10 @@ namespace Octopus.Tentacle.Tests.Integration
         
         [Test]
         [TestCaseSource(typeof(TentacleTypesToTest))]
-        public async Task WhenANetworkFailureOccurs_DuringGetStatus_TheCallIsNotRetried(TentacleType tentacleType)
+        public async Task WhenANetworkFailureOccurs_DuringGetStatus_TheCallIsNotRetried(TentacleType tentacleType, SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithRetriesDisabled()
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
@@ -189,10 +189,11 @@ namespace Octopus.Tentacle.Tests.Integration
         
         [Test]
         [TestCaseSource(typeof(TentacleTypesToTest))]
-        public async Task WhenANetworkFailureOccurs_DuringCancelScript_TheCallIsNotRetried(TentacleType tentacleType)
+        public async Task WhenANetworkFailureOccurs_DuringCancelScript_TheCallIsNotRetried(TentacleType tentacleType, SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
             CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithRetriesDisabled()
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
@@ -208,12 +209,13 @@ namespace Octopus.Tentacle.Tests.Integration
 
                             cts.Cancel();
                         })
-                        .BeforeCancelScript(async () =>
+                        .BeforeCancelScript(async (service, _) =>
                         {
                             await Task.CompletedTask;
 
                             if (scriptServiceExceptions.CancelScriptLatestException == null)
                             {
+                                await service.EnsureTentacleIsConnectedToServer(Logger);
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
                         })
@@ -248,9 +250,10 @@ namespace Octopus.Tentacle.Tests.Integration
 
         [Test]
         [TestCaseSource(typeof(TentacleTypesToTest))]
-        public async Task WhenANetworkFailureOccurs_DuringCompleteScript_TheCallIsNotRetried(TentacleType tentacleType)
+        public async Task WhenANetworkFailureOccurs_DuringCompleteScript_TheCallIsNotRetried(TentacleType tentacleType, SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithRetriesDisabled()
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)

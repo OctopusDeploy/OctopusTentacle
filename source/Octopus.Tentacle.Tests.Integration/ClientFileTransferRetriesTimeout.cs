@@ -22,14 +22,14 @@ namespace Octopus.Tentacle.Tests.Integration
     public class ClientFileTransferRetriesTimeout : IntegrationTest
     {
         [Test]
-        [TestCase(TentacleType.Polling, false)] // Timeout an in-flight request
-        [TestCase(TentacleType.Polling, true)] // Timeout trying to connect
-        [TestCase(TentacleType.Listening, false)] // Timeout an in-flight request
-        [TestCase(TentacleType.Listening, true)] // Timeout trying to connect
-        public async Task WhenRpcRetriesTimeOut_DuringUploadFile_TheRpcCallIsCancelled(TentacleType tentacleType, bool stopPortForwarderAfterFirstCall)
+        public async Task WhenRpcRetriesTimeOut_DuringUploadFile_TheRpcCallIsCancelled(
+            [Values]TentacleType tentacleType, 
+            [Values]bool stopPortForwarderAfterFirstCall, 
+            [Values]SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
             PortForwarder portForwarder = null!;
             using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 // Set a short retry duration so we cancel fairly quickly
                 .WithRetryDuration(TimeSpan.FromSeconds(15))
                 .WithPortForwarderDataLogging()
@@ -89,14 +89,14 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TestCase(TentacleType.Polling, false)] // Timeout an in-flight request
-        [TestCase(TentacleType.Polling, true)] // Timeout trying to connect
-        [TestCase(TentacleType.Listening, false)] // Timeout an in-flight request
-        [TestCase(TentacleType.Listening, true)] // Timeout trying to connect
-        public async Task WhenRpcRetriesTimeOut_DuringDownloadFile_TheRpcCallIsCancelled(TentacleType tentacleType, bool stopPortForwarderAfterFirstCall)
+        public async Task WhenRpcRetriesTimeOut_DuringDownloadFile_TheRpcCallIsCancelled(
+            [Values]TentacleType tentacleType, 
+            [Values]bool stopPortForwarderAfterFirstCall, 
+            [Values]SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
             PortForwarder portForwarder = null!;
             using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 // Set a short retry duration so we cancel fairly quickly
                 .WithRetryDuration(TimeSpan.FromSeconds(15))
                 .WithPortForwarderDataLogging()

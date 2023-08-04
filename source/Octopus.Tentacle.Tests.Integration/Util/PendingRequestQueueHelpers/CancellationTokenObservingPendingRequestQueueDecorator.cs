@@ -8,34 +8,36 @@ namespace Octopus.Tentacle.Tests.Integration.Util.PendingRequestQueueHelpers
 {
     public class CancellationTokenObservingPendingRequestQueueDecorator : IPendingRequestQueue
     {
-        private IPendingRequestQueue pendingRequestQueue;
+        private readonly IPendingRequestQueue pendingRequestQueue;
 
         public CancellationTokenObservingPendingRequestQueueDecorator(IPendingRequestQueue pendingRequestQueue)
         {
             this.pendingRequestQueue = pendingRequestQueue;
         }
 
-        public void ApplyResponse(ResponseMessage response, ServiceEndPoint destination)
+        public async Task ApplyResponse(ResponseMessage response, ServiceEndPoint destination)
         {
-            pendingRequestQueue.ApplyResponse(response, destination);
+            await pendingRequestQueue.ApplyResponse(response, destination);
         }
 
-        public RequestMessage Dequeue()
+        public async Task<RequestMessage> DequeueAsync(CancellationToken cancellationToken)
         {
-            return pendingRequestQueue.Dequeue();
+            return await pendingRequestQueue.DequeueAsync(cancellationToken);
         }
-
-        public Task<RequestMessage> DequeueAsync()
-        {
-            return pendingRequestQueue.DequeueAsync();
-        }
-
+        
         public Task<ResponseMessage> QueueAndWaitAsync(RequestMessage request, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             return pendingRequestQueue.QueueAndWaitAsync(request, cancellationToken);
         }
 
+        public Task<ResponseMessage> QueueAndWaitAsync(RequestMessage request, RequestCancellationTokens requestCancellationTokens)
+        {
+            requestCancellationTokens.ConnectingCancellationToken.ThrowIfCancellationRequested();
+            return pendingRequestQueue.QueueAndWaitAsync(request, requestCancellationTokens);
+        }
+
         public bool IsEmpty => pendingRequestQueue.IsEmpty;
+        public int Count => pendingRequestQueue.Count;
     }
 }

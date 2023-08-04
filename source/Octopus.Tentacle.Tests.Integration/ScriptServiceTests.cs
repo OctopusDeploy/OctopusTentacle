@@ -7,7 +7,6 @@ using NUnit.Framework;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.Legacy;
-using Octopus.Tentacle.Tests.Integration.Util;
 
 namespace Octopus.Tentacle.Tests.Integration
 {
@@ -16,7 +15,7 @@ namespace Octopus.Tentacle.Tests.Integration
     {
         [Test]
         [TestCaseSource(typeof(TentacleTypesToTest))]
-        public async Task RunScriptWithSuccess(TentacleType tentacleType)
+        public async Task RunScriptWithSuccess(TentacleType tentacleType, SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
             var windowsScript = @"
                 Write-Host ""This is the start of the script""
@@ -33,10 +32,12 @@ namespace Octopus.Tentacle.Tests.Integration
                 echo This is the end of the script";
 
             using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleType)
+                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .Build(CancellationToken);
 
-            var scriptStatusResponse = await new ScriptExecutionOrchestrator(clientAndTentacle.TentacleClient)
+            var scriptStatusResponse = await new ScriptExecutionOrchestrator(clientAndTentacle.TentacleClient, syncOrAsyncHalibut)
                 .ExecuteScript(windowsScript, nixScript, CancellationToken);
+
             DumpLog(scriptStatusResponse);
 
             scriptStatusResponse.State.Should().Be(ProcessState.Complete);
@@ -46,7 +47,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
         [Test]
         [TestCaseSource(typeof(TentacleTypesToTest))]
-        public async Task RunScriptWithErrors(TentacleType tentacleType)
+        public async Task RunScriptWithErrors(TentacleType tentacleType, SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
             var windowsScript = @"
                 Write-Host ""This is the start of the script""
@@ -62,10 +63,12 @@ namespace Octopus.Tentacle.Tests.Integration
                 echo This is the end of the script";
 
             using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleType)
+                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .Build(CancellationToken);
 
-            var scriptStatusResponse = await new ScriptExecutionOrchestrator(clientAndTentacle.TentacleClient)
+            var scriptStatusResponse = await new ScriptExecutionOrchestrator(clientAndTentacle.TentacleClient, syncOrAsyncHalibut)
                 .ExecuteScript(windowsScript, nixScript, CancellationToken);
+
             DumpLog(scriptStatusResponse);
 
             scriptStatusResponse.State.Should().Be(ProcessState.Complete);
@@ -76,7 +79,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
         [Test]
         [TestCaseSource(typeof(TentacleTypesToTest))]
-        public async Task CancelScript(TentacleType tentacleType)
+        public async Task CancelScript(TentacleType tentacleType, SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
             var windowsScript = @"Write-Host ""This is the start of the script""
                                 & ping.exe 127.0.0.1 -n 100
@@ -87,21 +90,27 @@ namespace Octopus.Tentacle.Tests.Integration
                               echo This is the end of the script";
 
             using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleType)
+                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .Build(CancellationToken);
 
-            var scriptExecutor = new ScriptExecutionOrchestrator(clientAndTentacle.TentacleClient);
-            var ticket = scriptExecutor.StartScript(windowsScript, nixScript, CancellationToken);
+            var scriptExecutor = new ScriptExecutionOrchestrator(clientAndTentacle.TentacleClient, syncOrAsyncHalibut);
+
+            var ticket = await scriptExecutor.StartScript(windowsScript, nixScript, CancellationToken);
+
             // Possible Tentacle BUG: If we just observe until the first output is received then sometimes the script will fail to Cancel
             await scriptExecutor.ObserverUntilScriptOutputReceived(ticket, "This is the start of the script", CancellationToken);
 
             Console.WriteLine("Canceling");
-            clientAndTentacle.TentacleClient.ScriptService.CancelScript(new CancelScriptCommand(ticket, 0));
+            await syncOrAsyncHalibut
+                .WhenSync(() => clientAndTentacle.TentacleClient.ScriptService.SyncService.CancelScript(new CancelScriptCommand(ticket, 0)))
+                .WhenAsync(async () => await clientAndTentacle.TentacleClient.ScriptService.AsyncService.CancelScriptAsync(new CancelScriptCommand(ticket, 0), new(CancellationToken, null)));
+            
             var cancellationDuration = Stopwatch.StartNew();
             Console.WriteLine("Waiting for complete");
             var finalScriptStatusResponse = await scriptExecutor.ObserverUntilComplete(ticket, CancellationToken);
             cancellationDuration.Stop();
 
-            var finalStatus = scriptExecutor.CompleteScript(finalScriptStatusResponse, CancellationToken);
+            var finalStatus = await scriptExecutor.CompleteScript(finalScriptStatusResponse, CancellationToken);
             DumpLog(finalStatus);
 
             finalStatus.State.Should().Be(ProcessState.Complete);

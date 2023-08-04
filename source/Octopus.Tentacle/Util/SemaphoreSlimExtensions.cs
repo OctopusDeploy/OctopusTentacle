@@ -29,5 +29,11 @@ namespace Octopus.Tentacle.Util
             using var _ = await semaphore.LockAsync(cancellationToken);
             actionToPerformWhileTheLockIsHeld();
         }
+
+        public static async Task WithLockAsync(this SemaphoreSlim semaphore, Func<Task> actionToPerformWhileTheLockIsHeld, CancellationToken cancellationToken)
+        {
+            using var _ = await semaphore.LockAsync(cancellationToken);
+            await actionToPerformWhileTheLockIsHeld();
+        }
     }
 }
