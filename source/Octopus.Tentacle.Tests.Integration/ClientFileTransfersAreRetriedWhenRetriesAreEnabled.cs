@@ -12,7 +12,7 @@ using Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers;
 
 namespace Octopus.Tentacle.Tests.Integration
 {
-    public class ClientFileTransfersAreRetried : IntegrationTest
+    public class ClientFileTransfersAreRetriedWhenRetriesAreEnabled : IntegrationTest
     {
         [Test]
         [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]

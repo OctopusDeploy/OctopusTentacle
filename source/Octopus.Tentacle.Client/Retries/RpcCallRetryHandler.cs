@@ -10,6 +10,7 @@ namespace Octopus.Tentacle.Client.Retries
     internal class RpcCallRetryHandler
     {
         public delegate Task OnRetyAction(Exception lastException, TimeSpan retrySleepDuration, int retryCount, TimeSpan retryTimeout, CancellationToken cancellationToken);
+
         public delegate Task OnTimeoutAction(TimeSpan retryTimeout, CancellationToken cancellationToken);
 
         readonly TimeoutStrategy timeoutStrategy;
@@ -117,11 +118,11 @@ namespace Octopus.Tentacle.Client.Retries
 
                     using var abandonCancellationTokenSource = new CancellationTokenSource();
                     using (ct.Register(() =>
-                    {
-                        // Give the actionTask some time to cancel on it's own.
-                        // If it doesn't assume it does not co-operate with cancellationTokens and walk away.
-                        abandonCancellationTokenSource.TryCancelAfter(abandonAfter);
-                    }))
+                           {
+                               // Give the actionTask some time to cancel on it's own.
+                               // If it doesn't assume it does not co-operate with cancellationTokens and walk away.
+                               abandonCancellationTokenSource.TryCancelAfter(abandonAfter);
+                           }))
                     {
                         var abandonTask = abandonCancellationTokenSource.Token.AsTask<T>();
 

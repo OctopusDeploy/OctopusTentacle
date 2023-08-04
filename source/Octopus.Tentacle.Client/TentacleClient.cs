@@ -8,6 +8,7 @@ using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Client.Decorators;
 using Octopus.Tentacle.Client.Execution;
 using Octopus.Tentacle.Client.Observability;
+using Octopus.Tentacle.Client.Retries;
 using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Capabilities;
@@ -26,6 +27,7 @@ namespace Octopus.Tentacle.Client
         readonly IClientScriptServiceV2 scriptServiceV2;
         readonly IClientFileTransferService fileTransferServiceV1;
         readonly IClientCapabilitiesServiceV2 capabilitiesServiceV2;
+        readonly RpcRetrySettings rpcRetrySettings;
 
         public static void CacheServiceWasNotFoundResponseMessages(IHalibutRuntime halibutRuntime)
         {
@@ -46,22 +48,23 @@ namespace Octopus.Tentacle.Client
             ServiceEndPoint serviceEndPoint,
             IHalibutRuntime halibutRuntime,
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
-            TimeSpan retryDuration,
-            ITentacleClientObserver tentacleClientObserver) :
-                this(serviceEndPoint, halibutRuntime, scriptObserverBackOffStrategy, retryDuration, tentacleClientObserver, null)
+            ITentacleClientObserver tentacleClientObserver,
+            RpcRetrySettings rpcRetrySettings
+        ) : this(serviceEndPoint, halibutRuntime, scriptObserverBackOffStrategy, tentacleClientObserver, rpcRetrySettings, null)
         {
         }
-
+        
         internal TentacleClient(
             ServiceEndPoint serviceEndPoint,
             IHalibutRuntime halibutRuntime,
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
-            TimeSpan retryDuration,
             ITentacleClientObserver tentacleClientObserver,
+            RpcRetrySettings rpcRetrySettings,
             ITentacleServiceDecorator? tentacleServicesDecorator)
         {
             this.scriptObserverBackOffStrategy = scriptObserverBackOffStrategy;
             this.tentacleClientObserver = tentacleClientObserver;
+            this.rpcRetrySettings = rpcRetrySettings;
 
             if (halibutRuntime.OverrideErrorResponseMessageCaching == null)
             {
@@ -87,7 +90,7 @@ namespace Octopus.Tentacle.Client
                 capabilitiesServiceV2 = tentacleServicesDecorator.Decorate(capabilitiesServiceV2);
             }
 
-            rpcCallExecutor = RpcCallExecutorFactory.Create(retryDuration, tentacleClientObserver);
+            rpcCallExecutor = RpcCallExecutorFactory.Create(rpcRetrySettings.RetryDuration, tentacleClientObserver);
         }
 
         public TimeSpan OnCancellationAbandonCompleteScriptAfter { get; set; } = TimeSpan.FromMinutes(1);
@@ -96,21 +99,35 @@ namespace Octopus.Tentacle.Client
         {
             var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
 
+            UploadResult UploadFileAction(CancellationToken ct)
+            {
+                logger.Info($"Beginning upload of {fileName} to Tentacle");
+                var result = fileTransferServiceV1.UploadFile(path, package, new HalibutProxyRequestOptions(ct));
+                logger.Info("Upload complete");
+                return result;
+            }
+
             try
             {
-                return await rpcCallExecutor.ExecuteWithRetries(
-                    RpcCall.Create<IFileTransferService>(nameof(IFileTransferService.UploadFile)),
-                    ct =>
-                    {
-                        logger.Info($"Beginning upload of {fileName} to Tentacle");
-                        var result = fileTransferServiceV1.UploadFile(path, package, new HalibutProxyRequestOptions(ct));
-                        logger.Info("Upload complete");
-                        return result;
-                    },
-                    logger,
-                    abandonActionOnCancellation: false,
-                    operationMetricsBuilder,
-                    cancellationToken).ConfigureAwait(false);
+                if (rpcRetrySettings.RetriesEnabled)
+                {
+                    return await rpcCallExecutor.ExecuteWithRetries(
+                        RpcCall.Create<IFileTransferService>(nameof(IFileTransferService.UploadFile)),
+                        UploadFileAction,
+                        logger,
+                        abandonActionOnCancellation: false,
+                        operationMetricsBuilder,
+                        cancellationToken).ConfigureAwait(false);
+                }
+                else
+                {
+                    return await rpcCallExecutor.ExecuteWithNoRetries(
+                        RpcCall.Create<IFileTransferService>(nameof(IFileTransferService.UploadFile)),
+                        UploadFileAction,
+                        abandonActionOnCancellation: false,
+                        operationMetricsBuilder,
+                        cancellationToken).ConfigureAwait(false);
+                }
             }
             catch (Exception e)
             {
@@ -128,23 +145,35 @@ namespace Octopus.Tentacle.Client
         {
             var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
 
+            DataStream DownloadFileAction(CancellationToken ct)
+            {
+                logger.Info($"Beginning download of {Path.GetFileName(remotePath)} from Tentacle");
+                var result = fileTransferServiceV1.DownloadFile(remotePath, new HalibutProxyRequestOptions(ct));
+                logger.Info("Download complete");
+                return result;
+            }
+
             try
             {
-                var dataStream = await rpcCallExecutor.ExecuteWithRetries(
-                    RpcCall.Create<IFileTransferService>(nameof(IFileTransferService.DownloadFile)),
-                    ct =>
-                    {
-                        logger.Info($"Beginning download of {Path.GetFileName(remotePath)} from Tentacle");
-                        var result = fileTransferServiceV1.DownloadFile(remotePath, new HalibutProxyRequestOptions(ct));
-                        logger.Info("Download complete");
-                        return result;
-                    },
-                    logger,
-                    abandonActionOnCancellation: false,
-                    operationMetricsBuilder,
-                    cancellationToken).ConfigureAwait(false);
-
-                return (DataStream?)dataStream;
+                if (rpcRetrySettings.RetriesEnabled)
+                {
+                    return await rpcCallExecutor.ExecuteWithRetries(
+                        RpcCall.Create<IFileTransferService>(nameof(IFileTransferService.DownloadFile)),
+                        DownloadFileAction,
+                        logger,
+                        abandonActionOnCancellation: false,
+                        operationMetricsBuilder,
+                        cancellationToken).ConfigureAwait(false);
+                }
+                else
+                {
+                    return await rpcCallExecutor.ExecuteWithNoRetries(
+                        RpcCall.Create<IFileTransferService>(nameof(IFileTransferService.DownloadFile)),
+                        DownloadFileAction,
+                        abandonActionOnCancellation: false,
+                        operationMetricsBuilder,
+                        cancellationToken).ConfigureAwait(false);
+                }
             }
             catch (Exception e)
             {
@@ -180,6 +209,7 @@ namespace Octopus.Tentacle.Client
                     onScriptStatusResponseReceived,
                     onScriptCompleted,
                     OnCancellationAbandonCompleteScriptAfter,
+                    rpcRetrySettings,
                     logger);
 
                 var result = await orchestrator.ExecuteScript(scriptExecutionCancellationToken).ConfigureAwait(false);

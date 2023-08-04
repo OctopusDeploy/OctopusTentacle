@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Halibut;
 using Halibut.ServiceModel;
 using Octopus.Tentacle.Client;
+using Octopus.Tentacle.Client.Retries;
 using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.Contracts.Legacy;
 using Octopus.Tentacle.Contracts.Observability;
@@ -18,6 +19,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     {
         ITentacleServiceDecorator? tentacleServiceDecorator;
         TimeSpan retryDuration = TimeSpan.FromMinutes(2);
+        bool retriesEnabled = true;
         IScriptObserverBackoffStrategy scriptObserverBackoffStrategy = new DefaultScriptObserverBackoffStrategy();
         public readonly TentacleType TentacleType;
         string? tentacleVersion;
@@ -55,6 +57,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         {
             this.retryDuration = retryDuration;
 
+            return this;
+        }
+
+        public ClientAndTentacleBuilder WithRetriesDisabled()
+        {
+            this.retriesEnabled = false;
             return this;
         }
 
@@ -172,8 +180,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 tentacleEndPoint,
                 server.ServerHalibutRuntime,
                 scriptObserverBackoffStrategy,
-                retryDuration,
                 tentacleClientObserver,
+                new RpcRetrySettings(retriesEnabled, retryDuration),
                 tentacleServiceDecorator);
 
             return new ClientAndTentacle(server.ServerHalibutRuntime, tentacleEndPoint, server, portForwarder, runningTentacle, tentacleClient, temporaryDirectory);
