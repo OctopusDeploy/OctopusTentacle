@@ -22,7 +22,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         bool retriesEnabled = true;
         IScriptObserverBackoffStrategy scriptObserverBackoffStrategy = new DefaultScriptObserverBackoffStrategy();
         public readonly TentacleType TentacleType;
-        string? tentacleVersion;
+        Version? tentacleVersion;
         readonly List<Func<PortForwarderBuilder, PortForwarderBuilder>> portForwarderModifiers = new ();
         readonly List<Action<ServiceEndPoint>> serviceEndpointModifiers = new();
         private IPendingRequestQueueFactory? queueFactory = null;
@@ -73,7 +73,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             return this;
         }
 
-        public ClientAndTentacleBuilder WithTentacleVersion(string? tentacleVersion)
+        public ClientAndTentacleBuilder WithTentacleVersion(Version? tentacleVersion)
         {
             this.tentacleVersion = tentacleVersion;
 
@@ -139,7 +139,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             ServiceEndPoint tentacleEndPoint;
 
             var temporaryDirectory = new TemporaryDirectory();
-            var tentacleExe = string.IsNullOrWhiteSpace(tentacleVersion) ?
+            var tentacleExe = tentacleVersion == null ?
                 TentacleExeFinder.FindTentacleExe() :
                 await TentacleFetcher.GetTentacleVersion(temporaryDirectory.DirectoryPath, tentacleVersion, cancellationToken);
 

@@ -15,7 +15,7 @@ namespace Octopus.Tentacle.Tests.Integration
     {
         [Test]
         [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
-        public async Task CanRunScript(TentacleType tentacleType, string tentacleVersion)
+        public async Task CanRunScript(TentacleType tentacleType, Version? tentacleVersion)
         {
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithTentacleVersion(tentacleVersion)

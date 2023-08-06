@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.IO.Compression;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -12,15 +11,15 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     {
         static string LinuxDownloadUrlForVersion(string versionString) => $"https://download.octopusdeploy.com/linux-tentacle/tentacle-{versionString}-linux_x64.tar.gz";
 
-        public async Task<string> GetTentacleVersion(string downloadPath, string version, CancellationToken cancellationToken)
+        public async Task<string> GetTentacleVersion(string downloadPath, Version version, CancellationToken cancellationToken)
         {
-            var directoryPath = Path.Combine(downloadPath, version);
+            var directoryPath = Path.Combine(downloadPath, version.ToString());
             if (!Directory.Exists(directoryPath))
             {
                 Directory.CreateDirectory(directoryPath);
             }
 
-            return await DownloadAndExtractFromUrl(directoryPath, LinuxDownloadUrlForVersion(version));
+            return await DownloadAndExtractFromUrl(directoryPath, LinuxDownloadUrlForVersion(version.ToString()));
         }
 
         static async Task<string> DownloadAndExtractFromUrl(string directoryPath, string url)

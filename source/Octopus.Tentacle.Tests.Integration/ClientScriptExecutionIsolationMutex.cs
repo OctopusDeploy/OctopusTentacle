@@ -22,7 +22,10 @@ namespace Octopus.Tentacle.Tests.Integration
             {
                 return AllCombinations
                     .Of(new TentacleTypesToTest())
-                    .And(TentacleVersions.Current, TentacleVersions.v6_3_417_LastWithScriptServiceV1Only)
+                    .And(
+                        TentacleVersions.Current, 
+                        TentacleVersions.v6_3_417_LastWithScriptServiceV1Only,
+                        TentacleVersions.v7_0_1_ScriptServiceV2Added)
                     .And(ScriptIsolationLevel.FullIsolation, ScriptIsolationLevel.NoIsolation)
                     .Build();
             }
@@ -30,7 +33,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
         [Test]
         [TestCaseSource(typeof(WithFullIsolationTestCases))]
-        public async Task ScriptIsolationMutexFull_EnsuresTwoDifferentScriptsDontRunAtTheSameTime(TentacleType tentacleType, string tentacleVersion, ScriptIsolationLevel levelOfSecondScript)
+        public async Task ScriptIsolationMutexFull_EnsuresTwoDifferentScriptsDontRunAtTheSameTime(TentacleType tentacleType, Version? tentacleVersion, ScriptIsolationLevel levelOfSecondScript)
         {
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithTentacleVersion(tentacleVersion)
@@ -110,7 +113,10 @@ namespace Octopus.Tentacle.Tests.Integration
             {
                 return AllCombinations
                     .Of(new TentacleTypesToTest())
-                    .And(TentacleVersions.Current, TentacleVersions.v6_3_417_LastWithScriptServiceV1Only) // Testing against v1 and v2 script services
+                    .And(
+                        TentacleVersions.Current, 
+                        TentacleVersions.v6_3_417_LastWithScriptServiceV1Only, 
+                        TentacleVersions.v7_0_1_ScriptServiceV2Added) // Testing against v1 and v2 script services
                     .And(
                         // Scripts with different mutex names can run at the same time.
                         new ScriptsInParallelTestCases(ScriptIsolationLevel.FullIsolation, "mutex", ScriptIsolationLevel.FullIsolation, "differentMutex"),
@@ -124,7 +130,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TestCaseSource(typeof(ScriptsCanRunInParallelCases))]
         public async Task ScriptIsolationMutexFull_IsOnlyExclusiveWhenFullAndWhenTheMutexNameIsTheSame(
             TentacleType tentacleType,
-            string tentacleVersion,
+            Version? tentacleVersion,
             ScriptsInParallelTestCases scriptsInParallelTestCases)
         {
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)

@@ -1,8 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using NUnit.Framework;
-using Org.BouncyCastle.Crypto.Modes;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
@@ -42,7 +40,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             sequences.Add(sequence);
             return this;
         }
-        public AllCombinations And(params object[] sequence)
+        public AllCombinations And(params object?[] sequence)
         {
             sequences.Add(sequence);
             return this;
