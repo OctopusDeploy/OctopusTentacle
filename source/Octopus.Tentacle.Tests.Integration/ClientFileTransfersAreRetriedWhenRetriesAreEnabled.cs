@@ -28,9 +28,9 @@ namespace Octopus.Tentacle.Tests.Integration
                     .RecordExceptionThrownInFileTransferService(out var fileTransferServiceException)
                     .DecorateFileTransferServiceWith(b =>
                     {
-                        b.BeforeUploadFile((service, _, ds) =>
+                        b.BeforeUploadFile(async (service, _, ds) =>
                         {
-                            service.EnsureTentacleIsConnectedToServer(Logger);
+                            await service.EnsureTentacleIsConnectedToServer(Logger);
                             if (fileTransferServiceException.UploadLatestException == null)
                             {
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
@@ -65,9 +65,9 @@ namespace Octopus.Tentacle.Tests.Integration
                     .RecordExceptionThrownInFileTransferService(out var fileTransferServiceException)
                     .DecorateFileTransferServiceWith(b =>
                     {
-                        b.BeforeDownloadFile((service, _) =>
+                        b.BeforeDownloadFile(async (service, _) =>
                         {
-                            service.EnsureTentacleIsConnectedToServer(Logger);
+                            await service.EnsureTentacleIsConnectedToServer(Logger);
                             if (fileTransferServiceException.DownloadFileLatestException == null)
                             {
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();

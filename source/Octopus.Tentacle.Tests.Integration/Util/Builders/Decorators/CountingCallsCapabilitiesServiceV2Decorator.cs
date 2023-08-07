@@ -1,8 +1,8 @@
-using System;
 using System.Threading;
+using System.Threading.Tasks;
 using Halibut.ServiceModel;
-using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Contracts.Capabilities;
+using Octopus.Tentacle.Contracts.ClientServices;
 
 namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
 {
@@ -13,24 +13,24 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
         public long GetCapabilitiesCallCountComplete;
     }
 
-    public class CountingCallsCapabilitiesServiceV2Decorator : IClientCapabilitiesServiceV2
+    public class CountingCallsCapabilitiesServiceV2Decorator : IAsyncClientCapabilitiesServiceV2
     {
         private readonly CapabilitiesServiceV2CallCounts counts;
 
-        private readonly IClientCapabilitiesServiceV2 inner;
+        private readonly IAsyncClientCapabilitiesServiceV2 inner;
 
-        public CountingCallsCapabilitiesServiceV2Decorator(IClientCapabilitiesServiceV2 inner, CapabilitiesServiceV2CallCounts counts)
+        public CountingCallsCapabilitiesServiceV2Decorator(IAsyncClientCapabilitiesServiceV2 inner, CapabilitiesServiceV2CallCounts counts)
         {
             this.inner = inner;
             this.counts = counts;
         }
 
-        public CapabilitiesResponseV2 GetCapabilities(HalibutProxyRequestOptions options)
+        public async Task<CapabilitiesResponseV2> GetCapabilitiesAsync(HalibutProxyRequestOptions options)
         {
             Interlocked.Increment(ref counts.GetCapabilitiesCallCountStarted);
             try
             {
-                return inner.GetCapabilities(options);
+                return await inner.GetCapabilitiesAsync(options);
             }
             finally
             {

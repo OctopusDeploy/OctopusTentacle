@@ -1,28 +1,29 @@
+using System.Threading.Tasks;
 using Halibut;
 using Halibut.ServiceModel;
-using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Contracts.ClientServices;
 using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
 {
-    public class LogCallsToFileTransferServiceDecorator : IClientFileTransferService
+    public class LogCallsToFileTransferServiceDecorator : IAsyncClientFileTransferService
     {
-        private IClientFileTransferService inner;
+        private IAsyncClientFileTransferService inner;
         private ILogger logger;
 
-        public LogCallsToFileTransferServiceDecorator(IClientFileTransferService inner)
+        public LogCallsToFileTransferServiceDecorator(IAsyncClientFileTransferService inner)
         {
             this.inner = inner;
             logger = new SerilogLoggerBuilder().Build().ForContext<LogCallsToFileTransferServiceDecorator>();
         }
 
-        public UploadResult UploadFile(string remotePath, DataStream upload, HalibutProxyRequestOptions options)
+        public async Task<UploadResult> UploadFileAsync(string remotePath, DataStream upload, HalibutProxyRequestOptions options)
         {
             logger.Information("UploadFile call started");
             try
             {
-                return inner.UploadFile(remotePath, upload, options);
+                return await inner.UploadFileAsync(remotePath, upload, options);
             }
             finally
             {
@@ -30,12 +31,12 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             }
         }
 
-        public DataStream DownloadFile(string remotePath, HalibutProxyRequestOptions options)
+        public async Task<DataStream> DownloadFileAsync(string remotePath, HalibutProxyRequestOptions options)
         {
             logger.Information("DownloadFile call started");
             try
             {
-                return inner.DownloadFile(remotePath, options);
+                return await inner.DownloadFileAsync(remotePath, options);
             }
             finally
             {

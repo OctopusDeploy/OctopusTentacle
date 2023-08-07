@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -72,8 +73,10 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTentacleVersion(version)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .DecorateCapabilitiesServiceV2With(d => d
-                        .AfterGetCapabilities((response) =>
+                        .AfterGetCapabilities(async (response) =>
                         {
+                            await Task.CompletedTask;
+
                             capabilitiesResponses.Add(response);
 
                             if (resumePortForwarder)

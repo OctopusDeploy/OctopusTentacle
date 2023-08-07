@@ -1,9 +1,9 @@
-using System;
 using System.Threading;
+using System.Threading.Tasks;
 using Halibut;
 using Halibut.ServiceModel;
-using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Contracts.ClientServices;
 
 namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
 {
@@ -16,24 +16,24 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
         public long DownloadFileCallCountComplete;
     }
 
-    public class CountingCallsFileTransferServiceDecorator : IClientFileTransferService
+    public class CountingCallsFileTransferServiceDecorator : IAsyncClientFileTransferService
     {
         private readonly FileTransferServiceCallCounts counts;
 
-        private readonly IClientFileTransferService inner;
+        private readonly IAsyncClientFileTransferService inner;
 
-        public CountingCallsFileTransferServiceDecorator(IClientFileTransferService inner, FileTransferServiceCallCounts counts)
+        public CountingCallsFileTransferServiceDecorator(IAsyncClientFileTransferService inner, FileTransferServiceCallCounts counts)
         {
             this.inner = inner;
             this.counts = counts;
         }
 
-        public UploadResult UploadFile(string remotePath, DataStream upload, HalibutProxyRequestOptions options)
+        public async Task<UploadResult> UploadFileAsync(string remotePath, DataStream upload, HalibutProxyRequestOptions options)
         {
             Interlocked.Increment(ref counts.UploadFileCallCountStarted);
             try
             {
-                return inner.UploadFile(remotePath, upload, options);
+                return await inner.UploadFileAsync(remotePath, upload, options);
             }
             finally
             {
@@ -41,12 +41,12 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             }
         }
 
-        public DataStream DownloadFile(string remotePath, HalibutProxyRequestOptions options)
+        public async Task<DataStream> DownloadFileAsync(string remotePath, HalibutProxyRequestOptions options)
         {
             Interlocked.Increment(ref counts.DownloadFileCallCountStarted);
             try
             {
-                return inner.DownloadFile(remotePath, options);
+                return await inner.DownloadFileAsync(remotePath, options);
             }
             finally
             {
