@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
 using Octopus.Tentacle.Contracts.Legacy;
@@ -10,14 +11,14 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
     internal class LegacyClientAndTentacleBuilder
     {
         private readonly TentacleType tentacleType;
-        private string? tentacleVersion;
+        private Version? tentacleVersion;
 
         public LegacyClientAndTentacleBuilder(TentacleType tentacleType)
         {
             this.tentacleType = tentacleType;
         }
 
-        public LegacyClientAndTentacleBuilder WithTentacleVersion(string tentacleVersion)
+        public LegacyClientAndTentacleBuilder WithTentacleVersion(Version? tentacleVersion)
         {
             this.tentacleVersion = tentacleVersion;
             return this;
@@ -43,7 +44,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
 
             // Tentacle
             var temporaryDirectory = new TemporaryDirectory();
-            var tentacleExe = string.IsNullOrWhiteSpace(tentacleVersion) ?
+            var tentacleExe = tentacleVersion == null ?
                 TentacleExeFinder.FindTentacleExe() :
                 await TentacleFetcher.GetTentacleVersion(temporaryDirectory.DirectoryPath, tentacleVersion, cancellationToken);
 

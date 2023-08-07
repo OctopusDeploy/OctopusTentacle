@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -13,6 +14,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         /// <param name="version">The version to download.</param>
         /// <param name="cancellationToken"></param>
         /// <returns>The full path to the tentacle executable.</returns>
-        public Task<string> GetTentacleVersion(string tmp, string version, CancellationToken cancellationToken);
+        public Task<string> GetTentacleVersion(string tmp, Version version, CancellationToken cancellationToken);
     }
 }

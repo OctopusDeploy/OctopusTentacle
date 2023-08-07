@@ -21,14 +21,14 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         private static readonly string cacheDirRunExtension = Guid.NewGuid().ToString("N");
 
-        private static readonly ConcurrentDictionary<string, SemaphoreSlim> versionLock = new();
+        private static readonly ConcurrentDictionary<Version, SemaphoreSlim> versionLock = new();
 
-        public async Task<string> GetTentacleVersion(string tmp, string version, CancellationToken cancellationToken)
+        public async Task<string> GetTentacleVersion(string tmp, Version version, CancellationToken cancellationToken)
         {
             var logger = new SerilogLoggerBuilder().Build().ForContext<TentacleBinaryCache>();
             using var _ = await versionLock.GetOrAdd(version, s => new SemaphoreSlim(1, 1)).LockAsync();
 
-            var tentacleVersionCacheDir = TentacleVersionCacheDir(version);
+            var tentacleVersionCacheDir = TentacleVersionCacheDir(version.ToString());
 
             if (Directory.Exists(tentacleVersionCacheDir)) return Path.Combine(tentacleVersionCacheDir, TentacleExeFinder.AddExeExtension("Tentacle"));
 

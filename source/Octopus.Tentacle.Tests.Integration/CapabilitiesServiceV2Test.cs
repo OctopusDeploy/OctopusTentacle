@@ -5,17 +5,12 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Halibut;
 using NUnit.Framework;
-using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.CommonTestUtils.Builders;
-using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Capabilities;
-using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.Legacy;
-using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
 using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
-using Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers;
 
 namespace Octopus.Tentacle.Tests.Integration
 {
@@ -29,7 +24,8 @@ namespace Octopus.Tentacle.Tests.Integration
                     TentacleVersions.Current,
                     TentacleVersions.v5_0_4_FirstLinuxRelease,
                     TentacleVersions.v5_0_12_AutofacServiceFactoryIsInShared,
-                    TentacleVersions.v6_3_417_LastWithScriptServiceV1Only // the autofac service is in tentacle, but tentacle does not have the capabilities service.
+                    TentacleVersions.v6_3_417_LastWithScriptServiceV1Only, // the autofac service is in tentacle, but tentacle does not have the capabilities service.
+                    TentacleVersions.v7_0_1_ScriptServiceV2Added
                 )
                 .Build();
         }
@@ -42,17 +38,18 @@ namespace Octopus.Tentacle.Tests.Integration
         [TestCaseSource(typeof(CapabilitiesServiceInterestingTentacles))]
         public async Task CapabilitiesFromAnOlderTentacleWhichHasNoCapabilitiesService_WorksWithTheBackwardsCompatabilityDecorator(
             TentacleType tentacleType,
-            string? version)
+            Version? version)
         {
             using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleType)
-                .WithTentacleVersion(version!)
+                .WithTentacleVersion(version)
                 .Build(CancellationToken);
 
             var capabilities = clientAndTentacle.TentacleClient.CapabilitiesServiceV2.GetCapabilities().SupportedCapabilities;
 
             capabilities.Should().Contain("IScriptService");
             capabilities.Should().Contain("IFileTransferService");
-            if (version == null)
+
+            if (version.HasScriptServiceV2())
             {
                 capabilities.Should().Contain("IScriptServiceV2");
                 capabilities.Count.Should().Be(3);
@@ -65,7 +62,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
         [Test]
         [TestCaseSource(typeof(CapabilitiesServiceInterestingTentacles))]
-        public async Task CapabilitiesResponseShouldBeCached(TentacleType tentacleType, string? version)
+        public async Task CapabilitiesResponseShouldBeCached(TentacleType tentacleType, Version? version)
         {
             var capabilitiesResponses = new List<CapabilitiesResponseV2>();
             var resumePortForwarder = false;
@@ -105,7 +102,7 @@ namespace Octopus.Tentacle.Tests.Integration
             {
                 await clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken);
             }
-            catch (HalibutClientException) when (tentacleType == TentacleType.Polling && !string.IsNullOrWhiteSpace(version))
+            catch (HalibutClientException) when (tentacleType == TentacleType.Polling && version != null)
             {
                 // For script execution on a tentacle without ScriptServiceV2 and retries a polling request can be de-queued into a broken TCP Connection
                 // By the time this happens we will have already called gt capabilities and got the cached response so we can safely ignore.

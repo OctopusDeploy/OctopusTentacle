@@ -22,7 +22,7 @@ namespace Octopus.Tentacle.Tests.Integration
     {
         [Test]
         [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
-        public async Task ExecuteScriptShouldGatherMetrics_WhenSucceeds(TentacleType tentacleType, string? tentacleVersion)
+        public async Task ExecuteScriptShouldGatherMetrics_WhenSucceeds(TentacleType tentacleType, Version? tentacleVersion)
         {
             // Arrange
             var tentacleClientObserver = new TestTentacleClientObserver();
@@ -44,7 +44,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var executeScriptMetrics = tentacleClientObserver.ExecuteScriptMetrics.Should().ContainSingle().Subject;
             ThenClientOperationMetricsShouldBeSuccessful(executeScriptMetrics);
 
-            var expectedScriptService = tentacleVersion == TentacleVersions.Current ? nameof(IScriptServiceV2) : nameof(IScriptService);
+            var expectedScriptService = tentacleVersion.HasScriptServiceV2() ? nameof(IScriptServiceV2) : nameof(IScriptService);
             tentacleClientObserver.RpcCallMetrics.Should().NotBeEmpty();
             tentacleClientObserver.RpcCallMetrics.Should().ContainSingle(m => m.RpcCall.Name == nameof(ICapabilitiesServiceV2.GetCapabilities) && m.RpcCall.Service == nameof(ICapabilitiesServiceV2));
             tentacleClientObserver.RpcCallMetrics.Should().ContainSingle(m => m.RpcCall.Name == nameof(IScriptServiceV2.StartScript) && m.RpcCall.Service == expectedScriptService);
@@ -55,7 +55,7 @@ namespace Octopus.Tentacle.Tests.Integration
         
         [Test]
         [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
-        public async Task ExecuteScriptShouldGatherMetrics_WhenFails(TentacleType tentacleType, string? tentacleVersion)
+        public async Task ExecuteScriptShouldGatherMetrics_WhenFails(TentacleType tentacleType, Version? tentacleVersion)
         {
             // Arrange
             var tentacleClientObserver = new TestTentacleClientObserver();
@@ -88,7 +88,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
         [Test]
         [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
-        public async Task UploadFileShouldGatherMetrics_WhenSucceeds(TentacleType tentacleType, string? tentacleVersion)
+        public async Task UploadFileShouldGatherMetrics_WhenSucceeds(TentacleType tentacleType, Version? tentacleVersion)
         {
             // Arrange
             var tentacleClientObserver = new TestTentacleClientObserver();
@@ -115,7 +115,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
         [Test]
         [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
-        public async Task UploadFileShouldGatherMetrics_WhenFails(TentacleType tentacleType, string? tentacleVersion)
+        public async Task UploadFileShouldGatherMetrics_WhenFails(TentacleType tentacleType, Version? tentacleVersion)
         {
             // Arrange
             var tentacleClientObserver = new TestTentacleClientObserver();
@@ -146,7 +146,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
         [Test]
         [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
-        public async Task DownloadFileShouldGatherMetrics_WhenSucceeds(TentacleType tentacleType, string? tentacleVersion)
+        public async Task DownloadFileShouldGatherMetrics_WhenSucceeds(TentacleType tentacleType, Version? tentacleVersion)
         {
             // Arrange
             var tentacleClientObserver = new TestTentacleClientObserver();
@@ -174,7 +174,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
         [Test]
         [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
-        public async Task DownloadFileShouldGatherMetrics_WhenFails(TentacleType tentacleType, string? tentacleVersion)
+        public async Task DownloadFileShouldGatherMetrics_WhenFails(TentacleType tentacleType, Version? tentacleVersion)
         {
             // Arrange
             var tentacleClientObserver = new TestTentacleClientObserver();

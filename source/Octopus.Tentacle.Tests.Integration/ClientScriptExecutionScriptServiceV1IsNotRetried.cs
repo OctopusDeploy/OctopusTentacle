@@ -24,7 +24,7 @@ namespace Octopus.Tentacle.Tests.Integration
         public async Task WhenANetworkFailureOccurs_DuringStartScript_WithATentacleThatOnlySupportsV1ScriptService_TheCallIsNotRetried(TentacleType tentacleType)
         {
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
-                .WithTentacleVersion("6.3.451") // No capabilities service
+                .WithTentacleVersion(TentacleVersions.v6_3_451_NoCapabilitiesService)
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithRetryDuration(TimeSpan.FromMinutes(4))
@@ -80,7 +80,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             ScriptStatusRequest? scriptStatusRequest = null;
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
-                .WithTentacleVersion("6.3.451") // No capabilities service
+                .WithTentacleVersion(TentacleVersions.v6_3_451_NoCapabilitiesService)
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithRetryDuration(TimeSpan.FromMinutes(4))
@@ -136,7 +136,7 @@ namespace Octopus.Tentacle.Tests.Integration
             ScriptStatusRequest? scriptStatusRequest = null;
             CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
-                .WithTentacleVersion("6.3.451") // No capabilities service
+                .WithTentacleVersion(TentacleVersions.v6_3_451_NoCapabilitiesService)
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithRetryDuration(TimeSpan.FromMinutes(4))
@@ -194,7 +194,7 @@ namespace Octopus.Tentacle.Tests.Integration
         public async Task WhenANetworkFailureOccurs_DuringCompleteScript_WithATentacleThatOnlySupportsV1ScriptService_TheCallIsNotRetried(TentacleType tentacleType)
         {
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
-                .WithTentacleVersion("6.3.451") // No capabilities service
+                .WithTentacleVersion(TentacleVersions.v6_3_451_NoCapabilitiesService)
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithRetryDuration(TimeSpan.FromMinutes(4))

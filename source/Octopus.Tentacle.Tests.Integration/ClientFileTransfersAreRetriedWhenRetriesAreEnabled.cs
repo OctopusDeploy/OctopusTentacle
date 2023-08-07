@@ -16,7 +16,7 @@ namespace Octopus.Tentacle.Tests.Integration
     {
         [Test]
         [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
-        public async Task FailedUploadsAreRetriedAndIsEventuallySuccessful(TentacleType tentacleType, string version)
+        public async Task FailedUploadsAreRetriedAndIsEventuallySuccessful(TentacleType tentacleType, Version? version)
         {
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithTentacleVersion(version)
@@ -53,7 +53,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
         [Test]
         [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
-        public async Task FailedDownloadsAreRetriedAndIsEventuallySuccessful(TentacleType tentacleType, string version)
+        public async Task FailedDownloadsAreRetriedAndIsEventuallySuccessful(TentacleType tentacleType, Version? version)
         {
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithTentacleVersion(version)

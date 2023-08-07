@@ -17,7 +17,7 @@ namespace Octopus.Tentacle.Tests.Integration
     {
         [Test]
         [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
-        public async Task AdditionalScriptsWork(TentacleType tentacleType, string tentacleVersion)
+        public async Task AdditionalScriptsWork(TentacleType tentacleType, Version? tentacleVersion)
         {
             using var tmp = new TemporaryDirectory();
             var path = Path.Combine(tmp.DirectoryPath, "file");

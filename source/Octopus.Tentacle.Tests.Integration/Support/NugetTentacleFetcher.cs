@@ -1,11 +1,9 @@
 using System;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using NuGet.Frameworks;
 using NUnit.Framework;
 using Octopus.Tentacle.Util;
 
@@ -19,9 +17,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     {
         static string DownloadUrlForVersion(string versionString) => $"https://f.feedz.io/octopus-deploy/dependencies/packages/Octopus.Tentacle.CrossPlatformBundle/{versionString}/download";
 
-        public async Task<string> GetTentacleVersion(string downloadPath, string version, CancellationToken cancellationToken)
+        public async Task<string> GetTentacleVersion(string downloadPath, Version version, CancellationToken cancellationToken)
         {
-            return await DownloadAndExtractFromUrl(downloadPath, DownloadUrlForVersion(version));
+            return await DownloadAndExtractFromUrl(downloadPath, DownloadUrlForVersion(version.ToString()));
         }
 
         async Task<string> DownloadAndExtractFromUrl(string directoryPath, string url)
