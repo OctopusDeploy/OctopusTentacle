@@ -427,16 +427,16 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TestCase(TentacleType.Polling, RpcCallStage.Connecting, SyncOrAsyncHalibut.Sync)]
-        [TestCase(TentacleType.Listening, RpcCallStage.Connecting, SyncOrAsyncHalibut.Sync)]
-        [TestCase(TentacleType.Polling, RpcCallStage.InFlight, SyncOrAsyncHalibut.Sync)]
-        [TestCase(TentacleType.Listening, RpcCallStage.InFlight, SyncOrAsyncHalibut.Sync)]
+        [TestCase(TentacleType.Polling, RpcCallStage.Connecting)]
+        [TestCase(TentacleType.Listening, RpcCallStage.Connecting)]
+        [TestCase(TentacleType.Polling, RpcCallStage.InFlight)]
+        [TestCase(TentacleType.Listening, RpcCallStage.InFlight)]
 
-        [TestCase(TentacleType.Polling, RpcCallStage.Connecting, SyncOrAsyncHalibut.Async)]
-        [TestCase(TentacleType.Listening, RpcCallStage.Connecting, SyncOrAsyncHalibut.Async)]
-        [TestCase(TentacleType.Polling, RpcCallStage.InFlight, SyncOrAsyncHalibut.Async)]
-        [TestCase(TentacleType.Listening, RpcCallStage.InFlight, SyncOrAsyncHalibut.Async)]
-        public async Task DuringCompleteScript_ScriptExecutionCanBeCancelled(TentacleType tentacleType, RpcCallStage rpcCallStage, SyncOrAsyncHalibut syncOrAsyncHalibut)
+        [TestCase(TentacleType.Polling, RpcCallStage.Connecting)]
+        [TestCase(TentacleType.Listening, RpcCallStage.Connecting)]
+        [TestCase(TentacleType.Polling, RpcCallStage.InFlight)]
+        [TestCase(TentacleType.Listening, RpcCallStage.InFlight)]
+        public async Task DuringCompleteScript_ScriptExecutionCanBeCancelled(TentacleType tentacleType, RpcCallStage rpcCallStage)
         {
             // ARRANGE
             var rpcCallHasStarted = new Reference<bool>(false);
