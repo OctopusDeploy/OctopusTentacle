@@ -1,8 +1,9 @@
 using System;
+using System.Threading.Tasks;
 using Halibut;
 using Halibut.ServiceModel;
-using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Contracts.ClientServices;
 using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
@@ -13,24 +14,24 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
         public Exception? DownloadFileLatestException { get; set; }
     }
 
-    public class ErrorRecordingFileTransferServiceDecorator : IClientFileTransferService
+    public class ErrorRecordingFileTransferServiceDecorator : IAsyncClientFileTransferService
     {
         private FileTransferServiceExceptions errors;
-        private IClientFileTransferService inner;
+        private IAsyncClientFileTransferService inner;
         private ILogger logger;
 
-        public ErrorRecordingFileTransferServiceDecorator(IClientFileTransferService inner, FileTransferServiceExceptions errors)
+        public ErrorRecordingFileTransferServiceDecorator(IAsyncClientFileTransferService inner, FileTransferServiceExceptions errors)
         {
             this.inner = inner;
             this.errors = errors;
             logger = new SerilogLoggerBuilder().Build().ForContext<ErrorRecordingFileTransferServiceDecorator>();
         }
 
-        public UploadResult UploadFile(string remotePath, DataStream upload, HalibutProxyRequestOptions options)
+        public async Task<UploadResult> UploadFileAsync(string remotePath, DataStream upload, HalibutProxyRequestOptions options)
         {
             try
             {
-                return inner.UploadFile(remotePath, upload, options);
+                return await inner.UploadFileAsync(remotePath, upload, options);
             }
             catch (Exception e)
             {
@@ -40,11 +41,11 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             }
         }
 
-        public DataStream DownloadFile(string remotePath, HalibutProxyRequestOptions options)
+        public async Task<DataStream> DownloadFileAsync(string remotePath, HalibutProxyRequestOptions options)
         {
             try
             {
-                return inner.DownloadFile(remotePath, options);
+                return await inner.DownloadFileAsync(remotePath, options);
             }
             catch (Exception e)
             {

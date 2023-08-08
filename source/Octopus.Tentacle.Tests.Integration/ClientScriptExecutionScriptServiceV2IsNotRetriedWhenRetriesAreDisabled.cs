@@ -9,6 +9,7 @@ using NUnit.Framework;
 using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util;
@@ -26,7 +27,11 @@ namespace Octopus.Tentacle.Tests.Integration
         public async Task WhenNetworkFailureOccurs_DuringGetCapabilities_TheCallIsNotRetried(TentacleType tentacleType)
         {
             IClientScriptServiceV2? scriptServiceV2 = null;
-            
+            IAsyncClientScriptServiceV2? asyncScriptServiceV2 = null;
+
+            // Temporarily hard code to Sync until tests are converted to both sync and async
+            var syncOrAsyncHalibut = SyncOrAsyncHalibut.Sync;
+
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithRetriesDisabled()
                 .WithPortForwarderDataLogging()
@@ -38,14 +43,15 @@ namespace Octopus.Tentacle.Tests.Integration
                     .CountCallsToScriptServiceV2(out var scriptServiceCallCounts)
                     .RecordExceptionThrownInCapabilitiesServiceV2(out var capabilitiesServiceExceptions)
                     .DecorateCapabilitiesServiceV2With(new CapabilitiesServiceV2DecoratorBuilder()
-                        .BeforeGetCapabilities(() =>
+                        .BeforeGetCapabilities(async () =>
                         {
                             // Due to the GetCapabilities response getting cached, we must
                             // use a different service to ensure Tentacle is connected to Server.
                             // Otherwise, the response to the 'ensure connection' will get cached
                             // and any subsequent calls will succeed w/o using the network.
-                            scriptServiceV2!.EnsureTentacleIsConnectedToServer(Logger);
-                            
+                            await syncOrAsyncHalibut.WhenSync(() => scriptServiceV2.EnsureTentacleIsConnectedToServer(Logger))
+                                .WhenAsync(async () => await asyncScriptServiceV2.EnsureTentacleIsConnectedToServer(Logger));
+
                             if (capabilitiesServiceExceptions.GetCapabilitiesLatestException == null)
                             {
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
@@ -54,9 +60,11 @@ namespace Octopus.Tentacle.Tests.Integration
                         .Build())
                     .Build())
                 .Build(CancellationToken);
-            
-            scriptServiceV2 = clientTentacle.Server.ServerHalibutRuntime.CreateClient<IScriptServiceV2, IClientScriptServiceV2>(clientTentacle.ServiceEndPoint);
-            
+
+            syncOrAsyncHalibut.WhenSync(() => scriptServiceV2 = clientTentacle.Server.ServerHalibutRuntime.CreateClient<IScriptServiceV2, IClientScriptServiceV2>(clientTentacle.ServiceEndPoint));
+                //.IgnoreResult()
+                //.WhenAsync(() => asyncScriptServiceV2 = clientTentacle.Server.ServerHalibutRuntime.CreateAsyncClient<IScriptServiceV2, IAsyncClientScriptServiceV2>(clientTentacle.ServiceEndPoint));
+
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody(new ScriptBuilder().Print("hello")).Build();
 
@@ -89,8 +97,10 @@ namespace Octopus.Tentacle.Tests.Integration
                     .RecordExceptionThrownInScriptServiceV2(out var scriptServiceExceptions)
                     .CountCallsToScriptServiceV2(out var scriptServiceCallCounts)
                     .DecorateScriptServiceV2With(new ScriptServiceV2DecoratorBuilder()
-                        .BeforeStartScript(() =>
+                        .BeforeStartScript(async () =>
                         {
+                            await Task.CompletedTask;
+
                             if (scriptServiceExceptions.StartScriptLatestException == null)
                             {
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
@@ -136,8 +146,10 @@ namespace Octopus.Tentacle.Tests.Integration
                     .RecordExceptionThrownInScriptServiceV2(out var scriptServiceExceptions)
                     .CountCallsToScriptServiceV2(out var scriptServiceCallCounts)
                     .DecorateScriptServiceV2With(new ScriptServiceV2DecoratorBuilder()
-                        .BeforeGetStatus((_, _) =>
+                        .BeforeGetStatus(async (_, _) =>
                         {
+                            await Task.CompletedTask;
+
                             if (scriptServiceExceptions.GetStatusLatestException == null)
                             {
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
@@ -190,12 +202,16 @@ namespace Octopus.Tentacle.Tests.Integration
                     .RecordExceptionThrownInScriptServiceV2(out var scriptServiceExceptions)
                     .CountCallsToScriptServiceV2(out var scriptServiceCallCounts)
                     .DecorateScriptServiceV2With(new ScriptServiceV2DecoratorBuilder()
-                        .BeforeGetStatus((_, _) =>
+                        .BeforeGetStatus(async (_, _) =>
                         {
+                            await Task.CompletedTask;
+
                             cts.Cancel();
                         })
-                        .BeforeCancelScript(() =>
+                        .BeforeCancelScript(async () =>
                         {
+                            await Task.CompletedTask;
+
                             if (scriptServiceExceptions.CancelScriptLatestException == null)
                             {
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
@@ -244,8 +260,10 @@ namespace Octopus.Tentacle.Tests.Integration
                     .RecordExceptionThrownInScriptServiceV2(out var scriptServiceExceptions)
                     .CountCallsToScriptServiceV2(out var scriptServiceCallCounts)
                     .DecorateScriptServiceV2With(new ScriptServiceV2DecoratorBuilder()
-                        .BeforeCompleteScript(() =>
+                        .BeforeCompleteScript(async () =>
                         {
+                            await Task.CompletedTask;
+
                             if (scriptServiceExceptions.CompleteScriptLatestException == null)
                             {
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();

@@ -1,7 +1,8 @@
 using System;
+using System.Threading.Tasks;
 using Halibut.ServiceModel;
-using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Contracts.Capabilities;
+using Octopus.Tentacle.Contracts.ClientServices;
 using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
@@ -11,24 +12,24 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
         public Exception? GetCapabilitiesLatestException { get; set; }
     }
 
-    public class ErrorRecordingCapabilitiesServiceV2Decorator : IClientCapabilitiesServiceV2
+    public class ErrorRecordingCapabilitiesServiceV2Decorator : IAsyncClientCapabilitiesServiceV2
     {
         private CapabilitiesServiceV2Exceptions errors;
-        private IClientCapabilitiesServiceV2 inner;
+        private IAsyncClientCapabilitiesServiceV2 inner;
         private ILogger logger;
 
-        public ErrorRecordingCapabilitiesServiceV2Decorator(IClientCapabilitiesServiceV2 inner, CapabilitiesServiceV2Exceptions errors)
+        public ErrorRecordingCapabilitiesServiceV2Decorator(IAsyncClientCapabilitiesServiceV2 inner, CapabilitiesServiceV2Exceptions errors)
         {
             this.inner = inner;
             this.errors = errors;
             logger = new SerilogLoggerBuilder().Build().ForContext<ErrorRecordingCapabilitiesServiceV2Decorator>();
         }
 
-        public CapabilitiesResponseV2 GetCapabilities(HalibutProxyRequestOptions options)
+        public async Task<CapabilitiesResponseV2> GetCapabilitiesAsync(HalibutProxyRequestOptions options)
         {
             try
             {
-                return inner.GetCapabilities(options);
+                return await inner.GetCapabilitiesAsync(options);
             }
             catch (Exception e)
             {

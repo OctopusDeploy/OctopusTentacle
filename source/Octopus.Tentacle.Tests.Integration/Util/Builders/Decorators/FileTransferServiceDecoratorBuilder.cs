@@ -1,34 +1,35 @@
 using System;
+using System.Threading.Tasks;
 using Halibut;
 using Halibut.ServiceModel;
-using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Contracts.ClientServices;
 
 namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
 {
     public class FileTransferServiceDecoratorBuilder
     {
-        public delegate UploadResult UploadFileClientDecorator(IClientFileTransferService inner, string remotePath, DataStream upload, HalibutProxyRequestOptions proxyRequestOptions); 
-        public delegate DataStream DownloadFileClientDecorator(IClientFileTransferService inner, string remotePath, HalibutProxyRequestOptions proxyRequestOptions);
+        public delegate Task<UploadResult> UploadFileClientDecorator(IAsyncClientFileTransferService inner, string remotePath, DataStream upload, HalibutProxyRequestOptions proxyRequestOptions); 
+        public delegate Task<DataStream> DownloadFileClientDecorator(IAsyncClientFileTransferService inner, string remotePath, HalibutProxyRequestOptions proxyRequestOptions);
         
-        private UploadFileClientDecorator uploadFileFunc = (inner, remotePath, upload, options) => inner.UploadFile(remotePath, upload, options);
-        private DownloadFileClientDecorator downloadFileFunc = (inner, remotePath, options) => inner.DownloadFile(remotePath, options);
+        private UploadFileClientDecorator uploadFileFunc = async (inner, remotePath, upload, options) => await inner.UploadFileAsync(remotePath, upload, options);
+        private DownloadFileClientDecorator downloadFileFunc = async (inner, remotePath, options) => await inner.DownloadFileAsync(remotePath, options);
 
-        public FileTransferServiceDecoratorBuilder BeforeUploadFile(Action beforeUploadFile)
+        public FileTransferServiceDecoratorBuilder BeforeUploadFile(Func<Task>beforeUploadFile)
         {
-            return DecorateUploadFileWith((inner, remotePath, upload, options) =>
+            return DecorateUploadFileWith(async (inner, remotePath, upload, options) =>
             {
-                beforeUploadFile();
-                return inner.UploadFile(remotePath, upload, options);
+                await beforeUploadFile();
+                return await inner.UploadFileAsync(remotePath, upload, options);
             });
         }
 
-        public FileTransferServiceDecoratorBuilder BeforeUploadFile(Action<IClientFileTransferService, string, DataStream> beforeUploadFile)
+        public FileTransferServiceDecoratorBuilder BeforeUploadFile(Func<IAsyncClientFileTransferService, string, DataStream, Task> beforeUploadFile)
         {
-            return DecorateUploadFileWith((inner, remotePath, upload, options) =>
+            return DecorateUploadFileWith(async (inner, remotePath, upload, options) =>
             {
-                beforeUploadFile(inner, remotePath, upload);
-                return inner.UploadFile(remotePath, upload, options);
+                await beforeUploadFile(inner, remotePath, upload);
+                return await inner.UploadFileAsync(remotePath, upload, options);
             });
         }
 
@@ -38,21 +39,21 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             return this;
         }
 
-        public FileTransferServiceDecoratorBuilder BeforeDownloadFile(Action beforeDownloadFile)
+        public FileTransferServiceDecoratorBuilder BeforeDownloadFile(Func<Task> beforeDownloadFile)
         {
-            return DecorateDownloadFileWith((inner, remotePath, options) =>
+            return DecorateDownloadFileWith(async (inner, remotePath, options) =>
             {
-                beforeDownloadFile();
-                return inner.DownloadFile(remotePath, options);
+                await beforeDownloadFile();
+                return await inner.DownloadFileAsync(remotePath, options);
             });
         }
 
-        public FileTransferServiceDecoratorBuilder BeforeDownloadFile(Action<IClientFileTransferService, string> beforeDownloadFile)
+        public FileTransferServiceDecoratorBuilder BeforeDownloadFile(Func<IAsyncClientFileTransferService, string, Task> beforeDownloadFile)
         {
-            return DecorateDownloadFileWith((inner, remotePath, options) =>
+            return DecorateDownloadFileWith(async (inner, remotePath, options) =>
             {
-                beforeDownloadFile(inner, remotePath);
-                return inner.DownloadFile(remotePath, options);
+                await beforeDownloadFile(inner, remotePath);
+                return await inner.DownloadFileAsync(remotePath, options);
             });
         }
 
@@ -62,7 +63,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             return this;
         }
 
-        public Func<IClientFileTransferService, IClientFileTransferService> Build()
+        public Decorator<IAsyncClientFileTransferService> Build()
         {
             return inner =>
             {
@@ -73,14 +74,14 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
         }
 
 
-        private class FuncDecoratingFileTransferService : IClientFileTransferService
+        private class FuncDecoratingFileTransferService : IAsyncClientFileTransferService
         {
-            private IClientFileTransferService inner;
+            private IAsyncClientFileTransferService inner;
             private UploadFileClientDecorator uploadFileFunc;
             private DownloadFileClientDecorator downloadFileFunc;
 
             public FuncDecoratingFileTransferService(
-                IClientFileTransferService inner,
+                IAsyncClientFileTransferService inner,
                 UploadFileClientDecorator uploadFileFunc,
                 DownloadFileClientDecorator downloadFileFunc)
             {
@@ -89,14 +90,14 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
                 this.downloadFileFunc = downloadFileFunc;
             }
 
-            public UploadResult UploadFile(string remotePath, DataStream upload, HalibutProxyRequestOptions options)
+            public async Task<UploadResult> UploadFileAsync(string remotePath, DataStream upload, HalibutProxyRequestOptions options)
             {
-                return uploadFileFunc(inner, remotePath, upload, options);
+                return await uploadFileFunc(inner, remotePath, upload, options);
             }
 
-            public DataStream DownloadFile(string remotePath, HalibutProxyRequestOptions options)
+            public async Task<DataStream> DownloadFileAsync(string remotePath, HalibutProxyRequestOptions options)
             {
-                return downloadFileFunc(inner, remotePath, options);
+                return await downloadFileFunc(inner, remotePath, options);
             }
         }
     }

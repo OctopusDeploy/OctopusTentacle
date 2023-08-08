@@ -33,8 +33,10 @@ namespace Octopus.Tentacle.Tests.Integration
                     .RecordExceptionThrownInScriptService(out var scriptServiceExceptions)
                     .CountCallsToScriptService(out var scriptServiceCallCounts)
                     .DecorateScriptServiceWith(new ScriptServiceDecoratorBuilder()
-                        .BeforeStartScript(() =>
+                        .BeforeStartScript(async () =>
                         {
+                            await Task.CompletedTask;
+
                             if (scriptServiceExceptions.StartScriptLatestException == null)
                             {
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
@@ -89,8 +91,10 @@ namespace Octopus.Tentacle.Tests.Integration
                     .RecordExceptionThrownInScriptService(out var scriptServiceExceptions)
                     .CountCallsToScriptService(out var scriptServiceCallCounts)
                     .DecorateScriptServiceWith(new ScriptServiceDecoratorBuilder()
-                        .BeforeGetStatus((inner, request) =>
+                        .BeforeGetStatus(async (inner, request) =>
                         {
+                            await Task.CompletedTask;
+
                             scriptStatusRequest = request;
                             if (scriptServiceExceptions.GetStatusLatestException == null)
                             {
@@ -145,13 +149,17 @@ namespace Octopus.Tentacle.Tests.Integration
                     .RecordExceptionThrownInScriptService(out var scriptServiceExceptions)
                     .CountCallsToScriptService(out var scriptServiceCallCounts)
                     .DecorateScriptServiceWith(new ScriptServiceDecoratorBuilder()
-                        .BeforeGetStatus((inner, request) =>
+                        .BeforeGetStatus(async (inner, request) =>
                         {
+                            await Task.CompletedTask;
+
                             cts.Cancel();
                             scriptStatusRequest = request;
                         })
-                        .BeforeCancelScript(() =>
+                        .BeforeCancelScript(async () =>
                         {
+                            await Task.CompletedTask;
+
                             if (scriptServiceExceptions.CancelScriptLatestException == null)
                             {
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
@@ -170,11 +178,10 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Print("AllDone"))
                 .Build();
 
-            List<ProcessOutput> logs = new List<ProcessOutput>();
-
-            //Assert.CatchAsync(async () => await clientTentacle.TentacleClient.ExecuteScriptAssumingException(startScriptCommand, logs, cts.Token));
+            var logs = new List<ProcessOutput>();
+            
             Assert.ThrowsAsync<HalibutClientException>(async () => await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, logs, cts.Token));
-
+            
             // Let the script finish.
             File.WriteAllText(waitForFile, "");
             var legacyTentacleClient = clientTentacle.LegacyTentacleClientBuilder().Build(CancellationToken);
@@ -203,8 +210,10 @@ namespace Octopus.Tentacle.Tests.Integration
                     .RecordExceptionThrownInScriptService(out var scriptServiceExceptions)
                     .CountCallsToScriptService(out var scriptServiceCallCounts)
                     .DecorateScriptServiceWith(new ScriptServiceDecoratorBuilder()
-                        .BeforeCompleteScript(() =>
+                        .BeforeCompleteScript(async () =>
                         {
+                            await Task.CompletedTask;
+
                             if (scriptServiceExceptions.CompleteScriptLatestException == null)
                             {
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();

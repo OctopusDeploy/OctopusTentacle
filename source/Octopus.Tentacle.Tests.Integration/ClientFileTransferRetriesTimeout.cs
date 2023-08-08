@@ -39,9 +39,9 @@ namespace Octopus.Tentacle.Tests.Integration
                     .CountCallsToFileTransferService(out var fileTransferServiceCallCounts)
                     .RecordExceptionThrownInFileTransferService(out var fileTransferServiceException)
                     .DecorateFileTransferServiceWith(d => d
-                        .BeforeUploadFile((service, _, _) =>
+                        .BeforeUploadFile(async (service, _, _) =>
                         {
-                            service.EnsureTentacleIsConnectedToServer(Logger);
+                            await service.EnsureTentacleIsConnectedToServer(Logger);
 
                             // Kill the first UploadFile call to force the rpc call into retries
                             if (fileTransferServiceException.UploadLatestException == null)
@@ -106,9 +106,9 @@ namespace Octopus.Tentacle.Tests.Integration
                     .CountCallsToFileTransferService(out var fileTransferServiceCallCounts)
                     .RecordExceptionThrownInFileTransferService(out var fileTransferServiceException)
                     .DecorateFileTransferServiceWith(d => d
-                        .BeforeDownloadFile((service, _) =>
+                        .BeforeDownloadFile(async (service, _) =>
                         {
-                            service.EnsureTentacleIsConnectedToServer(Logger);
+                            await service.EnsureTentacleIsConnectedToServer(Logger);
 
                             // Kill the first DownloadFile call to force the rpc call into retries
                             if (fileTransferServiceException.DownloadFileLatestException == null)

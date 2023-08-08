@@ -7,6 +7,7 @@ using Halibut;
 using NUnit.Framework;
 using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.CommonTestUtils.Builders;
+using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util;
@@ -31,6 +32,10 @@ namespace Octopus.Tentacle.Tests.Integration
         public async Task WhenRpcRetriesTimeOut_DuringGetCapabilities_TheRpcCallIsCancelled(TentacleType tentacleType, RpcCallStage rpcCallStage)
         {
             IClientScriptServiceV2? scriptServiceV2 = null;
+            IAsyncClientScriptServiceV2? asyncScriptServiceV2 = null;
+
+            // Temporarily hard code to Sync until tests are converted to both sync and async
+            var syncOrAsyncHalibut = SyncOrAsyncHalibut.Sync;
 
             using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 // Set a short retry duration so we cancel fairly quickly
@@ -45,9 +50,10 @@ namespace Octopus.Tentacle.Tests.Integration
                     .CountCallsToScriptServiceV2(out var scriptServiceV2CallCounts)
                     .RecordExceptionThrownInCapabilitiesServiceV2(out var capabilitiesServiceV2Exception)
                     .DecorateCapabilitiesServiceV2With(d => d
-                        .BeforeGetCapabilities((service) =>
+                        .BeforeGetCapabilities(async (service) =>
                         {
-                            scriptServiceV2.EnsureTentacleIsConnectedToServer(Logger);
+                            await syncOrAsyncHalibut.WhenSync(() => scriptServiceV2.EnsureTentacleIsConnectedToServer(Logger))
+                                .WhenAsync(async () => await asyncScriptServiceV2.EnsureTentacleIsConnectedToServer(Logger));
 
                             // Kill the first GetCapabilities call to force the rpc call into retries
                             if (capabilitiesServiceV2Exception.GetCapabilitiesLatestException == null)
@@ -74,7 +80,9 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            scriptServiceV2 = clientAndTentacle.Server.ServerHalibutRuntime.CreateClient<IScriptServiceV2, IClientScriptServiceV2>(clientAndTentacle.ServiceEndPoint);
+            syncOrAsyncHalibut.WhenSync(() => scriptServiceV2 = clientAndTentacle.Server.ServerHalibutRuntime.CreateClient<IScriptServiceV2, IClientScriptServiceV2>(clientAndTentacle.ServiceEndPoint));
+                //.IgnoreResult()
+                //.WhenAsync(() => asyncScriptServiceV2 = clientAndTentacle.Server.ServerHalibutRuntime.CreateAsyncClient<IScriptServiceV2, IAsyncClientScriptServiceV2>(clientAndTentacle.ServiceEndPoint));
 
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody(b => b
@@ -113,7 +121,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .CountCallsToScriptServiceV2(out var scriptServiceCallCounts)
                     .RecordExceptionThrownInScriptServiceV2(out var scriptServiceV2Exception)
                     .DecorateScriptServiceV2With(d => d
-                        .BeforeStartScript((service, _) =>
+                        .BeforeStartScript(async (service, _) =>
                         {
                             // Kill the first StartScript call to force the rpc call into retries
                             if (scriptServiceV2Exception.StartScriptLatestException == null)
@@ -122,7 +130,7 @@ namespace Octopus.Tentacle.Tests.Integration
                             }
                             else
                             {
-                                service.EnsureTentacleIsConnectedToServer(Logger);
+                                await service.EnsureTentacleIsConnectedToServer(Logger);
 
                                 if (rpcCallStage == RpcCallStage.Connecting)
                                 {
@@ -182,7 +190,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .CountCallsToScriptServiceV2(out var scriptServiceCallCounts)
                     .RecordExceptionThrownInScriptServiceV2(out var scriptServiceV2Exception)
                     .DecorateScriptServiceV2With(d => d
-                        .BeforeGetStatus((service, _) =>
+                        .BeforeGetStatus(async (service, _) =>
                         {
                             // Kill the first GetStatus call to force the rpc call into retries
                             if (scriptServiceV2Exception.GetStatusLatestException == null)
@@ -191,7 +199,7 @@ namespace Octopus.Tentacle.Tests.Integration
                             }
                             else
                             {
-                                service.EnsureTentacleIsConnectedToServer(Logger);
+                                await service.EnsureTentacleIsConnectedToServer(Logger);
 
                                 if (rpcCallStage == RpcCallStage.Connecting)
                                 {
@@ -253,7 +261,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .CountCallsToScriptServiceV2(out var scriptServiceCallCounts)
                     .RecordExceptionThrownInScriptServiceV2(out var scriptServiceV2Exception)
                     .DecorateScriptServiceV2With(d => d
-                        .BeforeCancelScript((service, _) =>
+                        .BeforeCancelScript(async (service, _) =>
                         {
                             // Kill the first CancelScript call to force the rpc call into retries
                             if (scriptServiceV2Exception.CancelScriptLatestException == null)
@@ -262,7 +270,7 @@ namespace Octopus.Tentacle.Tests.Integration
                             }
                             else
                             {
-                                service.EnsureTentacleIsConnectedToServer(Logger);
+                                await service.EnsureTentacleIsConnectedToServer(Logger);
 
                                 if (rpcCallStage == RpcCallStage.Connecting)
                                 {

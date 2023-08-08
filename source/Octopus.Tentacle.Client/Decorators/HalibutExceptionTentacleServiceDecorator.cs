@@ -1,8 +1,10 @@
 using System;
+using System.Threading.Tasks;
 using Halibut;
 using Halibut.ServiceModel;
 using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Contracts.Capabilities;
+using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
 
 namespace Octopus.Tentacle.Client.Decorators
@@ -17,9 +19,19 @@ namespace Octopus.Tentacle.Client.Decorators
             return service;
         }
 
+        public IAsyncClientScriptService Decorate(IAsyncClientScriptService service)
+        {
+            return service;
+        }
+
         public IClientScriptServiceV2 Decorate(IClientScriptServiceV2 service)
         {
             return new HalibutExceptionScriptServiceV2Decorator(service);
+        }
+
+        public IAsyncClientScriptServiceV2 Decorate(IAsyncClientScriptServiceV2 service)
+        {
+            return new HalibutExceptionAsyncScriptServiceV2Decorator(service);
         }
 
         public IClientFileTransferService Decorate(IClientFileTransferService service)
@@ -27,9 +39,19 @@ namespace Octopus.Tentacle.Client.Decorators
             return service;
         }
 
+        public IAsyncClientFileTransferService Decorate(IAsyncClientFileTransferService service)
+        {
+            return service;
+        }
+
         public IClientCapabilitiesServiceV2 Decorate(IClientCapabilitiesServiceV2 service)
         {
             return new HalibutExceptionCapabilitiesServiceV2Decorator(service);
+        }
+
+        public IAsyncClientCapabilitiesServiceV2 Decorate(IAsyncClientCapabilitiesServiceV2 service)
+        {
+            return new HalibutExceptionAsyncCapabilitiesServiceV2Decorator(service);
         }
 
         public static bool IsHalibutOperationCancellationException(Exception e)
@@ -96,6 +118,64 @@ namespace Octopus.Tentacle.Client.Decorators
         }
     }
 
+    class HalibutExceptionAsyncScriptServiceV2Decorator : IAsyncClientScriptServiceV2
+    {
+        private readonly IAsyncClientScriptServiceV2 inner;
+
+        public HalibutExceptionAsyncScriptServiceV2Decorator(IAsyncClientScriptServiceV2 inner)
+        {
+            this.inner = inner;
+        }
+
+        public async Task<ScriptStatusResponseV2> StartScriptAsync(StartScriptCommandV2 command, HalibutProxyRequestOptions halibutProxyRequestOptions)
+        {
+            try
+            {
+                return await inner.StartScriptAsync(command, halibutProxyRequestOptions);
+            }
+            catch (Exception e) when (HalibutExceptionTentacleServiceDecorator.IsHalibutOperationCancellationException(e))
+            {
+                throw new OperationCanceledException("The operation was cancelled", e);
+            }
+        }
+
+        public async Task<ScriptStatusResponseV2> GetStatusAsync(ScriptStatusRequestV2 request, HalibutProxyRequestOptions halibutProxyRequestOptions)
+        {
+            try
+            {
+                return await inner.GetStatusAsync(request, halibutProxyRequestOptions);
+            }
+            catch (Exception e) when (HalibutExceptionTentacleServiceDecorator.IsHalibutOperationCancellationException(e))
+            {
+                throw new OperationCanceledException("The operation was cancelled", e);
+            }
+        }
+
+        public async Task<ScriptStatusResponseV2> CancelScriptAsync(CancelScriptCommandV2 command, HalibutProxyRequestOptions halibutProxyRequestOptions)
+        {
+            try
+            {
+                return await inner.CancelScriptAsync(command, halibutProxyRequestOptions);
+            }
+            catch (Exception e) when (HalibutExceptionTentacleServiceDecorator.IsHalibutOperationCancellationException(e))
+            {
+                throw new OperationCanceledException("The operation was cancelled", e);
+            }
+        }
+
+        public async Task CompleteScriptAsync(CompleteScriptCommandV2 command, HalibutProxyRequestOptions halibutProxyRequestOptions)
+        {
+            try
+            {
+                await inner.CompleteScriptAsync(command, halibutProxyRequestOptions);
+            }
+            catch (Exception e) when (HalibutExceptionTentacleServiceDecorator.IsHalibutOperationCancellationException(e))
+            {
+                throw new OperationCanceledException("The operation was cancelled", e);
+            }
+        }
+    }
+
     class HalibutExceptionCapabilitiesServiceV2Decorator : IClientCapabilitiesServiceV2
     {
         private readonly IClientCapabilitiesServiceV2 inner;
@@ -110,6 +190,28 @@ namespace Octopus.Tentacle.Client.Decorators
             try
             {
                 return inner.GetCapabilities(halibutProxyRequestOptions);
+            }
+            catch (Exception e) when (HalibutExceptionTentacleServiceDecorator.IsHalibutOperationCancellationException(e))
+            {
+                throw new OperationCanceledException("The operation was cancelled", e);
+            }
+        }
+    }
+
+    class HalibutExceptionAsyncCapabilitiesServiceV2Decorator : IAsyncClientCapabilitiesServiceV2
+    {
+        private readonly IAsyncClientCapabilitiesServiceV2 inner;
+
+        public HalibutExceptionAsyncCapabilitiesServiceV2Decorator(IAsyncClientCapabilitiesServiceV2 inner)
+        {
+            this.inner = inner;
+        }
+
+        public async Task<CapabilitiesResponseV2> GetCapabilitiesAsync(HalibutProxyRequestOptions halibutProxyRequestOptions)
+        {
+            try
+            {
+                return await inner.GetCapabilitiesAsync(halibutProxyRequestOptions);
             }
             catch (Exception e) when (HalibutExceptionTentacleServiceDecorator.IsHalibutOperationCancellationException(e))
             {

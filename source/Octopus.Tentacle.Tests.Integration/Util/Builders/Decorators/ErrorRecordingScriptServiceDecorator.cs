@@ -1,7 +1,8 @@
 using System;
+using System.Threading.Tasks;
 using Halibut.ServiceModel;
-using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Contracts.ClientServices;
 using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
@@ -15,24 +16,24 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
         public Exception? CompleteScriptLatestException { get; set; }
     }
 
-    public class ErrorRecordingScriptServiceDecorator : IClientScriptService
+    public class ErrorRecordingScriptServiceDecorator : IAsyncClientScriptService
     {
         private readonly ScriptServiceExceptions errors;
-        private readonly IClientScriptService inner;
+        private readonly IAsyncClientScriptService inner;
         private readonly ILogger logger;
 
-        public ErrorRecordingScriptServiceDecorator(IClientScriptService inner, ScriptServiceExceptions errors)
+        public ErrorRecordingScriptServiceDecorator(IAsyncClientScriptService inner, ScriptServiceExceptions errors)
         {
             this.inner = inner;
             this.errors = errors;
             logger = new SerilogLoggerBuilder().Build().ForContext<ErrorRecordingScriptServiceDecorator>();
         }
 
-        public ScriptTicket StartScript(StartScriptCommand command, HalibutProxyRequestOptions options)
+        public async Task<ScriptTicket> StartScriptAsync(StartScriptCommand command, HalibutProxyRequestOptions options)
         {
             try
             {
-                return inner.StartScript(command, options);
+                return await inner.StartScriptAsync(command, options);
             }
             catch (Exception e)
             {
@@ -42,11 +43,11 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             }
         }
 
-        public ScriptStatusResponse GetStatus(ScriptStatusRequest request, HalibutProxyRequestOptions options)
+        public async Task<ScriptStatusResponse> GetStatusAsync(ScriptStatusRequest request, HalibutProxyRequestOptions options)
         {
             try
             {
-                return inner.GetStatus(request, options);
+                return await inner.GetStatusAsync(request, options);
             }
             catch (Exception e)
             {
@@ -56,11 +57,11 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             }
         }
 
-        public ScriptStatusResponse CancelScript(CancelScriptCommand command, HalibutProxyRequestOptions options)
+        public async Task<ScriptStatusResponse> CancelScriptAsync(CancelScriptCommand command, HalibutProxyRequestOptions options)
         {
             try
             {
-                return inner.CancelScript(command, options);
+                return await inner.CancelScriptAsync(command, options);
             }
             catch (Exception e)
             {
@@ -70,11 +71,11 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             }
         }
 
-        public ScriptStatusResponse CompleteScript(CompleteScriptCommand command, HalibutProxyRequestOptions options)
+        public async Task<ScriptStatusResponse> CompleteScriptAsync(CompleteScriptCommand command, HalibutProxyRequestOptions options)
         {
             try
             {
-                return inner.CompleteScript(command, options);
+                return await inner.CompleteScriptAsync(command, options);
             }
             catch (Exception e)
             {
