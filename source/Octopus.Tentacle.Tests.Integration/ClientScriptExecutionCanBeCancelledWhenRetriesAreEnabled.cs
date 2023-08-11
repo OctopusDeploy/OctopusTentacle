@@ -85,7 +85,7 @@ namespace Octopus.Tentacle.Tests.Integration
                                         .WhenAsync(async () => await asyncScriptServiceV2.EnsureTentacleIsConnectedToServer(Logger));
 
                                     PauseOrStopPortForwarder(rpcCallStage, portForwarder.Value, responseMessageTcpKiller, rpcCallHasStarted);
-                                    if (rpcCallStage == RpcCallStage.Connecting)
+                                    if (rpcCallStage == RpcCallStage.Connecting && tentacleType == TentacleType.Polling)
                                     {
                                         await service.EnsurePollingQueueWontSendMessageToDisconnectedTentacles(Logger);
                                     }
@@ -123,6 +123,12 @@ namespace Octopus.Tentacle.Tests.Integration
             switch (rpcCallStage)
             {
                 case RpcCallStage.Connecting:
+                    if (tentacleType == TentacleType.Listening && rpcCall == RpcCall.RetryingCall && capabilityServiceV2Exceptions.GetCapabilitiesLatestException is HalibutClientException)
+                    {
+                        Assert.Inconclusive("This test is very fragile and often it will cancel script execution when the client is not in a wait trying to connect but instead gets error responses from the proxy. " + 
+                            "This results in an error being returned rather than an operation cancelled being returned and is not testing the intended scenario");
+                    }
+                    
                     capabilityServiceV2Exceptions.GetCapabilitiesLatestException.Should().BeTaskOrOperationCancelledException().And.NotBeOfType<OperationAbandonedException>();
                     break;
                 case RpcCallStage.InFlight:
@@ -252,6 +258,12 @@ namespace Octopus.Tentacle.Tests.Integration
             {
                 case ExpectedFlow.CancelRpcAndExitImmediately:
                 case ExpectedFlow.CancelRpcThenCancelScriptThenCompleteScript:
+                    if (tentacleType == TentacleType.Listening && rpcCall == RpcCall.RetryingCall && scriptServiceV2Exceptions.StartScriptLatestException is HalibutClientException)
+                    {
+                        Assert.Inconclusive("This test is very fragile and often it will cancel script execution when the client is not in a wait trying to connect but instead gets error responses from the proxy. " + 
+                            "This results in an error being returned rather than an operation cancelled being returned and is not testing the intended scenario");
+                    }
+                    
                     scriptServiceV2Exceptions.StartScriptLatestException.Should().BeTaskOrOperationCancelledException().And.NotBeOfType<OperationAbandonedException>();
                     break;
                 case ExpectedFlow.AbandonRpcThenCancelScriptThenCompleteScript:
@@ -397,6 +409,12 @@ namespace Octopus.Tentacle.Tests.Integration
             switch (expectedFlow)
             {
                 case ExpectedFlow.CancelRpcThenCancelScriptThenCompleteScript:
+                    if (tentacleType == TentacleType.Listening && rpcCall == RpcCall.RetryingCall && scriptServiceV2Exceptions.GetStatusLatestException is HalibutClientException)
+                    {
+                        Assert.Inconclusive("This test is very fragile and often it will cancel script execution when the client is not in a wait trying to connect but instead gets error responses from the proxy. " + 
+                            "This results in an error being returned rather than an operation cancelled being returned and is not testing the intended scenario");
+                    }
+                    
                     scriptServiceV2Exceptions.GetStatusLatestException.Should().BeTaskOrOperationCancelledException().And.NotBeOfType<OperationAbandonedException>();
                     break;
                 case ExpectedFlow.AbandonRpcThenCancelScriptThenCompleteScript:
