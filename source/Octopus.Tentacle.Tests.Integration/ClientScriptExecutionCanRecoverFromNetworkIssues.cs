@@ -267,9 +267,14 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            syncOrAsyncHalibut.WhenSync(() => scriptServiceV2 = clientTentacle.Server.ServerHalibutRuntime.CreateClient<IScriptServiceV2, IClientScriptServiceV2>(clientTentacle.ServiceEndPoint))
-                .IgnoreResult()
-                .WhenAsync(() => asyncScriptServiceV2 = clientTentacle.Server.ServerHalibutRuntime.CreateAsyncClient<IScriptServiceV2, IAsyncClientScriptServiceV2>(clientTentacle.ServiceEndPoint));
+            syncOrAsyncHalibut.WhenSync(() =>
+                {
+                    scriptServiceV2 = clientTentacle.Server.ServerHalibutRuntime.CreateClient<IScriptServiceV2, IClientScriptServiceV2>(clientTentacle.ServiceEndPoint);
+                })
+                .WhenAsync(() =>
+                {
+                    asyncScriptServiceV2 = clientTentacle.Server.ServerHalibutRuntime.CreateAsyncClient<IScriptServiceV2, IAsyncClientScriptServiceV2>(clientTentacle.ServiceEndPoint);
+                });
 
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody(new ScriptBuilder().Print("hello"))

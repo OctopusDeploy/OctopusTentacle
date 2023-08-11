@@ -5,6 +5,7 @@ using FluentAssertions;
 using Halibut;
 using NUnit.Framework;
 using Octopus.Tentacle.CommonTestUtils;
+using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.Legacy;
 using Octopus.Tentacle.Tests.Integration.Util;
@@ -23,23 +24,35 @@ namespace Octopus.Tentacle.Tests.Integration
             using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleType)
                 .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .Build(CancellationToken);
+            
+            UploadResult uploadResult;
 
 #pragma warning disable CS0612
-            var dataStream = new DataStream(
-                fileToUpload.File.Length,
-                stream =>
-                {
-                    using var fileStream = File.OpenRead(fileToUpload.File.FullName);
-                    fileStream.CopyTo(stream);
-                });
+            if (syncOrAsyncHalibut == SyncOrAsyncHalibut.Sync)
+            {
+                var dataStream = new DataStream(
+                    fileToUpload.File.Length,
+                    stream =>
+                    {
+                        using var fileStream = File.OpenRead(fileToUpload.File.FullName);
+                        fileStream.CopyTo(stream);
+                    });
 #pragma warning restore CS0612
 
-            var uploadResult = await syncOrAsyncHalibut
-                .WhenSync(() => clientAndTentacle.TentacleClient.FileTransferService.SyncService.UploadFile("the_remote_uploaded_file", dataStream))
-                .WhenAsync(async () => await clientAndTentacle.TentacleClient.FileTransferService.AsyncService.UploadFileAsync(
-                    "the_remote_uploaded_file", 
-                    dataStream, 
-                    new (CancellationToken, null)));
+                uploadResult = clientAndTentacle.TentacleClient.FileTransferService.SyncService.UploadFile("the_remote_uploaded_file", dataStream);
+            }
+            else
+            {
+                var dataStream = new DataStream(
+                    fileToUpload.File.Length,
+                    async (stream, ct) =>
+                    {
+                        using var fileStream = File.OpenRead(fileToUpload.File.FullName);
+                        await fileStream.CopyToAsync(stream);
+                    });
+
+                uploadResult = await clientAndTentacle.TentacleClient.FileTransferService.AsyncService.UploadFileAsync("the_remote_uploaded_file", dataStream, new(CancellationToken, null));
+            }
 
             Console.WriteLine($"Source: {fileToUpload.File.FullName}");
             Console.WriteLine($"Destination: {uploadResult.FullPath}");
