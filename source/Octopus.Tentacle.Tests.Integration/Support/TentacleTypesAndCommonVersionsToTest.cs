@@ -16,6 +16,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                     TentacleVersions.v6_3_417_LastWithScriptServiceV1Only,
                     TentacleVersions.v7_0_1_ScriptServiceV2Added
                 )
+                .And(
+                    SyncOrAsyncHalibut.Sync,
+                    SyncOrAsyncHalibut.Async
+                )
                 .Build();
         }
     }

@@ -68,6 +68,15 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             });
         }
 
+        public ScriptServiceDecoratorBuilder BeforeCancelScript(Func<IAsyncClientScriptService, CancelScriptCommand, Task> beforeCancelScript)
+        {
+            return DecorateCancelScriptWith(async (inner, command, options) =>
+            {
+                await beforeCancelScript(inner, command);
+                return await inner.CancelScriptAsync(command, options);
+            });
+        }
+
         public ScriptServiceDecoratorBuilder DecorateCompleteScriptWith(CompleteScriptClientDecorator completeScriptAction)
         {
             this.completeScriptAction = completeScriptAction;

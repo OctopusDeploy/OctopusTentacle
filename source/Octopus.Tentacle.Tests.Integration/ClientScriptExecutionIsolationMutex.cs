@@ -21,21 +21,31 @@ namespace Octopus.Tentacle.Tests.Integration
             public IEnumerator GetEnumerator()
             {
                 return AllCombinations
-                    .Of(new TentacleTypesToTest())
+                    .Of(TentacleType.Polling,
+                        TentacleType.Listening)
                     .And(
-                        TentacleVersions.Current, 
+                        TentacleVersions.Current,
                         TentacleVersions.v6_3_417_LastWithScriptServiceV1Only,
                         TentacleVersions.v7_0_1_ScriptServiceV2Added)
                     .And(ScriptIsolationLevel.FullIsolation, ScriptIsolationLevel.NoIsolation)
+                    .And(
+                        SyncOrAsyncHalibut.Sync,
+                        SyncOrAsyncHalibut.Async
+                    )
                     .Build();
             }
         }
 
         [Test]
         [TestCaseSource(typeof(WithFullIsolationTestCases))]
-        public async Task ScriptIsolationMutexFull_EnsuresTwoDifferentScriptsDontRunAtTheSameTime(TentacleType tentacleType, Version? tentacleVersion, ScriptIsolationLevel levelOfSecondScript)
+        public async Task ScriptIsolationMutexFull_EnsuresTwoDifferentScriptsDontRunAtTheSameTime(
+            TentacleType tentacleType, 
+            Version? tentacleVersion, 
+            ScriptIsolationLevel levelOfSecondScript,
+            SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithTentacleVersion(tentacleVersion)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .CountCallsToScriptServiceV2(out var scriptServiceV2CallCounts)
@@ -112,16 +122,21 @@ namespace Octopus.Tentacle.Tests.Integration
             public IEnumerator GetEnumerator()
             {
                 return AllCombinations
-                    .Of(new TentacleTypesToTest())
+                    .Of(TentacleType.Polling,
+                        TentacleType.Listening)
                     .And(
-                        TentacleVersions.Current, 
-                        TentacleVersions.v6_3_417_LastWithScriptServiceV1Only, 
+                        TentacleVersions.Current,
+                        TentacleVersions.v6_3_417_LastWithScriptServiceV1Only,
                         TentacleVersions.v7_0_1_ScriptServiceV2Added) // Testing against v1 and v2 script services
                     .And(
                         // Scripts with different mutex names can run at the same time.
                         new ScriptsInParallelTestCases(ScriptIsolationLevel.FullIsolation, "mutex", ScriptIsolationLevel.FullIsolation, "differentMutex"),
                         // Scripts with the same mutex name can run at the same time if they both has no isolation.
                         new ScriptsInParallelTestCases(ScriptIsolationLevel.NoIsolation, "sameMutex", ScriptIsolationLevel.NoIsolation, "sameMutex"))
+                    .And(
+                        SyncOrAsyncHalibut.Sync,
+                        SyncOrAsyncHalibut.Async
+                    )
                     .Build();
             }
         }
@@ -130,10 +145,12 @@ namespace Octopus.Tentacle.Tests.Integration
         [TestCaseSource(typeof(ScriptsCanRunInParallelCases))]
         public async Task ScriptIsolationMutexFull_IsOnlyExclusiveWhenFullAndWhenTheMutexNameIsTheSame(
             TentacleType tentacleType,
-            Version? tentacleVersion,
-            ScriptsInParallelTestCases scriptsInParallelTestCases)
+            Version tentacleVersion,
+            ScriptsInParallelTestCases scriptsInParallelTestCases,
+            SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithTentacleVersion(tentacleVersion)
                 .Build(CancellationToken);
 

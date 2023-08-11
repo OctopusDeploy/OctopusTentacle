@@ -20,13 +20,18 @@ namespace Octopus.Tentacle.Tests.Integration
         public IEnumerator GetEnumerator()
         {
             return AllCombinations
-                .Of(new TentacleTypesToTest())
+                .Of(TentacleType.Polling,
+                    TentacleType.Listening)
                 .And(
                     TentacleVersions.Current,
                     TentacleVersions.v5_0_4_FirstLinuxRelease,
                     TentacleVersions.v5_0_12_AutofacServiceFactoryIsInShared,
                     TentacleVersions.v6_3_417_LastWithScriptServiceV1Only, // the autofac service is in tentacle, but tentacle does not have the capabilities service.
                     TentacleVersions.v7_0_1_ScriptServiceV2Added
+                )
+                .And(
+                    SyncOrAsyncHalibut.Sync,
+                    SyncOrAsyncHalibut.Async
                 )
                 .Build();
         }
@@ -39,13 +44,17 @@ namespace Octopus.Tentacle.Tests.Integration
         [TestCaseSource(typeof(CapabilitiesServiceInterestingTentacles))]
         public async Task CapabilitiesFromAnOlderTentacleWhichHasNoCapabilitiesService_WorksWithTheBackwardsCompatabilityDecorator(
             TentacleType tentacleType,
-            Version? version)
+            Version? version, 
+            SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
             using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleType)
+                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithTentacleVersion(version)
                 .Build(CancellationToken);
 
-            var capabilities = clientAndTentacle.TentacleClient.CapabilitiesServiceV2.GetCapabilities().SupportedCapabilities;
+            var capabilities = await syncOrAsyncHalibut
+                .WhenSync(() => clientAndTentacle.TentacleClient.CapabilitiesServiceV2.SyncService.GetCapabilities().SupportedCapabilities)
+                .WhenAsync(async () => (await clientAndTentacle.TentacleClient.CapabilitiesServiceV2.AsyncService.GetCapabilitiesAsync(new(CancellationToken, null))).SupportedCapabilities);
 
             capabilities.Should().Contain("IScriptService");
             capabilities.Should().Contain("IFileTransferService");
@@ -63,12 +72,13 @@ namespace Octopus.Tentacle.Tests.Integration
 
         [Test]
         [TestCaseSource(typeof(CapabilitiesServiceInterestingTentacles))]
-        public async Task CapabilitiesResponseShouldBeCached(TentacleType tentacleType, Version? version)
+        public async Task CapabilitiesResponseShouldBeCached(TentacleType tentacleType, Version? version, SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
             var capabilitiesResponses = new List<CapabilitiesResponseV2>();
             var resumePortForwarder = false;
 
             using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithPortForwarder(out var portForwarder)
                 .WithTentacleVersion(version)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()

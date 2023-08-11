@@ -5,6 +5,7 @@ using FluentAssertions;
 using Halibut;
 using NUnit.Framework;
 using Octopus.Tentacle.CommonTestUtils;
+using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.Legacy;
 using Octopus.Tentacle.Tests.Integration.Util;
@@ -16,22 +17,42 @@ namespace Octopus.Tentacle.Tests.Integration
     {
         [Test]
         [TestCaseSource(typeof(TentacleTypesToTest))]
-        public async Task UploadFileSuccessfully(TentacleType tentacleType)
+        public async Task UploadFileSuccessfully(TentacleType tentacleType, SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
             using var fileToUpload = new RandomTemporaryFileBuilder().Build();
 
             using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleType)
+                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .Build(CancellationToken);
+            
+            UploadResult uploadResult;
 
-            var uploadResult = clientAndTentacle.TentacleClient.FileTransferService.UploadFile(
-                "the_remote_uploaded_file",
-                new DataStream(
+#pragma warning disable CS0612
+            if (syncOrAsyncHalibut == SyncOrAsyncHalibut.Sync)
+            {
+                var dataStream = new DataStream(
                     fileToUpload.File.Length,
                     stream =>
                     {
                         using var fileStream = File.OpenRead(fileToUpload.File.FullName);
                         fileStream.CopyTo(stream);
-                    }));
+                    });
+#pragma warning restore CS0612
+
+                uploadResult = clientAndTentacle.TentacleClient.FileTransferService.SyncService.UploadFile("the_remote_uploaded_file", dataStream);
+            }
+            else
+            {
+                var dataStream = new DataStream(
+                    fileToUpload.File.Length,
+                    async (stream, ct) =>
+                    {
+                        using var fileStream = File.OpenRead(fileToUpload.File.FullName);
+                        await fileStream.CopyToAsync(stream);
+                    });
+
+                uploadResult = await clientAndTentacle.TentacleClient.FileTransferService.AsyncService.UploadFileAsync("the_remote_uploaded_file", dataStream, new(CancellationToken, null));
+            }
 
             Console.WriteLine($"Source: {fileToUpload.File.FullName}");
             Console.WriteLine($"Destination: {uploadResult.FullPath}");
@@ -44,14 +65,19 @@ namespace Octopus.Tentacle.Tests.Integration
 
         [Test]
         [TestCaseSource(typeof(TentacleTypesToTest))]
-        public async Task DownloadFileSuccessfully(TentacleType tentacleType)
+        public async Task DownloadFileSuccessfully(TentacleType tentacleType, SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
             using var fileToDownload = new RandomTemporaryFileBuilder().Build();
 
             using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleType)
+                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .Build(CancellationToken);
 
-            var downloadedData = clientAndTentacle.TentacleClient.FileTransferService.DownloadFile(fileToDownload.File.FullName);
+            var downloadedData = await syncOrAsyncHalibut
+                .WhenSync(() => clientAndTentacle.TentacleClient.FileTransferService.SyncService.DownloadFile(fileToDownload.File.FullName))
+                .WhenAsync(async () => await clientAndTentacle.TentacleClient.FileTransferService.AsyncService.DownloadFileAsync(
+                    fileToDownload.File.FullName, 
+                    new(CancellationToken, null)));
 
             var sourceBytes = File.ReadAllBytes(fileToDownload.File.FullName);
             var destinationBytes = downloadedData.ToBytes();

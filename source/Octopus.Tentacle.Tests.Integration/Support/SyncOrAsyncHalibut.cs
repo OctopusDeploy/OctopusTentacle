@@ -62,6 +62,16 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
             return syncOrAsyncWithResult.Result!;
         }
+
+        public static AsyncHalibutFeature ToAsyncHalibutFeature(this SyncOrAsyncHalibut syncOrAsyncHalibut)
+        {
+            return syncOrAsyncHalibut switch
+            {
+                SyncOrAsyncHalibut.Sync => AsyncHalibutFeature.Disabled,
+                SyncOrAsyncHalibut.Async => AsyncHalibutFeature.Enabled,
+                _ => throw new ArgumentOutOfRangeException(nameof(syncOrAsyncHalibut), syncOrAsyncHalibut, null)
+            };
+        }
     }
 
     public class SyncOrAsyncWithoutResult

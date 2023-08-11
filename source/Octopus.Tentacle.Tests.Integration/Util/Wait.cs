@@ -18,5 +18,17 @@ namespace Octopus.Tentacle.Tests.Integration.Util
                 await Task.Delay(stopWatch.Elapsed + TimeSpan.FromMilliseconds(10), cancellationToken);
             }
         }
+
+        public static async Task For(Func<Task<bool>> toBeTrue, CancellationToken cancellationToken)
+        {
+            while (true)
+            {
+                var stopWatch = Stopwatch.StartNew();
+                if (await toBeTrue()) return;
+                stopWatch.Stop();
+                cancellationToken.ThrowIfCancellationRequested();
+                await Task.Delay(stopWatch.Elapsed + TimeSpan.FromMilliseconds(10), cancellationToken);
+            }
+        }
     }
 }

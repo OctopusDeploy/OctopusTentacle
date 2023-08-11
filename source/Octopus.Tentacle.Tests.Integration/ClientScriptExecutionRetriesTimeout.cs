@@ -25,19 +25,13 @@ namespace Octopus.Tentacle.Tests.Integration
     public class ClientScriptExecutionRetriesTimeout : IntegrationTest
     {
         [Test]
-        [TestCase(TentacleType.Polling, RpcCallStage.InFlight)]
-        [TestCase(TentacleType.Polling, RpcCallStage.Connecting)]
-        [TestCase(TentacleType.Listening, RpcCallStage.InFlight)]
-        [TestCase(TentacleType.Listening, RpcCallStage.Connecting)]
-        public async Task WhenRpcRetriesTimeOut_DuringGetCapabilities_TheRpcCallIsCancelled(TentacleType tentacleType, RpcCallStage rpcCallStage)
+        public async Task WhenRpcRetriesTimeOut_DuringGetCapabilities_TheRpcCallIsCancelled([Values]TentacleType tentacleType, [Values] RpcCallStage rpcCallStage, [Values] SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
             IClientScriptServiceV2? scriptServiceV2 = null;
             IAsyncClientScriptServiceV2? asyncScriptServiceV2 = null;
 
-            // Temporarily hard code to Sync until tests are converted to both sync and async
-            var syncOrAsyncHalibut = SyncOrAsyncHalibut.Sync;
-
             using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 // Set a short retry duration so we cancel fairly quickly
                 .WithRetryDuration(TimeSpan.FromSeconds(15))
                 .WithPortForwarderDataLogging()
@@ -80,9 +74,9 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            syncOrAsyncHalibut.WhenSync(() => scriptServiceV2 = clientAndTentacle.Server.ServerHalibutRuntime.CreateClient<IScriptServiceV2, IClientScriptServiceV2>(clientAndTentacle.ServiceEndPoint));
-                //.IgnoreResult()
-                //.WhenAsync(() => asyncScriptServiceV2 = clientAndTentacle.Server.ServerHalibutRuntime.CreateAsyncClient<IScriptServiceV2, IAsyncClientScriptServiceV2>(clientAndTentacle.ServiceEndPoint));
+            syncOrAsyncHalibut.WhenSync(() => scriptServiceV2 = clientAndTentacle.Server.ServerHalibutRuntime.CreateClient<IScriptServiceV2, IClientScriptServiceV2>(clientAndTentacle.ServiceEndPoint))
+                .IgnoreResult()
+                .WhenAsync(() => asyncScriptServiceV2 = clientAndTentacle.Server.ServerHalibutRuntime.CreateAsyncClient<IScriptServiceV2, IAsyncClientScriptServiceV2>(clientAndTentacle.ServiceEndPoint));
 
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody(b => b
@@ -104,13 +98,10 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TestCase(TentacleType.Polling, RpcCallStage.InFlight)]
-        [TestCase(TentacleType.Polling, RpcCallStage.Connecting)]
-        [TestCase(TentacleType.Listening, RpcCallStage.InFlight)]
-        [TestCase(TentacleType.Listening, RpcCallStage.Connecting)]
-        public async Task WhenRpcRetriesTimeOut_DuringStartScript_TheRpcCallIsCancelled(TentacleType tentacleType, RpcCallStage rpcCallStage)
+        public async Task WhenRpcRetriesTimeOut_DuringStartScript_TheRpcCallIsCancelled([Values] TentacleType tentacleType, [Values] RpcCallStage rpcCallStage, [Values] SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
             using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 // Set a short retry duration so we cancel fairly quickly
                 .WithRetryDuration(TimeSpan.FromSeconds(15))
                 .WithPortForwarderDataLogging()
@@ -173,13 +164,10 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TestCase(TentacleType.Polling, RpcCallStage.InFlight)]
-        [TestCase(TentacleType.Polling, RpcCallStage.Connecting)]
-        [TestCase(TentacleType.Listening, RpcCallStage.InFlight)]
-        [TestCase(TentacleType.Listening, RpcCallStage.Connecting)]
-        public async Task WhenRpcRetriesTimeOut_DuringGetStatus_TheRpcCallIsCancelled(TentacleType tentacleType, RpcCallStage rpcCallStage)
+        public async Task WhenRpcRetriesTimeOut_DuringGetStatus_TheRpcCallIsCancelled([Values] TentacleType tentacleType, [Values] RpcCallStage rpcCallStage, [Values] SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
             using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 // Set a short retry duration so we cancel fairly quickly
                 .WithRetryDuration(TimeSpan.FromSeconds(15))
                 .WithPortForwarderDataLogging()
@@ -244,13 +232,10 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TestCase(TentacleType.Polling, RpcCallStage.InFlight)]
-        [TestCase(TentacleType.Polling, RpcCallStage.Connecting)]
-        [TestCase(TentacleType.Listening, RpcCallStage.InFlight)]
-        [TestCase(TentacleType.Listening, RpcCallStage.Connecting)]
-        public async Task WhenRpcRetriesTimeOut_DuringCancelScript_TheRpcCallIsCancelled(TentacleType tentacleType, RpcCallStage rpcCallStage)
+        public async Task WhenRpcRetriesTimeOut_DuringCancelScript_TheRpcCallIsCancelled([Values] TentacleType tentacleType, [Values] RpcCallStage rpcCallStage, [Values] SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
             using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 // Set a short retry duration so we cancel fairly quickly
                 .WithRetryDuration(TimeSpan.FromSeconds(15))
                 .WithPortForwarderDataLogging()

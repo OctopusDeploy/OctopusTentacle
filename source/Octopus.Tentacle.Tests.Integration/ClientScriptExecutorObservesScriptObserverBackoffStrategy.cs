@@ -15,9 +15,10 @@ namespace Octopus.Tentacle.Tests.Integration
     {
         [Test]
         [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
-        public async Task TheScriptObserverBackoffShouldBeRespected(TentacleType tentacleType, Version? tentacleVersion)
+        public async Task TheScriptObserverBackoffShouldBeRespected(TentacleType tentacleType, Version? tentacleVersion, SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithTentacleVersion(tentacleVersion)
                 .WithScriptObserverBackoffStrategy(new FuncScriptObserverBackoffStrategy(iters => TimeSpan.FromSeconds(20)))
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()

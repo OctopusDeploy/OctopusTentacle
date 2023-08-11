@@ -41,6 +41,7 @@ namespace Octopus.Tentacle.Services.FileTransfer
             using (fileSystem.OpenFile(fullPath, FileAccess.Read, FileShare.ReadWrite))
             {}
 
+#pragma warning disable CS0612
             return new DataStream(fileSize, writer =>
             {
                 log.Trace("Begin streaming file download: " + fullPath);
@@ -51,6 +52,7 @@ namespace Octopus.Tentacle.Services.FileTransfer
                     log.Trace("Finished streaming file download: " + fullPath);
                 }
             });
+#pragma warning restore CS0612
         }
 
         public UploadResult UploadFile(string remotePath, DataStream upload)

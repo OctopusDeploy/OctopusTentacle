@@ -22,7 +22,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.PendingRequestQueueHelpers
         {
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeSpan.FromMilliseconds(500));
-            return new HalibutProxyRequestOptions(cts.Token);
+            return new HalibutProxyRequestOptions(cts.Token, null);
         }
 
         public static async Task EnsurePollingQueueWontSendMessageToDisconnectedTentacles(this IAsyncClientCapabilitiesServiceV2 service, ILogger logger)

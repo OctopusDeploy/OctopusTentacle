@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Halibut.ServiceModel;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;

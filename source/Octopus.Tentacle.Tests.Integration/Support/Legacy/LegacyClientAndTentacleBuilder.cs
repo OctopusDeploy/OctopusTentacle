@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
+using Halibut.Util;
 using Octopus.Tentacle.Contracts.Legacy;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.TestPortForwarder;
@@ -12,6 +13,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
     {
         private readonly TentacleType tentacleType;
         private Version? tentacleVersion;
+        private AsyncHalibutFeature asyncHalibutFeature = AsyncHalibutFeature.Disabled;
 
         public LegacyClientAndTentacleBuilder(TentacleType tentacleType)
         {
@@ -24,13 +26,26 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
             return this;
         }
 
+        public LegacyClientAndTentacleBuilder WithAsyncHalibutFeature(AsyncHalibutFeature asyncHalibutFeature)
+        {
+            this.asyncHalibutFeature = asyncHalibutFeature;
+
+            return this;
+        }
+
         public async Task<LegacyClientAndTentacle> Build(CancellationToken cancellationToken)
         {
             // Server
-            var serverHalibutRuntime = new HalibutRuntimeBuilder()
+            var serverHalibutRuntimeBuilder = new HalibutRuntimeBuilder()
                 .WithServerCertificate(Certificates.Server)
-                .WithLegacyContractSupport()
-                .Build();
+                .WithLegacyContractSupport();
+
+            if (asyncHalibutFeature.IsEnabled())
+            {
+                serverHalibutRuntimeBuilder.WithAsyncHalibutFeatureEnabled();
+            }
+
+            var serverHalibutRuntime = serverHalibutRuntimeBuilder.Build();
 
             serverHalibutRuntime.Trust(Certificates.TentaclePublicThumbprint);
             var serverListeningPort = serverHalibutRuntime.Listen();
@@ -69,7 +84,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
                 tentacleEndPoint = new ServiceEndPoint(portForwarder.PublicEndpoint, runningTentacle.Thumbprint);
             }
 
-            var tentacleClient = new LegacyTentacleClientBuilder(server.ServerHalibutRuntime, tentacleEndPoint)
+            var tentacleClient = new LegacyTentacleClientBuilder(server.ServerHalibutRuntime, tentacleEndPoint, asyncHalibutFeature)
                 .Build(cancellationToken);
 
             return new LegacyClientAndTentacle(server, portForwarder, runningTentacle, tentacleClient, temporaryDirectory);

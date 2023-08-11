@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using Halibut.ServiceModel;
 using Halibut.Transport.Caching;
 using Octopus.Tentacle.Contracts.Capabilities;

@@ -16,9 +16,10 @@ namespace Octopus.Tentacle.Tests.Integration
     {
         [Test]
         [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
-        public async Task FailedUploadsAreNotRetriedAndFail(TentacleType tentacleType, Version? version)
+        public async Task FailedUploadsAreNotRetriedAndFail(TentacleType tentacleType, Version? version, SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithTentacleVersion(version)
                 .WithRetriesDisabled()
                 .WithPortForwarderDataLogging()
@@ -56,9 +57,10 @@ namespace Octopus.Tentacle.Tests.Integration
 
         [Test]
         [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
-        public async Task FailedDownloadsAreNotRetriedAndFail(TentacleType tentacleType, Version? version)
+        public async Task FailedDownloadsAreNotRetriedAndFail(TentacleType tentacleType, Version? version, SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithTentacleVersion(version)
                 .WithRetriesDisabled()
                 .WithPortForwarderDataLogging()
