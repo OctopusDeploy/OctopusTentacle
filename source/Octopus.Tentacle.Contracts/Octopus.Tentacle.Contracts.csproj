@@ -29,6 +29,7 @@
   </Choose>
   <ItemGroup>
     <PackageReference Include="Halibut" Version="6.0.1069" />
+    <PackageReference Include="Octopus.Diagnostics" Version="2.1.0" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Solution Items\SolutionInfo.cs">

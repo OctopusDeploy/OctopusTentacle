@@ -19,6 +19,7 @@ using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using ILog = Octopus.Diagnostics.ILog;
+using ITentacleClientObserver = Octopus.Tentacle.Contracts.Observability.ITentacleClientObserver;
 
 namespace Octopus.Tentacle.Client
 {
@@ -69,7 +70,7 @@ namespace Octopus.Tentacle.Client
             ITentacleServiceDecorator? tentacleServicesDecorator)
         {
             this.scriptObserverBackOffStrategy = scriptObserverBackOffStrategy;
-            this.tentacleClientObserver = tentacleClientObserver;
+            this.tentacleClientObserver = tentacleClientObserver.DecorateWithNonThrowingTentacleClientObserver();
             this.rpcRetrySettings = rpcRetrySettings;
             this.asyncHalibutFeature = halibutRuntime.AsyncHalibutFeature;
 
@@ -129,7 +130,7 @@ namespace Octopus.Tentacle.Client
                 capabilitiesServiceV2 = new(null, asyncCapabilitiesServiceV2);
             }
 
-            rpcCallExecutor = RpcCallExecutorFactory.Create(rpcRetrySettings.RetryDuration, tentacleClientObserver);
+            rpcCallExecutor = RpcCallExecutorFactory.Create(rpcRetrySettings.RetryDuration, this.tentacleClientObserver);
         }
 
         public TimeSpan OnCancellationAbandonCompleteScriptAfter { get; set; } = TimeSpan.FromMinutes(1);
@@ -169,6 +170,7 @@ namespace Octopus.Tentacle.Client
                     return await rpcCallExecutor.ExecuteWithNoRetries(
                         RpcCall.Create<IFileTransferService>(nameof(IFileTransferService.UploadFile)),
                         UploadFileAction,
+                        logger,
                         abandonActionOnCancellation: false,
                         operationMetricsBuilder,
                         cancellationToken).ConfigureAwait(false);
@@ -182,7 +184,7 @@ namespace Octopus.Tentacle.Client
             finally
             {
                 var operationMetrics = operationMetricsBuilder.Build();
-                tentacleClientObserver.UploadFileCompleted(operationMetrics);
+                tentacleClientObserver.UploadFileCompleted(operationMetrics, logger);
             }
         }
 
@@ -221,6 +223,7 @@ namespace Octopus.Tentacle.Client
                     return await rpcCallExecutor.ExecuteWithNoRetries(
                         RpcCall.Create<IFileTransferService>(nameof(IFileTransferService.DownloadFile)),
                         DownloadFileAction,
+                        logger,
                         abandonActionOnCancellation: false,
                         operationMetricsBuilder,
                         cancellationToken).ConfigureAwait(false);
@@ -234,7 +237,7 @@ namespace Octopus.Tentacle.Client
             finally
             {
                 var operationMetrics = operationMetricsBuilder.Build();
-                tentacleClientObserver.DownloadFileCompleted(operationMetrics);
+                tentacleClientObserver.DownloadFileCompleted(operationMetrics, logger);
             }
         }
 
@@ -275,7 +278,7 @@ namespace Octopus.Tentacle.Client
             finally
             {
                 var operationMetrics = operationMetricsBuilder.Build();
-                tentacleClientObserver.ExecuteScriptCompleted(operationMetrics);
+                tentacleClientObserver.ExecuteScriptCompleted(operationMetrics, logger);
             }
         }
 

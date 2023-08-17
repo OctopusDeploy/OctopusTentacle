@@ -85,13 +85,14 @@ namespace Octopus.Tentacle.Client.Execution
             {
                 var rpcCallMetrics = rpcCallMetricsBuilder.Build();
                 clientOperationMetricsBuilder.WithRpcCall(rpcCallMetrics);
-                tentacleClientObserver.RpcCallCompleted(rpcCallMetrics);
+                tentacleClientObserver.RpcCallCompleted(rpcCallMetrics, logger);
             }
         }
 
         public async Task<T> ExecuteWithNoRetries<T>(
             RpcCall rpcCall,
             Func<CancellationToken, Task<T>> action,
+            ILog logger,
             bool abandonActionOnCancellation,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
@@ -121,7 +122,7 @@ namespace Octopus.Tentacle.Client.Execution
                             {
                                 var rpcCallMetrics = rpcCallMetricsBuilder.Build();
                                 clientOperationMetricsBuilder.WithRpcCall(rpcCallMetrics);
-                                tentacleClientObserver.RpcCallCompleted(rpcCallMetrics);
+                                tentacleClientObserver.RpcCallCompleted(rpcCallMetrics, logger);
                             }
                         }, ct);
                     },
@@ -135,6 +136,7 @@ namespace Octopus.Tentacle.Client.Execution
         public async Task ExecuteWithNoRetries(
             RpcCall rpcCall,
             Func<CancellationToken, Task> action,
+            ILog logger,
             bool abandonActionOnCancellation,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
@@ -163,7 +165,7 @@ namespace Octopus.Tentacle.Client.Execution
                             {
                                 var rpcCallMetrics = rpcCallMetricsBuilder.Build();
                                 clientOperationMetricsBuilder.WithRpcCall(rpcCallMetrics);
-                                tentacleClientObserver.RpcCallCompleted(rpcCallMetrics);
+                                tentacleClientObserver.RpcCallCompleted(rpcCallMetrics, logger);
                             }
                         }, ct);
                     },
