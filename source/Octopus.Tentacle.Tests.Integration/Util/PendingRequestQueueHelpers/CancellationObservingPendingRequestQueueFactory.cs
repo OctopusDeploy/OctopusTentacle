@@ -23,7 +23,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.PendingRequestQueueHelpers
 #pragma warning restore CS0612
             }
 
-            return new CancellationTokenObservingPendingRequestQueueDecorator(new PendingRequestQueueAsync(new LogFactory().ForEndpoint(endpoint)));
+            return new CancellationTokenObservingPendingRequestQueueDecorator(new PendingRequestQueueAsync(new HalibutTimeoutsAndLimits(), new LogFactory().ForEndpoint(endpoint)));
         }
     }
 }

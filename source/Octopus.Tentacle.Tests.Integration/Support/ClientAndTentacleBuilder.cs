@@ -171,7 +171,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                     .WithTentacleExe(tentacleExe)
                     .Build(cancellationToken);
 
+#pragma warning disable CS0612
                 tentacleEndPoint = new ServiceEndPoint(runningTentacle.ServiceUri, runningTentacle.Thumbprint);
+#pragma warning restore CS0612
             }
             else
             {
@@ -181,7 +183,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
                 portForwarder = BuildPortForwarder(runningTentacle.ServiceUri.Port, null);
 
+#pragma warning disable CS0612
                 tentacleEndPoint = new ServiceEndPoint(portForwarder?.PublicEndpoint ?? runningTentacle.ServiceUri, runningTentacle.Thumbprint);
+#pragma warning restore CS0612
             }
 
             if (portForwarderReference != null && portForwarder != null)
