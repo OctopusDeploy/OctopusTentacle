@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Octopus.Tentacle.Util;
+using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration
 {
@@ -15,7 +16,7 @@ namespace Octopus.Tentacle.Tests.Integration
     /// </summary>
     public class OctopusPackageDownloader
     {
-        public static async Task DownloadPackage(string downloadUrl, string filePath)
+        public static async Task DownloadPackage(string downloadUrl, string filePath, ILogger logger)
         {
             string expectedHash = null;
             using (var client = new HttpClient())
@@ -28,8 +29,8 @@ namespace Octopus.Tentacle.Tests.Integration
                     {
                         expectedHash = expectedHashs.FirstOrDefault();
                     }
-                    
-                    TestContext.WriteLine($"Downloading {downloadUrl} ({totalLength} bytes)");
+
+                    logger.Information($"Downloading {downloadUrl} ({totalLength} bytes)");
                     var sw = new Stopwatch();
                     sw.Start();
                     using (Stream contentStream = await response.Content.ReadAsStreamAsync(),
@@ -52,7 +53,7 @@ namespace Octopus.Tentacle.Tests.Integration
                             if (totalLength.HasValue && sw.ElapsedMilliseconds >= TimeSpan.FromSeconds(7).TotalMilliseconds)
                             {
                                 var percentRead = totalRead * 1.0 / totalLength.Value * 100;
-                                TestContext.WriteLine($"Downloading Completed {percentRead}%");
+                                logger.Information($"Downloading Completed {percentRead}%");
                                 sw.Reset();
                                 sw.Start();
                             }
@@ -61,7 +62,7 @@ namespace Octopus.Tentacle.Tests.Integration
                             totalRead += read;
                         }
 
-                        TestContext.WriteLine("Download Finished");
+                        logger.Information("Download Finished");
                     }
                 }
             }

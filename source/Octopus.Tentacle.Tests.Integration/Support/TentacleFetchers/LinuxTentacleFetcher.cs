@@ -2,13 +2,20 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Octopus.Tentacle.Util;
+using Serilog;
 
-namespace Octopus.Tentacle.Tests.Integration.Support
+namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
 {
     public class LinuxTentacleFetcher : ITentacleFetcher
     {
+        private ILogger logger;
+
+        public LinuxTentacleFetcher(ILogger logger)
+        {
+            this.logger = logger;
+        }
+
         static string LinuxDownloadUrlForVersion(string versionString) => $"https://download.octopusdeploy.com/linux-tentacle/tentacle-{versionString}-linux_x64.tar.gz";
 
         public async Task<string> GetTentacleVersion(string downloadPath, Version version, CancellationToken cancellationToken)
@@ -22,20 +29,20 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             return await DownloadAndExtractFromUrl(directoryPath, LinuxDownloadUrlForVersion(version.ToString()));
         }
 
-        static async Task<string> DownloadAndExtractFromUrl(string directoryPath, string url)
+        async Task<string> DownloadAndExtractFromUrl(string directoryPath, string url)
         {
             var downloadFilePath = Path.Combine(directoryPath, Guid.NewGuid().ToString("N"));
 
-            TestContext.WriteLine($"Downloading {url} to {downloadFilePath}");
-            await OctopusPackageDownloader.DownloadPackage(url, downloadFilePath);
+            logger.Information($"Downloading {url} to {downloadFilePath}");
+            await OctopusPackageDownloader.DownloadPackage(url, downloadFilePath, logger);
 
             var extractionDirectory = new DirectoryInfo(Path.Combine(directoryPath, "extracted"));
 
-            ExtractTarGzip(downloadFilePath, extractionDirectory.FullName);
+            ExtractTarGzip(downloadFilePath, extractionDirectory.FullName, logger);
             return Path.Combine(extractionDirectory.FullName, "tentacle", "Tentacle");
         }
 
-        public static void ExtractTarGzip(string gzArchiveName, string destFolder)
+        public static void ExtractTarGzip(string gzArchiveName, string destFolder, ILogger logger)
         {
             if (!Directory.Exists(destFolder))
             {
@@ -47,13 +54,15 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             // In practice, this means that after extraction the executables don't have the executable bit.
             // Falling back to good old fashioned `tar` does the job nicely :)
             using var tmp = new TemporaryDirectory();
+
+            Action<string> log = s => logger.Information(s);
             var exitCode = SilentProcessRunner.ExecuteCommand(
                 "tar",
                 $"xzvf {gzArchiveName} -C {destFolder}",
                 tmp.DirectoryPath,
-                TestContext.WriteLine,
-                TestContext.WriteLine,
-                TestContext.WriteLine,
+                log,
+                log,
+                log,
                 CancellationToken.None);
 
             if (exitCode != 0)

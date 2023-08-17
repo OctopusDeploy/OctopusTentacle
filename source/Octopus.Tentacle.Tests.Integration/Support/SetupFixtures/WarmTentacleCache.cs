@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Util;
 using Serilog;
@@ -29,7 +30,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.SetupFixtures
                         using var l = await concurrentDownloadLimiter.LockAsync(cts.Token);
                         using var temporaryDirectory = new TemporaryDirectory();
                         logger.Information($"Will fetch tentacle {tentacleVersion} if it is not already in cache");
-                        await TentacleFetcher.GetTentacleVersion(temporaryDirectory.DirectoryPath, tentacleVersion, cts.Token);
+                        await TentacleFetcher.GetTentacleVersion(temporaryDirectory.DirectoryPath, tentacleVersion, logger, cts.Token);
                         logger.Information($"Tentacle {tentacleVersion} is now in cache");
                     }));
                 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using NUnit.Framework;
 using Octopus.Tentacle.Tests.Integration.Support.SetupFixtures;
 using Octopus.Tentacle.Tests.Integration.Util;
@@ -21,15 +22,23 @@ namespace Octopus.Tentacle.Tests.Integration
             new BumpThreadPoolForAllTests(),
             new WarmTentacleCache()
         };
+
+        public static string OneTimeSetupLogOutput = "Nothing to show";
         
         [OneTimeSetUp]
         public void OneTimeSetup()
         {
-            var logger = new SerilogLoggerBuilder().Build().ForContext<TentacleIntegrationSetupFixtures>();
+            var sb = new StringBuilder();
+            var logger = new SerilogLoggerBuilder()
+                .WithLoggingToStringBuilder(sb)
+                .Build()
+                .ForContext<TentacleIntegrationSetupFixtures>();
             foreach (var setupFixture in setupFixtures)
             {
                 setupFixture.OneTimeSetUp(logger.ForContext(setupFixture.GetType()));
             }
+
+            OneTimeSetupLogOutput = sb.ToString();
         }
 
         [OneTimeTearDown]
