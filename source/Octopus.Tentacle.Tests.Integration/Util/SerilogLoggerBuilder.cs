@@ -54,6 +54,8 @@ namespace Octopus.Tentacle.Tests.Integration.Util
             public void Emit(LogEvent logEvent)
             {
             }
+            
+            static Lazy<bool> IsForcingContextWrite = new(() => !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("Force_Test_Context_Write")));
 
             public void Emit(Serilog.Events.LogEvent logEvent)
             {
@@ -70,7 +72,14 @@ namespace Octopus.Tentacle.Tests.Integration.Util
                 // This is the change, call this instead of: TestContext.Progress
                 var elapsed = SerilogLoggerBuilder.TestTimers[TestContext.CurrentContext.Test.ID].Elapsed.ToString();
                 var s = elapsed + " " + output.ToString();
-                TestContext.Write(s);
+                if (TentacleExeFinder.IsRunningInTeamCity() || IsForcingContextWrite.Value)
+                {
+                    TestContext.Write(s);
+                }
+                else
+                {
+                    TestContext.Progress.Write(s);
+                }
             }
         }
     }
