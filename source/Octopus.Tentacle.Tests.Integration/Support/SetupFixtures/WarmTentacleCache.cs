@@ -16,7 +16,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.SetupFixtures
             public void OneTimeSetUp(ILogger logger)
             {
                 logger.Fatal("Downloading all tentacles now");
-                using var temporaryDirectory = new TemporaryDirectory();
+                
                 var tasks = new List<Task>();
                 var concurrentDownloads = TentacleExeFinder.IsRunningInTeamCity() ? 4 : 1;
                 var concurrentDownloadLimiter = new SemaphoreSlim(concurrentDownloads, concurrentDownloads);
@@ -26,6 +26,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.SetupFixtures
                     tasks.Add(Task.Run(async () =>
                     {
                         using var l = await concurrentDownloadLimiter.LockAsync(cts.Token);
+                        using var temporaryDirectory = new TemporaryDirectory();
                         logger.Information($"Will fetch tentacle {tentacleVersion} if it is not already in cache");
                         await TentacleFetcher.GetTentacleVersion(temporaryDirectory.DirectoryPath, tentacleVersion, cts.Token);
                         logger.Information($"Tentacle {tentacleVersion} is now in cache");

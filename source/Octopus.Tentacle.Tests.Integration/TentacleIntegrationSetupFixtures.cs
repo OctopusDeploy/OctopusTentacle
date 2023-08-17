@@ -5,6 +5,8 @@ using NUnit.Framework;
 using Octopus.Tentacle.Tests.Integration.Support.SetupFixtures;
 using Octopus.Tentacle.Tests.Integration.Util;
 
+// This class must be in the top level 'Octopus.Tentacle.Tests.Integration' namespace.
+// Otherwise nunit wont use it.
 namespace Octopus.Tentacle.Tests.Integration
 {
     /// <summary>
