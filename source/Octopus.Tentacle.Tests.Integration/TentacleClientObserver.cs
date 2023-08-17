@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Halibut;
 using NUnit.Framework;
+using Octopus.Diagnostics;
 using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Tests.Integration.Support;
@@ -127,7 +128,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 this.errorOnExecuteScriptCompleted = errorOnExecuteScriptCompleted;
             }
 
-            public void RpcCallCompleted(RpcCallMetrics metrics)
+            public void RpcCallCompleted(RpcCallMetrics metrics, ILog logger)
             {
                 if (errorOnRpcCallCompleted)
                 {
@@ -135,7 +136,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 }
             }
 
-            public void UploadFileCompleted(ClientOperationMetrics clientOperationMetrics)
+            public void UploadFileCompleted(ClientOperationMetrics clientOperationMetrics, ILog logger)
             {
                 if (errorOnUploadFileCompleted)
                 {
@@ -143,7 +144,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 }
             }
 
-            public void DownloadFileCompleted(ClientOperationMetrics clientOperationMetrics)
+            public void DownloadFileCompleted(ClientOperationMetrics clientOperationMetrics, ILog logger)
             {
                 if (errorOnDownloadFileCompleted)
                 {
@@ -151,7 +152,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 }
             }
 
-            public void ExecuteScriptCompleted(ClientOperationMetrics clientOperationMetrics)
+            public void ExecuteScriptCompleted(ClientOperationMetrics clientOperationMetrics, ILog logger)
             {
                 if (errorOnExecuteScriptCompleted)
                 {

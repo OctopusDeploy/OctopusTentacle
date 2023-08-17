@@ -19,6 +19,7 @@ using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using ILog = Octopus.Diagnostics.ILog;
+using ITentacleClientObserver = Octopus.Tentacle.Contracts.Observability.ITentacleClientObserver;
 
 namespace Octopus.Tentacle.Client
 {
@@ -69,7 +70,7 @@ namespace Octopus.Tentacle.Client
             ITentacleServiceDecorator? tentacleServicesDecorator)
         {
             this.scriptObserverBackOffStrategy = scriptObserverBackOffStrategy;
-            this.tentacleClientObserver = tentacleClientObserver;
+            this.tentacleClientObserver = tentacleClientObserver.DecorateWithNonThrowingTentacleClientObserver();
             this.rpcRetrySettings = rpcRetrySettings;
             this.asyncHalibutFeature = halibutRuntime.AsyncHalibutFeature;
 
@@ -129,7 +130,7 @@ namespace Octopus.Tentacle.Client
                 capabilitiesServiceV2 = new(null, asyncCapabilitiesServiceV2);
             }
 
-            rpcCallExecutor = RpcCallExecutorFactory.Create(rpcRetrySettings.RetryDuration, tentacleClientObserver);
+            rpcCallExecutor = RpcCallExecutorFactory.Create(rpcRetrySettings.RetryDuration, this.tentacleClientObserver);
         }
 
         public TimeSpan OnCancellationAbandonCompleteScriptAfter { get; set; } = TimeSpan.FromMinutes(1);
@@ -183,15 +184,7 @@ namespace Octopus.Tentacle.Client
             finally
             {
                 var operationMetrics = operationMetricsBuilder.Build();
-
-                try
-                {
-                    tentacleClientObserver.UploadFileCompleted(operationMetrics);
-                }
-                catch (Exception e)
-                {
-                    logger.Warn(e, "An error occurred while notifying the Tentacle Client Observer of the Upload File completion.");
-                }
+                tentacleClientObserver.UploadFileCompleted(operationMetrics, logger);
             }
         }
 
@@ -244,15 +237,7 @@ namespace Octopus.Tentacle.Client
             finally
             {
                 var operationMetrics = operationMetricsBuilder.Build();
-
-                try
-                {
-                    tentacleClientObserver.DownloadFileCompleted(operationMetrics);
-                }
-                catch (Exception e)
-                {
-                    logger.Warn(e, "An error occurred while notifying the Tentacle Client Observer of the Download File completion.");
-                }
+                tentacleClientObserver.DownloadFileCompleted(operationMetrics, logger);
             }
         }
 
@@ -293,15 +278,7 @@ namespace Octopus.Tentacle.Client
             finally
             {
                 var operationMetrics = operationMetricsBuilder.Build();
-
-                try
-                {
-                    tentacleClientObserver.ExecuteScriptCompleted(operationMetrics);
-                }
-                catch (Exception e)
-                {
-                    logger.Warn(e, "An error occurred while notifying the Tentacle Client Observer of the Execute Script completion.");
-                }
+                tentacleClientObserver.ExecuteScriptCompleted(operationMetrics, logger);
             }
         }
 

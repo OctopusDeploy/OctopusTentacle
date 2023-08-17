@@ -85,14 +85,7 @@ namespace Octopus.Tentacle.Client.Execution
             {
                 var rpcCallMetrics = rpcCallMetricsBuilder.Build();
                 clientOperationMetricsBuilder.WithRpcCall(rpcCallMetrics);
-                try
-                {
-                    tentacleClientObserver.RpcCallCompleted(rpcCallMetrics);
-                }
-                catch (Exception e)
-                {
-                    logger.Warn(e, "An error occurred while notifying the Tentacle Client Observer of the RPC call completion.");
-                }
+                tentacleClientObserver.RpcCallCompleted(rpcCallMetrics, logger);
             }
         }
 
@@ -129,15 +122,7 @@ namespace Octopus.Tentacle.Client.Execution
                             {
                                 var rpcCallMetrics = rpcCallMetricsBuilder.Build();
                                 clientOperationMetricsBuilder.WithRpcCall(rpcCallMetrics);
-
-                                try
-                                {
-                                    tentacleClientObserver.RpcCallCompleted(rpcCallMetrics);
-                                }
-                                catch (Exception e)
-                                {
-                                    logger.Warn(e, "An error occurred while notifying the Tentacle Client Observer of the RPC call completion.");
-                                }
+                                tentacleClientObserver.RpcCallCompleted(rpcCallMetrics, logger);
                             }
                         }, ct);
                     },
@@ -180,15 +165,7 @@ namespace Octopus.Tentacle.Client.Execution
                             {
                                 var rpcCallMetrics = rpcCallMetricsBuilder.Build();
                                 clientOperationMetricsBuilder.WithRpcCall(rpcCallMetrics);
-
-                                try
-                                {
-                                    tentacleClientObserver.RpcCallCompleted(rpcCallMetrics);
-                                }
-                                catch (Exception e)
-                                {
-                                    logger.Warn(e, "An error occurred while notifying the Tentacle Client Observer of the RPC call completion.");
-                                }
+                                tentacleClientObserver.RpcCallCompleted(rpcCallMetrics, logger);
                             }
                         }, ct);
                     },
