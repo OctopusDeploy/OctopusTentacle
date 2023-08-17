@@ -28,6 +28,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var logger = new SerilogLoggerBuilder().Build().ForContext<TentacleIntegrationSetupFixtures>();
             foreach (var setupFixture in setupFixtures)
             {
+                Console.WriteLine("TentacleIntegrationSetupFixtures from console");
                 setupFixture.OneTimeSetUp(logger.ForContext(setupFixture.GetType()));
             }
         }
