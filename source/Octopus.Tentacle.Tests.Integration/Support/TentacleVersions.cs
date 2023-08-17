@@ -8,7 +8,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public static readonly Version v5_0_4_FirstLinuxRelease = new("5.0.4"); 
 
         public static readonly Version v5_0_12_AutofacServiceFactoryIsInShared = new("5.0.12");
-
+        
         public static readonly Version v5_0_15_LastOfVersion5 = new("5.0.15");
 
         // Before script service v2
@@ -24,6 +24,16 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         // The version compiled from the current source
         public static readonly Version? Current = null;
+
+        public static Version[] AllTestedVersionsToDownload = new[]
+        {
+            v5_0_4_FirstLinuxRelease,
+            v5_0_12_AutofacServiceFactoryIsInShared,
+            v5_0_15_LastOfVersion5,
+            v6_3_417_LastWithScriptServiceV1Only,
+            v6_3_451_NoCapabilitiesService,
+            v7_0_1_ScriptServiceV2Added
+        };
     }
 
     public static class VersionExtensionMethods{

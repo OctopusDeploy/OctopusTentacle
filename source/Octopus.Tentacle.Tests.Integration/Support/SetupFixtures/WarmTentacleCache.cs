@@ -20,7 +20,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support.SetupFixtures
                 var tasks = new List<Task>();
                 var concurrentDownloads = TentacleExeFinder.IsRunningInTeamCity() ? 4 : 1;
                 var concurrentDownloadLimiter = new SemaphoreSlim(concurrentDownloads, concurrentDownloads);
-                foreach (var tentacleVersion in TentacleTypesAndCommonVersionsToTest.StandardVersion)
+                
+                foreach (var tentacleVersion in TentacleVersions.AllTestedVersionsToDownload)
                 {
                     if(tentacleVersion == TentacleVersions.Current) continue;
                     tasks.Add(Task.Run(async () =>
