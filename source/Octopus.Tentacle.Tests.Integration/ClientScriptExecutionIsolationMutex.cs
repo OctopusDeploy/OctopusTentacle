@@ -44,7 +44,7 @@ namespace Octopus.Tentacle.Tests.Integration
             ScriptIsolationLevel levelOfSecondScript,
             SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
-            using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithTentacleVersion(tentacleVersion)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
@@ -149,7 +149,7 @@ namespace Octopus.Tentacle.Tests.Integration
             ScriptsInParallelTestCases scriptsInParallelTestCases,
             SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
-            using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithTentacleVersion(tentacleVersion)
                 .Build(CancellationToken);

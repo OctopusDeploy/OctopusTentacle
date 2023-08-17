@@ -22,7 +22,7 @@ namespace Octopus.Tentacle.Tests.Integration
             using var tmp = new TemporaryDirectory();
             var path = Path.Combine(tmp.DirectoryPath, "file");
             
-            using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithTentacleVersion(tentacleVersion)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()

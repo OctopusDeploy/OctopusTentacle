@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Halibut;
 using Halibut.Util;
 using Octopus.Tentacle.Client;
@@ -7,7 +8,7 @@ using Octopus.TestPortForwarder;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
-    public class ClientAndTentacle: IDisposable
+    public class ClientAndTentacle: IAsyncDisposable
     {
         private readonly IHalibutRuntime halibutRuntime;
         public ServiceEndPoint ServiceEndPoint { get; }
@@ -40,11 +41,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             this.ServiceEndPoint = serviceEndPoint;
         }
 
-        public void Dispose()
+        public async ValueTask DisposeAsync()
         {
             Server.Dispose();
             PortForwarder?.Dispose();
-            RunningTentacle.Dispose();
+            await RunningTentacle.DisposeAsync();
             TentacleClient.Dispose();
             TemporaryDirectory.Dispose();
         }

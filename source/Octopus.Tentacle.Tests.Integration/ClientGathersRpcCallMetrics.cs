@@ -26,7 +26,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             // Arrange
             var tentacleClientObserver = new TestTentacleClientObserver();
-            using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithTentacleVersion(tentacleVersion)
                 .WithTentacleClientObserver(tentacleClientObserver)
@@ -61,7 +61,7 @@ namespace Octopus.Tentacle.Tests.Integration
             // Arrange
             var tentacleClientObserver = new TestTentacleClientObserver();
             var exception = new HalibutClientException("Error");
-            using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithTentacleVersion(tentacleVersion)
                 .WithTentacleClientObserver(tentacleClientObserver)
@@ -94,7 +94,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             // Arrange
             var tentacleClientObserver = new TestTentacleClientObserver();
-            using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithTentacleVersion(tentacleVersion)
                 .WithTentacleClientObserver(tentacleClientObserver)
@@ -123,7 +123,7 @@ namespace Octopus.Tentacle.Tests.Integration
             // Arrange
             var tentacleClientObserver = new TestTentacleClientObserver();
             var exception = new HalibutClientException("Error");
-            using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithTentacleVersion(tentacleVersion)
                 .WithTentacleClientObserver(tentacleClientObserver)
@@ -154,7 +154,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             // Arrange
             var tentacleClientObserver = new TestTentacleClientObserver();
-            using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithTentacleVersion(tentacleVersion)
                 .WithTentacleClientObserver(tentacleClientObserver)
@@ -184,7 +184,7 @@ namespace Octopus.Tentacle.Tests.Integration
             // Arrange
             var tentacleClientObserver = new TestTentacleClientObserver();
             var exception = new HalibutClientException("Error");
-            using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithTentacleVersion(tentacleVersion)
                 .WithTentacleClientObserver(tentacleClientObserver)

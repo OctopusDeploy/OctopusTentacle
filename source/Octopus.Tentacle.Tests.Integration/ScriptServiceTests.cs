@@ -31,7 +31,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 sleep 3
                 echo This is the end of the script";
 
-            using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleType)
+            await using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleType)
                 .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .Build(CancellationToken);
 
@@ -62,7 +62,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 exit 1
                 echo This is the end of the script";
 
-            using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleType)
+            await using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleType)
                 .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .Build(CancellationToken);
 
@@ -89,7 +89,7 @@ namespace Octopus.Tentacle.Tests.Integration
                               ping 127.0.0.1 -c 100
                               echo This is the end of the script";
 
-            using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleType)
+            await using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleType)
                 .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .Build(CancellationToken);
 

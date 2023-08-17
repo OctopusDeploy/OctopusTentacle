@@ -27,9 +27,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             var tentacleExe = TentacleExePath ?? TentacleExeFinder.FindTentacleExe();
             var subscriptionId = PollingSubscriptionId.Generate();
 
-            CreateInstance(tentacleExe, configFilePath, instanceName, tempDirectory, cancellationToken);
+            await CreateInstance(tentacleExe, configFilePath, instanceName, tempDirectory, cancellationToken);
             ConfigureTentacleToPollOctopusServer(configFilePath, subscriptionId);
-            AddCertificateToTentacle(tentacleExe, instanceName, CertificatePfxPath, tempDirectory, cancellationToken);
+            await AddCertificateToTentacle(tentacleExe, instanceName, CertificatePfxPath, tempDirectory, cancellationToken);
             
 
             return await StartTentacle(

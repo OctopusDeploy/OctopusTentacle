@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
+using CliWrap;
 using Nito.AsyncEx.Interop;
 using NUnit.Framework;
 using Octopus.Tentacle.Configuration;
@@ -68,11 +69,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             {
                 try
                 {
-                    runningTentacle.Dispose();
+                    await runningTentacle.DisposeAsync();
                 }
                 catch (Exception e)
                 {
-                    TestContext.WriteLine(e);
+                    new SerilogLoggerBuilder().Build().Information(e, "Error disposing tentacle after tentacle failed to start.");
                 }
 
                 throw;
@@ -90,11 +91,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             hasTentacleStarted.Reset();
             int? listeningPort = null;
 
-            var runningTentacle = Task.Run(() =>
+            var runningTentacle = Task.Run(async () =>
             {
                 try
                 {
-                    RunTentacleCommandOutOfProcess(tentacleExe, new[] { "agent", $"--instance={instanceName}", "--noninteractive" }, tempDirectory,
+                    await RunTentacleCommandOutOfProcess(tentacleExe, new[] { "agent", $"--instance={instanceName}", "--noninteractive" }, tempDirectory,
                         s =>
                         {
                             if (s.Contains("Listener started"))
@@ -136,23 +137,23 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         }
 
 
-        protected void AddCertificateToTentacle(string tentacleExe, string instanceName, string tentaclePfxPath, TemporaryDirectory tmp, CancellationToken cancellationToken)
+        protected async Task AddCertificateToTentacle(string tentacleExe, string instanceName, string tentaclePfxPath, TemporaryDirectory tmp, CancellationToken cancellationToken)
         {
-            RunTentacleCommand(tentacleExe, new[] { "import-certificate", $"--from-file={tentaclePfxPath}", $"--instance={instanceName}" }, tmp, cancellationToken);
+            await RunTentacleCommand(tentacleExe, new[] { "import-certificate", $"--from-file={tentaclePfxPath}", $"--instance={instanceName}" }, tmp, cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
         }
 
-        protected void CreateInstance(string tentacleExe, string configFilePath, string instanceName, TemporaryDirectory tmp, CancellationToken cancellationToken)
+        protected async Task CreateInstance(string tentacleExe, string configFilePath, string instanceName, TemporaryDirectory tmp, CancellationToken cancellationToken)
         {
-            RunTentacleCommand(tentacleExe, new[] { "create-instance", "--config", $"\"{configFilePath}\"", $"--instance={instanceName}" }, tmp, cancellationToken);
+            await RunTentacleCommand(tentacleExe, new[] { "create-instance", "--config", configFilePath, $"--instance={instanceName}" }, tmp, cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
         }
 
-        internal void DeleteInstanceIgnoringFailure(string tentacleExe, string instanceName, TemporaryDirectory tmp, CancellationToken cancellationToken)
+        internal async Task DeleteInstanceIgnoringFailure(string tentacleExe, string instanceName, TemporaryDirectory tmp, CancellationToken cancellationToken)
         {
             try
             {
-                DeleteInstance(tentacleExe, instanceName, tmp, cancellationToken);
+                await DeleteInstanceAsync(tentacleExe, instanceName, tmp, cancellationToken);
             }
             catch (Exception e)
             {
@@ -160,9 +161,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 throw;
             }
         }
-        internal void DeleteInstance(string tentacleExe, string instanceName, TemporaryDirectory tmp, CancellationToken cancellationToken)
+        internal async Task DeleteInstanceAsync(string tentacleExe, string instanceName, TemporaryDirectory tmp, CancellationToken cancellationToken)
         {
-            RunTentacleCommand(tentacleExe, new[] {"delete-instance", $"--instance={instanceName}"}, tmp, cancellationToken);
+            await RunTentacleCommand(tentacleExe, new[] {"delete-instance", $"--instance={instanceName}"}, tmp, cancellationToken);
         }
 
         internal string InstanceNameGenerator()
@@ -170,40 +171,40 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             return $"TentacleIT-{Guid.NewGuid().ToString("N")}";
         }
 
-        private void RunTentacleCommand(string tentacleExe, string[] args, TemporaryDirectory tmp, CancellationToken cancellationToken)
+        private async Task RunTentacleCommand(string tentacleExe, string[] args, TemporaryDirectory tmp, CancellationToken cancellationToken)
         {
-            RunTentacleCommandOutOfProcess(tentacleExe, args, tmp, s =>
+            await RunTentacleCommandOutOfProcess(tentacleExe, args, tmp, s =>
             {
             }, cancellationToken);
         }
 
-        private void RunTentacleCommandOutOfProcess(string tentacleExe,
+        private async Task RunTentacleCommandOutOfProcess(string tentacleExe,
             string[] args,
             TemporaryDirectory tmp,
             Action<string> commandOutput,
             CancellationToken cancellationToken)
         {
             var log = new SerilogLoggerBuilder().Build().ForContext<RunningTentacle>();
-            void AllOutput(string s)
+            async Task ProcessLogs(string s, CancellationToken ct)
             {
+                await Task.CompletedTask;
                 log.Information("[Tentacle] " + s);
                 commandOutput(s);
             }
 
-            var exitCode = SilentProcessRunner.ExecuteCommand(
-                tentacleExe,
-                string.Join(" ", args),
-                tmp.DirectoryPath,
-                AllOutput,
-                AllOutput,
-                AllOutput,
-                cancellationToken);
+            var commandResult = await Cli.Wrap(
+                tentacleExe)
+                .WithArguments(args)
+                .WithWorkingDirectory(tmp.DirectoryPath)
+                .WithStandardOutputPipe(PipeTarget.ToDelegate(ProcessLogs))
+                .WithStandardErrorPipe(PipeTarget.ToDelegate(ProcessLogs))
+                .ExecuteAsync(cancellationToken);
 
             if (cancellationToken.IsCancellationRequested) return;
 
-            if (exitCode != 0)
+            if (commandResult.ExitCode != 0)
             {
-                throw new Exception("Tentacle returns non zero exit code: " + exitCode);
+                throw new Exception("Tentacle returns non zero exit code: " + commandResult.ExitCode);
             }
         }
     }

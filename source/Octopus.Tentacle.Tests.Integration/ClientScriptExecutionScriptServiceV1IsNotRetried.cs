@@ -24,7 +24,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TestCaseSource(typeof(TentacleTypesToTest))]
         public async Task WhenANetworkFailureOccurs_DuringStartScript_WithATentacleThatOnlySupportsV1ScriptService_TheCallIsNotRetried(TentacleType tentacleType, SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
-            using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithTentacleVersion(TentacleVersions.v6_3_451_NoCapabilitiesService)
                 .WithPortForwarderDataLogging()
@@ -83,7 +83,7 @@ namespace Octopus.Tentacle.Tests.Integration
         public async Task WhenANetworkFailureOccurs_DuringGetStatus_WithATentacleThatOnlySupportsV1ScriptService_TheCallIsNotRetried(TentacleType tentacleType, SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
             ScriptStatusRequest? scriptStatusRequest = null;
-            using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithTentacleVersion(TentacleVersions.v6_3_451_NoCapabilitiesService)
                 .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithPortForwarderDataLogging()
@@ -151,7 +151,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             ScriptStatusRequest? scriptStatusRequest = null;
             CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
-            using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithTentacleVersion(TentacleVersions.v6_3_451_NoCapabilitiesService)
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
@@ -222,7 +222,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TestCaseSource(typeof(TentacleTypesToTest))]
         public async Task WhenANetworkFailureOccurs_DuringCompleteScript_WithATentacleThatOnlySupportsV1ScriptService_TheCallIsNotRetried(TentacleType tentacleType, SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
-            using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithTentacleVersion(TentacleVersions.v6_3_451_NoCapabilitiesService)
                 .WithPortForwarderDataLogging()

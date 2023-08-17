@@ -28,7 +28,7 @@ namespace Octopus.Tentacle.Tests.Integration
             [Values]SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
             PortForwarder portForwarder = null!;
-            using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
+            await using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 // Set a short retry duration so we cancel fairly quickly
                 .WithRetryDuration(TimeSpan.FromSeconds(15))
@@ -95,7 +95,7 @@ namespace Octopus.Tentacle.Tests.Integration
             [Values]SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
             PortForwarder portForwarder = null!;
-            using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
+            await using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 // Set a short retry duration so we cancel fairly quickly
                 .WithRetryDuration(TimeSpan.FromSeconds(15))

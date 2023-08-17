@@ -21,7 +21,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             using var fileToUpload = new RandomTemporaryFileBuilder().Build();
 
-            using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleType)
+            await using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleType)
                 .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .Build(CancellationToken);
             
@@ -69,7 +69,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             using var fileToDownload = new RandomTemporaryFileBuilder().Build();
 
-            using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleType)
+            await using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleType)
                 .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .Build(CancellationToken);
 

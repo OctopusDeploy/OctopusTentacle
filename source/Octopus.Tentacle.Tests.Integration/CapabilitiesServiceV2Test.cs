@@ -47,7 +47,7 @@ namespace Octopus.Tentacle.Tests.Integration
             Version? version, 
             SyncOrAsyncHalibut syncOrAsyncHalibut)
         {
-            using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleType)
+            await using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleType)
                 .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithTentacleVersion(version)
                 .Build(CancellationToken);
@@ -77,7 +77,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var capabilitiesResponses = new List<CapabilitiesResponseV2>();
             var resumePortForwarder = false;
 
-            using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
+            await using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithPortForwarder(out var portForwarder)
                 .WithTentacleVersion(version)
