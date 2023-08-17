@@ -115,6 +115,7 @@ namespace Octopus.Tentacle.Client.Scripts
                         scriptStatusResponse = await rpcCallExecutor.ExecuteWithNoRetries(
                             RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.StartScript)),
                             StartScriptAction,
+                            logger,
                             abandonActionOnCancellation: true,
                             clientOperationMetricsBuilder,
                             scriptExecutionCancellationToken).ConfigureAwait(false);
@@ -157,6 +158,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
                         return result;
                     },
+                    logger,
                     abandonActionOnCancellation: false,
                     clientOperationMetricsBuilder,
                     scriptExecutionCancellationToken).ConfigureAwait(false);
@@ -206,6 +208,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 tentacleCapabilities = await rpcCallExecutor.ExecuteWithNoRetries(
                     RpcCall.Create<ICapabilitiesServiceV2>(nameof(ICapabilitiesServiceV2.GetCapabilities)),
                     GetCapabilitiesFunc,
+                    logger,
                     abandonActionOnCancellation: true,
                     clientOperationMetricsBuilder,
                     cancellationToken).ConfigureAwait(false);
@@ -331,6 +334,7 @@ namespace Octopus.Tentacle.Client.Scripts
                         return await rpcCallExecutor.ExecuteWithNoRetries(
                             RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.GetStatus)),
                             GetStatusAction,
+                            logger,
                             abandonActionOnCancellation: true,
                             clientOperationMetricsBuilder,
                             cancellationToken).ConfigureAwait(false);
@@ -356,6 +360,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
                         return result;
                     },
+                    logger,
                     abandonActionOnCancellation: false,
                     clientOperationMetricsBuilder,
                     cancellationToken).ConfigureAwait(false);
@@ -399,6 +404,7 @@ namespace Octopus.Tentacle.Client.Scripts
                     return await rpcCallExecutor.ExecuteWithNoRetries(
                         RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.CancelScript)),
                         CancelScriptAction,
+                        logger,
                         abandonActionOnCancellation: false,
                         clientOperationMetricsBuilder,
                         cancellationToken).ConfigureAwait(false);
@@ -418,6 +424,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
                         return result;
                     },
+                    logger,
                     abandonActionOnCancellation: false,
                     clientOperationMetricsBuilder,
                     cancellationToken).ConfigureAwait(false);
@@ -449,6 +456,7 @@ namespace Octopus.Tentacle.Client.Scripts
                                     .WhenDisabled(() => clientScriptServiceV2.SyncService.CompleteScript(request, new HalibutProxyRequestOptions(ct, CancellationToken.None)))
                                     .WhenEnabled(async () => await clientScriptServiceV2.AsyncService.CompleteScriptAsync(request, new HalibutProxyRequestOptions(ct, CancellationToken.None)));
                             },
+                            logger,
                             abandonActionOnCancellation: false,
                             clientOperationMetricsBuilder,
                             CancellationToken.None);
@@ -494,6 +502,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
                         return result;
                     },
+                    logger,
                     abandonActionOnCancellation: false,
                     clientOperationMetricsBuilder,
                     CancellationToken.None).ConfigureAwait(false);

@@ -85,13 +85,21 @@ namespace Octopus.Tentacle.Client.Execution
             {
                 var rpcCallMetrics = rpcCallMetricsBuilder.Build();
                 clientOperationMetricsBuilder.WithRpcCall(rpcCallMetrics);
-                tentacleClientObserver.RpcCallCompleted(rpcCallMetrics);
+                try
+                {
+                    tentacleClientObserver.RpcCallCompleted(rpcCallMetrics);
+                }
+                catch (Exception e)
+                {
+                    logger.Warn(e, "An error occurred while notifying the Tentacle Client Observer of the RPC call completion.");
+                }
             }
         }
 
         public async Task<T> ExecuteWithNoRetries<T>(
             RpcCall rpcCall,
             Func<CancellationToken, Task<T>> action,
+            ILog logger,
             bool abandonActionOnCancellation,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
@@ -121,7 +129,15 @@ namespace Octopus.Tentacle.Client.Execution
                             {
                                 var rpcCallMetrics = rpcCallMetricsBuilder.Build();
                                 clientOperationMetricsBuilder.WithRpcCall(rpcCallMetrics);
-                                tentacleClientObserver.RpcCallCompleted(rpcCallMetrics);
+
+                                try
+                                {
+                                    tentacleClientObserver.RpcCallCompleted(rpcCallMetrics);
+                                }
+                                catch (Exception e)
+                                {
+                                    logger.Warn(e, "An error occurred while notifying the Tentacle Client Observer of the RPC call completion.");
+                                }
                             }
                         }, ct);
                     },
@@ -135,6 +151,7 @@ namespace Octopus.Tentacle.Client.Execution
         public async Task ExecuteWithNoRetries(
             RpcCall rpcCall,
             Func<CancellationToken, Task> action,
+            ILog logger,
             bool abandonActionOnCancellation,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
@@ -163,7 +180,15 @@ namespace Octopus.Tentacle.Client.Execution
                             {
                                 var rpcCallMetrics = rpcCallMetricsBuilder.Build();
                                 clientOperationMetricsBuilder.WithRpcCall(rpcCallMetrics);
-                                tentacleClientObserver.RpcCallCompleted(rpcCallMetrics);
+
+                                try
+                                {
+                                    tentacleClientObserver.RpcCallCompleted(rpcCallMetrics);
+                                }
+                                catch (Exception e)
+                                {
+                                    logger.Warn(e, "An error occurred while notifying the Tentacle Client Observer of the RPC call completion.");
+                                }
                             }
                         }, ct);
                     },
