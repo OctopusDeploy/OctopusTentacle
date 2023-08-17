@@ -139,11 +139,13 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         protected void AddCertificateToTentacle(string tentacleExe, string instanceName, string tentaclePfxPath, TemporaryDirectory tmp, CancellationToken cancellationToken)
         {
             RunTentacleCommand(tentacleExe, new[] { "import-certificate", $"--from-file={tentaclePfxPath}", $"--instance={instanceName}" }, tmp, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
         }
 
         protected void CreateInstance(string tentacleExe, string configFilePath, string instanceName, TemporaryDirectory tmp, CancellationToken cancellationToken)
         {
             RunTentacleCommand(tentacleExe, new[] { "create-instance", "--config", $"\"{configFilePath}\"", $"--instance={instanceName}" }, tmp, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
         }
 
         internal void DeleteInstanceIgnoringFailure(string tentacleExe, string instanceName, TemporaryDirectory tmp, CancellationToken cancellationToken)
