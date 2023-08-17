@@ -6,18 +6,20 @@ using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods;
-using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Util;
+using Serilog;
 
-namespace Octopus.Tentacle.Tests.Integration.Support
+namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
 {
     public class TentacleBinaryCache : ITentacleFetcher
     {
         private readonly ITentacleFetcher tentacleFetcher;
+        private ILogger logger;
 
-        public TentacleBinaryCache(ITentacleFetcher tentacleFetcher)
+        public TentacleBinaryCache(ITentacleFetcher tentacleFetcher, ILogger logger)
         {
             this.tentacleFetcher = tentacleFetcher;
+            this.logger = logger;
         }
 
         private static readonly string cacheDirRunExtension = Guid.NewGuid().ToString("N");
@@ -26,7 +28,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         public async Task<string> GetTentacleVersion(string tmp, Version version, CancellationToken cancellationToken)
         {
-            var logger = new SerilogLoggerBuilder().Build().ForContext<TentacleBinaryCache>();
             using var _ = await versionLock.GetOrAdd(version, s => new SemaphoreSlim(1, 1)).LockAsync();
 
             var tentacleVersionCacheDir = TentacleVersionCacheDir(version.ToString());

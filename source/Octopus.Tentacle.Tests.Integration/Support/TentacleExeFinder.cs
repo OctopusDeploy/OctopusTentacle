@@ -48,15 +48,15 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             if (PlatformDetection.IsRunningOnWindows) path += ".exe";
             return path;
         }
-        
-        public static bool IsRunningInTeamCity()
+
+        private static Lazy<bool> IsRunningInTeamCityLazy = new Lazy<bool>(() =>
         {
             // Under linux we don't have the team city environment variables
             if (typeof(TentacleExeFinder).Assembly.Location.Contains("TeamCity"))
             {
                 return true;
             }
-            
+
             // Under windows we do.
             var teamcityenvvars = new String[] {"TEAMCITY_VERSION", "TEAMCITY_BUILD_ID"};
             foreach (var s in teamcityenvvars)
@@ -66,7 +66,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             }
 
             return false;
-            
+        });
+        public static bool IsRunningInTeamCity()
+        {
+            return IsRunningInTeamCityLazy.Value;
         }
     }
 }

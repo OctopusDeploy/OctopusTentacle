@@ -11,6 +11,7 @@ using Octopus.Tentacle.Client.Retries;
 using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.Contracts.Legacy;
 using Octopus.Tentacle.Contracts.Observability;
+using Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.TestPortForwarder;
 
@@ -129,6 +130,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         public async Task<ClientAndTentacle> Build(CancellationToken cancellationToken)
         {
+            var logger = new SerilogLoggerBuilder().Build().ForContext<ClientAndTentacleBuilder>();
             // Server
             var serverHalibutRuntimeBuilder = new HalibutRuntimeBuilder()
                 .WithServerCertificate(Certificates.Server)
@@ -159,7 +161,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             var temporaryDirectory = new TemporaryDirectory();
             var tentacleExe = tentacleVersion == null ?
                 TentacleExeFinder.FindTentacleExe() :
-                await TentacleFetcher.GetTentacleVersion(temporaryDirectory.DirectoryPath, tentacleVersion, cancellationToken);
+                await TentacleFetcher.GetTentacleVersion(temporaryDirectory.DirectoryPath, tentacleVersion, logger, cancellationToken);
 
             if (TentacleType == TentacleType.Polling)
             {

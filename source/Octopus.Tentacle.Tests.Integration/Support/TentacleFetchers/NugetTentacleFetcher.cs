@@ -4,10 +4,10 @@ using System.IO.Compression;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Octopus.Tentacle.Util;
+using Serilog;
 
-namespace Octopus.Tentacle.Tests.Integration.Support
+namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
 {
     /// <summary>
     /// Downloads tentacle from the cross platform nuget package
@@ -15,6 +15,13 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     /// </summary>
     public class NugetTentacleFetcher : ITentacleFetcher
     {
+        private ILogger logger;
+
+        public NugetTentacleFetcher(ILogger logger)
+        {
+            this.logger = logger;
+        }
+
         static string DownloadUrlForVersion(string versionString) => $"https://f.feedz.io/octopus-deploy/dependencies/packages/Octopus.Tentacle.CrossPlatformBundle/{versionString}/download";
 
         public async Task<string> GetTentacleVersion(string downloadPath, Version version, CancellationToken cancellationToken)
@@ -27,8 +34,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             await Task.CompletedTask;
             var downloadFilePath = Path.Combine(directoryPath, Guid.NewGuid().ToString("N"));
 
-            TestContext.WriteLine($"Downloading {url} to {downloadFilePath}");
-            await OctopusPackageDownloader.DownloadPackage(url, downloadFilePath);
+            logger.Information($"Downloading {url} to {downloadFilePath}");
+            await OctopusPackageDownloader.DownloadPackage(url, downloadFilePath, logger);
 
             var extractionDirectory = Path.Combine(directoryPath, "extracted");
 
@@ -39,7 +46,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             var tentacleFolder = Path.Combine(directoryPath, "tentacle");
             if (tentacleArtifact.EndsWith(".tar.gz"))
             {
-                LinuxTentacleFetcher.ExtractTarGzip(tentacleArtifact, tentacleFolder);
+                LinuxTentacleFetcher.ExtractTarGzip(tentacleArtifact, tentacleFolder, logger);
             }
             else
             {

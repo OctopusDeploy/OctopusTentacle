@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using Halibut.Diagnostics;
 using NUnit.Framework;
 using Octopus.Tentacle.Tests.Integration.Support;
@@ -14,6 +15,14 @@ namespace Octopus.Tentacle.Tests.Integration.Util
     public class SerilogLoggerBuilder
     {
         public static readonly ConcurrentDictionary<string, Stopwatch> TestTimers = new ConcurrentDictionary<string, Stopwatch>();
+
+        StringBuilder? stringBuilder;
+
+        public SerilogLoggerBuilder WithLoggingToStringBuilder(StringBuilder stringBuilder)
+        {
+            this.stringBuilder = stringBuilder;
+            return this;
+        }
         
         public ILogger Build()
         {
@@ -32,9 +41,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
             
             return new LoggerConfiguration()
                 .MinimumLevel.Debug()
-                .WriteTo.Sink(new NonProgressNUnitSink(
-                    new MessageTemplateTextFormatter(outputTemplate)
-                    ))
+                .WriteTo.Sink(new NonProgressNUnitSink(new MessageTemplateTextFormatter(outputTemplate), stringBuilder))
                 .Enrich.WithProperty("TestName", TestContext.CurrentContext.Test.Name)
                 .CreateLogger();
         }
@@ -48,12 +55,19 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         public class NonProgressNUnitSink : ILogEventSink
         {
             private readonly MessageTemplateTextFormatter _formatter;
+            StringBuilder? stringBuilder;
 
-            public NonProgressNUnitSink(MessageTemplateTextFormatter formatter) => _formatter = formatter != null ? formatter : throw new ArgumentNullException(nameof(formatter));
+            public NonProgressNUnitSink(MessageTemplateTextFormatter formatter, StringBuilder? stringBuilder)
+            {
+                this.stringBuilder = stringBuilder;
+                _formatter = formatter != null ? formatter : throw new ArgumentNullException(nameof(formatter));
+            }
 
             public void Emit(LogEvent logEvent)
             {
             }
+            
+            static Lazy<bool> IsForcingContextWrite = new(() => !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("Force_Test_Context_Write")));
 
             public void Emit(Serilog.Events.LogEvent logEvent)
             {
@@ -70,7 +84,21 @@ namespace Octopus.Tentacle.Tests.Integration.Util
                 // This is the change, call this instead of: TestContext.Progress
                 var elapsed = SerilogLoggerBuilder.TestTimers[TestContext.CurrentContext.Test.ID].Elapsed.ToString();
                 var s = elapsed + " " + output.ToString();
-                TestContext.Write(s);
+                if (stringBuilder != null)
+                {
+                    lock (stringBuilder)
+                    {
+                        stringBuilder.Append(s);
+                    }
+                }
+                if (TentacleExeFinder.IsRunningInTeamCity() || IsForcingContextWrite.Value)
+                {
+                    TestContext.Write(s);
+                }
+                else
+                {
+                    TestContext.Progress.Write(s);
+                }
             }
         }
     }
