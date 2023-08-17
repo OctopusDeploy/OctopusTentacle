@@ -45,12 +45,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             sequences.Add(sequence);
             return this;
         }
-        
-        public AllCombinations AndValuesOf(IEnumerable sequence)
-        {
-            sequences.Add(sequence);
-            return this;
-        }
 
         public IEnumerator Build()
         {

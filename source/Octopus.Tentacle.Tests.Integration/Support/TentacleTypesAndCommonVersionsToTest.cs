@@ -5,20 +5,17 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 {
     public class TentacleTypesAndCommonVersionsToTest : IEnumerable
     {
-        public static Version[] StandardVersion = new Version[]
-        {
-            TentacleVersions.Current,
-            TentacleVersions.v5_0_15_LastOfVersion5,
-            TentacleVersions.v6_3_417_LastWithScriptServiceV1Only,
-            TentacleVersions.v7_0_1_ScriptServiceV2Added
-        };
-        
         public IEnumerator GetEnumerator()
         {
             return AllCombinations
                 .Of(TentacleType.Polling,
                     TentacleType.Listening)
-                .AndValuesOf(StandardVersion)
+                .And(
+                    TentacleVersions.Current,
+                    TentacleVersions.v5_0_15_LastOfVersion5,
+                    TentacleVersions.v6_3_417_LastWithScriptServiceV1Only,
+                    TentacleVersions.v7_0_1_ScriptServiceV2Added
+                    )
                 .And(
                     SyncOrAsyncHalibut.Sync,
                     SyncOrAsyncHalibut.Async
