@@ -5,10 +5,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     public static class TentacleVersions
     {
         // First linux Release 9/9/2019
-        public static readonly Version v5_0_4_FirstLinuxRelease = new("5.0.4"); 
+        public static readonly Version v5_0_4_FirstLinuxRelease = new("5.0.4");
 
         public static readonly Version v5_0_12_AutofacServiceFactoryIsInShared = new("5.0.12");
-        
+
         public static readonly Version v5_0_15_LastOfVersion5 = new("5.0.15");
 
         // Before script service v2
@@ -25,7 +25,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         // The version compiled from the current source
         public static readonly Version? Current = null;
 
-        public static Version[] AllTestedVersionsToDownload = new[]
+        public static Version[] AllTestedVersionsToDownload =
         {
             v5_0_4_FirstLinuxRelease,
             v5_0_12_AutofacServiceFactoryIsInShared,
@@ -36,7 +36,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         };
     }
 
-    public static class VersionExtensionMethods{
+    public static class VersionExtensionMethods
+    {
         public static bool HasScriptServiceV2(this Version? version)
         {
             return version == TentacleVersions.Current || version >= TentacleVersions.v7_0_1_ScriptServiceV2Added;
