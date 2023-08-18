@@ -192,19 +192,26 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 commandOutput(s);
             }
 
-            var commandResult = await Cli.Wrap(
-                tentacleExe)
-                .WithArguments(args)
-                .WithWorkingDirectory(tmp.DirectoryPath)
-                .WithStandardOutputPipe(PipeTarget.ToDelegate(ProcessLogs))
-                .WithStandardErrorPipe(PipeTarget.ToDelegate(ProcessLogs))
-                .ExecuteAsync(cancellationToken);
-
-            if (cancellationToken.IsCancellationRequested) return;
-
-            if (commandResult.ExitCode != 0)
+            try
             {
-                throw new Exception("Tentacle returns non zero exit code: " + commandResult.ExitCode);
+                var commandResult = await Cli.Wrap(
+                        tentacleExe)
+                    .WithArguments(args)
+                    .WithWorkingDirectory(tmp.DirectoryPath)
+                    .WithStandardOutputPipe(PipeTarget.ToDelegate(ProcessLogs))
+                    .WithStandardErrorPipe(PipeTarget.ToDelegate(ProcessLogs))
+                    .ExecuteAsync(cancellationToken);
+
+                if (cancellationToken.IsCancellationRequested) return;
+
+                if (commandResult.ExitCode != 0)
+                {
+                    throw new Exception("Tentacle returns non zero exit code: " + commandResult.ExitCode);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                return;
             }
         }
     }
