@@ -21,8 +21,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             var configFilePath = Path.Combine(tempDirectory.DirectoryPath, instanceName + ".cfg");
             var tentacleExe = TentacleExePath ?? TentacleExeFinder.FindTentacleExe();
 
-            CreateInstance(tentacleExe, configFilePath, instanceName, tempDirectory, cancellationToken);
-            AddCertificateToTentacle(tentacleExe, instanceName, CertificatePfxPath, tempDirectory, cancellationToken);
+            await CreateInstance(tentacleExe, configFilePath, instanceName, tempDirectory, cancellationToken);
+            await AddCertificateToTentacle(tentacleExe, instanceName, CertificatePfxPath, tempDirectory, cancellationToken);
             ConfigureTentacleToListen(configFilePath);
 
             var runningTentacle = await StartTentacle(

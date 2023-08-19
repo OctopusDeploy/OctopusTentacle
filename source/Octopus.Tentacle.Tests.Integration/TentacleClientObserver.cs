@@ -23,7 +23,7 @@ namespace Octopus.Tentacle.Tests.Integration
             // Arrange
             var tentacleClientObserver = new BrokenTentacleClientObserver(errorOnExecuteScriptCompleted: true);
 
-            using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
@@ -51,7 +51,7 @@ namespace Octopus.Tentacle.Tests.Integration
             // Arrange
             var tentacleClientObserver = new BrokenTentacleClientObserver(errorOnRpcCallCompleted: true);
 
-            using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
@@ -79,7 +79,7 @@ namespace Octopus.Tentacle.Tests.Integration
             // Arrange
             var tentacleClientObserver = new BrokenTentacleClientObserver(errorOnUploadFileCompleted: true);
 
-            using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .Build(CancellationToken);
@@ -97,7 +97,7 @@ namespace Octopus.Tentacle.Tests.Integration
             // Arrange
             var tentacleClientObserver = new BrokenTentacleClientObserver(errorOnDownloadFileCompleted: true);
 
-            using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .Build(CancellationToken);

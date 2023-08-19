@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Octopus.TestPortForwarder;
 
 namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
 {
-    internal class LegacyClientAndTentacle : IDisposable
+    internal class LegacyClientAndTentacle : IAsyncDisposable
     {
         private readonly TemporaryDirectory temporaryDirectory;
         public Server Server { get; }
@@ -25,11 +26,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
             TentacleClient = tentacleClient;
         }
 
-        public void Dispose()
+        public async ValueTask DisposeAsync()
         {
             Server.Dispose();
             PortForwarder.Dispose();
-            RunningTentacle.Dispose();
+            await RunningTentacle.DisposeAsync();
             temporaryDirectory.Dispose();
         }
     }
