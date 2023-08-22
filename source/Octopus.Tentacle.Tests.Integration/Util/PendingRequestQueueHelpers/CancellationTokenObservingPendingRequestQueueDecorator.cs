@@ -28,7 +28,9 @@ namespace Octopus.Tentacle.Tests.Integration.Util.PendingRequestQueueHelpers
         public Task<ResponseMessage> QueueAndWaitAsync(RequestMessage request, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
+#pragma warning disable CS0612
             return pendingRequestQueue.QueueAndWaitAsync(request, cancellationToken);
+#pragma warning restore CS0612
         }
 
         public Task<ResponseMessage> QueueAndWaitAsync(RequestMessage request, RequestCancellationTokens requestCancellationTokens)

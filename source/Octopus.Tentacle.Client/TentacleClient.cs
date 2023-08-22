@@ -83,10 +83,12 @@ namespace Octopus.Tentacle.Client
 
             if (asyncHalibutFeature == AsyncHalibutFeature.Disabled)
             {
+#pragma warning disable CS0612
                 var syncScriptServiceV1 = halibutRuntime.CreateClient<IScriptService, IClientScriptService>(serviceEndPoint);
                 var syncScriptServiceV2 = halibutRuntime.CreateClient<IScriptServiceV2, IClientScriptServiceV2>(serviceEndPoint);
                 var syncFileTransferServiceV1 = halibutRuntime.CreateClient<IFileTransferService, IClientFileTransferService>(serviceEndPoint);
                 var syncCapabilitiesServiceV2 = halibutRuntime.CreateClient<ICapabilitiesServiceV2, IClientCapabilitiesServiceV2>(serviceEndPoint).WithBackwardsCompatability();
+#pragma warning restore CS0612
 
                 var exceptionDecorator = new HalibutExceptionTentacleServiceDecorator();
                 syncScriptServiceV2 = exceptionDecorator.Decorate(syncScriptServiceV2);

@@ -59,7 +59,9 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
+#pragma warning disable CS0612
             syncOrAsyncHalibut.WhenSync(() => scriptServiceV2 = clientTentacle.Server.ServerHalibutRuntime.CreateClient<IScriptServiceV2, IClientScriptServiceV2>(clientTentacle.ServiceEndPoint))
+#pragma warning restore CS0612
                 .IgnoreResult()
                 .WhenAsync(() => asyncScriptServiceV2 = clientTentacle.Server.ServerHalibutRuntime.CreateAsyncClient<IScriptServiceV2, IAsyncClientScriptServiceV2>(clientTentacle.ServiceEndPoint));
 

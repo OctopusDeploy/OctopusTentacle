@@ -72,6 +72,7 @@ namespace Octopus.Tentacle.Scripts
 
         void SaveFileToDisk(IScriptWorkspace workspace, ScriptFile scriptFile)
         {
+#pragma warning disable CS0612
             if (scriptFile.EncryptionPassword == null)
             {
                 scriptFile.Contents.Receiver().SaveTo(workspace.ResolvePath(scriptFile.Name));
@@ -84,6 +85,7 @@ namespace Octopus.Tentacle.Scripts
                     fileSystem.WriteAllBytes(workspace.ResolvePath(scriptFile.Name), new AesEncryption(scriptFile.EncryptionPassword).Encrypt(reader.ReadToEnd()));
                 });
             }
+#pragma warning restore CS0612
         }
 
         string FindWorkingDirectory(ScriptTicket ticket)

@@ -24,9 +24,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
         {
             if (asyncHalibutFeature.IsDisabled())
             {
+#pragma warning disable CS0612
                 var syncScriptService = halibutRuntime.CreateClient<IScriptService>(serviceEndPoint, cancellationToken);
                 var syncFileTransferService = halibutRuntime.CreateClient<IFileTransferService>(serviceEndPoint, cancellationToken);
                 var syncCapabilitiesServiceV2 = halibutRuntime.CreateClient<ICapabilitiesServiceV2>(serviceEndPoint, cancellationToken).WithBackwardsCompatability();
+#pragma warning restore CS0612
 
                 return new LegacyTentacleClient(
                     new(syncScriptService, null),
