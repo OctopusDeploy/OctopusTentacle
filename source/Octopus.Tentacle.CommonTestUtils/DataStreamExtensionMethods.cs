@@ -9,6 +9,7 @@ namespace Octopus.Tentacle.CommonTestUtils
         public static byte[] ToBytes(this DataStream dataStream)
         {
             byte[]? bytes = null;
+#pragma warning disable CS0612
             dataStream.Receiver()
                 .Read(
                     stream =>
@@ -25,6 +26,7 @@ namespace Octopus.Tentacle.CommonTestUtils
                             bytes = memoryStream.ToArray();
                         }
                     });
+#pragma warning restore CS0612
 
             return bytes!;
         }

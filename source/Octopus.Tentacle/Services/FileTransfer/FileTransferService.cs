@@ -71,7 +71,9 @@ namespace Octopus.Tentacle.Services.FileTransfer
             fileSystem.EnsureDiskHasEnoughFreeSpace(parentDirectory, upload.Length);
 
             log.Trace("Copying uploaded data stream to: " + fullPath);
+#pragma warning disable CS0612
             upload.Receiver().SaveTo(fullPath);
+#pragma warning restore CS0612
             return new UploadResult(fullPath, HashFile(fullPath), fileSystem.GetFileSize(fullPath));
         }
 
