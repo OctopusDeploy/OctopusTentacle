@@ -461,7 +461,7 @@ namespace Octopus.Tentacle.Client.Scripts
                             clientOperationMetricsBuilder,
                             CancellationToken.None);
 
-                    var abandonCancellationTokenSource = new CancellationTokenSource();
+                    using var abandonCancellationTokenSource = new CancellationTokenSource();
 
                     void CancelAfter()
                     {
