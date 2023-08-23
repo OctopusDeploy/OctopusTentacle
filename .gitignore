@@ -49,3 +49,5 @@ tools
 
 _artifacts
 _build
+
+.DS_Store
