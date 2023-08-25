@@ -40,6 +40,7 @@ namespace Octopus.Tentacle.Configuration
                 }
 
                 var address = proxy.GetProxy(destination);
+#pragma warning disable CS8602
                 log.Info($"Agent will use the configured system proxy at {address.Host}:{address.Port} for server at {destination}");
                 return config.UsingDefaultCredentials()
                     ? new ProxyDetails(address.Host,
@@ -52,6 +53,7 @@ namespace Octopus.Tentacle.Configuration
                         ProxyType.HTTP,
                         config.CustomProxyUsername,
                         config.CustomProxyPassword);
+#pragma warning restore CS8602
 #endif
             }
 

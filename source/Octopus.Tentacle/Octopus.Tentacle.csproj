@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<AppConfig Condition="'$(TargetFramework)' == 'net6.0'">app.netcore.config</AppConfig>
 		<ApplicationManifest>Tentacle.exe.manifest</ApplicationManifest>
@@ -98,7 +98,7 @@
 		<PackageReference Include="System.Security.Cryptography.ProtectedData" Version="5.0.0" />
 	</ItemGroup>
 	<ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
-		<PackageReference Include="NLog" Version="5.0.4" />
+        <PackageReference Include="NLog" Version="5.0.4" />
 		<PackageReference Include="System.Runtime" Version="4.3.0" />
 		<Reference Include="System.Security" />
 		<Reference Include="System.DirectoryServices" />

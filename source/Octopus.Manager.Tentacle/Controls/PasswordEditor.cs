@@ -43,11 +43,15 @@ namespace Octopus.Manager.Tentacle.Controls
 
         async void ChangePasswordClicked(object sender, ExecutedRoutedEventArgs e)
         {
+#pragma warning disable CA1416
             var dialogHost = FindParent<DialogHost>(this);
+#pragma warning restore CA1416
             if (dialogHost == null) throw new Exception("Cannot find a parent DialogHost control.");
 
             var setPasswordDialog = new SetPasswordDialog();
+#pragma warning disable CA1416
             var result = await DialogHost.Show(setPasswordDialog, dialogHost.Identifier);
+#pragma warning restore CA1416
             if (!(result is bool typedResult)) return;
             if (typedResult)
             {
