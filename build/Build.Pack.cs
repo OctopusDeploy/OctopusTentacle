@@ -235,7 +235,7 @@ partial class Build
                     }
                     else
                     {
-                        platformString = $"{NetCore}-win" + platform == MSBuildTargetPlatform.x64 ? "-x64" : "-x86";
+                        platformString = $"-{NetCore}-win" + (platform == MSBuildTargetPlatform.x64 ? "-x64" : "-x86");
                     }
 
                     FileSystemTasks.MoveFile(
