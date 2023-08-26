@@ -23,6 +23,7 @@
             <PropertyGroup>
                 <RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
                 <PublishSingleFile>true</PublishSingleFile>
+                <PublishTrimmed>true</PublishTrimmed>
                 <DebugType>embedded</DebugType>
             </PropertyGroup>
         </Otherwise>
@@ -32,7 +33,7 @@
     <Optimize>True</Optimize>
   </PropertyGroup>
 
-  <PropertyGroup Condition="('$(TargetFramework)'=='net48' OR '$(TargetFramework)'=='net6.0') AND '$(RuntimeIdentifier)'=='win'">
+  <PropertyGroup Condition="('$(TargetFramework)'=='net48' OR '$(TargetFramework)'=='net6.0') AND ('$(RuntimeIdentifier)'=='win' OR '$(RuntimeIdentifier)'=='win-x86' OR '$(RuntimeIdentifier)'=='win-x64')">
     <IsPublishable>true</IsPublishable>
   </PropertyGroup>
 
