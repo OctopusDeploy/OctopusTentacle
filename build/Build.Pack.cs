@@ -154,7 +154,7 @@ partial class Build
         .DependsOn(BuildWindows)
         .Executes(() =>
         {
-            void PackWindowsInstallers(MSBuildTargetPlatform platform, AbsolutePath wixNugetPackagePath, string framework, string frameworkName, string msiPostFix)
+            void PackWindowsInstallers(MSBuildTargetPlatform platform, AbsolutePath wixNugetPackagePath, string framework, string frameworkName)
             {
                 var installerDirectory = BuildDirectory / "Installer";
                 FileSystemTasks.EnsureExistingDirectory(installerDirectory);
@@ -177,7 +177,7 @@ partial class Build
 
                 using var harvestFile = new ModifiableFileWithRestoreContentsOnDispose(harvestFilePath);
                 GenerateMsiInstallerContents(installerDirectory, harvestFile.FilePath);
-                BuildMsiInstallerForPlatform(platform, wixNugetPackagePath, framework, msiPostFix);
+                BuildMsiInstallerForPlatform(platform, wixNugetPackagePath, framework);
             }
 
             void GenerateMsiInstallerContents(AbsolutePath installerDirectory, AbsolutePath harvestFile)
@@ -202,7 +202,7 @@ partial class Build
                 });
             }
 
-            void BuildMsiInstallerForPlatform(MSBuildTargetPlatform platform, AbsolutePath wixNugetPackagePath, string frameworkName, string msiPostFix)
+            void BuildMsiInstallerForPlatform(MSBuildTargetPlatform platform, AbsolutePath wixNugetPackagePath, string frameworkName)
             {
                 Logging.InBlock($"Building {platform} installer", () =>
                 {
@@ -228,10 +228,19 @@ partial class Build
                     var builtMsi = RootDirectory / "installer" / "Octopus.Tentacle.Installer" / "bin" / platform / "Octopus.Tentacle.msi";
                     Signing.Sign(builtMsi);
 
-                    var platformString = platform == MSBuildTargetPlatform.x64 ? "-x64" : "";
+                    string platformString;
+                    if (frameworkName == NetFramework)
+                    {
+                        platformString = platform == MSBuildTargetPlatform.x64 ? "-x64" : "";
+                    }
+                    else
+                    {
+                        platformString = $"{NetCore}-win" + platform == MSBuildTargetPlatform.x64 ? "-x64" : "-x86";
+                    }
+
                     FileSystemTasks.MoveFile(
                         builtMsi,
-                        ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{OctoVersionInfo.FullSemVer}{platformString}{msiPostFix}.msi");
+                        ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{OctoVersionInfo.FullSemVer}{platformString}.msi");
                 });
             }
 
@@ -241,11 +250,11 @@ partial class Build
 
             FileSystemTasks.EnsureExistingDirectory(ArtifactsDirectory / "msi");
             
-            PackWindowsInstallers(MSBuildTargetPlatform.x64, wixNugetInstalledPackage.Directory, NetFramework, "NetFramework", "");
-            PackWindowsInstallers(MSBuildTargetPlatform.x86, wixNugetInstalledPackage.Directory, NetFramework, "NetFramework", "");
+            PackWindowsInstallers(MSBuildTargetPlatform.x64, wixNugetInstalledPackage.Directory, NetFramework, "NetFramework");
+            PackWindowsInstallers(MSBuildTargetPlatform.x86, wixNugetInstalledPackage.Directory, NetFramework, "NetFramework");
 
-            PackWindowsInstallers(MSBuildTargetPlatform.x64, wixNugetInstalledPackage.Directory, NetCore, "NetCore", $"-{NetCore}");
-            PackWindowsInstallers(MSBuildTargetPlatform.x86, wixNugetInstalledPackage.Directory, NetCore, "NetCore", $"-{NetCore}");
+            PackWindowsInstallers(MSBuildTargetPlatform.x64, wixNugetInstalledPackage.Directory, NetCore, "NetCore");
+            PackWindowsInstallers(MSBuildTargetPlatform.x86, wixNugetInstalledPackage.Directory, NetCore, "NetCore");
         });
 
     [PublicAPI]
@@ -346,11 +355,15 @@ partial class Build
 
             FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{OctoVersionInfo.FullSemVer}.msi", workingDirectory / "Octopus.Tentacle.msi");
             FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{OctoVersionInfo.FullSemVer}-x64.msi", workingDirectory / "Octopus.Tentacle-x64.msi");
-            FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{OctoVersionInfo.FullSemVer}-net6.0.msi", workingDirectory / "Octopus.Tentacle-net6.0.msi");
-            FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{OctoVersionInfo.FullSemVer}-x64-net6.0.msi", workingDirectory / "Octopus.Tentacle-x64-net6.0.msi");
+            FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{OctoVersionInfo.FullSemVer}-net6.0-win-x86.msi", workingDirectory / "Octopus.Tentacle-net6.0-win-x86.msi");
+            FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{OctoVersionInfo.FullSemVer}-net6.0-win-x64.msi", workingDirectory / "Octopus.Tentacle-net6.0-win-x64.msi");
 
             var octopusTentacleUpgraderDirectory = BuildDirectory / "Octopus.Tentacle.Upgrader" / NetFramework / "win";
-            octopusTentacleUpgraderDirectory.GlobFiles("*").ForEach(x => FileSystemTasks.CopyFileToDirectory(x, workingDirectory));
+            octopusTentacleUpgraderDirectory.GlobFiles("*.exe").ForEach(sourceFilePath => FileSystemTasks.CopyFileToDirectory(sourceFilePath, workingDirectory));
+
+            var octopusTentacleUpgraderNet60Directory = BuildDirectory / "Octopus.Tentacle.Upgrader" / NetCore / "win";
+            octopusTentacleUpgraderNet60Directory.GlobFiles("*.exe").ForEach(sourceFilePath => FileSystemTasks.CopyFileToDirectory(sourceFilePath, workingDirectory));
+
             FileSystemTasks.CopyFile(ArtifactsDirectory / "deb" / debAmd64PackageFilename, workingDirectory / debAmd64PackageFilename);
             FileSystemTasks.CopyFile(ArtifactsDirectory / "deb" / debArm64PackageFilename, workingDirectory / debArm64PackageFilename);
             FileSystemTasks.CopyFile(ArtifactsDirectory / "deb" / debArm32PackageFilename, workingDirectory / debArm32PackageFilename);
@@ -373,9 +386,11 @@ partial class Build
 
             Assert.True((workingDirectory / "Octopus.Tentacle.msi").FileExists(), "Missing Octopus.Tentacle.msi");
             Assert.True((workingDirectory / "Octopus.Tentacle-x64.msi").FileExists(), "Missing Octopus.Tentacle-x64.msi");
-            Assert.True((workingDirectory / "Octopus.Tentacle-net6.0.msi").FileExists(), "Missing Octopus.Tentacle-net6.0.msi");
-            Assert.True((workingDirectory / "Octopus.Tentacle-x64-net6.0.msi").FileExists(), "Missing Octopus.Tentacle-x64-net6.0.msi");
+            Assert.True((workingDirectory / "Octopus.Tentacle-net6.0-win-x86.msi").FileExists(), "Missing Octopus.Tentacle-net6.0-win-x86.msi");
+            Assert.True((workingDirectory / "Octopus.Tentacle-net6.0-win-x64.msi").FileExists(), "Missing Octopus.Tentacle-net6.0-win-x64.msi");
             Assert.True((workingDirectory / "Octopus.Tentacle.Upgrader.exe").FileExists(), "Missing Octopus.Tentacle.Upgrader.exe");
+            Assert.True((workingDirectory / "Octopus.Tentacle.Upgrader-net6.0-win-x86.exe").FileExists(), "Missing Octopus.Tentacle.Upgrader-net6.0-win-x86.exe");
+            Assert.True((workingDirectory / "Octopus.Tentacle.Upgrader-net6.0-win-x64.exe").FileExists(), "Missing Octopus.Tentacle.Upgrader-net6.0-win-x64.exe");
             Assert.True((workingDirectory / debAmd64PackageFilename).FileExists(), $"Missing {debAmd64PackageFilename}");
             Assert.True((workingDirectory / debArm64PackageFilename).FileExists(), $"Missing {debArm64PackageFilename}");
             Assert.True((workingDirectory / debArm32PackageFilename).FileExists(), $"Missing {debArm32PackageFilename}");

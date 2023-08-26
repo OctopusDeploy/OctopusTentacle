@@ -8,11 +8,25 @@
     <OutputType>Exe</OutputType>
     <PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
     <RootNamespace>Octopus.Tentacle.Upgrader</RootNamespace>
-    <RuntimeIdentifiers>win</RuntimeIdentifiers>
     <TargetFrameworks>net48;net6.0</TargetFrameworks>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
+
+    <Choose>
+        <When Condition="'$(TargetFramework)'=='net48'">
+            <PropertyGroup>
+                <RuntimeIdentifier>win</RuntimeIdentifier><!-- This is AnyCPU -->
+            </PropertyGroup>
+        </When>
+        <Otherwise>
+            <PropertyGroup>
+                <RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
+                <PublishSingleFile>true</PublishSingleFile>
+                <DebugType>embedded</DebugType>
+            </PropertyGroup>
+        </Otherwise>
+    </Choose>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <Optimize>True</Optimize>
