@@ -21,6 +21,8 @@
         <Otherwise>
             <PropertyGroup>
                 <RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
+                <PublishSingleFile>true</PublishSingleFile>
+                <DebugType>embedded</DebugType>
             </PropertyGroup>
         </Otherwise>
     </Choose>
@@ -147,9 +149,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Octopus.Tentacle\Octopus.Tentacle.csproj">
-      <Private>True</Private>
-      <CopyLocalSatelliteAssemblies>False</CopyLocalSatelliteAssemblies>
-    </ProjectReference>
+    <ProjectReference Include="..\Octopus.Tentacle\Octopus.Tentacle.csproj" TreatAsUsed="True"/>
   </ItemGroup>
 </Project>

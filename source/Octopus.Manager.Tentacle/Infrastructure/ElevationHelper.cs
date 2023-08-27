@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Reflection;
 using System.Security.Principal;
 
 namespace Octopus.Manager.Tentacle.Infrastructure
@@ -18,7 +17,7 @@ namespace Octopus.Manager.Tentacle.Infrastructure
             {
                 // We removed this class in favour of using the application manifest for elevation... but then!
                 // See https://github.com/OctopusDeploy/Issues/issues/3875
-                var info = new ProcessStartInfo(Assembly.GetEntryAssembly().Location, String.Join(" ", args));
+                var info = new ProcessStartInfo(AppContext.BaseDirectory, string.Join(" ", args));
                 info.Verb = "runas";
 
                 var process = new Process {StartInfo = info};
