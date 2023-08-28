@@ -113,15 +113,15 @@ namespace Octopus.Tentacle.Services.Scripts
             workspace.Delete();
         }
 
-        RunningScript LaunchShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, IScriptStateStore stateStore, CancellationTokenSource cancel)
+        RunningShellScript LaunchShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, IScriptStateStore stateStore, CancellationTokenSource cancel)
         {
-            var runningScript = new RunningScript(shell, workspace, stateStore, workspace.CreateLog(), serverTaskId, cancel.Token, log);
+            var runningScript = new RunningShellScript(shell, workspace, stateStore, workspace.CreateLog(), serverTaskId, cancel.Token, log);
             var thread = new Thread(runningScript.Execute) { Name = "Executing PowerShell runningScript for " + ticket.TaskId };
             thread.Start();
             return runningScript;
         }
 
-        ScriptStatusResponseV2 GetResponse(ScriptTicket ticket, long lastLogSequence, RunningScript? runningScript)
+        ScriptStatusResponseV2 GetResponse(ScriptTicket ticket, long lastLogSequence, RunningShellScript? runningScript)
         {
             var workspace = workspaceFactory.GetWorkspace(ticket);
             var scriptLog = runningScript?.ScriptLog ?? workspace.CreateLog();
@@ -157,7 +157,7 @@ namespace Octopus.Tentacle.Services.Scripts
                 ScriptStateStore = scriptStateStore;
             }
 
-            public RunningScript? Process { get; set; }
+            public RunningShellScript? Process { get; set; }
             public ScriptStateStore ScriptStateStore { get; }
             public SemaphoreSlim StartScriptMutex { get; } = new(1, 1);
             public CancellationTokenSource? CancellationTokenSource { get; set; }

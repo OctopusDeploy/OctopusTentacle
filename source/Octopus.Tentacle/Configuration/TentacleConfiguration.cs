@@ -9,6 +9,7 @@ using Octopus.Client.Model;
 using Octopus.Configuration;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Certificates;
+using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Security;
 using Octopus.Tentacle.Security.Certificates;
 using Octopus.Tentacle.Util;
@@ -25,6 +26,7 @@ namespace Octopus.Tentacle.Configuration
         internal const string CertificateSettingName = "Tentacle.Certificate";
         internal const string CertificateThumbprintSettingName = "Tentacle.CertificateThumbprint";
         internal const string LastReceivedHandshakeSettingName = "Tentacle.Communication.LastReceivedHandshake";
+        internal const string ScriptExecutorSettingName = "Tentacle.Services.ScriptExecutor";
 
         readonly IKeyValueStore settings;
         readonly IHomeConfiguration home;
@@ -63,6 +65,8 @@ namespace Octopus.Tentacle.Configuration
         public IProxyConfiguration ProxyConfiguration => proxyConfiguration;
 
         public IPollingProxyConfiguration PollingProxyConfiguration => pollingProxyConfiguration;
+
+        public ScriptExecutor ScriptExecutor => settings.Get<ScriptExecutor?>(ScriptExecutorSettingName) ?? ScriptExecutor.Shell;
 
         public int ServicesPortNumber => settings.Get(ServicesPortSettingName, 10933);
 
@@ -289,6 +293,11 @@ namespace Octopus.Tentacle.Configuration
         {
             if (certificate == null) throw new ArgumentNullException(nameof(certificate));
             SetTentacleCertificate(certificate);
+        }
+
+        public void SetScriptExecutor(ScriptExecutor scriptExecutor)
+        {
+            settings.Set(ScriptExecutorSettingName, scriptExecutor);
         }
     }
 }

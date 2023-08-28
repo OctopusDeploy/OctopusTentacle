@@ -10,17 +10,20 @@ namespace Octopus.Tentacle.Services.Scripts
     [Service]
     public class ScriptService : IScriptService
     {
+        private readonly IScriptExecutor scriptExecutor;
         readonly IShell shell;
         readonly IScriptWorkspaceFactory workspaceFactory;
         readonly ISystemLog log;
-        readonly ConcurrentDictionary<string, RunningScript> running = new(StringComparer.OrdinalIgnoreCase);
+        readonly ConcurrentDictionary<string, IRunningScript> running = new(StringComparer.OrdinalIgnoreCase);
         readonly ConcurrentDictionary<string, CancellationTokenSource> cancellationTokens = new(StringComparer.OrdinalIgnoreCase);
 
         public ScriptService(
+            IScriptExecutor scriptExecutor,
             IShell shell,
             IScriptWorkspaceFactory workspaceFactory,
             ISystemLog log)
         {
+            this.scriptExecutor = scriptExecutor;
             this.shell = shell;
             this.workspaceFactory = workspaceFactory;
             this.log = log;
@@ -39,7 +42,10 @@ namespace Octopus.Tentacle.Services.Scripts
                 command.Files);
 
             var cancel = new CancellationTokenSource();
-            var process = LaunchShell(ticket, command.TaskId ?? ticket.TaskId, workspace, cancel);
+
+            //execute the script
+            var process = scriptExecutor.Execute(ticket, command.TaskId ?? ticket.TaskId, workspace, cancel);
+
             running.TryAdd(ticket.TaskId, process);
             cancellationTokens.TryAdd(ticket.TaskId, cancel);
             return ticket;
@@ -72,15 +78,7 @@ namespace Octopus.Tentacle.Services.Scripts
             return response;
         }
 
-        RunningScript LaunchShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, CancellationTokenSource cancel)
-        {
-            var runningScript = new RunningScript(shell, workspace, workspace.CreateLog(), serverTaskId, cancel.Token, log);
-            var thread = new Thread(runningScript.Execute) { Name = "Executing PowerShell script for " + ticket.TaskId };
-            thread.Start();
-            return runningScript;
-        }
-
-        ScriptStatusResponse GetResponse(ScriptTicket ticket, RunningScript? script, long lastLogSequence)
+        ScriptStatusResponse GetResponse(ScriptTicket ticket, IRunningScript? script, long lastLogSequence)
         {
             var exitCode = script != null ? script.ExitCode : 0;
             var state = script != null ? script.State : ProcessState.Complete;

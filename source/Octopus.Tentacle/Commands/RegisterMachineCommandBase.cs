@@ -178,6 +178,10 @@ namespace Octopus.Tentacle.Commands
             }
 
             configuration.Value.AddOrUpdateTrustedOctopusServer(server);
+
+            // Update any extra configuration
+            UpdateConfiguration(configuration.Value);
+
             VoteForRestart();
 
             log.Info("Machine registered successfully");
@@ -186,6 +190,10 @@ namespace Octopus.Tentacle.Commands
         protected abstract void CheckArgs();
 
         protected abstract void EnhanceOperation(TRegistrationOperationType registerOperation);
+
+        protected virtual void UpdateConfiguration(IWritableTentacleConfiguration writableConfiguration)
+        {
+        }
 
         async Task<string> GetServerThumbprint(IOctopusSystemAsyncRepository repository, Uri? serverAddress, string? sslThumbprint)
         {

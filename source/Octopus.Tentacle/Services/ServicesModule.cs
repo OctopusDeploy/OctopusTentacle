@@ -18,6 +18,10 @@ namespace Octopus.Tentacle.Services
 
             builder.RegisterType<NuGetPackageInstaller>().As<IPackageInstaller>();
 
+            builder.RegisterType<ScriptExecutorFactory>().As<IScriptExecutorFactory>();
+            builder.RegisterType<ShellScriptExecutor>().AsSelf().As<IScriptExecutor>();
+            builder.RegisterType<KubernetesJobScriptExecutor>().AsSelf().As<IScriptExecutor>();
+
             // Register our Halibut services
             var serviceTypes = ThisAssembly.GetTypes().Where(t => t.GetCustomAttributes(typeof(ServiceAttribute), true).Length > 0).ToArray();
             var assemblyServices = new KnownServiceSource(serviceTypes);

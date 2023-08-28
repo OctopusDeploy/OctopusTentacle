@@ -12,11 +12,11 @@ using Octopus.Tentacle.Startup;
 
 namespace Octopus.Tentacle.Commands
 {
-    public class RegisterWorkerCommand : RegisterMachineCommandBase<IRegisterWorkerOperation>
+    public class RegisterK8sWorkerCommand : RegisterMachineCommandBase<IRegisterWorkerOperation>
     {
         readonly List<string> workerpoolNames = new List<string>();
 
-        public RegisterWorkerCommand(Lazy<IRegisterWorkerOperation> lazyRegisterMachineOperation,
+        public RegisterK8sWorkerCommand(Lazy<IRegisterWorkerOperation> lazyRegisterMachineOperation,
             Lazy<IWritableTentacleConfiguration> configuration,
             ISystemLog log,
             IApplicationInstanceSelector selector,
@@ -43,7 +43,7 @@ namespace Octopus.Tentacle.Commands
 
         protected override void UpdateConfiguration(IWritableTentacleConfiguration writableConfiguration)
         {
-            writableConfiguration.SetScriptExecutor(ScriptExecutor.Shell);
+            writableConfiguration.SetScriptExecutor(ScriptExecutor.KubernetesJob);
         }
     }
 }

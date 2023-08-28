@@ -26,7 +26,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         string taskId;
         IScriptWorkspace workspace;
         TestScriptLog scriptLog;
-        RunningScript runningScript;
+        RunningShellScript runningShellScript;
         TestUserPrincipal user;
 
         [SetUp]
@@ -58,7 +58,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
             Console.WriteLine($"Working directory: {workspace.WorkingDirectory}");
             scriptLog = new TestScriptLog();
             cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-            runningScript = new RunningScript(shell,
+            runningShellScript = new RunningShellScript(shell,
                 workspace,
                 scriptLog,
                 taskId,
@@ -78,8 +78,8 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         public void ExitCode_ShouldBeReturned()
         {
             workspace.BootstrapScript("exit 99");
-            runningScript.Execute();
-            runningScript.ExitCode.Should().Be(99, "the exit code of the script should be returned");
+            runningShellScript.Execute();
+            runningShellScript.ExitCode.Should().Be(99, "the exit code of the script should be returned");
         }
 
         [Test]
@@ -87,8 +87,8 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         public void WriteHost_WritesToStdOut_AndIsReturned()
         {
             workspace.BootstrapScript("echo Hello");
-            runningScript.Execute();
-            runningScript.ExitCode.Should().Be(0, "the script should have run to completion");
+            runningShellScript.Execute();
+            runningShellScript.ExitCode.Should().Be(0, "the script should have run to completion");
             scriptLog.StdErr.Length.Should().Be(0, "the script shouldn't have written to stderr");
             scriptLog.StdOut.ToString().Should().ContainEquivalentOf("Hello", "the message should have been written to stdout");
         }
@@ -99,8 +99,8 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         public void WriteDebug_DoesNotWriteAnywhere()
         {
             workspace.BootstrapScript("Write-Debug Hello");
-            runningScript.Execute();
-            runningScript.ExitCode.Should().Be(0, "the script should have run to completion");
+            runningShellScript.Execute();
+            runningShellScript.ExitCode.Should().Be(0, "the script should have run to completion");
             scriptLog.StdOut.ToString().Should().NotContain("Hello", "the script shouldn't have written to stdout");
             scriptLog.StdErr.ToString().Should().NotContain("Hello", "the script shouldn't have written to stderr");
         }
@@ -111,8 +111,8 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         public void WriteOutput_WritesToStdOut_AndIsReturned()
         {
             workspace.BootstrapScript("Write-Output Hello");
-            runningScript.Execute();
-            runningScript.ExitCode.Should().Be(0, "the script should have run to completion");
+            runningShellScript.Execute();
+            runningShellScript.ExitCode.Should().Be(0, "the script should have run to completion");
             scriptLog.StdErr.ToString().Should().NotContain("Hello", "the script shouldn't have written to stderr");
             scriptLog.StdOut.ToString().Should().ContainEquivalentOf("Hello", "the message should have been written to stdout");
         }
@@ -123,11 +123,11 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         {
             workspace.BootstrapScript(PlatformDetection.IsRunningOnWindows ? "Write-Error EpicFail" : "&2 echo EpicFail");
 
-            runningScript.Execute();
+            runningShellScript.Execute();
             if (PlatformDetection.IsRunningOnWindows)
-                runningScript.ExitCode.Should().Be(1, "Write-Error causes the exit code to be 1");
+                runningShellScript.ExitCode.Should().Be(1, "Write-Error causes the exit code to be 1");
             else
-                runningScript.ExitCode.Should().Be(2, "&2 echo causes the exit code to be 1");
+                runningShellScript.ExitCode.Should().Be(2, "&2 echo causes the exit code to be 1");
 
             scriptLog.StdOut.ToString().Should().NotContain("EpicFail", "the script shouldn't have written to stdout");
             scriptLog.StdErr.ToString().Should().ContainEquivalentOf("EpicFail", "the message should have been written to stderr");
@@ -141,8 +141,8 @@ namespace Octopus.Tentacle.Tests.Integration.Util
                 ? $"echo {EchoEnvironmentVariable("username")}"
                 : "whoami";
             workspace.BootstrapScript(scriptBody);
-            runningScript.Execute();
-            runningScript.ExitCode.Should().Be(0, "the script should have run to completion");
+            runningShellScript.Execute();
+            runningShellScript.ExitCode.Should().Be(0, "the script should have run to completion");
             scriptLog.StdErr.Length.Should().Be(0, "the script shouldn't have written to stderr");
             scriptLog.StdOut.ToString().Should().ContainEquivalentOf($@"{Environment.UserName}");
         }
@@ -157,7 +157,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
                     ? (new PowerShell(), "Start-Sleep -seconds")
                     : (new Bash() as IShell, "sleep");
 
-                var script = new RunningScript(shell,
+                var script = new RunningShellScript(shell,
                     workspace,
                     scriptLog,
                     taskId,
@@ -166,7 +166,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
 
                 workspace.BootstrapScript($"echo Starting\n{sleepCommand} 30\necho Finito");
                 script.Execute();
-                runningScript.ExitCode.Should().Be(0, "the script should have been canceled");
+                runningShellScript.ExitCode.Should().Be(0, "the script should have been canceled");
                 scriptLog.StdErr.ToString().Should().Be("", "the script shouldn't have written to stderr");
                 scriptLog.StdOut.ToString().Should().ContainEquivalentOf("Starting", "the starting message should be written to stdout");
                 scriptLog.StdOut.ToString().Should().NotContainEquivalentOf("Finito", "the script should have canceled before writing the finish message");

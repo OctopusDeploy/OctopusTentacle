@@ -15,5 +15,6 @@ namespace Octopus.Tentacle.Scripts
         string ResolvePath(string fileName);
         void Delete();
         IScriptLog CreateLog();
+        string WriteFile(string filename, string contents);
     }
 }

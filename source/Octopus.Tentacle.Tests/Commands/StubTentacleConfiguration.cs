@@ -5,6 +5,7 @@ using System.Security.Cryptography.X509Certificates;
 using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Diagnostics;
+using Octopus.Tentacle.Scripts;
 using IPollingProxyConfiguration = Octopus.Tentacle.Configuration.IPollingProxyConfiguration;
 
 namespace Octopus.Tentacle.Tests.Commands
@@ -38,6 +39,7 @@ namespace Octopus.Tentacle.Tests.Commands
         public OctopusServerConfiguration LastReceivedHandshake { get; set; } = null!;
         public IProxyConfiguration ProxyConfiguration { get; set; } = null!;
         public IPollingProxyConfiguration PollingProxyConfiguration { get; set; } = null!;
+        public ScriptExecutor ScriptExecutor { get; private set; }
 
         public bool SetApplicationDirectory(string directory)
         {
@@ -116,6 +118,11 @@ namespace Octopus.Tentacle.Tests.Commands
         public void ImportCertificate(X509Certificate2 certificate)
         {
             TentacleCertificate = certificate;
+        }
+
+        public void SetScriptExecutor(ScriptExecutor scriptExecutor)
+        {
+            ScriptExecutor = scriptExecutor;
         }
 
         public void Save()

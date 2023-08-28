@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Text;
 using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Util;
@@ -21,6 +22,15 @@ namespace Octopus.Tentacle.Scripts
         {
             scriptBody = scriptBody.Replace("\r\n", "\n");
             FileSystem.OverwriteFile(BootstrapScriptFilePath, scriptBody, Encoding.Default);
+        }
+
+        public override string WriteFile(string filename, string contents)
+        {
+            var path = Path.Combine(WorkingDirectory, filename);
+
+            FileSystem.OverwriteFile(path, contents, Encoding.Default);
+
+            return path;
         }
     }
 }

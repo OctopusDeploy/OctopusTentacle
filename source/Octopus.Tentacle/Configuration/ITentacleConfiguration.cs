@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
+using Octopus.Tentacle.Scripts;
 
 namespace Octopus.Tentacle.Configuration
 {
@@ -10,7 +11,6 @@ namespace Octopus.Tentacle.Configuration
     /// </summary>
     public interface ITentacleConfiguration
     {
-
         /// <summary>
         /// Gets the Squid for this tentacle.
         /// </summary>
@@ -82,6 +82,11 @@ namespace Octopus.Tentacle.Configuration
         /// Gets the proxy used for halibut communications with the octopus server.
         /// </summary>
         IPollingProxyConfiguration PollingProxyConfiguration { get; }
+
+        /// <summary>
+        /// Gets a value representing which <see cref="IScriptExecutor"/> to use
+        /// </summary>
+        ScriptExecutor ScriptExecutor { get; }
     }
 
     public interface IWritableTentacleConfiguration : ITentacleConfiguration
@@ -138,5 +143,11 @@ namespace Octopus.Tentacle.Configuration
 
         X509Certificate2 GenerateNewCertificate();
         void ImportCertificate(X509Certificate2 certificate);
+
+        /// <summary>
+        /// Update the Script Executor to be used on this worker
+        /// </summary>
+        /// <param name="scriptExecutor"></param>
+        void SetScriptExecutor(ScriptExecutor scriptExecutor);
     }
 }

@@ -28,8 +28,12 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var octopusPhysicalFileSystem = new OctopusPhysicalFileSystem(Substitute.For<ISystemLog>());
 
+            var shell = PlatformDetection.IsRunningOnWindows ? (IShell)new PowerShell() : new Bash();
+            var systemLog = Substitute.For<ISystemLog>();
+
             service = new ScriptService(
-                PlatformDetection.IsRunningOnWindows ? (IShell) new PowerShell() : new Bash(),
+                new ShellScriptExecutor(shell, systemLog),
+                PlatformDetection.IsRunningOnWindows ? (IShell)new PowerShell() : new Bash(),
                 new ScriptWorkspaceFactory(octopusPhysicalFileSystem, homeConfiguration, new SensitiveValueMasker()),
                 Substitute.For<ISystemLog>());
         }
@@ -112,6 +116,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     Thread.Sleep(pollInterval);
                     if (sw.Elapsed > safetyLimit) Assert.Fail("Did not start in a reasonable time");
                 }
+
                 Console.WriteLine("***" + state);
 
                 // Give it a chance to log something
@@ -137,6 +142,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     Thread.Sleep(pollInterval);
                     if (sw.Elapsed > safetyLimit) Assert.Fail("Did not complete in a reasonable time");
                 }
+
                 Console.WriteLine("***" + state);
 
                 var finalStatus = service.CompleteScript(new CompleteScriptCommand(ticket, 0));

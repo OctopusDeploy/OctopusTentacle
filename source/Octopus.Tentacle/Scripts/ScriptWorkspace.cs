@@ -77,5 +77,14 @@ namespace Octopus.Tentacle.Scripts
         {
             return new ScriptLog(ResolvePath("Output.log"), FileSystem, SensitiveValueMasker);
         }
+
+        public virtual string WriteFile(string filename, string contents)
+        {
+            var path = Path.Combine(WorkingDirectory, filename);
+
+            FileSystem.OverwriteFile(path, contents, Encoding.UTF8);
+
+            return path;
+        }
     }
 }

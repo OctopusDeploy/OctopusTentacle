@@ -6,7 +6,7 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Scripts
 {
-    public class RunningScript
+    public class RunningShellScript : IRunningScript
     {
         readonly IScriptWorkspace workspace;
         readonly IScriptStateStore? stateStore;
@@ -15,7 +15,7 @@ namespace Octopus.Tentacle.Scripts
         readonly CancellationToken token;
         readonly ILog log;
 
-        public RunningScript(IShell shell,
+        public RunningShellScript(IShell shell,
             IScriptWorkspace workspace,
             IScriptStateStore? stateStore,
             IScriptLog scriptLog,
@@ -33,7 +33,7 @@ namespace Octopus.Tentacle.Scripts
             this.State = ProcessState.Pending;
         }
 
-        public RunningScript(IShell shell,
+        public RunningShellScript(IShell shell,
             IScriptWorkspace workspace,
             IScriptLog scriptLog,
             string taskId,
@@ -61,7 +61,7 @@ namespace Octopus.Tentacle.Scripts
                     {
                         using (ScriptIsolationMutex.Acquire(workspace.IsolationLevel,
                                    workspace.ScriptMutexAcquireTimeout,
-                                   workspace.ScriptMutexName ?? nameof(RunningScript),
+                                   workspace.ScriptMutexName ?? nameof(RunningShellScript),
                                    message => writer.WriteOutput(ProcessOutputSource.StdOut, message),
                                    taskId,
                                    token,
