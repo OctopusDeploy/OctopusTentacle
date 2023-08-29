@@ -1,16 +1,19 @@
 version: "3"
 
-services:
-  db:
-    image: docker.packages.octopushq.com/octopusdeploy/mssql-server-windows-express:${MSSQL_SERVER_VERSION}
+services:  
+  sql-server: # https://hub.docker.com/_/microsoft-mssql-server
+    image: "mcr.microsoft.com/mssql/server:${MSSQL_SERVER_VERSION:?err}"
     environment:
-      sa_password: "${SA_PASSWORD}"
-      ACCEPT_EULA: "Y"
+        SA_PASSWORD: "${SA_PASSWORD}"
+        ACCEPT_EULA: "Y"
+        MSSQL_PID: "Developer"
+        MSSQL_TCP_PORT: 1433
     healthcheck:
-      test: [ "CMD", "sqlcmd", "-U", "sa", "-P", "${SA_PASSWORD}", "-Q", "select 1" ]
-      interval: 10s
-      retries: 10
-    restart: always
+        test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "$$SA_PASSWORD" -Q "SELECT 1" || exit 1
+        interval: 10s
+        timeout: 3s
+        retries: 10
+        start_period: 10s
 
   octopus-server:
     image: docker.packages.octopushq.com/octopusdeploy/octopusdeploy:${OCTOPUS_VERSION}
