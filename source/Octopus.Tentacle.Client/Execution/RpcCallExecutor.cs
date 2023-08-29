@@ -47,8 +47,9 @@ namespace Octopus.Tentacle.Client.Execution
                             try
                             {
                                 // Wrap the action in a task so it doesn't block on sync Halibut calls, and cancellation token is respected.
-                                var actionTask = Task.Run(async () => await action(ct), ct);
-                                var response = await actionTask.ConfigureAwait(false);
+                                //var actionTask = Task.Run(async () => await action(ct), ct);
+                                //var response = await actionTask.ConfigureAwait(false);
+                                var response = await action(ct);
 
                                 rpcCallMetricsBuilder.WithAttempt(TimedOperation.Success(start));
                                 return response;

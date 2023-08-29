@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
@@ -13,8 +14,73 @@ using Polly.Timeout;
 namespace Octopus.Tentacle.Tests.Client
 {
     [TestFixture]
+    [Parallelizable(ParallelScope.All)]
     public class RpcCallRetryHandlerFixture
     {
+        private ConcurrentBag<Exception> bag = new ConcurrentBag<Exception>();
+        [SetUp]
+        public void foo()
+        {
+            void Subscription(object s, UnobservedTaskExceptionEventArgs args)
+            {
+                bag.Add(args.Exception);
+                TestContext.WriteLine(args.Exception);
+            }
+
+            TaskScheduler.UnobservedTaskException += Subscription;
+        }
+
+        [TearDown]
+        public void Down()
+        {
+            Console.WriteLine("GC..");
+                        GC.Collect();
+                        GC.WaitForPendingFinalizers();
+
+                        for (int i = 0; i < 10; i++)
+                        {
+                            if(!bag.IsEmpty) break;
+                            Thread.Sleep(1000);
+                        }
+            
+                
+            
+            bag.Should().BeEmpty();
+        }
+
+        [Test]
+        public async Task dfdf()
+        {
+            await Task.CompletedTask;
+#pragma warning disable CS4014
+            Aaa();
+            Bbb();
+            Ccc();
+            ThrowIt();
+#pragma warning restore CS4014
+        }
+
+        public async Task Aaa()
+        {
+            await Bbb();
+        }
+
+        private async Task Bbb()
+        {
+            await Ccc();
+        }
+
+        private async Task Ccc()
+        {
+            await ThrowIt();
+        }
+
+        public async Task ThrowIt()
+        {
+            await Task.Yield();
+            throw new Exception("oh no");
+        }
+
         [TestCase(TimeoutStrategy.Optimistic)]
         [TestCase(TimeoutStrategy.Pessimistic)]
         public async Task ReturnsTheResultWhenNoRetries(TimeoutStrategy timeoutStrategy)

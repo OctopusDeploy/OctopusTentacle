@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
+using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Serilog;
@@ -14,10 +17,27 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         private CancellationTokenRegistration? cancellationTokenRegistration;
         public CancellationToken CancellationToken { get; private set; }
         public ILogger Logger { get; private set; } = null!;
+        
+        private Lazy<ConcurrentBag<Exception>> bag = new Lazy<ConcurrentBag<Exception>>(() =>
+        {
+            var bag = new ConcurrentBag<Exception>();
+            void Subscription(object s, UnobservedTaskExceptionEventArgs args)
+            {
+                bag.Add(args.Exception);
+                TestContext.WriteLine(args.Exception);
+            }
+
+            TaskScheduler.UnobservedTaskException += Subscription;
+            return bag;
+        });
+        
+        
 
         [SetUp]
         public void SetUp()
         {
+            var s = bag.Value;
+            
             Logger = new SerilogLoggerBuilder().Build().ForContext(GetType());
             Logger.Information("Test started");
             cancellationTokenSource = new CancellationTokenSource(IntegrationTestTimeout.TestTimeoutInMilliseconds() - (int)TimeSpan.FromSeconds(5).TotalMilliseconds);
@@ -37,6 +57,16 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             cancellationTokenRegistration?.Dispose();
             cancellationTokenSource?.Dispose();
             
+            for (int i = 0; i < 10; i++)
+            {
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                if(!bag.Value.IsEmpty) break;
+                Thread.Sleep(1000);
+            }
+
+            bag.Value.Should().BeEmpty();
+
         }
     }
 
