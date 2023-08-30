@@ -477,7 +477,14 @@ namespace Octopus.Tentacle.Client.Scripts
                         }
 
                         var abandonTask = abandonCancellationTokenSource.Token.AsTask<ScriptStatusResponseV2>();
-                        await (await Task.WhenAny(actionTask, abandonTask).ConfigureAwait(false)).ConfigureAwait(false);
+                        var task = await Task.WhenAny(actionTask, abandonTask);
+
+                        if (task == abandonTask)
+                        {
+                            actionTask.IgnoreUnobservedExceptions();
+                        }
+
+                        await task;
                     }
                 }
                 catch (Exception ex) when (ex is HalibutClientException or OperationCanceledException)
