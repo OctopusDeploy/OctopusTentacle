@@ -2,7 +2,9 @@ version: "3"
 
 services:
   db:
-    image: docker.packages.octopushq.com/octopusdeploy/mssql-server-windows-express:${MSSQL_SERVER_VERSION}
+    # There appears to be an issue with this docker image and the latest version will not start
+    # image: docker.packages.octopushq.com/octopusdeploy/mssql-server-windows-express:${MSSQL_SERVER_VERSION}
+    image: octopusdeploy/mssql-server-windows-express:latest
     environment:
       sa_password: "${SA_PASSWORD}"
       ACCEPT_EULA: "Y"
