@@ -66,7 +66,7 @@ namespace Octopus.Tentacle.Configuration
 
         public IPollingProxyConfiguration PollingProxyConfiguration => pollingProxyConfiguration;
 
-        public ScriptExecutor ScriptExecutor => settings.Get<ScriptExecutor?>(ScriptExecutorSettingName) ?? ScriptExecutor.Shell;
+        public ScriptExecutor ScriptExecutor => settings.Get<ScriptExecutor>(ScriptExecutorSettingName);
 
         public int ServicesPortNumber => settings.Get(ServicesPortSettingName, 10933);
 

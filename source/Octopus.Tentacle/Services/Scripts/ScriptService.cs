@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Threading;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Scripts;
 
@@ -10,23 +9,17 @@ namespace Octopus.Tentacle.Services.Scripts
     [Service]
     public class ScriptService : IScriptService
     {
-        private readonly IScriptExecutor scriptExecutor;
-        readonly IShell shell;
+        private readonly IScriptExecutorFactory scriptExecutorFactory;
         readonly IScriptWorkspaceFactory workspaceFactory;
-        readonly ISystemLog log;
         readonly ConcurrentDictionary<string, IRunningScript> running = new(StringComparer.OrdinalIgnoreCase);
         readonly ConcurrentDictionary<string, CancellationTokenSource> cancellationTokens = new(StringComparer.OrdinalIgnoreCase);
 
         public ScriptService(
-            IScriptExecutor scriptExecutor,
-            IShell shell,
-            IScriptWorkspaceFactory workspaceFactory,
-            ISystemLog log)
+            IScriptExecutorFactory scriptExecutorFactory,
+            IScriptWorkspaceFactory workspaceFactory)
         {
-            this.scriptExecutor = scriptExecutor;
-            this.shell = shell;
+            this.scriptExecutorFactory = scriptExecutorFactory;
             this.workspaceFactory = workspaceFactory;
-            this.log = log;
         }
 
         public ScriptTicket StartScript(StartScriptCommand command)
@@ -44,7 +37,8 @@ namespace Octopus.Tentacle.Services.Scripts
             var cancel = new CancellationTokenSource();
 
             //execute the script
-            var process = scriptExecutor.Execute(ticket, command.TaskId ?? ticket.TaskId, workspace, cancel);
+            var executor = scriptExecutorFactory.GetExecutor();
+            var process = executor.Execute(ticket, command.TaskId ?? ticket.TaskId, workspace, cancel);
 
             running.TryAdd(ticket.TaskId, process);
             cancellationTokens.TryAdd(ticket.TaskId, cancel);

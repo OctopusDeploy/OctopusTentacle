@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Net;
 using Octopus.Client.Model;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
+using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Startup;
 using Octopus.Tentacle.Util;
 
@@ -78,11 +80,21 @@ namespace Octopus.Tentacle.Commands
                     tentacleConfiguration.Value.SetListenIpAddress(v);
                     log.Info("Listen on IP address: " + parsed);
                 }
+
                 VoteForRestart();
             }));
             Options.Add("trust=", "The thumbprint of the Octopus Server to trust", v => octopusToAdd.Add(v));
             Options.Add("remove-trust=", "The thumbprint of the Octopus Server to remove from the trusted list", v => octopusToRemove.Add(v));
             Options.Add("reset-trust", "Removes all trusted Octopus Servers", v => resetTrust = true);
+            Options.Add("scriptExecutor=", "The script execution mode", v => QueueOperation(() =>
+            {
+                var scriptExecutor = Enum.TryParse<ScriptExecutor>(v, true, out var result)
+                    ? result
+                    : ScriptExecutor.Shell;
+
+                tentacleConfiguration.Value.SetScriptExecutor(scriptExecutor);
+                log.Info($"Set script execution mode to: {scriptExecutor}");
+            }));
         }
 
         protected override void Start()
