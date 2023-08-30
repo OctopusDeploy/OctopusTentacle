@@ -81,7 +81,34 @@ namespace Octopus.Tentacle.Client.Retries
                     .WithRetryTimeout(remainingRetryDuration, timeoutStrategy)
                     .BuildTimeoutPolicy();
 
-                return await timeoutPolicy.ExecuteAsync(action, ct).ConfigureAwait(false);
+                if (timeoutStrategy == TimeoutStrategy.Optimistic)
+                {
+                    return await timeoutPolicy.ExecuteAsync(action, ct).ConfigureAwait(false);
+                }
+                else
+                {
+                    // Poly will walk away from the action, to avoid unobserved exceptions we wrap the
+                    // action to never throw 
+                    var (res, e) = await timeoutPolicy.ExecuteAsync(async ct =>
+                    {
+
+                        try
+                        {
+                            var res = await action(ct);
+                            return (res, (Exception?)null);
+                        }
+                        catch (Exception e)
+                        {
+                            T t = default!;
+                            return (t, e);
+                        }
+
+                    }, ct).ConfigureAwait(false);
+
+                    if (e != null) throw e;
+                    return res;
+                }
+
             }
 
             try
