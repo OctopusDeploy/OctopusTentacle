@@ -44,31 +44,31 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             builder.Append($"{SyncOrAsyncHalibut}, ");
             
             string version = Version?.ToString() ?? "Latest";
-            builder.Append($"{version}, ");
+            builder.Append($"{version}");
 
             if (StopPortForwarderAfterFirstCall.HasValue)
             {
-                builder.Append($"{StopPortForwarderAfterFirstCall!.Value}, ");
+                builder.Append($", {StopPortForwarderAfterFirstCall!.Value}");
             }
 
             if (RpcCall.HasValue)
             {
-                builder.Append($"{RpcCall!.Value}, ");
+                builder.Append($", {RpcCall!.Value}");
             }
 
             if (RpcCallStage.HasValue)
             {
-                builder.Append($"{RpcCallStage!.Value}, ");
+                builder.Append($", {RpcCallStage!.Value}");
             }
 
             if (ScriptIsolationLevel.HasValue)
             {
-                builder.Append($"{ScriptIsolationLevel!.Value}, ");
+                builder.Append($", {ScriptIsolationLevel!.Value}");
             }
 
             if (ScriptsInParallelTestCase != null)
             {
-                builder.Append($"{ScriptsInParallelTestCase!}, ");
+                builder.Append($", {ScriptsInParallelTestCase!}");
             }
 
             return builder.ToString();

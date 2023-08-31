@@ -22,7 +22,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             TentacleType tentacleType = tentacleConfigurationTestCase.TentacleType;
             SyncOrAsyncHalibut syncOrAsyncHalibut = tentacleConfigurationTestCase.SyncOrAsyncHalibut;
-            Version? tentacleVersion = tentacleConfigurationTestCase.Version!;
+            Version? tentacleVersion = tentacleConfigurationTestCase.Version;
             ScriptIsolationLevel levelOfSecondScript = tentacleConfigurationTestCase.ScriptIsolationLevel!.Value;
             
             await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
@@ -88,7 +88,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             TentacleType tentacleType = tentacleConfigurationTestCase.TentacleType;
             SyncOrAsyncHalibut syncOrAsyncHalibut = tentacleConfigurationTestCase.SyncOrAsyncHalibut;
-            Version tentacleVersion = tentacleConfigurationTestCase.Version!;
+            Version? tentacleVersion = tentacleConfigurationTestCase.Version;
             ScriptsInParallelTestCase scriptsInParallelTestCases = tentacleConfigurationTestCase.ScriptsInParallelTestCase!;
             
             await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
