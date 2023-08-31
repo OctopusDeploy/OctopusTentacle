@@ -19,11 +19,12 @@ namespace Octopus.Tentacle.Tests.Integration
     {
         [Test]
         [TentacleConfigurations(testCapabilitiesServiceInterestingVersions: true)]
-        public async Task CapabilitiesFromAnOlderTentacleWhichHasNoCapabilitiesService_WorksWithTheBackwardsCompatabilityDecorator(
-            TentacleType tentacleType,
-            Version? version, 
-            SyncOrAsyncHalibut syncOrAsyncHalibut)
+        public async Task CapabilitiesFromAnOlderTentacleWhichHasNoCapabilitiesService_WorksWithTheBackwardsCompatabilityDecorator(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
+            TentacleType tentacleType = tentacleConfigurationTestCase.TentacleType;
+            SyncOrAsyncHalibut syncOrAsyncHalibut = tentacleConfigurationTestCase.SyncOrAsyncHalibut;
+            Version? version = tentacleConfigurationTestCase.Version;
+            
             await using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleType)
                 .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithTentacleVersion(version)

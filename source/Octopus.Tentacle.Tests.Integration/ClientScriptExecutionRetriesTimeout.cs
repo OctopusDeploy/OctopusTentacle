@@ -25,8 +25,13 @@ namespace Octopus.Tentacle.Tests.Integration
     public class ClientScriptExecutionRetriesTimeout : IntegrationTest
     {
         [Test]
-        public async Task WhenRpcRetriesTimeOut_DuringGetCapabilities_TheRpcCallIsCancelled([Values]TentacleType tentacleType, [Values] RpcCallStage rpcCallStage, [Values] SyncOrAsyncHalibut syncOrAsyncHalibut)
+        [TentacleConfigurations(testRpcCallStages: true)]
+        public async Task WhenRpcRetriesTimeOut_DuringGetCapabilities_TheRpcCallIsCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
+            TentacleType tentacleType = tentacleConfigurationTestCase.TentacleType;
+            SyncOrAsyncHalibut syncOrAsyncHalibut = tentacleConfigurationTestCase.SyncOrAsyncHalibut;
+            RpcCallStage rpcCallStage = tentacleConfigurationTestCase.RpcCallStage!.Value;
+                
             IClientScriptServiceV2? scriptServiceV2 = null;
             IAsyncClientScriptServiceV2? asyncScriptServiceV2 = null;
 
@@ -100,8 +105,13 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        public async Task WhenRpcRetriesTimeOut_DuringStartScript_TheRpcCallIsCancelled([Values] TentacleType tentacleType, [Values] RpcCallStage rpcCallStage, [Values] SyncOrAsyncHalibut syncOrAsyncHalibut)
+        [TentacleConfigurations(testRpcCallStages: true)]
+        public async Task WhenRpcRetriesTimeOut_DuringStartScript_TheRpcCallIsCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
+            TentacleType tentacleType = tentacleConfigurationTestCase.TentacleType;
+            SyncOrAsyncHalibut syncOrAsyncHalibut = tentacleConfigurationTestCase.SyncOrAsyncHalibut;
+            RpcCallStage rpcCallStage = tentacleConfigurationTestCase.RpcCallStage!.Value;
+                
             await using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 // Set a short retry duration so we cancel fairly quickly
@@ -166,8 +176,13 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        public async Task WhenRpcRetriesTimeOut_DuringGetStatus_TheRpcCallIsCancelled([Values] TentacleType tentacleType, [Values] RpcCallStage rpcCallStage, [Values] SyncOrAsyncHalibut syncOrAsyncHalibut)
+        [TentacleConfigurations(testRpcCallStages: true)]
+        public async Task WhenRpcRetriesTimeOut_DuringGetStatus_TheRpcCallIsCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
+            TentacleType tentacleType = tentacleConfigurationTestCase.TentacleType;
+            SyncOrAsyncHalibut syncOrAsyncHalibut = tentacleConfigurationTestCase.SyncOrAsyncHalibut;
+            RpcCallStage rpcCallStage = tentacleConfigurationTestCase.RpcCallStage!.Value;
+                
             await using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 // Set a short retry duration so we cancel fairly quickly
@@ -234,8 +249,13 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        public async Task WhenRpcRetriesTimeOut_DuringCancelScript_TheRpcCallIsCancelled([Values] TentacleType tentacleType, [Values] RpcCallStage rpcCallStage, [Values] SyncOrAsyncHalibut syncOrAsyncHalibut)
+        [TentacleConfigurations(testRpcCallStages: true)]
+        public async Task WhenRpcRetriesTimeOut_DuringCancelScript_TheRpcCallIsCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
+            TentacleType tentacleType = tentacleConfigurationTestCase.TentacleType;
+            SyncOrAsyncHalibut syncOrAsyncHalibut = tentacleConfigurationTestCase.SyncOrAsyncHalibut;
+            RpcCallStage rpcCallStage = tentacleConfigurationTestCase.RpcCallStage!.Value;
+                
             await using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
                 // Set a short retry duration so we cancel fairly quickly
