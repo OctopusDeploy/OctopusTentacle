@@ -378,6 +378,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
+        [TentacleConfigurations(testRpcCallStages: true)]
         public async Task DuringCompleteScript_ScriptExecutionCanBeCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             // ARRANGE

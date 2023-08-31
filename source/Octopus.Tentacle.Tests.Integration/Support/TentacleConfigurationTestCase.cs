@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using Octopus.Tentacle.Contracts;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
@@ -34,21 +35,75 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             ScriptIsolationLevel = scriptIsolationLevel;
             ScriptsInParallelTestCase = scriptsInParallelTestCase;
         }
+
+        public override string ToString()
+        {
+            StringBuilder builder = new();
+            
+            builder.Append($"{TentacleType}, ");
+            builder.Append($"{SyncOrAsyncHalibut}, ");
+            
+            string version = Version?.ToString() ?? "Latest";
+            builder.Append($"{version}, ");
+
+            if (StopPortForwarderAfterFirstCall.HasValue)
+            {
+                builder.Append($"{StopPortForwarderAfterFirstCall!.Value}, ");
+            }
+
+            if (RpcCall.HasValue)
+            {
+                builder.Append($"{RpcCall!.Value}, ");
+            }
+
+            if (RpcCallStage.HasValue)
+            {
+                builder.Append($"{RpcCallStage!.Value}, ");
+            }
+
+            if (ScriptIsolationLevel.HasValue)
+            {
+                builder.Append($"{ScriptIsolationLevel!.Value}, ");
+            }
+
+            if (ScriptsInParallelTestCase != null)
+            {
+                builder.Append($"{ScriptsInParallelTestCase!}, ");
+            }
+
+            return builder.ToString();
+        }
     }
 
     public class ScriptsInParallelTestCase
     {
-        public ScriptIsolationLevel levelOfFirstScript;
-        public string mutexForFirstScript;
-        public ScriptIsolationLevel levelOfSecondScript;
-        public string mutexForSecondScript;
+        public static ScriptsInParallelTestCase NoIsolationSameMutex => new(ScriptIsolationLevel.NoIsolation, "sameMutex", ScriptIsolationLevel.NoIsolation, "sameMutex", nameof(NoIsolationSameMutex));
+        public static ScriptsInParallelTestCase FullIsolationDifferentMutex =>new(ScriptIsolationLevel.FullIsolation, "mutex", ScriptIsolationLevel.FullIsolation, "differentMutex", nameof(FullIsolationDifferentMutex));
+        
+        public readonly ScriptIsolationLevel LevelOfFirstScript;
+        public readonly string MutexForFirstScript;
+        public readonly ScriptIsolationLevel LevelOfSecondScript;
+        public readonly string MutexForSecondScript;
+        
+        private readonly string stringValue;
 
-        public ScriptsInParallelTestCase(ScriptIsolationLevel levelOfFirstScript, string mutexForFirstScript, ScriptIsolationLevel levelOfSecondScript, string mutexForSecondScript)
+        private ScriptsInParallelTestCase(
+            ScriptIsolationLevel levelOfFirstScript,
+            string mutexForFirstScript,
+            ScriptIsolationLevel levelOfSecondScript,
+            string mutexForSecondScript,
+            string stringValue)
         {
-            this.levelOfFirstScript = levelOfFirstScript;
-            this.mutexForFirstScript = mutexForFirstScript;
-            this.levelOfSecondScript = levelOfSecondScript;
-            this.mutexForSecondScript = mutexForSecondScript;
+            LevelOfFirstScript = levelOfFirstScript;
+            MutexForFirstScript = mutexForFirstScript;
+            LevelOfSecondScript = levelOfSecondScript;
+            MutexForSecondScript = mutexForSecondScript;
+            this.stringValue = stringValue;
+        }
+
+        public override string ToString()
+        {
+            return stringValue;
         }
     }
 }

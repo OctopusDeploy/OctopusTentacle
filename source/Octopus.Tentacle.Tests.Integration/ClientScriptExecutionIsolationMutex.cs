@@ -105,14 +105,14 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithScriptBody(new ScriptBuilder()
                     .CreateFile(firstScriptStartFile)
                     .WaitForFileToExist(firstScriptWaitFile))
-                .WithIsolation(scriptsInParallelTestCases.levelOfFirstScript)
-                .WithMutexName(scriptsInParallelTestCases.mutexForFirstScript)
+                .WithIsolation(scriptsInParallelTestCases.LevelOfFirstScript)
+                .WithMutexName(scriptsInParallelTestCases.MutexForFirstScript)
                 .Build();
 
             var secondStartScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody(new ScriptBuilder().CreateFile(secondScriptStart))
-                .WithIsolation(scriptsInParallelTestCases.levelOfSecondScript)
-                .WithMutexName(scriptsInParallelTestCases.mutexForSecondScript)
+                .WithIsolation(scriptsInParallelTestCases.LevelOfSecondScript)
+                .WithMutexName(scriptsInParallelTestCases.MutexForSecondScript)
                 .Build();
 
             var tentacleClient = clientTentacle.TentacleClient;

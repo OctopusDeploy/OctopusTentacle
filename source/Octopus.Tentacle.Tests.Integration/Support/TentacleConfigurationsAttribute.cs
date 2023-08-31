@@ -92,9 +92,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 ? new List<ScriptsInParallelTestCase?>
                 {
                     // Scripts with different mutex names can run at the same time.
-                    new(ScriptIsolationLevel.FullIsolation, "mutex", ScriptIsolationLevel.FullIsolation, "differentMutex"),
+                    ScriptsInParallelTestCase.FullIsolationDifferentMutex,
                     // Scripts with the same mutex name can run at the same time if they both has no isolation.
-                    new(ScriptIsolationLevel.NoIsolation, "sameMutex", ScriptIsolationLevel.NoIsolation, "sameMutex")
+                    ScriptsInParallelTestCase.NoIsolationSameMutex
                 }
                 : new List<ScriptsInParallelTestCase?> {null};
 
