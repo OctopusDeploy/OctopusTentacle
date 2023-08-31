@@ -16,15 +16,15 @@ namespace Octopus.Tentacle.Tests.Integration
     public class ClientScriptExecutionAdditionalScripts : IntegrationTest
     {
         [Test]
-        [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
-        public async Task AdditionalScriptsWork(TentacleType tentacleType, Version? tentacleVersion, SyncOrAsyncHalibut syncOrAsyncHalibut)
+        [TentacleConfigurations]
+        public async Task AdditionalScriptsWork(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             using var tmp = new TemporaryDirectory();
             var path = Path.Combine(tmp.DirectoryPath, "file");
             
-            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
-                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
-                .WithTentacleVersion(tentacleVersion)
+            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
+                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
+                .WithTentacleVersion(tentacleConfigurationTestCase.Version)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .CountCallsToScriptServiceV2(out var scriptServiceV2CallCounts)
                     .Build())

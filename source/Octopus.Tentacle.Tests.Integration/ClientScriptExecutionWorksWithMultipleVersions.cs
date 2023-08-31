@@ -14,12 +14,12 @@ namespace Octopus.Tentacle.Tests.Integration
     public class ClientScriptExecutionWorksWithMultipleVersions : IntegrationTest
     {
         [Test]
-        [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
-        public async Task CanRunScript(TentacleType tentacleType, Version? tentacleVersion, SyncOrAsyncHalibut syncOrAsyncHalibut)
+        [TentacleConfigurations]
+        public async Task CanRunScript(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
-            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
-                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
-                .WithTentacleVersion(tentacleVersion)
+            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
+                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
+                .WithTentacleVersion(tentacleConfigurationTestCase.Version)
                 .Build(CancellationToken);
 
             var startScriptCommand = new StartScriptCommandV2Builder()

@@ -1,6 +1,5 @@
 #nullable enable
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -15,33 +14,11 @@ using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
 
 namespace Octopus.Tentacle.Tests.Integration
 {
-    public class CapabilitiesServiceInterestingTentacles : IEnumerable
-    {
-        public IEnumerator GetEnumerator()
-        {
-            return AllCombinations
-                .Of(TentacleType.Polling,
-                    TentacleType.Listening)
-                .And(
-                    TentacleVersions.Current,
-                    TentacleVersions.v5_0_4_FirstLinuxRelease,
-                    TentacleVersions.v5_0_12_AutofacServiceFactoryIsInShared,
-                    TentacleVersions.v6_3_417_LastWithScriptServiceV1Only, // the autofac service is in tentacle, but tentacle does not have the capabilities service.
-                    TentacleVersions.v7_0_1_ScriptServiceV2Added
-                )
-                .And(
-                    SyncOrAsyncHalibut.Sync,
-                    SyncOrAsyncHalibut.Async
-                )
-                .Build();
-        }
-    }
-
     [IntegrationTestTimeout]
     public class CapabilitiesServiceV2Test : IntegrationTest
     {
         [Test]
-        [TestCaseSource(typeof(CapabilitiesServiceInterestingTentacles))]
+        [TentacleConfigurations(testCommonVersions: false, testCapabilitiesServiceInterestingVersions: true)]
         public async Task CapabilitiesFromAnOlderTentacleWhichHasNoCapabilitiesService_WorksWithTheBackwardsCompatabilityDecorator(
             TentacleType tentacleType,
             Version? version, 
@@ -71,16 +48,16 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TestCaseSource(typeof(CapabilitiesServiceInterestingTentacles))]
-        public async Task CapabilitiesResponseShouldBeCached(TentacleType tentacleType, Version? version, SyncOrAsyncHalibut syncOrAsyncHalibut)
+        [TentacleConfigurations(testCommonVersions: false, testCapabilitiesServiceInterestingVersions: true)]
+        public async Task CapabilitiesResponseShouldBeCached(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             var capabilitiesResponses = new List<CapabilitiesResponseV2>();
             var resumePortForwarder = false;
 
-            await using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
-                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
+            await using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
+                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithPortForwarder(out var portForwarder)
-                .WithTentacleVersion(version)
+                .WithTentacleVersion(tentacleConfigurationTestCase.Version)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .DecorateCapabilitiesServiceV2With(d => d
                         .AfterGetCapabilities(async (response) =>
@@ -115,7 +92,7 @@ namespace Octopus.Tentacle.Tests.Integration
             {
                 await clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken);
             }
-            catch (HalibutClientException) when (tentacleType == TentacleType.Polling && version != null)
+            catch (HalibutClientException) when (tentacleConfigurationTestCase.TentacleType == TentacleType.Polling && tentacleConfigurationTestCase.Version != null)
             {
                 // For script execution on a tentacle without ScriptServiceV2 and retries a polling request can be de-queued into a broken TCP Connection
                 // By the time this happens we will have already called gt capabilities and got the cached response so we can safely ignore.

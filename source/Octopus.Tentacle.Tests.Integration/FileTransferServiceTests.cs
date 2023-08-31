@@ -16,19 +16,19 @@ namespace Octopus.Tentacle.Tests.Integration
     public class FileTransferServiceTests : IntegrationTest
     {
         [Test]
-        [TestCaseSource(typeof(TentacleTypesToTest))]
-        public async Task UploadFileSuccessfully(TentacleType tentacleType, SyncOrAsyncHalibut syncOrAsyncHalibut)
+        [TentacleConfigurations(testCommonVersions: false)]
+        public async Task UploadFileSuccessfully(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             using var fileToUpload = new RandomTemporaryFileBuilder().Build();
 
-            await using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleType)
-                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
+            await using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
+                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .Build(CancellationToken);
             
             UploadResult uploadResult;
 
 #pragma warning disable CS0612
-            if (syncOrAsyncHalibut == SyncOrAsyncHalibut.Sync)
+            if (tentacleConfigurationTestCase.SyncOrAsyncHalibut == SyncOrAsyncHalibut.Sync)
             {
                 var dataStream = new DataStream(
                     fileToUpload.File.Length,
@@ -64,16 +64,16 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TestCaseSource(typeof(TentacleTypesToTest))]
-        public async Task DownloadFileSuccessfully(TentacleType tentacleType, SyncOrAsyncHalibut syncOrAsyncHalibut)
+        [TentacleConfigurations(testCommonVersions: false)]
+        public async Task DownloadFileSuccessfully(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             using var fileToDownload = new RandomTemporaryFileBuilder().Build();
 
-            await using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleType)
-                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
+            await using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
+                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .Build(CancellationToken);
 
-            var downloadedData = await syncOrAsyncHalibut
+            var downloadedData = await tentacleConfigurationTestCase.SyncOrAsyncHalibut
                 .WhenSync(() => clientAndTentacle.TentacleClient.FileTransferService.SyncService.DownloadFile(fileToDownload.File.FullName))
                 .WhenAsync(async () => await clientAndTentacle.TentacleClient.FileTransferService.AsyncService.DownloadFileAsync(
                     fileToDownload.File.FullName, 

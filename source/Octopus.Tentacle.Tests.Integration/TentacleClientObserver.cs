@@ -17,14 +17,14 @@ namespace Octopus.Tentacle.Tests.Integration
     public class TentacleClientObserver : IntegrationTest
     {
         [Test]
-        [TestCaseSource(typeof(TentacleTypesToTest))]
-        public async Task AnErrorDuringTheCallbackTo_ExecuteScriptCompleted_ShouldNotThrowOrStopScriptExecution(TentacleType tentacleType, SyncOrAsyncHalibut syncOrAsyncHalibut)
+        [TentacleConfigurations(testCommonVersions: false)]
+        public async Task AnErrorDuringTheCallbackTo_ExecuteScriptCompleted_ShouldNotThrowOrStopScriptExecution(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             // Arrange
             var tentacleClientObserver = new BrokenTentacleClientObserver(errorOnExecuteScriptCompleted: true);
 
-            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
-                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
+            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
+                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .LogAllCalls()
@@ -45,14 +45,14 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TestCaseSource(typeof(TentacleTypesToTest))]
-        public async Task AnErrorDuringTheCallbackTo_RpcCallComplete_ShouldNotThrowOrStopScriptExecution(TentacleType tentacleType, SyncOrAsyncHalibut syncOrAsyncHalibut)
+        [TentacleConfigurations(testCommonVersions: false)]
+        public async Task AnErrorDuringTheCallbackTo_RpcCallComplete_ShouldNotThrowOrStopScriptExecution(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             // Arrange
             var tentacleClientObserver = new BrokenTentacleClientObserver(errorOnRpcCallCompleted: true);
 
-            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
-                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
+            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
+                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .LogAllCalls()
@@ -73,14 +73,14 @@ namespace Octopus.Tentacle.Tests.Integration
         }
         
         [Test]
-        [TestCaseSource(typeof(TentacleTypesToTest))]
-        public async Task AnErrorDuringTheCallbackTo_UploadFileCompleted_ShouldNotThrowAnExecution(TentacleType tentacleType, SyncOrAsyncHalibut syncOrAsyncHalibut)
+        [TentacleConfigurations(testCommonVersions: false)]
+        public async Task AnErrorDuringTheCallbackTo_UploadFileCompleted_ShouldNotThrowAnExecution(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             // Arrange
             var tentacleClientObserver = new BrokenTentacleClientObserver(errorOnUploadFileCompleted: true);
 
-            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
-                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
+            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
+                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .Build(CancellationToken);
 
@@ -91,14 +91,14 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TestCaseSource(typeof(TentacleTypesToTest))]
-        public async Task AnErrorDuringTheCallbackTo_DownloadFileCompleted_ShouldNotThrowAnExecution(TentacleType tentacleType, SyncOrAsyncHalibut syncOrAsyncHalibut)
+        [TentacleConfigurations(testCommonVersions: false)]
+        public async Task AnErrorDuringTheCallbackTo_DownloadFileCompleted_ShouldNotThrowAnExecution(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             // Arrange
             var tentacleClientObserver = new BrokenTentacleClientObserver(errorOnDownloadFileCompleted: true);
 
-            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
-                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
+            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
+                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .Build(CancellationToken);
 

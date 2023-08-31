@@ -14,8 +14,8 @@ namespace Octopus.Tentacle.Tests.Integration
     public class ScriptServiceTests : IntegrationTest
     {
         [Test]
-        [TestCaseSource(typeof(TentacleTypesToTest))]
-        public async Task RunScriptWithSuccess(TentacleType tentacleType, SyncOrAsyncHalibut syncOrAsyncHalibut)
+        [TentacleConfigurations(testCommonVersions: false)]
+        public async Task RunScriptWithSuccess(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             var windowsScript = @"
                 Write-Host ""This is the start of the script""
@@ -31,11 +31,11 @@ namespace Octopus.Tentacle.Tests.Integration
                 sleep 3
                 echo This is the end of the script";
 
-            await using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleType)
-                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
+            await using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
+                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .Build(CancellationToken);
 
-            var scriptStatusResponse = await new ScriptExecutionOrchestrator(clientAndTentacle.TentacleClient, syncOrAsyncHalibut)
+            var scriptStatusResponse = await new ScriptExecutionOrchestrator(clientAndTentacle.TentacleClient, tentacleConfigurationTestCase.SyncOrAsyncHalibut)
                 .ExecuteScript(windowsScript, nixScript, CancellationToken);
 
             DumpLog(scriptStatusResponse);
@@ -46,8 +46,8 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TestCaseSource(typeof(TentacleTypesToTest))]
-        public async Task RunScriptWithErrors(TentacleType tentacleType, SyncOrAsyncHalibut syncOrAsyncHalibut)
+        [TentacleConfigurations(testCommonVersions: false)]
+        public async Task RunScriptWithErrors(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             var windowsScript = @"
                 Write-Host ""This is the start of the script""
@@ -62,11 +62,11 @@ namespace Octopus.Tentacle.Tests.Integration
                 exit 1
                 echo This is the end of the script";
 
-            await using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleType)
-                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
+            await using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
+                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .Build(CancellationToken);
 
-            var scriptStatusResponse = await new ScriptExecutionOrchestrator(clientAndTentacle.TentacleClient, syncOrAsyncHalibut)
+            var scriptStatusResponse = await new ScriptExecutionOrchestrator(clientAndTentacle.TentacleClient, tentacleConfigurationTestCase.SyncOrAsyncHalibut)
                 .ExecuteScript(windowsScript, nixScript, CancellationToken);
 
             DumpLog(scriptStatusResponse);
@@ -78,8 +78,8 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TestCaseSource(typeof(TentacleTypesToTest))]
-        public async Task CancelScript(TentacleType tentacleType, SyncOrAsyncHalibut syncOrAsyncHalibut)
+        [TentacleConfigurations(testCommonVersions: false)]
+        public async Task CancelScript(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             var windowsScript = @"Write-Host ""This is the start of the script""
                                 & ping.exe 127.0.0.1 -n 100
@@ -89,11 +89,11 @@ namespace Octopus.Tentacle.Tests.Integration
                               ping 127.0.0.1 -c 100
                               echo This is the end of the script";
 
-            await using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleType)
-                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
+            await using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
+                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
                 .Build(CancellationToken);
 
-            var scriptExecutor = new ScriptExecutionOrchestrator(clientAndTentacle.TentacleClient, syncOrAsyncHalibut);
+            var scriptExecutor = new ScriptExecutionOrchestrator(clientAndTentacle.TentacleClient, tentacleConfigurationTestCase.SyncOrAsyncHalibut);
 
             var ticket = await scriptExecutor.StartScript(windowsScript, nixScript, CancellationToken);
 
@@ -101,7 +101,7 @@ namespace Octopus.Tentacle.Tests.Integration
             await scriptExecutor.ObserverUntilScriptOutputReceived(ticket, "This is the start of the script", CancellationToken);
 
             Console.WriteLine("Canceling");
-            await syncOrAsyncHalibut
+            await tentacleConfigurationTestCase.SyncOrAsyncHalibut
                 .WhenSync(() => clientAndTentacle.TentacleClient.ScriptService.SyncService.CancelScript(new CancelScriptCommand(ticket, 0)))
                 .WhenAsync(async () => await clientAndTentacle.TentacleClient.ScriptService.AsyncService.CancelScriptAsync(new CancelScriptCommand(ticket, 0), new(CancellationToken, null)));
             
