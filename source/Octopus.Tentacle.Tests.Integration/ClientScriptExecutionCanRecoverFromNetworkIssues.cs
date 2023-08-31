@@ -24,7 +24,7 @@ namespace Octopus.Tentacle.Tests.Integration
     public class ClientScriptExecutionCanRecoverFromNetworkIssues : IntegrationTest
     {
         [Test]
-        [TentacleConfigurations(testCommonVersions: false)]
+        [TentacleConfigurations]
         public async Task WhenANetworkFailureOccurs_DuringStartScript_TheClientIsAbleToSuccessfullyCompleteTheScript(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
@@ -70,7 +70,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TentacleConfigurations(testCommonVersions: false)]
+        [TentacleConfigurations]
         public async Task WhenANetworkFailureOccurs_DuringGetStatus_TheClientIsAbleToSuccessfullyCompleteTheScript(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
@@ -121,7 +121,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TentacleConfigurations(testCommonVersions: false)]
+        [TentacleConfigurations]
         public async Task WhenANetworkFailureOccurs_DuringCompleteScript_TheClientIsAbleToSuccessfullyCompleteTheScript(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             bool completeScriptWasCalled = false;
@@ -168,7 +168,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TentacleConfigurations(testCommonVersions: false)]
+        [TentacleConfigurations]
         public async Task WhenANetworkFailureOccurs_DuringCancelScript_TheClientIsAbleToSuccessfullyCancelTheScript(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             var cts = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
@@ -238,7 +238,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TentacleConfigurations(testCommonVersions: false)]
+        [TentacleConfigurations]
         public async Task WhenANetworkFailureOccurs_DuringGetCapabilities_TheClientIsAbleToSuccessfullyCompleteTheScript(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             IClientScriptServiceV2? scriptServiceV2 = null;

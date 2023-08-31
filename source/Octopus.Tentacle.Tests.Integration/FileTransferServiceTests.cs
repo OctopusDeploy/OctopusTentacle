@@ -16,7 +16,7 @@ namespace Octopus.Tentacle.Tests.Integration
     public class FileTransferServiceTests : IntegrationTest
     {
         [Test]
-        [TentacleConfigurations(testCommonVersions: false)]
+        [TentacleConfigurations]
         public async Task UploadFileSuccessfully(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             using var fileToUpload = new RandomTemporaryFileBuilder().Build();
@@ -64,7 +64,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TentacleConfigurations(testCommonVersions: false)]
+        [TentacleConfigurations]
         public async Task DownloadFileSuccessfully(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             using var fileToDownload = new RandomTemporaryFileBuilder().Build();

@@ -15,7 +15,7 @@ namespace Octopus.Tentacle.Tests.Integration
     public class ClientFileTransfersAreNotRetriedWhenRetriesAreDisabled : IntegrationTest
     {
         [Test]
-        [TentacleConfigurations]
+        [TentacleConfigurations(testCommonVersions: true)]
         public async Task FailedUploadsAreNotRetriedAndFail(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
@@ -56,7 +56,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TentacleConfigurations]
+        [TentacleConfigurations(testCommonVersions: true)]
         public async Task FailedDownloadsAreNotRetriedAndFail(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)

@@ -21,7 +21,7 @@ namespace Octopus.Tentacle.Tests.Integration
     public class ClientGathersRpcCallMetrics : IntegrationTest
     {
         [Test]
-        [TentacleConfigurations]
+        [TentacleConfigurations(testCommonVersions: true)]
         public async Task ExecuteScriptShouldGatherMetrics_WhenSucceeds(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             // Arrange
@@ -55,7 +55,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
         
         [Test]
-        [TentacleConfigurations]
+        [TentacleConfigurations(testCommonVersions: true)]
         public async Task ExecuteScriptShouldGatherMetrics_WhenFails(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             // Arrange
@@ -89,7 +89,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TentacleConfigurations]
+        [TentacleConfigurations(testCommonVersions: true)]
         public async Task UploadFileShouldGatherMetrics_WhenSucceeds(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             // Arrange
@@ -117,7 +117,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TentacleConfigurations]
+        [TentacleConfigurations(testCommonVersions: true)]
         public async Task UploadFileShouldGatherMetrics_WhenFails(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             // Arrange
@@ -149,7 +149,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TentacleConfigurations]
+        [TentacleConfigurations(testCommonVersions: true)]
         public async Task DownloadFileShouldGatherMetrics_WhenSucceeds(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             // Arrange
@@ -178,7 +178,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TentacleConfigurations]
+        [TentacleConfigurations(testCommonVersions: true)]
         public async Task DownloadFileShouldGatherMetrics_WhenFails(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             // Arrange

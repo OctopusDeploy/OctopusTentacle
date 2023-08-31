@@ -8,7 +8,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 {
     public class TentacleConfigurationsAttribute : TestCaseSourceAttribute
     {
-        public TentacleConfigurationsAttribute(bool testCommonVersions = true, bool testCapabilitiesServiceInterestingVersions = false)
+        public TentacleConfigurationsAttribute(bool testCommonVersions = false, bool testCapabilitiesServiceInterestingVersions = false)
         : base(
             typeof(TentacleConfigurationTestCases),
             nameof(TentacleConfigurationTestCases.GetEnumerator),

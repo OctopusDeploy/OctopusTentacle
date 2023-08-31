@@ -17,7 +17,7 @@ namespace Octopus.Tentacle.Tests.Integration
     public class TentacleClientObserver : IntegrationTest
     {
         [Test]
-        [TentacleConfigurations(testCommonVersions: false)]
+        [TentacleConfigurations]
         public async Task AnErrorDuringTheCallbackTo_ExecuteScriptCompleted_ShouldNotThrowOrStopScriptExecution(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             // Arrange
@@ -45,7 +45,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TentacleConfigurations(testCommonVersions: false)]
+        [TentacleConfigurations]
         public async Task AnErrorDuringTheCallbackTo_RpcCallComplete_ShouldNotThrowOrStopScriptExecution(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             // Arrange
@@ -73,7 +73,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
         
         [Test]
-        [TentacleConfigurations(testCommonVersions: false)]
+        [TentacleConfigurations]
         public async Task AnErrorDuringTheCallbackTo_UploadFileCompleted_ShouldNotThrowAnExecution(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             // Arrange
@@ -91,7 +91,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TentacleConfigurations(testCommonVersions: false)]
+        [TentacleConfigurations]
         public async Task AnErrorDuringTheCallbackTo_DownloadFileCompleted_ShouldNotThrowAnExecution(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             // Arrange

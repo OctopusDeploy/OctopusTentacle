@@ -16,7 +16,7 @@ namespace Octopus.Tentacle.Tests.Integration
     public class ClientScriptExecutionAdditionalScripts : IntegrationTest
     {
         [Test]
-        [TentacleConfigurations]
+        [TentacleConfigurations(testCommonVersions: true)]
         public async Task AdditionalScriptsWork(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             using var tmp = new TemporaryDirectory();

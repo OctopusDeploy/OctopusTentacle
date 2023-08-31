@@ -23,7 +23,7 @@ namespace Octopus.Tentacle.Tests.Integration
     public class ClientScriptExecutionScriptServiceV2IsNotRetriedWhenRetriesAreDisabled : IntegrationTest
     {
         [Test]
-        [TentacleConfigurations(testCommonVersions: false)]
+        [TentacleConfigurations]
         public async Task WhenNetworkFailureOccurs_DuringGetCapabilities_TheCallIsNotRetried(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             IClientScriptServiceV2? scriptServiceV2 = null;
@@ -84,7 +84,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
         
         [Test]
-        [TentacleConfigurations(testCommonVersions: false)]
+        [TentacleConfigurations]
         public async Task WhenANetworkFailureOccurs_DuringStartScript_TheCallIsNotRetried(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
@@ -134,7 +134,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
         
         [Test]
-        [TentacleConfigurations(testCommonVersions: false)]
+        [TentacleConfigurations]
         public async Task WhenANetworkFailureOccurs_DuringGetStatus_TheCallIsNotRetried(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
@@ -190,7 +190,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
         
         [Test]
-        [TentacleConfigurations(testCommonVersions: false)]
+        [TentacleConfigurations]
         public async Task WhenANetworkFailureOccurs_DuringCancelScript_TheCallIsNotRetried(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
@@ -251,7 +251,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TentacleConfigurations(testCommonVersions: false)]
+        [TentacleConfigurations]
         public async Task WhenANetworkFailureOccurs_DuringCompleteScript_TheCallIsNotRetried(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
