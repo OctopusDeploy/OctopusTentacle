@@ -1,6 +1,5 @@
 using System;
 using System.Text;
-using System.Threading.Tasks;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Tests.Integration.Support.Legacy;
 

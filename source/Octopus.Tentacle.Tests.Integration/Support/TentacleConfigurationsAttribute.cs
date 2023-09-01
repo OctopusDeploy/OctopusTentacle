@@ -17,11 +17,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             bool testRpcCalls = false,
             bool testRpcCallStages = false,
             bool testScriptIsolationLevel = false,
-            bool testScriptsInParallel = false)
+            bool testScriptsInParallel = false,
+            params object[] additionalParameterTypes)
             : base(
                 typeof(TentacleConfigurationTestCases),
                 nameof(TentacleConfigurationTestCases.GetEnumerator),
-                new object[] {testCommonVersions, testCapabilitiesServiceInterestingVersions, testStopPortForwarderAfterFirstCall, testRpcCalls, testRpcCallStages, testScriptIsolationLevel, testScriptsInParallel})
+                new object[] {testCommonVersions, testCapabilitiesServiceInterestingVersions, testStopPortForwarderAfterFirstCall, testRpcCalls, testRpcCallStages, testScriptIsolationLevel, testScriptsInParallel, additionalParameterTypes})
         {
         }
     }
@@ -35,7 +36,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             bool testRpcCalls,
             bool testRpcCallStages,
             bool testScriptIsolationLevel,
-            bool testScriptsInParallel)
+            bool testScriptsInParallel,
+            object[] additionalParameterTypes)
         {
             var tentacleTypes = new[] {TentacleType.Listening, TentacleType.Polling};
             var halibutTypes = new[] {SyncOrAsyncHalibut.Sync, SyncOrAsyncHalibut.Async};
@@ -98,24 +100,65 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 }
                 : new List<ScriptsInParallelTestCase?> {null};
 
-            return (from tentacleType in tentacleTypes
-                    from halibutType in halibutTypes
-                    from version in versions.Distinct()
-                    from stopPortForwarderAfterFirstCall in stopPortForwarderAfterFirstCallValues
-                    from rpcCall in rpcCalls
-                    from rpcCallStage in rpcCallStages
-                    from scriptIsolationLevel in scriptIsolationLevels
-                    from scriptsInParallelTestCase in scriptsInParallelTestCases
-                    select new TentacleConfigurationTestCase(
-                        tentacleType,
-                        halibutType,
-                        version,
-                        stopPortForwarderAfterFirstCall,
-                        rpcCall,
-                        rpcCallStage,
-                        scriptIsolationLevel,
-                        scriptsInParallelTestCase))
+            var testCases =
+                from tentacleType in tentacleTypes
+                from halibutType in halibutTypes
+                from version in versions.Distinct()
+                from stopPortForwarderAfterFirstCall in stopPortForwarderAfterFirstCallValues
+                from rpcCall in rpcCalls
+                from rpcCallStage in rpcCallStages
+                from scriptIsolationLevel in scriptIsolationLevels
+                from scriptsInParallelTestCase in scriptsInParallelTestCases
+                select new TentacleConfigurationTestCase(
+                    tentacleType,
+                    halibutType,
+                    version,
+                    stopPortForwarderAfterFirstCall,
+                    rpcCall,
+                    rpcCallStage,
+                    scriptIsolationLevel,
+                    scriptsInParallelTestCase);
+
+            if (additionalParameterTypes.Length == 0)
+            {
+                return testCases.GetEnumerator();
+            }
+            
+            return CombineTestCasesWithAdditionalParameters(testCases, additionalParameterTypes);
+        }
+
+        private static IEnumerator CombineTestCasesWithAdditionalParameters(IEnumerable<TentacleConfigurationTestCase> testCases, object[] additionalEnumerables)
+        {
+            AllCombinations enums = new AllCombinations();
+            var additionalEnums = additionalEnumerables.Cast<Type>().ToArray();
+
+            for (int i = 0; i < additionalEnums.Length; i++)
+            {
+                var additionalEnum = additionalEnums[i];
+                if (additionalEnum.IsEnum)
+                {
+                    enums.And(Enum.GetValues(additionalEnums[i]));
+                }
+                else if (typeof(IEnumerable).IsAssignableFrom(additionalEnum))
+                {
+                    enums.And(ValuesOf.CreateValues(additionalEnum));
+                }
+            }
+
+            var enumerablePermutations = enums.BuildEnumerable();
+
+            return (from testCase in testCases
+                    from IEnumerable<object> permutation in enumerablePermutations
+                    select CombineTestCaseWithAdditionalParameters(testCase, permutation.ToArray()))
                 .GetEnumerator();
+        }
+
+        static object[] CombineTestCaseWithAdditionalParameters(TentacleConfigurationTestCase testCase, object[] additionalParameters)
+        {
+            var parameters = new object[1 + additionalParameters.Length];
+            parameters[0] = testCase;
+            Array.Copy(additionalParameters, 0, parameters, 1, additionalParameters.Length);
+            return parameters;
         }
     }
 }
