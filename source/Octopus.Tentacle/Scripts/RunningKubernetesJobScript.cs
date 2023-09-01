@@ -21,11 +21,13 @@ namespace Octopus.Tentacle.Scripts
         private readonly ILog log;
 
         private static readonly object OutputFileLock = new();
+
         private static readonly Dictionary<string, ProcessOutputSource> FileSourceMap = new Dictionary<string, ProcessOutputSource>
         {
             ["job-output.log"] = ProcessOutputSource.StdOut,
             ["job-error.log"] = ProcessOutputSource.StdErr
         };
+
         private readonly Dictionary<string, long> lastFilePositions;
 
         public RunningKubernetesJobScript(IShell shell,
@@ -69,9 +71,11 @@ namespace Octopus.Tentacle.Scripts
                         {
                             State = ProcessState.Running;
 
-                            var jobBootstrapScriptName = CreateJobBootstrapScript();
+                            CreateJobBootstrapScript();
 
-                            exitCode = RunAndMonitorKubernetesJob(jobBootstrapScriptName, writer);
+                            var path = CreateJobYaml();
+
+                            exitCode = RunAndMonitorKubernetesJob(path, writer);
                         }
                     }
                     catch (OperationCanceledException)
@@ -97,25 +101,29 @@ namespace Octopus.Tentacle.Scripts
             }
         }
 
-        private int RunAndMonitorKubernetesJob(string jobBootstrapScriptName, IScriptLogWriter writer)
+        private int RunAndMonitorKubernetesJob(string path, IScriptLogWriter writer)
         {
-            var exitCode = SilentProcessRunner.ExecuteCommand(
-                shell.GetFullPath(),
-                shell.FormatCommandArguments(jobBootstrapScriptName, null, false),
-                workspace.WorkingDirectory,
-                output => writer.WriteOutput(ProcessOutputSource.Debug, output),
-                output => writer.WriteOutput(ProcessOutputSource.StdOut, output),
-                output => writer.WriteOutput(ProcessOutputSource.StdErr, output),
-                cancellationToken);
+            var commandLine = new CommandLineInvocation(
+                "kubectl",
+                $"apply -f \"{path}\"");
+            var result = commandLine.ExecuteCommand();
 
             // if creating the job failed, blow up
-            if (exitCode != 0)
-                return exitCode;
+            if (result.ExitCode != 0)
+                return result.ExitCode;
 
             //otherwise, we now need to monitor the resulting output files and pod status
             MonitorPodAndOutputFiles(writer).GetAwaiter().GetResult();
 
-            return exitCode;
+            return result.ExitCode;
+        }
+
+        private string CreateJobYaml()
+        {
+            var jobYaml = BuildJobYaml();
+
+            var path = workspace.WriteFile("KubernetesJob.yaml", jobYaml);
+            return path;
         }
 
         private async Task MonitorPodAndOutputFiles(IScriptLogWriter writer)
@@ -123,7 +131,7 @@ namespace Octopus.Tentacle.Scripts
             using var completionReset = new ManualResetEventSlim(false);
 
             var outputMonitorTask = Task.Run(() => MonitorOutputFiles(writer, completionReset), cancellationToken);
-            var jobMonitorTask = Task.Run(() => CheckIfPodHasCompleted(completionReset), cancellationToken);
+            var jobMonitorTask = Task.Run(async () => await CheckIfPodHasCompleted(completionReset), cancellationToken);
 
             await Task.WhenAll(jobMonitorTask, outputMonitorTask);
 
@@ -134,7 +142,7 @@ namespace Octopus.Tentacle.Scripts
             }
         }
 
-        private int CheckIfPodHasCompleted(ManualResetEventSlim resetEvent)
+        private async Task<int> CheckIfPodHasCompleted(ManualResetEventSlim resetEvent)
         {
             while (true)
             {
@@ -146,21 +154,24 @@ namespace Octopus.Tentacle.Scripts
 
                 var kubectlCheckCommand = new CommandLineInvocation(
                     "kubectl",
-                    $"get job octopus-tentacle-{ticket.TaskId} -o jsonpath=\"{{.status.conditions[].type}}\"");
+                    $"get job octopus-tentacle-{ticket.TaskId} --namespace octopus-tentacle -o jsonpath=\"{{.status.conditions[].type}}\"");
                 var result = kubectlCheckCommand.ExecuteCommand(workspace.WorkingDirectory);
 
                 var firstLine = result.Infos.FirstOrDefault();
-                if (firstLine == null)
-                    continue;
-
-                switch (firstLine)
+                if (firstLine != null)
                 {
-                    case "Complete":
-                        resetEvent.Set();
-                        return 0;
-                    case "Failed":
-                        resetEvent.Set();
-                        return 1;
+                    switch (firstLine)
+                    {
+                        case "Complete":
+                            resetEvent.Set();
+                            return 0;
+                        case "Failed":
+                            resetEvent.Set();
+                            return 1;
+                        default:
+                            await Task.Delay(50, cancellationToken);
+                            break;
+                    }
                 }
             }
         }
@@ -227,49 +238,39 @@ namespace Octopus.Tentacle.Scripts
                 lastFilePositions[eventArgs.Name] = fileStream.Position;
             }
         }
-        private string CreateJobBootstrapScript()
+        private void CreateJobBootstrapScript()
         {
-            var jobYaml = BuildJobYaml();
+            var filename = Path.GetFileName(workspace.BootstrapScriptFilePath);
 
-            var path = workspace.WriteFile("KubernetesJob.yaml", jobYaml);
-
-            //for windows we need to
-            if (PlatformDetection.IsRunningOnWindows)
+            var args = new List<string>
             {
-                var jobBootstrapScript = $@"
+                $"/data/work/{ticket.TaskId}/{filename}"
+            };
 
-Write-Host ""##octopus[stdout-default]""
+            args.AddRange(workspace.ScriptArguments ?? Array.Empty<string>());
 
-& kubectl apply -f ""{path}""
+            args.AddRange(new[]
+            {
+                ">>",
+                $"/data/work/{ticket.TaskId}/job-output.log",
+                "2>>",
+                $"/data/work/{ticket.TaskId}/job-error.log"
+            });
 
-if ((Test-Path variable:global:LastExitCode))
-{{
-	Exit $LastExitCode
-}}
-";
+            var escapedArgs = args
+                .Select(arg => $"\"{arg}\"")
+                .ToList();
 
-                var jobBootstrapPath = workspace.WriteFile("JobBootstrap.ps1", jobBootstrapScript);
+            var scriptArgs = string.Join(" ", args);
 
-                return jobBootstrapPath;
-            }
+            var script = $@"#!/bin/bash
+/bin/bash {scriptArgs}";
 
-            throw new NotImplementedException("I only have a windows machine, so that'll do for now :D");
+            workspace.WriteFile("JobBootstrap.sh", script);
         }
 
         private string BuildJobYaml()
         {
-            var filename = Path.GetFileName(workspace.BootstrapScriptFilePath);
-            var boostrapFileArg = new[]
-            {
-                $"\\\"/data/work/{ticket.TaskId}/{filename}\\\""
-            };
-
-            var escapedArgs = (workspace.ScriptArguments ?? Array.Empty<string>())
-                .Select(arg => $"\\\"{arg}\\\"")
-                .ToList();
-
-            var scriptArgs = string.Join(" ", boostrapFileArg.Concat(escapedArgs));
-
             //We normalize the workspace path as it's going to be running in linux
             var normalizedWorkspace = NormalizeWorkingDirectoryForNix(workspace.WorkingDirectory);
 
@@ -277,6 +278,7 @@ if ((Test-Path variable:global:LastExitCode))
 kind: Job
 metadata:
     name: ""octopus-tentacle-{ticket.TaskId}""
+    namespace: ""octopus-tentacle""
     labels: 
         ""serverTaskId"": ""{taskId}""
 spec:
@@ -286,9 +288,7 @@ spec:
             - name: ""octopus-tentacle-{ticket.TaskId}""
               image: octopusdeploy/worker-tools:ubuntu.22.04
               command: [""{Bash.GetFullBashPath()}""]
-              args: 
-                - ""-c""
-                - ""pwsh {scriptArgs} 1> \""/data/work/{ticket.TaskId}/job-output.log\"" 2> \""/data/work/{ticket.TaskId}/job-error.log\""""
+              args: [""/data/work/{ticket.TaskId}/JobBootstrap.sh""]
               volumeMounts:
                 - mountPath: ""/data/work/{ticket.TaskId}""
                   name: work

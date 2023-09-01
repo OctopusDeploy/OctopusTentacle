@@ -28,6 +28,7 @@ namespace Octopus.Tentacle.Scripts
         {
             var path = Path.Combine(WorkingDirectory, filename);
 
+            contents = contents.Replace("\r\n", "\n");
             FileSystem.OverwriteFile(path, contents, Encoding.Default);
 
             return path;

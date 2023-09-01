@@ -14,11 +14,13 @@ namespace Octopus.Tentacle.Scripts
         readonly IOctopusFileSystem fileSystem;
         readonly IHomeConfiguration home;
         readonly SensitiveValueMasker sensitiveValueMasker;
+        private readonly ITentacleConfiguration configuration;
 
         public ScriptWorkspaceFactory(
             IOctopusFileSystem fileSystem,
             IHomeConfiguration home,
-            SensitiveValueMasker sensitiveValueMasker)
+            SensitiveValueMasker sensitiveValueMasker,
+            ITentacleConfiguration configuration)
         {
             if (home.ApplicationSpecificHomeDirectory == null)
                 throw new ArgumentException($"{GetType().Name} cannot function without the HomeDirectory configured.", nameof(home));
@@ -26,11 +28,12 @@ namespace Octopus.Tentacle.Scripts
             this.fileSystem = fileSystem;
             this.home = home;
             this.sensitiveValueMasker = sensitiveValueMasker;
+            this.configuration = configuration;
         }
 
         public IScriptWorkspace GetWorkspace(ScriptTicket ticket)
         {
-            if (!PlatformDetection.IsRunningOnWindows)
+            if (configuration.ScriptExecutor == ScriptExecutor.KubernetesJob ||!PlatformDetection.IsRunningOnWindows)
                 return new BashScriptWorkspace(FindWorkingDirectory(ticket), fileSystem, sensitiveValueMasker);
 
             return new ScriptWorkspace(FindWorkingDirectory(ticket), fileSystem, sensitiveValueMasker);
@@ -52,7 +55,7 @@ namespace Octopus.Tentacle.Scripts
             workspace.ScriptArguments = scriptArguments;
             workspace.ScriptMutexName = scriptMutexName;
 
-            if (PlatformDetection.IsRunningOnNix || PlatformDetection.IsRunningOnMac)
+            if (configuration.ScriptExecutor == ScriptExecutor.KubernetesJob || PlatformDetection.IsRunningOnNix || PlatformDetection.IsRunningOnMac)
             {
                 //TODO: This could be better
                 workspace.BootstrapScript(scripts.ContainsKey(ScriptType.Bash)

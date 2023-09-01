@@ -38,9 +38,9 @@ namespace Octopus.Tentacle.Services.Scripts
 
             //execute the script
             var executor = scriptExecutorFactory.GetExecutor();
-            var process = executor.Execute(ticket, command.TaskId ?? ticket.TaskId, workspace, cancel);
+            var runningScript = executor.Execute(ticket, command.TaskId ?? ticket.TaskId, workspace, cancel);
 
-            running.TryAdd(ticket.TaskId, process);
+            running.TryAdd(ticket.TaskId, runningScript);
             cancellationTokens.TryAdd(ticket.TaskId, cancel);
             return ticket;
         }
