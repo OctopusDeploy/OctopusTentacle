@@ -6,6 +6,7 @@ using System.Text;
 using Halibut.Diagnostics;
 using NUnit.Framework;
 using Octopus.Tentacle.Tests.Integration.Support;
+using Octopus.Tentacle.Util;
 using Serilog;
 using Serilog.Core;
 using Serilog.Formatting.Display;
@@ -28,7 +29,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         {
             // In teamcity we need to know what test the log is for, since we can find hung builds and only have a single file containing all log messages.
             var testName = "";
-            if (TentacleExeFinder.IsRunningInTeamCity())
+            if (TeamCityDetection.IsRunningInTeamCity())
             {
                 testName = "[{TestName}] ";
             }
@@ -91,7 +92,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
                         stringBuilder.Append(s);
                     }
                 }
-                if (TentacleExeFinder.IsRunningInTeamCity() || IsForcingContextWrite.Value)
+                if (TeamCityDetection.IsRunningInTeamCity() || IsForcingContextWrite.Value)
                 {
                     TestContext.Write(s);
                 }

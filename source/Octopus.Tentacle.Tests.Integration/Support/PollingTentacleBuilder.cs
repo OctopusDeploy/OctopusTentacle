@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Client.Model;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
@@ -26,6 +27,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             var configFilePath = Path.Combine(tempDirectory.DirectoryPath, instanceName + ".cfg");
             var tentacleExe = TentacleExePath ?? TentacleExeFinder.FindTentacleExe();
             var subscriptionId = PollingSubscriptionId.Generate();
+            
+            var logger = new SerilogLoggerBuilder().Build().ForContext<ListeningTentacleBuilder>();
+            logger.Information($"Tentacle.exe location: {tentacleExe}");
 
             await CreateInstance(tentacleExe, configFilePath, instanceName, tempDirectory, cancellationToken);
             ConfigureTentacleToPollOctopusServer(configFilePath, subscriptionId);

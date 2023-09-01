@@ -25,6 +25,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         IScriptObserverBackoffStrategy scriptObserverBackoffStrategy = new DefaultScriptObserverBackoffStrategy();
         public readonly TentacleType TentacleType;
         Version? tentacleVersion;
+        private TentacleRuntime tentacleRuntime = TentacleRuntime.Default;
         readonly List<Func<PortForwarderBuilder, PortForwarderBuilder>> portForwarderModifiers = new ();
         readonly List<Action<ServiceEndPoint>> serviceEndpointModifiers = new();
         private IPendingRequestQueueFactory? queueFactory = null;
@@ -80,6 +81,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         {
             this.tentacleVersion = tentacleVersion;
 
+            return this;
+        }
+
+        public ClientAndTentacleBuilder WithTentacleRuntime(TentacleRuntime tentacleRuntime)
+        {
+            this.tentacleRuntime = tentacleRuntime;
             return this;
         }
 
@@ -160,8 +167,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
             var temporaryDirectory = new TemporaryDirectory();
             var tentacleExe = tentacleVersion == null ?
-                TentacleExeFinder.FindTentacleExe() :
-                await TentacleFetcher.GetTentacleVersion(temporaryDirectory.DirectoryPath, tentacleVersion, logger, cancellationToken);
+                TentacleExeFinder.FindTentacleExe(this.tentacleRuntime) :
+                await TentacleFetcher.GetTentacleVersion(temporaryDirectory.DirectoryPath, tentacleVersion, tentacleRuntime, logger, cancellationToken);
+            
+            logger.Information($"Tentacle.exe location: {tentacleExe}");
 
             if (TentacleType == TentacleType.Polling)
             {

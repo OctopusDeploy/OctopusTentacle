@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
@@ -81,20 +82,31 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 versions.Add(TentacleVersions.Current);
             }
 
+#if NETFRAMEWORK
+            List<TentacleRuntime> runtimes = new List<TentacleRuntime> { TentacleRuntime.Default };
+#endif
+#if !NETFRAMEWORK
+            List<TentacleRuntime> runtimes = PlatformDetection.IsRunningOnWindows
+                ? new List<TentacleRuntime> {TentacleRuntime.DotNet6, TentacleRuntime.Framework48}
+                : new List<TentacleRuntime> {TentacleRuntime.Default};
+#endif
+
             var testCases =
                 from tentacleType in tentacleTypes
                 from halibutType in halibutTypes
+                from runtime in runtimes
                 from version in versions.Distinct()
                 select new TentacleConfigurationTestCase(
                     tentacleType,
                     halibutType,
+                    runtime,
                     version);
 
             if (additionalParameterTypes.Length == 0)
             {
                 return testCases.GetEnumerator();
             }
-            
+
             return CombineTestCasesWithAdditionalParameters(testCases, additionalParameterTypes);
         }
 

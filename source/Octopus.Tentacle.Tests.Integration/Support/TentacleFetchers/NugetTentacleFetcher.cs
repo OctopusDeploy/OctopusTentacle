@@ -24,12 +24,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
 
         static string DownloadUrlForVersion(string versionString) => $"https://f.feedz.io/octopus-deploy/dependencies/packages/Octopus.Tentacle.CrossPlatformBundle/{versionString}/download";
 
-        public async Task<string> GetTentacleVersion(string downloadPath, Version version, CancellationToken cancellationToken)
+        public async Task<string> GetTentacleVersion(string downloadPath, Version version, TentacleRuntime runtime, CancellationToken cancellationToken)
         {
-            return await DownloadAndExtractFromUrl(downloadPath, DownloadUrlForVersion(version.ToString()));
+            return await DownloadAndExtractFromUrl(downloadPath, runtime, DownloadUrlForVersion(version.ToString()));
         }
 
-        async Task<string> DownloadAndExtractFromUrl(string directoryPath, string url)
+        async Task<string> DownloadAndExtractFromUrl(string directoryPath, TentacleRuntime runtime, string url)
         {
             await Task.CompletedTask;
             var downloadFilePath = Path.Combine(directoryPath, Guid.NewGuid().ToString("N"));
@@ -41,7 +41,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
 
             ZipFile.ExtractToDirectory(downloadFilePath, extractionDirectory);
 
-            var tentacleArtifact = Path.Combine(extractionDirectory, TentacleArtifactName());
+            // This is the path to the runtime-specific artifact
+            var tentacleArtifact = Path.Combine(extractionDirectory, TentacleArtifactName(runtime));
 
             var tentacleFolder = Path.Combine(directoryPath, "tentacle");
             if (tentacleArtifact.EndsWith(".tar.gz"))
@@ -56,40 +57,41 @@ namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
             return Path.Combine(tentacleFolder, "tentacle", "Tentacle");
         }
 
-        public string TentacleArtifactName()
+        public string TentacleArtifactName(TentacleRuntime runtime)
         {
             if (PlatformDetection.IsRunningOnWindows)
             {
-                if (TentacleBinaryFrameworkForCurrentOs() == "net48")
+                var net48ArtifactName = "tentacle-net48-win.zip";
+                var net60ArtifactName = $"tentacle-{RuntimeDetection.GetCurrentRuntime()}-win-{Architecture()}.zip";
+
+                var name = runtime switch
                 {
-                    return "tentacle-net48-win.zip";
-                }
-                return $"tentacle-{TentacleBinaryFrameworkForCurrentOs()}-win-{Architecture()}.zip";
+                    TentacleRuntime.DotNet6 => net60ArtifactName,
+                    TentacleRuntime.Framework48 => net48ArtifactName,
+                    TentacleRuntime.Default =>
+#if NETFRAMEWORK
+                        net48ArtifactName,
+#endif
+#if !NETFRAMEWORK
+                        net60ArtifactName,
+#endif
+                    _ => throw new ArgumentOutOfRangeException(nameof(runtime), runtime, null)
+                };
+
+                return name;
             }
 
             if (PlatformDetection.IsRunningOnMac)
             {
-                return $"tentacle-{TentacleBinaryFrameworkForCurrentOs()}-osx-{Architecture()}.tar.gz";
+                return $"tentacle-{RuntimeDetection.GetCurrentRuntime()}-osx-{Architecture()}.tar.gz";
             }
 
             if (PlatformDetection.IsRunningOnNix)
             {
-                return $"tentacle-{TentacleBinaryFrameworkForCurrentOs()}-linux-{Architecture()}.tar.gz";
+                return $"tentacle-{RuntimeDetection.GetCurrentRuntime()}-linux-{Architecture()}.tar.gz";
             }
 
             throw new Exception("Wow this is one fancy OS that tentacle probably can't run on");
-        }
-
-        public static string TentacleBinaryFrameworkForCurrentOs()
-        {
-            // This wont work for future versions of dotnet
-            if (RuntimeInformation.FrameworkDescription.StartsWith(".NET 6.0"))
-            {
-                return "net6.0";
-            }
-
-            // This is the last net framework
-            return "net48";
         }
 
         string Architecture()
