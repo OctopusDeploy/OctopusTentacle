@@ -406,7 +406,7 @@ namespace Octopus.Tentacle.Tests.Client
                         callCount++;
                         throw new HalibutClientException("An error has occurred.");
                     },
-                    onRetryAction: async (exception, sleepDuration, retryCount, totalRetryDuration, ct) =>
+                    onRetryAction: async (exception, sleepDuration, retryCount, totalRetryDuration, elapsedDuration, ct) =>
                     {
                         await Task.CompletedTask;
                         retryCounts.Add(retryCount);
@@ -471,7 +471,7 @@ namespace Octopus.Tentacle.Tests.Client
                         await Task.CompletedTask;
                         throw new HalibutClientException("An error has occurred.");
                     },
-                    onRetryAction: async (exception, sleepDuration, retryCount, totalRetryDuration, ct) =>
+                    onRetryAction: async (exception, sleepDuration, retryCount, totalRetryDuration, elapsedDuration, ct) =>
                     {
                         await Task.CompletedTask;
                         sleepDurations.Add(sleepDuration);

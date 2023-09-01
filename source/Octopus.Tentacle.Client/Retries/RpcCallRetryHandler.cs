@@ -9,7 +9,17 @@ namespace Octopus.Tentacle.Client.Retries
 {
     internal class RpcCallRetryHandler
     {
-        public delegate Task OnRetyAction(Exception lastException, TimeSpan retrySleepDuration, int retryCount, TimeSpan retryTimeout, CancellationToken cancellationToken);
+        /// <summary>
+        /// Action to Perform before a retry is attempted
+        /// </summary>
+        /// <param name="lastException">The last exception that occurred</param>
+        /// <param name="retrySleepDuration">The duration execution will sleep for before the next retry attempt</param>
+        /// <param name="retryCount">The current retry count</param>
+        /// <param name="retryTimeout">The total duration that retries are allowed to take, including the initial execution</param>
+        /// <param name="elapsedDuration">The duration that has elapsed already including the initial execution and any previous retries</param>
+        /// <param name="cancellationToken">CancellationToken that will be cancelled when execution is cancelled by the caller</param>
+        /// <returns></returns>
+        public delegate Task OnRetyAction(Exception lastException, TimeSpan retrySleepDuration, int retryCount, TimeSpan retryTimeout, TimeSpan elapsedDuration, CancellationToken cancellationToken);
 
         public delegate Task OnTimeoutAction(TimeSpan retryTimeout, CancellationToken cancellationToken);
 
@@ -30,14 +40,16 @@ namespace Octopus.Tentacle.Client.Retries
             CancellationToken cancellationToken)
         {
             Exception? lastException = null;
+            var started = new Stopwatch();
 
             async Task OnRetryAction(Exception exception, TimeSpan sleepDuration, int retryCount, Context context)
             {
                 lastException = exception;
+                var elapsedDuration = started.Elapsed;
 
                 if (onRetryAction != null)
                 {
-                    await onRetryAction.Invoke(exception, sleepDuration, retryCount, RetryTimeout, cancellationToken).ConfigureAwait(false);
+                    await onRetryAction.Invoke(exception, sleepDuration, retryCount, RetryTimeout, elapsedDuration, cancellationToken).ConfigureAwait(false);
                 }
             }
 
@@ -56,7 +68,6 @@ namespace Octopus.Tentacle.Client.Retries
 
             var retryPolicy = policyBuilder.BuildRetryPolicy();
             var isInitialAction = true;
-            var started = new Stopwatch();
 
             // This ensures the timeout policy does not apply to the initial request and only applies to retries
             async Task<T> ExecuteAction(CancellationToken ct)
