@@ -31,9 +31,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 sleep 3
                 echo This is the end of the script";
 
-            await using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
-                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
-                .Build(CancellationToken);
+            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateLegacyBuilder().Build(CancellationToken);
 
             var scriptStatusResponse = await new ScriptExecutionOrchestrator(clientAndTentacle.TentacleClient, tentacleConfigurationTestCase.SyncOrAsyncHalibut)
                 .ExecuteScript(windowsScript, nixScript, CancellationToken);
@@ -62,9 +60,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 exit 1
                 echo This is the end of the script";
 
-            await using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
-                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
-                .Build(CancellationToken);
+            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateLegacyBuilder().Build(CancellationToken);
 
             var scriptStatusResponse = await new ScriptExecutionOrchestrator(clientAndTentacle.TentacleClient, tentacleConfigurationTestCase.SyncOrAsyncHalibut)
                 .ExecuteScript(windowsScript, nixScript, CancellationToken);
@@ -89,9 +85,7 @@ namespace Octopus.Tentacle.Tests.Integration
                               ping 127.0.0.1 -c 100
                               echo This is the end of the script";
 
-            await using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
-                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
-                .Build(CancellationToken);
+            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateLegacyBuilder().Build(CancellationToken);
 
             var scriptExecutor = new ScriptExecutionOrchestrator(clientAndTentacle.TentacleClient, tentacleConfigurationTestCase.SyncOrAsyncHalibut);
 

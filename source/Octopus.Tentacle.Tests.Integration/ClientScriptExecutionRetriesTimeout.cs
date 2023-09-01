@@ -35,8 +35,7 @@ namespace Octopus.Tentacle.Tests.Integration
             IClientScriptServiceV2? scriptServiceV2 = null;
             IAsyncClientScriptServiceV2? asyncScriptServiceV2 = null;
 
-            await using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
-                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
+            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 // Set a short retry duration so we cancel fairly quickly
                 .WithRetryDuration(TimeSpan.FromSeconds(15))
                 .WithPortForwarderDataLogging()
@@ -112,8 +111,7 @@ namespace Octopus.Tentacle.Tests.Integration
             SyncOrAsyncHalibut syncOrAsyncHalibut = tentacleConfigurationTestCase.SyncOrAsyncHalibut;
             RpcCallStage rpcCallStage = tentacleConfigurationTestCase.RpcCallStage!.Value;
                 
-            await using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
-                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
+            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 // Set a short retry duration so we cancel fairly quickly
                 .WithRetryDuration(TimeSpan.FromSeconds(15))
                 .WithPortForwarderDataLogging()
@@ -183,8 +181,7 @@ namespace Octopus.Tentacle.Tests.Integration
             SyncOrAsyncHalibut syncOrAsyncHalibut = tentacleConfigurationTestCase.SyncOrAsyncHalibut;
             RpcCallStage rpcCallStage = tentacleConfigurationTestCase.RpcCallStage!.Value;
                 
-            await using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
-                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
+            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 // Set a short retry duration so we cancel fairly quickly
                 .WithRetryDuration(TimeSpan.FromSeconds(15))
                 .WithPortForwarderDataLogging()
@@ -256,8 +253,7 @@ namespace Octopus.Tentacle.Tests.Integration
             SyncOrAsyncHalibut syncOrAsyncHalibut = tentacleConfigurationTestCase.SyncOrAsyncHalibut;
             RpcCallStage rpcCallStage = tentacleConfigurationTestCase.RpcCallStage!.Value;
                 
-            await using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
-                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
+            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 // Set a short retry duration so we cancel fairly quickly
                 .WithRetryDuration(TimeSpan.FromSeconds(15))
                 .WithPortForwarderDataLogging()

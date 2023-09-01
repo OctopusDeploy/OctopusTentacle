@@ -18,10 +18,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(testCommonVersions: true)]
         public async Task ArgumentsArePassedToTheScript(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
-            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
-                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
-                .WithTentacleVersion(tentacleConfigurationTestCase.Version)
-                .Build(CancellationToken);
+            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder().Build(CancellationToken);
 
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody(new ScriptBuilder().PrintArguments())

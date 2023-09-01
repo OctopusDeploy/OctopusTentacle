@@ -21,8 +21,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations]
         public async Task CanRunScript(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
-            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
-                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
+            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder().CountCallsToScriptServiceV2(out var scriptServiceV2CallCounts).Build())
                 .Build(CancellationToken);
 
@@ -54,8 +53,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations]
         public async Task DelayInStartScriptSavesNetworkCalls(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
-            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
-                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
+            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder().CountCallsToScriptServiceV2(out var scriptServiceV2CallCounts).Build())
                 .Build(CancellationToken);
 
@@ -86,8 +84,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations]
         public async Task WhenTentacleRestartsWhileRunningAScript_TheExitCodeShouldBe_UnknownResultExitCode(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
-            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
-                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
+            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder().CountCallsToScriptServiceV2(out var scriptServiceV2CallCounts).Build())
                 .Build(CancellationToken);
 
@@ -132,8 +129,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations]
         public async Task WhenALongRunningScriptIsCancelled_TheScriptShouldStop(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
-            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
-                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
+            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder().CountCallsToScriptServiceV2(out var scriptServiceV2CallCounts).Build())
                 .Build(CancellationToken);
 

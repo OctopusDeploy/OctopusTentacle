@@ -21,9 +21,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             using var fileToUpload = new RandomTemporaryFileBuilder().Build();
 
-            await using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
-                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
-                .Build(CancellationToken);
+            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateLegacyBuilder().Build(CancellationToken);
             
             UploadResult uploadResult;
 
@@ -69,9 +67,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             using var fileToDownload = new RandomTemporaryFileBuilder().Build();
 
-            await using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
-                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
-                .Build(CancellationToken);
+            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateLegacyBuilder().Build(CancellationToken);
 
             var downloadedData = await tentacleConfigurationTestCase.SyncOrAsyncHalibut
                 .WhenSync(() => clientAndTentacle.TentacleClient.FileTransferService.SyncService.DownloadFile(fileToDownload.File.FullName))

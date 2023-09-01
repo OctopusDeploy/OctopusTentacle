@@ -26,9 +26,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             // Arrange
             var tentacleClientObserver = new TestTentacleClientObserver();
-            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
-                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
-                .WithTentacleVersion(tentacleConfigurationTestCase.Version)
+            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .Build(CancellationToken);
             
@@ -61,9 +59,7 @@ namespace Octopus.Tentacle.Tests.Integration
             // Arrange
             var tentacleClientObserver = new TestTentacleClientObserver();
             var exception = new HalibutClientException("Error");
-            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
-                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
-                .WithTentacleVersion(tentacleConfigurationTestCase.Version)
+            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .WithRetryDuration(TimeSpan.FromSeconds(1))
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
@@ -94,9 +90,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             // Arrange
             var tentacleClientObserver = new TestTentacleClientObserver();
-            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
-                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
-                .WithTentacleVersion(tentacleConfigurationTestCase.Version)
+            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .Build(CancellationToken);
 
@@ -123,9 +117,7 @@ namespace Octopus.Tentacle.Tests.Integration
             // Arrange
             var tentacleClientObserver = new TestTentacleClientObserver();
             var exception = new HalibutClientException("Error");
-            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
-                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
-                .WithTentacleVersion(tentacleConfigurationTestCase.Version)
+            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .WithRetryDuration(TimeSpan.FromSeconds(1))
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
@@ -154,9 +146,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             // Arrange
             var tentacleClientObserver = new TestTentacleClientObserver();
-            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
-                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
-                .WithTentacleVersion(tentacleConfigurationTestCase.Version)
+            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .Build(CancellationToken);
 
@@ -184,9 +174,7 @@ namespace Octopus.Tentacle.Tests.Integration
             // Arrange
             var tentacleClientObserver = new TestTentacleClientObserver();
             var exception = new HalibutClientException("Error");
-            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
-                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
-                .WithTentacleVersion(tentacleConfigurationTestCase.Version)
+            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .WithRetryDuration(TimeSpan.FromSeconds(1))
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()

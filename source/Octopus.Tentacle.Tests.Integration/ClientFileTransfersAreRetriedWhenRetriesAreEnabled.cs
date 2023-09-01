@@ -18,9 +18,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(testCommonVersions: true)]
         public async Task FailedUploadsAreRetriedAndIsEventuallySuccessful(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
-            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
-                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
-                .WithTentacleVersion(tentacleConfigurationTestCase.Version)
+            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
@@ -56,9 +54,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(testCommonVersions: true)]
         public async Task FailedDownloadsAreRetriedAndIsEventuallySuccessful(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
-            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
-                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
-                .WithTentacleVersion(tentacleConfigurationTestCase.Version)
+            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()

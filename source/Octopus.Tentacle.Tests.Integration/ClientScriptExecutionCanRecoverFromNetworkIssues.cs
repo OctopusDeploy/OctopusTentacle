@@ -27,8 +27,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations]
         public async Task WhenANetworkFailureOccurs_DuringStartScript_TheClientIsAbleToSuccessfullyCompleteTheScript(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
-            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
-                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
+            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithPortForwarder()
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .CountCallsToScriptServiceV2(out var scriptServiceV2CallCounts)
@@ -73,8 +72,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations]
         public async Task WhenANetworkFailureOccurs_DuringGetStatus_TheClientIsAbleToSuccessfullyCompleteTheScript(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
-            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
-                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
+            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
@@ -126,8 +124,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             bool completeScriptWasCalled = false;
             PortForwarder? portForwarder = null;
-            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
-                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
+            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithPortForwarderDataLogging()
                 .WithServiceEndpointModifier(serviceEndpoint =>
                 {
@@ -175,8 +172,7 @@ namespace Octopus.Tentacle.Tests.Integration
             using var tmp = new TemporaryDirectory();
             var scriptIsRunningFlag = Path.Combine(tmp.DirectoryPath, "scriptisrunning");
 
-            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
-                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
+            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
@@ -244,8 +240,7 @@ namespace Octopus.Tentacle.Tests.Integration
             IClientScriptServiceV2? scriptServiceV2 = null;
             IAsyncClientScriptServiceV2? asyncScriptServiceV2 = null;
 
-            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
-                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
+            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()

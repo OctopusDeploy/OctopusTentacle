@@ -21,14 +21,10 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(testCapabilitiesServiceInterestingVersions: true)]
         public async Task CapabilitiesFromAnOlderTentacleWhichHasNoCapabilitiesService_WorksWithTheBackwardsCompatabilityDecorator(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
-            TentacleType tentacleType = tentacleConfigurationTestCase.TentacleType;
             SyncOrAsyncHalibut syncOrAsyncHalibut = tentacleConfigurationTestCase.SyncOrAsyncHalibut;
             Version? version = tentacleConfigurationTestCase.Version;
             
-            await using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleType)
-                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
-                .WithTentacleVersion(version)
-                .Build(CancellationToken);
+            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateLegacyBuilder().Build(CancellationToken);
 
             var capabilities = await syncOrAsyncHalibut
                 .WhenSync(() => clientAndTentacle.TentacleClient.CapabilitiesServiceV2.SyncService.GetCapabilities().SupportedCapabilities)
@@ -55,10 +51,8 @@ namespace Octopus.Tentacle.Tests.Integration
             var capabilitiesResponses = new List<CapabilitiesResponseV2>();
             var resumePortForwarder = false;
 
-            await using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
-                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
+            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithPortForwarder(out var portForwarder)
-                .WithTentacleVersion(tentacleConfigurationTestCase.Version)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .DecorateCapabilitiesServiceV2With(d => d
                         .AfterGetCapabilities(async (response) =>

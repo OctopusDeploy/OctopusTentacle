@@ -23,8 +23,7 @@ namespace Octopus.Tentacle.Tests.Integration
             // Arrange
             var tentacleClientObserver = new BrokenTentacleClientObserver(errorOnExecuteScriptCompleted: true);
 
-            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
-                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
+            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .LogAllCalls()
@@ -51,8 +50,7 @@ namespace Octopus.Tentacle.Tests.Integration
             // Arrange
             var tentacleClientObserver = new BrokenTentacleClientObserver(errorOnRpcCallCompleted: true);
 
-            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
-                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
+            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .LogAllCalls()
@@ -79,8 +77,7 @@ namespace Octopus.Tentacle.Tests.Integration
             // Arrange
             var tentacleClientObserver = new BrokenTentacleClientObserver(errorOnUploadFileCompleted: true);
 
-            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
-                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
+            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .Build(CancellationToken);
 
@@ -97,8 +94,7 @@ namespace Octopus.Tentacle.Tests.Integration
             // Arrange
             var tentacleClientObserver = new BrokenTentacleClientObserver(errorOnDownloadFileCompleted: true);
 
-            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleConfigurationTestCase.TentacleType)
-                .WithAsyncHalibutFeature(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature())
+            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .Build(CancellationToken);
 

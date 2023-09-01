@@ -1,6 +1,8 @@
 using System;
 using System.Text;
+using System.Threading.Tasks;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Tests.Integration.Support.Legacy;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
@@ -34,6 +36,20 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             RpcCallStage = rpcCallStage;
             ScriptIsolationLevel = scriptIsolationLevel;
             ScriptsInParallelTestCase = scriptsInParallelTestCase;
+        }
+        
+        internal ClientAndTentacleBuilder CreateBuilder()
+        {
+            return new ClientAndTentacleBuilder(TentacleType)
+                .WithAsyncHalibutFeature(SyncOrAsyncHalibut.ToAsyncHalibutFeature())
+                .WithTentacleVersion(Version);
+        }
+
+        internal LegacyClientAndTentacleBuilder CreateLegacyBuilder()
+        {
+            return new LegacyClientAndTentacleBuilder(TentacleType)
+                .WithAsyncHalibutFeature(SyncOrAsyncHalibut.ToAsyncHalibutFeature())
+                .WithTentacleVersion(Version);
         }
 
         public override string ToString()

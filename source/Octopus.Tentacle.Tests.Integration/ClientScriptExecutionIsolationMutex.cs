@@ -25,9 +25,7 @@ namespace Octopus.Tentacle.Tests.Integration
             Version? tentacleVersion = tentacleConfigurationTestCase.Version;
             ScriptIsolationLevel levelOfSecondScript = tentacleConfigurationTestCase.ScriptIsolationLevel!.Value;
             
-            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
-                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
-                .WithTentacleVersion(tentacleVersion)
+            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .CountCallsToScriptServiceV2(out var scriptServiceV2CallCounts)
                     .CountCallsToScriptService(out var scriptServiceCallCounts)
@@ -91,10 +89,7 @@ namespace Octopus.Tentacle.Tests.Integration
             Version? tentacleVersion = tentacleConfigurationTestCase.Version;
             ScriptsInParallelTestCase scriptsInParallelTestCases = tentacleConfigurationTestCase.ScriptsInParallelTestCase!;
             
-            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
-                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
-                .WithTentacleVersion(tentacleVersion)
-                .Build(CancellationToken);
+            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder().Build(CancellationToken);
 
             var firstScriptStartFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "firstScriptStartFile");
             var firstScriptWaitFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "firstScriptWaitFile");
