@@ -25,12 +25,10 @@ namespace Octopus.Tentacle.Tests.Integration
     public class ClientScriptExecutionRetriesTimeout : IntegrationTest
     {
         [Test]
-        [TentacleConfigurations(testRpcCallStages: true)]
-        public async Task WhenRpcRetriesTimeOut_DuringGetCapabilities_TheRpcCallIsCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase)
+        [TentacleConfigurations(additionalParameterTypes: new object[] {typeof(RpcCallStage)})]
+        public async Task WhenRpcRetriesTimeOut_DuringGetCapabilities_TheRpcCallIsCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase, RpcCallStage rpcCallStage)
         {
-            TentacleType tentacleType = tentacleConfigurationTestCase.TentacleType;
             SyncOrAsyncHalibut syncOrAsyncHalibut = tentacleConfigurationTestCase.SyncOrAsyncHalibut;
-            RpcCallStage rpcCallStage = tentacleConfigurationTestCase.RpcCallStage!.Value;
                 
             IClientScriptServiceV2? scriptServiceV2 = null;
             IAsyncClientScriptServiceV2? asyncScriptServiceV2 = null;
@@ -104,13 +102,9 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TentacleConfigurations(testRpcCallStages: true)]
-        public async Task WhenRpcRetriesTimeOut_DuringStartScript_TheRpcCallIsCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase)
+        [TentacleConfigurations(additionalParameterTypes: new object[] { typeof(RpcCallStage)})]
+        public async Task WhenRpcRetriesTimeOut_DuringStartScript_TheRpcCallIsCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase, RpcCallStage rpcCallStage)
         {
-            TentacleType tentacleType = tentacleConfigurationTestCase.TentacleType;
-            SyncOrAsyncHalibut syncOrAsyncHalibut = tentacleConfigurationTestCase.SyncOrAsyncHalibut;
-            RpcCallStage rpcCallStage = tentacleConfigurationTestCase.RpcCallStage!.Value;
-                
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 // Set a short retry duration so we cancel fairly quickly
                 .WithRetryDuration(TimeSpan.FromSeconds(15))
@@ -174,12 +168,11 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TentacleConfigurations(testRpcCallStages: true)]
-        public async Task WhenRpcRetriesTimeOut_DuringGetStatus_TheRpcCallIsCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase)
+        [TentacleConfigurations(additionalParameterTypes: new object[] { typeof(RpcCallStage)})]
+        public async Task WhenRpcRetriesTimeOut_DuringGetStatus_TheRpcCallIsCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase, RpcCallStage rpcCallStage)
         {
             TentacleType tentacleType = tentacleConfigurationTestCase.TentacleType;
             SyncOrAsyncHalibut syncOrAsyncHalibut = tentacleConfigurationTestCase.SyncOrAsyncHalibut;
-            RpcCallStage rpcCallStage = tentacleConfigurationTestCase.RpcCallStage!.Value;
                 
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 // Set a short retry duration so we cancel fairly quickly
@@ -246,13 +239,9 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TentacleConfigurations(testRpcCallStages: true)]
-        public async Task WhenRpcRetriesTimeOut_DuringCancelScript_TheRpcCallIsCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase)
+        [TentacleConfigurations(additionalParameterTypes: new object[] {typeof(RpcCallStage)})]
+        public async Task WhenRpcRetriesTimeOut_DuringCancelScript_TheRpcCallIsCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase, RpcCallStage rpcCallStage)
         {
-            TentacleType tentacleType = tentacleConfigurationTestCase.TentacleType;
-            SyncOrAsyncHalibut syncOrAsyncHalibut = tentacleConfigurationTestCase.SyncOrAsyncHalibut;
-            RpcCallStage rpcCallStage = tentacleConfigurationTestCase.RpcCallStage!.Value;
-                
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 // Set a short retry duration so we cancel fairly quickly
                 .WithRetryDuration(TimeSpan.FromSeconds(15))

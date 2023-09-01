@@ -17,14 +17,9 @@ namespace Octopus.Tentacle.Tests.Integration
     public class ClientScriptExecutionIsolationMutex : IntegrationTest
     {
         [Test]
-        [TentacleConfigurations(testScriptIsolationLevel: true)]
-        public async Task ScriptIsolationMutexFull_EnsuresTwoDifferentScriptsDontRunAtTheSameTime(TentacleConfigurationTestCase tentacleConfigurationTestCase)
+        [TentacleConfigurations(testScriptIsolationLevelVersions: true, additionalParameterTypes: new object[] { typeof(ScriptIsolationLevel)})]
+        public async Task ScriptIsolationMutexFull_EnsuresTwoDifferentScriptsDontRunAtTheSameTime(TentacleConfigurationTestCase tentacleConfigurationTestCase, ScriptIsolationLevel scriptIsolationLevel)
         {
-            TentacleType tentacleType = tentacleConfigurationTestCase.TentacleType;
-            SyncOrAsyncHalibut syncOrAsyncHalibut = tentacleConfigurationTestCase.SyncOrAsyncHalibut;
-            Version? tentacleVersion = tentacleConfigurationTestCase.Version;
-            ScriptIsolationLevel levelOfSecondScript = tentacleConfigurationTestCase.ScriptIsolationLevel!.Value;
-            
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .CountCallsToScriptServiceV2(out var scriptServiceV2CallCounts)
@@ -47,7 +42,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var secondStartScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody(new ScriptBuilder().CreateFile(secondScriptStart))
-                .WithIsolation(levelOfSecondScript)
+                .WithIsolation(scriptIsolationLevel)
                 .WithMutexName("mymutex")
                 .Build();
 
@@ -81,14 +76,9 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TentacleConfigurations(testScriptsInParallel: true)]
-        public async Task ScriptIsolationMutexFull_IsOnlyExclusiveWhenFullAndWhenTheMutexNameIsTheSame(TentacleConfigurationTestCase tentacleConfigurationTestCase)
+        [TentacleConfigurations(testScriptIsolationLevelVersions: true, additionalParameterTypes: new object[] {typeof(ScriptsInParallelTestCases)})]
+        public async Task ScriptIsolationMutexFull_IsOnlyExclusiveWhenFullAndWhenTheMutexNameIsTheSame(TentacleConfigurationTestCase tentacleConfigurationTestCase, ScriptsInParallelTestCase scriptsInParallelTestCase)
         {
-            TentacleType tentacleType = tentacleConfigurationTestCase.TentacleType;
-            SyncOrAsyncHalibut syncOrAsyncHalibut = tentacleConfigurationTestCase.SyncOrAsyncHalibut;
-            Version? tentacleVersion = tentacleConfigurationTestCase.Version;
-            ScriptsInParallelTestCase scriptsInParallelTestCases = tentacleConfigurationTestCase.ScriptsInParallelTestCase!;
-            
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder().Build(CancellationToken);
 
             var firstScriptStartFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "firstScriptStartFile");
@@ -100,14 +90,14 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithScriptBody(new ScriptBuilder()
                     .CreateFile(firstScriptStartFile)
                     .WaitForFileToExist(firstScriptWaitFile))
-                .WithIsolation(scriptsInParallelTestCases.LevelOfFirstScript)
-                .WithMutexName(scriptsInParallelTestCases.MutexForFirstScript)
+                .WithIsolation(scriptsInParallelTestCase.LevelOfFirstScript)
+                .WithMutexName(scriptsInParallelTestCase.MutexForFirstScript)
                 .Build();
 
             var secondStartScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody(new ScriptBuilder().CreateFile(secondScriptStart))
-                .WithIsolation(scriptsInParallelTestCases.LevelOfSecondScript)
-                .WithMutexName(scriptsInParallelTestCases.MutexForSecondScript)
+                .WithIsolation(scriptsInParallelTestCase.LevelOfSecondScript)
+                .WithMutexName(scriptsInParallelTestCase.MutexForSecondScript)
                 .Build();
 
             var tentacleClient = clientTentacle.TentacleClient;
@@ -132,6 +122,49 @@ namespace Octopus.Tentacle.Tests.Integration
 
             finalResponseFirstScript.ExitCode.Should().Be(0);
             finalResponseSecondScript.ExitCode.Should().Be(0);
+        }
+
+        public class ScriptsInParallelTestCases : IEnumerable
+        {
+            public IEnumerator GetEnumerator()
+            {
+                // Scripts with the same mutex name can run at the same time if they both has no isolation.
+                yield return ScriptsInParallelTestCase.NoIsolationSameMutex;
+                // Scripts with different mutex names can run at the same time.
+                yield return ScriptsInParallelTestCase.FullIsolationDifferentMutex;
+            }
+        }
+
+        public class ScriptsInParallelTestCase
+        {
+            public static ScriptsInParallelTestCase NoIsolationSameMutex => new(ScriptIsolationLevel.NoIsolation, "sameMutex", ScriptIsolationLevel.NoIsolation, "sameMutex", nameof(NoIsolationSameMutex));
+            public static ScriptsInParallelTestCase FullIsolationDifferentMutex => new(ScriptIsolationLevel.FullIsolation, "mutex", ScriptIsolationLevel.FullIsolation, "differentMutex", nameof(FullIsolationDifferentMutex));
+
+            public readonly ScriptIsolationLevel LevelOfFirstScript;
+            public readonly string MutexForFirstScript;
+            public readonly ScriptIsolationLevel LevelOfSecondScript;
+            public readonly string MutexForSecondScript;
+
+            private readonly string stringValue;
+
+            private ScriptsInParallelTestCase(
+                ScriptIsolationLevel levelOfFirstScript,
+                string mutexForFirstScript,
+                ScriptIsolationLevel levelOfSecondScript,
+                string mutexForSecondScript,
+                string stringValue)
+            {
+                LevelOfFirstScript = levelOfFirstScript;
+                MutexForFirstScript = mutexForFirstScript;
+                LevelOfSecondScript = levelOfSecondScript;
+                MutexForSecondScript = mutexForSecondScript;
+                this.stringValue = stringValue;
+            }
+
+            public override string ToString()
+            {
+                return stringValue;
+            }
         }
     }
 }

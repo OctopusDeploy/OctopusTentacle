@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
@@ -22,8 +23,8 @@ namespace Octopus.Tentacle.Tests.Integration
     public class ClientFileTransferRetriesTimeout : IntegrationTest
     {
         [Test]
-        [TentacleConfigurations(testStopPortForwarderAfterFirstCall: true)]
-        public async Task WhenRpcRetriesTimeOut_DuringUploadFile_TheRpcCallIsCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase)
+        [TentacleConfigurations(additionalParameterTypes: new object[] { typeof(BooleanValues)})]
+        public async Task WhenRpcRetriesTimeOut_DuringUploadFile_TheRpcCallIsCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase, bool stopPortForwarderAfterFirstCall)
         {
             PortForwarder portForwarder = null!;
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
@@ -47,7 +48,7 @@ namespace Octopus.Tentacle.Tests.Integration
                             }
                             else
                             {
-                                if (tentacleConfigurationTestCase.StopPortForwarderAfterFirstCall!.Value)
+                                if (stopPortForwarderAfterFirstCall)
                                 {
                                     // Kill the port forwarder so the next requests are in the connecting state when retries timeout
                                     Logger.Information("Killing PortForwarder");
@@ -86,8 +87,8 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TentacleConfigurations(testStopPortForwarderAfterFirstCall: true)]
-        public async Task WhenRpcRetriesTimeOut_DuringDownloadFile_TheRpcCallIsCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase)
+        [TentacleConfigurations(additionalParameterTypes: new object[] { typeof(BooleanValues)})]
+        public async Task WhenRpcRetriesTimeOut_DuringDownloadFile_TheRpcCallIsCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase, bool stopPortForwarderAfterFirstCall)
         {
             PortForwarder portForwarder = null!;
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
@@ -111,7 +112,7 @@ namespace Octopus.Tentacle.Tests.Integration
                             }
                             else
                             {
-                                if (tentacleConfigurationTestCase.StopPortForwarderAfterFirstCall!.Value)
+                                if (stopPortForwarderAfterFirstCall)
                                 {
                                     // Kill the port forwarder so the next requests are in the connecting state when retries timeout
                                     Logger.Information("Killing PortForwarder");
@@ -146,6 +147,15 @@ namespace Octopus.Tentacle.Tests.Integration
 
             // Ensure we actually waited and retried until the timeout policy kicked in
             duration.Elapsed.Should().BeGreaterOrEqualTo(TimeSpan.FromSeconds(14));
+        }
+
+        private class BooleanValues : IEnumerable
+        {
+            public IEnumerator GetEnumerator()
+            {
+                yield return true;
+                yield return false;
+            }
         }
     }
 }
