@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Halibut;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Client;
 using NUnit.Framework;
 using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Client.Retries;
@@ -309,16 +310,20 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [SyncAndAsyncTestCase(TentacleType.Polling, RpcCallStage.Connecting, RpcCall.FirstCall, ExpectedFlow.CancelRpcThenCancelScriptThenCompleteScript)]
-        [SyncAndAsyncTestCase(TentacleType.Listening, RpcCallStage.Connecting, RpcCall.FirstCall, ExpectedFlow.CancelRpcThenCancelScriptThenCompleteScript)]
-        [SyncAndAsyncTestCase(TentacleType.Polling, RpcCallStage.Connecting, RpcCall.RetryingCall, ExpectedFlow.CancelRpcThenCancelScriptThenCompleteScript)]
-        [SyncAndAsyncTestCase(TentacleType.Listening, RpcCallStage.Connecting, RpcCall.RetryingCall, ExpectedFlow.CancelRpcThenCancelScriptThenCompleteScript)]
-        [SyncAndAsyncTestCase(TentacleType.Polling, RpcCallStage.InFlight, RpcCall.FirstCall, ExpectedFlow.AbandonRpcThenCancelScriptThenCompleteScript)]
-        [SyncAndAsyncTestCase(TentacleType.Listening, RpcCallStage.InFlight, RpcCall.FirstCall, ExpectedFlow.AbandonRpcThenCancelScriptThenCompleteScript)]
-        [SyncAndAsyncTestCase(TentacleType.Polling, RpcCallStage.InFlight, RpcCall.RetryingCall, ExpectedFlow.AbandonRpcThenCancelScriptThenCompleteScript)]
-        [SyncAndAsyncTestCase(TentacleType.Listening, RpcCallStage.InFlight, RpcCall.RetryingCall, ExpectedFlow.AbandonRpcThenCancelScriptThenCompleteScript)]
-        public async Task DuringGetStatus_ScriptExecutionCanBeCancelled(TentacleType tentacleType, RpcCallStage rpcCallStage, RpcCall rpcCall, ExpectedFlow expectedFlow, SyncOrAsyncHalibut syncOrAsyncHalibut)
+        [TentacleConfigurations(testRpcCallStages: true, testRpcCalls: true)]
+        public async Task DuringGetStatus_ScriptExecutionCanBeCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
+            TentacleType tentacleType = tentacleConfigurationTestCase.TentacleType;
+            SyncOrAsyncHalibut syncOrAsyncHalibut = tentacleConfigurationTestCase.SyncOrAsyncHalibut;
+            RpcCallStage rpcCallStage = tentacleConfigurationTestCase.RpcCallStage!.Value;
+            RpcCall rpcCall = tentacleConfigurationTestCase.RpcCall!.Value;
+            ExpectedFlow expectedFlow = rpcCallStage switch
+            {
+                RpcCallStage.Connecting => ExpectedFlow.CancelRpcThenCancelScriptThenCompleteScript,
+                RpcCallStage.InFlight => ExpectedFlow.AbandonRpcThenCancelScriptThenCompleteScript,
+                _ => throw new ArgumentOutOfRangeException()
+            };
+                
             // ARRANGE
             var rpcCallHasStarted = new Reference<bool>(false);
             TimeSpan? lastCallDuration = null;
@@ -449,12 +454,13 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [SyncAndAsyncTestCase(TentacleType.Polling, RpcCallStage.Connecting)]
-        [SyncAndAsyncTestCase(TentacleType.Listening, RpcCallStage.Connecting)]
-        [SyncAndAsyncTestCase(TentacleType.Polling, RpcCallStage.InFlight)]
-        [SyncAndAsyncTestCase(TentacleType.Listening, RpcCallStage.InFlight)]
-        public async Task DuringCompleteScript_ScriptExecutionCanBeCancelled(TentacleType tentacleType, RpcCallStage rpcCallStage, SyncOrAsyncHalibut syncOrAsyncHalibut)
+        [TentacleConfigurations(testRpcCallStages: true)]
+        public async Task DuringCompleteScript_ScriptExecutionCanBeCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
+            TentacleType tentacleType = tentacleConfigurationTestCase.TentacleType;
+            SyncOrAsyncHalibut syncOrAsyncHalibut = tentacleConfigurationTestCase.SyncOrAsyncHalibut;
+            RpcCallStage rpcCallStage = tentacleConfigurationTestCase.RpcCallStage!.Value;
+            
             // ARRANGE
             var rpcCallHasStarted = new Reference<bool>(false);
             var hasPausedOrStoppedPortForwarder = false;
