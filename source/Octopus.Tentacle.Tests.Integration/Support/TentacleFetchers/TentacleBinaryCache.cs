@@ -72,7 +72,13 @@ namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
         {
             // If default, find actual runtime and use that string value
             // If non-default, use what was passed in
-            return null;
+            return runtime switch
+            {
+                TentacleRuntime.Default => RuntimeDetection.GetCurrentRuntime(),
+                TentacleRuntime.DotNet6 => TentacleRuntime.DotNet6.GetStringValue(),
+                TentacleRuntime.Framework48 => TentacleRuntime.Framework48.GetStringValue(),
+                _ => throw new ArgumentOutOfRangeException(nameof(runtime), runtime, null)
+            };
         }
 
         private static void AddTentacleIntoCache(DirectoryInfo? parentDir, string tentacleVersionCacheDir)

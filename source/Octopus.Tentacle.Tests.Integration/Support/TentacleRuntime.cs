@@ -1,16 +1,18 @@
 ﻿using System;
 using System.Linq;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
     public enum TentacleRuntime
     {
+        [StringValue("Default")]
         Default,
         
-        [StringValue("net6.0")]
+        [StringValue(RuntimeDetection.DotNet6)]
         DotNet6,
         
-        [StringValue("net48")]
+        [StringValue(RuntimeDetection.Framework48)]
         Framework48
     }
 
