@@ -30,6 +30,7 @@ namespace Octopus.Tentacle.Tests.Integration
             IAsyncClientScriptServiceV2? asyncScriptServiceV2 = null;
 
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+                .WithRetriesDisabled()
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithRetryDuration(TimeSpan.FromMinutes(4))

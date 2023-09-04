@@ -12,12 +12,13 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public TentacleConfigurationsAttribute(
             bool testCommonVersions = false,
             bool testCapabilitiesServiceInterestingVersions = false,
+            bool testNoCapabilitiesServiceVersions = false,
             bool testScriptIsolationLevelVersions = false,
             params object[] additionalParameterTypes)
             : base(
                 typeof(TentacleConfigurationTestCases),
                 nameof(TentacleConfigurationTestCases.GetEnumerator),
-                new object[] {testCommonVersions, testCapabilitiesServiceInterestingVersions, testScriptIsolationLevelVersions, additionalParameterTypes})
+                new object[] {testCommonVersions, testCapabilitiesServiceInterestingVersions, testNoCapabilitiesServiceVersions, testScriptIsolationLevelVersions, additionalParameterTypes})
         {
         }
     }
@@ -27,17 +28,19 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public static IEnumerator GetEnumerator(
             bool testCommonVersions,
             bool testCapabilitiesInterestingVersions,
+            bool testNoCapabilitiesServiceVersions,
             bool testScriptIsolationLevel,
             object[] additionalParameterTypes)
         {
             var tentacleTypes = new[] {TentacleType.Listening, TentacleType.Polling};
             var halibutTypes = new[] {SyncOrAsyncHalibut.Sync, SyncOrAsyncHalibut.Async};
-            List<Version?> versions = new List<Version?> {TentacleVersions.Current};
+            List<Version?> versions = new();
 
             if (testCommonVersions)
             {
                 versions.AddRange(new[]
                 {
+                    TentacleVersions.Current,
                     TentacleVersions.v5_0_15_LastOfVersion5,
                     TentacleVersions.v6_3_417_LastWithScriptServiceV1Only,
                     TentacleVersions.v7_0_1_ScriptServiceV2Added
@@ -48,6 +51,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             {
                 versions.AddRange(new[]
                 {
+                    TentacleVersions.Current,
                     TentacleVersions.v5_0_4_FirstLinuxRelease,
                     TentacleVersions.v5_0_12_AutofacServiceFactoryIsInShared,
                     TentacleVersions.v6_3_417_LastWithScriptServiceV1Only, // the autofac service is in tentacle, but tentacle does not have the capabilities service.
@@ -59,8 +63,17 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             {
                 versions.AddRange(new[]
                 {
+                    TentacleVersions.Current,
                     TentacleVersions.v6_3_417_LastWithScriptServiceV1Only,
                     TentacleVersions.v7_0_1_ScriptServiceV2Added // Testing against v1 and v2 script services
+                });
+            }
+
+            if (testNoCapabilitiesServiceVersions)
+            {
+                versions.AddRange(new []
+                {
+                    TentacleVersions.v6_3_451_NoCapabilitiesService
                 });
             }
 
