@@ -11,6 +11,7 @@
     <RuntimeIdentifiers>win</RuntimeIdentifiers>
     <TargetFrameworks>net48</TargetFrameworks>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">

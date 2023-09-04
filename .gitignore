@@ -51,3 +51,4 @@ _artifacts
 _build
 
 .DS_Store
+.env
