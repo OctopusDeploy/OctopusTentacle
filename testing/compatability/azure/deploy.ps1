@@ -8,7 +8,7 @@ $env:octopusServerUrl = $octopusServerUrl
 $env:octopusServerApiKey = $octopusServerApiKey
 $env:adminPassword = $adminPassword
 
-$env:octopusServerRole = 'OsTestingListening'
+$env:octopusServerRole = 'OsTestingTentacle'
 $env:octopusServerEnvironment = 'OsTesting'
 $env:tentacleVersion = '7.0.201'
 
