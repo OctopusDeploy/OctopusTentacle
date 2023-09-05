@@ -1,5 +1,6 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
+  <?define TargetFramework = "{TargetFramework}" ?>
   <?if $(var.Platform) = x64 ?>
   <?define PlatformProgramFilesFolder = "ProgramFiles64Folder" ?>
   <?define Win64 = "yes" ?>
@@ -13,7 +14,7 @@
     - Product/Version      : Change this every major build
     - Product/UpgradeCode  : Never change this
   -->
-  <Product Id="*" Name="Octopus Deploy Tentacle" Language="1033" Version="7.0.33" Manufacturer="Octopus Deploy Pty. Ltd." UpgradeCode="1B32E04F-49C2-4907-8879-A556986F7F16">
+  <Product Id="*" Name="Octopus Deploy Tentacle" Language="1033" Version="7.0.178" Manufacturer="Octopus Deploy Pty. Ltd." UpgradeCode="1B32E04F-49C2-4907-8879-A556986F7F16">
     <Package InstallerVersion="200" Compressed="yes" Description="Octopus Deploy Tentacle" Platform="$(var.Platform)" InstallScope="perMachine" />
     <Media Id="1" Cabinet="Files.cab" EmbedCab="yes" />
     <Property Id="MSIFASTINSTALL" Value="3" />
@@ -42,16 +43,15 @@
     Ensure that they're not trying to run the 32-bit installer on a 64-bit Operating System.
     -->
     <?if $(var.Platform) = x86 ?>
-    <Condition Message="This installer is only supported on 64-bit operating systems. Please download and run the 64-bit installer."><![CDATA[Not VersionNT64]]></Condition>
+    <Condition Message="This installer is not supported on 64-bit operating systems. Please download and run the 64-bit installer."><![CDATA[Not VersionNT64]]></Condition>
     <?endif ?>
     <!--
     Ensure that the .NET Framework has been installed
     -->
-    <PropertyRef Id='WIXNETFX4RELEASEINSTALLED'/>
-    <Condition Message="This application requires Microsoft .NET Framework 4.8 Runtime in order to run. Please install the .NET Framework and then run this installer again.">
-      <![CDATA[Installed OR (WIXNETFX4RELEASEINSTALLED >= "#528040")]]>
-    </Condition>
-  
+    <?if $(var.TargetFramework) = NetFramework ?>
+    <PropertyRef Id="WIXNETFX4RELEASEINSTALLED" />
+    <Condition Message="This application requires Microsoft .NET Framework 4.8 Runtime in order to run. Please install the .NET Framework and then run this installer again."><![CDATA[Installed OR (WIXNETFX4RELEASEINSTALLED >= "#528040")]]></Condition>
+    <?endif ?>
     <!--
     User Interface
     -->
@@ -64,7 +64,12 @@
     <WixVariable Id="WixUIExclamationIco" Value="..\Resources\Warning.ico" />
     <WixVariable Id="WixUIInfoIco" Value="..\Resources\Information.ico" />
     <UI>
-      <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchApplication">NOT Installed</Publish>
+      <?if $(var.TargetFramework) = NetFramework ?>
+      <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchTentacleManager">NOT Installed</Publish>
+      <?endif ?>
+      <?if $(var.TargetFramework) = NetCore ?>
+      <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchTentacle">NOT Installed</Publish>
+      <?endif ?>
     </UI>
     <!-- Windows service -->
     <DirectoryRef Id="TARGETDIR">
@@ -92,7 +97,12 @@
     -->
     <DirectoryRef Id="ApplicationProgramsFolder">
       <Component Id="ApplicationShortcut" Guid="C54C6569-E8E6-4137-B32C-B3EFCD3D52B4">
+        <?if $(var.TargetFramework) = NetFramework ?>
         <Shortcut Id="ToolsStartMenuShortcut" Name="Octopus Tentacle Manager" Description="Configure the Octopus Deploy Tentacle agent" Target="[#Octopus.Manager.Tentacle.exe]" Arguments="tentacle" WorkingDirectory="INSTALLLOCATION" />
+        <?endif ?>
+        <?if $(var.TargetFramework) = NetCore ?>
+        <Shortcut Id="TentacleStartMenuShortcut" Name="Octopus Tentacle" Description="Run the Octopus Deploy Tentacle agent" Target="[SystemFolder]CMD.exe" Arguments="/K Tentacle.exe --help" WorkingDirectory="INSTALLLOCATION" />
+        <?endif ?>
         <RegistryValue Root="HKCU" Key="Software\Octopus\Tentacle" Name="installed" Type="integer" Value="1" KeyPath="yes" />
         <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
       </Component>
@@ -110,7 +120,10 @@
     <!--
     Launch tools after installer finishes
     -->
-    <CustomAction Id="LaunchApplication" FileKey="Octopus.Manager.Tentacle.exe" ExeCommand="tentacle --reconfigure" Execute="immediate" Impersonate="yes" Return="asyncNoWait" />
+    <?if $(var.TargetFramework) = NetFramework ?>
+    <CustomAction Id="LaunchTentacleManager" FileKey="Octopus.Manager.Tentacle.exe" ExeCommand="tentacle --reconfigure" Execute="immediate" Impersonate="yes" Return="asyncNoWait" />
+    <?endif ?>
+    <CustomAction Id="LaunchTentacle" Directory="INSTALLLOCATION" ExeCommand="cmd.exe /K Tentacle.exe --help" Execute="immediate" Impersonate="yes" Return="asyncNoWait" />
     <Feature Id="ProductFeature" Title="Octopus Tentacle" Level="1">
       <ComponentRef Id="RegistryEntries" />
       <ComponentRef Id="ApplicationShortcut" />

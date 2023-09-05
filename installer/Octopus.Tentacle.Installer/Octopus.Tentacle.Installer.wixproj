@@ -3,12 +3,12 @@
   <PropertyGroup>
     <WixToolPath>{WixToolPath}</WixToolPath>
     <WixTargetsPath>{WixTargetsPath}</WixTargetsPath>
-    <WixTasksPath>{WixTasksPath}</WixTasksPath>
+    <WixTasksPath>{WixTasksPath}</WixTasksPath>    
     <SuppressAclReset>True</SuppressAclReset>
   </PropertyGroup>
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>    
     <ProductVersion>3.5</ProductVersion>
     <ProjectGuid>{0abc6ae6-e695-4909-a345-20138c38f771}</ProjectGuid>
     <SchemaVersion>2.0</SchemaVersion>

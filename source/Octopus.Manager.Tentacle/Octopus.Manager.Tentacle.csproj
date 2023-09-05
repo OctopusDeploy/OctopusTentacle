@@ -10,6 +10,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <UseWPF>true</UseWPF>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>   
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Properties\Icon.ico</ApplicationIcon>
