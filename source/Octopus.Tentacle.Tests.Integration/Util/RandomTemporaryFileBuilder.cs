@@ -45,7 +45,9 @@ namespace Octopus.Tentacle.Tests.Integration.Util
                 }
                 catch
                 {
-                    // We really don't care
+                    // We sometimes have tests failing due to this file being locked during teardown.
+                    // As this is class purely for testing, and we regularly recycle our build agents,
+                    // we are happy with a 'best effort' approach here.
                 }
             }
         }
