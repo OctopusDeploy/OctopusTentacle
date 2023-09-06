@@ -149,7 +149,7 @@ partial class Build
         {
             ThenTentacleShouldHaveBeenInstalled(destination);
             ThenTentacleShouldBeRunnable(destination);
-            ThenBuildInUserShouldNotHaveWritePermissions(destination);
+            ThenBuiltInUserShouldNotHaveWritePermissions(destination);
         }
         finally
         {
@@ -165,7 +165,7 @@ partial class Build
         {
             throw new Exception($"Tentacle was not installed at {expectedTentacleExe}");
         }
-        Log.Information($"Tentacle was Installed at {expectedTentacleExe}");
+        Log.Information($"Tentacle was successfully installed at {expectedTentacleExe}");
     }
 
     void ThenTentacleShouldBeRunnable(string destination)
@@ -206,7 +206,7 @@ partial class Build
         Log.Information($"Tentacle successfully ran using '{tentacleProcess.StartInfo.Arguments}' argument");
     }
 
-    void ThenBuildInUserShouldNotHaveWritePermissions(string destination)
+    void ThenBuiltInUserShouldNotHaveWritePermissions(string destination)
     {
         var builtInUsersHaveWriteAccess = DoesSidHaveRightsToDirectory(destination, WellKnownSidType.BuiltinUsersSid, FileSystemRights.AppendData, FileSystemRights.CreateFiles);
         if (builtInUsersHaveWriteAccess)
