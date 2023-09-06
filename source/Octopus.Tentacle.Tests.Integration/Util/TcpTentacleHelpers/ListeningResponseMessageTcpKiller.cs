@@ -43,7 +43,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
                 var size = dataFromTentacle.Length;
                 // It seems messages around 45 and below are control messages
                 // So anything bigger must be the interesting one.
-                if (pauseConnection && size > 45)
+                if (pauseConnection && size > 85)
                 {
                     pauseConnection = false;
                     logger.Information("Pause connection");
@@ -51,7 +51,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
                     pauseConnectionCallBack?.Invoke();
                 }
 
-                if (killConnection && size > 45)
+                if (killConnection && size > 85)
                 {
                     killConnection = false;
                     logger.Information("Killing connection");
