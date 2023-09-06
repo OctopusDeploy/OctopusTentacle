@@ -158,6 +158,7 @@ partial class Build
             {
                 var installerDirectory = BuildDirectory / "Installer";
                 FileSystemTasks.EnsureExistingDirectory(installerDirectory);
+                FileSystemTasks.EnsureCleanDirectory(installerDirectory);
                 
                 if (framework != NetCore)
                 {
