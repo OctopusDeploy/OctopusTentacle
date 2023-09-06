@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Octopus.Tentacle.Tests.Integration.Util
 {
@@ -38,7 +39,14 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         {
             if (File.Exists)
             {
-                File.Delete();
+                try
+                {
+                    _ = Task.Run(() => File.Delete());
+                }
+                catch
+                {
+                    // We really don't care
+                }
             }
         }
     }
