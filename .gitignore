@@ -49,6 +49,7 @@ tools
 
 _artifacts
 _build
+_test
 
 .DS_Store
 .env
