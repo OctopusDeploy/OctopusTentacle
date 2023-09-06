@@ -1,6 +1,7 @@
 ﻿// ReSharper disable RedundantUsingDirective
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.AccessControl;
@@ -111,76 +112,10 @@ partial class Build
 
     [PublicAPI]
     //todo: move this out of the build script to a proper test project ("smoke tests"?)
-    Target TestWindowsInstallerPermissions => _ => _
+    Target TestWindowsInstallers => _ => _
         .Executes(() =>
         {
-            string GetTestName(AbsolutePath installerPath) => Path.GetFileName(installerPath).Replace(".msi", "");
-            
-            void TestInstallerPermissions(AbsolutePath installerPath)
-            {
-                var destination = TestDirectory / "install" / GetTestName(installerPath);
-                FileSystemTasks.EnsureExistingDirectory(destination);
-
-                InstallMsi(installerPath, destination);
-
-                try
-                {
-                    var builtInUsersHaveWriteAccess = DoesSidHaveRightsToDirectory(destination, WellKnownSidType.BuiltinUsersSid, FileSystemRights.AppendData, FileSystemRights.CreateFiles);
-                    if (builtInUsersHaveWriteAccess)
-                    {
-                        throw new Exception($"The installation destination {destination} has write permissions for the user BUILTIN\\Users. Expected write permissions to be removed by the installer.");
-                    }
-                }
-                finally
-                {
-                    UninstallMsi(installerPath);
-                }
-                
-                Log.Information($"BUILTIN\\Users do not have write access to {destination}. Hooray!");
-            }
-
-            void InstallMsi(AbsolutePath installerPath, AbsolutePath destination)
-            {
-                var installLogName = Path.Combine(TestDirectory, $"{GetTestName(installerPath)}.install.log");
-
-                Log.Information($"Installing {installerPath} to {destination}");
-
-                var arguments = $"/i {installerPath} /QN INSTALLLOCATION={destination} /L*V {installLogName}";
-                Log.Information($"Running msiexec {arguments}");
-                var installationProcess = ProcessTasks.StartProcess("msiexec", arguments);
-                installationProcess.WaitForExit();
-                FileSystemTasks.CopyFileToDirectory(installLogName, ArtifactsDirectory);
-                if (installationProcess.ExitCode != 0) {
-                    throw new Exception($"The installation process exited with a non-zero exit code ({installationProcess.ExitCode}). Check the log {installLogName} for details.");
-                }
-            }
-            
-            void UninstallMsi(AbsolutePath installerPath)
-            {
-                Log.Information($"Uninstalling {installerPath}");
-                var uninstallLogName = Path.Combine(TestDirectory, $"{GetTestName(installerPath)}.uninstall.log");
-
-                var arguments = $"/x {installerPath} /QN /L*V {uninstallLogName}";
-                Log.Information($"Running msiexec {arguments}");
-                var uninstallProcess = ProcessTasks.StartProcess("msiexec", arguments);
-                uninstallProcess.WaitForExit();
-                FileSystemTasks.CopyFileToDirectory(uninstallLogName, ArtifactsDirectory);
-            }
-            
-            bool DoesSidHaveRightsToDirectory(string directory, WellKnownSidType sid, params FileSystemRights[] rights)
-            {
-                var destinationInfo = new DirectoryInfo(directory);
-                var acl = destinationInfo.GetAccessControl();
-                var identifier = new SecurityIdentifier(sid, null);
-                return acl
-                    .GetAccessRules(true, true, typeof(SecurityIdentifier))
-                    .Cast<FileSystemAccessRule>()
-                    .Where(r => r.IdentityReference.Value == identifier.Value)
-                    .Where(r => r.AccessControlType == AccessControlType.Allow)
-                    .Any(r => rights.Any(right => r.FileSystemRights.HasFlag(right)));
-            }
-
-            Logging.InTest(nameof(TestWindowsInstallerPermissions), () =>
+            Logging.InTest(nameof(TestWindowsInstaller), () =>
             {
                 FileSystemTasks.EnsureExistingDirectory(TestDirectory);
                 FileSystemTasks.EnsureCleanDirectory(TestDirectory);
@@ -194,10 +129,134 @@ partial class Build
             
                 foreach (var installer in installers)
                 {
-                    TestInstallerPermissions(installer);
+                    TestWindowsInstaller(installer);
                 }
             });
         });
+
+    string GetTestName(AbsolutePath installerPath) => Path.GetFileName(installerPath).Replace(".msi", "");
+        
+    void TestWindowsInstaller(AbsolutePath installerPath)
+    {
+        Log.Information($"\n--------------------------------------\nTesting Installer {GetTestName(installerPath)}\n--------------------------------------");        
+
+        var destination = TestDirectory / "install" / GetTestName(installerPath);
+        FileSystemTasks.EnsureExistingDirectory(destination);
+
+        InstallMsi(installerPath, destination);
+
+        try
+        {
+            ThenTentacleShouldHaveBeenInstalled(destination);
+            ThenTentacleShouldBeRunnable(destination);
+            ThenBuildInUserShouldNotHaveWritePermissions(destination);
+        }
+        finally
+        {
+            UninstallMsi(installerPath);
+        }
+    }
+
+    void ThenTentacleShouldHaveBeenInstalled(string destination)
+    {
+        var expectedTentacleExe = Path.Combine(destination, "Tentacle.exe");
+            
+        if (!File.Exists(expectedTentacleExe))
+        {
+            throw new Exception($"Tentacle was not installed at {expectedTentacleExe}");
+        }
+        Log.Information($"Tentacle was Installed at {expectedTentacleExe}");
+    }
+
+    void ThenTentacleShouldBeRunnable(string destination)
+    {
+        var tentacleExe = Path.Combine(destination, "Tentacle.exe");
+        
+        Log.Information("Checking if Tentacle can run successfully...");
+
+        using var tentacleProcess = new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = tentacleExe,
+                Arguments = "help",
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                CreateNoWindow = true
+            }
+        };
+
+        tentacleProcess.Start();
+        var output = new List<string>();
+        while (!tentacleProcess.StandardOutput.EndOfStream)
+        {
+            output.Add(tentacleProcess.StandardOutput.ReadLine() ?? "");
+        }
+
+        if (tentacleProcess.ExitCode != 0)
+        {
+            throw new Exception($"Tentacle exited with exit code {tentacleProcess.ExitCode}");
+        }
+
+        if (!output.Any(o => o.StartsWith("Usage: Tentacle")))
+        {
+            throw new Exception($"Tentacle output does not look like '{tentacleProcess.StartInfo.Arguments}' argument was provided");
+        }
+
+        Log.Information($"Tentacle successfully ran using '{tentacleProcess.StartInfo.Arguments}' argument");
+    }
+
+    void ThenBuildInUserShouldNotHaveWritePermissions(string destination)
+    {
+        var builtInUsersHaveWriteAccess = DoesSidHaveRightsToDirectory(destination, WellKnownSidType.BuiltinUsersSid, FileSystemRights.AppendData, FileSystemRights.CreateFiles);
+        if (builtInUsersHaveWriteAccess)
+        {
+            throw new Exception($"The installation destination {destination} has write permissions for the user BUILTIN\\Users. Expected write permissions to be removed by the installer.");
+        }
+        Log.Information($"BUILTIN\\Users do not have write access to {destination}. Hooray!");
+    }
+
+    void InstallMsi(AbsolutePath installerPath, AbsolutePath destination)
+    {
+        var installLogName = Path.Combine(TestDirectory, $"{GetTestName(installerPath)}.install.log");
+
+        Log.Information($"Installing {installerPath} to {destination}");
+
+        var arguments = $"/i {installerPath} /QN INSTALLLOCATION={destination} /L*V {installLogName}";
+        Log.Information($"Running msiexec {arguments}");
+        var installationProcess = ProcessTasks.StartProcess("msiexec", arguments);
+        installationProcess.WaitForExit();
+
+        FileSystemTasks.CopyFileToDirectory(installLogName, ArtifactsDirectory, FileExistsPolicy.Overwrite);
+        if (installationProcess.ExitCode != 0) {
+            throw new Exception($"The installation process exited with a non-zero exit code ({installationProcess.ExitCode}). Check the log {installLogName} for details.");
+        }
+    }
+    
+    void UninstallMsi(AbsolutePath installerPath)
+    {
+        Log.Information($"Uninstalling {installerPath}");
+        var uninstallLogName = Path.Combine(TestDirectory, $"{GetTestName(installerPath)}.uninstall.log");
+
+        var arguments = $"/x {installerPath} /QN /L*V {uninstallLogName}";
+        Log.Information($"Running msiexec {arguments}");
+        var uninstallProcess = ProcessTasks.StartProcess("msiexec", arguments);
+        uninstallProcess.WaitForExit();
+        FileSystemTasks.CopyFileToDirectory(uninstallLogName, ArtifactsDirectory, FileExistsPolicy.Overwrite);
+    }
+    
+    bool DoesSidHaveRightsToDirectory(string directory, WellKnownSidType sid, params FileSystemRights[] rights)
+    {
+        var destinationInfo = new DirectoryInfo(directory);
+        var acl = destinationInfo.GetAccessControl();
+        var identifier = new SecurityIdentifier(sid, null);
+        return acl
+            .GetAccessRules(true, true, typeof(SecurityIdentifier))
+            .Cast<FileSystemAccessRule>()
+            .Where(r => r.IdentityReference.Value == identifier.Value)
+            .Where(r => r.AccessControlType == AccessControlType.Allow)
+            .Any(r => rights.Any(right => r.FileSystemRights.HasFlag(right)));
+    }
     
     void RunTests(string testFramework, string testRuntime)
     {
