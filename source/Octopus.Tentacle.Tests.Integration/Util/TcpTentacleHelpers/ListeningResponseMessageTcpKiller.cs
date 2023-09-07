@@ -40,10 +40,18 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
         {
             return new DataTransferObserverBuilder().WithWritingDataObserver((tcpPump, dataFromTentacle) =>
             {
-                var size = dataFromTentacle.Length;
-                // It seems messages around 45 and below are control messages
+                // It seems messages around 45 and below are control messages - except for
+                // Windows Server 2012, where the max size seems to be ~85.
                 // So anything bigger must be the interesting one.
-                if (pauseConnection && size > 45)
+                //
+                // We increased this value from 45 -> 85 to account for Windows Server 2012,
+                // and all the integration test builds seem happy with it.
+                // May need to be adjusted in the future to account for different OSs,
+                // runtimes, lunar cycles, and/or any other random heuristic.
+                const int assumedControlMessageMaxSize = 85;
+                
+                var size = dataFromTentacle.Length;
+                if (pauseConnection && size > assumedControlMessageMaxSize)
                 {
                     pauseConnection = false;
                     logger.Information("Pause connection");
@@ -51,7 +59,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
                     pauseConnectionCallBack?.Invoke();
                 }
 
-                if (killConnection && size > 45)
+                if (killConnection && size > assumedControlMessageMaxSize)
                 {
                     killConnection = false;
                     logger.Information("Killing connection");

@@ -41,7 +41,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders
 touch '{file}'
 ");
             windowsScript.AppendLine($@"
-New-Item '{file}'
+New-Item -type file '{file}'
 ");
             return this;
         }
