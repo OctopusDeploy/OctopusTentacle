@@ -40,8 +40,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             
             builder.Append($"{TentacleType},");
             string version = Version?.ToString() ?? "Latest";
-            builder.Append($"{version}");
-            builder.Append($"{SyncOrAsyncHalibut},");
+            builder.Append($"{version},");
+            builder.Append($"{SyncOrAsyncHalibut}");
 
             return builder.ToString();
         }
