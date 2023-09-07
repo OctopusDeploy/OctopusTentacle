@@ -48,7 +48,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         public IEnumerator Build()
         {
-            return CartesianProduct.Of(sequences.ToArray()).GetEnumerator();
+            return BuildEnumerable().GetEnumerator();
+        }
+
+        public IEnumerable BuildEnumerable()
+        {
+            return CartesianProduct.Of(sequences.ToArray());
         }
     }
 }
