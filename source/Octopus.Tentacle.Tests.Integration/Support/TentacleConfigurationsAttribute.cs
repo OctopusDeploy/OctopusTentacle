@@ -2,12 +2,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using NUnit.Framework;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
-    public class TentacleConfigurationsAttribute : TestCaseSourceAttribute
+    public class TentacleConfigurationsAttribute : TentacleTestCaseSourceAttribute
     {
         public TentacleConfigurationsAttribute(
             bool testCommonVersions = false,
