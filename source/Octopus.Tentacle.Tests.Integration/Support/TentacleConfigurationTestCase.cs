@@ -39,10 +39,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             StringBuilder builder = new();
             
             builder.Append($"{TentacleType},");
-            builder.Append($"{SyncOrAsyncHalibut},");
-            
             string version = Version?.ToString() ?? "Latest";
             builder.Append($"{version}");
+            builder.Append($"{SyncOrAsyncHalibut},");
 
             return builder.ToString();
         }
