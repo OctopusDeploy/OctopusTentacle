@@ -15,12 +15,10 @@ namespace Octopus.Tentacle.Tests.Integration
     public class ClientFileTransfersAreNotRetriedWhenRetriesAreDisabled : IntegrationTest
     {
         [Test]
-        [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
-        public async Task FailedUploadsAreNotRetriedAndFail(TentacleType tentacleType, Version? version, SyncOrAsyncHalibut syncOrAsyncHalibut)
+        [TentacleConfigurations(testCommonVersions: true)]
+        public async Task FailedUploadsAreNotRetriedAndFail(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
-            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
-                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
-                .WithTentacleVersion(version)
+            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithRetriesDisabled()
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
@@ -56,12 +54,10 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
-        public async Task FailedDownloadsAreNotRetriedAndFail(TentacleType tentacleType, Version? version, SyncOrAsyncHalibut syncOrAsyncHalibut)
+        [TentacleConfigurations(testCommonVersions: true)]
+        public async Task FailedDownloadsAreNotRetriedAndFail(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
-            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
-                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
-                .WithTentacleVersion(version)
+            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithRetriesDisabled()
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)

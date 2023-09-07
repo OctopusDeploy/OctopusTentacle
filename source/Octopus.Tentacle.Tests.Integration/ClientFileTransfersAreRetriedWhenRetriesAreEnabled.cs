@@ -15,12 +15,10 @@ namespace Octopus.Tentacle.Tests.Integration
     public class ClientFileTransfersAreRetriedWhenRetriesAreEnabled : IntegrationTest
     {
         [Test]
-        [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
-        public async Task FailedUploadsAreRetriedAndIsEventuallySuccessful(TentacleType tentacleType, Version? version, SyncOrAsyncHalibut syncOrAsyncHalibut)
+        [TentacleConfigurations(testCommonVersions: true)]
+        public async Task FailedUploadsAreRetriedAndIsEventuallySuccessful(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
-            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
-                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
-                .WithTentacleVersion(version)
+            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
@@ -53,12 +51,10 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
-        public async Task FailedDownloadsAreRetriedAndIsEventuallySuccessful(TentacleType tentacleType, Version? version, SyncOrAsyncHalibut syncOrAsyncHalibut)
+        [TentacleConfigurations(testCommonVersions: true)]
+        public async Task FailedDownloadsAreRetriedAndIsEventuallySuccessful(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
-            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
-                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
-                .WithTentacleVersion(version)
+            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()

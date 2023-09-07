@@ -15,13 +15,10 @@ namespace Octopus.Tentacle.Tests.Integration
     public class ClientScriptExecutionScriptFilesAreSent : IntegrationTest
     {
         [Test]
-        [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
-        public async Task ScriptFilesAreSent(TentacleType tentacleType, Version? tentacleVersion, SyncOrAsyncHalibut syncOrAsyncHalibut)
+        [TentacleConfigurations(testCommonVersions: true)]
+        public async Task ScriptFilesAreSent(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
-            await using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
-                .WithAsyncHalibutFeature(syncOrAsyncHalibut.ToAsyncHalibutFeature())
-                .WithTentacleVersion(tentacleVersion)
-                .Build(CancellationToken);
+            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder().Build(CancellationToken);
 
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody(new ScriptBuilder().PrintFileContents("foo.txt"))
