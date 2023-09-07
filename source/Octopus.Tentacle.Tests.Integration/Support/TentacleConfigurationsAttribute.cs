@@ -27,7 +27,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     {
         public static IEnumerator GetEnumerator(
             bool testCommonVersions,
-            bool testCapabilitiesInterestingVersions,
+            bool testCapabilitiesVersions,
             bool testNoCapabilitiesServiceVersions,
             bool testScriptIsolationLevel,
             object[] additionalParameterTypes)
@@ -47,7 +47,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 });
             }
 
-            if (testCapabilitiesInterestingVersions)
+            if (testCapabilitiesVersions)
             {
                 versions.AddRange(new[]
                 {
