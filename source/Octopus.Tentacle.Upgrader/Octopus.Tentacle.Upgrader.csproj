@@ -8,17 +8,32 @@
     <OutputType>Exe</OutputType>
     <PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
     <RootNamespace>Octopus.Tentacle.Upgrader</RootNamespace>
-    <RuntimeIdentifiers>win</RuntimeIdentifiers>
-    <TargetFrameworks>net48</TargetFrameworks>
+    <TargetFrameworks>net48;net6.0</TargetFrameworks>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
+
+    <Choose>
+        <When Condition="'$(TargetFramework)'=='net48'">
+            <PropertyGroup>
+                <RuntimeIdentifier>win</RuntimeIdentifier><!-- This is AnyCPU -->
+            </PropertyGroup>
+        </When>
+        <Otherwise>
+            <PropertyGroup>
+                <RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
+                <PublishSingleFile>true</PublishSingleFile>
+                <PublishTrimmed>true</PublishTrimmed>
+                <DebugType>embedded</DebugType>
+            </PropertyGroup>
+        </Otherwise>
+    </Choose>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <Optimize>True</Optimize>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)'=='net48' AND '$(RuntimeIdentifier)'=='win'">
+  <PropertyGroup Condition="('$(TargetFramework)'=='net48' OR '$(TargetFramework)'=='net6.0') AND ('$(RuntimeIdentifier)'=='win' OR '$(RuntimeIdentifier)'=='win-x86' OR '$(RuntimeIdentifier)'=='win-x64')">
     <IsPublishable>true</IsPublishable>
   </PropertyGroup>
 
@@ -35,8 +50,12 @@
 		</Compile>
 	</ItemGroup>
 
-	<ItemGroup>
+	<ItemGroup  Condition="'$(TargetFramework)'=='net48'">
 	  <Reference Include="System.ServiceProcess" />
 	</ItemGroup>
+
+    <ItemGroup  Condition="'$(TargetFramework)'=='net6.0'">
+        <PackageReference Include="System.ServiceProcess.ServiceController" Version="7.0.1" />
+    </ItemGroup>
 
 </Project>
