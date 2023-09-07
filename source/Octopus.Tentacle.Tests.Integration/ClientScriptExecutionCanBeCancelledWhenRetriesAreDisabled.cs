@@ -134,13 +134,12 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(additionalParameterTypes: new object[] {typeof(RpcCallStage)})]
         public async Task DuringStartScript_ScriptExecutionCanBeCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase, RpcCallStage rpcCallStage)
         {
-            var expectedFlow1 = rpcCallStage switch
+            var expectedFlow = rpcCallStage switch
             {
                 RpcCallStage.Connecting => ExpectedFlow.CancelRpcAndExitImmediately,
                 RpcCallStage.InFlight => ExpectedFlow.AbandonRpcThenCancelScriptThenCompleteScript,
                 _ => throw new ArgumentOutOfRangeException()
             };
-            var expectedFlow = expectedFlow1;
             
             // ARRANGE
             var rpcCallHasStarted = new Reference<bool>(false);

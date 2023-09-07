@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
-using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
@@ -11,14 +10,14 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     {
         public TentacleConfigurationsAttribute(
             bool testCommonVersions = false,
-            bool testCapabilitiesServiceInterestingVersions = false,
+            bool testCapabilitiesServiceVersions = false,
             bool testNoCapabilitiesServiceVersions = false,
             bool testScriptIsolationLevelVersions = false,
             params object[] additionalParameterTypes)
             : base(
                 typeof(TentacleConfigurationTestCases),
                 nameof(TentacleConfigurationTestCases.GetEnumerator),
-                new object[] {testCommonVersions, testCapabilitiesServiceInterestingVersions, testNoCapabilitiesServiceVersions, testScriptIsolationLevelVersions, additionalParameterTypes})
+                new object[] {testCommonVersions, testCapabilitiesServiceVersions, testNoCapabilitiesServiceVersions, testScriptIsolationLevelVersions, additionalParameterTypes})
         {
         }
     }
@@ -77,6 +76,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 });
             }
 
+            if (versions.Count == 0)
+            {
+                versions.Add(TentacleVersions.Current);
+            }
+
             var testCases =
                 from tentacleType in tentacleTypes
                 from halibutType in halibutTypes
@@ -102,14 +106,26 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             for (int i = 0; i < additionalEnums.Length; i++)
             {
                 var additionalEnum = additionalEnums[i];
+                object[] values;
                 if (additionalEnum.IsEnum)
                 {
-                    enums.And(Enum.GetValues(additionalEnums[i]));
+                    values = Enum.GetValues(additionalEnums[i]).ToArrayOfObjects();
                 }
                 else if (typeof(IEnumerable).IsAssignableFrom(additionalEnum))
                 {
-                    enums.And(ValuesOf.CreateValues(additionalEnum));
+                    values = ValuesOf.CreateValues(additionalEnum);
                 }
+                else
+                {
+                    throw new ArgumentException($"Enumerable type must be either an enum or implement IEnumerable: '{additionalEnum}'");
+                }
+
+                if (values.Length == 0)
+                {
+                    throw new ArgumentException($"Enumerable type does not contain any values: '{additionalEnum}'");
+                }
+                
+                enums.And(values);
             }
 
             var enumerablePermutations = enums.BuildEnumerable();

@@ -18,7 +18,7 @@ namespace Octopus.Tentacle.Tests.Integration
     {
         [Test]
         [TentacleConfigurations(testScriptIsolationLevelVersions: true, additionalParameterTypes: new object[] { typeof(ScriptIsolationLevel)})]
-        public async Task ScriptIsolationMutexFull_EnsuresTwoDifferentScriptsDontRunAtTheSameTime(TentacleConfigurationTestCase tentacleConfigurationTestCase, ScriptIsolationLevel scriptIsolationLevel)
+        public async Task ScriptIsolationMutexFull_EnsuresTwoDifferentScriptsDontRunAtTheSameTime(TentacleConfigurationTestCase tentacleConfigurationTestCase, ScriptIsolationLevel levelOfSecondScript)
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
@@ -42,7 +42,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var secondStartScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody(new ScriptBuilder().CreateFile(secondScriptStart))
-                .WithIsolation(scriptIsolationLevel)
+                .WithIsolation(levelOfSecondScript)
                 .WithMutexName("mymutex")
                 .Build();
 

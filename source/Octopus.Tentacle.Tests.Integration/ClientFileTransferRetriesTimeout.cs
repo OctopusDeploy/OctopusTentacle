@@ -23,7 +23,7 @@ namespace Octopus.Tentacle.Tests.Integration
     public class ClientFileTransferRetriesTimeout : IntegrationTest
     {
         [Test]
-        [TentacleConfigurations(additionalParameterTypes: new object[] { typeof(BooleanValues)})]
+        [TentacleConfigurations(additionalParameterTypes: new object[] { typeof(StopPortForwarderAfterFirstCallValues)})]
         public async Task WhenRpcRetriesTimeOut_DuringUploadFile_TheRpcCallIsCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase, bool stopPortForwarderAfterFirstCall)
         {
             PortForwarder portForwarder = null!;
@@ -87,7 +87,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TentacleConfigurations(additionalParameterTypes: new object[] { typeof(BooleanValues)})]
+        [TentacleConfigurations(additionalParameterTypes: new object[] { typeof(StopPortForwarderAfterFirstCallValues)})]
         public async Task WhenRpcRetriesTimeOut_DuringDownloadFile_TheRpcCallIsCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase, bool stopPortForwarderAfterFirstCall)
         {
             PortForwarder portForwarder = null!;
@@ -149,7 +149,7 @@ namespace Octopus.Tentacle.Tests.Integration
             duration.Elapsed.Should().BeGreaterOrEqualTo(TimeSpan.FromSeconds(14));
         }
 
-        private class BooleanValues : IEnumerable
+        class StopPortForwarderAfterFirstCallValues : IEnumerable
         {
             public IEnumerator GetEnumerator()
             {

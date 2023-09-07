@@ -18,7 +18,7 @@ namespace Octopus.Tentacle.Tests.Integration
     public class CapabilitiesServiceV2Test : IntegrationTest
     {
         [Test]
-        [TentacleConfigurations(testCapabilitiesServiceInterestingVersions: true)]
+        [TentacleConfigurations(testCapabilitiesServiceVersions: true)]
         public async Task CapabilitiesFromAnOlderTentacleWhichHasNoCapabilitiesService_WorksWithTheBackwardsCompatabilityDecorator(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             SyncOrAsyncHalibut syncOrAsyncHalibut = tentacleConfigurationTestCase.SyncOrAsyncHalibut;
@@ -45,7 +45,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TentacleConfigurations(testCapabilitiesServiceInterestingVersions: true)]
+        [TentacleConfigurations(testCapabilitiesServiceVersions: true)]
         public async Task CapabilitiesResponseShouldBeCached(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             var capabilitiesResponses = new List<CapabilitiesResponseV2>();
