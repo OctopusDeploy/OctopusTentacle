@@ -11,37 +11,11 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         {
             try
             {
-                using (var principalContext = new PrincipalContext(ContextType.Machine))
-                {
-                    UserPrincipal? principal = null;
-                    try
-                    {
-                        principal = UserPrincipal.FindByIdentity(principalContext, IdentityType.Name, username);
-                        if (principal != null)
-                        {
-                            Console.WriteLine($"The Windows User Account named '{username}' already exists, making sure the password is set correctly...");
-                            principal.SetPassword(password);
-                            principal.Save();
-                        }
-                        else
-                        {
-                            Console.WriteLine($"Trying to create a Windows User Account on the local machine called '{username}'...");
-                            principal = new UserPrincipal(principalContext);
-                            principal.Name = username;
-                            principal.SetPassword(password);
-                            principal.Save();
-                        }
-
-                        // Remember the pertinent details
-                        SamAccountName = principal.SamAccountName;
-                        Sid = principal.Sid;
-                        Password = password;
-                    }
-                    finally
-                    {
-                        principal?.Dispose();
-                    }
-                }
+                using var principal = GetOrCreateUserPrincipal(username, password);
+                // Remember the pertinent details
+                SamAccountName = principal.SamAccountName;
+                Sid = principal.Sid;
+                Password = password;
             }
             catch (Exception ex)
             {
@@ -50,12 +24,40 @@ namespace Octopus.Tentacle.Tests.Integration.Util
             }
         }
 
+        static UserPrincipal GetOrCreateUserPrincipal(string username, string password)
+        {
+            using var principalContext = new PrincipalContext(ContextType.Machine);
+            UserPrincipal? principal = null;
+            lock (SyncObject)
+            {
+                principal = UserPrincipal.FindByIdentity(principalContext, IdentityType.Name, username);
+                if (principal != null)
+                {
+                    Console.WriteLine($"The Windows User Account named '{username}' already exists, making sure the password is set correctly...");
+                    principal.SetPassword(password);
+                    principal.Save();
+                }
+                else
+                {
+                    Console.WriteLine($"Trying to create a Windows User Account on the local machine called '{username}'...");
+                    principal = new UserPrincipal(principalContext);
+                    principal.Name = username;
+                    principal.SetPassword(password);
+                    principal.Save();
+                }
+            }
+
+            return principal!;
+        }
+        
+        private static readonly object SyncObject = new();
+
         public SecurityIdentifier Sid { get; }
 #pragma warning disable CA1416
         public string NTAccountName => Sid.Translate(typeof(NTAccount)).ToString();
 #pragma warning restore CA1416
-        public string DomainName => NTAccountName.Split(new[] { '\\' }, 2)[0];
-        public string UserName => NTAccountName.Split(new[] { '\\' }, 2)[1];
+        public string DomainName => NTAccountName.Split(new[] {'\\'}, 2)[0];
+        public string UserName => NTAccountName.Split(new[] {'\\'}, 2)[1];
         public string SamAccountName { get; }
         public string Password { get; }
 
