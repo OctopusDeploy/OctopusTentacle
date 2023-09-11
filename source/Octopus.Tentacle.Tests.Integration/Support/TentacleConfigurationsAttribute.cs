@@ -82,10 +82,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             }
 
 #if NETFRAMEWORK
-            List<TentacleRuntime> runtimes = new List<TentacleRuntime> { TentacleRuntime.Default };
-#endif
-#if !NETFRAMEWORK
-            List<TentacleRuntime> runtimes = PlatformDetection.IsRunningOnWindows
+            var runtimes = new List<TentacleRuntime> { TentacleRuntime.Default };
+#else
+            var runtimes = PlatformDetection.IsRunningOnWindows
                 ? new List<TentacleRuntime> {TentacleRuntime.DotNet6, TentacleRuntime.Framework48}
                 : new List<TentacleRuntime> {TentacleRuntime.Default};
 #endif

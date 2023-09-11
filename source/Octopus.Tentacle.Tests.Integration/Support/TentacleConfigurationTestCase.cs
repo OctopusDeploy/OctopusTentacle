@@ -8,7 +8,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     {
         public TentacleType TentacleType { get; }
         public SyncOrAsyncHalibut SyncOrAsyncHalibut { get; }
-        public TentacleRuntime TentacleRuntime { get; set; }
+        public TentacleRuntime TentacleRuntime { get; }
         public Version? Version { get; }
 
         public TentacleConfigurationTestCase(
@@ -50,7 +50,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
             if (TentacleRuntime != TentacleRuntime.Default)
             {
-                builder.Append($", {TentacleRuntime.GetStringValue()}");
+                builder.Append($",{TentacleRuntime.GetDescription()}");
             }
 
             return builder.ToString();

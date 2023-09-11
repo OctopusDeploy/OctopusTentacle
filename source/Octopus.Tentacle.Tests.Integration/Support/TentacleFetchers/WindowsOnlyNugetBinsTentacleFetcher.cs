@@ -36,7 +36,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
             var dotNetVersionPath = Directory.EnumerateDirectories(buildDir.FullName).FirstOrDefault();
             var tentacleFolder = Directory.EnumerateDirectories(dotNetVersionPath).FirstOrDefault();
 
-            return TentacleExeFinder.AddExeExtension(Path.Combine(tentacleFolder, "Tentacle"));
+            return TentacleExeFinder.GetExecutablePath(tentacleFolder);
         }
     }
 }

@@ -14,8 +14,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public static string FindTentacleExe(TentacleRuntime version)
         {
             var assemblyDir = new DirectoryInfo(Path.GetDirectoryName(typeof(TentacleExeFinder).Assembly.Location)!);
-            var tentacleExe = Path.Combine(assemblyDir.FullName, "Tentacle");
-            
 
             // We don't have access to any teamcity environment variables so instead rely on the path. 
             if (TeamCityDetection.IsRunningInTeamCity())
@@ -24,24 +22,30 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 // /opt/TeamCity/BuildAgent/work/639265b01610d682/build/outputs/integrationtests/net6.0/linux-x64
                 // Desired path to tentacle.
                 // /opt/TeamCity/BuildAgent/work/639265b01610d682/build/outputs/tentaclereal/tentacle/Tentacle
-                
-            string tentacleDir =
-                version switch
-                {
-                    TentacleRuntime.Framework48 => "tentaclereal-net48",
-                    TentacleRuntime.DotNet6 => "tentaclereal-net6.0",
-                    TentacleRuntime.Default => 
-                #if NETFRAMEWORK
-                "tentaclereal-net48",
-                #endif
-                #if !NETFRAMEWORK
-                "tentaclereal-net6.0",
-                #endif
-                    _ => throw new ArgumentOutOfRangeException(nameof(version), version, null)
-                };
 
-                tentacleExe = Path.Combine(assemblyDir.Parent.Parent.Parent.FullName, tentacleDir, "tentacle", "Tentacle");
-                return AddExeExtension(tentacleExe);
+                const string net48ArtifactDir = "tentaclereal-net48";
+                const string net60ArtifactDir = "tentaclereal-net6.0";
+
+                string GetDefaultArtifactDir()
+                {
+#if NETFRAMEWORK
+                    return net48ArtifactDir;
+#else
+                    return net60ArtifactDir;
+#endif
+                }
+
+                string artifactDir =
+                    version switch
+                    {
+                        TentacleRuntime.Framework48 => net48ArtifactDir,
+                        TentacleRuntime.DotNet6 => net60ArtifactDir,
+                        TentacleRuntime.Default => GetDefaultArtifactDir(),
+                        _ => throw new ArgumentOutOfRangeException(nameof(version), version, null)
+                    };
+
+                var tentacleArtifactPath = Path.Combine(assemblyDir.Parent.Parent.Parent.FullName, artifactDir, "tentacle");
+                return GetExecutablePath(tentacleArtifactPath);
             }
 
             string runtimeDir =
@@ -52,27 +56,28 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                     TentacleRuntime.Default => assemblyDir.Name,
                     _ => throw new ArgumentOutOfRangeException(nameof(version), version, null)
                 };
-            
+
             // Try to use tentacle from the Tentacle project
             var tentacleProjectBinDir = new DirectoryInfo(Path.Combine(assemblyDir.Parent.Parent.Parent.FullName, "Octopus.Tentacle", assemblyDir.Parent.Name, runtimeDir));
             if (tentacleProjectBinDir.Exists)
             {
-                return AddExeExtension(Path.Combine(tentacleProjectBinDir.FullName, "Tentacle"));
+                return GetExecutablePath(tentacleProjectBinDir.FullName);
             }
-            
+
             var tentaclePublishBinDir = new DirectoryInfo(Path.Combine(assemblyDir.Parent.Parent.Parent.FullName, "Tentacle", assemblyDir.Parent.Name, runtimeDir));
             if (tentaclePublishBinDir.Exists)
             {
-                return AddExeExtension(Path.Combine(tentaclePublishBinDir.FullName, "Tentacle"));
+                return GetExecutablePath(tentaclePublishBinDir.FullName);
             }
 
             throw new Exception("Could not determine where to look for Tentacle Exe started searching from: " + assemblyDir.FullName);
         }
 
-        public static string AddExeExtension(string path)
+        public static string GetExecutablePath(string tentacleDir)
         {
-            if (PlatformDetection.IsRunningOnWindows) path += ".exe";
-            return path;
+            var executableName = "Tentacle";
+            if (PlatformDetection.IsRunningOnWindows) executableName += ".exe";
+            return Path.Combine(tentacleDir, executableName);
         }
     }
 }
