@@ -11,7 +11,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         {
             try
             {
-                using var principal = GetUserPrincipal(username, password);
+                using var principal = GetOrCreateUserPrincipal(username, password);
                 // Remember the pertinent details
                 SamAccountName = principal.SamAccountName;
                 Sid = principal.Sid;
@@ -24,7 +24,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
             }
         }
 
-        static UserPrincipal GetUserPrincipal(string username, string password)
+        static UserPrincipal GetOrCreateUserPrincipal(string username, string password)
         {
             using var principalContext = new PrincipalContext(ContextType.Machine);
             UserPrincipal? principal = null;
