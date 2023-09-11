@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Client.Model;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Tests.Integration.Util;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
@@ -20,6 +21,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             var instanceName = InstanceNameGenerator();
             var configFilePath = Path.Combine(tempDirectory.DirectoryPath, instanceName + ".cfg");
             var tentacleExe = TentacleExePath ?? TentacleExeFinder.FindTentacleExe();
+            
+            var logger = new SerilogLoggerBuilder().Build().ForContext<ListeningTentacleBuilder>();
+            logger.Information($"Tentacle.exe location: {tentacleExe}");
 
             await CreateInstance(tentacleExe, configFilePath, instanceName, tempDirectory, cancellationToken);
             await AddCertificateToTentacle(tentacleExe, instanceName, CertificatePfxPath, tempDirectory, cancellationToken);

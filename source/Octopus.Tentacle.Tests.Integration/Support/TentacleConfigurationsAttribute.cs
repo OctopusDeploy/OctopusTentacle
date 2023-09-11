@@ -2,11 +2,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using NUnit.Framework;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
-    public class TentacleConfigurationsAttribute : TestCaseSourceAttribute
+    public class TentacleConfigurationsAttribute : TentacleTestCaseSourceAttribute
     {
         public TentacleConfigurationsAttribute(
             bool testCommonVersions = false,
@@ -26,7 +26,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     {
         public static IEnumerator GetEnumerator(
             bool testCommonVersions,
-            bool testCapabilitiesInterestingVersions,
+            bool testCapabilitiesVersions,
             bool testNoCapabilitiesServiceVersions,
             bool testScriptIsolationLevel,
             object[] additionalParameterTypes)
@@ -46,7 +46,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 });
             }
 
-            if (testCapabilitiesInterestingVersions)
+            if (testCapabilitiesVersions)
             {
                 versions.AddRange(new[]
                 {
@@ -81,20 +81,30 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 versions.Add(TentacleVersions.Current);
             }
 
+#if NETFRAMEWORK
+            var runtimes = new List<TentacleRuntime> { TentacleRuntime.Default };
+#else
+            var runtimes = PlatformDetection.IsRunningOnWindows
+                ? new List<TentacleRuntime> {TentacleRuntime.DotNet6, TentacleRuntime.Framework48}
+                : new List<TentacleRuntime> {TentacleRuntime.Default};
+#endif
+
             var testCases =
                 from tentacleType in tentacleTypes
                 from halibutType in halibutTypes
+                from runtime in runtimes
                 from version in versions.Distinct()
                 select new TentacleConfigurationTestCase(
                     tentacleType,
                     halibutType,
+                    runtime,
                     version);
 
             if (additionalParameterTypes.Length == 0)
             {
                 return testCases.GetEnumerator();
             }
-            
+
             return CombineTestCasesWithAdditionalParameters(testCases, additionalParameterTypes);
         }
 

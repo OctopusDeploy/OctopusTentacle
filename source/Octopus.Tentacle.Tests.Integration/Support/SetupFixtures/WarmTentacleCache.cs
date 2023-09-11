@@ -2,47 +2,62 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers;
-using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Util;
 using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Support.SetupFixtures
 {
     public class WarmTentacleCache : ISetupFixture
+    {
+        private CancellationTokenSource cts = new();
+
+        public void OneTimeSetUp(ILogger logger)
         {
-            private CancellationTokenSource cts = new CancellationTokenSource();
-            
-            public void OneTimeSetUp(ILogger logger)
+            logger.Fatal("Downloading all tentacles now");
+
+            var tasks = new List<Task>();
+            var concurrentDownloads = TeamCityDetection.IsRunningInTeamCity() ? 4 : 1;
+            var concurrentDownloadLimiter = new SemaphoreSlim(concurrentDownloads, concurrentDownloads);
+
+            foreach (var tentacleVersion in TentacleVersions.AllTestedVersionsToDownload)
             {
-                logger.Fatal("Downloading all tentacles now");
-                
-                var tasks = new List<Task>();
-                var concurrentDownloads = TentacleExeFinder.IsRunningInTeamCity() ? 4 : 1;
-                var concurrentDownloadLimiter = new SemaphoreSlim(concurrentDownloads, concurrentDownloads);
-                
-                foreach (var tentacleVersion in TentacleVersions.AllTestedVersionsToDownload)
+                if (tentacleVersion == TentacleVersions.Current) continue;
+                tasks.Add(Task.Run(async () =>
                 {
-                    if(tentacleVersion == TentacleVersions.Current) continue;
-                    tasks.Add(Task.Run(async () =>
-                    {
-                        using var l = await concurrentDownloadLimiter.LockAsync(cts.Token);
-                        using var temporaryDirectory = new TemporaryDirectory();
-                        logger.Information($"Will fetch tentacle {tentacleVersion} if it is not already in cache");
-                        await TentacleFetcher.GetTentacleVersion(temporaryDirectory.DirectoryPath, tentacleVersion, logger, cts.Token);
-                        logger.Information($"Tentacle {tentacleVersion} is now in cache");
-                    }));
-                }
-                
-                Task.WhenAll(tasks).GetAwaiter().GetResult();
+                    using var l = await concurrentDownloadLimiter.LockAsync(cts.Token);
+                    await GetTentacleVersion(logger, tentacleVersion);
+                }));
             }
-            
-            public void OneTimeTearDown(ILogger logger)
+
+            Task.WhenAll(tasks).GetAwaiter().GetResult();
+        }
+
+        private async Task GetTentacleVersion(ILogger logger, Version tentacleVersion)
+        {
+            if (PlatformDetection.IsRunningOnWindows && RuntimeDetection.IsDotNet60)
             {
-                cts.Cancel();
-                cts.Dispose();
+                await GetTentacleVersionWithRuntime(logger, tentacleVersion, TentacleRuntime.DotNet6);
+                await GetTentacleVersionWithRuntime(logger, tentacleVersion, TentacleRuntime.Framework48);
+            }
+            else
+            {
+                await GetTentacleVersionWithRuntime(logger, tentacleVersion, TentacleRuntime.Default);
             }
         }
-    
+
+        private async Task GetTentacleVersionWithRuntime(ILogger logger, Version tentacleVersion, TentacleRuntime tentacleRuntime)
+        {
+            using var tempDir = new TemporaryDirectory();
+            logger.Information($"Will fetch tentacle {tentacleVersion} ({tentacleRuntime.GetDescription()}) if it is not already in cache");
+            await TentacleFetcher.GetTentacleVersion(tempDir.DirectoryPath, tentacleVersion, tentacleRuntime, logger, cts.Token);
+            logger.Information($"Tentacle {tentacleVersion} ({tentacleRuntime.GetDescription()}) is now in cache");
+        }
+
+        public void OneTimeTearDown(ILogger logger)
+        {
+            cts.Cancel();
+            cts.Dispose();
+        }
+    }
 }

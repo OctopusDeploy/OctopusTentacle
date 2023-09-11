@@ -19,7 +19,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
             this.logger = logger;
         }
 
-        public async Task<string> GetTentacleVersion(string downloadPath, Version version, CancellationToken cancellationToken)
+        public async Task<string> GetTentacleVersion(string downloadPath, Version version, TentacleRuntime _, CancellationToken cancellationToken)
         {
             var downloadFilePath = Path.Combine(downloadPath, Guid.NewGuid().ToString("N"));
 
@@ -33,10 +33,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
 
             var buildDir = new DirectoryInfo(Path.Combine(extractionDirectory, "build"));
 
-            var dotnetversionpath = Directory.EnumerateDirectories(buildDir.FullName).FirstOrDefault();
-            var tentacelFolder = Directory.EnumerateDirectories(dotnetversionpath).FirstOrDefault();
+            var dotNetVersionPath = Directory.EnumerateDirectories(buildDir.FullName).FirstOrDefault();
+            var tentacleFolder = Directory.EnumerateDirectories(dotNetVersionPath).FirstOrDefault();
 
-            return TentacleExeFinder.AddExeExtension(Path.Combine(tentacelFolder, "Tentacle"));
+            return TentacleExeFinder.GetExecutablePath(tentacleFolder);
         }
     }
 }

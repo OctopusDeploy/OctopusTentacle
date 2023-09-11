@@ -14,6 +14,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
     {
         private readonly TentacleType tentacleType;
         private Version? tentacleVersion;
+        private TentacleRuntime tentacleRuntime = TentacleRuntime.Default;
         private AsyncHalibutFeature asyncHalibutFeature = AsyncHalibutFeature.Disabled;
 
         public LegacyClientAndTentacleBuilder(TentacleType tentacleType)
@@ -24,6 +25,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
         public LegacyClientAndTentacleBuilder WithTentacleVersion(Version? tentacleVersion)
         {
             this.tentacleVersion = tentacleVersion;
+            return this;
+        }
+
+        public LegacyClientAndTentacleBuilder WithTentacleRuntime(TentacleRuntime tentacleRuntime)
+        {
+            this.tentacleRuntime = tentacleRuntime;
             return this;
         }
 
@@ -62,8 +69,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
             // Tentacle
             var temporaryDirectory = new TemporaryDirectory();
             var tentacleExe = tentacleVersion == null ?
-                TentacleExeFinder.FindTentacleExe() :
-                await TentacleFetcher.GetTentacleVersion(temporaryDirectory.DirectoryPath, tentacleVersion, logger, cancellationToken);
+                TentacleExeFinder.FindTentacleExe(this.tentacleRuntime) :
+                await TentacleFetcher.GetTentacleVersion(temporaryDirectory.DirectoryPath, tentacleVersion, tentacleRuntime, logger, cancellationToken);
+            
+            logger.Information($"Tentacle.exe location: {tentacleExe}");
 
             if (tentacleType == TentacleType.Polling)
             {

@@ -8,15 +8,18 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     {
         public TentacleType TentacleType { get; }
         public SyncOrAsyncHalibut SyncOrAsyncHalibut { get; }
+        public TentacleRuntime TentacleRuntime { get; }
         public Version? Version { get; }
 
         public TentacleConfigurationTestCase(
             TentacleType tentacleType,
             SyncOrAsyncHalibut syncOrAsyncHalibut,
+            TentacleRuntime tentacleRuntime,
             Version? version)
         {
             TentacleType = tentacleType;
             SyncOrAsyncHalibut = syncOrAsyncHalibut;
+            TentacleRuntime = tentacleRuntime;
             Version = version;
         }
         
@@ -24,14 +27,16 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         {
             return new ClientAndTentacleBuilder(TentacleType)
                 .WithAsyncHalibutFeature(SyncOrAsyncHalibut.ToAsyncHalibutFeature())
-                .WithTentacleVersion(Version);
+                .WithTentacleVersion(Version)
+                .WithTentacleRuntime(TentacleRuntime);
         }
 
         internal LegacyClientAndTentacleBuilder CreateLegacyBuilder()
         {
             return new LegacyClientAndTentacleBuilder(TentacleType)
                 .WithAsyncHalibutFeature(SyncOrAsyncHalibut.ToAsyncHalibutFeature())
-                .WithTentacleVersion(Version);
+                .WithTentacleVersion(Version)
+                .WithTentacleRuntime(TentacleRuntime);
         }
 
         public override string ToString()
@@ -42,6 +47,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             string version = Version?.ToString() ?? "Latest";
             builder.Append($"{version},");
             builder.Append($"{SyncOrAsyncHalibut}");
+
+            if (TentacleRuntime != TentacleRuntime.Default)
+            {
+                builder.Append($",{TentacleRuntime.GetDescription()}");
+            }
 
             return builder.ToString();
         }

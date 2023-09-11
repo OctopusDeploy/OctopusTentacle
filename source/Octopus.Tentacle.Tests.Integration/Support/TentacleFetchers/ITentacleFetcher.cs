@@ -14,6 +14,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
         /// <param name="version">The version to download.</param>
         /// <param name="cancellationToken"></param>
         /// <returns>The full path to the tentacle executable.</returns>
-        public Task<string> GetTentacleVersion(string tmp, Version version, CancellationToken cancellationToken);
+        public Task<string> GetTentacleVersion(string tmp, Version version, TentacleRuntime runtime, CancellationToken cancellationToken);
     }
 }
