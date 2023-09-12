@@ -144,7 +144,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
             runningScript.Execute();
             runningScript.ExitCode.Should().Be(0, "the script should have run to completion");
             scriptLog.StdErr.Length.Should().Be(0, "the script shouldn't have written to stderr");
-            scriptLog.StdOut.ToString().Should().ContainEquivalentOf(TestEnvironmentHelper.CurrentUserName);
+            scriptLog.StdOut.ToString().Should().ContainEquivalentOf(TestEnvironmentHelper.EnvironmentUserName);
         }
 
         [Test]
