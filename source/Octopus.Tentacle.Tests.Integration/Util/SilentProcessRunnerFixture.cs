@@ -52,7 +52,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
                     cts.Token);
 
                 exitCode.Should().Be(99, "our custom exit code should be reflected");
-                debugMessages.ToString().Should().ContainEquivalentOf($"Starting {command} in working directory '' using '{SilentProcessRunner.EncodingDetector.GetOEMEncoding().EncodingName}' encoding running as '{CurrentUserName}'");
+                debugMessages.ToString().Should().ContainEquivalentOf($"Starting {command} in working directory '' using '{SilentProcessRunner.EncodingDetector.GetOEMEncoding().EncodingName}' encoding running as '{TestEnvironmentHelper.CurrentUserName}'");
                 errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
                 infoMessages.ToString().Should().BeEmpty("no messages should be written to stdout");
             }
@@ -78,7 +78,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
                 debugMessages.ToString()
                     .Should()
                     .ContainEquivalentOf(command, "the command should be logged")
-                    .And.ContainEquivalentOf(CurrentUserName, "the current user details should be logged");
+                    .And.ContainEquivalentOf(TestEnvironmentHelper.CurrentUserName, "the current user details should be logged");
                 infoMessages.ToString().Should().ContainEquivalentOf("hello");
                 errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
             }
@@ -181,7 +181,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
 
                 exitCode.Should().Be(0, "the process should have run to completion");
                 errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
-                infoMessages.ToString().Should().ContainEquivalentOf($@"{Environment.UserName}");
+                infoMessages.ToString().Should().ContainEquivalentOf($@"{TestEnvironmentHelper.EnvironmentUserName}");
             }
         }
 
@@ -204,7 +204,8 @@ namespace Octopus.Tentacle.Tests.Integration.Util
 
                 exitCode.Should().Be(0, "the process should have run to completion");
                 errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
-                infoMessages.ToString().Should().ContainEquivalentOf($@"{Environment.UserDomainName}\{Environment.UserName}");
+
+                infoMessages.ToString().Should().ContainEquivalentOf($@"{TestEnvironmentHelper.EnvironmentDomain}\{TestEnvironmentHelper.EnvironmentUserName}");
             }
         }
 
@@ -255,13 +256,5 @@ namespace Octopus.Tentacle.Tests.Integration.Util
 
             return exitCode;
         }
-        
-        public static string CurrentUserName => PlatformDetection.IsRunningOnWindows
-            ?
-#pragma warning disable CA1416
-            WindowsIdentity.GetCurrent().Name
-#pragma warning restore CA1416
-            :
-            Environment.UserName;
     }
 }
