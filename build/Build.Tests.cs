@@ -31,11 +31,7 @@ partial class Build
 
     [PublicAPI]
     Target TestIntegration => _ => _
-        .Executes(() => RunIntegrationTests(TestFramework, TestRuntime, "TestCategory!=\"Net60ClientNet48Service\""));
-
-    [PublicAPI]
-    Target TestIntegrationNet60ClientNet48Service => _ => _
-        .Executes(() => RunIntegrationTests(TestFramework, TestRuntime,"TestCategory=\"Net60ClientNet48Service\""));
+        .Executes(() => RunIntegrationTests(TestFramework, TestRuntime, Filter));
 
     [PublicAPI]
     Target TestLinuxPackages => _ => _
