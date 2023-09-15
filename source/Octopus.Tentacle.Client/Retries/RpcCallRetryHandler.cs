@@ -21,7 +21,7 @@ namespace Octopus.Tentacle.Client.Retries
         /// <returns></returns>
         public delegate Task OnRetyAction(Exception lastException, TimeSpan retrySleepDuration, int retryCount, TimeSpan retryTimeout, TimeSpan elapsedDuration, CancellationToken cancellationToken);
 
-        public delegate Task OnTimeoutAction(TimeSpan retryTimeout, CancellationToken cancellationToken);
+        public delegate Task OnTimeoutAction(TimeSpan retryTimeout, TimeSpan elapsedDuration, int retryCount, CancellationToken cancellationToken);
 
         readonly TimeoutStrategy timeoutStrategy;
 
@@ -33,6 +33,8 @@ namespace Octopus.Tentacle.Client.Retries
 
         public TimeSpan RetryTimeout { get; }
 
+        public TimeSpan RetryIfRemainingDurationAtLeast { get; } = TimeSpan.FromSeconds(1);
+
         public async Task<T> ExecuteWithRetries<T>(
             Func<CancellationToken, Task<T>> action,
             OnRetyAction? onRetryAction,
@@ -41,23 +43,34 @@ namespace Octopus.Tentacle.Client.Retries
         {
             Exception? lastException = null;
             var started = new Stopwatch();
+            var nextSleepDuration = TimeSpan.Zero;
+            var totalRetryCount = 0;
 
             async Task OnRetryAction(Exception exception, TimeSpan sleepDuration, int retryCount, Context context)
             {
                 lastException = exception;
+                nextSleepDuration = sleepDuration;
                 var elapsedDuration = started.Elapsed;
+                var remainingRetryDuration = RetryTimeout - elapsedDuration - sleepDuration;
 
-                if (onRetryAction != null)
+                if (ShouldRetryWithRemainingDuration(remainingRetryDuration))
                 {
-                    await onRetryAction.Invoke(exception, sleepDuration, retryCount, RetryTimeout, elapsedDuration, cancellationToken).ConfigureAwait(false);
+                    totalRetryCount = retryCount;
+
+                    if (onRetryAction != null)
+                    {
+                        await onRetryAction.Invoke(exception, sleepDuration, retryCount, RetryTimeout, elapsedDuration, cancellationToken).ConfigureAwait(false);
+                    }
                 }
             }
 
             async Task OnTimeoutAction(Context? context, TimeSpan timeout, Task? task, Exception? exception)
             {
+                var elapsedDuration = started.Elapsed;
+
                 if (onTimeoutAction != null)
                 {
-                    await onTimeoutAction.Invoke(RetryTimeout, cancellationToken).ConfigureAwait(false);
+                    await onTimeoutAction.Invoke(RetryTimeout, elapsedDuration, totalRetryCount, cancellationToken).ConfigureAwait(false);
                 }
             }
 
@@ -78,9 +91,9 @@ namespace Octopus.Tentacle.Client.Retries
                     return await action(ct).ConfigureAwait(false);
                 }
 
-                var remainingRetryDuration = RetryTimeout - started.Elapsed;
+                var remainingRetryDuration = RetryTimeout - started.Elapsed - nextSleepDuration;
 
-                if (remainingRetryDuration < TimeSpan.FromSeconds(1))
+                if (!ShouldRetryWithRemainingDuration(remainingRetryDuration))
                 {
                     // We are short circuiting as the retry duration has elapsed
                     await OnTimeoutAction(null, RetryTimeout, null, null).ConfigureAwait(false);
@@ -108,6 +121,11 @@ namespace Octopus.Tentacle.Client.Retries
                 }
 
                 throw;
+            }
+
+            bool ShouldRetryWithRemainingDuration(TimeSpan remainingRetryDuration)
+            {
+                return remainingRetryDuration > RetryIfRemainingDurationAtLeast;
             }
         }
 

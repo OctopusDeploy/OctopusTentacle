@@ -1,8 +1,6 @@
 using System;
-using System.Threading;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Diagnostics;
-using Octopus.Tentacle.Tests.Integration.Util;
 using Serilog;
 using Log = Octopus.Tentacle.Diagnostics.Log;
 

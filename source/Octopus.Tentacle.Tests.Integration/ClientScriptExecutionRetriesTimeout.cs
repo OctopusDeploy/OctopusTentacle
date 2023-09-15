@@ -24,6 +24,9 @@ namespace Octopus.Tentacle.Tests.Integration
     [IntegrationTestTimeout]
     public class ClientScriptExecutionRetriesTimeout : IntegrationTest
     {
+        readonly TimeSpan retryIfRemainingDurationAtLeastBuffer = TimeSpan.FromSeconds(1);
+        readonly TimeSpan retryBackoffBuffer = TimeSpan.FromSeconds(2);
+
         [Test]
         [TentacleConfigurations(additionalParameterTypes: new object[] {typeof(RpcCallStage)})]
         public async Task WhenRpcRetriesTimeOut_DuringGetCapabilities_TheRpcCallIsCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase, RpcCallStage rpcCallStage)
@@ -82,13 +85,15 @@ namespace Octopus.Tentacle.Tests.Integration
                 .IgnoreResult()
                 .WhenAsync(() => asyncScriptServiceV2 = clientAndTentacle.Server.ServerHalibutRuntime.CreateAsyncClient<IScriptServiceV2, IAsyncClientScriptServiceV2>(clientAndTentacle.ServiceEndPoint));
 
+            var inMemoryLog = new InMemoryLog();
+
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody(b => b
                     .Print("Should not run this script"))
                 .Build();
 
             var duration = Stopwatch.StartNew();
-            var executeScriptTask = clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken);
+            var executeScriptTask = clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, inMemoryLog);
             Func<Task> action = async () => await executeScriptTask;
 
             await action.Should().ThrowAsync<HalibutClientException>();
@@ -98,7 +103,66 @@ namespace Octopus.Tentacle.Tests.Integration
             scriptServiceV2CallCounts.StartScriptCallCountStarted.Should().Be(0, "Test should not have not proceeded past GetCapabilities");
 
             // Ensure we actually waited and retried until the timeout policy kicked in
-            duration.Elapsed.Should().BeGreaterOrEqualTo(TimeSpan.FromSeconds(14));
+            duration.Elapsed.Should().BeGreaterOrEqualTo(clientAndTentacle.RpcRetrySettings.RetryDuration - retryIfRemainingDurationAtLeastBuffer - retryBackoffBuffer);
+
+            RetryLogMessageAssertions.AssertRetryAttemptsLoggedAndRetryFailureLogged(inMemoryLog);
+        }
+
+        [Test]
+        [TentacleConfigurations]
+        public async Task WhenGetCapabilitiesFails_AndTakesLongerThanTheRetryDuration_TheCallIsNotRetried_AndTimesOut(TentacleConfigurationTestCase tentacleConfigurationTestCase)
+        {
+            SyncOrAsyncHalibut syncOrAsyncHalibut = tentacleConfigurationTestCase.SyncOrAsyncHalibut;
+            IClientScriptServiceV2? scriptServiceV2 = null;
+            IAsyncClientScriptServiceV2? asyncScriptServiceV2 = null;
+
+            var retryDuration = TimeSpan.FromSeconds(15);
+
+            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+                // Set a short retry duration so we cancel fairly quickly
+                .WithRetryDuration(retryDuration)
+                .WithPortForwarderDataLogging()
+                .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
+                .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
+                    .LogCallsToCapabilitiesServiceV2()
+                    .LogCallsToScriptServiceV2()
+                    .CountCallsToCapabilitiesServiceV2(out var capabilitiesServiceCallCounts)
+                    .CountCallsToScriptServiceV2(out var scriptServiceV2CallCounts)
+                    .DecorateCapabilitiesServiceV2With(d => d
+                        .BeforeGetCapabilities(async _ =>
+                        {
+                            await syncOrAsyncHalibut.WhenSync(() => scriptServiceV2.EnsureTentacleIsConnectedToServer(Logger))
+                                .WhenAsync(async () => await asyncScriptServiceV2.EnsureTentacleIsConnectedToServer(Logger));
+
+                            // Sleep to make the initial RPC call take longer than the allowed retry duration
+                            await Task.Delay(retryDuration + TimeSpan.FromSeconds(1));
+
+                            // Kill the first GetCapabilities call to force the rpc call into retries
+                            responseMessageTcpKiller.KillConnectionOnNextResponse();
+                        })
+                        .Build())
+                    .Build())
+                .Build(CancellationToken);
+
+#pragma warning disable CS0612
+            syncOrAsyncHalibut.WhenSync(() => scriptServiceV2 = clientAndTentacle.Server.ServerHalibutRuntime.CreateClient<IScriptServiceV2, IClientScriptServiceV2>(clientAndTentacle.ServiceEndPoint))
+#pragma warning restore CS0612
+                .IgnoreResult()
+                .WhenAsync(() => asyncScriptServiceV2 = clientAndTentacle.Server.ServerHalibutRuntime.CreateAsyncClient<IScriptServiceV2, IAsyncClientScriptServiceV2>(clientAndTentacle.ServiceEndPoint));
+
+            var inMemoryLog = new InMemoryLog();
+
+            var startScriptCommand = new StartScriptCommandV2Builder()
+                .Build();
+
+            var executeScriptTask = clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, inMemoryLog);
+            Func<Task> action = async () => await executeScriptTask;
+            await action.Should().ThrowAsync<HalibutClientException>();
+
+            capabilitiesServiceCallCounts.GetCapabilitiesCallCountStarted.Should().Be(1);
+            scriptServiceV2CallCounts.StartScriptCallCountStarted.Should().Be(0, "Test should not have not proceeded past GetCapabilities");
+
+            RetryLogMessageAssertions.AssertNoRetryAttemptsLoggedAndRetryFailureLogged(inMemoryLog);
         }
 
         [Test]
@@ -145,6 +209,8 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
+            var inMemoryLog = new InMemoryLog();
+
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody(b => b
                     .Print("Start Script")
@@ -153,7 +219,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .Build();
 
             var duration = Stopwatch.StartNew();
-            var executeScriptTask = clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken);
+            var executeScriptTask = clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, inMemoryLog);
             Func<Task> action = async () => await executeScriptTask;
             await action.Should().ThrowAsync<HalibutClientException>();
             duration.Stop();
@@ -164,16 +230,61 @@ namespace Octopus.Tentacle.Tests.Integration
             scriptServiceCallCounts.CompleteScriptCallCountStarted.Should().Be(0);
 
             // Ensure we actually waited and retried until the timeout policy kicked in
-            duration.Elapsed.Should().BeGreaterOrEqualTo(TimeSpan.FromSeconds(14));
+            duration.Elapsed.Should().BeGreaterOrEqualTo(clientAndTentacle.RpcRetrySettings.RetryDuration - retryIfRemainingDurationAtLeastBuffer - retryBackoffBuffer);
+
+            RetryLogMessageAssertions.AssertRetryAttemptsLoggedAndRetryFailureLogged(inMemoryLog);
+        }
+
+        [Test]
+        [TentacleConfigurations]
+        public async Task WhenStartScriptFails_AndTakesLongerThanTheRetryDuration_TheCallIsNotRetried_AndTimesOut(TentacleConfigurationTestCase tentacleConfigurationTestCase)
+        {
+            var retryDuration = TimeSpan.FromSeconds(15);
+
+            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+                // Set a short retry duration so we cancel fairly quickly
+                .WithRetryDuration(retryDuration)
+                .WithPortForwarderDataLogging()
+                .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
+                .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
+                    .LogCallsToScriptServiceV2()
+                    .CountCallsToScriptServiceV2(out var scriptServiceCallCounts)
+                    .DecorateScriptServiceV2With(d => d
+                        .BeforeStartScript(async (_, _) =>
+                        {
+                            // Sleep to make the initial RPC call take longer than the allowed retry duration
+                            await Task.Delay(retryDuration + TimeSpan.FromSeconds(1));
+
+                            // Kill the first StartScript call to force the rpc call into retries
+                            responseMessageTcpKiller.KillConnectionOnNextResponse();
+                        })
+                        .Build())
+                    .Build())
+                .Build(CancellationToken);
+
+            var inMemoryLog = new InMemoryLog();
+
+            var startScriptCommand = new StartScriptCommandV2Builder()
+                .WithScriptBody(b => b
+                    .Sleep(TimeSpan.FromHours(1)))
+                .Build();
+
+            var executeScriptTask = clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, inMemoryLog);
+            Func<Task> action = async () => await executeScriptTask;
+            await action.Should().ThrowAsync<HalibutClientException>();
+
+            scriptServiceCallCounts.StartScriptCallCountStarted.Should().Be(1);
+            scriptServiceCallCounts.GetStatusCallCountStarted.Should().Be(0);
+            scriptServiceCallCounts.CancelScriptCallCountStarted.Should().Be(0);
+            scriptServiceCallCounts.CompleteScriptCallCountStarted.Should().Be(0);
+
+            RetryLogMessageAssertions.AssertNoRetryAttemptsLoggedAndRetryFailureLogged(inMemoryLog);
         }
 
         [Test]
         [TentacleConfigurations(additionalParameterTypes: new object[] { typeof(RpcCallStage)})]
         public async Task WhenRpcRetriesTimeOut_DuringGetStatus_TheRpcCallIsCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase, RpcCallStage rpcCallStage)
         {
-            TentacleType tentacleType = tentacleConfigurationTestCase.TentacleType;
-            SyncOrAsyncHalibut syncOrAsyncHalibut = tentacleConfigurationTestCase.SyncOrAsyncHalibut;
-                
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 // Set a short retry duration so we cancel fairly quickly
                 .WithRetryDuration(TimeSpan.FromSeconds(15))
@@ -214,6 +325,8 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
+            var inMemoryLog = new InMemoryLog();
+
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody(b => b
                     .Print("Start Script")
@@ -224,7 +337,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .Build();
 
             var duration = Stopwatch.StartNew();
-            var executeScriptTask = clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken);
+            var executeScriptTask = clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, inMemoryLog);
             Func<Task> action = async () => await executeScriptTask;
             await action.Should().ThrowAsync<HalibutClientException>();
             duration.Stop();
@@ -235,7 +348,57 @@ namespace Octopus.Tentacle.Tests.Integration
             scriptServiceCallCounts.CompleteScriptCallCountStarted.Should().Be(0);
 
             // Ensure we actually waited and retried until the timeout policy kicked in
-            duration.Elapsed.Should().BeGreaterOrEqualTo(TimeSpan.FromSeconds(14));
+            duration.Elapsed.Should().BeGreaterOrEqualTo(clientAndTentacle.RpcRetrySettings.RetryDuration - retryIfRemainingDurationAtLeastBuffer - retryBackoffBuffer);
+
+            RetryLogMessageAssertions.AssertRetryAttemptsLoggedAndRetryFailureLogged(inMemoryLog);
+        }
+
+        [Test]
+        [TentacleConfigurations]
+        public async Task WhenGetStatusFails_AndTakesLongerThanTheRetryDuration_TheCallIsNotRetried_AndTimesOut(TentacleConfigurationTestCase tentacleConfigurationTestCase)
+        {
+            var retryDuration = TimeSpan.FromSeconds(15);    
+
+            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+                // Set a short retry duration so we cancel fairly quickly
+                .WithRetryDuration(retryDuration)
+                .WithPortForwarderDataLogging()
+                .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
+                .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
+                    .LogCallsToScriptServiceV2()
+                    .CountCallsToScriptServiceV2(out var scriptServiceCallCounts)
+                    .DecorateScriptServiceV2With(d => d
+                        .BeforeGetStatus(async (_, _) =>
+                        {
+                            // Sleep to make the initial RPC call take longer than the allowed retry duration
+                            await Task.Delay(retryDuration + TimeSpan.FromSeconds(1));
+
+                            // Kill the first GetStatus call to force the rpc call into retries
+                            responseMessageTcpKiller.KillConnectionOnNextResponse();
+                        })
+                        .Build())
+                    .Build())
+                .Build(CancellationToken);
+
+            var inMemoryLog = new InMemoryLog();
+
+            var startScriptCommand = new StartScriptCommandV2Builder()
+                .WithScriptBody(b => b
+                    .Sleep(TimeSpan.FromHours(1)))
+                // Don't wait in start script as we want to test get status
+                .WithDurationStartScriptCanWaitForScriptToFinish(null)
+                .Build();
+
+            var executeScriptTask = clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, inMemoryLog);
+            Func<Task> action = async () => await executeScriptTask;
+            await action.Should().ThrowAsync<HalibutClientException>();
+
+            scriptServiceCallCounts.StartScriptCallCountStarted.Should().Be(1);
+            scriptServiceCallCounts.GetStatusCallCountStarted.Should().Be(1);
+            scriptServiceCallCounts.CancelScriptCallCountStarted.Should().Be(0);
+            scriptServiceCallCounts.CompleteScriptCallCountStarted.Should().Be(0);
+
+            RetryLogMessageAssertions.AssertNoRetryAttemptsLoggedAndRetryFailureLogged(inMemoryLog);
         }
 
         [Test]
@@ -281,6 +444,8 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
+            var inMemoryLog = new InMemoryLog();
+
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody(b => b
                     .Print("Start Script")
@@ -296,7 +461,9 @@ namespace Octopus.Tentacle.Tests.Integration
             var duration = Stopwatch.StartNew();
             var executeScriptTask = clientAndTentacle.TentacleClient.ExecuteScript(
                 startScriptCommand,
-                CancellationTokenSource.CreateLinkedTokenSource(CancellationToken, testCancellationTokenSource.Token).Token);
+                CancellationTokenSource.CreateLinkedTokenSource(CancellationToken, testCancellationTokenSource.Token).Token,
+                null,
+                inMemoryLog);
 
             Func<Task> action = async () => await executeScriptTask;
 
@@ -314,7 +481,70 @@ namespace Octopus.Tentacle.Tests.Integration
             scriptServiceCallCounts.CompleteScriptCallCountStarted.Should().Be(0);
 
             // Ensure we actually waited and retried until the timeout policy kicked in
-            duration.Elapsed.Should().BeGreaterOrEqualTo(TimeSpan.FromSeconds(14));
+            duration.Elapsed.Should().BeGreaterOrEqualTo(clientAndTentacle.RpcRetrySettings.RetryDuration - retryIfRemainingDurationAtLeastBuffer - retryBackoffBuffer);
+
+            RetryLogMessageAssertions.AssertRetryAttemptsLoggedAndRetryFailureLogged(inMemoryLog);
+        }
+
+        [Test]
+        [TentacleConfigurations]
+        public async Task WhenCancelScriptFails_AndTakesLongerThanTheRetryDuration_TheCallIsNotRetried_AndTimesOut(TentacleConfigurationTestCase tentacleConfigurationTestCase)
+        {
+            var retryDuration = TimeSpan.FromSeconds(15);
+
+            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+                // Set a short retry duration so we cancel fairly quickly
+                .WithRetryDuration(retryDuration)
+                .WithPortForwarderDataLogging()
+                .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
+                .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
+                    .LogCallsToScriptServiceV2()
+                    .CountCallsToScriptServiceV2(out var scriptServiceCallCounts)
+                    .DecorateScriptServiceV2With(d => d
+                        .BeforeCancelScript(async (_, _) =>
+                        {
+                            // Sleep to make the initial RPC call take longer than the allowed retry duration
+                            await Task.Delay(retryDuration + TimeSpan.FromSeconds(1));
+
+                            // Kill the first CancelScript call to force the rpc call into retries
+                            responseMessageTcpKiller.KillConnectionOnNextResponse();
+                        })
+                        .Build())
+                    .Build())
+                .Build(CancellationToken);
+
+            var inMemoryLog = new InMemoryLog();
+
+            var startScriptCommand = new StartScriptCommandV2Builder()
+                .WithScriptBody(b => b
+                    .Sleep(TimeSpan.FromHours(1)))
+                // Don't wait in start script as we want to test get status
+                .WithDurationStartScriptCanWaitForScriptToFinish(null)
+                .Build();
+
+            // Start the script which will wait for a file to exist
+            var testCancellationTokenSource = new CancellationTokenSource();
+
+            var executeScriptTask = clientAndTentacle.TentacleClient.ExecuteScript(
+                startScriptCommand,
+                CancellationTokenSource.CreateLinkedTokenSource(CancellationToken, testCancellationTokenSource.Token).Token,
+                null,
+                inMemoryLog);
+
+            Func<Task> action = async () => await executeScriptTask;
+            await Wait.For(() => scriptServiceCallCounts.GetStatusCallCountCompleted > 0, CancellationToken);
+
+            // We cancel script execution via the cancellation token. This should trigger the CancelScript RPC call to be made
+            testCancellationTokenSource.Cancel();
+
+            await action.Should().ThrowAsync<HalibutClientException>();
+
+            scriptServiceCallCounts.StartScriptCallCountStarted.Should().Be(1);
+            scriptServiceCallCounts.GetStatusCallCountStarted.Should().BeGreaterOrEqualTo(1);
+            scriptServiceCallCounts.CancelScriptCallCountStarted.Should().Be(1);
+            scriptServiceCallCounts.CompleteScriptCallCountStarted.Should().Be(0);
+
+            RetryLogMessageAssertions.AssertNoRetryAttemptsLoggedAndRetryFailureLogged(inMemoryLog);
         }
     }
 }

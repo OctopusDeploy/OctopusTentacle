@@ -5,7 +5,6 @@ using System.IO;
 using System.Text;
 using Halibut.Diagnostics;
 using NUnit.Framework;
-using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Util;
 using Serilog;
 using Serilog.Core;
@@ -15,7 +14,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
 {
     public class SerilogLoggerBuilder
     {
-        public static readonly ConcurrentDictionary<string, Stopwatch> TestTimers = new ConcurrentDictionary<string, Stopwatch>();
+        public static readonly ConcurrentDictionary<string, Stopwatch> TestTimers = new();
 
         StringBuilder? stringBuilder;
 
@@ -83,8 +82,9 @@ namespace Octopus.Tentacle.Tests.Integration.Util
                 }
                 _formatter.Format(logEvent, output);
                 // This is the change, call this instead of: TestContext.Progress
-                var elapsed = SerilogLoggerBuilder.TestTimers[TestContext.CurrentContext.Test.ID].Elapsed.ToString();
-                var s = elapsed + " " + output.ToString();
+                var elapsed = TestTimers[TestContext.CurrentContext.Test.ID].Elapsed.ToString();
+                var s = elapsed + " " + output;
+
                 if (stringBuilder != null)
                 {
                     lock (stringBuilder)
@@ -92,6 +92,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
                         stringBuilder.Append(s);
                     }
                 }
+
                 if (TeamCityDetection.IsRunningInTeamCity() || IsForcingContextWrite.Value)
                 {
                     TestContext.Write(s);
