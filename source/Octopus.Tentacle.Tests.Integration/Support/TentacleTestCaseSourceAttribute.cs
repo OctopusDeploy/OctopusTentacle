@@ -43,7 +43,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     {
         private readonly NUnitTestCaseBuilder _builder = new();
         
-        public const string Net60ClientNet48Tentacle = nameof(Net60ClientNet48Tentacle);
+        public const string Net60ClientNet48Service = nameof(Net60ClientNet48Service);
 
         /// <summary>
         /// Construct with a Type and name
@@ -163,7 +163,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                         #if !NETFRAMEWORK
                         if (item is TentacleConfigurationTestCase {TentacleRuntime: TentacleRuntime.Framework48} testCase)
                         {
-                            parms.Properties.Add(PropertyNames.Category, Net60ClientNet48Tentacle);
+                            parms.Properties.Add(PropertyNames.Category, Net60ClientNet48Service);
                         }
                         #endif
 

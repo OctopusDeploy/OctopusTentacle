@@ -31,7 +31,7 @@ partial class Build
 
     [PublicAPI]
     Target TestIntegration => _ => _
-        .Executes(() => RunIntegrationTests(TestFramework, TestRuntime));
+        .Executes(() => RunIntegrationTests(TestFramework, TestRuntime, Filter));
 
     [PublicAPI]
     Target TestLinuxPackages => _ => _
@@ -289,7 +289,7 @@ partial class Build
         }
     }
 
-    void RunIntegrationTests(string testFramework, string testRuntime)
+    void RunIntegrationTests(string testFramework, string testRuntime, string filter)
     {
         Log.Information("Running test for Framework: {TestFramework} and Runtime: {TestRuntime}", testFramework, testRuntime);
 
@@ -311,6 +311,7 @@ partial class Build
                 DotNetTasks.DotNetTest(settings => settings
                     .SetProjectFile(projectPath)
                     .SetFramework(testFramework)
+                    .SetFilter(filter)
                     .SetLoggers("console;verbosity=normal", "teamcity"))
             );
         }
