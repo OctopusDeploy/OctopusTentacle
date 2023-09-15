@@ -31,7 +31,7 @@ partial class Build
 
     [PublicAPI]
     Target TestIntegration => _ => _
-        .Executes(() => RunIntegrationTests(TestFramework, TestRuntime, Filter));
+        .Executes(() => RunIntegrationTests(TestFramework, TestRuntime, TestFilter));
 
     [PublicAPI]
     Target TestLinuxPackages => _ => _
