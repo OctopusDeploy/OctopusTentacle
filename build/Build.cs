@@ -51,6 +51,7 @@ partial class Build : NukeBuild
 
     [Parameter] string TestFramework = "";
     [Parameter] string TestRuntime = "";
+    [Parameter] string TestFilter = "";
 
     [PackageExecutable(
         packageId: "azuresigntool",
