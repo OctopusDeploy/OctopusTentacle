@@ -127,38 +127,16 @@ namespace Octopus.Tentacle.Client.Retries
                         return await action(ct).ConfigureAwait(false);
                     }
 
-                    using var abandonCancellationTokenSource = new CancellationTokenSource();
-                    using (ct.Register(() =>
-                           {
-                               // Give the actionTask some time to cancel on it's own.
-                               // If it doesn't assume it does not co-operate with cancellationTokens and walk away.
-                               abandonCancellationTokenSource.TryCancelAfter(abandonAfter);
-                           }))
+                    var actionTask = action(ct);
+
+                    var actionTaskCompleted = await actionTask.WaitTillCompletedOrAbandoned(abandonAfter, cancellationToken);
+                    if (!actionTaskCompleted)
                     {
-                        var abandonTask = abandonCancellationTokenSource.Token.AsTask<T>();
-
-                        try
-                        {
-                            var actionTask = action(ct);
-                            var completedTask = await Task.WhenAny(actionTask, abandonTask).ConfigureAwait(false);
-
-                            if (actionTask != completedTask)
-                            {
-                                actionTask.IgnoreUnobservedExceptions();
-                            }
-
-                            return await completedTask.ConfigureAwait(false);
-                        }
-                        catch (Exception e) when (e is OperationCanceledException)
-                        {
-                            if (abandonCancellationTokenSource.IsCancellationRequested)
-                            {
-                                throw new OperationAbandonedException(e, abandonAfter);
-                            }
-
-                            throw;
-                        }
+                        //TODO: How important is the stack trace when this was within the try/catch?
+                        throw new OperationAbandonedException(abandonAfter);
                     }
+
+                    return await actionTask.ConfigureAwait(false);
                 },
                 onRetryAction,
                 onTimeoutAction,
