@@ -10,6 +10,7 @@ using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Tests.Integration.Support;
+using Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
 using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
@@ -105,7 +106,7 @@ namespace Octopus.Tentacle.Tests.Integration
             // Ensure we actually waited and retried until the timeout policy kicked in
             duration.Elapsed.Should().BeGreaterOrEqualTo(clientAndTentacle.RpcRetrySettings.RetryDuration - retryIfRemainingDurationAtLeastBuffer - retryBackoffBuffer);
 
-            RetryLogMessageAssertions.AssertRetryAttemptsLoggedAndRetryFailureLogged(inMemoryLog);
+            inMemoryLog.ShouldHaveLoggedRetryAttemptsAndRetryFailure();
         }
 
         [Test]
@@ -162,7 +163,7 @@ namespace Octopus.Tentacle.Tests.Integration
             capabilitiesServiceCallCounts.GetCapabilitiesCallCountStarted.Should().Be(1);
             scriptServiceV2CallCounts.StartScriptCallCountStarted.Should().Be(0, "Test should not have not proceeded past GetCapabilities");
 
-            RetryLogMessageAssertions.AssertNoRetryAttemptsLoggedAndRetryFailureLogged(inMemoryLog);
+            inMemoryLog.ShouldHaveLoggedRetryFailureAndNoRetryAttempts();
         }
 
         [Test]
@@ -232,7 +233,7 @@ namespace Octopus.Tentacle.Tests.Integration
             // Ensure we actually waited and retried until the timeout policy kicked in
             duration.Elapsed.Should().BeGreaterOrEqualTo(clientAndTentacle.RpcRetrySettings.RetryDuration - retryIfRemainingDurationAtLeastBuffer - retryBackoffBuffer);
 
-            RetryLogMessageAssertions.AssertRetryAttemptsLoggedAndRetryFailureLogged(inMemoryLog);
+            inMemoryLog.ShouldHaveLoggedRetryAttemptsAndRetryFailure();
         }
 
         [Test]
@@ -278,7 +279,7 @@ namespace Octopus.Tentacle.Tests.Integration
             scriptServiceCallCounts.CancelScriptCallCountStarted.Should().Be(0);
             scriptServiceCallCounts.CompleteScriptCallCountStarted.Should().Be(0);
 
-            RetryLogMessageAssertions.AssertNoRetryAttemptsLoggedAndRetryFailureLogged(inMemoryLog);
+            inMemoryLog.ShouldHaveLoggedRetryFailureAndNoRetryAttempts();
         }
 
         [Test]
@@ -350,7 +351,7 @@ namespace Octopus.Tentacle.Tests.Integration
             // Ensure we actually waited and retried until the timeout policy kicked in
             duration.Elapsed.Should().BeGreaterOrEqualTo(clientAndTentacle.RpcRetrySettings.RetryDuration - retryIfRemainingDurationAtLeastBuffer - retryBackoffBuffer);
 
-            RetryLogMessageAssertions.AssertRetryAttemptsLoggedAndRetryFailureLogged(inMemoryLog);
+            inMemoryLog.ShouldHaveLoggedRetryAttemptsAndRetryFailure();
         }
 
         [Test]
@@ -398,7 +399,7 @@ namespace Octopus.Tentacle.Tests.Integration
             scriptServiceCallCounts.CancelScriptCallCountStarted.Should().Be(0);
             scriptServiceCallCounts.CompleteScriptCallCountStarted.Should().Be(0);
 
-            RetryLogMessageAssertions.AssertNoRetryAttemptsLoggedAndRetryFailureLogged(inMemoryLog);
+            inMemoryLog.ShouldHaveLoggedRetryFailureAndNoRetryAttempts();
         }
 
         [Test]
@@ -483,7 +484,7 @@ namespace Octopus.Tentacle.Tests.Integration
             // Ensure we actually waited and retried until the timeout policy kicked in
             duration.Elapsed.Should().BeGreaterOrEqualTo(clientAndTentacle.RpcRetrySettings.RetryDuration - retryIfRemainingDurationAtLeastBuffer - retryBackoffBuffer);
 
-            RetryLogMessageAssertions.AssertRetryAttemptsLoggedAndRetryFailureLogged(inMemoryLog);
+            inMemoryLog.ShouldHaveLoggedRetryAttemptsAndRetryFailure();
         }
 
         [Test]
@@ -544,7 +545,7 @@ namespace Octopus.Tentacle.Tests.Integration
             scriptServiceCallCounts.CancelScriptCallCountStarted.Should().Be(1);
             scriptServiceCallCounts.CompleteScriptCallCountStarted.Should().Be(0);
 
-            RetryLogMessageAssertions.AssertNoRetryAttemptsLoggedAndRetryFailureLogged(inMemoryLog);
+            inMemoryLog.ShouldHaveLoggedRetryFailureAndNoRetryAttempts();
         }
     }
 }

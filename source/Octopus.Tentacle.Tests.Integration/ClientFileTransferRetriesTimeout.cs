@@ -7,6 +7,7 @@ using FluentAssertions;
 using Halibut;
 using NUnit.Framework;
 using Octopus.Tentacle.Tests.Integration.Support;
+using Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
 using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
@@ -90,7 +91,7 @@ namespace Octopus.Tentacle.Tests.Integration
             // Ensure we actually waited and retried until the timeout policy kicked in
             duration.Elapsed.Should().BeGreaterOrEqualTo(clientAndTentacle.RpcRetrySettings.RetryDuration - retryIfRemainingDurationAtLeastBuffer - retryBackoffBuffer);
 
-            RetryLogMessageAssertions.AssertRetryAttemptsLoggedAndRetryFailureLogged(inMemoryLog);
+            inMemoryLog.ShouldHaveLoggedRetryAttemptsAndRetryFailure();
         }
 
         [Test]
@@ -132,7 +133,7 @@ namespace Octopus.Tentacle.Tests.Integration
             fileTransferServiceCallCounts.UploadFileCallCountStarted.Should().Be(1);
             fileTransferServiceCallCounts.DownloadFileCallCountStarted.Should().Be(0);
             
-            RetryLogMessageAssertions.AssertNoRetryAttemptsLoggedAndRetryFailureLogged(inMemoryLog);
+            inMemoryLog.ShouldHaveLoggedRetryFailureAndNoRetryAttempts();
         }
 
         [Test]
@@ -199,7 +200,7 @@ namespace Octopus.Tentacle.Tests.Integration
             // Ensure we actually waited and retried until the timeout policy kicked in
             duration.Elapsed.Should().BeGreaterOrEqualTo(clientAndTentacle.RpcRetrySettings.RetryDuration - retryIfRemainingDurationAtLeastBuffer - retryBackoffBuffer);
 
-            RetryLogMessageAssertions.AssertRetryAttemptsLoggedAndRetryFailureLogged(inMemoryLog);
+            inMemoryLog.ShouldHaveLoggedRetryAttemptsAndRetryFailure();
         }
 
         [Test]
@@ -240,7 +241,7 @@ namespace Octopus.Tentacle.Tests.Integration
             fileTransferServiceCallCounts.DownloadFileCallCountStarted.Should().Be(1);
             fileTransferServiceCallCounts.UploadFileCallCountStarted.Should().Be(0);
 
-            RetryLogMessageAssertions.AssertNoRetryAttemptsLoggedAndRetryFailureLogged(inMemoryLog);
+            inMemoryLog.ShouldHaveLoggedRetryFailureAndNoRetryAttempts();
         }
 
         class StopPortForwarderAfterFirstCallValues : IEnumerable

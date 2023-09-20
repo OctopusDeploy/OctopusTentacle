@@ -1,24 +1,15 @@
 ﻿using System.Text.RegularExpressions;
 using FluentAssertions;
 
-namespace Octopus.Tentacle.Tests.Integration.Support
+namespace Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods
 {
-    internal static class RetryLogMessageAssertions
+    internal static class InMemoryLogAssertionExtensionMethods
     {
-        static readonly Regex retryingMessageRegex = new ("An error occurred communicating with Tentacle. This action will be retried after \\d* seconds. Retry attempt \\d*. Retries will be performed for up to \\d* seconds.\\s*$", RegexOptions.Compiled | RegexOptions.Multiline);
-        static readonly Regex timeoutAfterRetriesMessageRegex = new ("Could not communicate with Tentacle after \\d* seconds. No more retries will be attempted.\\s*$", RegexOptions.Compiled | RegexOptions.Multiline);
-        static readonly Regex timeoutAfterNoRetriesMessageRegex = new ("Could not communicate with Tentacle after \\d* seconds.\\s*$", RegexOptions.Compiled | RegexOptions.Multiline);
+        static readonly Regex retryingMessageRegex = new("An error occurred communicating with Tentacle. This action will be retried after \\d* seconds. Retry attempt \\d*. Retries will be performed for up to \\d* seconds.\\s*$", RegexOptions.Compiled | RegexOptions.Multiline);
+        static readonly Regex timeoutAfterRetriesMessageRegex = new("Could not communicate with Tentacle after \\d* seconds. No more retries will be attempted.\\s*$", RegexOptions.Compiled | RegexOptions.Multiline);
+        static readonly Regex timeoutAfterNoRetriesMessageRegex = new("Could not communicate with Tentacle after \\d* seconds.\\s*$", RegexOptions.Compiled | RegexOptions.Multiline);
 
-        public static void AssertRetryAttemptsLoggedButNoRetryFailureLogged(InMemoryLog logs)
-        {
-            AssertRetriedLogMessages(logs);
-            
-            // Negative assertions
-            AssertNoTimeoutAfterRetriedLogMessages(logs);
-            AssertNoTimeoutAfterNoRetriedLogMessages(logs);
-        }
-
-        public static  void AssertRetryAttemptsLoggedAndRetryFailureLogged(InMemoryLog logs)
+        public static void ShouldHaveLoggedRetryAttemptsAndRetryFailure(this InMemoryLog logs)
         {
             AssertRetriedLogMessages(logs);
             AssertTimeoutAfterRetriedLogMessages(logs);
@@ -27,21 +18,30 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             AssertNoTimeoutAfterNoRetriedLogMessages(logs);
         }
 
-        public static  void AssertNoRetryAttemptsLoggedAndRetryFailureLogged(InMemoryLog logs)
+        public static void ShouldNotHaveLoggedRetryAttemptsOrRetryFailures(this InMemoryLog logs)
+        {
+            // Negative assertions
+            AssertNoRetriedLogMessages(logs);
+            AssertNoTimeoutAfterRetriedLogMessages(logs);
+            AssertNoTimeoutAfterNoRetriedLogMessages(logs);
+        }
+
+        public static void ShouldHaveLoggedRetryAttemptsAndNoRetryFailures(this InMemoryLog logs)
+        {
+            AssertRetriedLogMessages(logs);
+
+            // Negative assertions
+            AssertNoTimeoutAfterRetriedLogMessages(logs);
+            AssertNoTimeoutAfterNoRetriedLogMessages(logs);
+        }
+
+        public static void ShouldHaveLoggedRetryFailureAndNoRetryAttempts(this InMemoryLog logs)
         {
             AssertTimeoutAfterNoRetriedLogMessages(logs);
 
             // Negative assertions
             AssertNoRetriedLogMessages(logs);
             AssertNoTimeoutAfterRetriedLogMessages(logs);
-        }
-
-        public static  void AssertNoRetryAttemptsLoggedAndNoRetryFailureLogged(InMemoryLog logs)
-        {
-            // Negative assertions
-            AssertNoRetriedLogMessages(logs);
-            AssertNoTimeoutAfterRetriedLogMessages(logs);
-            AssertNoTimeoutAfterNoRetriedLogMessages(logs);
         }
 
         private static void AssertRetriedLogMessages(InMemoryLog logs)

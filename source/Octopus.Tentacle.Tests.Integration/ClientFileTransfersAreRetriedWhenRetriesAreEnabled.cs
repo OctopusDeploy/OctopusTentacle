@@ -6,6 +6,7 @@ using Halibut;
 using NUnit.Framework;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Tests.Integration.Support;
+using Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
 using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
 using Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers;
@@ -51,7 +52,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var actuallySent = (await clientTentacle.TentacleClient.DownloadFile(remotePath, CancellationToken)).GetUtf8String();
             actuallySent.Should().Be("Hello");
 
-            RetryLogMessageAssertions.AssertRetryAttemptsLoggedButNoRetryFailureLogged(inMemoryLog);
+            inMemoryLog.ShouldHaveLoggedRetryAttemptsAndNoRetryFailures();
         }
 
         [Test]
@@ -90,7 +91,7 @@ namespace Octopus.Tentacle.Tests.Integration
             fileTransferServiceCallCounts.DownloadFileCallCountStarted.Should().Be(2);
             actuallySent.Should().Be("Hello");
 
-            RetryLogMessageAssertions.AssertRetryAttemptsLoggedButNoRetryFailureLogged(inMemoryLog);
+            inMemoryLog.ShouldHaveLoggedRetryAttemptsAndNoRetryFailures();
         }
     }
 }

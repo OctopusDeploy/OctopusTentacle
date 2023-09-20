@@ -72,7 +72,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             scriptServiceV2CallCounts.StartScriptCallCountStarted.Should().BeGreaterThan(1);
 
-            RetryLogMessageAssertions.AssertRetryAttemptsLoggedButNoRetryFailureLogged(inMemoryLog);
+            inMemoryLog.ShouldHaveLoggedRetryAttemptsAndNoRetryFailures();
         }
 
         [Test]
@@ -128,7 +128,7 @@ namespace Octopus.Tentacle.Tests.Integration
             allLogs.Should().Contain("hello");
             scriptServiceV2Exceptions.GetStatusLatestException.Should().NotBeNull();
 
-            RetryLogMessageAssertions.AssertRetryAttemptsLoggedButNoRetryFailureLogged(inMemoryLog);
+            inMemoryLog.ShouldHaveLoggedRetryAttemptsAndNoRetryFailures();
         }
 
         [Test]
@@ -177,7 +177,7 @@ namespace Octopus.Tentacle.Tests.Integration
             allLogs.Should().Contain("hello");
             completeScriptWasCalled.Should().BeTrue("The tests expects that the client actually called this");
 
-            RetryLogMessageAssertions.AssertNoRetryAttemptsLoggedAndNoRetryFailureLogged(inMemoryLog);
+            inMemoryLog.ShouldNotHaveLoggedRetryAttemptsOrRetryFailures();
         }
 
         [Test]
@@ -249,7 +249,7 @@ namespace Octopus.Tentacle.Tests.Integration
             allLogs.Should().NotContain("AllDone");
             scriptServiceV2Exceptions.CancelScriptLatestException.Should().NotBeNull();
 
-            RetryLogMessageAssertions.AssertRetryAttemptsLoggedButNoRetryFailureLogged(inMemoryLog);
+            inMemoryLog.ShouldHaveLoggedRetryAttemptsAndNoRetryFailures();
         }
 
         [Test]
@@ -308,7 +308,7 @@ namespace Octopus.Tentacle.Tests.Integration
             capabilitiesServiceV2Exceptions.GetCapabilitiesLatestException.Should().NotBeNull();
             capabilitiesServiceV2CallCounts.GetCapabilitiesCallCountStarted.Should().Be(2);
 
-            RetryLogMessageAssertions.AssertRetryAttemptsLoggedButNoRetryFailureLogged(inMemoryLog);
+            inMemoryLog.ShouldHaveLoggedRetryAttemptsAndNoRetryFailures();
         }
     }
 }
