@@ -129,10 +129,9 @@ namespace Octopus.Tentacle.Client.Retries
 
                     var actionTask = action(ct);
 
-                    var actionTaskCompleted = await actionTask.WaitTillCompletedOrAbandoned(abandonAfter, cancellationToken);
-                    if (!actionTaskCompleted)
+                    var actionTaskCompletionResult = await actionTask.WaitTillCompletion(abandonAfter, cancellationToken);
+                    if (actionTaskCompletionResult == TaskCompletionResult.Abandoned)
                     {
-                        //TODO: How important is the stack trace when this was within the try/catch?
                         throw new OperationAbandonedException(abandonAfter);
                     }
 

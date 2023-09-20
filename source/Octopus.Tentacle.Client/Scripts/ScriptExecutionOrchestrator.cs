@@ -461,7 +461,7 @@ namespace Octopus.Tentacle.Client.Scripts
                             clientOperationMetricsBuilder,
                             CancellationToken.None);
 
-                    await actionTask.WaitTillCompletedOrAbandoned(onCancellationAbandonCompleteScriptAfter, scriptExecutionCancellationToken);
+                    await actionTask.WaitTillCompletion(onCancellationAbandonCompleteScriptAfter, scriptExecutionCancellationToken);
                 }
                 catch (Exception ex) when (ex is HalibutClientException or OperationCanceledException)
                 {
