@@ -26,25 +26,22 @@ namespace Octopus.Tentacle.Client.Retries
                 TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously);
         }
 
-        public static async Task<bool> WaitTillCompletedOrAbandoned(this Task actionTask, TimeSpan abandonAfter, CancellationToken cancellationToken)
+        public static async Task<TaskCompletionResult> WaitTillCompletion(this Task actionTask, TimeSpan abandonAfter, CancellationToken cancellationToken)
         {
             var actionTaskCompleted = await actionTask.WaitTillCompletedOrCancelled(cancellationToken);
 
-            if (!actionTaskCompleted)
-            {
-                actionTaskCompleted = await actionTask.WaitTillCompletedOrTimeout(abandonAfter).ConfigureAwait(false);
+            if (actionTaskCompleted) return TaskCompletionResult.Completed;
 
-                if (!actionTaskCompleted)
-                {
-                    actionTask.IgnoreUnobservedExceptions();
-                    return false;
-                }
-            }
+            actionTaskCompleted = await actionTask.WaitTillCompletedOrTimeout(abandonAfter).ConfigureAwait(false);
 
-            return true;
+            if (actionTaskCompleted) return TaskCompletionResult.Completed;
+
+            actionTask.IgnoreUnobservedExceptions();
+            return TaskCompletionResult.Abandoned;
+
         }
 
-        public static async Task<bool> WaitTillCompletedOrCancelled(this Task taskToWaitFor, CancellationToken cancellationToken)
+        static async Task<bool> WaitTillCompletedOrCancelled(this Task taskToWaitFor, CancellationToken cancellationToken)
         {
             using var cleanupCancellationTokenSource = new CancellationTokenSource();
             using var linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cleanupCancellationTokenSource.Token);
@@ -56,7 +53,7 @@ namespace Octopus.Tentacle.Client.Retries
             return taskToWaitFor == completedTask;
         }
 
-        public static async Task<bool> WaitTillCompletedOrTimeout(this Task taskToWaitFor, TimeSpan delay)
+        static async Task<bool> WaitTillCompletedOrTimeout(this Task taskToWaitFor, TimeSpan delay)
         {
             using var cleanupCancellationTokenSource = new CancellationTokenSource();
 
