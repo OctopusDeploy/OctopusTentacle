@@ -1,20 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Tentacle.Client.Scripts;
 
-namespace Octopus.IntegrationTests.Server.Orchestration.Targets.Tentacle
+namespace Octopus.Tentacle.Tests.Client
 {
     [TestFixture]
+    [Parallelizable(ParallelScope.All)]
     public class PollingTentacleScriptObserverBackoffStrategyTests
     {
-        readonly PollingTentacleScriptObserverBackoffStrategy pollingTentacleScriptObserverBackoffStrategy;
-
-        public PollingTentacleScriptObserverBackoffStrategyTests()
-        {
-            pollingTentacleScriptObserverBackoffStrategy = new PollingTentacleScriptObserverBackoffStrategy();
-        }
-
         [Test]
         public void BacksOffCorrectly()
         {
@@ -41,6 +36,7 @@ namespace Octopus.IntegrationTests.Server.Orchestration.Targets.Tentacle
 
             // Act
             var results = new List<double>();
+            var pollingTentacleScriptObserverBackoffStrategy = new PollingTentacleScriptObserverBackoffStrategy();
 
             for (var i = 0; i < testIteration; i++)
             {

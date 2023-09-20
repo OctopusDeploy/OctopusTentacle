@@ -16,6 +16,7 @@ using Octopus.Tentacle.Contracts.ScriptServiceV2;
 namespace Octopus.Tentacle.Tests.Client
 {
     [TestFixture]
+    [Parallelizable(ParallelScope.All)]
     public class RpcCallExecutorFixture
     {
         private const string RpcCallName = nameof(IScriptServiceV2.GetStatus);
@@ -113,7 +114,7 @@ namespace Octopus.Tentacle.Tests.Client
             var rpcCallObserver = new TestTentacleClientObserver();
             var exception = new HalibutClientException("An error has occurred.");
             //Timeout for long enough that we get a few attempts.
-            var retryDuration = TimeSpan.FromSeconds(3);
+            var retryDuration = TimeSpan.FromSeconds(8);
             var clientOperationMetricsBuilder = new ClientOperationMetricsBuilder(DateTimeOffset.UtcNow);
 
             // Act

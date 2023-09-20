@@ -9,7 +9,7 @@ namespace Octopus.Tentacle.Diagnostics
 {
     public abstract class Log : ILog, IDisposable
     {
-        public static ConcurrentBag<ILogAppender> Appenders { get; } = new ConcurrentBag<ILogAppender>();
+        public static ConcurrentBag<ILogAppender> Appenders { get; } = new();
         static IEnumerable<ILogAppender> GetThreadSafeAppenderCollection() => Appenders.ToArray();
 
         protected Log(string[]? sensitiveValues = null)

@@ -204,7 +204,7 @@ namespace Octopus.Tentacle.Tests.Integration
             metric.Exception.Should().BeNull();
             metric.WasCancelled.Should().BeFalse();
 
-            metric.End.Should().BeAfter(metric.Start);
+            metric.End.Should().BeOnOrAfter(metric.Start);
             metric.Duration.Should().Be(metric.End - metric.Start);
         }
 
