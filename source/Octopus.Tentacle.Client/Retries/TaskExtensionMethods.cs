@@ -32,13 +32,12 @@ namespace Octopus.Tentacle.Client.Retries
 
             if (actionTaskCompleted) return TaskCompletionResult.Completed;
 
-            actionTaskCompleted = await actionTask.WaitTillCompletedOrTimeout(abandonAfter).ConfigureAwait(false);
+            actionTaskCompleted = await actionTask.WaitTillCompletedOrTimeout(abandonAfter);
 
             if (actionTaskCompleted) return TaskCompletionResult.Completed;
 
             actionTask.IgnoreUnobservedExceptions();
             return TaskCompletionResult.Abandoned;
-
         }
 
         static async Task<bool> WaitTillCompletedOrCancelled(this Task taskToWaitFor, CancellationToken cancellationToken)
@@ -46,7 +45,7 @@ namespace Octopus.Tentacle.Client.Retries
             using var cleanupCancellationTokenSource = new CancellationTokenSource();
             using var linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cleanupCancellationTokenSource.Token);
 
-            var completedTask = await Task.WhenAny(taskToWaitFor, Task.Delay(-1, linkedCancellationTokenSource.Token)).ConfigureAwait(false);
+            var completedTask = await Task.WhenAny(taskToWaitFor, Task.Delay(-1, linkedCancellationTokenSource.Token));
 
             cleanupCancellationTokenSource.Cancel();
 
@@ -57,7 +56,7 @@ namespace Octopus.Tentacle.Client.Retries
         {
             using var cleanupCancellationTokenSource = new CancellationTokenSource();
 
-            var completedTask = await Task.WhenAny(taskToWaitFor, Task.Delay(delay, cleanupCancellationTokenSource.Token)).ConfigureAwait(false);
+            var completedTask = await Task.WhenAny(taskToWaitFor, Task.Delay(delay, cleanupCancellationTokenSource.Token));
 
             cleanupCancellationTokenSource.Cancel();
 
