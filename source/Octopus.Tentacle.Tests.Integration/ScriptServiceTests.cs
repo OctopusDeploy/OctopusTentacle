@@ -87,10 +87,13 @@ namespace Octopus.Tentacle.Tests.Integration
                               echo This is the end of the script";
 
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateLegacyBuilder().Build(CancellationToken);
+            Logger.Information("Client and Tentacle built");
 
             var scriptExecutor = new ScriptExecutionOrchestrator(clientAndTentacle.TentacleClient, tentacleConfigurationTestCase.SyncOrAsyncHalibut);
 
+            Logger.Information("Starting script now...");
             var ticket = await scriptExecutor.StartScript(windowsScript, nixScript, CancellationToken);
+            Logger.Information("Script started, waiting until output received...");
 
             // Possible Tentacle BUG: If we just observe until the first output is received then sometimes the script will fail to Cancel
             await scriptExecutor.ObserverUntilScriptOutputReceived(ticket, "This is the start of the script", CancellationToken);
