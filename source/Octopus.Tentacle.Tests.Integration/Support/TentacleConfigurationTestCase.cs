@@ -47,11 +47,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             string version = Version?.ToString() ?? "Latest";
             builder.Append($"{version},");
             builder.Append($"{SyncOrAsyncHalibut}");
-
-            if (TentacleRuntime != TentacleRuntime.Default)
-            {
-                builder.Append($",{TentacleRuntime.GetDescription()}");
-            }
+            builder.Append($",{TentacleRuntime.GetDescription()}");
 
             return builder.ToString();
         }

@@ -42,7 +42,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.SetupFixtures
             }
             else
             {
-                await GetTentacleVersionWithRuntime(logger, tentacleVersion, TentacleRuntime.Default);
+                await GetTentacleVersionWithRuntime(logger, tentacleVersion, DefaultTentacleRuntime.Value);
             }
         }
 

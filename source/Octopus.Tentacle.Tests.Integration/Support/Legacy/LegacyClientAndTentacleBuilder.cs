@@ -14,7 +14,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
     {
         private readonly TentacleType tentacleType;
         private Version? tentacleVersion;
-        private TentacleRuntime tentacleRuntime = TentacleRuntime.Default;
+        private TentacleRuntime tentacleRuntime = DefaultTentacleRuntime.Value;
         private AsyncHalibutFeature asyncHalibutFeature = AsyncHalibutFeature.Disabled;
 
         public LegacyClientAndTentacleBuilder(TentacleType tentacleType)

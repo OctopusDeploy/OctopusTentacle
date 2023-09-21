@@ -8,7 +8,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     {
         public static string FindTentacleExe()
         {
-            return FindTentacleExe(TentacleRuntime.Default);
+            return FindTentacleExe(DefaultTentacleRuntime.Value);
         }
 
         public static string FindTentacleExe(TentacleRuntime version)
@@ -25,22 +25,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
                 const string net48ArtifactDir = "tentaclereal-net48";
                 const string net60ArtifactDir = "tentaclereal-net6.0";
-
-                string GetDefaultArtifactDir()
-                {
-#if NETFRAMEWORK
-                    return net48ArtifactDir;
-#else
-                    return net60ArtifactDir;
-#endif
-                }
-
+                
                 string artifactDir =
                     version switch
                     {
                         TentacleRuntime.Framework48 => net48ArtifactDir,
                         TentacleRuntime.DotNet6 => net60ArtifactDir,
-                        TentacleRuntime.Default => GetDefaultArtifactDir(),
                         _ => throw new ArgumentOutOfRangeException(nameof(version), version, null)
                     };
 
@@ -53,7 +43,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 {
                     TentacleRuntime.Framework48 => "net48",
                     TentacleRuntime.DotNet6 => "net6.0",
-                    TentacleRuntime.Default => assemblyDir.Name,
                     _ => throw new ArgumentOutOfRangeException(nameof(version), version, null)
                 };
 
