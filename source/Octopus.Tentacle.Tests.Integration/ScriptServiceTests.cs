@@ -75,6 +75,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
         [Test]
         [TentacleConfigurations]
+        [NonParallelizable]
         public async Task CancelScript(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             var windowsScript = @"Write-Host ""This is the start of the script""
