@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
@@ -50,16 +51,32 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
         {
             var scriptStatusResponse = new ScriptStatusResponse(scriptTicket, ProcessState.Pending, 0, new List<ProcessOutput>(), 0);
             var logs = new List<ProcessOutput>();
+            var logger = new SerilogLoggerBuilder().Build();
+            logger.Information("ObserverUntilScriptOutputReceived started");
 
             while (scriptStatusResponse.State != ProcessState.Complete)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
+                logger.Information("About to call GetStatus");
                 scriptStatusResponse = await syncOrAsyncHalibut
-                    .WhenSync(() => tentacleClient.ScriptService.SyncService.GetStatus(new ScriptStatusRequest(scriptTicket, scriptStatusResponse.NextLogSequence)))
-                    .WhenAsync(async () => await tentacleClient.ScriptService.AsyncService.GetStatusAsync(
-                        new ScriptStatusRequest(scriptTicket, scriptStatusResponse.NextLogSequence), 
-                        new(cancellationToken, null)));
+                    .WhenSync(() =>
+                    {
+                        logger.Information("Calling GetStatus(sync)");
+                        var result = tentacleClient.ScriptService.SyncService.GetStatus(new ScriptStatusRequest(scriptTicket, scriptStatusResponse.NextLogSequence));
+                        logger.Information("GetStatus(sync) complete");
+                        return result;
+                    })
+                    .WhenAsync(async () =>
+                    {
+                        logger.Information("Calling GetStatus(sync)");
+                        var result = await tentacleClient.ScriptService.AsyncService.GetStatusAsync(
+                            new ScriptStatusRequest(scriptTicket, scriptStatusResponse.NextLogSequence),
+                            new(cancellationToken, null));
+                        logger.Information("GetStatus(sync) complete");
+                        return result;
+                    });
+                logger.Information($"GetStatus complete, status response state: {scriptStatusResponse.State}");
                 
                 logs.AddRange(scriptStatusResponse.Logs);
 
@@ -74,6 +91,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
                 }
             }
 
+            logger.Information("ObserverUntilScriptOutputReceived complete");
             return new ScriptStatusResponse(scriptStatusResponse.Ticket, scriptStatusResponse.State, scriptStatusResponse.ExitCode, logs, scriptStatusResponse.NextLogSequence);
         }
 
