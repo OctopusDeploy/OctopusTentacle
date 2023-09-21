@@ -68,13 +68,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
                 {
                     TentacleRuntime.DotNet6 => net60ArtifactName,
                     TentacleRuntime.Framework48 => net48ArtifactName,
-                    TentacleRuntime.Default =>
-#if NETFRAMEWORK
-                        net48ArtifactName,
-#endif
-#if !NETFRAMEWORK
-                        net60ArtifactName,
-#endif
                     _ => throw new ArgumentOutOfRangeException(nameof(runtime), runtime, null)
                 };
 

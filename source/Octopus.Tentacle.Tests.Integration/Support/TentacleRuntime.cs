@@ -4,11 +4,18 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
+    public static class DefaultTentacleRuntime
+    {
+        public const TentacleRuntime Value =
+#if NETFRAMEWORK
+            TentacleRuntime.Framework48;
+#else
+            TentacleRuntime.DotNet6;
+#endif
+    }
+
     public enum TentacleRuntime
     {
-        [Description("Default")]
-        Default,
-        
         [Description(RuntimeDetection.DotNet6)]
         DotNet6,
         

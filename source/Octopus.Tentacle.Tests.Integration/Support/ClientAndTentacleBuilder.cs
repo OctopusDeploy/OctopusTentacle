@@ -25,7 +25,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         IScriptObserverBackoffStrategy scriptObserverBackoffStrategy = new DefaultScriptObserverBackoffStrategy();
         public readonly TentacleType TentacleType;
         Version? tentacleVersion;
-        private TentacleRuntime tentacleRuntime = TentacleRuntime.Default;
+        private TentacleRuntime tentacleRuntime = DefaultTentacleRuntime.Value;
         readonly List<Func<PortForwarderBuilder, PortForwarderBuilder>> portForwarderModifiers = new ();
         readonly List<Action<ServiceEndPoint>> serviceEndpointModifiers = new();
         private IPendingRequestQueueFactory? queueFactory = null;

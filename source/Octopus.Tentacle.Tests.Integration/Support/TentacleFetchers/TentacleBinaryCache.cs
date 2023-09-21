@@ -70,7 +70,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
             // If non-default, use what was passed in
             return runtime switch
             {
-                TentacleRuntime.Default => RuntimeDetection.GetCurrentRuntime(),
                 TentacleRuntime.DotNet6 => TentacleRuntime.DotNet6.GetDescription(),
                 TentacleRuntime.Framework48 => TentacleRuntime.Framework48.GetDescription(),
                 _ => throw new ArgumentOutOfRangeException(nameof(runtime), runtime, null)
