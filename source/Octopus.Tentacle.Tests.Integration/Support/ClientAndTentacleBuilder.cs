@@ -209,15 +209,17 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
             TentacleClient.CacheServiceWasNotFoundResponseMessages(server.ServerHalibutRuntime);
 
+            var retrySettings = new RpcRetrySettings(retriesEnabled, retryDuration);
+
             var tentacleClient = new TentacleClient(
                 tentacleEndPoint,
                 server.ServerHalibutRuntime,
                 scriptObserverBackoffStrategy,
                 tentacleClientObserver,
-                new RpcRetrySettings(retriesEnabled, retryDuration),
+                retrySettings,
                 tentacleServiceDecorator);
 
-            return new ClientAndTentacle(server.ServerHalibutRuntime, tentacleEndPoint, server, portForwarder, runningTentacle, tentacleClient, temporaryDirectory);
+            return new ClientAndTentacle(server.ServerHalibutRuntime, tentacleEndPoint, server, portForwarder, runningTentacle, tentacleClient, temporaryDirectory, retrySettings);
         }
     }
 }

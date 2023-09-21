@@ -12,6 +12,7 @@ using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Tests.Integration.Support;
+using Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
 using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
@@ -46,7 +47,11 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithDurationStartScriptCanWaitForScriptToFinish(TimeSpan.FromHours(1))
                 .Build();
 
-            var execScriptTask = Task.Run(async () => await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken), CancellationToken);
+            var inMemoryLog = new InMemoryLog();
+
+            var execScriptTask = Task.Run(
+                async () => await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, inMemoryLog), 
+                CancellationToken);
 
             // Wait for the script to start.
             await Wait.For(() => File.Exists(scriptHasStartFile), CancellationToken);
@@ -66,6 +71,8 @@ namespace Octopus.Tentacle.Tests.Integration
             allLogs.Should().Contain("hello");
 
             scriptServiceV2CallCounts.StartScriptCallCountStarted.Should().BeGreaterThan(1);
+
+            inMemoryLog.ShouldHaveLoggedRetryAttemptsAndNoRetryFailures();
         }
 
         [Test]
@@ -101,7 +108,11 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Print("AllDone"))
                 .Build();
 
-            var execScriptTask = Task.Run(async () => await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken), CancellationToken);
+            var inMemoryLog = new InMemoryLog();
+
+            var execScriptTask = Task.Run(
+                async () => await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, inMemoryLog), 
+                CancellationToken);
 
             await Wait.For(() => scriptServiceV2Exceptions.GetStatusLatestException != null, CancellationToken);
 
@@ -116,6 +127,8 @@ namespace Octopus.Tentacle.Tests.Integration
             var allLogs = logs.JoinLogs();
             allLogs.Should().Contain("hello");
             scriptServiceV2Exceptions.GetStatusLatestException.Should().NotBeNull();
+
+            inMemoryLog.ShouldHaveLoggedRetryAttemptsAndNoRetryFailures();
         }
 
         [Test]
@@ -154,7 +167,8 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithScriptBody(new ScriptBuilder().Print("hello").Sleep(TimeSpan.FromSeconds(1)))
                 .Build();
 
-            var (finalResponse, logs) = await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken);
+            var inMemoryLog = new InMemoryLog();
+            var (finalResponse, logs) = await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, inMemoryLog);
 
             finalResponse.State.Should().Be(ProcessState.Complete);
             finalResponse.ExitCode.Should().Be(0);
@@ -162,6 +176,8 @@ namespace Octopus.Tentacle.Tests.Integration
             var allLogs = logs.JoinLogs();
             allLogs.Should().Contain("hello");
             completeScriptWasCalled.Should().BeTrue("The tests expects that the client actually called this");
+
+            inMemoryLog.ShouldNotHaveLoggedRetryAttemptsOrRetryFailures();
         }
 
         [Test]
@@ -208,6 +224,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             Exception? actualException = null;
             var logs = new List<ProcessOutput>();
+            var inMemoryLog = new InMemoryLog();
 
             try
             {
@@ -217,7 +234,7 @@ namespace Octopus.Tentacle.Tests.Integration
                         logs.AddRange(onScriptStatusResponseReceived.Logs);
                     },
                     _ => Task.CompletedTask,
-                    new SerilogLoggerBuilder().Build().ForContext<TentacleClient>().ToILog(),
+                    new SerilogLoggerBuilder().Build().ForContext<TentacleClient>().ToILog().Chain(inMemoryLog),
                     cts.Token);
             }
             catch (Exception ex)
@@ -231,6 +248,8 @@ namespace Octopus.Tentacle.Tests.Integration
             allLogs.Should().Contain("hello");
             allLogs.Should().NotContain("AllDone");
             scriptServiceV2Exceptions.CancelScriptLatestException.Should().NotBeNull();
+
+            inMemoryLog.ShouldHaveLoggedRetryAttemptsAndNoRetryFailures();
         }
 
         [Test]
@@ -273,11 +292,13 @@ namespace Octopus.Tentacle.Tests.Integration
                     asyncScriptServiceV2 = clientTentacle.Server.ServerHalibutRuntime.CreateAsyncClient<IScriptServiceV2, IAsyncClientScriptServiceV2>(clientTentacle.ServiceEndPoint);
                 });
 
+            var inMemoryLog = new InMemoryLog();
+
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody(new ScriptBuilder().Print("hello"))
                 .Build();
 
-            var (finalResponse, logs) = await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken);
+            var (finalResponse, logs) = await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, inMemoryLog);
 
             finalResponse.State.Should().Be(ProcessState.Complete);
             finalResponse.ExitCode.Should().Be(0);
@@ -286,6 +307,8 @@ namespace Octopus.Tentacle.Tests.Integration
             allLogs.Should().Contain("hello");
             capabilitiesServiceV2Exceptions.GetCapabilitiesLatestException.Should().NotBeNull();
             capabilitiesServiceV2CallCounts.GetCapabilitiesCallCountStarted.Should().Be(2);
+
+            inMemoryLog.ShouldHaveLoggedRetryAttemptsAndNoRetryFailures();
         }
     }
 }

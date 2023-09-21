@@ -64,13 +64,21 @@ namespace Octopus.Tentacle.Client.Execution
                             await Task.CompletedTask;
 
                             var remainingDurationInSeconds = (int)(totalRetryDuration - elapsedDuration).TotalSeconds;
-                            logger.Info($"An error occurred communicating with Tentacle. This action will be retried after {sleepDuration.TotalSeconds} seconds. Retry attempt {retryCount}. Retries will be performed for up to {remainingDurationInSeconds} seconds.");
+                            logger.Info($"An error occurred communicating with Tentacle. This action will be retried after {(int)sleepDuration.TotalSeconds} seconds. Retry attempt {retryCount}. Retries will be performed for up to {remainingDurationInSeconds} seconds.");
                             logger.Verbose(lastException);
                         },
-                        onTimeoutAction: async (timeoutDuration, _) =>
+                        onTimeoutAction: async (timeoutDuration, elapsedDuration, retryCount, _) =>
                         {
                             await Task.CompletedTask;
-                            logger.Info($"Could not communicate with Tentacle after {timeoutDuration.TotalSeconds} seconds. No more retries will be attempted.");
+
+                            if (retryCount > 0)
+                            {
+                                logger.Info($"Could not communicate with Tentacle after {(int)elapsedDuration.TotalSeconds} seconds. No more retries will be attempted.");
+                            }
+                            else
+                            {
+                                logger.Info($"Could not communicate with Tentacle after {(int)elapsedDuration.TotalSeconds} seconds.");
+                            }
                         },
                         abandonActionOnCancellation,
                         AbandonAfter,

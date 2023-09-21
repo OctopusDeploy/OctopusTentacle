@@ -7,15 +7,9 @@ using Octopus.Tentacle.Client.Scripts;
 namespace Octopus.Tentacle.Tests.Client
 {
     [TestFixture]
+    [Parallelizable(ParallelScope.All)]
     public class DefaultScriptObserverBackoffStrategyTests
     {
-        readonly DefaultScriptObserverBackoffStrategy defaultScriptObserverBackoffStrategy;
-
-        public DefaultScriptObserverBackoffStrategyTests()
-        {
-            defaultScriptObserverBackoffStrategy = new DefaultScriptObserverBackoffStrategy();
-        }
-
         [Test]
         public void BacksOffCorrectly()
         {
@@ -52,6 +46,7 @@ namespace Octopus.Tentacle.Tests.Client
 
             // Act
             var results = new List<double>();
+            var defaultScriptObserverBackoffStrategy = new DefaultScriptObserverBackoffStrategy();
 
             for (var i = 0; i < testIteration; i++)
             {

@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Halibut;
 using Halibut.Util;
 using Octopus.Tentacle.Client;
+using Octopus.Tentacle.Client.Retries;
 using Octopus.Tentacle.Tests.Integration.Support.Legacy;
 using Octopus.TestPortForwarder;
 
@@ -17,20 +18,21 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public RunningTentacle RunningTentacle { get; }
         public TentacleClient TentacleClient { get; }
         public TemporaryDirectory TemporaryDirectory { get; }
+        public RpcRetrySettings RpcRetrySettings { get; }
 
         public LegacyTentacleClientBuilder LegacyTentacleClientBuilder(AsyncHalibutFeature asyncHalibutFeature)
         {
             return new LegacyTentacleClientBuilder(halibutRuntime, ServiceEndPoint, asyncHalibutFeature);
         }
 
-        public ClientAndTentacle(
-            IHalibutRuntime halibutRuntime,
+        public ClientAndTentacle(IHalibutRuntime halibutRuntime,
             ServiceEndPoint serviceEndPoint,
             Server server,
             PortForwarder? portForwarder,
             RunningTentacle runningTentacle,
             TentacleClient tentacleClient,
-            TemporaryDirectory temporaryDirectory)
+            TemporaryDirectory temporaryDirectory, 
+            RpcRetrySettings rpcRetrySettings)
         {
             this.halibutRuntime = halibutRuntime;
             Server = server;
@@ -38,6 +40,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             RunningTentacle = runningTentacle;
             TentacleClient = tentacleClient;
             TemporaryDirectory = temporaryDirectory;
+            RpcRetrySettings = rpcRetrySettings;
             this.ServiceEndPoint = serviceEndPoint;
         }
 
