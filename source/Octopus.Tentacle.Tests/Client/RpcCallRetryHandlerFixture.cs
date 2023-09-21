@@ -17,6 +17,8 @@ namespace Octopus.Tentacle.Tests.Client
     [Parallelizable(ParallelScope.All)]
     public class RpcCallRetryHandlerFixture
     {
+        readonly TimeSpan retryBackoffBuffer = TimeSpan.FromSeconds(2);
+
         [TestCase(TimeoutStrategy.Optimistic)]
         [TestCase(TimeoutStrategy.Pessimistic)]
         public async Task ReturnsTheResultWhenNoRetries(TimeoutStrategy timeoutStrategy)
@@ -101,7 +103,6 @@ namespace Octopus.Tentacle.Tests.Client
             callCount.Should().BeGreaterThan(1);
         }
 
-
         [TestCase(TimeoutStrategy.Optimistic)]
         [TestCase(TimeoutStrategy.Pessimistic)]
         public async Task DoesNotRetryHalibutExceptionsThatAreKnownToNotBeNetworkErrors(TimeoutStrategy timeoutStrategy)
@@ -141,7 +142,6 @@ namespace Octopus.Tentacle.Tests.Client
             onRetryActionCalled.Should().BeFalse();
             onTimeoutActionCalled.Should().BeFalse();
         }
-
 
         [TestCase(TimeoutStrategy.Optimistic)]
         [TestCase(TimeoutStrategy.Pessimistic)]
@@ -271,7 +271,6 @@ namespace Octopus.Tentacle.Tests.Client
             calledOnTimeoutAction.Should().BeTrue();
         }
 
-
         [TestCase(TimeoutStrategy.Optimistic)]
         [TestCase(TimeoutStrategy.Pessimistic)]
         public async Task DoesNotRetryIfNoExceptionOccurs(TimeoutStrategy timeoutStrategy)
@@ -306,7 +305,6 @@ namespace Octopus.Tentacle.Tests.Client
             onRetryActionCalled.Should().BeFalse();
             onTimeoutActionCalled.Should().BeFalse();
         }
-
 
         [TestCase(TimeoutStrategy.Optimistic)]
         [TestCase(TimeoutStrategy.Pessimistic)]
@@ -386,7 +384,6 @@ namespace Octopus.Tentacle.Tests.Client
             (lastExpectedRetry.elapsedDuration + lastExpectedRetry.sleepDuration).Should().BeLessThan(handler.RetryTimeout);
         }
 
-
         [TestCase(TimeoutStrategy.Optimistic)]
         [TestCase(TimeoutStrategy.Pessimistic)]
         public async Task CancelsTheExecutingActionIfItIsARetryAfterTheTimeout(TimeoutStrategy timeoutStrategy)
@@ -431,7 +428,6 @@ namespace Octopus.Tentacle.Tests.Client
             callCount.Should().Be(2);
         }
 
-
         [TestCase(TimeoutStrategy.Pessimistic)]
         public async Task CancelsTheExecutingActionIfItIsARetryAfterTheTimeoutEvenIfActionIgnoresCancellation(TimeoutStrategy timeoutStrategy)
         {
@@ -473,10 +469,11 @@ namespace Octopus.Tentacle.Tests.Client
             }
             catch (HalibutClientException) { }
 
-            stopWatch.Elapsed.Should().BeGreaterOrEqualTo(TimeSpan.FromSeconds(8)).And.BeLessThan(TimeSpan.FromSeconds(20));
+            stopWatch.Elapsed.Should()
+                .BeGreaterOrEqualTo(handler.RetryTimeout - handler.RetryIfRemainingDurationAtLeast - retryBackoffBuffer)
+                .And.BeLessThan(TimeSpan.FromSeconds(20));
             callCount.Should().Be(2);
         }
-
 
         [TestCase(TimeoutStrategy.Optimistic)]
         [TestCase(TimeoutStrategy.Pessimistic)]
@@ -510,7 +507,6 @@ namespace Octopus.Tentacle.Tests.Client
             actualException.Should().BeOfType<HalibutClientException>();
             actualException!.Message.Should().Be(callCount.ToString());
         }
-
 
         [TestCase(TimeoutStrategy.Optimistic)]
         [TestCase(TimeoutStrategy.Pessimistic)]
@@ -550,8 +546,7 @@ namespace Octopus.Tentacle.Tests.Client
             stopWatch.Elapsed.Should().BeGreaterOrEqualTo(TimeSpan.FromSeconds(8)).And.BeLessThan(TimeSpan.FromSeconds(20));
             callCount.Should().Be(1);
         }
-
-
+        
         [TestCase(TimeoutStrategy.Optimistic)]
         [TestCase(TimeoutStrategy.Pessimistic)]
         public async Task CanPerformAnActionBeforeARetry(TimeoutStrategy timeoutStrategy)
@@ -676,7 +671,6 @@ namespace Octopus.Tentacle.Tests.Client
             timeoutTimes[0].RetryCount.Should().Be(0);
             onRetryActionCount.Should().Be(0);
         }
-
 
         [TestCase(TimeoutStrategy.Optimistic)]
         public async Task ShouldWaitBetweenRetries(TimeoutStrategy timeoutStrategy)
