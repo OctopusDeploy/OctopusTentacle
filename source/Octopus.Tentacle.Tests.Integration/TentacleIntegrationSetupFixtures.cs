@@ -17,8 +17,7 @@ namespace Octopus.Tentacle.Tests.Integration
     [SetUpFixture] // Must be the one and only. 
     public class TentacleIntegrationSetupFixtures
     {
-        private ISetupFixture[] setupFixtures = new ISetupFixture[]
-        {
+        private readonly ISetupFixture[] setupFixtures = {
             new BumpThreadPoolForAllTests(),
             new WarmTentacleCache()
         };
@@ -33,6 +32,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithLoggingToStringBuilder(sb)
                 .Build()
                 .ForContext<TentacleIntegrationSetupFixtures>();
+
             foreach (var setupFixture in setupFixtures)
             {
                 setupFixture.OneTimeSetUp(logger.ForContext(setupFixture.GetType()));
@@ -46,6 +46,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             var logger = new SerilogLoggerBuilder().Build().ForContext<TentacleIntegrationSetupFixtures>();
             var exceptions = new List<Exception>();
+
             foreach (var setupFixture in setupFixtures.Reverse())
             {
                 try
