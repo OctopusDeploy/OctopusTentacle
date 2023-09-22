@@ -424,7 +424,7 @@ namespace Octopus.Tentacle.Tests.Client
             }
             catch (HalibutClientException) { }
 
-            stopWatch.Elapsed.Should().BeGreaterOrEqualTo(TimeSpan.FromSeconds(8)).And.BeLessThan(TimeSpan.FromSeconds(20));
+            stopWatch.Elapsed.Should().BeGreaterOrEqualTo(GetMinTimeoutDuration(handler)).And.BeLessThan(TimeSpan.FromSeconds(20));
             callCount.Should().Be(2);
         }
 
@@ -469,9 +469,7 @@ namespace Octopus.Tentacle.Tests.Client
             }
             catch (HalibutClientException) { }
 
-            stopWatch.Elapsed.Should()
-                .BeGreaterOrEqualTo(handler.RetryTimeout - handler.RetryIfRemainingDurationAtLeast - retryBackoffBuffer)
-                .And.BeLessThan(TimeSpan.FromSeconds(20));
+            stopWatch.Elapsed.Should().BeGreaterOrEqualTo(GetMinTimeoutDuration(handler)).And.BeLessThan(TimeSpan.FromSeconds(20));
             callCount.Should().Be(2);
         }
 
@@ -786,6 +784,10 @@ namespace Octopus.Tentacle.Tests.Client
             var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutInSeconds));
             var cancellationToken = cancellationTokenSource.Token;
             return cancellationToken;
+        }
+        private TimeSpan GetMinTimeoutDuration(RpcCallRetryHandler handler)
+        {
+            return handler.RetryTimeout - handler.RetryIfRemainingDurationAtLeast - retryBackoffBuffer;
         }
     }
 }
