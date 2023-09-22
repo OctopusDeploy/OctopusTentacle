@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace Octopus.Tentacle.Util
+namespace Octopus.Tentacle.Tests.Integration.Support
 {
     public static class RuntimeDetection
     {
