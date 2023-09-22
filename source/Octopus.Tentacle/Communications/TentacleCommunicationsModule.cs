@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Autofac;
 using Halibut;
 using Halibut.ServiceModel;
@@ -20,14 +19,18 @@ namespace Octopus.Tentacle.Communications
             builder.Register(c =>
             {
                 var configuration = c.Resolve<ITentacleConfiguration>();
+                var featureConfiguration = c.Resolve<IFeatureConfiguration>();
                 var services = c.Resolve<IServiceFactory>();
                 var halibutRuntime = new HalibutRuntimeBuilder()
                     .WithServiceFactory(services)
                     .WithServerCertificate(configuration.TentacleCertificate)
                     .WithMessageSerializer(serializerBuilder => serializerBuilder.WithLegacyContractSupport())
+                    .WithAsyncHalibutFeature(featureConfiguration.AsyncHalibut)
                     .Build();
+
                 halibutRuntime.SetFriendlyHtmlPageContent(FriendlyHtmlPageContent);
                 halibutRuntime.SetFriendlyHtmlPageHeaders(FriendlyHtmlPageHeaders);
+
                 return halibutRuntime;
             }).As<HalibutRuntime>().SingleInstance();
             builder.RegisterType<OctopusServerChecker>().As<IOctopusServerChecker>();
@@ -63,12 +66,12 @@ namespace Octopus.Tentacle.Communications
 
         static readonly IEnumerable<KeyValuePair<string, string>> FriendlyHtmlPageHeaders = new List<KeyValuePair<string, string>>
         {
-            new KeyValuePair<string, string>("Content-Security-Policy", "default-src 'none'; style-src 'sha256-Og27Evh417GekW0LSWwdTR+KDPHniSjRY3CDgH5olCw='; img-src 'self'"),
-            new KeyValuePair<string, string>("Referrer-Policy", "no-referrer"),
-            new KeyValuePair<string, string>("X-Content-Type-Options", "nosniff"),
-            new KeyValuePair<string, string>("X-Frame-Options", "DENY"),
-            new KeyValuePair<string, string>("X-XSS-Protection",  "1; mode=block"),
-            new KeyValuePair<string, string>("Strict-Transport-Security",  "max-age=31536000")
+            new("Content-Security-Policy", "default-src 'none'; style-src 'sha256-Og27Evh417GekW0LSWwdTR+KDPHniSjRY3CDgH5olCw='; img-src 'self'"),
+            new("Referrer-Policy", "no-referrer"),
+            new("X-Content-Type-Options", "nosniff"),
+            new("X-Frame-Options", "DENY"),
+            new("X-XSS-Protection",  "1; mode=block"),
+            new("Strict-Transport-Security",  "max-age=31536000")
         };
     }
 }
