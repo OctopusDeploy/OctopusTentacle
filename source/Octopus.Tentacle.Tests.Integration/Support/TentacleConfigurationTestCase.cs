@@ -52,7 +52,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             var currentRuntime = RuntimeDetection.GetCurrentRuntime();
             if (tentacleRuntimeDescription != currentRuntime)
             {
-                builder.Append($",Cl:{tentacleRuntimeDescription},Svc:{currentRuntime}");
+                builder.Append($",Cl:{currentRuntime},Svc:{tentacleRuntimeDescription}");
             }
 
             return builder.ToString();
