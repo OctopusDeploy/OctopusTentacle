@@ -88,7 +88,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             await using var clientAndTentacle = await tentacleConfigurationTestCase
                 .CreateLegacyBuilder()
-                .WithHalibutLoggingLevel(LogLevel.Debug)
+                .WithHalibutLoggingLevel(LogLevel.Trace)
                 .Build(CancellationToken);
 
             var scriptExecutor = new ScriptExecutionOrchestrator(clientAndTentacle.TentacleClient, tentacleConfigurationTestCase.SyncOrAsyncHalibut, Logger);
