@@ -15,7 +15,7 @@ namespace Octopus.Tentacle.Tests.Integration
     public class ScriptServiceTests : IntegrationTest
     {
         [Test]
-        [TentacleConfigurations(testCommonVersions: true)]
+        [TentacleConfigurations]
         public async Task RunScriptWithSuccess(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             var windowsScript = @"
@@ -45,7 +45,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TentacleConfigurations(testCommonVersions: true)]
+        [TentacleConfigurations]
         public async Task RunScriptWithErrors(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             var windowsScript = @"
@@ -75,7 +75,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TentacleConfigurations(testCommonVersions: true)]
+        [TentacleConfigurations]
         public async Task CancelScript(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             var windowsScript = @"Write-Host ""This is the start of the script""
