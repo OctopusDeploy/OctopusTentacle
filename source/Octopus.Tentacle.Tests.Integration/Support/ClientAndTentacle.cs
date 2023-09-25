@@ -52,12 +52,13 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public async ValueTask DisposeAsync()
         {
             logger.Information("Starting DisposeAsync");
-            logger.Information("Starting Server.Dispose");
-            Server.Dispose();
-            logger.Information("Starting PortForwarder.Dispose");
-            PortForwarder?.Dispose();
-            logger.Information("Starting RunningTentacle.DisposeAsync");
-            await RunningTentacle.DisposeAsync();
+
+            logger.Information("Starting RunningTentacle.DisposeAsync and Server.Dispose and PortForwarder.Dispose");
+            var portForwarderTask = Task.Run(() => PortForwarder?.Dispose());
+            var runningTentacleTask = RunningTentacle.DisposeAsync();
+            var serverTask = Server.DisposeAsync();
+            await Task.WhenAll(runningTentacleTask.AsTask(), serverTask.AsTask(), portForwarderTask);
+
             logger.Information("Starting TentacleClient.Dispose");
             TentacleClient.Dispose();
             logger.Information("Starting TemporaryDirectory.Dispose");
