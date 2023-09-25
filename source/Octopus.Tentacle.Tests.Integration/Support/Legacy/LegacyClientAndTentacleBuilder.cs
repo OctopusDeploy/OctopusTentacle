@@ -2,8 +2,12 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
+using Halibut.Diagnostics;
+using Halibut.Diagnostics.LogCreators;
+using Halibut.Logging;
 using Halibut.Util;
 using Octopus.Tentacle.Contracts.Legacy;
+using Octopus.Tentacle.Tests.Integration.Support.Logging;
 using Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.TestPortForwarder;
@@ -16,6 +20,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
         private Version? tentacleVersion;
         private TentacleRuntime tentacleRuntime = DefaultTentacleRuntime.Value;
         private AsyncHalibutFeature asyncHalibutFeature = AsyncHalibutFeature.Disabled;
+        LogLevel halibutLogLevel = LogLevel.Info;
 
         public LegacyClientAndTentacleBuilder(TentacleType tentacleType)
         {
@@ -41,13 +46,20 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
             return this;
         }
 
+        public LegacyClientAndTentacleBuilder WithHalibutLoggingLevel(LogLevel halibutLogLevel)
+        {
+            this.halibutLogLevel = halibutLogLevel;
+            return this;
+        }
+
         public async Task<LegacyClientAndTentacle> Build(CancellationToken cancellationToken)
         {
             var logger = new SerilogLoggerBuilder().Build().ForContext<LegacyTentacleClientBuilder>();
             // Server
             var serverHalibutRuntimeBuilder = new HalibutRuntimeBuilder()
                 .WithServerCertificate(Certificates.Server)
-                .WithLegacyContractSupport();
+                .WithLegacyContractSupport()
+                .WithLogFactory(BuildClientLogger());
 
             if (asyncHalibutFeature.IsEnabled())
             {
@@ -59,7 +71,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
             serverHalibutRuntime.Trust(Certificates.TentaclePublicThumbprint);
             var serverListeningPort = serverHalibutRuntime.Listen();
 
-            var server = new Server(serverHalibutRuntime, serverListeningPort);
+            var server = new Server(serverHalibutRuntime, serverListeningPort, logger);
 
             // Port Forwarder
             PortForwarder portForwarder;
@@ -80,7 +92,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
 
                 runningTentacle = await new PollingTentacleBuilder(portForwarder.ListeningPort, Certificates.ServerPublicThumbprint)
                     .WithTentacleExe(tentacleExe)
-                    .Build(cancellationToken);
+                    .Build(logger, cancellationToken);
 
 #pragma warning disable CS0612
                 tentacleEndPoint = new ServiceEndPoint(runningTentacle.ServiceUri, runningTentacle.Thumbprint);
@@ -90,7 +102,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
             {
                 runningTentacle = await new ListeningTentacleBuilder(Certificates.ServerPublicThumbprint)
                     .WithTentacleExe(tentacleExe)
-                    .Build(cancellationToken);
+                    .Build(logger, cancellationToken);
 
                 portForwarder = new PortForwarderBuilder(runningTentacle.ServiceUri, new SerilogLoggerBuilder().Build()).Build();
 
@@ -102,7 +114,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
             var tentacleClient = new LegacyTentacleClientBuilder(server.ServerHalibutRuntime, tentacleEndPoint, asyncHalibutFeature)
                 .Build(cancellationToken);
 
-            return new LegacyClientAndTentacle(server, portForwarder, runningTentacle, tentacleClient, temporaryDirectory);
+            return new LegacyClientAndTentacle(server, portForwarder, runningTentacle, tentacleClient, temporaryDirectory, logger);
+        }
+
+        ILogFactory BuildClientLogger()
+        {
+            return new TestContextLogCreator("Client", halibutLogLevel).ToCachingLogFactory();
         }
     }
 }

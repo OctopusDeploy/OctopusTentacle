@@ -158,7 +158,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             serverHalibutRuntime.Trust(Certificates.TentaclePublicThumbprint);
             var serverListeningPort = serverHalibutRuntime.Listen();
 
-            var server = new Server(serverHalibutRuntime, serverListeningPort);
+            var server = new Server(serverHalibutRuntime, serverListeningPort, logger);
 
             // Port Forwarder
             PortForwarder? portForwarder;
@@ -178,7 +178,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
                 runningTentacle = await new PollingTentacleBuilder(portForwarder?.ListeningPort ?? serverListeningPort, Certificates.ServerPublicThumbprint)
                     .WithTentacleExe(tentacleExe)
-                    .Build(cancellationToken);
+                    .Build(logger, cancellationToken);
 
 #pragma warning disable CS0612
                 tentacleEndPoint = new ServiceEndPoint(runningTentacle.ServiceUri, runningTentacle.Thumbprint);
@@ -188,7 +188,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             {
                 runningTentacle = await new ListeningTentacleBuilder(Certificates.ServerPublicThumbprint)
                     .WithTentacleExe(tentacleExe)
-                    .Build(cancellationToken);
+                    .Build(logger, cancellationToken);
 
                 portForwarder = BuildPortForwarder(runningTentacle.ServiceUri.Port, null);
 
@@ -219,7 +219,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 retrySettings,
                 tentacleServiceDecorator);
 
-            return new ClientAndTentacle(server.ServerHalibutRuntime, tentacleEndPoint, server, portForwarder, runningTentacle, tentacleClient, temporaryDirectory, retrySettings);
+            return new ClientAndTentacle(server.ServerHalibutRuntime, tentacleEndPoint, server, portForwarder, runningTentacle, tentacleClient, temporaryDirectory, retrySettings, logger);
         }
     }
 }

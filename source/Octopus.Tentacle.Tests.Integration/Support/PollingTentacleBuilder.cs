@@ -4,8 +4,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Client.Model;
 using Octopus.Tentacle.Configuration;
-using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Util;
+using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
@@ -20,7 +20,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             ServerThumbprint = serverThumbprint;
         }
 
-        internal async Task<RunningTentacle> Build(CancellationToken cancellationToken)
+        internal async Task<RunningTentacle> Build(ILogger log, CancellationToken cancellationToken)
         {
             var tempDirectory = new TemporaryDirectory();
             var instanceName = InstanceNameGenerator();
@@ -28,7 +28,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             var tentacleExe = TentacleExePath ?? TentacleExeFinder.FindTentacleExe();
             var subscriptionId = PollingSubscriptionId.Generate();
             
-            var logger = new SerilogLoggerBuilder().Build().ForContext<ListeningTentacleBuilder>();
+            var logger = log.ForContext<ListeningTentacleBuilder>();
             logger.Information($"Tentacle.exe location: {tentacleExe}");
 
             await CreateInstance(tentacleExe, configFilePath, instanceName, tempDirectory, cancellationToken);
@@ -42,6 +42,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 instanceName,
                 tempDirectory,
                 TentacleThumbprint,
+                logger,
                 cancellationToken);
         }
 

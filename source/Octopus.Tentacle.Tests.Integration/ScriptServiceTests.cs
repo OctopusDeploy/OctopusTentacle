@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Halibut.Logging;
 using NUnit.Framework;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Tests.Integration.Support;
@@ -33,7 +34,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateLegacyBuilder().Build(CancellationToken);
 
-            var scriptStatusResponse = await new ScriptExecutionOrchestrator(clientAndTentacle.TentacleClient, tentacleConfigurationTestCase.SyncOrAsyncHalibut)
+            var scriptStatusResponse = await new ScriptExecutionOrchestrator(clientAndTentacle.TentacleClient, tentacleConfigurationTestCase.SyncOrAsyncHalibut, Logger)
                 .ExecuteScript(windowsScript, nixScript, CancellationToken);
 
             DumpLog(scriptStatusResponse);
@@ -62,7 +63,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateLegacyBuilder().Build(CancellationToken);
 
-            var scriptStatusResponse = await new ScriptExecutionOrchestrator(clientAndTentacle.TentacleClient, tentacleConfigurationTestCase.SyncOrAsyncHalibut)
+            var scriptStatusResponse = await new ScriptExecutionOrchestrator(clientAndTentacle.TentacleClient, tentacleConfigurationTestCase.SyncOrAsyncHalibut, Logger)
                 .ExecuteScript(windowsScript, nixScript, CancellationToken);
 
             DumpLog(scriptStatusResponse);
@@ -85,26 +86,33 @@ namespace Octopus.Tentacle.Tests.Integration
                               ping 127.0.0.1 -c 100
                               echo This is the end of the script";
 
-            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateLegacyBuilder().Build(CancellationToken);
+            await using var clientAndTentacle = await tentacleConfigurationTestCase
+                .CreateLegacyBuilder()
+                .WithHalibutLoggingLevel(LogLevel.Trace)
+                .Build(CancellationToken);
 
-            var scriptExecutor = new ScriptExecutionOrchestrator(clientAndTentacle.TentacleClient, tentacleConfigurationTestCase.SyncOrAsyncHalibut);
+            var scriptExecutor = new ScriptExecutionOrchestrator(clientAndTentacle.TentacleClient, tentacleConfigurationTestCase.SyncOrAsyncHalibut, Logger);
 
+            Logger.Information("Starting script execution");
             var ticket = await scriptExecutor.StartScript(windowsScript, nixScript, CancellationToken);
 
             // Possible Tentacle BUG: If we just observe until the first output is received then sometimes the script will fail to Cancel
             await scriptExecutor.ObserverUntilScriptOutputReceived(ticket, "This is the start of the script", CancellationToken);
 
-            Console.WriteLine("Canceling");
+            Logger.Information("Cancelling script execution");
             await tentacleConfigurationTestCase.SyncOrAsyncHalibut
                 .WhenSync(() => clientAndTentacle.TentacleClient.ScriptService.SyncService.CancelScript(new CancelScriptCommand(ticket, 0)))
                 .WhenAsync(async () => await clientAndTentacle.TentacleClient.ScriptService.AsyncService.CancelScriptAsync(new CancelScriptCommand(ticket, 0), new(CancellationToken, null)));
             
             var cancellationDuration = Stopwatch.StartNew();
-            Console.WriteLine("Waiting for complete");
+
+            Logger.Information("Waiting for Script Execution to complete");
             var finalScriptStatusResponse = await scriptExecutor.ObserverUntilComplete(ticket, CancellationToken);
             cancellationDuration.Stop();
 
+            Logger.Information("Completing script execution");
             var finalStatus = await scriptExecutor.CompleteScript(finalScriptStatusResponse, CancellationToken);
+
             DumpLog(finalStatus);
 
             finalStatus.State.Should().Be(ProcessState.Complete);
