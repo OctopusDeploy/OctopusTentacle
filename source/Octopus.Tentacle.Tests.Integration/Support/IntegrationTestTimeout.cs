@@ -21,7 +21,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 return (int)TimeSpan.FromHours(1).TotalMilliseconds;
             }
 
-            return (int)TimeSpan.FromMinutes(1).TotalMilliseconds;
+            return (int)TimeSpan.FromMinutes(2).TotalMilliseconds;
         }
     }
 }
