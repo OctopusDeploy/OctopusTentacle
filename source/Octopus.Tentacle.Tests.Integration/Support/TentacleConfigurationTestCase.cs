@@ -49,9 +49,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             builder.Append($"{SyncOrAsyncHalibut}");
 
             var tentacleRuntimeDescription = TentacleRuntime.GetDescription();
-            if (tentacleRuntimeDescription != RuntimeDetection.GetCurrentRuntime())
+            var currentRuntime = RuntimeDetection.GetCurrentRuntime();
+            if (tentacleRuntimeDescription != currentRuntime)
             {
-                builder.Append($",{tentacleRuntimeDescription}");
+                builder.Append($",Cl:{tentacleRuntimeDescription},Svc:{currentRuntime}");
             }
 
             return builder.ToString();
