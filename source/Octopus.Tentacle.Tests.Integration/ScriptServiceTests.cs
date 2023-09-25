@@ -79,11 +79,11 @@ namespace Octopus.Tentacle.Tests.Integration
         public async Task CancelScript(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             var windowsScript = @"Write-Host ""This is the start of the script""
-                                & ping.exe 127.0.0.1 -n 100
+                                Start-Sleep -Seconds 100
                                 Write-Host ""This is the end of the script""";
 
             var nixScript = @"echo This is the start of the script
-                              ping 127.0.0.1 -c 100
+                              sleep 100
                               echo This is the end of the script";
 
             await using var clientAndTentacle = await tentacleConfigurationTestCase
