@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,6 +9,7 @@ using Nito.AsyncEx.Interop;
 using NUnit.Framework;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Tests.Integration.Util;
+using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
@@ -51,6 +51,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             string instanceName,
             TemporaryDirectory tempDirectory,
             string tentacleThumbprint,
+            ILogger logger,
             CancellationToken cancellationToken)
         {
             Task<(Task, Uri?)> StartTentacleFunction(CancellationToken ct) => RunTentacle(serviceUri, tentacleExe, instanceName, tempDirectory, ct);
@@ -59,7 +60,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 tempDirectory,
                 StartTentacleFunction,
                 tentacleThumbprint,
-                ct => DeleteInstanceIgnoringFailure(tentacleExe, instanceName, tempDirectory, ct));
+                ct => DeleteInstanceIgnoringFailure(tentacleExe, instanceName, tempDirectory, logger, ct),
+                logger);
 
             try
             {
@@ -149,7 +151,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             cancellationToken.ThrowIfCancellationRequested();
         }
 
-        internal async Task DeleteInstanceIgnoringFailure(string tentacleExe, string instanceName, TemporaryDirectory tmp, CancellationToken cancellationToken)
+        internal async Task DeleteInstanceIgnoringFailure(string tentacleExe, string instanceName, TemporaryDirectory tmp, ILogger logger, CancellationToken cancellationToken)
         {
             try
             {
@@ -157,7 +159,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             }
             catch (Exception e)
             {
-                new SerilogLoggerBuilder().Build().Warning(e, "Could not delete instance: {InstanceName}", instanceName);
+                logger.Warning(e, "Could not delete instance: {InstanceName}", instanceName);
                 throw;
             }
         }
@@ -196,7 +198,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
             try
             {
-                CommandResult commandResult = await RetryHelper.RetryAsync<CommandResult, CommandExecutionException>(
+                var commandResult = await RetryHelper.RetryAsync<CommandResult, CommandExecutionException>(
                     () => Cli.Wrap(tentacleExe)
                         .WithArguments(args)
                         .WithWorkingDirectory(tmp.DirectoryPath)

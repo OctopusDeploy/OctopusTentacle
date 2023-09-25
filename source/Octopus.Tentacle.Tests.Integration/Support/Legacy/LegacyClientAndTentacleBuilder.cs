@@ -80,7 +80,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
 
                 runningTentacle = await new PollingTentacleBuilder(portForwarder.ListeningPort, Certificates.ServerPublicThumbprint)
                     .WithTentacleExe(tentacleExe)
-                    .Build(cancellationToken);
+                    .Build(logger, cancellationToken);
 
 #pragma warning disable CS0612
                 tentacleEndPoint = new ServiceEndPoint(runningTentacle.ServiceUri, runningTentacle.Thumbprint);
@@ -90,7 +90,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
             {
                 runningTentacle = await new ListeningTentacleBuilder(Certificates.ServerPublicThumbprint)
                     .WithTentacleExe(tentacleExe)
-                    .Build(cancellationToken);
+                    .Build(logger, cancellationToken);
 
                 portForwarder = new PortForwarderBuilder(runningTentacle.ServiceUri, new SerilogLoggerBuilder().Build()).Build();
 

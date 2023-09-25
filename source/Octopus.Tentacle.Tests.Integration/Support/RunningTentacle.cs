@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using Octopus.Tentacle.Tests.Integration.Util;
 using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
@@ -19,11 +18,13 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public RunningTentacle(
             IDisposable temporaryDirectory,
             Func<CancellationToken, Task<(Task, Uri)>> startTentacleFunction,
-            string thumbprint, Func<CancellationToken, Task> deleteInstanceFunction)
+            string thumbprint, 
+            Func<CancellationToken, Task> deleteInstanceFunction,
+            ILogger logger)
         {
             this.startTentacleFunction = startTentacleFunction;
             this.temporaryDirectory = temporaryDirectory;
-            this.logger = new SerilogLoggerBuilder().Build().ForContext<RunningTentacle>();
+            this.logger = logger.ForContext<RunningTentacle>();
 
             Thumbprint = thumbprint;
             this.deleteInstanceFunction = deleteInstanceFunction;
@@ -56,12 +57,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 cancellationTokenSource = null;
             }
 
-            var t = runningTentacleTask;
+            var task = runningTentacleTask;
             runningTentacleTask = null;
-            await t;
+            await task;
         }
 
-        private void StopOnDispose(CancellationToken cancellationToken)
+        private async Task StopOnDispose(CancellationToken cancellationToken)
         {
             if (cancellationTokenSource != null)
             {
@@ -70,16 +71,16 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 cancellationTokenSource = null;
             }
 
-            var t = runningTentacleTask;
+            var task = runningTentacleTask;
             runningTentacleTask = null;
 
             var stopDuration = Stopwatch.StartNew();
-            while (t?.IsCompleted == false && stopDuration.Elapsed < TimeSpan.FromSeconds(10))
+            while (task?.IsCompleted == false && stopDuration.Elapsed < TimeSpan.FromSeconds(10))
             {
-                Thread.Sleep(10);
+                await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken);
             }
 
-            if (t?.IsCompleted == false)
+            if (task?.IsCompleted == false)
             {
                 logger.Warning("Failed to stop Running Tentacle");
             }
@@ -93,14 +94,22 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         public async ValueTask DisposeAsync()
         {
+            using var disposeCancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            var cancellationToken = disposeCancellationTokenSource.Token;
+            logger.Information("Starting DisposeAsync");
             if (runningTentacleTask != null)
             {
-                StopOnDispose(CancellationToken.None);
+                logger.Information("Starting StopOnDispose");
+                await StopOnDispose(cancellationToken);
             }
 
-            await deleteInstanceFunction(CancellationToken.None);
+            logger.Information("Starting deleteInstanceFunction");
+            await deleteInstanceFunction(cancellationToken);
 
+            logger.Information("Starting temporaryDirectory.Dispose");
             temporaryDirectory.Dispose();
+
+            logger.Information("Finished DisposeAsync");
         }
     }
 }
