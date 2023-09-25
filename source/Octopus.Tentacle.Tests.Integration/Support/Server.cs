@@ -22,7 +22,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         public async ValueTask DisposeAsync()
         {
-            var disposeCancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            using var disposeCancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
             var cancellationToken = disposeCancellationTokenSource.Token;
 
             logger.Information("Starting ServerHalibutRuntime.DisposeAsync");
