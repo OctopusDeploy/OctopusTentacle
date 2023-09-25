@@ -145,38 +145,15 @@ namespace Octopus.Tentacle.Client.Retries
                         return await action(ct).ConfigureAwait(false);
                     }
 
-                    using var abandonCancellationTokenSource = new CancellationTokenSource();
-                    using (ct.Register(() =>
-                           {
-                               // Give the actionTask some time to cancel on it's own.
-                               // If it doesn't assume it does not co-operate with cancellationTokens and walk away.
-                               abandonCancellationTokenSource.TryCancelAfter(abandonAfter);
-                           }))
+                    var actionTask = action(ct);
+
+                    var actionTaskCompletionResult = await actionTask.WaitTillCompletion(abandonAfter, cancellationToken);
+                    if (actionTaskCompletionResult == TaskCompletionResult.Abandoned)
                     {
-                        var abandonTask = abandonCancellationTokenSource.Token.AsTask<T>();
-
-                        try
-                        {
-                            var actionTask = action(ct);
-                            var completedTask = await Task.WhenAny(actionTask, abandonTask).ConfigureAwait(false);
-
-                            if (actionTask != completedTask)
-                            {
-                                actionTask.IgnoreUnobservedExceptions();
-                            }
-
-                            return await completedTask.ConfigureAwait(false);
-                        }
-                        catch (Exception e) when (e is OperationCanceledException)
-                        {
-                            if (abandonCancellationTokenSource.IsCancellationRequested)
-                            {
-                                throw new OperationAbandonedException(e, abandonAfter);
-                            }
-
-                            throw;
-                        }
+                        throw new OperationAbandonedException(abandonAfter);
                     }
+
+                    return await actionTask.ConfigureAwait(false);
                 },
                 onRetryAction,
                 onTimeoutAction,

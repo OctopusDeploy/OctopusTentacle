@@ -461,31 +461,7 @@ namespace Octopus.Tentacle.Client.Scripts
                             clientOperationMetricsBuilder,
                             CancellationToken.None);
 
-                    using var abandonCancellationTokenSource = new CancellationTokenSource();
-
-                    void CancelAfter()
-                    {
-                        // If we are cancelling then try and call CompleteScript for a short period of time
-                        abandonCancellationTokenSource.TryCancelAfter(onCancellationAbandonCompleteScriptAfter);
-                    }
-
-                    using (scriptExecutionCancellationToken.Register(CancelAfter))
-                    {
-                        if (scriptExecutionCancellationToken.IsCancellationRequested)
-                        {
-                            CancelAfter();
-                        }
-
-                        var abandonTask = abandonCancellationTokenSource.Token.AsTask<ScriptStatusResponseV2>();
-                        var task = await Task.WhenAny(actionTask, abandonTask);
-
-                        if (task == abandonTask)
-                        {
-                            actionTask.IgnoreUnobservedExceptions();
-                        }
-
-                        await task;
-                    }
+                    await actionTask.WaitTillCompletion(onCancellationAbandonCompleteScriptAfter, scriptExecutionCancellationToken);
                 }
                 catch (Exception ex) when (ex is HalibutClientException or OperationCanceledException)
                 {
