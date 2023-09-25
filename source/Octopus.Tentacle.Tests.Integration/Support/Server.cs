@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
 using Serilog;
+using Octopus.Tentacle.Client.Retries;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
@@ -20,8 +22,17 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         public async ValueTask DisposeAsync()
         {
+            var disposeCancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            var cancellationToken = disposeCancellationTokenSource.Token;
+
             logger.Information("Starting ServerHalibutRuntime.DisposeAsync");
-            await ServerHalibutRuntime.DisposeAsync();
+            var disposeTask = ServerHalibutRuntime.DisposeAsync().AsTask();
+            var completed = await disposeTask.WaitTillCompletedOrCancelled(cancellationToken);
+            if (!completed)
+            {
+                logger.Information("Could not Dispose of the ServerHalibutRuntime within 10 seconds");
+            }
+
             logger.Information("Finished ServerHalibutRuntime.DisposeAsync");
         }
     }
