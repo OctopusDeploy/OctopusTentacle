@@ -26,7 +26,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             var cancellationToken = disposeCancellationTokenSource.Token;
 
             logger.Information("Starting ServerHalibutRuntime.DisposeAsync");
-            var disposeTask = ServerHalibutRuntime.DisposeAsync().AsTask();
+            var disposeTask = Task.Run(async () => await ServerHalibutRuntime.DisposeAsync(), CancellationToken.None);
             var completed = await disposeTask.WaitTillCompletedOrCancelled(cancellationToken);
             if (!completed)
             {
