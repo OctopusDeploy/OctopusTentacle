@@ -2,8 +2,12 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
+using Halibut.Diagnostics;
+using Halibut.Diagnostics.LogCreators;
+using Halibut.Logging;
 using Halibut.Util;
 using Octopus.Tentacle.Contracts.Legacy;
+using Octopus.Tentacle.Tests.Integration.Support.Logging;
 using Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.TestPortForwarder;
@@ -16,6 +20,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
         private Version? tentacleVersion;
         private TentacleRuntime tentacleRuntime = DefaultTentacleRuntime.Value;
         private AsyncHalibutFeature asyncHalibutFeature = AsyncHalibutFeature.Disabled;
+        LogLevel halibutLogLevel = LogLevel.Info;
 
         public LegacyClientAndTentacleBuilder(TentacleType tentacleType)
         {
@@ -41,13 +46,20 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
             return this;
         }
 
+        public LegacyClientAndTentacleBuilder WithHalibutLoggingLevel(LogLevel halibutLogLevel)
+        {
+            this.halibutLogLevel = halibutLogLevel;
+            return this;
+        }
+
         public async Task<LegacyClientAndTentacle> Build(CancellationToken cancellationToken)
         {
             var logger = new SerilogLoggerBuilder().Build().ForContext<LegacyTentacleClientBuilder>();
             // Server
             var serverHalibutRuntimeBuilder = new HalibutRuntimeBuilder()
                 .WithServerCertificate(Certificates.Server)
-                .WithLegacyContractSupport();
+                .WithLegacyContractSupport()
+                .WithLogFactory(BuildClientLogger());
 
             if (asyncHalibutFeature.IsEnabled())
             {
@@ -103,6 +115,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
                 .Build(cancellationToken);
 
             return new LegacyClientAndTentacle(server, portForwarder, runningTentacle, tentacleClient, temporaryDirectory, logger);
+        }
+
+        ILogFactory BuildClientLogger()
+        {
+            return new TestContextLogCreator("Client", halibutLogLevel).ToCachingLogFactory();
         }
     }
 }
