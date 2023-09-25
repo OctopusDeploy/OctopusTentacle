@@ -53,7 +53,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
             return scriptTicket;
         }
 
-        public async Task<ScriptStatusResponse> ObserverUntilScriptOutputReceived(ScriptTicket scriptTicket, string output, CancellationToken cancellationToken)
+        public async Task<ScriptStatusResponse> ObserverUntilScriptOutputReceived(ScriptTicket scriptTicket, string outputContains, CancellationToken cancellationToken)
         {
             var scriptStatusResponse = new ScriptStatusResponse(scriptTicket, ProcessState.Pending, 0, new List<ProcessOutput>(), 0);
             var logs = new List<ProcessOutput>();
@@ -79,14 +79,14 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
                     logger.Information("Script Logs: {Logs}", log.Text);
                 }
 
-                if (logs.Any(l => l.Text == output))
+                if (scriptStatusResponse.Logs.Any(l => l.Text.Contains(outputContains)))
                 {
                     break;
                 }
 
                 if (scriptStatusResponse.State != ProcessState.Complete)
                 {
-                    await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken);
+                    await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
                 }
             }
 
@@ -121,7 +121,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
 
                 if (scriptStatusResponse.State != ProcessState.Complete)
                 {
-                    await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken);
+                    await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
                 }
             }
 
