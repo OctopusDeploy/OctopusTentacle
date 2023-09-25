@@ -48,7 +48,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
                 .WhenSync(() => tentacleClient.ScriptService.SyncService.StartScript(startScriptCommand))
                 .WhenAsync(async () => await tentacleClient.ScriptService.AsyncService.StartScriptAsync(startScriptCommand, new(cancellationToken, null)));
             
-            logger.Information("Starting script execution completed");
+            logger.Information("Started script execution");
 
             return scriptTicket;
         }

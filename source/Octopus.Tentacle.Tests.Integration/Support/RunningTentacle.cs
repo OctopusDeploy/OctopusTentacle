@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Octopus.Tentacle.Client.Retries;
 using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
@@ -48,7 +49,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             ServiceUri = serviceUri;
         }
 
-        public async Task Stop(CancellationToken cancellationToken)
+        public async Task<bool> Stop(CancellationToken cancellationToken)
         {
             if (cancellationTokenSource != null)
             {
@@ -57,33 +58,15 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 cancellationTokenSource = null;
             }
 
-            var task = runningTentacleTask;
-            runningTentacleTask = null;
-            await task;
-        }
-
-        private async Task StopOnDispose(CancellationToken cancellationToken)
-        {
-            if (cancellationTokenSource != null)
+            if (runningTentacleTask != null)
             {
-                cancellationTokenSource.Cancel();
-                cancellationTokenSource.Dispose();
-                cancellationTokenSource = null;
+                var task = runningTentacleTask;
+                runningTentacleTask = null;
+
+                return await task.WaitTillCompletedOrCancelled(cancellationToken);
             }
 
-            var task = runningTentacleTask;
-            runningTentacleTask = null;
-
-            var stopDuration = Stopwatch.StartNew();
-            while (task?.IsCompleted == false && stopDuration.Elapsed < TimeSpan.FromSeconds(10))
-            {
-                await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken);
-            }
-
-            if (task?.IsCompleted == false)
-            {
-                logger.Warning("Failed to stop Running Tentacle");
-            }
+            return true;
         }
 
         public async Task Restart(CancellationToken cancellationToken)
@@ -97,10 +80,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             using var disposeCancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
             var cancellationToken = disposeCancellationTokenSource.Token;
             logger.Information("Starting DisposeAsync");
-            if (runningTentacleTask != null)
+            
+            logger.Information("Starting Stop");
+            var stopped = await Stop(cancellationToken);
+            if (!stopped)
             {
-                logger.Information("Starting StopOnDispose");
-                await StopOnDispose(cancellationToken);
+                logger.Warning("Tentacle did not stop in time and may still be running");
             }
 
             logger.Information("Starting deleteInstanceFunction");
