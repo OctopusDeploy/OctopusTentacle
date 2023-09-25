@@ -158,7 +158,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             serverHalibutRuntime.Trust(Certificates.TentaclePublicThumbprint);
             var serverListeningPort = serverHalibutRuntime.Listen();
 
-            var server = new Server(serverHalibutRuntime, serverListeningPort);
+            var server = new Server(serverHalibutRuntime, serverListeningPort, logger);
 
             // Port Forwarder
             PortForwarder? portForwarder;
