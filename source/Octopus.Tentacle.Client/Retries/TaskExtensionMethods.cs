@@ -40,7 +40,7 @@ namespace Octopus.Tentacle.Client.Retries
             return TaskCompletionResult.Abandoned;
         }
 
-        static async Task<bool> WaitTillCompletedOrCancelled(this Task taskToWaitFor, CancellationToken cancellationToken)
+        public static async Task<bool> WaitTillCompletedOrCancelled(this Task taskToWaitFor, CancellationToken cancellationToken)
         {
             using var cleanupCancellationTokenSource = new CancellationTokenSource();
             using var linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cleanupCancellationTokenSource.Token);

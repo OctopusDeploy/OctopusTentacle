@@ -32,26 +32,15 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
 
         public async ValueTask DisposeAsync()
         {
-            using var disposeCancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-            var cancellationToken = disposeCancellationTokenSource.Token;
-
             logger.Information("Starting DisposeAsync");
-            
             logger.Information("Starting Server.Dispose");
             Server.Dispose();
-
             logger.Information("Starting PortForwarder.Dispose");
             PortForwarder.Dispose();
-            
-            logger.Information("RunningTentacle.Stop");
-            await RunningTentacle.Stop(cancellationToken);
-
             logger.Information("Starting RunningTentacle.DisposeAsync");
             await RunningTentacle.DisposeAsync();
-            
             logger.Information("temporaryDirectory.Dispose");
             temporaryDirectory.Dispose();
-
             logger.Information("Finished DisposeAsync");
         }
     }
