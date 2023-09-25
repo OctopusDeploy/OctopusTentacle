@@ -54,13 +54,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             ILogger logger,
             CancellationToken cancellationToken)
         {
-            Task<(Task, Uri?)> StartTentacleFunction(CancellationToken ct) => RunTentacle(serviceUri, tentacleExe, instanceName, tempDirectory, ct);
-
             var runningTentacle = new RunningTentacle(
                 tempDirectory,
-                StartTentacleFunction,
+                startTentacleFunction: ct => RunTentacle(serviceUri, tentacleExe, instanceName, tempDirectory, ct),
                 tentacleThumbprint,
-                ct => DeleteInstanceIgnoringFailure(tentacleExe, instanceName, tempDirectory, logger, ct),
+                deleteInstanceFunction: ct => DeleteInstanceIgnoringFailure(tentacleExe, instanceName, tempDirectory, logger, ct),
                 logger);
 
             try
