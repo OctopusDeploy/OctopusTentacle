@@ -85,7 +85,9 @@ namespace Octopus.Tentacle.Tests.Integration
                               ping 127.0.0.1 -c 100
                               echo This is the end of the script";
 
-            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateLegacyBuilder().Build(CancellationToken);
+            await using var clientAndTentacle = await tentacleConfigurationTestCase
+                .CreateLegacyBuilder()
+                .Build(CancellationToken);
 
             var scriptExecutor = new ScriptExecutionOrchestrator(clientAndTentacle.TentacleClient, tentacleConfigurationTestCase.SyncOrAsyncHalibut);
 

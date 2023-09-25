@@ -102,7 +102,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
             var tentacleClient = new LegacyTentacleClientBuilder(server.ServerHalibutRuntime, tentacleEndPoint, asyncHalibutFeature)
                 .Build(cancellationToken);
 
-            return new LegacyClientAndTentacle(server, portForwarder, runningTentacle, tentacleClient, temporaryDirectory);
+            return new LegacyClientAndTentacle(server, portForwarder, runningTentacle, tentacleClient, temporaryDirectory, logger);
         }
     }
 }
