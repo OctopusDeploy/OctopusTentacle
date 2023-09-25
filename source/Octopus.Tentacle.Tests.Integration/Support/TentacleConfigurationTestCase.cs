@@ -1,6 +1,5 @@
 using System;
 using System.Text;
-using Halibut.Logging;
 using Octopus.Tentacle.Tests.Integration.Support.Legacy;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
