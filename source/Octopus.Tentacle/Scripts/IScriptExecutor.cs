@@ -5,6 +5,6 @@ namespace Octopus.Tentacle.Scripts
 {
     public interface IScriptExecutor
     {
-        IRunningScript Execute(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, CancellationTokenSource cancellationTokenSource);
+        IRunningScript Execute(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, CancellationTokenSource cancellationTokenSource, bool runInCurrentThread = false);
     }
 }

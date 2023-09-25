@@ -16,7 +16,7 @@ namespace Octopus.Tentacle.Scripts
             this.systemLog = systemLog;
         }
 
-        public IRunningScript Execute(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, CancellationTokenSource cancellationTokenSource)
+        public IRunningScript Execute(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, CancellationTokenSource cancellationTokenSource, bool runInCurrentThread = false)
         {
             var runningScript = new RunningKubernetesJobScript(shell, workspace, workspace.CreateLog(), ticket, serverTaskId, cancellationTokenSource.Token, systemLog);
 

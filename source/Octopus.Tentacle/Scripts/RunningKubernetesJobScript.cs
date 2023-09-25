@@ -63,7 +63,7 @@ namespace Octopus.Tentacle.Scripts
                     {
                         using (ScriptIsolationMutex.Acquire(workspace.IsolationLevel,
                                    workspace.ScriptMutexAcquireTimeout,
-                                   workspace.ScriptMutexName ?? nameof(RunningShellScript),
+                                   workspace.ScriptMutexName ?? nameof(RunningKubernetesJobScript),
                                    message => writer.WriteOutput(ProcessOutputSource.StdOut, message),
                                    taskId,
                                    cancellationToken,
@@ -295,6 +295,9 @@ spec:
             restartPolicy: Never
             volumes:
               - name: work
+                hostPath:
+                  path: ""{normalizedWorkspace}""
+              - name: app
                 hostPath:
                   path: ""{normalizedWorkspace}""
     backoffLimit: 0

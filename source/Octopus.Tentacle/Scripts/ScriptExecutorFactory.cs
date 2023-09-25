@@ -20,7 +20,12 @@ namespace Octopus.Tentacle.Scripts
 
         public IScriptExecutor GetExecutor()
         {
-            return configuration.Value.ScriptExecutor switch
+            return GetExecutor(configuration.Value.ScriptExecutor);
+        }
+
+        public IScriptExecutor GetExecutor(ScriptExecutor scriptExecutor)
+        {
+            return scriptExecutor switch
             {
                 ScriptExecutor.Shell => shellScriptExecutor.Value,
                 ScriptExecutor.KubernetesJob => kubernetesJobScriptExecutor.Value,

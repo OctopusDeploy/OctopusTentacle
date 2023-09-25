@@ -15,12 +15,19 @@ namespace Octopus.Tentacle.Scripts
             this.log = log;
         }
 
-        public IRunningScript Execute(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, CancellationTokenSource cancellationTokenSource)
+        public IRunningScript Execute(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, CancellationTokenSource cancellationTokenSource, bool runInCurrentThread = false)
         {
             var runningScript = new RunningShellScript(shell, workspace, workspace.CreateLog(), serverTaskId, cancellationTokenSource.Token, log);
 
-            var thread = new Thread(runningScript.Execute) { Name = "Executing PowerShell script for " + ticket.TaskId };
-            thread.Start();
+            if (!runInCurrentThread)
+            {
+                var thread = new Thread(runningScript.Execute) { Name = "Executing PowerShell script for " + ticket.TaskId };
+                thread.Start();
+            }
+            else
+            {
+                runningScript.Execute();
+            }
 
             return runningScript;
         }

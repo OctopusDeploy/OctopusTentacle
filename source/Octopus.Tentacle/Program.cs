@@ -85,6 +85,7 @@ namespace Octopus.Tentacle
             builder.RegisterCommand<ListInstancesCommand>("list-instances", "Lists all installed Tentacle instances");
             builder.RegisterCommand<VersionCommand>("version", "Show the Tentacle version information");
             builder.RegisterCommand<ShowConfigurationCommand>("show-configuration", "Outputs the Tentacle configuration");
+            builder.RegisterCommand<ExecuteK8sJobScriptCommand>("execute-k8s-job-script", "Executes the supplied script file in the context of a Kubernetes Job");
 
             return builder.Build();
         }
