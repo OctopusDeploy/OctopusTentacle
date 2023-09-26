@@ -1,5 +1,4 @@
 using System;
-using System.Threading;
 
 namespace Octopus.Tentacle.Contracts
 {
@@ -18,7 +17,7 @@ namespace Octopus.Tentacle.Contracts
                 return false;
             if (ReferenceEquals(this, other))
                 return true;
-            return string.Equals(TaskId, other.TaskId);
+            return string.Equals(TaskId, other.TaskId, StringComparison.OrdinalIgnoreCase);
         }
 
         public override bool Equals(object? obj)
@@ -33,7 +32,7 @@ namespace Octopus.Tentacle.Contracts
         }
 
         public override int GetHashCode()
-            => TaskId != null ? TaskId.GetHashCode() : 0;
+            => TaskId != null ? StringComparer.OrdinalIgnoreCase.GetHashCode(TaskId) : 0;
 
         public static bool operator ==(ScriptTicket left, ScriptTicket right)
             => Equals(left, right);

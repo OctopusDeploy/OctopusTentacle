@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,13 +14,39 @@ using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
-    public abstract class TentacleBuilder<T> where T : TentacleBuilder<T>
+    public interface ITentacleBuilder
+    {
+        ITentacleBuilder WithRunTentacleEnvironmentVariable<TValue>(string environmentVariable, TValue value);
+        ITentacleBuilder WithHomeDirectory(TemporaryDirectory homeDirectory);
+    }
+
+    public abstract class TentacleBuilder<T> : ITentacleBuilder
+        where T : TentacleBuilder<T>
     {
         protected string? ServerThumbprint;
         protected string? TentacleExePath;
         protected string CertificatePfxPath = Certificates.TentaclePfxPath;
         protected string TentacleThumbprint = Certificates.TentaclePublicThumbprint;
-        private readonly Regex listeningPortRegex = new Regex(@"^listen:\/\/.+:(\d+)\/");
+        
+        readonly Regex listeningPortRegex = new (@"^listen:\/\/.+:(\d+)\/");
+        readonly Dictionary<string, string> runTentacleEnvironmentVariables = new();
+
+        TemporaryDirectory? homeDirectory;
+
+        protected TemporaryDirectory HomeDirectory
+        {
+            get
+            {
+                homeDirectory ??= new TemporaryDirectory();
+                return homeDirectory;
+            }
+        }
+
+        public ITentacleBuilder WithHomeDirectory(TemporaryDirectory homeDirectory)
+        {
+            this.homeDirectory = homeDirectory;
+            return this;
+        }
 
         public T WithCertificate(string certificatePfxPath, string tentacleThumbprint)
         {
@@ -34,6 +61,13 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             TentacleExePath = tentacleExe;
 
             return (T)this;
+        }
+
+        public ITentacleBuilder WithRunTentacleEnvironmentVariable<TValue>(string environmentVariable, TValue value)
+        {
+            runTentacleEnvironmentVariables[environmentVariable] = value?.ToString();
+
+            return this;
         }
 
         protected void WithWritableTentacleConfiguration(string configFilePath, Action<IWritableTentacleConfiguration> action)
@@ -81,11 +115,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             }
         }
 
-        protected async Task<(Task task, Uri serviceUri)> RunTentacle(
+        async Task<(Task task, Uri serviceUri)> RunTentacle(
             Uri? serviceUri,
             string tentacleExe,
             string instanceName,
-            TemporaryDirectory tempDirectory,
+            TemporaryDirectory tempDirectory, 
             CancellationToken cancellationToken)
         {
             var hasTentacleStarted = new ManualResetEventSlim();
@@ -96,7 +130,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             {
                 try
                 {
-                    await RunTentacleCommandOutOfProcess(tentacleExe, new[] {"agent", $"--instance={instanceName}", "--noninteractive"}, tempDirectory,
+                    await RunTentacleCommandOutOfProcess(
+                        tentacleExe, 
+                        new[] {"agent", $"--instance={instanceName}", "--noninteractive"}, 
+                        tempDirectory,
                         s =>
                         {
                             if (s.Contains("Listener started"))
@@ -107,7 +144,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                             {
                                 hasTentacleStarted.Set();
                             }
-                        }, cancellationToken);
+                        },
+                        runTentacleEnvironmentVariables, 
+                        cancellationToken);
                 }
                 catch (Exception e)
                 {
@@ -169,20 +208,26 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         internal string InstanceNameGenerator()
         {
-            return $"TentacleIT-{Guid.NewGuid().ToString("N")}";
+            return $"TentacleIT-{Guid.NewGuid():N}";
         }
 
-        private async Task RunTentacleCommand(string tentacleExe, string[] args, TemporaryDirectory tmp, CancellationToken cancellationToken)
+        async Task RunTentacleCommand(string tentacleExe, string[] args, TemporaryDirectory tmp, CancellationToken cancellationToken)
         {
-            await RunTentacleCommandOutOfProcess(tentacleExe, args, tmp, s =>
-            {
-            }, cancellationToken);
+            await RunTentacleCommandOutOfProcess(
+                tentacleExe,
+                args, 
+                tmp, 
+                _ => { }, 
+                new Dictionary<string, string?>(), 
+                cancellationToken);
         }
 
-        private async Task RunTentacleCommandOutOfProcess(string tentacleExe,
+        async Task RunTentacleCommandOutOfProcess(
+            string tentacleExe,
             string[] args,
             TemporaryDirectory tmp,
-            Action<string> commandOutput,
+            Action<string> commandOutput, 
+            IReadOnlyDictionary<string, string> environmentVariables,
             CancellationToken cancellationToken)
         {
             var log = new SerilogLoggerBuilder().Build().ForContext<RunningTentacle>();
@@ -199,6 +244,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 var commandResult = await RetryHelper.RetryAsync<CommandResult, CommandExecutionException>(
                     () => Cli.Wrap(tentacleExe)
                         .WithArguments(args)
+                        .WithEnvironmentVariables(environmentVariables)
                         .WithWorkingDirectory(tmp.DirectoryPath)
                         .WithStandardOutputPipe(PipeTarget.ToDelegate(ProcessLogs))
                         .WithStandardErrorPipe(PipeTarget.ToDelegate(ProcessLogs))

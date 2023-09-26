@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Diagnostics;
@@ -11,6 +12,8 @@ namespace Octopus.Tentacle.Scripts
 {
     public class ScriptWorkspaceFactory : IScriptWorkspaceFactory
     {
+        public const string WorkDirectory = "Work";
+
         readonly IOctopusFileSystem fileSystem;
         readonly IHomeConfiguration home;
         readonly SensitiveValueMasker sensitiveValueMasker;
@@ -30,10 +33,9 @@ namespace Octopus.Tentacle.Scripts
 
         public IScriptWorkspace GetWorkspace(ScriptTicket ticket)
         {
-            if (!PlatformDetection.IsRunningOnWindows)
-                return new BashScriptWorkspace(FindWorkingDirectory(ticket), fileSystem, sensitiveValueMasker);
+            var workingDirectory = FindWorkingDirectory(ticket);
 
-            return new ScriptWorkspace(FindWorkingDirectory(ticket), fileSystem, sensitiveValueMasker);
+            return CreateWorkspace(ticket, workingDirectory);
         }
 
         public IScriptWorkspace PrepareWorkspace(
@@ -95,9 +97,56 @@ namespace Octopus.Tentacle.Scripts
             return work;
         }
 
+        IScriptWorkspace CreateWorkspace(ScriptTicket scriptTicket, string workingDirectory)
+        {
+            if (!PlatformDetection.IsRunningOnWindows)
+            {
+                return new BashScriptWorkspace(scriptTicket, workingDirectory, fileSystem, sensitiveValueMasker);
+            }
+
+            return new ScriptWorkspace(scriptTicket, workingDirectory, fileSystem, sensitiveValueMasker);
+        }
+
         public string GetWorkingDirectoryPath(ScriptTicket ticket)
         {
-            return fileSystem.GetFullPath(Path.Combine(home.HomeDirectory ?? "", "Work", ticket.TaskId));
+            var baseWorkingDirectory = GetBaseWorkingDirectory();
+            return fileSystem.GetFullPath(Path.Combine(baseWorkingDirectory, ticket.TaskId));
+        }
+        
+        string GetBaseWorkingDirectory()
+        {
+            return Path.Combine(home.HomeDirectory ?? "", WorkDirectory);
+        }
+
+        public List<IScriptWorkspace> GetUncompletedWorkspaces()
+        {
+            var baseWorkingDirectory = GetBaseWorkingDirectory();
+
+            if (!Directory.Exists(baseWorkingDirectory))
+            {
+                return new List<IScriptWorkspace>();
+            }
+
+            var workspaceDirectories = Directory.GetDirectories(baseWorkingDirectory)
+                .Where(IsUncompletedWorkspaceDirectory)
+                .Select(CreateWorkspaceFromWorkspaceDirectory)
+                .ToList();
+
+            return workspaceDirectories;
+        }
+
+        static bool IsUncompletedWorkspaceDirectory(string workspaceDirectory)
+        {
+            var outputLogFilePath = ScriptWorkspace.GetLogFilePath(workspaceDirectory);
+            return File.Exists(outputLogFilePath);
+        }
+
+        IScriptWorkspace CreateWorkspaceFromWorkspaceDirectory(string workspaceDirectory)
+        {
+            var workspaceDirectoryInfo = new DirectoryInfo(workspaceDirectory);
+            var scriptTicket = new ScriptTicket(workspaceDirectoryInfo.Name);
+
+            return CreateWorkspace(scriptTicket, workspaceDirectory);
         }
     }
 }

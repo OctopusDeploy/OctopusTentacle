@@ -13,11 +13,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             bool testCapabilitiesServiceVersions = false,
             bool testNoCapabilitiesServiceVersions = false,
             bool testScriptIsolationLevelVersions = false,
+            bool testDefaultTentacleRuntimeOnly = false,
             params object[] additionalParameterTypes)
             : base(
                 typeof(TentacleConfigurationTestCases),
                 nameof(TentacleConfigurationTestCases.GetEnumerator),
-                new object[] {testCommonVersions, testCapabilitiesServiceVersions, testNoCapabilitiesServiceVersions, testScriptIsolationLevelVersions, additionalParameterTypes})
+                new object[] {testCommonVersions, testCapabilitiesServiceVersions, testNoCapabilitiesServiceVersions, testScriptIsolationLevelVersions, testDefaultTentacleRuntimeOnly, additionalParameterTypes})
         {
         }
     }
@@ -29,6 +30,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             bool testCapabilitiesVersions,
             bool testNoCapabilitiesServiceVersions,
             bool testScriptIsolationLevel,
+            bool testDefaultTentacleRuntimeOnly,
             object[] additionalParameterTypes)
         {
             var tentacleTypes = new[] {TentacleType.Listening, TentacleType.Polling};
@@ -81,12 +83,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 versions.Add(TentacleVersions.Current);
             }
 
-#if NETFRAMEWORK
             var runtimes = new List<TentacleRuntime> { DefaultTentacleRuntime.Value };
-#else
-            var runtimes = PlatformDetection.IsRunningOnWindows
-                ? new List<TentacleRuntime> {TentacleRuntime.DotNet6, TentacleRuntime.Framework48}
-                : new List<TentacleRuntime> {DefaultTentacleRuntime.Value};
+#if !NETFRAMEWORK
+            if (!testDefaultTentacleRuntimeOnly && PlatformDetection.IsRunningOnWindows)
+            {
+                runtimes = new List<TentacleRuntime> {TentacleRuntime.DotNet6, TentacleRuntime.Framework48};
+            }
 #endif
 
             var testCases =
@@ -108,7 +110,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             return CombineTestCasesWithAdditionalParameters(testCases, additionalParameterTypes);
         }
 
-        private static IEnumerator CombineTestCasesWithAdditionalParameters(IEnumerable<TentacleConfigurationTestCase> testCases, object[] additionalEnumerables)
+        static IEnumerator CombineTestCasesWithAdditionalParameters(IEnumerable<TentacleConfigurationTestCase> testCases, object[] additionalEnumerables)
         {
             AllCombinations enums = new AllCombinations();
             var additionalEnums = additionalEnumerables.Cast<Type>().ToArray();

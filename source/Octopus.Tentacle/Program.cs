@@ -7,6 +7,7 @@ using Octopus.Tentacle.Commands.OptionSets;
 using Octopus.Tentacle.Communications;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Diagnostics;
+using Octopus.Tentacle.Maintenance;
 using Octopus.Tentacle.Properties;
 using Octopus.Tentacle.Services;
 using Octopus.Tentacle.Startup;
@@ -54,6 +55,7 @@ namespace Octopus.Tentacle
             builder.RegisterModule(new TentacleCommunicationsModule());
             builder.RegisterModule(new ServicesModule());
             builder.RegisterModule(new VersioningModule(GetType().Assembly));
+            builder.RegisterModule(new MaintenanceModule());
 
             builder.RegisterCommand<CreateInstanceCommand>("create-instance", "Registers a new instance of the Tentacle service");
             builder.RegisterCommand<DeleteInstanceCommand>("delete-instance", "Deletes an instance of the Tentacle service");

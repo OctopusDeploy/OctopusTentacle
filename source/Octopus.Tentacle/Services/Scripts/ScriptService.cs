@@ -89,5 +89,10 @@ namespace Octopus.Tentacle.Services.Scripts
             var logs = scriptLog.GetOutput(lastLogSequence, out var next);
             return new ScriptStatusResponse(ticket, state, exitCode, logs, next);
         }
+
+        public bool IsRunningScript(ScriptTicket ticket)
+        {
+            return running.ContainsKey(ticket.TaskId);
+        }
     }
 }

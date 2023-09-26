@@ -9,7 +9,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 {
     public class RunningTentacle : IAsyncDisposable
     {
-        private readonly IDisposable temporaryDirectory;
+        private readonly TemporaryDirectory temporaryDirectory;
         private CancellationTokenSource? cancellationTokenSource;
         private Task? runningTentacleTask;
         private readonly Func<CancellationToken, Task<(Task runningTentacleTask, Uri serviceUri)>> startTentacleFunction;
@@ -17,7 +17,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         private ILogger logger;
 
         public RunningTentacle(
-            IDisposable temporaryDirectory,
+            TemporaryDirectory temporaryDirectory,
             Func<CancellationToken, Task<(Task, Uri)>> startTentacleFunction,
             string thumbprint, 
             Func<CancellationToken, Task> deleteInstanceFunction,
@@ -33,6 +33,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         public Uri ServiceUri { get; private set; }
         public string Thumbprint { get; }
+        public string HomeDirectory => temporaryDirectory.DirectoryPath;
 
         public async Task Start(CancellationToken cancellationToken)
         {
