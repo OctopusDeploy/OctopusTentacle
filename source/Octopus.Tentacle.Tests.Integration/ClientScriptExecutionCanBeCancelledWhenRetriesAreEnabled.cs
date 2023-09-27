@@ -78,7 +78,7 @@ namespace Octopus.Tentacle.Tests.Integration
                                     await syncOrAsyncHalibut.WhenSync(() => scriptServiceV2.EnsureTentacleIsConnectedToServer(Logger))
                                         .WhenAsync(async () => await asyncScriptServiceV2.EnsureTentacleIsConnectedToServer(Logger));
 
-                                    PauseOrStopPortForwarder(rpcCallStage, portForwarder.Value, responseMessageTcpKiller, rpcCallHasStarted);
+                                    await PauseOrStopPortForwarder(rpcCallStage, portForwarder.Value, responseMessageTcpKiller, rpcCallHasStarted);
                                     if (rpcCallStage == RpcCallStage.Connecting && tentacleConfigurationTestCase.TentacleType == TentacleType.Polling)
                                     {
                                         await service.EnsurePollingQueueWontSendMessageToDisconnectedTentacles(Logger);
@@ -199,7 +199,7 @@ namespace Octopus.Tentacle.Tests.Integration
                                     {
                                         hasPausedOrStoppedPortForwarder = true;
                                         await service.EnsureTentacleIsConnectedToServer(Logger);
-                                        PauseOrStopPortForwarder(rpcCallStage, portForwarder.Value, responseMessageTcpKiller, rpcCallHasStarted);
+                                        await PauseOrStopPortForwarder(rpcCallStage, portForwarder.Value, responseMessageTcpKiller, rpcCallHasStarted);
                                         if (rpcCallStage == RpcCallStage.Connecting)
                                         {
                                             await service.EnsurePollingQueueWontSendMessageToDisconnectedTentacles(Logger);
@@ -352,7 +352,7 @@ namespace Octopus.Tentacle.Tests.Integration
                                     {
                                         hasPausedOrStoppedPortForwarder = true;
                                         await service.EnsureTentacleIsConnectedToServer(Logger);
-                                        PauseOrStopPortForwarder(rpcCallStage, portForwarder.Value, responseMessageTcpKiller, rpcCallHasStarted);
+                                        await PauseOrStopPortForwarder(rpcCallStage, portForwarder.Value, responseMessageTcpKiller, rpcCallHasStarted);
                                         if (rpcCallStage == RpcCallStage.Connecting)
                                         {
                                             await service.EnsurePollingQueueWontSendMessageToDisconnectedTentacles(Logger);
@@ -468,7 +468,7 @@ namespace Octopus.Tentacle.Tests.Integration
                             {
                                 hasPausedOrStoppedPortForwarder = true;
                                 await service.EnsureTentacleIsConnectedToServer(Logger);
-                                PauseOrStopPortForwarder(rpcCallStage, portForwarder.Value, responseMessageTcpKiller, rpcCallHasStarted);
+                                await PauseOrStopPortForwarder(rpcCallStage, portForwarder.Value, responseMessageTcpKiller, rpcCallHasStarted);
                                 if (rpcCallStage == RpcCallStage.Connecting)
                                 {
                                     await service.EnsurePollingQueueWontSendMessageToDisconnectedTentacles(Logger);
@@ -504,19 +504,29 @@ namespace Octopus.Tentacle.Tests.Integration
             scriptServiceV2CallCounts.CompleteScriptCallCountStarted.Should().BeGreaterOrEqualTo(1);
         }
 
-        private void PauseOrStopPortForwarder(RpcCallStage rpcCallStage, PortForwarder portForwarder, IResponseMessageTcpKiller responseMessageTcpKiller, Reference<bool> rpcCallHasStarted)
+        private async Task PauseOrStopPortForwarder(RpcCallStage rpcCallStage, PortForwarder portForwarder, IResponseMessageTcpKiller responseMessageTcpKiller, Reference<bool> rpcCallHasStarted)
         {
             if (rpcCallStage == RpcCallStage.Connecting)
             {
                 Logger.Information("Killing the port forwarder so the next RPCs are in the connecting state when being cancelled");
                 //portForwarder.Stop();
                 portForwarder.EnterKillNewAndExistingConnectionsMode();
-                rpcCallHasStarted.Value = true;
+
+                await SetRpcCallWeAreInterestedInAsStarted(rpcCallHasStarted);
             }
             else
             {
                 Logger.Information("Will Pause the port forwarder on next response so the next RPC is in-flight when being cancelled");
-                responseMessageTcpKiller.PauseConnectionOnNextResponse(() => rpcCallHasStarted.Value = true);
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                responseMessageTcpKiller.PauseConnectionOnNextResponse(() => SetRpcCallWeAreInterestedInAsStarted(rpcCallHasStarted));
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            }
+
+            static async Task SetRpcCallWeAreInterestedInAsStarted(Reference<bool> rpcCallHasStarted)
+            {
+                // Allow the port forwarder some time to stop
+                await Task.Delay(TimeSpan.FromSeconds(5));
+                rpcCallHasStarted.Value = true;
             }
         }
 
