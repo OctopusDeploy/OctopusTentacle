@@ -359,12 +359,10 @@ partial class Build
             FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{OctoVersionInfo.FullSemVer}-net6.0-win-x86.msi", workingDirectory / "Octopus.Tentacle-net6.0-win-x86.msi");
             FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{OctoVersionInfo.FullSemVer}-net6.0-win-x64.msi", workingDirectory / "Octopus.Tentacle-net6.0-win-x64.msi");
 
-            var octopusTentacleUpgraderDirectory = BuildDirectory / "Octopus.Tentacle.Upgrader" / NetFramework / "win";
-            octopusTentacleUpgraderDirectory.GlobFiles("*").ForEach(sourceFilePath => FileSystemTasks.CopyFileToDirectory(sourceFilePath, workingDirectory));
             FileSystemTasks.CopyFile(BuildDirectory / "Octopus.Tentacle.Upgrader" / NetCore / "win-x86" / "Octopus.Tentacle.Upgrader.exe", workingDirectory / "Octopus.Tentacle.Upgrader-net6.0-win-x86.exe");
             FileSystemTasks.CopyFile(BuildDirectory / "Octopus.Tentacle.Upgrader" / NetCore / "win-x64" / "Octopus.Tentacle.Upgrader.exe", workingDirectory / "Octopus.Tentacle.Upgrader-net6.0-win-x64.exe");
             
-            
+            var octopusTentacleUpgraderDirectory = BuildDirectory / "Octopus.Tentacle.Upgrader" / NetFramework / "win";
             octopusTentacleUpgraderDirectory.GlobFiles("*").ForEach(x => FileSystemTasks.CopyFileToDirectory(x, workingDirectory));
             FileSystemTasks.CopyFile(ArtifactsDirectory / "deb" / debAmd64PackageFilename, workingDirectory / debAmd64PackageFilename);
             FileSystemTasks.CopyFile(ArtifactsDirectory / "deb" / debArm64PackageFilename, workingDirectory / debArm64PackageFilename);
