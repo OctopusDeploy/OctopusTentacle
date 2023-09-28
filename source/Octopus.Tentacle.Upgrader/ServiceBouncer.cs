@@ -6,7 +6,6 @@ using System.Linq;
 using System.ServiceProcess;
 using System.Threading;
 using Microsoft.Win32;
-#pragma warning disable CA1416
 
 namespace Octopus.Tentacle.Upgrader
 {
