@@ -360,6 +360,11 @@ partial class Build
             FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{OctoVersionInfo.FullSemVer}-net6.0-win-x64.msi", workingDirectory / "Octopus.Tentacle-net6.0-win-x64.msi");
 
             var octopusTentacleUpgraderDirectory = BuildDirectory / "Octopus.Tentacle.Upgrader" / NetFramework / "win";
+            octopusTentacleUpgraderDirectory.GlobFiles("*").ForEach(sourceFilePath => FileSystemTasks.CopyFileToDirectory(sourceFilePath, workingDirectory));
+            FileSystemTasks.CopyFile(BuildDirectory / "Octopus.Tentacle.Upgrader" / NetCore / "win-x86" / "Octopus.Tentacle.Upgrader.exe", workingDirectory / "Octopus.Tentacle.Upgrader-net6.0-win-x86.exe");
+            FileSystemTasks.CopyFile(BuildDirectory / "Octopus.Tentacle.Upgrader" / NetCore / "win-x64" / "Octopus.Tentacle.Upgrader.exe", workingDirectory / "Octopus.Tentacle.Upgrader-net6.0-win-x64.exe");
+            
+            
             octopusTentacleUpgraderDirectory.GlobFiles("*").ForEach(x => FileSystemTasks.CopyFileToDirectory(x, workingDirectory));
             FileSystemTasks.CopyFile(ArtifactsDirectory / "deb" / debAmd64PackageFilename, workingDirectory / debAmd64PackageFilename);
             FileSystemTasks.CopyFile(ArtifactsDirectory / "deb" / debArm64PackageFilename, workingDirectory / debArm64PackageFilename);
@@ -386,6 +391,8 @@ partial class Build
             Assert.True((workingDirectory / "Octopus.Tentacle-net6.0-win-x86.msi").FileExists(), "Missing Octopus.Tentacle-net6.0-win-x86.msi");
             Assert.True((workingDirectory / "Octopus.Tentacle-net6.0-win-x64.msi").FileExists(), "Missing Octopus.Tentacle-net6.0-win-x64.msi");
             Assert.True((workingDirectory / "Octopus.Tentacle.Upgrader.exe").FileExists(), "Missing Octopus.Tentacle.Upgrader.exe");
+            Assert.True((workingDirectory / "Octopus.Tentacle.Upgrader-net6.0-win-x86.exe").FileExists(), "Missing Octopus.Tentacle.Upgrader-net6.0-win-x86.exe");
+            Assert.True((workingDirectory / "Octopus.Tentacle.Upgrader-net6.0-win-x64.exe").FileExists(), "Missing Octopus.Tentacle.Upgrader-net6.0-win-x64.exe");
             Assert.True((workingDirectory / debAmd64PackageFilename).FileExists(), $"Missing {debAmd64PackageFilename}");
             Assert.True((workingDirectory / debArm64PackageFilename).FileExists(), $"Missing {debArm64PackageFilename}");
             Assert.True((workingDirectory / debArm32PackageFilename).FileExists(), $"Missing {debArm32PackageFilename}");
