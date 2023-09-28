@@ -55,7 +55,7 @@
 		<PackageReference Include="Octopus.Diagnostics" Version="2.1.0" />
 		<PackageReference Include="Octopus.Time" Version="1.1.339" />
 		<PackageReference Include="Polly" Version="7.2.2" />
-		<PackageReference Include="Portable.BouncyCastle" Version="1.8.4" />
+		<PackageReference Include="Portable.BouncyCastle" Version="1.9.0" />
 		<PackageReference Include="System.Management" Version="4.7.0" />
 		<PackageReference Include="System.ValueTuple" Version="4.5.0" />
 		<PackageReference Include="System.Net.Primitives" Version="4.3.1" />
@@ -113,5 +113,11 @@
 	  <EmbeddedResource Include="Internals\Options\_Readme.txt" />
 	  <EmbeddedResource Include="Startup\PathsToDeleteOnStartup.core.txt" />
 	  <EmbeddedResource Include="Startup\PathsToDeleteOnStartup.netfx.txt" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
+	  <PackageReference Include="KubernetesClient" Version="10.1.19" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+		<PackageReference Include="KubernetesClient.Classic" Version="10.1.19" />
 	</ItemGroup>
 </Project>

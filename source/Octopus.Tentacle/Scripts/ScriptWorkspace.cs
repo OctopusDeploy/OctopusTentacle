@@ -38,9 +38,9 @@ namespace Octopus.Tentacle.Scripts
 
         public ScriptTicket ScriptTicket { get; }
 
-        public ScriptIsolationLevel IsolationLevel { get; set; }
+        public virtual ScriptIsolationLevel IsolationLevel { get; set; }
 
-        public TimeSpan ScriptMutexAcquireTimeout
+        public virtual TimeSpan ScriptMutexAcquireTimeout
         {
             get => scriptMutexAcquireTimeout;
             set
@@ -55,9 +55,9 @@ namespace Octopus.Tentacle.Scripts
             }
         }
 
-        public string? ScriptMutexName { get; set; }
+        public virtual string? ScriptMutexName { get; set; }
 
-        public string[]? ScriptArguments { get; set; }
+        public virtual string[]? ScriptArguments { get; set; }
 
         public string WorkingDirectory { get; }
 

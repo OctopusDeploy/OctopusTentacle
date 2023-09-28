@@ -5,6 +5,7 @@ using System.Linq;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Diagnostics;
+using Octopus.Tentacle.Scripts.Kubernetes;
 using Octopus.Tentacle.Security;
 using Octopus.Tentacle.Util;
 
@@ -35,6 +36,7 @@ namespace Octopus.Tentacle.Scripts
         {
             var workingDirectory = FindWorkingDirectory(ticket);
 
+
             return CreateWorkspace(ticket, workingDirectory);
         }
 
@@ -54,11 +56,12 @@ namespace Octopus.Tentacle.Scripts
             workspace.ScriptArguments = scriptArguments;
             workspace.ScriptMutexName = scriptMutexName;
 
-            if (PlatformDetection.IsRunningOnNix || PlatformDetection.IsRunningOnMac)
+            //TODO: Fix this hack as it could be running in k8s but on a windows node
+            if (PlatformDetection.IsRunningInKubernetes || PlatformDetection.IsRunningOnNix || PlatformDetection.IsRunningOnMac)
             {
                 //TODO: This could be better
-                workspace.BootstrapScript(scripts.ContainsKey(ScriptType.Bash)
-                    ? scripts[ScriptType.Bash]
+                workspace.BootstrapScript(scripts.TryGetValue(ScriptType.Bash, out var script)
+                    ? script
                     : scriptBody);
             }
             else
@@ -99,6 +102,9 @@ namespace Octopus.Tentacle.Scripts
 
         IScriptWorkspace CreateWorkspace(ScriptTicket scriptTicket, string workingDirectory)
         {
+            if (PlatformDetection.IsRunningInKubernetes)
+                return new KubernetesScriptWorkspace(scriptTicket, workingDirectory, fileSystem, sensitiveValueMasker);
+
             if (!PlatformDetection.IsRunningOnWindows)
             {
                 return new BashScriptWorkspace(scriptTicket, workingDirectory, fileSystem, sensitiveValueMasker);

@@ -170,6 +170,10 @@ namespace Octopus.Tentacle.Startup
             {
                 exitCode = HandleException(ex);
             }
+            catch (ScriptExitCodeException ex)
+            {
+                exitCode = ex.ExitCode;
+            }
             catch (Exception ex)
             {
                 exitCode = HandleException(ex);
@@ -371,7 +375,7 @@ namespace Octopus.Tentacle.Startup
                 return new StartUpRegistryInstanceRequest(instanceName);
             if (!string.IsNullOrWhiteSpace(configFile))
                 return new StartUpConfigFileInstanceRequest(configFile);
-            
+
             return new StartUpDynamicInstanceRequest();
         }
 
