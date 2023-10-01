@@ -43,6 +43,12 @@ namespace Octopus.Tentacle.Maintenance
         {
             lock (taskLock)
             {
+                if (cleanerTask is not null)
+                {
+                    log.Error("Workspace cleaner task already running.");
+                    return;
+                }
+
                 cleanerTask = Task.Run(RunTask);
             }
         }

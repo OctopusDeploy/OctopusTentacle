@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Tentacle.CommonTestUtils.Builders;
-using Octopus.Tentacle.Maintenance;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util;
@@ -25,20 +24,27 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var startScriptCommand = new StartScriptCommandV2Builder().WithScriptBody(b => b.Print("Hello")).Build();
 
+            var existingHomeDirectory = new TemporaryDirectory();
+            var existingWorkspaceDirectory = GivenExistingWorkspaceExists(existingHomeDirectory);
+            
             var workspaceDirectory = string.Empty;
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacle(b =>
                 {
-                    b.WithRunTentacleEnvironmentVariable(WorkspaceCleanerConfiguration.CleanerDelayEnvironmentVariableName, cleanerDelay)
-                        .WithRunTentacleEnvironmentVariable(WorkspaceCleanerConfiguration.DeleteWorkspacesOlderThanTimeSpanEnvironmentVariableName, deleteWorkspacesOlderThan);
+                    b.WithHomeDirectory(existingHomeDirectory)
+                        .WithWorkspaceCleaningSettings(cleanerDelay, deleteWorkspacesOlderThan);
                 })
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .DecorateScriptServiceV2With(d =>
-                        d.BeforeCompleteScript(async (_, _) =>
+                        d.BeforeStartScript(async () =>
                             {
-                                Directory.Exists(workspaceDirectory).Should().BeTrue("Workspace should exist before we complete");
-
-                                await Task.Delay(2 * 500, CancellationToken);
+                                await Task.CompletedTask;
+                                File.WriteAllText(ScriptWorkspace.GetLogFilePath(existingWorkspaceDirectory), "Existing log file");
+                            }).BeforeCompleteScript(async (_, _) =>
+                            {
+                                //Ensure we have run as best we can (dummy workspace was deleted, and we delay a little in case it's still working)
+                                await Wait.For(() => !Directory.Exists(existingWorkspaceDirectory), CancellationToken);
+                                await Task.Delay(1000, CancellationToken);
 
                                 Directory.Exists(workspaceDirectory).Should().BeTrue("Workspace should not have been cleaned up");
                             })
@@ -46,13 +52,13 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            workspaceDirectory = GetWorkspaceDirectoryPath(clientAndTentacle.RunningTentacle.HomeDirectory, startScriptCommand.ScriptTicket.TaskId);
+            workspaceDirectory = GetWorkspaceDirectoryPath(existingHomeDirectory.DirectoryPath, startScriptCommand.ScriptTicket.TaskId);
 
             await clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, new InMemoryLog());
-            
+
             Directory.Exists(workspaceDirectory).Should().BeFalse("Workspace should be naturally cleaned up after completion");
         }
-        
+
         [Test]
         [TentacleConfigurations(testDefaultTentacleRuntimeOnly: true)]
         public async Task WhenTentacleClientCrashesAndTentacleNeverGotToldToComplete_ThenWorkspaceIsConsideredRunning_AndWillNotBeDeleted(TentacleConfigurationTestCase tentacleConfigurationTestCase)
@@ -62,15 +68,23 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var startScriptCommand = new StartScriptCommandV2Builder().WithScriptBody(b => b.Print("Hello")).Build();
 
+            var existingHomeDirectory = new TemporaryDirectory();
+            var existingWorkspaceDirectory = GivenExistingWorkspaceExists(existingHomeDirectory);
+
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacle(b =>
                 {
-                    b.WithRunTentacleEnvironmentVariable(WorkspaceCleanerConfiguration.CleanerDelayEnvironmentVariableName, cleanerDelay)
-                        .WithRunTentacleEnvironmentVariable(WorkspaceCleanerConfiguration.DeleteWorkspacesOlderThanTimeSpanEnvironmentVariableName, deleteWorkspacesOlderThan);
+                    b.WithHomeDirectory(existingHomeDirectory)
+                        .WithWorkspaceCleaningSettings(cleanerDelay, deleteWorkspacesOlderThan);
                 })
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .DecorateScriptServiceV2With(d =>
-                        d.BeforeCompleteScript((_, _) => throw new NotImplementedException("Force failure to simulate tentacle client crashing, and ensure we do not completion"))
+                        d.BeforeStartScript(async () =>
+                            {
+                                await Task.CompletedTask;
+                                File.WriteAllText(ScriptWorkspace.GetLogFilePath(existingWorkspaceDirectory), "Existing log file");
+                            })
+                            .BeforeCompleteScript((_, _) => throw new NotImplementedException("Force failure to simulate tentacle client crashing, and ensure we do not complete the script"))
                         .Build())
                     .Build())
                 .Build(CancellationToken);
@@ -79,6 +93,8 @@ namespace Octopus.Tentacle.Tests.Integration
                 .Should(() => clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, new InMemoryLog()))
                 .ThrowAsync<NotImplementedException>();
 
+            //Ensure we have run as best we can (dummy workspace was deleted, and we delay a little in case it's still working)
+            await Wait.For(() => !Directory.Exists(existingWorkspaceDirectory), CancellationToken);
             await Task.Delay(1000, CancellationToken);
 
             var workspaceDirectory = GetWorkspaceDirectoryPath(clientAndTentacle.RunningTentacle.HomeDirectory, startScriptCommand.ScriptTicket.TaskId);
@@ -94,8 +110,8 @@ namespace Octopus.Tentacle.Tests.Integration
             var deleteWorkspacesOlderThan = TimeSpan.FromMilliseconds(500);
 
             var existingHomeDirectory = new TemporaryDirectory();
-            var existingOrphanedWorkspaceDirectory = GivenExistingOrphanedWorkspaceExists(existingHomeDirectory);
-            File.WriteAllText(ScriptWorkspace.GetLogFilePath(existingOrphanedWorkspaceDirectory), "Existing log file");
+            var existingWorkspaceDirectory = GivenExistingWorkspaceExists(existingHomeDirectory);
+            File.WriteAllText(ScriptWorkspace.GetLogFilePath(existingWorkspaceDirectory), "Existing log file");
 
             await Task.Delay(1000, CancellationToken);
 
@@ -103,12 +119,11 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTentacle(b =>
                 {
                     b.WithHomeDirectory(existingHomeDirectory)
-                        .WithRunTentacleEnvironmentVariable(WorkspaceCleanerConfiguration.CleanerDelayEnvironmentVariableName, cleanerDelay)
-                        .WithRunTentacleEnvironmentVariable(WorkspaceCleanerConfiguration.DeleteWorkspacesOlderThanTimeSpanEnvironmentVariableName, deleteWorkspacesOlderThan);
+                        .WithWorkspaceCleaningSettings(cleanerDelay, deleteWorkspacesOlderThan);
                 })
                 .Build(CancellationToken);
 
-            await Wait.For(() => !Directory.Exists(existingOrphanedWorkspaceDirectory), CancellationToken);
+            await Wait.For(() => !Directory.Exists(existingWorkspaceDirectory), CancellationToken);
         }
 
         [Test]
@@ -119,21 +134,20 @@ namespace Octopus.Tentacle.Tests.Integration
             var deleteWorkspacesOlderThan = TimeSpan.FromMinutes(30);
 
             var existingHomeDirectory = new TemporaryDirectory();
-            var existingOrphanedWorkspaceDirectory = GivenExistingOrphanedWorkspaceExists(existingHomeDirectory);
-            File.WriteAllText(ScriptWorkspace.GetLogFilePath(existingOrphanedWorkspaceDirectory), "Existing log file");
+            var existingWorkspaceDirectory = GivenExistingWorkspaceExists(existingHomeDirectory);
+            File.WriteAllText(ScriptWorkspace.GetLogFilePath(existingWorkspaceDirectory), "Existing log file");
 
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacle(b =>
                 {
                     b.WithHomeDirectory(existingHomeDirectory)
-                        .WithRunTentacleEnvironmentVariable(WorkspaceCleanerConfiguration.CleanerDelayEnvironmentVariableName, cleanerDelay)
-                        .WithRunTentacleEnvironmentVariable(WorkspaceCleanerConfiguration.DeleteWorkspacesOlderThanTimeSpanEnvironmentVariableName, deleteWorkspacesOlderThan);
+                        .WithWorkspaceCleaningSettings(cleanerDelay, deleteWorkspacesOlderThan);
                 })
                 .Build(CancellationToken);
 
             await Task.Delay(1000, CancellationToken);
 
-            Directory.Exists(existingOrphanedWorkspaceDirectory).Should().BeTrue();
+            Directory.Exists(existingWorkspaceDirectory).Should().BeTrue();
         }
 
         [Test]
@@ -149,19 +163,18 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTentacle(b =>
                 {
                     b.WithHomeDirectory(existingHomeDirectory)
-                        .WithRunTentacleEnvironmentVariable(WorkspaceCleanerConfiguration.CleanerDelayEnvironmentVariableName, cleanerDelay)
-                        .WithRunTentacleEnvironmentVariable(WorkspaceCleanerConfiguration.DeleteWorkspacesOlderThanTimeSpanEnvironmentVariableName, deleteWorkspacesOlderThan);
+                        .WithWorkspaceCleaningSettings(cleanerDelay, deleteWorkspacesOlderThan);
                 })
                 .Build(CancellationToken);
 
             await Task.Delay(1000, CancellationToken);
 
-            var existingOrphanedWorkspaceDirectory = GivenExistingOrphanedWorkspaceExists(existingHomeDirectory);
-            File.WriteAllText(ScriptWorkspace.GetLogFilePath(existingOrphanedWorkspaceDirectory), "Existing log file");
+            var existingWorkspaceDirectory = GivenExistingWorkspaceExists(existingHomeDirectory);
+            File.WriteAllText(ScriptWorkspace.GetLogFilePath(existingWorkspaceDirectory), "Existing log file");
 
             await Task.Delay(1000, CancellationToken);
 
-            await Wait.For(() => !Directory.Exists(existingOrphanedWorkspaceDirectory), CancellationToken);
+            await Wait.For(() => !Directory.Exists(existingWorkspaceDirectory), CancellationToken);
         }
         
         static string GetWorkspaceDirectoryPath(string homeDirectory, string scriptTicket)
@@ -173,11 +186,11 @@ namespace Octopus.Tentacle.Tests.Integration
             return workspaceDirectory;
         }
 
-        static string GivenExistingOrphanedWorkspaceExists(TemporaryDirectory existingHomeDirectory)
+        static string GivenExistingWorkspaceExists(TemporaryDirectory existingHomeDirectory)
         {
-            var existingOrphanedWorkspaceDirectory = GetWorkspaceDirectoryPath(existingHomeDirectory.DirectoryPath, "35024668-3FED-46B7-94E5-FA288292ABF9");
-            Directory.CreateDirectory(existingOrphanedWorkspaceDirectory);
-            return existingOrphanedWorkspaceDirectory;
+            var existingWorkspaceDirectory = GetWorkspaceDirectoryPath(existingHomeDirectory.DirectoryPath, "35024668-3FED-46B7-94E5-FA288292ABF9");
+            Directory.CreateDirectory(existingWorkspaceDirectory);
+            return existingWorkspaceDirectory;
         }
     }
 }

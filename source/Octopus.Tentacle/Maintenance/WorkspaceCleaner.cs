@@ -39,7 +39,7 @@ namespace Octopus.Tentacle.Maintenance
         public async Task Clean(CancellationToken cancellationToken)
         {
             var deleteWorkspacesOlderThanDateTimeUtc = clock.GetUtcTime().DateTime.Subtract(configuration.DeleteWorkspacesOlderThanTimeSpan);
-            log.Verbose($"Cleaning orphaned workspaces older than {deleteWorkspacesOlderThanDateTimeUtc:g}");
+            log.Verbose($"Cleaning workspaces older than {deleteWorkspacesOlderThanDateTimeUtc:g}");
 
             var deletedCount = 0;
             var workspaces = scriptWorkspaceFactory.GetUncompletedWorkspaces();
@@ -51,27 +51,41 @@ namespace Octopus.Tentacle.Maintenance
                     if (scriptServiceV2.IsRunningScript(workspace.ScriptTicket)) continue;
 
                     var workspaceLogFilePath = workspace.LogFilePath;
-                    if (!File.Exists(workspaceLogFilePath)) continue;
+                    try
+                    {
+                        var outputLogFileLastWriteTimeUtc = File.GetLastWriteTimeUtc(workspaceLogFilePath);
+                        if (outputLogFileLastWriteTimeUtc >= deleteWorkspacesOlderThanDateTimeUtc)
+                        {
+                            continue;
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // If the cause of this exception was due to a race condition (i.e. the workspace was deleted), then this is not an error.
+                        if (!File.Exists(workspaceLogFilePath))
+                        {
+                            continue;
+                        }
 
-                    var outputLogFileLastWriteTimeUtc = File.GetLastWriteTimeUtc(workspaceLogFilePath);
-                    if (outputLogFileLastWriteTimeUtc >= deleteWorkspacesOlderThanDateTimeUtc) continue;
+                        throw;
+                    }
 
                     await workspace.Delete(cancellationToken);
                     deletedCount++;
                 }
                 catch (Exception e)
                 {
-                    log.Error(e, $"Could not delete orphaned workspace {workspace.WorkingDirectory}.");
+                    log.Warn(e, $"Could not delete workspace {workspace.WorkingDirectory}.");
                 }
             }
 
             if (deletedCount > 0)
             {
-                log.Info($"Deleted {deletedCount} orphaned workspace{(deletedCount != 1 ? "s" : "")}.");
+                log.Info($"Deleted {deletedCount} workspace{(deletedCount != 1 ? "s" : "")}.");
             }
             else
             {
-                log.Verbose("No orphaned workspaces found.");
+                log.Verbose("No workspaces found that need to be deleted.");
             }
         }
     }
