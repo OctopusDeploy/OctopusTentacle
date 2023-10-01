@@ -152,7 +152,15 @@ namespace Octopus.Tentacle.Services.Scripts
 
         public bool IsRunningScript(ScriptTicket ticket)
         {
-            return runningScripts.ContainsKey(ticket);
+            if (runningScripts.TryGetValue(ticket, out var script))
+            {
+                if (script.Process?.State != ProcessState.Complete)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         class RunningScriptWrapper

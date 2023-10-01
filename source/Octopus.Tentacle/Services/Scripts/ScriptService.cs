@@ -92,7 +92,15 @@ namespace Octopus.Tentacle.Services.Scripts
 
         public bool IsRunningScript(ScriptTicket ticket)
         {
-            return running.ContainsKey(ticket.TaskId);
+            if (running.TryGetValue(ticket.TaskId, out var script))
+            {
+                if (script.State != ProcessState.Complete)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }
