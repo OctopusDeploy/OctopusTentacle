@@ -170,8 +170,6 @@ namespace Octopus.Tentacle.Tests.Configuration
         void SetupMissingStoredInstances(string? instanceName = null)
         {
             applicationInstanceStore.LoadInstanceDetails(instanceName).Throws(new ControlledFailureException(""));
-            applicationInstanceStore.TryLoadInstanceDetails(instanceName, out Arg.Any<ApplicationInstanceRecord>()!)
-                .Returns(x => false);
         }
 
         string SetupAvailableStoredInstance(string instanceName)
@@ -179,12 +177,6 @@ namespace Octopus.Tentacle.Tests.Configuration
             var configPath = Guid.NewGuid().ToString();
             var record = new ApplicationInstanceRecord(instanceName, configPath);
             applicationInstanceStore.LoadInstanceDetails(instanceName).Returns(record);
-            applicationInstanceStore.TryLoadInstanceDetails(instanceName, out Arg.Any<ApplicationInstanceRecord>()!)
-                .Returns(x =>
-                {
-                    x[1] = record;
-                    return true;
-                });
             octopusFileSystem.FileExists(configPath).Returns(true);
             return configPath;
         }
