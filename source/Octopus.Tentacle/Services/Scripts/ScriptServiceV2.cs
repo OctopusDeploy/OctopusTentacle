@@ -114,15 +114,8 @@ namespace Octopus.Tentacle.Services.Scripts
         {
             runningScripts.TryRemove(command.Ticket, out _);
             var workspace = workspaceFactory.GetWorkspace(command.Ticket);
-            workspace.Delete();
-        }
-
-        RunningShellScript LaunchShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, IScriptStateStore stateStore, CancellationTokenSource cancel)
-        {
-            var runningScript = new RunningShellScript(shell, workspace, stateStore, workspace.CreateLog(), serverTaskId, cancel.Token, log);
-            var thread = new Thread(runningScript.Execute) { Name = "Executing PowerShell runningScript for " + ticket.TaskId };
-            thread.Start();
-            return runningScript;
+            //TODO: Don't clean up the workspace for future testing
+            //workspace.Delete();
         }
 
         ScriptStatusResponseV2 GetResponse(ScriptTicket ticket, long lastLogSequence, IRunningScript? runningScript)

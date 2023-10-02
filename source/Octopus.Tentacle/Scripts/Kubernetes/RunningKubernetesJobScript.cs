@@ -134,7 +134,10 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
             #endif
 
             var applicationDirectory = Path.GetDirectoryName(applicationPath);
+            applicationDirectory = $"{applicationDirectory}/linux-x64";
+
             var applicationName = Path.GetFileNameWithoutExtension(applicationPath);
+            applicationName = $"{applicationName}.dll";
 
             var job = new V1Job
             {
@@ -162,10 +165,11 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                                 {
                                     Name = jobService.BuildJobName(scriptTicket),
                                     Image = "octopusdeploy/worker-tools:ubuntu.22.04",
-                                    Command = new List<string> { Bash.GetFullBashPath() },
+                                    Command = new List<string> { "dotnet" },
                                     Args = new List<string>
                                     {
-                                        $"/data/octopus/{applicationName}",
+                                        $"/data/tentacle-app/{applicationName}",
+                                        "--", //force all the args after to be passed to the Tentacle application
                                         "execute-script",
                                         $"--scriptTicketId={scriptTicket.TaskId}",
                                         $"--serverTaskId={taskId}",
@@ -173,8 +177,8 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                                     },
                                     VolumeMounts = new List<V1VolumeMount>
                                     {
-                                        new($"/data/work/{scriptTicket.TaskId}", "work"),
-                                        new ("/data/octopus", "app"),
+                                        new($"/data/tentacle-work/{scriptTicket.TaskId}", "work"),
+                                        new ("/data/tentacle-app", "app"),
                                         new ("/data/tentacle-home", "home")
                                     },
                                     Env = new List<V1EnvVar>
