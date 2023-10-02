@@ -123,7 +123,7 @@ namespace Octopus.Tentacle.Configuration.Instances
 
                     if (!applicationInstanceStore.TryLoadInstanceDetails(null, out var indexDefaultInstance))
                     {
-                        throw new ControlledFailureException("There are no instances of OctopusServer configured on this machine. " +
+                        throw new ControlledFailureException("There are no instances of OctopusTentacle configured on this machine. " +
                             "Please run the setup wizard, configure an instance using the command-line interface or specify a configuration file");
                     }
 
