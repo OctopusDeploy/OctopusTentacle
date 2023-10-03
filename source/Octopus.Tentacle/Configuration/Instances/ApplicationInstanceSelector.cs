@@ -124,7 +124,7 @@ namespace Octopus.Tentacle.Configuration.Instances
                     // This will throw a ControlledFailureException if it can't find the instance so it won't be null
                     var indexDefaultInstance = applicationInstanceStore.LoadInstanceDetails(null);
                     
-                    return (indexDefaultInstance!.InstanceName, indexDefaultInstance!.ConfigurationFilePath);
+                    return (indexDefaultInstance.InstanceName, indexDefaultInstance.ConfigurationFilePath);
                 }
             }
         }
