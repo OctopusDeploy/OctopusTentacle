@@ -7,6 +7,7 @@ namespace Octopus.Tentacle.Scripts
     public interface IScriptWorkspaceFactory
     {
         IScriptWorkspace GetWorkspace(ScriptTicket ticket);
+
         IScriptWorkspace PrepareWorkspace(
             ScriptTicket ticket,
             string scriptBody,
@@ -16,5 +17,7 @@ namespace Octopus.Tentacle.Scripts
             string? scriptMutexName,
             string[]? scriptArguments,
             List<ScriptFile> files);
+
+        List<IScriptWorkspace> GetUncompletedWorkspaces();
     }
 }

@@ -2,7 +2,6 @@
 using System.IO;
 using System.Threading;
 using Newtonsoft.Json;
-using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Scripts
@@ -11,12 +10,10 @@ namespace Octopus.Tentacle.Scripts
     {
         readonly SemaphoreSlim scriptStateLock = new(1, 1);
         readonly IScriptWorkspace workspace;
-        readonly ScriptTicket scriptTicket;
         readonly IOctopusFileSystem fileSystem;
 
-        public ScriptStateStore(ScriptTicket scriptTicket, IScriptWorkspace workspace, IOctopusFileSystem fileSystem)
+        public ScriptStateStore(IScriptWorkspace workspace, IOctopusFileSystem fileSystem)
         {
-            this.scriptTicket = scriptTicket;
             this.workspace = workspace;
             this.fileSystem = fileSystem;
         }
@@ -32,7 +29,7 @@ namespace Octopus.Tentacle.Scripts
                 throw new InvalidOperationException($"ScriptState already exists at {StateFilePath}");
             }
 
-            var state = new ScriptState(scriptTicket, DateTimeOffset.UtcNow);
+            var state = new ScriptState(DateTimeOffset.UtcNow);
             var serialized = SerializeState(state);
             using var writer = GetStreamWriter(StateFilePath, FileMode.CreateNew);
             writer.Write(serialized);

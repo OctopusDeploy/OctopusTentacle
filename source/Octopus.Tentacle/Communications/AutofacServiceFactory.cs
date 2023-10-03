@@ -12,12 +12,12 @@ namespace Octopus.Tentacle.Communications
     /// However, before resolving, one or more IAutofacServiceSources must also be registered.
     /// This is so that only explicitly specified services will be resolved, and the types of all messages are known when the service is instantiated.
     /// </summary>
-    public class AutofacServiceFactory : IServiceFactory, IDisposable
+    public class AutofacServiceFactory : IServiceFactory, IServiceRegistration, IDisposable
     {
         // Must never be modified as it is required for backwards compatability in BackwardsCompatibleCapabilitiesV2Decorator
         const string TentacleServiceShuttingDownMessage = "The Tentacle service is shutting down and cannot process this request.";
         readonly ILifetimeScope scope;
-        readonly Dictionary<string, Type> serviceTypes = new Dictionary<string, Type>();
+        readonly Dictionary<string, Type> serviceTypes = new();
 
         public AutofacServiceFactory(ILifetimeScope scope, IEnumerable<IAutofacServiceSource> sources)
         {
@@ -32,7 +32,11 @@ namespace Octopus.Tentacle.Communications
 
         void BuildService(ContainerBuilder builder, Type serviceType)
         {
-            var registrationBuilder = builder.RegisterType(serviceType).SingleInstance();
+            var registrationBuilder = builder
+                .RegisterType(serviceType)
+                .AsSelf()
+                .SingleInstance();
+
             var interfaces = serviceType.GetInterfaces();
             if (serviceType.IsInterface || interfaces.IsNullOrEmpty())
             {
@@ -84,6 +88,11 @@ namespace Octopus.Tentacle.Communications
         public void Dispose()
         {
             scope.Dispose();
+        }
+
+        public T GetService<T>()
+        {
+            return scope.Resolve<T>();
         }
     }
 }

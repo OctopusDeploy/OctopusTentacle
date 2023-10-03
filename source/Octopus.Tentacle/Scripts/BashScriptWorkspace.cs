@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Util;
 
@@ -8,10 +9,11 @@ namespace Octopus.Tentacle.Scripts
     public class BashScriptWorkspace : ScriptWorkspace
     {
         public BashScriptWorkspace(
+            ScriptTicket scriptTicket,
             string workingDirectory,
             IOctopusFileSystem fileSystem,
             SensitiveValueMasker sensitiveValueMasker) :
-            base(workingDirectory, fileSystem, sensitiveValueMasker)
+            base(scriptTicket, workingDirectory, fileSystem, sensitiveValueMasker)
         {
         }
 

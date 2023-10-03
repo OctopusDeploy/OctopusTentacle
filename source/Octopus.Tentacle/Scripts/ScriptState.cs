@@ -7,7 +7,7 @@ namespace Octopus.Tentacle.Scripts
     public class ScriptState
     {
         [JsonConstructor]
-        public ScriptState(ScriptTicket scriptTicket,
+        public ScriptState(
             DateTimeOffset created,
             DateTimeOffset? started,
             DateTimeOffset? completed,
@@ -16,7 +16,6 @@ namespace Octopus.Tentacle.Scripts
             bool? ranToCompletion)
         {
             Created = created;
-            ScriptTicket = scriptTicket;
             Started = started;
             Completed = completed;
             State = state;
@@ -24,13 +23,11 @@ namespace Octopus.Tentacle.Scripts
             RanToCompletion = ranToCompletion;
         }
 
-        public ScriptState(ScriptTicket scriptTicket, DateTimeOffset created)
+        public ScriptState(DateTimeOffset created)
         {
-            ScriptTicket = scriptTicket;
             Created = created;
         }
-
-        public ScriptTicket ScriptTicket { get; }
+        
         public DateTimeOffset Created { get; }
         public DateTimeOffset? Started { get; private set; }
         public DateTimeOffset? Completed { get; private set; }

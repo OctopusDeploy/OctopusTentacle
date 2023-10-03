@@ -16,23 +16,22 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         internal async Task<RunningTentacle> Build(ILogger log, CancellationToken cancellationToken)
         {
-            var tempDirectory = new TemporaryDirectory();
             var instanceName = InstanceNameGenerator();
-            var configFilePath = Path.Combine(tempDirectory.DirectoryPath, instanceName + ".cfg");
+            var configFilePath = Path.Combine(HomeDirectory.DirectoryPath, instanceName + ".cfg");
             var tentacleExe = TentacleExePath ?? TentacleExeFinder.FindTentacleExe();
             
             var logger = log.ForContext<ListeningTentacleBuilder>();
             logger.Information($"Tentacle.exe location: {tentacleExe}");
 
-            await CreateInstance(tentacleExe, configFilePath, instanceName, tempDirectory, cancellationToken);
-            await AddCertificateToTentacle(tentacleExe, instanceName, CertificatePfxPath, tempDirectory, cancellationToken);
+            await CreateInstance(tentacleExe, configFilePath, instanceName, HomeDirectory, cancellationToken);
+            await AddCertificateToTentacle(tentacleExe, instanceName, CertificatePfxPath, HomeDirectory, cancellationToken);
             ConfigureTentacleToListen(configFilePath);
 
             var runningTentacle = await StartTentacle(
                 null,
                 tentacleExe,
                 instanceName,
-                tempDirectory,
+                HomeDirectory,
                 TentacleThumbprint,
                 logger,
                 cancellationToken);

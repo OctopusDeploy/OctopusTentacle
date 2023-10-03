@@ -16,7 +16,8 @@ namespace Octopus.Tentacle.Communications
 
             builder.RegisterType<ProxyConfigParser>().As<IProxyConfigParser>();
             builder.RegisterType<HalibutInitializer>().As<IHalibutInitializer>();
-            builder.RegisterType<AutofacServiceFactory>().As<IServiceFactory>();
+            builder.RegisterType<AutofacServiceFactory>().AsImplementedInterfaces().SingleInstance();
+
             builder.Register(c =>
             {
                 var configuration = c.Resolve<ITentacleConfiguration>();

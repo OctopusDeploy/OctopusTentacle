@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Octopus.Tentacle.Util
 {
@@ -11,6 +13,7 @@ namespace Octopus.Tentacle.Util
         bool DirectoryExists(string path);
         void DeleteFile(string path, DeletionOptions? options = null);
         void DeleteDirectory(string path, DeletionOptions? options = null);
+        Task DeleteDirectory(string path, CancellationToken cancellationToken, DeletionOptions? options = null);
         IEnumerable<string> EnumerateFiles(string parentDirectoryPath, params string[] searchPatterns);
         long GetFileSize(string path);
         string ReadFile(string path);

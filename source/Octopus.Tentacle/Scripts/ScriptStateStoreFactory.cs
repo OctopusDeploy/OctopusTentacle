@@ -1,5 +1,4 @@
 ﻿using System;
-using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Scripts
@@ -13,9 +12,9 @@ namespace Octopus.Tentacle.Scripts
             this.fileSystem = fileSystem;
         }
 
-        public ScriptStateStore Create(ScriptTicket ticket, IScriptWorkspace workspace)
+        public ScriptStateStore Create(IScriptWorkspace workspace)
         {
-            return new ScriptStateStore(ticket, workspace, fileSystem);
+            return new ScriptStateStore(workspace, fileSystem);
         }
     }
 }

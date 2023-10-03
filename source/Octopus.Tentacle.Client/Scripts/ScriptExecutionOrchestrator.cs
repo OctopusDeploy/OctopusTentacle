@@ -461,9 +461,15 @@ namespace Octopus.Tentacle.Client.Scripts
                             clientOperationMetricsBuilder,
                             CancellationToken.None);
 
-                    await actionTask.WaitTillCompletion(onCancellationAbandonCompleteScriptAfter, scriptExecutionCancellationToken);
+                    var actionTaskCompletionResult = await actionTask.WaitTillCompletion(onCancellationAbandonCompleteScriptAfter, scriptExecutionCancellationToken);
+                    if (actionTaskCompletionResult == TaskCompletionResult.Abandoned)
+                    {
+                        throw new OperationAbandonedException(onCancellationAbandonCompleteScriptAfter);
+                    }
+
+                    await actionTask;
                 }
-                catch (Exception ex) when (ex is HalibutClientException or OperationCanceledException)
+                catch (Exception ex) when (ex is HalibutClientException or OperationCanceledException or OperationAbandonedException)
                 {
                     logger.Warn("Failed to cleanup the script working directory on Tentacle");
                     logger.Verbose(ex);

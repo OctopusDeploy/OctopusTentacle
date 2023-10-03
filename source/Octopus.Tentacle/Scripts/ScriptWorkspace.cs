@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Services.Scripts;
@@ -16,10 +18,12 @@ namespace Octopus.Tentacle.Scripts
         TimeSpan scriptMutexAcquireTimeout = ScriptIsolationMutex.NoTimeout;
 
         public ScriptWorkspace(
+            ScriptTicket scriptTicket,
             string workingDirectory,
             IOctopusFileSystem fileSystem,
             SensitiveValueMasker sensitiveValueMasker)
         {
+            ScriptTicket = scriptTicket;
             WorkingDirectory = workingDirectory;
             FileSystem = fileSystem;
             SensitiveValueMasker = sensitiveValueMasker;
@@ -27,6 +31,12 @@ namespace Octopus.Tentacle.Scripts
         }
 
         protected virtual string BootstrapScriptName => "Bootstrap.ps1";
+
+        const string LogFileName = "Output.log";
+        public string LogFilePath => GetLogFilePath(WorkingDirectory);
+        public static string GetLogFilePath(string workingDirectory) => Path.Combine(workingDirectory, LogFileName);
+
+        public ScriptTicket ScriptTicket { get; }
 
         public ScriptIsolationLevel IsolationLevel { get; set; }
 
@@ -73,9 +83,14 @@ namespace Octopus.Tentacle.Scripts
             FileSystem.DeleteDirectory(WorkingDirectory, DeletionOptions.TryThreeTimesIgnoreFailure);
         }
 
+        public async Task Delete(CancellationToken cancellationToken)
+        {
+            await FileSystem.DeleteDirectory(WorkingDirectory, cancellationToken, DeletionOptions.TryThreeTimesIgnoreFailure);
+        }
+
         public IScriptLog CreateLog()
         {
-            return new ScriptLog(ResolvePath("Output.log"), FileSystem, SensitiveValueMasker);
+            return new ScriptLog(ResolvePath(LogFileName), FileSystem, SensitiveValueMasker);
         }
     }
 }

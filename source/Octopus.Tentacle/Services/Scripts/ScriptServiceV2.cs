@@ -35,10 +35,10 @@ namespace Octopus.Tentacle.Services.Scripts
         {
             var runningScript = runningScripts.GetOrAdd(
                 command.ScriptTicket,
-                s =>
+                _ =>
                 {
                     var workspace = workspaceFactory.GetWorkspace(command.ScriptTicket);
-                    var scriptState = scriptStateStoreFactory.Create(s, workspace);
+                    var scriptState = scriptStateStoreFactory.Create(workspace);
                     return new RunningScriptWrapper(scriptState);
                 });
 
@@ -133,7 +133,7 @@ namespace Octopus.Tentacle.Services.Scripts
             }
 
             // If we don't have a RunningProcess we check the ScriptStateStore to see if we have persisted a script result
-            var scriptStateStore = scriptStateStoreFactory.Create(ticket, workspace);
+            var scriptStateStore = scriptStateStoreFactory.Create(workspace);
             if (scriptStateStore.Exists())
             {
                 var scriptState = scriptStateStore.Load();
@@ -148,6 +148,19 @@ namespace Octopus.Tentacle.Services.Scripts
             }
 
             return new ScriptStatusResponseV2(ticket, ProcessState.Complete, ScriptExitCodes.UnknownScriptExitCode, logs, next);
+        }
+
+        public bool IsRunningScript(ScriptTicket ticket)
+        {
+            if (runningScripts.TryGetValue(ticket, out var script))
+            {
+                if (script.Process?.State != ProcessState.Complete)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         class RunningScriptWrapper

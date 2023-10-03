@@ -420,13 +420,11 @@ namespace Octopus.Tentacle.Tests.Integration
             runningScriptState.Completed.Should().BeNull();
             runningScriptState.ExitCode.Should().BeNull();
             runningScriptState.RanToCompletion.Should().BeNull();
-            runningScriptState.ScriptTicket.Should().BeEquivalentTo(startScriptCommand.ScriptTicket);
             runningScriptState.Created.Should().BeOnOrAfter(testStarted).And.BeOnOrBefore(testFinished);
 
             finishedScriptState.Completed.Should().BeOnOrAfter(testStarted.AddSeconds(5)).And.BeOnOrBefore(testFinished);
             finishedScriptState.ExitCode.Should().Be(0);
             finishedScriptState.RanToCompletion.Should().BeTrue();
-            finishedScriptState.ScriptTicket.Should().BeEquivalentTo(startScriptCommand.ScriptTicket);
             finishedScriptState.Created.Should().Be(runningScriptState.Created);
             finishedScriptState.Started.Should().BeOnOrAfter(testStarted).And.BeOnOrBefore(testFinished);
         }
@@ -442,7 +440,7 @@ namespace Octopus.Tentacle.Tests.Integration
         private ScriptStateStore SetupScriptStateStore(ScriptTicket ticket)
         {
             var workspace = workspaceFactory.GetWorkspace(ticket);
-            var stateWorkspace = stateStoreFactory.Create(ticket, workspace);
+            var stateWorkspace = stateStoreFactory.Create(workspace);
             return stateWorkspace;
         }
 

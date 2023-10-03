@@ -7,6 +7,7 @@ using Octopus.Diagnostics;
 using Octopus.Tentacle.Communications;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
+using Octopus.Tentacle.Maintenance;
 using Octopus.Tentacle.Startup;
 using Octopus.Tentacle.Util;
 using Octopus.Tentacle.Variables;
@@ -27,6 +28,7 @@ namespace Octopus.Tentacle.Commands
         readonly Lazy<IProxyInitializer> proxyInitializer;
         readonly IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker;
         readonly AppVersion appVersion;
+        readonly IWorkspaceCleanerTask workspaceCleanerTask;
         int wait;
         bool halibutHasStarted;
 
@@ -43,7 +45,8 @@ namespace Octopus.Tentacle.Commands
             Lazy<IProxyInitializer> proxyInitializer,
             IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker,
             AppVersion appVersion,
-            ILogFileOnlyLogger logFileOnlyLogger) : base(selector, log, logFileOnlyLogger)
+            ILogFileOnlyLogger logFileOnlyLogger,
+            IWorkspaceCleanerTask workspaceCleanerTask) : base(selector, log, logFileOnlyLogger)
         {
             this.halibut = halibut;
             this.configuration = configuration;
@@ -55,6 +58,7 @@ namespace Octopus.Tentacle.Commands
             this.proxyInitializer = proxyInitializer;
             this.windowsLocalAdminRightsChecker = windowsLocalAdminRightsChecker;
             this.appVersion = appVersion;
+            this.workspaceCleanerTask = workspaceCleanerTask;
 
             Options.Add("wait=", "Delay (ms) before starting", arg => wait = int.Parse(arg));
             Options.Add("console", "Don't attempt to run as a service, even if the user is non-interactive", v =>
@@ -118,6 +122,8 @@ namespace Octopus.Tentacle.Commands
             halibut.Value.Start();
             halibutHasStarted = true;
 
+            workspaceCleanerTask.Start();
+
             Runtime.WaitForUserToExit();
         }
 
@@ -136,7 +142,11 @@ namespace Octopus.Tentacle.Commands
         protected override void Stop()
         {
             if (halibutHasStarted)
+            {
                 halibut.Value.Stop();
+            }
+
+            workspaceCleanerTask.Stop();
         }
     }
 }
