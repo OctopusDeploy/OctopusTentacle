@@ -121,13 +121,10 @@ namespace Octopus.Tentacle.Configuration.Instances
                     if (fileSystem.FileExists(rootPath))
                         return (null, rootPath);
 
-                    if (!applicationInstanceStore.TryLoadInstanceDetails(null, out var indexDefaultInstance))
-                    {
-                        throw new ControlledFailureException("There are no instances of OctopusServer configured on this machine. " +
-                            "Please run the setup wizard, configure an instance using the command-line interface or specify a configuration file");
-                    }
-
-                    return (indexDefaultInstance!.InstanceName, indexDefaultInstance!.ConfigurationFilePath);
+                    // This will throw a ControlledFailureException if it can't find the instance so it won't be null
+                    var indexDefaultInstance = applicationInstanceStore.LoadInstanceDetails(null);
+                    
+                    return (indexDefaultInstance.InstanceName, indexDefaultInstance.ConfigurationFilePath);
                 }
             }
         }

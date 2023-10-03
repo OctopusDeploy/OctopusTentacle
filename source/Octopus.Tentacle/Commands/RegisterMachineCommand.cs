@@ -51,7 +51,7 @@ namespace Octopus.Tentacle.Commands
                 throw new ControlledFailureException("Please specify an environment name, e.g., --environment=Development");
 
             if (roles.Count == 0 || string.IsNullOrWhiteSpace(roles.First()))
-                throw new ControlledFailureException("Please specify an role name, e.g., --role=web-server");
+                throw new ControlledFailureException("Please specify a role name, e.g., --role=web-server");
         }
 
         protected override void EnhanceOperation(IRegisterMachineOperation registerOperation)

@@ -10,7 +10,6 @@ namespace Octopus.Tentacle.Configuration.Instances
     /// </summary>
     public interface IApplicationInstanceStore
     {
-        bool TryLoadInstanceDetails(string? instanceName, out ApplicationInstanceRecord? instanceRecord);
         ApplicationInstanceRecord LoadInstanceDetails(string? instanceName);
         void RegisterInstance(ApplicationInstanceRecord instanceRecord);
         void DeleteInstance(string instanceName);
