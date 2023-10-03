@@ -45,29 +45,26 @@ namespace Octopus.Tentacle.Maintenance
             var workspaces = scriptWorkspaceFactory.GetUncompletedWorkspaces();
             foreach (var workspace in workspaces)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 try
                 {
                     if (scriptService.IsRunningScript(workspace.ScriptTicket)) continue;
                     if (scriptServiceV2.IsRunningScript(workspace.ScriptTicket)) continue;
 
                     var workspaceLogFilePath = workspace.LogFilePath;
-                    try
+                    
+                    var outputLogFileLastWriteTimeUtc = File.GetLastWriteTimeUtc(workspaceLogFilePath);
+                    if (outputLogFileLastWriteTimeUtc >= deleteWorkspacesOlderThanDateTimeUtc)
                     {
-                        var outputLogFileLastWriteTimeUtc = File.GetLastWriteTimeUtc(workspaceLogFilePath);
-                        if (outputLogFileLastWriteTimeUtc >= deleteWorkspacesOlderThanDateTimeUtc)
-                        {
-                            continue;
-                        }
+                        continue;
                     }
-                    catch (Exception)
-                    {
-                        // If the cause of this exception was due to a race condition (i.e. the workspace was deleted), then this is not an error.
-                        if (!File.Exists(workspaceLogFilePath))
-                        {
-                            continue;
-                        }
 
-                        throw;
+                    // If workspaceLogFilePath does not exist, then outputLogFileLastWriteTimeUtc will be in the year 1601 (and therefore we attempt to delete it)
+                    // This will happen if we check the workspace while it is being deleted. So only delete if we are not currently deleting the workspace (i.e. the log file still exists)
+                    if (!File.Exists(workspaceLogFilePath))
+                    {
+                        continue;
                     }
 
                     await workspace.Delete(cancellationToken);
