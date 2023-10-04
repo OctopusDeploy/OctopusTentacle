@@ -1,5 +1,4 @@
-﻿#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-using System;
+﻿using System;
 using Octopus.Tentacle.Internals.Options;
 using Octopus.Tentacle.Startup;
 
@@ -15,7 +14,6 @@ namespace Octopus.Tentacle.Commands.OptionSets
 
         public bool IgnoreSslErrors { get; private set; } = false;
         public bool Optional { private get; set; }
-
 
         public ApiEndpointOptions(OptionSet options)
         {
@@ -70,4 +68,3 @@ namespace Octopus.Tentacle.Commands.OptionSets
         }
     }
 }
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
