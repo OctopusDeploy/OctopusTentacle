@@ -42,6 +42,7 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Octopus.Client" Version="14.3.884" />
+		<PackageReference Include="Octopus.Client" Version="14.3.857-scme-add-support-for-token-authentication" />
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Autofac" Version="4.6.2" />
