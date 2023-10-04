@@ -41,7 +41,7 @@
 		<DefineConstants>$(DefineConstants);HTTP_CLIENT_SUPPORTS_SSL_OPTIONS;REQUIRES_EXPLICIT_LOG_CONFIG;REQUIRES_CODE_PAGE_PROVIDER;USER_INTERACTIVE_DOES_NOT_WORK;DEFAULT_PROXY_IS_NOT_AVAILABLE;HAS_NULLABLE_REF_TYPES</DefineConstants>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="Octopus.Client" Version="11.3.3453" />
+		<PackageReference Include="Octopus.Client" Version="14.3.857-scme-add-support-for-token-authentication" />
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Autofac" Version="4.6.2" />
