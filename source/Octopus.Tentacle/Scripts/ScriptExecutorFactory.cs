@@ -16,7 +16,7 @@ namespace Octopus.Tentacle.Scripts
 
         public IScriptExecutor GetExecutor()
         {
-            return PlatformDetection.IsRunningInKubernetes switch
+            return PlatformDetection.Kubernetes.IsRunningInKubernetes switch
             {
                 true => kubernetesJobScriptExecutor.Value,
                 false => shellScriptExecutor.Value

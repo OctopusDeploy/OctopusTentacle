@@ -56,20 +56,7 @@ namespace Octopus.Tentacle.Scripts
             workspace.ScriptArguments = scriptArguments;
             workspace.ScriptMutexName = scriptMutexName;
 
-            //TODO: Fix this hack as it could be running in k8s but on a windows node
-            if (PlatformDetection.IsRunningInKubernetes || PlatformDetection.IsRunningOnNix || PlatformDetection.IsRunningOnMac)
-            {
-                //TODO: This could be better
-                workspace.BootstrapScript(scripts.TryGetValue(ScriptType.Bash, out var script)
-                    ? script
-                    : scriptBody);
-            }
-            else
-            {
-                workspace.BootstrapScript(scriptBody);
-            }
-
-
+            workspace.BootstrapScript(scriptBody, scripts);
             files.ForEach(file => SaveFileToDisk(workspace, file));
 
             return workspace;

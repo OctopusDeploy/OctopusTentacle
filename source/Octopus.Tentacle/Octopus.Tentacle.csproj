@@ -75,6 +75,10 @@
 		<Content Include="Tentacle.exe.manifest">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
+		<None Remove="Kubernetes\Scripts\JobBootstrapper.sh" />
+		<Content Include="Kubernetes\Scripts\JobBootstrapper.sh">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
 	</ItemGroup>
 	<ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETCoreApp' ">
 		<RuntimeHostConfigurationOption Include="System.Globalization.Invariant" Value="true" />

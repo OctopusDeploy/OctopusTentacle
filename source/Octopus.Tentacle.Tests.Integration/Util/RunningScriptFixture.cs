@@ -77,7 +77,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         [Retry(3)]
         public void ExitCode_ShouldBeReturned()
         {
-            workspace.BootstrapScript("exit 99");
+            workspace.BootstrapScript("exit 99", TODO);
             runningShellScript.Execute();
             runningShellScript.ExitCode.Should().Be(99, "the exit code of the script should be returned");
         }
@@ -86,7 +86,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         [Retry(3)]
         public void WriteHost_WritesToStdOut_AndIsReturned()
         {
-            workspace.BootstrapScript("echo Hello");
+            workspace.BootstrapScript("echo Hello", TODO);
             runningShellScript.Execute();
             runningShellScript.ExitCode.Should().Be(0, "the script should have run to completion");
             scriptLog.StdErr.Length.Should().Be(0, "the script shouldn't have written to stderr");
@@ -98,7 +98,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         [WindowsTest]
         public void WriteDebug_DoesNotWriteAnywhere()
         {
-            workspace.BootstrapScript("Write-Debug Hello");
+            workspace.BootstrapScript("Write-Debug Hello", TODO);
             runningShellScript.Execute();
             runningShellScript.ExitCode.Should().Be(0, "the script should have run to completion");
             scriptLog.StdOut.ToString().Should().NotContain("Hello", "the script shouldn't have written to stdout");
@@ -110,7 +110,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         [WindowsTest]
         public void WriteOutput_WritesToStdOut_AndIsReturned()
         {
-            workspace.BootstrapScript("Write-Output Hello");
+            workspace.BootstrapScript("Write-Output Hello", TODO);
             runningShellScript.Execute();
             runningShellScript.ExitCode.Should().Be(0, "the script should have run to completion");
             scriptLog.StdErr.ToString().Should().NotContain("Hello", "the script shouldn't have written to stderr");
@@ -121,7 +121,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         [Retry(3)]
         public void WriteError_WritesToStdErr_AndIsReturned()
         {
-            workspace.BootstrapScript(PlatformDetection.IsRunningOnWindows ? "Write-Error EpicFail" : "&2 echo EpicFail");
+            workspace.BootstrapScript(PlatformDetection.IsRunningOnWindows ? "Write-Error EpicFail" : "&2 echo EpicFail", TODO);
 
             runningShellScript.Execute();
             if (PlatformDetection.IsRunningOnWindows)
@@ -140,7 +140,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
             var scriptBody = PlatformDetection.IsRunningOnWindows
                 ? $"echo {EchoEnvironmentVariable("username")}"
                 : "whoami";
-            workspace.BootstrapScript(scriptBody);
+            workspace.BootstrapScript(scriptBody, TODO);
             runningShellScript.Execute();
             runningShellScript.ExitCode.Should().Be(0, "the script should have run to completion");
             scriptLog.StdErr.Length.Should().Be(0, "the script shouldn't have written to stderr");
@@ -164,7 +164,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
                     cts.Token,
                     new InMemoryLog());
 
-                workspace.BootstrapScript($"echo Starting\n{sleepCommand} 30\necho Finito");
+                workspace.BootstrapScript($"echo Starting\n{sleepCommand} 30\necho Finito", TODO);
                 script.Execute();
                 runningShellScript.ExitCode.Should().Be(0, "the script should have been canceled");
                 scriptLog.StdErr.ToString().Should().Be("", "the script shouldn't have written to stderr");

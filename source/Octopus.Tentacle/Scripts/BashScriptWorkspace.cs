@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Diagnostics;
@@ -19,10 +20,15 @@ namespace Octopus.Tentacle.Scripts
 
         protected override string BootstrapScriptName => "Bootstrap.sh";
 
-        public override void BootstrapScript(string scriptBody)
+        public override void BootstrapScript(string scriptBody, Dictionary<ScriptType, string> otherScripts)
         {
-            scriptBody = scriptBody.Replace("\r\n", "\n");
-            FileSystem.OverwriteFile(BootstrapScriptFilePath, scriptBody, Encoding.Default);
+            //we get the bash script
+            var script = otherScripts.TryGetValue(ScriptType.Bash, out var bashScript)
+                ? bashScript
+                : scriptBody;
+
+            script = script.Replace("\r\n", "\n");
+            FileSystem.OverwriteFile(BootstrapScriptFilePath, script, Encoding.Default);
         }
     }
 }

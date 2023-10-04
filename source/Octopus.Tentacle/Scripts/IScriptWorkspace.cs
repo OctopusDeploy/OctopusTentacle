@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Tentacle.Contracts;
@@ -14,7 +15,7 @@ namespace Octopus.Tentacle.Scripts
         ScriptIsolationLevel IsolationLevel { get; set; }
         TimeSpan ScriptMutexAcquireTimeout { get; set; }
         string? ScriptMutexName { get; set; }
-        void BootstrapScript(string scriptBody);
+        void BootstrapScript(string scriptBody, Dictionary<ScriptType, string> otherScripts);
         string ResolvePath(string fileName);
         void Delete();
         Task Delete(CancellationToken cancellationToken);

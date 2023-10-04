@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -63,7 +64,7 @@ namespace Octopus.Tentacle.Scripts
 
         public string BootstrapScriptFilePath => Path.Combine(WorkingDirectory, BootstrapScriptName);
 
-        public virtual void BootstrapScript(string scriptBody)
+        public virtual void BootstrapScript(string scriptBody, Dictionary<ScriptType, string> otherScripts)
         {
             // default is UTF8noBOM but powershell doesn't interpret that correctly
             FileSystem.OverwriteFile(BootstrapScriptFilePath, scriptBody, Encoding.UTF8);

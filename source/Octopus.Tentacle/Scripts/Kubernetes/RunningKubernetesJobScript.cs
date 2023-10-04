@@ -114,7 +114,7 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                 var firstCondition = job.Status.Conditions.FirstOrDefault();
                 switch (firstCondition)
                 {
-                    case { Status: "True", Type: "Completed" }:
+                    case { Status: "True", Type: "Complete" }:
                         return 0;
                     case { Status: "True", Type: "Failed" }:
                         return 1;
@@ -127,17 +127,16 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
 
         private void CreateJob()
         {
-            #if NETFX
+            var scriptName = Path.GetFileName(workspace.BootstrapScriptFilePath);
+
+#if NETFX
             var applicationPath = Process.GetCurrentProcess().MainModule!.FileName;
-            #else
+#else
             var applicationPath = Environment.ProcessPath;
-            #endif
+#endif
 
             var applicationDirectory = Path.GetDirectoryName(applicationPath);
-            applicationDirectory = $"{applicationDirectory}/linux-x64";
-
-            var applicationName = Path.GetFileNameWithoutExtension(applicationPath);
-            applicationName = $"{applicationName}.dll";
+            var bootstrapScriptDirectory = $"{applicationDirectory}/Kubernetes/Scripts";
 
             var job = new V1Job
             {
@@ -165,25 +164,23 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                                 {
                                     Name = jobService.BuildJobName(scriptTicket),
                                     Image = "octopusdeploy/worker-tools:ubuntu.22.04",
-                                    Command = new List<string> { "dotnet" },
+                                    Command = new List<string> { Bash.GetFullBashPath() },
                                     Args = new List<string>
-                                    {
-                                        $"/data/tentacle-app/{applicationName}",
-                                        "--", //force all the args after to be passed to the Tentacle application
-                                        "execute-script",
-                                        $"--scriptTicketId={scriptTicket.TaskId}",
-                                        $"--serverTaskId={taskId}",
-                                        "--forceShell"
-                                    },
+                                        {
+                                            "/data/tentacle-scripts/JobBootstrapper.sh",
+                                            $"/data/tentacle-work/{scriptName}"
+                                        }.Concat(workspace.ScriptArguments ?? Array.Empty<string>())
+                                        .ToList(),
                                     VolumeMounts = new List<V1VolumeMount>
                                     {
-                                        new($"/data/tentacle-work/{scriptTicket.TaskId}", "work"),
-                                        new ("/data/tentacle-app", "app"),
-                                        new ("/data/tentacle-home", "home")
+                                        new($"/data/tentacle-work", "work"),
+                                        new("/data/tentacle-scripts", "scripts"),
+                                        new("/data/tentacle-home", "home")
                                     },
                                     Env = new List<V1EnvVar>
                                     {
-                                        new(EnvironmentVariables.TentacleHome, "/data/tentacle-home")
+                                        new(EnvironmentVariables.TentacleHome, "/data/tentacle-home"),
+                                        new("TentacleWork", "/data/tentacle-work")
                                     }
                                 }
                             },
@@ -197,8 +194,8 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                                 },
                                 new()
                                 {
-                                    Name = "app",
-                                    HostPath = new V1HostPathVolumeSource(NormalizePathsForNix(applicationDirectory))
+                                    Name = "scripts",
+                                    HostPath = new V1HostPathVolumeSource(NormalizePathsForNix(bootstrapScriptDirectory))
                                 },
                                 new()
                                 {
