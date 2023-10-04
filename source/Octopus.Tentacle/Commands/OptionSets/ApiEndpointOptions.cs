@@ -13,6 +13,7 @@ namespace Octopus.Tentacle.Commands.OptionSets
         public string Password { get; private set; } = null!;
 
         public bool IgnoreSslErrors { get; private set; } = false;
+
         public bool Optional { private get; set; }
 
         public ApiEndpointOptions(OptionSet options)
