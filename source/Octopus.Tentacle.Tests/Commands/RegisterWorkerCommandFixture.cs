@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
-using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using NSubstitute;
@@ -47,7 +46,7 @@ namespace Octopus.Tentacle.Tests.Commands
 
             repository = Substitute.For<IOctopusAsyncRepository>();
             repository.Client.Returns(octopusAsyncClient);
-            repository.LoadRootDocument(CancellationToken.None).Returns(new RootResource { Version = "2018.4" });
+            repository.LoadRootDocument().Returns(new RootResource { Version = "2018.4" });
             octopusAsyncClient.Repository.Returns(repository);
             octopusAsyncClient.ForSystem().Returns(repository);
             octopusAsyncClient.ForSpace(Arg.Any<SpaceResource>()).Returns(repository);

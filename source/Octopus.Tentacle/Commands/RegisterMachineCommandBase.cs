@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Net;
-using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
 using Octopus.Client;
@@ -244,7 +243,7 @@ namespace Octopus.Tentacle.Commands
 
         async Task ConfirmTentacleCanRegisterWithServerBasedOnItsVersion(IOctopusSystemAsyncRepository repository)
         {
-            var rootDocument = await repository.LoadRootDocument(CancellationToken.None);
+            var rootDocument = await repository.LoadRootDocument();
             // Eg. Check they're not trying to register a 3.* Tentacle with a 2.* API Server.
             if (string.IsNullOrEmpty(rootDocument.Version))
                 throw new ControlledFailureException("Unable to determine the Octopus Server version.");

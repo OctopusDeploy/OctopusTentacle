@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Client;
 using Octopus.Client.Exceptions;
@@ -163,12 +162,12 @@ namespace Octopus.Tentacle.Commands
 
         async Task CollectionServerSideConfigurationFromMachine(IWritableKeyValueStore outputStore, IOctopusSpaceAsyncRepository repository, MachineResource machine)
         {
-            var environments = await repository.Environments.FindAll(CancellationToken.None);
+            var environments = await repository.Environments.FindAll();
             outputStore.Set("Tentacle.Environments", environments.Where(x => machine.EnvironmentIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }));
 
             if (await repository.HasLink("Tenants"))
             {
-                var tenants = await repository.Tenants.FindAll(CancellationToken.None);
+                var tenants = await repository.Tenants.FindAll();
                 outputStore.Set("Tentacle.Tenants", tenants.Where(x => machine.TenantIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }));
                 outputStore.Set("Tentacle.TenantTags", machine.TenantTags);
             }
@@ -176,7 +175,7 @@ namespace Octopus.Tentacle.Commands
             outputStore.Set("Tentacle.Roles", machine.Roles);
             if (machine.MachinePolicyId != null)
             {
-                var machinePolicy = await repository.MachinePolicies.Get(machine.MachinePolicyId, CancellationToken.None);
+                var machinePolicy = await repository.MachinePolicies.Get(machine.MachinePolicyId);
                 outputStore.Set("Tentacle.MachinePolicy", new { machinePolicy.Id, machinePolicy.Name });
             }
 
@@ -187,12 +186,12 @@ namespace Octopus.Tentacle.Commands
 
         async Task CollectionServerSideConfigurationFromWorker(IWritableKeyValueStore outputStore, IOctopusSpaceAsyncRepository repository, WorkerResource machine)
         {
-            var workerPools = await repository.WorkerPools.FindAll(CancellationToken.None);
+            var workerPools = await repository.WorkerPools.FindAll();
             outputStore.Set("Tentacle.WorkerPools", workerPools.Where(x => machine.WorkerPoolIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }));
 
             if (machine.MachinePolicyId != null)
             {
-                var machinePolicy = await repository.MachinePolicies.Get(machine.MachinePolicyId, CancellationToken.None);
+                var machinePolicy = await repository.MachinePolicies.Get(machine.MachinePolicyId);
                 outputStore.Set("Tentacle.MachinePolicy", new { machinePolicy.Id, machinePolicy.Name });
             }
 
