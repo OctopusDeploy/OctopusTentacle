@@ -24,6 +24,8 @@ namespace Octopus.Tentacle.Services.Scripts
             this.sensitiveValueMasker = sensitiveValueMasker;
         }
 
+        public string LogFilePath => logFile;
+
         public IScriptLogWriter CreateWriter()
         {
             return new Writer(logFile, fileSystem, sync, sensitiveValueMasker);
@@ -35,8 +37,8 @@ namespace Octopus.Tentacle.Services.Scripts
             nextSequenceNumber = afterSequenceNumber;
             lock (sync)
             {
-                using (var writer = new StreamReader(fileSystem.OpenFile(logFile, FileAccess.Read, FileShare.ReadWrite), Encoding.UTF8))
-                using (var json = new JsonTextReader(writer))
+                using (var reader = new StreamReader(fileSystem.OpenFile(logFile, FileAccess.Read, FileShare.ReadWrite), Encoding.UTF8))
+                using (var json = new JsonTextReader(reader))
                 {
                     json.SupportMultipleContent = true;
 
@@ -102,6 +104,7 @@ namespace Octopus.Tentacle.Services.Scripts
 
         class Writer : IScriptLogWriter
         {
+            private readonly string logFile;
             readonly object sync;
             readonly SensitiveValueMasker sensitiveValueMasker;
             readonly JsonTextWriter json;
@@ -110,9 +113,10 @@ namespace Octopus.Tentacle.Services.Scripts
 
             public Writer(string logFile, IOctopusFileSystem fileSystem, object sync, SensitiveValueMasker sensitiveValueMasker)
             {
+                this.logFile = logFile;
                 this.sync = sync;
                 this.sensitiveValueMasker = sensitiveValueMasker;
-                writeStream = fileSystem.OpenFile(logFile, FileMode.Append, FileAccess.Write);
+                writeStream = fileSystem.OpenFile(logFile, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
                 writer = new StreamWriter(writeStream, Encoding.UTF8);
                 json = new JsonTextWriter(writer);
             }

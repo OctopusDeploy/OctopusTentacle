@@ -47,6 +47,9 @@ public class ExecuteScriptCommand : RootCommand
     {
         await Task.CompletedTask;
 
+        // we get erroneously left "s sometimes in k8s, so strip these
+        scriptPath = scriptPath.Trim('"');
+
         var workingDirectory = Path.GetDirectoryName(scriptPath);
 
         var workspace = new BashScriptWorkspace(
@@ -55,7 +58,7 @@ public class ExecuteScriptCommand : RootCommand
             new SensitiveValueMasker());
 
         var log = workspace.CreateLog();
-        var writer = log.CreateWriter();
+        using var writer = log.CreateWriter();
 
         scriptArgs ??= Array.Empty<string>();
 

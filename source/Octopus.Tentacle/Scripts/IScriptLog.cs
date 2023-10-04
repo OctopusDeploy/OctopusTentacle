@@ -8,5 +8,6 @@ namespace Octopus.Tentacle.Scripts
     {
         IScriptLogWriter CreateWriter();
         List<ProcessOutput> GetOutput(long afterSequenceNumber, out long nextSequenceNumber);
+        string LogFilePath { get; }
     }
 }

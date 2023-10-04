@@ -72,7 +72,7 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                             State = ProcessState.Running;
 
                             //we now need to monitor the resulting pod status
-                            CheckIfPodHasCompleted().GetAwaiter().GetResult();
+                            exitCode = CheckIfPodHasCompleted().GetAwaiter().GetResult();
                         }
                     }
                     catch (OperationCanceledException)
@@ -111,7 +111,7 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                 if (job is null)
                     continue;
 
-                var firstCondition = job.Status.Conditions.FirstOrDefault();
+                var firstCondition = job.Status?.Conditions?.FirstOrDefault();
                 switch (firstCondition)
                 {
                     case { Status: "True", Type: "Complete" }:
@@ -136,7 +136,12 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
 #endif
 
             var applicationDirectory = Path.GetDirectoryName(applicationPath);
-            var bootstrapScriptDirectory = $"{applicationDirectory}/Kubernetes/Scripts";
+
+            //TODO: Make the ScriptRunner a configurable location
+            var scriptRunnerDirectory = Path.GetFullPath(Path.Combine(
+                applicationDirectory!,
+                "./../../../Octopus.Tentacle.Kubernetes.ScriptRunner/bin/net6.0/linux-x64"
+            ));
 
             var job = new V1Job
             {
@@ -164,23 +169,32 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                                 {
                                     Name = jobService.BuildJobName(scriptTicket),
                                     Image = "octopusdeploy/worker-tools:ubuntu.22.04",
-                                    Command = new List<string> { Bash.GetFullBashPath() },
+                                    Command = new List<string> {"dotnet"},
                                     Args = new List<string>
+                                    {
+                                        "/data/tentacle-app/Octopus.Tentacle.Kubernetes.ScriptRunner.dll",
+                                        "--script",
+                                        $"\"/data/tentacle-work/{scriptName}\""
+                                    }.Concat(
+                                        (workspace.ScriptArguments ?? Array.Empty<string>())
+                                        .SelectMany(arg => new[]
                                         {
-                                            "/data/tentacle-scripts/JobBootstrapper.sh",
-                                            $"/data/tentacle-work/{scriptName}"
-                                        }.Concat(workspace.ScriptArguments ?? Array.Empty<string>())
-                                        .ToList(),
+                                            "--args",
+                                            $"\"{arg}\""
+                                        })
+                                    ).ToList(),
                                     VolumeMounts = new List<V1VolumeMount>
                                     {
-                                        new($"/data/tentacle-work", "work"),
-                                        new("/data/tentacle-scripts", "scripts"),
+                                        new("/data/tentacle-work", "work"),
+                                        new("/data/tentacle-app", "app"),
                                         new("/data/tentacle-home", "home")
                                     },
                                     Env = new List<V1EnvVar>
                                     {
                                         new(EnvironmentVariables.TentacleHome, "/data/tentacle-home"),
-                                        new("TentacleWork", "/data/tentacle-work")
+                                        new(EnvironmentVariables.TentacleVersion, Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleVersion)),
+                                        new(EnvironmentVariables.TentacleCertificateSignatureAlgorithm, Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleCertificateSignatureAlgorithm)),
+                                        new("OCTOPUS_RUNNING_IN_CONTAINER", "Y")
                                     }
                                 }
                             },
@@ -194,8 +208,8 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                                 },
                                 new()
                                 {
-                                    Name = "scripts",
-                                    HostPath = new V1HostPathVolumeSource(NormalizePathsForNix(bootstrapScriptDirectory))
+                                    Name = "app",
+                                    HostPath = new V1HostPathVolumeSource(NormalizePathsForNix(scriptRunnerDirectory))
                                 },
                                 new()
                                 {
@@ -206,7 +220,7 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                         }
                     },
                     BackoffLimit = 0, //we never want to rerun if it fails
-                    TtlSecondsAfterFinished = 1800 // 30min
+                    TtlSecondsAfterFinished = 300 // 5min
                 }
             };
 
