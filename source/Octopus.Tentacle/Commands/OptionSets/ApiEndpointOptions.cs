@@ -7,11 +7,11 @@ namespace Octopus.Tentacle.Commands.OptionSets
 {
     public class ApiEndpointOptions : ICommandOptions
     {
-        public string Server { get; private set; }
-        public string ApiKey { get; private set; }
-        public string Token { get; private set; }
-        public string Username { get; private set; }
-        public string Password { get; private set; }
+        public string Server { get; private set; } = null!;
+        public string ApiKey { get; private set; } = null!;
+        public string Token { get; private set; } = null!;
+        public string Username { get; private set; } = null!;
+        public string Password { get; private set; } = null!;
 
         public bool IgnoreSslErrors { get; private set; } = false;
         public bool Optional { private get; set; }
