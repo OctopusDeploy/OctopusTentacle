@@ -39,9 +39,9 @@ function getPublicHostName() {
 }
 
 function validateVariables() {
-	if [[ -z "$ServerApiKey" ]]; then
+	if [[ -z "$ServerApiKey" && -z "$Token" ]]; then
 		if [[ -z "$ServerPassword" || -z "$ServerUsername" ]]; then
-			echo "Please specify either an API key or a username/password with the 'ServerApiKey' or 'ServerUsername'/'ServerPassword' environment variables" >&2
+			echo "Please specify either an API key, a Token or a username/password with the 'ServerApiKey' or 'ServerUsername'/'ServerPassword' environment variables" >&2
 			exit 1
 		fi
 	fi
@@ -158,6 +158,10 @@ function registerTentacle() {
 			for i in "${ROLES[@]}"; do
 				ARGS+=('--role' "$i")
 			done
+		fi
+
+		if [[ ! -z "$Token" ]]; then
+			ARGS+=('--token' "$Token")
 		fi
 
 		if [[ ! -z "$TargetTenant" ]]; then
