@@ -172,9 +172,9 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                                     Command = new List<string> {"dotnet"},
                                     Args = new List<string>
                                     {
-                                        "/data/tentacle-app/Octopus.Tentacle.Kubernetes.ScriptRunner.dll",
+                                        "/data/tentacle-app/source/Octopus.Tentacle.Kubernetes.ScriptRunner/bin/net6.0/linux-x64/Octopus.Tentacle.Kubernetes.ScriptRunner.dll",
                                         "--script",
-                                        $"\"/data/tentacle-work/{scriptName}\""
+                                        $"\"/data/tentacle-home/Work/{scriptTicket.TaskId}/{scriptName}\""
                                     }.Concat(
                                         (workspace.ScriptArguments ?? Array.Empty<string>())
                                         .SelectMany(arg => new[]
@@ -185,9 +185,8 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                                     ).ToList(),
                                     VolumeMounts = new List<V1VolumeMount>
                                     {
-                                        new("/data/tentacle-work", "work"),
-                                        new("/data/tentacle-app", "app"),
-                                        new("/data/tentacle-home", "home")
+                                        new("/data/tentacle-home", "tentacle-home"),
+                                        new("/data/tentacle-app", "tentacle-app"),
                                     },
                                     Env = new List<V1EnvVar>
                                     {
@@ -201,21 +200,16 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                             RestartPolicy = "Never",
                             Volumes = new List<V1Volume>
                             {
-                                new()
+                                new ()
                                 {
-                                    Name = "work",
-                                    HostPath = new V1HostPathVolumeSource(NormalizePathsForNix(workspace.WorkingDirectory))
+                                    Name = "tentacle-home",
+                                    PersistentVolumeClaim = new V1PersistentVolumeClaimVolumeSource("tentacle-home-pv-claim")
                                 },
                                 new()
                                 {
-                                    Name = "app",
-                                    HostPath = new V1HostPathVolumeSource(NormalizePathsForNix(scriptRunnerDirectory))
+                                    Name = "tentacle-app",
+                                    PersistentVolumeClaim = new V1PersistentVolumeClaimVolumeSource("tentacle-app-pv-claim"),
                                 },
-                                new()
-                                {
-                                    Name = "home",
-                                    HostPath = new V1HostPathVolumeSource(NormalizePathsForNix(homeConfiguration.HomeDirectory))
-                                }
                             }
                         }
                     },
@@ -225,25 +219,6 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
             };
 
             jobService.CreateJob(job);
-        }
-
-        private static string? NormalizePathsForNix(string? path)
-        {
-            if (path is null)
-                return path;
-
-            if (!PlatformDetection.IsRunningOnWindows)
-                return path;
-
-            var parts = path.Split('\\').ToList();
-
-            //trim the volume colon and lowercase it
-            parts[0] = parts[0].TrimEnd(':').ToLowerInvariant();
-
-            //we insert an empty string because all paths start with /
-            parts.Insert(0, string.Empty);
-
-            return string.Join("/", parts);
         }
     }
 }

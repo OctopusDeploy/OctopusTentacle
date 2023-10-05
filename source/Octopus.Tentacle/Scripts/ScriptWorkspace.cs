@@ -28,7 +28,7 @@ namespace Octopus.Tentacle.Scripts
             WorkingDirectory = workingDirectory;
             FileSystem = fileSystem;
             SensitiveValueMasker = sensitiveValueMasker;
-            //fileSystem.EnsureDiskHasEnoughFreeSpace(workingDirectory);
+            fileSystem.EnsureDiskHasEnoughFreeSpace(workingDirectory);
         }
 
         protected virtual string BootstrapScriptName => "Bootstrap.ps1";
