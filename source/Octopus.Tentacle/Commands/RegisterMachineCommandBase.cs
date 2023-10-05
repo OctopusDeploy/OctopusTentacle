@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
 using Octopus.Client;
@@ -43,6 +44,8 @@ namespace Octopus.Tentacle.Commands
         string serverWebSocketAddress = null!;
         int? tentacleCommsPort = null;
 
+        CancellationTokenSource? cancellationTokenSource;
+
         public RegisterMachineCommandBase(Lazy<TRegistrationOperationType> lazyRegisterMachineOperation,
             Lazy<IWritableTentacleConfiguration> configuration,
             ISystemLog log,
@@ -79,11 +82,19 @@ namespace Octopus.Tentacle.Commands
 
         protected override void Start()
         {
+            cancellationTokenSource = new CancellationTokenSource();
             base.Start();
-            StartAsync().GetAwaiter().GetResult();
+            StartAsync(cancellationTokenSource.Token).GetAwaiter().GetResult();
         }
 
-        async Task StartAsync()
+        protected override void Stop()
+        {
+            base.Stop();
+
+            cancellationTokenSource?.Cancel();
+        }
+
+        async Task StartAsync(CancellationToken cancellationToken)
         {
             CheckArgs();
 
@@ -123,12 +134,12 @@ namespace Octopus.Tentacle.Commands
                 : await octopusClientInitializer.CreateClient(api, proxyOverride);
 
             var spaceRepository = await spaceRepositoryFactory.CreateSpaceRepository(client, spaceName);
-            await RegisterMachine(client.ForSystem(), spaceRepository, serverAddress, sslThumbprint, communicationStyle);
+            await RegisterMachine(client.ForSystem(), spaceRepository, serverAddress, sslThumbprint, communicationStyle, cancellationToken);
         }
 
-        async Task RegisterMachine(IOctopusSystemAsyncRepository systemRepository, IOctopusSpaceAsyncRepository repository, Uri? serverAddress, string? sslThumbprint, CommunicationStyle communicationStyle)
+        async Task RegisterMachine(IOctopusSystemAsyncRepository systemRepository, IOctopusSpaceAsyncRepository repository, Uri? serverAddress, string? sslThumbprint, CommunicationStyle communicationStyle, CancellationToken cancellationToken)
         {
-            await ConfirmTentacleCanRegisterWithServerBasedOnItsVersion(systemRepository);
+            await ConfirmTentacleCanRegisterWithServerBasedOnItsVersion(systemRepository, cancellationToken);
 
             var server = new OctopusServerConfiguration(await GetServerThumbprint(systemRepository, serverAddress, sslThumbprint))
             {
@@ -241,9 +252,9 @@ namespace Octopus.Tentacle.Commands
 
         #region Helpers
 
-        async Task ConfirmTentacleCanRegisterWithServerBasedOnItsVersion(IOctopusSystemAsyncRepository repository)
+        async Task ConfirmTentacleCanRegisterWithServerBasedOnItsVersion(IOctopusSystemAsyncRepository repository, CancellationToken cancellationToken)
         {
-            var rootDocument = await repository.LoadRootDocument();
+            var rootDocument = await repository.LoadRootDocument(cancellationToken);
             // Eg. Check they're not trying to register a 3.* Tentacle with a 2.* API Server.
             if (string.IsNullOrEmpty(rootDocument.Version))
                 throw new ControlledFailureException("Unable to determine the Octopus Server version.");
