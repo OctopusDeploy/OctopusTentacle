@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentValidation;
 using Octopus.Client;
@@ -702,7 +703,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 {
                     if (AuthMode == AuthMode.UsernamePassword)
                     {
-                        await client.SignIn(new LoginCommand { Username = username, Password = password });
+                        await client.SignIn(new LoginCommand { Username = username, Password = password }, CancellationToken.None);
                     }
                     await loadAction(client);
                 }
@@ -975,7 +976,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             var machineRoles = await repository.MachineRoles.GetAllRoleNames();
 
             onProgress("Getting available environments...");
-            var environments = await repository.Environments.GetAll();
+            var environments = await repository.Environments.GetAll(CancellationToken.None);
 
             var areWorkersSupported = await repository.HasLink("WorkerPools");
             var workerPools = areWorkersSupported ? await LoadWorkerPools() : new List<WorkerPoolResource>();
@@ -991,19 +992,19 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             async Task<List<WorkerPoolResource>> LoadWorkerPools()
             {
                 onProgress("Getting available worker pools...");
-                return await repository.WorkerPools.GetAll();
+                return await repository.WorkerPools.GetAll(CancellationToken.None);
             }
 
             async Task<List<TagSetResource>> LoadTagSets()
             {
                 onProgress("Getting available tenant tags...");
-                return await repository.TagSets.GetAll();
+                return await repository.TagSets.GetAll(CancellationToken.None);
             }
 
             async Task<List<TenantResource>> LoadTenants()
             {
                 onProgress("Getting available tenants...");
-                return await repository.Tenants.GetAll();
+                return await repository.Tenants.GetAll(CancellationToken.None);
             }
 
             async Task<(bool machinePoliciesAreSupported, List<MachinePolicyResource> machinePolicies)> GetMachinePolicies()
@@ -1011,7 +1012,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 try
                 {
                     onProgress("Getting available machine policies...");
-                    return (true, await repository.MachinePolicies.FindAll());
+                    return (true, await repository.MachinePolicies.FindAll(CancellationToken.None));
                 }
                 catch
                 {
