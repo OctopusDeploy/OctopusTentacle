@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -36,7 +35,7 @@ namespace Octopus.Manager.Tentacle.Dialogs
             Loaded += async (a, e) =>
             {
                 model.ContributeSensitiveValues(logger);
-                await model.VerifyCredentials(logger, CancellationToken.None);
+                await model.VerifyCredentials(logger);
                 if (model.HaveCredentialsBeenVerified)
                 {
                     setProgressBarToStatus(false, true);

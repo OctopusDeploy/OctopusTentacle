@@ -4,7 +4,6 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Threading;
 using System.Threading.Tasks;
 using FluentValidation;
 using Octopus.Client;
@@ -521,9 +520,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 OnPropertyChanged();
                 if (!string.IsNullOrEmpty(selectedSpace))
 #pragma warning disable 4014 // we want this to be async
-                    LoadSpaceData(async (client, ct) => await LoadSpaceSpecificData(client, ct), CancellationToken.None)
-                        .GetAwaiter()
-                        .GetResult();
+                    LoadSpaceData(async client => await LoadSpaceSpecificData(client));
 #pragma warning restore 4014
             }
         }
@@ -559,7 +556,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public ProxyWizardModel ProxyWizardModel => proxyWizardModel;
 
-        public async Task VerifyCredentials(ILog logger, CancellationToken cancellationToken)
+        public async Task VerifyCredentials(ILog logger)
         {
             try
             {
@@ -597,7 +594,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                         PotentialSpaces = new string[] { };
                         AreSpacesSupported = false;
 
-                        await LoadDataFromSpace(logger.Info, repository, cancellationToken);
+                        await LoadDataFromSpace(logger.Info, repository);
                     }
 
                     logger.Info("Credentials verified");
@@ -620,9 +617,9 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             return await repository.Users.GetSpaces(currentUser);
         }
 
-        public async Task RefreshSpaceData(CancellationToken cancellationToken)
+        public Task RefreshSpaceData()
         {
-            await LoadSpaceData(async (client, ct) =>
+            return LoadSpaceData(async client =>
             {
                 var spaces = await LoadAvailableSpaces(client.ForSystem());
 
@@ -644,11 +641,11 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                     throw new Exception(exceptionMessage);
                 }
 
-                await LoadSpaceSpecificData(client, ct);
+                await LoadSpaceSpecificData(client);
 
                 // Setting this state after all other data has been loaded so UI updates are synchronous
                 PotentialSpaces = loadedPotentialSpaces;
-            }, cancellationToken);
+            });
         }
 
         Task<IOctopusAsyncClient> CreateClient()
@@ -679,16 +676,16 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             return OctopusAsyncClient.Create(endpoint, new OctopusClientOptions());
         }
 
-        async Task LoadSpaceSpecificData(IOctopusAsyncClient client, CancellationToken cancellationToken)
+        async Task LoadSpaceSpecificData(IOctopusAsyncClient client)
         {
             var spaceRepository = await new SpaceRepositoryFactory().CreateSpaceRepository(client, SelectedSpace);
             await LoadDataFromSpace(_ =>
             {
                 /*users aren't actually interested in these progress messages, and we have nowhere to display them*/
-            }, spaceRepository, cancellationToken);
+            }, spaceRepository);
         }
 
-        async Task LoadSpaceData(Func<IOctopusAsyncClient, CancellationToken, Task> loadAction, CancellationToken cancellationToken)
+        async Task LoadSpaceData(Func<IOctopusAsyncClient, Task> loadAction)
         {
             if (IsLoadingSpaceData)
             {
@@ -705,9 +702,9 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 {
                     if (AuthMode == AuthMode.UsernamePassword)
                     {
-                        await client.SignIn(new LoginCommand { Username = username, Password = password }, cancellationToken);
+                        await client.SignIn(new LoginCommand { Username = username, Password = password });
                     }
-                    await loadAction(client, cancellationToken);
+                    await loadAction(client);
                 }
             }
             catch (Exception ex)
@@ -720,9 +717,9 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             }
         }
 
-        async Task LoadDataFromSpace(Action<string> onProgress, IOctopusSpaceAsyncRepository repository, CancellationToken cancellationToken)
+        async Task LoadDataFromSpace(Action<string> onProgress, IOctopusSpaceAsyncRepository repository)
         {
-            var spaceSpecificData = await SpaceSpecificData.LoadSpaceSpecificData(onProgress, repository, cancellationToken);
+            var spaceSpecificData = await SpaceSpecificData.LoadSpaceSpecificData(onProgress, repository);
             UpdateStateWithLoadedSpaceData(spaceSpecificData);
             IsSpaceDataLoaded = true;
         }
@@ -972,49 +969,49 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         // Don't update any state while loading data.
         // This prevents the UI from changing multiple times while loading.
         // It should instead update synchronously after all data has been loaded.
-        public static async Task<SpaceSpecificData> LoadSpaceSpecificData(Action<string> onProgress, IOctopusSpaceAsyncRepository repository, CancellationToken cancellationToken)
+        public static async Task<SpaceSpecificData> LoadSpaceSpecificData(Action<string> onProgress, IOctopusSpaceAsyncRepository repository)
         {
             onProgress("Getting available roles...");
             var machineRoles = await repository.MachineRoles.GetAllRoleNames();
 
             onProgress("Getting available environments...");
-            var environments = await repository.Environments.GetAll(cancellationToken);
+            var environments = await repository.Environments.GetAll();
 
             var areWorkersSupported = await repository.HasLink("WorkerPools");
-            var workerPools = areWorkersSupported ? await LoadWorkerPools(cancellationToken) : new List<WorkerPoolResource>();
+            var workerPools = areWorkersSupported ? await LoadWorkerPools() : new List<WorkerPoolResource>();
 
             var areTenantsSupported = await repository.HasLink("Tenants");
-            var tenantTagSets = areTenantsSupported ? await LoadTagSets(cancellationToken) : new List<TagSetResource>();
-            var tenants = areTenantsSupported ? await LoadTenants(cancellationToken) : new List<TenantResource>();
+            var tenantTagSets = areTenantsSupported ? await LoadTagSets() : new List<TagSetResource>();
+            var tenants = areTenantsSupported ? await LoadTenants() : new List<TenantResource>();
 
-            var (machinePoliciesAreSupported, machinePolicies) = await GetMachinePolicies(cancellationToken);
+            var (machinePoliciesAreSupported, machinePolicies) = await GetMachinePolicies();
 
             return new SpaceSpecificData(machineRoles, environments, workerPools, areTenantsSupported, tenantTagSets, tenants, machinePoliciesAreSupported, machinePolicies);
 
-            async Task<List<WorkerPoolResource>> LoadWorkerPools(CancellationToken ct)
+            async Task<List<WorkerPoolResource>> LoadWorkerPools()
             {
                 onProgress("Getting available worker pools...");
-                return await repository.WorkerPools.GetAll(ct);
+                return await repository.WorkerPools.GetAll();
             }
 
-            async Task<List<TagSetResource>> LoadTagSets(CancellationToken ct)
+            async Task<List<TagSetResource>> LoadTagSets()
             {
                 onProgress("Getting available tenant tags...");
-                return await repository.TagSets.GetAll(ct);
+                return await repository.TagSets.GetAll();
             }
 
-            async Task<List<TenantResource>> LoadTenants(CancellationToken ct)
+            async Task<List<TenantResource>> LoadTenants()
             {
                 onProgress("Getting available tenants...");
-                return await repository.Tenants.GetAll(ct);
+                return await repository.Tenants.GetAll();
             }
 
-            async Task<(bool machinePoliciesAreSupported, List<MachinePolicyResource> machinePolicies)> GetMachinePolicies(CancellationToken ct)
+            async Task<(bool machinePoliciesAreSupported, List<MachinePolicyResource> machinePolicies)> GetMachinePolicies()
             {
                 try
                 {
                     onProgress("Getting available machine policies...");
-                    return (true, await repository.MachinePolicies.FindAll(ct));
+                    return (true, await repository.MachinePolicies.FindAll());
                 }
                 catch
                 {
