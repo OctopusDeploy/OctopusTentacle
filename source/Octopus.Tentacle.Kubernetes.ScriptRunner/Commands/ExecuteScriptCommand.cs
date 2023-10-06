@@ -51,9 +51,11 @@ public class ExecuteScriptCommand : RootCommand
         scriptPath = scriptPath.Trim('"');
 
         var workingDirectory = Path.GetDirectoryName(scriptPath);
+        var scriptTicket = workingDirectory!.Split(Path.DirectorySeparatorChar).Last();
 
         var workspace = new BashScriptWorkspace(
-            workingDirectory!,
+            new ScriptTicket(scriptTicket),
+            workingDirectory,
             new OctopusPhysicalFileSystem(new SystemLog()),
             new SensitiveValueMasker());
 
