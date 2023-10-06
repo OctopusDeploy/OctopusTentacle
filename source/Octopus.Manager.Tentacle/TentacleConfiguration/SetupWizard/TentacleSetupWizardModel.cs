@@ -521,7 +521,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 OnPropertyChanged();
                 if (!string.IsNullOrEmpty(selectedSpace))
                 {
-                    var _ = LoadSpaceData(LoadSpaceSpecificData, CancellationToken.None);
+                    var _ = LoadSpaceData(async (client, ct) => await LoadSpaceSpecificData(client, ct), CancellationToken.None);
                 }
             }
         }
@@ -620,7 +620,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public async Task RefreshSpaceData(CancellationToken cancellationToken)
         {
-            async Task RefreshSpaceDataInternal(IOctopusAsyncClient client, CancellationToken ct)
+            await LoadSpaceData(async (client, ct) =>
             {
                 var spaces = await LoadAvailableSpaces(client.ForSystem());
 
@@ -646,9 +646,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
                 // Setting this state after all other data has been loaded so UI updates are synchronous
                 PotentialSpaces = loadedPotentialSpaces;
-            }
-
-            await LoadSpaceData(RefreshSpaceDataInternal, cancellationToken);
+            }, cancellationToken);
         }
 
         Task<IOctopusAsyncClient> CreateClient()
