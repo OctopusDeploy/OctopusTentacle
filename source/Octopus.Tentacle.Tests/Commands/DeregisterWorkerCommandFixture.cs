@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using NSubstitute;
@@ -66,7 +65,7 @@ namespace Octopus.Tentacle.Tests.Commands
             asyncRepository.Workers.FindByThumbprint(Arg.Any<string>())
                 .ReturnsForAnyArgs(matchingMachines.AsTask());
 
-            Func<Task> exec = () => Command.Deregister(asyncRepository, CancellationToken.None);
+            Func<Task> exec = () => Command.Deregister(asyncRepository);
             await exec.Should().ThrowAsync<ControlledFailureException>().WithMessage(DeregisterWorkerCommand.MultipleMatchErrorMsg);
         }
 
@@ -99,7 +98,7 @@ namespace Octopus.Tentacle.Tests.Commands
             asyncRepository.Workers.FindByThumbprint(Arg.Any<string>())
                 .ReturnsForAnyArgs(matchingMachines.AsTask());
 
-            await Command.Deregister(asyncRepository, CancellationToken.None);
+            await Command.Deregister(asyncRepository);
 
             log.Received().Info($"Deleting worker '{machineName}' from the Octopus Server...");
         }
@@ -133,7 +132,7 @@ namespace Octopus.Tentacle.Tests.Commands
             asyncRepository.Workers.FindByThumbprint(Arg.Any<string>())
                 .ReturnsForAnyArgs(matchingMachines.AsTask());
 
-            await Command.Deregister(asyncRepository, CancellationToken.None);
+            await Command.Deregister(asyncRepository);
 
             log.Received().Info($"Deleting worker '{machineName}' from the Octopus Server...");
             log.Received().Info(DeregisterWorkerCommand.DeregistrationSuccessMsg);
