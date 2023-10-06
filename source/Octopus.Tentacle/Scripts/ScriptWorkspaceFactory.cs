@@ -89,7 +89,7 @@ namespace Octopus.Tentacle.Scripts
 
         IScriptWorkspace CreateWorkspace(ScriptTicket scriptTicket, string workingDirectory)
         {
-            if (PlatformDetection.IsRunningInKubernetes)
+            if (PlatformDetection.Kubernetes.IsRunningInKubernetes)
                 return new KubernetesScriptWorkspace(scriptTicket, workingDirectory, fileSystem, sensitiveValueMasker);
 
             if (!PlatformDetection.IsRunningOnWindows)
@@ -105,7 +105,7 @@ namespace Octopus.Tentacle.Scripts
             var baseWorkingDirectory = GetBaseWorkingDirectory();
             return fileSystem.GetFullPath(Path.Combine(baseWorkingDirectory, ticket.TaskId));
         }
-        
+
         string GetBaseWorkingDirectory()
         {
             return Path.Combine(home.HomeDirectory ?? "", WorkDirectory);
