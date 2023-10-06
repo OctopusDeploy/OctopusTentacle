@@ -47,7 +47,7 @@ namespace Octopus.Tentacle.Tests.Commands
 
             repository = Substitute.For<IOctopusAsyncRepository>();
             repository.Client.Returns(octopusAsyncClient);
-            repository.LoadRootDocument(Arg.Any<CancellationToken>()).Returns(Task.FromResult(new RootResource { Version = "3.0" }));
+            repository.LoadRootDocument(CancellationToken.None).Returns(Task.FromResult(new RootResource { Version = "3.0" }));
             octopusAsyncClient.Repository.Returns(repository);
             octopusAsyncClient.ForSystem().Returns(repository);
             octopusAsyncClient.ForSpace(Arg.Any<SpaceResource>()).Returns(repository);
