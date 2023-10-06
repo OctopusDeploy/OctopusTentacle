@@ -520,9 +520,11 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 selectedSpace = value;
                 OnPropertyChanged();
                 if (!string.IsNullOrEmpty(selectedSpace))
-                {
-                    var _ = LoadSpaceData(async (client, ct) => await LoadSpaceSpecificData(client, ct), CancellationToken.None);
-                }
+#pragma warning disable 4014 // we want this to be async
+                    LoadSpaceData(async (client, ct) => await LoadSpaceSpecificData(client, ct), CancellationToken.None)
+                        .GetAwaiter()
+                        .GetResult();
+#pragma warning restore 4014
             }
         }
 
