@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Client;
 using Octopus.Client.Exceptions;
@@ -33,8 +32,6 @@ namespace Octopus.Tentacle.Commands
         readonly ISpaceRepositoryFactory spaceRepositoryFactory;
         string spaceName = null!;
 
-        CancellationTokenSource? cancellationTokenSource;
-
         public override bool SuppressConsoleLogging => true;
 
         public ShowConfigurationCommand(
@@ -64,19 +61,10 @@ namespace Octopus.Tentacle.Commands
 
         protected override void Start()
         {
-            cancellationTokenSource = new CancellationTokenSource();
-
-            StartAsync(cancellationTokenSource.Token).GetAwaiter().GetResult();
+            StartAsync().GetAwaiter().GetResult();
         }
 
-        protected override void Stop()
-        {
-            base.Stop();
-
-            cancellationTokenSource?.Cancel();
-        }
-
-        async Task StartAsync(CancellationToken cancellationToken)
+        async Task StartAsync()
         {
             base.Start();
 
@@ -91,12 +79,12 @@ namespace Octopus.Tentacle.Commands
                 outputFile = new JsonHierarchicalConsoleKeyValueStore();
             }
 
-            await CollectConfigurationSettings(outputFile, cancellationToken);
+            await CollectConfigurationSettings(outputFile);
 
             outputFile.Save();
         }
 
-        internal async Task CollectConfigurationSettings(DictionaryKeyValueStore outputStore, CancellationToken cancellationToken)
+        internal async Task CollectConfigurationSettings(DictionaryKeyValueStore outputStore)
         {
             var configStore = instanceSelector.Current.Configuration;
 
@@ -122,11 +110,11 @@ namespace Octopus.Tentacle.Commands
             //advanced settings
             if (apiEndpointOptions.IsSupplied)
             {
-                await CollectServerSideConfiguration(outputStore, cancellationToken);
+                await CollectServerSideConfiguration(outputStore);
             }
         }
 
-        async Task CollectServerSideConfiguration(IWritableKeyValueStore outputStore, CancellationToken cancellationToken)
+        async Task CollectServerSideConfiguration(IWritableKeyValueStore outputStore)
         {
             if (tentacleConfiguration.Value.TentacleCertificate == null)
                 throw new ControlledFailureException("No certificate has been generated for this Tentacle. Unable to display configuration.");
@@ -148,11 +136,11 @@ namespace Octopus.Tentacle.Commands
                             break;
 
                         case 1 when matches.First() is MachineResource machine:
-                            await CollectionServerSideConfigurationFromMachine(outputStore, repository, machine, cancellationToken);
+                            await CollectionServerSideConfigurationFromMachine(outputStore, repository, machine);
                             break;
 
                         case 1 when matches.First() is WorkerResource worker:
-                            await CollectionServerSideConfigurationFromWorker(outputStore, repository, worker, cancellationToken);
+                            await CollectionServerSideConfigurationFromWorker(outputStore, repository, worker);
                             break;
 
                         default:
@@ -172,14 +160,14 @@ namespace Octopus.Tentacle.Commands
             }
         }
 
-        async Task CollectionServerSideConfigurationFromMachine(IWritableKeyValueStore outputStore, IOctopusSpaceAsyncRepository repository, MachineResource machine, CancellationToken cancellationToken)
+        async Task CollectionServerSideConfigurationFromMachine(IWritableKeyValueStore outputStore, IOctopusSpaceAsyncRepository repository, MachineResource machine)
         {
-            var environments = await repository.Environments.FindAll(cancellationToken);
+            var environments = await repository.Environments.FindAll();
             outputStore.Set("Tentacle.Environments", environments.Where(x => machine.EnvironmentIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }));
 
             if (await repository.HasLink("Tenants"))
             {
-                var tenants = await repository.Tenants.FindAll(cancellationToken);
+                var tenants = await repository.Tenants.FindAll();
                 outputStore.Set("Tentacle.Tenants", tenants.Where(x => machine.TenantIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }));
                 outputStore.Set("Tentacle.TenantTags", machine.TenantTags);
             }
@@ -187,7 +175,7 @@ namespace Octopus.Tentacle.Commands
             outputStore.Set("Tentacle.Roles", machine.Roles);
             if (machine.MachinePolicyId != null)
             {
-                var machinePolicy = await repository.MachinePolicies.Get(machine.MachinePolicyId, cancellationToken);
+                var machinePolicy = await repository.MachinePolicies.Get(machine.MachinePolicyId);
                 outputStore.Set("Tentacle.MachinePolicy", new { machinePolicy.Id, machinePolicy.Name });
             }
 
@@ -196,14 +184,14 @@ namespace Octopus.Tentacle.Commands
                 outputStore.Set<string>("Tentacle.Communication.PublicHostName", ((ListeningTentacleEndpointResource)machine.Endpoint).Uri);
         }
 
-        async Task CollectionServerSideConfigurationFromWorker(IWritableKeyValueStore outputStore, IOctopusSpaceAsyncRepository repository, WorkerResource machine, CancellationToken cancellationToken)
+        async Task CollectionServerSideConfigurationFromWorker(IWritableKeyValueStore outputStore, IOctopusSpaceAsyncRepository repository, WorkerResource machine)
         {
-            var workerPools = await repository.WorkerPools.FindAll(cancellationToken);
+            var workerPools = await repository.WorkerPools.FindAll();
             outputStore.Set("Tentacle.WorkerPools", workerPools.Where(x => machine.WorkerPoolIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }));
 
             if (machine.MachinePolicyId != null)
             {
-                var machinePolicy = await repository.MachinePolicies.Get(machine.MachinePolicyId, cancellationToken);
+                var machinePolicy = await repository.MachinePolicies.Get(machine.MachinePolicyId);
                 outputStore.Set("Tentacle.MachinePolicy", new { machinePolicy.Id, machinePolicy.Name });
             }
 
