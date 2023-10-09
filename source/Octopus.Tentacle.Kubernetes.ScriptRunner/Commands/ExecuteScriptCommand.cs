@@ -31,19 +31,25 @@ public class ExecuteScriptCommand : RootCommand
         };
         AddOption(scriptArgsOption);
 
+        var logToConsoleOption = new Option<bool>(
+            name: "--logToConsole",
+            description: "If true, also writes the script logs to the console");
+        AddOption(logToConsoleOption);
+
         this.SetHandler(async context =>
         {
             var scriptPath = context.ParseResult.GetValueForOption(scriptPathOption);
             var scriptArgs = context.ParseResult.GetValueForOption(scriptArgsOption);
+            var logToConsole = context.ParseResult.GetValueForOption(logToConsoleOption);
             var token = context.GetCancellationToken();
 
-            var exitCode = await ExecuteScript(scriptPath!, scriptArgs, token);
+            var exitCode = await ExecuteScript(scriptPath!, scriptArgs,logToConsole, token);
 
             context.ExitCode = exitCode;
         });
     }
 
-    private async Task<int> ExecuteScript(string scriptPath, string[]? scriptArgs, CancellationToken cancellationToken)
+    private async Task<int> ExecuteScript(string scriptPath, string[]? scriptArgs, bool logToConsole, CancellationToken cancellationToken)
     {
         await Task.CompletedTask;
 
@@ -60,7 +66,11 @@ public class ExecuteScriptCommand : RootCommand
             new SensitiveValueMasker());
 
         var log = workspace.CreateLog();
-        using var writer = log.CreateWriter();
+        var logWriter = log.CreateWriter();
+
+        using var writer = logToConsole
+            ? new ConsoleLogWriter(logWriter)
+            : logWriter;
 
         scriptArgs ??= Array.Empty<string>();
 
@@ -83,6 +93,27 @@ public class ExecuteScriptCommand : RootCommand
             writer.WriteOutput(ProcessOutputSource.StdErr, ex.ToString());
 
             return ScriptExitCodes.PowershellInvocationErrorExitCode;
+        }
+    }
+
+    private class ConsoleLogWriter : IScriptLogWriter
+    {
+        readonly IScriptLogWriter writer;
+
+        public ConsoleLogWriter(IScriptLogWriter writer)
+        {
+            this.writer = writer;
+        }
+
+        public void WriteOutput(ProcessOutputSource source, string message)
+        {
+            Console.WriteLine($"[{source}] {message}");
+            writer.WriteOutput(source, message);
+        }
+
+        public void Dispose()
+        {
+            writer.Dispose();
         }
     }
 }

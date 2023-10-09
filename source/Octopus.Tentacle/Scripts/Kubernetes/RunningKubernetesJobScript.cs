@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using k8s.Models;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Util;
@@ -22,8 +23,8 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
         private readonly string taskId;
         private readonly ILog log;
         private readonly IKubernetesJobService jobService;
-        private readonly IHomeConfiguration homeConfiguration;
         private readonly CancellationToken cancellationToken;
+        readonly string? instanceName;
 
         public int ExitCode { get; private set; }
         public ProcessState State { get; private set; }
@@ -37,16 +38,16 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
             CancellationToken cancellationToken,
             ILog log,
             IKubernetesJobService jobService,
-            IHomeConfiguration homeConfiguration)
+            IApplicationInstanceSelector appInstanceSelector)
         {
             this.workspace = workspace;
             this.scriptTicket = scriptTicket;
             this.taskId = taskId;
             this.log = log;
             this.jobService = jobService;
-            this.homeConfiguration = homeConfiguration;
             this.cancellationToken = cancellationToken;
             ScriptLog = scriptLog;
+            instanceName = appInstanceSelector.Current.InstanceName;
         }
 
         public void Execute()
@@ -129,20 +130,6 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
         {
             var scriptName = Path.GetFileName(workspace.BootstrapScriptFilePath);
 
-#if NETFX
-            var applicationPath = Process.GetCurrentProcess().MainModule!.FileName;
-#else
-            var applicationPath = Environment.ProcessPath;
-#endif
-
-            var applicationDirectory = Path.GetDirectoryName(applicationPath);
-
-            //TODO: Make the ScriptRunner a configurable location
-            var scriptRunnerDirectory = Path.GetFullPath(Path.Combine(
-                applicationDirectory!,
-                "./../../../Octopus.Tentacle.Kubernetes.ScriptRunner/bin/net6.0/linux-x64"
-            ));
-
             var job = new V1Job
             {
                 ApiVersion = "batch/v1",
@@ -174,7 +161,8 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                                     {
                                         "/data/tentacle-app/source/Octopus.Tentacle.Kubernetes.ScriptRunner/bin/net6.0/linux-x64/Octopus.Tentacle.Kubernetes.ScriptRunner.dll",
                                         "--script",
-                                        $"\"/data/tentacle-home/Work/{scriptTicket.TaskId}/{scriptName}\""
+                                        $"\"/data/tentacle-home/{instanceName}/Work/{scriptTicket.TaskId}/{scriptName}\"",
+                                        "--logToConsole"
                                     }.Concat(
                                         (workspace.ScriptArguments ?? Array.Empty<string>())
                                         .SelectMany(arg => new[]
@@ -190,7 +178,7 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                                     },
                                     Env = new List<V1EnvVar>
                                     {
-                                        new(EnvironmentVariables.TentacleHome, "/data/tentacle-home"),
+                                        new(EnvironmentVariables.TentacleHome, $"/data/tentacle-home/{instanceName}"),
                                         new(EnvironmentVariables.TentacleVersion, Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleVersion)),
                                         new(EnvironmentVariables.TentacleCertificateSignatureAlgorithm, Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleCertificateSignatureAlgorithm)),
                                         new("OCTOPUS_RUNNING_IN_CONTAINER", "Y")

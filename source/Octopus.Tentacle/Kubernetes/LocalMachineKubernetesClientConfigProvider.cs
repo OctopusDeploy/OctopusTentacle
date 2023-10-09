@@ -8,7 +8,9 @@ namespace Octopus.Tentacle.Kubernetes
         public KubernetesClientConfiguration Get()
         {
 #if DEBUG
-            return KubernetesClientConfiguration.BuildConfigFromConfigFile();
+            
+            var kubeConfigEnvVar = Environment.GetEnvironmentVariable("KUBECONFIG");
+            return KubernetesClientConfiguration.BuildConfigFromConfigFile(kubeConfigEnvVar);
 #else
             throw new NotSupportedException("Local machine configuration is only supported when debugging.");
 #endif

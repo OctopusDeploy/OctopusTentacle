@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 using Octopus.Diagnostics;
-using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Scripts.Kubernetes;
@@ -12,18 +12,18 @@ namespace Octopus.Tentacle.Scripts
     {
         private readonly ISystemLog systemLog;
         private readonly IKubernetesJobService jobService;
-        private readonly IHomeConfiguration homeConfiguration;
+        readonly IApplicationInstanceSelector appInstanceSelector;
 
-        public KubernetesJobScriptExecutor(ISystemLog systemLog, IKubernetesJobService jobService, IHomeConfiguration homeConfiguration)
+        public KubernetesJobScriptExecutor(ISystemLog systemLog, IKubernetesJobService jobService, IApplicationInstanceSelector appInstanceSelector)
         {
             this.systemLog = systemLog;
             this.jobService = jobService;
-            this.homeConfiguration = homeConfiguration;
+            this.appInstanceSelector = appInstanceSelector;
         }
 
         public IRunningScript ExecuteOnBackgroundThread(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, ScriptStateStore? runningScriptScriptStateStore, CancellationTokenSource cancellationTokenSource)
         {
-            var runningScript = new RunningKubernetesJobScript(workspace, workspace.CreateLog(), ticket, serverTaskId, cancellationTokenSource.Token, systemLog, jobService, homeConfiguration);
+            var runningScript = new RunningKubernetesJobScript(workspace, workspace.CreateLog(), ticket, serverTaskId, cancellationTokenSource.Token, systemLog, jobService, appInstanceSelector);
 
             var thread = new Thread(runningScript.Execute) { Name = "Executing Kubernetes Job for " + ticket.TaskId };
             thread.Start();
@@ -32,12 +32,6 @@ namespace Octopus.Tentacle.Scripts
         }
 
         public IRunningScript Execute(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, CancellationTokenSource cancellationTokenSource)
-        {
-            var runningScript = new RunningKubernetesJobScript(workspace, workspace.CreateLog(), ticket, serverTaskId, cancellationTokenSource.Token, systemLog, jobService, homeConfiguration);
-
-            runningScript.Execute();
-
-            return runningScript;
-        }
+            => throw new NotSupportedException("We don't support running Kubernetes Jobs on the current thread.");
     }
 }
