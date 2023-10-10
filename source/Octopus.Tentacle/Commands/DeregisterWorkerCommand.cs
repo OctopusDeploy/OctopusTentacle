@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Client;
 using Octopus.Diagnostics;
@@ -82,7 +83,7 @@ namespace Octopus.Tentacle.Commands
             foreach (var machineResource in matchingMachines)
             {
                 log.Info($"Deleting worker '{machineResource.Name}' from the Octopus Server...");
-                await repository.Workers.Delete(machineResource);
+                await repository.Workers.Delete(machineResource, CancellationToken.None);
             }
 
             var certificate = await repository.Certificates.GetOctopusCertificate();
