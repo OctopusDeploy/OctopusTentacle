@@ -126,10 +126,15 @@ partial class Build : NukeBuild
             versionInfoFile.Dispose();
             productWxsFile.Dispose();
             
-            var winFolder = (BuildDirectory / "Tentacle" / NetFramework / "win");
             var hardenInstallationDirectoryScript = RootDirectory / "scripts" / "Harden-InstallationDirectory.ps1";
-            CopyFileToDirectory(hardenInstallationDirectoryScript, winFolder, FileExistsPolicy.Overwrite);
-
+            var directoriesToCopyHardenScriptInto = new []
+            {
+                (BuildDirectory / "Tentacle" / NetFramework / "win"),
+                (BuildDirectory / "Tentacle" / NetCore / "win-x86"),
+                (BuildDirectory / "Tentacle" / NetCore / "win-x64")
+            };
+            directoriesToCopyHardenScriptInto.ForEach(dir => CopyFileToDirectory(hardenInstallationDirectoryScript, dir, FileExistsPolicy.Overwrite));
+            
             // Sign any unsigned libraries that Octopus Deploy authors so that they play nicely with security scanning tools.
             // Refer: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1551655877004400
             // Decision re: no signing everything: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1557938890227100
