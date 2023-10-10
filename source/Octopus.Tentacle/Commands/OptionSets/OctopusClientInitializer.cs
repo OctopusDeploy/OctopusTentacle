@@ -29,7 +29,7 @@ namespace Octopus.Tentacle.Commands.OptionSets
                 client = await OctopusAsyncClient.Create(endpoint, clientOptions).ConfigureAwait(false);
 
                 if (string.IsNullOrWhiteSpace(apiEndpointOptions.ApiKey) &&
-                    string.IsNullOrWhiteSpace(apiEndpointOptions.Token))
+                    string.IsNullOrWhiteSpace(apiEndpointOptions.BearerToken))
                 {
                     await client.Repository.Users
                         .SignIn(new LoginCommand { Username = apiEndpointOptions.Username, Password = apiEndpointOptions.Password });
@@ -46,9 +46,9 @@ namespace Octopus.Tentacle.Commands.OptionSets
 
         private static OctopusServerEndpoint GetEndpoint(ApiEndpointOptions apiEndpointOptions, IWebProxy? overrideProxy)
         {
-            if (!string.IsNullOrWhiteSpace(apiEndpointOptions.Token))
+            if (!string.IsNullOrWhiteSpace(apiEndpointOptions.BearerToken))
             {
-                return AddProxy(OctopusServerEndpoint.CreateWithBearerToken(apiEndpointOptions.Server, apiEndpointOptions.Token));
+                return AddProxy(OctopusServerEndpoint.CreateWithBearerToken(apiEndpointOptions.Server, apiEndpointOptions.BearerToken));
             }
 
             if (!string.IsNullOrWhiteSpace(apiEndpointOptions.ApiKey))
