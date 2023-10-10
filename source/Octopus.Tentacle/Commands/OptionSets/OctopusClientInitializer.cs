@@ -48,7 +48,7 @@ namespace Octopus.Tentacle.Commands.OptionSets
         {
             if (!string.IsNullOrWhiteSpace(apiEndpointOptions.Token))
             {
-                return AddProxy(OctopusServerEndpoint.CreateWithToken(apiEndpointOptions.Server, apiEndpointOptions.Token));
+                return AddProxy(OctopusServerEndpoint.CreateWithBearerToken(apiEndpointOptions.Server, apiEndpointOptions.Token));
             }
 
             if (!string.IsNullOrWhiteSpace(apiEndpointOptions.ApiKey))
