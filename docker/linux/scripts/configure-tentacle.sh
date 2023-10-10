@@ -39,9 +39,9 @@ function getPublicHostName() {
 }
 
 function validateVariables() {
-	if [[ -z "$ServerApiKey" && -z "$Token" ]]; then
+	if [[ -z "$ServerApiKey" && -z "$BearerToken" ]]; then
 		if [[ -z "$ServerPassword" || -z "$ServerUsername" ]]; then
-			echo "Please specify either an API key, a Token or a username/password with the 'ServerApiKey' or 'ServerUsername'/'ServerPassword' environment variables" >&2
+			echo "Please specify either an API key, a Bearer Token or a username/password with the 'ServerApiKey' or 'ServerUsername'/'ServerPassword' environment variables" >&2
 			exit 1
 		fi
 	fi
@@ -160,10 +160,6 @@ function registerTentacle() {
 			done
 		fi
 
-		if [[ ! -z "$Token" ]]; then
-			ARGS+=('--token' "$Token")
-		fi
-
 		if [[ ! -z "$TargetTenant" ]]; then
 			IFS=',' read -ra TENANTS <<< "$TargetTenant"
 			for i in "${TENANTS[@]}"; do
@@ -209,6 +205,9 @@ function registerTentacle() {
 	if [[ ! -z "$ServerApiKey" ]]; then
 		echo "Registering Tentacle with API key"
 		ARGS+=('--apiKey' $ServerApiKey)
+	elif [[ ! -z "$BearerToken" ]]; then
+		echo "Registering Tentacle with Bearer Token"
+		ARGS+=('--bearerToken' "$BearerToken")
 	else
 		echo "Registering Tentacle with username/password"
 		ARGS+=(

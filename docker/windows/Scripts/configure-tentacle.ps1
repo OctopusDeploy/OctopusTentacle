@@ -72,9 +72,9 @@ function Get-PublicHostName
 }
 
 function Validate-Variables() {
-  if($ServerApiKey -eq $null) {
+  if($ServerApiKey -eq $null -and $BearerToken -eq $null) {
     if($ServerPassword -eq $null -or $ServerUsername -eq $null){
-      Write-Error "Please specify either an API key or a username/password with the 'ServerApiKey' or 'ServerUsername'/'ServerPassword' environment variables"
+      Write-Error "Please specify either an API key, a Bearer Token or a username/password with the 'ServerApiKey' or 'ServerUsername'/'ServerPassword' environment variables"
       exit 1;
     }
   }
@@ -246,6 +246,12 @@ function Register-Tentacle(){
     $arg += $ServerApiKey
 
     $mask = $ServerApiKey
+  } elseif(!($BearerToken -eq $null)) {
+    Write-Verbose "Registering Tentacle with Bearer Token"
+    $arg += "--bearerToken";
+    $arg += $BearerToken
+
+    $mask = $BearerToken
   } else {
     Write-Verbose "Registering Tentacle with username/password"
     $arg += "--username";
