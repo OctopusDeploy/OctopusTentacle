@@ -15,12 +15,14 @@ namespace Octopus.Tentacle.Contracts.ScriptServiceV2
             string[] arguments,
             string taskId,
             ScriptTicket scriptTicket,
-            TimeSpan? durationToWaitForScriptToFinish)
+            TimeSpan? durationToWaitForScriptToFinish,
+            Dictionary<string,string>? executionProperties)
         {
             Arguments = arguments;
             TaskId = taskId;
             ScriptTicket = scriptTicket;
             DurationToWaitForScriptToFinish = durationToWaitForScriptToFinish;
+            ExecutionProperties = executionProperties;
             ScriptBody = scriptBody;
             Isolation = isolation;
             ScriptIsolationMutexTimeout = scriptIsolationMutexTimeout;
@@ -35,6 +37,7 @@ namespace Octopus.Tentacle.Contracts.ScriptServiceV2
             string taskId,
             ScriptTicket scriptTicket,
             TimeSpan? durationToWaitForScriptToFinish,
+            Dictionary<string,string>? executionProperties,
             params ScriptFile[]? additionalFiles)
             : this(scriptBody,
                 isolation,
@@ -43,7 +46,8 @@ namespace Octopus.Tentacle.Contracts.ScriptServiceV2
                 arguments,
                 taskId,
                 scriptTicket,
-                durationToWaitForScriptToFinish)
+                durationToWaitForScriptToFinish,
+                executionProperties)
         {
             if (additionalFiles != null)
                 Files.AddRange(additionalFiles);
@@ -57,6 +61,7 @@ namespace Octopus.Tentacle.Contracts.ScriptServiceV2
             string taskId,
             ScriptTicket scriptTicket,
             TimeSpan? durationToWaitForScriptToFinish,
+            Dictionary<string,string>? executionProperties,
             Dictionary<ScriptType, string>? additionalScripts,
             params ScriptFile[]? additionalFiles)
             : this(scriptBody,
@@ -67,6 +72,7 @@ namespace Octopus.Tentacle.Contracts.ScriptServiceV2
                 taskId,
                 scriptTicket,
                 durationToWaitForScriptToFinish,
+                executionProperties,
                 additionalFiles)
         {
             if (additionalScripts == null || !additionalScripts.Any())
@@ -90,5 +96,7 @@ namespace Octopus.Tentacle.Contracts.ScriptServiceV2
         public Dictionary<ScriptType, string> Scripts { get; } = new();
         public List<ScriptFile> Files { get; } = new();
         public string[] Arguments { get; }
+
+        public Dictionary<string, string>? ExecutionProperties { get; }
     }
 }

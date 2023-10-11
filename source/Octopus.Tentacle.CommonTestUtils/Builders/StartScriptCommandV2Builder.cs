@@ -21,6 +21,7 @@ namespace Octopus.Tentacle.CommonTestUtils.Builders
         string taskId = Guid.NewGuid().ToString();
         ScriptTicket scriptTicket = new ScriptTicket(Guid.NewGuid().ToString());
         TimeSpan? durationStartScriptCanWaitForScriptToFinish;
+        Dictionary<string, string>? executionProperties;
 
         public StartScriptCommandV2Builder WithScriptBody(string scriptBody)
         {
@@ -105,6 +106,13 @@ namespace Octopus.Tentacle.CommonTestUtils.Builders
             return this;
         }
 
+        public StartScriptCommandV2Builder WithExecutionProperty(string name, string value)
+        {
+            executionProperties ??= new Dictionary<string, string>();
+            executionProperties[name] = value;
+            return this;
+        }
+
         public StartScriptCommandV2 Build()
             => new StartScriptCommandV2(scriptBody.ToString(),
                 isolation,
@@ -114,6 +122,7 @@ namespace Octopus.Tentacle.CommonTestUtils.Builders
                 taskId,
                 scriptTicket,
                 durationStartScriptCanWaitForScriptToFinish,
+                executionProperties,
                 additionalScripts,
                 files.ToArray());
     }
