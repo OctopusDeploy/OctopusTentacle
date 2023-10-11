@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using FluentAssertions;
@@ -77,7 +78,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         [Retry(3)]
         public void ExitCode_ShouldBeReturned()
         {
-            workspace.BootstrapScript("exit 99", TODO);
+            workspace.BootstrapScript("exit 99", new Dictionary<ScriptType, string>());
             runningShellScript.Execute();
             runningShellScript.ExitCode.Should().Be(99, "the exit code of the script should be returned");
         }
@@ -86,7 +87,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         [Retry(3)]
         public void WriteHost_WritesToStdOut_AndIsReturned()
         {
-            workspace.BootstrapScript("echo Hello", TODO);
+            workspace.BootstrapScript("echo Hello", new Dictionary<ScriptType, string>());
             runningShellScript.Execute();
             runningShellScript.ExitCode.Should().Be(0, "the script should have run to completion");
             scriptLog.StdErr.Length.Should().Be(0, "the script shouldn't have written to stderr");
@@ -98,7 +99,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         [WindowsTest]
         public void WriteDebug_DoesNotWriteAnywhere()
         {
-            workspace.BootstrapScript("Write-Debug Hello", TODO);
+            workspace.BootstrapScript("Write-Debug Hello", new Dictionary<ScriptType, string>());
             runningShellScript.Execute();
             runningShellScript.ExitCode.Should().Be(0, "the script should have run to completion");
             scriptLog.StdOut.ToString().Should().NotContain("Hello", "the script shouldn't have written to stdout");
@@ -110,7 +111,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         [WindowsTest]
         public void WriteOutput_WritesToStdOut_AndIsReturned()
         {
-            workspace.BootstrapScript("Write-Output Hello", TODO);
+            workspace.BootstrapScript("Write-Output Hello", new Dictionary<ScriptType, string>());
             runningShellScript.Execute();
             runningShellScript.ExitCode.Should().Be(0, "the script should have run to completion");
             scriptLog.StdErr.ToString().Should().NotContain("Hello", "the script shouldn't have written to stderr");
@@ -121,7 +122,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         [Retry(3)]
         public void WriteError_WritesToStdErr_AndIsReturned()
         {
-            workspace.BootstrapScript(PlatformDetection.IsRunningOnWindows ? "Write-Error EpicFail" : "&2 echo EpicFail", TODO);
+            workspace.BootstrapScript(PlatformDetection.IsRunningOnWindows ? "Write-Error EpicFail" : "&2 echo EpicFail", new Dictionary<ScriptType, string>());
 
             runningShellScript.Execute();
             if (PlatformDetection.IsRunningOnWindows)
@@ -140,7 +141,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
             var scriptBody = PlatformDetection.IsRunningOnWindows
                 ? $"echo {EchoEnvironmentVariable("username")}"
                 : "whoami";
-            workspace.BootstrapScript(scriptBody, TODO);
+            workspace.BootstrapScript(scriptBody, new Dictionary<ScriptType, string>());
             runningShellScript.Execute();
             runningShellScript.ExitCode.Should().Be(0, "the script should have run to completion");
             scriptLog.StdErr.Length.Should().Be(0, "the script shouldn't have written to stderr");
@@ -164,7 +165,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
                     cts.Token,
                     new InMemoryLog());
 
-                workspace.BootstrapScript($"echo Starting\n{sleepCommand} 30\necho Finito", TODO);
+                workspace.BootstrapScript($"echo Starting\n{sleepCommand} 30\necho Finito", new Dictionary<ScriptType, string>());
                 script.Execute();
                 runningShellScript.ExitCode.Should().Be(0, "the script should have been canceled");
                 scriptLog.StdErr.ToString().Should().Be("", "the script shouldn't have written to stderr");

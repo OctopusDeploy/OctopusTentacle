@@ -1,28 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using k8s.Models;
 using Octopus.Diagnostics;
-using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Kubernetes;
-using Octopus.Tentacle.Util;
 using Octopus.Tentacle.Variables;
 
 namespace Octopus.Tentacle.Scripts.Kubernetes
 {
     public class RunningKubernetesJobScript : IRunningScript
     {
+        private const string DefaultContainerImage = "octopusdeploy/worker-tools:ubuntu.22.04";
+
         private readonly IScriptWorkspace workspace;
         private readonly ScriptTicket scriptTicket;
         private readonly string taskId;
         private readonly ILog log;
         private readonly IKubernetesJobService jobService;
+        readonly string? executionContainerImage;
         private readonly CancellationToken cancellationToken;
         readonly string? instanceName;
 
@@ -30,21 +30,22 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
         public ProcessState State { get; private set; }
         public IScriptLog ScriptLog { get; }
 
-        public RunningKubernetesJobScript(
-            IScriptWorkspace workspace,
+        public RunningKubernetesJobScript(IScriptWorkspace workspace,
             IScriptLog scriptLog,
             ScriptTicket scriptTicket,
             string taskId,
             CancellationToken cancellationToken,
             ILog log,
             IKubernetesJobService jobService,
-            IApplicationInstanceSelector appInstanceSelector)
+            IApplicationInstanceSelector appInstanceSelector,
+            string? executionContainerImage)
         {
             this.workspace = workspace;
             this.scriptTicket = scriptTicket;
             this.taskId = taskId;
             this.log = log;
             this.jobService = jobService;
+            this.executionContainerImage = executionContainerImage;
             this.cancellationToken = cancellationToken;
             ScriptLog = scriptLog;
             instanceName = appInstanceSelector.Current.InstanceName;
@@ -97,6 +98,11 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                 ExitCode = exitCode;
                 State = ProcessState.Complete;
             }
+        }
+
+        public void Complete()
+        {
+            jobService.Delete(scriptTicket);
         }
 
         private async Task<int> CheckIfPodHasCompleted()
@@ -155,11 +161,11 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                                 new()
                                 {
                                     Name = jobService.BuildJobName(scriptTicket),
-                                    Image = "octopusdeploy/worker-tools:ubuntu.22.04",
-                                    Command = new List<string> {"dotnet"},
+                                    Image = !string.IsNullOrWhiteSpace(executionContainerImage) ? executionContainerImage : DefaultContainerImage,
+                                    Command = new List<string> { "dotnet" },
                                     Args = new List<string>
                                     {
-                                        "/data/tentacle-app/source/Octopus.Tentacle.Kubernetes.ScriptRunner/bin/net6.0/linux-x64/Octopus.Tentacle.Kubernetes.ScriptRunner.dll",
+                                        "/data/tentacle-app/source/Octopus.Tentacle.Kubernetes.ScriptRunner/bin/net6.0/Octopus.Tentacle.Kubernetes.ScriptRunner.dll",
                                         "--script",
                                         $"\"/data/tentacle-home/{instanceName}/Work/{scriptTicket.TaskId}/{scriptName}\"",
                                         "--logToConsole"
@@ -181,14 +187,16 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                                         new(EnvironmentVariables.TentacleHome, $"/data/tentacle-home/{instanceName}"),
                                         new(EnvironmentVariables.TentacleVersion, Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleVersion)),
                                         new(EnvironmentVariables.TentacleCertificateSignatureAlgorithm, Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleCertificateSignatureAlgorithm)),
+                                        new("OCTOPUS__TARGET__KUBERNETES__USESERVICEACCOUNTAUTH", bool.TrueString),
                                         new("OCTOPUS_RUNNING_IN_CONTAINER", "Y")
                                     }
                                 }
                             },
+                            ServiceAccountName = "octopus-tentacle-job",
                             RestartPolicy = "Never",
                             Volumes = new List<V1Volume>
                             {
-                                new ()
+                                new()
                                 {
                                     Name = "tentacle-home",
                                     PersistentVolumeClaim = new V1PersistentVolumeClaimVolumeSource("tentacle-home-pv-claim")
@@ -202,7 +210,7 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                         }
                     },
                     BackoffLimit = 0, //we never want to rerun if it fails
-                    TtlSecondsAfterFinished = 300 // 5min
+                    TtlSecondsAfterFinished = 5
                 }
             };
 

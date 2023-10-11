@@ -11,9 +11,9 @@ namespace Octopus.Tentacle.Kubernetes
     public interface IKubernetesJobService
     {
         V1Job? TryGet(ScriptTicket scriptTicket);
-        bool Exists(ScriptTicket scriptTicket);
         string BuildJobName(ScriptTicket scriptTicket);
         void CreateJob(V1Job job);
+        void Delete(ScriptTicket scriptTicket);
     }
 
     public class KubernetesJobService : KubernetesService, IKubernetesJobService
@@ -36,14 +36,9 @@ namespace Octopus.Tentacle.Kubernetes
                 if (opException.Response.StatusCode == HttpStatusCode.NotFound)
                     return null;
 
-                //if there is some _other_ error, just throw the exception
+                //if there is some other error, just throw the exception
                 throw;
             }
-        }
-
-        public bool Exists(ScriptTicket scriptTicket)
-        {
-            return TryGet(scriptTicket) != null;
         }
 
         public string BuildJobName(ScriptTicket scriptTicket) => $"octopus-{scriptTicket.TaskId}".ToLowerInvariant();
@@ -53,9 +48,16 @@ namespace Octopus.Tentacle.Kubernetes
             Client.CreateNamespacedJob(job, KubernetesNamespace.Value);
         }
 
-        static class Labels
+        public void Delete(ScriptTicket scriptTicket)
         {
-            public const string ScriptTicket = "octopus.com/script-ticket-id";
+            try
+            {
+                Client.DeleteNamespacedJob(BuildJobName(scriptTicket), KubernetesNamespace.Value);
+            }
+            catch
+            {
+                //we are comfortable silently consuming this as the jobs have a TTL that will clean it up anyway
+            }
         }
     }
 }

@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Scripts;
@@ -13,25 +12,18 @@ namespace Octopus.Tentacle.Services.Scripts
     [Service]
     public class ScriptServiceV2 : IScriptServiceV2
     {
-        readonly IShell shell;
         readonly IScriptWorkspaceFactory workspaceFactory;
         readonly IScriptStateStoreFactory scriptStateStoreFactory;
         readonly IScriptExecutorFactory scriptExecutorFactory;
-        readonly ISystemLog log;
         readonly ConcurrentDictionary<ScriptTicket, RunningScriptWrapper> runningScripts = new();
 
-        public ScriptServiceV2(
-            IShell shell,
-            IScriptWorkspaceFactory workspaceFactory,
+        public ScriptServiceV2(IScriptWorkspaceFactory workspaceFactory,
             IScriptStateStoreFactory scriptStateStoreFactory,
-            IScriptExecutorFactory scriptExecutorFactory,
-            ISystemLog log)
+            IScriptExecutorFactory scriptExecutorFactory)
         {
-            this.shell = shell;
             this.workspaceFactory = workspaceFactory;
             this.scriptStateStoreFactory = scriptStateStoreFactory;
             this.scriptExecutorFactory = scriptExecutorFactory;
-            this.log = log;
         }
 
         public ScriptStatusResponseV2 StartScript(StartScriptCommandV2 command)
@@ -77,7 +69,7 @@ namespace Octopus.Tentacle.Services.Scripts
 
                 var cancellationTokenSource = new CancellationTokenSource();
                 var executor = scriptExecutorFactory.GetExecutor();
-                var process = executor.ExecuteOnBackgroundThread(command.ScriptTicket, command.TaskId, workspace, runningScript.ScriptStateStore, cancellationTokenSource);
+                var process = executor.ExecuteOnBackgroundThread(command, workspace, runningScript.ScriptStateStore, cancellationTokenSource);
 
                 runningScript.Process = process;
                 runningScript.CancellationTokenSource = cancellationTokenSource;
@@ -113,9 +105,9 @@ namespace Octopus.Tentacle.Services.Scripts
         public void CompleteScript(CompleteScriptCommandV2 command)
         {
             runningScripts.TryRemove(command.Ticket, out _);
+
             var workspace = workspaceFactory.GetWorkspace(command.Ticket);
-            //TODO: Don't clean up the workspace for future testing
-            //workspace.Delete();
+            workspace.Delete();
         }
 
         ScriptStatusResponseV2 GetResponse(ScriptTicket ticket, long lastLogSequence, IRunningScript? runningScript)

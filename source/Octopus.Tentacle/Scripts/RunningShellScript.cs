@@ -47,6 +47,10 @@ namespace Octopus.Tentacle.Scripts
 
         public IScriptLog ScriptLog { get; }
 
+        public void Complete()
+        {
+        }
+
         public void Execute()
         {
             var exitCode = -1;

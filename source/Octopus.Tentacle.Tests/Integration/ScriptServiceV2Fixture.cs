@@ -37,9 +37,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var octopusPhysicalFileSystem = new OctopusPhysicalFileSystem(Substitute.For<ISystemLog>());
             workspaceFactory = new ScriptWorkspaceFactory(octopusPhysicalFileSystem, homeConfiguration, new SensitiveValueMasker());
             stateStoreFactory = new ScriptStateStoreFactory(octopusPhysicalFileSystem);
-            service = new ScriptServiceV2(
-                PlatformDetection.IsRunningOnWindows ? (IShell)new PowerShell() : new Bash(),
-                workspaceFactory,
+            service = new ScriptServiceV2(workspaceFactory,
                 stateStoreFactory,
                 Substitute.For<ISystemLog>());
         }

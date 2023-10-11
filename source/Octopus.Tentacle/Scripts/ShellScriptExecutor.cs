@@ -2,6 +2,7 @@
 using System.Threading;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Contracts.ScriptServiceV2;
 
 namespace Octopus.Tentacle.Scripts
 {
@@ -16,11 +17,11 @@ namespace Octopus.Tentacle.Scripts
             this.log = log;
         }
 
-        public IRunningScript ExecuteOnBackgroundThread(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, ScriptStateStore? scriptStateStore, CancellationTokenSource cancellationTokenSource)
+        public IRunningScript ExecuteOnBackgroundThread(StartScriptCommandV2 command, IScriptWorkspace workspace, ScriptStateStore? scriptStateStore, CancellationTokenSource cancellationTokenSource)
         {
-            var runningScript = new RunningShellScript(shell, workspace,  scriptStateStore, workspace.CreateLog(), serverTaskId, cancellationTokenSource.Token, log);
+            var runningScript = new RunningShellScript(shell, workspace,  scriptStateStore, workspace.CreateLog(), command.TaskId, cancellationTokenSource.Token, log);
 
-            var thread = new Thread(runningScript.Execute) { Name = "Executing PowerShell script for " + ticket.TaskId };
+            var thread = new Thread(runningScript.Execute) { Name = "Executing PowerShell script for " + command.ScriptTicket.TaskId };
             thread.Start();
 
             return runningScript;

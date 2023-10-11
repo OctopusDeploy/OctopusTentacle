@@ -15,7 +15,8 @@ namespace Octopus.Tentacle.Contracts.ScriptServiceV2
             string[] arguments,
             string taskId,
             ScriptTicket scriptTicket,
-            TimeSpan? durationToWaitForScriptToFinish)
+            TimeSpan? durationToWaitForScriptToFinish,
+            string? executionContainerImage)
         {
             Arguments = arguments;
             TaskId = taskId;
@@ -25,6 +26,7 @@ namespace Octopus.Tentacle.Contracts.ScriptServiceV2
             Isolation = isolation;
             ScriptIsolationMutexTimeout = scriptIsolationMutexTimeout;
             IsolationMutexName = isolationMutexName;
+            ExecutionContainerImage = executionContainerImage;
         }
 
         public StartScriptCommandV2(string scriptBody,
@@ -35,6 +37,7 @@ namespace Octopus.Tentacle.Contracts.ScriptServiceV2
             string taskId,
             ScriptTicket scriptTicket,
             TimeSpan? durationToWaitForScriptToFinish,
+            string? executionContainerImage,
             params ScriptFile[]? additionalFiles)
             : this(scriptBody,
                 isolation,
@@ -43,7 +46,8 @@ namespace Octopus.Tentacle.Contracts.ScriptServiceV2
                 arguments,
                 taskId,
                 scriptTicket,
-                durationToWaitForScriptToFinish)
+                durationToWaitForScriptToFinish,
+                executionContainerImage)
         {
             if (additionalFiles != null)
                 Files.AddRange(additionalFiles);
@@ -57,6 +61,7 @@ namespace Octopus.Tentacle.Contracts.ScriptServiceV2
             string taskId,
             ScriptTicket scriptTicket,
             TimeSpan? durationToWaitForScriptToFinish,
+            string? executionContainerImage,
             Dictionary<ScriptType, string>? additionalScripts,
             params ScriptFile[]? additionalFiles)
             : this(scriptBody,
@@ -67,6 +72,7 @@ namespace Octopus.Tentacle.Contracts.ScriptServiceV2
                 taskId,
                 scriptTicket,
                 durationToWaitForScriptToFinish,
+                executionContainerImage,
                 additionalFiles)
         {
             if (additionalScripts == null || !additionalScripts.Any())
@@ -90,5 +96,6 @@ namespace Octopus.Tentacle.Contracts.ScriptServiceV2
         public Dictionary<ScriptType, string> Scripts { get; } = new();
         public List<ScriptFile> Files { get; } = new();
         public string[] Arguments { get; }
+        public string? ExecutionContainerImage { get; }
     }
 }

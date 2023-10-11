@@ -3,6 +3,7 @@ using System.Threading;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Scripts.Kubernetes;
 
@@ -21,11 +22,11 @@ namespace Octopus.Tentacle.Scripts
             this.appInstanceSelector = appInstanceSelector;
         }
 
-        public IRunningScript ExecuteOnBackgroundThread(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, ScriptStateStore? runningScriptScriptStateStore, CancellationTokenSource cancellationTokenSource)
+        public IRunningScript ExecuteOnBackgroundThread(StartScriptCommandV2 command, IScriptWorkspace workspace, ScriptStateStore? runningScriptScriptStateStore, CancellationTokenSource cancellationTokenSource)
         {
-            var runningScript = new RunningKubernetesJobScript(workspace, workspace.CreateLog(), ticket, serverTaskId, cancellationTokenSource.Token, systemLog, jobService, appInstanceSelector);
+            var runningScript = new RunningKubernetesJobScript(workspace, workspace.CreateLog(), command.ScriptTicket, command.TaskId, cancellationTokenSource.Token, systemLog, jobService, appInstanceSelector, command.ExecutionContainerImage);
 
-            var thread = new Thread(runningScript.Execute) { Name = "Executing Kubernetes Job for " + ticket.TaskId };
+            var thread = new Thread(runningScript.Execute) { Name = "Executing Kubernetes Job for " + command.ScriptTicket.TaskId };
             thread.Start();
 
             return runningScript;

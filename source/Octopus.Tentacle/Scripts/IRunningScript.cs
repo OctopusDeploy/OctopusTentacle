@@ -7,5 +7,6 @@ namespace Octopus.Tentacle.Scripts
         int ExitCode { get; }
         ProcessState State { get; }
         IScriptLog ScriptLog { get; }
+        void Complete();
     }
 }

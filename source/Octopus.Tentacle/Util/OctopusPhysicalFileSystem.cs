@@ -44,7 +44,7 @@ namespace Octopus.Tentacle.Util
 
         public void DeleteFile(string path, DeletionOptions? options = null)
         {
-            DeleteFile(path, CancellationToken.None, options).Wait();
+            DeleteFile(path, CancellationToken.None, options).GetAwaiter().GetResult();
         }
 
         public async Task DeleteFile(string path, CancellationToken cancellationToken, DeletionOptions? options = null)
@@ -71,7 +71,7 @@ namespace Octopus.Tentacle.Util
 
         public void DeleteDirectory(string path, DeletionOptions? options = null)
         {
-            DeleteDirectory(path, DefaultCancellationToken, options).Wait();
+            DeleteDirectory(path, DefaultCancellationToken, options).GetAwaiter().GetResult();
         }
 
         public async Task DeleteDirectory(string path, CancellationToken cancellationToken, DeletionOptions? options = null)
