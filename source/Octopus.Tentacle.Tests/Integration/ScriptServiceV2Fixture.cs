@@ -37,11 +37,22 @@ namespace Octopus.Tentacle.Tests.Integration
             var octopusPhysicalFileSystem = new OctopusPhysicalFileSystem(Substitute.For<ISystemLog>());
             workspaceFactory = new ScriptWorkspaceFactory(octopusPhysicalFileSystem, homeConfiguration, new SensitiveValueMasker());
             stateStoreFactory = new ScriptStateStoreFactory(octopusPhysicalFileSystem);
+
+            var shellScriptExecutor = new ShellScriptExecutor(
+                PlatformDetection.IsRunningOnWindows ? new PowerShell() : new Bash(),
+                Substitute.For<ISystemLog>()
+            );
+
+            var factory = new ScriptExecutorFactory(
+                new Lazy<ShellScriptExecutor>(() => new ShellScriptExecutor(
+                    PlatformDetection.IsRunningOnWindows ? new PowerShell() : new Bash(),
+                    Substitute.For<ISystemLog>()
+                )));
+
             service = new ScriptServiceV2(
-                PlatformDetection.IsRunningOnWindows ? (IShell)new PowerShell() : new Bash(),
+                factory,
                 workspaceFactory,
-                stateStoreFactory,
-                Substitute.For<ISystemLog>());
+                stateStoreFactory);
         }
 
         [Test]

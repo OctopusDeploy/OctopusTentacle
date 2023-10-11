@@ -6,7 +6,7 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Scripts
 {
-    public class RunningScript
+    public class RunningScript : IRunningScript
     {
         readonly IScriptWorkspace workspace;
         readonly IScriptStateStore? stateStore;
