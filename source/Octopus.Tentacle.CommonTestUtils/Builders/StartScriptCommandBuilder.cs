@@ -14,7 +14,7 @@ namespace Octopus.Tentacle.CommonTestUtils.Builders
         StringBuilder scriptBody = new StringBuilder(string.Empty);
         ScriptIsolationLevel isolation = ScriptIsolationLevel.FullIsolation;
         TimeSpan scriptIsolationMutexTimeout = ScriptIsolationMutex.NoTimeout;
-        string scriptIsolationMutexName = nameof(RunningScript);
+        string scriptIsolationMutexName = nameof(RunningShellScript);
         string? taskId;
 
         public StartScriptCommandBuilder WithScriptBody(string scriptBody)

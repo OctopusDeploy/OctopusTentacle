@@ -26,7 +26,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         string taskId;
         IScriptWorkspace workspace;
         TestScriptLog scriptLog;
-        RunningScript runningScript;
+        RunningShellScript runningScript;
         TestUserPrincipal user;
 
         [SetUp]
@@ -58,7 +58,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
             Console.WriteLine($"Working directory: {workspace.WorkingDirectory}");
             scriptLog = new TestScriptLog();
             cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-            runningScript = new RunningScript(shell,
+            runningScript = new RunningShellScript(shell,
                 workspace,
                 scriptLog,
                 taskId,
@@ -157,7 +157,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
                     ? (new PowerShell(), "Start-Sleep -seconds")
                     : (new Bash() as IShell, "sleep");
 
-                var script = new RunningScript(shell,
+                var script = new RunningShellScript(shell,
                     workspace,
                     scriptLog,
                     taskId,

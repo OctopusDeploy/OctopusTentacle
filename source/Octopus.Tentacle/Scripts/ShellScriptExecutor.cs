@@ -20,7 +20,7 @@ namespace Octopus.Tentacle.Scripts
 
         public IRunningScript ExecuteOnThread(StartScriptCommandV2 command, IScriptWorkspace workspace, ScriptStateStore? scriptStateStore, CancellationTokenSource cancellationTokenSource)
         {
-            var runningScript = new RunningScript(shell, workspace,  scriptStateStore, workspace.CreateLog(), command.TaskId, cancellationTokenSource.Token, log);
+            var runningScript = new RunningShellScript(shell, workspace,  scriptStateStore, workspace.CreateLog(), command.TaskId, cancellationTokenSource.Token, log);
 
             var thread = new Thread(runningScript.Execute) { Name = $"Executing {shellName} script for " + command.ScriptTicket.TaskId };
             thread.Start();
