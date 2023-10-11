@@ -18,19 +18,23 @@ namespace Octopus.Tentacle.Commands
 {
     public class RunAgentCommand : AbstractStandardCommand
     {
+        // The lazy dependencies allow the class to be created when its dependencies are not initialised yet.
+        // This is needed when calling commands like 'help' or providing feedback on validation (e.g. when no --instance parameter provided)
         readonly Lazy<IHalibutInitializer> halibut;
         readonly Lazy<IWritableTentacleConfiguration> configuration;
         readonly Lazy<IHomeConfiguration> home;
         readonly Lazy<IProxyConfiguration> proxyConfiguration;
+        readonly Lazy<IProxyInitializer> proxyInitializer;
+        readonly Lazy<IWorkspaceCleanerTask> workspaceCleanerTask;
+        
         readonly ISleep sleep;
         readonly ISystemLog log;
         readonly IApplicationInstanceSelector selector;
-        readonly Lazy<IProxyInitializer> proxyInitializer;
         readonly IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker;
         readonly AppVersion appVersion;
-        readonly Lazy<IWorkspaceCleanerTask> workspaceCleanerTask;
         int wait;
         bool halibutHasStarted;
+        bool workspaceCleanerHasStarted;
 
         public override bool CanRunAsService => true;
 
@@ -123,7 +127,8 @@ namespace Octopus.Tentacle.Commands
             halibutHasStarted = true;
 
             workspaceCleanerTask.Value.Start();
-
+            workspaceCleanerHasStarted = true;
+            
             Runtime.WaitForUserToExit();
         }
 
@@ -146,7 +151,10 @@ namespace Octopus.Tentacle.Commands
                 halibut.Value.Stop();
             }
 
-            workspaceCleanerTask.Value.Stop();
+            if (workspaceCleanerHasStarted)
+            {
+                workspaceCleanerTask.Value.Stop();
+            }
         }
     }
 }
