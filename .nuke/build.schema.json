@@ -98,6 +98,8 @@
               "BuildLinux",
               "BuildOsx",
               "BuildWindows",
+              "BuildWindowsNetCore",
+              "BuildWindowsNetFx",
               "CalculateVersion",
               "Clean",
               "CopyToLocalPackages",
@@ -141,6 +143,8 @@
               "BuildLinux",
               "BuildOsx",
               "BuildWindows",
+              "BuildWindowsNetCore",
+              "BuildWindowsNetFx",
               "CalculateVersion",
               "Clean",
               "CopyToLocalPackages",
@@ -169,6 +173,9 @@
               "TestWindowsInstallers"
             ]
           }
+        },
+        "TestFilter": {
+          "type": "string"
         },
         "TestFramework": {
           "type": "string"

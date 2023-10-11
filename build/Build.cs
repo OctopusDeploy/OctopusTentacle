@@ -1,4 +1,5 @@
 // ReSharper disable RedundantUsingDirective
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -35,15 +36,14 @@ partial class Build : NukeBuild
     /// - JetBrains Rider            https://nuke.build/rider
     /// - Microsoft VisualStudio     https://nuke.build/visualstudio
     /// - Microsoft VSCode           https://nuke.build/vscode
-
-    [Solution(GenerateProjects = true)] readonly Solution Solution = null!;
+    [Solution(GenerateProjects = true)]
+    readonly Solution Solution = null!;
 
     [Parameter("Branch name for OctoVersion to use to calculate the version number. Can be set via the environment variable OCTOVERSION_CurrentBranch.",
         Name = "OCTOVERSION_CurrentBranch")]
     readonly string BranchName = null!;
 
-    [Parameter("Whether to auto-detect the branch name - this is okay for a local build, but should not be used under CI.")]
-    readonly bool AutoDetectBranch = IsLocalBuild;
+    [Parameter("Whether to auto-detect the branch name - this is okay for a local build, but should not be used under CI.")] readonly bool AutoDetectBranch = IsLocalBuild;
 
     [OctoVersion(UpdateBuildNumber = true, BranchParameter = nameof(BranchName),
         AutoDetectBranchParameter = nameof(AutoDetectBranch), Framework = "net6.0")]
@@ -114,39 +114,54 @@ partial class Build : NukeBuild
 
     [PublicAPI]
     Target BuildWindows => _ => _
+        .DependsOn(BuildWindowsNetFx)
+        .DependsOn(BuildWindowsNetCore);
+
+    [PublicAPI]
+    Target BuildWindowsNetFx => _ => _
         .DependsOn(Restore)
         .Executes(() =>
         {
-            using var versionInfoFile = ModifyTemplatedVersionAndProductFilesWithValues();
-            using var productWxsFile = UpdateMsiProductVersion();
-
-            RuntimeIds.Where(x => x.StartsWith("win"))
-                .ForEach(runtimeId => RunBuildFor(runtimeId.Equals("win") ? NetFramework : NetCore, runtimeId));
-            
-            versionInfoFile.Dispose();
-            productWxsFile.Dispose();
-            
-            var hardenInstallationDirectoryScript = RootDirectory / "scripts" / "Harden-InstallationDirectory.ps1";
-            var directoriesToCopyHardenScriptInto = new []
-            {
-                (BuildDirectory / "Tentacle" / NetFramework / "win"),
-                (BuildDirectory / "Tentacle" / NetCore / "win-x86"),
-                (BuildDirectory / "Tentacle" / NetCore / "win-x64")
-            };
-            directoriesToCopyHardenScriptInto.ForEach(dir => CopyFileToDirectory(hardenInstallationDirectoryScript, dir, FileExistsPolicy.Overwrite));
-            
-            // Sign any unsigned libraries that Octopus Deploy authors so that they play nicely with security scanning tools.
-            // Refer: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1551655877004400
-            // Decision re: no signing everything: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1557938890227100
-            var windowsOnlyBuiltFileSpec = BuildDirectory.GlobDirectories("**/win*/**");
-
-            var filesToSign = windowsOnlyBuiltFileSpec
-                .SelectMany(x => x.GlobFiles("**/Octo*.exe", "**/Octo*.dll", "**/Tentacle.exe", "**/Tentacle.dll", "**/Halibut.dll", "**/Nuget.*.dll", "**/Nevermore.dll", "**/*.ps1"))
-                .Where(file => !Signing.HasAuthenticodeSignature(file))
-                .ToArray();
-
-            Signing.Sign(filesToSign);
+            BuildWindowsInternal(new[] { "win" }, NetFramework);
         });
+
+    [PublicAPI]
+    Target BuildWindowsNetCore => _ => _
+        .DependsOn(Restore)
+        .Executes(() =>
+        {
+            BuildWindowsInternal(new[] { "win-x86", "win-x64" }, NetCore);
+        });
+
+    void BuildWindowsInternal(string[] runtimeIds, string framework)
+    {
+        using var versionInfoFile = ModifyTemplatedVersionAndProductFilesWithValues();
+        using var productWxsFile = UpdateMsiProductVersion();
+
+        runtimeIds.ForEach(runtimeId => RunBuildFor(framework, runtimeId));
+
+        versionInfoFile.Dispose();
+        productWxsFile.Dispose();
+
+        var hardenInstallationDirectoryScript = RootDirectory / "scripts" / "Harden-InstallationDirectory.ps1";
+        var directoriesToCopyHardenScriptInto = runtimeIds
+            .Select(id => BuildDirectory / "Tentacle" / framework / id)
+            .ToArray();
+
+        directoriesToCopyHardenScriptInto.ForEach(dir => CopyFileToDirectory(hardenInstallationDirectoryScript, dir, FileExistsPolicy.Overwrite));
+
+        // Sign any unsigned libraries that Octopus Deploy authors so that they play nicely with security scanning tools.
+        // Refer: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1551655877004400
+        // Decision re: no signing everything: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1557938890227100
+        var windowsOnlyBuiltFileSpec = BuildDirectory.GlobDirectories("**/win*/**");
+
+        var filesToSign = windowsOnlyBuiltFileSpec
+            .SelectMany(x => x.GlobFiles("**/Octo*.exe", "**/Octo*.dll", "**/Tentacle.exe", "**/Tentacle.dll", "**/Halibut.dll", "**/Nuget.*.dll", "**/Nevermore.dll", "**/*.ps1"))
+            .Where(file => !Signing.HasAuthenticodeSignature(file))
+            .ToArray();
+
+        Signing.Sign(filesToSign);
+    }
 
     [PublicAPI]
     Target BuildLinux => _ => _
@@ -158,7 +173,7 @@ partial class Build : NukeBuild
 
             RuntimeIds.Where(x => x.StartsWith("linux-"))
                 .ForEach(runtimeId => RunBuildFor(NetCore, runtimeId));
-            
+
             versionInfoFile.Dispose();
             productWxsFile.Dispose();
         });
@@ -173,7 +188,7 @@ partial class Build : NukeBuild
 
             RuntimeIds.Where(x => x.StartsWith("osx-"))
                 .ForEach(runtimeId => RunBuildFor(NetCore, runtimeId));
-            
+
             versionInfoFile.Dispose();
             productWxsFile.Dispose();
         });
@@ -221,7 +236,7 @@ partial class Build : NukeBuild
     ModifiableFileWithRestoreContentsOnDispose UpdateMsiProductVersion()
     {
         var productWxsFilePath = RootDirectory / "installer" / "Octopus.Tentacle.Installer" / "Product.wxs";
-        
+
         var xmlDoc = new XmlDocument();
         xmlDoc.Load(productWxsFilePath);
 
@@ -244,7 +259,7 @@ partial class Build : NukeBuild
     void RunBuildFor(string framework, string runtimeId)
     {
         var configuration = $"Release-{framework}-{runtimeId}";
-        
+
         DotNetPublish(p => p
             .SetProject(SourceDirectory / "Tentacle.sln")
             .SetConfiguration(configuration)
@@ -266,5 +281,5 @@ partial class Build : NukeBuild
             .SetArgs("tar", "-C", "/input", "-czvf", $"/output/{outputFile}", fileSpec, "--preserve-permissions"));
     }
 
-    public static int Main () => Execute<Build>(x => x.Default);
+    public static int Main() => Execute<Build>(x => x.Default);
 }

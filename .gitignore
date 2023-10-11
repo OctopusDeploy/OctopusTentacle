@@ -53,3 +53,4 @@ _test
 
 .DS_Store
 .env
+source/create-local*.ps1
