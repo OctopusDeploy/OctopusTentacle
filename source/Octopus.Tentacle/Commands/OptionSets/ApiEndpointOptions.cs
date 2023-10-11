@@ -50,27 +50,30 @@ namespace Octopus.Tentacle.Commands.OptionSets
             if (!usernameSet && password)
                 throw new ControlledFailureException("Please specify a username for the specified password");
 
+            const string credentialNotSpecifiedMessage = "Please specify an Octopus API key, a Bearer Token or a username and password. You can get an API key from the Octopus web portal. E.g., --apiKey=ABC1234";
+            const string serverAddressNotSpecifiedMessage = "Please specify an Octopus Server, e.g., --server=http://your-octopus-server";
+
             if (Optional)
             {
                 if (serverSet &&
                     !bearerTokenSet &&
                     !usernameSet &&
                     !apiKeySet)
-                    throw new ControlledFailureException("Please specify an Octopus API key, a Bearer Token or a username and password. You can get an API key from the Octopus web portal. E.g., --apiKey=ABC1234");
+                    throw new ControlledFailureException(credentialNotSpecifiedMessage);
 
                 if (!serverSet &&
                     (bearerTokenSet || usernameSet || apiKeySet))
-                    throw new ControlledFailureException("Please specify an Octopus Server, e.g., --server=http://your-octopus-server");
+                    throw new ControlledFailureException(serverAddressNotSpecifiedMessage);
                 return;
             }
 
             if (!serverSet)
-                throw new ControlledFailureException("Please specify an Octopus Server, e.g., --server=http://your-octopus-server");
+                throw new ControlledFailureException(serverAddressNotSpecifiedMessage);
 
-            if (!usernameSet &&
-                !apiKeySet &&
-                !bearerTokenSet)
-                throw new ControlledFailureException("Please specify an Octopus API key, a Bearer Token or a username and password. You can get an API key from the Octopus web portal. E.g., --apiKey=ABC1234");
+            if (!bearerTokenSet &&
+                !usernameSet &&
+                !apiKeySet)
+                throw new ControlledFailureException(credentialNotSpecifiedMessage);
         }
     }
 }
