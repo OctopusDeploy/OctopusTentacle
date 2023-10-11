@@ -28,7 +28,7 @@ namespace Octopus.Tentacle.Commands
         readonly Lazy<IProxyInitializer> proxyInitializer;
         readonly IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker;
         readonly AppVersion appVersion;
-        readonly IWorkspaceCleanerTask workspaceCleanerTask;
+        readonly Lazy<IWorkspaceCleanerTask> workspaceCleanerTask;
         int wait;
         bool halibutHasStarted;
 
@@ -46,7 +46,7 @@ namespace Octopus.Tentacle.Commands
             IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker,
             AppVersion appVersion,
             ILogFileOnlyLogger logFileOnlyLogger,
-            IWorkspaceCleanerTask workspaceCleanerTask) : base(selector, log, logFileOnlyLogger)
+            Lazy<IWorkspaceCleanerTask> workspaceCleanerTask) : base(selector, log, logFileOnlyLogger)
         {
             this.halibut = halibut;
             this.configuration = configuration;
@@ -122,7 +122,7 @@ namespace Octopus.Tentacle.Commands
             halibut.Value.Start();
             halibutHasStarted = true;
 
-            workspaceCleanerTask.Start();
+            workspaceCleanerTask.Value.Start();
 
             Runtime.WaitForUserToExit();
         }
@@ -146,7 +146,7 @@ namespace Octopus.Tentacle.Commands
                 halibut.Value.Stop();
             }
 
-            workspaceCleanerTask.Stop();
+            workspaceCleanerTask.Value.Stop();
         }
     }
 }
