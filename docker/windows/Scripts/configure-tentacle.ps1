@@ -5,6 +5,7 @@ Param()
  . ./common.ps1
 
 $ServerApiKey = $env:ServerApiKey;
+$BearerToken = $env:BearerToken;
 $ServerUsername = $env:ServerUsername;
 $ServerPassword = $env:ServerPassword;
 $ServerUrl = $env:ServerUrl;
