@@ -205,7 +205,7 @@ namespace Octopus.Tentacle.Commands
         {
             if (string.IsNullOrWhiteSpace(serverWebSocketAddress))
             {
-                Uri? serverCommsAddressUri;
+                Uri serverCommsAddressUri;
 
                 if (string.IsNullOrEmpty(serverCommsAddress))
                 {
@@ -218,7 +218,7 @@ namespace Octopus.Tentacle.Commands
                     serverCommsPort ??= serverCommsAddressUri.Port;
                 }
 
-                return new Uri($"https://{serverCommsAddressUri?.Host}:{serverCommsPort}");
+                return new Uri($"https://{serverCommsAddressUri.Host}:{serverCommsPort}");
             }
 
             if (!HalibutRuntime.OSSupportsWebSockets)

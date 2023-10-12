@@ -7,6 +7,8 @@ namespace Octopus.Tentacle.Commands.OptionSets
 {
     public class ApiEndpointOptions : ICommandOptions
     {
+        const string ServerAddressNotSpecifiedMessage = "Please specify an Octopus Server, e.g., --server=http://your-octopus-server";
+
         public string Server { get; private set; } = null!;
         public string ApiKey { get; private set; } = null!;
         public string BearerToken { get; private set; } = null!;
@@ -29,7 +31,7 @@ namespace Octopus.Tentacle.Commands.OptionSets
 #endif
         }
 
-        public Uri? ServerUri => Server != null ? new Uri(Server) : null;
+        public Uri ServerUri => Server != null ? new Uri(Server) : throw new ControlledFailureException(ServerAddressNotSpecifiedMessage);
 
         public bool IsSupplied => !string.IsNullOrWhiteSpace(Server) && (!string.IsNullOrEmpty(Username) || !string.IsNullOrEmpty(ApiKey) || !string.IsNullOrEmpty(BearerToken));
 
@@ -52,7 +54,6 @@ namespace Octopus.Tentacle.Commands.OptionSets
                 throw new ControlledFailureException("Please specify a username for the specified password");
 
             const string credentialNotSpecifiedMessage = "Please specify an Octopus API key, a Bearer Token or a username and password. You can get an API key from the Octopus web portal. E.g., --apiKey=ABC1234";
-            const string serverAddressNotSpecifiedMessage = "Please specify an Octopus Server, e.g., --server=http://your-octopus-server";
 
             if (Optional)
             {
@@ -64,12 +65,12 @@ namespace Octopus.Tentacle.Commands.OptionSets
 
                 if (!isServerSet &&
                     (isBearerTokenSet || isUsernameSet || isApiKeySet))
-                    throw new ControlledFailureException(serverAddressNotSpecifiedMessage);
+                    throw new ControlledFailureException(ServerAddressNotSpecifiedMessage);
                 return;
             }
 
             if (!isServerSet)
-                throw new ControlledFailureException(serverAddressNotSpecifiedMessage);
+                throw new ControlledFailureException(ServerAddressNotSpecifiedMessage);
 
             if (!isBearerTokenSet &&
                 !isUsernameSet &&
