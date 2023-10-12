@@ -35,19 +35,20 @@ namespace Octopus.Tentacle.Commands.OptionSets
 
         public void Validate()
         {
-            var serverSet = !string.IsNullOrEmpty(Server);
-            var bearerTokenSet = !string.IsNullOrEmpty(BearerToken);
-            var apiKeySet = !string.IsNullOrEmpty(ApiKey);
-            var usernameSet = !string.IsNullOrEmpty(Username);
-            var password = !string.IsNullOrEmpty(Password);
-            var multipleCredentialsSet = new[] { bearerTokenSet, apiKeySet, usernameSet || password }.Count(x => x == true);
+            var isServerSet = !string.IsNullOrEmpty(Server);
+            var isBearerTokenSet = !string.IsNullOrEmpty(BearerToken);
+            var isApiKeySet = !string.IsNullOrEmpty(ApiKey);
+            var isUsernameSet = !string.IsNullOrEmpty(Username);
+            var isPasswordSet = !string.IsNullOrEmpty(Password);
+
+            var multipleCredentialsSet = new[] { isBearerTokenSet, isApiKeySet, isUsernameSet || isPasswordSet }.Count(x => x == true);
             if (multipleCredentialsSet >= 2)
                 throw new ControlledFailureException("Please specify a Bearer Token, API Key or username and password - not multiple.");
 
-            if (usernameSet && !password)
+            if (isUsernameSet && !isPasswordSet)
                 throw new ControlledFailureException("Please specify a password for the specified user account");
 
-            if (!usernameSet && password)
+            if (!isUsernameSet && isPasswordSet)
                 throw new ControlledFailureException("Please specify a username for the specified password");
 
             const string credentialNotSpecifiedMessage = "Please specify an Octopus API key, a Bearer Token or a username and password. You can get an API key from the Octopus web portal. E.g., --apiKey=ABC1234";
@@ -55,24 +56,24 @@ namespace Octopus.Tentacle.Commands.OptionSets
 
             if (Optional)
             {
-                if (serverSet &&
-                    !bearerTokenSet &&
-                    !usernameSet &&
-                    !apiKeySet)
+                if (isServerSet &&
+                    !isBearerTokenSet &&
+                    !isUsernameSet &&
+                    !isApiKeySet)
                     throw new ControlledFailureException(credentialNotSpecifiedMessage);
 
-                if (!serverSet &&
-                    (bearerTokenSet || usernameSet || apiKeySet))
+                if (!isServerSet &&
+                    (isBearerTokenSet || isUsernameSet || isApiKeySet))
                     throw new ControlledFailureException(serverAddressNotSpecifiedMessage);
                 return;
             }
 
-            if (!serverSet)
+            if (!isServerSet)
                 throw new ControlledFailureException(serverAddressNotSpecifiedMessage);
 
-            if (!bearerTokenSet &&
-                !usernameSet &&
-                !apiKeySet)
+            if (!isBearerTokenSet &&
+                !isUsernameSet &&
+                !isApiKeySet)
                 throw new ControlledFailureException(credentialNotSpecifiedMessage);
         }
     }
