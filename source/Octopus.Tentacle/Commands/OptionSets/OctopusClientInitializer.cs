@@ -28,7 +28,8 @@ namespace Octopus.Tentacle.Commands.OptionSets
 
                 client = await OctopusAsyncClient.Create(endpoint, clientOptions).ConfigureAwait(false);
 
-                if (string.IsNullOrWhiteSpace(apiEndpointOptions.ApiKey))
+                if (string.IsNullOrWhiteSpace(apiEndpointOptions.ApiKey) &&
+                    string.IsNullOrWhiteSpace(apiEndpointOptions.BearerToken))
                 {
                     await client.Repository.Users
                         .SignIn(new LoginCommand { Username = apiEndpointOptions.Username, Password = apiEndpointOptions.Password });
@@ -45,25 +46,27 @@ namespace Octopus.Tentacle.Commands.OptionSets
 
         OctopusServerEndpoint GetEndpoint(ApiEndpointOptions apiEndpointOptions, IWebProxy? overrideProxy)
         {
-            OctopusServerEndpoint endpoint;
-            if (string.IsNullOrWhiteSpace(apiEndpointOptions.ApiKey))
+            if (!string.IsNullOrWhiteSpace(apiEndpointOptions.BearerToken))
             {
-                endpoint = new OctopusServerEndpoint(apiEndpointOptions.Server);
-                if (overrideProxy != null)
-                {
-                    endpoint.Proxy = overrideProxy;
-                }
-            }
-            else
-            {
-                endpoint = new OctopusServerEndpoint(apiEndpointOptions.Server, apiEndpointOptions.ApiKey, credentials: null);
-                if (overrideProxy != null)
-                {
-                    endpoint.Proxy = overrideProxy;
-                }
+                return AddProxy(OctopusServerEndpoint.CreateWithBearerToken(apiEndpointOptions.Server, apiEndpointOptions.BearerToken));
             }
 
-            return endpoint;
+            if (!string.IsNullOrWhiteSpace(apiEndpointOptions.ApiKey))
+            {
+                return AddProxy(OctopusServerEndpoint.CreateWithApiKey(apiEndpointOptions.Server, apiEndpointOptions.ApiKey));
+            }
+
+            return AddProxy(new OctopusServerEndpoint(apiEndpointOptions.Server));
+
+            OctopusServerEndpoint AddProxy(OctopusServerEndpoint endpoint)
+            {
+                if (overrideProxy != null)
+                {
+                    endpoint.Proxy = overrideProxy;
+                }
+
+                return endpoint;
+            }
         }
     }
 }
