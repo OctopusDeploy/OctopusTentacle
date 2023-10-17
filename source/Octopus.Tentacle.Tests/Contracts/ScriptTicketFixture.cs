@@ -19,6 +19,15 @@ namespace Octopus.Tentacle.Tests.Contracts
         }
 
         [Test]
+        public void WhenScriptTicketsAreDifferentThenHashCodeShouldNotBeSame()
+        {
+            var scriptTicket1 = new ScriptTicket("one");
+            var scriptTicket2 = new ScriptTicket("two");
+
+            scriptTicket1.GetHashCode().Should().NotBe(scriptTicket2.GetHashCode());
+        }
+
+        [Test]
         public void EqualityShouldIgnoreCasing()
         {
             var originalScriptTicket = new ScriptTicket("MixedCasing");
@@ -36,6 +45,21 @@ namespace Octopus.Tentacle.Tests.Contracts
 
             (originalScriptTicket != upperCaseScriptTicket).Should().BeFalse();
             (originalScriptTicket != lowerCaseScriptTicket).Should().BeFalse();
+        }
+
+        [Test]
+        public void WhenScriptTicketsAreDifferentThenShouldNotBeEqual()
+        {
+            var scriptTicket1 = new ScriptTicket("one");
+            var scriptTicket2 = new ScriptTicket("two");
+
+            scriptTicket1.Equals(scriptTicket2).Should().BeFalse();
+
+            scriptTicket1.Equals((object)scriptTicket2).Should().BeFalse();
+
+            (scriptTicket1 == scriptTicket2).Should().BeFalse();
+
+            (scriptTicket1 != scriptTicket2).Should().BeTrue();
         }
     }
 }
