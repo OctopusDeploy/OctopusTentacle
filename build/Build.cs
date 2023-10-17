@@ -87,6 +87,18 @@ partial class Build : NukeBuild
     const string NetCore = "net6.0";
     readonly string[] RuntimeIds = { "win", "win-x86", "win-x64", "linux-x64", "linux-musl-x64", "linux-arm64", "linux-arm", "osx-x64", "osx-arm64" };
 
+    static readonly string Timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
+
+    string FullSemVer =>
+        !IsLocalBuild
+            ? OctoVersionInfo.FullSemVer
+            : $"{OctoVersionInfo.FullSemVer}-{Timestamp}";
+
+    string NuGetVersion =>
+        !IsLocalBuild
+            ? OctoVersionInfo.NuGetVersion
+            : $"{OctoVersionInfo.NuGetVersion}-{Timestamp}";
+
     [PublicAPI]
     Target CalculateVersion => _ => _
         .Executes(() =>
@@ -193,7 +205,20 @@ partial class Build : NukeBuild
         .Executes(() =>
         {
             EnsureExistingDirectory(LocalPackagesDirectory);
-            CopyFileToDirectory(ArtifactsDirectory / "Chocolatey" / $"OctopusDeploy.Tentacle.{OctoVersionInfo.NuGetVersion}.nupkg", LocalPackagesDirectory);
+            CopyFileToDirectory(ArtifactsDirectory / "Chocolatey" / $"OctopusDeploy.Tentacle.{NuGetVersion}.nupkg", LocalPackagesDirectory);
+        });
+
+    [PublicAPI]
+    Target CopyClientAndContractsToLocalPackages => _ => _
+        .OnlyWhenStatic(() => IsLocalBuild)
+        .DependsOn(PackContracts)
+        .DependsOn(PackClient)
+        .Description("If not running on a build agent, this step copies the relevant built artifacts to the local packages cache.")
+        .Executes(() =>
+        {
+            EnsureExistingDirectory(LocalPackagesDirectory);
+            CopyFileToDirectory(ArtifactsDirectory / "nuget" / $"Octopus.Tentacle.Contracts.{FullSemVer}.nupkg", LocalPackagesDirectory);
+            CopyFileToDirectory(ArtifactsDirectory / "nuget" / $"Octopus.Tentacle.Client.{FullSemVer}.nupkg", LocalPackagesDirectory);
         });
 
     [PublicAPI]
@@ -212,7 +237,7 @@ partial class Build : NukeBuild
         versionInfoFile.ReplaceRegexInFiles("AssemblyFileVersion\\(\".*?\"\\)", $"AssemblyFileVersion(\"{OctoVersionInfo.MajorMinorPatch}\")");
         versionInfoFile.ReplaceRegexInFiles("AssemblyInformationalVersion\\(\".*?\"\\)", $"AssemblyInformationalVersion(\"{OctoVersionInfo.InformationalVersion}\")");
         versionInfoFile.ReplaceRegexInFiles("AssemblyGitBranch\\(\".*?\"\\)", $"AssemblyGitBranch(\"{Git.DeriveGitBranch()}\")");
-        versionInfoFile.ReplaceRegexInFiles("AssemblyNuGetVersion\\(\".*?\"\\)", $"AssemblyNuGetVersion(\"{OctoVersionInfo.FullSemVer}\")");
+        versionInfoFile.ReplaceRegexInFiles("AssemblyNuGetVersion\\(\".*?\"\\)", $"AssemblyNuGetVersion(\"{FullSemVer}\")");
 
         return versionInfoFile;
     }
@@ -251,7 +276,7 @@ partial class Build : NukeBuild
             .SetFramework(framework)
             .SetRuntime(runtimeId)
             .EnableNoRestore()
-            .SetVersion(OctoVersionInfo.FullSemVer));
+            .SetVersion(FullSemVer));
     }
 
     // We need to use tar directly, because .NET utilities aren't able to preserve the file permissions

@@ -68,10 +68,10 @@ partial class Build
                         .EnableTty()
                         .SetImage(testConfiguration.DockerImage)
                         .SetEnv(
-                            $"VERSION={OctoVersionInfo.FullSemVer}",
+                            $"VERSION={FullSemVer}",
                             "INPUT_PATH=/input",
                             "OUTPUT_PATH=/output",
-                            $"BUILD_NUMBER={OctoVersionInfo.FullSemVer}")
+                            $"BUILD_NUMBER={FullSemVer}")
                         .SetVolume(
                             $"{testScriptsBindMountPoint}:/test-scripts:ro",
                             $"{ArtifactsDirectory}:/artifacts:ro")

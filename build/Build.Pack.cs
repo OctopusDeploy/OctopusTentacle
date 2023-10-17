@@ -71,7 +71,7 @@ partial class Build
                     .EnableRm()
                     .EnableTty()
                     .SetEnv(
-                        $"VERSION={OctoVersionInfo.FullSemVer}",
+                        $"VERSION={FullSemVer}",
                         "INPUT_PATH=/input",
                         "OUTPUT_PATH=/output",
                         "SIGN_PRIVATE_KEY",
@@ -144,7 +144,7 @@ partial class Build
 
                 ZipFile.CreateFromDirectory(
                     workingDirectory,
-                    ArtifactsDirectory / "zip" / $"tentacle-{OctoVersionInfo.FullSemVer}-{framework}-{runtimeId}.zip");
+                    ArtifactsDirectory / "zip" / $"tentacle-{FullSemVer}-{framework}-{runtimeId}.zip");
             }
         });
 
@@ -241,7 +241,7 @@ partial class Build
 
                     FileSystemTasks.MoveFile(
                         builtMsi,
-                        ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{OctoVersionInfo.FullSemVer}{platformString}.msi");
+                        ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}{platformString}.msi");
                 });
             }
 
@@ -266,16 +266,16 @@ partial class Build
         {
             FileSystemTasks.EnsureExistingDirectory(ArtifactsDirectory / "chocolatey");
 
-            var md5Checksum = FileSystemTasks.GetFileHash(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{OctoVersionInfo.FullSemVer}.msi");
+            var md5Checksum = FileSystemTasks.GetFileHash(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}.msi");
             Log.Information($"MD5 Checksum: Octopus.Tentacle.msi = {md5Checksum}");
 
-            var md5ChecksumX64 = FileSystemTasks.GetFileHash(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{OctoVersionInfo.FullSemVer}-x64.msi");
+            var md5ChecksumX64 = FileSystemTasks.GetFileHash(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-x64.msi");
             Log.Information($"Checksum: Octopus.Tentacle-x64.msi = {md5ChecksumX64}");
 
             var chocolateyInstallScriptPath = SourceDirectory / "Chocolatey" / "chocolateyInstall.ps1";
             using var chocolateyInstallScriptFile = new ModifiableFileWithRestoreContentsOnDispose(chocolateyInstallScriptPath);
 
-            chocolateyInstallScriptFile.ReplaceRegexInFiles("0.0.0", OctoVersionInfo.FullSemVer);
+            chocolateyInstallScriptFile.ReplaceRegexInFiles("0.0.0", FullSemVer);
             chocolateyInstallScriptFile.ReplaceRegexInFiles("<checksum>", md5Checksum);
             chocolateyInstallScriptFile.ReplaceRegexInFiles("<checksumtype>", "md5");
             chocolateyInstallScriptFile.ReplaceRegexInFiles("<checksum64>", md5ChecksumX64);
@@ -283,7 +283,7 @@ partial class Build
 
             ChocolateyTasks.ChocolateyPack(settings => settings
                 .SetPathToNuspec(SourceDirectory / "Chocolatey" / "OctopusDeploy.Tentacle.nuspec")
-                .SetVersion(OctoVersionInfo.NuGetVersion)
+                .SetVersion(NuGetVersion)
                 .SetOutputDirectory(ArtifactsDirectory / "chocolatey"));
         });
 
@@ -297,11 +297,11 @@ partial class Build
 
             DotNetPack(p => p
                 .SetProject(RootDirectory / "source" / "Octopus.Tentacle.Contracts" / "Octopus.Tentacle.Contracts.csproj")
-                .SetVersion(OctoVersionInfo.FullSemVer)
+                .SetVersion(FullSemVer)
                 .SetOutputDirectory(ArtifactsDirectory / "nuget")
                 .DisableIncludeSymbols()
                 .SetVerbosity(DotNetVerbosity.Normal)
-                .SetProperty("NuspecProperties", $"Version={OctoVersionInfo.FullSemVer}"));
+                .SetProperty("NuspecProperties", $"Version={FullSemVer}"));
         });
 
     [PublicAPI]
@@ -314,11 +314,11 @@ partial class Build
 
             DotNetPack(p => p
                 .SetProject(RootDirectory / "source" / "Octopus.Tentacle.Client" / "Octopus.Tentacle.Client.csproj")
-                .SetVersion(OctoVersionInfo.FullSemVer)
+                .SetVersion(FullSemVer)
                 .SetOutputDirectory(ArtifactsDirectory / "nuget")
                 .DisableIncludeSymbols()
                 .SetVerbosity(DotNetVerbosity.Normal)
-                .SetProperty("NuspecProperties", $"Version={OctoVersionInfo.FullSemVer}"));
+                .SetProperty("NuspecProperties", $"Version={FullSemVer}"));
         });
 
     [PublicAPI]
@@ -332,11 +332,11 @@ partial class Build
         .Description("Packs the cross-platform Tentacle.nupkg used by Octopus Server to dynamically upgrade Tentacles.")
         .Executes(() =>
         {
-            string ConstructDebianPackageFilename(string packageName, string architecture) => $"{packageName}_{OctoVersionInfo.FullSemVer}_{architecture}.deb";
+            string ConstructDebianPackageFilename(string packageName, string architecture) => $"{packageName}_{FullSemVer}_{architecture}.deb";
 
             string ConstructRedHatPackageFilename(string packageName, string architecture)
             {
-                var transformedVersion = OctoVersionInfo.FullSemVer.Replace("-", "_");
+                var transformedVersion = FullSemVer.Replace("-", "_");
                 var filename = $"{packageName}-{transformedVersion}-1.{architecture}.rpm";
                 return filename;
             }
@@ -354,10 +354,10 @@ partial class Build
             var rpmArm32PackageFilename = ConstructRedHatPackageFilename("tentacle", "armv7hl");
             var rpmx64PackageFilename = ConstructRedHatPackageFilename("tentacle", "x86_64");
 
-            FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{OctoVersionInfo.FullSemVer}.msi", workingDirectory / "Octopus.Tentacle.msi");
-            FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{OctoVersionInfo.FullSemVer}-x64.msi", workingDirectory / "Octopus.Tentacle-x64.msi");
-            FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{OctoVersionInfo.FullSemVer}-net6.0-win-x86.msi", workingDirectory / "Octopus.Tentacle-net6.0-win-x86.msi");
-            FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{OctoVersionInfo.FullSemVer}-net6.0-win-x64.msi", workingDirectory / "Octopus.Tentacle-net6.0-win-x64.msi");
+            FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}.msi", workingDirectory / "Octopus.Tentacle.msi");
+            FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-x64.msi", workingDirectory / "Octopus.Tentacle-x64.msi");
+            FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net6.0-win-x86.msi", workingDirectory / "Octopus.Tentacle-net6.0-win-x86.msi");
+            FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net6.0-win-x64.msi", workingDirectory / "Octopus.Tentacle-net6.0-win-x64.msi");
 
             FileSystemTasks.CopyFile(BuildDirectory / "Octopus.Tentacle.Upgrader" / NetCore / "win-x86" / "Octopus.Tentacle.Upgrader.exe", workingDirectory / "Octopus.Tentacle.Upgrader-net6.0-win-x86.exe");
             FileSystemTasks.CopyFile(BuildDirectory / "Octopus.Tentacle.Upgrader" / NetCore / "win-x64" / "Octopus.Tentacle.Upgrader.exe", workingDirectory / "Octopus.Tentacle.Upgrader-net6.0-win-x64.exe");
@@ -379,7 +379,7 @@ partial class Build
                         || runtimeId != "win" && framework == "net48") continue;
 
                     var fileExtension = runtimeId.StartsWith("win") ? "zip" : "tar.gz";
-                    FileSystemTasks.CopyFile(ArtifactsDirectory / "zip" / $"tentacle-{OctoVersionInfo.FullSemVer}-{framework}-{runtimeId}.{fileExtension}",
+                    FileSystemTasks.CopyFile(ArtifactsDirectory / "zip" / $"tentacle-{FullSemVer}-{framework}-{runtimeId}.{fileExtension}",
                         workingDirectory / $"tentacle-{framework}-{runtimeId}.{fileExtension}");
                 }
             }
@@ -401,7 +401,7 @@ partial class Build
             const string description = "The deployment agent that is installed on each machine you plan to deploy to using Octopus.";
             const string author = "Octopus Deploy";
             const string title = "Octopus Tentacle cross platform bundle";
-            OctoCliTool($@"pack --id=Octopus.Tentacle.CrossPlatformBundle --version={OctoVersionInfo.FullSemVer} --basePath={workingDirectory} --outFolder={ArtifactsDirectory / "nuget"} --author=""{author}"" --title=""{title}"" --description=""{description}""");
+            OctoCliTool($@"pack --id=Octopus.Tentacle.CrossPlatformBundle --version={FullSemVer} --basePath={workingDirectory} --outFolder={ArtifactsDirectory / "nuget"} --author=""{author}"" --title=""{title}"" --description=""{description}""");
         });
 
     [PublicAPI]
@@ -430,6 +430,6 @@ partial class Build
             workingDir,
             "tentacle",
             ArtifactsDirectory / "zip",
-            $"tentacle-{OctoVersionInfo.FullSemVer}-{NetCore}-{runtimeId}.tar.gz");
+            $"tentacle-{FullSemVer}-{NetCore}-{runtimeId}.tar.gz");
     }
 }
