@@ -87,7 +87,6 @@ namespace Octopus.Tentacle
             builder.RegisterCommand<ListInstancesCommand>("list-instances", "Lists all installed Tentacle instances");
             builder.RegisterCommand<VersionCommand>("version", "Show the Tentacle version information");
             builder.RegisterCommand<ShowConfigurationCommand>("show-configuration", "Outputs the Tentacle configuration");
-            builder.RegisterCommand<ExecuteScriptCommand>("execute-script", "Executes the script file in the workspace for the supplied ScriptTicket");
 
             return builder.Build();
         }

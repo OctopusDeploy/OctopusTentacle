@@ -3,7 +3,7 @@ using System.Threading;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Contracts;
-using Octopus.Tentacle.Contracts.ScriptServiceV2;
+using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
 using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Scripts.Kubernetes;
 
@@ -22,11 +22,14 @@ namespace Octopus.Tentacle.Scripts
             this.appInstanceSelector = appInstanceSelector;
         }
 
-        public IRunningScript ExecuteOnBackgroundThread(StartScriptCommandV2 command, IScriptWorkspace workspace, ScriptStateStore? runningScriptScriptStateStore, CancellationTokenSource cancellationTokenSource)
+        public IRunningScript ExecuteOnBackgroundThread(StartScriptCommandV3Alpha startScriptCommand, IScriptWorkspace workspace, ScriptStateStore? scriptStateStore, CancellationToken cancellationToken)
         {
-            var runningScript = new RunningKubernetesJobScript(workspace, workspace.CreateLog(), command.ScriptTicket, command.TaskId, cancellationTokenSource.Token, systemLog, jobService, appInstanceSelector, command.ExecutionContainerImage);
+            if (startScriptCommand.ExecutionContext is not KubernetesJobScriptExecutionContext kubernetesJobScriptExecutionContext)
+                throw new InvalidOperationException("The ExecutionContext must be of type KubernetesJobScriptExecutionContext");
 
-            var thread = new Thread(runningScript.Execute) { Name = "Executing Kubernetes Job for " + command.ScriptTicket.TaskId };
+            var runningScript = new RunningKubernetesJobScript(workspace, workspace.CreateLog(), startScriptCommand.ScriptTicket, startScriptCommand.TaskId, cancellationToken, systemLog, jobService, appInstanceSelector, kubernetesJobScriptExecutionContext);
+
+            var thread = new Thread(runningScript.Execute) { Name = "Executing Kubernetes Job for " + startScriptCommand.ScriptTicket.TaskId };
             thread.Start();
 
             return runningScript;

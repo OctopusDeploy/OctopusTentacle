@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading;
+using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Scripts;
@@ -12,43 +13,47 @@ namespace Octopus.Tentacle.Services.Scripts
     [Service]
     public class ScriptServiceV2 : IScriptServiceV2
     {
+        readonly IShell shell;
         readonly IScriptWorkspaceFactory workspaceFactory;
         readonly IScriptStateStoreFactory scriptStateStoreFactory;
-        readonly IScriptExecutorFactory scriptExecutorFactory;
-        readonly ConcurrentDictionary<ScriptTicket, RunningScriptWrapper> runningScripts = new();
+        readonly ISystemLog log;
+        readonly ConcurrentDictionary<ScriptTicket, RunningShellScriptWrapper> runningShellScripts = new();
 
-        public ScriptServiceV2(IScriptWorkspaceFactory workspaceFactory,
+        public ScriptServiceV2(
+            IShell shell,
+            IScriptWorkspaceFactory workspaceFactory,
             IScriptStateStoreFactory scriptStateStoreFactory,
-            IScriptExecutorFactory scriptExecutorFactory)
+            ISystemLog log)
         {
+            this.shell = shell;
             this.workspaceFactory = workspaceFactory;
             this.scriptStateStoreFactory = scriptStateStoreFactory;
-            this.scriptExecutorFactory = scriptExecutorFactory;
+            this.log = log;
         }
 
         public ScriptStatusResponseV2 StartScript(StartScriptCommandV2 command)
         {
-            var runningScript = runningScripts.GetOrAdd(
+            var runningShellScript = runningShellScripts.GetOrAdd(
                 command.ScriptTicket,
                 _ =>
                 {
                     var workspace = workspaceFactory.GetWorkspace(command.ScriptTicket);
                     var scriptState = scriptStateStoreFactory.Create(workspace);
-                    return new RunningScriptWrapper(scriptState);
+                    return new RunningShellScriptWrapper(scriptState);
                 });
 
-            using (runningScript.StartScriptMutex.Lock())
+            using (runningShellScript.StartScriptMutex.Lock())
             {
                 IScriptWorkspace workspace;
 
-                // If the state already exists then this runningScript is already running/has already run and we should not run it again
-                if (runningScript.ScriptStateStore.Exists())
+                // If the state already exists then this runningShellScript is already running/has already run and we should not run it again
+                if (runningShellScript.ScriptStateStore.Exists())
                 {
-                    var state = runningScript.ScriptStateStore.Load();
+                    var state = runningShellScript.ScriptStateStore.Load();
 
-                    if (state.HasStarted() || runningScript.Process != null)
+                    if (state.HasStarted() || runningShellScript.Process != null)
                     {
-                        return GetResponse(command.ScriptTicket, 0, runningScript.Process);
+                        return GetResponse(command.ScriptTicket, 0, runningShellScript.Process);
                     }
 
                     workspace = workspaceFactory.GetWorkspace(command.ScriptTicket);
@@ -64,15 +69,12 @@ namespace Octopus.Tentacle.Services.Scripts
                         command.Arguments,
                         command.Files);
 
-                    runningScript.ScriptStateStore.Create();
+                    runningShellScript.ScriptStateStore.Create();
                 }
 
-                var cancellationTokenSource = new CancellationTokenSource();
-                var executor = scriptExecutorFactory.GetExecutor();
-                var process = executor.ExecuteOnBackgroundThread(command, workspace, runningScript.ScriptStateStore, cancellationTokenSource);
+                var process = LaunchShell(command.ScriptTicket, command.TaskId, workspace, runningShellScript.ScriptStateStore, runningShellScript.CancellationToken);
 
-                runningScript.Process = process;
-                runningScript.CancellationTokenSource = cancellationTokenSource;
+                runningShellScript.Process = process;
 
                 if (command.DurationToWaitForScriptToFinish != null)
                 {
@@ -83,42 +85,54 @@ namespace Octopus.Tentacle.Services.Scripts
                     }
                 }
 
-                return GetResponse(command.ScriptTicket, 0, runningScript.Process);
+                return GetResponse(command.ScriptTicket, 0, runningShellScript.Process);
             }
         }
 
         public ScriptStatusResponseV2 GetStatus(ScriptStatusRequestV2 request)
         {
-            runningScripts.TryGetValue(request.Ticket, out var runningScript);
-            return GetResponse(request.Ticket, request.LastLogSequence, runningScript?.Process);
+            runningShellScripts.TryGetValue(request.Ticket, out var runningShellScript);
+            return GetResponse(request.Ticket, request.LastLogSequence, runningShellScript?.Process);
         }
 
         public ScriptStatusResponseV2 CancelScript(CancelScriptCommandV2 command)
         {
-            runningScripts.TryGetValue(command.Ticket, out var runningScript);
+            if (runningShellScripts.TryGetValue(command.Ticket, out var runningShellScript))
+            {
+                runningShellScript.Cancel();
+            }
 
-            runningScript?.CancellationTokenSource?.Cancel();
-
-            return GetResponse(command.Ticket, command.LastLogSequence, runningScript?.Process);
+            return GetResponse(command.Ticket, command.LastLogSequence, runningShellScript?.Process);
         }
 
         public void CompleteScript(CompleteScriptCommandV2 command)
         {
-            runningScripts.TryRemove(command.Ticket, out _);
+            if (runningShellScripts.TryRemove(command.Ticket, out var runningShellScript))
+            {
+                runningShellScript.Dispose();
+            }
 
             var workspace = workspaceFactory.GetWorkspace(command.Ticket);
             workspace.Delete();
         }
 
-        ScriptStatusResponseV2 GetResponse(ScriptTicket ticket, long lastLogSequence, IRunningScript? runningScript)
+        RunningShellScript LaunchShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, IScriptStateStore stateStore, CancellationToken cancellationToken)
+        {
+            var runningShellScript = new RunningShellScript(shell, workspace, stateStore, workspace.CreateLog(), serverTaskId, cancellationToken, log);
+            var thread = new Thread(runningShellScript.Execute) { Name = "Executing PowerShell runningShellScript for " + ticket.TaskId };
+            thread.Start();
+            return runningShellScript;
+        }
+
+        ScriptStatusResponseV2 GetResponse(ScriptTicket ticket, long lastLogSequence, RunningShellScript? runningShellScript)
         {
             var workspace = workspaceFactory.GetWorkspace(ticket);
-            var scriptLog = runningScript?.ScriptLog ?? workspace.CreateLog();
+            var scriptLog = runningShellScript?.ScriptLog ?? workspace.CreateLog();
             var logs = scriptLog.GetOutput(lastLogSequence, out var next);
 
-            if (runningScript != null)
+            if (runningShellScript != null)
             {
-                return new ScriptStatusResponseV2(ticket, runningScript.State, runningScript.ExitCode, logs, next);
+                return new ScriptStatusResponseV2(ticket, runningShellScript.State, runningShellScript.ExitCode, logs, next);
             }
 
             // If we don't have a RunningProcess we check the ScriptStateStore to see if we have persisted a script result
@@ -141,7 +155,7 @@ namespace Octopus.Tentacle.Services.Scripts
 
         public bool IsRunningScript(ScriptTicket ticket)
         {
-            if (runningScripts.TryGetValue(ticket, out var script))
+            if (runningShellScripts.TryGetValue(ticket, out var script))
             {
                 if (script.Process?.State != ProcessState.Complete)
                 {
@@ -152,17 +166,32 @@ namespace Octopus.Tentacle.Services.Scripts
             return false;
         }
 
-        class RunningScriptWrapper
+        class RunningShellScriptWrapper : IDisposable
         {
-            public RunningScriptWrapper(ScriptStateStore scriptStateStore)
+            readonly CancellationTokenSource cancellationTokenSource = new ();
+
+            public RunningShellScriptWrapper(ScriptStateStore scriptStateStore)
             {
                 ScriptStateStore = scriptStateStore;
+
+                CancellationToken = cancellationTokenSource.Token;
             }
 
-            public IRunningScript? Process { get; set; }
+            public RunningShellScript? Process { get; set; }
             public ScriptStateStore ScriptStateStore { get; }
             public SemaphoreSlim StartScriptMutex { get; } = new(1, 1);
-            public CancellationTokenSource? CancellationTokenSource { get; set; }
+
+            public CancellationToken CancellationToken { get; }
+
+            public void Cancel()
+            {
+                cancellationTokenSource.Cancel();
+            }
+
+            public void Dispose()
+            {
+                cancellationTokenSource.Dispose();
+            }
         }
     }
 }

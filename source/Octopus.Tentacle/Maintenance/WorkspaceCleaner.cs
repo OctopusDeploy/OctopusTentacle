@@ -19,6 +19,7 @@ namespace Octopus.Tentacle.Maintenance
 
         readonly ScriptService scriptService;
         readonly ScriptServiceV2 scriptServiceV2;
+        readonly ScriptServiceV3Alpha scriptServiceV3Alpha;
 
         public WorkspaceCleaner(
             WorkspaceCleanerConfiguration configuration,
@@ -34,6 +35,7 @@ namespace Octopus.Tentacle.Maintenance
 
             scriptService = serviceRegistration.GetService<ScriptService>();
             scriptServiceV2 = serviceRegistration.GetService<ScriptServiceV2>();
+            scriptServiceV3Alpha = serviceRegistration.GetService<ScriptServiceV3Alpha>();
         }
 
         public async Task Clean(CancellationToken cancellationToken)
@@ -51,9 +53,10 @@ namespace Octopus.Tentacle.Maintenance
                 {
                     if (scriptService.IsRunningScript(workspace.ScriptTicket)) continue;
                     if (scriptServiceV2.IsRunningScript(workspace.ScriptTicket)) continue;
+                    if (scriptServiceV3Alpha.IsRunningScript(workspace.ScriptTicket)) continue;
 
                     var workspaceLogFilePath = workspace.LogFilePath;
-                    
+
                     var outputLogFileLastWriteTimeUtc = File.GetLastWriteTimeUtc(workspaceLogFilePath);
                     if (outputLogFileLastWriteTimeUtc >= deleteWorkspacesOlderThanDateTimeUtc)
                     {

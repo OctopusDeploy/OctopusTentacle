@@ -8,6 +8,7 @@ using k8s.Models;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
 using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Variables;
 
@@ -15,14 +16,12 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
 {
     public class RunningKubernetesJobScript : IRunningScript
     {
-        private const string DefaultContainerImage = "octopusdeploy/worker-tools:ubuntu.22.04";
-
         private readonly IScriptWorkspace workspace;
         private readonly ScriptTicket scriptTicket;
         private readonly string taskId;
         private readonly ILog log;
         private readonly IKubernetesJobService jobService;
-        readonly string? executionContainerImage;
+        readonly KubernetesJobScriptExecutionContext executionContext;
         private readonly CancellationToken cancellationToken;
         readonly string? instanceName;
 
@@ -38,14 +37,14 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
             ILog log,
             IKubernetesJobService jobService,
             IApplicationInstanceSelector appInstanceSelector,
-            string? executionContainerImage)
+            KubernetesJobScriptExecutionContext executionContext)
         {
             this.workspace = workspace;
             this.scriptTicket = scriptTicket;
             this.taskId = taskId;
             this.log = log;
             this.jobService = jobService;
-            this.executionContainerImage = executionContainerImage;
+            this.executionContext = executionContext;
             this.cancellationToken = cancellationToken;
             ScriptLog = scriptLog;
             instanceName = appInstanceSelector.Current.InstanceName;
@@ -161,7 +160,7 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                                 new()
                                 {
                                     Name = jobService.BuildJobName(scriptTicket),
-                                    Image = !string.IsNullOrWhiteSpace(executionContainerImage) ? executionContainerImage : DefaultContainerImage,
+                                    Image = executionContext.ContainerImage,
                                     Command = new List<string> { "dotnet" },
                                     Args = new List<string>
                                     {

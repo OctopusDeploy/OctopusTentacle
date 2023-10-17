@@ -1,5 +1,5 @@
 ﻿using System;
-using Octopus.Tentacle.Util;
+using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
 
 namespace Octopus.Tentacle.Scripts
 {
@@ -14,12 +14,13 @@ namespace Octopus.Tentacle.Scripts
             this.kubernetesJobScriptExecutor = kubernetesJobScriptExecutor;
         }
 
-        public IScriptExecutor GetExecutor()
+        public IScriptExecutor GetExecutor(StartScriptCommandV3Alpha startScriptCommand)
         {
-            return PlatformDetection.Kubernetes.IsRunningInKubernetes switch
+            return startScriptCommand.ExecutionContext switch
             {
-                true => kubernetesJobScriptExecutor.Value,
-                false => shellScriptExecutor.Value
+                LocalShellScriptExecutionContext => kubernetesJobScriptExecutor.Value,
+                KubernetesJobScriptExecutionContext => shellScriptExecutor.Value,
+                _ => throw new InvalidOperationException($"{startScriptCommand.GetType().Name} is not a supported IScriptExecutionContext.")
             };
         }
     }

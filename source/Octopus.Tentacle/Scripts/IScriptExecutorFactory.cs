@@ -1,7 +1,9 @@
-﻿namespace Octopus.Tentacle.Scripts
+﻿using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
+
+namespace Octopus.Tentacle.Scripts
 {
     public interface IScriptExecutorFactory
     {
-        IScriptExecutor GetExecutor();
+        IScriptExecutor GetExecutor(StartScriptCommandV3Alpha startScriptCommandV3Alpha);
     }
 }
