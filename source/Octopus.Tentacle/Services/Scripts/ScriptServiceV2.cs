@@ -72,11 +72,9 @@ namespace Octopus.Tentacle.Services.Scripts
                     runningScript.ScriptStateStore.Create();
                 }
 
-                var cancellationTokenSource = new CancellationTokenSource();
-                var process = LaunchShell(command.ScriptTicket, command.TaskId, workspace, runningScript.ScriptStateStore, cancellationTokenSource);
+                var process = LaunchShell(command.ScriptTicket, command.TaskId, workspace, runningScript.ScriptStateStore, runningScript.CancellationToken);
 
                 runningScript.Process = process;
-                runningScript.CancellationTokenSource = cancellationTokenSource;
 
                 if (command.DurationToWaitForScriptToFinish != null)
                 {
@@ -99,23 +97,28 @@ namespace Octopus.Tentacle.Services.Scripts
 
         public ScriptStatusResponseV2 CancelScript(CancelScriptCommandV2 command)
         {
-            runningScripts.TryGetValue(command.Ticket, out var runningScript);
-
-            runningScript?.CancellationTokenSource?.Cancel();
+            if (runningScripts.TryGetValue(command.Ticket, out var runningScript))
+            {
+                runningScript.Cancel();
+            }
 
             return GetResponse(command.Ticket, command.LastLogSequence, runningScript?.Process);
         }
 
         public void CompleteScript(CompleteScriptCommandV2 command)
         {
-            runningScripts.TryRemove(command.Ticket, out _);
+            if (runningScripts.TryRemove(command.Ticket, out var runningScript))
+            {
+                runningScript.Dispose();
+            }
+
             var workspace = workspaceFactory.GetWorkspace(command.Ticket);
             workspace.Delete();
         }
 
-        RunningScript LaunchShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, IScriptStateStore stateStore, CancellationTokenSource cancel)
+        RunningScript LaunchShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, IScriptStateStore stateStore, CancellationToken cancellationToken)
         {
-            var runningScript = new RunningScript(shell, workspace, stateStore, workspace.CreateLog(), serverTaskId, cancel.Token, log);
+            var runningScript = new RunningScript(shell, workspace, stateStore, workspace.CreateLog(), serverTaskId, cancellationToken, log);
             var thread = new Thread(runningScript.Execute) { Name = "Executing PowerShell runningScript for " + ticket.TaskId };
             thread.Start();
             return runningScript;
@@ -163,17 +166,32 @@ namespace Octopus.Tentacle.Services.Scripts
             return false;
         }
 
-        class RunningScriptWrapper
+        class RunningScriptWrapper : IDisposable
         {
+            readonly CancellationTokenSource cancellationTokenSource = new ();
+
             public RunningScriptWrapper(ScriptStateStore scriptStateStore)
             {
                 ScriptStateStore = scriptStateStore;
+
+                CancellationToken = cancellationTokenSource.Token;
             }
 
             public RunningScript? Process { get; set; }
             public ScriptStateStore ScriptStateStore { get; }
             public SemaphoreSlim StartScriptMutex { get; } = new(1, 1);
-            public CancellationTokenSource? CancellationTokenSource { get; set; }
+
+            public CancellationToken CancellationToken { get; }
+
+            public void Cancel()
+            {
+                cancellationTokenSource.Cancel();
+            }
+
+            public void Dispose()
+            {
+                cancellationTokenSource.Dispose();
+            }
         }
     }
 }
