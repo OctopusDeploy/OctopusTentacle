@@ -25,8 +25,17 @@ namespace Octopus.Tentacle.Tests.Contracts
             var upperCaseScriptTicket = new ScriptTicket(originalScriptTicket.TaskId.ToUpper());
             var lowerCaseScriptTicket = new ScriptTicket(originalScriptTicket.TaskId.ToLower());
 
-            upperCaseScriptTicket.Should().Be(originalScriptTicket);
-            lowerCaseScriptTicket.Should().Be(originalScriptTicket);
+            originalScriptTicket.Equals(upperCaseScriptTicket).Should().BeTrue();
+            originalScriptTicket.Equals(lowerCaseScriptTicket).Should().BeTrue();
+
+            originalScriptTicket.Equals((object)upperCaseScriptTicket).Should().BeTrue();
+            originalScriptTicket.Equals((object)lowerCaseScriptTicket).Should().BeTrue();
+
+            (originalScriptTicket == upperCaseScriptTicket).Should().BeTrue();
+            (originalScriptTicket == lowerCaseScriptTicket).Should().BeTrue();
+
+            (originalScriptTicket != upperCaseScriptTicket).Should().BeFalse();
+            (originalScriptTicket != lowerCaseScriptTicket).Should().BeFalse();
         }
     }
 }
