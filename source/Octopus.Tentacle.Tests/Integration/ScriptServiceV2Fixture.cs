@@ -429,6 +429,29 @@ namespace Octopus.Tentacle.Tests.Integration
             finishedScriptState.Started.Should().BeOnOrAfter(testStarted).And.BeOnOrBefore(testFinished);
         }
 
+        [Test]
+        public void ScriptTicketCasingShouldNotAffectCommands()
+        {
+            // Arrange
+            var startScriptCommand = new StartScriptCommandV2Builder()
+                .WithScriptBody("echo \"finished\"")
+                .Build();
+
+            var response = service.StartScript(startScriptCommand);
+
+            var upperCaseScriptTicket = new ScriptTicket(startScriptCommand.ScriptTicket.TaskId.ToUpper());
+            var lowerCaseScriptTicket = new ScriptTicket(startScriptCommand.ScriptTicket.TaskId.ToLower());
+
+            // Act
+            var upperCaseResponse = service.GetStatus(new ScriptStatusRequestV2(upperCaseScriptTicket, response.NextLogSequence));
+            var lowerCaseResponse = service.GetStatus(new ScriptStatusRequestV2(lowerCaseScriptTicket, response.NextLogSequence));
+            service.CompleteScript(new CompleteScriptCommandV2(startScriptCommand.ScriptTicket));
+
+            // Assert
+            upperCaseResponse.ExitCode.Should().Be(0);
+            lowerCaseResponse.ExitCode.Should().Be(0);
+        }
+
         // TODO - Test the stateStore is updated.
 
         private void SetupScriptState(ScriptTicket ticket)
