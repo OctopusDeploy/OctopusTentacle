@@ -18,6 +18,7 @@ using Octopus.Tentacle.Contracts.Capabilities;
 using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
+using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
 using ILog = Octopus.Diagnostics.ILog;
 using ITentacleClientObserver = Octopus.Tentacle.Contracts.Observability.ITentacleClientObserver;
 
@@ -35,6 +36,7 @@ namespace Octopus.Tentacle.Client
         readonly SyncAndAsyncClientScriptServiceV2 scriptServiceV2;
         readonly SyncAndAsyncClientFileTransferServiceV1 clientFileTransferServiceV1;
         readonly SyncAndAsyncClientCapabilitiesServiceV2 capabilitiesServiceV2;
+        readonly IAsyncClientScriptServiceV3Alpha scriptServiceV3Alpha;
 
         public static void CacheServiceWasNotFoundResponseMessages(IHalibutRuntime halibutRuntime)
         {
@@ -60,7 +62,7 @@ namespace Octopus.Tentacle.Client
         ) : this(serviceEndPoint, halibutRuntime, scriptObserverBackOffStrategy, tentacleClientObserver, rpcRetrySettings, null)
         {
         }
-        
+
         internal TentacleClient(
             ServiceEndPoint serviceEndPoint,
             IHalibutRuntime halibutRuntime,
@@ -113,7 +115,7 @@ namespace Octopus.Tentacle.Client
                 var asyncScriptServiceV2 = halibutRuntime.CreateAsyncClient<IScriptServiceV2, IAsyncClientScriptServiceV2>(serviceEndPoint);
                 var asyncFileTransferServiceV1 = halibutRuntime.CreateAsyncClient<IFileTransferService, IAsyncClientFileTransferService>(serviceEndPoint);
                 var asyncCapabilitiesServiceV2 = halibutRuntime.CreateAsyncClient<ICapabilitiesServiceV2, IAsyncClientCapabilitiesServiceV2>(serviceEndPoint).WithBackwardsCompatability();
-                
+
                 var exceptionDecorator = new HalibutExceptionTentacleServiceDecorator();
                 asyncScriptServiceV2 = exceptionDecorator.Decorate(asyncScriptServiceV2);
                 asyncCapabilitiesServiceV2 = exceptionDecorator.Decorate(asyncCapabilitiesServiceV2);
@@ -131,6 +133,8 @@ namespace Octopus.Tentacle.Client
                 clientFileTransferServiceV1 = new(null, asyncFileTransferServiceV1);
                 capabilitiesServiceV2 = new(null, asyncCapabilitiesServiceV2);
             }
+
+            scriptServiceV3Alpha = halibutRuntime.CreateAsyncClient<IScriptServiceV3Alpha, IAsyncClientScriptServiceV3Alpha>(serviceEndPoint);
 
             rpcCallExecutor = RpcCallExecutorFactory.Create(rpcRetrySettings.RetryDuration, this.tentacleClientObserver);
         }
@@ -203,7 +207,7 @@ namespace Octopus.Tentacle.Client
                 var result = await asyncHalibutFeature
                     .WhenDisabled(() => clientFileTransferServiceV1.SyncService.DownloadFile(remotePath, new HalibutProxyRequestOptions(ct, CancellationToken.None)))
                     .WhenEnabled(async () => await clientFileTransferServiceV1.AsyncService.DownloadFileAsync(remotePath, new HalibutProxyRequestOptions(ct, CancellationToken.None)));
-                
+
                 logger.Info("Download complete");
                 return result;
             }
@@ -244,8 +248,8 @@ namespace Octopus.Tentacle.Client
         }
 
         public async Task<ScriptExecutionResult> ExecuteScript(
-            StartScriptCommandV2 startScriptCommand,
-            Action<ScriptStatusResponseV2> onScriptStatusResponseReceived,
+            StartScriptCommandV3Alpha startScriptCommand,
+            Action<ScriptStatusResponseV3Alpha> onScriptStatusResponseReceived,
             Func<CancellationToken, Task> onScriptCompleted,
             ILog logger,
             CancellationToken scriptExecutionCancellationToken)
@@ -257,6 +261,7 @@ namespace Octopus.Tentacle.Client
                 using var orchestrator = new ScriptExecutionOrchestrator(
                     scriptServiceV1,
                     scriptServiceV2,
+                    scriptServiceV3Alpha,
                     capabilitiesServiceV2,
                     scriptObserverBackOffStrategy,
                     rpcCallExecutor,

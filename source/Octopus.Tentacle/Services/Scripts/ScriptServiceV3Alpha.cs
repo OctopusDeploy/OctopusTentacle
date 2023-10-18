@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
 using Octopus.Tentacle.Scripts;
@@ -26,8 +27,9 @@ namespace Octopus.Tentacle.Services.Scripts
             this.scriptExecutorFactory = scriptExecutorFactory;
         }
 
-        public ScriptStatusResponseV3Alpha StartScript(StartScriptCommandV3Alpha command)
+        public async Task<ScriptStatusResponseV3Alpha> StartScriptAsync(StartScriptCommandV3Alpha command)
         {
+            await Task.CompletedTask;
             var runningScript = runningScripts.GetOrAdd(
                 command.ScriptTicket,
                 _ =>
@@ -85,14 +87,16 @@ namespace Octopus.Tentacle.Services.Scripts
             }
         }
 
-        public ScriptStatusResponseV3Alpha GetStatus(ScriptStatusRequestV3Alpha request)
+        public async Task<ScriptStatusResponseV3Alpha> GetStatusAsync(ScriptStatusRequestV3Alpha request)
         {
+            await Task.CompletedTask;
             runningScripts.TryGetValue(request.Ticket, out var runningScript);
             return GetResponse(request.Ticket, request.LastLogSequence, runningScript?.Process);
         }
 
-        public ScriptStatusResponseV3Alpha CancelScript(CancelScriptCommandV3Alpha command)
+        public async Task<ScriptStatusResponseV3Alpha> CancelScriptAsync(CancelScriptCommandV3Alpha command)
         {
+            await Task.CompletedTask;
             if (runningScripts.TryGetValue(command.Ticket, out var runningScript))
             {
                 runningScript.Cancel();
@@ -101,8 +105,9 @@ namespace Octopus.Tentacle.Services.Scripts
             return GetResponse(command.Ticket, command.LastLogSequence, runningScript?.Process);
         }
 
-        public void CompleteScript(CompleteScriptCommandV3Alpha command)
+        public async Task CompleteScriptAsync(CompleteScriptCommandV3Alpha command)
         {
+            await Task.CompletedTask;
             if (runningScripts.TryRemove(command.Ticket, out var runningScript))
             {
                 runningScript.Dispose();

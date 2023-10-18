@@ -6,6 +6,7 @@ using Octopus.Diagnostics;
 using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
+using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
 
 namespace Octopus.Tentacle.Client
 {
@@ -25,8 +26,8 @@ namespace Octopus.Tentacle.Client
         /// <param name="scriptExecutionCancellationToken">When cancelled, will attempt to stop the execution of the script on Tentacle before returning.</param>
         /// <returns></returns>
         Task<ScriptExecutionResult> ExecuteScript(
-            StartScriptCommandV2 startScriptCommand,
-            Action<ScriptStatusResponseV2> onScriptStatusResponseReceived,
+            StartScriptCommandV3Alpha startScriptCommand,
+            Action<ScriptStatusResponseV3Alpha> onScriptStatusResponseReceived,
             Func<CancellationToken, Task> onScriptCompleted,
             ILog logger,
             CancellationToken scriptExecutionCancellationToken);
