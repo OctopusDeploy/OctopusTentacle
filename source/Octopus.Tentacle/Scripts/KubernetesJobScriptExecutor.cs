@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using System.Threading.Tasks;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Contracts;
@@ -29,8 +30,10 @@ namespace Octopus.Tentacle.Scripts
 
             var runningScript = new RunningKubernetesJobScript(workspace, workspace.CreateLog(), startScriptCommand.ScriptTicket, startScriptCommand.TaskId, cancellationToken, systemLog, jobService, appInstanceSelector, kubernetesJobScriptExecutionContext);
 
-            var thread = new Thread(runningScript.Execute) { Name = "Executing Kubernetes Job for " + startScriptCommand.ScriptTicket.TaskId };
-            thread.Start();
+            Task.Run(async () =>
+            {
+                await runningScript.Execute(cancellationToken);
+            }, cancellationToken);
 
             return runningScript;
         }

@@ -22,7 +22,7 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
         private readonly ILog log;
         private readonly IKubernetesJobService jobService;
         readonly KubernetesJobScriptExecutionContext executionContext;
-        private readonly CancellationToken cancellationToken;
+        private readonly CancellationToken scriptCancellationToken;
         readonly string? instanceName;
 
         public int ExitCode { get; private set; }
@@ -33,7 +33,7 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
             IScriptLog scriptLog,
             ScriptTicket scriptTicket,
             string taskId,
-            CancellationToken cancellationToken,
+            CancellationToken scriptCancellationToken,
             ILog log,
             IKubernetesJobService jobService,
             IApplicationInstanceSelector appInstanceSelector,
@@ -45,47 +45,48 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
             this.log = log;
             this.jobService = jobService;
             this.executionContext = executionContext;
-            this.cancellationToken = cancellationToken;
+            this.scriptCancellationToken = scriptCancellationToken;
             ScriptLog = scriptLog;
             instanceName = appInstanceSelector.Current.InstanceName;
         }
 
-        public void Execute()
+        public async Task Execute(CancellationToken taskCancellationToken)
         {
             var exitCode = -1;
+
+            var linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(scriptCancellationToken, taskCancellationToken);
+            var cancellationToken = linkedCancellationTokenSource.Token;
             try
             {
-                using (var writer = ScriptLog.CreateWriter())
+                using var writer = ScriptLog.CreateWriter();
+                try
                 {
-                    try
+                    using (ScriptIsolationMutex.Acquire(workspace.IsolationLevel,
+                               workspace.ScriptMutexAcquireTimeout,
+                               workspace.ScriptMutexName ?? nameof(RunningKubernetesJobScript),
+                               message => writer.WriteOutput(ProcessOutputSource.StdOut, message),
+                               taskId,
+                               cancellationToken,
+                               log))
                     {
-                        using (ScriptIsolationMutex.Acquire(workspace.IsolationLevel,
-                                   workspace.ScriptMutexAcquireTimeout,
-                                   workspace.ScriptMutexName ?? nameof(RunningKubernetesJobScript),
-                                   message => writer.WriteOutput(ProcessOutputSource.StdOut, message),
-                                   taskId,
-                                   cancellationToken,
-                                   log))
-                        {
-                            //create the k8s job
-                            CreateJob();
+                        //create the k8s job
+                        await CreateJob(cancellationToken);
 
-                            State = ProcessState.Running;
+                        State = ProcessState.Running;
 
-                            //we now need to monitor the resulting pod status
-                            exitCode = CheckIfPodHasCompleted().GetAwaiter().GetResult();
-                        }
+                        //we now need to monitor the resulting pod status
+                        exitCode = await CheckIfPodHasCompleted(cancellationToken);
                     }
-                    catch (OperationCanceledException)
-                    {
-                        writer.WriteOutput(ProcessOutputSource.StdOut, "Script execution canceled.");
-                        exitCode = ScriptExitCodes.CanceledExitCode;
-                    }
-                    catch (TimeoutException)
-                    {
-                        writer.WriteOutput(ProcessOutputSource.StdOut, "Script execution timed out.");
-                        exitCode = ScriptExitCodes.TimeoutExitCode;
-                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    writer.WriteOutput(ProcessOutputSource.StdOut, "Script execution canceled.");
+                    exitCode = ScriptExitCodes.CanceledExitCode;
+                }
+                catch (TimeoutException)
+                {
+                    writer.WriteOutput(ProcessOutputSource.StdOut, "Script execution timed out.");
+                    exitCode = ScriptExitCodes.TimeoutExitCode;
                 }
             }
             catch (Exception)
@@ -104,7 +105,7 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
             jobService.Delete(scriptTicket);
         }
 
-        private async Task<int> CheckIfPodHasCompleted()
+        private async Task<int> CheckIfPodHasCompleted(CancellationToken cancellationToken)
         {
             while (true)
             {
@@ -113,7 +114,7 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                     return ScriptExitCodes.CanceledExitCode;
                 }
 
-                var job = jobService.TryGet(scriptTicket);
+                var job = await jobService.TryGet(scriptTicket, cancellationToken);
                 if (job is null)
                     continue;
 
@@ -131,7 +132,7 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
             }
         }
 
-        private void CreateJob()
+        private async Task CreateJob(CancellationToken cancellationToken)
         {
             var scriptName = Path.GetFileName(workspace.BootstrapScriptFilePath);
 
@@ -213,7 +214,7 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                 }
             };
 
-            jobService.CreateJob(job);
+            await jobService.CreateJob(job, cancellationToken);
         }
     }
 }

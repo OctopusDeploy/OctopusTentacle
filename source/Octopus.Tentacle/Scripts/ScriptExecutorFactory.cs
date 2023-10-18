@@ -18,8 +18,8 @@ namespace Octopus.Tentacle.Scripts
         {
             return startScriptCommand.ExecutionContext switch
             {
-                LocalShellScriptExecutionContext => kubernetesJobScriptExecutor.Value,
-                KubernetesJobScriptExecutionContext => shellScriptExecutor.Value,
+                LocalShellScriptExecutionContext => shellScriptExecutor.Value,
+                KubernetesJobScriptExecutionContext => kubernetesJobScriptExecutor.Value,
                 _ => throw new InvalidOperationException($"{startScriptCommand.GetType().Name} is not a supported IScriptExecutionContext.")
             };
         }

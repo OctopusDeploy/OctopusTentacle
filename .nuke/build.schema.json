@@ -100,6 +100,7 @@
               "BuildWindows",
               "CalculateVersion",
               "Clean",
+              "CopyClientAndContractsToLocalPackages",
               "CopyToLocalPackages",
               "Default",
               "Pack",
@@ -143,6 +144,7 @@
               "BuildWindows",
               "CalculateVersion",
               "Clean",
+              "CopyClientAndContractsToLocalPackages",
               "CopyToLocalPackages",
               "Default",
               "Pack",
@@ -169,6 +171,9 @@
               "TestWindowsInstallers"
             ]
           }
+        },
+        "TestFilter": {
+          "type": "string"
         },
         "TestFramework": {
           "type": "string"

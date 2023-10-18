@@ -43,8 +43,10 @@ namespace Octopus.Tentacle.Communications
                 throw new InvalidServiceTypeException(serviceType);
             }
             
-            foreach (var face in interfaces)
+            //register all the synchronous interfaces
+            foreach (var face in interfaces.Where(i => !i.Name.StartsWith("IAsync")))
             {
+                
                 serviceTypes[face.Name] = face;
                 registrationBuilder.As(face);
             }

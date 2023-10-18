@@ -26,6 +26,7 @@ namespace Octopus.Tentacle.Communications
                     .WithServiceFactory(services)
                     .WithServerCertificate(configuration.TentacleCertificate)
                     .WithMessageSerializer(serializerBuilder => serializerBuilder.WithLegacyContractSupport())
+                    .WithAsyncHalibutFeatureEnabled()
                     .Build();
                 halibutRuntime.SetFriendlyHtmlPageContent(FriendlyHtmlPageContent);
                 halibutRuntime.SetFriendlyHtmlPageHeaders(FriendlyHtmlPageHeaders);

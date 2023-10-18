@@ -100,7 +100,7 @@ namespace Octopus.Tentacle.Client.Scripts
                     if (rpcRetrySettings.RetriesEnabled)
                     {
                         scriptStatusResponse = await rpcCallExecutor.ExecuteWithRetries(
-                            RpcCall.Create<IScriptServiceV3Alpha>(nameof(IScriptServiceV3Alpha.StartScriptAsync)),
+                            RpcCall.Create<IScriptServiceV3Alpha>(nameof(IScriptServiceV3Alpha.StartScript)),
                             StartScriptAction,
                             logger,
                             // If we are cancelling script execution we can abandon a call to start script
@@ -114,7 +114,7 @@ namespace Octopus.Tentacle.Client.Scripts
                     else
                     {
                         scriptStatusResponse = await rpcCallExecutor.ExecuteWithNoRetries(
-                            RpcCall.Create<IScriptServiceV3Alpha>(nameof(IScriptServiceV3Alpha.StartScriptAsync)),
+                            RpcCall.Create<IScriptServiceV3Alpha>(nameof(IScriptServiceV3Alpha.StartScript)),
                             StartScriptAction,
                             logger,
                             abandonActionOnCancellation: true,
@@ -599,7 +599,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 {
                     var actionTask =
                         rpcCallExecutor.ExecuteWithNoRetries(
-                            RpcCall.Create<IScriptServiceV3Alpha>(nameof(IScriptServiceV3Alpha.CompleteScriptAsync)),
+                            RpcCall.Create<IScriptServiceV3Alpha>(nameof(IScriptServiceV3Alpha.CompleteScript)),
                             async ct =>
                             {
                                 var request = new CompleteScriptCommandV3Alpha(lastStatusResponse.Ticket);

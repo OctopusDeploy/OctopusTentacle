@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Net;
+using System.Threading;
+using System.Threading.Tasks;
 using k8s;
 using k8s.Autorest;
 using k8s.Models;
@@ -10,9 +12,9 @@ namespace Octopus.Tentacle.Kubernetes
 {
     public interface IKubernetesJobService
     {
-        V1Job? TryGet(ScriptTicket scriptTicket);
+        Task<V1Job?> TryGet(ScriptTicket scriptTicket, CancellationToken cancellationToken);
         string BuildJobName(ScriptTicket scriptTicket);
-        void CreateJob(V1Job job);
+        Task CreateJob(V1Job job, CancellationToken cancellationToken);
         void Delete(ScriptTicket scriptTicket);
     }
 
@@ -23,13 +25,13 @@ namespace Octopus.Tentacle.Kubernetes
         {
         }
 
-        public V1Job? TryGet(ScriptTicket scriptTicket)
+        public async Task<V1Job?> TryGet(ScriptTicket scriptTicket, CancellationToken cancellationToken)
         {
             var jobName = BuildJobName(scriptTicket);
 
             try
             {
-                return Client.ReadNamespacedJobStatus(jobName, KubernetesNamespace.Value);
+                return await Client.ReadNamespacedJobStatusAsync(jobName, KubernetesNamespace.Value, cancellationToken: cancellationToken);
             }
             catch (HttpOperationException opException)
             {
@@ -43,9 +45,9 @@ namespace Octopus.Tentacle.Kubernetes
 
         public string BuildJobName(ScriptTicket scriptTicket) => $"octopus-{scriptTicket.TaskId}".ToLowerInvariant();
 
-        public void CreateJob(V1Job job)
+        public async Task CreateJob(V1Job job, CancellationToken cancellationToken)
         {
-            Client.CreateNamespacedJob(job, KubernetesNamespace.Value);
+            await Client.CreateNamespacedJobAsync(job, KubernetesNamespace.Value, cancellationToken: cancellationToken);
         }
 
         public void Delete(ScriptTicket scriptTicket)

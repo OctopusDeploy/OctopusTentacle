@@ -11,7 +11,7 @@ using Octopus.Tentacle.Util;
 namespace Octopus.Tentacle.Services.Scripts
 {
     [Service]
-    public class ScriptServiceV3Alpha : IScriptServiceV3Alpha
+    public class ScriptServiceV3Alpha : IScriptServiceV3Alpha, IAsyncScriptServiceV3Alpha
     {
         readonly IScriptWorkspaceFactory workspaceFactory;
         readonly IScriptStateStoreFactory scriptStateStoreFactory;
@@ -27,7 +27,7 @@ namespace Octopus.Tentacle.Services.Scripts
             this.scriptExecutorFactory = scriptExecutorFactory;
         }
 
-        public async Task<ScriptStatusResponseV3Alpha> StartScriptAsync(StartScriptCommandV3Alpha command)
+        public async Task<ScriptStatusResponseV3Alpha> StartScriptAsync(StartScriptCommandV3Alpha command, CancellationToken cancellationToken)
         {
             await Task.CompletedTask;
             var runningScript = runningScripts.GetOrAdd(
@@ -87,14 +87,14 @@ namespace Octopus.Tentacle.Services.Scripts
             }
         }
 
-        public async Task<ScriptStatusResponseV3Alpha> GetStatusAsync(ScriptStatusRequestV3Alpha request)
+        public async Task<ScriptStatusResponseV3Alpha> GetStatusAsync(ScriptStatusRequestV3Alpha request, CancellationToken cancellationToken)
         {
             await Task.CompletedTask;
             runningScripts.TryGetValue(request.Ticket, out var runningScript);
             return GetResponse(request.Ticket, request.LastLogSequence, runningScript?.Process);
         }
 
-        public async Task<ScriptStatusResponseV3Alpha> CancelScriptAsync(CancelScriptCommandV3Alpha command)
+        public async Task<ScriptStatusResponseV3Alpha> CancelScriptAsync(CancelScriptCommandV3Alpha command, CancellationToken cancellationToken)
         {
             await Task.CompletedTask;
             if (runningScripts.TryGetValue(command.Ticket, out var runningScript))
@@ -105,7 +105,7 @@ namespace Octopus.Tentacle.Services.Scripts
             return GetResponse(command.Ticket, command.LastLogSequence, runningScript?.Process);
         }
 
-        public async Task CompleteScriptAsync(CompleteScriptCommandV3Alpha command)
+        public async Task CompleteScriptAsync(CompleteScriptCommandV3Alpha command, CancellationToken cancellationToken)
         {
             await Task.CompletedTask;
             if (runningScripts.TryRemove(command.Ticket, out var runningScript))
@@ -186,5 +186,29 @@ namespace Octopus.Tentacle.Services.Scripts
                 cancellationTokenSource.Dispose();
             }
         }
+
+        #region IScriptServiceV3Alpha Explicit Implementation
+
+        ScriptStatusResponseV3Alpha IScriptServiceV3Alpha.StartScript(StartScriptCommandV3Alpha command)
+        {
+            throw new NotSupportedException($"{nameof(ScriptServiceV3Alpha)} only supports asynchronous invocation");
+        }
+
+        ScriptStatusResponseV3Alpha IScriptServiceV3Alpha.GetStatus(ScriptStatusRequestV3Alpha request)
+        {
+            throw new NotSupportedException($"{nameof(ScriptServiceV3Alpha)} only supports asynchronous invocation");
+        }
+
+        ScriptStatusResponseV3Alpha IScriptServiceV3Alpha.CancelScript(CancelScriptCommandV3Alpha command)
+        {
+            throw new NotSupportedException($"{nameof(ScriptServiceV3Alpha)} only supports asynchronous invocation");
+        }
+
+        void IScriptServiceV3Alpha.CompleteScript(CompleteScriptCommandV3Alpha command)
+        {
+            throw new NotSupportedException($"{nameof(ScriptServiceV3Alpha)} only supports asynchronous invocation");
+        }
+
+        #endregion
     }
 }
