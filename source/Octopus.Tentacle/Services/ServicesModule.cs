@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Linq;
+using System.Reflection;
 using Autofac;
 using Octopus.Tentacle.Communications;
 using Octopus.Tentacle.Packages;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Services.Scripts.ScriptServiceV3Alpha;
+using Module = Autofac.Module;
 
 namespace Octopus.Tentacle.Services
 {
@@ -32,8 +34,13 @@ namespace Octopus.Tentacle.Services
                 .As<IScriptServiceV3AlphaExecutor>();
 
             // Register our Halibut services
-            var serviceTypes = ThisAssembly.GetTypes().Where(t => t.GetCustomAttributes(typeof(ServiceAttribute), true).Length > 0).ToArray();
-            var assemblyServices = new KnownServiceSource(serviceTypes);
+            var knownServices = ThisAssembly.GetTypes()
+                .Select(t => (ServiceImplementationType: t, ServiceAttribute: t.GetCustomAttribute<ServiceAttribute>()))
+                .Where(x => x.ServiceAttribute != null)
+                .Select(x => new KnownService(x.ServiceImplementationType, x.ServiceAttribute!.ServiceType))
+                .ToArray();
+
+            var assemblyServices = new KnownServiceSource(knownServices);
             builder.RegisterInstance(assemblyServices).AsImplementedInterfaces();
         }
     }

@@ -6,8 +6,8 @@ using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
 
 namespace Octopus.Tentacle.Services.Scripts.ScriptServiceV3Alpha
 {
-    [Service]
-    public class ScriptServiceV3Alpha : IScriptServiceV3Alpha, IAsyncScriptServiceV3Alpha
+    [Service(typeof(IScriptServiceV3Alpha))]
+    public class ScriptServiceV3Alpha : IAsyncScriptServiceV3Alpha
     {
         readonly IScriptServiceV3AlphaExecutor serviceExecutor;
 
@@ -35,29 +35,5 @@ namespace Octopus.Tentacle.Services.Scripts.ScriptServiceV3Alpha
 
         public bool IsRunningScript(ScriptTicket scriptTicket)
             => serviceExecutor.IsRunningScript(scriptTicket);
-
-        #region IScriptServiceV3Alpha Explicit Implementation
-
-        ScriptStatusResponseV3Alpha IScriptServiceV3Alpha.StartScript(StartScriptCommandV3Alpha command)
-        {
-            throw new NotSupportedException($"{nameof(ScriptServiceV3Alpha)} only supports asynchronous invocation");
-        }
-
-        ScriptStatusResponseV3Alpha IScriptServiceV3Alpha.GetStatus(ScriptStatusRequestV3Alpha request)
-        {
-            throw new NotSupportedException($"{nameof(ScriptServiceV3Alpha)} only supports asynchronous invocation");
-        }
-
-        ScriptStatusResponseV3Alpha IScriptServiceV3Alpha.CancelScript(CancelScriptCommandV3Alpha command)
-        {
-            throw new NotSupportedException($"{nameof(ScriptServiceV3Alpha)} only supports asynchronous invocation");
-        }
-
-        void IScriptServiceV3Alpha.CompleteScript(CompleteScriptCommandV3Alpha command)
-        {
-            throw new NotSupportedException($"{nameof(ScriptServiceV3Alpha)} only supports asynchronous invocation");
-        }
-
-        #endregion
     }
 }

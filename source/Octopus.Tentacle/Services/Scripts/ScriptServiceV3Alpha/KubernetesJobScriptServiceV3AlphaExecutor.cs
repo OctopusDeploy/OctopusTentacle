@@ -43,7 +43,6 @@ namespace Octopus.Tentacle.Services.Scripts.ScriptServiceV3Alpha
 
         public async Task<ScriptStatusResponseV3Alpha> StartScriptAsync(StartScriptCommandV3Alpha command, CancellationToken cancellationToken)
         {
-            await Task.CompletedTask;
             var runningScript = runningScripts.GetOrAdd(
                 command.ScriptTicket,
                 _ =>

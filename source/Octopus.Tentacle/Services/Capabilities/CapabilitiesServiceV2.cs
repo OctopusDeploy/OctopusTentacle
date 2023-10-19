@@ -6,12 +6,12 @@ using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
 
 namespace Octopus.Tentacle.Services.Capabilities
 {
-    [Service]
+    [Service(typeof(ICapabilitiesServiceV2))]
     public class CapabilitiesServiceV2 : ICapabilitiesServiceV2
     {
         public CapabilitiesResponseV2 GetCapabilities()
         {
-            return new CapabilitiesResponseV2(new List<string>() {nameof(IScriptService), nameof(IFileTransferService), nameof(IScriptServiceV2), nameof(IScriptServiceV3Alpha)});
+            return new CapabilitiesResponseV2(new List<string> {nameof(IScriptService), nameof(IFileTransferService), nameof(IScriptServiceV2), nameof(IScriptServiceV3Alpha)});
         }
     }
 }

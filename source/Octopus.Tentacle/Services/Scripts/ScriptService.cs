@@ -7,7 +7,7 @@ using Octopus.Tentacle.Scripts;
 
 namespace Octopus.Tentacle.Services.Scripts
 {
-    [Service]
+    [Service(typeof(IScriptService))]
     public class ScriptService : IScriptService
     {
         readonly IShell shell;
