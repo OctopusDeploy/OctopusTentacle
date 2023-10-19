@@ -6,6 +6,7 @@ using Octopus.Diagnostics;
 using Octopus.Tentacle.Communications;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Services.Scripts;
+using Octopus.Tentacle.Services.Scripts.ScriptServiceV3Alpha;
 using Octopus.Time;
 
 namespace Octopus.Tentacle.Maintenance

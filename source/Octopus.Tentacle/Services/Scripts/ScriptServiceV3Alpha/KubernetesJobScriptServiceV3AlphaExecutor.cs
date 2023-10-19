@@ -3,29 +3,43 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Octopus.Diagnostics;
+using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
+using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Scripts;
+using Octopus.Tentacle.Scripts.Kubernetes;
 using Octopus.Tentacle.Util;
 
-namespace Octopus.Tentacle.Services.Scripts
+namespace Octopus.Tentacle.Services.Scripts.ScriptServiceV3Alpha
 {
-    [Service]
-    public class ScriptServiceV3Alpha : IScriptServiceV3Alpha, IAsyncScriptServiceV3Alpha
+    public class KubernetesJobScriptServiceV3AlphaExecutor : IScriptServiceV3AlphaExecutor
     {
+        readonly IKubernetesJobService jobService;
         readonly IScriptWorkspaceFactory workspaceFactory;
         readonly IScriptStateStoreFactory scriptStateStoreFactory;
-        readonly IScriptExecutorFactory scriptExecutorFactory;
+        readonly IApplicationInstanceSelector appInstanceSelector;
+        readonly ISystemLog log;
         readonly ConcurrentDictionary<ScriptTicket, RunningScriptWrapper> runningScripts = new();
 
-        public ScriptServiceV3Alpha(IScriptWorkspaceFactory workspaceFactory,
+        public KubernetesJobScriptServiceV3AlphaExecutor(
+            IKubernetesJobService jobService,
+            IScriptWorkspaceFactory workspaceFactory,
             IScriptStateStoreFactory scriptStateStoreFactory,
-            IScriptExecutorFactory scriptExecutorFactory)
+            IApplicationInstanceSelector appInstanceSelector,
+            ISystemLog log)
         {
+            this.jobService = jobService;
             this.workspaceFactory = workspaceFactory;
             this.scriptStateStoreFactory = scriptStateStoreFactory;
-            this.scriptExecutorFactory = scriptExecutorFactory;
+            this.appInstanceSelector = appInstanceSelector;
+            this.log = log;
         }
+
+        public bool ValidateExecutionContext(IScriptExecutionContext executionContext)
+            => executionContext is KubernetesJobScriptExecutionContext;
+
 
         public async Task<ScriptStatusResponseV3Alpha> StartScriptAsync(StartScriptCommandV3Alpha command, CancellationToken cancellationToken)
         {
@@ -39,7 +53,7 @@ namespace Octopus.Tentacle.Services.Scripts
                     return new RunningScriptWrapper(scriptState);
                 });
 
-            using (runningScript.StartScriptMutex.Lock())
+            using (await runningScript.StartScriptMutex.LockAsync(cancellationToken))
             {
                 IScriptWorkspace workspace;
 
@@ -69,8 +83,7 @@ namespace Octopus.Tentacle.Services.Scripts
                     runningScript.ScriptStateStore.Create();
                 }
 
-                var executor = scriptExecutorFactory.GetExecutor(command);
-                var process = executor.ExecuteOnBackgroundThread(command, workspace, runningScript.ScriptStateStore, runningScript.CancellationToken);
+                var process = ExecuteKubernetesJob(command, workspace, runningScript.CancellationToken);
 
                 runningScript.Process = process;
 
@@ -85,6 +98,21 @@ namespace Octopus.Tentacle.Services.Scripts
 
                 return GetResponse(command.ScriptTicket, 0, runningScript.Process);
             }
+        }
+
+        IRunningScript ExecuteKubernetesJob(StartScriptCommandV3Alpha startScriptCommand, IScriptWorkspace workspace, CancellationToken cancellationToken)
+        {
+            if (startScriptCommand.ExecutionContext is not KubernetesJobScriptExecutionContext kubernetesJobScriptExecutionContext)
+                throw new InvalidOperationException("The ExecutionContext must be of type KubernetesJobScriptExecutionContext");
+
+            var runningScript = new RunningKubernetesJobScript(workspace, workspace.CreateLog(), startScriptCommand.ScriptTicket, startScriptCommand.TaskId, cancellationToken, log, jobService, appInstanceSelector, kubernetesJobScriptExecutionContext);
+
+            Task.Run(async () =>
+            {
+                await runningScript.Execute(cancellationToken);
+            }, cancellationToken);
+
+            return runningScript;
         }
 
         public async Task<ScriptStatusResponseV3Alpha> GetStatusAsync(ScriptStatusRequestV3Alpha request, CancellationToken cancellationToken)
@@ -114,9 +142,8 @@ namespace Octopus.Tentacle.Services.Scripts
             }
 
             var workspace = workspaceFactory.GetWorkspace(command.Ticket);
-            workspace.Delete();
+            await workspace.Delete(cancellationToken);
         }
-
         ScriptStatusResponseV3Alpha GetResponse(ScriptTicket ticket, long lastLogSequence, IRunningScript? runningScript)
         {
             var workspace = workspaceFactory.GetWorkspace(ticket);
@@ -146,9 +173,10 @@ namespace Octopus.Tentacle.Services.Scripts
             return new ScriptStatusResponseV3Alpha(ticket, ProcessState.Complete, ScriptExitCodes.UnknownScriptExitCode, logs, next);
         }
 
-        public bool IsRunningScript(ScriptTicket ticket)
+
+        public bool IsRunningScript(ScriptTicket scriptTicket)
         {
-            if (runningScripts.TryGetValue(ticket, out var script))
+            if (runningScripts.TryGetValue(scriptTicket, out var script))
             {
                 if (script.Process?.State != ProcessState.Complete)
                 {
@@ -186,29 +214,5 @@ namespace Octopus.Tentacle.Services.Scripts
                 cancellationTokenSource.Dispose();
             }
         }
-
-        #region IScriptServiceV3Alpha Explicit Implementation
-
-        ScriptStatusResponseV3Alpha IScriptServiceV3Alpha.StartScript(StartScriptCommandV3Alpha command)
-        {
-            throw new NotSupportedException($"{nameof(ScriptServiceV3Alpha)} only supports asynchronous invocation");
-        }
-
-        ScriptStatusResponseV3Alpha IScriptServiceV3Alpha.GetStatus(ScriptStatusRequestV3Alpha request)
-        {
-            throw new NotSupportedException($"{nameof(ScriptServiceV3Alpha)} only supports asynchronous invocation");
-        }
-
-        ScriptStatusResponseV3Alpha IScriptServiceV3Alpha.CancelScript(CancelScriptCommandV3Alpha command)
-        {
-            throw new NotSupportedException($"{nameof(ScriptServiceV3Alpha)} only supports asynchronous invocation");
-        }
-
-        void IScriptServiceV3Alpha.CompleteScript(CompleteScriptCommandV3Alpha command)
-        {
-            throw new NotSupportedException($"{nameof(ScriptServiceV3Alpha)} only supports asynchronous invocation");
-        }
-
-        #endregion
     }
 }
