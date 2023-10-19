@@ -5,11 +5,11 @@ namespace Octopus.Tentacle.Services
     [AttributeUsage(AttributeTargets.Class)]
     public class ServiceAttribute : Attribute
     {
-        public Type ServiceType { get; }
+        public Type ServiceInterfaceType { get; }
 
-        public ServiceAttribute(Type serviceType)
+        public ServiceAttribute(Type serviceInterfaceType)
         {
-            ServiceType = serviceType;
+            ServiceInterfaceType = serviceInterfaceType;
         }
     }
 }

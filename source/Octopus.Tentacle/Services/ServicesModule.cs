@@ -37,7 +37,7 @@ namespace Octopus.Tentacle.Services
             var knownServices = ThisAssembly.GetTypes()
                 .Select(t => (ServiceImplementationType: t, ServiceAttribute: t.GetCustomAttribute<ServiceAttribute>()))
                 .Where(x => x.ServiceAttribute != null)
-                .Select(x => new KnownService(x.ServiceImplementationType, x.ServiceAttribute!.ServiceType))
+                .Select(x => new KnownService(x.ServiceImplementationType, x.ServiceAttribute!.ServiceInterfaceType))
                 .ToArray();
 
             var assemblyServices = new KnownServiceSource(knownServices);
