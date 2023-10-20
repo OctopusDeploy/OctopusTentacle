@@ -10,6 +10,7 @@ using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
 using Octopus.Tentacle.Kubernetes;
+using Octopus.Tentacle.Util;
 using Octopus.Tentacle.Variables;
 
 namespace Octopus.Tentacle.Scripts.Kubernetes
@@ -70,7 +71,7 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                                log))
                     {
                         //create the k8s job
-                        await CreateJob(cancellationToken);
+                        await CreateJob(writer, cancellationToken);
 
                         State = ProcessState.Running;
 
@@ -132,7 +133,7 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
             }
         }
 
-        private async Task CreateJob(CancellationToken cancellationToken)
+        private async Task CreateJob(IScriptLogWriter writer, CancellationToken cancellationToken)
         {
             var scriptName = Path.GetFileName(workspace.BootstrapScriptFilePath);
 
@@ -210,9 +211,11 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                         }
                     },
                     BackoffLimit = 0, //we never want to rerun if it fails
-                    TtlSecondsAfterFinished = 5
+                    TtlSecondsAfterFinished = 1800 //30min
                 }
             };
+
+            writer.WriteVerbose($"Executing script in Kubernetes Job '{job.Name()}'");
 
             await jobService.CreateJob(job, cancellationToken);
         }

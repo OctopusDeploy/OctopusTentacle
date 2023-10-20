@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Octopus.Tentacle.Util;
 
@@ -77,6 +78,27 @@ namespace Octopus.Tentacle.Scripts
 
             File.Replace(tempFilePath, StateFilePath, backupPath, true);
         }
+
+        public async Task SaveAsync(ScriptState state)
+        {
+            using var _ = await scriptStateLock.LockAsync();
+
+            if (!ExistsNoLock())
+            {
+                throw new InvalidOperationException($"ScriptState does not exists at {StateFilePath}");
+            }
+
+            var serialized = SerializeState(state);
+            var tempFilePath = workspace.ResolvePath(Guid.NewGuid().ToString());
+            var backupPath = workspace.ResolvePath(Guid.NewGuid().ToString());
+            using (var writer = GetStreamWriter(tempFilePath, FileMode.Create))
+            {
+                await writer.WriteAsync(serialized);
+            }
+
+            File.Replace(tempFilePath, StateFilePath, backupPath, true);
+        }
+
 
         public bool Exists()
         {

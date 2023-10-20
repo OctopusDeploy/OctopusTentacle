@@ -7,7 +7,6 @@ namespace Octopus.Tentacle.Kubernetes
         protected override void Load(ContainerBuilder builder)
         {
             builder.RegisterType<KubernetesJobService>().As<IKubernetesJobService>();
-            builder.RegisterType<KubernetesPodService>().As<IKubernetesPodService>();
 
 #if DEBUG
             builder.RegisterType<LocalMachineKubernetesClientConfigProvider>().As<IKubernetesClientConfigProvider>();

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace Octopus.Tentacle.Scripts
 {
@@ -8,5 +9,6 @@ namespace Octopus.Tentacle.Scripts
         ScriptState Create();
         void Save(ScriptState state);
         ScriptState Load();
+        Task SaveAsync(ScriptState state);
     }
 }

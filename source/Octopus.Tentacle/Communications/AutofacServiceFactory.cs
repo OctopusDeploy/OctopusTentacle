@@ -32,7 +32,7 @@ namespace Octopus.Tentacle.Communications
 
         void BuildService(ContainerBuilder builder, KnownService knownService)
         {
-            var registrationBuilder = builder
+            builder
                 .RegisterType(knownService.ServiceImplementationType)
                 .AsSelf()
                 .SingleInstance();
