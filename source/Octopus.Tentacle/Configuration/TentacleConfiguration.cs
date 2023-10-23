@@ -6,6 +6,7 @@ using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using Newtonsoft.Json;
 using Octopus.Client.Model;
+using Octopus.Client.Model.Endpoints;
 using Octopus.Configuration;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Certificates;
@@ -248,23 +249,25 @@ namespace Octopus.Tentacle.Configuration
                 var match = string.Equals(configuration.Thumbprint, oldThumbprint, StringComparison.OrdinalIgnoreCase);
 
                 if (match)
-                    log.Info($"Updating {CommTypeToString(configuration.CommunicationStyle)} {configuration.Address} {configuration.Thumbprint} - changing to trust {newThumbprint}");
+                    log.Info($"Updating {CommTypeToString(configuration.CommunicationStyle, configuration.AgentCommunicationBehaviour)} {configuration.Address} {configuration.Thumbprint} - changing to trust {newThumbprint}");
                 else
-                    log.Info($"Ignoring {CommTypeToString(configuration.CommunicationStyle)} {configuration.Address} {configuration.Thumbprint} - does not match old thumbprint");
+                    log.Info($"Ignoring {CommTypeToString(configuration.CommunicationStyle, configuration.AgentCommunicationBehaviour)} {configuration.Address} {configuration.Thumbprint} - does not match old thumbprint");
 
                 configuration.Thumbprint = match ? newThumbprint : configuration.Thumbprint;
                 return configuration;
             }));
         }
 
-        static string CommTypeToString(CommunicationStyle communicationStyle)
+        static string CommTypeToString(CommunicationStyle communicationStyle, AgentCommunicationBehaviour agentCommunicationBehaviour = AgentCommunicationBehaviour.Polling)
         {
-            if (communicationStyle == CommunicationStyle.TentacleActive)
-                return "polling tentacle";
-            if (communicationStyle == CommunicationStyle.TentaclePassive)
-                return "listening tentacle";
-
-            return string.Empty;
+            return communicationStyle switch
+            {
+                CommunicationStyle.TentacleActive => "polling tentacle",
+                CommunicationStyle.TentaclePassive => "listening tentacle",
+                CommunicationStyle.KubernetesAgent =>
+                    "kubernetes agent" + (agentCommunicationBehaviour == AgentCommunicationBehaviour.Polling ? " (polling)" : " (listening)"),
+                _ => string.Empty
+            };
         }
 
         public X509Certificate2 GenerateNewCertificate()

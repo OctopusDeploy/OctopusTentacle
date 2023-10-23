@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Octopus.Client.Model;
+using Octopus.Client.Model.Endpoints;
 using Octopus.Configuration;
 using Octopus.Manager.Tentacle.Controls;
 using Octopus.Manager.Tentacle.Infrastructure;
@@ -166,7 +167,8 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
             }
             else
             {
-                var listens = tencon.TrustedOctopusServers.Where(t => t.CommunicationStyle == CommunicationStyle.TentaclePassive).ToList();
+                var listens = tencon.TrustedOctopusServers.Where(t => t.CommunicationStyle == CommunicationStyle.TentaclePassive ||
+                    (t.CommunicationStyle == CommunicationStyle.KubernetesAgent && t.AgentCommunicationBehaviour == AgentCommunicationBehaviour.Listening)).ToList();
                 if (listens.Any())
                 {
                     describeTrust.Add($"The Tentacle listens for connections on port {tencon.ServicesPortNumber}.");
@@ -177,7 +179,8 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
                         : $"Incoming requests are accepted from Octopus Servers with thumbprints {thumbprints}.");
                 }
 
-                var polls = tencon.TrustedOctopusServers.Where(s => s.CommunicationStyle == CommunicationStyle.TentacleActive).ToList();
+                var polls = tencon.TrustedOctopusServers.Where(s => s.CommunicationStyle == CommunicationStyle.TentacleActive ||
+                    (s.CommunicationStyle == CommunicationStyle.KubernetesAgent && s.AgentCommunicationBehaviour == AgentCommunicationBehaviour.Polling)).ToList();
                 if (polls.Any())
                 {
                     pollsServers = true;

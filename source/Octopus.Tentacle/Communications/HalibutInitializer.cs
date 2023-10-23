@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using Halibut;
 using Octopus.Client.Model;
+using Octopus.Client.Model.Endpoints;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration;
 
@@ -67,9 +68,9 @@ namespace Octopus.Tentacle.Communications
         void TrustOctopusServers()
         {
             var trust = GetTrustedOctopusThumbprints();
-            foreach (var thumbprint in trust)
+            foreach (var (thumbprint, comms, agentCommunicationBehaviour) in trust)
             {
-                log.Info("Agent will trust Octopus Servers with the thumbprint: " + thumbprint);
+                log.Info("Agent will trust Octopus Servers with the thumbprint: " + thumbprint + " and comms: " + comms + " and behaviour: " + agentCommunicationBehaviour);
                 halibut.Trust(thumbprint);
             }
             if (trust.Count == 0)
@@ -100,14 +101,16 @@ namespace Octopus.Tentacle.Communications
             }
         }
 
-        List<string> GetTrustedOctopusThumbprints()
+        List<(string, CommunicationStyle, AgentCommunicationBehaviour)> GetTrustedOctopusThumbprints()
         {
-            return configuration.TrustedOctopusServers.Select(t => t.Thumbprint).ToList();
+            return configuration.TrustedOctopusServers.Select(t => (t.Thumbprint, t.CommunicationStyle, t.AgentCommunicationBehaviour)).ToList();
         }
 
         IEnumerable<OctopusServerConfiguration> GetOctopusServersToPoll()
         {
-            return configuration.TrustedOctopusServers.Where(octopusServerConfiguration => octopusServerConfiguration.CommunicationStyle == CommunicationStyle.TentacleActive);
+            return configuration.TrustedOctopusServers.Where(octopusServerConfiguration =>
+                octopusServerConfiguration.CommunicationStyle == CommunicationStyle.TentacleActive ||
+                octopusServerConfiguration is { CommunicationStyle: CommunicationStyle.KubernetesAgent, AgentCommunicationBehaviour: AgentCommunicationBehaviour.Polling });
         }
 
         IPEndPoint GetEndPointToListenOn()

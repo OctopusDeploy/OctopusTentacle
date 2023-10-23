@@ -76,7 +76,17 @@ function validateVariables() {
     echo " - server endpoint '$ServerUrl'"
     echo " - api key '##########'"
   if [[ ! -z "$ServerCommsAddress" || ! -z "$ServerPort" ]]; then
-    echo " - communication mode 'Polling' (Active)"
+    if [[ ! -z $AsKubernetesAgent ]]; then
+      echo " - communication mode 'KubernetesAgent' (Polling)"
+      if [[ ! -z $DefaultJobExecutionContainer ]]; then
+        echo " - default execution container $DefaultJobExecutionContainer"
+      fi
+      if [[ ! -z $DefaultJobExecutionContainerFeed ]]; then
+        echo " - default execution container feed $DefaultJobExecutionContainerFeed"
+      fi
+    else
+      echo " - communication mode 'Polling' (Active)"
+    fi
     if [[ ! -z "$ServerCommsAddress" ]]; then
       echo " - server comms address $ServerCommsAddress"
     fi
@@ -84,7 +94,17 @@ function validateVariables() {
       echo " - server port $ServerPort"
     fi
   else
-    echo " - communication mode 'Listening' (Passive)"
+    if [[ ! -z $AsKubernetesAgent ]]; then
+      echo " - communication mode 'KubernetesAgent' (Listening)"
+      if [[ ! -z $DefaultJobExecutionContainer ]]; then
+        echo " - default execution container $DefaultJobExecutionContainer"
+      fi
+      if [[ ! -z $DefaultJobExecutionContainerFeed ]]; then
+        echo " - default execution container feed $DefaultJobExecutionContainerFeed"
+      fi
+    else
+      echo " - communication mode 'Listening' (Passive)"
+    fi
     echo " - registered port $ListeningPort"
   fi
   if [[ ! -z "$TargetWorkerPool" ]]; then
@@ -182,8 +202,22 @@ function registerTentacle() {
 		'--policy' "$MachinePolicy"
 		'--force')
 
+	if [[ ! -z "$DefaultJobExecutionContainer" ]]; then
+		ARGS+=('--default-job-container' "$DefaultJobExecutionContainer")
+	fi
+
+	if [[ ! -z "$DefaultJobExecutionContainerFeed" ]]; then
+		ARGS+=('--default-job-container-feed' "$DefaultJobExecutionContainerFeed")
+	fi
+
 	if [[ ! -z "$ServerCommsAddress" || ! -z "$ServerPort" ]]; then
-		ARGS+=('--comms-style' 'TentacleActive')
+		if [[ ! -z "$AsKubernetesAgent" ]]; then
+			ARGS+=(
+				'--comms-style' 'KubernetesAgent'
+				'--agent-comms' 'Polling')
+		else
+			ARGS+=('--comms-style' 'TentacleActive')
+		fi
 
 		if [[ ! -z "$ServerCommsAddress" ]]; then
 			ARGS+=('--server-comms-address' $ServerCommsAddress)
@@ -193,9 +227,15 @@ function registerTentacle() {
 			ARGS+=('--server-comms-port' $ServerPort)
 		fi
 	else
-		ARGS+=(
-			'--comms-style' 'TentaclePassive'
-			'--publicHostName' $(getPublicHostName))
+		if [[ ! -z "$AsKubernetesAgent" ]]; then
+			ARGS+=(
+				'--comms-style' 'KubernetesAgent'
+				'--agent-comms' 'Listening')
+		else
+			ARGS+=('--comms-style' 'TentaclePassive')
+		fi
+
+		ARGS+=('--publicHostName' $(getPublicHostName))
 
 		if [[ ! -z "$ListeningPort" && "$ListeningPort" != "$internalListeningPort" ]]; then
 			ARGS+=('--tentacle-comms-port' $ListeningPort)
