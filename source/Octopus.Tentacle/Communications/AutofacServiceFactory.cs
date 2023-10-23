@@ -17,36 +17,35 @@ namespace Octopus.Tentacle.Communications
         // Must never be modified as it is required for backwards compatability in BackwardsCompatibleCapabilitiesV2Decorator
         const string TentacleServiceShuttingDownMessage = "The Tentacle service is shutting down and cannot process this request.";
         readonly ILifetimeScope scope;
-        readonly Dictionary<string, Type> serviceTypes = new();
+        readonly Dictionary<string, KnownService> knownServices = new();
 
         public AutofacServiceFactory(ILifetimeScope scope, IEnumerable<IAutofacServiceSource> sources)
         {
             this.scope = scope.BeginLifetimeScope(b =>
             {
-                foreach (var service in sources.SelectMany(x => x.ServiceTypes.EmptyIfNull()))
+                foreach (var knownService in sources.SelectMany(x => x.KnownServices.EmptyIfNull()))
                 {
-                    BuildService(b, service);
+                    BuildService(b, knownService);
                 }
             });
         }
 
-        void BuildService(ContainerBuilder builder, Type serviceType)
+        void BuildService(ContainerBuilder builder, KnownService knownService)
         {
-            var registrationBuilder = builder
-                .RegisterType(serviceType)
+            //register the service implementation AsSelf(), so we can resolve it in the future
+            builder
+                .RegisterType(knownService.ServiceImplementationType)
                 .AsSelf()
                 .SingleInstance();
 
-            var interfaces = serviceType.GetInterfaces();
-            if (serviceType.IsInterface || interfaces.IsNullOrEmpty())
+            //track the contract type to their known service implementations
+            //the contract type is the one that is sent across the wire (typically an IService sync contract)
+            knownServices[knownService.ServiceContractType.Name] = knownService;
+
+            //the implementation type doesn't need to implement the service contract, but it's _implied_ that it should have _some_ interfaces
+            if (knownService.ServiceImplementationType.IsInterface || knownService.ServiceImplementationType.GetInterfaces().IsNullOrEmpty())
             {
-                throw new InvalidServiceTypeException(serviceType);
-            }
-            
-            foreach (var face in interfaces)
-            {
-                serviceTypes[face.Name] = face;
-                registrationBuilder.As(face);
+                throw new InvalidServiceTypeException(knownService.ServiceImplementationType);
             }
         }
 
@@ -54,11 +53,12 @@ namespace Octopus.Tentacle.Communications
         {
             try
             {
-                if (serviceTypes.TryGetValue(serviceName, out var serviceType))
+                if (knownServices.TryGetValue(serviceName, out var knownService))
                 {
-                    return new Lease(scope.Resolve(serviceType));
+                    //because the service implementations are registered `AsSelf()`, we can resolve them directly
+                    return new Lease(scope.Resolve(knownService.ServiceImplementationType));
                 }
-                
+
                 throw new UnknownServiceNameException(serviceName);
             }
             catch (ObjectDisposedException)
@@ -67,7 +67,7 @@ namespace Octopus.Tentacle.Communications
             }
         }
 
-        public IReadOnlyList<Type> RegisteredServiceTypes => serviceTypes.Values.ToList();
+        public IReadOnlyList<Type> RegisteredServiceTypes => knownServices.Values.Select(ks => ks.ServiceContractType).ToList();
 
         class Lease : IServiceLease
         {
