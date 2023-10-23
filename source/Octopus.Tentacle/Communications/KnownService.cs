@@ -1,4 +1,5 @@
 ﻿using System;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Communications
 {
@@ -16,6 +17,12 @@ namespace Octopus.Tentacle.Communications
 
         public KnownService(Type serviceImplementationType, Type serviceContractType)
         {
+            //the implementation type doesn't need to implement the service contract, but it's _implied_ that it should have _some_ interfaces
+            if (serviceImplementationType.IsInterface || serviceImplementationType.GetInterfaces().IsNullOrEmpty())
+            {
+                throw new InvalidServiceTypeException(serviceImplementationType);
+            }
+
             ServiceImplementationType = serviceImplementationType;
             ServiceContractType = serviceContractType;
         }

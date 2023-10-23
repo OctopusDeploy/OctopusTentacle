@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
-using Autofac.Core;
 using FluentAssertions;
 using Halibut.ServiceModel;
 using NUnit.Framework;
@@ -18,8 +17,6 @@ namespace Octopus.Tentacle.Tests.Communications
         readonly IAutofacServiceSource pieSource = new KnownServiceSource(new KnownService(typeof(PieService), typeof(IPieService)));
         readonly IAutofacServiceSource emptySource = new KnownServiceSource();
         readonly IAutofacServiceSource nullSource = new KnownServiceSource();
-        readonly IAutofacServiceSource invalidInterfaceSource = new KnownServiceSource( new KnownService(typeof(ISimpleService), typeof(ISimpleService)));
-        readonly IAutofacServiceSource invalidClassSource = new KnownServiceSource( new KnownService(typeof(PlainClass), typeof(PlainClass)));
 
         [Test]
         public void Resolved_WithNoSources_WorksAsExpected()
@@ -119,48 +116,6 @@ namespace Octopus.Tentacle.Tests.Communications
         }
 
         [Test]
-        public void Resolved_WithInvalidInterfaceSource_ThrowsExpectedException()
-        {
-            var builder = new ContainerBuilder();
-            builder.RegisterType<AutofacServiceFactory>().AsImplementedInterfaces().SingleInstance();
-            builder.RegisterInstance(invalidInterfaceSource).AsImplementedInterfaces();
-            var container = builder.Build();
-
-            try
-            {
-                container.Resolve<IServiceFactory>();
-            }
-            catch (Exception ex)
-            {
-                ex.Should().BeOfType<DependencyResolutionException>();
-                var baseEx = ex.GetBaseException();
-                baseEx.Should().BeOfType<InvalidServiceTypeException>();
-                (baseEx as InvalidServiceTypeException)?.InvalidType.Name.Should().Be(nameof(ISimpleService));
-            }
-        }
-
-        [Test]
-        public void Resolved_WithInvalidClassSource_ThrowsExpectedException()
-        {
-            var builder = new ContainerBuilder();
-            builder.RegisterType<AutofacServiceFactory>().AsImplementedInterfaces().SingleInstance();
-            builder.RegisterInstance(invalidClassSource).AsImplementedInterfaces();
-            var container = builder.Build();
-
-            try
-            {
-                container.Resolve<IServiceFactory>();
-            }
-            catch (Exception ex)
-            {
-                ex.Should().BeOfType<DependencyResolutionException>();
-                var baseEx = ex.GetBaseException();
-                baseEx.Should().BeOfType<InvalidServiceTypeException>();
-                (baseEx as InvalidServiceTypeException)?.InvalidType.Name.Should().Be(nameof(PlainClass));
-            }
-        }
-
-        [Test]
         public void CreateService_WithMissingService_ThrowsExpectedException()
         {
             var builder = new ContainerBuilder();
@@ -204,16 +159,6 @@ namespace Octopus.Tentacle.Tests.Communications
 
         class SimpleService : ISimpleService
         {
-            public string Greet(string name)
-            {
-                return $"Hello {name}!";
-            }
-        }
-
-        // No interface, this will not be register-able
-        class PlainClass
-        {
-            // ReSharper disable once UnusedMember.Local
             public string Greet(string name)
             {
                 return $"Hello {name}!";

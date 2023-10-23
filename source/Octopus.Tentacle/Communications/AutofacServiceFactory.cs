@@ -41,12 +41,6 @@ namespace Octopus.Tentacle.Communications
             //track the contract type to their known service implementations
             //the contract type is the one that is sent across the wire (typically an IService sync contract)
             knownServices[knownService.ServiceContractType.Name] = knownService;
-
-            //the implementation type doesn't need to implement the service contract, but it's _implied_ that it should have _some_ interfaces
-            if (knownService.ServiceImplementationType.IsInterface || knownService.ServiceImplementationType.GetInterfaces().IsNullOrEmpty())
-            {
-                throw new InvalidServiceTypeException(knownService.ServiceImplementationType);
-            }
         }
 
         public IServiceLease CreateService(string serviceName)
