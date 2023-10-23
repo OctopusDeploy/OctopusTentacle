@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Autofac;
 using Autofac.Core;
 using FluentAssertions;
@@ -11,34 +13,35 @@ namespace Octopus.Tentacle.Tests.Communications
 {
     public class AutofacServiceFactoryFixture
     {
-        readonly IAutofacServiceSource simpleSource = new KnownServiceSource(typeof(SimpleService));
-        readonly IAutofacServiceSource pieSource = new KnownServiceSource(typeof(PieService));
-        readonly IAutofacServiceSource emptySource = new KnownServiceSource(new Type[] {});
+        readonly IAutofacServiceSource simpleSource = new KnownServiceSource(new KnownService(typeof(SimpleService), typeof(ISimpleService)));
+        readonly IAutofacServiceSource asyncSimpleSource = new KnownServiceSource(new KnownService(typeof(AsyncSimpleService), typeof(ISimpleService)));
+        readonly IAutofacServiceSource pieSource = new KnownServiceSource(new KnownService(typeof(PieService), typeof(IPieService)));
+        readonly IAutofacServiceSource emptySource = new KnownServiceSource();
         readonly IAutofacServiceSource nullSource = new KnownServiceSource();
-        readonly IAutofacServiceSource invalidInterfaceSource = new KnownServiceSource(typeof(ISimpleService));
-        readonly IAutofacServiceSource invalidClassSource = new KnownServiceSource(typeof(PlainClass));
-        
+        readonly IAutofacServiceSource invalidInterfaceSource = new KnownServiceSource( new KnownService(typeof(ISimpleService), typeof(ISimpleService)));
+        readonly IAutofacServiceSource invalidClassSource = new KnownServiceSource( new KnownService(typeof(PlainClass), typeof(PlainClass)));
+
         [Test]
         public void Resolved_WithNoSources_WorksAsExpected()
         {
             var builder = new ContainerBuilder();
             builder.RegisterType<AutofacServiceFactory>().AsImplementedInterfaces().SingleInstance();
-            
+
             var container = builder.Build();
-            
+
             var factory = container.Resolve<IServiceFactory>();
             factory.RegisteredServiceTypes.Count.Should().Be(0);
         }
-        
+
         [Test]
         public void Resolved_WithSingleSource_CanCreateServices()
         {
             var builder = new ContainerBuilder();
             builder.RegisterType<AutofacServiceFactory>().AsImplementedInterfaces().SingleInstance();
             builder.RegisterInstance(simpleSource).AsImplementedInterfaces();
-            
+
             var container = builder.Build();
-            
+
             var factory = container.Resolve<IServiceFactory>();
             factory.RegisteredServiceTypes.Count.Should().Be(1);
             factory.RegisteredServiceTypes.Select(x => x.Name).Should().Contain(nameof(ISimpleService));
@@ -49,21 +52,39 @@ namespace Octopus.Tentacle.Tests.Communications
         }
 
         [Test]
+        public async Task Resolved_WithSingleSource_CanCreateAsyncServices()
+        {
+            var builder = new ContainerBuilder();
+            builder.RegisterType<AutofacServiceFactory>().AsImplementedInterfaces().SingleInstance();
+            builder.RegisterInstance(asyncSimpleSource).AsImplementedInterfaces();
+
+            var container = builder.Build();
+
+            var factory = container.Resolve<IServiceFactory>();
+            factory.RegisteredServiceTypes.Count.Should().Be(1);
+            factory.RegisteredServiceTypes.Select(x => x.Name).Should().Contain(nameof(ISimpleService));
+
+            var service = factory.CreateService(nameof(ISimpleService));
+            var greeting = await (service.Service as IAsyncSimpleService)!.GreetAsync("Fred", CancellationToken.None);
+            greeting.Should().Be("Hello Fred!");
+        }
+
+        [Test]
         public void Resolved_WithMultipleSources_CanCreateServices()
         {
             var builder = new ContainerBuilder();
             builder.RegisterType<AutofacServiceFactory>().AsImplementedInterfaces().SingleInstance();
             builder.RegisterInstance(simpleSource).AsImplementedInterfaces();
             builder.RegisterInstance(pieSource).AsImplementedInterfaces();
-            
+
             var container = builder.Build();
-            
+
             var factory = container.Resolve<IServiceFactory>();
             factory.RegisteredServiceTypes.Count.Should().Be(2);
             var types = factory.RegisteredServiceTypes.Select(x => x.Name).ToList();
             types.Should().Contain(nameof(ISimpleService));
             types.Should().Contain(nameof(IPieService));
-            
+
             var service = factory.CreateService(nameof(ISimpleService));
             var greeting = (service.Service as ISimpleService)?.Greet("Fred");
             greeting.Should().Be("Hello Fred!");
@@ -80,11 +101,11 @@ namespace Octopus.Tentacle.Tests.Communications
             builder.RegisterType<AutofacServiceFactory>().AsImplementedInterfaces().SingleInstance();
             builder.RegisterInstance(nullSource).AsImplementedInterfaces();
             var container = builder.Build();
-            
+
             var factory = container.Resolve<IServiceFactory>();
             factory.RegisteredServiceTypes.Count.Should().Be(0);
         }
-        
+
         [Test]
         public void Resolved_WithEmptySource_DoesNotThrow()
         {
@@ -92,11 +113,11 @@ namespace Octopus.Tentacle.Tests.Communications
             builder.RegisterType<AutofacServiceFactory>().AsImplementedInterfaces().SingleInstance();
             builder.RegisterInstance(emptySource).AsImplementedInterfaces();
             var container = builder.Build();
-            
+
             var factory = container.Resolve<IServiceFactory>();
             factory.RegisteredServiceTypes.Count.Should().Be(0);
         }
-        
+
         [Test]
         public void Resolved_WithInvalidInterfaceSource_ThrowsExpectedException()
         {
@@ -117,7 +138,7 @@ namespace Octopus.Tentacle.Tests.Communications
                 (baseEx as InvalidServiceTypeException)?.InvalidType.Name.Should().Be(nameof(ISimpleService));
             }
         }
-        
+
         [Test]
         public void Resolved_WithInvalidClassSource_ThrowsExpectedException()
         {
@@ -138,16 +159,16 @@ namespace Octopus.Tentacle.Tests.Communications
                 (baseEx as InvalidServiceTypeException)?.InvalidType.Name.Should().Be(nameof(PlainClass));
             }
         }
-                
+
         [Test]
         public void CreateService_WithMissingService_ThrowsExpectedException()
         {
             var builder = new ContainerBuilder();
             builder.RegisterType<AutofacServiceFactory>().AsImplementedInterfaces().SingleInstance();
             builder.RegisterInstance(simpleSource).AsImplementedInterfaces();
-            
+
             var container = builder.Build();
-            
+
             var factory = container.Resolve<IServiceFactory>();
             factory.RegisteredServiceTypes.Count.Should().Be(1);
 
@@ -162,7 +183,7 @@ namespace Octopus.Tentacle.Tests.Communications
                 (ex as UnknownServiceNameException)?.ServiceName.Should().Be(missingService);
             }
         }
-        
+
         interface IPieService
         {
             float GetPie();
@@ -175,7 +196,7 @@ namespace Octopus.Tentacle.Tests.Communications
                 return 3.14159f;
             }
         }
-        
+
         interface ISimpleService
         {
             string Greet(string name);
@@ -195,6 +216,20 @@ namespace Octopus.Tentacle.Tests.Communications
             // ReSharper disable once UnusedMember.Local
             public string Greet(string name)
             {
+                return $"Hello {name}!";
+            }
+        }
+
+        interface IAsyncSimpleService
+        {
+            Task<string> GreetAsync(string name, CancellationToken cancellationToken);
+        }
+
+        class AsyncSimpleService: IAsyncSimpleService
+        {
+            public async Task<string> GreetAsync(string name, CancellationToken cancellationToken)
+            {
+                await Task.CompletedTask;
                 return $"Hello {name}!";
             }
         }
