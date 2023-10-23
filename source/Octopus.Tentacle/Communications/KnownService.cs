@@ -17,10 +17,14 @@ namespace Octopus.Tentacle.Communications
 
         public KnownService(Type serviceImplementationType, Type serviceContractType)
         {
-            //the implementation type doesn't need to implement the service contract, but it's _implied_ that it should have _some_ interfaces
-            if (serviceImplementationType.IsInterface || serviceImplementationType.GetInterfaces().IsNullOrEmpty())
+            if (serviceImplementationType.IsInterface || serviceImplementationType.IsAbstract || serviceImplementationType.GetInterfaces().IsNullOrEmpty())
             {
-                throw new InvalidServiceTypeException(serviceImplementationType);
+                throw new ArgumentException("The service implementation type must be a non-abstract class that implements at least one interface.", nameof(serviceImplementationType));
+            }
+
+            if (!serviceContractType.IsInterface)
+            {
+                throw new ArgumentException("The service contract type must be an interface.", nameof(serviceContractType));
             }
 
             ServiceImplementationType = serviceImplementationType;

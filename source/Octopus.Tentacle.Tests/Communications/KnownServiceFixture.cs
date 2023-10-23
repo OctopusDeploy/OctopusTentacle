@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using System;
+using NUnit.Framework;
 using Octopus.Tentacle.Communications;
 
 namespace Octopus.Tentacle.Tests.Communications
@@ -9,27 +10,53 @@ namespace Octopus.Tentacle.Tests.Communications
         [Test]
         public void CannotConstructWhenImplementationTypeHasNoInterfaces()
         {
-            Assert.Throws<InvalidServiceTypeException>(() =>
+            Assert.Throws<ArgumentException>(() =>
             {
-                _ = new KnownService(typeof(PlainClass), typeof(IPlainClass));
+                _ = new KnownService(typeof(PlainClass), typeof(IPlainInterface));
             });
         }
-
 
         [Test]
         public void CannotConstructWhenImplementationTypeIsAnInterface()
         {
-            Assert.Throws<InvalidServiceTypeException>(() =>
+            Assert.Throws<ArgumentException>(() =>
             {
-                _ = new KnownService(typeof(IPlainClass), typeof(IPlainClass));
+                _ = new KnownService(typeof(IPlainInterface), typeof(IPlainInterface));
+            });
+        }
+
+        [Test]
+        public void CannotConstructWhenImplementationTypeIsAnAbstractClass()
+        {
+            Assert.Throws<ArgumentException>(() =>
+            {
+                _ = new KnownService(typeof(AbstractClass), typeof(IPlainInterface));
+            });
+        }
+
+        [Test]
+        public void CannotConstructWhenContractTypeIsNotAnInterface()
+        {
+            Assert.Throws<ArgumentException>(() =>
+            {
+                _ = new KnownService(typeof(ValidClass), typeof(PlainClass));
             });
         }
     }
 
-    class PlainClass
-    { }
+    class ValidClass : IPlainInterface
+    {
+    }
 
-    interface IPlainClass
+    class PlainClass
+    {
+    }
+
+    abstract class AbstractClass
+    {
+    }
+
+    interface IPlainInterface
     {
     }
 }
