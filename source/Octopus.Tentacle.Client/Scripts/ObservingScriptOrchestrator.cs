@@ -84,7 +84,7 @@ namespace Octopus.Tentacle.Client.Scripts
                     }
                 }
 
-                OnScriptStatusResponseReceived(scriptStatusResponse);
+                OnScriptStatusResponseReceived(lastStatusResponse);
 
                 if (GetState(lastStatusResponse) == ProcessState.Complete)
                 {
