@@ -26,7 +26,7 @@ namespace Octopus.Tentacle.Client.Scripts
         {
             var mappedStartCommand = Map(startScriptCommand);
 
-            var scriptStatusResponse = await StartScript(mappedStartCommand, scriptExecutionCancellationToken);
+            var scriptStatusResponse = await StartScript(mappedStartCommand, scriptExecutionCancellationToken).ConfigureAwait(false);
 
             scriptStatusResponse = await ObserveUntilCompleteThenFinish(scriptStatusResponse, scriptExecutionCancellationToken).ConfigureAwait(false);
 
