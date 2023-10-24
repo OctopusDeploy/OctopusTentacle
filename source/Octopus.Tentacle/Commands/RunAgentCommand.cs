@@ -26,7 +26,7 @@ namespace Octopus.Tentacle.Commands
         readonly Lazy<IProxyConfiguration> proxyConfiguration;
         readonly Lazy<IProxyInitializer> proxyInitializer;
         readonly Lazy<IWorkspaceCleanerTask> workspaceCleanerTask;
-        
+
         readonly ISleep sleep;
         readonly ISystemLog log;
         readonly IApplicationInstanceSelector selector;
@@ -35,6 +35,7 @@ namespace Octopus.Tentacle.Commands
         int wait;
         bool halibutHasStarted;
         bool workspaceCleanerHasStarted;
+        bool enableAsyncHalibut;
 
         public override bool CanRunAsService => true;
 
@@ -70,6 +71,7 @@ namespace Octopus.Tentacle.Commands
                 // There's actually nothing to do here. The CommandHost should have already been determined before Start() was called
                 // This option is added to show help
             });
+            Options.Add("async-halibut", "Enables async Halibut support for running services asynchronously", _ => enableAsyncHalibut = true);
         }
 
         protected override void Start()
@@ -118,6 +120,7 @@ namespace Octopus.Tentacle.Commands
             Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleProxyPassword, proxyConfiguration.Value.CustomProxyPassword);
             Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleProxyHost, proxyConfiguration.Value.CustomProxyHost);
             Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleProxyPort, proxyConfiguration.Value.CustomProxyPort.ToString());
+            Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleEnableAsyncHalibut, enableAsyncHalibut.ToString());
 
             LogWarningIfNotRunningAsAdministrator();
 
@@ -128,16 +131,16 @@ namespace Octopus.Tentacle.Commands
 
             workspaceCleanerTask.Value.Start();
             workspaceCleanerHasStarted = true;
-            
+
             Runtime.WaitForUserToExit();
         }
 
         void LogWarningIfNotRunningAsAdministrator()
         {
             if (!PlatformDetection.IsRunningOnWindows) return;
-            
+
             if (windowsLocalAdminRightsChecker.IsRunningElevated()) return;
-            
+
 #pragma warning disable CA1416
             var groupName = new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null).Translate(typeof(NTAccount)).Value;
             log.Warn($"Tentacle is not running with elevated permissions (user '{WindowsIdentity.GetCurrent().Name}' is not a member of '{groupName}'). Some functionality may be impaired.");

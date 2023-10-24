@@ -5,6 +5,6 @@ namespace Octopus.Tentacle.Communications
 {
     public interface IAutofacServiceSource
     {
-        IEnumerable<Type> ServiceTypes { get; }
+        IEnumerable<KnownService> KnownServices { get; }
     }
 }

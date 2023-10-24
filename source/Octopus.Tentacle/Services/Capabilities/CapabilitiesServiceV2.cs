@@ -5,7 +5,7 @@ using Octopus.Tentacle.Contracts.ScriptServiceV2;
 
 namespace Octopus.Tentacle.Services.Capabilities
 {
-    [Service]
+    [Service(typeof(ICapabilitiesServiceV2))]
     public class CapabilitiesServiceV2 : ICapabilitiesServiceV2
     {
         public CapabilitiesResponseV2 GetCapabilities()

@@ -5,11 +5,11 @@ namespace Octopus.Tentacle.Communications
 {
     public class KnownServiceSource : IAutofacServiceSource
     {
-        public KnownServiceSource(params Type[] serviceTypes)
+        public KnownServiceSource(params KnownService[] serviceTypes)
         {
-            ServiceTypes = serviceTypes;
+            KnownServices = serviceTypes;
         }
-        
-        public IEnumerable<Type> ServiceTypes { get; }
+
+        public IEnumerable<KnownService> KnownServices { get; }
     }
 }

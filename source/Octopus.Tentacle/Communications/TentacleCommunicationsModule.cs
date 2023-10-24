@@ -5,6 +5,7 @@ using Halibut;
 using Halibut.ServiceModel;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Contracts.Legacy;
+using Octopus.Tentacle.Variables;
 
 namespace Octopus.Tentacle.Communications
 {
@@ -22,11 +23,19 @@ namespace Octopus.Tentacle.Communications
             {
                 var configuration = c.Resolve<ITentacleConfiguration>();
                 var services = c.Resolve<IServiceFactory>();
-                var halibutRuntime = new HalibutRuntimeBuilder()
+                var halibutRuntimeBuilder = new HalibutRuntimeBuilder()
                     .WithServiceFactory(services)
                     .WithServerCertificate(configuration.TentacleCertificate)
-                    .WithMessageSerializer(serializerBuilder => serializerBuilder.WithLegacyContractSupport())
-                    .Build();
+                    .WithMessageSerializer(serializerBuilder => serializerBuilder.WithLegacyContractSupport());
+
+                //if we have the environment variable to enable async halibut, enable it :)
+                if (bool.TryParse(Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleEnableAsyncHalibut), out var isEnabled) && isEnabled)
+                {
+                    halibutRuntimeBuilder.WithAsyncHalibutFeatureEnabled();
+                }
+
+                var halibutRuntime = halibutRuntimeBuilder.Build();
+
                 halibutRuntime.SetFriendlyHtmlPageContent(FriendlyHtmlPageContent);
                 halibutRuntime.SetFriendlyHtmlPageHeaders(FriendlyHtmlPageHeaders);
                 return halibutRuntime;
@@ -68,8 +77,8 @@ namespace Octopus.Tentacle.Communications
             new KeyValuePair<string, string>("Referrer-Policy", "no-referrer"),
             new KeyValuePair<string, string>("X-Content-Type-Options", "nosniff"),
             new KeyValuePair<string, string>("X-Frame-Options", "DENY"),
-            new KeyValuePair<string, string>("X-XSS-Protection",  "1; mode=block"),
-            new KeyValuePair<string, string>("Strict-Transport-Security",  "max-age=31536000")
+            new KeyValuePair<string, string>("X-XSS-Protection", "1; mode=block"),
+            new KeyValuePair<string, string>("Strict-Transport-Security", "max-age=31536000")
         };
     }
 }

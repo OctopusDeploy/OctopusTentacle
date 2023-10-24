@@ -8,7 +8,7 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Services.FileTransfer
 {
-    [Service]
+    [Service(typeof(IFileTransferService))]
     public class FileTransferService : IFileTransferService
     {
         readonly ISystemLog log;
