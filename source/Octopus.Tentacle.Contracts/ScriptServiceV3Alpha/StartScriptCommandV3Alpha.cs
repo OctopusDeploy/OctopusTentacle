@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 namespace Octopus.Tentacle.Contracts.ScriptServiceV3Alpha
 {
-    public class StartScriptCommandV3Alpha : ScriptCommandV3Alpha
+    public class StartScriptCommandV3Alpha
     {
         [JsonConstructor]
         public StartScriptCommandV3Alpha(string scriptBody,
@@ -17,10 +17,10 @@ namespace Octopus.Tentacle.Contracts.ScriptServiceV3Alpha
             ScriptTicket scriptTicket,
             TimeSpan? durationToWaitForScriptToFinish,
             IScriptExecutionContext scriptExecutionContext)
-            : base(scriptTicket)
         {
             Arguments = arguments;
             TaskId = taskId;
+            ScriptTicket = scriptTicket;
             DurationToWaitForScriptToFinish = durationToWaitForScriptToFinish;
             ExecutionContext = scriptExecutionContext;
             ScriptBody = scriptBody;
@@ -86,6 +86,7 @@ namespace Octopus.Tentacle.Contracts.ScriptServiceV3Alpha
 
         public string ScriptBody { get; }
         public string TaskId { get; }
+        public ScriptTicket ScriptTicket { get; }
         public TimeSpan? DurationToWaitForScriptToFinish { get; }
         public IScriptExecutionContext ExecutionContext { get; }
 
