@@ -6,13 +6,13 @@ using Octopus.Tentacle.Contracts.ScriptServiceV2;
 
 namespace Octopus.Tentacle.Client.Scripts
 {
-    abstract class ObservableScriptOrchestrator<TStartCommand, TScriptStatusResponse> : IScriptOrchestrator
+    abstract class ObservingScriptOrchestrator<TStartCommand, TScriptStatusResponse> : IScriptOrchestrator
     {
         readonly IScriptObserverBackoffStrategy scriptObserverBackOffStrategy;
         readonly OnScriptStatusResponseReceived onScriptStatusResponseReceived;
         readonly OnScriptCompleted onScriptCompleted;
 
-        protected ObservableScriptOrchestrator(
+        protected ObservingScriptOrchestrator(
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
             OnScriptStatusResponseReceived onScriptStatusResponseReceived,
             OnScriptCompleted onScriptCompleted)

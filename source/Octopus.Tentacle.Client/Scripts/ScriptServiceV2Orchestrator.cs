@@ -17,7 +17,7 @@ using ILog = Octopus.Diagnostics.ILog;
 
 namespace Octopus.Tentacle.Client.Scripts
 {
-    class ScriptServiceV2Orchestrator : ObservableScriptOrchestrator<StartScriptCommandV2, ScriptStatusResponseV2>
+    class ScriptServiceV2Orchestrator : ObservingScriptOrchestrator<StartScriptCommandV2, ScriptStatusResponseV2>
     {
         readonly SyncAndAsyncClientScriptServiceV2 clientScriptServiceV2;
         readonly RpcCallExecutor rpcCallExecutor;
