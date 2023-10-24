@@ -26,8 +26,8 @@ namespace Octopus.Tentacle.Client
         /// <returns></returns>
         Task<ScriptExecutionResult> ExecuteScript(
             StartScriptCommandV2 startScriptCommand,
-            Action<ScriptStatusResponseV2> onScriptStatusResponseReceived,
-            Func<CancellationToken, Task> onScriptCompleted,
+            OnScriptStatusResponseReceived onScriptStatusResponseReceived,
+            OnScriptCompleted onScriptCompleted,
             ILog logger,
             CancellationToken scriptExecutionCancellationToken);
     }
