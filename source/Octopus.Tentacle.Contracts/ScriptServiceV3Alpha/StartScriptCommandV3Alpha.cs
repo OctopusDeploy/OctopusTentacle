@@ -22,7 +22,7 @@ namespace Octopus.Tentacle.Contracts.ScriptServiceV3Alpha
             Arguments = arguments;
             TaskId = taskId;
             DurationToWaitForScriptToFinish = durationToWaitForScriptToFinish;
-            ScriptExecutionContext = scriptExecutionContext;
+            ExecutionContext = scriptExecutionContext;
             ScriptBody = scriptBody;
             Isolation = isolation;
             ScriptIsolationMutexTimeout = scriptIsolationMutexTimeout;
@@ -87,7 +87,7 @@ namespace Octopus.Tentacle.Contracts.ScriptServiceV3Alpha
         public string ScriptBody { get; }
         public string TaskId { get; }
         public TimeSpan? DurationToWaitForScriptToFinish { get; }
-        public IScriptExecutionContext ScriptExecutionContext { get; }
+        public IScriptExecutionContext ExecutionContext { get; }
 
         public ScriptIsolationLevel Isolation { get; }
         public TimeSpan ScriptIsolationMutexTimeout { get; }
