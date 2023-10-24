@@ -52,7 +52,13 @@ namespace Octopus.Tentacle.Client.Scripts
         }
 
         protected override StartScriptCommandV2 Map(StartScriptCommandV2 command) => command;
-        protected override ScriptStatusResponseV2 Map(ScriptStatusResponseV2 response) => response;
+
+        protected override ScriptExecutionStatus MapToStatus(ScriptStatusResponseV2 response)
+            => new(response.Logs);
+
+        protected override ScriptExecutionResult MapToResult(ScriptStatusResponseV2 response)
+            => new(response.State, response.ExitCode);
+
         protected override ProcessState GetState(ScriptStatusResponseV2 response) => response.State;
 
         protected override async Task<ScriptStatusResponseV2> StartScript(StartScriptCommandV2 command, CancellationToken scriptExecutionCancellationToken)

@@ -36,7 +36,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 throw new OperationCanceledException("Script execution was cancelled");
             }
 
-            var mappedResponse = Map(scriptStatusResponse);
+            var mappedResponse = MapToResult(scriptStatusResponse);
 
             return new ScriptExecutionResult(mappedResponse.State, mappedResponse.ExitCode);
         }
@@ -110,7 +110,8 @@ namespace Octopus.Tentacle.Client.Scripts
 
         protected abstract TStartCommand Map(StartScriptCommandV2 command);
 
-        protected abstract ScriptStatusResponseV2 Map(TScriptStatusResponse response);
+        protected abstract ScriptExecutionStatus MapToStatus(TScriptStatusResponse response);
+        protected abstract ScriptExecutionResult MapToResult(TScriptStatusResponse response);
 
         protected abstract ProcessState GetState(TScriptStatusResponse response);
 
@@ -124,7 +125,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
         protected void OnScriptStatusResponseReceived(TScriptStatusResponse scriptStatusResponse)
         {
-            onScriptStatusResponseReceived(Map(scriptStatusResponse));
+            onScriptStatusResponseReceived(MapToStatus(scriptStatusResponse));
         }
     }
 }

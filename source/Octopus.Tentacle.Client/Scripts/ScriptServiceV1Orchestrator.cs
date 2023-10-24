@@ -56,13 +56,11 @@ namespace Octopus.Tentacle.Client.Scripts
                 command.Scripts,
                 command.Files.ToArray());
 
-        protected override ScriptStatusResponseV2 Map(ScriptStatusResponse response)
-            => new(
-                response.Ticket,
-                response.State,
-                response.ExitCode,
-                response.Logs,
-                response.NextLogSequence);
+        protected override ScriptExecutionStatus MapToStatus(ScriptStatusResponse response)
+            => new(response.Logs);
+
+        protected override ScriptExecutionResult MapToResult(ScriptStatusResponse response)
+            => new(response.State, response.ExitCode);
 
         protected override ProcessState GetState(ScriptStatusResponse response) => response.State;
 
