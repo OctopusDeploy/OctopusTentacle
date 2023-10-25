@@ -14,19 +14,19 @@ namespace Octopus.Tentacle.Services.Scripts.ScriptServiceV3Alpha
     [Service(typeof(IScriptServiceV3Alpha))]
     public class ScriptServiceV3Alpha : IAsyncScriptServiceV3Alpha
     {
-        readonly IShell shell;
+        readonly IScriptExecutorFactory scriptExecutorFactory;
         readonly IScriptWorkspaceFactory workspaceFactory;
         readonly IScriptStateStoreFactory scriptStateStoreFactory;
         readonly ISystemLog log;
         readonly ConcurrentDictionary<ScriptTicket, RunningScriptWrapper> runningScripts = new();
 
         public ScriptServiceV3Alpha(
-            IShell shell,
+            IScriptExecutorFactory scriptExecutorFactory,
             IScriptWorkspaceFactory workspaceFactory,
             IScriptStateStoreFactory scriptStateStoreFactory,
             ISystemLog log)
         {
-            this.shell = shell;
+            this.scriptExecutorFactory = scriptExecutorFactory;
             this.workspaceFactory = workspaceFactory;
             this.scriptStateStoreFactory = scriptStateStoreFactory;
             this.log = log;
@@ -73,7 +73,8 @@ namespace Octopus.Tentacle.Services.Scripts.ScriptServiceV3Alpha
                     runningScript.ScriptStateStore.Create();
                 }
 
-                var process = LaunchShell(command.ScriptTicket, command.TaskId, workspace, runningScript.ScriptStateStore, runningScript.CancellationToken);
+                var executor = scriptExecutorFactory.GetExecutor();
+                var process = executor.ExecuteOnBackgroundThread(command, workspace, runningScript.ScriptStateStore, runningScript.CancellationToken);
 
                 runningScript.Process = process;
 
@@ -180,7 +181,7 @@ namespace Octopus.Tentacle.Services.Scripts.ScriptServiceV3Alpha
                 CancellationToken = cancellationTokenSource.Token;
             }
 
-            public RunningScript? Process { get; set; }
+            public IRunningScript? Process { get; set; }
             public ScriptStateStore ScriptStateStore { get; }
             public SemaphoreSlim StartScriptMutex { get; } = new(1, 1);
 
