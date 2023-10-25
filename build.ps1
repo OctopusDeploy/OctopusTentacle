@@ -39,6 +39,7 @@ if ($null -ne (Get-Command "dotnet" -ErrorAction SilentlyContinue) -and `
     $env:DOTNET_EXE = (Get-Command "dotnet").Path
 }
 else {
+    Write-Output "The 'dotnet' command was not found globally, downloading local version"
     # Download install script
     $DotNetInstallFile = "$TempDirectory\dotnet-install.ps1"
     New-Item -ItemType Directory -Path $TempDirectory -Force | Out-Null
@@ -60,6 +61,10 @@ else {
     } else {
         ExecSafe { & $DotNetInstallFile -InstallDir $DotNetDirectory -Version $DotNetVersion -NoPath }
     }
+    Write-Output "Downloaded dotnet succesfully"
+
+    Write-Output (Get-ChildItem -Path $DotNetDirectory)
+
     $env:DOTNET_EXE = "$DotNetDirectory\dotnet.exe"
 }
 
