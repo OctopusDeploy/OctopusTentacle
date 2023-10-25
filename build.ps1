@@ -40,7 +40,10 @@ if ($null -ne (Get-Command "dotnet" -ErrorAction SilentlyContinue) -and `
 }
 else {
     Write-Output "The 'dotnet' command was not found globally, downloading local version"
+
     Write-Output "LASTEXITCODE: $LASTEXITCODE"
+    $global:LASTEXITCODE = 0;
+    Write-Output "LASTEXITCODE (modified): $LASTEXITCODE"
 
     # Download install script
     $DotNetInstallFile = "$TempDirectory\dotnet-install.ps1"
