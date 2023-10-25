@@ -4,6 +4,10 @@ using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
 
 namespace Octopus.Tentacle.Services.Scripts.ScriptServiceV3Alpha
 {
+    /// <remarks>
+    /// This interface should mirror <see cref="IScriptServiceV3Alpha"/>.
+    /// All return types must be <see cref="Task"/>/<see cref="Task{T}"/> and all methods must be suffixed with 'Async' with their last parameter must be a <see cref="CancellationToken"/>.
+    /// </remarks>
     public interface IAsyncScriptServiceV3Alpha
     {
         Task<ScriptStatusResponseV3Alpha> StartScriptAsync(StartScriptCommandV3Alpha command, CancellationToken cancellationToken);
