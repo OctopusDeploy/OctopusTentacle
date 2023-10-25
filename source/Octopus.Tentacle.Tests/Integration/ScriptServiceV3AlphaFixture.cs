@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -93,7 +92,10 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var started = Stopwatch.StartNew();
 
-            var tasks = scripts.Select(script => service.StartScriptAsync(script.Command, CancellationToken.None));
+            var tasks = scripts.Select(async script =>
+            {
+                script.Response = await service.StartScriptAsync(script.Command, CancellationToken.None);
+            });
 
             await Task.WhenAll(tasks);
 
