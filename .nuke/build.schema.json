@@ -41,6 +41,7 @@
             "AppVeyor",
             "AzurePipelines",
             "Bamboo",
+            "Bitbucket",
             "Bitrise",
             "GitHubActions",
             "GitLab",
@@ -98,8 +99,11 @@
               "BuildLinux",
               "BuildOsx",
               "BuildWindows",
+              "BuildWindowsNetCore",
+              "BuildWindowsNetFx",
               "CalculateVersion",
               "Clean",
+              "CopyClientAndContractsToLocalPackages",
               "CopyToLocalPackages",
               "Default",
               "Pack",
@@ -141,8 +145,11 @@
               "BuildLinux",
               "BuildOsx",
               "BuildWindows",
+              "BuildWindowsNetCore",
+              "BuildWindowsNetFx",
               "CalculateVersion",
               "Clean",
+              "CopyClientAndContractsToLocalPackages",
               "CopyToLocalPackages",
               "Default",
               "Pack",
@@ -169,6 +176,9 @@
               "TestWindowsInstallers"
             ]
           }
+        },
+        "TestFilter": {
+          "type": "string"
         },
         "TestFramework": {
           "type": "string"
