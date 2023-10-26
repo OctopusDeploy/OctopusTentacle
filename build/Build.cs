@@ -109,9 +109,9 @@ partial class Build : NukeBuild
     Target Clean => _ => _
         .Executes(() =>
         {
-            SourceDirectory.GlobDirectories("**/bin", "**/obj", "**/TestResults").ForEach(DeleteDirectory);
-            EnsureCleanDirectory(ArtifactsDirectory);
-            EnsureCleanDirectory(BuildDirectory);
+            SourceDirectory.GlobDirectories("**/bin", "**/obj", "**/TestResults").ForEach(path => path.DeleteDirectory());
+            ArtifactsDirectory.CreateOrCleanDirectory();
+            BuildDirectory.CreateOrCleanDirectory();
         });
 
     [PublicAPI]
@@ -229,7 +229,7 @@ partial class Build : NukeBuild
         .Description("If not running on a build agent, this step copies the relevant built artifacts to the local packages cache.")
         .Executes(() =>
         {
-            EnsureExistingDirectory(LocalPackagesDirectory);
+            LocalPackagesDirectory.CreateDirectory();
             CopyFileToDirectory(ArtifactsDirectory / "Chocolatey" / $"OctopusDeploy.Tentacle.{NuGetVersion}.nupkg", LocalPackagesDirectory);
         });
 
@@ -241,7 +241,7 @@ partial class Build : NukeBuild
         .Description("If not running on a build agent, this step copies the relevant built artifacts to the local packages cache.")
         .Executes(() =>
         {
-            EnsureExistingDirectory(LocalPackagesDirectory);
+            LocalPackagesDirectory.CreateDirectory();
             CopyFileToDirectory(ArtifactsDirectory / "nuget" / $"Octopus.Tentacle.Contracts.{FullSemVer}.nupkg", LocalPackagesDirectory);
             CopyFileToDirectory(ArtifactsDirectory / "nuget" / $"Octopus.Tentacle.Client.{FullSemVer}.nupkg", LocalPackagesDirectory);
         });
