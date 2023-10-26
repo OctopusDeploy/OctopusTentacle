@@ -17,19 +17,16 @@ namespace Octopus.Tentacle.Services.Scripts.ScriptServiceV3Alpha
         readonly IScriptExecutorFactory scriptExecutorFactory;
         readonly IScriptWorkspaceFactory workspaceFactory;
         readonly IScriptStateStoreFactory scriptStateStoreFactory;
-        readonly ISystemLog log;
         readonly ConcurrentDictionary<ScriptTicket, RunningScriptWrapper> runningScripts = new();
 
         public ScriptServiceV3Alpha(
             IScriptExecutorFactory scriptExecutorFactory,
             IScriptWorkspaceFactory workspaceFactory,
-            IScriptStateStoreFactory scriptStateStoreFactory,
-            ISystemLog log)
+            IScriptStateStoreFactory scriptStateStoreFactory)
         {
             this.scriptExecutorFactory = scriptExecutorFactory;
             this.workspaceFactory = workspaceFactory;
             this.scriptStateStoreFactory = scriptStateStoreFactory;
-            this.log = log;
         }
 
         public async Task<ScriptStatusResponseV3Alpha> StartScriptAsync(StartScriptCommandV3Alpha command, CancellationToken cancellationToken)
@@ -118,15 +115,7 @@ namespace Octopus.Tentacle.Services.Scripts.ScriptServiceV3Alpha
             await workspace.Delete(cancellationToken);
         }
 
-        RunningScript LaunchShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, IScriptStateStore stateStore, CancellationToken cancellationToken)
-        {
-            var runningScript = new RunningScript(shell, workspace, stateStore, workspace.CreateLog(), serverTaskId, cancellationToken, log);
-            var thread = new Thread(runningScript.Execute) { Name = "Executing PowerShell runningScript for " + ticket.TaskId };
-            thread.Start();
-            return runningScript;
-        }
-
-        async Task<ScriptStatusResponseV3Alpha> GetResponse(ScriptTicket ticket, long lastLogSequence, RunningScript? runningScript)
+        async Task<ScriptStatusResponseV3Alpha> GetResponse(ScriptTicket ticket, long lastLogSequence, IRunningScript? runningScript)
         {
             await Task.CompletedTask;
 
