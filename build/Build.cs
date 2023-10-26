@@ -159,7 +159,7 @@ partial class Build : NukeBuild
             .SetImage("mcr.microsoft.com/dotnet/framework/sdk:4.8")
             .EnableRm()
             .SetDotNetRuntime(DotNetRuntimeIdentifier.win_x64)
-            .SetPlatform("win/amd64"))
+            .SetPlatform("windows/amd64"))
         .Executes(() =>
         {
             using var versionInfoFile = ModifyTemplatedVersionAndProductFilesWithValues();
@@ -175,7 +175,7 @@ partial class Build : NukeBuild
             .SetImage("mcr.microsoft.com/dotnet/sdk:6.0.416")
             .EnableRm()
             .SetDotNetRuntime(DotNetRuntimeIdentifier.win_x64)
-            .SetPlatform("win/amd64"))
+            .SetPlatform("windows/amd64"))
         .Executes(() =>
         {
             using var versionInfoFile = ModifyTemplatedVersionAndProductFilesWithValues();
