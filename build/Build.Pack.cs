@@ -159,7 +159,7 @@ partial class Build
                 var installerDirectory = BuildDirectory / "Installer";
                 FileSystemTasks.EnsureExistingDirectory(installerDirectory);
                 FileSystemTasks.EnsureCleanDirectory(installerDirectory);
-                
+
                 if (framework != NetCore)
                 {
                     (BuildDirectory / "Tentacle" / framework / "win").GlobFiles("*")
@@ -246,11 +246,11 @@ partial class Build
             }
 
             // This is a slow operation
-            var wixNugetInstalledPackage = NuGetPackageResolver.GetLocalInstalledPackage("wix", ToolPathResolver.NuGetPackagesConfigFile);
+            var wixNugetInstalledPackage = NuGetPackageResolver.GetLocalInstalledPackage("wix", NuGetToolPathResolver.NuGetPackagesConfigFile);
             if (wixNugetInstalledPackage == null) throw new Exception("Failed to find wix nuget package path");
 
             FileSystemTasks.EnsureExistingDirectory(ArtifactsDirectory / "msi");
-            
+
             PackWindowsInstallers(MSBuildTargetPlatform.x64, wixNugetInstalledPackage.Directory, NetFramework, "NetFramework");
             PackWindowsInstallers(MSBuildTargetPlatform.x86, wixNugetInstalledPackage.Directory, NetFramework, "NetFramework");
 
@@ -361,7 +361,7 @@ partial class Build
 
             FileSystemTasks.CopyFile(BuildDirectory / "Octopus.Tentacle.Upgrader" / NetCore / "win-x86" / "Octopus.Tentacle.Upgrader.exe", workingDirectory / "Octopus.Tentacle.Upgrader-net6.0-win-x86.exe");
             FileSystemTasks.CopyFile(BuildDirectory / "Octopus.Tentacle.Upgrader" / NetCore / "win-x64" / "Octopus.Tentacle.Upgrader.exe", workingDirectory / "Octopus.Tentacle.Upgrader-net6.0-win-x64.exe");
-            
+
             var octopusTentacleUpgraderDirectory = BuildDirectory / "Octopus.Tentacle.Upgrader" / NetFramework / "win";
             octopusTentacleUpgraderDirectory.GlobFiles("*").ForEach(x => FileSystemTasks.CopyFileToDirectory(x, workingDirectory));
             FileSystemTasks.CopyFile(ArtifactsDirectory / "deb" / debAmd64PackageFilename, workingDirectory / debAmd64PackageFilename);

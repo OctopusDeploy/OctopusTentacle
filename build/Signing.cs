@@ -23,7 +23,7 @@ public static class Signing
         {
             foreach (var file in files)
             {
-                if (!FileSystemTasks.FileExists(file)) throw new Exception($"File {file} does not exist");
+                if (!file.FileExists()) throw new Exception($"File {file} does not exist");
                 var fileInfo = new FileInfo(file);
 
                 if (fileInfo.IsReadOnly)
@@ -38,7 +38,7 @@ public static class Signing
                 && string.IsNullOrEmpty(Build.AzureKeyVaultTenantId)
                 && string.IsNullOrEmpty(Build.AzureKeyVaultAppSecret)
                 && string.IsNullOrEmpty(Build.AzureKeyVaultCertificateName))
-            { 
+            {
                 Log.Information("Signing files using signtool and the self-signed development code signing certificate.");
                 SignWithSignTool(files);
             }
@@ -49,7 +49,7 @@ public static class Signing
             }
         });
     }
-    
+
     public static bool HasAuthenticodeSignature(AbsolutePath fileInfo)
     {
         // note: Doesn't check if existing signatures are valid, only that one exists
@@ -89,16 +89,16 @@ public static class Signing
                     lastException = e;
                 }
             });
-            
+
             if (lastException == null) return;
         }
 
         if (lastException != null) throw lastException;
     }
-    
+
     static void SignWithAzureSignTool(AbsolutePath[] files)
     {
-        
+
         var lastException = default(Exception);
         foreach (var timestampUrl in SigningTimestampUrls)
         {
@@ -118,7 +118,7 @@ public static class Signing
                     arguments = files.Aggregate(arguments, (current, file) => current + $"\"{file}\" ");
 
                     Build.AzureSignTool(arguments);
-        
+
                     Log.Information($"Finished signing {files.Length} files.");
                 }
                 catch (Exception e)
@@ -126,7 +126,7 @@ public static class Signing
                     lastException = e;
                 }
             });
-            
+
             if (lastException == null) return;
         }
 
