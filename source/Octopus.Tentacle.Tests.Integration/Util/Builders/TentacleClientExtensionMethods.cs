@@ -20,7 +20,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders
             this TentacleClient tentacleClient,
             StartScriptCommandV2 startScriptCommand,
             CancellationToken token,
-            Action<ScriptStatusResponseV2>? onScriptStatusResponseReceivedAction = null,
+            OnScriptStatusResponseReceived? onScriptStatusResponseReceivedAction = null,
             Log? log = null)
         {
             var logs = new List<ProcessOutput>();

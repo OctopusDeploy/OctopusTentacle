@@ -60,7 +60,7 @@ namespace Octopus.Tentacle.Client
         ) : this(serviceEndPoint, halibutRuntime, scriptObserverBackOffStrategy, tentacleClientObserver, rpcRetrySettings, null)
         {
         }
-        
+
         internal TentacleClient(
             ServiceEndPoint serviceEndPoint,
             IHalibutRuntime halibutRuntime,
@@ -113,7 +113,7 @@ namespace Octopus.Tentacle.Client
                 var asyncScriptServiceV2 = halibutRuntime.CreateAsyncClient<IScriptServiceV2, IAsyncClientScriptServiceV2>(serviceEndPoint);
                 var asyncFileTransferServiceV1 = halibutRuntime.CreateAsyncClient<IFileTransferService, IAsyncClientFileTransferService>(serviceEndPoint);
                 var asyncCapabilitiesServiceV2 = halibutRuntime.CreateAsyncClient<ICapabilitiesServiceV2, IAsyncClientCapabilitiesServiceV2>(serviceEndPoint).WithBackwardsCompatability();
-                
+
                 var exceptionDecorator = new HalibutExceptionTentacleServiceDecorator();
                 asyncScriptServiceV2 = exceptionDecorator.Decorate(asyncScriptServiceV2);
                 asyncCapabilitiesServiceV2 = exceptionDecorator.Decorate(asyncCapabilitiesServiceV2);
@@ -203,7 +203,7 @@ namespace Octopus.Tentacle.Client
                 var result = await asyncHalibutFeature
                     .WhenDisabled(() => clientFileTransferServiceV1.SyncService.DownloadFile(remotePath, new HalibutProxyRequestOptions(ct, CancellationToken.None)))
                     .WhenEnabled(async () => await clientFileTransferServiceV1.AsyncService.DownloadFileAsync(remotePath, new HalibutProxyRequestOptions(ct, CancellationToken.None)));
-                
+
                 logger.Info("Download complete");
                 return result;
             }
@@ -245,8 +245,8 @@ namespace Octopus.Tentacle.Client
 
         public async Task<ScriptExecutionResult> ExecuteScript(
             StartScriptCommandV2 startScriptCommand,
-            Action<ScriptStatusResponseV2> onScriptStatusResponseReceived,
-            Func<CancellationToken, Task> onScriptCompleted,
+            OnScriptStatusResponseReceived onScriptStatusResponseReceived,
+            OnScriptCompleted onScriptCompleted,
             ILog logger,
             CancellationToken scriptExecutionCancellationToken)
         {
@@ -254,14 +254,13 @@ namespace Octopus.Tentacle.Client
 
             try
             {
-                using var orchestrator = new ScriptExecutionOrchestrator(
+                var factory = new ScriptOrchestratorFactory(
                     scriptServiceV1,
                     scriptServiceV2,
                     capabilitiesServiceV2,
                     scriptObserverBackOffStrategy,
                     rpcCallExecutor,
                     operationMetricsBuilder,
-                    startScriptCommand,
                     onScriptStatusResponseReceived,
                     onScriptCompleted,
                     OnCancellationAbandonCompleteScriptAfter,
@@ -269,7 +268,10 @@ namespace Octopus.Tentacle.Client
                     asyncHalibutFeature,
                     logger);
 
-                var result = await orchestrator.ExecuteScript(scriptExecutionCancellationToken).ConfigureAwait(false);
+                var orchestrator = await factory.CreateOrchestrator(scriptExecutionCancellationToken);
+
+                var result = await orchestrator.ExecuteScript(startScriptCommand, scriptExecutionCancellationToken);
+
                 return new ScriptExecutionResult(result.State, result.ExitCode);
             }
             catch (Exception e)
