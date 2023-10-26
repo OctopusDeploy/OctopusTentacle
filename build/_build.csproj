@@ -11,8 +11,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Nuke.Common" Version="6.3.0" />
-    <PackageReference Include="System.IO.FileSystem.AccessControl" Version="4.5.0" />
+    <PackageReference Include="Nuke.Common" Version="7.0.6" />
+    <PackageReference Include="System.IO.FileSystem.AccessControl" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup>
