@@ -155,7 +155,12 @@ partial class Build : NukeBuild
 
     Target BuildWindowsNetFx => _ => _
         .DependsOn(Restore)
-        .DockerRun(_ => _.SetImage("mcr.microsoft.com/dotnet/framework/sdk:4.8"))
+        .DockerRun(_ => _
+            .EnablePullImage()
+            .SetImage("mcr.microsoft.com/dotnet/framework/sdk:4.8")
+            .EnableRm()
+            .SetDotNetRuntime(DotNetRuntimeIdentifier.win_x64)
+            .SetPlatform("win/amd64"))
         .Executes(() =>
         {
             using var versionInfoFile = ModifyTemplatedVersionAndProductFilesWithValues();
@@ -166,7 +171,12 @@ partial class Build : NukeBuild
 
     Target BuildWindowsNetCore => _ => _
         .DependsOn(Restore)
-        .DockerRun(_ => _.SetImage("mcr.microsoft.com/dotnet/sdk:6.0.416"))
+        .DockerRun(_ => _
+            .EnablePullImage()
+            .SetImage("mcr.microsoft.com/dotnet/sdk:6.0.416")
+            .EnableRm()
+            .SetDotNetRuntime(DotNetRuntimeIdentifier.win_x64)
+            .SetPlatform("win/amd64"))
         .Executes(() =>
         {
             using var versionInfoFile = ModifyTemplatedVersionAndProductFilesWithValues();
@@ -179,7 +189,6 @@ partial class Build : NukeBuild
     [PublicAPI]
     Target BuildLinux => _ => _
         .DependsOn(Restore)
-        .DockerRun(_ => _.SetImage("mcr.microsoft.com/dotnet/sdk:6.0.416"))
         .Executes(() =>
         {
             using var versionInfoFile = ModifyTemplatedVersionAndProductFilesWithValues();
@@ -195,7 +204,6 @@ partial class Build : NukeBuild
     [PublicAPI]
     Target BuildOsx => _ => _
         .DependsOn(Restore)
-        .DockerRun(_ => _.SetImage("mcr.microsoft.com/dotnet/sdk:6.0.416"))
         .Executes(() =>
         {
             using var versionInfoFile = ModifyTemplatedVersionAndProductFilesWithValues();
