@@ -19,7 +19,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 {
     public class ClientAndTentacleBuilder
     {
-        ITentacleServiceDecorator? tentacleServiceDecorator;
+        ITentacleServiceDecoratorFactory? tentacleServiceDecorator;
         TimeSpan retryDuration = TimeSpan.FromMinutes(2);
         bool retriesEnabled = true;
         IScriptObserverBackoffStrategy scriptObserverBackoffStrategy = new DefaultScriptObserverBackoffStrategy();
@@ -51,9 +51,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             return this;
         }
 
-        internal ClientAndTentacleBuilder WithTentacleServiceDecorator(ITentacleServiceDecorator tentacleServiceDecorator)
+        internal ClientAndTentacleBuilder WithTentacleServiceDecorator(ITentacleServiceDecoratorFactory tentacleServiceDecoratorFactory)
         {
-            this.tentacleServiceDecorator = tentacleServiceDecorator;
+            this.tentacleServiceDecorator = tentacleServiceDecoratorFactory;
 
             return this;
         }
