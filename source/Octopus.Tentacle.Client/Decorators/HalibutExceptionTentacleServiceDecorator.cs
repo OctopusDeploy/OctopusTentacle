@@ -55,6 +55,6 @@ namespace Octopus.Tentacle.Client.Decorators
             }
         }
 
-        static OperationCanceledException CreateOperationCanceledException(Exception e) => throw new OperationCanceledException("The operation was cancelled", e);
+        static OperationCanceledException CreateOperationCanceledException(Exception e) => new("The operation was cancelled", e);
     }
 }
