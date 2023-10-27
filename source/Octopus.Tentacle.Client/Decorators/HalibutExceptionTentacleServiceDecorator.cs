@@ -6,7 +6,6 @@ namespace Octopus.Tentacle.Client.Decorators
     public abstract class HalibutExceptionTentacleServiceDecorator
     {
         protected static Task<TResponse> HandleCancellationException<TResponse>(Func<Task<TResponse>> action)
-
         {
             try
             {
@@ -31,7 +30,6 @@ namespace Octopus.Tentacle.Client.Decorators
         }
 
         protected static TResponse HandleCancellationException<TResponse>(Func<TResponse> action)
-
         {
             try
             {
