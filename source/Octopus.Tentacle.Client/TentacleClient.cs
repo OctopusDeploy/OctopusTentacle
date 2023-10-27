@@ -67,7 +67,7 @@ namespace Octopus.Tentacle.Client
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
             ITentacleClientObserver tentacleClientObserver,
             RpcRetrySettings rpcRetrySettings,
-            ITentacleServiceDecorator? tentacleServicesDecorator)
+            ITentacleServiceDecoratorFactory? tentacleServicesDecorator)
         {
             this.scriptObserverBackOffStrategy = scriptObserverBackOffStrategy;
             this.tentacleClientObserver = tentacleClientObserver.DecorateWithNonThrowingTentacleClientObserver();
@@ -90,7 +90,7 @@ namespace Octopus.Tentacle.Client
                 var syncCapabilitiesServiceV2 = halibutRuntime.CreateClient<ICapabilitiesServiceV2, IClientCapabilitiesServiceV2>(serviceEndPoint).WithBackwardsCompatability();
 #pragma warning restore CS0612
 
-                var exceptionDecorator = new HalibutExceptionTentacleServiceDecorator();
+                var exceptionDecorator = new HalibutExceptionTentacleServiceDecoratorFactory();
                 syncScriptServiceV2 = exceptionDecorator.Decorate(syncScriptServiceV2);
                 syncCapabilitiesServiceV2 = exceptionDecorator.Decorate(syncCapabilitiesServiceV2);
 
@@ -114,7 +114,7 @@ namespace Octopus.Tentacle.Client
                 var asyncFileTransferServiceV1 = halibutRuntime.CreateAsyncClient<IFileTransferService, IAsyncClientFileTransferService>(serviceEndPoint);
                 var asyncCapabilitiesServiceV2 = halibutRuntime.CreateAsyncClient<ICapabilitiesServiceV2, IAsyncClientCapabilitiesServiceV2>(serviceEndPoint).WithBackwardsCompatability();
 
-                var exceptionDecorator = new HalibutExceptionTentacleServiceDecorator();
+                var exceptionDecorator = new HalibutExceptionTentacleServiceDecoratorFactory();
                 asyncScriptServiceV2 = exceptionDecorator.Decorate(asyncScriptServiceV2);
                 asyncCapabilitiesServiceV2 = exceptionDecorator.Decorate(asyncCapabilitiesServiceV2);
 
