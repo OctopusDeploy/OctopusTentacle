@@ -5,11 +5,11 @@ namespace Octopus.Tentacle.Client.Decorators
 {
     public abstract class HalibutExceptionTentacleServiceDecorator
     {
-        protected static Task<TResponse> HandleCancellationException<TResponse>(Func<Task<TResponse>> action)
+        protected static async Task<TResponse> HandleCancellationException<TResponse>(Func<Task<TResponse>> action)
         {
             try
             {
-                return action();
+                return await action();
             }
             catch (Exception e) when (e.IsHalibutOperationCancellationException())
             {
@@ -17,11 +17,11 @@ namespace Octopus.Tentacle.Client.Decorators
             }
         }
 
-        protected static Task HandleCancellationException(Func<Task> action)
+        protected static async Task HandleCancellationException(Func<Task> action)
         {
             try
             {
-                return action();
+                await action();
             }
             catch (Exception e) when (e.IsHalibutOperationCancellationException())
             {
