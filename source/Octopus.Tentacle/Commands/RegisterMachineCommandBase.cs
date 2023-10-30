@@ -95,7 +95,7 @@ namespace Octopus.Tentacle.Commands
             if (!Enum.TryParse(comms, true, out CommunicationStyle communicationStyle))
                 throw new ControlledFailureException("Please specify a valid communications style, e.g. --comms-style=TentaclePassive");
 
-            if (!TryParseAgentCommunicationMode(agentComms, out var agentCommunicationMode) || agentCommunicationMode == null)
+            if (!TryParse(agentComms, out var agentCommunicationMode))
                 throw new ControlledFailureException("Please specify a valid agent communications behaviour, e.g. --agent-comms=Polling");
 
             if (configuration.Value.TentacleCertificate == null)
@@ -240,6 +240,7 @@ namespace Octopus.Tentacle.Commands
                     serverCommsPort ??= serverCommsAddressUri.Port;
                 }
 
+                var  hello = AgentCommunicationModeResource.Create<AgentCommunicationModeResource>("wat");
                 return new Uri($"https://{serverCommsAddressUri.Host}:{serverCommsPort}");
             }
 
@@ -279,16 +280,15 @@ namespace Octopus.Tentacle.Commands
             if (serverVersion.Version.Major < 3)
                 throw new ControlledFailureException($"You cannot register a {tentacleVersion.Version.Major}.* Octopus Tentacle with a {serverVersion.Version.Major}.* Octopus Server.");
         }
-
-        static bool TryParseAgentCommunicationMode(string communicationModeString, [NotNullWhen(true)] out AgentCommunicationModeResource? agentCommunicationMode)
+        static bool TryParse(string value, [NotNullWhen(true)] out AgentCommunicationModeResource? agentCommunicationMode)
         {
-            if (communicationModeString.Equals(AgentCommunicationModeResource.Listening.Value, StringComparison.InvariantCultureIgnoreCase))
+            if (value.Equals(AgentCommunicationModeResource.Listening.Value, StringComparison.InvariantCultureIgnoreCase))
             {
                 agentCommunicationMode = AgentCommunicationModeResource.Listening;
                 return true;
             }
 
-            if (communicationModeString.Equals(AgentCommunicationModeResource.Polling.Value, StringComparison.InvariantCultureIgnoreCase))
+            if (value.Equals(AgentCommunicationModeResource.Polling.Value, StringComparison.InvariantCultureIgnoreCase))
             {
                 agentCommunicationMode = AgentCommunicationModeResource.Polling;
                 return true;
