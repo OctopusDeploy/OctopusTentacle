@@ -101,16 +101,17 @@ namespace Octopus.Tentacle.Communications
             }
         }
 
-        List<(string, CommunicationStyle, AgentCommunicationBehaviour)> GetTrustedOctopusThumbprints()
+        List<(string, CommunicationStyle, AgentCommunicationModeResource)> GetTrustedOctopusThumbprints()
         {
-            return configuration.TrustedOctopusServers.Select(t => (t.Thumbprint, t.CommunicationStyle, t.AgentCommunicationBehaviour)).ToList();
+            return configuration.TrustedOctopusServers.Select(t => (t.Thumbprint, t.CommunicationStyle, t.AgentCommunicationMode)).ToList();
         }
 
         IEnumerable<OctopusServerConfiguration> GetOctopusServersToPoll()
         {
             return configuration.TrustedOctopusServers.Where(octopusServerConfiguration =>
                 octopusServerConfiguration.CommunicationStyle == CommunicationStyle.TentacleActive ||
-                octopusServerConfiguration is { CommunicationStyle: CommunicationStyle.KubernetesAgent, AgentCommunicationBehaviour: AgentCommunicationBehaviour.Polling });
+                (octopusServerConfiguration is { CommunicationStyle: CommunicationStyle.KubernetesAgent } &&
+                octopusServerConfiguration.AgentCommunicationMode == AgentCommunicationModeResource.Polling));
         }
 
         IPEndPoint GetEndPointToListenOn()
