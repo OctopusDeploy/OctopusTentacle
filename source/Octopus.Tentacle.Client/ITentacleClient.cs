@@ -25,7 +25,8 @@ namespace Octopus.Tentacle.Client
         /// <param name="logger">Used to output user orientated log messages</param>
         /// <param name="scriptExecutionCancellationToken">When cancelled, will attempt to stop the execution of the script on Tentacle before returning.</param>
         /// <returns></returns>
-        Task<ScriptExecutionResult> ExecuteScript(StartScriptCommandV3Alpha startScriptCommand,
+        Task<ScriptExecutionResult> ExecuteScript(
+            StartScriptCommandV3Alpha startScriptCommand,
             OnScriptStatusResponseReceived onScriptStatusResponseReceived,
             OnScriptCompleted onScriptCompleted,
             ILog logger,

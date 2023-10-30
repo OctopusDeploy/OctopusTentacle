@@ -157,7 +157,7 @@ namespace Octopus.Tentacle.Client.Scripts
                     ? $"RPC call retries are enabled. Retry timeout {rpcCallExecutor.RetryTimeout.TotalSeconds} seconds"
                     : "RPC call retries are disabled.");
                 return ScriptServiceVersion.Version3Alpha;
-			}
+            }
 
             if (tentacleCapabilities.HasScriptServiceV2())
             {
