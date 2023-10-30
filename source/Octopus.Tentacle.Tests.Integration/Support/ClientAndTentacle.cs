@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
-using Halibut.Util;
 using Octopus.Tentacle.Client;
 using Octopus.Tentacle.Client.Retries;
 using Octopus.Tentacle.Tests.Integration.Support.Legacy;
@@ -13,8 +11,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 {
     public class ClientAndTentacle: IAsyncDisposable
     {
-        private readonly IHalibutRuntime halibutRuntime;
-        private readonly ILogger logger;
+        readonly IHalibutRuntime halibutRuntime;
+        readonly ILogger logger;
+
         public ServiceEndPoint ServiceEndPoint { get; }
         public Server Server { get; }
         public PortForwarder? PortForwarder { get; }
@@ -23,9 +22,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public TemporaryDirectory TemporaryDirectory { get; }
         public RpcRetrySettings RpcRetrySettings { get; }
 
-        public LegacyTentacleClientBuilder LegacyTentacleClientBuilder(AsyncHalibutFeature asyncHalibutFeature)
+        public LegacyTentacleClientBuilder LegacyTentacleClientBuilder()
         {
-            return new LegacyTentacleClientBuilder(halibutRuntime, ServiceEndPoint, asyncHalibutFeature);
+            return new LegacyTentacleClientBuilder(halibutRuntime, ServiceEndPoint);
         }
 
         public ClientAndTentacle(IHalibutRuntime halibutRuntime,

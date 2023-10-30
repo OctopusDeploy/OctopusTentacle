@@ -4,14 +4,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
 using Halibut.ServiceModel;
-using Halibut.Util;
-using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Client.Decorators;
 using Octopus.Tentacle.Client.Execution;
 using Octopus.Tentacle.Client.Observability;
 using Octopus.Tentacle.Client.Scripts;
-using Octopus.Tentacle.Client.Services;
-using Octopus.Tentacle.Client.Utils;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Capabilities;
 using Octopus.Tentacle.Contracts.ClientServices;
@@ -28,10 +24,10 @@ namespace Octopus.Tentacle.Client
         readonly ITentacleClientObserver tentacleClientObserver;
         readonly RpcCallExecutor rpcCallExecutor;
 
-        readonly SyncAndAsyncClientScriptServiceV1 scriptServiceV1;
-        readonly SyncAndAsyncClientScriptServiceV2 scriptServiceV2;
-        readonly SyncAndAsyncClientFileTransferServiceV1 clientFileTransferServiceV1;
-        readonly SyncAndAsyncClientCapabilitiesServiceV2 capabilitiesServiceV2;
+        readonly IAsyncClientScriptService scriptServiceV1;
+        readonly IAsyncClientScriptServiceV2 scriptServiceV2;
+        readonly IAsyncClientFileTransferService clientFileTransferServiceV1;
+        readonly IAsyncClientCapabilitiesServiceV2 capabilitiesServiceV2;
         readonly TentacleClientOptions clientOptions;
 
         public static void CacheServiceWasNotFoundResponseMessages(IHalibutRuntime halibutRuntime)
@@ -71,7 +67,6 @@ namespace Octopus.Tentacle.Client
             this.tentacleClientObserver = tentacleClientObserver.DecorateWithNonThrowingTentacleClientObserver();
 
             this.clientOptions = clientOptions;
-            this.clientOptions.AsyncHalibutFeature = halibutRuntime.AsyncHalibutFeature;
 
             if (halibutRuntime.OverrideErrorResponseMessageCaching == null)
             {
@@ -80,57 +75,23 @@ namespace Octopus.Tentacle.Client
                 throw new ArgumentException("Ensure that TentacleClient.CacheServiceWasNotFoundResponseMessages has been called for the HalibutRuntime", nameof(halibutRuntime));
             }
 
-            if (clientOptions.AsyncHalibutFeature == AsyncHalibutFeature.Disabled)
+            scriptServiceV1 = halibutRuntime.CreateAsyncClient<IScriptService, IAsyncClientScriptService>(serviceEndPoint);
+            scriptServiceV2 = halibutRuntime.CreateAsyncClient<IScriptServiceV2, IAsyncClientScriptServiceV2>(serviceEndPoint);
+            clientFileTransferServiceV1 = halibutRuntime.CreateAsyncClient<IFileTransferService, IAsyncClientFileTransferService>(serviceEndPoint);
+            capabilitiesServiceV2 = halibutRuntime.CreateAsyncClient<ICapabilitiesServiceV2, IAsyncClientCapabilitiesServiceV2>(serviceEndPoint).WithBackwardsCompatability();
+
+            var exceptionDecorator = new HalibutExceptionTentacleServiceDecoratorFactory();
+            scriptServiceV2 = exceptionDecorator.Decorate(scriptServiceV2);
+            capabilitiesServiceV2 = exceptionDecorator.Decorate(capabilitiesServiceV2);
+
+            if (tentacleServicesDecorator != null)
             {
-#pragma warning disable CS0612
-                var syncScriptServiceV1 = halibutRuntime.CreateClient<IScriptService, IClientScriptService>(serviceEndPoint);
-                var syncScriptServiceV2 = halibutRuntime.CreateClient<IScriptServiceV2, IClientScriptServiceV2>(serviceEndPoint);
-                var syncFileTransferServiceV1 = halibutRuntime.CreateClient<IFileTransferService, IClientFileTransferService>(serviceEndPoint);
-                var syncCapabilitiesServiceV2 = halibutRuntime.CreateClient<ICapabilitiesServiceV2, IClientCapabilitiesServiceV2>(serviceEndPoint).WithBackwardsCompatability();
-#pragma warning restore CS0612
-
-                var exceptionDecorator = new HalibutExceptionTentacleServiceDecoratorFactory();
-                syncScriptServiceV2 = exceptionDecorator.Decorate(syncScriptServiceV2);
-                syncCapabilitiesServiceV2 = exceptionDecorator.Decorate(syncCapabilitiesServiceV2);
-
-                if (tentacleServicesDecorator != null)
-                {
-                    syncScriptServiceV1 = tentacleServicesDecorator.Decorate(syncScriptServiceV1);
-                    syncScriptServiceV2 = tentacleServicesDecorator.Decorate(syncScriptServiceV2);
-                    syncFileTransferServiceV1 = tentacleServicesDecorator.Decorate(syncFileTransferServiceV1);
-                    syncCapabilitiesServiceV2 = tentacleServicesDecorator.Decorate(syncCapabilitiesServiceV2);
-                }
-
-                scriptServiceV1 = new(syncScriptServiceV1, null);
-                scriptServiceV2 = new(syncScriptServiceV2, null);
-                clientFileTransferServiceV1 = new(syncFileTransferServiceV1, null);
-                capabilitiesServiceV2 = new(syncCapabilitiesServiceV2, null);
+                scriptServiceV1 = tentacleServicesDecorator.Decorate(scriptServiceV1);
+                scriptServiceV2 = tentacleServicesDecorator.Decorate(scriptServiceV2);
+                clientFileTransferServiceV1 = tentacleServicesDecorator.Decorate(clientFileTransferServiceV1);
+                capabilitiesServiceV2 = tentacleServicesDecorator.Decorate(capabilitiesServiceV2);
             }
-            else
-            {
-                var asyncScriptServiceV1 = halibutRuntime.CreateAsyncClient<IScriptService, IAsyncClientScriptService>(serviceEndPoint);
-                var asyncScriptServiceV2 = halibutRuntime.CreateAsyncClient<IScriptServiceV2, IAsyncClientScriptServiceV2>(serviceEndPoint);
-                var asyncFileTransferServiceV1 = halibutRuntime.CreateAsyncClient<IFileTransferService, IAsyncClientFileTransferService>(serviceEndPoint);
-                var asyncCapabilitiesServiceV2 = halibutRuntime.CreateAsyncClient<ICapabilitiesServiceV2, IAsyncClientCapabilitiesServiceV2>(serviceEndPoint).WithBackwardsCompatability();
-
-                var exceptionDecorator = new HalibutExceptionTentacleServiceDecoratorFactory();
-                asyncScriptServiceV2 = exceptionDecorator.Decorate(asyncScriptServiceV2);
-                asyncCapabilitiesServiceV2 = exceptionDecorator.Decorate(asyncCapabilitiesServiceV2);
-
-                if (tentacleServicesDecorator != null)
-                {
-                    asyncScriptServiceV1 = tentacleServicesDecorator.Decorate(asyncScriptServiceV1);
-                    asyncScriptServiceV2 = tentacleServicesDecorator.Decorate(asyncScriptServiceV2);
-                    asyncFileTransferServiceV1 = tentacleServicesDecorator.Decorate(asyncFileTransferServiceV1);
-                    asyncCapabilitiesServiceV2 = tentacleServicesDecorator.Decorate(asyncCapabilitiesServiceV2);
-                }
-
-                scriptServiceV1 = new(null, asyncScriptServiceV1);
-                scriptServiceV2 = new(null, asyncScriptServiceV2);
-                clientFileTransferServiceV1 = new(null, asyncFileTransferServiceV1);
-                capabilitiesServiceV2 = new(null, asyncCapabilitiesServiceV2);
-            }
-
+            
             rpcCallExecutor = RpcCallExecutorFactory.Create(this.clientOptions.RpcRetrySettings.RetryDuration, this.tentacleClientObserver);
         }
 
@@ -146,9 +107,7 @@ namespace Octopus.Tentacle.Client
 
                 logger.Info($"Beginning upload of {fileName} to Tentacle");
 
-                var result = await clientOptions.AsyncHalibutFeature
-                    .WhenDisabled(() => clientFileTransferServiceV1.SyncService.UploadFile(path, package, new HalibutProxyRequestOptions(ct, CancellationToken.None)))
-                    .WhenEnabled(async () => await clientFileTransferServiceV1.AsyncService.UploadFileAsync(path, package, new HalibutProxyRequestOptions(ct, CancellationToken.None)));
+                var result = await clientFileTransferServiceV1.UploadFileAsync(path, package, new HalibutProxyRequestOptions(ct, CancellationToken.None));
 
                 logger.Info("Upload complete");
                 return result;
@@ -199,9 +158,7 @@ namespace Octopus.Tentacle.Client
 
                 logger.Info($"Beginning download of {Path.GetFileName(remotePath)} from Tentacle");
 
-                var result = await clientOptions.AsyncHalibutFeature
-                    .WhenDisabled(() => clientFileTransferServiceV1.SyncService.DownloadFile(remotePath, new HalibutProxyRequestOptions(ct, CancellationToken.None)))
-                    .WhenEnabled(async () => await clientFileTransferServiceV1.AsyncService.DownloadFileAsync(remotePath, new HalibutProxyRequestOptions(ct, CancellationToken.None)));
+                var result = await clientFileTransferServiceV1.DownloadFileAsync(remotePath, new HalibutProxyRequestOptions(ct, CancellationToken.None));
 
                 logger.Info("Download complete");
                 return result;

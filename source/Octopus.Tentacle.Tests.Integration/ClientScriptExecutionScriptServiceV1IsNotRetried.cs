@@ -120,17 +120,10 @@ namespace Octopus.Tentacle.Tests.Integration
 
             // Let the script finish.
             File.WriteAllText(waitForFile, "");
-            var legacyTentacleClient = clientTentacle.LegacyTentacleClientBuilder(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature()).Build(CancellationToken);
+            var legacyTentacleClient = clientTentacle.LegacyTentacleClientBuilder().Build();
 
-            if (tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature().IsDisabled())
-            {
-                await Wait.For(() => legacyTentacleClient.ScriptService.SyncService.GetStatus(scriptStatusRequest).State == ProcessState.Complete, CancellationToken);
-            }
-            else
-            {
-                await Wait.For(async () => (await legacyTentacleClient.ScriptService.AsyncService.GetStatusAsync(scriptStatusRequest, new(CancellationToken, null)))
-                    .State == ProcessState.Complete, CancellationToken);
-            }
+            await Wait.For(async () => (await legacyTentacleClient.ScriptService.GetStatusAsync(scriptStatusRequest, new(CancellationToken, null)))
+                .State == ProcessState.Complete, CancellationToken);
 
             var allLogs = logs.JoinLogs();
 
@@ -199,17 +192,10 @@ namespace Octopus.Tentacle.Tests.Integration
 
             // Let the script finish.
             File.WriteAllText(waitForFile, "");
-            var legacyTentacleClient = clientTentacle.LegacyTentacleClientBuilder(tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature()).Build(CancellationToken);
+            var legacyTentacleClient = clientTentacle.LegacyTentacleClientBuilder().Build();
 
-            if (tentacleConfigurationTestCase.SyncOrAsyncHalibut.ToAsyncHalibutFeature().IsDisabled())
-            {
-                await Wait.For(() => legacyTentacleClient.ScriptService.SyncService.GetStatus(scriptStatusRequest).State == ProcessState.Complete, CancellationToken);
-            }
-            else
-            {
-                await Wait.For(async () => (await legacyTentacleClient.ScriptService.AsyncService.GetStatusAsync(scriptStatusRequest, new(CancellationToken, null)))
-                    .State == ProcessState.Complete, CancellationToken);
-            }
+            await Wait.For(async () => (await legacyTentacleClient.ScriptService.GetStatusAsync(scriptStatusRequest, new(CancellationToken, null)))
+                .State == ProcessState.Complete, CancellationToken);
         }
 
         [Test]

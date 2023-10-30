@@ -7,9 +7,8 @@ using Halibut.ServiceModel;
 using Octopus.Tentacle.Client.Execution;
 using Octopus.Tentacle.Client.Observability;
 using Octopus.Tentacle.Client.Retries;
-using Octopus.Tentacle.Client.Services;
-using Octopus.Tentacle.Client.Utils;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using ILog = Octopus.Diagnostics.ILog;
@@ -18,14 +17,14 @@ namespace Octopus.Tentacle.Client.Scripts
 {
     class ScriptServiceV2Orchestrator : ObservingScriptOrchestrator<StartScriptCommandV2, ScriptStatusResponseV2>
     {
-        readonly SyncAndAsyncClientScriptServiceV2 clientScriptServiceV2;
+        readonly IAsyncClientScriptServiceV2 clientScriptServiceV2;
         readonly RpcCallExecutor rpcCallExecutor;
         readonly ClientOperationMetricsBuilder clientOperationMetricsBuilder;
         readonly TimeSpan onCancellationAbandonCompleteScriptAfter;
         readonly ILog logger;
 
         public ScriptServiceV2Orchestrator(
-            SyncAndAsyncClientScriptServiceV2 clientScriptServiceV2,
+            IAsyncClientScriptServiceV2 clientScriptServiceV2,
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
             RpcCallExecutor rpcCallExecutor,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
@@ -66,9 +65,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 {
                     ++startScriptCallCount;
 
-                    var result = await ClientOptions.AsyncHalibutFeature
-                        .WhenDisabled(() => clientScriptServiceV2.SyncService.StartScript(command, new HalibutProxyRequestOptions(ct, CancellationToken.None)))
-                        .WhenEnabled(async () => await clientScriptServiceV2.AsyncService.StartScriptAsync(command, new HalibutProxyRequestOptions(ct, CancellationToken.None)));
+                    var result = await clientScriptServiceV2.StartScriptAsync(command, new HalibutProxyRequestOptions(ct, CancellationToken.None));
 
                     return result;
                 }
@@ -132,9 +129,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 {
                     var request = new ScriptStatusRequestV2(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence);
 
-                    var result = await ClientOptions.AsyncHalibutFeature
-                        .WhenDisabled(() => clientScriptServiceV2.SyncService.GetStatus(request, new HalibutProxyRequestOptions(ct, CancellationToken.None)))
-                        .WhenEnabled(async () => await clientScriptServiceV2.AsyncService.GetStatusAsync(request, new HalibutProxyRequestOptions(ct, CancellationToken.None)));
+                    var result = await clientScriptServiceV2.GetStatusAsync(request, new HalibutProxyRequestOptions(ct, CancellationToken.None));
 
                     return result;
                 }
@@ -172,9 +167,7 @@ namespace Octopus.Tentacle.Client.Scripts
             {
                 var request = new CancelScriptCommandV2(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence);
 
-                var result = await ClientOptions.AsyncHalibutFeature
-                    .WhenDisabled(() => clientScriptServiceV2.SyncService.CancelScript(request, new HalibutProxyRequestOptions(ct, CancellationToken.None)))
-                    .WhenEnabled(async () => await clientScriptServiceV2.AsyncService.CancelScriptAsync(request, new HalibutProxyRequestOptions(ct, CancellationToken.None)));
+                var result = await clientScriptServiceV2.CancelScriptAsync(request, new HalibutProxyRequestOptions(ct, CancellationToken.None));
 
                 return result;
             }
@@ -212,9 +205,7 @@ namespace Octopus.Tentacle.Client.Scripts
                         {
                             var request = new CompleteScriptCommandV2(lastStatusResponse.Ticket);
 
-                            await ClientOptions.AsyncHalibutFeature
-                                .WhenDisabled(() => clientScriptServiceV2.SyncService.CompleteScript(request, new HalibutProxyRequestOptions(ct, CancellationToken.None)))
-                                .WhenEnabled(async () => await clientScriptServiceV2.AsyncService.CompleteScriptAsync(request, new HalibutProxyRequestOptions(ct, CancellationToken.None)));
+                            await clientScriptServiceV2.CompleteScriptAsync(request, new HalibutProxyRequestOptions(ct, CancellationToken.None));
                         },
                         logger,
                         abandonActionOnCancellation: false,

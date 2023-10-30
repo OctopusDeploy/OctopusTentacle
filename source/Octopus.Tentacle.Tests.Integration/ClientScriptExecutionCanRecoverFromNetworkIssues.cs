@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Tentacle.Client;
-using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ClientServices;
@@ -256,7 +255,6 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations]
         public async Task WhenANetworkFailureOccurs_DuringGetCapabilities_TheClientIsAbleToSuccessfullyCompleteTheScript(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
-            IClientScriptServiceV2? scriptServiceV2 = null;
             IAsyncClientScriptServiceV2? asyncScriptServiceV2 = null;
 
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
@@ -271,8 +269,7 @@ namespace Octopus.Tentacle.Tests.Integration
                         {
                             if (capabilitiesServiceV2Exceptions.GetCapabilitiesLatestException == null)
                             {
-                                await tentacleConfigurationTestCase.SyncOrAsyncHalibut.WhenSync(() => scriptServiceV2.EnsureTentacleIsConnectedToServer(Logger))
-                                    .WhenAsync(async () => await asyncScriptServiceV2.EnsureTentacleIsConnectedToServer(Logger));
+                                await asyncScriptServiceV2.EnsureTentacleIsConnectedToServer(Logger);
 
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
@@ -281,16 +278,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            tentacleConfigurationTestCase.SyncOrAsyncHalibut.WhenSync(() =>
-                {
-#pragma warning disable CS0612
-                    scriptServiceV2 = clientTentacle.Server.ServerHalibutRuntime.CreateClient<IScriptServiceV2, IClientScriptServiceV2>(clientTentacle.ServiceEndPoint);
-#pragma warning restore CS0612
-                })
-                .WhenAsync(() =>
-                {
-                    asyncScriptServiceV2 = clientTentacle.Server.ServerHalibutRuntime.CreateAsyncClient<IScriptServiceV2, IAsyncClientScriptServiceV2>(clientTentacle.ServiceEndPoint);
-                });
+            asyncScriptServiceV2 = clientTentacle.Server.ServerHalibutRuntime.CreateAsyncClient<IScriptServiceV2, IAsyncClientScriptServiceV2>(clientTentacle.ServiceEndPoint);
 
             var inMemoryLog = new InMemoryLog();
 

@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
 using Halibut.ServiceModel;
-using Halibut.Util;
 using Octopus.Tentacle.Client;
 using Octopus.Tentacle.Client.Retries;
 using Octopus.Tentacle.Client.Scripts;
@@ -31,7 +30,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         IPendingRequestQueueFactory? queueFactory = null;
         Reference<PortForwarder>? portForwarderReference;
         ITentacleClientObserver tentacleClientObserver = new NoTentacleClientObserver();
-        AsyncHalibutFeature asyncHalibutFeature = AsyncHalibutFeature.Disabled;
         Action<ITentacleBuilder>? tentacleBuilderAction;
 
         public ClientAndTentacleBuilder(TentacleType tentacleType)
@@ -118,12 +116,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             return this;
         }
 
-        public ClientAndTentacleBuilder WithAsyncHalibutFeature(AsyncHalibutFeature asyncHalibutFeature)
-        {
-            this.asyncHalibutFeature = asyncHalibutFeature;
-            return this;
-        }
-
         public ClientAndTentacleBuilder WithTentacle(Action<ITentacleBuilder> tentacleBuilderAction)
         {
             this.tentacleBuilderAction = tentacleBuilderAction;
@@ -149,12 +141,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             var serverHalibutRuntimeBuilder = new HalibutRuntimeBuilder()
                 .WithServerCertificate(Certificates.Server)
                 .WithLegacyContractSupport();
-
-            if (asyncHalibutFeature.IsEnabled())
-            {
-                serverHalibutRuntimeBuilder.WithAsyncHalibutFeatureEnabled();
-            }
-
+            
             if (queueFactory != null)
             {
                 serverHalibutRuntimeBuilder.WithPendingRequestQueueFactory(queueFactory);

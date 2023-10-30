@@ -8,7 +8,6 @@ using NUnit.Framework;
 using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Contracts.Capabilities;
 using Octopus.Tentacle.Tests.Integration.Support;
-using Octopus.Tentacle.Tests.Integration.Support.Legacy;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
 using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
 
@@ -21,14 +20,11 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(testCapabilitiesServiceVersions: true)]
         public async Task CapabilitiesFromAnOlderTentacleWhichHasNoCapabilitiesService_WorksWithTheBackwardsCompatabilityDecorator(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
-            SyncOrAsyncHalibut syncOrAsyncHalibut = tentacleConfigurationTestCase.SyncOrAsyncHalibut;
             Version? version = tentacleConfigurationTestCase.Version;
             
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateLegacyBuilder().Build(CancellationToken);
 
-            var capabilities = await syncOrAsyncHalibut
-                .WhenSync(() => clientAndTentacle.TentacleClient.CapabilitiesServiceV2.SyncService.GetCapabilities().SupportedCapabilities)
-                .WhenAsync(async () => (await clientAndTentacle.TentacleClient.CapabilitiesServiceV2.AsyncService.GetCapabilitiesAsync(new(CancellationToken, null))).SupportedCapabilities);
+            var capabilities = (await clientAndTentacle.TentacleClient.CapabilitiesServiceV2.GetCapabilitiesAsync(new(CancellationToken, null))).SupportedCapabilities;
 
             capabilities.Should().Contain("IScriptService");
             capabilities.Should().Contain("IFileTransferService");
