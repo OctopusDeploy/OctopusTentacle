@@ -23,17 +23,11 @@ namespace Octopus.Tentacle.Client
             return this;
         }
 
-        public TentacleClientOptionsBuilder DisableService<T>()
-            => DisableService(typeof(T).Name);
-
         public TentacleClientOptionsBuilder EnableService(string serviceName)
         {
             disabledServices.Remove(serviceName);
             return this;
         }
-
-        public TentacleClientOptionsBuilder EnableService<T>()
-            => EnableService(typeof(T).Name);
 
         internal TentacleClientOptionsBuilder SetAsyncHalibut(AsyncHalibutFeature asyncHalibut)
         {
