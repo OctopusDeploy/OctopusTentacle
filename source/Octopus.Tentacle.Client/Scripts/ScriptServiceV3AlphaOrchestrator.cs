@@ -21,7 +21,6 @@ namespace Octopus.Tentacle.Client.Scripts
         readonly RpcCallExecutor rpcCallExecutor;
         readonly ClientOperationMetricsBuilder clientOperationMetricsBuilder;
         readonly TimeSpan onCancellationAbandonCompleteScriptAfter;
-        readonly RpcRetrySettings rpcRetrySettings;
         readonly ILog logger;
 
         public ScriptServiceV3AlphaOrchestrator(
@@ -32,17 +31,17 @@ namespace Octopus.Tentacle.Client.Scripts
             OnScriptStatusResponseReceived onScriptStatusResponseReceived,
             OnScriptCompleted onScriptCompleted,
             TimeSpan onCancellationAbandonCompleteScriptAfter,
-            RpcRetrySettings rpcRetrySettings,
+            TentacleClientOptions clientOptions,
             ILog logger)
             : base(scriptObserverBackOffStrategy,
                 onScriptStatusResponseReceived,
-                onScriptCompleted)
+                onScriptCompleted,
+                clientOptions)
         {
             this.clientScriptServiceV3Alpha = clientScriptServiceV3Alpha;
             this.rpcCallExecutor = rpcCallExecutor;
             this.clientOperationMetricsBuilder = clientOperationMetricsBuilder;
             this.onCancellationAbandonCompleteScriptAfter = onCancellationAbandonCompleteScriptAfter;
-            this.rpcRetrySettings = rpcRetrySettings;
             this.logger = logger;
         }
 
@@ -69,7 +68,7 @@ namespace Octopus.Tentacle.Client.Scripts
                     return await clientScriptServiceV3Alpha.StartScriptAsync(command, new HalibutProxyRequestOptions(ct, CancellationToken.None));
                 }
 
-                if (rpcRetrySettings.RetriesEnabled)
+                if (ClientOptions.RpcRetrySettings.RetriesEnabled)
                 {
                     scriptStatusResponse = await rpcCallExecutor.ExecuteWithRetries(
                         RpcCall.Create<IScriptServiceV3Alpha>(nameof(IScriptServiceV3Alpha.StartScript)),
@@ -131,7 +130,7 @@ namespace Octopus.Tentacle.Client.Scripts
                     return await clientScriptServiceV3Alpha.GetStatusAsync(request, new HalibutProxyRequestOptions(ct, CancellationToken.None));
                 }
 
-                if (rpcRetrySettings.RetriesEnabled)
+                if (ClientOptions.RpcRetrySettings.RetriesEnabled)
                 {
                     return await rpcCallExecutor.ExecuteWithRetries(
                         RpcCall.Create<IScriptServiceV3Alpha>(nameof(IScriptServiceV3Alpha.GetStatus)),
@@ -167,7 +166,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 return await clientScriptServiceV3Alpha.CancelScriptAsync(request, new HalibutProxyRequestOptions(ct, CancellationToken.None));
             }
 
-            if (rpcRetrySettings.RetriesEnabled)
+            if (ClientOptions.RpcRetrySettings.RetriesEnabled)
             {
                 return await rpcCallExecutor.ExecuteWithRetries(
                     RpcCall.Create<IScriptServiceV3Alpha>(nameof(IScriptServiceV3Alpha.CancelScript)),

@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Halibut.ServiceModel;
+using Halibut.Util;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Client.Capabilities;
 using Octopus.Tentacle.Client.Execution;
@@ -95,7 +96,7 @@ namespace Octopus.Tentacle.Client.Scripts
                     onScriptStatusResponseReceived,
                     onScriptCompleted,
                     onCancellationAbandonCompleteScriptAfter,
-                    rpcRetrySettings,
+                    clientOptions,
                     logger),
 
                 _ => throw new ArgumentOutOfRangeException()
@@ -141,10 +142,10 @@ namespace Octopus.Tentacle.Client.Scripts
 
             logger.Verbose($"Discovered Tentacle capabilities: {string.Join(",", tentacleCapabilities.SupportedCapabilities)}");
 
-            if (tentacleCapabilities.HasScriptServiceV3Alpha())
+            if (tentacleCapabilities.HasScriptServiceV3Alpha(clientOptions))
             {
                 //TODO: Remove when the async halibut feature is defaulted to on all the time
-                if (asyncHalibutFeature.IsDisabled() || clientScriptServiceV3Alpha is null)
+                if (clientOptions.AsyncHalibutFeature.IsDisabled() || clientScriptServiceV3Alpha is null)
                 {
                     logger.Warn("Async Halibut is disabled, but Tentacle supports ScriptServiceV3Alpha. Async Halibut must be enabled to use this service.");
                     logger.Warn("Falling back to ScriptServiceV2.");
@@ -152,7 +153,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 }
 
                 logger.Verbose("Using ScriptServiceV3Alpha");
-                logger.Verbose(rpcRetrySettings.RetriesEnabled
+                logger.Verbose(clientOptions.RpcRetrySettings.RetriesEnabled
                     ? $"RPC call retries are enabled. Retry timeout {rpcCallExecutor.RetryTimeout.TotalSeconds} seconds"
                     : "RPC call retries are disabled.");
                 return ScriptServiceVersion.Version3Alpha;
