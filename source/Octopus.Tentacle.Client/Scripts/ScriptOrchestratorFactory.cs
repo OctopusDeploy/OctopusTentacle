@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Halibut.ServiceModel;
-using Halibut.Util;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Client.Capabilities;
 using Octopus.Tentacle.Client.Execution;
@@ -69,7 +68,7 @@ namespace Octopus.Tentacle.Client.Scripts
                     clientOperationMetricsBuilder,
                     onScriptStatusResponseReceived,
                     onScriptCompleted,
-                    clientOptions.AsyncHalibutFeature,
+                    clientOptions,
                     logger),
 
                 ScriptServiceVersion.Version2 => new ScriptServiceV2Orchestrator(
@@ -80,8 +79,7 @@ namespace Octopus.Tentacle.Client.Scripts
                     onScriptStatusResponseReceived,
                     onScriptCompleted,
                     onCancellationAbandonCompleteScriptAfter,
-                    clientOptions.RpcRetrySettings,
-                    clientOptions.AsyncHalibutFeature,
+                    clientOptions,
                     logger),
 
                 _ => throw new ArgumentOutOfRangeException()
