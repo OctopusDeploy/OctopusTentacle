@@ -22,12 +22,12 @@ namespace Octopus.Tentacle.Client
             return this;
         }
 
-        internal TentacleClientOptionsBuilder SetAsyncHalibut(AsyncHalibutFeature asyncHalibut)
+        internal TentacleClientOptionsBuilder SetAsyncHalibut(AsyncHalibutFeature asyncHalibutFeature)
         {
-            this.asyncHalibutFeature = asyncHalibut;
+            this.asyncHalibutFeature = asyncHalibutFeature;
             return this;
         }
-        internal TentacleClientOptionsBuilder SetRcRetrySettings(RpcRetrySettings settings)
+        internal TentacleClientOptionsBuilder SetRpcRetrySettings(RpcRetrySettings settings)
         {
             rpcRetrySettings = settings;
             return this;

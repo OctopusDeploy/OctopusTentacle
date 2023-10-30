@@ -81,7 +81,7 @@ namespace Octopus.Tentacle.Client
             var builder = new TentacleClientOptionsBuilder();
             builder
                 .SetAsyncHalibut(halibutRuntime.AsyncHalibutFeature)
-                .SetRcRetrySettings(rpcRetrySettings);
+                .SetRpcRetrySettings(rpcRetrySettings);
             configureOptionsBuilder?.Invoke(builder);
             clientOptions = builder.Build();
 
