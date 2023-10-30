@@ -29,12 +29,12 @@ namespace Octopus.Tentacle.Client
         readonly ITentacleClientObserver tentacleClientObserver;
         readonly RpcCallExecutor rpcCallExecutor;
         readonly RpcRetrySettings rpcRetrySettings;
-        readonly AsyncHalibutFeature asyncHalibutFeature;
 
         readonly SyncAndAsyncClientScriptServiceV1 scriptServiceV1;
         readonly SyncAndAsyncClientScriptServiceV2 scriptServiceV2;
         readonly SyncAndAsyncClientFileTransferServiceV1 clientFileTransferServiceV1;
         readonly SyncAndAsyncClientCapabilitiesServiceV2 capabilitiesServiceV2;
+        readonly TentacleClientOptions clientOptions;
 
         public static void CacheServiceWasNotFoundResponseMessages(IHalibutRuntime halibutRuntime)
         {
@@ -56,8 +56,9 @@ namespace Octopus.Tentacle.Client
             IHalibutRuntime halibutRuntime,
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
             ITentacleClientObserver tentacleClientObserver,
-            RpcRetrySettings rpcRetrySettings
-        ) : this(serviceEndPoint, halibutRuntime, scriptObserverBackOffStrategy, tentacleClientObserver, rpcRetrySettings, null)
+            RpcRetrySettings rpcRetrySettings,
+            Action<TentacleClientOptionsBuilder>? configureOptionsBuilder = null
+        ) : this(serviceEndPoint, halibutRuntime, scriptObserverBackOffStrategy, tentacleClientObserver, rpcRetrySettings, configureOptionsBuilder, null)
         {
         }
 
@@ -67,12 +68,22 @@ namespace Octopus.Tentacle.Client
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
             ITentacleClientObserver tentacleClientObserver,
             RpcRetrySettings rpcRetrySettings,
+            Action<TentacleClientOptionsBuilder>? configureOptionsBuilder,
             ITentacleServiceDecoratorFactory? tentacleServicesDecorator)
         {
             this.scriptObserverBackOffStrategy = scriptObserverBackOffStrategy;
             this.tentacleClientObserver = tentacleClientObserver.DecorateWithNonThrowingTentacleClientObserver();
             this.rpcRetrySettings = rpcRetrySettings;
-            this.asyncHalibutFeature = halibutRuntime.AsyncHalibutFeature;
+
+            //To maintain the external contract _requiring_ the rpc retry settings
+            //but the internal contract using the builder options, we just set the builder values here
+            //build the options
+            var builder = new TentacleClientOptionsBuilder();
+            builder
+                .SetAsyncHalibut(halibutRuntime.AsyncHalibutFeature)
+                .SetRcRetrySettings(rpcRetrySettings);
+            configureOptionsBuilder?.Invoke(builder);
+            clientOptions = builder.Build();
 
             if (halibutRuntime.OverrideErrorResponseMessageCaching == null)
             {
@@ -81,7 +92,7 @@ namespace Octopus.Tentacle.Client
                 throw new ArgumentException("Ensure that TentacleClient.CacheServiceWasNotFoundResponseMessages has been called for the HalibutRuntime", nameof(halibutRuntime));
             }
 
-            if (asyncHalibutFeature == AsyncHalibutFeature.Disabled)
+            if (clientOptions.AsyncHalibutFeature == AsyncHalibutFeature.Disabled)
             {
 #pragma warning disable CS0612
                 var syncScriptServiceV1 = halibutRuntime.CreateClient<IScriptService, IClientScriptService>(serviceEndPoint);
@@ -147,7 +158,7 @@ namespace Octopus.Tentacle.Client
 
                 logger.Info($"Beginning upload of {fileName} to Tentacle");
 
-                var result = await asyncHalibutFeature
+                var result = await clientOptions.AsyncHalibutFeature
                     .WhenDisabled(() => clientFileTransferServiceV1.SyncService.UploadFile(path, package, new HalibutProxyRequestOptions(ct, CancellationToken.None)))
                     .WhenEnabled(async () => await clientFileTransferServiceV1.AsyncService.UploadFileAsync(path, package, new HalibutProxyRequestOptions(ct, CancellationToken.None)));
 
@@ -200,7 +211,7 @@ namespace Octopus.Tentacle.Client
 
                 logger.Info($"Beginning download of {Path.GetFileName(remotePath)} from Tentacle");
 
-                var result = await asyncHalibutFeature
+                var result = await clientOptions.AsyncHalibutFeature
                     .WhenDisabled(() => clientFileTransferServiceV1.SyncService.DownloadFile(remotePath, new HalibutProxyRequestOptions(ct, CancellationToken.None)))
                     .WhenEnabled(async () => await clientFileTransferServiceV1.AsyncService.DownloadFileAsync(remotePath, new HalibutProxyRequestOptions(ct, CancellationToken.None)));
 
@@ -264,8 +275,7 @@ namespace Octopus.Tentacle.Client
                     onScriptStatusResponseReceived,
                     onScriptCompleted,
                     OnCancellationAbandonCompleteScriptAfter,
-                    rpcRetrySettings,
-                    asyncHalibutFeature,
+                    clientOptions,
                     logger);
 
                 var orchestrator = await factory.CreateOrchestrator(scriptExecutionCancellationToken);

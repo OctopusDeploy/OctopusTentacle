@@ -33,6 +33,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         ITentacleClientObserver tentacleClientObserver = new NoTentacleClientObserver();
         AsyncHalibutFeature asyncHalibutFeature = AsyncHalibutFeature.Disabled;
         Action<ITentacleBuilder>? tentacleBuilderAction;
+        Action<TentacleClientOptionsBuilder>? configureClientOptions;
 
         public ClientAndTentacleBuilder(TentacleType tentacleType)
         {
@@ -123,10 +124,16 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             this.asyncHalibutFeature = asyncHalibutFeature;
             return this;
         }
-        
+
         public ClientAndTentacleBuilder WithTentacle(Action<ITentacleBuilder> tentacleBuilderAction)
         {
             this.tentacleBuilderAction = tentacleBuilderAction;
+            return this;
+        }
+
+        public ClientAndTentacleBuilder WithTentacleClientOptions(Action<TentacleClientOptionsBuilder> configureClientOptions)
+        {
+            this.configureClientOptions = configureClientOptions;
             return this;
         }
 
@@ -176,7 +183,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             var tentacleExe = tentacleVersion == null ?
                 TentacleExeFinder.FindTentacleExe(this.tentacleRuntime) :
                 await TentacleFetcher.GetTentacleVersion(temporaryDirectory.DirectoryPath, tentacleVersion, tentacleRuntime, logger, cancellationToken);
-            
+
             logger.Information($"Tentacle.exe location: {tentacleExe}");
 
             if (TentacleType == TentacleType.Polling)
@@ -230,6 +237,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 scriptObserverBackoffStrategy,
                 tentacleClientObserver,
                 retrySettings,
+                configureClientOptions,
                 tentacleServiceDecorator);
 
             return new ClientAndTentacle(server.ServerHalibutRuntime, tentacleEndPoint, server, portForwarder, runningTentacle, tentacleClient, temporaryDirectory, retrySettings, logger);
