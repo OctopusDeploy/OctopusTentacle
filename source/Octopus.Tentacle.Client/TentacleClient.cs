@@ -9,7 +9,6 @@ using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Client.Decorators;
 using Octopus.Tentacle.Client.Execution;
 using Octopus.Tentacle.Client.Observability;
-using Octopus.Tentacle.Client.Retries;
 using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.Client.Services;
 using Octopus.Tentacle.Client.Utils;
@@ -28,7 +27,6 @@ namespace Octopus.Tentacle.Client
         readonly IScriptObserverBackoffStrategy scriptObserverBackOffStrategy;
         readonly ITentacleClientObserver tentacleClientObserver;
         readonly RpcCallExecutor rpcCallExecutor;
-        readonly RpcRetrySettings rpcRetrySettings;
 
         readonly SyncAndAsyncClientScriptServiceV1 scriptServiceV1;
         readonly SyncAndAsyncClientScriptServiceV2 scriptServiceV2;
@@ -56,9 +54,8 @@ namespace Octopus.Tentacle.Client
             IHalibutRuntime halibutRuntime,
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
             ITentacleClientObserver tentacleClientObserver,
-            RpcRetrySettings rpcRetrySettings,
-            Action<TentacleClientOptionsBuilder>? configureOptionsBuilder = null
-        ) : this(serviceEndPoint, halibutRuntime, scriptObserverBackOffStrategy, tentacleClientObserver, rpcRetrySettings, configureOptionsBuilder, null)
+            TentacleClientOptions clientOptions
+        ) : this(serviceEndPoint, halibutRuntime, scriptObserverBackOffStrategy, tentacleClientObserver, clientOptions, null)
         {
         }
 
@@ -67,23 +64,14 @@ namespace Octopus.Tentacle.Client
             IHalibutRuntime halibutRuntime,
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
             ITentacleClientObserver tentacleClientObserver,
-            RpcRetrySettings rpcRetrySettings,
-            Action<TentacleClientOptionsBuilder>? configureOptionsBuilder,
+            TentacleClientOptions clientOptions,
             ITentacleServiceDecoratorFactory? tentacleServicesDecorator)
         {
             this.scriptObserverBackOffStrategy = scriptObserverBackOffStrategy;
             this.tentacleClientObserver = tentacleClientObserver.DecorateWithNonThrowingTentacleClientObserver();
-            this.rpcRetrySettings = rpcRetrySettings;
 
-            //To maintain the external contract _requiring_ the rpc retry settings
-            //but the internal contract using the builder options, we just set the builder values here
-            //build the options
-            var builder = new TentacleClientOptionsBuilder();
-            builder
-                .SetAsyncHalibut(halibutRuntime.AsyncHalibutFeature)
-                .SetRpcRetrySettings(rpcRetrySettings);
-            configureOptionsBuilder?.Invoke(builder);
-            clientOptions = builder.Build();
+            this.clientOptions = clientOptions;
+            this.clientOptions.AsyncHalibutFeature = halibutRuntime.AsyncHalibutFeature;
 
             if (halibutRuntime.OverrideErrorResponseMessageCaching == null)
             {
@@ -143,7 +131,7 @@ namespace Octopus.Tentacle.Client
                 capabilitiesServiceV2 = new(null, asyncCapabilitiesServiceV2);
             }
 
-            rpcCallExecutor = RpcCallExecutorFactory.Create(rpcRetrySettings.RetryDuration, this.tentacleClientObserver);
+            rpcCallExecutor = RpcCallExecutorFactory.Create(this.clientOptions.RpcRetrySettings.RetryDuration, this.tentacleClientObserver);
         }
 
         public TimeSpan OnCancellationAbandonCompleteScriptAfter { get; set; } = TimeSpan.FromMinutes(1);
@@ -168,7 +156,7 @@ namespace Octopus.Tentacle.Client
 
             try
             {
-                if (rpcRetrySettings.RetriesEnabled)
+                if (clientOptions.RpcRetrySettings.RetriesEnabled)
                 {
                     return await rpcCallExecutor.ExecuteWithRetries(
                         RpcCall.Create<IFileTransferService>(nameof(IFileTransferService.UploadFile)),
@@ -221,7 +209,7 @@ namespace Octopus.Tentacle.Client
 
             try
             {
-                if (rpcRetrySettings.RetriesEnabled)
+                if (clientOptions.RpcRetrySettings.RetriesEnabled)
                 {
                     return await rpcCallExecutor.ExecuteWithRetries(
                         RpcCall.Create<IFileTransferService>(nameof(IFileTransferService.DownloadFile)),

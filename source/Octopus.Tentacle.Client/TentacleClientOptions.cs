@@ -5,10 +5,16 @@ using Octopus.Tentacle.Client.Retries;
 
 namespace Octopus.Tentacle.Client
 {
-    record TentacleClientOptions(HashSet<string> DisabledScriptServices, AsyncHalibutFeature AsyncHalibutFeature, RpcRetrySettings RpcRetrySettings)
+    public class TentacleClientOptions
     {
-        public HashSet<string> DisabledScriptServices { get; } = DisabledScriptServices;
-        public AsyncHalibutFeature AsyncHalibutFeature { get; } = AsyncHalibutFeature;
-        public RpcRetrySettings RpcRetrySettings { get; } = RpcRetrySettings;
+        public RpcRetrySettings RpcRetrySettings { get; }
+
+        //This is internal as we retrieve it from the HalibutRuntime inside TentacleClient (however it'll be being removed soon)
+        internal AsyncHalibutFeature AsyncHalibutFeature { get; set; }
+
+        public TentacleClientOptions(RpcRetrySettings rpcRetrySettings)
+        {
+            RpcRetrySettings = rpcRetrySettings;
+        }
     }
 }

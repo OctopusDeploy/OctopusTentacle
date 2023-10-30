@@ -7,17 +7,14 @@ namespace Octopus.Tentacle.Client.Capabilities
 {
     internal static class CapabilitiesResponseV2ExtensionMethods
     {
-        public static bool HasScriptServiceV2(this CapabilitiesResponseV2 capabilities, TentacleClientOptions clientOptions)
+        public static bool HasScriptServiceV2(this CapabilitiesResponseV2 capabilities)
         {
             if (capabilities?.SupportedCapabilities?.Any() != true)
             {
                 return false;
             }
 
-            const string serviceName = nameof(IScriptServiceV2);
-            //if the service is not explicitly disabled and is supported by the tentacle
-            return !clientOptions.DisabledScriptServices.Contains(serviceName) &&
-                capabilities.SupportedCapabilities.Contains(serviceName);
+            return capabilities.SupportedCapabilities.Contains(nameof(IScriptServiceV2));
         }
     }
 }

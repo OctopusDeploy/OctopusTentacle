@@ -33,7 +33,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         ITentacleClientObserver tentacleClientObserver = new NoTentacleClientObserver();
         AsyncHalibutFeature asyncHalibutFeature = AsyncHalibutFeature.Disabled;
         Action<ITentacleBuilder>? tentacleBuilderAction;
-        Action<TentacleClientOptionsBuilder>? configureClientOptions;
 
         public ClientAndTentacleBuilder(TentacleType tentacleType)
         {
@@ -131,12 +130,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             return this;
         }
 
-        public ClientAndTentacleBuilder WithTentacleClientOptions(Action<TentacleClientOptionsBuilder> configureClientOptions)
-        {
-            this.configureClientOptions = configureClientOptions;
-            return this;
-        }
-
         PortForwarder? BuildPortForwarder(int localPort, int? listeningPort)
         {
             if (portForwarderModifiers.Count == 0) return null;
@@ -230,14 +223,14 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             TentacleClient.CacheServiceWasNotFoundResponseMessages(server.ServerHalibutRuntime);
 
             var retrySettings = new RpcRetrySettings(retriesEnabled, retryDuration);
+            var clientOptions = new TentacleClientOptions(retrySettings);
 
             var tentacleClient = new TentacleClient(
                 tentacleEndPoint,
                 server.ServerHalibutRuntime,
                 scriptObserverBackoffStrategy,
                 tentacleClientObserver,
-                retrySettings,
-                configureClientOptions,
+                clientOptions,
                 tentacleServiceDecorator);
 
             return new ClientAndTentacle(server.ServerHalibutRuntime, tentacleEndPoint, server, portForwarder, runningTentacle, tentacleClient, temporaryDirectory, retrySettings, logger);

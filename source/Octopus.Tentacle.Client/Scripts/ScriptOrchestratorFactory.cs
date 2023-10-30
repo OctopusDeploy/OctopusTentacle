@@ -125,12 +125,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
             logger.Verbose($"Discovered Tentacle capabilities: {string.Join(",", tentacleCapabilities.SupportedCapabilities)}");
 
-            if (clientOptions.DisabledScriptServices.Any())
-            {
-                logger.Verbose($"Explicitly disabled services: {string.Join(", ", clientOptions.DisabledScriptServices)}");
-            }
-
-            if (tentacleCapabilities.HasScriptServiceV2(clientOptions))
+            if (tentacleCapabilities.HasScriptServiceV2())
             {
                 logger.Verbose("Using ScriptServiceV2");
                 logger.Verbose(clientOptions.RpcRetrySettings.RetriesEnabled
