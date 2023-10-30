@@ -16,7 +16,7 @@ namespace Octopus.Tentacle.Client.Capabilities
 
             const string serviceName = nameof(IScriptServiceV2);
             //if the service is not explicitly disabled and is supported by the tentacle
-            return !clientOptions.DisabledServices.Contains(serviceName) &&
+            return !clientOptions.DisabledScriptServices.Contains(serviceName) &&
                 capabilities.SupportedCapabilities.Contains(serviceName);
         }
     }

@@ -125,9 +125,9 @@ namespace Octopus.Tentacle.Client.Scripts
 
             logger.Verbose($"Discovered Tentacle capabilities: {string.Join(",", tentacleCapabilities.SupportedCapabilities)}");
 
-            if (clientOptions.DisabledServices.Any())
+            if (clientOptions.DisabledScriptServices.Any())
             {
-                logger.Verbose($"Explicitly disabled services: {string.Join(", ", clientOptions.DisabledServices)}");
+                logger.Verbose($"Explicitly disabled services: {string.Join(", ", clientOptions.DisabledScriptServices)}");
             }
 
             if (tentacleCapabilities.HasScriptServiceV2(clientOptions))

@@ -16,7 +16,7 @@ namespace Octopus.Tentacle.Tests.Client
             var builder = new TentacleClientOptionsBuilder();
 
             // Act + Assert
-            Action x = () => builder.DisableService(nameof(IScriptService));
+            Action x = () => builder.DisableScriptService(nameof(IScriptService));
 
             x.Should().Throw<ArgumentException>();
         }

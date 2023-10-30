@@ -26,7 +26,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder().CountCallsToScriptServiceV2(out var scriptServiceV2CallCounts).Build())
                 .WithTentacleClientOptions(builder =>
                 {
-                    builder.DisableService(nameof(IScriptServiceV2));
+                    builder.DisableScriptService(nameof(IScriptServiceV2));
                 })
                 .Build(CancellationToken);
 
