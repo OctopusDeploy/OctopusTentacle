@@ -142,7 +142,12 @@ namespace Octopus.Tentacle.Client.Scripts
 
             logger.Verbose($"Discovered Tentacle capabilities: {string.Join(",", tentacleCapabilities.SupportedCapabilities)}");
 
-            if (tentacleCapabilities.HasScriptServiceV3Alpha(clientOptions))
+            if (clientOptions.DisableScriptServiceV3Alpha)
+            {
+                logger.Verbose("ScriptServiceV3Alpha is disabled and will not be used.");
+            }
+
+            if (tentacleCapabilities.HasScriptServiceV3Alpha() && !clientOptions.DisableScriptServiceV3Alpha)
             {
                 //TODO: Remove when the async halibut feature is defaulted to on all the time
                 if (clientOptions.AsyncHalibutFeature.IsDisabled() || clientScriptServiceV3Alpha is null)

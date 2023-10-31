@@ -12,6 +12,11 @@ namespace Octopus.Tentacle.Client
         //This is internal as we retrieve it from the HalibutRuntime inside TentacleClient (however it'll be being removed soon)
         internal AsyncHalibutFeature AsyncHalibutFeature { get; set; }
 
+        /// <summary>
+        /// Disables the use of ScriptServiceV3Alpha, even if it's supported on the Tentacle
+        /// </summary>
+        public bool DisableScriptServiceV3Alpha { get; set; }
+
         public TentacleClientOptions(RpcRetrySettings rpcRetrySettings)
         {
             RpcRetrySettings = rpcRetrySettings;
