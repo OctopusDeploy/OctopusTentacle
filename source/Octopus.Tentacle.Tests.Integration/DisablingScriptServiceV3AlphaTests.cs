@@ -20,8 +20,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .CountCallsToScriptServiceV2(out var scriptServiceV2CallCounts)
-                    .CountCallsToScriptServiceV3Alpha(out var scriptServiceV3AlphaCallCounts)
+                    .CountAllCalls(out _, out _, out var scriptServiceV2CallCounts, out var scriptServiceV3AlphaCallCounts, out _)
                     .Build())
                 .WithClientOptions(options =>
                 {
@@ -46,10 +45,10 @@ namespace Octopus.Tentacle.Tests.Integration
             allLogs.Should().MatchRegex(".*Lets do it\nanother one\nanother one\nanother one\nanother one\nanother one\nanother one\nanother one\nanother one\nanother one\nanother one\nAll done.*");
 
             // there should be no calls to the Script Service V3 Alpha service.
-            scriptServiceV3AlphaCallCounts.Should().BeEquivalentTo(new ScriptServiceV3AlphaCallCounts());
+            scriptServiceV3AlphaCallCounts.Any().Should().BeFalse();
 
             //there should be _some_ calls to ScriptServiceV2
-            scriptServiceV2CallCounts.Should().NotBeEquivalentTo(new ScriptServiceV2CallCounts());
+            scriptServiceV2CallCounts.Any().Should().BeTrue();
         }
     }
 }

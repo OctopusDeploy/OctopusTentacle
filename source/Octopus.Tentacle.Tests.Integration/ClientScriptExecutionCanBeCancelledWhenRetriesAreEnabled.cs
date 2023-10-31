@@ -33,7 +33,7 @@ namespace Octopus.Tentacle.Tests.Integration
     public class ClientScriptExecutionCanBeCancelledWhenRetriesAreEnabled : IntegrationTest
     {
         [Test]
-        [TentacleConfigurations(additionalParameterTypes: new object[] { typeof(RpcCallStage), typeof(RpcCall)})]
+        [TentacleConfigurations(additionalParameterTypes: new object[] { typeof(RpcCallStage), typeof(RpcCall) })]
         public async Task DuringGetCapabilities_ScriptExecutionCanBeCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase, RpcCallStage rpcCallStage, RpcCall rpcCall)
         {
             // ARRANGE
@@ -57,7 +57,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithPortForwarder(out var portForwarder)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .LogAndCountAllCalls(out var capabilitiesServiceV2CallCounts, out _, out var scriptServiceV2CallCounts, out _)
+                    .LogAndCountAllCalls(out var capabilitiesServiceV2CallCounts, out _, out var scriptServiceV2CallCounts, out _, out _)
                     .RecordAllExceptions(out var capabilityServiceV2Exceptions, out _, out _, out _)
                     .DecorateCapabilitiesServiceV2With(d => d
                         .DecorateGetCapabilitiesWith(async (service, options) =>
@@ -151,7 +151,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TentacleConfigurations(additionalParameterTypes: new object[] {typeof(RpcCall), typeof(RpcCallStage)})]
+        [TentacleConfigurations(additionalParameterTypes: new object[] { typeof(RpcCall), typeof(RpcCallStage) })]
         public async Task DuringStartScript_ScriptExecutionCanBeCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase, RpcCall rpcCall, RpcCallStage rpcCallStage)
         {
             // ARRANGE
@@ -180,7 +180,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithPortForwarder(out var portForwarder)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .LogAndCountAllCalls(out _, out _, out var scriptServiceV2CallCounts, out _)
+                    .LogAndCountAllCalls(out _, out _, out var scriptServiceV2CallCounts, out _, out _)
                     .RecordAllExceptions(out _, out _, out var scriptServiceV2Exceptions, out _)
                     .DecorateScriptServiceV2With(d => d
                         .DecorateStartScriptWith(async (service, command, options) =>
@@ -303,7 +303,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TentacleConfigurations(additionalParameterTypes: new object[] {typeof(RpcCall), typeof(RpcCallStage)})]
+        [TentacleConfigurations(additionalParameterTypes: new object[] { typeof(RpcCall), typeof(RpcCallStage) })]
         public async Task DuringGetStatus_ScriptExecutionCanBeCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase, RpcCall rpcCall, RpcCallStage rpcCallStage)
         {
             TentacleType tentacleType = tentacleConfigurationTestCase.TentacleType;
@@ -333,7 +333,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithPortForwarder(out var portForwarder)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .LogAndCountAllCalls(out _, out _, out var scriptServiceV2CallCounts, out _)
+                    .LogAndCountAllCalls(out _, out _, out var scriptServiceV2CallCounts, out _, out _)
                     .RecordAllExceptions(out _, out _, out var scriptServiceV2Exceptions, out _)
                     .DecorateScriptServiceV2With(d => d
                         .DecorateGetStatusWith(async (service, request, options) =>
@@ -444,7 +444,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TentacleConfigurations(additionalParameterTypes: new object[]{typeof(RpcCallStage)})]
+        [TentacleConfigurations(additionalParameterTypes: new object[] { typeof(RpcCallStage) })]
         public async Task DuringCompleteScript_ScriptExecutionCanBeCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase, RpcCallStage rpcCallStage)
         {
             SyncOrAsyncHalibut syncOrAsyncHalibut = tentacleConfigurationTestCase.SyncOrAsyncHalibut;
@@ -460,7 +460,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithPortForwarder(out var portForwarder)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .LogAndCountAllCalls(out _, out _, out var scriptServiceV2CallCounts, out _)
+                    .LogAndCountAllCalls(out _, out _, out var scriptServiceV2CallCounts, out _, out _)
                     .RecordAllExceptions(out _, out _, out var scriptServiceV2Exceptions, out _)
                     .DecorateScriptServiceV2With(d => d
                         .BeforeCompleteScript(async (service, _) =>

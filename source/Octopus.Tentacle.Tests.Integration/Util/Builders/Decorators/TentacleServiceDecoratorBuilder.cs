@@ -192,16 +192,19 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             out CapabilitiesServiceV2CallCounts capabilitiesServiceV2CallCounts,
             out ScriptServiceCallCounts scriptServiceCallCounts,
             out ScriptServiceV2CallCounts scriptServiceV2CallCounts,
+            out ScriptServiceV3AlphaCallCounts scriptServiceV3AlphaCallCounts,
             out FileTransferServiceCallCounts fileTransferServiceServiceCallCounts)
         {
             builder.CountCallsToCapabilitiesServiceV2(out var capabilitiesServiceCallCountsOut)
                 .CountCallsToScriptService(out var scriptServiceCallCountsOut)
                 .CountCallsToScriptServiceV2(out var scriptServiceV2CallCountsOut)
+                .CountCallsToScriptServiceV3Alpha(out var scriptServiceV3AlphaCallCountsOut)
                 .CountCallsToFileTransferService(out var fileTransferServiceCallCountsOut);
 
             capabilitiesServiceV2CallCounts = capabilitiesServiceCallCountsOut;
             scriptServiceCallCounts = scriptServiceCallCountsOut;
             scriptServiceV2CallCounts = scriptServiceV2CallCountsOut;
+            scriptServiceV3AlphaCallCounts = scriptServiceV3AlphaCallCountsOut;
             fileTransferServiceServiceCallCounts = fileTransferServiceCallCountsOut;
 
             return builder;
@@ -211,17 +214,20 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             out CapabilitiesServiceV2CallCounts capabilitiesServiceV2CallCounts,
             out ScriptServiceCallCounts scriptServiceCallCounts,
             out ScriptServiceV2CallCounts scriptServiceV2CallCounts,
+            out ScriptServiceV3AlphaCallCounts scriptServiceV3AlphaCallCounts,
             out FileTransferServiceCallCounts fileTransferServiceServiceCallCounts)
         {
             builder.LogAllCalls()
                 .CountAllCalls(out var capabilitiesServiceCallCountsOut,
                     out var scriptServiceCallCountsOut,
                     out var scriptServiceV2CallCountsOut,
+                    out var scriptServiceV3AlphaCountsOut,
                     out var fileTransferServiceCallCountsOut);
 
             capabilitiesServiceV2CallCounts = capabilitiesServiceCallCountsOut;
             scriptServiceCallCounts = scriptServiceCallCountsOut;
             scriptServiceV2CallCounts = scriptServiceV2CallCountsOut;
+            scriptServiceV3AlphaCallCounts = scriptServiceV3AlphaCountsOut;
             fileTransferServiceServiceCallCounts = fileTransferServiceCallCountsOut;
 
             return builder;

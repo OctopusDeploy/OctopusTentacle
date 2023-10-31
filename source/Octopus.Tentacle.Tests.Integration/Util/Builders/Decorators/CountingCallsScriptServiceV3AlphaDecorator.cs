@@ -17,6 +17,16 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
         public long GetStatusCallCountCompleted;
         public long CancelScriptCallCountCompleted;
         public long CompleteScriptCallCountCompleted;
+
+        public bool Any() =>
+            StartScriptCallCountStarted +
+            GetStatusCallCountStarted +
+            CancelScriptCallCountStarted +
+            CompleteScriptCallCountStarted +
+            StartScriptCallCountComplete +
+            GetStatusCallCountCompleted +
+            CancelScriptCallCountCompleted +
+            CompleteScriptCallCountCompleted > 0;
     }
 
     public class CountingCallsScriptServiceV3AlphaDecorator : IAsyncClientScriptServiceV3Alpha

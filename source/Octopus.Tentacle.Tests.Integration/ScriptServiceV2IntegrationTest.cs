@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
-using NUnit.Framework.Constraints;
 using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Tests.Integration.Support;
