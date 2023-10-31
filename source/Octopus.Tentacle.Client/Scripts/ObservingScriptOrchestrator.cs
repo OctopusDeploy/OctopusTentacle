@@ -12,11 +12,15 @@ namespace Octopus.Tentacle.Client.Scripts
         readonly OnScriptStatusResponseReceived onScriptStatusResponseReceived;
         readonly OnScriptCompleted onScriptCompleted;
 
+        protected TentacleClientOptions ClientOptions { get; }
+
         protected ObservingScriptOrchestrator(
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
             OnScriptStatusResponseReceived onScriptStatusResponseReceived,
-            OnScriptCompleted onScriptCompleted)
+            OnScriptCompleted onScriptCompleted,
+            TentacleClientOptions clientOptions)
         {
+            ClientOptions = clientOptions;
             this.scriptObserverBackOffStrategy = scriptObserverBackOffStrategy;
             this.onScriptStatusResponseReceived = onScriptStatusResponseReceived;
             this.onScriptCompleted = onScriptCompleted;

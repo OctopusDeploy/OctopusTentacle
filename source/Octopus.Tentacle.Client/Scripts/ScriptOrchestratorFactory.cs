@@ -1,13 +1,12 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Halibut.ServiceModel;
-using Halibut.Util;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Client.Capabilities;
 using Octopus.Tentacle.Client.Execution;
 using Octopus.Tentacle.Client.Observability;
-using Octopus.Tentacle.Client.Retries;
 using Octopus.Tentacle.Client.Services;
 using Octopus.Tentacle.Client.Utils;
 using Octopus.Tentacle.Contracts.Capabilities;
@@ -23,13 +22,12 @@ namespace Octopus.Tentacle.Client.Scripts
         readonly OnScriptStatusResponseReceived onScriptStatusResponseReceived;
         readonly OnScriptCompleted onScriptCompleted;
         readonly TimeSpan onCancellationAbandonCompleteScriptAfter;
-        readonly RpcRetrySettings rpcRetrySettings;
-        readonly AsyncHalibutFeature asyncHalibutFeature;
         readonly ILog logger;
 
         readonly SyncAndAsyncClientScriptServiceV1 clientScriptServiceV1;
         readonly SyncAndAsyncClientScriptServiceV2 clientScriptServiceV2;
         readonly SyncAndAsyncClientCapabilitiesServiceV2 clientCapabilitiesServiceV2;
+        readonly TentacleClientOptions clientOptions;
 
         public ScriptOrchestratorFactory(
             SyncAndAsyncClientScriptServiceV1 clientScriptServiceV1,
@@ -41,8 +39,7 @@ namespace Octopus.Tentacle.Client.Scripts
             OnScriptStatusResponseReceived onScriptStatusResponseReceived,
             OnScriptCompleted onScriptCompleted,
             TimeSpan onCancellationAbandonCompleteScriptAfter,
-            RpcRetrySettings rpcRetrySettings,
-            AsyncHalibutFeature asyncHalibutFeature,
+            TentacleClientOptions clientOptions,
             ILog logger)
         {
             this.clientScriptServiceV1 = clientScriptServiceV1;
@@ -54,8 +51,7 @@ namespace Octopus.Tentacle.Client.Scripts
             this.onScriptStatusResponseReceived = onScriptStatusResponseReceived;
             this.onScriptCompleted = onScriptCompleted;
             this.onCancellationAbandonCompleteScriptAfter = onCancellationAbandonCompleteScriptAfter;
-            this.rpcRetrySettings = rpcRetrySettings;
-            this.asyncHalibutFeature = asyncHalibutFeature;
+            this.clientOptions = clientOptions;
             this.logger = logger;
         }
 
@@ -72,7 +68,7 @@ namespace Octopus.Tentacle.Client.Scripts
                     clientOperationMetricsBuilder,
                     onScriptStatusResponseReceived,
                     onScriptCompleted,
-                    asyncHalibutFeature,
+                    clientOptions,
                     logger),
 
                 ScriptServiceVersion.Version2 => new ScriptServiceV2Orchestrator(
@@ -83,8 +79,7 @@ namespace Octopus.Tentacle.Client.Scripts
                     onScriptStatusResponseReceived,
                     onScriptCompleted,
                     onCancellationAbandonCompleteScriptAfter,
-                    rpcRetrySettings,
-                    asyncHalibutFeature,
+                    clientOptions,
                     logger),
 
                 _ => throw new ArgumentOutOfRangeException()
@@ -99,14 +94,14 @@ namespace Octopus.Tentacle.Client.Scripts
 
             async Task<CapabilitiesResponseV2> GetCapabilitiesFunc(CancellationToken ct)
             {
-                var result = await asyncHalibutFeature
+                var result = await clientOptions.AsyncHalibutFeature
                     .WhenDisabled(() => clientCapabilitiesServiceV2.SyncService.GetCapabilities(new HalibutProxyRequestOptions(ct, CancellationToken.None)))
                     .WhenEnabled(async () => await clientCapabilitiesServiceV2.AsyncService.GetCapabilitiesAsync(new HalibutProxyRequestOptions(ct, CancellationToken.None)));
 
                 return result;
             }
 
-            if (rpcRetrySettings.RetriesEnabled)
+            if (clientOptions.RpcRetrySettings.RetriesEnabled)
             {
                 tentacleCapabilities = await rpcCallExecutor.ExecuteWithRetries(
                     RpcCall.Create<ICapabilitiesServiceV2>(nameof(ICapabilitiesServiceV2.GetCapabilities)),
@@ -133,7 +128,7 @@ namespace Octopus.Tentacle.Client.Scripts
             if (tentacleCapabilities.HasScriptServiceV2())
             {
                 logger.Verbose("Using ScriptServiceV2");
-                logger.Verbose(rpcRetrySettings.RetriesEnabled
+                logger.Verbose(clientOptions.RpcRetrySettings.RetriesEnabled
                     ? $"RPC call retries are enabled. Retry timeout {rpcCallExecutor.RetryTimeout.TotalSeconds} seconds"
                     : "RPC call retries are disabled.");
                 return ScriptServiceVersion.Version2;

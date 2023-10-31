@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.Contracts.Capabilities;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
 

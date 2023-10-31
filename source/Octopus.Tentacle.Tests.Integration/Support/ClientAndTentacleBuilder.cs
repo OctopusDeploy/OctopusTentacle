@@ -123,7 +123,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             this.asyncHalibutFeature = asyncHalibutFeature;
             return this;
         }
-        
+
         public ClientAndTentacleBuilder WithTentacle(Action<ITentacleBuilder> tentacleBuilderAction)
         {
             this.tentacleBuilderAction = tentacleBuilderAction;
@@ -176,7 +176,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             var tentacleExe = tentacleVersion == null ?
                 TentacleExeFinder.FindTentacleExe(this.tentacleRuntime) :
                 await TentacleFetcher.GetTentacleVersion(temporaryDirectory.DirectoryPath, tentacleVersion, tentacleRuntime, logger, cancellationToken);
-            
+
             logger.Information($"Tentacle.exe location: {tentacleExe}");
 
             if (TentacleType == TentacleType.Polling)
@@ -223,13 +223,14 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             TentacleClient.CacheServiceWasNotFoundResponseMessages(server.ServerHalibutRuntime);
 
             var retrySettings = new RpcRetrySettings(retriesEnabled, retryDuration);
+            var clientOptions = new TentacleClientOptions(retrySettings);
 
             var tentacleClient = new TentacleClient(
                 tentacleEndPoint,
                 server.ServerHalibutRuntime,
                 scriptObserverBackoffStrategy,
                 tentacleClientObserver,
-                retrySettings,
+                clientOptions,
                 tentacleServiceDecorator);
 
             return new ClientAndTentacle(server.ServerHalibutRuntime, tentacleEndPoint, server, portForwarder, runningTentacle, tentacleClient, temporaryDirectory, retrySettings, logger);
