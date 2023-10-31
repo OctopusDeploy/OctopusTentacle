@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -8,7 +7,6 @@ using Halibut;
 using Octopus.Client;
 using Octopus.Client.Exceptions;
 using Octopus.Client.Model;
-using Octopus.Client.Model.Endpoints;
 using Octopus.Client.Operations;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Commands.OptionSets;
@@ -23,8 +21,6 @@ namespace Octopus.Tentacle.Commands
 {
     public abstract class RegisterMachineCommandBase<TRegistrationOperationType> : AbstractStandardCommand where TRegistrationOperationType : IRegisterMachineOperationBase
     {
-        const int DefaultServerCommsPort = 10943;
-
         readonly Lazy<TRegistrationOperationType> lazyRegisterMachineOperation;
         readonly Lazy<IWritableTentacleConfiguration> configuration;
         readonly Lazy<IOctopusServerChecker> octopusServerChecker;
@@ -34,18 +30,7 @@ namespace Octopus.Tentacle.Commands
 
         readonly ISystemLog log;
         readonly ApiEndpointOptions api;
-        string name = null!;
-        string policy = null!;
-        string publicName = null!;
-        bool allowOverwrite;
-        string comms = "TentaclePassive";
-        string agentComms = "Polling";
-        int? serverCommsPort = null;
-        string serverCommsAddress = null!;
-        string proxy = null!;
-        string spaceName = null!;
-        string serverWebSocketAddress = null!;
-        int? tentacleCommsPort = null;
+        readonly TentacleOptions tentacleOptions;
 
         public RegisterMachineCommandBase(Lazy<TRegistrationOperationType> lazyRegisterMachineOperation,
             Lazy<IWritableTentacleConfiguration> configuration,
@@ -67,19 +52,7 @@ namespace Octopus.Tentacle.Commands
             this.spaceRepositoryFactory = spaceRepositoryFactory;
 
             api = AddOptionSet(new ApiEndpointOptions(Options));
-
-            Options.Add("name=", "Name of the machine when registered; the default is the hostname", s => name = s);
-            Options.Add("policy=", "The name of a machine policy that applies to this machine", s => policy = s);
-            Options.Add("h|publicHostName=", "An Octopus-accessible DNS name/IP address for this machine; the default is the hostname", s => publicName = s);
-            Options.Add("f|force", "Allow overwriting of existing machines", s => allowOverwrite = true);
-            Options.Add("comms-style=", "The communication style to use - either TentacleActive or TentaclePassive; the default is " + comms, s => comms = s);
-            Options.Add("agent-comms=", "The communication behaviour of the Kubernetes Agent; either Polling or Listening; the default is " + agentComms, s => agentComms = s);
-            Options.Add("proxy=", "When using passive communication, the name of a proxy that Octopus should connect to the Tentacle through - e.g., 'Proxy ABC' where the proxy name is already configured in Octopus; the default is to connect to the machine directly", s => proxy = s);
-            Options.Add("space=", "The name of the space within which this command will be executed. E.g. 'Finance Department' where Finance Department is the name of an existing space. The default space will be used if omitted.", s => spaceName = s);
-            Options.Add("server-comms-port=", "When using active communication, the comms port on the Octopus Server; the default is " + DefaultServerCommsPort + ". If specified, this will take precedence over any port number in server-comms-address.", s => serverCommsPort = int.Parse(s));
-            Options.Add("server-comms-address=", "When using active communication, the comms address on the Octopus Server; the address of the Octopus Server will be used if omitted.", s => serverCommsAddress = s);
-            Options.Add("server-web-socket=", "When using active communication over websockets, the address of the Octopus Server, eg 'wss://example.com/OctopusComms'. Refer to http://g.octopushq.com/WebSocketComms", s => serverWebSocketAddress = s);
-            Options.Add("tentacle-comms-port=", "When using passive communication, the comms port that the Octopus Server is instructed to call back on to reach this machine; defaults to the configured listening port", s => tentacleCommsPort = int.Parse(s));
+            tentacleOptions = AddOptionSet(new TentacleOptions(Options));
         }
 
         protected override void Start()
@@ -92,24 +65,12 @@ namespace Octopus.Tentacle.Commands
         {
             CheckArgs();
 
-            if (!Enum.TryParse(comms, true, out CommunicationStyle communicationStyle))
-                throw new ControlledFailureException("Please specify a valid communications style, e.g. --comms-style=TentaclePassive");
-
-            if (!TryParse(agentComms, out var agentCommunicationMode))
-                throw new ControlledFailureException("Please specify a valid agent communications behaviour, e.g. --agent-comms=Polling");
-
             if (configuration.Value.TentacleCertificate == null)
                 throw new ControlledFailureException("No certificate has been generated for this Tentacle. Please run the new-certificate command first.");
 
-            if (communicationStyle == CommunicationStyle.TentacleActive && !string.IsNullOrWhiteSpace(proxy))
-                throw new ControlledFailureException("Option --proxy can only be used with --comms-style=TentaclePassive.  To set a proxy for a polling Tentacle use the polling-proxy command first and then register the Tentacle with register-with.");
-
-            if (!string.IsNullOrEmpty(serverWebSocketAddress) && !string.IsNullOrEmpty(serverCommsAddress))
-                throw new ControlledFailureException("Please specify a --server-web-socket, or a --server-comms-address - not both.");
-
             Uri? serverAddress = null;
 
-            var isPolling = IsPolling(communicationStyle, agentCommunicationMode);
+            var isPolling = IsPolling(tentacleOptions.CommunicationStyle);
 
             var useDefaultProxy = isPolling
                 ? configuration.Value.PollingProxyConfiguration.UseDefaultProxy
@@ -131,40 +92,36 @@ namespace Octopus.Tentacle.Commands
                 ? await octopusClientInitializer.CreateClient(api, useDefaultProxy)
                 : await octopusClientInitializer.CreateClient(api, proxyOverride);
 
-            var spaceRepository = await spaceRepositoryFactory.CreateSpaceRepository(client, spaceName);
-            await RegisterMachine(client.ForSystem(), spaceRepository, serverAddress, sslThumbprint, communicationStyle, agentCommunicationMode);
+            var spaceRepository = await spaceRepositoryFactory.CreateSpaceRepository(client, tentacleOptions.SpaceName);
+            await RegisterMachine(client.ForSystem(), spaceRepository, serverAddress, sslThumbprint, tentacleOptions.CommunicationStyle);
         }
 
-        bool IsPolling(CommunicationStyle communicationStyle, AgentCommunicationModeResource agentCommunicationMode)
+        bool IsPolling(CommunicationStyle communicationStyle)
         {
-            return communicationStyle == CommunicationStyle.TentacleActive ||
-                (communicationStyle == CommunicationStyle.KubernetesAgent && agentCommunicationMode == AgentCommunicationModeResource.Polling);
+            return communicationStyle == CommunicationStyle.TentacleActive;
         }
 
-        async Task RegisterMachine(IOctopusSystemAsyncRepository systemRepository, IOctopusSpaceAsyncRepository repository, Uri? serverAddress, string? sslThumbprint, CommunicationStyle communicationStyle, AgentCommunicationModeResource agentCommunicationMode)
+        async Task RegisterMachine(IOctopusSystemAsyncRepository systemRepository, IOctopusSpaceAsyncRepository repository, Uri? serverAddress, string? sslThumbprint, CommunicationStyle communicationStyle)
         {
             await ConfirmTentacleCanRegisterWithServerBasedOnItsVersion(systemRepository);
 
             var server = new OctopusServerConfiguration(await GetServerThumbprint(systemRepository, serverAddress, sslThumbprint))
             {
                 Address = serverAddress!,
-                CommunicationStyle = communicationStyle,
-                AgentCommunicationMode = agentCommunicationMode
+                CommunicationStyle = communicationStyle
             };
 
             var registerMachineOperation = lazyRegisterMachineOperation.Value;
-            registerMachineOperation.MachineName = string.IsNullOrWhiteSpace(name) ? Environment.MachineName : name;
+            registerMachineOperation.MachineName = string.IsNullOrWhiteSpace(tentacleOptions.Name) ? Environment.MachineName : tentacleOptions.Name;
 
             var existingServer = configuration.Value.TrustedOctopusServers.FirstOrDefault(x => x.Address == server.Address && x.CommunicationStyle == communicationStyle);
-            if (communicationStyle == CommunicationStyle.TentaclePassive ||
-                (communicationStyle == CommunicationStyle.KubernetesAgent && agentCommunicationMode == AgentCommunicationModeResource.Listening))
+            if (communicationStyle == CommunicationStyle.TentaclePassive)
             {
-                registerMachineOperation.TentacleHostname = string.IsNullOrWhiteSpace(publicName) ? Environment.MachineName : publicName;
-                registerMachineOperation.TentaclePort = tentacleCommsPort ?? configuration.Value.ServicesPortNumber;
-                registerMachineOperation.ProxyName = proxy;
+                registerMachineOperation.TentacleHostname = string.IsNullOrWhiteSpace(tentacleOptions.PublicName) ? Environment.MachineName : tentacleOptions.PublicName;
+                registerMachineOperation.TentaclePort = tentacleOptions.TentacleCommsPort ?? configuration.Value.ServicesPortNumber;
+                registerMachineOperation.ProxyName = tentacleOptions.Proxy;
             }
-            else if (communicationStyle == CommunicationStyle.TentacleActive ||
-                (communicationStyle == CommunicationStyle.KubernetesAgent && agentCommunicationMode == AgentCommunicationModeResource.Polling))
+            else if (communicationStyle == CommunicationStyle.TentacleActive)
             {
                 Uri subscriptionId;
                 if (existingServer?.SubscriptionId != null)
@@ -175,13 +132,8 @@ namespace Octopus.Tentacle.Commands
                 server.SubscriptionId = subscriptionId.ToString();
             }
 
-            if (communicationStyle == CommunicationStyle.KubernetesAgent)
-            {
-                registerMachineOperation.AgentCommunicationMode = agentCommunicationMode;
-            }
-
-            registerMachineOperation.MachinePolicy = policy;
-            registerMachineOperation.AllowOverwrite = allowOverwrite;
+            registerMachineOperation.MachinePolicy = tentacleOptions.Policy;
+            registerMachineOperation.AllowOverwrite = tentacleOptions.AllowOverwrite;
             registerMachineOperation.CommunicationStyle = communicationStyle;
             registerMachineOperation.TentacleThumbprint = configuration.Value.TentacleCertificate!.Thumbprint;
 
@@ -225,29 +177,29 @@ namespace Octopus.Tentacle.Commands
 
         Uri GetActiveTentacleAddress()
         {
-            if (string.IsNullOrWhiteSpace(serverWebSocketAddress))
+            if (string.IsNullOrWhiteSpace(tentacleOptions.ServerWebSocketAddress))
             {
                 Uri serverCommsAddressUri;
+                int serverCommsPort;
 
-                if (string.IsNullOrEmpty(serverCommsAddress))
+                if (string.IsNullOrEmpty(tentacleOptions.ServerCommsAddress))
                 {
                     serverCommsAddressUri = api.ServerUri;
-                    serverCommsPort ??= DefaultServerCommsPort;
+                    serverCommsPort = TentacleOptions.DefaultServerCommsPort;
                 }
                 else
                 {
-                    serverCommsAddressUri = new Uri(serverCommsAddress);
-                    serverCommsPort ??= serverCommsAddressUri.Port;
+                    serverCommsAddressUri = new Uri(tentacleOptions.ServerCommsAddress);
+                    serverCommsPort = serverCommsAddressUri.Port;
                 }
 
-                var  hello = AgentCommunicationModeResource.Create<AgentCommunicationModeResource>("wat");
                 return new Uri($"https://{serverCommsAddressUri.Host}:{serverCommsPort}");
             }
 
             if (!HalibutRuntime.OSSupportsWebSockets)
                 throw new ControlledFailureException("Websockets is only supported on Windows Server 2012 and later");
 
-            var address = new Uri(serverWebSocketAddress);
+            var address = new Uri(tentacleOptions.ServerWebSocketAddress);
 
             switch (address.Scheme.ToLower())
             {
@@ -279,23 +231,6 @@ namespace Octopus.Tentacle.Commands
 
             if (serverVersion.Version.Major < 3)
                 throw new ControlledFailureException($"You cannot register a {tentacleVersion.Version.Major}.* Octopus Tentacle with a {serverVersion.Version.Major}.* Octopus Server.");
-        }
-        static bool TryParse(string value, [NotNullWhen(true)] out AgentCommunicationModeResource? agentCommunicationMode)
-        {
-            if (value.Equals(AgentCommunicationModeResource.Listening.Value, StringComparison.InvariantCultureIgnoreCase))
-            {
-                agentCommunicationMode = AgentCommunicationModeResource.Listening;
-                return true;
-            }
-
-            if (value.Equals(AgentCommunicationModeResource.Polling.Value, StringComparison.InvariantCultureIgnoreCase))
-            {
-                agentCommunicationMode = AgentCommunicationModeResource.Polling;
-                return true;
-            }
-
-            agentCommunicationMode = default;
-            return false;
         }
 
         #endregion

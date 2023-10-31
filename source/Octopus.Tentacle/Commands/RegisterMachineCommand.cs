@@ -13,7 +13,14 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Commands
 {
-    public class RegisterMachineCommand : RegisterMachineCommandBase<IRegisterMachineOperation>
+    public class RegisterMachineCommand : RegisterMachineCommand<IRegisterMachineOperation>
+    {
+        public RegisterMachineCommand(Lazy<IRegisterMachineOperation> lazyRegisterMachineOperation, Lazy<IWritableTentacleConfiguration> configuration, ISystemLog log, IApplicationInstanceSelector selector, Lazy<IOctopusServerChecker> octopusServerChecker, IProxyConfigParser proxyConfig, IOctopusClientInitializer octopusClientInitializer, ISpaceRepositoryFactory spaceRepositoryFactory, ILogFileOnlyLogger logFileOnlyLogger) : base(lazyRegisterMachineOperation, configuration, log, selector, octopusServerChecker, proxyConfig, octopusClientInitializer, spaceRepositoryFactory, logFileOnlyLogger)
+        {
+        }
+    }
+
+    public class RegisterMachineCommand<TRegisterMachineOperation> : RegisterMachineCommandBase<TRegisterMachineOperation> where TRegisterMachineOperation : IRegisterMachineOperation
     {
         readonly List<string> environmentNames = new List<string>();
         readonly List<string> roles = new List<string>();
@@ -21,7 +28,7 @@ namespace Octopus.Tentacle.Commands
         readonly List<string> tenantTgs = new List<string>();
         TenantedDeploymentMode tenantedDeploymentMode;
 
-        public RegisterMachineCommand(Lazy<IRegisterMachineOperation> lazyRegisterMachineOperation,
+        public RegisterMachineCommand(Lazy<TRegisterMachineOperation> lazyRegisterMachineOperation,
                                       Lazy<IWritableTentacleConfiguration> configuration,
                                       ISystemLog log,
                                       IApplicationInstanceSelector selector,
@@ -54,7 +61,7 @@ namespace Octopus.Tentacle.Commands
                 throw new ControlledFailureException("Please specify a role name, e.g., --role=web-server");
         }
 
-        protected override void EnhanceOperation(IRegisterMachineOperation registerOperation)
+        protected override void EnhanceOperation(TRegisterMachineOperation registerOperation)
         {
             registerOperation.Tenants = tenants.ToArray();
             registerOperation.TenantTags = tenantTgs.ToArray();
