@@ -27,7 +27,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         protected string? TentacleExePath;
         protected string CertificatePfxPath = Certificates.TentaclePfxPath;
         protected string TentacleThumbprint = Certificates.TentaclePublicThumbprint;
-        
+
         readonly Regex listeningPortRegex = new (@"^listen:\/\/.+:(\d+)\/");
         readonly Dictionary<string, string> runTentacleEnvironmentVariables = new();
 
@@ -119,7 +119,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             Uri? serviceUri,
             string tentacleExe,
             string instanceName,
-            TemporaryDirectory tempDirectory, 
+            TemporaryDirectory tempDirectory,
             CancellationToken cancellationToken)
         {
             var hasTentacleStarted = new ManualResetEventSlim();
@@ -131,8 +131,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 try
                 {
                     await RunTentacleCommandOutOfProcess(
-                        tentacleExe, 
-                        new[] {"agent", $"--instance={instanceName}", "--noninteractive"}, 
+                        tentacleExe,
+                        new[] {"agent", $"--instance={instanceName}", "--noninteractive", "--async-halibut"},
                         tempDirectory,
                         s =>
                         {
@@ -145,7 +145,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                                 hasTentacleStarted.Set();
                             }
                         },
-                        runTentacleEnvironmentVariables, 
+                        runTentacleEnvironmentVariables,
                         cancellationToken);
                 }
                 catch (Exception e)
@@ -215,10 +215,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         {
             await RunTentacleCommandOutOfProcess(
                 tentacleExe,
-                args, 
-                tmp, 
-                _ => { }, 
-                new Dictionary<string, string?>(), 
+                args,
+                tmp,
+                _ => { },
+                new Dictionary<string, string?>(),
                 cancellationToken);
         }
 
@@ -226,7 +226,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             string tentacleExe,
             string[] args,
             TemporaryDirectory tmp,
-            Action<string> commandOutput, 
+            Action<string> commandOutput,
             IReadOnlyDictionary<string, string> environmentVariables,
             CancellationToken cancellationToken)
         {
