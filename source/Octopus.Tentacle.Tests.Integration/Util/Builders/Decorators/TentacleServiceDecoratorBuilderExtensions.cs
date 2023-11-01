@@ -50,22 +50,6 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             return builder.RegisterInterceptor(serviceType, new CallMetricsInterceptor(callMetrics).ToInterceptor());
         }
 
-        public static TentacleServiceDecoratorBuilder RegisterInvocationHooks<TService>(this TentacleServiceDecoratorBuilder builder, Action<TService>? preInvocation, Action<TService>? postInvocation)
-        {
-            return builder.RegisterInterceptor<TService>(new InvocationHooksInterceptor<TService>(WrapAction(preInvocation), WrapAction(postInvocation)).ToInterceptor());
-        }
-
-        static Func<TService, Task>? WrapAction<TService>(Action<TService>? action)
-        {
-            return action is null
-                ? null
-                : service =>
-                {
-                    action(service);
-                    return Task.CompletedTask;
-                };
-        }
-
         public static TentacleServiceDecoratorBuilder RegisterInvocationHooks<TService>(this TentacleServiceDecoratorBuilder builder, Func<TService, Task>? preInvocation, Func<TService, Task>? postInvocation)
             => builder.RegisterInterceptor<TService>(new InvocationHooksInterceptor<TService>(preInvocation, postInvocation).ToInterceptor());
     }

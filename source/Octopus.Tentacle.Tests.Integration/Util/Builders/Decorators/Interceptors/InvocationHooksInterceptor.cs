@@ -15,10 +15,20 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Intercepto
             this.postInvocation = postInvocation;
         }
 
+        protected override void OnStartingInvocation(IInvocation invocation)
+        {
+            preInvocation?.Invoke((TService)invocation.InvocationTarget).GetAwaiter().GetResult();
+        }
+
         protected override async Task OnStartingInvocationAsync(IInvocation invocation)
         {
             if (preInvocation is not null)
                 await preInvocation((TService)invocation.InvocationTarget);
+        }
+
+        protected override void OnCompletingInvocation(IInvocation invocation)
+        {
+            postInvocation?.Invoke((TService)invocation.InvocationTarget).GetAwaiter().GetResult();
         }
 
         protected override async Task OnCompletingInvocationAsync(IInvocation invocation)
