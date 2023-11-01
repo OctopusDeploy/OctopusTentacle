@@ -2,12 +2,11 @@
 using System.Collections.Concurrent;
 using System.Reflection;
 using System.Threading;
-using System.Threading.Tasks;
 using Castle.DynamicProxy;
 
 namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Interceptors
 {
-    public class CallMetricsInterceptor : IAsyncInterceptor
+    public class CallMetricsInterceptor : AsyncInterceptor
     {
         readonly IRecordableCallMetrics callMetrics;
 
@@ -16,74 +15,19 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Intercepto
             this.callMetrics = callMetrics;
         }
 
-        public void InterceptSynchronous(IInvocation invocation)
+        protected override void OnStartingInvocation(IInvocation invocation)
         {
-            try
-            {
-                callMetrics.RecordCallStart(invocation.Method);
-                invocation.Proceed();
-            }
-            catch (Exception e)
-            {
-                callMetrics.RecordCallException(invocation.Method, e);
-                throw;
-            }
-            finally
-            {
-                callMetrics.RecordCallComplete(invocation.Method);
-            }
+            callMetrics.RecordCallStart(invocation.Method);
         }
 
-        public void InterceptAsynchronous(IInvocation invocation)
+        protected override void OnInvocationException(IInvocation invocation, Exception exception)
         {
-            invocation.ReturnValue = InternalInterceptAsynchronous(invocation);
+            callMetrics.RecordCallException(invocation.Method, exception);
         }
 
-        async Task InternalInterceptAsynchronous(IInvocation invocation)
+        protected override void OnCompletingInvocation(IInvocation invocation)
         {
-            try
-            {
-                callMetrics.RecordCallStart(invocation.Method);
-
-                invocation.Proceed();
-
-                await (Task)invocation.ReturnValue;
-            }
-            catch (Exception e)
-            {
-                callMetrics.RecordCallException(invocation.Method, e);
-                throw;
-            }
-            finally
-            {
-                callMetrics.RecordCallComplete(invocation.Method);
-            }
-        }
-
-        public void InterceptAsynchronous<TResult>(IInvocation invocation)
-        {
-            invocation.ReturnValue = InternalInterceptAsynchronous<TResult>(invocation);
-        }
-
-        async Task<TResult> InternalInterceptAsynchronous<TResult>(IInvocation invocation)
-        {
-            try
-            {
-                callMetrics.RecordCallStart(invocation.Method);
-
-                invocation.Proceed();
-
-                return await (Task<TResult>)invocation.ReturnValue;
-            }
-            catch (Exception e)
-            {
-                callMetrics.RecordCallException(invocation.Method, e);
-                throw;
-            }
-            finally
-            {
-                callMetrics.RecordCallComplete(invocation.Method);
-            }
+            callMetrics.RecordCallComplete(invocation.Method);
         }
     }
 

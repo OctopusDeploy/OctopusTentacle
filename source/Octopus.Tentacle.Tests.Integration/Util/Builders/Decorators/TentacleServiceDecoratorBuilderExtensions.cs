@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Castle.DynamicProxy;
 using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Interceptors;
 
@@ -7,9 +8,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
     public static class TentacleServiceDecoratorBuilderExtensions
     {
         public static TentacleServiceDecoratorBuilder LogCallsToService<TService>(this TentacleServiceDecoratorBuilder builder) where TService : class
-        {
-            return builder.RegisterInterceptor<TService>(new CallLoggingInterceptor().ToInterceptor());
-        }
+            => builder.RegisterInterceptor<TService>(new CallLoggingInterceptor().ToInterceptor());
 
         public static TentacleServiceDecoratorBuilder LogCallsToService<TSyncService, TAsyncService>(this TentacleServiceDecoratorBuilder builder)
             where TSyncService : class
@@ -22,9 +21,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
         }
 
         public static TentacleServiceDecoratorBuilder LogCallsToService(this TentacleServiceDecoratorBuilder builder, Type serviceType)
-        {
-            return builder.RegisterInterceptor(serviceType, new CallLoggingInterceptor().ToInterceptor());
-        }
+            => builder.RegisterInterceptor(serviceType, new CallLoggingInterceptor().ToInterceptor());
 
         public static TentacleServiceDecoratorBuilder RecordCallMetricsToService<TService>(this TentacleServiceDecoratorBuilder builder, out CallMetrics callMetrics) where TService : class
         {
@@ -52,5 +49,24 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             callMetrics = localCallMetrics;
             return builder.RegisterInterceptor(serviceType, new CallMetricsInterceptor(callMetrics).ToInterceptor());
         }
+
+        public static TentacleServiceDecoratorBuilder RegisterInvocationHooks<TService>(this TentacleServiceDecoratorBuilder builder, Action<TService>? preInvocation, Action<TService>? postInvocation)
+        {
+            return builder.RegisterInterceptor<TService>(new InvocationHooksInterceptor<TService>(WrapAction(preInvocation), WrapAction(postInvocation)).ToInterceptor());
+        }
+
+        static Func<TService, Task>? WrapAction<TService>(Action<TService>? action)
+        {
+            return action is null
+                ? null
+                : service =>
+                {
+                    action(service);
+                    return Task.CompletedTask;
+                };
+        }
+
+        public static TentacleServiceDecoratorBuilder RegisterInvocationHooks<TService>(this TentacleServiceDecoratorBuilder builder, Func<TService, Task>? preInvocation, Func<TService, Task>? postInvocation)
+            => builder.RegisterInterceptor<TService>(new InvocationHooksInterceptor<TService>(preInvocation, postInvocation).ToInterceptor());
     }
 }

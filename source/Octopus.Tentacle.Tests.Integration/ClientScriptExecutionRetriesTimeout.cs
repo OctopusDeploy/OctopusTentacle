@@ -33,7 +33,7 @@ namespace Octopus.Tentacle.Tests.Integration
         public async Task WhenRpcRetriesTimeOut_DuringGetCapabilities_TheRpcCallIsCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase, RpcCallStage rpcCallStage)
         {
             SyncOrAsyncHalibut syncOrAsyncHalibut = tentacleConfigurationTestCase.SyncOrAsyncHalibut;
-                
+
             IClientScriptServiceV2? scriptServiceV2 = null;
             IAsyncClientScriptServiceV2? asyncScriptServiceV2 = null;
 
@@ -44,19 +44,17 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithPortForwarder(out var portForwarder)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .LogCallsToCapabilitiesServiceV2()
+                    .LogCallsToService<IClientCapabilitiesServiceV2, IAsyncClientCapabilitiesServiceV2>()
                     .LogCallsToScriptServiceV2()
-                    .CountCallsToCapabilitiesServiceV2(out var capabilitiesServiceCallCounts)
+                    .RecordCallMetricsToService<IClientCapabilitiesServiceV2, IAsyncClientScriptServiceV2>(out var capabilitiesCallMetrics)
                     .CountCallsToScriptServiceV2(out var scriptServiceV2CallCounts)
-                    .RecordExceptionThrownInCapabilitiesServiceV2(out var capabilitiesServiceV2Exception)
-                    .DecorateCapabilitiesServiceV2With(d => d
-                        .BeforeGetCapabilities(async (service) =>
-                        {
+                    .RegisterInvocationHooks<IAsyncClientCapabilitiesServiceV2>(async _ =>
+                    {
                             await syncOrAsyncHalibut.WhenSync(() => scriptServiceV2.EnsureTentacleIsConnectedToServer(Logger))
                                 .WhenAsync(async () => await asyncScriptServiceV2.EnsureTentacleIsConnectedToServer(Logger));
 
                             // Kill the first GetCapabilities call to force the rpc call into retries
-                            if (capabilitiesServiceV2Exception.GetCapabilitiesLatestException == null)
+                            if (capabilitiesCallMetrics.LatestException(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)) == null)
                             {
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
@@ -75,8 +73,8 @@ namespace Octopus.Tentacle.Tests.Integration
                                 }
 
                             }
-                        })
-                        .Build())
+
+                    }, null)
                     .Build())
                 .Build(CancellationToken);
 
@@ -100,7 +98,7 @@ namespace Octopus.Tentacle.Tests.Integration
             await action.Should().ThrowAsync<HalibutClientException>();
             duration.Stop();
 
-            capabilitiesServiceCallCounts.GetCapabilitiesCallCountStarted.Should().BeGreaterOrEqualTo(2);
+            capabilitiesCallMetrics.StartedCount(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)).Should().BeGreaterOrEqualTo(2);
             scriptServiceV2CallCounts.StartScriptCallCountStarted.Should().Be(0, "Test should not have not proceeded past GetCapabilities");
 
             // Ensure we actually waited and retried until the timeout policy kicked in
@@ -358,7 +356,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations]
         public async Task WhenGetStatusFails_AndTakesLongerThanTheRetryDuration_TheCallIsNotRetried_AndTimesOut(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
-            var retryDuration = TimeSpan.FromSeconds(15);    
+            var retryDuration = TimeSpan.FromSeconds(15);
 
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 // Set a short retry duration so we cancel fairly quickly
