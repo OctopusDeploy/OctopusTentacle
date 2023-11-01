@@ -5,7 +5,7 @@ using System;
 /// These attributes replicate the ones from System.Diagnostics.CodeAnalysis, and are here so we can still compile against the older frameworks.
 /// </summary>
 
-namespace System.Diagnostics.CodeAnalysis
+namespace Octopus.Tentacle
 {
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Parameter | AttributeTargets.ReturnValue, AllowMultiple = true)]
     public sealed class NotNullIfNotNullAttribute : Attribute

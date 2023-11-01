@@ -1,5 +1,5 @@
 ﻿using System;
-using NotNullIfNotNullAttribute = System.Diagnostics.CodeAnalysis.NotNullIfNotNullAttribute;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Octopus.Configuration;
 

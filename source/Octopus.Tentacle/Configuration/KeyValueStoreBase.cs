@@ -1,5 +1,5 @@
 using System;
-using NotNullIfNotNullAttribute = System.Diagnostics.CodeAnalysis.NotNullIfNotNullAttribute;
+using System.Diagnostics.CodeAnalysis;
 using Octopus.Configuration;
 
 namespace Octopus.Tentacle.Configuration
