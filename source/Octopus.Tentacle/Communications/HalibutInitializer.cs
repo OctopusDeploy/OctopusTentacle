@@ -101,7 +101,7 @@ namespace Octopus.Tentacle.Communications
             }
         }
 
-        List<(string, CommunicationStyle, AgentCommunicationModeResource)> GetTrustedOctopusThumbprints()
+        List<(string, CommunicationStyle, TentacleCommunicationModeResource)> GetTrustedOctopusThumbprints()
         {
             return configuration.TrustedOctopusServers.Select(t => (t.Thumbprint, t.CommunicationStyle, t.AgentCommunicationMode)).ToList();
         }
@@ -110,8 +110,8 @@ namespace Octopus.Tentacle.Communications
         {
             return configuration.TrustedOctopusServers.Where(octopusServerConfiguration =>
                 octopusServerConfiguration.CommunicationStyle == CommunicationStyle.TentacleActive ||
-                (octopusServerConfiguration is { CommunicationStyle: CommunicationStyle.KubernetesAgent } &&
-                octopusServerConfiguration.AgentCommunicationMode == AgentCommunicationModeResource.Polling));
+                (octopusServerConfiguration is { CommunicationStyle: CommunicationStyle.KubernetesTentacle } &&
+                octopusServerConfiguration.AgentCommunicationMode == TentacleCommunicationModeResource.Polling));
         }
 
         IPEndPoint GetEndPointToListenOn()

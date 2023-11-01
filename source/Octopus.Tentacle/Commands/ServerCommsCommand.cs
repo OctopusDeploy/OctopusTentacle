@@ -89,7 +89,7 @@ namespace Octopus.Tentacle.Commands
             if (server.SubscriptionId == null)
             {
                 var existingPollingConfiguration = servers.FirstOrDefault(s =>
-                    (s.CommunicationStyle == CommunicationStyle.TentacleActive || (s.CommunicationStyle == CommunicationStyle.KubernetesAgent && s.AgentCommunicationMode == AgentCommunicationModeResource.Polling)) && s.SubscriptionId != null);
+                    (s.CommunicationStyle == CommunicationStyle.TentacleActive || (s.CommunicationStyle == CommunicationStyle.KubernetesTentacle && s.AgentCommunicationMode == TentacleCommunicationModeResource.Polling)) && s.SubscriptionId != null);
                 server.SubscriptionId = existingPollingConfiguration?.SubscriptionId ?? new Uri($"poll://{RandomStringGenerator.Generate(20).ToLowerInvariant()}/").ToString();
             }
 

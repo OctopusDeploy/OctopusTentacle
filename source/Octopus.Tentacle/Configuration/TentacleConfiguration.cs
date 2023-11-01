@@ -258,16 +258,16 @@ namespace Octopus.Tentacle.Configuration
             }));
         }
 
-        static string CommTypeToString(CommunicationStyle communicationStyle, AgentCommunicationModeResource? agentCommunicationBehaviour = null)
+        static string CommTypeToString(CommunicationStyle communicationStyle, TentacleCommunicationModeResource? agentCommunicationBehaviour = null)
         {
-            agentCommunicationBehaviour ??= AgentCommunicationModeResource.Polling;
+            agentCommunicationBehaviour ??= TentacleCommunicationModeResource.Polling;
 
             return communicationStyle switch
             {
                 CommunicationStyle.TentacleActive => "polling tentacle",
                 CommunicationStyle.TentaclePassive => "listening tentacle",
-                CommunicationStyle.KubernetesAgent =>
-                    "kubernetes agent" + (agentCommunicationBehaviour == AgentCommunicationModeResource.Polling ? " (polling)" : " (listening)"),
+                CommunicationStyle.KubernetesTentacle =>
+                    "kubernetes agent" + (agentCommunicationBehaviour == TentacleCommunicationModeResource.Polling ? " (polling)" : " (listening)"),
                 _ => string.Empty
             };
         }

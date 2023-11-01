@@ -168,7 +168,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
             else
             {
                 var listens = tencon.TrustedOctopusServers.Where(t => t.CommunicationStyle == CommunicationStyle.TentaclePassive ||
-                    (t.CommunicationStyle == CommunicationStyle.KubernetesAgent && t.AgentCommunicationMode == AgentCommunicationModeResource.Listening)).ToList();
+                    (t.CommunicationStyle == CommunicationStyle.KubernetesTentacle && t.AgentCommunicationMode == TentacleCommunicationModeResource.Listening)).ToList();
                 if (listens.Any())
                 {
                     describeTrust.Add($"The Tentacle listens for connections on port {tencon.ServicesPortNumber}.");
@@ -180,7 +180,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
                 }
 
                 var polls = tencon.TrustedOctopusServers.Where(s => s.CommunicationStyle == CommunicationStyle.TentacleActive ||
-                    (s.CommunicationStyle == CommunicationStyle.KubernetesAgent && s.AgentCommunicationMode == AgentCommunicationModeResource.Polling)).ToList();
+                    (s.CommunicationStyle == CommunicationStyle.KubernetesTentacle && s.AgentCommunicationMode == TentacleCommunicationModeResource.Polling)).ToList();
                 if (polls.Any())
                 {
                     pollsServers = true;
