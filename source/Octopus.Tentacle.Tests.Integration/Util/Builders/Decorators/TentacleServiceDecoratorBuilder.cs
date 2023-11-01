@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Castle.DynamicProxy;
 using Octopus.Tentacle.Client;
 using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Contracts.ClientServices;
-using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.SyncAndAsyncProxies;
+using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Interceptors;
 
 namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
 {
@@ -16,6 +18,28 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
         private readonly List<Decorator<IAsyncClientScriptServiceV3Alpha>> scriptServiceV3AlphaDecorators = new();
         private readonly List<Decorator<IAsyncClientFileTransferService>> fileTransferServiceDecorators = new();
         private readonly List<Decorator<IAsyncClientCapabilitiesServiceV2>> capabilitiesServiceV2Decorators = new();
+
+        readonly Dictionary<Type, List<IInterceptor>> interceptors = new();
+
+        public TentacleServiceDecoratorBuilder RegisterInterceptor<TService>(IInterceptor interceptor)
+            => RegisterInterceptor(typeof(TService), interceptor);
+
+        public TentacleServiceDecoratorBuilder RegisterInterceptor(Type serviceType, IInterceptor interceptor)
+        {
+            if (interceptors.TryGetValue(serviceType, out var list))
+            {
+                list.Add(interceptor);
+            }
+            else
+            {
+                interceptors.Add(serviceType, new List<IInterceptor>
+                {
+                    interceptor
+                });
+            }
+
+            return this;
+        }
 
         public TentacleServiceDecoratorBuilder DecorateScriptServiceWith(Decorator<IAsyncClientScriptService> scriptServiceDecorator)
         {
@@ -73,108 +97,51 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
 
         internal ITentacleServiceDecoratorFactory Build()
         {
-            return new FooTentacleServiceDecoratorFactory(
-                Combine(scriptServiceDecorators),
-                Combine(scriptServiceV2Decorators),
-                Combine(scriptServiceV3AlphaDecorators),
-                Combine(fileTransferServiceDecorators),
-                Combine(capabilitiesServiceV2Decorators));
+            return new DynamicProxyTentacleServiceDecoratorFactory(interceptors);
         }
 
-        public static Decorator<T> Combine<T>(List<Decorator<T>> chain) where T : class
+        class DynamicProxyTentacleServiceDecoratorFactory : ITentacleServiceDecoratorFactory
         {
-            return t =>
+            static readonly ProxyGenerator Generator = new();
+            readonly Dictionary<Type, List<IInterceptor>> serviceInterceptors;
+
+            public DynamicProxyTentacleServiceDecoratorFactory(Dictionary<Type, List<IInterceptor>> serviceInterceptors)
             {
-                var reverseChain = new List<Decorator<T>>(chain);
-                reverseChain.Reverse();
-
-                foreach (var func in reverseChain)
-                {
-                    t = func(t);
-                }
-
-                return t;
-            };
-        }
-
-        private class FooTentacleServiceDecoratorFactory : AsyncToSyncTentacleServiceDecorator, ITentacleServiceDecoratorFactory
-        {
-            readonly Decorator<IAsyncClientScriptServiceV3Alpha> scriptServiceV3AlphaDecorator;
-
-            public FooTentacleServiceDecoratorFactory(
-                Decorator<IAsyncClientScriptService> scriptServiceDecorator,
-                Decorator<IAsyncClientScriptServiceV2> scriptServiceV2Decorator,
-                Decorator<IAsyncClientScriptServiceV3Alpha> scriptServiceV3AlphaDecorator,
-                Decorator<IAsyncClientFileTransferService> fileTransferServiceDecorator,
-                Decorator<IAsyncClientCapabilitiesServiceV2> capabilitiesServiceV2Decorator) :
-                base(scriptServiceDecorator, scriptServiceV2Decorator, fileTransferServiceDecorator, capabilitiesServiceV2Decorator)
-            {
-                this.scriptServiceV3AlphaDecorator = scriptServiceV3AlphaDecorator;
+                this.serviceInterceptors = serviceInterceptors;
             }
 
-            public IAsyncClientScriptService Decorate(IAsyncClientScriptService scriptService)
+            public IClientScriptService Decorate(IClientScriptService scriptService) => GetProxy(scriptService);
+
+            public IAsyncClientScriptService Decorate(IAsyncClientScriptService scriptService) => GetProxy(scriptService);
+
+            public IClientScriptServiceV2 Decorate(IClientScriptServiceV2 scriptService) => GetProxy(scriptService);
+
+            public IAsyncClientScriptServiceV2 Decorate(IAsyncClientScriptServiceV2 scriptService) => GetProxy(scriptService);
+
+            public IClientFileTransferService Decorate(IClientFileTransferService service) => GetProxy(service);
+
+            public IAsyncClientFileTransferService Decorate(IAsyncClientFileTransferService service) => GetProxy(service);
+
+            public IClientCapabilitiesServiceV2 Decorate(IClientCapabilitiesServiceV2 service) => GetProxy(service);
+
+            public IAsyncClientCapabilitiesServiceV2 Decorate(IAsyncClientCapabilitiesServiceV2 service) => GetProxy(service);
+
+            public IAsyncClientScriptServiceV3Alpha Decorate(IAsyncClientScriptServiceV3Alpha service) => GetProxy(service);
+
+            T GetProxy<T>(T scriptService) where T : class
             {
-                return scriptServiceDecorator(scriptService);
-            }
+                var interceptors = GetInterceptors<T>();
 
-            public IAsyncClientScriptServiceV2 Decorate(IAsyncClientScriptServiceV2 scriptService)
+                return interceptors.Any()
+                    ? Generator.CreateInterfaceProxyWithTargetInterface(scriptService, interceptors)
+                    : scriptService;
+            }
+            IInterceptor[] GetInterceptors<T>()
             {
-                return scriptServiceV2Decorator(scriptService);
+                return serviceInterceptors.TryGetValue(typeof(T), out var interceptors)
+                    ? interceptors.ToArray()
+                    : Array.Empty<IInterceptor>();
             }
-
-            public IAsyncClientFileTransferService Decorate(IAsyncClientFileTransferService service)
-            {
-                return fileTransferServiceDecorator(service);
-            }
-
-            public IAsyncClientCapabilitiesServiceV2 Decorate(IAsyncClientCapabilitiesServiceV2 service)
-            {
-                return capabilitiesServiceV2Decorator(service);
-            }
-
-            public IAsyncClientScriptServiceV3Alpha Decorate(IAsyncClientScriptServiceV3Alpha service)
-            {
-                return scriptServiceV3AlphaDecorator(service);
-            }
-        }
-    }
-
-    internal abstract class AsyncToSyncTentacleServiceDecorator
-    {
-        protected readonly Decorator<IAsyncClientScriptService> scriptServiceDecorator;
-        protected readonly Decorator<IAsyncClientScriptServiceV2> scriptServiceV2Decorator;
-        protected readonly Decorator<IAsyncClientFileTransferService> fileTransferServiceDecorator;
-        protected readonly Decorator<IAsyncClientCapabilitiesServiceV2> capabilitiesServiceV2Decorator;
-
-        protected AsyncToSyncTentacleServiceDecorator(Decorator<IAsyncClientScriptService> scriptServiceDecorator,
-            Decorator<IAsyncClientScriptServiceV2> scriptServiceV2Decorator,
-            Decorator<IAsyncClientFileTransferService> fileTransferServiceDecorator,
-            Decorator<IAsyncClientCapabilitiesServiceV2> capabilitiesServiceV2Decorator)
-        {
-            this.scriptServiceDecorator = scriptServiceDecorator;
-            this.scriptServiceV2Decorator = scriptServiceV2Decorator;
-            this.fileTransferServiceDecorator = fileTransferServiceDecorator;
-            this.capabilitiesServiceV2Decorator = capabilitiesServiceV2Decorator;
-        }
-
-        public IClientScriptService Decorate(IClientScriptService scriptService)
-        {
-            return AsyncToSyncProxy.ProxyAsyncToSync(scriptServiceDecorator(AsyncToSyncProxy.ProxySyncToAsync(scriptService)));
-        }
-
-        public IClientScriptServiceV2 Decorate(IClientScriptServiceV2 scriptService)
-        {
-            return AsyncToSyncProxy.ProxyAsyncToSync(scriptServiceV2Decorator(AsyncToSyncProxy.ProxySyncToAsync(scriptService)));
-        }
-
-        public IClientFileTransferService Decorate(IClientFileTransferService service)
-        {
-            return AsyncToSyncProxy.ProxyAsyncToSync(fileTransferServiceDecorator(AsyncToSyncProxy.ProxySyncToAsync(service)));
-        }
-
-        public IClientCapabilitiesServiceV2 Decorate(IClientCapabilitiesServiceV2 service)
-        {
-            return AsyncToSyncProxy.ProxyAsyncToSync(capabilitiesServiceV2Decorator(AsyncToSyncProxy.ProxySyncToAsync(service)));
         }
     }
 

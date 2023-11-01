@@ -4,8 +4,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
+using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
@@ -21,7 +23,12 @@ namespace Octopus.Tentacle.Tests.Integration
         public async Task CanRunScript(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
-                .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder().CountCallsToScriptServiceV2(out var scriptServiceV2CallCounts).Build())
+                .WithTentacleServiceDecorator(
+                    new TentacleServiceDecoratorBuilder()
+                        .LogCallsToService<IClientScriptServiceV2, IAsyncClientScriptServiceV2>()
+                        .RecordCallMetricsToService<IClientScriptServiceV2, IAsyncClientScriptServiceV2>(out var callMetrics)
+                        .Build())
+                .WithClientOptions(options => options.DisableScriptServiceV3Alpha = true)
                 .Build(CancellationToken);
 
             var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
@@ -40,12 +47,13 @@ namespace Octopus.Tentacle.Tests.Integration
 
             allLogs.Should().MatchRegex(".*Lets do it\nanother one\nanother one\nanother one\nanother one\nanother one\nanother one\nanother one\nanother one\nanother one\nanother one\nAll done.*");
 
-            scriptServiceV2CallCounts.StartScriptCallCountStarted.Should().Be(1);
-            scriptServiceV2CallCounts.GetStatusCallCountStarted.Should().BeGreaterThan(2);
-            scriptServiceV2CallCounts.GetStatusCallCountStarted.Should().BeLessThan(30);
-            Logger.Debug("{S}", scriptServiceV2CallCounts.GetStatusCallCountStarted);
-            scriptServiceV2CallCounts.CompleteScriptCallCountStarted.Should().Be(1);
-            scriptServiceV2CallCounts.CancelScriptCallCountStarted.Should().Be(0);
+            callMetrics.StartedCount(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Should().Be(1);
+            callMetrics.StartedCount(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Should().BeGreaterThan(2);
+            callMetrics.StartedCount(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Should().BeLessThan(30);
+            Logger.Debug("GetStatusAsync: {S}", callMetrics.StartedCount(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)));
+
+            callMetrics.CompletedCount(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).Should().Be(1);
+            callMetrics.CompletedCount(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Should().Be(0);
         }
 
         [Test]
@@ -53,7 +61,12 @@ namespace Octopus.Tentacle.Tests.Integration
         public async Task DelayInStartScriptSavesNetworkCalls(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
-                .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder().CountCallsToScriptServiceV2(out var scriptServiceV2CallCounts).Build())
+                .WithTentacleServiceDecorator(
+                    new TentacleServiceDecoratorBuilder()
+                        .LogCallsToService<IClientScriptServiceV2, IAsyncClientScriptServiceV2>()
+                        .RecordCallMetricsToService<IClientScriptServiceV2, IAsyncClientScriptServiceV2>(out var callMetrics)
+                        .Build())
+                .WithClientOptions(options => options.DisableScriptServiceV3Alpha = true)
                 .Build(CancellationToken);
 
             var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
@@ -73,10 +86,10 @@ namespace Octopus.Tentacle.Tests.Integration
 
             allLogs.Should().MatchRegex(".*Lets do it\nanother one\nanother one\nanother one\nanother one\nanother one\nanother one\nanother one\nanother one\nanother one\nanother one\nAll done.*");
 
-            scriptServiceV2CallCounts.StartScriptCallCountStarted.Should().Be(1);
-            scriptServiceV2CallCounts.GetStatusCallCountStarted.Should().Be(0, "Since start script should wait for the script to finish so we don't need to call get status");
-            scriptServiceV2CallCounts.CompleteScriptCallCountStarted.Should().Be(1);
-            scriptServiceV2CallCounts.CancelScriptCallCountStarted.Should().Be(0);
+            callMetrics.StartedCount(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Should().Be(1);
+            callMetrics.StartedCount(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Should().Be(0, "Since start script should wait for the script to finish so we don't need to call get status");
+            callMetrics.StartedCount(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).Should().Be(1);
+            callMetrics.StartedCount(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Should().Be(0);
         }
 
         [Test]
@@ -84,7 +97,12 @@ namespace Octopus.Tentacle.Tests.Integration
         public async Task WhenTentacleRestartsWhileRunningAScript_TheExitCodeShouldBe_UnknownResultExitCode(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
-                .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder().CountCallsToScriptServiceV2(out var scriptServiceV2CallCounts).Build())
+                .WithTentacleServiceDecorator(
+                    new TentacleServiceDecoratorBuilder()
+                        .LogCallsToService<IClientScriptServiceV2, IAsyncClientScriptServiceV2>()
+                        .RecordCallMetricsToService<IClientScriptServiceV2, IAsyncClientScriptServiceV2>(out var callMetrics)
+                        .Build())
+                .WithClientOptions(options => options.DisableScriptServiceV3Alpha = true)
                 .Build(CancellationToken);
 
             var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
@@ -118,10 +136,10 @@ namespace Octopus.Tentacle.Tests.Integration
             finalResponse.State.Should().Be(ProcessState.Complete); // This is technically a lie, the process is still running on linux
             finalResponse.ExitCode.Should().Be(ScriptExitCodes.UnknownResultExitCode);
 
-            scriptServiceV2CallCounts.StartScriptCallCountStarted.Should().Be(1);
-            scriptServiceV2CallCounts.GetStatusCallCountStarted.Should().BeGreaterThan(1);
-            scriptServiceV2CallCounts.CompleteScriptCallCountStarted.Should().Be(1);
-            scriptServiceV2CallCounts.CancelScriptCallCountStarted.Should().Be(0);
+            callMetrics.StartedCount(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Should().Be(1);
+            callMetrics.StartedCount(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Should().BeGreaterThan(1);
+            callMetrics.StartedCount(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).Should().Be(1);
+            callMetrics.StartedCount(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Should().Be(0);
         }
 
         [Test]
@@ -129,7 +147,12 @@ namespace Octopus.Tentacle.Tests.Integration
         public async Task WhenALongRunningScriptIsCancelled_TheScriptShouldStop(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
-                .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder().CountCallsToScriptServiceV2(out var scriptServiceV2CallCounts).Build())
+                .WithTentacleServiceDecorator(
+                    new TentacleServiceDecoratorBuilder()
+                        .LogCallsToService<IClientScriptServiceV2, IAsyncClientScriptServiceV2>()
+                        .RecordCallMetricsToService<IClientScriptServiceV2, IAsyncClientScriptServiceV2>(out var callMetrics)
+                        .Build())
+                .WithClientOptions(options => options.DisableScriptServiceV3Alpha = true)
                 .Build(CancellationToken);
 
             var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
@@ -164,10 +187,10 @@ namespace Octopus.Tentacle.Tests.Integration
             actualException.Should().NotBeNull().And.BeOfType<OperationCanceledException>().And.Match<Exception>(x => x.Message == "Script execution was cancelled");
             stopWatch.Elapsed.Should().BeLessOrEqualTo(TimeSpan.FromSeconds(10));
 
-            scriptServiceV2CallCounts.StartScriptCallCountStarted.Should().Be(1);
-            scriptServiceV2CallCounts.GetStatusCallCountStarted.Should().BeGreaterThan(1);
-            scriptServiceV2CallCounts.CancelScriptCallCountStarted.Should().BeGreaterThan(0);
-            scriptServiceV2CallCounts.CompleteScriptCallCountStarted.Should().Be(1);
+            callMetrics.StartedCount(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Should().Be(1);
+            callMetrics.StartedCount(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Should().BeGreaterThan(1);
+            callMetrics.StartedCount(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Should().BeGreaterThan(0);
+            callMetrics.StartedCount(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).Should().Be(1);
         }
     }
 }

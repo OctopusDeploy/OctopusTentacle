@@ -25,6 +25,7 @@
     </PropertyGroup>
 
   <ItemGroup>
+        <PackageReference Include="Castle.Core.AsyncInterceptor" Version="2.1.0" />
         <PackageReference Include="CliWrap" Version="3.6.4" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.2" />
         <ProjectReference Include="..\Octopus.Tentacle.CommonTestUtils\Octopus.Tentacle.CommonTestUtils.csproj" />

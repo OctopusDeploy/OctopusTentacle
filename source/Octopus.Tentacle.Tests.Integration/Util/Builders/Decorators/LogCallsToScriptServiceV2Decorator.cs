@@ -1,7 +1,10 @@
+using System;
 using System.Threading.Tasks;
+using Castle.DynamicProxy;
 using Halibut.ServiceModel;
 using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
+using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Interceptors;
 using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
@@ -67,15 +70,16 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             {
                 logger.Information("CompleteScript call complete");
             }
-
         }
     }
 
     public static class TentacleServiceDecoratorBuilderLogCallsToScriptServiceV2DecoratorExtensionMethods
     {
+        private static readonly ProxyGenerator Generator = new();
+
         public static TentacleServiceDecoratorBuilder LogCallsToScriptServiceV2(this TentacleServiceDecoratorBuilder tentacleServiceDecoratorBuilder)
         {
-            return tentacleServiceDecoratorBuilder.DecorateScriptServiceV2With(inner => new LogCallsToScriptServiceV2Decorator(inner));
+            return tentacleServiceDecoratorBuilder.DecorateScriptServiceV2With(inner => Generator.CreateInterfaceProxyWithTarget(inner, new CallLoggingInterceptor()));
         }
     }
 }
