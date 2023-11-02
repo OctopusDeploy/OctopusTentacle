@@ -68,9 +68,9 @@ namespace Octopus.Tentacle.Communications
         void TrustOctopusServers()
         {
             var trust = GetTrustedOctopusThumbprints();
-            foreach (var (thumbprint, comms, agentCommunicationBehaviour) in trust)
+            foreach (var thumbprint in trust)
             {
-                log.Info("Agent will trust Octopus Servers with the thumbprint: " + thumbprint + " and comms: " + comms + " and behaviour: " + agentCommunicationBehaviour);
+                log.Info("Agent will trust Octopus Servers with the thumbprint: " + thumbprint);
                 halibut.Trust(thumbprint);
             }
             if (trust.Count == 0)
@@ -101,9 +101,9 @@ namespace Octopus.Tentacle.Communications
             }
         }
 
-        List<(string, CommunicationStyle, TentacleCommunicationModeResource)> GetTrustedOctopusThumbprints()
+        List<string> GetTrustedOctopusThumbprints()
         {
-            return configuration.TrustedOctopusServers.Select(t => (t.Thumbprint, t.CommunicationStyle, t.AgentCommunicationMode)).ToList();
+            return configuration.TrustedOctopusServers.Select(t => t.Thumbprint).ToList();
         }
 
         IEnumerable<OctopusServerConfiguration> GetOctopusServersToPoll()
