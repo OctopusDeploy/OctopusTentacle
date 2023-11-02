@@ -68,7 +68,7 @@ namespace Octopus.Tentacle
             builder.RegisterCommand<UpdateTrustCommand>("update-trust", "Replaces the trusted Octopus Server thumbprint of any matching polling or listening registrations with a new thumbprint to trust");
             builder.RegisterCommand<RegisterMachineCommand>("register-with", "Registers this machine as a deployment target with an Octopus Server");
             builder.RegisterCommand<RegisterWorkerCommand>("register-worker", "Registers this machine as a worker with an Octopus Server");
-            builder.RegisterCommand<RegisterKubernetesClusterCommand>("register-k8s-cluster", "Registers this kubernetes cluster as an deployment target with an Octopus Server");
+            builder.RegisterCommand<RegisterKubernetesClusterCommand>("register-k8s-cluster", "Registers this kubernetes cluster as a deployment target with an Octopus Server");
             builder.RegisterCommand<ExtractCommand>("extract", "Extracts a NuGet package");
             builder.RegisterCommand<DeregisterMachineCommand>("deregister-from", "Deregisters this deployment target from an Octopus Server");
             builder.RegisterCommand<DeregisterWorkerCommand>("deregister-worker", "Deregisters this worker from an Octopus Server");
