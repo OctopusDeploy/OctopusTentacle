@@ -16,7 +16,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Intercepto
 
         protected override Task OnStartingInvocationAsync(IInvocation invocation)
         {
-            OnStartingInvocation(invocation);
+            logger.Information("{MethodName} call started (Invocation: {InvocationId})", invocation.Method.Name, invocation.GetHashCode());
             return Task.CompletedTask;
         }
 
@@ -27,7 +27,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Intercepto
 
         protected override Task OnInvocationExceptionAsync(IInvocation invocation, Exception exception)
         {
-            OnInvocationException(invocation, exception);
+            logger.Information(exception, "{MethodName} threw an exception (Invocation: {InvocationId})", invocation.Method.Name, invocation.GetHashCode());
             return Task.CompletedTask;
         }
 
@@ -38,7 +38,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Intercepto
 
         protected override Task OnCompletingInvocationAsync(IInvocation invocation)
         {
-            OnCompletingInvocation(invocation);
+            logger.Information("{MethodName} call completed (Invocation: {InvocationId})", invocation.Method.Name, invocation.GetHashCode());
             return Task.CompletedTask;
         }
     }

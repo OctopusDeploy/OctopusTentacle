@@ -40,7 +40,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     {
         public static bool HasScriptServiceV2(this Version? version)
         {
-            return version == TentacleVersions.Current || version >= TentacleVersions.v7_0_1_ScriptServiceV2Added;
+            return version != TentacleVersions.Current || version >= TentacleVersions.v7_0_1_ScriptServiceV2Added;
+        }
+        public static bool HasScriptServiceV3Alpha(this Version? version)
+        {
+            return version == TentacleVersions.Current;
         }
     }
 }
