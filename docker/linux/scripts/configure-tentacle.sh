@@ -76,8 +76,8 @@ function validateVariables() {
     echo " - server endpoint '$ServerUrl'"
     echo " - api key '##########'"
     if [[ ! -z "$ServerCommsAddress" || ! -z "$ServerPort" ]]; then
-        if [[ ! -z $AsKubernetesAgent ]]; then
-            echo " - communication mode 'KubernetesAgent' (Polling)"
+        if [[ ! -z $AsKubernetesTentacle ]]; then
+            echo " - communication mode 'Kubernetes' (Polling)"
         else
             echo " - communication mode 'Polling' (Active)"
         fi
@@ -88,8 +88,8 @@ function validateVariables() {
             echo " - server port $ServerPort"
         fi
     else
-        if [[ ! -z $AsKubernetesAgent ]]; then
-            echo " - communication mode 'KubernetesAgent' (Listening)"
+        if [[ ! -z $AsKubernetesTentacle ]]; then
+            echo " - communication mode 'Kubernetes' (Listening)"
         else
             echo " - communication mode 'Listening' (Passive)"
         fi
@@ -152,7 +152,7 @@ function registerTentacle() {
             ARGS+=('--workerpool' "$i")
         done
     else
-        if [[ ! -z "$AsKubernetesAgent" ]]; then
+        if [[ ! -z "$AsKubernetesTentacle" ]]; then
             ARGS+=('register-k8s-cluster')
         else
             ARGS+=('register-with')
