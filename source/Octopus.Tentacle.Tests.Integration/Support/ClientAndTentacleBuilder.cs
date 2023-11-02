@@ -34,6 +34,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         Reference<PortForwarder>? portForwarderReference;
         ITentacleClientObserver tentacleClientObserver = new NoTentacleClientObserver();
         Action<ITentacleBuilder>? tentacleBuilderAction;
+        string? instanceName;
         Action<TentacleClientOptions>? configureClientOptions;
         TcpConnectionUtilities? tcpConnectionUtilities;
 
@@ -140,6 +141,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             this.configureClientOptions = configureClientOptions;
             return this;
         }
+        
+        public ClientAndTentacleBuilder WithInstanceName(string customInstanceName)
+        {
+            instanceName = customInstanceName;
+            return this;
+        }
 
         PortForwarder? BuildPortForwarder(int localPort, int? listeningPort)
         {
@@ -192,7 +199,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
                 tentacleBuilderAction?.Invoke(pollingTentacleBuilder);
 
-                runningTentacle = await pollingTentacleBuilder.Build(logger, cancellationToken);
+                runningTentacle = await pollingTentacleBuilder.Build(logger, cancellationToken, instanceName);
 
                 tentacleEndPoint = new ServiceEndPoint(runningTentacle.ServiceUri, runningTentacle.Thumbprint, serverHalibutRuntime.TimeoutsAndLimits);
             }
@@ -203,7 +210,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
                 tentacleBuilderAction?.Invoke(listeningTentacleBuilder);
 
-                runningTentacle = await listeningTentacleBuilder.Build(logger, cancellationToken);
+                runningTentacle = await listeningTentacleBuilder.Build(logger, cancellationToken, instanceName);
 
                 portForwarder = BuildPortForwarder(runningTentacle.ServiceUri.Port, null);
 
