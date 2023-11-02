@@ -132,7 +132,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 {
                     await RunTentacleCommandOutOfProcess(
                         tentacleExe,
-                        new[] {"agent", $"--instance={instanceName}", "--noninteractive", "--async-halibut"},
+                        new[] {"agent", $"--instance={instanceName}", "--noninteractive"},
                         tempDirectory,
                         s =>
                         {

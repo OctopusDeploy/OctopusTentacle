@@ -25,7 +25,6 @@ namespace Octopus.Tentacle.Tests.Integration
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleServiceDecorator(
                     new TentacleServiceDecoratorBuilder()
-                        .LogCallsToService<IClientScriptServiceV2, IAsyncClientScriptServiceV2>()
                         .RecordCallMetricsToService<IClientScriptServiceV2, IAsyncClientScriptServiceV2>(out var callMetrics)
                         .Build())
                 .WithClientOptions(options => options.DisableScriptServiceV3Alpha = true)
@@ -63,7 +62,6 @@ namespace Octopus.Tentacle.Tests.Integration
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleServiceDecorator(
                     new TentacleServiceDecoratorBuilder()
-                        .LogCallsToService<IClientScriptServiceV2, IAsyncClientScriptServiceV2>()
                         .RecordCallMetricsToService<IClientScriptServiceV2, IAsyncClientScriptServiceV2>(out var callMetrics)
                         .Build())
                 .WithClientOptions(options => options.DisableScriptServiceV3Alpha = true)
@@ -99,7 +97,6 @@ namespace Octopus.Tentacle.Tests.Integration
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleServiceDecorator(
                     new TentacleServiceDecoratorBuilder()
-                        .LogCallsToService<IClientScriptServiceV2, IAsyncClientScriptServiceV2>()
                         .RecordCallMetricsToService<IClientScriptServiceV2, IAsyncClientScriptServiceV2>(out var callMetrics)
                         .Build())
                 .WithClientOptions(options => options.DisableScriptServiceV3Alpha = true)
@@ -149,7 +146,6 @@ namespace Octopus.Tentacle.Tests.Integration
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleServiceDecorator(
                     new TentacleServiceDecoratorBuilder()
-                        .LogCallsToService<IClientScriptServiceV2, IAsyncClientScriptServiceV2>()
                         .RecordCallMetricsToService<IClientScriptServiceV2, IAsyncClientScriptServiceV2>(out var callMetrics)
                         .Build())
                 .WithClientOptions(options => options.DisableScriptServiceV3Alpha = true)

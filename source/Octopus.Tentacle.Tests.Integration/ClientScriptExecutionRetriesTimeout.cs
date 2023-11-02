@@ -31,16 +31,14 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(additionalParameterTypes: new object[] { typeof(RpcCallStage) })]
         public async Task WhenRpcRetriesTimeOut_DuringGetCapabilities_TheRpcCallIsCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase, RpcCallStage rpcCallStage)
         {
-            var connectionFixer = TcpConnectionFixer.None;
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 // Set a short retry duration so we cancel fairly quickly
                 .WithRetryDuration(TimeSpan.FromSeconds(15))
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithPortForwarder(out var portForwarder)
+                .WithTcpConnectionUtilities(Logger, out var connectionDefib)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .LogCallsToService<IClientCapabilitiesServiceV2, IAsyncClientCapabilitiesServiceV2>()
-                    .LogCallsToService<IAsyncClientScriptServiceV3Alpha>()
                     .RecordCallMetricsToService<IClientCapabilitiesServiceV2, IAsyncClientCapabilitiesServiceV2>(out var capabilitiesCallMetrics)
                     .RecordCallMetricsToService<IAsyncClientScriptServiceV3Alpha>(out var scriptServiceMetrics)
                     .RegisterInvocationHooks<IClientCapabilitiesServiceV2>(async _ =>
@@ -53,8 +51,6 @@ namespace Octopus.Tentacle.Tests.Integration
                     }, null)
                     .Build())
                 .Build(CancellationToken);
-
-            connectionFixer = clientAndTentacle.GetTcpConnectionFixer(tentacleConfigurationTestCase.SyncOrAsyncHalibut, Logger);
 
             var inMemoryLog = new InMemoryLog();
 
@@ -81,7 +77,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             async Task SetUpAndKillCapabilitiesCall()
             {
-                await connectionFixer.EnsureTentacleIsConnectedToServer();
+                await connectionDefib.RestartTcpConnection();
 
                 // Kill the first GetCapabilities call to force the rpc call into retries
                 if (capabilitiesCallMetrics.LatestException(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)) == null)
@@ -111,15 +107,13 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             var retryDuration = TimeSpan.FromSeconds(15);
 
-            var tcpConnectionFixer = TcpConnectionFixer.None;
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 // Set a short retry duration so we cancel fairly quickly
                 .WithRetryDuration(retryDuration)
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
+                .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .LogCallsToService<IClientCapabilitiesServiceV2, IAsyncClientCapabilitiesServiceV2>()
-                    .LogCallsToService<IAsyncClientScriptServiceV3Alpha>()
                     .RecordCallMetricsToService<IClientCapabilitiesServiceV2, IAsyncClientCapabilitiesServiceV2>(out var capabilitiesCallMetrics)
                     .RecordCallMetricsToService<IAsyncClientScriptServiceV3Alpha>(out var scriptServiceMetrics)
                     .RegisterInvocationHooks<IClientCapabilitiesServiceV2>(async _ =>
@@ -132,8 +126,6 @@ namespace Octopus.Tentacle.Tests.Integration
                     }, null)
                     .Build())
                 .Build(CancellationToken);
-
-            tcpConnectionFixer = clientAndTentacle.GetTcpConnectionFixer(tentacleConfigurationTestCase.SyncOrAsyncHalibut, Logger);
 
             var inMemoryLog = new InMemoryLog();
 
@@ -151,7 +143,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             async Task SetUpAndKillCapabilitiesCall()
             {
-                await tcpConnectionFixer.EnsureTentacleIsConnectedToServer();
+                await tcpConnectionUtilities.RestartTcpConnection();
 
                 // Sleep to make the initial RPC call take longer than the allowed retry duration
                 await Task.Delay(retryDuration + TimeSpan.FromSeconds(1));
@@ -165,15 +157,14 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(additionalParameterTypes: new object[] { typeof(RpcCallStage) })]
         public async Task WhenRpcRetriesTimeOut_DuringStartScript_TheRpcCallIsCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase, RpcCallStage rpcCallStage)
         {
-            var tcpConnectionFixer = TcpConnectionFixer.None;
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 // Set a short retry duration so we cancel fairly quickly
                 .WithRetryDuration(TimeSpan.FromSeconds(15))
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
+                .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithPortForwarder(out var portForwarder)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .LogCallsToService<IAsyncClientScriptServiceV3Alpha>()
                     .RecordCallMetricsToService<IAsyncClientScriptServiceV3Alpha>(out var scriptServiceMetrics)
                     .RegisterInvocationHooks<IAsyncClientScriptServiceV3Alpha>(async _ =>
                     {
@@ -184,7 +175,7 @@ namespace Octopus.Tentacle.Tests.Integration
                         }
                         else
                         {
-                            await tcpConnectionFixer.EnsureTentacleIsConnectedToServer();
+                            await tcpConnectionUtilities.RestartTcpConnection();
 
                             if (rpcCallStage == RpcCallStage.Connecting)
                             {
@@ -201,8 +192,6 @@ namespace Octopus.Tentacle.Tests.Integration
                     }, null)
                     .Build())
                 .Build(CancellationToken);
-
-            tcpConnectionFixer = clientAndTentacle.GetTcpConnectionFixer(tentacleConfigurationTestCase.SyncOrAsyncHalibut, Logger);
 
             var inMemoryLog = new InMemoryLog();
 

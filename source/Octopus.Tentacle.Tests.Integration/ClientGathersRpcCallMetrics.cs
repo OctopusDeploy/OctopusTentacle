@@ -5,10 +5,12 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Halibut;
 using NUnit.Framework;
+using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Capabilities;
+using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Tests.Integration.Support;
@@ -29,7 +31,7 @@ namespace Octopus.Tentacle.Tests.Integration
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .Build(CancellationToken);
-            
+
             var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
                 .WithScriptBody(b => b.Print("Hello"))
                 .Build();
@@ -51,7 +53,7 @@ namespace Octopus.Tentacle.Tests.Integration
             tentacleClientObserver.RpcCallMetrics.Should().ContainSingle(m => m.RpcCall.Name == nameof(IScriptServiceV2.CompleteScript) && m.RpcCall.Service == expectedScriptService);
             tentacleClientObserver.RpcCallMetrics.Should().AllSatisfy(m => m.Succeeded.Should().BeTrue());
         }
-        
+
         [Test]
         [TentacleConfigurations(testCommonVersions: true)]
         public async Task ExecuteScriptShouldGatherMetrics_WhenFails(TentacleConfigurationTestCase tentacleConfigurationTestCase)
@@ -63,8 +65,11 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .WithRetryDuration(TimeSpan.FromSeconds(1))
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .DecorateScriptServiceWith(new ScriptServiceDecoratorBuilder().BeforeStartScript(() => throw exception).Build())
-                    .DecorateScriptServiceV2With(b => b.BeforeStartScript(() => throw exception))
+                    .RegisterInvocationHooks<IClientScriptService>(_ => throw exception, nameof(IClientScriptService.StartScript))
+                    .RegisterInvocationHooks<IAsyncClientScriptService>(_ => throw exception, nameof(IAsyncClientScriptService.StartScriptAsync))
+                    .RegisterInvocationHooks<IClientScriptServiceV2>(_ => throw exception, nameof(IClientScriptServiceV2.StartScript))
+                    .RegisterInvocationHooks<IAsyncClientScriptServiceV2>(_ => throw exception, nameof(IAsyncClientScriptServiceV2.StartScriptAsync))
+                    .RegisterInvocationHooks<IAsyncClientScriptServiceV3Alpha>(_ => throw exception, nameof(IAsyncClientScriptServiceV2.StartScriptAsync))
                     .Build())
                 .Build(CancellationToken);
 
@@ -121,7 +126,9 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .WithRetryDuration(TimeSpan.FromSeconds(1))
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .DecorateFileTransferServiceWith(b => b.BeforeUploadFile(() => throw exception)).Build())
+                    .RegisterInvocationHooks<IClientFileTransferService>(_ => throw exception, nameof(IClientFileTransferService.UploadFile))
+                    .RegisterInvocationHooks<IAsyncClientFileTransferService>(_ => throw exception, nameof(IAsyncClientFileTransferService.UploadFileAsync))
+                    .Build())
                 .Build(CancellationToken);
 
             var remotePath = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "UploadFile.txt");
@@ -178,7 +185,9 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .WithRetryDuration(TimeSpan.FromSeconds(1))
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .DecorateFileTransferServiceWith(b => b.BeforeDownloadFile(() => throw exception)).Build())
+                    .RegisterInvocationHooks<IClientFileTransferService>(_ => throw exception, nameof(IClientFileTransferService.DownloadFile))
+                    .RegisterInvocationHooks<IAsyncClientFileTransferService>(_ => throw exception, nameof(IAsyncClientFileTransferService.DownloadFileAsync))
+                    .Build())
                 .Build(CancellationToken);
 
             var remotePath = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "DownloadFile.txt");

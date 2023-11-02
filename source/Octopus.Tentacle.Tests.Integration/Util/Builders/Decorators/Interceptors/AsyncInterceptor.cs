@@ -32,13 +32,16 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Intercepto
 
         async Task InternalInterceptAsynchronous(IInvocation invocation)
         {
+            var proceedInfo = invocation.CaptureProceedInfo();
             try
             {
                 await OnStartingInvocationAsync(invocation);
 
-                invocation.Proceed();
+                proceedInfo.Invoke();
 
-                await ((Task)invocation.ReturnValue).ConfigureAwait(false);
+                var task = (Task)invocation.ReturnValue;
+
+                await task.ConfigureAwait(false);
             }
             catch (Exception e)
             {
@@ -58,13 +61,16 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Intercepto
 
         async Task<TResult> InternalInterceptAsynchronous<TResult>(IInvocation invocation)
         {
+            var proceedInfo = invocation.CaptureProceedInfo();
             try
             {
                 await OnStartingInvocationAsync(invocation);
 
-                invocation.Proceed();
+                proceedInfo.Invoke();
 
-                return await ((Task<TResult>)invocation.ReturnValue).ConfigureAwait(false);
+                var task = (Task<TResult>)invocation.ReturnValue;
+
+                return await task.ConfigureAwait(false);
             }
             catch (Exception e)
             {
@@ -77,33 +83,11 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Intercepto
             }
         }
 
-        protected virtual void OnStartingInvocation(IInvocation invocation)
-        {}
-
-        protected virtual Task OnStartingInvocationAsync(IInvocation invocation)
-        {
-            OnStartingInvocation(invocation);
-            return Task.CompletedTask;
-        }
-
-        protected virtual void OnCompletingInvocation(IInvocation invocation)
-        {
-        }
-
-        protected virtual Task OnCompletingInvocationAsync(IInvocation invocation)
-        {
-            OnCompletingInvocation(invocation);
-            return Task.CompletedTask;
-        }
-
-        protected virtual void OnInvocationException(IInvocation invocation, Exception exception)
-        {
-        }
-
-        protected virtual Task OnInvocationExceptionAsync(IInvocation invocation, Exception exception)
-        {
-            OnInvocationException(invocation, exception);
-            return Task.CompletedTask;
-        }
+        protected abstract void OnStartingInvocation(IInvocation invocation);
+        protected abstract Task OnStartingInvocationAsync(IInvocation invocation);
+        protected abstract void OnCompletingInvocation(IInvocation invocation);
+        protected abstract Task OnCompletingInvocationAsync(IInvocation invocation);
+        protected abstract void OnInvocationException(IInvocation invocation, Exception exception);
+        protected abstract Task OnInvocationExceptionAsync(IInvocation invocation, Exception exception);
     }
 }

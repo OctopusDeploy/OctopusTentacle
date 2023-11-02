@@ -73,14 +73,6 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             return this;
         }
 
-        public TentacleServiceDecoratorBuilder DecorateFileTransferServiceWith(Action<FileTransferServiceDecoratorBuilder> fileTransferServiceDecorator)
-        {
-            var b = new FileTransferServiceDecoratorBuilder();
-            fileTransferServiceDecorator(b);
-            this.DecorateFileTransferServiceWith(b.Build());
-            return this;
-        }
-
         public TentacleServiceDecoratorBuilder DecorateCapabilitiesServiceV2With(Decorator<IAsyncClientCapabilitiesServiceV2> capabilitiesServiceV2Decorator)
         {
             this.capabilitiesServiceV2Decorators.Add(capabilitiesServiceV2Decorator);
@@ -104,6 +96,12 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
         {
             static readonly ProxyGenerator Generator = new();
             readonly Dictionary<Type, List<IInterceptor>> serviceInterceptors;
+
+            static List<IInterceptor> StandardInterceptors = new()
+            {
+                //all calls should be logged
+                new CallLoggingInterceptor().ToInterceptor()
+            };
 
             public DynamicProxyTentacleServiceDecoratorFactory(Dictionary<Type, List<IInterceptor>> serviceInterceptors)
             {
@@ -130,17 +128,12 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
 
             T GetProxy<T>(T scriptService) where T : class
             {
-                var interceptors = GetInterceptors<T>();
-
-                return interceptors.Any()
-                    ? Generator.CreateInterfaceProxyWithTargetInterface(scriptService, interceptors)
-                    : scriptService;
-            }
-            IInterceptor[] GetInterceptors<T>()
-            {
-                return serviceInterceptors.TryGetValue(typeof(T), out var interceptors)
-                    ? interceptors.ToArray()
+                var interceptors = serviceInterceptors.TryGetValue(typeof(T), out var svcInterceptors)
+                    ? svcInterceptors.ToArray()
                     : Array.Empty<IInterceptor>();
+
+                interceptors = StandardInterceptors.Concat(interceptors).ToArray();
+                return Generator.CreateInterfaceProxyWithTargetInterface(scriptService, interceptors);
             }
         }
     }

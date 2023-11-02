@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using System.Threading.Tasks;
 using Castle.DynamicProxy;
 
@@ -8,33 +9,72 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Intercepto
     {
         readonly Func<TService, Task>? preInvocation;
         readonly Func<TService, Task>? postInvocation;
+        readonly string? methodName;
 
-        public InvocationHooksInterceptor(Func<TService, Task>? preInvocation, Func<TService, Task>? postInvocation)
+        public InvocationHooksInterceptor(Func<TService, Task>? preInvocation, Func<TService, Task>? postInvocation, string? methodName)
         {
             this.preInvocation = preInvocation;
             this.postInvocation = postInvocation;
+            this.methodName = methodName;
         }
 
         protected override void OnStartingInvocation(IInvocation invocation)
         {
-            preInvocation?.Invoke((TService)invocation.InvocationTarget).GetAwaiter().GetResult();
+            if (IsMethodInteresting(invocation.Method))
+            {
+                preInvocation?.Invoke((TService)invocation.InvocationTarget).GetAwaiter().GetResult();
+            }
         }
 
         protected override async Task OnStartingInvocationAsync(IInvocation invocation)
         {
-            if (preInvocation is not null)
+            if (preInvocation is not null && IsMethodInteresting(invocation.Method))
+            {
                 await preInvocation((TService)invocation.InvocationTarget);
+            }
         }
 
         protected override void OnCompletingInvocation(IInvocation invocation)
         {
-            postInvocation?.Invoke((TService)invocation.InvocationTarget).GetAwaiter().GetResult();
+            if (IsMethodInteresting(invocation.Method))
+            {
+                postInvocation?.Invoke((TService)invocation.InvocationTarget).GetAwaiter().GetResult();
+            }
         }
 
         protected override async Task OnCompletingInvocationAsync(IInvocation invocation)
         {
-            if (postInvocation is not null)
+            if (postInvocation is not null && IsMethodInteresting(invocation.Method))
+            {
                 await postInvocation((TService)invocation.InvocationTarget);
+            }
         }
+
+        protected override void OnInvocationException(IInvocation invocation, Exception exception)
+        {
+        }
+
+        protected override Task OnInvocationExceptionAsync(IInvocation invocation, Exception exception) => Task.CompletedTask;
+
+        bool IsMethodInteresting(MemberInfo invocationMethod)
+            => invocationMethod.Name.Equals(methodName);
+
+        // protected override object StartingInvocation(IInvocation invocation)
+        // {
+        //     if (IsMethodInteresting(invocation.Method))
+        //     {
+        //         preInvocation?.Invoke((TService)invocation.InvocationTarget).GetAwaiter().GetResult();
+        //     }
+        //
+        //     return new object();
+        // }
+        //
+        // protected override void CompletedInvocation(IInvocation invocation, object state)
+        // {
+        //     if (IsMethodInteresting(invocation.Method))
+        //     {
+        //         postInvocation?.Invoke((TService)invocation.InvocationTarget).GetAwaiter().GetResult();
+        //     }
+        // }
     }
 }

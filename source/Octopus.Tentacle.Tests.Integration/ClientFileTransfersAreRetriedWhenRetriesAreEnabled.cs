@@ -4,7 +4,9 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Halibut;
 using NUnit.Framework;
+using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.CommonTestUtils;
+using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
@@ -22,21 +24,27 @@ namespace Octopus.Tentacle.Tests.Integration
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
+                .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .LogCallsToFileTransferService()
-                    .CountCallsToFileTransferService(out var fileTransferServiceCallCounts)
-                    .RecordExceptionThrownInFileTransferService(out var fileTransferServiceException)
-                    .DecorateFileTransferServiceWith(b =>
+                    .RecordCallMetricsToService<IClientFileTransferService, IAsyncClientFileTransferService>(out var serviceMetrics)
+                    .RegisterInvocationHooks<IClientFileTransferService>(async _ =>
                     {
-                        b.BeforeUploadFile(async (service, _, ds) =>
+                        await tcpConnectionUtilities.RestartTcpConnection();
+
+                        if (serviceMetrics.LatestException(nameof(IClientFileTransferService.UploadFile)) == null)
                         {
-                            await service.EnsureTentacleIsConnectedToServer(Logger);
-                            if (fileTransferServiceException.UploadLatestException == null)
-                            {
-                                responseMessageTcpKiller.KillConnectionOnNextResponse();
-                            }
-                        });
-                    })
+                            responseMessageTcpKiller.KillConnectionOnNextResponse();
+                        }
+                    }, nameof(IClientFileTransferService.UploadFile))
+                    .RegisterInvocationHooks<IAsyncClientFileTransferService>(async _ =>
+                    {
+                        await tcpConnectionUtilities.RestartTcpConnection();
+
+                        if (serviceMetrics.LatestException(nameof(IAsyncClientFileTransferService.UploadFileAsync)) == null)
+                        {
+                            responseMessageTcpKiller.KillConnectionOnNextResponse();
+                        }
+                    }, nameof(IAsyncClientFileTransferService.UploadFileAsync))
                     .Build())
                 .Build(CancellationToken);
 
@@ -46,8 +54,9 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var res = await clientTentacle.TentacleClient.UploadFile(remotePath, DataStream.FromString("Hello"), CancellationToken, inMemoryLog);
             res.Length.Should().Be(5);
-            fileTransferServiceException.UploadLatestException.Should().NotBeNull();
-            fileTransferServiceCallCounts.UploadFileCallCountStarted.Should().Be(2);
+
+            serviceMetrics.LatestException(nameof(IAsyncClientFileTransferService.UploadFileAsync)).Should().NotBeNull();
+            serviceMetrics.StartedCount(nameof(IAsyncClientFileTransferService.UploadFileAsync)).Should().Be(2);
 
             var actuallySent = (await clientTentacle.TentacleClient.DownloadFile(remotePath, CancellationToken)).GetUtf8String();
             actuallySent.Should().Be("Hello");
@@ -62,21 +71,27 @@ namespace Octopus.Tentacle.Tests.Integration
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
+                .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .LogCallsToFileTransferService()
-                    .CountCallsToFileTransferService(out var fileTransferServiceCallCounts)
-                    .RecordExceptionThrownInFileTransferService(out var fileTransferServiceException)
-                    .DecorateFileTransferServiceWith(b =>
+                    .RecordCallMetricsToService<IClientFileTransferService, IAsyncClientFileTransferService>(out var serviceMetrics)
+                    .RegisterInvocationHooks<IClientFileTransferService>(async _ =>
                     {
-                        b.BeforeDownloadFile(async (service, _) =>
+                        await tcpConnectionUtilities.RestartTcpConnection();
+
+                        if (serviceMetrics.LatestException(nameof(IClientFileTransferService.DownloadFile)) == null)
                         {
-                            await service.EnsureTentacleIsConnectedToServer(Logger);
-                            if (fileTransferServiceException.DownloadFileLatestException == null)
-                            {
-                                responseMessageTcpKiller.KillConnectionOnNextResponse();
-                            }
-                        });
-                    })
+                            responseMessageTcpKiller.KillConnectionOnNextResponse();
+                        }
+                    }, nameof(IClientFileTransferService.DownloadFile))
+                    .RegisterInvocationHooks<IAsyncClientFileTransferService>(async _ =>
+                    {
+                        await tcpConnectionUtilities.RestartTcpConnection();
+
+                        if (serviceMetrics.LatestException(nameof(IAsyncClientFileTransferService.DownloadFileAsync)) == null)
+                        {
+                            responseMessageTcpKiller.KillConnectionOnNextResponse();
+                        }
+                    }, nameof(IAsyncClientFileTransferService.DownloadFileAsync))
                     .Build())
                 .Build(CancellationToken);
 
@@ -87,8 +102,9 @@ namespace Octopus.Tentacle.Tests.Integration
             await clientTentacle.TentacleClient.UploadFile(remotePath, DataStream.FromString("Hello"), CancellationToken);
             var actuallySent = (await clientTentacle.TentacleClient.DownloadFile(remotePath, CancellationToken, inMemoryLog)).GetUtf8String();
 
-            fileTransferServiceException.DownloadFileLatestException.Should().NotBeNull();
-            fileTransferServiceCallCounts.DownloadFileCallCountStarted.Should().Be(2);
+            serviceMetrics.LatestException(nameof(IAsyncClientFileTransferService.DownloadFileAsync)).Should().NotBeNull();
+            serviceMetrics.StartedCount(nameof(IAsyncClientFileTransferService.DownloadFileAsync)).Should().Be(2);
+
             actuallySent.Should().Be("Hello");
 
             inMemoryLog.ShouldHaveLoggedRetryAttemptsAndNoRetryFailures();

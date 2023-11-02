@@ -48,19 +48,24 @@ New-Item -type file '{file}'
 
         public ScriptBuilder WaitForFileToExist(string fileToWaitFor)
         {
+            //we add a 120s timout so the script actually completes if the text explodes and doesn't just run forever
             bashScript.AppendLine($@"
-until [ -f '{fileToWaitFor}' ]
+count = 0
+until [ -f '{fileToWaitFor}' ] || [$count -gt 120];
 do
     echo waiting
     sleep 1
+    ((count++))
 done
 ");
             windowsScript.AppendLine($@"
-while (!(Test-Path '{fileToWaitFor}'))" + @"
-{
+$count = 0
+while (!(Test-Path '{fileToWaitFor}') -and $count -lt 120)
+{{
     echo waiting
     Start-Sleep 1
-}
+    $count++
+}}
 ");
             return this;
         }

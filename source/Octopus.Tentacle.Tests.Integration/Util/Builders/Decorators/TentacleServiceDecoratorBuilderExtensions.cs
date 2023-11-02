@@ -7,22 +7,6 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
 {
     public static class TentacleServiceDecoratorBuilderExtensions
     {
-        public static TentacleServiceDecoratorBuilder LogCallsToService<TService>(this TentacleServiceDecoratorBuilder builder) where TService : class
-            => builder.RegisterInterceptor<TService>(new CallLoggingInterceptor().ToInterceptor());
-
-        public static TentacleServiceDecoratorBuilder LogCallsToService<TSyncService, TAsyncService>(this TentacleServiceDecoratorBuilder builder)
-            where TSyncService : class
-            where TAsyncService : class
-        {
-            var interceptor = new CallLoggingInterceptor().ToInterceptor();
-            return builder
-                .RegisterInterceptor<TSyncService>(interceptor)
-                .RegisterInterceptor<TAsyncService>(interceptor);
-        }
-
-        public static TentacleServiceDecoratorBuilder LogCallsToService(this TentacleServiceDecoratorBuilder builder, Type serviceType)
-            => builder.RegisterInterceptor(serviceType, new CallLoggingInterceptor().ToInterceptor());
-
         public static TentacleServiceDecoratorBuilder RecordCallMetricsToService<TService>(this TentacleServiceDecoratorBuilder builder, out CallMetrics callMetrics) where TService : class
         {
             var localCallMetrics = new CallMetrics();
@@ -30,17 +14,32 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             return builder.RegisterInterceptor<TService>(new CallMetricsInterceptor(callMetrics).ToInterceptor());
         }
 
-        public static TentacleServiceDecoratorBuilder RecordCallMetricsToService<TSyncService, TAsyncService>(this TentacleServiceDecoratorBuilder builder, out CallMetrics callMetrics)
-            where TSyncService : class
-            where TAsyncService : class
+        public static TentacleServiceDecoratorBuilder RecordCallMetricsToService<T1, T2>(this TentacleServiceDecoratorBuilder builder, out CallMetrics callMetrics)
+            where T1 : class
+            where T2 : class
         {
             var localCallMetrics = new CallMetrics();
             callMetrics = localCallMetrics;
             var interceptor = new CallMetricsInterceptor(callMetrics).ToInterceptor();
 
             return builder
-                .RegisterInterceptor<TSyncService>(interceptor)
-                .RegisterInterceptor<TAsyncService>(interceptor);
+                .RegisterInterceptor<T1>(interceptor)
+                .RegisterInterceptor<T2>(interceptor);
+        }
+
+        public static TentacleServiceDecoratorBuilder RecordCallMetricsToService<T1, T2, T3>(this TentacleServiceDecoratorBuilder builder, out CallMetrics callMetrics)
+            where T1 : class
+            where T2 : class
+            where T3 : class
+        {
+            var localCallMetrics = new CallMetrics();
+            callMetrics = localCallMetrics;
+            var interceptor = new CallMetricsInterceptor(callMetrics).ToInterceptor();
+
+            return builder
+                .RegisterInterceptor<T1>(interceptor)
+                .RegisterInterceptor<T2>(interceptor)
+                .RegisterInterceptor<T3>(interceptor);
         }
 
         public static TentacleServiceDecoratorBuilder RecordCallMetricsToService(this TentacleServiceDecoratorBuilder builder, Type serviceType, out CallMetrics callMetrics)
@@ -50,7 +49,22 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             return builder.RegisterInterceptor(serviceType, new CallMetricsInterceptor(callMetrics).ToInterceptor());
         }
 
-        public static TentacleServiceDecoratorBuilder RegisterInvocationHooks<TService>(this TentacleServiceDecoratorBuilder builder, Func<TService, Task>? preInvocation, Func<TService, Task>? postInvocation)
-            => builder.RegisterInterceptor<TService>(new InvocationHooksInterceptor<TService>(preInvocation, postInvocation).ToInterceptor());
+        public static TentacleServiceDecoratorBuilder RecordCallMetricsToService(this TentacleServiceDecoratorBuilder builder, out CallMetrics callMetrics, params Type[] serviceTypes)
+        {
+            var localCallMetrics = new CallMetrics();
+            callMetrics = localCallMetrics;
+            var interceptor = new CallMetricsInterceptor(callMetrics).ToInterceptor();
+
+            foreach (var serviceType in serviceTypes)
+                builder.RegisterInterceptor(serviceType, interceptor);
+
+            return builder;
+        }
+
+        public static TentacleServiceDecoratorBuilder RegisterInvocationHooks<TService>(this TentacleServiceDecoratorBuilder builder, Func<TService, Task>? preInvocation, string methodName)
+            => RegisterInvocationHooks(builder, preInvocation, null, methodName);
+
+        public static TentacleServiceDecoratorBuilder RegisterInvocationHooks<TService>(this TentacleServiceDecoratorBuilder builder, Func<TService, Task>? preInvocation, Func<TService, Task>? postInvocation, string? methodName = null)
+            => builder.RegisterInterceptor<TService>(new InvocationHooksInterceptor<TService>(preInvocation, postInvocation, methodName).ToInterceptor());
     }
 }

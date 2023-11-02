@@ -13,7 +13,9 @@ using Octopus.Tentacle.Contracts.Legacy;
 using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers;
 using Octopus.Tentacle.Tests.Integration.Util;
+using Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers;
 using Octopus.TestPortForwarder;
+using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
@@ -34,6 +36,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         AsyncHalibutFeature asyncHalibutFeature = AsyncHalibutFeature.Disabled;
         Action<ITentacleBuilder>? tentacleBuilderAction;
         Action<TentacleClientOptions>? configureClientOptions;
+        TcpConnectionUtilities? tcpConnectionRestarter;
 
         public ClientAndTentacleBuilder(TentacleType tentacleType)
         {
@@ -137,6 +140,13 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             return this;
         }
 
+        public ClientAndTentacleBuilder WithTcpConnectionUtilities(ILogger logger, out ITcpConnectionUtilities tcpConnectionUtilities)
+        {
+            this.tcpConnectionRestarter = new TcpConnectionUtilities(asyncHalibutFeature, logger);
+            tcpConnectionUtilities = this.tcpConnectionRestarter;
+            return this;
+        }
+
         PortForwarder? BuildPortForwarder(int localPort, int? listeningPort)
         {
             if (portForwarderModifiers.Count == 0) return null;
@@ -225,6 +235,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             foreach (var serviceEndpointModifier in serviceEndpointModifiers)
             {
                 serviceEndpointModifier(tentacleEndPoint);
+            }
+
+            if (tcpConnectionRestarter is not null)
+            {
+                tcpConnectionRestarter.HalibutRuntime = server.ServerHalibutRuntime;
+                tcpConnectionRestarter.ServiceEndPoint = tentacleEndPoint;
             }
 
             TentacleClient.CacheServiceWasNotFoundResponseMessages(server.ServerHalibutRuntime);

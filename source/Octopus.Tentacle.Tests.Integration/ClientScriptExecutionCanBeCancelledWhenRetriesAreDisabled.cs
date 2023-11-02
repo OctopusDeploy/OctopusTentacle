@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Halibut;
 using NUnit.Framework;
-using NUnit.Framework.Constraints;
 using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Client.Retries;
 using Octopus.Tentacle.Client.Scripts;
@@ -17,7 +16,6 @@ using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods;
-using Octopus.Tentacle.Tests.Integration.Support.TestAttributes;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
 using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
@@ -39,8 +37,6 @@ namespace Octopus.Tentacle.Tests.Integration
         public async Task DuringGetCapabilities_ScriptExecutionCanBeCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase, RpcCallStage rpcCallStage)
         {
             // ARRANGE
-            IClientScriptServiceV2? scriptServiceV2 = null;
-            IAsyncClientScriptServiceV2? asyncScriptServiceV2 = null;
             var rpcCallHasStarted = new Reference<bool>(false);
             var hasPausedOrStoppedPortForwarder = false;
             var ensureCancellationOccursDuringAnRpcCall = new SemaphoreSlim(0, 1);
@@ -52,44 +48,55 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithPortForwarder(out var portForwarder)
+                .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .LogAndCountAllCalls(out var capabilitiesServiceV2CallCounts, out _, out var scriptServiceV2CallCounts, out _, out _)
-                    .RecordAllExceptions(out var capabilityServiceV2Exceptions, out _, out _, out _)
-                    .DecorateCapabilitiesServiceV2With(d => d
-                        .DecorateGetCapabilitiesWith(async (service, options) =>
+                    .RecordCallMetricsToService<IAsyncClientScriptServiceV3Alpha>(out var scriptServiceMetrics)
+                    .RecordCallMetricsToService<IClientCapabilitiesServiceV2, IAsyncClientCapabilitiesServiceV2>(out var capabilitiesServiceMetrics)
+                    .RegisterInvocationHooks<IClientCapabilitiesServiceV2>(async _ =>
                         {
                             ensureCancellationOccursDuringAnRpcCall.Release();
-                            try
+
+                            if (!hasPausedOrStoppedPortForwarder)
                             {
-                                if (!hasPausedOrStoppedPortForwarder)
+                                hasPausedOrStoppedPortForwarder = true;
+                                await tcpConnectionUtilities.RestartTcpConnection();
+
+                                PauseOrStopPortForwarder(rpcCallStage, portForwarder.Value, responseMessageTcpKiller, rpcCallHasStarted);
+                                if (rpcCallStage == RpcCallStage.Connecting)
                                 {
-                                    hasPausedOrStoppedPortForwarder = true;
-                                    await tentacleConfigurationTestCase.SyncOrAsyncHalibut.WhenSync(() => scriptServiceV2.EnsureTentacleIsConnectedToServer(Logger))
-                                        .WhenAsync(async () => await asyncScriptServiceV2.EnsureTentacleIsConnectedToServer(Logger));
-
-                                    PauseOrStopPortForwarder(rpcCallStage, portForwarder.Value, responseMessageTcpKiller, rpcCallHasStarted);
-                                    if (rpcCallStage == RpcCallStage.Connecting)
-                                    {
-                                        await service.EnsurePollingQueueWontSendMessageToDisconnectedTentacles(Logger);
-                                    }
+                                    await tcpConnectionUtilities.EnsurePollingQueueWontSendMessageToDisconnectedTentacles();
                                 }
+                            }
+                        },
+                        async _ =>
+                        {
+                            await ensureCancellationOccursDuringAnRpcCall.WaitAsync(CancellationToken);
+                        },
+                        nameof(IClientCapabilitiesServiceV2.GetCapabilities))
+                    .RegisterInvocationHooks<IAsyncClientCapabilitiesServiceV2>(async svc =>
+                        {
+                            ensureCancellationOccursDuringAnRpcCall.Release();
 
-                                return await service.GetCapabilitiesAsync(options);
-                            }
-                            finally
+                            if (!hasPausedOrStoppedPortForwarder)
                             {
-                                await ensureCancellationOccursDuringAnRpcCall.WaitAsync(CancellationToken);
+                                hasPausedOrStoppedPortForwarder = true;
+
+                                await tcpConnectionUtilities.RestartTcpConnection();
+
+                                PauseOrStopPortForwarder(rpcCallStage, portForwarder.Value, responseMessageTcpKiller, rpcCallHasStarted);
+                                if (rpcCallStage == RpcCallStage.Connecting)
+                                {
+                                    await tcpConnectionUtilities.EnsurePollingQueueWontSendMessageToDisconnectedTentacles();
+                                }
                             }
-                        })
-                        .Build())
+                        },
+                        async _ =>
+                        {
+                            await ensureCancellationOccursDuringAnRpcCall.WaitAsync(CancellationToken);
+                        },
+                        nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync))
                     .Build())
                 .Build(CancellationToken);
-
-#pragma warning disable CS0612
-            tentacleConfigurationTestCase.SyncOrAsyncHalibut.WhenSync(() => scriptServiceV2 = clientAndTentacle.Server.ServerHalibutRuntime.CreateClient<IScriptServiceV2, IClientScriptServiceV2>(clientAndTentacle.ServiceEndPoint))
-#pragma warning restore CS0612
-                .IgnoreResult()
-                .WhenAsync(() => asyncScriptServiceV2 = clientAndTentacle.Server.ServerHalibutRuntime.CreateAsyncClient<IScriptServiceV2, IAsyncClientScriptServiceV2>(clientAndTentacle.ServiceEndPoint));
 
             var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
                 .WithScriptBody(b => b
@@ -108,10 +115,10 @@ namespace Octopus.Tentacle.Tests.Integration
             switch (rpcCallStage)
             {
                 case RpcCallStage.Connecting:
-                    capabilityServiceV2Exceptions.GetCapabilitiesLatestException.Should().BeTaskOrOperationCancelledException().And.NotBeOfType<OperationAbandonedException>();
+                    capabilitiesServiceMetrics.LatestException(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)).Should().BeTaskOrOperationCancelledException().And.NotBeOfType<OperationAbandonedException>();
                     break;
                 case RpcCallStage.InFlight:
-                    capabilityServiceV2Exceptions.GetCapabilitiesLatestException?.Should().BeOfType<HalibutClientException>();
+                    capabilitiesServiceMetrics.LatestException(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)).Should().BeOfType<HalibutClientException>();
                     break;
             }
 
@@ -125,10 +132,10 @@ namespace Octopus.Tentacle.Tests.Integration
             cancellationDuration.Should().BeLessOrEqualTo(TimeSpan.FromSeconds(30));
 
             // The expected RPC calls were made - this also verifies the integrity of the test
-            capabilitiesServiceV2CallCounts.GetCapabilitiesCallCountStarted.Should().Be(1);
+            capabilitiesServiceMetrics.StartedCount(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)).Should().Be(1);
 
-            scriptServiceV2CallCounts.StartScriptCallCountStarted.Should().Be(0, "Should not have proceeded past GetCapabilities");
-            scriptServiceV2CallCounts.CancelScriptCallCountStarted.Should().Be(0, "Should not have tried to call CancelScript");
+            scriptServiceMetrics.StartedCount(nameof(IAsyncClientScriptServiceV3Alpha.StartScriptAsync)).Should().Be(0, "Should not have proceeded past GetCapabilities");
+            scriptServiceMetrics.StartedCount(nameof(IAsyncClientScriptServiceV3Alpha.CancelScriptAsync)).Should().Be(0, "Should not have tried to call CancelScript");
         }
 
         [Test]
