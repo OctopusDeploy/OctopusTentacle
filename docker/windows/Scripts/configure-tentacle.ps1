@@ -113,7 +113,7 @@ function Validate-Variables() {
   Write-Log " - server endpoint '$ServerUrl'"
   Write-Log " - api key '##########'"
   if (($null -ne $ServerCommsAddress) -or ($null -ne $ServerPort)) {
-    if (($null -ne $AsKubernetesTentacle )) {
+    if ($null -ne $AsKubernetesTentacle ) {
       Write-Log " - communication mode 'Kubernetes' (Polling)"
     } else {
       Write-Log " - communication mode 'Polling' (Active)"
