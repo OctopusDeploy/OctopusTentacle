@@ -43,7 +43,10 @@ namespace Octopus.Tentacle.Configuration
         [JsonConverter(typeof(CommunicationStyleConverter))]
         public CommunicationStyle CommunicationStyle { get; set; }
 
-        public TentacleCommunicationModeResource AgentCommunicationMode { get; set; } = TentacleCommunicationModeResource.Polling;
+        /// <summary>
+        ///
+        /// </summary>
+        public TentacleCommunicationModeResource KubernetesTentacleCommunicationMode { get; set; } = TentacleCommunicationModeResource.Polling;
 
         /// <summary>
         /// The URL used when connecting to the server, if available.

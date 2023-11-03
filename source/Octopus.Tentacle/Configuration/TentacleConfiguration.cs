@@ -249,25 +249,25 @@ namespace Octopus.Tentacle.Configuration
                 var match = string.Equals(configuration.Thumbprint, oldThumbprint, StringComparison.OrdinalIgnoreCase);
 
                 if (match)
-                    log.Info($"Updating {CommTypeToString(configuration.CommunicationStyle, configuration.AgentCommunicationMode)} {configuration.Address} {configuration.Thumbprint} - changing to trust {newThumbprint}");
+                    log.Info($"Updating {CommTypeToString(configuration.CommunicationStyle, configuration.KubernetesTentacleCommunicationMode)} {configuration.Address} {configuration.Thumbprint} - changing to trust {newThumbprint}");
                 else
-                    log.Info($"Ignoring {CommTypeToString(configuration.CommunicationStyle, configuration.AgentCommunicationMode)} {configuration.Address} {configuration.Thumbprint} - does not match old thumbprint");
+                    log.Info($"Ignoring {CommTypeToString(configuration.CommunicationStyle, configuration.KubernetesTentacleCommunicationMode)} {configuration.Address} {configuration.Thumbprint} - does not match old thumbprint");
 
                 configuration.Thumbprint = match ? newThumbprint : configuration.Thumbprint;
                 return configuration;
             }));
         }
 
-        static string CommTypeToString(CommunicationStyle communicationStyle, TentacleCommunicationModeResource? agentCommunicationBehaviour = null)
+        static string CommTypeToString(CommunicationStyle communicationStyle, TentacleCommunicationModeResource? kubernetesTentacleCommunicationBehaviour = null)
         {
-            agentCommunicationBehaviour ??= TentacleCommunicationModeResource.Polling;
+            kubernetesTentacleCommunicationBehaviour ??= TentacleCommunicationModeResource.Polling;
 
             return communicationStyle switch
             {
                 CommunicationStyle.TentacleActive => "polling tentacle",
                 CommunicationStyle.TentaclePassive => "listening tentacle",
                 CommunicationStyle.KubernetesTentacle =>
-                    "kubernetes agent" + (agentCommunicationBehaviour == TentacleCommunicationModeResource.Polling ? " (polling)" : " (listening)"),
+                    "kubernetes tentacle" + (kubernetesTentacleCommunicationBehaviour == TentacleCommunicationModeResource.Polling ? " (polling)" : " (listening)"),
                 _ => string.Empty
             };
         }

@@ -111,7 +111,7 @@ namespace Octopus.Tentacle.Communications
             return configuration.TrustedOctopusServers.Where(octopusServerConfiguration =>
                 octopusServerConfiguration.CommunicationStyle == CommunicationStyle.TentacleActive ||
                 (octopusServerConfiguration is { CommunicationStyle: CommunicationStyle.KubernetesTentacle } &&
-                octopusServerConfiguration.AgentCommunicationMode == TentacleCommunicationModeResource.Polling));
+                octopusServerConfiguration.KubernetesTentacleCommunicationMode == TentacleCommunicationModeResource.Polling));
         }
 
         IPEndPoint GetEndPointToListenOn()
