@@ -34,12 +34,6 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Intercepto
             callMetrics.RecordCallException(invocation.Method, exception);
         }
 
-        protected override Task OnInvocationExceptionAsync(IInvocation invocation, Exception exception)
-        {
-            callMetrics.RecordCallException(invocation.Method, exception);
-            return Task.CompletedTask;
-        }
-
         protected override void OnCompletingInvocation(IInvocation invocation)
         {
             callMetrics.RecordCallComplete(invocation.Method);

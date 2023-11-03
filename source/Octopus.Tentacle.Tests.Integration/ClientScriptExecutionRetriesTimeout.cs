@@ -37,18 +37,18 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithPortForwarder(out var portForwarder)
-                .WithTcpConnectionUtilities(Logger, out var connectionDefib)
+                .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .RecordCallMetricsToService<IClientCapabilitiesServiceV2, IAsyncClientCapabilitiesServiceV2>(out var capabilitiesCallMetrics)
-                    .RecordCallMetricsToService<IAsyncClientScriptServiceV3Alpha>(out var scriptServiceMetrics)
-                    .RegisterInvocationHooks<IClientCapabilitiesServiceV2>(async _ =>
+                    .RecordCallMetricsToServiceV2<IClientCapabilitiesServiceV2, IAsyncClientCapabilitiesServiceV2>(out var capabilitiesCallMetrics)
+                    .RecordCallMetricsToServiceV2<IAsyncClientScriptServiceV3Alpha>(out var scriptServiceMetrics)
+                    .RegisterInvocationHooksV2<IClientCapabilitiesServiceV2>(async _ =>
                     {
                         await SetUpAndKillCapabilitiesCall();
-                    }, null)
-                    .RegisterInvocationHooks<IAsyncClientCapabilitiesServiceV2>(async _ =>
+                    }, nameof(IClientCapabilitiesServiceV2.GetCapabilities))
+                    .RegisterInvocationHooksV2<IAsyncClientCapabilitiesServiceV2>(async _ =>
                     {
                         await SetUpAndKillCapabilitiesCall();
-                    }, null)
+                    }, nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync))
                     .Build())
                 .Build(CancellationToken);
 
@@ -77,7 +77,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             async Task SetUpAndKillCapabilitiesCall()
             {
-                await connectionDefib.RestartTcpConnection();
+                await tcpConnectionUtilities.RestartTcpConnection();
 
                 // Kill the first GetCapabilities call to force the rpc call into retries
                 if (capabilitiesCallMetrics.LatestException(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)) == null)
@@ -119,11 +119,11 @@ namespace Octopus.Tentacle.Tests.Integration
                     .RegisterInvocationHooks<IClientCapabilitiesServiceV2>(async _ =>
                     {
                         await SetUpAndKillCapabilitiesCall();
-                    }, null)
+                    }, nameof(IClientCapabilitiesServiceV2.GetCapabilities))
                     .RegisterInvocationHooks<IAsyncClientCapabilitiesServiceV2>(async _ =>
                     {
                         await SetUpAndKillCapabilitiesCall();
-                    }, null)
+                    }, nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync))
                     .Build())
                 .Build(CancellationToken);
 
@@ -189,7 +189,7 @@ namespace Octopus.Tentacle.Tests.Integration
                                 responseMessageTcpKiller.PauseConnectionOnNextResponse();
                             }
                         }
-                    }, null)
+                    }, nameof(IAsyncClientScriptServiceV3Alpha.StartScriptAsync))
                     .Build())
                 .Build(CancellationToken);
 

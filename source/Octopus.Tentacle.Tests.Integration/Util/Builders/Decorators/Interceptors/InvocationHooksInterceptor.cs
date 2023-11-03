@@ -54,8 +54,6 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Intercepto
         {
         }
 
-        protected override Task OnInvocationExceptionAsync(IInvocation invocation, Exception exception) => Task.CompletedTask;
-
         bool IsMethodInteresting(MemberInfo invocationMethod)
             => invocationMethod.Name.Equals(methodName);
 

@@ -50,9 +50,9 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithPortForwarder(out var portForwarder)
                 .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .RecordCallMetricsToService<IAsyncClientScriptServiceV3Alpha>(out var scriptServiceMetrics)
-                    .RecordCallMetricsToService<IClientCapabilitiesServiceV2, IAsyncClientCapabilitiesServiceV2>(out var capabilitiesServiceMetrics)
-                    .RegisterInvocationHooks<IClientCapabilitiesServiceV2>(async _ =>
+                    .RecordCallMetricsToServiceV2<IAsyncClientScriptServiceV3Alpha>(out var scriptServiceMetrics)
+                    .RecordCallMetricsToServiceV2<IClientCapabilitiesServiceV2, IAsyncClientCapabilitiesServiceV2>(out var capabilitiesServiceMetrics)
+                    .RegisterInvocationHooksV2<IClientCapabilitiesServiceV2>(async _ =>
                         {
                             ensureCancellationOccursDuringAnRpcCall.Release();
 
@@ -73,7 +73,7 @@ namespace Octopus.Tentacle.Tests.Integration
                             await ensureCancellationOccursDuringAnRpcCall.WaitAsync(CancellationToken);
                         },
                         nameof(IClientCapabilitiesServiceV2.GetCapabilities))
-                    .RegisterInvocationHooks<IAsyncClientCapabilitiesServiceV2>(async svc =>
+                    .RegisterInvocationHooksV2<IAsyncClientCapabilitiesServiceV2>(async svc =>
                         {
                             ensureCancellationOccursDuringAnRpcCall.Release();
 
@@ -485,7 +485,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 startScriptCommand,
                 cancelExecutionCancellationTokenSource.Token);
 
-            Logger.Information("Create action");
+            Logger.Information("Create action: {TaskId}", executeScriptTask.Id);
             Func<Task<(ScriptExecutionResult, List<ProcessOutput>)>> action = async () => await executeScriptTask;
 
             Logger.Information("Waiting for the RPC Call to start");
@@ -506,10 +506,14 @@ namespace Octopus.Tentacle.Tests.Integration
             (ScriptExecutionResult Response, List<ProcessOutput> Logs)? responseAndLogs = null;
             try
             {
-                responseAndLogs = await action();
+                var task = action();
+                Logger.Information("Awaiting execute script action: {TaskId}", task.Id);
+                responseAndLogs = await task;
+                Logger.Information("Awaited execute script action: {TaskId}", task.Id);
             }
             catch (Exception ex)
             {
+                Logger.Information(ex, "Exception thrown");
                 actualException = ex;
             }
 
