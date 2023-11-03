@@ -24,6 +24,7 @@ $ServerCommsAddress=$env:ServerCommsAddress;
 $ServerPort=$env:ServerPort;
 $Space=$env:Space;
 $MachinePolicy=$env:MachinePolicy;
+$AsKubernetesTentacle=$env:AsKubernetesTentacle;
 
 $TentacleExe=$Exe
 
@@ -112,7 +113,11 @@ function Validate-Variables() {
   Write-Log " - server endpoint '$ServerUrl'"
   Write-Log " - api key '##########'"
   if (($null -ne $ServerCommsAddress) -or ($null -ne $ServerPort)) {
-    Write-Log " - communication mode 'Polling' (Active)"
+    if ($null -ne $AsKubernetesTentacle ) {
+      Write-Log " - communication mode 'Kubernetes' (Polling)"
+    } else {
+      Write-Log " - communication mode 'Polling' (Active)"
+    }
 
     if ($null -ne $ServerCommsAddress) {
       Write-Log " - server comms address $ServerCommsAddress"
@@ -121,7 +126,11 @@ function Validate-Variables() {
       Write-Log " - server port $ServerPort"
     }
   } else {
-    Write-Log " - communication mode 'Listening' (Passive)"
+    if (($null -ne $AsKubernetesTentacle )) {
+      Write-Log " - communication mode 'Kubernetes' (Listening)"
+    } else {
+      Write-Log " - communication mode 'Listening' (Passive)"
+    }
     Write-Log " - registered port $ListeningPort"
   }
   if ($null -ne $TargetWorkerPool) {
@@ -208,8 +217,14 @@ function Register-Tentacle(){
     '--server', $ServerUrl,
     '--force')
   } else {
+    if ($null -ne $AsKubernetesTentacle)
+    {
+      $Command='register-k8s-cluster'
+    } else {
+      $Command='register-with'
+    }
     $arg = @(
-      'register-with',
+      $Command,
       '--console',
     '--instance', 'Tentacle',
     '--server', $ServerUrl,
