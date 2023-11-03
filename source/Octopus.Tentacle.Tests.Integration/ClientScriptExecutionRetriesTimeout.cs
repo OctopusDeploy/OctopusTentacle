@@ -39,13 +39,13 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithPortForwarder(out var portForwarder)
                 .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .RecordCallMetricsToServiceV2<IClientCapabilitiesServiceV2, IAsyncClientCapabilitiesServiceV2>(out var capabilitiesCallMetrics)
-                    .RecordCallMetricsToServiceV2<IAsyncClientScriptServiceV3Alpha>(out var scriptServiceMetrics)
-                    .RegisterInvocationHooksV2<IClientCapabilitiesServiceV2>(async _ =>
+                    .RecordCallMetricsToService<IClientCapabilitiesServiceV2, IAsyncClientCapabilitiesServiceV2>(out var capabilitiesCallMetrics)
+                    .RecordCallMetricsToService<IAsyncClientScriptServiceV3Alpha>(out var scriptServiceMetrics)
+                    .RegisterInvocationHooks<IClientCapabilitiesServiceV2>(async _ =>
                     {
                         await SetUpAndKillCapabilitiesCall();
                     }, nameof(IClientCapabilitiesServiceV2.GetCapabilities))
-                    .RegisterInvocationHooksV2<IAsyncClientCapabilitiesServiceV2>(async _ =>
+                    .RegisterInvocationHooks<IAsyncClientCapabilitiesServiceV2>(async _ =>
                     {
                         await SetUpAndKillCapabilitiesCall();
                     }, nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync))

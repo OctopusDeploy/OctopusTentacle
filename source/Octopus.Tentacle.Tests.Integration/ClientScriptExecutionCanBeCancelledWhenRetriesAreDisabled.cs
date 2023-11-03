@@ -50,9 +50,9 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithPortForwarder(out var portForwarder)
                 .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .RecordCallMetricsToServiceV2<IAsyncClientScriptServiceV3Alpha>(out var scriptServiceMetrics)
-                    .RecordCallMetricsToServiceV2<IClientCapabilitiesServiceV2, IAsyncClientCapabilitiesServiceV2>(out var capabilitiesServiceMetrics)
-                    .RegisterInvocationHooksV2<IClientCapabilitiesServiceV2>(async _ =>
+                    .RecordCallMetricsToService<IAsyncClientScriptServiceV3Alpha>(out var scriptServiceMetrics)
+                    .RecordCallMetricsToService<IClientCapabilitiesServiceV2, IAsyncClientCapabilitiesServiceV2>(out var capabilitiesServiceMetrics)
+                    .RegisterInvocationHooks<IClientCapabilitiesServiceV2>(async _ =>
                         {
                             ensureCancellationOccursDuringAnRpcCall.Release();
 
@@ -73,7 +73,7 @@ namespace Octopus.Tentacle.Tests.Integration
                             await ensureCancellationOccursDuringAnRpcCall.WaitAsync(CancellationToken);
                         },
                         nameof(IClientCapabilitiesServiceV2.GetCapabilities))
-                    .RegisterInvocationHooksV2<IAsyncClientCapabilitiesServiceV2>(async svc =>
+                    .RegisterInvocationHooks<IAsyncClientCapabilitiesServiceV2>(async svc =>
                         {
                             ensureCancellationOccursDuringAnRpcCall.Release();
 
@@ -118,7 +118,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     capabilitiesServiceMetrics.LatestException(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)).Should().BeTaskOrOperationCancelledException().And.NotBeOfType<OperationAbandonedException>();
                     break;
                 case RpcCallStage.InFlight:
-                    capabilitiesServiceMetrics.LatestException(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)).Should().BeOfType<HalibutClientException>();
+                    capabilitiesServiceMetrics.LatestException(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync))?.Should().BeOfType<HalibutClientException>();
                     break;
             }
 

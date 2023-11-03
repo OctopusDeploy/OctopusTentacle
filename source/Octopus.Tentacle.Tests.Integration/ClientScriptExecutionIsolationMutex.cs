@@ -20,18 +20,14 @@ namespace Octopus.Tentacle.Tests.Integration
     public class ClientScriptExecutionIsolationMutex : IntegrationTest
     {
         [Test]
-        [TentacleConfigurations(testScriptIsolationLevelVersions: true, additionalParameterTypes: new object[] { typeof(ScriptIsolationLevel)})]
+        [TentacleConfigurations(testScriptIsolationLevelVersions: true, additionalParameterTypes: new object[] { typeof(ScriptIsolationLevel) })]
         public async Task ScriptIsolationMutexFull_EnsuresTwoDifferentScriptsDontRunAtTheSameTime(TentacleConfigurationTestCase tentacleConfigurationTestCase, ScriptIsolationLevel levelOfSecondScript)
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .RecordCallMetricsToService(
-                        out var metrics,
-                        typeof(IClientScriptService),
-                        typeof(IAsyncClientScriptService),
-                        typeof(IClientScriptServiceV2),
-                        typeof(IAsyncClientScriptServiceV2),
-                        typeof(IAsyncClientScriptServiceV3Alpha))
+                    .RecordCallMetricsToService<IClientScriptService, IAsyncClientScriptService>(out var v1Metrics)
+                    .RecordCallMetricsToService<IClientScriptServiceV2, IAsyncClientScriptServiceV2>(out var v2Metrics)
+                    .RecordCallMetricsToService<IAsyncClientScriptServiceV3Alpha>(out var v3Metrics)
                     .Build())
                 .Build(CancellationToken);
 
@@ -64,7 +60,9 @@ namespace Octopus.Tentacle.Tests.Integration
             var secondScriptExecution = Task.Run(async () => await tentacleClient.ExecuteScript(secondStartScriptCommand, CancellationToken));
 
             // Wait for the second script start script RPC call to return.
-            await Wait.For(() => metrics.CompletedCount(new Regex("StartScript")) == 2, CancellationToken);
+            await Wait.For(() => v1Metrics.CompletedCount(nameof(IAsyncClientScriptService.StartScriptAsync)) +
+                v2Metrics.CompletedCount(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)) +
+                v3Metrics.CompletedCount(nameof(IAsyncClientScriptServiceV3Alpha.StartScriptAsync)) == 2, CancellationToken);
 
             // Give Tentacle some more time to run the script (although it should not).
             await Task.Delay(TimeSpan.FromSeconds(2));
@@ -84,7 +82,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TentacleConfigurations(testScriptIsolationLevelVersions: true, additionalParameterTypes: new object[] {typeof(ScriptsInParallelTestCases)})]
+        [TentacleConfigurations(testScriptIsolationLevelVersions: true, additionalParameterTypes: new object[] { typeof(ScriptsInParallelTestCases) })]
         public async Task ScriptIsolationMutexFull_IsOnlyExclusiveWhenFullAndWhenTheMutexNameIsTheSame(TentacleConfigurationTestCase tentacleConfigurationTestCase, ScriptsInParallelTestCase scriptsInParallelTestCase)
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder().Build(CancellationToken);

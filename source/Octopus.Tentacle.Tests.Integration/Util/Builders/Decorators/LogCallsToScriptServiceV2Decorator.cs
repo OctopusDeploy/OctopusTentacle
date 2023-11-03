@@ -4,7 +4,6 @@ using Castle.DynamicProxy;
 using Halibut.ServiceModel;
 using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
-using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Interceptors;
 using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
@@ -79,7 +78,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
 
         public static TentacleServiceDecoratorBuilder LogCallsToScriptServiceV2(this TentacleServiceDecoratorBuilder tentacleServiceDecoratorBuilder)
         {
-            return tentacleServiceDecoratorBuilder.DecorateScriptServiceV2With(inner => Generator.CreateInterfaceProxyWithTarget(inner, new CallLoggingInterceptor()));
+            return tentacleServiceDecoratorBuilder.DecorateScriptServiceV2With(inner => new LogCallsToScriptServiceV2Decorator(inner));
         }
     }
 }

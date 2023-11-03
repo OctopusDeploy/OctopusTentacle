@@ -1,12 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using Castle.DynamicProxy;
 using Octopus.Tentacle.Client;
 using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Contracts.ClientServices;
-using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Interceptors;
 using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies;
 
 namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
@@ -23,7 +20,6 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
         private readonly List<Decorator<IAsyncClientFileTransferService>> fileTransferServiceDecorators = new();
         private readonly List<Decorator<IAsyncClientCapabilitiesServiceV2>> capabilitiesServiceV2Decorators = new();
 
-        readonly Dictionary<Type, List<IInterceptor>> interceptors = new();
         readonly Dictionary<Type, List<WrappedProxyBuilder>> proxyBuilders = new();
 
         public TentacleServiceDecoratorBuilder RegisterProxyBuilder<TService>(Func<TService, TService> proxyBuilder)
@@ -39,26 +35,6 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
                 proxyBuilders.Add(serviceType, new List<WrappedProxyBuilder>
                 {
                     wrappedBuilder
-                });
-            }
-
-            return this;
-        }
-
-        public TentacleServiceDecoratorBuilder RegisterInterceptor<TService>(IInterceptor interceptor)
-            => RegisterInterceptor(typeof(TService), interceptor);
-
-        public TentacleServiceDecoratorBuilder RegisterInterceptor(Type serviceType, IInterceptor interceptor)
-        {
-            if (interceptors.TryGetValue(serviceType, out var list))
-            {
-                list.Add(interceptor);
-            }
-            else
-            {
-                interceptors.Add(serviceType, new List<IInterceptor>
-                {
-                    interceptor
                 });
             }
 
@@ -113,7 +89,6 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
 
         internal ITentacleServiceDecoratorFactory Build()
         {
-            //return new DynamicProxyTentacleServiceDecoratorFactory(interceptors);
             return new DynamicProxyAsyncTentacleServiceDecoratorFactory(proxyBuilders);
         }
 
@@ -169,51 +144,6 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
                 proxiedService = CreateLoggingProxy(proxiedService);
 
                 return proxiedService;
-            }
-        }
-
-        class DynamicProxyTentacleServiceDecoratorFactory : ITentacleServiceDecoratorFactory
-        {
-            static readonly ProxyGenerator Generator = new();
-            readonly Dictionary<Type, List<IInterceptor>> serviceInterceptors;
-
-            static List<IInterceptor> StandardInterceptors = new()
-            {
-                //all calls should be logged
-                new CallLoggingInterceptor().ToInterceptor()
-            };
-
-            public DynamicProxyTentacleServiceDecoratorFactory(Dictionary<Type, List<IInterceptor>> serviceInterceptors)
-            {
-                this.serviceInterceptors = serviceInterceptors;
-            }
-
-            public IClientScriptService Decorate(IClientScriptService scriptService) => GetProxy(scriptService);
-
-            public IAsyncClientScriptService Decorate(IAsyncClientScriptService scriptService) => GetProxy(scriptService);
-
-            public IClientScriptServiceV2 Decorate(IClientScriptServiceV2 scriptService) => GetProxy(scriptService);
-
-            public IAsyncClientScriptServiceV2 Decorate(IAsyncClientScriptServiceV2 scriptService) => GetProxy(scriptService);
-
-            public IClientFileTransferService Decorate(IClientFileTransferService service) => GetProxy(service);
-
-            public IAsyncClientFileTransferService Decorate(IAsyncClientFileTransferService service) => GetProxy(service);
-
-            public IClientCapabilitiesServiceV2 Decorate(IClientCapabilitiesServiceV2 service) => GetProxy(service);
-
-            public IAsyncClientCapabilitiesServiceV2 Decorate(IAsyncClientCapabilitiesServiceV2 service) => GetProxy(service);
-
-            public IAsyncClientScriptServiceV3Alpha Decorate(IAsyncClientScriptServiceV3Alpha service) => GetProxy(service);
-
-            T GetProxy<T>(T scriptService) where T : class
-            {
-                var interceptors = serviceInterceptors.TryGetValue(typeof(T), out var svcInterceptors)
-                    ? svcInterceptors.ToArray()
-                    : Array.Empty<IInterceptor>();
-
-                interceptors = StandardInterceptors.Concat(interceptors).ToArray();
-                return Generator.CreateInterfaceProxyWithTargetInterface(scriptService, interceptors);
             }
         }
     }
