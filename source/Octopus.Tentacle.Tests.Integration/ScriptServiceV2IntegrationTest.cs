@@ -174,8 +174,8 @@ namespace Octopus.Tentacle.Tests.Integration
 
             tracingStats.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().Be(1);
             tracingStats.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Started.Should().BeGreaterThan(1);
-            tracingStats.For(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).Started.Should().BeGreaterThan(0);
-            tracingStats.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Started.Should().Be(1);
+            tracingStats.For(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).Started.Should().Be(1);
+            tracingStats.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Started.Should().BeGreaterThanOrEqualTo(1);
         }
     }
 }
