@@ -3,18 +3,28 @@ using System.Collections.Generic;
 using Octopus.Tentacle.Client;
 using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Contracts.ClientServices;
+using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies;
 using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.SyncAndAsyncProxies;
 
 namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
 {
     public delegate T Decorator<T>(T service);
+    public delegate object WrappedProxyDecoratorFactory(object service);
 
     public class TentacleServiceDecoratorBuilder
     {
+        readonly bool useProxyDecorators;
         private readonly List<Decorator<IAsyncClientScriptService>> scriptServiceDecorator = new ();
         private readonly List<Decorator<IAsyncClientScriptServiceV2>> scriptServiceV2Decorator = new ();
         private readonly List<Decorator<IAsyncClientFileTransferService>> fileTransferServiceDecorator = new ();
         private readonly List<Decorator<IAsyncClientCapabilitiesServiceV2>> capabilitiesServiceV2Decorator = new ();
+
+        readonly Dictionary<Type, List<WrappedProxyDecoratorFactory>> registeredProxyDecorators = new();
+
+        public TentacleServiceDecoratorBuilder(bool useProxyDecorators = false)
+        {
+            this.useProxyDecorators = useProxyDecorators;
+        }
 
         public TentacleServiceDecoratorBuilder DecorateScriptServiceWith(Decorator<IAsyncClientScriptService> scriptServiceDecorator)
         {
@@ -66,6 +76,9 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
 
         internal ITentacleServiceDecoratorFactory Build()
         {
+            if (useProxyDecorators)
+                return new ProxyTentacleServiceDecoratorFactory(registeredProxyDecorators);
+
             return new FooTentacleServiceDecoratorFactory(Combine(scriptServiceDecorator), Combine(scriptServiceV2Decorator), Combine(fileTransferServiceDecorator), Combine(capabilitiesServiceV2Decorator));
         }
 
@@ -91,7 +104,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             public FooTentacleServiceDecoratorFactory(Decorator<IAsyncClientScriptService> scriptServiceDecorator,
                 Decorator<IAsyncClientScriptServiceV2> scriptServiceV2Decorator,
                 Decorator<IAsyncClientFileTransferService> fileTransferServiceDecorator,
-                Decorator<IAsyncClientCapabilitiesServiceV2> capabilitiesServiceV2Decorator) : 
+                Decorator<IAsyncClientCapabilitiesServiceV2> capabilitiesServiceV2Decorator) :
                 base(scriptServiceDecorator, scriptServiceV2Decorator, fileTransferServiceDecorator, capabilitiesServiceV2Decorator)
             {
             }
@@ -114,6 +127,72 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             public IAsyncClientCapabilitiesServiceV2 Decorate(IAsyncClientCapabilitiesServiceV2 service)
             {
                 return capabilitiesServiceV2Decorator(service);
+            }
+        }
+
+        public TentacleServiceDecoratorBuilder RegisterProxyDecorator<TService>(Func<TService, TService> proxyDecoratorFactory) where TService : class
+        {
+            var serviceType = typeof(TService);
+            WrappedProxyDecoratorFactory wrappedFactory = o => proxyDecoratorFactory((TService)o);
+
+            if (registeredProxyDecorators.TryGetValue(serviceType, out var factories))
+            {
+                // we add each builder at the start so the latest registered decorator wraps the original service
+                factories.Insert(0, wrappedFactory);
+            }
+            else
+            {
+                registeredProxyDecorators.Add(serviceType, new List<WrappedProxyDecoratorFactory>
+                {
+                    wrappedFactory
+                });
+            }
+
+            return this;
+        }
+
+        class ProxyTentacleServiceDecoratorFactory : ITentacleServiceDecoratorFactory
+        {
+            readonly Dictionary<Type, List<WrappedProxyDecoratorFactory>> registeredProxyDecorators;
+
+            public ProxyTentacleServiceDecoratorFactory(Dictionary<Type, List<WrappedProxyDecoratorFactory>> registeredProxyDecorators)
+            {
+                this.registeredProxyDecorators = registeredProxyDecorators;
+            }
+
+            public IClientScriptService Decorate(IClientScriptService scriptService) => GetDecoratedProxy(scriptService);
+
+            public IAsyncClientScriptService Decorate(IAsyncClientScriptService scriptService) => GetDecoratedProxy(scriptService);
+
+            public IClientScriptServiceV2 Decorate(IClientScriptServiceV2 scriptService) => GetDecoratedProxy(scriptService);
+
+            public IAsyncClientScriptServiceV2 Decorate(IAsyncClientScriptServiceV2 scriptService) => GetDecoratedProxy(scriptService);
+
+            public IClientFileTransferService Decorate(IClientFileTransferService service) => GetDecoratedProxy(service);
+
+            public IAsyncClientFileTransferService Decorate(IAsyncClientFileTransferService service) => GetDecoratedProxy(service);
+
+            public IClientCapabilitiesServiceV2 Decorate(IClientCapabilitiesServiceV2 service) => GetDecoratedProxy(service);
+
+            public IAsyncClientCapabilitiesServiceV2 Decorate(IAsyncClientCapabilitiesServiceV2 service) => GetDecoratedProxy(service);
+
+            T GetDecoratedProxy<T>(T service) where T : class
+            {
+                var proxiedService = service;
+
+                if (registeredProxyDecorators.TryGetValue(typeof(T), out var builders))
+                {
+                    foreach (var builder in builders)
+                    {
+                        // pass the proxied service in and build it
+                        proxiedService = (T)builder(proxiedService);
+                    }
+                }
+
+                //we add the call logging proxy decorator to all services
+                proxiedService = MethodLoggingProxyDecorator<T>.Create(proxiedService);
+
+                return proxiedService;
             }
         }
     }
