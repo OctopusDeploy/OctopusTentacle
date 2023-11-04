@@ -24,7 +24,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .TraceMethods<IClientScriptServiceV2, IAsyncClientScriptServiceV2>(out var tracingStats)
+                    .TraceService<IClientScriptServiceV2, IAsyncClientScriptServiceV2>(out var tracingStats)
                     .Build())
                 .Build(CancellationToken);
 
@@ -56,7 +56,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .TraceMethods<IClientScriptServiceV2, IAsyncClientScriptServiceV2>(out var tracingStats)
+                    .TraceService<IClientScriptServiceV2, IAsyncClientScriptServiceV2>(out var tracingStats)
                     .Build())
                 .Build(CancellationToken);
 
@@ -89,7 +89,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .TraceMethods<IClientScriptServiceV2, IAsyncClientScriptServiceV2>(out var tracingStats)
+                    .TraceService<IClientScriptServiceV2, IAsyncClientScriptServiceV2>(out var tracingStats)
                     .Build())
                 .Build(CancellationToken);
 
@@ -136,7 +136,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .TraceMethods<IClientScriptServiceV2, IAsyncClientScriptServiceV2>(out var tracingStats)
+                    .TraceService<IClientScriptServiceV2, IAsyncClientScriptServiceV2>(out var tracingStats)
                     .Build())
                 .Build(CancellationToken);
 

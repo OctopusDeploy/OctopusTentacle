@@ -5,7 +5,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
 {
     public static class TentacleServiceDecoratorBuilderExtensions
     {
-        public static TentacleServiceDecoratorBuilder TraceMethods<TService>(this TentacleServiceDecoratorBuilder builder, out IRecordedMethodTracingStats recordedTracingStats)
+        public static TentacleServiceDecoratorBuilder TraceService<TService>(this TentacleServiceDecoratorBuilder builder, out IRecordedMethodTracingStats recordedTracingStats)
             where TService : class
         {
             var localTracingStats = new MethodTracingStats();
@@ -14,7 +14,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             return builder.RegisterProxyDecorator<TService>(service => MethodTracingProxyDecorator.Create(service, localTracingStats));
         }
 
-        public static TentacleServiceDecoratorBuilder TraceMethods<TSyncService, TAsyncService>(this TentacleServiceDecoratorBuilder builder, out IRecordedMethodTracingStats recordedTracingStats)
+        public static TentacleServiceDecoratorBuilder TraceService<TSyncService, TAsyncService>(this TentacleServiceDecoratorBuilder builder, out IRecordedMethodTracingStats recordedTracingStats)
             where TSyncService : class
             where TAsyncService : class
         {
@@ -27,10 +27,10 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
 
         }
 
-        public static TentacleServiceDecoratorBuilder HookMethodInvocation<TService>(this TentacleServiceDecoratorBuilder builder, string methodName, MethodInvocationHook<TService>? preInvocation) where TService : class
-            => HookMethodInvocation(builder, methodName, preInvocation, null);
+        public static TentacleServiceDecoratorBuilder HookServiceMethod<TService>(this TentacleServiceDecoratorBuilder builder, string methodName, MethodInvocationHook<TService>? preInvocation) where TService : class
+            => HookServiceMethod(builder, methodName, preInvocation, null);
 
-        public static TentacleServiceDecoratorBuilder HookMethodInvocation<TService>(this TentacleServiceDecoratorBuilder builder, string methodName, MethodInvocationHook<TService>? preInvocation, MethodInvocationHook<TService>? postInvocation) where TService : class
+        public static TentacleServiceDecoratorBuilder HookServiceMethod<TService>(this TentacleServiceDecoratorBuilder builder, string methodName, MethodInvocationHook<TService>? preInvocation, MethodInvocationHook<TService>? postInvocation) where TService : class
         {
             return builder.RegisterProxyDecorator<TService>(service => MethodInvocationHookProxyDecorator<TService>.Create(service, methodName, preInvocation, postInvocation));
         }

@@ -40,8 +40,8 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .TraceMethods<IClientFileTransferService, IAsyncClientFileTransferService>(out var tracingStats)
-                    .HookMethodInvocation<IClientFileTransferService>(nameof(IClientFileTransferService.UploadFile),
+                    .TraceService<IClientFileTransferService, IAsyncClientFileTransferService>(out var tracingStats)
+                    .HookServiceMethod<IClientFileTransferService>(nameof(IClientFileTransferService.UploadFile),
                         async _ =>
                         {
                             await tcpConnectionUtilities.RestartTcpConnection();
@@ -65,7 +65,7 @@ namespace Octopus.Tentacle.Tests.Integration
                                 }
                             }
                         })
-                    .HookMethodInvocation<IAsyncClientFileTransferService>(nameof(IAsyncClientFileTransferService.UploadFileAsync),
+                    .HookServiceMethod<IAsyncClientFileTransferService>(nameof(IAsyncClientFileTransferService.UploadFileAsync),
                         async _ =>
                         {
                             await tcpConnectionUtilities.RestartTcpConnection();
@@ -128,8 +128,8 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .TraceMethods<IClientFileTransferService, IAsyncClientFileTransferService>(out var tracingStats)
-                    .HookMethodInvocation<IClientFileTransferService>(nameof(IClientFileTransferService.UploadFile),
+                    .TraceService<IClientFileTransferService, IAsyncClientFileTransferService>(out var tracingStats)
+                    .HookServiceMethod<IClientFileTransferService>(nameof(IClientFileTransferService.UploadFile),
                         async _ =>
                         {
                             await tcpConnectionUtilities.RestartTcpConnection();
@@ -140,7 +140,7 @@ namespace Octopus.Tentacle.Tests.Integration
                             // Kill the first UploadFile call to force the rpc call into retries
                             responseMessageTcpKiller.KillConnectionOnNextResponse();
                         })
-                    .HookMethodInvocation<IAsyncClientFileTransferService>(nameof(IAsyncClientFileTransferService.UploadFileAsync),
+                    .HookServiceMethod<IAsyncClientFileTransferService>(nameof(IAsyncClientFileTransferService.UploadFileAsync),
                         async _ =>
                         {
                             await tcpConnectionUtilities.RestartTcpConnection();
