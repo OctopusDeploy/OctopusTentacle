@@ -13,18 +13,13 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
 
     public class TentacleServiceDecoratorBuilder
     {
-        readonly bool useProxyDecorators;
+        bool useProxyDecorators;
         private readonly List<Decorator<IAsyncClientScriptService>> scriptServiceDecorator = new ();
         private readonly List<Decorator<IAsyncClientScriptServiceV2>> scriptServiceV2Decorator = new ();
         private readonly List<Decorator<IAsyncClientFileTransferService>> fileTransferServiceDecorator = new ();
         private readonly List<Decorator<IAsyncClientCapabilitiesServiceV2>> capabilitiesServiceV2Decorator = new ();
 
         readonly Dictionary<Type, List<WrappedProxyDecoratorFactory>> registeredProxyDecorators = new();
-
-        public TentacleServiceDecoratorBuilder(bool useProxyDecorators = false)
-        {
-            this.useProxyDecorators = useProxyDecorators;
-        }
 
         public TentacleServiceDecoratorBuilder DecorateScriptServiceWith(Decorator<IAsyncClientScriptService> scriptServiceDecorator)
         {
@@ -132,6 +127,10 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
 
         public TentacleServiceDecoratorBuilder RegisterProxyDecorator<TService>(Func<TService, TService> proxyDecoratorFactory) where TService : class
         {
+            //if we are registering any proxy decorators, then we should use them
+            //it's implied that we won't be mixing decorator models in the same test
+            useProxyDecorators = true;
+
             var serviceType = typeof(TService);
             WrappedProxyDecoratorFactory wrappedFactory = o => proxyDecoratorFactory((TService)o);
 

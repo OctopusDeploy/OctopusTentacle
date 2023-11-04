@@ -23,7 +23,7 @@ namespace Octopus.Tentacle.Tests.Integration
         public async Task CanRunScript(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
-                .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder(true)
+                .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .TraceMethods<IClientScriptServiceV2, IAsyncClientScriptServiceV2>(out var tracingStats)
                     .Build())
                 .Build(CancellationToken);
@@ -55,7 +55,7 @@ namespace Octopus.Tentacle.Tests.Integration
         public async Task DelayInStartScriptSavesNetworkCalls(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
-                .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder(true)
+                .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .TraceMethods<IClientScriptServiceV2, IAsyncClientScriptServiceV2>(out var tracingStats)
                     .Build())
                 .Build(CancellationToken);
@@ -88,7 +88,7 @@ namespace Octopus.Tentacle.Tests.Integration
         public async Task WhenTentacleRestartsWhileRunningAScript_TheExitCodeShouldBe_UnknownResultExitCode(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
-                .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder(true)
+                .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .TraceMethods<IClientScriptServiceV2, IAsyncClientScriptServiceV2>(out var tracingStats)
                     .Build())
                 .Build(CancellationToken);
@@ -135,7 +135,7 @@ namespace Octopus.Tentacle.Tests.Integration
         public async Task WhenALongRunningScriptIsCancelled_TheScriptShouldStop(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
-                .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder(true)
+                .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .TraceMethods<IClientScriptServiceV2, IAsyncClientScriptServiceV2>(out var tracingStats)
                     .Build())
                 .Build(CancellationToken);
