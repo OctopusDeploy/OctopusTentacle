@@ -13,7 +13,9 @@ using Octopus.Tentacle.Contracts.Legacy;
 using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers;
 using Octopus.Tentacle.Tests.Integration.Util;
+using Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers;
 using Octopus.TestPortForwarder;
+using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
@@ -26,13 +28,14 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public readonly TentacleType TentacleType;
         Version? tentacleVersion;
         TentacleRuntime tentacleRuntime = DefaultTentacleRuntime.Value;
-        readonly List<Func<PortForwarderBuilder, PortForwarderBuilder>> portForwarderModifiers = new ();
+        readonly List<Func<PortForwarderBuilder, PortForwarderBuilder>> portForwarderModifiers = new();
         readonly List<Action<ServiceEndPoint>> serviceEndpointModifiers = new();
         IPendingRequestQueueFactory? queueFactory = null;
         Reference<PortForwarder>? portForwarderReference;
         ITentacleClientObserver tentacleClientObserver = new NoTentacleClientObserver();
         AsyncHalibutFeature asyncHalibutFeature = AsyncHalibutFeature.Disabled;
         Action<ITentacleBuilder>? tentacleBuilderAction;
+        TcpConnectionUtilities? tcpConnectionUtilities;
 
         public ClientAndTentacleBuilder(TentacleType tentacleType)
         {
@@ -112,6 +115,14 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             return this;
         }
 
+        public ClientAndTentacleBuilder WithTcpConnectionUtilities(ILogger logger, out ITcpConnectionUtilities tcpConnectionUtilities)
+        {
+            this.tcpConnectionUtilities = new TcpConnectionUtilities(asyncHalibutFeature, logger);
+            tcpConnectionUtilities = this.tcpConnectionUtilities;
+
+            return this;
+        }
+
         public ClientAndTentacleBuilder WithTentacleClientObserver(ITentacleClientObserver tentacleClientObserver)
         {
             this.tentacleClientObserver = tentacleClientObserver;
@@ -173,9 +184,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             ServiceEndPoint tentacleEndPoint;
 
             var temporaryDirectory = new TemporaryDirectory();
-            var tentacleExe = tentacleVersion == null ?
-                TentacleExeFinder.FindTentacleExe(this.tentacleRuntime) :
-                await TentacleFetcher.GetTentacleVersion(temporaryDirectory.DirectoryPath, tentacleVersion, tentacleRuntime, logger, cancellationToken);
+            var tentacleExe = tentacleVersion == null ? TentacleExeFinder.FindTentacleExe(this.tentacleRuntime) : await TentacleFetcher.GetTentacleVersion(temporaryDirectory.DirectoryPath, tentacleVersion, tentacleRuntime, logger, cancellationToken);
 
             logger.Information($"Tentacle.exe location: {tentacleExe}");
 
@@ -219,6 +228,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             {
                 serviceEndpointModifier(tentacleEndPoint);
             }
+
+            //make sure we do this after and
+            tcpConnectionUtilities?.Configure(server.ServerHalibutRuntime, tentacleEndPoint);
 
             TentacleClient.CacheServiceWasNotFoundResponseMessages(server.ServerHalibutRuntime);
 
