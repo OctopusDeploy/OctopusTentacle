@@ -82,7 +82,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             return new FooTentacleServiceDecoratorFactory(Combine(scriptServiceDecorator), Combine(scriptServiceV2Decorator), Combine(fileTransferServiceDecorator), Combine(capabilitiesServiceV2Decorator));
         }
 
-        public static Decorator<T> Combine<T>(List<Decorator<T>> chain) where T : class
+        static Decorator<T> Combine<T>(List<Decorator<T>> chain) where T : class
         {
 
             return t =>

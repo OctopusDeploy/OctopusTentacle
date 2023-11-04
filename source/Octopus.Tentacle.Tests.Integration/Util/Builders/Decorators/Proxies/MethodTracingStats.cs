@@ -9,7 +9,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies
     {
         readonly ConcurrentDictionary<string, Lazy<TracedMethodStats>> trackedMethods = new();
 
-        IRecordedTracedMethodStats IRecordedMethodTracingStats.Get(string methodName) => GetMethodStats(methodName);
+        IRecordedTracedMethodStats IRecordedMethodTracingStats.For(string methodName) => GetMethodStats(methodName);
 
         public void RecordCallStart(MethodInfo targetMethod)
         {
@@ -29,13 +29,19 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies
             stats.RecordException(exception);
         }
 
-        TracedMethodStats GetMethodStats(string methodName) => trackedMethods.GetOrAdd(methodName, _ => new Lazy<TracedMethodStats>(() => new TracedMethodStats())).Value;
+        TracedMethodStats GetMethodStats(string methodName) => trackedMethods.GetOrAdd(NormalizeMethodName(methodName), _ => new Lazy<TracedMethodStats>(() => new TracedMethodStats())).Value;
         TracedMethodStats GetMethodStats(MethodInfo targetMethod) => GetMethodStats(targetMethod.Name);
+
+        static string NormalizeMethodName(string methodName)
+            //we normalize to include the async suffix as all methods will be async in the future
+            => !methodName.EndsWith("Async")
+                ? $"{methodName}Async"
+                : methodName;
     }
 
     public interface IRecordedMethodTracingStats
     {
-        IRecordedTracedMethodStats Get(string methodName);
+        IRecordedTracedMethodStats For(string methodName);
     }
 
     public class TracedMethodStats : IRecordedTracedMethodStats
