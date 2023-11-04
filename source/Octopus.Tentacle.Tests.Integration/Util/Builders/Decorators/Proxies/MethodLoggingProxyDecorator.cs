@@ -5,43 +5,51 @@ using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies
 {
-    public class MethodLoggingProxyDecorator<TService> : ServiceProxy where TService : class
+    public class MethodLoggingProxyDecorator : ServiceProxy
     {
-        readonly ILogger logger = new SerilogLoggerBuilder().Build().ForContext<MethodLoggingProxyDecorator<TService>>();
-        readonly string serviceTypeName = typeof(TService).Name;
+        readonly ILogger logger = new SerilogLoggerBuilder().Build().ForContext<MethodLoggingProxyDecorator>();
+        string serviceTypeName;
 
-        public static TService Create(TService service)
+        void Configure(string serviceTypeName)
         {
-            var proxy = DispatchProxyAsync.Create<TService, MethodLoggingProxyDecorator<TService>>();
-            (proxy as MethodLoggingProxyDecorator<TService>)!.SetTargetService(service);
-            return proxy;
+            this.serviceTypeName = serviceTypeName;
+        }
+
+        public static TService Create<TService>(TService service) where TService : class
+        {
+            var proxiedService = DispatchProxyAsync.Create<TService, MethodLoggingProxyDecorator>();
+            var proxy = proxiedService as MethodLoggingProxyDecorator;
+            proxy!.SetTargetService(service);
+            proxy.Configure(typeof(TService).Name);
+
+            return proxiedService;
         }
 
         protected override void OnStartingInvocation(MethodInfo targetMethod)
         {
-            logger.Information("{ServiceName}.{MethodName} call started", serviceTypeName, targetMethod.Name);
+            logger.Information("{ServiceName:l}.{MethodName:l}() started", serviceTypeName, targetMethod.Name);
         }
 
         protected override Task OnStartingInvocationAsync(MethodInfo targetMethod)
         {
-            logger.Information("{ServiceName}.{MethodName} call started", serviceTypeName, targetMethod.Name);
+            logger.Information("{ServiceName:l}.{MethodName:l}() started", serviceTypeName, targetMethod.Name);
             return Task.CompletedTask;
         }
 
         protected override void OnCompletingInvocation(MethodInfo targetMethod)
         {
-            logger.Information("{ServiceName}.{MethodName} call completed", serviceTypeName, targetMethod.Name);
+            logger.Information("{ServiceName:l}.{MethodName:l}() completed", serviceTypeName, targetMethod.Name);
         }
 
         protected override Task OnCompletingInvocationAsync(MethodInfo targetMethod)
         {
-            logger.Information("{ServiceName}.{MethodName} call completed", serviceTypeName, targetMethod.Name);
+            logger.Information("{ServiceName:l}.{MethodName:l}() completed", serviceTypeName, targetMethod.Name);
             return Task.CompletedTask;
         }
 
         protected override void OnInvocationException(MethodInfo targetMethod, Exception exception)
         {
-            logger.Information(exception, "{ServiceName}.{MethodName} threw an exception", serviceTypeName, targetMethod.Name);
+            logger.Information(exception, "{ServiceName:l}.{MethodName:l}() threw an exception", serviceTypeName, targetMethod.Name);
         }
     }
 }

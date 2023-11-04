@@ -190,7 +190,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
                 }
 
                 //we add the call logging proxy decorator to all services
-                proxiedService = MethodLoggingProxyDecorator<T>.Create(proxiedService);
+                proxiedService = MethodLoggingProxyDecorator.Create(proxiedService);
 
                 return proxiedService;
             }

@@ -49,9 +49,11 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies
             EnsureTargetServiceNotNull();
             try
             {
-                await OnStartingInvocationAsync(method);
+                await OnStartingInvocationAsync(method).ConfigureAwait(false);
 
-                await (Task)method.Invoke(TargetService, args)!;
+                var task = (Task)method.Invoke(TargetService, args);
+
+                await task!.ConfigureAwait(false);
             }
             catch (TargetInvocationException e)
             {
@@ -66,7 +68,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies
                 throw;
             }
             {
-                await OnCompletingInvocationAsync(method);
+                await OnCompletingInvocationAsync(method).ConfigureAwait(false);
             }
         }
 
@@ -75,9 +77,13 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies
             EnsureTargetServiceNotNull();
             try
             {
-                await OnStartingInvocationAsync(method);
+                await OnStartingInvocationAsync(method).ConfigureAwait(false);
 
-                return await (Task<T>)method.Invoke(TargetService, args)!;
+                var task = (Task<T>)method.Invoke(TargetService, args);
+
+                var result = await task!.ConfigureAwait(false);
+
+                return result;
             }
             catch (TargetInvocationException e)
             {
@@ -96,7 +102,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies
             }
             finally
             {
-                await OnCompletingInvocationAsync(method);
+                await OnCompletingInvocationAsync(method).ConfigureAwait(false);
             }
         }
 
