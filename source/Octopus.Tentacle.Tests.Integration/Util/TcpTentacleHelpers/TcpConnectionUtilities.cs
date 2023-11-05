@@ -37,13 +37,6 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
             logger.Information("Finished DownloadFile work around call");
         }
 
-        private static HalibutProxyRequestOptions PollingQueueProxyRequestOptions()
-        {
-            var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeSpan.FromMilliseconds(500));
-            return new HalibutProxyRequestOptions(cts.Token, null);
-        }
-
         public async Task EnsurePollingQueueWontSendMessageToDisconnectedTentacles()
         {
             logger.Information("Call DownloadFile to work around an issue where the polling queue will send work to a disconnected tentacle");
