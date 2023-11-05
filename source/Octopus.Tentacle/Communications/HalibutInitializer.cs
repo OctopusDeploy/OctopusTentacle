@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using Halibut;
 using Octopus.Client.Model;
+using Octopus.Client.Model.Endpoints;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration;
 
@@ -107,7 +108,10 @@ namespace Octopus.Tentacle.Communications
 
         IEnumerable<OctopusServerConfiguration> GetOctopusServersToPoll()
         {
-            return configuration.TrustedOctopusServers.Where(octopusServerConfiguration => octopusServerConfiguration.CommunicationStyle == CommunicationStyle.TentacleActive);
+            return configuration.TrustedOctopusServers.Where(octopusServerConfiguration =>
+                octopusServerConfiguration.CommunicationStyle == CommunicationStyle.TentacleActive ||
+                (octopusServerConfiguration is { CommunicationStyle: CommunicationStyle.KubernetesTentacle } &&
+                octopusServerConfiguration.KubernetesTentacleCommunicationMode == TentacleCommunicationModeResource.Polling));
         }
 
         IPEndPoint GetEndPointToListenOn()

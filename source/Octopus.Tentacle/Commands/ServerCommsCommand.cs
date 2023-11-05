@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Octopus.Client.Model;
+using Octopus.Client.Model.Endpoints;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
@@ -88,9 +89,8 @@ namespace Octopus.Tentacle.Commands
             if (server.SubscriptionId == null)
             {
                 var existingPollingConfiguration = servers.FirstOrDefault(s =>
-                    s.CommunicationStyle == CommunicationStyle.TentacleActive && s.SubscriptionId != null);
+                    (s.CommunicationStyle == CommunicationStyle.TentacleActive || (s.CommunicationStyle == CommunicationStyle.KubernetesTentacle && s.KubernetesTentacleCommunicationMode == TentacleCommunicationModeResource.Polling)) && s.SubscriptionId != null);
                 server.SubscriptionId = existingPollingConfiguration?.SubscriptionId ?? new Uri($"poll://{RandomStringGenerator.Generate(20).ToLowerInvariant()}/").ToString();
-
             }
 
             tentacleConfiguration.Value.AddOrUpdateTrustedOctopusServer(server);

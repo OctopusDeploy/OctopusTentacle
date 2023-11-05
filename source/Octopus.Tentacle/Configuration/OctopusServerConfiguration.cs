@@ -1,6 +1,7 @@
 using System;
 using Newtonsoft.Json;
 using Octopus.Client.Model;
+using Octopus.Client.Model.Endpoints;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Configuration
@@ -41,6 +42,8 @@ namespace Octopus.Tentacle.Configuration
         /// </summary>
         [JsonConverter(typeof(CommunicationStyleConverter))]
         public CommunicationStyle CommunicationStyle { get; set; }
+
+        public TentacleCommunicationModeResource KubernetesTentacleCommunicationMode { get; set; } = TentacleCommunicationModeResource.Polling;
 
         /// <summary>
         /// The URL used when connecting to the server, if available.
