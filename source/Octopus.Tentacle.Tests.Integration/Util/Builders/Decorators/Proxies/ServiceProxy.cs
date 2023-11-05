@@ -109,7 +109,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies
         void EnsureTargetServiceNotNull()
         {
             if (TargetService is null)
-                throw new InvalidOperationException("TargetService has not been set via SetTarget().");
+                throw new InvalidOperationException("TargetService has not been set via SetTargetService().");
         }
 
         protected abstract void OnStartingInvocation(MethodInfo targetMethod);
