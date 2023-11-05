@@ -229,7 +229,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 serviceEndpointModifier(tentacleEndPoint);
             }
 
-            //make sure we do this after and
+            //make sure we do this after any service endpoint modifiers have run
             tcpConnectionUtilities?.Configure(server.ServerHalibutRuntime, tentacleEndPoint);
 
             TentacleClient.CacheServiceWasNotFoundResponseMessages(server.ServerHalibutRuntime);
