@@ -32,7 +32,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         static readonly Type[] CurrentScriptServiceTypes = ScriptServiceV2Types;
 
-        static readonly Dictionary<Version?, Type[]> ScriptServiceVersionTypesMap = new()
+        static readonly Dictionary<Version, Type[]> ScriptServiceVersionTypesMap = new()
         {
             [TentacleVersions.v5_0_4_FirstLinuxRelease] = ScriptServiceV1Types,
             [TentacleVersions.v5_0_12_AutofacServiceFactoryIsInShared] = ScriptServiceV1Types,
