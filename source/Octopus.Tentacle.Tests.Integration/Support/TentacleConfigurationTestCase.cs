@@ -9,17 +9,23 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public TentacleType TentacleType { get; }
         public TentacleRuntime TentacleRuntime { get; }
         public Version? Version { get; }
+        /// <summary>
+        /// An array of <see cref="Type">Types</see> of the latest script service available on the tentacle version
+        /// </summary>
+        public Type[] LatestScriptServiceTypes { get; }
 
         public TentacleConfigurationTestCase(
             TentacleType tentacleType,
             TentacleRuntime tentacleRuntime,
-            Version? version)
+            Version? version,
+            Type[] latestScriptServiceTypes)
         {
             TentacleType = tentacleType;
             TentacleRuntime = tentacleRuntime;
             Version = version;
+            LatestScriptServiceTypes = latestScriptServiceTypes;
         }
-        
+
         internal ClientAndTentacleBuilder CreateBuilder()
         {
             return new ClientAndTentacleBuilder(TentacleType)
@@ -37,7 +43,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public override string ToString()
         {
             StringBuilder builder = new();
-            
+
             builder.Append($"{TentacleType},");
             string version = Version?.ToString() ?? "Latest";
             builder.Append($"{version}");

@@ -7,7 +7,7 @@ using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies;
 namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
 {
     public delegate T Decorator<T>(T service);
-    public delegate object WrappedProxyDecoratorFactory(object service);
+    public delegate object ProxyDecoratorFactory(object service);
 
     public class TentacleServiceDecoratorBuilder
     {
@@ -17,7 +17,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
         private readonly List<Decorator<IAsyncClientFileTransferService>> fileTransferServiceDecorator = new ();
         private readonly List<Decorator<IAsyncClientCapabilitiesServiceV2>> capabilitiesServiceV2Decorator = new ();
 
-        readonly Dictionary<Type, List<WrappedProxyDecoratorFactory>> registeredProxyDecorators = new();
+        readonly Dictionary<Type, List<ProxyDecoratorFactory>> registeredProxyDecorators = new();
 
         public TentacleServiceDecoratorBuilder DecorateScriptServiceWith(Decorator<IAsyncClientScriptService> scriptServiceDecorator)
         {
@@ -139,18 +139,28 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             useProxyDecorators = true;
 
             var serviceType = typeof(TService);
-            WrappedProxyDecoratorFactory wrappedFactory = o => proxyDecoratorFactory((TService)o);
+
+            return RegisterProxyDecorator(serviceType, WrapGenericFunc);
+
+            object WrapGenericFunc(object o) => proxyDecoratorFactory((TService)o);
+        }
+
+        public TentacleServiceDecoratorBuilder RegisterProxyDecorator(Type serviceType, ProxyDecoratorFactory proxyDecoratorFactory)
+        {
+            //if we are registering any proxy decorators, then we should use them
+            //it's implied that we won't be mixing decorator models in the same test
+            useProxyDecorators = true;
 
             if (registeredProxyDecorators.TryGetValue(serviceType, out var factories))
             {
                 // we add each builder at the start so the latest registered decorator wraps the original service
-                factories.Insert(0, wrappedFactory);
+                factories.Insert(0, proxyDecoratorFactory);
             }
             else
             {
-                registeredProxyDecorators.Add(serviceType, new List<WrappedProxyDecoratorFactory>
+                registeredProxyDecorators.Add(serviceType, new List<ProxyDecoratorFactory>
                 {
-                    wrappedFactory
+                    proxyDecoratorFactory
                 });
             }
 
@@ -159,9 +169,9 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
 
         class ProxyTentacleServiceDecoratorFactory : ITentacleServiceDecoratorFactory
         {
-            readonly Dictionary<Type, List<WrappedProxyDecoratorFactory>> registeredProxyDecorators;
+            readonly Dictionary<Type, List<ProxyDecoratorFactory>> registeredProxyDecorators;
 
-            public ProxyTentacleServiceDecoratorFactory(Dictionary<Type, List<WrappedProxyDecoratorFactory>> registeredProxyDecorators)
+            public ProxyTentacleServiceDecoratorFactory(Dictionary<Type, List<ProxyDecoratorFactory>> registeredProxyDecorators)
             {
                 this.registeredProxyDecorators = registeredProxyDecorators;
             }
