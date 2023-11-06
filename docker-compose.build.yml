@@ -2,13 +2,15 @@ version: '3'
 services:
 
     octopusdeploy-tentacle-linux:
+        platform: "linux/${BUILD_ARCH:?err}"
         build:
             context: .
             dockerfile: ./docker/linux/Dockerfile
             args:
                 BUILD_DATE: ${BUILD_DATE:?err}
                 BUILD_NUMBER: ${BUILD_NUMBER:?err}
-        image: docker.packages.octopushq.com/octopusdeploy/tentacle:${BUILD_NUMBER?err}-linux
+                BUILD_ARCH: ${BUILD_ARCH:?err}
+        image: docker.packages.octopushq.com/octopusdeploy/tentacle:${BUILD_NUMBER?err}-linux-${BUILD_ARCH:?err}
 
     octopusdeploy-tentacle-windows-2019:
         build:
