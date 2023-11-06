@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Tentacle.CommonTestUtils.Builders;
+using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
@@ -20,7 +21,7 @@ namespace Octopus.Tentacle.Tests.Integration
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithScriptObserverBackoffStrategy(new FuncScriptObserverBackoffStrategy(iters => TimeSpan.FromSeconds(20)))
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .CountCallsToScriptServiceV2(out var scriptServiceV2CallCounts)
+                    .TraceService(tentacleConfigurationTestCase.LatestScriptServiceTypes, out var tracingStats)
                     .Build())
                 .Build(CancellationToken);
 
@@ -30,7 +31,11 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var (_, logs) = await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken);
 
-            scriptServiceV2CallCounts.GetStatusCallCountStarted.Should().BeLessThan(3);
+            tracingStats.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Started
+                .Should()
+                .BeGreaterThan(0)
+                .And
+                .BeLessThan(3);
         }
     }
 }
