@@ -65,6 +65,27 @@ namespace Octopus.Tentacle.Tests.Integration
                 Assert.That(logs[0].Source, Is.EqualTo(ProcessOutputSource.StdErr));
             }
         }
+        
+        [Test]
+        public void ShouldHandleIncompleteLine()
+        {
+            using (var appender = sut.CreateWriter())
+            {
+                appender.WriteOutput(ProcessOutputSource.StdOut, "Hello");
+                appender.WriteOutput(ProcessOutputSource.StdOut, "World");
+            }
+
+            using (var fs = File.Open(logFile, FileMode.Open))
+            {
+                FileInfo fi = new FileInfo(logFile);
+                fs.SetLength(fi.Length - 10);
+            }
+            
+            var logs = sut.GetOutput(long.MinValue, out var next);
+            logs.Count.Should().Be(2);
+
+            logs[1].Text.Should().Be("Corrupt Tentacle log at line 2, no more logs will be read");
+        }
 
         [Test]
         public void MaskSensitiveValues_SingleMessage_Masked()

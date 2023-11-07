@@ -41,6 +41,7 @@ namespace Octopus.Tentacle.Services.Scripts
                     json.SupportMultipleContent = true;
 
                     var sequence = 0L;
+                    DateTimeOffset? lastLogLineOccured = null;
                     while (json.Read())
                     {
                         if (json.TokenType != JsonToken.StartArray)
@@ -52,12 +53,23 @@ namespace Octopus.Tentacle.Services.Scripts
                             continue;
                         }
 
-                        var source = StringToSource(json.ReadAsString());
-                        var message = json.ReadAsString();
-                        var occurred = json.ReadAsDateTimeOffset();
-                        if (occurred == null || message == null) continue;
+                        try
+                        {
+                            var source = StringToSource(json.ReadAsString());
+                            var message = json.ReadAsString();
+                            var occurred = json.ReadAsDateTimeOffset();
+                            lastLogLineOccured = occurred;
+                            if (occurred == null || message == null) continue;
 
-                        results.Add(new ProcessOutput(source, message, occurred.Value));
+                            results.Add(new ProcessOutput(source, message, occurred.Value));
+                        }
+                        catch (Exception)
+                        {
+                            results.Add(new ProcessOutput(ProcessOutputSource.StdErr, $"Corrupt Tentacle log at line {sequence}, no more logs will be read", lastLogLineOccured??DateTimeOffset.Now));
+                            // Tentacle doesn't continue to write to logs after it has died so it is probably safe to assume we don't
+                            // need to try to read more JSONL lines. 
+                            break;
+                        }
                     }
 
                     if (sequence > nextSequenceNumber)
