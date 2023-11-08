@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
 using Halibut.ServiceModel;
@@ -27,10 +28,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.PendingRequestQueueHelpers
         
         public Task<ResponseMessage> QueueAndWaitAsync(RequestMessage request, CancellationToken cancellationToken)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-#pragma warning disable CS0612
-            return pendingRequestQueue.QueueAndWaitAsync(request, cancellationToken);
-#pragma warning restore CS0612
+            throw new InvalidOperationException("This method is obsolete, and should not be called in Tentacle");
         }
 
         public Task<ResponseMessage> QueueAndWaitAsync(RequestMessage request, RequestCancellationTokens requestCancellationTokens)

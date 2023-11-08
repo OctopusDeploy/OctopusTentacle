@@ -53,7 +53,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 new(CancellationToken, null));
 
             var sourceBytes = File.ReadAllBytes(fileToDownload.File.FullName);
-            var destinationBytes = downloadedData.ToBytes();
+            var destinationBytes = await downloadedData.ToBytes(CancellationToken);
 
             destinationBytes.Should().BeEquivalentTo(sourceBytes);
         }

@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
@@ -11,7 +12,7 @@ using Octopus.Tentacle.Util;
 namespace Octopus.Tentacle.Services.Scripts
 {
     [Service(typeof(IScriptServiceV2))]
-    public class ScriptServiceV2 : IScriptServiceV2
+    public class ScriptServiceV2 : IAsyncScriptServiceV2
     {
         readonly IShell shell;
         readonly IScriptWorkspaceFactory workspaceFactory;
@@ -31,8 +32,10 @@ namespace Octopus.Tentacle.Services.Scripts
             this.log = log;
         }
 
-        public ScriptStatusResponseV2 StartScript(StartScriptCommandV2 command)
+        public async Task<ScriptStatusResponseV2> StartScriptAsync(StartScriptCommandV2 command, CancellationToken cancellationToken)
         {
+            await Task.CompletedTask;
+
             var runningScript = runningScripts.GetOrAdd(
                 command.ScriptTicket,
                 _ =>
@@ -67,7 +70,8 @@ namespace Octopus.Tentacle.Services.Scripts
                         command.ScriptIsolationMutexTimeout,
                         command.IsolationMutexName,
                         command.Arguments,
-                        command.Files);
+                        command.Files,
+                        CancellationToken.None).Result;
 
                     runningScript.ScriptStateStore.Create();
                 }
@@ -89,14 +93,18 @@ namespace Octopus.Tentacle.Services.Scripts
             }
         }
 
-        public ScriptStatusResponseV2 GetStatus(ScriptStatusRequestV2 request)
+        public async Task<ScriptStatusResponseV2> GetStatusAsync(ScriptStatusRequestV2 request, CancellationToken cancellationToken)
         {
+            await Task.CompletedTask;
+
             runningScripts.TryGetValue(request.Ticket, out var runningScript);
             return GetResponse(request.Ticket, request.LastLogSequence, runningScript?.Process);
         }
 
-        public ScriptStatusResponseV2 CancelScript(CancelScriptCommandV2 command)
+        public async Task<ScriptStatusResponseV2> CancelScriptAsync(CancelScriptCommandV2 command, CancellationToken cancellationToken)
         {
+            await Task.CompletedTask;
+
             if (runningScripts.TryGetValue(command.Ticket, out var runningScript))
             {
                 runningScript.Cancel();
@@ -105,8 +113,10 @@ namespace Octopus.Tentacle.Services.Scripts
             return GetResponse(command.Ticket, command.LastLogSequence, runningScript?.Process);
         }
 
-        public void CompleteScript(CompleteScriptCommandV2 command)
+        public async Task CompleteScriptAsync(CompleteScriptCommandV2 command, CancellationToken cancellationToken)
         {
+            await Task.CompletedTask;
+
             if (runningScripts.TryRemove(command.Ticket, out var runningScript))
             {
                 runningScript.Dispose();

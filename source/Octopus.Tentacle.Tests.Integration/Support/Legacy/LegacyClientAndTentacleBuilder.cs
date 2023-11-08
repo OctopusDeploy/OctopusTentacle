@@ -73,6 +73,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
             
             logger.Information($"Tentacle.exe location: {tentacleExe}");
 
+            var halibutTimeoutsAndLimits = new HalibutTimeoutsAndLimits();
             if (tentacleType == TentacleType.Polling)
             {
                 portForwarder = PortForwarderBuilder.ForwardingToLocalPort(serverListeningPort, new SerilogLoggerBuilder().Build()).Build();
@@ -81,9 +82,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
                     .WithTentacleExe(tentacleExe)
                     .Build(logger, cancellationToken);
 
-#pragma warning disable CS0612
-                tentacleEndPoint = new ServiceEndPoint(runningTentacle.ServiceUri, runningTentacle.Thumbprint);
-#pragma warning restore CS0612
+                tentacleEndPoint = new ServiceEndPoint(runningTentacle.ServiceUri, runningTentacle.Thumbprint, halibutTimeoutsAndLimits);
             }
             else
             {
@@ -92,10 +91,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
                     .Build(logger, cancellationToken);
 
                 portForwarder = new PortForwarderBuilder(runningTentacle.ServiceUri, new SerilogLoggerBuilder().Build()).Build();
-
-#pragma warning disable CS0612
-                tentacleEndPoint = new ServiceEndPoint(portForwarder.PublicEndpoint, runningTentacle.Thumbprint);
-#pragma warning restore CS0612
+                
+                tentacleEndPoint = new ServiceEndPoint(portForwarder.PublicEndpoint, runningTentacle.Thumbprint, halibutTimeoutsAndLimits);
             }
 
             var tentacleClient = new LegacyTentacleClientBuilder(server.ServerHalibutRuntime, tentacleEndPoint)

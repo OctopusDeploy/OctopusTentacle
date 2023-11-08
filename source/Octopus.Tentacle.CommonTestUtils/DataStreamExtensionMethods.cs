@@ -1,18 +1,20 @@
 using System.IO;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Halibut;
 
 namespace Octopus.Tentacle.CommonTestUtils
 {
     public static class DataStreamExtensionMethods
     {
-        public static byte[] ToBytes(this DataStream dataStream)
+        public static async Task<byte[]> ToBytes(this DataStream dataStream, CancellationToken cancellationToken)
         {
             byte[]? bytes = null;
-#pragma warning disable CS0612
-            dataStream.Receiver()
-                .Read(
-                    stream =>
+
+            await dataStream.Receiver()
+                .ReadAsync(
+                    async (stream, ct) =>
                     {
                         if (stream is MemoryStream ms)
                         {
@@ -22,17 +24,18 @@ namespace Octopus.Tentacle.CommonTestUtils
                         {
                             using var memoryStream = new MemoryStream();
 
-                            stream.CopyTo(memoryStream);
+                            await stream.CopyToAsync(memoryStream, 81920, ct);
                             bytes = memoryStream.ToArray();
                         }
-                    });
-#pragma warning restore CS0612
+                    }, cancellationToken);
 
             return bytes!;
         }
-
-        public static string GetString(this DataStream dataStream, Encoding encoding) => encoding.GetString(dataStream.ToBytes());
         
-        public static string GetUtf8String(this DataStream dataStream) => dataStream.GetString(Encoding.UTF8);
+        public static async Task<string> GetUtf8String(this DataStream dataStream, CancellationToken cancellationToken)
+        {
+            var bytes = await dataStream.ToBytes(cancellationToken);
+            return Encoding.UTF8.GetString(bytes);
+        }
     }
 }

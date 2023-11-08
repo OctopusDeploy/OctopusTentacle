@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using Halibut;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration;
@@ -9,7 +11,7 @@ using Octopus.Tentacle.Util;
 namespace Octopus.Tentacle.Services.FileTransfer
 {
     [Service(typeof(IFileTransferService))]
-    public class FileTransferService : IFileTransferService
+    public class FileTransferService : IAsyncFileTransferService
     {
         readonly ISystemLog log;
         readonly IOctopusFileSystem fileSystem;
@@ -22,8 +24,10 @@ namespace Octopus.Tentacle.Services.FileTransfer
             this.log = log;
         }
 
-        public DataStream DownloadFile(string remotePath)
+        public async Task<DataStream> DownloadFileAsync(string remotePath, CancellationToken cancellationToken)
         {
+            await Task.CompletedTask;
+
             var fullPath = ResolvePath(remotePath);
             if (!fileSystem.FileExists(fullPath))
             {
@@ -41,22 +45,23 @@ namespace Octopus.Tentacle.Services.FileTransfer
             using (fileSystem.OpenFile(fullPath, FileAccess.Read, FileShare.ReadWrite))
             {}
 
-#pragma warning disable CS0612
-            return new DataStream(fileSize, writer =>
+
+            return new DataStream(fileSize, async (writer, ct) =>
             {
                 log.Trace("Begin streaming file download: " + fullPath);
                 using (var stream = fileSystem.OpenFile(fullPath, FileAccess.Read, FileShare.ReadWrite))
                 {
-                    stream.CopyTo(writer);
-                    writer.Flush();
+                    await stream.CopyToAsync(writer, 81920, ct);
+                    await writer.FlushAsync(ct);
                     log.Trace("Finished streaming file download: " + fullPath);
                 }
             });
-#pragma warning restore CS0612
         }
 
-        public UploadResult UploadFile(string remotePath, DataStream upload)
+        public async Task<UploadResult> UploadFileAsync(string remotePath, DataStream upload, CancellationToken cancellationToken)
         {
+            await Task.CompletedTask;
+
             if (upload == null)
             {
                 log.Trace("Client requested a file upload, but no content stream was provided.");
@@ -71,9 +76,7 @@ namespace Octopus.Tentacle.Services.FileTransfer
             fileSystem.EnsureDiskHasEnoughFreeSpace(parentDirectory, upload.Length);
 
             log.Trace("Copying uploaded data stream to: " + fullPath);
-#pragma warning disable CS0612
-            upload.Receiver().SaveTo(fullPath);
-#pragma warning restore CS0612
+            upload.Receiver().SaveToAsync(fullPath, CancellationToken.None).Wait();
             return new UploadResult(fullPath, HashFile(fullPath), fileSystem.GetFileSize(fullPath));
         }
 
