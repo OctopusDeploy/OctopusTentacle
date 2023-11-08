@@ -75,13 +75,13 @@ namespace Octopus.Tentacle.Tests.Integration
                 appender.WriteOutput(ProcessOutputSource.StdOut, "World");
             }
 
-            using (var fs = File.Open(logFile, FileMode.Open))
+            using (var logFileStream = File.Open(logFile, FileMode.Open))
             {
-                FileInfo fi = new FileInfo(logFile);
-                fs.SetLength(fi.Length - 10);
+                var logFileInfo = new FileInfo(logFile);
+                logFileStream.SetLength(logFileInfo.Length - 10);
             }
             
-            var logs = sut.GetOutput(long.MinValue, out var next);
+            var logs = sut.GetOutput(long.MinValue, out _);
             logs.Count.Should().Be(2);
 
             logs[1].Text.Should().Be("Corrupt Tentacle log at line 2, no more logs will be read");
