@@ -22,12 +22,11 @@ namespace Octopus.Tentacle.Communications
             {
                 var configuration = c.Resolve<ITentacleConfiguration>();
                 var services = c.Resolve<IServiceFactory>();
-                var halibutRuntimeBuilder = new HalibutRuntimeBuilder()
+                var halibutRuntime = new HalibutRuntimeBuilder()
                     .WithServiceFactory(services)
                     .WithServerCertificate(configuration.TentacleCertificate)
-                    .WithMessageSerializer(serializerBuilder => serializerBuilder.WithLegacyContractSupport());
-                
-                var halibutRuntime = halibutRuntimeBuilder.Build();
+                    .WithMessageSerializer(serializerBuilder => serializerBuilder.WithLegacyContractSupport())
+                    .Build();
 
                 halibutRuntime.SetFriendlyHtmlPageContent(FriendlyHtmlPageContent);
                 halibutRuntime.SetFriendlyHtmlPageHeaders(FriendlyHtmlPageHeaders);
