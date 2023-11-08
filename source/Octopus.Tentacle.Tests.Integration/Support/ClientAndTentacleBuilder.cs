@@ -140,7 +140,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             // Server
             var serverHalibutRuntimeBuilder = new HalibutRuntimeBuilder()
                 .WithServerCertificate(Certificates.Server)
-                .WithLegacyContractSupport();
+                .WithLegacyContractSupport()
+                .WithAsyncHalibutFeatureEnabled();
             
             if (queueFactory != null)
             {
