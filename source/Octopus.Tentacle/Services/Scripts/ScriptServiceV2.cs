@@ -34,8 +34,6 @@ namespace Octopus.Tentacle.Services.Scripts
 
         public async Task<ScriptStatusResponseV2> StartScriptAsync(StartScriptCommandV2 command, CancellationToken cancellationToken)
         {
-            await Task.CompletedTask;
-
             var runningScript = runningScripts.GetOrAdd(
                 command.ScriptTicket,
                 _ =>
@@ -63,7 +61,7 @@ namespace Octopus.Tentacle.Services.Scripts
                 }
                 else
                 {
-                    workspace = workspaceFactory.PrepareWorkspace(command.ScriptTicket,
+                    workspace = await workspaceFactory.PrepareWorkspace(command.ScriptTicket,
                         command.ScriptBody,
                         command.Scripts,
                         command.Isolation,
@@ -71,7 +69,7 @@ namespace Octopus.Tentacle.Services.Scripts
                         command.IsolationMutexName,
                         command.Arguments,
                         command.Files,
-                        CancellationToken.None).Result;
+                        CancellationToken.None);
 
                     runningScript.ScriptStateStore.Create();
                 }

@@ -5,7 +5,6 @@ using Halibut;
 using Halibut.ServiceModel;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Contracts.Legacy;
-using Octopus.Tentacle.Variables;
 
 namespace Octopus.Tentacle.Communications
 {
@@ -27,13 +26,7 @@ namespace Octopus.Tentacle.Communications
                     .WithServiceFactory(services)
                     .WithServerCertificate(configuration.TentacleCertificate)
                     .WithMessageSerializer(serializerBuilder => serializerBuilder.WithLegacyContractSupport());
-
-                //if we have the environment variable to enable async halibut, enable it :)
-                if (bool.TryParse(Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleEnableAsyncHalibut), out var isEnabled) && isEnabled)
-                {
-                    halibutRuntimeBuilder.WithAsyncHalibutFeatureEnabled();
-                }
-
+                
                 var halibutRuntime = halibutRuntimeBuilder.Build();
 
                 halibutRuntime.SetFriendlyHtmlPageContent(FriendlyHtmlPageContent);

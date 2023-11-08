@@ -9,7 +9,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.PendingRequestQueueHelpers
 {
     public class CancellationTokenObservingPendingRequestQueueDecorator : IPendingRequestQueue
     {
-        private readonly IPendingRequestQueue pendingRequestQueue;
+        readonly IPendingRequestQueue pendingRequestQueue;
 
         public CancellationTokenObservingPendingRequestQueueDecorator(IPendingRequestQueue pendingRequestQueue)
         {
@@ -24,11 +24,6 @@ namespace Octopus.Tentacle.Tests.Integration.Util.PendingRequestQueueHelpers
         public async Task<RequestMessage> DequeueAsync(CancellationToken cancellationToken)
         {
             return await pendingRequestQueue.DequeueAsync(cancellationToken);
-        }
-        
-        public Task<ResponseMessage> QueueAndWaitAsync(RequestMessage request, CancellationToken cancellationToken)
-        {
-            throw new InvalidOperationException("This method is obsolete, and should not be called in Tentacle");
         }
 
         public Task<ResponseMessage> QueueAndWaitAsync(RequestMessage request, RequestCancellationTokens requestCancellationTokens)

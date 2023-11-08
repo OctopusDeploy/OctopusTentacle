@@ -95,7 +95,6 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var tasks = new ConcurrentBag<Task>();
 
-            // Act
             Parallel.ForEach(scripts, script =>
             {
                 var task = Task.Run(async () => script.Response = await service.StartScriptAsync(script.Command, CancellationToken.None));
