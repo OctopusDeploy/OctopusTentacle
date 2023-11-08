@@ -5,7 +5,6 @@ using Halibut;
 using Halibut.Diagnostics;
 using Halibut.Diagnostics.LogCreators;
 using Halibut.Logging;
-using Halibut.Util;
 using Octopus.Tentacle.Contracts.Legacy;
 using Octopus.Tentacle.Tests.Integration.Support.Logging;
 using Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers;

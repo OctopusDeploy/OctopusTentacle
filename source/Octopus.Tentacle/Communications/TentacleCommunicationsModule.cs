@@ -26,9 +26,14 @@ namespace Octopus.Tentacle.Communications
                 var halibutRuntimeBuilder = new HalibutRuntimeBuilder()
                     .WithServiceFactory(services)
                     .WithServerCertificate(configuration.TentacleCertificate)
-                    .WithMessageSerializer(serializerBuilder => serializerBuilder.WithLegacyContractSupport())
-                    .WithAsyncHalibutFeatureEnabled();
-                
+                    .WithMessageSerializer(serializerBuilder => serializerBuilder.WithLegacyContractSupport());
+
+                //if we have the environment variable to enable async halibut, enable it :)
+                if (bool.TryParse(Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleEnableAsyncHalibut), out var isEnabled) && isEnabled)
+                {
+                    halibutRuntimeBuilder.WithAsyncHalibutFeatureEnabled();
+                }
+
                 var halibutRuntime = halibutRuntimeBuilder.Build();
 
                 halibutRuntime.SetFriendlyHtmlPageContent(FriendlyHtmlPageContent);
