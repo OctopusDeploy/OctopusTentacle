@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using Autofac;
 using Halibut;
+using Halibut.Diagnostics;
 using Halibut.ServiceModel;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Contracts.Legacy;
+using Octopus.Tentacle.Variables;
 
 namespace Octopus.Tentacle.Communications
 {
@@ -22,10 +24,18 @@ namespace Octopus.Tentacle.Communications
             {
                 var configuration = c.Resolve<ITentacleConfiguration>();
                 var services = c.Resolve<IServiceFactory>();
+
+                bool.TryParse(Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleTcpKeepAliveEnabled), out var tcpKeepAliveEnabled);
+                var halibutTimeoutsAndLimits = new HalibutTimeoutsAndLimits
+                {
+                    TcpKeepAliveEnabled = tcpKeepAliveEnabled
+                };
+
                 var halibutRuntime = new HalibutRuntimeBuilder()
                     .WithServiceFactory(services)
                     .WithServerCertificate(configuration.TentacleCertificate)
                     .WithMessageSerializer(serializerBuilder => serializerBuilder.WithLegacyContractSupport())
+                    .WithHalibutTimeoutsAndLimits(halibutTimeoutsAndLimits)
                     .Build();
 
                 halibutRuntime.SetFriendlyHtmlPageContent(FriendlyHtmlPageContent);
