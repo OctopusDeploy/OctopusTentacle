@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Octopus.Tentacle.Client;
-using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Contracts.ClientServices;
-using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.SyncAndAsyncProxies;
 
 namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
 {
@@ -11,10 +9,10 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
 
     public class TentacleServiceDecoratorBuilder
     {
-        private readonly List<Decorator<IAsyncClientScriptService>> scriptServiceDecorator = new ();
-        private readonly List<Decorator<IAsyncClientScriptServiceV2>> scriptServiceV2Decorator = new ();
-        private readonly List<Decorator<IAsyncClientFileTransferService>> fileTransferServiceDecorator = new ();
-        private readonly List<Decorator<IAsyncClientCapabilitiesServiceV2>> capabilitiesServiceV2Decorator = new ();
+        readonly List<Decorator<IAsyncClientScriptService>> scriptServiceDecorator = new ();
+        readonly List<Decorator<IAsyncClientScriptServiceV2>> scriptServiceV2Decorator = new ();
+        readonly List<Decorator<IAsyncClientFileTransferService>> fileTransferServiceDecorator = new ();
+        readonly List<Decorator<IAsyncClientCapabilitiesServiceV2>> capabilitiesServiceV2Decorator = new ();
 
         public TentacleServiceDecoratorBuilder DecorateScriptServiceWith(Decorator<IAsyncClientScriptService> scriptServiceDecorator)
         {
@@ -86,14 +84,23 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             };
         }
 
-        private class FooTentacleServiceDecoratorFactory : AsyncToSyncTentacleServiceDecorator, ITentacleServiceDecoratorFactory
+        class FooTentacleServiceDecoratorFactory : ITentacleServiceDecoratorFactory
         {
-            public FooTentacleServiceDecoratorFactory(Decorator<IAsyncClientScriptService> scriptServiceDecorator,
+            readonly Decorator<IAsyncClientScriptService> scriptServiceDecorator;
+            readonly Decorator<IAsyncClientScriptServiceV2> scriptServiceV2Decorator;
+            readonly Decorator<IAsyncClientFileTransferService> fileTransferServiceDecorator;
+            readonly Decorator<IAsyncClientCapabilitiesServiceV2> capabilitiesServiceV2Decorator;
+
+            public FooTentacleServiceDecoratorFactory(
+                Decorator<IAsyncClientScriptService> scriptServiceDecorator,
                 Decorator<IAsyncClientScriptServiceV2> scriptServiceV2Decorator,
                 Decorator<IAsyncClientFileTransferService> fileTransferServiceDecorator,
-                Decorator<IAsyncClientCapabilitiesServiceV2> capabilitiesServiceV2Decorator) : 
-                base(scriptServiceDecorator, scriptServiceV2Decorator, fileTransferServiceDecorator, capabilitiesServiceV2Decorator)
+                Decorator<IAsyncClientCapabilitiesServiceV2> capabilitiesServiceV2Decorator)
             {
+                this.scriptServiceDecorator = scriptServiceDecorator;
+                this.scriptServiceV2Decorator = scriptServiceV2Decorator;
+                this.fileTransferServiceDecorator = fileTransferServiceDecorator;
+                this.capabilitiesServiceV2Decorator = capabilitiesServiceV2Decorator;
             }
 
             public IAsyncClientScriptService Decorate(IAsyncClientScriptService scriptService)
@@ -117,46 +124,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             }
         }
     }
-
-    internal abstract class AsyncToSyncTentacleServiceDecorator
-    {
-        protected readonly Decorator<IAsyncClientScriptService> scriptServiceDecorator;
-        protected readonly Decorator<IAsyncClientScriptServiceV2> scriptServiceV2Decorator;
-        protected readonly Decorator<IAsyncClientFileTransferService> fileTransferServiceDecorator;
-        protected readonly Decorator<IAsyncClientCapabilitiesServiceV2> capabilitiesServiceV2Decorator;
-
-        protected AsyncToSyncTentacleServiceDecorator(Decorator<IAsyncClientScriptService> scriptServiceDecorator,
-            Decorator<IAsyncClientScriptServiceV2> scriptServiceV2Decorator,
-            Decorator<IAsyncClientFileTransferService> fileTransferServiceDecorator,
-            Decorator<IAsyncClientCapabilitiesServiceV2> capabilitiesServiceV2Decorator)
-        {
-            this.scriptServiceDecorator = scriptServiceDecorator;
-            this.scriptServiceV2Decorator = scriptServiceV2Decorator;
-            this.fileTransferServiceDecorator = fileTransferServiceDecorator;
-            this.capabilitiesServiceV2Decorator = capabilitiesServiceV2Decorator;
-        }
-
-        public IClientScriptService Decorate(IClientScriptService scriptService)
-        {
-            return AsyncToSyncProxy.ProxyAsyncToSync(scriptServiceDecorator(AsyncToSyncProxy.ProxySyncToAsync(scriptService)));
-        }
-
-        public IClientScriptServiceV2 Decorate(IClientScriptServiceV2 scriptService)
-        {
-            return AsyncToSyncProxy.ProxyAsyncToSync(scriptServiceV2Decorator(AsyncToSyncProxy.ProxySyncToAsync(scriptService)));
-        }
-
-        public IClientFileTransferService Decorate(IClientFileTransferService service)
-        {
-            return AsyncToSyncProxy.ProxyAsyncToSync(fileTransferServiceDecorator(AsyncToSyncProxy.ProxySyncToAsync(service)));
-        }
-
-        public IClientCapabilitiesServiceV2 Decorate(IClientCapabilitiesServiceV2 service)
-        {
-            return AsyncToSyncProxy.ProxyAsyncToSync(capabilitiesServiceV2Decorator(AsyncToSyncProxy.ProxySyncToAsync(service)));
-        }
-    }
-
+    
     public static class TentacleServiceDecoratorBuilderExtensionMethods
     {
         public static TentacleServiceDecoratorBuilder LogAllCalls(this TentacleServiceDecoratorBuilder builder)

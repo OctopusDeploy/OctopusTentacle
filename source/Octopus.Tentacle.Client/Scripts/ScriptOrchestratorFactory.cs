@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Halibut.ServiceModel;
@@ -7,9 +6,8 @@ using Octopus.Diagnostics;
 using Octopus.Tentacle.Client.Capabilities;
 using Octopus.Tentacle.Client.Execution;
 using Octopus.Tentacle.Client.Observability;
-using Octopus.Tentacle.Client.Services;
-using Octopus.Tentacle.Client.Utils;
 using Octopus.Tentacle.Contracts.Capabilities;
+using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.Observability;
 
 namespace Octopus.Tentacle.Client.Scripts
@@ -24,15 +22,15 @@ namespace Octopus.Tentacle.Client.Scripts
         readonly TimeSpan onCancellationAbandonCompleteScriptAfter;
         readonly ILog logger;
 
-        readonly SyncAndAsyncClientScriptServiceV1 clientScriptServiceV1;
-        readonly SyncAndAsyncClientScriptServiceV2 clientScriptServiceV2;
-        readonly SyncAndAsyncClientCapabilitiesServiceV2 clientCapabilitiesServiceV2;
+        readonly IAsyncClientScriptService clientScriptServiceV1;
+        readonly IAsyncClientScriptServiceV2 clientScriptServiceV2;
+        readonly IAsyncClientCapabilitiesServiceV2 clientCapabilitiesServiceV2;
         readonly TentacleClientOptions clientOptions;
 
         public ScriptOrchestratorFactory(
-            SyncAndAsyncClientScriptServiceV1 clientScriptServiceV1,
-            SyncAndAsyncClientScriptServiceV2 clientScriptServiceV2,
-            SyncAndAsyncClientCapabilitiesServiceV2 clientCapabilitiesServiceV2,
+            IAsyncClientScriptService clientScriptServiceV1,
+            IAsyncClientScriptServiceV2 clientScriptServiceV2,
+            IAsyncClientCapabilitiesServiceV2 clientCapabilitiesServiceV2,
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
             RpcCallExecutor rpcCallExecutor,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
@@ -94,9 +92,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
             async Task<CapabilitiesResponseV2> GetCapabilitiesFunc(CancellationToken ct)
             {
-                var result = await clientOptions.AsyncHalibutFeature
-                    .WhenDisabled(() => clientCapabilitiesServiceV2.SyncService.GetCapabilities(new HalibutProxyRequestOptions(ct, CancellationToken.None)))
-                    .WhenEnabled(async () => await clientCapabilitiesServiceV2.AsyncService.GetCapabilitiesAsync(new HalibutProxyRequestOptions(ct, CancellationToken.None)));
+                var result = await clientCapabilitiesServiceV2.GetCapabilitiesAsync(new HalibutProxyRequestOptions(ct, CancellationToken.None));
 
                 return result;
             }

@@ -5,7 +5,6 @@ using Halibut;
 using Halibut.Diagnostics;
 using Halibut.Diagnostics.LogCreators;
 using Halibut.Logging;
-using Halibut.Util;
 using Octopus.Tentacle.Contracts.Legacy;
 using Octopus.Tentacle.Tests.Integration.Support.Logging;
 using Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers;
@@ -19,7 +18,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
         private readonly TentacleType tentacleType;
         private Version? tentacleVersion;
         private TentacleRuntime tentacleRuntime = DefaultTentacleRuntime.Value;
-        private AsyncHalibutFeature asyncHalibutFeature = AsyncHalibutFeature.Disabled;
         LogLevel halibutLogLevel = LogLevel.Info;
 
         public LegacyClientAndTentacleBuilder(TentacleType tentacleType)
@@ -38,14 +36,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
             this.tentacleRuntime = tentacleRuntime;
             return this;
         }
-
-        public LegacyClientAndTentacleBuilder WithAsyncHalibutFeature(AsyncHalibutFeature asyncHalibutFeature)
-        {
-            this.asyncHalibutFeature = asyncHalibutFeature;
-
-            return this;
-        }
-
+        
         public LegacyClientAndTentacleBuilder WithHalibutLoggingLevel(LogLevel halibutLogLevel)
         {
             this.halibutLogLevel = halibutLogLevel;
@@ -59,13 +50,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
             var serverHalibutRuntimeBuilder = new HalibutRuntimeBuilder()
                 .WithServerCertificate(Certificates.Server)
                 .WithLegacyContractSupport()
-                .WithLogFactory(BuildClientLogger());
-
-            if (asyncHalibutFeature.IsEnabled())
-            {
-                serverHalibutRuntimeBuilder.WithAsyncHalibutFeatureEnabled();
-            }
-
+                .WithLogFactory(BuildClientLogger())
+                .WithAsyncHalibutFeatureEnabled();
+            
             var serverHalibutRuntime = serverHalibutRuntimeBuilder.Build();
 
             serverHalibutRuntime.Trust(Certificates.TentaclePublicThumbprint);
@@ -111,8 +98,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
 #pragma warning restore CS0612
             }
 
-            var tentacleClient = new LegacyTentacleClientBuilder(server.ServerHalibutRuntime, tentacleEndPoint, asyncHalibutFeature)
-                .Build(cancellationToken);
+            var tentacleClient = new LegacyTentacleClientBuilder(server.ServerHalibutRuntime, tentacleEndPoint)
+                .Build();
 
             return new LegacyClientAndTentacle(server, portForwarder, runningTentacle, tentacleClient, temporaryDirectory, logger);
         }
