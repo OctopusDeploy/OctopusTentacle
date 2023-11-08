@@ -23,11 +23,12 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
         }
 
         public static TentacleServiceDecoratorBuilder HookServiceMethod<TService>(this TentacleServiceDecoratorBuilder builder, string methodName, MethodInvocationHook<TService>? preInvocation) where TService : class
-            => HookServiceMethod(builder, methodName, preInvocation, null);
+        //if we aren't hooking the post invocation, we don't care about the response type
+            => HookServiceMethod<TService, object>(builder, methodName, preInvocation, null);
 
-        public static TentacleServiceDecoratorBuilder HookServiceMethod<TService>(this TentacleServiceDecoratorBuilder builder, string methodName, MethodInvocationHook<TService>? preInvocation, MethodInvocationHook<TService>? postInvocation) where TService : class
+        public static TentacleServiceDecoratorBuilder HookServiceMethod<TService, TResponse>(this TentacleServiceDecoratorBuilder builder, string methodName, MethodInvocationHook<TService>? preInvocation, MethodInvocationHook<TService, TResponse>? postInvocation) where TService : class
         {
-            return builder.RegisterProxyDecorator<TService>(service => MethodInvocationHookProxyDecorator<TService>.Create(service, methodName, preInvocation, postInvocation));
+            return builder.RegisterProxyDecorator<TService>(service => MethodInvocationHookProxyDecorator<TService, TResponse>.Create(service, methodName, preInvocation, postInvocation));
         }
     }
 }

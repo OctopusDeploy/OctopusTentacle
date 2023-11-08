@@ -40,7 +40,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies
             }
             finally
             {
-                OnCompletingInvocation(method);
+                OnCompletingInvocation(method, null);
             }
         }
 
@@ -69,20 +69,21 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies
             }
             finally
             {
-                await OnCompletingInvocationAsync(method).ConfigureAwait(false);
+                await OnCompletingInvocationAsync(method, null).ConfigureAwait(false);
             }
         }
 
         public override async Task<T> InvokeAsyncT<T>(MethodInfo method, object[] args)
         {
             EnsureTargetServiceNotNull();
+            T result = default;
             try
             {
                 await OnStartingInvocationAsync(method).ConfigureAwait(false);
 
                 var task = (Task<T>)method.Invoke(TargetService, args);
 
-                var result = await task!.ConfigureAwait(false);
+                result = await task!.ConfigureAwait(false);
 
                 return result;
             }
@@ -103,7 +104,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies
             }
             finally
             {
-                await OnCompletingInvocationAsync(method).ConfigureAwait(false);
+                await OnCompletingInvocationAsync(method, result).ConfigureAwait(false);
             }
         }
 
@@ -115,8 +116,8 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies
 
         protected abstract void OnStartingInvocation(MethodInfo targetMethod);
         protected abstract Task OnStartingInvocationAsync(MethodInfo targetMethod);
-        protected abstract void OnCompletingInvocation(MethodInfo targetMethod);
-        protected abstract Task OnCompletingInvocationAsync(MethodInfo targetMethod);
+        protected abstract void OnCompletingInvocation(MethodInfo targetMethod, object? response);
+        protected abstract Task OnCompletingInvocationAsync(MethodInfo targetMethod, object? response);
         protected abstract void OnInvocationException(MethodInfo targetMethod, Exception exception);
     }
 }

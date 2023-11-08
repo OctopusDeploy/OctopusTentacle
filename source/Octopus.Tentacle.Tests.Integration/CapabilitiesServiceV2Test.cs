@@ -7,6 +7,7 @@ using Halibut;
 using NUnit.Framework;
 using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Contracts.Capabilities;
+using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
 using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
@@ -21,7 +22,7 @@ namespace Octopus.Tentacle.Tests.Integration
         public async Task CapabilitiesFromAnOlderTentacleWhichHasNoCapabilitiesService_WorksWithTheBackwardsCompatabilityDecorator(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             Version? version = tentacleConfigurationTestCase.Version;
-            
+
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateLegacyBuilder().Build(CancellationToken);
 
             var capabilities = (await clientAndTentacle.TentacleClient.CapabilitiesServiceV2.GetCapabilitiesAsync(new(CancellationToken, null))).SupportedCapabilities;
@@ -50,11 +51,10 @@ namespace Octopus.Tentacle.Tests.Integration
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithPortForwarder(out var portForwarder)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .DecorateCapabilitiesServiceV2With(d => d
-                        .AfterGetCapabilities(async (response) =>
+                    .HookServiceMethod<IAsyncClientCapabilitiesServiceV2, CapabilitiesResponseV2>(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync),
+                        null,
+                        (_, response) =>
                         {
-                            await Task.CompletedTask;
-
                             capabilitiesResponses.Add(response);
 
                             if (resumePortForwarder)
@@ -63,8 +63,8 @@ namespace Octopus.Tentacle.Tests.Integration
                                 // to allow script execution to continue
                                 portForwarder.Value.ReturnToNormalMode();
                             }
+                            return Task.CompletedTask;
                         })
-                        .Build())
                     .Build())
                 .Build(CancellationToken);
 

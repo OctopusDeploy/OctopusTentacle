@@ -142,22 +142,21 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithRetryDuration(TimeSpan.FromSeconds(15))
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
+                .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .LogCallsToFileTransferService()
-                    .CountCallsToFileTransferService(out var fileTransferServiceCallCounts)
-                    .RecordExceptionThrownInFileTransferService(out var fileTransferServiceException)
-                    .DecorateFileTransferServiceWith(d => d
-                        .BeforeDownloadFile(async (service, _) =>
+                    .TraceService<IClientFileTransferService, IAsyncClientFileTransferService>(out var tracingStats)
+                    .HookServiceMethod<IClientFileTransferService>(nameof(IClientFileTransferService.DownloadFile),
+                        async _ =>
                         {
-                            await service.EnsureTentacleIsConnectedToServer(Logger);
+                            await tcpConnectionUtilities.RestartTcpConnection();
 
-                            // Kill the first DownloadFile call to force the rpc call into retries
-                            if (fileTransferServiceException.DownloadFileLatestException == null)
+                            if (tracingStats.For(nameof(IClientFileTransferService.DownloadFile)).LastException is null)
                             {
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
                             else
                             {
+
                                 if (stopPortForwarderAfterFirstCall)
                                 {
                                     // Kill the port forwarder so the next requests are in the connecting state when retries timeout
@@ -171,7 +170,31 @@ namespace Octopus.Tentacle.Tests.Integration
                                 }
                             }
                         })
-                        .Build())
+                    .HookServiceMethod<IAsyncClientFileTransferService>(nameof(IAsyncClientFileTransferService.DownloadFileAsync),
+                        async _ =>
+                        {
+                            await tcpConnectionUtilities.RestartTcpConnection();
+
+                            if (tracingStats.For(nameof(IAsyncClientFileTransferService.DownloadFileAsync)).LastException is null)
+                            {
+                                responseMessageTcpKiller.KillConnectionOnNextResponse();
+                            }
+                            else
+                            {
+
+                                if (stopPortForwarderAfterFirstCall)
+                                {
+                                    // Kill the port forwarder so the next requests are in the connecting state when retries timeout
+                                    Logger.Information("Killing PortForwarder");
+                                    portForwarder!.Dispose();
+                                }
+                                else
+                                {
+                                    // Pause the port forwarder so the next requests are in-flight when retries timeout
+                                    responseMessageTcpKiller.PauseConnectionOnNextResponse();
+                                }
+                            }
+                        })
                     .Build())
                 .Build(CancellationToken);
 
@@ -189,8 +212,8 @@ namespace Octopus.Tentacle.Tests.Integration
             await action.Should().ThrowAsync<HalibutClientException>();
             duration.Stop();
 
-            fileTransferServiceCallCounts.DownloadFileCallCountStarted.Should().BeGreaterOrEqualTo(2);
-            fileTransferServiceCallCounts.UploadFileCallCountStarted.Should().Be(0);
+            tracingStats.For(nameof(IAsyncClientFileTransferService.DownloadFileAsync)).Started.Should().BeGreaterOrEqualTo(2);
+            tracingStats.For(nameof(IAsyncClientFileTransferService.UploadFileAsync)).Started.Should().Be(0);
 
             // Ensure we actually waited and retried until the timeout policy kicked in
             duration.Elapsed.Should().BeGreaterOrEqualTo(clientAndTentacle.RpcRetrySettings.RetryDuration - retryIfRemainingDurationAtLeastBuffer - retryBackoffBuffer);
