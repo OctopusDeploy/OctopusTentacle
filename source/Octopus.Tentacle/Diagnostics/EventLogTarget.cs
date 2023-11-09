@@ -3,6 +3,7 @@
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using NLog;
 using NLog.Common;
@@ -54,6 +55,7 @@ namespace Octopus.Tentacle.Diagnostics
     ///     </p>
     ///     <code lang="C#" source="examples/targets/Configuration API/EventLog/Simple/Example.cs" />
     /// </example>
+    [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
     public class EventLogTarget : TargetWithLayout, IInstallable
     {
         EventLog eventLogInstance;

@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -18,6 +19,7 @@ namespace Octopus.Tentacle.Tests.Integration.Startup
     [TestFixture]
     [WindowsTest]
     [NonParallelizable]
+    [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
     public class WindowsServiceConfiguratorFixture
     {
         [Test]

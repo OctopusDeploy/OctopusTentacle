@@ -1,9 +1,11 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.ServiceProcess;
 using Octopus.Diagnostics;
 
 namespace Octopus.Tentacle.Startup
 {
+    [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
     public class WindowsServiceHost : ICommandHost, ICommandRuntime
     {
         readonly ISystemLog log;

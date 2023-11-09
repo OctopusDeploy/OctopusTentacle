@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Management;
@@ -12,6 +13,7 @@ using Polly;
 
 namespace Octopus.Tentacle.Startup
 {
+    [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
     public class WindowsServiceConfigurator : IServiceConfigurator
     {
         readonly ISystemLog log;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.ServiceProcess;
 using System.Threading;
@@ -10,6 +11,7 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Startup
 {
+    [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
     public class CheckServicesCommand : AbstractCommand
     {
         readonly ISystemLog log;
