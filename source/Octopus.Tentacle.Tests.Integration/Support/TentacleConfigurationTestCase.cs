@@ -12,18 +12,18 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         /// <summary>
         /// An array of <see cref="Type">Types</see> of the latest script service available on the tentacle version
         /// </summary>
-        public Type[] LatestScriptServiceTypes { get; }
+        public Type LatestScriptServiceType { get; }
 
         public TentacleConfigurationTestCase(
             TentacleType tentacleType,
             TentacleRuntime tentacleRuntime,
             Version? version,
-            Type[] latestScriptServiceTypes)
+            Type latestScriptServiceType)
         {
             TentacleType = tentacleType;
             TentacleRuntime = tentacleRuntime;
             Version = version;
-            LatestScriptServiceTypes = latestScriptServiceTypes;
+            LatestScriptServiceType = latestScriptServiceType;
         }
 
         internal ClientAndTentacleBuilder CreateBuilder()

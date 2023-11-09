@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Util;
 
@@ -27,19 +26,19 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
     static class TentacleConfigurationTestCases
     {
-        static readonly Type[] ScriptServiceV2Types = { typeof(IClientScriptServiceV2), typeof(IAsyncClientScriptServiceV2) };
-        static readonly Type[] ScriptServiceV1Types = { typeof(IClientScriptService), typeof(IAsyncClientScriptService) };
+        static readonly Type ScriptServiceV2Type =  typeof(IAsyncClientScriptServiceV2);
+        static readonly Type ScriptServiceV1Type =  typeof(IAsyncClientScriptService);
 
-        static readonly Type[] CurrentScriptServiceTypes = ScriptServiceV2Types;
+        static readonly Type CurrentScriptServiceTypes = ScriptServiceV2Type;
 
-        static readonly Dictionary<Version, Type[]> ScriptServiceVersionTypesMap = new()
+        static readonly Dictionary<Version, Type> ScriptServiceVersionTypesMap = new()
         {
-            [TentacleVersions.v5_0_4_FirstLinuxRelease] = ScriptServiceV1Types,
-            [TentacleVersions.v5_0_12_AutofacServiceFactoryIsInShared] = ScriptServiceV1Types,
-            [TentacleVersions.v5_0_15_LastOfVersion5] = ScriptServiceV1Types,
-            [TentacleVersions.v6_3_417_LastWithScriptServiceV1Only] = ScriptServiceV1Types,
-            [TentacleVersions.v6_3_451_NoCapabilitiesService] = ScriptServiceV1Types,
-            [TentacleVersions.v7_0_1_ScriptServiceV2Added] = ScriptServiceV2Types
+            [TentacleVersions.v5_0_4_FirstLinuxRelease] = ScriptServiceV1Type,
+            [TentacleVersions.v5_0_12_AutofacServiceFactoryIsInShared] = ScriptServiceV1Type,
+            [TentacleVersions.v5_0_15_LastOfVersion5] = ScriptServiceV1Type,
+            [TentacleVersions.v6_3_417_LastWithScriptServiceV1Only] = ScriptServiceV1Type,
+            [TentacleVersions.v6_3_451_NoCapabilitiesService] = ScriptServiceV1Type,
+            [TentacleVersions.v7_0_1_ScriptServiceV2Added] = ScriptServiceV2Type
         };
 
         public static IEnumerator GetEnumerator(
