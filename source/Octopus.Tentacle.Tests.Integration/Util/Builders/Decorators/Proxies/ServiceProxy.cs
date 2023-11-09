@@ -67,6 +67,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies
                 OnInvocationException(method, e);
                 throw;
             }
+            finally
             {
                 await OnCompletingInvocationAsync(method).ConfigureAwait(false);
             }
