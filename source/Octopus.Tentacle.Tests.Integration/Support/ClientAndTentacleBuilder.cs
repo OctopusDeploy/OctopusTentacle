@@ -115,7 +115,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         public ClientAndTentacleBuilder WithTcpConnectionUtilities(ILogger logger, out ITcpConnectionUtilities tcpConnectionUtilities)
         {
-            this.tcpConnectionUtilities = new TcpConnectionUtilities(asyncHalibutFeature, logger);
+            this.tcpConnectionUtilities = new TcpConnectionUtilities(logger);
             tcpConnectionUtilities = this.tcpConnectionUtilities;
 
             return this;

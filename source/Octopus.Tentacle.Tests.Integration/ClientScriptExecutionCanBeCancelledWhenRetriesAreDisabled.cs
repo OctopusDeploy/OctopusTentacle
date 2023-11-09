@@ -48,28 +48,8 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithPortForwarder(out var portForwarder)
                 .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .TraceService<IClientCapabilitiesServiceV2, IAsyncClientCapabilitiesServiceV2>(out var capabilitiesTracingStats)
-                    .TraceService<IClientScriptServiceV2, IAsyncClientScriptServiceV2>(out var scriptTracingStats)
-                    .HookServiceMethod<IClientCapabilitiesServiceV2>(nameof(IClientCapabilitiesServiceV2.GetCapabilities),
-                        async _ =>
-                        {
-                            ensureCancellationOccursDuringAnRpcCall.Release();
-
-                            if (!hasPausedOrStoppedPortForwarder)
-                            {
-                                hasPausedOrStoppedPortForwarder = true;
-                                await tcpConnectionUtilities.RestartTcpConnection();
-
-                                PauseOrStopPortForwarder(rpcCallStage, portForwarder.Value, responseMessageTcpKiller, rpcCallHasStarted);
-                                if (rpcCallStage == RpcCallStage.Connecting)
-                                {
-                                    await tcpConnectionUtilities.EnsurePollingQueueWontSendMessageToDisconnectedTentacles();
-                                }
-                            }
-                        }, async _ =>
-                        {
-                            await ensureCancellationOccursDuringAnRpcCall.WaitAsync(CancellationToken);
-                        })
+                    .TraceService<IAsyncClientCapabilitiesServiceV2>(out var capabilitiesTracingStats)
+                    .TraceService<IAsyncClientScriptServiceV2>(out var scriptTracingStats)
                     .HookServiceMethod<IAsyncClientCapabilitiesServiceV2>(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync),
                         async _ =>
                         {

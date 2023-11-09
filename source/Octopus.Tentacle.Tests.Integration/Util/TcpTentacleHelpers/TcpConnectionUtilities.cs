@@ -3,8 +3,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
 using Halibut.ServiceModel;
-using Halibut.Util;
-using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ClientServices;
 using Serilog;
@@ -13,14 +11,12 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
 {
     class TcpConnectionUtilities : ITcpConnectionUtilities
     {
-        readonly AsyncHalibutFeature asyncHalibutFeature;
         readonly ILogger logger;
         IHalibutRuntime halibutRuntime;
         ServiceEndPoint serviceEndPoint;
 
-        public TcpConnectionUtilities(AsyncHalibutFeature asyncHalibutFeature, ILogger logger)
+        public TcpConnectionUtilities(ILogger logger)
         {
-            this.asyncHalibutFeature = asyncHalibutFeature;
             this.logger = logger.ForContext<TcpConnectionUtilities>();
         }
 
@@ -57,20 +53,8 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
 
         async Task ExecuteDownloadFile(HalibutProxyRequestOptions proxyRequestOptions)
         {
-            if (asyncHalibutFeature == AsyncHalibutFeature.Disabled)
-            {
-#pragma warning disable CS0612
-                var syncFileTransferService = halibutRuntime.CreateClient<IFileTransferService, IClientFileTransferService>(serviceEndPoint);
-#pragma warning restore CS0612
-
-                syncFileTransferService.DownloadFile("nope", proxyRequestOptions);
-            }
-            else
-            {
-                var asyncFileTransferService = halibutRuntime.CreateAsyncClient<IFileTransferService, IAsyncClientFileTransferService>(serviceEndPoint);
-
-                await asyncFileTransferService.DownloadFileAsync("nope", proxyRequestOptions);
-            }
+            var asyncFileTransferService = halibutRuntime.CreateAsyncClient<IFileTransferService, IAsyncClientFileTransferService>(serviceEndPoint);
+            await asyncFileTransferService.DownloadFileAsync("nope", proxyRequestOptions);
         }
     }
 

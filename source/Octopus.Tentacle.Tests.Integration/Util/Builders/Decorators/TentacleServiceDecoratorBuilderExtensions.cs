@@ -14,19 +14,6 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             return builder.RegisterProxyDecorator<TService>(service => MethodTracingProxyDecorator.Create(service, localTracingStats));
         }
 
-        public static TentacleServiceDecoratorBuilder TraceService<TSyncService, TAsyncService>(this TentacleServiceDecoratorBuilder builder, out IRecordedMethodTracingStats recordedTracingStats)
-            where TSyncService : class
-            where TAsyncService : class
-        {
-            var localTracingStats = new MethodTracingStats();
-            recordedTracingStats = localTracingStats;
-
-            return builder
-                .RegisterProxyDecorator<TSyncService>(service => MethodTracingProxyDecorator.Create(service, localTracingStats))
-                .RegisterProxyDecorator<TAsyncService>(service => MethodTracingProxyDecorator.Create(service, localTracingStats));
-
-        }
-
         public static TentacleServiceDecoratorBuilder HookServiceMethod<TService>(this TentacleServiceDecoratorBuilder builder, string methodName, MethodInvocationHook<TService>? preInvocation) where TService : class
             => HookServiceMethod(builder, methodName, preInvocation, null);
 

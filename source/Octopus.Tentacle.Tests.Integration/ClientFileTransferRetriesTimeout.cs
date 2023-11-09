@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Halibut;
 using NUnit.Framework;
-using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods;
@@ -40,31 +39,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .TraceService<IClientFileTransferService, IAsyncClientFileTransferService>(out var tracingStats)
-                    .HookServiceMethod<IClientFileTransferService>(nameof(IClientFileTransferService.UploadFile),
-                        async _ =>
-                        {
-                            await tcpConnectionUtilities.RestartTcpConnection();
-
-                            if (tracingStats.For(nameof(IClientFileTransferService.UploadFile)).LastException is null)
-                            {
-                                responseMessageTcpKiller.KillConnectionOnNextResponse();
-                            }
-                            else
-                            {
-                                if (stopPortForwarderAfterFirstCall)
-                                {
-                                    // Kill the port forwarder so the next requests are in the connecting state when retries timeout
-                                    Logger.Information("Killing PortForwarder");
-                                    portForwarder!.Dispose();
-                                }
-                                else
-                                {
-                                    // Pause the port forwarder so the next requests are in-flight when retries timeout
-                                    responseMessageTcpKiller.PauseConnectionOnNextResponse();
-                                }
-                            }
-                        })
+                    .TraceService<IAsyncClientFileTransferService>(out var tracingStats)
                     .HookServiceMethod<IAsyncClientFileTransferService>(nameof(IAsyncClientFileTransferService.UploadFileAsync),
                         async _ =>
                         {
@@ -128,18 +103,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .TraceService<IClientFileTransferService, IAsyncClientFileTransferService>(out var tracingStats)
-                    .HookServiceMethod<IClientFileTransferService>(nameof(IClientFileTransferService.UploadFile),
-                        async _ =>
-                        {
-                            await tcpConnectionUtilities.RestartTcpConnection();
-
-                            // Sleep to make the initial RPC call take longer than the allowed retry duration
-                            await Task.Delay(retryDuration + TimeSpan.FromSeconds(1));
-
-                            // Kill the first UploadFile call to force the rpc call into retries
-                            responseMessageTcpKiller.KillConnectionOnNextResponse();
-                        })
+                    .TraceService<IAsyncClientFileTransferService>(out var tracingStats)
                     .HookServiceMethod<IAsyncClientFileTransferService>(nameof(IAsyncClientFileTransferService.UploadFileAsync),
                         async _ =>
                         {

@@ -166,19 +166,11 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
                 this.registeredProxyDecorators = registeredProxyDecorators;
             }
 
-            public IClientScriptService Decorate(IClientScriptService scriptService) => GetDecoratedProxy(scriptService);
-
             public IAsyncClientScriptService Decorate(IAsyncClientScriptService scriptService) => GetDecoratedProxy(scriptService);
-
-            public IClientScriptServiceV2 Decorate(IClientScriptServiceV2 scriptService) => GetDecoratedProxy(scriptService);
 
             public IAsyncClientScriptServiceV2 Decorate(IAsyncClientScriptServiceV2 scriptService) => GetDecoratedProxy(scriptService);
 
-            public IClientFileTransferService Decorate(IClientFileTransferService service) => GetDecoratedProxy(service);
-
             public IAsyncClientFileTransferService Decorate(IAsyncClientFileTransferService service) => GetDecoratedProxy(service);
-
-            public IClientCapabilitiesServiceV2 Decorate(IClientCapabilitiesServiceV2 service) => GetDecoratedProxy(service);
 
             public IAsyncClientCapabilitiesServiceV2 Decorate(IAsyncClientCapabilitiesServiceV2 service) => GetDecoratedProxy(service);
 
@@ -202,7 +194,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             }
         }
     }
-    
+
     public static class TentacleServiceDecoratorBuilderExtensionMethods
     {
         public static TentacleServiceDecoratorBuilder LogAllCalls(this TentacleServiceDecoratorBuilder builder)
