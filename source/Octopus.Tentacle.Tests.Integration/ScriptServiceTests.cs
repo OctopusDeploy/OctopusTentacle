@@ -34,7 +34,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateLegacyBuilder().Build(CancellationToken);
 
-            var scriptStatusResponse = await new ScriptExecutionOrchestrator(clientAndTentacle.TentacleClient, tentacleConfigurationTestCase.SyncOrAsyncHalibut, Logger)
+            var scriptStatusResponse = await new ScriptExecutionOrchestrator(clientAndTentacle.TentacleClient, Logger)
                 .ExecuteScript(windowsScript, nixScript, CancellationToken);
 
             DumpLog(scriptStatusResponse);
@@ -63,7 +63,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateLegacyBuilder().Build(CancellationToken);
 
-            var scriptStatusResponse = await new ScriptExecutionOrchestrator(clientAndTentacle.TentacleClient, tentacleConfigurationTestCase.SyncOrAsyncHalibut, Logger)
+            var scriptStatusResponse = await new ScriptExecutionOrchestrator(clientAndTentacle.TentacleClient, Logger)
                 .ExecuteScript(windowsScript, nixScript, CancellationToken);
 
             DumpLog(scriptStatusResponse);
@@ -91,7 +91,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithHalibutLoggingLevel(LogLevel.Trace)
                 .Build(CancellationToken);
 
-            var scriptExecutor = new ScriptExecutionOrchestrator(clientAndTentacle.TentacleClient, tentacleConfigurationTestCase.SyncOrAsyncHalibut, Logger);
+            var scriptExecutor = new ScriptExecutionOrchestrator(clientAndTentacle.TentacleClient, Logger);
 
             Logger.Information("Starting script execution");
             var ticket = await scriptExecutor.StartScript(windowsScript, nixScript, CancellationToken);
@@ -100,9 +100,7 @@ namespace Octopus.Tentacle.Tests.Integration
             await scriptExecutor.ObserverUntilScriptOutputReceived(ticket, "This is the start of the script", CancellationToken);
 
             Logger.Information("Cancelling script execution");
-            await tentacleConfigurationTestCase.SyncOrAsyncHalibut
-                .WhenSync(() => clientAndTentacle.TentacleClient.ScriptService.SyncService.CancelScript(new CancelScriptCommand(ticket, 0)))
-                .WhenAsync(async () => await clientAndTentacle.TentacleClient.ScriptService.AsyncService.CancelScriptAsync(new CancelScriptCommand(ticket, 0), new(CancellationToken, null)));
+            await clientAndTentacle.TentacleClient.ScriptService.CancelScriptAsync(new CancelScriptCommand(ticket, 0), new(CancellationToken, null));
             
             var cancellationDuration = Stopwatch.StartNew();
 

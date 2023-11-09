@@ -27,7 +27,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             var tentacleExe = TentacleExePath ?? TentacleExeFinder.FindTentacleExe();
             var subscriptionId = PollingSubscriptionId.Generate();
             
-            var logger = log.ForContext<ListeningTentacleBuilder>();
+            var logger = log.ForContext<PollingTentacleBuilder>();
             logger.Information($"Tentacle.exe location: {tentacleExe}");
 
             await CreateInstance(tentacleExe, configFilePath, instanceName, HomeDirectory, cancellationToken);

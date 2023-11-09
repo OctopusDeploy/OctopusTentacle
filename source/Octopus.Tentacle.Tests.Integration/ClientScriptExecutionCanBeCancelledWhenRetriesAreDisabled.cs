@@ -6,8 +6,6 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Halibut;
 using NUnit.Framework;
-using NUnit.Framework.Constraints;
-using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Client.Retries;
 using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.CommonTestUtils.Builders;
@@ -16,7 +14,6 @@ using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods;
-using Octopus.Tentacle.Tests.Integration.Support.TestAttributes;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
 using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
@@ -43,7 +40,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var ensureCancellationOccursDuringAnRpcCall = new SemaphoreSlim(0, 1);
 
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
-                .WithPendingRequestQueueFactory(new CancellationObservingPendingRequestQueueFactory(tentacleConfigurationTestCase.SyncOrAsyncHalibut)) // Partially works around disconnected polling tentacles take work from the queue
+                .WithPendingRequestQueueFactory(new CancellationObservingPendingRequestQueueFactory()) // Partially works around disconnected polling tentacles take work from the queue
                 .WithServiceEndpointModifier(point => point.TryAndConnectForALongTime())
                 .WithRetriesDisabled()
                 .WithPortForwarderDataLogging()
@@ -156,7 +153,7 @@ namespace Octopus.Tentacle.Tests.Integration
             SemaphoreSlim ensureCancellationOccursDuringAnRpcCall = new SemaphoreSlim(0, 1);
 
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
-                .WithPendingRequestQueueFactory(new CancellationObservingPendingRequestQueueFactory(tentacleConfigurationTestCase.SyncOrAsyncHalibut)) // Partially works around disconnected polling tentacles take work from the queue
+                .WithPendingRequestQueueFactory(new CancellationObservingPendingRequestQueueFactory()) // Partially works around disconnected polling tentacles take work from the queue
                 .WithServiceEndpointModifier(point => point.TryAndConnectForALongTime())
                 .WithRetriesDisabled()
                 .WithPortForwarderDataLogging()
@@ -279,7 +276,7 @@ namespace Octopus.Tentacle.Tests.Integration
             SemaphoreSlim ensureCancellationOccursDuringAnRpcCall = new SemaphoreSlim(0, 1);
 
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
-                .WithPendingRequestQueueFactory(new CancellationObservingPendingRequestQueueFactory(tentacleConfigurationTestCase.SyncOrAsyncHalibut)) // Partially works around disconnected polling tentacles take work from the queue
+                .WithPendingRequestQueueFactory(new CancellationObservingPendingRequestQueueFactory()) // Partially works around disconnected polling tentacles take work from the queue
                 .WithServiceEndpointModifier(point => point.TryAndConnectForALongTime())
                 .WithRetriesDisabled()
                 .WithPortForwarderDataLogging()
@@ -389,7 +386,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var hasPausedOrStoppedPortForwarder = false;
 
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
-                .WithPendingRequestQueueFactory(new CancellationObservingPendingRequestQueueFactory(tentacleConfigurationTestCase.SyncOrAsyncHalibut)) // Partially works around disconnected polling tentacles take work from the queue
+                .WithPendingRequestQueueFactory(new CancellationObservingPendingRequestQueueFactory()) // Partially works around disconnected polling tentacles take work from the queue
                 .WithServiceEndpointModifier(point => point.TryAndConnectForALongTime())
                 .WithRetriesDisabled()
                 .WithPortForwarderDataLogging()

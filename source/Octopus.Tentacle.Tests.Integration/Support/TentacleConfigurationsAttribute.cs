@@ -34,7 +34,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             object[] additionalParameterTypes)
         {
             var tentacleTypes = new[] {TentacleType.Listening, TentacleType.Polling};
-            var halibutTypes = new[] {SyncOrAsyncHalibut.Sync, SyncOrAsyncHalibut.Async};
             List<Version?> versions = new();
 
             if (testCommonVersions)
@@ -93,12 +92,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
             var testCases =
                 from tentacleType in tentacleTypes
-                from halibutType in halibutTypes
                 from runtime in runtimes
                 from version in versions.Distinct()
                 select new TentacleConfigurationTestCase(
                     tentacleType,
-                    halibutType,
                     runtime,
                     version);
 
