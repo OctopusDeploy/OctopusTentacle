@@ -31,7 +31,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies
 
         protected override void OnStartingInvocation(MethodInfo targetMethod)
         {
-            if (IsMethodInteresting(targetMethod))
+            if (IsMethodThatIsToBeHooked(targetMethod))
             {
                 preInvocation?.Invoke((TService)TargetService).GetAwaiter().GetResult();
             }
@@ -39,7 +39,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies
 
         protected override async Task OnStartingInvocationAsync(MethodInfo targetMethod)
         {
-            if (preInvocation is not null && IsMethodInteresting(targetMethod))
+            if (preInvocation is not null && IsMethodThatIsToBeHooked(targetMethod))
             {
                 await preInvocation((TService)TargetService);
             }
@@ -47,7 +47,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies
 
         protected override void OnCompletingInvocation(MethodInfo targetMethod)
         {
-            if (IsMethodInteresting(targetMethod))
+            if (IsMethodThatIsToBeHooked(targetMethod))
             {
                 postInvocation?.Invoke((TService)TargetService).GetAwaiter().GetResult();
             }
@@ -55,7 +55,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies
 
         protected override async Task OnCompletingInvocationAsync(MethodInfo targetMethod)
         {
-            if (postInvocation is not null && IsMethodInteresting(targetMethod))
+            if (postInvocation is not null && IsMethodThatIsToBeHooked(targetMethod))
             {
                 await postInvocation((TService)TargetService);
             }
@@ -65,7 +65,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies
         {
         }
 
-        bool IsMethodInteresting(MemberInfo invocationMethod)
+        bool IsMethodThatIsToBeHooked(MemberInfo invocationMethod)
             => invocationMethod.Name.Equals(methodName);
     }
 }
