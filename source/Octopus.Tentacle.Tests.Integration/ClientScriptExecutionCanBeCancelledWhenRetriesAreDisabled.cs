@@ -48,8 +48,8 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithPortForwarder(out var portForwarder)
                 .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .TraceService<IAsyncClientCapabilitiesServiceV2>(out var capabilitiesTracingStats)
-                    .TraceService<IAsyncClientScriptServiceV2>(out var scriptTracingStats)
+                    .RecordMethodUsages<IAsyncClientCapabilitiesServiceV2>(out var capabilitiesMethodUsages)
+                    .RecordMethodUsages<IAsyncClientScriptServiceV2>(out var scriptMethodUsages)
                     .HookServiceMethod<IAsyncClientCapabilitiesServiceV2>(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync),
                         async _ =>
                         {
@@ -87,7 +87,7 @@ namespace Octopus.Tentacle.Tests.Integration
             actualException.Should().BeTaskOrOperationCancelledException();
 
             // If the rpc call could be cancelled then the correct error was recorded
-            var latestException = capabilitiesTracingStats.For(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)).LastException;
+            var latestException = capabilitiesMethodUsages.For(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)).LastException;
             switch (rpcCallStage)
             {
                 case RpcCallStage.Connecting:
@@ -108,10 +108,10 @@ namespace Octopus.Tentacle.Tests.Integration
             cancellationDuration.Should().BeLessOrEqualTo(TimeSpan.FromSeconds(30));
 
             // The expected RPC calls were made - this also verifies the integrity of the test
-            capabilitiesTracingStats.For(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)).Started.Should().Be(1);
+            capabilitiesMethodUsages.For(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)).Started.Should().Be(1);
 
-            scriptTracingStats.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().Be(0, "Should not have proceeded past GetCapabilities");
-            scriptTracingStats.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Started.Should().Be(0, "Should not have tried to call CancelScript");
+            scriptMethodUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().Be(0, "Should not have proceeded past GetCapabilities");
+            scriptMethodUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Started.Should().Be(0, "Should not have tried to call CancelScript");
         }
 
         [Test]

@@ -23,7 +23,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .TraceService<IAsyncClientScriptServiceV2>(out var tracingStats)
+                    .RecordMethodUsages<IAsyncClientScriptServiceV2>(out var methodUsages)
                     .Build())
                 .Build(CancellationToken);
 
@@ -43,10 +43,10 @@ namespace Octopus.Tentacle.Tests.Integration
 
             allLogs.Should().MatchRegex(".*Lets do it\nanother one\nanother one\nanother one\nanother one\nanother one\nanother one\nanother one\nanother one\nanother one\nanother one\nAll done.*");
 
-            tracingStats.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().Be(1);
-            tracingStats.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Started.Should().BeGreaterThan(2).And.BeLessThan(30);
-            tracingStats.For(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).Started.Should().Be(1);
-            tracingStats.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Started.Should().Be(0);
+            methodUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().Be(1);
+            methodUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Started.Should().BeGreaterThan(2).And.BeLessThan(30);
+            methodUsages.For(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).Started.Should().Be(1);
+            methodUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Started.Should().Be(0);
         }
 
         [Test]
@@ -55,7 +55,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .TraceService<IAsyncClientScriptServiceV2>(out var tracingStats)
+                    .RecordMethodUsages<IAsyncClientScriptServiceV2>(out var tracingStats)
                     .Build())
                 .Build(CancellationToken);
 
@@ -88,7 +88,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .TraceService<IAsyncClientScriptServiceV2>(out var tracingStats)
+                    .RecordMethodUsages<IAsyncClientScriptServiceV2>(out var tracingStats)
                     .Build())
                 .Build(CancellationToken);
 
@@ -135,7 +135,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .TraceService<IAsyncClientScriptServiceV2>(out var tracingStats)
+                    .RecordMethodUsages<IAsyncClientScriptServiceV2>(out var tracingStats)
                     .Build())
                 .Build(CancellationToken);
 

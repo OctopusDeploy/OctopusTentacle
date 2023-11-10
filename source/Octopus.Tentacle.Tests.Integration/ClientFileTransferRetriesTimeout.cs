@@ -39,13 +39,13 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .TraceService<IAsyncClientFileTransferService>(out var tracingStats)
+                    .RecordMethodUsages<IAsyncClientFileTransferService>(out var methodUsages)
                     .HookServiceMethod<IAsyncClientFileTransferService>(nameof(IAsyncClientFileTransferService.UploadFileAsync),
                         async _ =>
                         {
                             await tcpConnectionUtilities.RestartTcpConnection();
 
-                            if (tracingStats.For(nameof(IAsyncClientFileTransferService.UploadFileAsync)).LastException is null)
+                            if (methodUsages.For(nameof(IAsyncClientFileTransferService.UploadFileAsync)).LastException is null)
                             {
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
@@ -82,8 +82,8 @@ namespace Octopus.Tentacle.Tests.Integration
             await action.Should().ThrowAsync<HalibutClientException>();
             duration.Stop();
 
-            tracingStats.For(nameof(IAsyncClientFileTransferService.UploadFileAsync)).Started.Should().BeGreaterOrEqualTo(2);
-            tracingStats.For(nameof(IAsyncClientFileTransferService.DownloadFileAsync)).Started.Should().Be(0);
+            methodUsages.For(nameof(IAsyncClientFileTransferService.UploadFileAsync)).Started.Should().BeGreaterOrEqualTo(2);
+            methodUsages.For(nameof(IAsyncClientFileTransferService.DownloadFileAsync)).Started.Should().Be(0);
 
             // Ensure we actually waited and retried until the timeout policy kicked in
             duration.Elapsed.Should().BeGreaterOrEqualTo(clientAndTentacle.RpcRetrySettings.RetryDuration - retryIfRemainingDurationAtLeastBuffer - retryBackoffBuffer);
@@ -103,7 +103,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .TraceService<IAsyncClientFileTransferService>(out var tracingStats)
+                    .RecordMethodUsages<IAsyncClientFileTransferService>(out var methodUsages)
                     .HookServiceMethod<IAsyncClientFileTransferService>(nameof(IAsyncClientFileTransferService.UploadFileAsync),
                         async _ =>
                         {
@@ -126,8 +126,8 @@ namespace Octopus.Tentacle.Tests.Integration
             Func<Task> action = async () => await executeScriptTask;
             await action.Should().ThrowAsync<HalibutClientException>();
 
-            tracingStats.For(nameof(IAsyncClientFileTransferService.UploadFileAsync)).Started.Should().Be(1);
-            tracingStats.For(nameof(IAsyncClientFileTransferService.DownloadFileAsync)).Started.Should().Be(0);
+            methodUsages.For(nameof(IAsyncClientFileTransferService.UploadFileAsync)).Started.Should().Be(1);
+            methodUsages.For(nameof(IAsyncClientFileTransferService.DownloadFileAsync)).Started.Should().Be(0);
 
             inMemoryLog.ShouldHaveLoggedRetryFailureAndNoRetryAttempts();
         }

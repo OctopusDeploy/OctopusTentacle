@@ -1,17 +1,16 @@
-﻿using System.Collections.Immutable;
-using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies;
+﻿using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies;
 
 namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
 {
     public static class TentacleServiceDecoratorBuilderExtensions
     {
-        public static TentacleServiceDecoratorBuilder TraceService<TService>(this TentacleServiceDecoratorBuilder builder, out IRecordedMethodTracingStats recordedTracingStats)
+        public static TentacleServiceDecoratorBuilder RecordMethodUsages<TService>(this TentacleServiceDecoratorBuilder builder, out IRecordedMethodUsages recordedUsages)
             where TService : class
         {
-            var localTracingStats = new MethodTracingStats();
-            recordedTracingStats = localTracingStats;
+            var localTracingStats = new MethodUsages();
+            recordedUsages = localTracingStats;
 
-            return builder.RegisterProxyDecorator<TService>(service => MethodTracingProxyDecorator.Create(service, localTracingStats));
+            return builder.RegisterProxyDecorator<TService>(service => MethodUsageProxyDecorator.Create(service, localTracingStats));
         }
 
         public static TentacleServiceDecoratorBuilder HookServiceMethod<TService>(this TentacleServiceDecoratorBuilder builder, string methodName, MethodInvocationHook<TService>? preInvocation) where TService : class

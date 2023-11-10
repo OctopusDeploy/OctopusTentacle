@@ -5,11 +5,11 @@ using System.Threading;
 
 namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies
 {
-    public class MethodTracingStats : IRecordedMethodTracingStats
+    public class MethodUsages : IRecordedMethodUsages
     {
-        readonly ConcurrentDictionary<string, Lazy<TracedMethodStats>> trackedMethods = new();
+        readonly ConcurrentDictionary<string, Lazy<MethodUsage>> trackedMethods = new();
 
-        IRecordedTracedMethodStats IRecordedMethodTracingStats.For(string methodName) => GetMethodStats(methodName);
+        IRecordedMethodUsage IRecordedMethodUsages.For(string methodName) => GetMethodStats(methodName);
 
         public void RecordCallStart(MethodInfo targetMethod)
         {
@@ -23,22 +23,22 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies
             stats.RecordCompleted();
         }
 
-        public  void RecordCallException(MethodInfo targetMethod, Exception exception)
+        public void RecordCallException(MethodInfo targetMethod, Exception exception)
         {
             var stats = GetMethodStats(targetMethod);
             stats.RecordException(exception);
         }
 
-        TracedMethodStats GetMethodStats(string methodName) => trackedMethods.GetOrAdd(methodName, _ => new Lazy<TracedMethodStats>(() => new TracedMethodStats())).Value;
-        TracedMethodStats GetMethodStats(MethodInfo targetMethod) => GetMethodStats(targetMethod.Name);
+        MethodUsage GetMethodStats(string methodName) => trackedMethods.GetOrAdd(methodName, _ => new Lazy<MethodUsage>(() => new MethodUsage())).Value;
+        MethodUsage GetMethodStats(MethodInfo targetMethod) => GetMethodStats(targetMethod.Name);
     }
 
-    public interface IRecordedMethodTracingStats
+    public interface IRecordedMethodUsages
     {
-        IRecordedTracedMethodStats For(string methodName);
+        IRecordedMethodUsage For(string methodName);
     }
 
-    public class TracedMethodStats : IRecordedTracedMethodStats
+    public class MethodUsage : IRecordedMethodUsage
     {
         long started;
         long completed;
@@ -54,7 +54,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies
         public void RecordException(Exception exception) => LastException = exception;
     }
 
-    public interface IRecordedTracedMethodStats
+    public interface IRecordedMethodUsage
     {
         long Started { get; }
         long Completed { get; }
