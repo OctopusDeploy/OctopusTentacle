@@ -144,32 +144,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .TraceService<IClientFileTransferService, IAsyncClientFileTransferService>(out var tracingStats)
-                    .HookServiceMethod<IClientFileTransferService>(nameof(IClientFileTransferService.DownloadFile),
-                        async _ =>
-                        {
-                            await tcpConnectionUtilities.RestartTcpConnection();
-
-                            if (tracingStats.For(nameof(IClientFileTransferService.DownloadFile)).LastException is null)
-                            {
-                                responseMessageTcpKiller.KillConnectionOnNextResponse();
-                            }
-                            else
-                            {
-
-                                if (stopPortForwarderAfterFirstCall)
-                                {
-                                    // Kill the port forwarder so the next requests are in the connecting state when retries timeout
-                                    Logger.Information("Killing PortForwarder");
-                                    portForwarder!.Dispose();
-                                }
-                                else
-                                {
-                                    // Pause the port forwarder so the next requests are in-flight when retries timeout
-                                    responseMessageTcpKiller.PauseConnectionOnNextResponse();
-                                }
-                            }
-                        })
+                    .RecordMethodUsages<IAsyncClientFileTransferService>(out var tracingStats)
                     .HookServiceMethod<IAsyncClientFileTransferService>(nameof(IAsyncClientFileTransferService.DownloadFileAsync),
                         async _ =>
                         {
