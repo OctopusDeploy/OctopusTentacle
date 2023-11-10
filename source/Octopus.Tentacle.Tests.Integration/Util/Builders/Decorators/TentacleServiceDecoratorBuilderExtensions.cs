@@ -14,7 +14,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             return builder.RegisterProxyDecorator<TService>(service => MethodUsageProxyDecorator.Create(service, localTracingStats));
         }
 
-        public static TentacleServiceDecoratorBuilder TraceService(this TentacleServiceDecoratorBuilder builder, Type latestScriptServiceType, out IRecordedMethodUsages recordMethodUsages)
+        public static TentacleServiceDecoratorBuilder RecordMethodUsage(this TentacleServiceDecoratorBuilder builder, Type latestScriptServiceType, out IRecordedMethodUsages recordMethodUsages)
         {
             var localTracingStats = new MethodUsages();
             recordMethodUsages = localTracingStats;
