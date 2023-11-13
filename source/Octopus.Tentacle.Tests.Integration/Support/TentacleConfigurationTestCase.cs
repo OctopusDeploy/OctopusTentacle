@@ -10,7 +10,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public TentacleRuntime TentacleRuntime { get; }
         public Version? Version { get; }
         /// <summary>
-        /// An array of <see cref="Type">Types</see> of the latest script service available on the tentacle version
+        /// The <see cref="Type"/> of the latest script service available on the tentacle version
         /// </summary>
         public Type LatestScriptServiceType { get; }
 
