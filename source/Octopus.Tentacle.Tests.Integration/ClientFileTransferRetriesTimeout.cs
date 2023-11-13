@@ -206,13 +206,13 @@ namespace Octopus.Tentacle.Tests.Integration
                 // Set a short retry duration so we cancel fairly quickly
                 .WithRetryDuration(retryDuration)
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
+                .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .LogCallsToFileTransferService()
-                    .CountCallsToFileTransferService(out var fileTransferServiceCallCounts)
-                    .DecorateFileTransferServiceWith(d => d
-                        .BeforeDownloadFile(async (service, _) =>
+                    .RecordMethodUsages<IAsyncClientFileTransferService>(out var recordedUsages)
+                    .HookServiceMethod<IAsyncClientFileTransferService>(nameof(IAsyncClientFileTransferService.DownloadFileAsync),
+                        async _ =>
                         {
-                            await service.EnsureTentacleIsConnectedToServer(Logger);
+                            await tcpConnectionUtilities.RestartTcpConnection();
 
                             // Sleep to make the initial RPC call take longer than the allowed retry duration
                             await Task.Delay(retryDuration + TimeSpan.FromSeconds(1));
@@ -220,7 +220,6 @@ namespace Octopus.Tentacle.Tests.Integration
                             // Kill the first DownloadFile call to force the rpc call into retries
                             responseMessageTcpKiller.KillConnectionOnNextResponse();
                         })
-                        .Build())
                     .Build())
                 .Build(CancellationToken);
 
@@ -231,8 +230,8 @@ namespace Octopus.Tentacle.Tests.Integration
             Func<Task<DataStream>> action = async () => await executeScriptTask;
             await action.Should().ThrowAsync<HalibutClientException>();
 
-            fileTransferServiceCallCounts.DownloadFileCallCountStarted.Should().Be(1);
-            fileTransferServiceCallCounts.UploadFileCallCountStarted.Should().Be(0);
+            recordedUsages.For(nameof(IAsyncClientFileTransferService.DownloadFileAsync)).Started.Should().Be(1);
+            recordedUsages.For(nameof(IAsyncClientFileTransferService.UploadFileAsync)).Started.Should().Be(0);
 
             inMemoryLog.ShouldHaveLoggedRetryFailureAndNoRetryAttempts();
         }

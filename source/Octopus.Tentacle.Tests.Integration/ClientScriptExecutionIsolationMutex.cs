@@ -23,7 +23,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .RecordMethodUsage(tentacleConfigurationTestCase.LatestScriptServiceType, out var tracingStats)
+                    .RecordMethodUsages(tentacleConfigurationTestCase, out var tracingStats)
                     .Build())
                 .Build(CancellationToken);
 

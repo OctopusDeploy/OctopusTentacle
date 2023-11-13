@@ -7,6 +7,7 @@ using NUnit.Framework;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Contracts.Observability;
+using Octopus.Tentacle.Services.Scripts.ScriptServiceV3Alpha;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
 using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
@@ -26,11 +27,10 @@ namespace Octopus.Tentacle.Tests.Integration
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .LogAllCalls()
-                    .CountCallsToScriptServiceV2(out var scriptServiceV2CallCounts)
+                    .RecordMethodUsages(tentacleConfigurationTestCase, out var recordedUsages)
                     .Build())
                 .Build(CancellationToken);
-            
+
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody(b => b.Print("Hello"))
                 .Build();
@@ -40,7 +40,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             // Assert
             // We should have completed the script and not failed due to the error thrown by the TentacleClientObserver
-            scriptServiceV2CallCounts.CompleteScriptCallCountStarted.Should().Be(1);
+            recordedUsages.For(nameof(IAsyncScriptServiceV3Alpha.CompleteScriptAsync)).Started.Should().Be(1);
         }
 
         [Test]
@@ -53,11 +53,10 @@ namespace Octopus.Tentacle.Tests.Integration
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .LogAllCalls()
-                    .CountCallsToScriptServiceV2(out var scriptServiceV2CallCounts)
+                    .RecordMethodUsages(tentacleConfigurationTestCase, out var recordedUsages)
                     .Build())
                 .Build(CancellationToken);
-            
+
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody(b => b.Print("Hello"))
                 .Build();
@@ -67,9 +66,9 @@ namespace Octopus.Tentacle.Tests.Integration
 
             // Assert
             // We should have completed the script and not failed due to the error thrown by the TentacleClientObserver
-            scriptServiceV2CallCounts.CompleteScriptCallCountStarted.Should().Be(1);
+            recordedUsages.For(nameof(IAsyncScriptServiceV3Alpha.CompleteScriptAsync)).Started.Should().Be(1);
         }
-        
+
         [Test]
         [TentacleConfigurations]
         public async Task AnErrorDuringTheCallbackTo_UploadFileCompleted_ShouldNotThrowAnExecution(TentacleConfigurationTestCase tentacleConfigurationTestCase)
@@ -82,7 +81,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .Build(CancellationToken);
 
             var remotePath = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "UploadFile.txt");
-            
+
             // Act + Assert
             await clientTentacle.TentacleClient.UploadFile(remotePath, DataStream.FromString("Hello"), CancellationToken);
         }

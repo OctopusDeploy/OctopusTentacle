@@ -6,6 +6,7 @@ using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Scripts;
+using Octopus.Tentacle.Services.Scripts.ScriptServiceV3Alpha;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
@@ -28,7 +29,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var waitBeforeCompletingScriptFile = Path.Combine(existingHomeDirectory.DirectoryPath, "WaitForMeToExist.txt");
             var startScriptCommand = new StartScriptCommandV2Builder().WithScriptBody(b => b.WaitForFileToExist(waitBeforeCompletingScriptFile)).Build();
             var startScriptWorkspaceDirectory = GetWorkspaceDirectoryPath(existingHomeDirectory.DirectoryPath, startScriptCommand.ScriptTicket.TaskId);
-            
+
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacle(b =>
                 {
@@ -36,7 +37,7 @@ namespace Octopus.Tentacle.Tests.Integration
                         .WithWorkspaceCleaningSettings(cleanerDelay, deleteWorkspacesOlderThan);
                 })
                 .Build(CancellationToken);
-            
+
             // Start task
             var runningScriptTask = clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, new InMemoryLog());
             await Wait.For(() => Directory.Exists(startScriptWorkspaceDirectory), CancellationToken);
@@ -69,16 +70,17 @@ namespace Octopus.Tentacle.Tests.Integration
                     b.WithWorkspaceCleaningSettings(cleanerDelay, deleteWorkspacesOlderThan);
                 })
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .DecorateScriptServiceV2With(d =>
-                        d.BeforeCompleteScript((_, _) => throw new NotImplementedException("Force failure to simulate tentacle client crashing, and ensure we do not complete the script"))
-                        .Build())
+                    .HookServiceMethod(
+                        tentacleConfigurationTestCase,
+                        nameof(IAsyncScriptServiceV3Alpha.CompleteScriptAsync),
+                        _ => throw new NotImplementedException("Force failure to simulate tentacle client crashing, and ensure we do not complete the script"))
                     .Build())
                 .Build(CancellationToken);
-            
+
             await AssertionExtensions
                 .Should(() => clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, new InMemoryLog()))
                 .ThrowAsync<NotImplementedException>();
-            
+
             var workspaceDirectory = GetWorkspaceDirectoryPath(clientAndTentacle.RunningTentacle.HomeDirectory, startScriptCommand.ScriptTicket.TaskId);
 
             await Wait.For(() => !Directory.Exists(workspaceDirectory), CancellationToken);
@@ -133,7 +135,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             Directory.Exists(existingWorkspaceDirectory).Should().BeTrue();
         }
-        
+
         static string GetWorkspaceDirectoryPath(string homeDirectory, string scriptTicket)
         {
             var workspaceDirectory = Path.Combine(

@@ -25,20 +25,10 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies
             return proxiedService;
         }
 
-        protected override void OnStartingInvocation(MethodInfo targetMethod)
-        {
-            logger.Information("{ServiceName:l}.{MethodName:l}() started", serviceTypeName, targetMethod.Name);
-        }
-
-        protected override Task OnStartingInvocationAsync(MethodInfo targetMethod)
+        protected override Task OnStartingInvocationAsync(MethodInfo targetMethod, object? request)
         {
             logger.Information("{ServiceName:l}.{MethodName:l}() started", serviceTypeName, targetMethod.Name);
             return Task.CompletedTask;
-        }
-
-        protected override void OnCompletingInvocation(MethodInfo targetMethod, object? response)
-        {
-            logger.Information("{ServiceName:l}.{MethodName:l}() completed", serviceTypeName, targetMethod.Name);
         }
 
         protected override Task OnCompletingInvocationAsync(MethodInfo targetMethod, object? response)

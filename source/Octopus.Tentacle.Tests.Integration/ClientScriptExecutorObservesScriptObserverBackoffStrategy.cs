@@ -21,7 +21,7 @@ namespace Octopus.Tentacle.Tests.Integration
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithScriptObserverBackoffStrategy(new FuncScriptObserverBackoffStrategy(iters => TimeSpan.FromSeconds(20)))
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .RecordMethodUsage(tentacleConfigurationTestCase.LatestScriptServiceType, out var tracingStats)
+                    .RecordMethodUsages(tentacleConfigurationTestCase, out var tracingStats)
                     .Build())
                 .Build(CancellationToken);
 
