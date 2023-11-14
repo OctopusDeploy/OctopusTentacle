@@ -41,7 +41,7 @@ We bundle Tentacle inside Octopus Server to make it super duper easy to keep Ten
 
 To include a new version into the next Octopus Server release, update the [reference in Octopus.Server.csproj](https://github.com/OctopusDeploy/OctopusDeploy/blob/master/source/Octopus.Server/Octopus.Server.csproj#L36). This is how we guarantee the version of Tentacle we bundle is also the version we use for all the end to end tests.
 
-## Debugging
+## Debugging 
 
 In most scenarios, Tentacle is simple to debug:
 
