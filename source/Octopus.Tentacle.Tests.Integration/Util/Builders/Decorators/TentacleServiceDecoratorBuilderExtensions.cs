@@ -40,7 +40,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
         public static TentacleServiceDecoratorBuilder HookServiceMethod(this TentacleServiceDecoratorBuilder builder, TentacleConfigurationTestCase testCase, string methodName, PreMethodInvocationHook<object, object>? preInvocation, PostMethodInvocationHook<object, object>? postInvocation)
         {
             var proxyType = typeof(MethodInvocationHookProxyDecorator<,,>);
-            var concreteType = proxyType.MakeGenericType(testCase.LatestScriptServiceType, typeof(object));
+            var concreteType = proxyType.MakeGenericType(testCase.LatestScriptServiceType, typeof(object), typeof(object));
 
             var createMethodInfo = concreteType.GetMethod(nameof(MethodInvocationHookProxyDecorator<object, object, object>.Create));
 
