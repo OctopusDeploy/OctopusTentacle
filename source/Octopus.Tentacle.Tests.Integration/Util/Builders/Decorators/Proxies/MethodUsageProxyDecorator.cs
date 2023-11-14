@@ -36,16 +36,16 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies
             return proxiedService!;
         }
 
-        protected override Task OnStartingInvocationAsync(MethodInfo targetMethod, object? request)
+        protected override async Task OnStartingInvocationAsync(MethodInfo targetMethod, object? request)
         {
+            await Task.CompletedTask;
             usages.RecordCallStart(targetMethod);
-            return Task.CompletedTask;
         }
 
-        protected override Task OnCompletingInvocationAsync(MethodInfo targetMethod, object? response)
+        protected override async Task OnCompletingInvocationAsync(MethodInfo targetMethod, object? response)
         {
+            await Task.CompletedTask;
             usages.RecordCallComplete(targetMethod);
-            return Task.CompletedTask;
         }
 
         protected override void OnInvocationException(MethodInfo targetMethod, Exception exception)

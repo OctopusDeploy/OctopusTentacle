@@ -87,14 +87,14 @@ namespace Octopus.Tentacle.Tests.Integration
                     .HookServiceMethod(
                         tentacleConfigurationTestCase,
                         nameof(IAsyncClientScriptServiceV2.StartScriptAsync),
-                        (_,_) =>
+                        async (_,_) =>
                         {
+                            await Task.CompletedTask;
+
                             if (scriptRecordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).LastException is null)
                             {
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
-
-                            return Task.CompletedTask;
                         })
                     .Build())
                 .Build(CancellationToken);
@@ -136,14 +136,14 @@ namespace Octopus.Tentacle.Tests.Integration
                     .HookServiceMethod(
                         tentacleConfigurationTestCase,
                         nameof(IAsyncClientScriptServiceV2.GetStatusAsync),
-                        (_,_) =>
+                        async (_,_) =>
                         {
+                            await Task.CompletedTask;
+
                             if (scriptRecordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).LastException is null)
                             {
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
-
-                            return Task.CompletedTask;
                         })
                     .Build())
                 .Build(CancellationToken);
@@ -252,14 +252,14 @@ namespace Octopus.Tentacle.Tests.Integration
                     .HookServiceMethod(
                         tentacleConfigurationTestCase,
                         nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync),
-                        (_,_) =>
+                        async (_,_) =>
                         {
+                            await Task.CompletedTask;
+
                             if (scriptRecordedUsages.For(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).LastException is null)
                             {
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
-
-                            return Task.CompletedTask;
                         })
                     .Build())
                 .Build(CancellationToken);

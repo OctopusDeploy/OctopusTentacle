@@ -53,8 +53,10 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .HookServiceMethod<IAsyncClientCapabilitiesServiceV2, object, CapabilitiesResponseV2>(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync),
                         null,
-                        (_, response) =>
+                        async (_, response) =>
                         {
+                            await Task.CompletedTask;
+
                             capabilitiesResponses.Add(response);
 
                             if (resumePortForwarder)
@@ -63,7 +65,6 @@ namespace Octopus.Tentacle.Tests.Integration
                                 // to allow script execution to continue
                                 portForwarder.Value.ReturnToNormalMode();
                             }
-                            return Task.CompletedTask;
                         })
                     .Build())
                 .Build(CancellationToken);
