@@ -24,12 +24,14 @@ namespace Octopus.Tentacle.Client.Scripts
 
         readonly IAsyncClientScriptService clientScriptServiceV1;
         readonly IAsyncClientScriptServiceV2 clientScriptServiceV2;
+        readonly IAsyncClientScriptServiceV3Alpha clientScriptServiceV3Alpha;
         readonly IAsyncClientCapabilitiesServiceV2 clientCapabilitiesServiceV2;
         readonly TentacleClientOptions clientOptions;
 
         public ScriptOrchestratorFactory(
             IAsyncClientScriptService clientScriptServiceV1,
             IAsyncClientScriptServiceV2 clientScriptServiceV2,
+            IAsyncClientScriptServiceV3Alpha clientScriptServiceV3Alpha,
             IAsyncClientCapabilitiesServiceV2 clientCapabilitiesServiceV2,
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
             RpcCallExecutor rpcCallExecutor,
@@ -42,6 +44,7 @@ namespace Octopus.Tentacle.Client.Scripts
         {
             this.clientScriptServiceV1 = clientScriptServiceV1;
             this.clientScriptServiceV2 = clientScriptServiceV2;
+            this.clientScriptServiceV3Alpha = clientScriptServiceV3Alpha;
             this.clientCapabilitiesServiceV2 = clientCapabilitiesServiceV2;
             this.scriptObserverBackOffStrategy = scriptObserverBackOffStrategy;
             this.rpcCallExecutor = rpcCallExecutor;
@@ -71,6 +74,17 @@ namespace Octopus.Tentacle.Client.Scripts
 
                 ScriptServiceVersion.Version2 => new ScriptServiceV2Orchestrator(
                     clientScriptServiceV2,
+                    scriptObserverBackOffStrategy,
+                    rpcCallExecutor,
+                    clientOperationMetricsBuilder,
+                    onScriptStatusResponseReceived,
+                    onScriptCompleted,
+                    onCancellationAbandonCompleteScriptAfter,
+                    clientOptions,
+                    logger),
+
+                ScriptServiceVersion.Version3Alpha => new ScriptServiceV3AlphaOrchestrator(
+                    clientScriptServiceV3Alpha,
                     scriptObserverBackOffStrategy,
                     rpcCallExecutor,
                     clientOperationMetricsBuilder,
@@ -120,6 +134,15 @@ namespace Octopus.Tentacle.Client.Scripts
             }
 
             logger.Verbose($"Discovered Tentacle capabilities: {string.Join(",", tentacleCapabilities.SupportedCapabilities)}");
+
+            if (tentacleCapabilities.HasScriptServiceV3Alpha())
+            {
+                logger.Verbose("Using ScriptServiceV3Alpha");
+                logger.Verbose(clientOptions.RpcRetrySettings.RetriesEnabled
+                    ? $"RPC call retries are enabled. Retry timeout {rpcCallExecutor.RetryTimeout.TotalSeconds} seconds"
+                    : "RPC call retries are disabled.");
+                return ScriptServiceVersion.Version3Alpha;
+			}
 
             if (tentacleCapabilities.HasScriptServiceV2())
             {

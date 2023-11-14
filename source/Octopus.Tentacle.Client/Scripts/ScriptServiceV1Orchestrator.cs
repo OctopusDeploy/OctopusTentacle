@@ -9,6 +9,7 @@ using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
+using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
 using ILog = Octopus.Diagnostics.ILog;
 
 namespace Octopus.Tentacle.Client.Scripts
@@ -42,7 +43,7 @@ namespace Octopus.Tentacle.Client.Scripts
             this.logger = logger;
         }
 
-        protected override StartScriptCommand Map(StartScriptCommandV2 command)
+        protected override StartScriptCommand Map(StartScriptCommandV3Alpha command)
             => new(
                 command.ScriptBody,
                 command.Isolation,
