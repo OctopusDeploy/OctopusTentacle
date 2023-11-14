@@ -18,7 +18,7 @@ If you're unable to find an open issue addressing the problem, please follow our
  
 ### Issues, Pull Requests, and Release Notes  
 
-:+1::tada: First off, thanks for your contribution to Tentacle! :tada::+1:
+:+1::tada: First off, thanks for your contribution to Tentacle! :tada::+1: 
 
 Please [create a new issue](issues/new) for each bug fix or enhancement. [Issues in this repository](issues) are automatically used to create release notes for [releases](releases).
 
