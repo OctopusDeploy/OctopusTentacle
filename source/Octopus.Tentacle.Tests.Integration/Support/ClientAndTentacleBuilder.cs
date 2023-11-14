@@ -34,6 +34,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         Reference<PortForwarder>? portForwarderReference;
         ITentacleClientObserver tentacleClientObserver = new NoTentacleClientObserver();
         Action<ITentacleBuilder>? tentacleBuilderAction;
+        Action<TentacleClientOptions>? configureClientOptions;
         TcpConnectionUtilities? tcpConnectionUtilities;
 
         public ClientAndTentacleBuilder(TentacleType tentacleType)
@@ -134,6 +135,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             return this;
         }
 
+        public ClientAndTentacleBuilder WithClientOptions(Action<TentacleClientOptions> configureClientOptions)
+        {
+            this.configureClientOptions = configureClientOptions;
+            return this;
+        }
+
         PortForwarder? BuildPortForwarder(int localPort, int? listeningPort)
         {
             if (portForwarderModifiers.Count == 0) return null;
@@ -220,6 +227,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
             var retrySettings = new RpcRetrySettings(retriesEnabled, retryDuration);
             var clientOptions = new TentacleClientOptions(retrySettings);
+
+            //configure the client options
+            configureClientOptions?.Invoke(clientOptions);
 
             var tentacleClient = new TentacleClient(
                 tentacleEndPoint,

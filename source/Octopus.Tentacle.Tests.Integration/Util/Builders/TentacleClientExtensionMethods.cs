@@ -8,6 +8,7 @@ using Octopus.Tentacle.Client;
 using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
+using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
 using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods;
@@ -18,7 +19,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders
     {
         public static async Task<(ScriptExecutionResult, List<ProcessOutput>)> ExecuteScript(
             this TentacleClient tentacleClient,
-            StartScriptCommandV2 startScriptCommand,
+            StartScriptCommandV3Alpha startScriptCommand,
             CancellationToken token,
             OnScriptStatusResponseReceived? onScriptStatusResponseReceivedAction = null,
             Log? log = null)
