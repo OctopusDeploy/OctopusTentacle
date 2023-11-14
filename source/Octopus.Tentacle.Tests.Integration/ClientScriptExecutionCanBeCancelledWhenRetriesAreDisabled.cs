@@ -369,7 +369,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages(tentacleConfigurationTestCase, out var recordedUsages)
                     .HookServiceMethod(tentacleConfigurationTestCase,
-                        nameof(IAsyncClientScriptServiceV2.GetStatusAsync),
+                        nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync),
                         async (_, _) =>
                         {
                             if (!hasPausedOrStoppedPortForwarder)

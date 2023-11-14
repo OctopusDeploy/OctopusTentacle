@@ -86,12 +86,13 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithRetryDuration(TimeSpan.FromMinutes(4))
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages<IAsyncClientScriptService>(out var recordedUsages)
-                    .HookServiceMethod<IAsyncClientScriptService>(
+                    .HookServiceMethod<IAsyncClientScriptService, ScriptStatusRequest>(
                         nameof(IAsyncClientScriptService.GetStatusAsync),
-                        async (_, _) =>
+                        async (_, request) =>
                         {
                             await Task.CompletedTask;
 
+                            scriptStatusRequest = request;
                             if (recordedUsages.For(nameof(IAsyncClientScriptService.GetStatusAsync)).LastException == null)
                             {
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();

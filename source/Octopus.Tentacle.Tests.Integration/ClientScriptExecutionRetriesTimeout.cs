@@ -108,7 +108,8 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages<IAsyncClientCapabilitiesServiceV2>(out var capabilitiesMethodUsages)
                     .RecordMethodUsages(tentacleConfigurationTestCase, out var scriptMethodUsages)
-                    .HookServiceMethod<IAsyncClientCapabilitiesServiceV2>(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync),
+                    .HookServiceMethod<IAsyncClientCapabilitiesServiceV2>(
+                        nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync),
                         async (_,_) =>
                         {
                             await tcpConnectionUtilities.RestartTcpConnection();
@@ -131,8 +132,8 @@ namespace Octopus.Tentacle.Tests.Integration
             Func<Task> action = async () => await executeScriptTask;
             await action.Should().ThrowAsync<HalibutClientException>();
 
-            capabilitiesMethodUsages.For(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)).Should().Be(1);
-            scriptMethodUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Should().Be(0, "Test should not have not proceeded past GetCapabilities");
+            capabilitiesMethodUsages.For(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)).Started.Should().Be(1);
+            scriptMethodUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().Be(0, "Test should not have not proceeded past GetCapabilities");
 
             inMemoryLog.ShouldHaveLoggedRetryFailureAndNoRetryAttempts();
         }
