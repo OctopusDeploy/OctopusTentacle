@@ -22,6 +22,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         // First version with ScriptServiceV2
         public static readonly Version v7_0_1_ScriptServiceV2Added = new("7.0.1");
 
+        // Last version without ScriptServiceV3Alpha
+        public static readonly Version v8_0_34_LastWithoutScriptServiceV3Alpha = new("8.0.34");
+
         // The version compiled from the current source
         public static readonly Version? Current = null;
 
@@ -32,15 +35,19 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             v5_0_15_LastOfVersion5,
             v6_3_417_LastWithScriptServiceV1Only,
             v6_3_451_NoCapabilitiesService,
-            v7_0_1_ScriptServiceV2Added
+            v8_0_34_LastWithoutScriptServiceV3Alpha
         };
     }
 
     public static class VersionExtensionMethods
     {
+        public static bool HasScriptServiceV3Alpha(this Version? version)
+        {
+            return version == TentacleVersions.Current || version > TentacleVersions.v8_0_34_LastWithoutScriptServiceV3Alpha;
+        }
         public static bool HasScriptServiceV2(this Version? version)
         {
-            return version == TentacleVersions.Current || version >= TentacleVersions.v7_0_1_ScriptServiceV2Added;
+            return version >= TentacleVersions.v7_0_1_ScriptServiceV2Added && version <= TentacleVersions.v8_0_34_LastWithoutScriptServiceV3Alpha;
         }
     }
 }
