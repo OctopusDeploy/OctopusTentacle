@@ -47,7 +47,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         }
         public static bool HasScriptServiceV2(this Version? version)
         {
-            return version >= TentacleVersions.v7_0_1_ScriptServiceV2Added && version <= TentacleVersions.v8_0_34_LastWithoutScriptServiceV3Alpha;
+            return version == TentacleVersions.Current || version >= TentacleVersions.v7_0_1_ScriptServiceV2Added;
         }
     }
 }

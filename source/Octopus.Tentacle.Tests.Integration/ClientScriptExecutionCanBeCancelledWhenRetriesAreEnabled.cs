@@ -56,7 +56,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages<IAsyncClientCapabilitiesServiceV2>(out var capabilitiesMethodUsages)
-                    .RecordMethodUsages<IAsyncClientScriptServiceV2>(out var scriptMethodUsages)
+                    .RecordMethodUsages(tentacleConfigurationTestCase, out var scriptMethodUsages)
                     .HookServiceMethod<IAsyncClientCapabilitiesServiceV2, object, CapabilitiesResponseV2>(
                         nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync),
                         async (_, _) =>
@@ -174,7 +174,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithPortForwarder(out var portForwarder)
                 .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .RecordMethodUsages<IAsyncClientScriptServiceV2>(out var recordedUsages)
+                    .RecordMethodUsages(tentacleConfigurationTestCase, out var recordedUsages)
                     .HookServiceMethod(tentacleConfigurationTestCase,
                         nameof(IAsyncClientScriptServiceV2.StartScriptAsync),
                         async (_, _) =>
@@ -329,7 +329,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithPortForwarder(out var portForwarder)
                 .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .RecordMethodUsages<IAsyncClientScriptServiceV2>(out var recordedUsages)
+                    .RecordMethodUsages(tentacleConfigurationTestCase, out var recordedUsages)
                     .HookServiceMethod(tentacleConfigurationTestCase,
                         nameof(IAsyncClientScriptServiceV2.GetStatusAsync),
                         async (_, _) =>
