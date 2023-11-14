@@ -43,7 +43,7 @@ To include a new version into the next Octopus Server release, update the [refer
 
 ## Debugging 
 
-In most scenarios, Tentacle is simple to debug:
+In most scenarios, Tentacle is simple to debug: 
 
 1. Just like a customer, set up an instance of Tentacle and connect it to an Octopus Server
 2. Start Tentacle using the debugger in your development environment of choice, using the `Tentacle.exe run --instance=YOUR_INSTANCE_NAME` command
