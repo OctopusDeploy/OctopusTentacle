@@ -256,11 +256,10 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations]
         public async Task WhenANetworkFailureOccurs_DuringGetCapabilities_TheClientIsAbleToSuccessfullyCompleteTheScript(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
-            IAsyncClientScriptServiceV2? asyncScriptServiceV2 = null;
-
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
+                .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages<IAsyncClientCapabilitiesServiceV2>(out var recordedUsages)
                     .HookServiceMethod<IAsyncClientCapabilitiesServiceV2>(
@@ -269,15 +268,13 @@ namespace Octopus.Tentacle.Tests.Integration
                         {
                             if (recordedUsages.For(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)).LastException == null)
                             {
-                                await asyncScriptServiceV2.EnsureTentacleIsConnectedToServer(Logger);
+                                await tcpConnectionUtilities.RestartTcpConnection();
 
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
                         })
                     .Build())
                 .Build(CancellationToken);
-
-            asyncScriptServiceV2 = clientTentacle.Server.ServerHalibutRuntime.CreateAsyncClient<IScriptServiceV2, IAsyncClientScriptServiceV2>(clientTentacle.ServiceEndPoint);
 
             var inMemoryLog = new InMemoryLog();
 
