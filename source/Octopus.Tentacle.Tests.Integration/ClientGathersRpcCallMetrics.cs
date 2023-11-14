@@ -32,7 +32,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .Build(CancellationToken);
 
-            var startScriptCommand = new StartScriptCommandV2Builder()
+            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
                 .WithScriptBody(b => b.Print("Hello"))
                 .Build();
 
@@ -69,7 +69,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new StartScriptCommandV2Builder()
+            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
                 .WithScriptBody(b => b.Print("Hello"))
                 .Build();
 

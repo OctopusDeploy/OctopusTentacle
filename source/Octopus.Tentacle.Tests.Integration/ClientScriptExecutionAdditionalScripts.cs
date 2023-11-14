@@ -28,7 +28,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .CreateFile(path) // How files are made are different in bash and powershell, doing this ensures the client and tentacle really are using the correct script.
                 .Print("Hello");
 
-            var startScriptCommand = new StartScriptCommandV2Builder()
+            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
                 .WithAdditionalScriptTypes(ScriptType.Bash, scriptBuilder.BuildBashScript())
                 // Additional Scripts don't actually work on tentacle for anything other than bash.
                 // Below is what we would have expected to tentacle to work with.

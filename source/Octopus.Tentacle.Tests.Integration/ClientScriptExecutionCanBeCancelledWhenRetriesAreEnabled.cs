@@ -13,6 +13,7 @@ using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Capabilities;
 using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
+using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods;
 using Octopus.Tentacle.Tests.Integration.Util;
@@ -88,7 +89,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new StartScriptCommandV2Builder()
+            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
                 .WithScriptBody(b => b
                     .Print("Should not run this script")
                     .Sleep(TimeSpan.FromHours(1)))
@@ -225,7 +226,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new StartScriptCommandV2Builder()
+            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
                 .WithScriptBody(b => b
                     .Print("The script")
                     .Sleep(TimeSpan.FromHours(1)))
@@ -380,7 +381,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new StartScriptCommandV2Builder()
+            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
                 .WithScriptBody(b => b
                     .Print("The script")
                     .Sleep(TimeSpan.FromHours(1)))
@@ -476,7 +477,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             clientAndTentacle.TentacleClient.OnCancellationAbandonCompleteScriptAfter = TimeSpan.FromSeconds(20);
 
-            var startScriptCommand = new StartScriptCommandV2Builder()
+            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
                 .WithScriptBody(b => b
                     .Print("The script")
                     .Sleep(TimeSpan.FromSeconds(5)))
@@ -542,7 +543,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
         private async Task<(ScriptExecutionResult response, Exception? actualException, TimeSpan cancellationDuration)> ExecuteScriptThenCancelExecutionWhenRpcCallHasStarted(
             ClientAndTentacle clientAndTentacle,
-            StartScriptCommandV2 startScriptCommand,
+            StartScriptCommandV3Alpha startScriptCommand,
             Reference<bool> rpcCallHasStarted,
             SemaphoreSlim whenTheRequestCanBeCancelled)
         {

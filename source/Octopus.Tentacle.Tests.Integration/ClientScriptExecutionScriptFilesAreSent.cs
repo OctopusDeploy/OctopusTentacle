@@ -20,7 +20,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder().Build(CancellationToken);
 
-            var startScriptCommand = new StartScriptCommandV2Builder()
+            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
                 .WithScriptBody(new ScriptBuilder().PrintFileContents("foo.txt"))
                 .WithFiles(new ScriptFile("foo.txt", DataStream.FromString("The File Contents")))
                 .Build();

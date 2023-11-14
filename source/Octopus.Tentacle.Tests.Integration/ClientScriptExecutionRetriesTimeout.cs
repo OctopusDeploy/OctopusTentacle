@@ -72,7 +72,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var inMemoryLog = new InMemoryLog();
 
-            var startScriptCommand = new StartScriptCommandV2Builder()
+            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
                 .WithScriptBody(b => b
                     .Print("Should not run this script"))
                 .Build();
@@ -125,7 +125,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var inMemoryLog = new InMemoryLog();
 
-            var startScriptCommand = new StartScriptCommandV2Builder()
+            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
                 .Build();
 
             var executeScriptTask = clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, inMemoryLog);
@@ -182,7 +182,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var inMemoryLog = new InMemoryLog();
 
-            var startScriptCommand = new StartScriptCommandV2Builder()
+            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
                 .WithScriptBody(b => b
                     .Print("Start Script")
                     .Sleep(TimeSpan.FromHours(1))
@@ -234,7 +234,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var inMemoryLog = new InMemoryLog();
 
-            var startScriptCommand = new StartScriptCommandV2Builder()
+            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
                 .WithScriptBody(b => b
                     .Sleep(TimeSpan.FromHours(1)))
                 .Build();
@@ -295,7 +295,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var inMemoryLog = new InMemoryLog();
 
-            var startScriptCommand = new StartScriptCommandV2Builder()
+            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
                 .WithScriptBody(b => b
                     .Print("Start Script")
                     .Sleep(TimeSpan.FromHours(1))
@@ -350,7 +350,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var inMemoryLog = new InMemoryLog();
 
-            var startScriptCommand = new StartScriptCommandV2Builder()
+            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
                 .WithScriptBody(b => b
                     .Sleep(TimeSpan.FromHours(1)))
                 // Don't wait in start script as we want to test get status
@@ -413,7 +413,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var inMemoryLog = new InMemoryLog();
 
-            var startScriptCommand = new StartScriptCommandV2Builder()
+            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
                 .WithScriptBody(b => b
                     .Print("Start Script")
                     .Sleep(TimeSpan.FromHours(1))
@@ -481,7 +481,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var inMemoryLog = new InMemoryLog();
 
-            var startScriptCommand = new StartScriptCommandV2Builder()
+            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
                 .WithScriptBody(b => b
                     .Sleep(TimeSpan.FromHours(1)))
                 // Don't wait in start script as we want to test get status
