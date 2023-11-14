@@ -137,12 +137,18 @@ namespace Octopus.Tentacle.Client.Scripts
 
             if (tentacleCapabilities.HasScriptServiceV3Alpha())
             {
-                logger.Verbose("Using ScriptServiceV3Alpha");
-                logger.Verbose(clientOptions.RpcRetrySettings.RetriesEnabled
-                    ? $"RPC call retries are enabled. Retry timeout {rpcCallExecutor.RetryTimeout.TotalSeconds} seconds"
-                    : "RPC call retries are disabled.");
-                return ScriptServiceVersion.Version3Alpha;
-			}
+                //if the service is not disabled, we can use it :)
+                if (!clientOptions.DisableScriptServiceV3Alpha)
+                {
+                    logger.Verbose("Using ScriptServiceV3Alpha");
+                    logger.Verbose(clientOptions.RpcRetrySettings.RetriesEnabled
+                        ? $"RPC call retries are enabled. Retry timeout {rpcCallExecutor.RetryTimeout.TotalSeconds} seconds"
+                        : "RPC call retries are disabled.");
+                    return ScriptServiceVersion.Version3Alpha;
+                }
+
+                logger.Verbose("ScriptServiceV3Alpha is disabled and will not be used.");
+            }
 
             if (tentacleCapabilities.HasScriptServiceV2())
             {
