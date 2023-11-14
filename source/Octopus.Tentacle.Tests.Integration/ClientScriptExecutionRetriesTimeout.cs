@@ -32,8 +32,6 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(additionalParameterTypes: new object[] {typeof(RpcCallStage)})]
         public async Task WhenRpcRetriesTimeOut_DuringGetCapabilities_TheRpcCallIsCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase, RpcCallStage rpcCallStage)
         {
-            IAsyncClientScriptServiceV2? asyncScriptServiceV2 = null;
-
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 // Set a short retry duration so we cancel fairly quickly
                 .WithRetryDuration(TimeSpan.FromSeconds(15))
@@ -45,7 +43,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .RecordMethodUsages<IAsyncClientCapabilitiesServiceV2>(out var capabilitiesMethodUsages)
                     .RecordMethodUsages(tentacleConfigurationTestCase, out var scriptMethodUsages)
                     .HookServiceMethod<IAsyncClientCapabilitiesServiceV2>(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync),
-                        async _ =>
+                        async (_,_) =>
                         {
                             await tcpConnectionUtilities.RestartTcpConnection();
 
@@ -72,8 +70,6 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            asyncScriptServiceV2 = clientAndTentacle.Server.ServerHalibutRuntime.CreateAsyncClient<IScriptServiceV2, IAsyncClientScriptServiceV2>(clientAndTentacle.ServiceEndPoint);
-
             var inMemoryLog = new InMemoryLog();
 
             var startScriptCommand = new StartScriptCommandV2Builder()
@@ -89,7 +85,7 @@ namespace Octopus.Tentacle.Tests.Integration
             duration.Stop();
 
             capabilitiesMethodUsages.For(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)).Started.Should().BeGreaterOrEqualTo(2);
-            scriptMethodUsages.For(nameof(IAsyncScriptServiceV3Alpha.StartScriptAsync)).Started.Should().Be(0, "Test should not have not proceeded past GetCapabilities");
+            scriptMethodUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().Be(0, "Test should not have not proceeded past GetCapabilities");
 
             // Ensure we actually waited and retried until the timeout policy kicked in
             duration.Elapsed.Should().BeGreaterOrEqualTo(clientAndTentacle.RpcRetrySettings.RetryDuration - retryIfRemainingDurationAtLeastBuffer - retryBackoffBuffer);
@@ -113,7 +109,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .RecordMethodUsages<IAsyncClientCapabilitiesServiceV2>(out var capabilitiesMethodUsages)
                     .RecordMethodUsages(tentacleConfigurationTestCase, out var scriptMethodUsages)
                     .HookServiceMethod<IAsyncClientCapabilitiesServiceV2>(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync),
-                        async _ =>
+                        async (_,_) =>
                         {
                             await tcpConnectionUtilities.RestartTcpConnection();
 
@@ -136,7 +132,7 @@ namespace Octopus.Tentacle.Tests.Integration
             await action.Should().ThrowAsync<HalibutClientException>();
 
             capabilitiesMethodUsages.For(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)).Should().Be(1);
-            scriptMethodUsages.For(nameof(IAsyncScriptServiceV3Alpha.StartScriptAsync)).Should().Be(0, "Test should not have not proceeded past GetCapabilities");
+            scriptMethodUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Should().Be(0, "Test should not have not proceeded past GetCapabilities");
 
             inMemoryLog.ShouldHaveLoggedRetryFailureAndNoRetryAttempts();
         }
@@ -151,22 +147,21 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithPortForwarder(out var portForwarder)
+                .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .
-                    .LogCallsToScriptServiceV2()
-                    .CountCallsToScriptServiceV2(out var scriptServiceCallCounts)
-                    .RecordExceptionThrownInScriptServiceV2(out var scriptServiceV2Exception)
-                    .DecorateScriptServiceV2With(d => d
-                        .BeforeStartScript(async (service, _) =>
+                    .RecordMethodUsages(tentacleConfigurationTestCase, out var recordedUsages)
+                    .HookServiceMethod(tentacleConfigurationTestCase,
+                        nameof(IAsyncClientScriptServiceV2.StartScriptAsync),
+                        async (_, _) =>
                         {
                             // Kill the first StartScript call to force the rpc call into retries
-                            if (scriptServiceV2Exception.StartScriptLatestException == null)
+                            if (recordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).LastException == null)
                             {
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
                             else
                             {
-                                await service.EnsureTentacleIsConnectedToServer(Logger);
+                                await tcpConnectionUtilities.RestartTcpConnection();
 
                                 if (rpcCallStage == RpcCallStage.Connecting)
                                 {
@@ -179,10 +174,8 @@ namespace Octopus.Tentacle.Tests.Integration
                                     // Pause the port forwarder so the next requests are in-flight when retries timeout
                                     responseMessageTcpKiller.PauseConnectionOnNextResponse();
                                 }
-
                             }
                         })
-                        .Build())
                     .Build())
                 .Build(CancellationToken);
 
@@ -201,10 +194,10 @@ namespace Octopus.Tentacle.Tests.Integration
             await action.Should().ThrowAsync<HalibutClientException>();
             duration.Stop();
 
-            scriptServiceCallCounts.StartScriptCallCountStarted.Should().BeGreaterOrEqualTo(2);
-            scriptServiceCallCounts.GetStatusCallCountStarted.Should().Be(0);
-            scriptServiceCallCounts.CancelScriptCallCountStarted.Should().Be(0);
-            scriptServiceCallCounts.CompleteScriptCallCountStarted.Should().Be(0);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().BeGreaterOrEqualTo(2);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Started.Should().Be(0);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Started.Should().Be(0);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).Started.Should().Be(0);
 
             // Ensure we actually waited and retried until the timeout policy kicked in
             duration.Elapsed.Should().BeGreaterOrEqualTo(clientAndTentacle.RpcRetrySettings.RetryDuration - retryIfRemainingDurationAtLeastBuffer - retryBackoffBuffer);
@@ -224,18 +217,17 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .LogCallsToScriptServiceV2()
-                    .CountCallsToScriptServiceV2(out var scriptServiceCallCounts)
-                    .DecorateScriptServiceV2With(d => d
-                        .BeforeStartScript(async (_, _) =>
-                        {
-                            // Sleep to make the initial RPC call take longer than the allowed retry duration
-                            await Task.Delay(retryDuration + TimeSpan.FromSeconds(1));
+                    .RecordMethodUsages(tentacleConfigurationTestCase, out var recordedUsages)
+                    .HookServiceMethod(tentacleConfigurationTestCase,
+                        nameof(IAsyncClientScriptServiceV2.StartScriptAsync),
+                        async (_, _) =>
+                            {
+                                // Sleep to make the initial RPC call take longer than the allowed retry duration
+                                await Task.Delay(retryDuration + TimeSpan.FromSeconds(1));
 
-                            // Kill the first StartScript call to force the rpc call into retries
-                            responseMessageTcpKiller.KillConnectionOnNextResponse();
-                        })
-                        .Build())
+                                // Kill the first StartScript call to force the rpc call into retries
+                                responseMessageTcpKiller.KillConnectionOnNextResponse();
+                            })
                     .Build())
                 .Build(CancellationToken);
 
@@ -250,10 +242,10 @@ namespace Octopus.Tentacle.Tests.Integration
             Func<Task> action = async () => await executeScriptTask;
             await action.Should().ThrowAsync<HalibutClientException>();
 
-            scriptServiceCallCounts.StartScriptCallCountStarted.Should().Be(1);
-            scriptServiceCallCounts.GetStatusCallCountStarted.Should().Be(0);
-            scriptServiceCallCounts.CancelScriptCallCountStarted.Should().Be(0);
-            scriptServiceCallCounts.CompleteScriptCallCountStarted.Should().Be(0);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().Be(1);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Started.Should().Be(0);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Started.Should().Be(0);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).Started.Should().Be(0);
 
             inMemoryLog.ShouldHaveLoggedRetryFailureAndNoRetryAttempts();
         }
@@ -268,21 +260,21 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithPortForwarder(out var portForwarder)
+                .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .LogCallsToScriptServiceV2()
-                    .CountCallsToScriptServiceV2(out var scriptServiceCallCounts)
-                    .RecordExceptionThrownInScriptServiceV2(out var scriptServiceV2Exception)
-                    .DecorateScriptServiceV2With(d => d
-                        .BeforeGetStatus(async (service, _) =>
+                    .RecordMethodUsages(tentacleConfigurationTestCase, out var recordedUsages)
+                    .HookServiceMethod(tentacleConfigurationTestCase,
+                        nameof(IAsyncClientScriptServiceV2.GetStatusAsync),
+                        async (_, _) =>
                         {
-                            // Kill the first GetStatus call to force the rpc call into retries
-                            if (scriptServiceV2Exception.GetStatusLatestException == null)
+                            // Kill the first StartScript call to force the rpc call into retries
+                            if (recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).LastException == null)
                             {
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
                             else
                             {
-                                await service.EnsureTentacleIsConnectedToServer(Logger);
+                                await tcpConnectionUtilities.RestartTcpConnection();
 
                                 if (rpcCallStage == RpcCallStage.Connecting)
                                 {
@@ -295,11 +287,9 @@ namespace Octopus.Tentacle.Tests.Integration
                                     // Pause the port forwarder so the next requests are in-flight when retries timeout
                                     responseMessageTcpKiller.PauseConnectionOnNextResponse();
                                 }
-
                             }
                         })
                         .Build())
-                    .Build())
                 .Build(CancellationToken);
 
             var inMemoryLog = new InMemoryLog();
@@ -319,10 +309,11 @@ namespace Octopus.Tentacle.Tests.Integration
             await action.Should().ThrowAsync<HalibutClientException>();
             duration.Stop();
 
-            scriptServiceCallCounts.StartScriptCallCountStarted.Should().Be(1);
-            scriptServiceCallCounts.GetStatusCallCountStarted.Should().BeGreaterOrEqualTo(2);
-            scriptServiceCallCounts.CancelScriptCallCountStarted.Should().Be(0);
-            scriptServiceCallCounts.CompleteScriptCallCountStarted.Should().Be(0);
+
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().Be(1);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Started.Should().BeGreaterOrEqualTo(2);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Started.Should().Be(0);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).Started.Should().Be(0);
 
             // Ensure we actually waited and retried until the timeout policy kicked in
             duration.Elapsed.Should().BeGreaterOrEqualTo(clientAndTentacle.RpcRetrySettings.RetryDuration - retryIfRemainingDurationAtLeastBuffer - retryBackoffBuffer);
@@ -342,18 +333,17 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .LogCallsToScriptServiceV2()
-                    .CountCallsToScriptServiceV2(out var scriptServiceCallCounts)
-                    .DecorateScriptServiceV2With(d => d
-                        .BeforeGetStatus(async (_, _) =>
+                    .RecordMethodUsages(tentacleConfigurationTestCase, out var recordedUsages)
+                    .HookServiceMethod(tentacleConfigurationTestCase,
+                        nameof(IAsyncClientScriptServiceV2.GetStatusAsync),
+                        async (_, _) =>
                         {
                             // Sleep to make the initial RPC call take longer than the allowed retry duration
                             await Task.Delay(retryDuration + TimeSpan.FromSeconds(1));
 
-                            // Kill the first GetStatus call to force the rpc call into retries
+                            // Kill the first StartScript call to force the rpc call into retries
                             responseMessageTcpKiller.KillConnectionOnNextResponse();
                         })
-                        .Build())
                     .Build())
                 .Build(CancellationToken);
 
@@ -370,10 +360,10 @@ namespace Octopus.Tentacle.Tests.Integration
             Func<Task> action = async () => await executeScriptTask;
             await action.Should().ThrowAsync<HalibutClientException>();
 
-            scriptServiceCallCounts.StartScriptCallCountStarted.Should().Be(1);
-            scriptServiceCallCounts.GetStatusCallCountStarted.Should().Be(1);
-            scriptServiceCallCounts.CancelScriptCallCountStarted.Should().Be(0);
-            scriptServiceCallCounts.CompleteScriptCallCountStarted.Should().Be(0);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().Be(1);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Started.Should().Be(1);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Started.Should().Be(0);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).Started.Should().Be(0);
 
             inMemoryLog.ShouldHaveLoggedRetryFailureAndNoRetryAttempts();
         }
@@ -388,21 +378,21 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithPortForwarder(out var portForwarder)
+                .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .LogCallsToScriptServiceV2()
-                    .CountCallsToScriptServiceV2(out var scriptServiceCallCounts)
-                    .RecordExceptionThrownInScriptServiceV2(out var scriptServiceV2Exception)
-                    .DecorateScriptServiceV2With(d => d
-                        .BeforeCancelScript(async (service, _) =>
+                    .RecordMethodUsages(tentacleConfigurationTestCase, out var recordedUsages)
+                    .HookServiceMethod(tentacleConfigurationTestCase,
+                        nameof(IAsyncClientScriptServiceV2.CancelScriptAsync),
+                        async (_, _) =>
                         {
-                            // Kill the first CancelScript call to force the rpc call into retries
-                            if (scriptServiceV2Exception.CancelScriptLatestException == null)
+                            // Kill the first StartScript call to force the rpc call into retries
+                            if (recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).LastException == null)
                             {
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
                             else
                             {
-                                await service.EnsureTentacleIsConnectedToServer(Logger);
+                                await tcpConnectionUtilities.RestartTcpConnection();
 
                                 if (rpcCallStage == RpcCallStage.Connecting)
                                 {
@@ -417,7 +407,6 @@ namespace Octopus.Tentacle.Tests.Integration
                                 }
                             }
                         })
-                        .Build())
                     .Build())
                 .Build(CancellationToken);
 
@@ -444,7 +433,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             Func<Task> action = async () => await executeScriptTask;
 
-            await Wait.For(() => scriptServiceCallCounts.GetStatusCallCountCompleted > 0, CancellationToken);
+            await Wait.For(() => recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Completed > 0, CancellationToken);
 
             // We cancel script execution via the cancellation token. This should trigger the CancelScript RPC call to be made
             testCancellationTokenSource.Cancel();
@@ -452,10 +441,10 @@ namespace Octopus.Tentacle.Tests.Integration
             await action.Should().ThrowAsync<HalibutClientException>();
             duration.Stop();
 
-            scriptServiceCallCounts.StartScriptCallCountStarted.Should().Be(1);
-            scriptServiceCallCounts.GetStatusCallCountStarted.Should().BeGreaterOrEqualTo(1);
-            scriptServiceCallCounts.CancelScriptCallCountStarted.Should().BeGreaterOrEqualTo(2);
-            scriptServiceCallCounts.CompleteScriptCallCountStarted.Should().Be(0);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().Be(1);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Started.Should().BeGreaterOrEqualTo(1);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Started.Should().BeGreaterOrEqualTo(2);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).Started.Should().Be(0);
 
             // Ensure we actually waited and retried until the timeout policy kicked in
             duration.Elapsed.Should().BeGreaterOrEqualTo(clientAndTentacle.RpcRetrySettings.RetryDuration - retryIfRemainingDurationAtLeastBuffer - retryBackoffBuffer);
@@ -475,18 +464,17 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .LogCallsToScriptServiceV2()
-                    .CountCallsToScriptServiceV2(out var scriptServiceCallCounts)
-                    .DecorateScriptServiceV2With(d => d
-                        .BeforeCancelScript(async (_, _) =>
+                    .RecordMethodUsages(tentacleConfigurationTestCase, out var recordedUsages)
+                    .HookServiceMethod(tentacleConfigurationTestCase,
+                        nameof(IAsyncClientScriptServiceV2.CancelScriptAsync),
+                        async (_, _) =>
                         {
                             // Sleep to make the initial RPC call take longer than the allowed retry duration
                             await Task.Delay(retryDuration + TimeSpan.FromSeconds(1));
 
-                            // Kill the first CancelScript call to force the rpc call into retries
+                            // Kill the first StartScript call to force the rpc call into retries
                             responseMessageTcpKiller.KillConnectionOnNextResponse();
                         })
-                        .Build())
                     .Build())
                 .Build(CancellationToken);
 
@@ -509,17 +497,17 @@ namespace Octopus.Tentacle.Tests.Integration
                 inMemoryLog);
 
             Func<Task> action = async () => await executeScriptTask;
-            await Wait.For(() => scriptServiceCallCounts.GetStatusCallCountCompleted > 0, CancellationToken);
+            await Wait.For(() => recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Completed > 0, CancellationToken);
 
             // We cancel script execution via the cancellation token. This should trigger the CancelScript RPC call to be made
             testCancellationTokenSource.Cancel();
 
             await action.Should().ThrowAsync<HalibutClientException>();
 
-            scriptServiceCallCounts.StartScriptCallCountStarted.Should().Be(1);
-            scriptServiceCallCounts.GetStatusCallCountStarted.Should().BeGreaterOrEqualTo(1);
-            scriptServiceCallCounts.CancelScriptCallCountStarted.Should().Be(1);
-            scriptServiceCallCounts.CompleteScriptCallCountStarted.Should().Be(0);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().Be(1);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Started.Should().BeGreaterOrEqualTo(1);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Started.Should().Be(1);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).Started.Should().Be(0);
 
             inMemoryLog.ShouldHaveLoggedRetryFailureAndNoRetryAttempts();
         }

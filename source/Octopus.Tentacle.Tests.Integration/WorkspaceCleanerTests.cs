@@ -1,12 +1,11 @@
 using System;
 using System.IO;
-using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Tentacle.CommonTestUtils.Builders;
+using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Scripts;
-using Octopus.Tentacle.Services.Scripts.ScriptServiceV3Alpha;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
@@ -72,8 +71,8 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .HookServiceMethod(
                         tentacleConfigurationTestCase,
-                        nameof(IAsyncScriptServiceV3Alpha.CompleteScriptAsync),
-                        _ => throw new NotImplementedException("Force failure to simulate tentacle client crashing, and ensure we do not complete the script"))
+                        nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync),
+                        (_,_) => throw new NotImplementedException("Force failure to simulate tentacle client crashing, and ensure we do not complete the script"))
                     .Build())
                 .Build(CancellationToken);
 

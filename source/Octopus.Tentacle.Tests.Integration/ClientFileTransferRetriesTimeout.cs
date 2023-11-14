@@ -41,7 +41,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages<IAsyncClientFileTransferService>(out var methodUsages)
                     .HookServiceMethod<IAsyncClientFileTransferService>(nameof(IAsyncClientFileTransferService.UploadFileAsync),
-                        async _ =>
+                        async (_,_) =>
                         {
                             await tcpConnectionUtilities.RestartTcpConnection();
 
@@ -105,7 +105,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages<IAsyncClientFileTransferService>(out var methodUsages)
                     .HookServiceMethod<IAsyncClientFileTransferService>(nameof(IAsyncClientFileTransferService.UploadFileAsync),
-                        async _ =>
+                        async (_,_) =>
                         {
                             await tcpConnectionUtilities.RestartTcpConnection();
 
@@ -146,7 +146,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages<IAsyncClientFileTransferService>(out var tracingStats)
                     .HookServiceMethod<IAsyncClientFileTransferService>(nameof(IAsyncClientFileTransferService.DownloadFileAsync),
-                        async _ =>
+                        async (_,_) =>
                         {
                             await tcpConnectionUtilities.RestartTcpConnection();
 
@@ -210,7 +210,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages<IAsyncClientFileTransferService>(out var recordedUsages)
                     .HookServiceMethod<IAsyncClientFileTransferService>(nameof(IAsyncClientFileTransferService.DownloadFileAsync),
-                        async _ =>
+                        async (_,_) =>
                         {
                             await tcpConnectionUtilities.RestartTcpConnection();
 

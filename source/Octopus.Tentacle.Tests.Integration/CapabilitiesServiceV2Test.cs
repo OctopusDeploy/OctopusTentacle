@@ -51,7 +51,7 @@ namespace Octopus.Tentacle.Tests.Integration
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithPortForwarder(out var portForwarder)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .HookServiceMethod<IAsyncClientCapabilitiesServiceV2, CapabilitiesResponseV2>(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync),
+                    .HookServiceMethod<IAsyncClientCapabilitiesServiceV2, object, CapabilitiesResponseV2>(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync),
                         null,
                         (_, response) =>
                         {

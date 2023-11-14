@@ -36,7 +36,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .RecordMethodUsages<IAsyncClientCapabilitiesServiceV2>(out var capabilitiesRecordedUsages)
                     .RecordMethodUsages(tentacleConfigurationTestCase, out var scriptRecordedUsages)
                     .HookServiceMethod<IAsyncClientCapabilitiesServiceV2>(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync),
-                        async _ =>
+                        async (_,_) =>
                         {
                             // Due to the GetCapabilities response getting cached, we must
                             // use a different service to ensure Tentacle is connected to Server.
@@ -67,10 +67,10 @@ namespace Octopus.Tentacle.Tests.Integration
             getCapabilitiesUsages.Started.Should().Be(1);
             getCapabilitiesUsages.Completed.Should().Be(1);
 
-            scriptRecordedUsages.For(nameof(IAsyncScriptServiceV3Alpha.GetStatusAsync)).Started.Should().Be(0);
-            scriptRecordedUsages.For(nameof(IAsyncScriptServiceV3Alpha.GetStatusAsync)).Completed.Should().Be(0);
-            scriptRecordedUsages.For(nameof(IAsyncScriptServiceV3Alpha.StartScriptAsync)).Started.Should().Be(0);
-            scriptRecordedUsages.For(nameof(IAsyncScriptServiceV3Alpha.StartScriptAsync)).Completed.Should().Be(0);
+            scriptRecordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Started.Should().Be(0);
+            scriptRecordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Completed.Should().Be(0);
+            scriptRecordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().Be(0);
+            scriptRecordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Completed.Should().Be(0);
         }
 
         [Test]
@@ -86,10 +86,10 @@ namespace Octopus.Tentacle.Tests.Integration
                     .RecordMethodUsages(tentacleConfigurationTestCase, out var scriptRecordedUsages)
                     .HookServiceMethod(
                         tentacleConfigurationTestCase,
-                        nameof(IAsyncScriptServiceV3Alpha.StartScriptAsync),
-                        _ =>
+                        nameof(IAsyncClientScriptServiceV2.StartScriptAsync),
+                        (_,_) =>
                         {
-                            if (scriptRecordedUsages.For(nameof(IAsyncScriptServiceV3Alpha.StartScriptAsync)).LastException is null)
+                            if (scriptRecordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).LastException is null)
                             {
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
@@ -112,10 +112,10 @@ namespace Octopus.Tentacle.Tests.Integration
 
             allLogs.Should().NotContain("AllDone");
 
-            scriptRecordedUsages.For(nameof(IAsyncScriptServiceV3Alpha.StartScriptAsync)).LastException.Should().NotBeNull();
-            scriptRecordedUsages.For(nameof(IAsyncScriptServiceV3Alpha.StartScriptAsync)).Started.Should().Be(1);
-            scriptRecordedUsages.For(nameof(IAsyncScriptServiceV3Alpha.GetStatusAsync)).Started.Should().Be(0);
-            scriptRecordedUsages.For(nameof(IAsyncScriptServiceV3Alpha.CompleteScriptAsync)).Started.Should().Be(0);
+            scriptRecordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).LastException.Should().NotBeNull();
+            scriptRecordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().Be(1);
+            scriptRecordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Started.Should().Be(0);
+            scriptRecordedUsages.For(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).Started.Should().Be(0);
 
             // We must ensure all script are complete, otherwise if we shutdown tentacle while running a script the build can hang.
             // Ensure the script is finished by running the script again
@@ -135,10 +135,10 @@ namespace Octopus.Tentacle.Tests.Integration
                     .RecordMethodUsages(tentacleConfigurationTestCase, out var scriptRecordedUsages)
                     .HookServiceMethod(
                         tentacleConfigurationTestCase,
-                        nameof(IAsyncScriptServiceV3Alpha.GetStatusAsync),
-                        _ =>
+                        nameof(IAsyncClientScriptServiceV2.GetStatusAsync),
+                        (_,_) =>
                         {
-                            if (scriptRecordedUsages.For(nameof(IAsyncScriptServiceV3Alpha.GetStatusAsync)).LastException is null)
+                            if (scriptRecordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).LastException is null)
                             {
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
@@ -166,10 +166,10 @@ namespace Octopus.Tentacle.Tests.Integration
 
             allLogs.Should().NotContain("AllDone");
 
-            scriptRecordedUsages.For(nameof(IAsyncScriptServiceV3Alpha.GetStatusAsync)).LastException.Should().NotBeNull();
-            scriptRecordedUsages.For(nameof(IAsyncScriptServiceV3Alpha.StartScriptAsync)).Started.Should().Be(1);
-            scriptRecordedUsages.For(nameof(IAsyncScriptServiceV3Alpha.GetStatusAsync)).Started.Should().Be(1);
-            scriptRecordedUsages.For(nameof(IAsyncScriptServiceV3Alpha.CompleteScriptAsync)).Started.Should().Be(0);
+            scriptRecordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).LastException.Should().NotBeNull();
+            scriptRecordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().Be(1);
+            scriptRecordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Started.Should().Be(1);
+            scriptRecordedUsages.For(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).Started.Should().Be(0);
 
             // Let the script finish.
             File.WriteAllText(waitForFile, "");
@@ -191,8 +191,8 @@ namespace Octopus.Tentacle.Tests.Integration
                     .RecordMethodUsages(tentacleConfigurationTestCase, out var scriptRecordedUsages)
                     .HookServiceMethod(
                         tentacleConfigurationTestCase,
-                        nameof(IAsyncScriptServiceV3Alpha.GetStatusAsync),
-                        async _ =>
+                        nameof(IAsyncClientScriptServiceV2.GetStatusAsync),
+                        async (_,_) =>
                         {
                             await Task.CompletedTask;
 
@@ -200,10 +200,10 @@ namespace Octopus.Tentacle.Tests.Integration
                         })
                     .HookServiceMethod(
                         tentacleConfigurationTestCase,
-                        nameof(IAsyncScriptServiceV3Alpha.CancelScriptAsync),
-                        async _ =>
+                        nameof(IAsyncClientScriptServiceV2.CancelScriptAsync),
+                        async (_,_) =>
                         {
-                            if (scriptRecordedUsages.For(nameof(IAsyncScriptServiceV3Alpha.CancelScriptAsync)).LastException is null)
+                            if (scriptRecordedUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).LastException is null)
                             {
                                 await tcpConnectionUtilities.RestartTcpConnection();
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
@@ -228,10 +228,10 @@ namespace Octopus.Tentacle.Tests.Integration
 
             allLogs.Should().NotContain("AllDone");
 
-            scriptRecordedUsages.For(nameof(IAsyncScriptServiceV3Alpha.CancelScriptAsync)).LastException.Should().NotBeNull();
-            scriptRecordedUsages.For(nameof(IAsyncScriptServiceV3Alpha.StartScriptAsync)).Started.Should().Be(1);
-            scriptRecordedUsages.For(nameof(IAsyncScriptServiceV3Alpha.CancelScriptAsync)).Started.Should().Be(1);
-            scriptRecordedUsages.For(nameof(IAsyncScriptServiceV3Alpha.CompleteScriptAsync)).Started.Should().Be(0);
+            scriptRecordedUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).LastException.Should().NotBeNull();
+            scriptRecordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().Be(1);
+            scriptRecordedUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Started.Should().Be(1);
+            scriptRecordedUsages.For(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).Started.Should().Be(0);
 
             // Let the script finish.
             File.WriteAllText(waitForFile, "");
@@ -251,10 +251,10 @@ namespace Octopus.Tentacle.Tests.Integration
                     .RecordMethodUsages(tentacleConfigurationTestCase, out var scriptRecordedUsages)
                     .HookServiceMethod(
                         tentacleConfigurationTestCase,
-                        nameof(IAsyncScriptServiceV3Alpha.CompleteScriptAsync),
-                        _ =>
+                        nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync),
+                        (_,_) =>
                         {
-                            if (scriptRecordedUsages.For(nameof(IAsyncScriptServiceV3Alpha.CompleteScriptAsync)).LastException is null)
+                            if (scriptRecordedUsages.For(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).LastException is null)
                             {
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
@@ -276,9 +276,9 @@ namespace Octopus.Tentacle.Tests.Integration
             var allLogs = logs.JoinLogs();
             allLogs.Should().Contain("AllDone");
 
-            scriptRecordedUsages.For(nameof(IAsyncScriptServiceV3Alpha.CompleteScriptAsync)).LastException.Should().NotBeNull();
-            scriptRecordedUsages.For(nameof(IAsyncScriptServiceV3Alpha.StartScriptAsync)).Started.Should().Be(1);
-            scriptRecordedUsages.For(nameof(IAsyncScriptServiceV3Alpha.CompleteScriptAsync)).Started.Should().Be(1);
+            scriptRecordedUsages.For(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).LastException.Should().NotBeNull();
+            scriptRecordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().Be(1);
+            scriptRecordedUsages.For(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).Started.Should().Be(1);
         }
     }
 }

@@ -9,8 +9,10 @@ using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Capabilities;
+using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
+using Octopus.Tentacle.Services.Scripts.ScriptServiceV3Alpha;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
 using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
@@ -63,8 +65,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .WithRetryDuration(TimeSpan.FromSeconds(1))
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .DecorateScriptServiceWith(new ScriptServiceDecoratorBuilder().BeforeStartScript(() => throw exception).Build())
-                    .DecorateScriptServiceV2With(b => b.BeforeStartScript(() => throw exception))
+                    .HookServiceMethod(tentacleConfigurationTestCase, nameof(IAsyncClientScriptServiceV2.StartScriptAsync), (_, _) => throw exception)
                     .Build())
                 .Build(CancellationToken);
 
@@ -121,7 +122,8 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .WithRetryDuration(TimeSpan.FromSeconds(1))
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .DecorateFileTransferServiceWith(b => b.BeforeUploadFile(() => throw exception)).Build())
+                    .HookServiceMethod<IAsyncClientFileTransferService>(nameof(IAsyncClientFileTransferService.UploadFileAsync), (_, _) => throw exception)
+                    .Build())
                 .Build(CancellationToken);
 
             var remotePath = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "UploadFile.txt");
@@ -178,7 +180,8 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .WithRetryDuration(TimeSpan.FromSeconds(1))
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .DecorateFileTransferServiceWith(b => b.BeforeDownloadFile(() => throw exception)).Build())
+                    .HookServiceMethod<IAsyncClientFileTransferService>(nameof(IAsyncClientFileTransferService.DownloadFileAsync), (_, _) => throw exception)
+                    .Build())
                 .Build(CancellationToken);
 
             var remotePath = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "DownloadFile.txt");

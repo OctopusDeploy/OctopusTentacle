@@ -9,6 +9,7 @@ using Halibut.Util;
 using NUnit.Framework;
 using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
@@ -29,20 +30,18 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithRetryDuration(TimeSpan.FromMinutes(4))
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .LogCallsToScriptService()
-                    .RecordExceptionThrownInScriptService(out var scriptServiceExceptions)
-                    .CountCallsToScriptService(out var scriptServiceCallCounts)
-                    .DecorateScriptServiceWith(new ScriptServiceDecoratorBuilder()
-                        .BeforeStartScript(async () =>
+                    .RecordMethodUsages<IAsyncClientScriptService>(out var recordedUsages)
+                    .HookServiceMethod<IAsyncClientScriptService>(
+                        nameof(IAsyncClientScriptService.StartScriptAsync),
+                        async (_, _) =>
                         {
                             await Task.CompletedTask;
 
-                            if (scriptServiceExceptions.StartScriptLatestException == null)
+                            if (recordedUsages.For(nameof(IAsyncClientScriptService.StartScriptAsync)).LastException == null)
                             {
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
                         })
-                        .Build())
                     .Build())
                 .Build(CancellationToken);
 
@@ -66,10 +65,10 @@ namespace Octopus.Tentacle.Tests.Integration
             var allLogs = logs.JoinLogs();
 
             allLogs.Should().NotContain("AllDone");
-            scriptServiceExceptions.StartScriptLatestException.Should().NotBeNull();
-            scriptServiceCallCounts.StartScriptCallCountStarted.Should().Be(1);
-            scriptServiceCallCounts.GetStatusCallCountStarted.Should().Be(0);
-            scriptServiceCallCounts.CompleteScriptCallCountStarted.Should().Be(0);
+            recordedUsages.For(nameof(IAsyncClientScriptService.StartScriptAsync)).LastException.Should().NotBeNull();
+            recordedUsages.For(nameof(IAsyncClientScriptService.StartScriptAsync)).Started.Should().Be(1);
+            recordedUsages.For(nameof(IAsyncClientScriptService.GetStatusAsync)).Started.Should().Be(0);
+            recordedUsages.For(nameof(IAsyncClientScriptService.CompleteScriptAsync)).Started.Should().Be(0);
 
             // We must ensure all script are complete, otherwise if we shutdown tentacle while running a script the build can hang.
             // Ensure the script is finished by running the script again, the isolation mutex will ensure this second script runs after the first is complete.
@@ -86,21 +85,18 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithRetryDuration(TimeSpan.FromMinutes(4))
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .LogCallsToScriptService()
-                    .RecordExceptionThrownInScriptService(out var scriptServiceExceptions)
-                    .CountCallsToScriptService(out var scriptServiceCallCounts)
-                    .DecorateScriptServiceWith(new ScriptServiceDecoratorBuilder()
-                        .BeforeGetStatus(async (inner, request) =>
+                    .RecordMethodUsages<IAsyncClientScriptService>(out var recordedUsages)
+                    .HookServiceMethod<IAsyncClientScriptService>(
+                        nameof(IAsyncClientScriptService.GetStatusAsync),
+                        async (_, _) =>
                         {
                             await Task.CompletedTask;
 
-                            scriptStatusRequest = request;
-                            if (scriptServiceExceptions.GetStatusLatestException == null)
+                            if (recordedUsages.For(nameof(IAsyncClientScriptService.GetStatusAsync)).LastException == null)
                             {
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
                         })
-                        .Build())
                     .Build())
                 .Build(CancellationToken);
 
@@ -128,10 +124,10 @@ namespace Octopus.Tentacle.Tests.Integration
             var allLogs = logs.JoinLogs();
 
             allLogs.Should().NotContain("AllDone");
-            scriptServiceExceptions.GetStatusLatestException.Should().NotBeNull();
-            scriptServiceCallCounts.StartScriptCallCountStarted.Should().Be(1);
-            scriptServiceCallCounts.GetStatusCallCountStarted.Should().Be(1);
-            scriptServiceCallCounts.CompleteScriptCallCountStarted.Should().Be(0);
+            recordedUsages.For(nameof(IAsyncClientScriptService.GetStatusAsync)).LastException.Should().NotBeNull();
+            recordedUsages.For(nameof(IAsyncClientScriptService.StartScriptAsync)).Started.Should().Be(1);
+            recordedUsages.For(nameof(IAsyncClientScriptService.GetStatusAsync)).Started.Should().Be(1);
+            recordedUsages.For(nameof(IAsyncClientScriptService.CompleteScriptAsync)).Started.Should().Be(0);
         }
 
         [Test]
@@ -145,28 +141,27 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithRetryDuration(TimeSpan.FromMinutes(4))
                 .WithPortForwarderDataLogging()
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .LogCallsToScriptService()
-                    .RecordExceptionThrownInScriptService(out var scriptServiceExceptions)
-                    .CountCallsToScriptService(out var scriptServiceCallCounts)
-                    .DecorateScriptServiceWith(new ScriptServiceDecoratorBuilder()
-                        .BeforeGetStatus(async (_, request) =>
+                    .RecordMethodUsages<IAsyncClientScriptService>(out var recordedUsages)
+                    .HookServiceMethod<IAsyncClientScriptService, ScriptStatusRequest>(
+                        nameof(IAsyncClientScriptService.GetStatusAsync),
+                        async (_, request) =>
                         {
                             await Task.CompletedTask;
 
                             cts.Cancel();
                             scriptStatusRequest = request;
                         })
-                        .BeforeCancelScript(async (service, _) =>
+                    .HookServiceMethod<IAsyncClientScriptService>(
+                        nameof(IAsyncClientScriptService.CancelScriptAsync),
+                        async (_, _) =>
                         {
                             await Task.CompletedTask;
 
-                            if (scriptServiceExceptions.CancelScriptLatestException == null)
+                            if (recordedUsages.For(nameof(IAsyncClientScriptService.CancelScriptAsync)).LastException == null)
                             {
-                                await service.EnsureTentacleIsConnectedToServer(Logger);
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
                         })
-                        .Build())
                     .Build())
                 .Build(CancellationToken);
 
@@ -180,15 +175,15 @@ namespace Octopus.Tentacle.Tests.Integration
                 .Build();
 
             var logs = new List<ProcessOutput>();
-            
+
             Assert.ThrowsAsync<HalibutClientException>(async () => await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, logs, cts.Token));
-            
+
             var allLogs = logs.JoinLogs();
             allLogs.Should().NotContain("AllDone");
-            scriptServiceExceptions.CancelScriptLatestException.Should().NotBeNull();
-            scriptServiceCallCounts.StartScriptCallCountStarted.Should().Be(1);
-            scriptServiceCallCounts.CancelScriptCallCountStarted.Should().Be(1);
-            scriptServiceCallCounts.CompleteScriptCallCountStarted.Should().Be(0);
+            recordedUsages.For(nameof(IAsyncClientScriptService.CancelScriptAsync)).LastException.Should().NotBeNull();
+            recordedUsages.For(nameof(IAsyncClientScriptService.StartScriptAsync)).Started.Should().Be(1);
+            recordedUsages.For(nameof(IAsyncClientScriptService.CancelScriptAsync)).Started.Should().Be(1);
+            recordedUsages.For(nameof(IAsyncClientScriptService.CompleteScriptAsync)).Started.Should().Be(0);
 
             // Let the script finish.
             File.WriteAllText(waitForFile, "");
@@ -207,20 +202,18 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithRetryDuration(TimeSpan.FromMinutes(4))
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .LogCallsToScriptService()
-                    .RecordExceptionThrownInScriptService(out var scriptServiceExceptions)
-                    .CountCallsToScriptService(out var scriptServiceCallCounts)
-                    .DecorateScriptServiceWith(new ScriptServiceDecoratorBuilder()
-                        .BeforeCompleteScript(async () =>
+                    .RecordMethodUsages<IAsyncClientScriptService>(out var recordedUsages)
+                    .HookServiceMethod<IAsyncClientScriptService>(
+                        nameof(IAsyncClientScriptService.CompleteScriptAsync),
+                        async (_, _) =>
                         {
                             await Task.CompletedTask;
 
-                            if (scriptServiceExceptions.CompleteScriptLatestException == null)
+                            if (recordedUsages.For(nameof(IAsyncClientScriptService.CompleteScriptAsync)).LastException == null)
                             {
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
                         })
-                        .Build())
                     .Build())
                 .Build(CancellationToken);
 
@@ -232,9 +225,10 @@ namespace Octopus.Tentacle.Tests.Integration
             // We Can not verify what will be in the logs because of race conditions in tentacle.
             // The last complete script which we fail might come back with the logs.
 
-            scriptServiceExceptions.CompleteScriptLatestException.Should().NotBeNull();
-            scriptServiceCallCounts.StartScriptCallCountStarted.Should().Be(1);
-            scriptServiceCallCounts.CompleteScriptCallCountStarted.Should().Be(1);
+
+            recordedUsages.For(nameof(IAsyncClientScriptService.CompleteScriptAsync)).LastException.Should().NotBeNull();
+            recordedUsages.For(nameof(IAsyncClientScriptService.StartScriptAsync)).Started.Should().Be(1);
+            recordedUsages.For(nameof(IAsyncClientScriptService.CompleteScriptAsync)).Started.Should().Be(1);
         }
     }
 }

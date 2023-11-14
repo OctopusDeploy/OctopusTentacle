@@ -10,6 +10,7 @@ using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
+using Octopus.Tentacle.Services.Scripts.ScriptServiceV3Alpha;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods;
 using Octopus.Tentacle.Tests.Integration.Util;
@@ -30,7 +31,7 @@ namespace Octopus.Tentacle.Tests.Integration
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithPortForwarder()
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .CountCallsToScriptServiceV2(out var scriptServiceV2CallCounts)
+                    .RecordMethodUsages(tentacleConfigurationTestCase, out var scriptRecordedUsages)
                     .Build())
                 .Build(CancellationToken);
 
@@ -49,7 +50,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var inMemoryLog = new InMemoryLog();
 
             var execScriptTask = Task.Run(
-                async () => await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, inMemoryLog), 
+                async () => await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, inMemoryLog),
                 CancellationToken);
 
             // Wait for the script to start.
@@ -69,7 +70,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var allLogs = logs.JoinLogs();
             allLogs.Should().Contain("hello");
 
-            scriptServiceV2CallCounts.StartScriptCallCountStarted.Should().BeGreaterThan(1);
+            scriptRecordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().BeGreaterThan(1);
 
             inMemoryLog.ShouldHaveLoggedRetryAttemptsAndNoRetryFailures();
         }
@@ -82,19 +83,18 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .RecordExceptionThrownInScriptServiceV2(out var scriptServiceV2Exceptions)
-                    .LogCallsToScriptServiceV2()
-                    .DecorateScriptServiceV2With(new ScriptServiceV2DecoratorBuilder()
-                        .BeforeGetStatus(async () =>
+                    .RecordMethodUsages(tentacleConfigurationTestCase, out var scriptRecordedUsages)
+                    .HookServiceMethod(tentacleConfigurationTestCase,
+                        nameof(IAsyncClientScriptServiceV2.GetStatusAsync),
+                        async (_, _) =>
                         {
                             await Task.CompletedTask;
 
-                            if (scriptServiceV2Exceptions.GetStatusLatestException == null)
+                            if (scriptRecordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).LastException is null)
                             {
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
                         })
-                        .Build())
                     .Build())
                 .Build(CancellationToken);
 
@@ -110,10 +110,10 @@ namespace Octopus.Tentacle.Tests.Integration
             var inMemoryLog = new InMemoryLog();
 
             var execScriptTask = Task.Run(
-                async () => await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, inMemoryLog), 
+                async () => await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, inMemoryLog),
                 CancellationToken);
 
-            await Wait.For(() => scriptServiceV2Exceptions.GetStatusLatestException != null, CancellationToken);
+            await Wait.For(() => scriptRecordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).LastException != null, CancellationToken);
 
             // Let the script finish.
             File.WriteAllText(waitForFile, "");
@@ -125,7 +125,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var allLogs = logs.JoinLogs();
             allLogs.Should().Contain("hello");
-            scriptServiceV2Exceptions.GetStatusLatestException.Should().NotBeNull();
+            scriptRecordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).LastException.Should().NotBeNull();
 
             inMemoryLog.ShouldHaveLoggedRetryAttemptsAndNoRetryFailures();
         }
@@ -145,10 +145,11 @@ namespace Octopus.Tentacle.Tests.Integration
                     serviceEndpoint.RetryCountLimit = 1;
                 })
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .LogCallsToScriptServiceV2()
-                    .DecorateScriptServiceV2With(new ScriptServiceV2DecoratorBuilder()
-                        .BeforeCompleteScript(async () =>
+                    .HookServiceMethod(tentacleConfigurationTestCase,
+                        nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync),
+                        async (_, _) =>
                         {
+
                             await Task.CompletedTask;
 
                             completeScriptWasCalled = true;
@@ -157,7 +158,6 @@ namespace Octopus.Tentacle.Tests.Integration
                             // yet the script execution is marked as successful.
                             portForwarder.Dispose();
                         })
-                        .Build())
                     .Build())
                 .Build(CancellationToken);
             portForwarder = clientTentacle.PortForwarder;
@@ -191,25 +191,25 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .LogCallsToScriptServiceV2()
-                    .RecordExceptionThrownInScriptServiceV2(out var scriptServiceV2Exceptions)
-                    .DecorateScriptServiceV2With(new ScriptServiceV2DecoratorBuilder()
-                        .BeforeGetStatus(async () =>
+                    .RecordMethodUsages(tentacleConfigurationTestCase, out var recordedUsages)
+                    .HookServiceMethod(tentacleConfigurationTestCase,
+                        nameof(IAsyncClientScriptServiceV2.GetStatusAsync),
+                        async (_, _) =>
                         {
-                            await Task.CompletedTask;
-                            Wait.For(() => File.Exists(scriptIsRunningFlag), CancellationToken).GetAwaiter().GetResult();
+                            await Wait.For(() => File.Exists(scriptIsRunningFlag), CancellationToken);
                             cts.Cancel();
                         })
-                        .BeforeCancelScript(async () =>
+                    .HookServiceMethod(tentacleConfigurationTestCase,
+                        nameof(IAsyncClientScriptServiceV2.CancelScriptAsync),
+                        async (_, _) =>
                         {
                             await Task.CompletedTask;
 
-                            if (scriptServiceV2Exceptions.CancelScriptLatestException == null)
+                            if (recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).LastException == null)
                             {
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
                         })
-                        .Build())
                     .Build())
                 .Build(CancellationToken);
 
@@ -246,7 +246,8 @@ namespace Octopus.Tentacle.Tests.Integration
             var allLogs = logs.JoinLogs();
             allLogs.Should().Contain("hello");
             allLogs.Should().NotContain("AllDone");
-            scriptServiceV2Exceptions.CancelScriptLatestException.Should().NotBeNull();
+
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).LastException.Should().NotBeNull();
 
             inMemoryLog.ShouldHaveLoggedRetryAttemptsAndNoRetryFailures();
         }
@@ -261,20 +262,18 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .LogCallsToCapabilitiesServiceV2()
-                    .CountCallsToCapabilitiesServiceV2(out var capabilitiesServiceV2CallCounts)
-                    .RecordExceptionThrownInCapabilitiesServiceV2(out var capabilitiesServiceV2Exceptions)
-                    .DecorateCapabilitiesServiceV2With(new CapabilitiesServiceV2DecoratorBuilder()
-                        .BeforeGetCapabilities(async inner =>
+                    .RecordMethodUsages<IAsyncClientCapabilitiesServiceV2>(out var recordedUsages)
+                    .HookServiceMethod<IAsyncClientCapabilitiesServiceV2>(
+                        nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync),
+                        async (_, _) =>
                         {
-                            if (capabilitiesServiceV2Exceptions.GetCapabilitiesLatestException == null)
+                            if (recordedUsages.For(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)).LastException == null)
                             {
                                 await asyncScriptServiceV2.EnsureTentacleIsConnectedToServer(Logger);
 
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
                         })
-                        .Build())
                     .Build())
                 .Build(CancellationToken);
 
@@ -293,8 +292,9 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var allLogs = logs.JoinLogs();
             allLogs.Should().Contain("hello");
-            capabilitiesServiceV2Exceptions.GetCapabilitiesLatestException.Should().NotBeNull();
-            capabilitiesServiceV2CallCounts.GetCapabilitiesCallCountStarted.Should().Be(2);
+
+            recordedUsages.For(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)).LastException.Should().NotBeNull();
+            recordedUsages.For(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)).Started.Should().Be(2);
 
             inMemoryLog.ShouldHaveLoggedRetryAttemptsAndNoRetryFailures();
         }

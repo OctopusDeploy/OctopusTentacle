@@ -8,7 +8,6 @@ using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
-using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
 
 namespace Octopus.Tentacle.Tests.Integration
 {
@@ -23,9 +22,6 @@ namespace Octopus.Tentacle.Tests.Integration
             var path = Path.Combine(tmp.DirectoryPath, "file");
 
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
-                .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .CountCallsToScriptServiceV2(out var scriptServiceV2CallCounts)
-                    .Build())
                 .Build(CancellationToken);
 
             var scriptBuilder = new ScriptBuilder()
