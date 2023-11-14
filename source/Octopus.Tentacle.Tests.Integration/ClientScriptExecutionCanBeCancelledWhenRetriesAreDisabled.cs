@@ -12,7 +12,6 @@ using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Capabilities;
 using Octopus.Tentacle.Contracts.ClientServices;
-using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods;
@@ -51,7 +50,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages<IAsyncClientCapabilitiesServiceV2>(out var capabilitiesMethodUsages)
-                    .RecordMethodUsages<IAsyncClientScriptServiceV2>(out var scriptMethodUsages)
+                    .RecordMethodUsages(tentacleConfigurationTestCase, out var scriptMethodUsages)
                     .HookServiceMethod<IAsyncClientCapabilitiesServiceV2, object, CapabilitiesResponseV2>(
                         nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync),
                         async (_, _) =>

@@ -7,7 +7,6 @@ using Halibut;
 using Octopus.Tentacle.Client;
 using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.Contracts;
-using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
 using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Tests.Integration.Support;
