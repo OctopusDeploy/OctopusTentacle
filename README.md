@@ -16,7 +16,7 @@ If you're unable to find an open issue addressing the problem, please follow our
 
 ## Contributing
 
-### Issues, Pull Requests, and Release Notes
+### Issues, Pull Requests, and Release Notes 
 
 :+1::tada: First off, thanks for your contribution to Tentacle! :tada::+1:
 
