@@ -15,7 +15,7 @@ Search our [public Issues repository](https://github.com/OctopusDeploy/Issues) t
 If you're unable to find an open issue addressing the problem, please follow our [support guidelines](https://github.com/OctopusDeploy/.github/blob/main/SUPPORT.md).
 
 ## Contributing
-
+ 
 ### Issues, Pull Requests, and Release Notes 
 
 :+1::tada: First off, thanks for your contribution to Tentacle! :tada::+1:
