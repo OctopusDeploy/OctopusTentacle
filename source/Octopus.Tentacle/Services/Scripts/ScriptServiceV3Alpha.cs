@@ -14,22 +14,19 @@ namespace Octopus.Tentacle.Services.Scripts
     [Service(typeof(IScriptServiceV3Alpha))]
     public class ScriptServiceV3Alpha : IAsyncScriptServiceV3Alpha
     {
-        readonly IShell shell;
+        readonly IScriptExecutorFactory scriptExecutorFactory;
         readonly IScriptWorkspaceFactory workspaceFactory;
         readonly IScriptStateStoreFactory scriptStateStoreFactory;
-        readonly ISystemLog log;
         readonly ConcurrentDictionary<ScriptTicket, RunningScriptWrapper> runningScripts = new();
 
         public ScriptServiceV3Alpha(
-            IShell shell,
+            IScriptExecutorFactory scriptExecutorFactory,
             IScriptWorkspaceFactory workspaceFactory,
-            IScriptStateStoreFactory scriptStateStoreFactory,
-            ISystemLog log)
+            IScriptStateStoreFactory scriptStateStoreFactory)
         {
-            this.shell = shell;
+            this.scriptExecutorFactory = scriptExecutorFactory;
             this.workspaceFactory = workspaceFactory;
             this.scriptStateStoreFactory = scriptStateStoreFactory;
-            this.log = log;
         }
 
         public async Task<ScriptStatusResponseV3Alpha> StartScriptAsync(StartScriptCommandV3Alpha command, CancellationToken cancellationToken)
@@ -74,7 +71,8 @@ namespace Octopus.Tentacle.Services.Scripts
                     runningScript.ScriptStateStore.Create();
                 }
 
-                var process = LaunchShell(command.ScriptTicket, command.TaskId, workspace, runningScript.ScriptStateStore, runningScript.CancellationToken);
+                var executor = scriptExecutorFactory.GetExecutor();
+                var process = executor.ExecuteOnBackgroundThread(command, workspace, runningScript.ScriptStateStore, runningScript.CancellationToken);
 
                 runningScript.Process = process;
 
@@ -118,15 +116,7 @@ namespace Octopus.Tentacle.Services.Scripts
             await workspace.Delete(cancellationToken);
         }
 
-        RunningScript LaunchShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, IScriptStateStore stateStore, CancellationToken cancellationToken)
-        {
-            var runningScript = new RunningScript(shell, workspace, stateStore, workspace.CreateLog(), serverTaskId, cancellationToken, log);
-            var thread = new Thread(runningScript.Execute) { Name = "Executing PowerShell runningScript for " + ticket.TaskId };
-            thread.Start();
-            return runningScript;
-        }
-
-        async Task<ScriptStatusResponseV3Alpha> GetResponse(ScriptTicket ticket, long lastLogSequence, RunningScript? runningScript)
+        async Task<ScriptStatusResponseV3Alpha> GetResponse(ScriptTicket ticket, long lastLogSequence, IRunningScript? runningScript)
         {
             await Task.CompletedTask;
 
@@ -181,7 +171,7 @@ namespace Octopus.Tentacle.Services.Scripts
                 CancellationToken = cancellationTokenSource.Token;
             }
 
-            public RunningScript? Process { get; set; }
+            public IRunningScript? Process { get; set; }
             public ScriptStateStore ScriptStateStore { get; }
             public SemaphoreSlim StartScriptMutex { get; } = new(1, 1);
 

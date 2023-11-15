@@ -36,18 +36,24 @@ namespace Octopus.Tentacle.Tests.Integration
             var octopusPhysicalFileSystem = new OctopusPhysicalFileSystem(Substitute.For<ISystemLog>());
             workspaceFactory = new ScriptWorkspaceFactory(octopusPhysicalFileSystem, homeConfiguration, new SensitiveValueMasker());
             stateStoreFactory = new ScriptStateStoreFactory(octopusPhysicalFileSystem);
+
+            var scriptExecutorFactory = new ScriptExecutorFactory(
+                new Lazy<LocalShellScriptExecutor>(() =>
+                    new LocalShellScriptExecutor(
+                        PlatformDetection.IsRunningOnWindows ? new PowerShell() : new Bash(),
+                        Substitute.For<ISystemLog>())));
+
             service = new ScriptServiceV3Alpha(
-                PlatformDetection.IsRunningOnWindows ? new PowerShell() : new Bash(),
+                scriptExecutorFactory,
                 workspaceFactory,
-                stateStoreFactory,
-                Substitute.For<ISystemLog>());
+                stateStoreFactory);
         }
 
         [Test]
         public async Task ShouldExecuteAScriptSuccessfully()
         {
-            var windowsScript = "& ping.exe localhost -n 1";
-            var bashScript = "ping localhost -c 1";
+            const string windowsScript = "& ping.exe localhost -n 1";
+            const string bashScript = "ping localhost -c 1";
 
             var startScriptCommand = new LatestStartScriptCommandBuilder()
                 .WithScriptBodyForCurrentOs(windowsScript, bashScript)
@@ -236,6 +242,7 @@ namespace Octopus.Tentacle.Tests.Integration
             {
                 scripts.Add(GetStartScriptCommandForScriptThatCreatesAFile(scriptTicket, scriptDelayInSeconds: 10));
             }
+
             // Act
             var tasks = scripts.Select(x => service.StartScriptAsync(x.StartScriptCommand, CancellationToken.None));
 
@@ -333,7 +340,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [Test]
         public async Task CancelScriptShouldReturnAnExitCodeOf45ForAnUnknownScriptTicket()
         {
-            var response =await service.CancelScriptAsync(new CancelScriptCommandV3Alpha(new ScriptTicket("nope"), 0), CancellationToken.None);
+            var response = await service.CancelScriptAsync(new CancelScriptCommandV3Alpha(new ScriptTicket("nope"), 0), CancellationToken.None);
 
             response.ExitCode.Should().Be(-45);
         }

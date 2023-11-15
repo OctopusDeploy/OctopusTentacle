@@ -5,6 +5,8 @@ namespace Octopus.Tentacle.Scripts
 {
     public class Bash : IShell
     {
+        public string Name => nameof(Bash);
+
         public string GetFullPath()
             => GetFullBashPath();
 
