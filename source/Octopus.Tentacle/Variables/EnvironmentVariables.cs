@@ -20,6 +20,5 @@ namespace Octopus.Tentacle.Variables
         public const string TentacleExecutablePath = "TentacleExecutablePath";
         public const string TentacleProgramDirectoryPath = "TentacleProgramDirectoryPath";
         public const string AgentProgramDirectoryPath = "AgentProgramDirectoryPath";
-        public const string TentacleEnableAsyncHalibut = "TentacleEnableAsyncHalibut";
     }
 }

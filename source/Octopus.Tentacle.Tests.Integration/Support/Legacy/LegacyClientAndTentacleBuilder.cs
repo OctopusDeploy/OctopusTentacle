@@ -13,11 +13,11 @@ using Octopus.TestPortForwarder;
 
 namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
 {
-    internal class LegacyClientAndTentacleBuilder
+    class LegacyClientAndTentacleBuilder
     {
-        private readonly TentacleType tentacleType;
-        private Version? tentacleVersion;
-        private TentacleRuntime tentacleRuntime = DefaultTentacleRuntime.Value;
+        readonly TentacleType tentacleType;
+        Version? tentacleVersion;
+        TentacleRuntime tentacleRuntime = DefaultTentacleRuntime.Value;
         LogLevel halibutLogLevel = LogLevel.Info;
 
         public LegacyClientAndTentacleBuilder(TentacleType tentacleType)
@@ -50,8 +50,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
             var serverHalibutRuntimeBuilder = new HalibutRuntimeBuilder()
                 .WithServerCertificate(Certificates.Server)
                 .WithLegacyContractSupport()
-                .WithLogFactory(BuildClientLogger())
-                .WithAsyncHalibutFeatureEnabled();
+                .WithLogFactory(BuildClientLogger());
             
             var serverHalibutRuntime = serverHalibutRuntimeBuilder.Build();
 
@@ -81,9 +80,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
                     .WithTentacleExe(tentacleExe)
                     .Build(logger, cancellationToken);
 
-#pragma warning disable CS0612
-                tentacleEndPoint = new ServiceEndPoint(runningTentacle.ServiceUri, runningTentacle.Thumbprint);
-#pragma warning restore CS0612
+                tentacleEndPoint = new ServiceEndPoint(runningTentacle.ServiceUri, runningTentacle.Thumbprint, serverHalibutRuntime.TimeoutsAndLimits);
             }
             else
             {
@@ -92,10 +89,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
                     .Build(logger, cancellationToken);
 
                 portForwarder = new PortForwarderBuilder(runningTentacle.ServiceUri, new SerilogLoggerBuilder().Build()).Build();
-
-#pragma warning disable CS0612
-                tentacleEndPoint = new ServiceEndPoint(portForwarder.PublicEndpoint, runningTentacle.Thumbprint);
-#pragma warning restore CS0612
+                
+                tentacleEndPoint = new ServiceEndPoint(portForwarder.PublicEndpoint, runningTentacle.Thumbprint, serverHalibutRuntime.TimeoutsAndLimits);
             }
 
             var tentacleClient = new LegacyTentacleClientBuilder(server.ServerHalibutRuntime, tentacleEndPoint)

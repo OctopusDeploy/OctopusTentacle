@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
+using Halibut.Diagnostics;
 using Halibut.ServiceModel;
 using Octopus.Tentacle.Client;
 using Octopus.Tentacle.Client.Retries;
@@ -151,8 +152,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             // Server
             var serverHalibutRuntimeBuilder = new HalibutRuntimeBuilder()
                 .WithServerCertificate(Certificates.Server)
-                .WithLegacyContractSupport()
-                .WithAsyncHalibutFeatureEnabled();
+                .WithLegacyContractSupport();
             
             if (queueFactory != null)
             {
@@ -187,9 +187,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
                 runningTentacle = await pollingTentacleBuilder.Build(logger, cancellationToken);
 
-#pragma warning disable CS0612
-                tentacleEndPoint = new ServiceEndPoint(runningTentacle.ServiceUri, runningTentacle.Thumbprint);
-#pragma warning restore CS0612
+                tentacleEndPoint = new ServiceEndPoint(runningTentacle.ServiceUri, runningTentacle.Thumbprint, serverHalibutRuntime.TimeoutsAndLimits);
             }
             else
             {
@@ -202,9 +200,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
                 portForwarder = BuildPortForwarder(runningTentacle.ServiceUri.Port, null);
 
-#pragma warning disable CS0612
-                tentacleEndPoint = new ServiceEndPoint(portForwarder?.PublicEndpoint ?? runningTentacle.ServiceUri, runningTentacle.Thumbprint);
-#pragma warning restore CS0612
+                tentacleEndPoint = new ServiceEndPoint(portForwarder?.PublicEndpoint ?? runningTentacle.ServiceUri, runningTentacle.Thumbprint, serverHalibutRuntime.TimeoutsAndLimits);
             }
 
             if (portForwarderReference != null && portForwarder != null)

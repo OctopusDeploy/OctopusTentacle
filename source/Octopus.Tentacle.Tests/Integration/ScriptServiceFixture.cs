@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using NSubstitute;
 using NUnit.Framework;
 using Octopus.Diagnostics;
@@ -18,7 +19,7 @@ namespace Octopus.Tentacle.Tests.Integration
     [TestFixture]
     public class ScriptServiceFixture
     {
-        IScriptService service;
+        ScriptService service;
 
         [SetUp]
         public void SetUp()
@@ -35,7 +36,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        public void ShouldPingLocalhostSuccessfully()
+        public async Task ShouldPingLocalhostSuccessfully()
         {
             var bashPing = "ping localhost -c 1";
             var cmdPing = "& ping.exe localhost -n 1";
@@ -44,14 +45,14 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithScriptBody(PlatformDetection.IsRunningOnWindows ? cmdPing : bashPing)
                 .Build();
 
-            var ticket = service.StartScript(startScriptCommand);
+            var ticket = await service.StartScriptAsync(startScriptCommand, CancellationToken.None);
 
-            while (service.GetStatus(new ScriptStatusRequest(ticket, 0)).State != ProcessState.Complete)
+            while ((await service.GetStatusAsync(new ScriptStatusRequest(ticket, 0), CancellationToken.None)).State != ProcessState.Complete)
             {
                 Thread.Sleep(100);
             }
 
-            var finalStatus = service.CompleteScript(new CompleteScriptCommand(ticket, 0));
+            var finalStatus = await service.CompleteScriptAsync(new CompleteScriptCommand(ticket, 0), CancellationToken.None);
             DumpLog(finalStatus);
             Assert.That(finalStatus.State, Is.EqualTo(ProcessState.Complete));
             Assert.That(finalStatus.ExitCode, Is.EqualTo(0));
@@ -59,7 +60,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        public void ShouldPingRandomUnsuccessfully()
+        public async Task ShouldPingRandomUnsuccessfully()
         {
             var guid = Guid.NewGuid();
 
@@ -70,14 +71,14 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithScriptBody(PlatformDetection.IsRunningOnWindows ? cmdPing : bashPing)
                 .Build();
 
-            var ticket = service.StartScript(startScriptCommand);
+            var ticket = await service.StartScriptAsync(startScriptCommand, CancellationToken.None);
 
-            while (service.GetStatus(new ScriptStatusRequest(ticket, 0)).State != ProcessState.Complete)
+            while ((await service.GetStatusAsync(new ScriptStatusRequest(ticket, 0), CancellationToken.None)).State != ProcessState.Complete)
             {
                 Thread.Sleep(100);
             }
 
-            var finalStatus = service.CompleteScript(new CompleteScriptCommand(ticket, 0));
+            var finalStatus = await service.CompleteScriptAsync(new CompleteScriptCommand(ticket, 0), CancellationToken.None);
             DumpLog(finalStatus);
             Assert.That(finalStatus.State, Is.EqualTo(ProcessState.Complete));
             Assert.That(finalStatus.ExitCode, Is.Not.EqualTo(0));
@@ -85,7 +86,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        public void ShouldCancelPing()
+        public async Task ShouldCancelPing()
         {
             ScriptTicket ticket = null;
 
@@ -102,11 +103,11 @@ namespace Octopus.Tentacle.Tests.Integration
                     .WithScriptBody(PlatformDetection.IsRunningOnWindows ? cmdPing : bashPing)
                     .Build();
 
-                ticket = service.StartScript(startScriptCommand);
+                ticket = await service.StartScriptAsync(startScriptCommand, CancellationToken.None);
 
                 ProcessState state;
                 Console.WriteLine("Waiting for start");
-                while ((state = service.GetStatus(new ScriptStatusRequest(ticket, 0)).State) == ProcessState.Pending)
+                while ((state = (await service.GetStatusAsync(new ScriptStatusRequest(ticket, 0), CancellationToken.None)).State) == ProcessState.Pending)
                 {
                     Console.WriteLine(state);
                     Thread.Sleep(pollInterval);
@@ -116,9 +117,9 @@ namespace Octopus.Tentacle.Tests.Integration
 
                 // Give it a chance to log something
                 Console.WriteLine("Waiting for something to get logged");
-                while ((service.GetStatus(new ScriptStatusRequest(ticket, 0)).State) == ProcessState.Running)
+                while (((await service.GetStatusAsync(new ScriptStatusRequest(ticket, 0), CancellationToken.None)).State) == ProcessState.Running)
                 {
-                    var status = service.GetStatus(new ScriptStatusRequest(ticket, 0));
+                    var status = (await service.GetStatusAsync(new ScriptStatusRequest(ticket, 0), CancellationToken.None));
                     Console.WriteLine($"{status.State} ({sw.Elapsed} elapsed)");
                     if (status.Logs.Any(l => l.Source == ProcessOutputSource.StdOut)) break;
                     Console.WriteLine("...");
@@ -127,19 +128,19 @@ namespace Octopus.Tentacle.Tests.Integration
                 }
 
                 Console.WriteLine("Canceling");
-                service.CancelScript(new CancelScriptCommand(ticket, 0));
+                await service.CancelScriptAsync(new CancelScriptCommand(ticket, 0), CancellationToken.None);
 
                 Console.WriteLine("Waiting for complete");
-                while ((state = service.GetStatus(new ScriptStatusRequest(ticket, 0)).State) != ProcessState.Complete)
+                while ((state = (await service.GetStatusAsync(new ScriptStatusRequest(ticket, 0), CancellationToken.None)).State) != ProcessState.Complete)
                 {
-                    var status = service.GetStatus(new ScriptStatusRequest(ticket, 0));
+                    var status = (await service.GetStatusAsync(new ScriptStatusRequest(ticket, 0), CancellationToken.None));
                     Console.WriteLine($"{status.State} ({sw.Elapsed} elapsed)");
                     Thread.Sleep(pollInterval);
                     if (sw.Elapsed > safetyLimit) Assert.Fail("Did not complete in a reasonable time");
                 }
                 Console.WriteLine("***" + state);
 
-                var finalStatus = service.CompleteScript(new CompleteScriptCommand(ticket, 0));
+                var finalStatus = await service.CompleteScriptAsync(new CompleteScriptCommand(ticket, 0), CancellationToken.None);
                 DumpLog(finalStatus);
                 Assert.That(finalStatus.State, Is.EqualTo(ProcessState.Complete));
                 Assert.That(finalStatus.ExitCode, Is.Not.EqualTo(0), "Expected ExitCode to be non-zero");
@@ -153,7 +154,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 if (ticket != null)
                 {
                     Console.WriteLine("The test didn't complete successfully. Attempting to cancel the running script which should clean up any dangling processes.");
-                    service.CancelScript(new CancelScriptCommand(ticket, 0));
+                    await service.CancelScriptAsync(new CancelScriptCommand(ticket, 0), CancellationToken.None);
                     ticket = null;
                 }
             }

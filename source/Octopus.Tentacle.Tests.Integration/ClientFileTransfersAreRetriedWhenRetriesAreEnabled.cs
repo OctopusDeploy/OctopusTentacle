@@ -49,7 +49,8 @@ namespace Octopus.Tentacle.Tests.Integration
             fileTransferServiceException.UploadLatestException.Should().NotBeNull();
             fileTransferServiceCallCounts.UploadFileCallCountStarted.Should().Be(2);
 
-            var actuallySent = (await clientTentacle.TentacleClient.DownloadFile(remotePath, CancellationToken)).GetUtf8String();
+            var downloadFile = await clientTentacle.TentacleClient.DownloadFile(remotePath, CancellationToken);
+            var actuallySent = await downloadFile.GetUtf8String(CancellationToken);
             actuallySent.Should().Be("Hello");
 
             inMemoryLog.ShouldHaveLoggedRetryAttemptsAndNoRetryFailures();
@@ -85,7 +86,8 @@ namespace Octopus.Tentacle.Tests.Integration
             var remotePath = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "UploadFile.txt");
 
             await clientTentacle.TentacleClient.UploadFile(remotePath, DataStream.FromString("Hello"), CancellationToken);
-            var actuallySent = (await clientTentacle.TentacleClient.DownloadFile(remotePath, CancellationToken, inMemoryLog)).GetUtf8String();
+            var downloadFile = await clientTentacle.TentacleClient.DownloadFile(remotePath, CancellationToken, inMemoryLog);
+            var actuallySent = await downloadFile.GetUtf8String(CancellationToken);
 
             fileTransferServiceException.DownloadFileLatestException.Should().NotBeNull();
             fileTransferServiceCallCounts.DownloadFileCallCountStarted.Should().Be(2);

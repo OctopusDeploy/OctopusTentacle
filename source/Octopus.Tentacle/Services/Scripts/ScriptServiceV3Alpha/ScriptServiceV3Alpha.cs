@@ -61,14 +61,15 @@ namespace Octopus.Tentacle.Services.Scripts.ScriptServiceV3Alpha
                 }
                 else
                 {
-                    workspace = workspaceFactory.PrepareWorkspace(command.ScriptTicket,
+                    workspace = await workspaceFactory.PrepareWorkspace(command.ScriptTicket,
                         command.ScriptBody,
                         command.Scripts,
                         command.Isolation,
                         command.ScriptIsolationMutexTimeout,
                         command.IsolationMutexName,
                         command.Arguments,
-                        command.Files);
+                        command.Files,
+                        cancellationToken);
 
                     runningScript.ScriptStateStore.Create();
                 }

@@ -1,3 +1,5 @@
+using System.Threading;
+using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Tentacle.Services.Capabilities;
@@ -7,10 +9,10 @@ namespace Octopus.Tentacle.Tests.Capabilities
     public class CapabilitiesServiceV2Fixture
     {
         [Test]
-        public void CapabilitiesAreReturned()
+        public async Task CapabilitiesAreReturned()
         {
-            var capabilities = new CapabilitiesServiceV2()
-                .GetCapabilities()
+            var capabilities = (await new CapabilitiesServiceV2()
+                .GetCapabilitiesAsync(CancellationToken.None))
                 .SupportedCapabilities;
 
             capabilities.Should().Contain("IScriptService");

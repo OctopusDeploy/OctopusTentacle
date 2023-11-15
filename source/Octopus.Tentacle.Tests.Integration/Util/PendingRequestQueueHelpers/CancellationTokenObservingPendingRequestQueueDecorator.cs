@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
 using Halibut.ServiceModel;
@@ -8,7 +9,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.PendingRequestQueueHelpers
 {
     public class CancellationTokenObservingPendingRequestQueueDecorator : IPendingRequestQueue
     {
-        private readonly IPendingRequestQueue pendingRequestQueue;
+        readonly IPendingRequestQueue pendingRequestQueue;
 
         public CancellationTokenObservingPendingRequestQueueDecorator(IPendingRequestQueue pendingRequestQueue)
         {
@@ -23,14 +24,6 @@ namespace Octopus.Tentacle.Tests.Integration.Util.PendingRequestQueueHelpers
         public async Task<RequestMessage> DequeueAsync(CancellationToken cancellationToken)
         {
             return await pendingRequestQueue.DequeueAsync(cancellationToken);
-        }
-        
-        public Task<ResponseMessage> QueueAndWaitAsync(RequestMessage request, CancellationToken cancellationToken)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-#pragma warning disable CS0612
-            return pendingRequestQueue.QueueAndWaitAsync(request, cancellationToken);
-#pragma warning restore CS0612
         }
 
         public Task<ResponseMessage> QueueAndWaitAsync(RequestMessage request, RequestCancellationTokens requestCancellationTokens)

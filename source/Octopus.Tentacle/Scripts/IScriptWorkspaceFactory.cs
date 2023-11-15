@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Octopus.Tentacle.Contracts;
 
 namespace Octopus.Tentacle.Scripts
@@ -8,7 +10,7 @@ namespace Octopus.Tentacle.Scripts
     {
         IScriptWorkspace GetWorkspace(ScriptTicket ticket);
 
-        IScriptWorkspace PrepareWorkspace(
+        Task<IScriptWorkspace> PrepareWorkspace(
             ScriptTicket ticket,
             string scriptBody,
             Dictionary<ScriptType, string> scripts,
@@ -16,7 +18,8 @@ namespace Octopus.Tentacle.Scripts
             TimeSpan scriptMutexAcquireTimeout,
             string? scriptMutexName,
             string[]? scriptArguments,
-            List<ScriptFile> files);
+            List<ScriptFile> files,
+            CancellationToken cancellationToken);
 
         List<IScriptWorkspace> GetUncompletedWorkspaces();
     }

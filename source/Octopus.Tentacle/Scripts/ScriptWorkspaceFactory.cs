@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Diagnostics;
@@ -38,7 +40,7 @@ namespace Octopus.Tentacle.Scripts
             return CreateWorkspace(ticket, workingDirectory);
         }
 
-        public IScriptWorkspace PrepareWorkspace(
+        public async Task<IScriptWorkspace> PrepareWorkspace(
             ScriptTicket ticket,
             string scriptBody,
             Dictionary<ScriptType, string> scripts,
@@ -46,7 +48,8 @@ namespace Octopus.Tentacle.Scripts
             TimeSpan scriptMutexAcquireTimeout,
             string? scriptMutexName,
             string[]? scriptArguments,
-            List<ScriptFile> files)
+            List<ScriptFile> files,
+            CancellationToken cancellationToken)
         {
             var workspace = GetWorkspace(ticket);
             workspace.IsolationLevel = isolationLevel;
@@ -67,27 +70,30 @@ namespace Octopus.Tentacle.Scripts
             }
 
 
-            files.ForEach(file => SaveFileToDisk(workspace, file));
+            foreach (var file in files)
+            {
+                await SaveFileToDisk(workspace, file, cancellationToken);
+            }
 
             return workspace;
         }
 
-        void SaveFileToDisk(IScriptWorkspace workspace, ScriptFile scriptFile)
+        async Task SaveFileToDisk(IScriptWorkspace workspace, ScriptFile scriptFile, CancellationToken cancellationToken)
         {
-#pragma warning disable CS0612
             if (scriptFile.EncryptionPassword == null)
             {
-                scriptFile.Contents.Receiver().SaveTo(workspace.ResolvePath(scriptFile.Name));
+                await scriptFile.Contents.Receiver().SaveToAsync(workspace.ResolvePath(scriptFile.Name), cancellationToken);
             }
             else
             {
-                scriptFile.Contents.Receiver().Read(stream =>
+                await scriptFile.Contents.Receiver().ReadAsync(async (stream, _) =>
                 {
+                    await Task.CompletedTask;
+
                     using var reader = new StreamReader(stream);
                     fileSystem.WriteAllBytes(workspace.ResolvePath(scriptFile.Name), new AesEncryption(scriptFile.EncryptionPassword).Encrypt(reader.ReadToEnd()));
-                });
+                }, cancellationToken);
             }
-#pragma warning restore CS0612
         }
 
         string FindWorkingDirectory(ScriptTicket ticket)
