@@ -129,11 +129,9 @@ namespace Octopus.Tentacle.Tests.Integration
 
             // ARRANGE
             var rpcCallHasStarted = new Reference<bool>(false);
-            TimeSpan? lastCallDuration = null;
             var restartedPortForwarderForCancel = false;
             var hasPausedOrStoppedPortForwarder = false;
             SemaphoreSlim ensureCancellationOccursDuringAnRpcCall = new SemaphoreSlim(0, 1);
-            var timer = new Stopwatch();
 
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithPendingRequestQueueFactory(new CancellationObservingPendingRequestQueueFactory()) // Partially works around disconnected polling tentacles take work from the queue
@@ -161,15 +159,6 @@ namespace Octopus.Tentacle.Tests.Integration
                                     await tcpConnectionUtilities.EnsurePollingQueueWontSendMessageToDisconnectedTentacles();
                                 }
                             }
-
-                            timer.Restart();
-                        },
-                        async (_, _) =>
-                        {
-                            await Task.CompletedTask;
-
-                            timer.Stop();
-                            lastCallDuration = timer.Elapsed;
                         })
                     .HookServiceMethod(tentacleConfigurationTestCase,
                         nameof(IAsyncClientScriptServiceV2.CancelScriptAsync),
