@@ -23,6 +23,20 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies
             return proxiedService;
         }
 
+
+        public static object Create(Type scriptServiceType, object targetService, IRecordedMethodUsages usages)
+        {
+            var genericCreateMethod = typeof(DispatchProxyAsync).GetMethod(nameof(DispatchProxyAsync.Create), BindingFlags.Public | BindingFlags.Static);
+            var concreteMethodInfo = genericCreateMethod!.MakeGenericMethod(scriptServiceType, typeof(MethodUsageProxyDecorator));
+
+            var proxiedService = concreteMethodInfo.Invoke(null, null);
+            var proxy = (proxiedService as MethodUsageProxyDecorator)!;
+            proxy!.SetTargetService(targetService);
+            proxy!.Configure((MethodUsages)usages);
+
+            return proxiedService!;
+        }
+
         protected override void OnStartingInvocation(MethodInfo targetMethod)
         {
             usages.RecordCallStart(targetMethod);

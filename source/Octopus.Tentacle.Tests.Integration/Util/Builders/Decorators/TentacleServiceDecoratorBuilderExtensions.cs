@@ -1,4 +1,5 @@
-﻿using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies;
+using System;
+using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies;
 
 namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
 {
@@ -11,6 +12,14 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             recordedUsages = localTracingStats;
 
             return builder.RegisterProxyDecorator<TService>(service => MethodUsageProxyDecorator.Create(service, localTracingStats));
+        }
+
+        public static TentacleServiceDecoratorBuilder RecordMethodUsage(this TentacleServiceDecoratorBuilder builder, Type latestScriptServiceType, out IRecordedMethodUsages recordMethodUsages)
+        {
+            var localTracingStats = new MethodUsages();
+            recordMethodUsages = localTracingStats;
+
+            return builder.RegisterProxyDecorator(latestScriptServiceType, service => MethodUsageProxyDecorator.Create(latestScriptServiceType, service, localTracingStats));
         }
 
         public static TentacleServiceDecoratorBuilder HookServiceMethod<TService>(this TentacleServiceDecoratorBuilder builder, string methodName, MethodInvocationHook<TService>? preInvocation) where TService : class

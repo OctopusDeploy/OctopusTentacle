@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
@@ -18,13 +19,28 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             : base(
                 typeof(TentacleConfigurationTestCases),
                 nameof(TentacleConfigurationTestCases.GetEnumerator),
-                new object[] {testCommonVersions, testCapabilitiesServiceVersions, testNoCapabilitiesServiceVersions, testScriptIsolationLevelVersions, testDefaultTentacleRuntimeOnly, additionalParameterTypes})
+                new object[] { testCommonVersions, testCapabilitiesServiceVersions, testNoCapabilitiesServiceVersions, testScriptIsolationLevelVersions, testDefaultTentacleRuntimeOnly, additionalParameterTypes })
         {
         }
     }
 
     static class TentacleConfigurationTestCases
     {
+        static readonly Type ScriptServiceV2Type =  typeof(IAsyncClientScriptServiceV2);
+        static readonly Type ScriptServiceV1Type =  typeof(IAsyncClientScriptService);
+
+        static readonly Type CurrentScriptServiceTypes = ScriptServiceV2Type;
+
+        static readonly Dictionary<Version, Type> ScriptServiceVersionTypesMap = new()
+        {
+            [TentacleVersions.v5_0_4_FirstLinuxRelease] = ScriptServiceV1Type,
+            [TentacleVersions.v5_0_12_AutofacServiceFactoryIsInShared] = ScriptServiceV1Type,
+            [TentacleVersions.v5_0_15_LastOfVersion5] = ScriptServiceV1Type,
+            [TentacleVersions.v6_3_417_LastWithScriptServiceV1Only] = ScriptServiceV1Type,
+            [TentacleVersions.v6_3_451_NoCapabilitiesService] = ScriptServiceV1Type,
+            [TentacleVersions.v7_0_1_ScriptServiceV2Added] = ScriptServiceV2Type
+        };
+
         public static IEnumerator GetEnumerator(
             bool testCommonVersions,
             bool testCapabilitiesVersions,
@@ -33,7 +49,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             bool testDefaultTentacleRuntimeOnly,
             object[] additionalParameterTypes)
         {
-            var tentacleTypes = new[] {TentacleType.Listening, TentacleType.Polling};
+            var tentacleTypes = new[] { TentacleType.Listening, TentacleType.Polling };
             List<Version?> versions = new();
 
             if (testCommonVersions)
@@ -71,7 +87,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
             if (testNoCapabilitiesServiceVersions)
             {
-                versions.AddRange(new []
+                versions.AddRange(new[]
                 {
                     TentacleVersions.v6_3_451_NoCapabilitiesService
                 });
@@ -86,7 +102,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 #if !NETFRAMEWORK
             if (!testDefaultTentacleRuntimeOnly && PlatformDetection.IsRunningOnWindows)
             {
-                runtimes = new List<TentacleRuntime> {TentacleRuntime.DotNet6, TentacleRuntime.Framework48};
+                runtimes = new List<TentacleRuntime> { TentacleRuntime.DotNet6, TentacleRuntime.Framework48 };
             }
 #endif
 
@@ -97,7 +113,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 select new TentacleConfigurationTestCase(
                     tentacleType,
                     runtime,
-                    version);
+                    version,
+                    //null == current version and you can't have a null dictionary key
+                    version != null ?
+                        ScriptServiceVersionTypesMap[version]
+                        : CurrentScriptServiceTypes);
 
             if (additionalParameterTypes.Length == 0)
             {
@@ -133,7 +153,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 {
                     throw new ArgumentException($"Enumerable type does not contain any values: '{additionalEnum}'");
                 }
-                
+
                 enums.And(values);
             }
 

@@ -6,6 +6,7 @@ using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
@@ -22,8 +23,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .CountCallsToScriptServiceV2(out var scriptServiceV2CallCounts)
-                    .CountCallsToScriptService(out var scriptServiceCallCounts)
+                    .RecordMethodUsage(tentacleConfigurationTestCase.LatestScriptServiceType, out var tracingStats)
                     .Build())
                 .Build(CancellationToken);
 
@@ -56,7 +56,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var secondScriptExecution = Task.Run(async () => await tentacleClient.ExecuteScript(secondStartScriptCommand, CancellationToken));
 
             // Wait for the second script start script RPC call to return.
-            await Wait.For(() => (scriptServiceV2CallCounts.StartScriptCallCountComplete + scriptServiceCallCounts.StartScriptCallCountComplete) == 2, CancellationToken);
+            await Wait.For(() => tracingStats.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Completed == 2, CancellationToken);
 
             // Give Tentacle some more time to run the script (although it should not).
             await Task.Delay(TimeSpan.FromSeconds(2));
