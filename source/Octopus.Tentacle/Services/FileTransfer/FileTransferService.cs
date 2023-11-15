@@ -60,8 +60,6 @@ namespace Octopus.Tentacle.Services.FileTransfer
 
         public async Task<UploadResult> UploadFileAsync(string remotePath, DataStream upload, CancellationToken cancellationToken)
         {
-            await Task.CompletedTask;
-
             if (upload == null)
             {
                 log.Trace("Client requested a file upload, but no content stream was provided.");
@@ -76,7 +74,7 @@ namespace Octopus.Tentacle.Services.FileTransfer
             fileSystem.EnsureDiskHasEnoughFreeSpace(parentDirectory, upload.Length);
 
             log.Trace("Copying uploaded data stream to: " + fullPath);
-            upload.Receiver().SaveToAsync(fullPath, CancellationToken.None).Wait();
+            await upload.Receiver().SaveToAsync(fullPath, CancellationToken.None);
             return new UploadResult(fullPath, HashFile(fullPath), fileSystem.GetFileSize(fullPath));
         }
 
