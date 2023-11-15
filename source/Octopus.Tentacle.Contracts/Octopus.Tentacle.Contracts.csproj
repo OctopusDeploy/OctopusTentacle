@@ -28,7 +28,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <PackageReference Include="Halibut" Version="7.0.115-sast-tcp-keep-alives-post-async-halibut-20231113084413" />
+    <PackageReference Include="Halibut" Version="7.0.142-pull-533" />
     <PackageReference Include="Octopus.Diagnostics" Version="2.1.0" />
   </ItemGroup>
   <ItemGroup>
