@@ -268,7 +268,7 @@ namespace Octopus.Tentacle.Tests.Integration
                         nameof(IAsyncClientScriptServiceV2.GetStatusAsync),
                         async (_, _) =>
                         {
-                            // Kill the first StartScript call to force the rpc call into retries
+                            // Kill the first GetStatus call to force the rpc call into retries
                             if (recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).LastException == null)
                             {
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
@@ -342,7 +342,7 @@ namespace Octopus.Tentacle.Tests.Integration
                             // Sleep to make the initial RPC call take longer than the allowed retry duration
                             await Task.Delay(retryDuration + TimeSpan.FromSeconds(1));
 
-                            // Kill the first StartScript call to force the rpc call into retries
+                            // Kill the first GetStatus call to force the rpc call into retries
                             responseMessageTcpKiller.KillConnectionOnNextResponse();
                         })
                     .Build())
@@ -386,7 +386,7 @@ namespace Octopus.Tentacle.Tests.Integration
                         nameof(IAsyncClientScriptServiceV2.CancelScriptAsync),
                         async (_, _) =>
                         {
-                            // Kill the first StartScript call to force the rpc call into retries
+                            // Kill the first CancelScript call to force the rpc call into retries
                             if (recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).LastException == null)
                             {
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
@@ -473,7 +473,7 @@ namespace Octopus.Tentacle.Tests.Integration
                             // Sleep to make the initial RPC call take longer than the allowed retry duration
                             await Task.Delay(retryDuration + TimeSpan.FromSeconds(1));
 
-                            // Kill the first StartScript call to force the rpc call into retries
+                            // Kill the first CancelScript call to force the rpc call into retries
                             responseMessageTcpKiller.KillConnectionOnNextResponse();
                         })
                     .Build())

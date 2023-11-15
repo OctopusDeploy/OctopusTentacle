@@ -55,7 +55,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .RecordMethodUsages<IAsyncClientScriptServiceV2>(out var tracingStats)
+                    .RecordMethodUsages<IAsyncClientScriptServiceV2>(out var recordedUsages)
                     .Build())
                 .Build(CancellationToken);
 
@@ -76,10 +76,10 @@ namespace Octopus.Tentacle.Tests.Integration
 
             allLogs.Should().MatchRegex(".*Lets do it\nanother one\nanother one\nanother one\nanother one\nanother one\nanother one\nanother one\nanother one\nanother one\nanother one\nAll done.*");
 
-            tracingStats.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().Be(1);
-            tracingStats.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Started.Should().Be(0, "Since start script should wait for the script to finish so we don't need to call get status");
-            tracingStats.For(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).Started.Should().Be(1);
-            tracingStats.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Started.Should().Be(0);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().Be(1);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Started.Should().Be(0, "Since start script should wait for the script to finish so we don't need to call get status");
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).Started.Should().Be(1);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Started.Should().Be(0);
         }
 
         [Test]
@@ -88,7 +88,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .RecordMethodUsages<IAsyncClientScriptServiceV2>(out var tracingStats)
+                    .RecordMethodUsages<IAsyncClientScriptServiceV2>(out var recordedUsages)
                     .Build())
                 .Build(CancellationToken);
 
@@ -123,10 +123,10 @@ namespace Octopus.Tentacle.Tests.Integration
             finalResponse.State.Should().Be(ProcessState.Complete); // This is technically a lie, the process is still running on linux
             finalResponse.ExitCode.Should().Be(ScriptExitCodes.UnknownResultExitCode);
 
-            tracingStats.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().Be(1);
-            tracingStats.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Started.Should().BeGreaterThan(1);
-            tracingStats.For(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).Started.Should().Be(1);
-            tracingStats.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Started.Should().Be(0);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().Be(1);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Started.Should().BeGreaterThan(1);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).Started.Should().Be(1);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Started.Should().Be(0);
         }
 
         [Test]
@@ -135,7 +135,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .RecordMethodUsages<IAsyncClientScriptServiceV2>(out var tracingStats)
+                    .RecordMethodUsages<IAsyncClientScriptServiceV2>(out var recordedUsages)
                     .Build())
                 .Build(CancellationToken);
 
@@ -171,10 +171,10 @@ namespace Octopus.Tentacle.Tests.Integration
             actualException.Should().NotBeNull().And.BeOfType<OperationCanceledException>().And.Match<Exception>(x => x.Message == "Script execution was cancelled");
             stopWatch.Elapsed.Should().BeLessOrEqualTo(TimeSpan.FromSeconds(10));
 
-            tracingStats.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().Be(1);
-            tracingStats.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Started.Should().BeGreaterThan(1);
-            tracingStats.For(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).Started.Should().Be(1);
-            tracingStats.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Started.Should().BeGreaterThanOrEqualTo(1);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().Be(1);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Started.Should().BeGreaterThan(1);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).Started.Should().Be(1);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Started.Should().BeGreaterThanOrEqualTo(1);
         }
     }
 }

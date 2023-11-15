@@ -31,7 +31,7 @@ namespace Octopus.Tentacle.Tests.Integration
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithPortForwarder()
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .RecordMethodUsages(tentacleConfigurationTestCase, out var scriptRecordedUsages)
+                    .RecordMethodUsages(tentacleConfigurationTestCase, out var recordedUsages)
                     .Build())
                 .Build(CancellationToken);
 
@@ -70,7 +70,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var allLogs = logs.JoinLogs();
             allLogs.Should().Contain("hello");
 
-            scriptRecordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().BeGreaterThan(1);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().BeGreaterThan(1);
 
             inMemoryLog.ShouldHaveLoggedRetryAttemptsAndNoRetryFailures();
         }
@@ -83,14 +83,14 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .RecordMethodUsages(tentacleConfigurationTestCase, out var scriptRecordedUsages)
+                    .RecordMethodUsages(tentacleConfigurationTestCase, out var recordedUsages)
                     .HookServiceMethod(tentacleConfigurationTestCase,
                         nameof(IAsyncClientScriptServiceV2.GetStatusAsync),
                         async (_, _) =>
                         {
                             await Task.CompletedTask;
 
-                            if (scriptRecordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).LastException is null)
+                            if (recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).LastException is null)
                             {
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
@@ -113,7 +113,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 async () => await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, inMemoryLog),
                 CancellationToken);
 
-            await Wait.For(() => scriptRecordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).LastException != null, CancellationToken);
+            await Wait.For(() => recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).LastException != null, CancellationToken);
 
             // Let the script finish.
             File.WriteAllText(waitForFile, "");
@@ -125,7 +125,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var allLogs = logs.JoinLogs();
             allLogs.Should().Contain("hello");
-            scriptRecordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).LastException.Should().NotBeNull();
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).LastException.Should().NotBeNull();
 
             inMemoryLog.ShouldHaveLoggedRetryAttemptsAndNoRetryFailures();
         }

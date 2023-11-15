@@ -21,7 +21,7 @@ namespace Octopus.Tentacle.Tests.Integration
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithScriptObserverBackoffStrategy(new FuncScriptObserverBackoffStrategy(iters => TimeSpan.FromSeconds(20)))
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .RecordMethodUsages(tentacleConfigurationTestCase, out var tracingStats)
+                    .RecordMethodUsages(tentacleConfigurationTestCase, out var recordedUsages)
                     .Build())
                 .Build(CancellationToken);
 
@@ -31,7 +31,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var (_, logs) = await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken);
 
-            tracingStats.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Started
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Started
                 .Should()
                 .BeGreaterThan(0)
                 .And

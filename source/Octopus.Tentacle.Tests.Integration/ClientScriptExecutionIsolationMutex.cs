@@ -23,7 +23,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .RecordMethodUsages(tentacleConfigurationTestCase, out var tracingStats)
+                    .RecordMethodUsages(tentacleConfigurationTestCase, out var recordedUsages)
                     .Build())
                 .Build(CancellationToken);
 
@@ -56,7 +56,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var secondScriptExecution = Task.Run(async () => await tentacleClient.ExecuteScript(secondStartScriptCommand, CancellationToken));
 
             // Wait for the second script start script RPC call to return.
-            await Wait.For(() => tracingStats.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Completed == 2, CancellationToken);
+            await Wait.For(() => recordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Completed == 2, CancellationToken);
 
             // Give Tentacle some more time to run the script (although it should not).
             await Task.Delay(TimeSpan.FromSeconds(2));
