@@ -40,7 +40,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             [TentacleVersions.v6_3_417_LastWithScriptServiceV1Only] = ScriptServiceV1Type,
             [TentacleVersions.v6_3_451_NoCapabilitiesService] = ScriptServiceV1Type,
             [TentacleVersions.v7_0_1_ScriptServiceV2Added] = ScriptServiceV2Type,
-            [TentacleVersions.v8_0_34_LastWithoutScriptServiceV3Alpha] = ScriptServiceV2Type
+            [TentacleVersions.v8_0_73_LastWithoutScriptServiceV3Alpha] = ScriptServiceV2Type
         };
 
         public static IEnumerator GetEnumerator(
@@ -61,7 +61,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                     TentacleVersions.Current,
                     TentacleVersions.v5_0_15_LastOfVersion5,
                     TentacleVersions.v6_3_417_LastWithScriptServiceV1Only,
-                    TentacleVersions.v8_0_34_LastWithoutScriptServiceV3Alpha
+                    TentacleVersions.v8_0_73_LastWithoutScriptServiceV3Alpha
                 });
             }
 
@@ -73,7 +73,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                     TentacleVersions.v5_0_4_FirstLinuxRelease,
                     TentacleVersions.v5_0_12_AutofacServiceFactoryIsInShared,
                     TentacleVersions.v6_3_417_LastWithScriptServiceV1Only, // the autofac service is in tentacle, but tentacle does not have the capabilities service.
-                    TentacleVersions.v8_0_34_LastWithoutScriptServiceV3Alpha
+                    TentacleVersions.v8_0_73_LastWithoutScriptServiceV3Alpha
                 });
             }
 
@@ -83,7 +83,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 {
                     TentacleVersions.Current,
                     TentacleVersions.v6_3_417_LastWithScriptServiceV1Only,
-                    TentacleVersions.v8_0_34_LastWithoutScriptServiceV3Alpha // Testing against v1 and v2 script services
+                    TentacleVersions.v8_0_73_LastWithoutScriptServiceV3Alpha // Testing against v1 and v2 script services
                 });
             }
 
