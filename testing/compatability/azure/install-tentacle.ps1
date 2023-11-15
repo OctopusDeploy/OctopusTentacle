@@ -4,12 +4,30 @@ $octopusServerApiKey,
 $octopusServerRole,
 $octopusServerEnvironment,
 $os,
-$tentacleVersion)
+$tentacleUri)
 
 [Enum]::GetNames([Net.SecurityProtocolType]) -contains 'Tls12'
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 
-$tentacleUri = " https://octopus-downloads.s3.amazonaws.com/octopus/Octopus.Tentacle.$tentacleVersion-net6.0-win-x64.msi"
+Write-Host "Installing .NET 4.8"
+
+$installedVersion = [int](Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full').'Release'
+$net48BuildNumber = 528040
+
+if ($installedVersion -lt $net48BuildNumber) {
+    Write-Host "Downloading net framework 4.8"
+    invoke-webrequest "https://download.visualstudio.microsoft.com/download/pr/014120d7-d689-4305-befd-3cb711108212/0fd66638cde16859462a6243a4629a50/ndp48-x86-x64-allos-enu.exe" -OutFile "C:\Windows\Temp\ndp48-x86-x64-allos-enu.exe"
+    Write-Host "Installing net framework 4.8"
+    $process = start-process "C:\Windows\Temp\ndp48-x86-x64-allos-enu.exe" -argumentlist @("/q", "/norestart", "/log", "C:\Windows\Temp\ndp48-x86-x64-allos-enu.log") -wait -PassThru
+    $process.WaitForExit()
+	Write-Host "Installed .NET 4.8"
+} else {
+    Write-Host "Net framework 4.8 already installed"
+}
+
+
+
+
 
 $tentacleMsiFilename = "tentacle.msi"
 

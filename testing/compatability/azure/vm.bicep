@@ -12,7 +12,7 @@ param octopusServerApiKey string
 param octopusServerRole string
 param octopusServerEnvironment string
 param os string
-param tentacleVersion string
+param tentacleUri string
 
 var networkSecurityGroupName = '${virtualMachineName}-nsg'
 var networkInterfaceName = '${virtualMachineName}-nic'
@@ -203,8 +203,8 @@ resource deploymentscript 'Microsoft.Compute/virtualMachines/runCommands@2022-03
         value: os
       }
       {
-        name: 'tentacleVersion'
-        value: tentacleVersion
+        name: 'tentacleUri'
+        value: tentacleUri
       }
     ]
     protectedParameters: [
@@ -217,5 +217,6 @@ resource deploymentscript 'Microsoft.Compute/virtualMachines/runCommands@2022-03
 }
 
 output adminUsername string = adminUsername
-output errorBlobUri string = deploymentscript.properties.errorBlobUri
-output outputBlobUri string = deploymentscript.properties.outputBlobUri
+// Use these if you wish to output the script results somewhere
+//output errorBlobUri string = deploymentscript.properties.errorBlobUri
+//output outputBlobUri string = deploymentscript.properties.outputBlobUri
