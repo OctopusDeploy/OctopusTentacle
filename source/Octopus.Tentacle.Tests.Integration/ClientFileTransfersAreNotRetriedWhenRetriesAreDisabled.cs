@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Halibut;
 using NUnit.Framework;
+using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
 using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
@@ -22,35 +23,34 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithRetriesDisabled()
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
+                .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .LogCallsToFileTransferService()
-                    .CountCallsToFileTransferService(out var fileTransferServiceCallCounts)
-                    .RecordExceptionThrownInFileTransferService(out var fileTransferServiceException)
-                    .DecorateFileTransferServiceWith(b =>
-                    {
-                        b.BeforeUploadFile(async (service, _, ds) =>
+                    .RecordMethodUsages<IAsyncClientFileTransferService>(out var recordedUsages)
+                    .HookServiceMethod<IAsyncClientFileTransferService>(
+                        nameof(IAsyncClientFileTransferService.UploadFileAsync),
+                        async (_, _) =>
                         {
-                            await service.EnsureTentacleIsConnectedToServer(Logger);
+                            await tcpConnectionUtilities.RestartTcpConnection();
+
                             // Only kill the connection the first time, causing the upload
                             // to succeed - and therefore failing the test - if retries are attempted
-                            if (fileTransferServiceException.UploadLatestException == null)
+                            if (recordedUsages.For(nameof(IAsyncClientFileTransferService.UploadFileAsync)).LastException is null)
                             {
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
-                        });
-                    })
+                        })
                     .Build())
                 .Build(CancellationToken);
 
             var remotePath = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "UploadFile.txt");
 
             var uploadFileTask = clientTentacle.TentacleClient.UploadFile(remotePath, DataStream.FromString("Hello"), CancellationToken);
-            
+
             Func<Task> action = async () => await uploadFileTask;
             await action.Should().ThrowAsync<HalibutClientException>();
-            
-            fileTransferServiceException.UploadLatestException.Should().NotBeNull();
-            fileTransferServiceCallCounts.UploadFileCallCountStarted.Should().Be(1);
+
+            recordedUsages.For(nameof(IAsyncClientFileTransferService.UploadFileAsync)).LastException.Should().NotBeNull();
+            recordedUsages.For(nameof(IAsyncClientFileTransferService.UploadFileAsync)).Started.Should().Be(1);
         }
 
         [Test]
@@ -61,36 +61,35 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithRetriesDisabled()
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
+                .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .LogCallsToFileTransferService()
-                    .CountCallsToFileTransferService(out var fileTransferServiceCallCounts)
-                    .RecordExceptionThrownInFileTransferService(out var fileTransferServiceException)
-                    .DecorateFileTransferServiceWith(b =>
-                    {
-                        b.BeforeDownloadFile(async (service, _) =>
+                    .RecordMethodUsages<IAsyncClientFileTransferService>(out var recordedUsages)
+                    .HookServiceMethod<IAsyncClientFileTransferService>(
+                        nameof(IAsyncClientFileTransferService.DownloadFileAsync),
+                        async (_, _) =>
                         {
-                            await service.EnsureTentacleIsConnectedToServer(Logger);
-                            // Only kill the connection the first time, causing the download
+                            await tcpConnectionUtilities.RestartTcpConnection();
+
+                            // Only kill the connection the first time, causing the upload
                             // to succeed - and therefore failing the test - if retries are attempted
-                            if (fileTransferServiceException.DownloadFileLatestException == null)
+                            if (recordedUsages.For(nameof(IAsyncClientFileTransferService.DownloadFileAsync)).LastException is null)
                             {
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
-                        });
-                    })
+                        })
                     .Build())
                 .Build(CancellationToken);
 
             var remotePath = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "UploadFile.txt");
-            
+
             await clientTentacle.TentacleClient.UploadFile(remotePath, DataStream.FromString("Hello"), CancellationToken);
             var downloadFileTask = clientTentacle.TentacleClient.DownloadFile(remotePath, CancellationToken);
 
             Func<Task> action = async () => await downloadFileTask;
             await action.Should().ThrowAsync<HalibutClientException>();
 
-            fileTransferServiceException.DownloadFileLatestException.Should().NotBeNull();
-            fileTransferServiceCallCounts.DownloadFileCallCountStarted.Should().Be(1);
+            recordedUsages.For(nameof(IAsyncClientFileTransferService.DownloadFileAsync)).LastException.Should().NotBeNull();
+            recordedUsages.For(nameof(IAsyncClientFileTransferService.DownloadFileAsync)).Started.Should().Be(1);
         }
     }
 }

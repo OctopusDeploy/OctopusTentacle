@@ -1,4 +1,5 @@
 using System;
+using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies;
 
 namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
@@ -8,26 +9,45 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
         public static TentacleServiceDecoratorBuilder RecordMethodUsages<TService>(this TentacleServiceDecoratorBuilder builder, out IRecordedMethodUsages recordedUsages)
             where TService : class
         {
-            var localTracingStats = new MethodUsages();
-            recordedUsages = localTracingStats;
+            var localMethodUsages = new MethodUsages();
+            recordedUsages = localMethodUsages;
 
-            return builder.RegisterProxyDecorator<TService>(service => MethodUsageProxyDecorator.Create(service, localTracingStats));
+            return builder.RegisterProxyDecorator<TService>(service => MethodUsageProxyDecorator.Create(service, localMethodUsages));
         }
 
-        public static TentacleServiceDecoratorBuilder RecordMethodUsage(this TentacleServiceDecoratorBuilder builder, Type latestScriptServiceType, out IRecordedMethodUsages recordMethodUsages)
+        public static TentacleServiceDecoratorBuilder RecordMethodUsages(this TentacleServiceDecoratorBuilder builder, TentacleConfigurationTestCase testCase, out IRecordedMethodUsages recordedUsages)
         {
-            var localTracingStats = new MethodUsages();
-            recordMethodUsages = localTracingStats;
+            var localMethodUsages = new MethodUsages();
+            recordedUsages = localMethodUsages;
 
-            return builder.RegisterProxyDecorator(latestScriptServiceType, service => MethodUsageProxyDecorator.Create(latestScriptServiceType, service, localTracingStats));
+            return builder.RegisterProxyDecorator(testCase.LatestScriptServiceType, service => MethodUsageProxyDecorator.Create(testCase.LatestScriptServiceType, service, localMethodUsages));
         }
 
-        public static TentacleServiceDecoratorBuilder HookServiceMethod<TService>(this TentacleServiceDecoratorBuilder builder, string methodName, MethodInvocationHook<TService>? preInvocation) where TService : class
-            => HookServiceMethod(builder, methodName, preInvocation, null);
+        public static TentacleServiceDecoratorBuilder HookServiceMethod<TService>(this TentacleServiceDecoratorBuilder builder, string methodName, PreMethodInvocationHook<TService, object> preInvocation) where TService : class
+        //if we aren't hooking the post invocation, we don't care about the response type
+            => HookServiceMethod<TService, object,  object>(builder, methodName, preInvocation, null);
 
-        public static TentacleServiceDecoratorBuilder HookServiceMethod<TService>(this TentacleServiceDecoratorBuilder builder, string methodName, MethodInvocationHook<TService>? preInvocation, MethodInvocationHook<TService>? postInvocation) where TService : class
+        public static TentacleServiceDecoratorBuilder HookServiceMethod<TService, TRequest>(this TentacleServiceDecoratorBuilder builder, string methodName, PreMethodInvocationHook<TService, TRequest> preInvocation) where TService : class
+        //if we aren't hooking the post invocation, we don't care about the response type
+            => HookServiceMethod<TService, TRequest,  object>(builder, methodName, preInvocation, null);
+
+        public static TentacleServiceDecoratorBuilder HookServiceMethod<TService, TRequest, TResponse>(this TentacleServiceDecoratorBuilder builder, string methodName, PreMethodInvocationHook<TService, TRequest>? preInvocation, PostMethodInvocationHook<TService, TResponse>? postInvocation) where TService : class
+            => builder.RegisterProxyDecorator<TService>(service => MethodInvocationHookProxyDecorator<TService, TRequest, TResponse>.Create(service, methodName, preInvocation, postInvocation));
+
+        public static TentacleServiceDecoratorBuilder HookServiceMethod(this TentacleServiceDecoratorBuilder builder, TentacleConfigurationTestCase testCase, string methodName, PreMethodInvocationHook<object, object> preInvocation)
+            => HookServiceMethod(builder, testCase, methodName, preInvocation, null);
+
+        public static TentacleServiceDecoratorBuilder HookServiceMethod(this TentacleServiceDecoratorBuilder builder, TentacleConfigurationTestCase testCase, string methodName, PreMethodInvocationHook<object, object>? preInvocation, PostMethodInvocationHook<object, object>? postInvocation)
         {
-            return builder.RegisterProxyDecorator<TService>(service => MethodInvocationHookProxyDecorator<TService>.Create(service, methodName, preInvocation, postInvocation));
+            var proxyType = typeof(MethodInvocationHookProxyDecorator<,,>);
+            var concreteType = proxyType.MakeGenericType(testCase.LatestScriptServiceType, typeof(object), typeof(object));
+
+            var createMethodInfo = concreteType.GetMethod(nameof(MethodInvocationHookProxyDecorator<object, object, object>.Create));
+
+            return builder.RegisterProxyDecorator(testCase.LatestScriptServiceType, service =>
+            {
+                return createMethodInfo.Invoke(null, new object?[] { service, methodName, preInvocation, postInvocation });
+            });
         }
     }
 }

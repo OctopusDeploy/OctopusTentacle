@@ -23,7 +23,6 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies
             return proxiedService;
         }
 
-
         public static object Create(Type scriptServiceType, object targetService, IRecordedMethodUsages usages)
         {
             var genericCreateMethod = typeof(DispatchProxyAsync).GetMethod(nameof(DispatchProxyAsync.Create), BindingFlags.Public | BindingFlags.Static);
@@ -37,26 +36,16 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies
             return proxiedService!;
         }
 
-        protected override void OnStartingInvocation(MethodInfo targetMethod)
+        protected override async Task OnStartingInvocationAsync(MethodInfo targetMethod, object? request)
         {
+            await Task.CompletedTask;
             usages.RecordCallStart(targetMethod);
         }
 
-        protected override Task OnStartingInvocationAsync(MethodInfo targetMethod)
+        protected override async Task OnCompletingInvocationAsync(MethodInfo targetMethod, object? response)
         {
-            usages.RecordCallStart(targetMethod);
-            return Task.CompletedTask;
-        }
-
-        protected override void OnCompletingInvocation(MethodInfo targetMethod)
-        {
+            await Task.CompletedTask;
             usages.RecordCallComplete(targetMethod);
-        }
-
-        protected override Task OnCompletingInvocationAsync(MethodInfo targetMethod)
-        {
-            usages.RecordCallComplete(targetMethod);
-            return Task.CompletedTask;
         }
 
         protected override void OnInvocationException(MethodInfo targetMethod, Exception exception)
