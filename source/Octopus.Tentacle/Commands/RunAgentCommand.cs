@@ -35,7 +35,6 @@ namespace Octopus.Tentacle.Commands
         int wait;
         bool halibutHasStarted;
         bool workspaceCleanerHasStarted;
-        bool tcpKeepAliveEnabled;
 
         public override bool CanRunAsService => true;
 
@@ -71,7 +70,6 @@ namespace Octopus.Tentacle.Commands
                 // There's actually nothing to do here. The CommandHost should have already been determined before Start() was called
                 // This option is added to show help
             });
-            Options.Add("tcp-keep-alive-enabled", "Whether TCP keep alive is enabled", _ => tcpKeepAliveEnabled = true);
         }
 
         protected override void Start()
@@ -120,7 +118,6 @@ namespace Octopus.Tentacle.Commands
             Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleProxyPassword, proxyConfiguration.Value.CustomProxyPassword);
             Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleProxyHost, proxyConfiguration.Value.CustomProxyHost);
             Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleProxyPort, proxyConfiguration.Value.CustomProxyPort.ToString());
-            Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleTcpKeepAliveEnabled, tcpKeepAliveEnabled.ToString());
 
             LogWarningIfNotRunningAsAdministrator();
 
