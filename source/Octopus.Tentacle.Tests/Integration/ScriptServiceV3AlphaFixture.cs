@@ -15,7 +15,7 @@ using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
 using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Scripts;
-using Octopus.Tentacle.Services.Scripts.ScriptServiceV3Alpha;
+using Octopus.Tentacle.Services.Scripts;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Integration

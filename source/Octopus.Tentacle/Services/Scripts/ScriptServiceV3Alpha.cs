@@ -9,7 +9,7 @@ using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Util;
 
-namespace Octopus.Tentacle.Services.Scripts.ScriptServiceV3Alpha
+namespace Octopus.Tentacle.Services.Scripts
 {
     [Service(typeof(IScriptServiceV3Alpha))]
     public class ScriptServiceV3Alpha : IAsyncScriptServiceV3Alpha

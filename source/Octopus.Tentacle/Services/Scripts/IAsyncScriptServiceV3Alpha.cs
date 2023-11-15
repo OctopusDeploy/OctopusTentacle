@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
 
-namespace Octopus.Tentacle.Services.Scripts.ScriptServiceV3Alpha
+namespace Octopus.Tentacle.Services.Scripts
 {
     /// <remarks>
     /// This interface should mirror <see cref="IScriptServiceV3Alpha"/>.
