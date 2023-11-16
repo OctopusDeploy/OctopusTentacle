@@ -122,8 +122,4 @@
 	  <EmbeddedResource Include="Startup\PathsToDeleteOnStartup.core.txt" />
 	  <EmbeddedResource Include="Startup\PathsToDeleteOnStartup.netfx.txt" />
 	</ItemGroup>
-	<ItemGroup>
-	  <Folder Include="Kubernetes\" />
-	  <Folder Include="Scripts\Kubernetes\" />
-	</ItemGroup>
 </Project>
