@@ -36,6 +36,7 @@ namespace Octopus.Tentacle
 
         static int Main(string[] args)
         {
+            Console.WriteLine($"Program.Main(args: {string.Join(",", args)})");
             return new Program(args).Run();
         }
 

@@ -1,7 +1,15 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Octopus.Configuration;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Util;
+#if !NETFRAMEWORK
+using k8s;
+using k8s.Models;
+using Newtonsoft.Json;
+#endif
 
 namespace Octopus.Tentacle.Configuration.Instances
 {
@@ -64,30 +72,53 @@ namespace Octopus.Tentacle.Configuration.Instances
         ApplicationInstanceConfiguration LoadInstance()
         {
             var appInstance = LocateApplicationPrimaryConfiguration();
-            EnsureConfigurationExists(appInstance.instanceName, appInstance.configurationpath);
 
-            log.Verbose($"Loading configuration from {appInstance.configurationpath}");
-            var writableConfig = new XmlFileKeyValueStore(fileSystem, appInstance.configurationpath);
-            
-            var aggregatedKeyValueStore = ContributeAdditionalConfiguration(writableConfig);
+            IKeyValueStore aggregatedKeyValueStore;
+            IWritableKeyValueStore writableConfig;
+#if !NETFRAMEWORK
+            if (appInstance is { instanceName: not null, configurationpath: null })
+            {
+                Console.WriteLine($"Adding ConfigMap Key Value Store: instanceName: {appInstance.instanceName}");
+                var writeable = new ConfigMapKeyValueStore(appInstance.instanceName);
+                writableConfig = writeable;
+                aggregatedKeyValueStore = ContributeAdditionalConfiguration(writeable);
+            }
+            else
+            {
+#endif
+                if (!ConfigurationFileExists(appInstance.configurationpath))
+                {
+                    ThrowConfigurationMissingException(appInstance.instanceName, appInstance.configurationpath);
+                }
+
+                log.Verbose($"Loading configuration from {appInstance.configurationpath}");
+                var writeable = new XmlFileKeyValueStore(fileSystem, appInstance.configurationpath!);
+                writableConfig = writeable;
+                aggregatedKeyValueStore = ContributeAdditionalConfiguration(writeable);
+#if !NETFRAMEWORK
+            }
+#endif
+
             return new ApplicationInstanceConfiguration(appInstance.instanceName, appInstance.configurationpath, aggregatedKeyValueStore, writableConfig);
         }
 
-        void EnsureConfigurationExists(string? instanceName, string configurationPath)
+        bool ConfigurationFileExists([NotNullWhen(true)] string? configurationPath)
         {
-            if (!fileSystem.FileExists(configurationPath))
-            {
-                var message = !string.IsNullOrEmpty(instanceName)
-                    ? $"The configuration file for instance {instanceName} could not be located at the specified location {configurationPath}. " +
-                    "The file might have been manually removed without properly removing the instance and as such it is still listed as present." +
-                    "The instance must be created again before you can interact with it."
-                    : $"The configuration file at {configurationPath} could not be located at the specified location.";
-                    
-                throw new ControlledFailureException(message);
-            }
+            return fileSystem.FileExists(configurationPath ?? "");
         }
 
-        AggregatedKeyValueStore ContributeAdditionalConfiguration(XmlFileKeyValueStore writableConfig)
+        void ThrowConfigurationMissingException(string? instanceName, string? configurationPath)
+        {
+            var message = !string.IsNullOrEmpty(instanceName)
+                ? $"The configuration file for instance {instanceName} could not be located at the specified location {configurationPath}. " +
+                "The file might have been manually removed without properly removing the instance and as such it is still listed as present." +
+                "The instance must be created again before you can interact with it."
+                : $"The configuration file at {configurationPath} could not be located at the specified location.";
+
+            throw new ControlledFailureException(message);
+        }
+
+        AggregatedKeyValueStore ContributeAdditionalConfiguration(IAggregatableKeyValueStore writableConfig)
         {
             // build composite configuration pulling values out of the environment
             var keyValueStores = instanceStrategies
@@ -102,10 +133,14 @@ namespace Octopus.Tentacle.Configuration.Instances
             return new AggregatedKeyValueStore(keyValueStores.ToArray());
         }
 
-        (string? instanceName, string configurationpath) LocateApplicationPrimaryConfiguration()
+        (string? instanceName, string? configurationpath) LocateApplicationPrimaryConfiguration()
         {
             switch (startUpInstanceRequest)
             {
+                case StartUpKubernetesConfigMapInstanceRequest configMapInstanceRequest:
+                {   // `--instance` parameter provided and running on Kubernetes.
+                    return (configMapInstanceRequest.InstanceName, null);
+                }
                 case StartUpRegistryInstanceRequest registryInstanceRequest:
                 {   //  `--instance` parameter provided. Use That
                     var indexInstance = applicationInstanceStore.LoadInstanceDetails(registryInstanceRequest.InstanceName);
@@ -129,4 +164,88 @@ namespace Octopus.Tentacle.Configuration.Instances
             }
         }
     }
+
+#if !NETFRAMEWORK
+    class ConfigMapKeyValueStore : IWritableKeyValueStore, IAggregatableKeyValueStore
+    {
+        const string Namespace = "octopus";
+        readonly string name;
+        readonly Kubernetes client;
+
+        V1ConfigMap configMap;
+
+        IDictionary<string, string> ConfigMapData => configMap.Data ?? (configMap.Data = new Dictionary<string, string>());
+
+        public ConfigMapKeyValueStore(string instanceName)
+        {
+            var kubeConfig = KubernetesClientConfiguration.InClusterConfig();
+            client = new Kubernetes(kubeConfig);
+            name = $"{instanceName.ToLowerInvariant()}-configmap";
+            V1ConfigMap? config;
+            try
+            {
+                config = client.CoreV1.ReadNamespacedConfigMap(name, Namespace);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"ConfigMapKeyValueStore.ctor Exception: {e}");
+                config = null;
+            }
+
+            configMap = config ?? client.CoreV1.CreateNamespacedConfigMap(new V1ConfigMap { Metadata = new V1ObjectMeta { Name = name, NamespaceProperty = Namespace }}, Namespace);
+            Console.WriteLine($"ConfigMapKeyValueStore.ctor ConfigMap loaded: {JsonConvert.SerializeObject(configMap)}");
+        }
+
+        public string? Get(string name, ProtectionLevel protectionLevel = ProtectionLevel.None)
+        {
+            return ConfigMapData.TryGetValue(name, out var value) ? value : null;
+        }
+
+        public TData? Get<TData>(string name, TData? defaultValue = default, ProtectionLevel protectionLevel = ProtectionLevel.None)
+        {
+            var result = TryGet<TData>(name, protectionLevel);
+
+            return result.foundResult ? result.value : defaultValue;
+        }
+
+        public bool Set(string name, string? value, ProtectionLevel protectionLevel = ProtectionLevel.None)
+        {
+            configMap.Data[name] = value;
+            return Save();
+        }
+
+        public bool Set<TData>(string name, TData value, ProtectionLevel protectionLevel = ProtectionLevel.None)
+        {
+            return Set(name, JsonConvert.SerializeObject(value), protectionLevel);
+        }
+
+        public bool Remove(string name)
+        {
+            return ConfigMapData.Remove(name) && Save();
+        }
+
+        public bool Save()
+        {
+            configMap = client.CoreV1.ReplaceNamespacedConfigMap(configMap, name, Namespace);
+            return true;
+        }
+
+        public (bool foundResult, TData? value) TryGet<TData>(string name, ProtectionLevel protectionLevel = ProtectionLevel.None)
+        {
+            var value = Get(name, protectionLevel);
+
+            if (value == null) return (false, default);
+
+            try
+            {
+                return value is TData data ? (true, data) : (true, JsonConvert.DeserializeObject<TData>(value));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"ConfigMapKeyValueStore.TryGet<TData>: Exception! {e}");
+                return (false, default);
+            }
+        }
+    }
+#endif
 }

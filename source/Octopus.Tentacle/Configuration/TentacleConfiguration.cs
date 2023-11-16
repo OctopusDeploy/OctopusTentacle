@@ -43,6 +43,7 @@ namespace Octopus.Tentacle.Configuration
             IPollingProxyConfiguration pollingProxyConfiguration,
             ISystemLog log)
         {
+            Console.WriteLine($"Settings Type: {settings.GetType().FullName}");
             this.settings = settings;
             this.home = home;
             this.proxyConfiguration = proxyConfiguration;
@@ -105,14 +106,15 @@ namespace Octopus.Tentacle.Configuration
             {
                 if (CachedCertificate != null)
                     return CachedCertificate;
-
-                var thumbprint = settings.Get<string?>(CertificateThumbprintSettingName);
+                Console.WriteLine("get_TentacleCertificate");
+                var thumbprint = settings.Get(CertificateThumbprintSettingName);
+                Console.WriteLine($"Thumbprint is {thumbprint}");
                 if (string.IsNullOrWhiteSpace(thumbprint))
                 {
                     return null;
                 }
 
-                var encoded = settings.Get<string>(CertificateSettingName, protectionLevel: ProtectionLevel.MachineKey);
+                var encoded = settings.Get(CertificateSettingName, protectionLevel: ProtectionLevel.MachineKey);
                 return encoded is null || string.IsNullOrWhiteSpace(encoded) ? null : CertificateEncoder.FromBase64String(thumbprint!, encoded, log);
             }
         }
@@ -183,6 +185,7 @@ namespace Octopus.Tentacle.Configuration
 
         public bool SetTrustedOctopusServers(IEnumerable<OctopusServerConfiguration>? servers)
         {
+            Console.WriteLine($"SetTrustedOctopusServers: {string.Join(",", servers?.Select(s => s.Thumbprint) ?? Array.Empty<string>())} Settings: {settings.GetType().FullName}");
             return settings.Set(TrustedServersSettingName, servers ?? new OctopusServerConfiguration[0]);
         }
 

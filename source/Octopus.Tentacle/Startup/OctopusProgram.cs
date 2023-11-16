@@ -368,7 +368,13 @@ namespace Octopus.Tentacle.Startup
             options.Parse(commandLineArguments);
 
             if (!string.IsNullOrWhiteSpace(instanceName))
+            {
+                if (Environment.GetEnvironmentVariable("KUBERNETES_SERVICE_HOST") != null)
+                {
+                    return new StartUpKubernetesConfigMapInstanceRequest(instanceName);
+                }
                 return new StartUpRegistryInstanceRequest(instanceName);
+            }
             if (!string.IsNullOrWhiteSpace(configFile))
                 return new StartUpConfigFileInstanceRequest(configFile);
             
