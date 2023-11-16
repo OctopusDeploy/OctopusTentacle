@@ -50,7 +50,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
+            var startScriptCommand = new LatestStartScriptCommandBuilder()
                 .WithScriptBody(new ScriptBuilder().Print("hello")).Build();
 
             var logs = new List<ProcessOutput>();
@@ -97,7 +97,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
+            var startScriptCommand = new LatestStartScriptCommandBuilder()
                 .WithScriptBody(new ScriptBuilder()
                     .Print("hello")
                     .Print("AllDone"))
@@ -148,7 +148,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var waitForFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "waitforme");
 
-            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
+            var startScriptCommand = new LatestStartScriptCommandBuilder()
                 .WithScriptBody(new ScriptBuilder()
                     .Print("hello")
                     .WaitForFileToExist(waitForFile)
@@ -212,7 +212,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var waitForFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "waitforme");
 
-            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
+            var startScriptCommand = new LatestStartScriptCommandBuilder()
                 .WithScriptBody(new ScriptBuilder()
                     .Print("hello")
                     .WaitForFileToExist(waitForFile)
@@ -262,7 +262,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
+            var startScriptCommand = new LatestStartScriptCommandBuilder()
                 .WithScriptBody(new ScriptBuilder()
                     .Print("hello")
                     .Print("AllDone"))

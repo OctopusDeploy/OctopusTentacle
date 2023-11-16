@@ -36,7 +36,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var scriptHasStartFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "scripthasstarted");
             var waitForFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "waitforme");
 
-            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
+            var startScriptCommand = new LatestStartScriptCommandBuilder()
                 .WithScriptBody(new ScriptBuilder()
                     .CreateFile(scriptHasStartFile)
                     .WaitForFileToExist(waitForFile)
@@ -98,7 +98,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var waitForFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "waitforme");
 
-            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
+            var startScriptCommand = new LatestStartScriptCommandBuilder()
                 .WithScriptBody(new ScriptBuilder()
                     .Print("hello")
                     .WaitForFileToExist(waitForFile)
@@ -160,7 +160,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .Build(CancellationToken);
             portForwarder = clientTentacle.PortForwarder;
 
-            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
+            var startScriptCommand = new LatestStartScriptCommandBuilder()
                 .WithScriptBody(new ScriptBuilder().Print("hello").Sleep(TimeSpan.FromSeconds(1)))
                 .Build();
 
@@ -211,7 +211,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
+            var startScriptCommand = new LatestStartScriptCommandBuilder()
                 .WithScriptBody(new ScriptBuilder()
                     .Print("hello")
                     .CreateFile(scriptIsRunningFlag)
@@ -276,7 +276,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var inMemoryLog = new InMemoryLog();
 
-            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
+            var startScriptCommand = new LatestStartScriptCommandBuilder()
                 .WithScriptBody(new ScriptBuilder().Print("hello"))
                 .Build();
 

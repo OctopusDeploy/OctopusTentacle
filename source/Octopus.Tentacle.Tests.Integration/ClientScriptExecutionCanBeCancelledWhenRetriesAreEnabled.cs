@@ -88,7 +88,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
+            var startScriptCommand = new LatestStartScriptCommandBuilder()
                 .WithScriptBody(b => b
                     .Print("Should not run this script")
                     .Sleep(TimeSpan.FromHours(1)))
@@ -225,7 +225,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
+            var startScriptCommand = new LatestStartScriptCommandBuilder()
                 .WithScriptBody(b => b
                     .Print("The script")
                     .Sleep(TimeSpan.FromHours(1)))
@@ -380,7 +380,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
+            var startScriptCommand = new LatestStartScriptCommandBuilder()
                 .WithScriptBody(b => b
                     .Print("The script")
                     .Sleep(TimeSpan.FromHours(1)))
@@ -476,7 +476,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             clientAndTentacle.TentacleClient.OnCancellationAbandonCompleteScriptAfter = TimeSpan.FromSeconds(20);
 
-            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
+            var startScriptCommand = new LatestStartScriptCommandBuilder()
                 .WithScriptBody(b => b
                     .Print("The script")
                     .Sleep(TimeSpan.FromSeconds(5)))

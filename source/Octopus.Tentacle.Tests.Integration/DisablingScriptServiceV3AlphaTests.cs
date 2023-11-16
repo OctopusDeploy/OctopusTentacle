@@ -30,7 +30,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 })
                 .Build(CancellationToken);
 
-            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
+            var startScriptCommand = new LatestStartScriptCommandBuilder()
                 .WithScriptBody(new ScriptBuilder()
                     .Print("Lets do it")
                     .PrintNTimesWithDelay("another one", 10, TimeSpan.FromSeconds(1))
