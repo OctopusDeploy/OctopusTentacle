@@ -1,6 +1,5 @@
 using System;
 using System.Threading;
-using NSubstitute;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.TestPortForwarder;
 using Serilog;

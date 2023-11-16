@@ -60,6 +60,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             public IAsyncClientFileTransferService Decorate(IAsyncClientFileTransferService service) => GetDecoratedProxy(service);
 
             public IAsyncClientCapabilitiesServiceV2 Decorate(IAsyncClientCapabilitiesServiceV2 service) => GetDecoratedProxy(service);
+            public IAsyncClientScriptServiceV3Alpha Decorate(IAsyncClientScriptServiceV3Alpha service) => GetDecoratedProxy(service);
 
             T GetDecoratedProxy<T>(T service) where T : class
             {

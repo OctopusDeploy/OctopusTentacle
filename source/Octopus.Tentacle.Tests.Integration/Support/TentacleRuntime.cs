@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {

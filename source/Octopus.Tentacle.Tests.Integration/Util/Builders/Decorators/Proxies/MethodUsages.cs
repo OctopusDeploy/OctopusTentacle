@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 
@@ -10,6 +11,15 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies
         readonly ConcurrentDictionary<string, Lazy<MethodUsage>> trackedMethods = new();
 
         IRecordedMethodUsage IRecordedMethodUsages.For(string methodName) => GetMethodStats(methodName);
+
+        public IRecordedMethodUsage ForAll()
+        {
+            return trackedMethods.Aggregate(new MethodUsage(), (usage, kvp) =>
+            {
+                usage.Add(kvp.Value.Value);
+                return usage;
+            });
+        }
 
         public void RecordCallStart(MethodInfo targetMethod)
         {
@@ -36,6 +46,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies
     public interface IRecordedMethodUsages
     {
         IRecordedMethodUsage For(string methodName);
+        IRecordedMethodUsage ForAll();
     }
 
     public class MethodUsage : IRecordedMethodUsage
@@ -45,19 +56,31 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies
 
         public long Started => started;
         public long Completed => completed;
-        public Exception? LastException { get; set; }
+        public Exception? LastException { get; private set; }
 
         public void RecordStarted() => Interlocked.Increment(ref started);
 
         public void RecordCompleted() => Interlocked.Increment(ref completed);
 
-        public void RecordException(Exception exception) => LastException = exception;
+        public void RecordException(Exception exception) => this.LastException = exception;
+
+        public void Add(MethodUsage methodUsage)
+        {
+            started += methodUsage.Started;
+            completed += methodUsage.Completed;
+
+            // if the incoming last exception is not null, overwrite
+            if (methodUsage.LastException is not null)
+            {
+                LastException = methodUsage.LastException;
+            }
+        }
     }
 
     public interface IRecordedMethodUsage
     {
         long Started { get; }
         long Completed { get; }
-        Exception? LastException { get; set; }
+        Exception? LastException { get; }
     }
 }

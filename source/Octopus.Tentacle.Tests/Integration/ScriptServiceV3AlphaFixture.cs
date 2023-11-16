@@ -49,7 +49,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var windowsScript = "& ping.exe localhost -n 1";
             var bashScript = "ping localhost -c 1";
 
-            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
+            var startScriptCommand = new LatestStartScriptCommandBuilder()
                 .WithScriptBodyForCurrentOs(windowsScript, bashScript)
                 .Build();
 
@@ -67,7 +67,7 @@ namespace Octopus.Tentacle.Tests.Integration
             const string windowsScript = "& ping.exe nope -n 1";
             const string bashScript = "ping nope -c 1";
 
-            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
+            var startScriptCommand = new LatestStartScriptCommandBuilder()
                 .WithScriptBodyForCurrentOs(windowsScript, bashScript)
                 .Build();
 
@@ -86,7 +86,7 @@ namespace Octopus.Tentacle.Tests.Integration
             const string windowsScript = "Start-Sleep -Seconds 10";
 
             var scripts = Enumerable.Range(0, 5).Select(x =>
-                new StartScriptCommandAndResponse(command: new StartScriptCommandV3AlphaBuilder()
+                new StartScriptCommandAndResponse(command: new LatestStartScriptCommandBuilder()
                     .WithScriptBodyForCurrentOs(windowsScript, bashScript)
                     .Build())).ToList();
 
@@ -122,7 +122,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             var script = "echo \"finished\"";
 
-            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
+            var startScriptCommand = new LatestStartScriptCommandBuilder()
                 .WithScriptBody(script)
                 .Build();
 
@@ -155,7 +155,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var bashScript = "sleep 10";
             var windowsScript = "Start-Sleep -Seconds 10";
 
-            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
+            var startScriptCommand = new LatestStartScriptCommandBuilder()
                 .WithScriptBodyForCurrentOs(windowsScript, bashScript)
                 .Build();
 
@@ -169,7 +169,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [Test]
         public async Task StartScriptShouldWaitForAShortScriptToFinish()
         {
-            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
+            var startScriptCommand = new LatestStartScriptCommandBuilder()
                 .WithScriptBody("echo \"finished\"")
                 .WithDurationStartScriptCanWaitForScriptToFinish(TimeSpan.FromSeconds(5))
                 .Build();
@@ -189,7 +189,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var bashScript = "sleep 10";
             var windowsScript = "Start-Sleep -Seconds 10";
 
-            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
+            var startScriptCommand = new LatestStartScriptCommandBuilder()
                 .WithScriptBodyForCurrentOs(windowsScript, bashScript)
                 .WithDurationStartScriptCanWaitForScriptToFinish(TimeSpan.FromSeconds(5))
                 .Build();
@@ -266,7 +266,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var bashScript = "sleep 60";
             var windowsScript = "Start-Sleep -Seconds 60";
 
-            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
+            var startScriptCommand = new LatestStartScriptCommandBuilder()
                 .WithScriptBodyForCurrentOs(windowsScript, bashScript)
                 .Build();
 
@@ -308,7 +308,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             var script = "echo \"finished\"";
 
-            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
+            var startScriptCommand = new LatestStartScriptCommandBuilder()
                 .WithScriptBody(script)
                 .Build();
 
@@ -390,7 +390,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var bashScript = "sleep 10";
             var windowsScript = "Start-Sleep -Seconds 10";
 
-            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
+            var startScriptCommand = new LatestStartScriptCommandBuilder()
                 .WithScriptBodyForCurrentOs(windowsScript, bashScript)
                 .Build();
 
@@ -427,7 +427,7 @@ namespace Octopus.Tentacle.Tests.Integration
         public async Task ScriptTicketCasingShouldNotAffectCommands()
         {
             // Arrange
-            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
+            var startScriptCommand = new LatestStartScriptCommandBuilder()
                 .WithScriptBody("echo \"finished\"")
                 .Build();
 
@@ -480,7 +480,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 windowsScript += $"{Environment.NewLine} Start-Sleep -Seconds {scriptDelayInSeconds}";
             }
 
-            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
+            var startScriptCommand = new LatestStartScriptCommandBuilder()
                 .WithScriptBodyForCurrentOs(windowsScript, bashScript)
                 .WithScriptTicket(scriptTicket)
                 .Build();

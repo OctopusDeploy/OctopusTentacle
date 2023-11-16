@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Tentacle.Client;
 using Octopus.Tentacle.Contracts;
-using Octopus.Tentacle.Contracts.ScriptServiceV2;
+using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
 using Octopus.Tentacle.Tests.Integration.Support;
 
 namespace Octopus.Tentacle.Tests.Integration.Util
@@ -12,7 +12,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
     {
         public static async Task ExecuteScript(
             this TentacleClient tentacleClient,
-            StartScriptCommandV2 startScriptCommand,
+            StartScriptCommandV3Alpha startScriptCommand,
             List<ProcessOutput> logs,
             CancellationToken token)
         {

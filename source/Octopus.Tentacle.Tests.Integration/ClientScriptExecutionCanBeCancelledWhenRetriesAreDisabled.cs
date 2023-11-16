@@ -12,7 +12,7 @@ using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Capabilities;
 using Octopus.Tentacle.Contracts.ClientServices;
-using Octopus.Tentacle.Contracts.ScriptServiceV2;
+using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods;
 using Octopus.Tentacle.Tests.Integration.Util;
@@ -50,7 +50,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages<IAsyncClientCapabilitiesServiceV2>(out var capabilitiesMethodUsages)
-                    .RecordMethodUsages<IAsyncClientScriptServiceV2>(out var scriptMethodUsages)
+                    .RecordMethodUsages(tentacleConfigurationTestCase, out var scriptMethodUsages)
                     .HookServiceMethod<IAsyncClientCapabilitiesServiceV2, object, CapabilitiesResponseV2>(
                         nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync),
                         async (_, _) =>
@@ -75,7 +75,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new StartScriptCommandV2Builder()
+            var startScriptCommand = new LatestStartScriptCommandBuilder()
                 .WithScriptBody(b => b
                     .Print("Should not run this script")
                     .Sleep(TimeSpan.FromHours(1)))
@@ -129,11 +129,9 @@ namespace Octopus.Tentacle.Tests.Integration
 
             // ARRANGE
             var rpcCallHasStarted = new Reference<bool>(false);
-            TimeSpan? lastCallDuration = null;
             var restartedPortForwarderForCancel = false;
             var hasPausedOrStoppedPortForwarder = false;
             SemaphoreSlim ensureCancellationOccursDuringAnRpcCall = new SemaphoreSlim(0, 1);
-            var timer = new Stopwatch();
 
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithPendingRequestQueueFactory(new CancellationObservingPendingRequestQueueFactory()) // Partially works around disconnected polling tentacles take work from the queue
@@ -161,15 +159,6 @@ namespace Octopus.Tentacle.Tests.Integration
                                     await tcpConnectionUtilities.EnsurePollingQueueWontSendMessageToDisconnectedTentacles();
                                 }
                             }
-
-                            timer.Restart();
-                        },
-                        async (_, _) =>
-                        {
-                            await Task.CompletedTask;
-
-                            timer.Stop();
-                            lastCallDuration = timer.Elapsed;
                         })
                     .HookServiceMethod(tentacleConfigurationTestCase,
                         nameof(IAsyncClientScriptServiceV2.CancelScriptAsync),
@@ -186,7 +175,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new StartScriptCommandV2Builder()
+            var startScriptCommand = new LatestStartScriptCommandBuilder()
                 .WithScriptBody(b => b
                     .Print("The script")
                     .Sleep(TimeSpan.FromHours(1)))
@@ -304,7 +293,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new StartScriptCommandV2Builder()
+            var startScriptCommand = new LatestStartScriptCommandBuilder()
                 .WithScriptBody(b => b
                     .Print("The script")
                     .Sleep(TimeSpan.FromHours(1)))
@@ -388,7 +377,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             clientAndTentacle.TentacleClient.OnCancellationAbandonCompleteScriptAfter = TimeSpan.FromSeconds(20);
 
-            var startScriptCommand = new StartScriptCommandV2Builder()
+            var startScriptCommand = new LatestStartScriptCommandBuilder()
                 .WithScriptBody(b => b
                     .Print("The script")
                     .Sleep(TimeSpan.FromSeconds(5)))
@@ -443,7 +432,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
         private async Task<(ScriptExecutionResult response, Exception? actualException, TimeSpan cancellationDuration)> ExecuteScriptThenCancelExecutionWhenRpcCallHasStarted(
             ClientAndTentacle clientAndTentacle,
-            StartScriptCommandV2 startScriptCommand,
+            StartScriptCommandV3Alpha startScriptCommand,
             Reference<bool> rpcCallHasStarted,
             SemaphoreSlim whenTheRequestCanBeCancelled)
         {

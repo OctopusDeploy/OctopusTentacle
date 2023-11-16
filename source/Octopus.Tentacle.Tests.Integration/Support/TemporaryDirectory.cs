@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data;
 using System.IO;
 using System.Reflection;
 using Octopus.Tentacle.Util;

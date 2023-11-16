@@ -27,5 +27,10 @@ namespace Octopus.Tentacle.Client.Decorators
         {
             return new HalibutExceptionAsyncCapabilitiesServiceV2Decorator(service);
         }
+
+        public IAsyncClientScriptServiceV3Alpha Decorate(IAsyncClientScriptServiceV3Alpha service)
+        {
+            return new HalibutExceptionScriptServiceV3AlphaDecorator(service);
+        }
     }
 }

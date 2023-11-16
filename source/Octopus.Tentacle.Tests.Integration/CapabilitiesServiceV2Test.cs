@@ -30,15 +30,20 @@ namespace Octopus.Tentacle.Tests.Integration
             capabilities.Should().Contain("IScriptService");
             capabilities.Should().Contain("IFileTransferService");
 
+            //all versions have ScriptServiceV1 & IFileTransferService
+            var expectedCapabilitiesCount = 2;
+            if (version.HasScriptServiceV3Alpha())
+            {
+                capabilities.Should().Contain("IScriptServiceV3Alpha");
+                expectedCapabilitiesCount++;
+            }
             if (version.HasScriptServiceV2())
             {
                 capabilities.Should().Contain("IScriptServiceV2");
-                capabilities.Count.Should().Be(3);
+                expectedCapabilitiesCount++;
             }
-            else
-            {
-                capabilities.Count.Should().Be(2);
-            }
+
+            capabilities.Count.Should().Be(expectedCapabilitiesCount);
         }
 
         [Test]
@@ -69,7 +74,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new StartScriptCommandV2Builder()
+            var startScriptCommand = new LatestStartScriptCommandBuilder()
                 .WithScriptBody(b => b
                     .Print("Running..."))
                 .Build();

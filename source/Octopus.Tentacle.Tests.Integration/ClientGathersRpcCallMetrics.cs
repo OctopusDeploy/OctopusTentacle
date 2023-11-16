@@ -12,7 +12,7 @@ using Octopus.Tentacle.Contracts.Capabilities;
 using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
-using Octopus.Tentacle.Services.Scripts.ScriptServiceV3Alpha;
+using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
 using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
@@ -32,7 +32,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .Build(CancellationToken);
 
-            var startScriptCommand = new StartScriptCommandV2Builder()
+            var startScriptCommand = new LatestStartScriptCommandBuilder()
                 .WithScriptBody(b => b.Print("Hello"))
                 .Build();
 
@@ -45,7 +45,20 @@ namespace Octopus.Tentacle.Tests.Integration
             var executeScriptMetrics = tentacleClientObserver.ExecuteScriptMetrics.Should().ContainSingle().Subject;
             ThenClientOperationMetricsShouldBeSuccessful(executeScriptMetrics);
 
-            var expectedScriptService = tentacleConfigurationTestCase.Version.HasScriptServiceV2() ? nameof(IScriptServiceV2) : nameof(IScriptService);
+            string expectedScriptService;
+            if (tentacleConfigurationTestCase.Version.HasScriptServiceV3Alpha())
+            {
+                expectedScriptService = nameof(IScriptServiceV3Alpha);
+            }
+            else if (tentacleConfigurationTestCase.Version.HasScriptServiceV2())
+            {
+                expectedScriptService = nameof(IScriptServiceV2);
+            }
+            else
+            {
+                expectedScriptService = nameof(IScriptService);
+            }
+
             tentacleClientObserver.RpcCallMetrics.Should().NotBeEmpty();
             tentacleClientObserver.RpcCallMetrics.Should().ContainSingle(m => m.RpcCall.Name == nameof(ICapabilitiesServiceV2.GetCapabilities) && m.RpcCall.Service == nameof(ICapabilitiesServiceV2));
             tentacleClientObserver.RpcCallMetrics.Should().ContainSingle(m => m.RpcCall.Name == nameof(IScriptServiceV2.StartScript) && m.RpcCall.Service == expectedScriptService);
@@ -69,7 +82,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new StartScriptCommandV2Builder()
+            var startScriptCommand = new LatestStartScriptCommandBuilder()
                 .WithScriptBody(b => b.Print("Hello"))
                 .Build();
 

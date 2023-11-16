@@ -19,8 +19,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         // No capabilities service
         public static Version v6_3_451_NoCapabilitiesService = new("6.3.451");
 
-        // First version with ScriptServiceV2
-        public static readonly Version v7_0_1_ScriptServiceV2Added = new("7.0.1");
+        // Last version of v7 with ScriptServiceV2
+        public static readonly Version v7_1_189_ScriptServiceV2Added = new("7.1.189");
+
+        // Last version without ScriptServiceV3Alpha
+        // Contains ScriptServiceV1 and ScriptServiceV2
+        public static readonly Version v8_0_81_LastWithoutScriptServiceV3Alpha = new("8.0.81");
 
         // The version compiled from the current source
         public static readonly Version? Current = null;
@@ -32,15 +36,21 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             v5_0_15_LastOfVersion5,
             v6_3_417_LastWithScriptServiceV1Only,
             v6_3_451_NoCapabilitiesService,
-            v7_0_1_ScriptServiceV2Added
+            v7_1_189_ScriptServiceV2Added,
+            v8_0_81_LastWithoutScriptServiceV3Alpha
         };
     }
 
     public static class VersionExtensionMethods
     {
+        public static bool HasScriptServiceV3Alpha(this Version? version)
+        {
+            return version == TentacleVersions.Current || version > TentacleVersions.v8_0_81_LastWithoutScriptServiceV3Alpha;
+        }
+
         public static bool HasScriptServiceV2(this Version? version)
         {
-            return version == TentacleVersions.Current || version >= TentacleVersions.v7_0_1_ScriptServiceV2Added;
+            return version == TentacleVersions.Current || version >= TentacleVersions.v7_1_189_ScriptServiceV2Added;
         }
     }
 }

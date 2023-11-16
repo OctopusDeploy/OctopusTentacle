@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
+using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
 
 namespace Octopus.Tentacle.Client.Scripts
 {
@@ -26,7 +27,7 @@ namespace Octopus.Tentacle.Client.Scripts
             this.onScriptCompleted = onScriptCompleted;
         }
 
-        public async Task<ScriptExecutionResult> ExecuteScript(StartScriptCommandV2 startScriptCommand, CancellationToken scriptExecutionCancellationToken)
+        public async Task<ScriptExecutionResult> ExecuteScript(StartScriptCommandV3Alpha startScriptCommand, CancellationToken scriptExecutionCancellationToken)
         {
             var mappedStartCommand = Map(startScriptCommand);
 
@@ -112,7 +113,7 @@ namespace Octopus.Tentacle.Client.Scripts
             return lastStatusResponse;
         }
 
-        protected abstract TStartCommand Map(StartScriptCommandV2 command);
+        protected abstract TStartCommand Map(StartScriptCommandV3Alpha command);
 
         protected abstract ScriptExecutionStatus MapToStatus(TScriptStatusResponse response);
         protected abstract ScriptExecutionResult MapToResult(TScriptStatusResponse response);

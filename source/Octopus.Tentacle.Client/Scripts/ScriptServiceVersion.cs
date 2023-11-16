@@ -3,6 +3,7 @@
     internal enum ScriptServiceVersion
     {
         Version1,
-        Version2
+        Version2,
+        Version3Alpha
     }
 }

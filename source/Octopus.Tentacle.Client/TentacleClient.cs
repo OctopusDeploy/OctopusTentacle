@@ -13,6 +13,7 @@ using Octopus.Tentacle.Contracts.Capabilities;
 using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
+using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
 using ILog = Octopus.Diagnostics.ILog;
 using ITentacleClientObserver = Octopus.Tentacle.Contracts.Observability.ITentacleClientObserver;
 
@@ -26,6 +27,7 @@ namespace Octopus.Tentacle.Client
 
         readonly IAsyncClientScriptService scriptServiceV1;
         readonly IAsyncClientScriptServiceV2 scriptServiceV2;
+        readonly IAsyncClientScriptServiceV3Alpha scriptServiceV3Alpha;
         readonly IAsyncClientFileTransferService clientFileTransferServiceV1;
         readonly IAsyncClientCapabilitiesServiceV2 capabilitiesServiceV2;
         readonly TentacleClientOptions clientOptions;
@@ -61,7 +63,7 @@ namespace Octopus.Tentacle.Client
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
             ITentacleClientObserver tentacleClientObserver,
             TentacleClientOptions clientOptions,
-            ITentacleServiceDecoratorFactory? tentacleServicesDecorator)
+            ITentacleServiceDecoratorFactory? tentacleServicesDecoratorFactory)
         {
             this.scriptObserverBackOffStrategy = scriptObserverBackOffStrategy;
             this.tentacleClientObserver = tentacleClientObserver.DecorateWithNonThrowingTentacleClientObserver();
@@ -77,21 +79,24 @@ namespace Octopus.Tentacle.Client
 
             scriptServiceV1 = halibutRuntime.CreateAsyncClient<IScriptService, IAsyncClientScriptService>(serviceEndPoint);
             scriptServiceV2 = halibutRuntime.CreateAsyncClient<IScriptServiceV2, IAsyncClientScriptServiceV2>(serviceEndPoint);
+            scriptServiceV3Alpha = halibutRuntime.CreateAsyncClient<IScriptServiceV3Alpha, IAsyncClientScriptServiceV3Alpha>(serviceEndPoint);
             clientFileTransferServiceV1 = halibutRuntime.CreateAsyncClient<IFileTransferService, IAsyncClientFileTransferService>(serviceEndPoint);
             capabilitiesServiceV2 = halibutRuntime.CreateAsyncClient<ICapabilitiesServiceV2, IAsyncClientCapabilitiesServiceV2>(serviceEndPoint).WithBackwardsCompatability();
 
-            var exceptionDecorator = new HalibutExceptionTentacleServiceDecoratorFactory();
-            scriptServiceV2 = exceptionDecorator.Decorate(scriptServiceV2);
-            capabilitiesServiceV2 = exceptionDecorator.Decorate(capabilitiesServiceV2);
+            var exceptionDecoratorFactory = new HalibutExceptionTentacleServiceDecoratorFactory();
+            scriptServiceV2 = exceptionDecoratorFactory.Decorate(scriptServiceV2);
+            scriptServiceV3Alpha = exceptionDecoratorFactory.Decorate(scriptServiceV3Alpha);
+            capabilitiesServiceV2 = exceptionDecoratorFactory.Decorate(capabilitiesServiceV2);
 
-            if (tentacleServicesDecorator != null)
+            if (tentacleServicesDecoratorFactory != null)
             {
-                scriptServiceV1 = tentacleServicesDecorator.Decorate(scriptServiceV1);
-                scriptServiceV2 = tentacleServicesDecorator.Decorate(scriptServiceV2);
-                clientFileTransferServiceV1 = tentacleServicesDecorator.Decorate(clientFileTransferServiceV1);
-                capabilitiesServiceV2 = tentacleServicesDecorator.Decorate(capabilitiesServiceV2);
+                scriptServiceV1 = tentacleServicesDecoratorFactory.Decorate(scriptServiceV1);
+                scriptServiceV2 = tentacleServicesDecoratorFactory.Decorate(scriptServiceV2);
+                scriptServiceV3Alpha = tentacleServicesDecoratorFactory.Decorate(scriptServiceV3Alpha);
+                clientFileTransferServiceV1 = tentacleServicesDecoratorFactory.Decorate(clientFileTransferServiceV1);
+                capabilitiesServiceV2 = tentacleServicesDecoratorFactory.Decorate(capabilitiesServiceV2);
             }
-            
+
             rpcCallExecutor = RpcCallExecutorFactory.Create(this.clientOptions.RpcRetrySettings.RetryDuration, this.tentacleClientObserver);
         }
 
@@ -200,7 +205,7 @@ namespace Octopus.Tentacle.Client
         }
 
         public async Task<ScriptExecutionResult> ExecuteScript(
-            StartScriptCommandV2 startScriptCommand,
+            StartScriptCommandV3Alpha startScriptCommand,
             OnScriptStatusResponseReceived onScriptStatusResponseReceived,
             OnScriptCompleted onScriptCompleted,
             ILog logger,
@@ -213,6 +218,7 @@ namespace Octopus.Tentacle.Client
                 var factory = new ScriptOrchestratorFactory(
                     scriptServiceV1,
                     scriptServiceV2,
+                    scriptServiceV3Alpha,
                     capabilitiesServiceV2,
                     scriptObserverBackOffStrategy,
                     rpcCallExecutor,
