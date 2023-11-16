@@ -11,22 +11,23 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
     public class KubernetesJobScriptExecutor : IScriptExecutor
     {
         readonly IKubernetesJobService jobService;
+        readonly IKubernetesClusterService clusterService;
         readonly IApplicationInstanceSelector appInstanceSelector;
         readonly ISystemLog log;
 
-        public KubernetesJobScriptExecutor(IKubernetesJobService jobService, IApplicationInstanceSelector appInstanceSelector, ISystemLog log)
+        public KubernetesJobScriptExecutor(IKubernetesJobService jobService, IKubernetesClusterService clusterService, IApplicationInstanceSelector appInstanceSelector, ISystemLog log)
         {
             this.jobService = jobService;
+            this.clusterService = clusterService;
             this.appInstanceSelector = appInstanceSelector;
             this.log = log;
         }
 
+        public bool ValidateExecutionContext(IScriptExecutionContext executionContext) => executionContext is KubernetesJobScriptExecutionContext;
+
         public IRunningScript ExecuteOnBackgroundThread(StartScriptCommandV3Alpha command, IScriptWorkspace workspace, ScriptStateStore? scriptStateStore, CancellationToken cancellationToken)
         {
-            if (command.ExecutionContext is not KubernetesJobScriptExecutionContext kubernetesJobScriptExecutionContext)
-                throw new InvalidOperationException("The ExecutionContext must be of type KubernetesJobScriptExecutionContext");
-
-            var runningScript = new RunningKubernetesJobScript(workspace, workspace.CreateLog(), command.ScriptTicket, command.TaskId, cancellationToken, log, jobService, appInstanceSelector, kubernetesJobScriptExecutionContext);
+            var runningScript = new RunningKubernetesJobScript(workspace, workspace.CreateLog(), command.ScriptTicket, command.TaskId, cancellationToken, log, jobService, clusterService, appInstanceSelector, (KubernetesJobScriptExecutionContext)command.ExecutionContext);
 
             Task.Run(async () =>
             {

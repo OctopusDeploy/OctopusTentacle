@@ -2,7 +2,7 @@
 
 namespace Octopus.Tentacle.Kubernetes
 {
-    public static class KubernetesJobsConfig
+    public static class KubernetesConfig
     {
         public static string Namespace => Environment.GetEnvironmentVariable("OCTOPUS__TENTACLE__K8SNAMESPACE")
             ?? throw new InvalidOperationException("Unable to determine Kubernetes namespace. An environment variable 'OCTOPUS__TENTACLE__K8SNAMESPACE' must be defined.");

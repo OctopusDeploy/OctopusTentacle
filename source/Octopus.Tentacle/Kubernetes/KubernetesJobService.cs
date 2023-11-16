@@ -31,7 +31,7 @@ namespace Octopus.Tentacle.Kubernetes
 
             try
             {
-                return await Client.ReadNamespacedJobStatusAsync(jobName, KubernetesJobsConfig.Namespace, cancellationToken: cancellationToken);
+                return await Client.ReadNamespacedJobStatusAsync(jobName, KubernetesConfig.Namespace, cancellationToken: cancellationToken);
             }
             catch (HttpOperationException opException)
             {
@@ -48,7 +48,7 @@ namespace Octopus.Tentacle.Kubernetes
             var jobName = BuildJobName(scriptTicket);
 
             using var response = Client.BatchV1.ListNamespacedJobWithHttpMessagesAsync(
-                KubernetesJobsConfig.Namespace,
+                KubernetesConfig.Namespace,
                 //only list this job
                 fieldSelector: $"metadata.name=={jobName}",
                 watch: true,
@@ -71,14 +71,14 @@ namespace Octopus.Tentacle.Kubernetes
 
         public async Task CreateJob(V1Job job, CancellationToken cancellationToken)
         {
-            await Client.CreateNamespacedJobAsync(job, KubernetesJobsConfig.Namespace, cancellationToken: cancellationToken);
+            await Client.CreateNamespacedJobAsync(job, KubernetesConfig.Namespace, cancellationToken: cancellationToken);
         }
 
         public void Delete(ScriptTicket scriptTicket)
         {
             try
             {
-                Client.DeleteNamespacedJob(BuildJobName(scriptTicket), KubernetesJobsConfig.Namespace);
+                Client.DeleteNamespacedJob(BuildJobName(scriptTicket), KubernetesConfig.Namespace);
             }
             catch
             {

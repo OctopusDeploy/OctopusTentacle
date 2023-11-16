@@ -22,6 +22,7 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
         readonly string taskId;
         readonly ILog log;
         readonly IKubernetesJobService jobService;
+        readonly IKubernetesClusterService kubernetesClusterService;
         readonly KubernetesJobScriptExecutionContext executionContext;
         readonly CancellationToken scriptCancellationToken;
         readonly string? instanceName;
@@ -30,13 +31,15 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
         public ProcessState State { get; private set; }
         public IScriptLog ScriptLog { get; }
 
-        public RunningKubernetesJobScript(IScriptWorkspace workspace,
+        public RunningKubernetesJobScript(
+            IScriptWorkspace workspace,
             IScriptLog scriptLog,
             ScriptTicket scriptTicket,
             string taskId,
             CancellationToken scriptCancellationToken,
             ILog log,
             IKubernetesJobService jobService,
+            IKubernetesClusterService kubernetesClusterService,
             IApplicationInstanceSelector appInstanceSelector,
             KubernetesJobScriptExecutionContext executionContext)
         {
@@ -45,6 +48,7 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
             this.taskId = taskId;
             this.log = log;
             this.jobService = jobService;
+            this.kubernetesClusterService = kubernetesClusterService;
             this.executionContext = executionContext;
             this.scriptCancellationToken = scriptCancellationToken;
             ScriptLog = scriptLog;
@@ -146,7 +150,7 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                 Metadata = new V1ObjectMeta
                 {
                     Name = jobName,
-                    NamespaceProperty = KubernetesJobsConfig.Namespace,
+                    NamespaceProperty = KubernetesConfig.Namespace,
                     Labels = new Dictionary<string, string>
                     {
                         ["octopus.com/serverTaskId"] = taskId,
@@ -164,7 +168,7 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                                 new()
                                 {
                                     Name = jobName,
-                                    Image = executionContext.ContainerImage,
+                                    Image = executionContext.ContainerImage ?? await GetDefaultContainer(),
                                     Command = new List<string> { "dotnet" },
                                     Args = new List<string>
                                     {
@@ -194,7 +198,7 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                                     }
                                 }
                             },
-                            ServiceAccountName = KubernetesJobsConfig.ServiceAccountName,
+                            ServiceAccountName = KubernetesConfig.ServiceAccountName,
                             RestartPolicy = "Never",
                             Volumes = new List<V1Volume>
                             {
@@ -219,6 +223,24 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
             writer.WriteVerbose($"Executing script in Kubernetes Job '{job.Name()}'");
 
             await jobService.CreateJob(job, cancellationToken);
+        }
+
+        static readonly List<Version> KnownLatestContainerTags = new List<Version>
+        {
+            new(1, 26, 3),
+            new(1, 27, 3),
+            new(1, 28, 2),
+        };
+
+        async Task<string> GetDefaultContainer()
+        {
+            var clusterVersion = await kubernetesClusterService.GetClusterVersion();
+
+            var tagVersion = KnownLatestContainerTags.FirstOrDefault(tag => tag.Major == clusterVersion.Major && tag.Minor == clusterVersion.Minor);
+
+            var tag = tagVersion?.ToString(3) ?? "latest";
+
+            return $"octopuslabs/k8s-workertools:{tag}";
         }
     }
 }

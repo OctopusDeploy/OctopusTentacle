@@ -17,7 +17,7 @@ namespace Octopus.Tentacle.Scripts
 
         public IScriptExecutor GetExecutor()
         {
-            return KubernetesJobsConfig.UseJobs switch
+            return KubernetesConfig.UseJobs switch
             {
                 true => kubernetesJobScriptExecutor.Value,
                 false => shellScriptExecutor.Value

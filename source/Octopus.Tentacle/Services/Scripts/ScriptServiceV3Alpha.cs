@@ -72,6 +72,9 @@ namespace Octopus.Tentacle.Services.Scripts
                 }
 
                 var executor = scriptExecutorFactory.GetExecutor();
+                if(!executor.ValidateExecutionContext(command.ExecutionContext))
+                    throw new InvalidOperationException($"The execution context type {command.ExecutionContext.GetType().Name} cannot be used with script executor {executor.GetType().Name}.");
+
                 var process = executor.ExecuteOnBackgroundThread(command, workspace, runningScript.ScriptStateStore, runningScript.CancellationToken);
 
                 runningScript.Process = process;
