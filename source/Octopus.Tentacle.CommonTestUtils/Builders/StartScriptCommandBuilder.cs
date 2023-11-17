@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Text;
 using Octopus.Tentacle.Contracts;
-using Octopus.Tentacle.Scripts;
 
 namespace Octopus.Tentacle.CommonTestUtils.Builders
 {
@@ -13,8 +12,8 @@ namespace Octopus.Tentacle.CommonTestUtils.Builders
         readonly Dictionary<ScriptType, string> additionalScripts = new Dictionary<ScriptType, string>();
         StringBuilder scriptBody = new StringBuilder(string.Empty);
         ScriptIsolationLevel isolation = ScriptIsolationLevel.FullIsolation;
-        TimeSpan scriptIsolationMutexTimeout = ScriptIsolationMutex.NoTimeout;
-        string scriptIsolationMutexName = nameof(RunningScript);
+        TimeSpan scriptIsolationMutexTimeout = TimeSpan.FromMilliseconds(int.MaxValue);
+        string scriptIsolationMutexName = "RunningScript";
         string? taskId;
 
         public StartScriptCommandBuilder WithScriptBody(string scriptBody)

@@ -5,25 +5,16 @@
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
         <OutputPath>bin\</OutputPath>
-        <TargetFrameworks>net48;net6.0</TargetFrameworks>
+        <TargetFrameworks>net6.0</TargetFrameworks>
         <DisableImplicitPackageTargetFallback>true</DisableImplicitPackageTargetFallback>
         <Optimize Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">True</Optimize>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <LangVersion>9</LangVersion>
         <Nullable>enable</Nullable>
     </PropertyGroup>
-    <Choose>
-        <When Condition="'$(TargetFramework)' == 'net48'">
-            <PropertyGroup>
-                <RuntimeIdentifiers>win</RuntimeIdentifiers><!-- This is AnyCPU -->
-            </PropertyGroup>
-        </When>
-        <Otherwise>
-            <PropertyGroup>
-                <RuntimeIdentifiers>win-x86;win-x64;linux-x64;osx-x64;osx-arm64;linux-arm64;linux-arm;linux-musl-x64</RuntimeIdentifiers>
-            </PropertyGroup>
-        </Otherwise>
-    </Choose>
+    <PropertyGroup>
+        <RuntimeIdentifiers>win-x86;win-x64;linux-x64;osx-x64;osx-arm64;linux-arm64;linux-arm;linux-musl-x64</RuntimeIdentifiers>
+    </PropertyGroup>
     <ItemGroup>
       <Compile Include="..\Solution Items\SolutionInfo.cs" Link="SolutionInfo.cs" />
       <Compile Include="..\Solution Items\VersionInfo.cs" Link="VersionInfo.cs" />

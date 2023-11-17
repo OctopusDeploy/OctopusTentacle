@@ -28,7 +28,6 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.2" />
-    <ProjectReference Include="..\Octopus.Tentacle.CommonTestUtils\Octopus.Tentacle.CommonTestUtils.csproj" />
     <PackageReference Include="NSubstitute" Version="4.4.0" />
     <PackageReference Include="FluentAssertions" Version="6.7.0" />
     <PackageReference Include="Assent" Version="1.8.2" />
@@ -90,5 +89,11 @@
 
   <ItemGroup>
     <Content Include="Startup\Packages\Acme.Service\Acme.Service.exe" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Octopus.Tentacle.CommonTestUtils\Octopus.Tentacle.CommonTestUtils.csproj" />
+    <ProjectReference Include="..\Octopus.Tentacle.Contracts\Octopus.Tentacle.Contracts.csproj" />
+    <ProjectReference Include="..\Octopus.Tentacle\Octopus.Tentacle.csproj" />
   </ItemGroup>
 </Project>
