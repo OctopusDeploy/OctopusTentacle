@@ -15,11 +15,19 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             bool testNoCapabilitiesServiceVersions = false,
             bool testScriptIsolationLevelVersions = false,
             bool testDefaultTentacleRuntimeOnly = false,
+            bool testCurrentVersionOnly = false,
             params object[] additionalParameterTypes)
             : base(
                 typeof(TentacleConfigurationTestCases),
                 nameof(TentacleConfigurationTestCases.GetEnumerator),
-                new object[] { testCommonVersions, testCapabilitiesServiceVersions, testNoCapabilitiesServiceVersions, testScriptIsolationLevelVersions, testDefaultTentacleRuntimeOnly, additionalParameterTypes })
+                new object[] { 
+                    testCommonVersions, 
+                    testCapabilitiesServiceVersions, 
+                    testNoCapabilitiesServiceVersions, 
+                    testScriptIsolationLevelVersions, 
+                    testDefaultTentacleRuntimeOnly, 
+                    testCurrentVersionOnly,
+                    additionalParameterTypes })
         {
         }
     }
@@ -49,6 +57,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             bool testNoCapabilitiesServiceVersions,
             bool testScriptIsolationLevel,
             bool testDefaultTentacleRuntimeOnly,
+            bool testCurrentVersionOnly,
             object[] additionalParameterTypes)
         {
             var tentacleTypes = new[] { TentacleType.Listening, TentacleType.Polling };
@@ -96,6 +105,16 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 {
                     TentacleVersions.v6_3_451_NoCapabilitiesService
                 });
+            }
+
+            if (testCurrentVersionOnly)
+            {
+                if (versions.Count != 0)
+                {
+                    throw new ArgumentException("testCurrentVersionOnly cannot be used when other versions are also being tested", nameof(testCurrentVersionOnly));
+                }
+
+                versions.Add(TentacleVersions.Current);
             }
 
             if (versions.Count == 0)
