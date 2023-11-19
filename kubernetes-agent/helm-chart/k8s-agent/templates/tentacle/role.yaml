@@ -1,0 +1,9 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: octopus-tentacle
+  name: octopus-tentacle-role
+rules:
+- apiGroups: ["*"]
+  resources: ["jobs"]
+  verbs: ["*"]

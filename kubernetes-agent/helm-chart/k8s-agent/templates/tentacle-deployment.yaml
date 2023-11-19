@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tentacle-deployment
+  namespace: {{ .Values.octopus.agent.deployment.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: "octopus-tentacle"
+  template:
+    metadata:
+      labels:
+        app: "octopus-tentacle"
+    spec:
+      containers:
+      - name: octopustentacle
+        image: {{ .Values.octopus.agent.deployment.tentacleImage }}
+        imagePullPolicy: Always
+        #Todo: 	SecurityContext?
+        env:
+        - name: "DISABLE_DIND"
+          value: "Y"
+        {{- range $key, $value := .Values.octopus.agent.deployment.env }}
+        - name: {{ $key | quote }}
+          value: {{ $value | quote }}
+        {{- end }}  

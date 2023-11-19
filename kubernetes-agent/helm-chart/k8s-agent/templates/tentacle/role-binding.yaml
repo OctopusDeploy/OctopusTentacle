@@ -1,0 +1,13 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: octopus-tentacle-binding
+  namespace: octopus-tentacle
+subjects:
+- kind: ServiceAccount
+  name: octopus-tentacle
+  namespace: octopus-tentacle
+roleRef:
+  kind: Role
+  name: octopus-tentacle
+  apiGroup: rbac.authorization.k8s.io

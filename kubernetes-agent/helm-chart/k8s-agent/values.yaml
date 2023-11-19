@@ -1,0 +1,17 @@
+octopus: 
+  agent:
+    deployment: 
+      namespace: main-testoctopus-app-tentacles 
+      
+      tentacleImage: localhost:5001/alpine-agent:latest      
+
+      env:
+        acceptEula: "Y"
+        targetName: "Minikube Tentacle"
+        space: "K8s Agent"
+        serverCommsAddress: "https://polling.main.testoctopus.app"
+        serverApiKey: ""
+        serverUrl: "https://main.testoctopus.app"
+        targetEnvironment: "Development"
+        targetRole: "my-minikube"        
+    
