@@ -55,13 +55,13 @@ namespace Octopus.Tentacle.Kubernetes
                 timeoutSeconds: 1800, //same as the TTL of the job itself
                 cancellationToken: cancellationToken);
 
-            await foreach (var (type, item) in response.WatchAsync<V1Job, V1JobList>(onError, cancellationToken: cancellationToken))
+            await foreach (var (type, job) in response.WatchAsync<V1Job, V1JobList>(onError, cancellationToken: cancellationToken))
             {
                 //we are only watching for modifications
                 if (type != WatchEventType.Modified)
                     continue;
 
-                var stopWatching = onChange(item);
+                var stopWatching = onChange(job);
                 if (stopWatching)
                     break;
             }

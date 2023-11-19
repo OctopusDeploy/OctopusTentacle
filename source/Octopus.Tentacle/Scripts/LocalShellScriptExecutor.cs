@@ -18,7 +18,7 @@ namespace Octopus.Tentacle.Scripts
 
         public bool ValidateExecutionContext(IScriptExecutionContext executionContext) => executionContext is LocalShellScriptExecutionContext;
 
-        public IRunningScript ExecuteOnBackgroundThread(StartScriptCommandV3Alpha command, IScriptWorkspace workspace, ScriptStateStore? scriptStateStore, CancellationToken cancellationToken)
+        public IRunningScript ExecuteOnBackgroundThread(StartScriptCommandV3Alpha command, IScriptWorkspace workspace, ScriptStateStore scriptStateStore, CancellationToken cancellationToken)
         {
             var runningScript = new RunningScript(shell, workspace, scriptStateStore, workspace.CreateLog(), command.TaskId, cancellationToken, log);
 

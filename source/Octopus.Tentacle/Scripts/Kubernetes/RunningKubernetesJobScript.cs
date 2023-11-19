@@ -21,6 +21,7 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
         readonly ScriptTicket scriptTicket;
         readonly string taskId;
         readonly ILog log;
+        readonly IScriptStateStore stateStore;
         readonly IKubernetesJobService jobService;
         readonly IKubernetesClusterService kubernetesClusterService;
         readonly KubernetesJobScriptExecutionContext executionContext;
@@ -38,6 +39,7 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
             string taskId,
             CancellationToken scriptCancellationToken,
             ILog log,
+            IScriptStateStore stateStore,
             IKubernetesJobService jobService,
             IKubernetesClusterService kubernetesClusterService,
             IApplicationInstanceSelector appInstanceSelector,
@@ -47,6 +49,7 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
             this.scriptTicket = scriptTicket;
             this.taskId = taskId;
             this.log = log;
+            this.stateStore = stateStore;
             this.jobService = jobService;
             this.kubernetesClusterService = kubernetesClusterService;
             this.executionContext = executionContext;
@@ -78,6 +81,7 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                         await CreateJob(writer, cancellationToken);
 
                         State = ProcessState.Running;
+                        RecordScriptHasStarted(writer);
 
                         //we now need to monitor the resulting pod status
                         exitCode = await CheckIfPodHasCompleted(cancellationToken);
@@ -100,15 +104,18 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
             }
             finally
             {
-                ExitCode = exitCode;
-                State = ProcessState.Complete;
+                try
+                {
+                    RecordScriptHasCompleted(exitCode);
+                }
+                finally
+                {
+                    ExitCode = exitCode;
+                    State = ProcessState.Complete;
+                }
             }
         }
 
-        public void Complete()
-        {
-            jobService.Delete(scriptTicket);
-        }
 
         async Task<int> CheckIfPodHasCompleted(CancellationToken cancellationToken)
         {
@@ -236,11 +243,57 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
         {
             var clusterVersion = await kubernetesClusterService.GetClusterVersion();
 
+            //find the highest tag for this cluster version
             var tagVersion = KnownLatestContainerTags.FirstOrDefault(tag => tag.Major == clusterVersion.Major && tag.Minor == clusterVersion.Minor);
 
             var tag = tagVersion?.ToString(3) ?? "latest";
 
             return $"octopuslabs/k8s-workertools:{tag}";
+        }
+
+        void RecordScriptHasStarted(IScriptLogWriter writer)
+        {
+            try
+            {
+                var scriptState = stateStore.Load();
+                scriptState.Start();
+                stateStore.Save(scriptState);
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    writer.WriteOutput(ProcessOutputSource.StdOut, $"Warning: An exception occurred saving the ScriptState: {ex.Message}");
+                    writer.WriteOutput(ProcessOutputSource.StdOut, ex.ToString());
+                }
+                catch
+                {
+                    //we don't care about errors here
+                }
+            }
+        }
+
+        void RecordScriptHasCompleted(int exitCode)
+        {
+            try
+            {
+                var scriptState = stateStore.Load();
+                scriptState.Complete(exitCode);
+                stateStore.Save(scriptState);
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    using var writer = ScriptLog.CreateWriter();
+                    writer.WriteOutput(ProcessOutputSource.StdOut, $"Warning: An exception occurred saving the ScriptState: {ex.Message}");
+                    writer.WriteOutput(ProcessOutputSource.StdOut, ex.ToString());
+                }
+                catch
+                {
+                    //we don't care about errors here
+                }
+            }
         }
     }
 }

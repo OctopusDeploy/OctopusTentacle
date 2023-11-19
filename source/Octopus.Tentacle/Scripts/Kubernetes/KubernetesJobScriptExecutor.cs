@@ -25,9 +25,9 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
 
         public bool ValidateExecutionContext(IScriptExecutionContext executionContext) => executionContext is KubernetesJobScriptExecutionContext;
 
-        public IRunningScript ExecuteOnBackgroundThread(StartScriptCommandV3Alpha command, IScriptWorkspace workspace, ScriptStateStore? scriptStateStore, CancellationToken cancellationToken)
+        public IRunningScript ExecuteOnBackgroundThread(StartScriptCommandV3Alpha command, IScriptWorkspace workspace, ScriptStateStore scriptStateStore, CancellationToken cancellationToken)
         {
-            var runningScript = new RunningKubernetesJobScript(workspace, workspace.CreateLog(), command.ScriptTicket, command.TaskId, cancellationToken, log, jobService, clusterService, appInstanceSelector, (KubernetesJobScriptExecutionContext)command.ExecutionContext);
+            var runningScript = new RunningKubernetesJobScript(workspace, workspace.CreateLog(), command.ScriptTicket, command.TaskId, cancellationToken, log, scriptStateStore, jobService, clusterService, appInstanceSelector, (KubernetesJobScriptExecutionContext)command.ExecutionContext);
 
             Task.Run(async () =>
             {
