@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.ServiceProcess;
 using System.Threading;
 using Octopus.Diagnostics;
@@ -7,6 +8,7 @@ using Octopus.Tentacle.Diagnostics.KnowledgeBase;
 
 namespace Octopus.Tentacle.Startup
 {
+    [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
     public class WindowsServiceAdapter : ServiceBase
     {
         readonly Action execute;
