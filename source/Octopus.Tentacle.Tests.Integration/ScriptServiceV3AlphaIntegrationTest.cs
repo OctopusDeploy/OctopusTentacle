@@ -18,7 +18,7 @@ namespace Octopus.Tentacle.Tests.Integration
     public class ScriptServiceV3AlphaIntegrationTest : IntegrationTest
     {
         [Test]
-        [TentacleConfigurations]
+        [TentacleConfigurations(specificServiceToTest: typeof(IAsyncClientScriptServiceV3Alpha))]
         public async Task CanRunScript(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
@@ -50,7 +50,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TentacleConfigurations]
+        [TentacleConfigurations(specificServiceToTest: typeof(IAsyncClientScriptServiceV3Alpha))]
         public async Task DelayInStartScriptSavesNetworkCalls(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
@@ -83,7 +83,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TentacleConfigurations]
+        [TentacleConfigurations(specificServiceToTest: typeof(IAsyncClientScriptServiceV3Alpha))]
         public async Task WhenTentacleRestartsWhileRunningAScript_TheExitCodeShouldBe_UnknownResultExitCode(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
@@ -130,7 +130,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TentacleConfigurations]
+        [TentacleConfigurations(specificServiceToTest: typeof(IAsyncClientScriptServiceV3Alpha))]
         public async Task WhenALongRunningScriptIsCancelled_TheScriptShouldStop(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()

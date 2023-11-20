@@ -10,19 +10,19 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 {
     public class TentacleConfigurationsAttribute : TentacleTestCaseSourceAttribute
     {
-        public TentacleConfigurationsAttribute(
-            bool testCommonVersions = false,
+        public TentacleConfigurationsAttribute(bool testCommonVersions = false,
             bool testCapabilitiesServiceVersions = false,
             bool testNoCapabilitiesServiceVersions = false,
             bool testScriptIsolationLevelVersions = false,
             bool testDefaultTentacleRuntimeOnly = false,
+            Type? specificServiceToTest = null,
             params object[] additionalParameterTypes)
             : base(
                 typeof(TentacleConfigurationTestCases),
                 nameof(TentacleConfigurationTestCases.GetEnumerator),
                 new object[]
                 {
-                    testCommonVersions, testCapabilitiesServiceVersions, testNoCapabilitiesServiceVersions, testScriptIsolationLevelVersions, testDefaultTentacleRuntimeOnly, additionalParameterTypes
+                    testCommonVersions, testCapabilitiesServiceVersions, testNoCapabilitiesServiceVersions, testScriptIsolationLevelVersions, testDefaultTentacleRuntimeOnly, specificServiceToTest, additionalParameterTypes
                 })
         {
         }
@@ -53,6 +53,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             bool testNoCapabilitiesServiceVersions,
             bool testScriptIsolationLevel,
             bool testDefaultTentacleRuntimeOnly,
+            Type? specificServiceToTest,
             object[] additionalParameterTypes)
         {
             var tentacleTypes = new[] { TentacleType.Listening, TentacleType.Polling };
@@ -122,10 +123,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 from tentacleType in tentacleTypes
                 from runtime in runtimes
                 from version in versions.Distinct()
-                //null == current version and you can't have a null dictionary key
-                from scriptServiceToTest in version != null
-                    ? ScriptServiceVersionsToTestMap[version]
-                    : CurrentScriptServiceVersionsToTest
+                from scriptServiceToTest in
+                    specificServiceToTest is not null
+                        ? new[] { specificServiceToTest }
+                        : version != null
+                            ? ScriptServiceVersionsToTestMap[version]
+                            : CurrentScriptServiceVersionsToTest
                 select new TentacleConfigurationTestCase(
                     tentacleType,
                     runtime,
