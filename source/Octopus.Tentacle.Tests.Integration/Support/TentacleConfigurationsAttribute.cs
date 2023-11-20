@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Util;
 
@@ -19,28 +20,31 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             : base(
                 typeof(TentacleConfigurationTestCases),
                 nameof(TentacleConfigurationTestCases.GetEnumerator),
-                new object[] { testCommonVersions, testCapabilitiesServiceVersions, testNoCapabilitiesServiceVersions, testScriptIsolationLevelVersions, testDefaultTentacleRuntimeOnly, additionalParameterTypes })
+                new object[]
+                {
+                    testCommonVersions, testCapabilitiesServiceVersions, testNoCapabilitiesServiceVersions, testScriptIsolationLevelVersions, testDefaultTentacleRuntimeOnly, additionalParameterTypes
+                })
         {
         }
     }
 
     static class TentacleConfigurationTestCases
     {
-        static readonly Type ScriptServiceV3AlphaType =  typeof(IAsyncClientScriptServiceV3Alpha);
-        static readonly Type ScriptServiceV2Type =  typeof(IAsyncClientScriptServiceV2);
-        static readonly Type ScriptServiceV1Type =  typeof(IAsyncClientScriptService);
+        static readonly Type ScriptServiceV3AlphaType = typeof(IAsyncClientScriptServiceV3Alpha);
+        static readonly Type ScriptServiceV2Type = typeof(IAsyncClientScriptServiceV2);
+        static readonly Type ScriptServiceV1Type = typeof(IAsyncClientScriptService);
 
-        static readonly Type CurrentScriptServiceTypes = ScriptServiceV3AlphaType;
+        static readonly IEnumerable<Type> CurrentScriptServiceVersionToTest = new[] { ScriptServiceV2Type, ScriptServiceV3AlphaType };
 
-        static readonly Dictionary<Version, Type> ScriptServiceVersionTypesMap = new()
+        static readonly Dictionary<Version, IEnumerable<Type>> ScriptServiceVersionsToTestMap = new()
         {
-            [TentacleVersions.v5_0_4_FirstLinuxRelease] = ScriptServiceV1Type,
-            [TentacleVersions.v5_0_12_AutofacServiceFactoryIsInShared] = ScriptServiceV1Type,
-            [TentacleVersions.v5_0_15_LastOfVersion5] = ScriptServiceV1Type,
-            [TentacleVersions.v6_3_417_LastWithScriptServiceV1Only] = ScriptServiceV1Type,
-            [TentacleVersions.v6_3_451_NoCapabilitiesService] = ScriptServiceV1Type,
-            [TentacleVersions.v7_1_189_ScriptServiceV2Added] = ScriptServiceV2Type,
-            [TentacleVersions.v8_0_81_LastWithoutScriptServiceV3Alpha] = ScriptServiceV2Type
+            [TentacleVersions.v5_0_4_FirstLinuxRelease] = new[] { ScriptServiceV1Type },
+            [TentacleVersions.v5_0_12_AutofacServiceFactoryIsInShared] = new[] { ScriptServiceV1Type },
+            [TentacleVersions.v5_0_15_LastOfVersion5] = new[] { ScriptServiceV1Type },
+            [TentacleVersions.v6_3_417_LastWithScriptServiceV1Only] = new[] { ScriptServiceV1Type },
+            [TentacleVersions.v6_3_451_NoCapabilitiesService] = new[] { ScriptServiceV1Type },
+            [TentacleVersions.v7_1_189_ScriptServiceV2Added] = new[] { ScriptServiceV2Type },
+            [TentacleVersions.v8_0_81_LastWithoutScriptServiceV3Alpha] = new[] { ScriptServiceV2Type }
         };
 
         public static IEnumerator GetEnumerator(
@@ -53,6 +57,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         {
             var tentacleTypes = new[] { TentacleType.Listening, TentacleType.Polling };
             List<Version?> versions = new();
+            List<ScriptServiceVersion?> scriptServicesToTest = new();
 
             if (testCommonVersions)
             {
@@ -101,6 +106,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             if (versions.Count == 0)
             {
                 versions.Add(TentacleVersions.Current);
+                //for current, we want to test both SSv2 and SSv3Alpha services
+                scriptServicesToTest = new List<ScriptServiceVersion?> { ScriptServiceVersion.Version2, ScriptServiceVersion.Version3Alpha };
             }
 
             var runtimes = new List<TentacleRuntime> { DefaultTentacleRuntime.Value };
@@ -115,14 +122,15 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 from tentacleType in tentacleTypes
                 from runtime in runtimes
                 from version in versions.Distinct()
+                //null == current version and you can't have a null dictionary key
+                from scriptServiceToTest in version != null
+                    ? ScriptServiceVersionsToTestMap[version]
+                    : CurrentScriptServiceVersionToTest
                 select new TentacleConfigurationTestCase(
                     tentacleType,
                     runtime,
                     version,
-                    //null == current version and you can't have a null dictionary key
-                    version != null ?
-                        ScriptServiceVersionTypesMap[version]
-                        : CurrentScriptServiceTypes);
+                    scriptServiceToTest);
 
             if (additionalParameterTypes.Length == 0)
             {

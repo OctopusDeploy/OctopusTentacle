@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
+using Octopus.Tentacle.Client.Scripts;
+using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Tests.Integration.Support.Legacy;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
@@ -12,23 +15,26 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         /// <summary>
         /// The <see cref="Type"/> of the latest script service available on the tentacle version
         /// </summary>
-        public Type LatestScriptServiceType { get; }
+        public Type ScriptServiceTypeToTest { get; }
 
-        public TentacleConfigurationTestCase(
-            TentacleType tentacleType,
+        public TentacleConfigurationTestCase(TentacleType tentacleType,
             TentacleRuntime tentacleRuntime,
             Version? version,
-            Type latestScriptServiceType)
+            Type scriptServiceTypeToTest)
         {
             TentacleType = tentacleType;
             TentacleRuntime = tentacleRuntime;
             Version = version;
-            LatestScriptServiceType = latestScriptServiceType;
+            ScriptServiceTypeToTest = scriptServiceTypeToTest;
         }
 
         internal ClientAndTentacleBuilder CreateBuilder()
         {
             return new ClientAndTentacleBuilder(TentacleType)
+                .WithClientOptions(opt =>
+                {
+                    opt.DisableScriptServiceV3Alpha = ScriptServiceTypeToTest != typeof(IAsyncClientScriptServiceV3Alpha);
+                })
                 .WithTentacleVersion(Version)
                 .WithTentacleRuntime(TentacleRuntime);
         }
@@ -45,8 +51,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             StringBuilder builder = new();
 
             builder.Append($"{TentacleType},");
-            string version = Version?.ToString() ?? "Latest";
-            builder.Append($"{version}");
+            var version = Version?.ToString() ?? "Latest";
+            builder.Append($"{version},{ScriptServiceTypeToTest.Name.Replace("IAsyncClient", string.Empty)}");
 
             var tentacleRuntimeDescription = TentacleRuntime.GetDescription();
             var currentRuntime = RuntimeDetection.GetCurrentRuntime();
