@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Diagnostics;
+using Octopus.Tentacle.Kubernetes;
 using Polly;
 
 namespace Octopus.Tentacle.Util
@@ -259,7 +260,11 @@ namespace Octopus.Tentacle.Util
 
             if (!Path.IsPathRooted(directoryPath))
                 return;
-            
+
+            //We can't perform this check in Kubernetes due to how drives are mounted and reported (always returns 0 byte sized drives)
+            if(PlatformDetection.Kubernetes.IsRunningInKubernetes)
+                return;
+
             var driveInfo = SafelyGetDriveInfo(directoryPath);
 
             var required = requiredSpaceInBytes < 0 ? 0 : (ulong)requiredSpaceInBytes;

@@ -29,8 +29,14 @@ namespace Octopus.Tentacle.Configuration.Instances
 
             machineConfigurationHomeDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Octopus");
 
-            if (!PlatformDetection.IsRunningOnWindows)
+            var customMachineHomeDirectory = Environment.GetEnvironmentVariable("OCTOPUS__TENTACLE__MACHINEHOMEDIRECTORY");
+            //if there is a custom environment variable, respect that first
+            if (!string.IsNullOrWhiteSpace(customMachineHomeDirectory))
+                machineConfigurationHomeDirectory = customMachineHomeDirectory;
+            else if (!PlatformDetection.IsRunningOnWindows)
                 machineConfigurationHomeDirectory = "/etc/octopus";
+            else
+                machineConfigurationHomeDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Octopus");
         }
 
         public ApplicationInstanceRecord LoadInstanceDetails(string? instanceName)
