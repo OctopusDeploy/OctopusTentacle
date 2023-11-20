@@ -3,15 +3,23 @@ FROM mcr.microsoft.com/dotnet/runtime-deps:6.0
 ARG BUILD_NUMBER
 ARG BUILD_DATE
 
-RUN apt-get update && \
-    apt-get install -y \
+RUN apt-get update
+RUN apt-get install -y \
         curl \
         dos2unix \
         jq \
         sudo \
-        && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+        gpg
+RUN apt-get clean
+RUN rm -rf /var/lib/apt/lists/*
+
+# install kubectl
+RUN sudo apt-get install -y apt-transport-https ca-certificates
+RUN sudo mkdir -p /etc/apt/keyrings
+RUN curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+RUN echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+RUN sudo apt-get update
+RUN sudo apt-get install -y kubectl
 
 EXPOSE 10933
 

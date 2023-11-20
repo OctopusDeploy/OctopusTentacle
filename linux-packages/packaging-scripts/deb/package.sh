@@ -28,16 +28,12 @@ set +ex
 architecture=$1
 if [ $architecture == "linux-arm64" ] ; then
   DEB_PACKAGE_ARCHITECTURE="arm64";
-  RPM_PACKAGE_ARCHITECTURE="aarch64";
 elif [ $architecture == "linux-arm" ] ; then
   DEB_PACKAGE_ARCHITECTURE="armhf"
-  RPM_PACKAGE_ARCHITECTURE="armv7hl"
 elif [ $architecture == "linux-x64" ] ; then
   DEB_PACKAGE_ARCHITECTURE="x86_64";
-  RPM_PACKAGE_ARCHITECTURE="x86_64";
 elif [ $architecture == "linux-musl-x64" ] ; then
   DEB_PACKAGE_ARCHITECTURE="x86_64";
-  RPM_PACKAGE_ARCHITECTURE="x86_64";
 fi
 COMMAND_FILE=Tentacle
 INSTALL_PATH=/opt/octopus/tentacle
@@ -50,10 +46,6 @@ FPM_OPTS=(
 FPM_DEB_OPTS=(
   --depends 'libssl1.0.0 | libssl1.0.2 | libssl1.1 | libssl3'
   --architecture "$DEB_PACKAGE_ARCHITECTURE"
-)
-FPM_RPM_OPTS=(
-  --depends 'openssl-libs'
-  --architecture "$RPM_PACKAGE_ARCHITECTURE"
 )
 
 # The script has interstitial errors so we can't use set -e here.

@@ -8,6 +8,7 @@ services:
             args:
                 BUILD_DATE: ${BUILD_DATE:?err}
                 BUILD_NUMBER: ${BUILD_NUMBER:?err}
+                BUILD_ARCH: ${BUILD_ARCH:?err}
         image: docker.packages.octopushq.com/octopusdeploy/tentacle:${BUILD_NUMBER?err}-linux
 
     octopusdeploy-tentacle-windows-2019:

@@ -120,7 +120,7 @@ function validateVariables() {
 }
 
 function configureTentacle() {
-    tentacle create-instance --instance "$instanceName" --config "$configurationDirectory/tentacle.config"
+    tentacle create-instance --instance "$instanceName" --home "$configurationDirectory"
 
     echo "Setting directory paths ..."
     tentacle configure --instance "$instanceName" --app "$applicationsDirectory"
@@ -145,7 +145,9 @@ function registerTentacle() {
     local ARGS=()
 
     if [[ ! -z "$TargetWorkerPool" ]]; then
-        ARGS+=('register-worker')
+        ARGS+=(
+        'register-worker'
+        '--force')
 
         IFS=',' read -ra WORKER_POOLS <<<"$TargetWorkerPool"
         for i in "${WORKER_POOLS[@]}"; do
@@ -155,7 +157,9 @@ function registerTentacle() {
         if [[ ! -z "$AsKubernetesTentacle" ]]; then
             ARGS+=('register-k8s-cluster')
         else
-            ARGS+=('register-with')
+            ARGS+=(
+            'register-with'
+            '--force')
         fi
 
         if [[ ! -z "$TargetEnvironment" ]]; then
@@ -191,8 +195,7 @@ function registerTentacle() {
         '--instance' "$instanceName"
         '--server' "$ServerUrl"
         '--space' "$Space"
-        '--policy' "$MachinePolicy"
-        '--force')
+        '--policy' "$MachinePolicy")
 
     if [[ ! -z "$ServerCommsAddress" || ! -z "$ServerPort" ]]; then
         ARGS+=('--comms-style' 'TentacleActive')

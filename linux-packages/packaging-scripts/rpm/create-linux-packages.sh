@@ -1,5 +1,5 @@
 #!/bin/bash
-# Package files from INPUT_PATH, with executable permission and a /usr/bin symlink, into .deb and .rpm packages in OUTPUT_PATH.
+# Package files from INPUT_PATH, with executable permission and a /usr/bin symlink, into an .rpm package in OUTPUT_PATH.
 
 # NOTE: This file has been lifted wholesale from
 # https://github.com/OctopusDeploy/tool-containers/blob/main/tool-linux-packages/linux/scripts/create-linux-packages.sh
@@ -36,7 +36,6 @@ if [[ -z "$OUTPUT_PATH" ]]; then
   exit 1
 fi
 # Set the array FPM_OPTS to supply additional options to fpm.
-# Set the array FPM_DEB_OPTS to supply additional options to fpm when building the .deb package.
 # Set the array FPM_RPM_OPTS to supply additional options to fpm when building the .rpm package.
 
 which fpm >/dev/null || {
@@ -59,7 +58,7 @@ list_descendent_pids() {
 echo "Preparing files to package."
 
 # Remove existing packages, fpm doesnt like to overwrite
-rm -f *.{deb,rpm} || exit
+rm -f *.rpm || exit
 
 # Remove build files
 if [[ -d tmp_usr_bin ]]; then
@@ -91,24 +90,7 @@ echo "%_signature gpg
 %_gpg_sign_cmd_extra_args --batch --passphrase-file '$PASSPHRASE_SHM'
 " > "$HOME/.rpmmacros"
 
-echo "Creating .deb package."
-set -ex
-fpm --version "$VERSION" \
-  --name "$PACKAGE_NAME" \
-  --input-type dir \
-  --output-type deb \
-  --maintainer '<support@octopus.com>' \
-  --vendor 'Octopus Deploy' \
-  --url 'https://octopus.com/' \
-  --description "$PACKAGE_DESC" \
-  --deb-no-default-config-files \
-  "${FPM_DEB_OPTS[@]}" \
-  "${FPM_OPTS[@]}" \
-  "$INPUT_PATH/=$INSTALL_PATH/" \
-  tmp_usr_bin/=/usr/bin/
-set +ex
-
-# Prevent gpg1 and rpmsign from hanging forever after a bad passphrase
+Prevent gpg1 and rpmsign from hanging forever after a bad passphrase
 {
   sleep "$SIGN_TIMEOUT_SECONDS"
   echo "Checking for hanging signing processes." >&2
@@ -142,15 +124,15 @@ set -ex
 rpmsign --addsign *.rpm
 set +ex
 
-  # "$INPUT_PATH/=$INSTALL_PATH/" \
+  "$INPUT_PATH/=$INSTALL_PATH/" \
 
 kill "$ANTIHANG_PID" 2>/dev/null && wait "$ANTIHANG_PID" 2>/dev/null
 
-# Remove build files
+Remove build files
 rm -f "$PASSPHRASE_SHM" "$HOME/.rpmmacros" || exit
 if [[ -d tmp_usr_bin ]]; then
   rm -rf tmp_usr_bin || exit
 fi
 
 # Move to output path
-mv -f *.{deb,rpm} "$OUTPUT_PATH" || exit
+mv -f *.rpm "$OUTPUT_PATH" || exit

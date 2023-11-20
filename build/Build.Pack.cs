@@ -1,8 +1,10 @@
 ﻿// ReSharper disable RedundantUsingDirective
 
 using System;
+using System.Collections.Generic;
 using System.IO.Compression;
 using System.Linq;
+using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 using Nuke.Common;
 using Nuke.Common.IO;
@@ -41,79 +43,19 @@ partial class Build
         });
 
     [PublicAPI]
-    Target PackLinuxPackagesLegacy => _ => _
-        .Description("Legacy task until we can split creation of .rpm and .deb packages into their own tasks")
-        .DependsOn(PackLinuxTarballs)
-        .Requires(
-            () => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SIGN_PRIVATE_KEY")),
-            () => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SIGN_PASSPHRASE")))
-        .Executes(() =>
-        {
-            const string dockerToolsContainerImage = "docker.packages.octopushq.com/octopusdeploy/tool-containers/tool-linux-packages:latest";
-
-            void CreateLinuxPackages(string runtimeId)
-            {
-                //TODO It's probable that the .deb and .rpm package layouts will be different - and potentially _should already_ be different.
-                // We're approaching this with the assumption that we'll split .deb and .rpm creation soon, which means that we'll create a separate
-                // filesystem layout for each of them. Using .deb for now; expecting to replicate that soon for .rpm.
-                var debBuildDir = BuildDirectory / "deb" / runtimeId;
-                FileSystemTasks.EnsureExistingDirectory(debBuildDir / "scripts");
-                FileSystemTasks.EnsureExistingDirectory(debBuildDir / "output");
-
-                var packagingScriptsDirectory = RootDirectory / "linux-packages" / "packaging-scripts";
-                packagingScriptsDirectory.GlobFiles("*")
-                    .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, debBuildDir / "scripts"));
-
-                DockerTasks.DockerPull(settings => settings
-                    .SetName(dockerToolsContainerImage));
-
-                DockerTasks.DockerRun(settings => settings
-                    .EnableRm()
-                    .EnableTty()
-                    .SetEnv(
-                        $"VERSION={FullSemVer}",
-                        "INPUT_PATH=/input",
-                        "OUTPUT_PATH=/output",
-                        "SIGN_PRIVATE_KEY",
-                        "SIGN_PASSPHRASE")
-                    .SetVolume(
-                        $"{debBuildDir / "scripts"}:/scripts",
-                        $"{BuildDirectory / "zip" / "net6.0" / runtimeId / "tentacle"}:/input",
-                        $"{debBuildDir / "output"}:/output"
-                    )
-                    .SetImage(dockerToolsContainerImage)
-                    .SetCommand("bash")
-                    .SetArgs("/scripts/package.sh", runtimeId));
-            }
-
-            var targetRuntimeIds = RuntimeIds.Where(x => x.StartsWith("linux-"))
-                .Where(x => x != "linux-musl-x64"); // not supported yet. Work in progress.
-
-            foreach (var runtimeId in targetRuntimeIds)
-            {
-                CreateLinuxPackages(runtimeId);
-
-                var debOutputDirectory = BuildDirectory / "deb" / runtimeId / "output";
-
-                FileSystemTasks.EnsureExistingDirectory(ArtifactsDirectory / "deb");
-                debOutputDirectory.GlobFiles("*.deb")
-                    .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, ArtifactsDirectory / "deb"));
-
-                FileSystemTasks.EnsureExistingDirectory(ArtifactsDirectory / "rpm");
-                debOutputDirectory.GlobFiles("*.rpm")
-                    .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, ArtifactsDirectory / "rpm"));
-            }
-        });
-
-    [PublicAPI]
     Target PackDebianPackage => _ => _
-        .Description("TODO: Move .deb creation into this task")
-        .DependsOn(PackLinuxPackagesLegacy);
+     .Description("Packs debian package .deb")
+     .DependsOn(PackLinuxTarballs)
+     .Executes(() => PackLinuxPackage(LinuxPackageType.Deb));
 
     [PublicAPI]
     Target PackRedHatPackage => _ => _
-        .Description("TODO: Move .rpm creation into this task")
-        .DependsOn(PackLinuxPackagesLegacy);
+     .Description("Packs redhat package .rpm")
+     .DependsOn(PackLinuxTarballs)
+     .Requires(
+         () => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SIGN_PRIVATE_KEY")),
+         () => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SIGN_PASSPHRASE")))
+     .Executes(() => PackLinuxPackage(LinuxPackageType.Rpm, "SIGN_PRIVATE_KEY", "SIGN_PASSPHRASE"));
 
     [PublicAPI]
     Target PackLinux => _ => _
@@ -159,7 +101,7 @@ partial class Build
                 var installerDirectory = BuildDirectory / "Installer";
                 FileSystemTasks.EnsureExistingDirectory(installerDirectory);
                 FileSystemTasks.EnsureCleanDirectory(installerDirectory);
-                
+
                 if (framework != NetCore)
                 {
                     (BuildDirectory / "Tentacle" / framework / "win").GlobFiles("*")
@@ -250,7 +192,7 @@ partial class Build
             if (wixNugetInstalledPackage == null) throw new Exception("Failed to find wix nuget package path");
 
             FileSystemTasks.EnsureExistingDirectory(ArtifactsDirectory / "msi");
-            
+
             PackWindowsInstallers(MSBuildTargetPlatform.x64, wixNugetInstalledPackage.Directory, NetFramework, "NetFramework");
             PackWindowsInstallers(MSBuildTargetPlatform.x86, wixNugetInstalledPackage.Directory, NetFramework, "NetFramework");
 
@@ -410,6 +352,66 @@ partial class Build
         .DependsOn(PackCrossPlatformBundle)
         .DependsOn(PackContracts)
         .DependsOn(PackClient);
+
+    public enum LinuxPackageType
+    {
+        Deb,
+        Rpm
+    }
+
+    void PackLinuxPackage(LinuxPackageType type, params string[] environmentVariables)
+    {
+        var packageType = type == LinuxPackageType.Deb ? "deb" : "rpm";
+
+        var targetRuntimeIds = RuntimeIds.Where(x => x.StartsWith("linux-"))
+                                         .Where(x => x != "linux-musl-x64"); // not supported yet. Work in progress.
+
+        foreach (var runtimeId in targetRuntimeIds)
+        {
+            CreateLinuxPackages(runtimeId, packageType, environmentVariables);
+
+            var debOutputDirectory = BuildDirectory / packageType / runtimeId / "output";
+
+            FileSystemTasks.EnsureExistingDirectory(ArtifactsDirectory / packageType);
+            debOutputDirectory.GlobFiles($"*.{packageType}")
+                              .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, ArtifactsDirectory / packageType));
+        }
+    }
+
+    void CreateLinuxPackages(string runtimeId, string packageType, IEnumerable<string> environmentVariables)
+    {
+        const string dockerToolsContainerImage = "docker.packages.octopushq.com/octopusdeploy/tool-containers/tool-linux-packages:latest";
+
+        //TODO It's probable that the .deb and .rpm package layouts will be different - and potentially _should already_ be different.
+        // We're approaching this with the assumption that we'll split .deb and .rpm creation soon, which means that we'll create a separate
+        // filesystem layout for each of them. Using .deb for now; expecting to replicate that soon for .rpm.
+        var debBuildDir = BuildDirectory / "deb" / runtimeId;
+        FileSystemTasks.EnsureExistingDirectory(debBuildDir / "scripts");
+        FileSystemTasks.EnsureExistingDirectory(debBuildDir / "output");
+
+        var packagingScriptsDirectory = RootDirectory / "linux-packages" / "packaging-scripts";
+        // packagingScriptsDirectory.GlobDirectories("**/*")
+                                 // .ForEach(x =>
+            FileSystemTasks.CopyDirectoryRecursively(packagingScriptsDirectory / packageType, debBuildDir / "scripts", DirectoryExistsPolicy.Merge, FileExistsPolicy.Overwrite);//);
+
+        DockerTasks.DockerPull(settings => settings
+                                           .When(RuntimeInformation.OSArchitecture == Architecture.Arm64, _ => _.SetPlatform("linux/amd64").SetQuiet(true))
+                                           .SetName(dockerToolsContainerImage));
+        var allEnvironmentVariables = environmentVariables.Concat($"VERSION={FullSemVer}", "INPUT_PATH=/input", "OUTPUT_PATH=/output");
+        DockerTasks.DockerRun(settings => settings
+                                          .When(RuntimeInformation.OSArchitecture == Architecture.Arm64, _ => _.SetPlatform("linux/amd64"))
+                                          .EnableRm()
+                                          .EnableTty()
+                                          .SetEnv(allEnvironmentVariables)
+                                          .SetVolume(
+                                              $"{debBuildDir / "scripts"}:/scripts",
+                                              $"{BuildDirectory / "zip" / "net6.0" / runtimeId / "tentacle"}:/input",
+                                              $"{debBuildDir / "output"}:/output"
+                                          )
+                                          .SetImage(dockerToolsContainerImage)
+                                          .SetCommand("bash")
+                                          .SetArgs("/scripts/package.sh", runtimeId));
+    }
 
     void PackTarballs(string runtimeId)
     {

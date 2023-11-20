@@ -100,6 +100,7 @@
               "BuildWindows",
               "CalculateVersion",
               "Clean",
+              "CopyClientAndContractsToLocalPackages",
               "CopyToLocalPackages",
               "Default",
               "Pack",
@@ -109,7 +110,6 @@
               "PackCrossPlatformBundle",
               "PackDebianPackage",
               "PackLinux",
-              "PackLinuxPackagesLegacy",
               "PackLinuxTarballs",
               "PackOsx",
               "PackOsxTarballs",
@@ -143,6 +143,7 @@
               "BuildWindows",
               "CalculateVersion",
               "Clean",
+              "CopyClientAndContractsToLocalPackages",
               "CopyToLocalPackages",
               "Default",
               "Pack",
@@ -152,7 +153,6 @@
               "PackCrossPlatformBundle",
               "PackDebianPackage",
               "PackLinux",
-              "PackLinuxPackagesLegacy",
               "PackLinuxTarballs",
               "PackOsx",
               "PackOsxTarballs",
@@ -169,6 +169,9 @@
               "TestWindowsInstallers"
             ]
           }
+        },
+        "TestFilter": {
+          "type": "string"
         },
         "TestFramework": {
           "type": "string"
