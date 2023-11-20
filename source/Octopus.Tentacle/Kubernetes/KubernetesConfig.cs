@@ -11,5 +11,8 @@ namespace Octopus.Tentacle.Kubernetes
 
         public static string ServiceAccountName => Environment.GetEnvironmentVariable("OCTOPUS__TENTACLE__K8SSERVICEACCOUNTNAME")
             ?? throw new InvalidOperationException("Unable to determine Kubernetes Job service account name. An environment variable 'OCTOPUS__TENTACLE__K8SSERVICEACCOUNTNAME' must be defined.");
+
+        public static string JobVolumeYaml => Environment.GetEnvironmentVariable("OCTOPUS__TENTACLE__K8SJOBVOLUMEYAML")
+            ?? throw new InvalidOperationException("Unable to determine Kubernetes Job volume yaml. An environment variable 'OCTOPUS__TENTACLE__K8SJOBVOLUMEYAML' must be defined.");
     }
 }

@@ -150,6 +150,8 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
 
             var jobName = jobService.BuildJobName(scriptTicket);
 
+            var volumes = k8s.KubernetesYaml.Deserialize<List<V1Volume>>(KubernetesConfig.JobVolumeYaml);
+
             var job = new V1Job
             {
                 ApiVersion = "batch/v1",
@@ -207,19 +209,20 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                             },
                             ServiceAccountName = KubernetesConfig.ServiceAccountName,
                             RestartPolicy = "Never",
-                            Volumes = new List<V1Volume>
-                            {
-                                new()
-                                {
-                                    Name = "tentacle-home",
-                                    PersistentVolumeClaim = new V1PersistentVolumeClaimVolumeSource("tentacle-home-pv-claim")
-                                },
-                                new()
-                                {
-                                    Name = "tentacle-app",
-                                    PersistentVolumeClaim = new V1PersistentVolumeClaimVolumeSource("tentacle-app-pv-claim"),
-                                },
-                            }
+                            Volumes = volumes
+                            // new List<V1Volume>
+                            // {
+                            //     new()
+                            //     {
+                            //         Name = "tentacle-home",
+                            //         PersistentVolumeClaim = new V1PersistentVolumeClaimVolumeSource("tentacle-home-pv-claim")
+                            //     },
+                            //     new()
+                            //     {
+                            //         Name = "tentacle-app",
+                            //         PersistentVolumeClaim = new V1PersistentVolumeClaimVolumeSource("tentacle-app-pv-claim"),
+                            //     },
+                            // }
                         }
                     },
                     BackoffLimit = 0, //we never want to rerun if it fails
