@@ -17,20 +17,32 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         internal async Task<RunningTentacle> Build(ILogger log, CancellationToken cancellationToken)
         {
             var instanceName = InstanceNameGenerator();
-            var configFilePath = Path.Combine(HomeDirectory.DirectoryPath, instanceName + ".cfg");
+            //Path.Combine(HomeDirectory.DirectoryPath, instanceName + ".cfg");
             var tentacleExe = TentacleExePath ?? TentacleExeFinder.FindTentacleExe();
             
             var logger = log.ForContext<ListeningTentacleBuilder>();
             logger.Information($"Tentacle.exe location: {tentacleExe}");
 
-            await CreateInstance(tentacleExe, configFilePath, instanceName, HomeDirectory, cancellationToken);
-            await AddCertificateToTentacle(tentacleExe, instanceName, CertificatePfxPath, HomeDirectory, cancellationToken);
+            var tempDirectory = Path.Combine(Path.GetTempPath(), instanceName);
+            Directory.CreateDirectory(tempDirectory);
+
+            var configFilePath = Path.Combine(tempDirectory, "Tentacle.config");
+
+            var exePath = new FileInfo(tentacleExe);
+            CopyDirectory(exePath.Directory.FullName, tempDirectory, true);
+
+            tentacleExe = Path.Combine(tempDirectory, exePath.Name);
+
+            await CreateInstance(tentacleExe, configFilePath, instanceName, false, HomeDirectory, cancellationToken);
+            await AddCertificateToTentacle(tentacleExe, instanceName, CertificatePfxPath, false, HomeDirectory, cancellationToken);
+
             ConfigureTentacleToListen(configFilePath);
 
             var runningTentacle = await StartTentacle(
                 null,
                 tentacleExe,
                 instanceName,
+                false,
                 HomeDirectory,
                 TentacleThumbprint,
                 logger,
@@ -39,6 +51,39 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             SetThePort(configFilePath, runningTentacle.ServiceUri.Port);
 
             return runningTentacle;
+
+            static void CopyDirectory(string sourceDir, string destinationDir, bool recursive)
+            {
+                // Get information about the source directory
+                var dir = new DirectoryInfo(sourceDir);
+
+                // Check if the source directory exists
+                if (!dir.Exists)
+                    throw new DirectoryNotFoundException($"Source directory not found: {dir.FullName}");
+
+                // Cache directories before we start copying
+                DirectoryInfo[] dirs = dir.GetDirectories();
+
+                // Create the destination directory
+                Directory.CreateDirectory(destinationDir);
+
+                // Get the files in the source directory and copy to the destination directory
+                foreach (FileInfo file in dir.GetFiles())
+                {
+                    string targetFilePath = Path.Combine(destinationDir, file.Name);
+                    file.CopyTo(targetFilePath);
+                }
+
+                // If recursive and copying subdirectories, recursively call this method
+                if (recursive)
+                {
+                    foreach (DirectoryInfo subDir in dirs)
+                    {
+                        string newDestinationDir = Path.Combine(destinationDir, subDir.Name);
+                        CopyDirectory(subDir.FullName, newDestinationDir, true);
+                    }
+                }
+            }
         }
 
         private void ConfigureTentacleToListen(string configFilePath)

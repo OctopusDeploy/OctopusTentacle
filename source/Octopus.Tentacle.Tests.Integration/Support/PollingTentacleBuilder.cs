@@ -30,15 +30,16 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             var logger = log.ForContext<PollingTentacleBuilder>();
             logger.Information($"Tentacle.exe location: {tentacleExe}");
 
-            await CreateInstance(tentacleExe, configFilePath, instanceName, HomeDirectory, cancellationToken);
+            await CreateInstance(tentacleExe, configFilePath, instanceName, false, HomeDirectory, cancellationToken);
             ConfigureTentacleToPollOctopusServer(configFilePath, subscriptionId);
-            await AddCertificateToTentacle(tentacleExe, instanceName, CertificatePfxPath, HomeDirectory, cancellationToken);
+            await AddCertificateToTentacle(tentacleExe, instanceName, CertificatePfxPath, false, HomeDirectory, cancellationToken);
             
 
             return await StartTentacle(
                 subscriptionId,
                 tentacleExe,
                 instanceName,
+                false,
                 HomeDirectory,
                 TentacleThumbprint,
                 logger,
