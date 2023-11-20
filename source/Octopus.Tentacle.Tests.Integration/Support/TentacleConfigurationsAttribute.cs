@@ -43,8 +43,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             [TentacleVersions.v5_0_15_LastOfVersion5] = new[] { ScriptServiceV1Type },
             [TentacleVersions.v6_3_417_LastWithScriptServiceV1Only] = new[] { ScriptServiceV1Type },
             [TentacleVersions.v6_3_451_NoCapabilitiesService] = new[] { ScriptServiceV1Type },
-            [TentacleVersions.v7_1_189_ScriptServiceV2Added] = new[] { ScriptServiceV2Type },
-            [TentacleVersions.v8_0_81_LastWithoutScriptServiceV3Alpha] = new[] { ScriptServiceV2Type }
+            [TentacleVersions.v7_1_189_SyncHalibutAndScriptServiceV2] = new[] { ScriptServiceV2Type },
+            [TentacleVersions.v8_0_81_AsyncHalibutAndLastWithoutScriptServiceV3Alpha] = new[] { ScriptServiceV2Type }
         };
 
         public static IEnumerator GetEnumerator(
@@ -67,8 +67,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                     TentacleVersions.Current,
                     TentacleVersions.v5_0_15_LastOfVersion5,
                     TentacleVersions.v6_3_417_LastWithScriptServiceV1Only,
-                    TentacleVersions.v7_1_189_ScriptServiceV2Added,
-                    TentacleVersions.v8_0_81_LastWithoutScriptServiceV3Alpha
+                    TentacleVersions.v7_1_189_SyncHalibutAndScriptServiceV2,
+                    TentacleVersions.v8_0_81_AsyncHalibutAndLastWithoutScriptServiceV3Alpha
                 });
             }
 
@@ -80,8 +80,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                     TentacleVersions.v5_0_4_FirstLinuxRelease,
                     TentacleVersions.v5_0_12_AutofacServiceFactoryIsInShared,
                     TentacleVersions.v6_3_417_LastWithScriptServiceV1Only, // the autofac service is in tentacle, but tentacle does not have the capabilities service.
-                    TentacleVersions.v7_1_189_ScriptServiceV2Added,
-                    TentacleVersions.v8_0_81_LastWithoutScriptServiceV3Alpha
+                    TentacleVersions.v7_1_189_SyncHalibutAndScriptServiceV2,
+                    TentacleVersions.v8_0_81_AsyncHalibutAndLastWithoutScriptServiceV3Alpha
                 });
             }
 
@@ -91,8 +91,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 {
                     TentacleVersions.Current,
                     TentacleVersions.v6_3_417_LastWithScriptServiceV1Only,
-                    TentacleVersions.v7_1_189_ScriptServiceV2Added, // Testing against v1 and v2 script services
-                    TentacleVersions.v8_0_81_LastWithoutScriptServiceV3Alpha // Testing against v1 and v2 script services
+                    TentacleVersions.v7_1_189_SyncHalibutAndScriptServiceV2, // Testing against v1 and v2 script services
+                    TentacleVersions.v8_0_81_AsyncHalibutAndLastWithoutScriptServiceV3Alpha // Testing against v1 and v2 script services
                 });
             }
 
