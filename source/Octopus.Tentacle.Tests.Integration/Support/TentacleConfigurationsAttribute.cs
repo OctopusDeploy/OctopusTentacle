@@ -15,19 +15,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             bool testNoCapabilitiesServiceVersions = false,
             bool testScriptIsolationLevelVersions = false,
             bool testDefaultTentacleRuntimeOnly = false,
-            bool testCurrentVersionOnly = false,
             params object[] additionalParameterTypes)
             : base(
                 typeof(TentacleConfigurationTestCases),
                 nameof(TentacleConfigurationTestCases.GetEnumerator),
-                new object[] { 
-                    testCommonVersions, 
-                    testCapabilitiesServiceVersions, 
-                    testNoCapabilitiesServiceVersions, 
-                    testScriptIsolationLevelVersions, 
-                    testDefaultTentacleRuntimeOnly, 
-                    testCurrentVersionOnly,
-                    additionalParameterTypes })
+                new object[] { testCommonVersions, testCapabilitiesServiceVersions, testNoCapabilitiesServiceVersions, testScriptIsolationLevelVersions, testDefaultTentacleRuntimeOnly, additionalParameterTypes })
         {
         }
     }
@@ -47,8 +39,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             [TentacleVersions.v5_0_15_LastOfVersion5] = ScriptServiceV1Type,
             [TentacleVersions.v6_3_417_LastWithScriptServiceV1Only] = ScriptServiceV1Type,
             [TentacleVersions.v6_3_451_NoCapabilitiesService] = ScriptServiceV1Type,
-            [TentacleVersions.v7_1_189_SyncHalibutAndScriptServiceV2] = ScriptServiceV2Type,
-            [TentacleVersions.v8_0_81_AsyncHalibutAndLastWithoutScriptServiceV3Alpha] = ScriptServiceV2Type
+            [TentacleVersions.v7_1_189_ScriptServiceV2Added] = ScriptServiceV2Type,
+            [TentacleVersions.v8_0_81_LastWithoutScriptServiceV3Alpha] = ScriptServiceV2Type
         };
 
         public static IEnumerator GetEnumerator(
@@ -57,7 +49,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             bool testNoCapabilitiesServiceVersions,
             bool testScriptIsolationLevel,
             bool testDefaultTentacleRuntimeOnly,
-            bool testCurrentVersionOnly,
             object[] additionalParameterTypes)
         {
             var tentacleTypes = new[] { TentacleType.Listening, TentacleType.Polling };
@@ -70,8 +61,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                     TentacleVersions.Current,
                     TentacleVersions.v5_0_15_LastOfVersion5,
                     TentacleVersions.v6_3_417_LastWithScriptServiceV1Only,
-                    TentacleVersions.v7_1_189_SyncHalibutAndScriptServiceV2,
-                    TentacleVersions.v8_0_81_AsyncHalibutAndLastWithoutScriptServiceV3Alpha
+                    TentacleVersions.v7_1_189_ScriptServiceV2Added,
+                    TentacleVersions.v8_0_81_LastWithoutScriptServiceV3Alpha
                 });
             }
 
@@ -83,8 +74,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                     TentacleVersions.v5_0_4_FirstLinuxRelease,
                     TentacleVersions.v5_0_12_AutofacServiceFactoryIsInShared,
                     TentacleVersions.v6_3_417_LastWithScriptServiceV1Only, // the autofac service is in tentacle, but tentacle does not have the capabilities service.
-                    TentacleVersions.v7_1_189_SyncHalibutAndScriptServiceV2,
-                    TentacleVersions.v8_0_81_AsyncHalibutAndLastWithoutScriptServiceV3Alpha
+                    TentacleVersions.v7_1_189_ScriptServiceV2Added,
+                    TentacleVersions.v8_0_81_LastWithoutScriptServiceV3Alpha
                 });
             }
 
@@ -94,8 +85,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 {
                     TentacleVersions.Current,
                     TentacleVersions.v6_3_417_LastWithScriptServiceV1Only,
-                    TentacleVersions.v7_1_189_SyncHalibutAndScriptServiceV2, // Testing against v1 and v2 script services
-                    TentacleVersions.v8_0_81_AsyncHalibutAndLastWithoutScriptServiceV3Alpha // Testing against v1 and v2 script services
+                    TentacleVersions.v7_1_189_ScriptServiceV2Added, // Testing against v1 and v2 script services
+                    TentacleVersions.v8_0_81_LastWithoutScriptServiceV3Alpha // Testing against v1 and v2 script services
                 });
             }
 
@@ -107,21 +98,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 });
             }
 
-            if (testCurrentVersionOnly)
-            {
-                if (versions.Count != 0)
-                {
-                    throw new ArgumentException("testCurrentVersionOnly cannot be used when other versions are also being tested", nameof(testCurrentVersionOnly));
-                }
-
-                versions.Add(TentacleVersions.Current);
-            }
-
             if (versions.Count == 0)
             {
                 versions.Add(TentacleVersions.Current);
-                versions.Add(TentacleVersions.v7_1_189_SyncHalibutAndScriptServiceV2);
-                versions.Add(TentacleVersions.v8_0_81_AsyncHalibutAndLastWithoutScriptServiceV3Alpha);
             }
 
             var runtimes = new List<TentacleRuntime> { DefaultTentacleRuntime.Value };
