@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Util;
 
@@ -15,7 +14,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             bool testNoCapabilitiesServiceVersions = false,
             bool testScriptIsolationLevelVersions = false,
             bool testDefaultTentacleRuntimeOnly = false,
-            ScriptServiceVersionToTest scriptServiceToTest = ScriptServiceVersionToTest.None,
+            ScriptServiceVersionToTest scriptServiceToTest = ScriptServiceVersionToTest.TentacleSupported,
             params object[] additionalParameterTypes)
             : base(
                 typeof(TentacleConfigurationTestCases),
@@ -120,7 +119,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 from tentacleType in tentacleTypes
                 from runtime in runtimes
                 from version in versions.Distinct()
-                from serviceToTest in GetScriptServicesToTest(scriptServiceToTest, version)
+                from serviceToTest in GetScriptServicesToTest(scriptServiceToTest, version).DefaultIfEmpty()
                 select new TentacleConfigurationTestCase(
                     tentacleType,
                     runtime,
@@ -143,9 +142,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 ScriptServiceVersionToTest.Version2 => new[] { ScriptServiceV2Type },
                 ScriptServiceVersionToTest.Version3Alpha => new[] { ScriptServiceV3AlphaType },
                 //if no specific script service version was specified, fallback on the services in the tentacle version
-                ScriptServiceVersionToTest.None => version != null
+                ScriptServiceVersionToTest.TentacleSupported => version != null
                     ? ScriptServiceVersionsToTestMap[version]
                     : CurrentScriptServiceVersionsToTest,
+                ScriptServiceVersionToTest.None => Enumerable.Empty<Type>(),
 
                 _ => throw new ArgumentOutOfRangeException(nameof(scriptServiceToTest), scriptServiceToTest, null)
             };

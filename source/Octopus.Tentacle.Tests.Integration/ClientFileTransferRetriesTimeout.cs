@@ -28,7 +28,7 @@ namespace Octopus.Tentacle.Tests.Integration
         readonly TimeSpan retryBackoffBuffer = TimeSpan.FromSeconds(2);
 
         [Test]
-        [TentacleConfigurations(additionalParameterTypes: new object[] { typeof(StopPortForwarderAfterFirstCallValues) })]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None, additionalParameterTypes: new object[] { typeof(StopPortForwarderAfterFirstCallValues) })]
         public async Task WhenRpcRetriesTimeOut_DuringUploadFile_TheRpcCallIsCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase, bool stopPortForwarderAfterFirstCall)
         {
             PortForwarder portForwarder = null!;
@@ -92,7 +92,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TentacleConfigurations]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task WhenUploadFileFails_AndTakesLongerThanTheRetryDuration_TheCallIsNotRetried_AndTimesOut(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             var retryDuration = TimeSpan.FromSeconds(15);
@@ -133,7 +133,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TentacleConfigurations(additionalParameterTypes: new object[] { typeof(StopPortForwarderAfterFirstCallValues) })]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None, additionalParameterTypes: new object[] { typeof(StopPortForwarderAfterFirstCallValues) })]
         public async Task WhenRpcRetriesTimeOut_DuringDownloadFile_TheRpcCallIsCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase, bool stopPortForwarderAfterFirstCall)
         {
             PortForwarder portForwarder = null!;
@@ -197,7 +197,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TentacleConfigurations]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task WhenDownloadFileFails_AndTakesLongerThanTheRetryDuration_TheCallIsNotRetried_AndTimesOut(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             var retryDuration = TimeSpan.FromSeconds(15);

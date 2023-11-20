@@ -1,8 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Text;
-using Octopus.Tentacle.Client.Scripts;
-using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Tests.Integration.Support.Legacy;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
@@ -16,7 +13,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         /// <summary>
         /// The <see cref="Type"/> of the script service to be tested
         /// </summary>
-        public Type ScriptServiceToTest { get; }
+        public Type? ScriptServiceToTest { get; }
 
         public TentacleConfigurationTestCase(TentacleType tentacleType,
             TentacleRuntime tentacleRuntime,
@@ -53,7 +50,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
             builder.Append($"{TentacleType},");
             var version = Version?.ToString() ?? "Latest";
-            builder.Append($"{version},{ScriptServiceToTest.Name.Replace("IAsyncClient", string.Empty)}");
+            builder.Append($"{version}");
+
+            if (ScriptServiceToTest is not null)
+            {
+                builder.Append($",{ScriptServiceToTest.Name.Replace("IAsyncClient", string.Empty)}");
+            }
 
             var tentacleRuntimeDescription = TentacleRuntime.GetDescription();
             var currentRuntime = RuntimeDetection.GetCurrentRuntime();
