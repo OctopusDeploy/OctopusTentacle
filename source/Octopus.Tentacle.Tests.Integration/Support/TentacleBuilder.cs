@@ -224,7 +224,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             }
             else
             {
-                await RunTentacleCommand(tentacleExe, new[] { "create-instance", "--config", configFilePath}, (new FileInfo(tentacleExe)).Directory!, cancellationToken);
+                await RunTentacleCommand(tentacleExe, new[] { "create-instance" }, (new FileInfo(tentacleExe)).Directory!, cancellationToken);
             }
 
             cancellationToken.ThrowIfCancellationRequested();
