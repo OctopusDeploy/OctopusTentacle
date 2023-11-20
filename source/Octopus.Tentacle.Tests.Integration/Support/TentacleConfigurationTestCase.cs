@@ -12,20 +12,21 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public TentacleType TentacleType { get; }
         public TentacleRuntime TentacleRuntime { get; }
         public Version? Version { get; }
+
         /// <summary>
-        /// The <see cref="Type"/> of the latest script service available on the tentacle version
+        /// The <see cref="Type"/> of the script service to be tested
         /// </summary>
-        public Type ScriptServiceTypeToTest { get; }
+        public Type ScriptServiceToTest { get; }
 
         public TentacleConfigurationTestCase(TentacleType tentacleType,
             TentacleRuntime tentacleRuntime,
             Version? version,
-            Type scriptServiceTypeToTest)
+            Type scriptServiceToTest)
         {
             TentacleType = tentacleType;
             TentacleRuntime = tentacleRuntime;
             Version = version;
-            ScriptServiceTypeToTest = scriptServiceTypeToTest;
+            ScriptServiceToTest = scriptServiceToTest;
         }
 
         internal ClientAndTentacleBuilder CreateBuilder()
@@ -33,7 +34,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             return new ClientAndTentacleBuilder(TentacleType)
                 .WithClientOptions(opt =>
                 {
-                    opt.DisableScriptServiceV3Alpha = ScriptServiceTypeToTest != typeof(IAsyncClientScriptServiceV3Alpha);
+                    opt.DisableScriptServiceV3Alpha = ScriptServiceToTest != TentacleConfigurationTestCases.ScriptServiceV3AlphaType;
                 })
                 .WithTentacleVersion(Version)
                 .WithTentacleRuntime(TentacleRuntime);
@@ -52,7 +53,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
             builder.Append($"{TentacleType},");
             var version = Version?.ToString() ?? "Latest";
-            builder.Append($"{version},{ScriptServiceTypeToTest.Name.Replace("IAsyncClient", string.Empty)}");
+            builder.Append($"{version},{ScriptServiceToTest.Name.Replace("IAsyncClient", string.Empty)}");
 
             var tentacleRuntimeDescription = TentacleRuntime.GetDescription();
             var currentRuntime = RuntimeDetection.GetCurrentRuntime();

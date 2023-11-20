@@ -30,11 +30,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
     static class TentacleConfigurationTestCases
     {
-        static readonly Type ScriptServiceV3AlphaType = typeof(IAsyncClientScriptServiceV3Alpha);
-        static readonly Type ScriptServiceV2Type = typeof(IAsyncClientScriptServiceV2);
-        static readonly Type ScriptServiceV1Type = typeof(IAsyncClientScriptService);
+        public static readonly Type ScriptServiceV3AlphaType = typeof(IAsyncClientScriptServiceV3Alpha);
+        public static readonly Type ScriptServiceV2Type = typeof(IAsyncClientScriptServiceV2);
+        public static readonly Type ScriptServiceV1Type = typeof(IAsyncClientScriptService);
 
-        static readonly IEnumerable<Type> CurrentScriptServiceVersionToTest = new[] { ScriptServiceV2Type, ScriptServiceV3AlphaType };
+        static readonly IEnumerable<Type> CurrentScriptServiceVersionsToTest = new[] { ScriptServiceV2Type, ScriptServiceV3AlphaType };
 
         static readonly Dictionary<Version, IEnumerable<Type>> ScriptServiceVersionsToTestMap = new()
         {
@@ -125,7 +125,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 //null == current version and you can't have a null dictionary key
                 from scriptServiceToTest in version != null
                     ? ScriptServiceVersionsToTestMap[version]
-                    : CurrentScriptServiceVersionToTest
+                    : CurrentScriptServiceVersionsToTest
                 select new TentacleConfigurationTestCase(
                     tentacleType,
                     runtime,
