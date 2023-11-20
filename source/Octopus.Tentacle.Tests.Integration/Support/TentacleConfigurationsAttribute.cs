@@ -15,14 +15,14 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             bool testNoCapabilitiesServiceVersions = false,
             bool testScriptIsolationLevelVersions = false,
             bool testDefaultTentacleRuntimeOnly = false,
-            Type? specificServiceToTest = null,
+            Type? scriptServiceToTest = null,
             params object[] additionalParameterTypes)
             : base(
                 typeof(TentacleConfigurationTestCases),
                 nameof(TentacleConfigurationTestCases.GetEnumerator),
                 new object[]
                 {
-                    testCommonVersions, testCapabilitiesServiceVersions, testNoCapabilitiesServiceVersions, testScriptIsolationLevelVersions, testDefaultTentacleRuntimeOnly, specificServiceToTest, additionalParameterTypes
+                    testCommonVersions, testCapabilitiesServiceVersions, testNoCapabilitiesServiceVersions, testScriptIsolationLevelVersions, testDefaultTentacleRuntimeOnly, scriptServiceToTest, additionalParameterTypes
                 })
         {
         }
@@ -53,7 +53,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             bool testNoCapabilitiesServiceVersions,
             bool testScriptIsolationLevel,
             bool testDefaultTentacleRuntimeOnly,
-            Type? specificServiceToTest,
+            Type? scriptServiceToTest,
             object[] additionalParameterTypes)
         {
             var tentacleTypes = new[] { TentacleType.Listening, TentacleType.Polling };
@@ -107,8 +107,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             if (versions.Count == 0)
             {
                 versions.Add(TentacleVersions.Current);
-                //for current, we want to test both SSv2 and SSv3Alpha services
-                scriptServicesToTest = new List<ScriptServiceVersion?> { ScriptServiceVersion.Version2, ScriptServiceVersion.Version3Alpha };
             }
 
             var runtimes = new List<TentacleRuntime> { DefaultTentacleRuntime.Value };
@@ -123,9 +121,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 from tentacleType in tentacleTypes
                 from runtime in runtimes
                 from version in versions.Distinct()
-                from scriptServiceToTest in
-                    specificServiceToTest is not null
-                        ? new[] { specificServiceToTest }
+                from serviceToTest in
+                    scriptServiceToTest is not null
+                        ? new[] { scriptServiceToTest }
                         : version != null
                             ? ScriptServiceVersionsToTestMap[version]
                             : CurrentScriptServiceVersionsToTest
@@ -133,7 +131,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                     tentacleType,
                     runtime,
                     version,
-                    scriptServiceToTest);
+                    serviceToTest);
 
             if (additionalParameterTypes.Length == 0)
             {
