@@ -15,7 +15,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             bool testNoCapabilitiesServiceVersions = false,
             bool testScriptIsolationLevelVersions = false,
             bool testDefaultTentacleRuntimeOnly = false,
-            Type? scriptServiceToTest = null,
+            ScriptServiceVersionToTest scriptServiceToTest = ScriptServiceVersionToTest.None,
             params object[] additionalParameterTypes)
             : base(
                 typeof(TentacleConfigurationTestCases),
@@ -53,12 +53,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             bool testNoCapabilitiesServiceVersions,
             bool testScriptIsolationLevel,
             bool testDefaultTentacleRuntimeOnly,
-            Type? scriptServiceToTest,
+            ScriptServiceVersionToTest scriptServiceToTest,
             object[] additionalParameterTypes)
         {
             var tentacleTypes = new[] { TentacleType.Listening, TentacleType.Polling };
             List<Version?> versions = new();
-            List<ScriptServiceVersion?> scriptServicesToTest = new();
 
             if (testCommonVersions)
             {
@@ -121,12 +120,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 from tentacleType in tentacleTypes
                 from runtime in runtimes
                 from version in versions.Distinct()
-                from serviceToTest in
-                    scriptServiceToTest is not null
-                        ? new[] { scriptServiceToTest }
-                        : version != null
-                            ? ScriptServiceVersionsToTestMap[version]
-                            : CurrentScriptServiceVersionsToTest
+                from serviceToTest in GetScriptServicesToTest(scriptServiceToTest, version)
                 select new TentacleConfigurationTestCase(
                     tentacleType,
                     runtime,
@@ -139,6 +133,22 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             }
 
             return CombineTestCasesWithAdditionalParameters(testCases, additionalParameterTypes);
+        }
+
+        static IEnumerable<Type> GetScriptServicesToTest(ScriptServiceVersionToTest scriptServiceToTest, Version? version)
+        {
+            return scriptServiceToTest switch
+            {
+                ScriptServiceVersionToTest.Version1 => new[] { ScriptServiceV1Type },
+                ScriptServiceVersionToTest.Version2 => new[] { ScriptServiceV2Type },
+                ScriptServiceVersionToTest.Version3Alpha => new[] { ScriptServiceV3AlphaType },
+                //if no specific script service version was specified, fallback on the services in the tentacle version
+                ScriptServiceVersionToTest.None => version != null
+                    ? ScriptServiceVersionsToTestMap[version]
+                    : CurrentScriptServiceVersionsToTest,
+
+                _ => throw new ArgumentOutOfRangeException(nameof(scriptServiceToTest), scriptServiceToTest, null)
+            };
         }
 
         static IEnumerator CombineTestCasesWithAdditionalParameters(IEnumerable<TentacleConfigurationTestCase> testCases, object[] additionalEnumerables)
