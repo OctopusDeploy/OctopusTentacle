@@ -16,13 +16,13 @@ namespace Octopus.Tentacle.Contracts.ScriptServiceV3Alpha
             string taskId,
             ScriptTicket scriptTicket,
             TimeSpan? durationToWaitForScriptToFinish,
-            IScriptExecutionContext scriptExecutionContext)
+            IScriptExecutionContext executionContext)
         {
             Arguments = arguments;
             TaskId = taskId;
             ScriptTicket = scriptTicket;
             DurationToWaitForScriptToFinish = durationToWaitForScriptToFinish;
-            ExecutionContext = scriptExecutionContext;
+            ExecutionContext = executionContext;
             ScriptBody = scriptBody;
             Isolation = isolation;
             ScriptIsolationMutexTimeout = scriptIsolationMutexTimeout;
@@ -37,7 +37,7 @@ namespace Octopus.Tentacle.Contracts.ScriptServiceV3Alpha
             string taskId,
             ScriptTicket scriptTicket,
             TimeSpan? durationToWaitForScriptToFinish,
-            IScriptExecutionContext scriptExecutionContext,
+            IScriptExecutionContext executionContext,
             params ScriptFile[]? additionalFiles)
             : this(scriptBody,
                 isolation,
@@ -47,7 +47,7 @@ namespace Octopus.Tentacle.Contracts.ScriptServiceV3Alpha
                 taskId,
                 scriptTicket,
                 durationToWaitForScriptToFinish,
-                scriptExecutionContext)
+                executionContext)
         {
             if (additionalFiles != null)
                 Files.AddRange(additionalFiles);
@@ -61,7 +61,7 @@ namespace Octopus.Tentacle.Contracts.ScriptServiceV3Alpha
             string taskId,
             ScriptTicket scriptTicket,
             TimeSpan? durationToWaitForScriptToFinish,
-            IScriptExecutionContext scriptExecutionContext,
+            IScriptExecutionContext executionContext,
             Dictionary<ScriptType, string>? additionalScripts,
             params ScriptFile[]? additionalFiles)
             : this(scriptBody,
@@ -72,7 +72,7 @@ namespace Octopus.Tentacle.Contracts.ScriptServiceV3Alpha
                 taskId,
                 scriptTicket,
                 durationToWaitForScriptToFinish,
-                scriptExecutionContext,
+                executionContext,
                 additionalFiles)
         {
             if (additionalScripts == null || !additionalScripts.Any())

@@ -9,6 +9,8 @@ namespace Octopus.Tentacle.Scripts
         const string EnvPowerShellPath = "PowerShell.exe";
         static string? powerShellPath;
 
+        public string Name => nameof(PowerShell);
+
         public string GetFullPath()
             => GetFullPowerShellPath();
 
