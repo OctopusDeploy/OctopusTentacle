@@ -12,12 +12,14 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         private readonly ILogger logger;
         public IHalibutRuntime ServerHalibutRuntime { get; }
         public int ServerListeningPort { get; }
+        public string Thumbprint { get; set; }
 
-        public Server(IHalibutRuntime serverHalibutRuntime, int serverListeningPort, ILogger logger)
+        public Server(IHalibutRuntime serverHalibutRuntime, int serverListeningPort, string thumbprint, ILogger logger)
         {
             this.logger = logger.ForContext<Server>();
             this.ServerHalibutRuntime = serverHalibutRuntime;
             ServerListeningPort = serverListeningPort;
+            Thumbprint = thumbprint;
         }
 
         public async ValueTask DisposeAsync()

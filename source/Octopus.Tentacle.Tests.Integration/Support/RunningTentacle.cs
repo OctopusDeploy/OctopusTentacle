@@ -1,7 +1,9 @@
 ﻿using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Tentacle.Client.Retries;
+using Polly;
 using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
@@ -19,20 +21,29 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             TemporaryDirectory temporaryDirectory,
             Func<CancellationToken, Task<(Task, Uri)>> startTentacleFunction,
             string thumbprint, 
+            string instanceName, 
+            string homeDirectory, 
+            string applicationDirectory, 
             Func<CancellationToken, Task> deleteInstanceFunction,
             ILogger logger)
         {
             this.startTentacleFunction = startTentacleFunction;
             this.temporaryDirectory = temporaryDirectory;
-            this.logger = logger.ForContext<RunningTentacle>();
-
-            Thumbprint = thumbprint;
             this.deleteInstanceFunction = deleteInstanceFunction;
+            
+            Thumbprint = thumbprint;
+            InstanceName = instanceName;
+            HomeDirectory = homeDirectory;
+            ApplicationDirectory = applicationDirectory;
+
+            this.logger = logger.ForContext<RunningTentacle>();
         }
 
         public Uri ServiceUri { get; private set; }
+        public string InstanceName { get; }
         public string Thumbprint { get; }
-        public string HomeDirectory => temporaryDirectory.DirectoryPath;
+        public string HomeDirectory { get; }
+        public string ApplicationDirectory { get; }
 
         public async Task Start(CancellationToken cancellationToken)
         {
@@ -95,6 +106,21 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             temporaryDirectory.Dispose();
 
             logger.Information("Finished DisposeAsync");
+        }
+
+        public string ReadAllLogFileText()
+        {
+            var filePath = Path.Combine(HomeDirectory, "Logs", "OctopusTentacle.txt");
+
+            var content = Policy
+                .Handle<IOException>()
+                .WaitAndRetry(
+                    10,
+                    retryCount => TimeSpan.FromMilliseconds(100 * retryCount),
+                    (exception, _) => { logger.Information("Failed to read file {File}: {Message}. Retrying!", filePath, exception.Message); })
+                .Execute(() => File.ReadAllText(filePath));
+
+            return content;
         }
     }
 }

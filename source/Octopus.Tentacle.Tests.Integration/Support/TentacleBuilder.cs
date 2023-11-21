@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Security.Policy;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -84,6 +85,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             string tentacleExe,
             string instanceName,
             TemporaryDirectory tempDirectory,
+            string applicationDirectory,
             string tentacleThumbprint,
             ILogger logger,
             CancellationToken cancellationToken)
@@ -92,6 +94,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 tempDirectory,
                 startTentacleFunction: ct => RunTentacle(serviceUri, tentacleExe, instanceName, tempDirectory, ct),
                 tentacleThumbprint,
+                instanceName,
+                HomeDirectory.DirectoryPath,
+                applicationDirectory,
                 deleteInstanceFunction: ct => DeleteInstanceIgnoringFailure(tentacleExe, instanceName, tempDirectory, logger, ct),
                 logger);
 
