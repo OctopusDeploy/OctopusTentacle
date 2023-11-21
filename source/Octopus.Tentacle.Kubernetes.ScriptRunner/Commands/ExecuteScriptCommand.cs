@@ -1,7 +1,9 @@
 ﻿using System.CommandLine;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Diagnostics;
+using Octopus.Tentacle.Kubernetes.ScriptRunner.Util;
 using Octopus.Tentacle.Scripts;
+using Octopus.Tentacle.Services.Scripts;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Kubernetes.ScriptRunner.Commands;
@@ -55,15 +57,14 @@ public class ExecuteScriptCommand : RootCommand
         scriptPath = scriptPath.Trim('"');
 
         var workingDirectory = Path.GetDirectoryName(scriptPath);
-        var scriptTicket = workingDirectory!.Split(Path.DirectorySeparatorChar).Last();
 
-        var workspace = new BashScriptWorkspace(
-            new ScriptTicket(scriptTicket),
-            workingDirectory,
+        var valueMasker = new SensitiveValueMasker();
+
+        //create a new script log using the working directory and the log file
+        var log = new ScriptLog(Path.Combine(workingDirectory, "Output.log"),
             new OctopusPhysicalFileSystem(new SystemLog()),
-            new SensitiveValueMasker());
+            valueMasker);
 
-        var log = workspace.CreateLog();
         var logWriter = log.CreateWriter();
 
         using var writer = logToConsole
@@ -91,27 +92,6 @@ public class ExecuteScriptCommand : RootCommand
             writer.WriteOutput(ProcessOutputSource.StdErr, ex.ToString());
 
             return ScriptExitCodes.PowershellInvocationErrorExitCode;
-        }
-    }
-
-    class ConsoleLogWriterWrapper : IScriptLogWriter
-    {
-        readonly IScriptLogWriter writer;
-
-        public ConsoleLogWriterWrapper(IScriptLogWriter writer)
-        {
-            this.writer = writer;
-        }
-
-        public void WriteOutput(ProcessOutputSource source, string message)
-        {
-            Console.WriteLine($"[{source}] {message}");
-            writer.WriteOutput(source, message);
-        }
-
-        public void Dispose()
-        {
-            writer.Dispose();
         }
     }
 }
