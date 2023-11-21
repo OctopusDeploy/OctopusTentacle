@@ -11,10 +11,13 @@ using NUnit.Framework;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
 using Octopus.Tentacle.Diagnostics;
+using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Scripts;
+using Octopus.Tentacle.Scripts.Kubernetes;
 using Octopus.Tentacle.Services.Scripts;
 using Octopus.Tentacle.Util;
 
@@ -41,6 +44,12 @@ namespace Octopus.Tentacle.Tests.Integration
                 new Lazy<LocalShellScriptExecutor>(() =>
                     new LocalShellScriptExecutor(
                         PlatformDetection.IsRunningOnWindows ? new PowerShell() : new Bash(),
+                        Substitute.For<ISystemLog>())),
+                new Lazy<KubernetesJobScriptExecutor>(() =>
+                    new KubernetesJobScriptExecutor(
+                        Substitute.For<IKubernetesJobService>(),
+                        Substitute.For<IKubernetesClusterService>(),
+                        Substitute.For<IApplicationInstanceSelector>(),
                         Substitute.For<ISystemLog>())));
 
             service = new ScriptServiceV3Alpha(

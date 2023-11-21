@@ -251,7 +251,8 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
 
             var tag = tagVersion?.ToString(3) ?? "latest";
 
-            return $"octopuslabs/k8s-workertools:{tag}";
+            //return $"octopuslabs/k8s-workertools:{tag}";
+            return "octopusdeploy/worker-tools:ubuntu.22.04";
         }
 
         void RecordScriptHasStarted(IScriptLogWriter writer)

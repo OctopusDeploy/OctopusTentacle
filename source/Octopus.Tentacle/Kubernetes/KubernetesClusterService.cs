@@ -7,26 +7,27 @@ namespace Octopus.Tentacle.Kubernetes
 {
     public interface IKubernetesClusterService
     {
-        Task<Version> GetClusterVersion();
+        Task<ClusterVersion> GetClusterVersion();
     }
 
     public class KubernetesClusterService : KubernetesService, IKubernetesClusterService
     {
-        readonly AsyncLazy<Version> lazyVersion;
+        readonly AsyncLazy<ClusterVersion> lazyVersion;
         public KubernetesClusterService(IKubernetesClientConfigProvider configProvider)
             : base(configProvider)
         {
             //As the cluster version isn't going to change without restarting, we just cache the version in an AsyncLazy
-            lazyVersion = new AsyncLazy<Version>(async () =>
+            lazyVersion = new AsyncLazy<ClusterVersion>(async () =>
             {
                 var versionInfo = await Client.Version.GetCodeAsync();
 
-                //the git version is in the format "vX.Y.Z" so we trim the "v" from the front
-                return Version.Parse(versionInfo.GitVersion.Substring(1));
+                return new ClusterVersion(int.Parse(versionInfo.Major), int.Parse(versionInfo.Minor));
             });
         }
 
-        public async Task<Version> GetClusterVersion()
+        public async Task<ClusterVersion> GetClusterVersion()
             => await lazyVersion;
     }
+
+    public record ClusterVersion(int Major, int Minor);
 }
