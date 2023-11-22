@@ -5,6 +5,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 {
     public static class RuntimeDetection
     {
+        // TODO OE: Better runtime detection
         public const string DotNet6 = "net6.0";
         public const string Framework48 = "net48";
         
@@ -20,6 +21,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             return Framework48;
         }
 
+        // TODO OE: Do we need an 8.0 specific thing?
         public static bool IsDotNet60 => GetCurrentRuntime() == DotNet6;
         public static bool IsFramework48 => GetCurrentRuntime() == Framework48;
     }

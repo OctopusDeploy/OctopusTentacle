@@ -46,7 +46,7 @@ partial class Build : NukeBuild
     readonly bool AutoDetectBranch = IsLocalBuild;
 
     [OctoVersion(UpdateBuildNumber = true, BranchParameter = nameof(BranchName),
-        AutoDetectBranchParameter = nameof(AutoDetectBranch), Framework = "net6.0")]
+        AutoDetectBranchParameter = nameof(AutoDetectBranch), Framework = "net8.0")]
     readonly OctoVersionInfo OctoVersionInfo = null!;
 
     [Parameter] string TestFramework = "";
@@ -84,7 +84,7 @@ partial class Build : NukeBuild
     readonly AbsolutePath TestDirectory = RootDirectory / "_test";
 
     const string NetFramework = "net48";
-    const string NetCore = "net6.0";
+    const string NetCore = "net6.0"; // TODO OE: what about NET8
     readonly string[] RuntimeIds = { "win", "win-x86", "win-x64", "linux-x64", "linux-musl-x64", "linux-arm64", "linux-arm", "osx-x64", "osx-arm64" };
 
     static readonly string Timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");

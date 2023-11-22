@@ -43,6 +43,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     {
         private readonly NUnitTestCaseBuilder _builder = new();
         
+        // TODO OE: NET8?
         public const string Net60ClientNet48Service = nameof(Net60ClientNet48Service);
 
         /// <summary>

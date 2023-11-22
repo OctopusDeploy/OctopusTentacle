@@ -62,6 +62,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
             if (PlatformDetection.IsRunningOnWindows)
             {
                 var net48ArtifactName = "tentacle-net48-win.zip";
+                // TODO OE: Net8
                 var net60ArtifactName = $"tentacle-{RuntimeDetection.GetCurrentRuntime()}-win-{Architecture()}.zip";
 
                 var name = runtime switch

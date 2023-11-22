@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFrameworks>net6.0;net8.0</TargetFrameworks>
     <NoWarn>CS0649;CS0169</NoWarn>
     <NukeRootDirectory>..</NukeRootDirectory>
     <NukeScriptDirectory>..</NukeScriptDirectory>
@@ -11,8 +11,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Nuke.Common" Version="6.0.3" />
+    <PackageReference Include="Nuke.Common" Version="7.0.6" />
     <PackageReference Include="System.IO.FileSystem.AccessControl" Version="4.5.0" />
+    <!-- NET8: Remove this when Nuke releases a new version which sets it for us -->
+    <EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
   </ItemGroup>
 
   <ItemGroup>

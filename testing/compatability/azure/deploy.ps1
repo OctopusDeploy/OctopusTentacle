@@ -17,6 +17,7 @@ az group create --name Tentacle --location australiaeast
 
 # .NET 6.0
 #---------------------------------
+# TODO OE: NET8.0
 $env:tentacleUri = "https://octopus-downloads-staging.s3.amazonaws.com/octopus/Octopus.Tentacle.$env:tentacleVersion-net6.0-win-x64.msi"
 
 # Windows 2012
