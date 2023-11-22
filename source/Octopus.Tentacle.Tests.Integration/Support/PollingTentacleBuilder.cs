@@ -31,21 +31,22 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             logger.Information($"Tentacle.exe location: {tentacleExe}");
 
             await CreateInstance(tentacleExe, configFilePath, instanceName, HomeDirectory, cancellationToken);
-            ConfigureTentacleToPollOctopusServer(configFilePath, subscriptionId);
+            var applicationDirectory = Path.Combine(HomeDirectory.DirectoryPath, "appdir");
+            ConfigureTentacleToPollOctopusServer(configFilePath, subscriptionId, applicationDirectory);
             await AddCertificateToTentacle(tentacleExe, instanceName, CertificatePfxPath, HomeDirectory, cancellationToken);
             
-
             return await StartTentacle(
                 subscriptionId,
                 tentacleExe,
                 instanceName,
                 HomeDirectory,
+                applicationDirectory,
                 TentacleThumbprint,
                 logger,
                 cancellationToken);
         }
 
-        private void ConfigureTentacleToPollOctopusServer(string configFilePath, Uri subscriptionId)
+        private void ConfigureTentacleToPollOctopusServer(string configFilePath, Uri subscriptionId, string applicationDirectory)
         {
             WithWritableTentacleConfiguration(configFilePath, writableTentacleConfiguration =>
             {
@@ -56,7 +57,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                     SubscriptionId = subscriptionId.ToString()
                 });
 
-                writableTentacleConfiguration.SetApplicationDirectory(Path.Combine(new DirectoryInfo(configFilePath).Parent.FullName, "appdir"));
+                writableTentacleConfiguration.SetApplicationDirectory(applicationDirectory);
                 writableTentacleConfiguration.SetNoListen(true);
             });
         }
