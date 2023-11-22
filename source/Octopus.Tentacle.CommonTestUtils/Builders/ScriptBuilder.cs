@@ -1,6 +1,6 @@
 using System;
 using System.Text;
-using Octopus.Tentacle.Util;
+using Octopus.Tentacle.CommonTestUtils;
 
 namespace Octopus.Tentacle.Tests.Integration.Util.Builders
 {

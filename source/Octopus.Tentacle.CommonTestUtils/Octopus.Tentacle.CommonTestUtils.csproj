@@ -1,9 +1,8 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <RuntimeIdentifiers>win;win-x86;win-x64;linux-x64;osx-x64;osx-arm64;linux-arm64;linux-arm;linux-musl-x64</RuntimeIdentifiers>
         <LangVersion>9</LangVersion>
-        <Nullable>enable</Nullable>
+        <Nullable>enable</Nullable>        
     </PropertyGroup>
     <PropertyGroup Condition="!$([MSBuild]::IsOSUnixLike())">
         <TargetFrameworks>net48;net6.0</TargetFrameworks>
@@ -11,10 +10,20 @@
     <PropertyGroup Condition="$([MSBuild]::IsOSUnixLike())">
         <TargetFramework>net6.0</TargetFramework>
     </PropertyGroup>
+    <Choose>
+        <When Condition="'$(TargetFramework)' == 'net48'">
+            <PropertyGroup>
+                <RuntimeIdentifiers>win</RuntimeIdentifiers><!-- This is AnyCPU -->
+            </PropertyGroup>
+        </When>
+        <Otherwise>
+            <PropertyGroup>
+                <RuntimeIdentifiers>win-x86;win-x64;linux-x64;osx-x64;osx-arm64;linux-arm64;linux-arm;linux-musl-x64</RuntimeIdentifiers>
+            </PropertyGroup>
+        </Otherwise>
+    </Choose>
     <ItemGroup>
-      <ProjectReference Include="..\Octopus.Tentacle.Client\Octopus.Tentacle.Client.csproj" />
       <ProjectReference Include="..\Octopus.Tentacle.Contracts\Octopus.Tentacle.Contracts.csproj" />
-      <ProjectReference Include="..\Octopus.Tentacle\Octopus.Tentacle.csproj" />
     </ItemGroup>
 
 </Project>

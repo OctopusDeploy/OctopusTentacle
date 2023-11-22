@@ -13,7 +13,7 @@ using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
 
-namespace Octopus.Tentacle.Tests.Client
+namespace Octopus.Tentacle.Client.Tests
 {
     [TestFixture]
     [Parallelizable(ParallelScope.All)]

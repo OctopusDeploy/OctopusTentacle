@@ -25,7 +25,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Octopus.Tentacle.Tests", "O
 	ProjectSection(ProjectDependencies) = postProject
 		{0FCA52BD-3D2C-4F05-9F87-42920C1FA4F4} = {0FCA52BD-3D2C-4F05-9F87-42920C1FA4F4}
 		{407551C4-B4DF-4665-96B1-BFF6A6A74D36} = {407551C4-B4DF-4665-96B1-BFF6A6A74D36}
-		{506D425E-10F0-49A1-826C-8B704B7140B2} = {506D425E-10F0-49A1-826C-8B704B7140B2}
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Octopus.Tentacle.Upgrader", "Octopus.Tentacle.Upgrader\Octopus.Tentacle.Upgrader.csproj", "{8F604C33-4137-4C00-A9B3-847FD403811D}"
@@ -46,6 +45,7 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Octopus.Tentacle.CommonTestUtils", "Octopus.Tentacle.CommonTestUtils\Octopus.Tentacle.CommonTestUtils.csproj", "{D0F2DBE7-017B-4AF1-9CA7-8C746220C6F0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Octopus.Tentacle.Common", "Octopus.Tentacle.Common\Octopus.Tentacle.Common.csproj", "{EBB212E4-C1B3-411E-98B8-F7BFF8DDD15F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Octopus.Tentacle.Client.Tests", "Octopus.Tentacle.Client.Tests\Octopus.Tentacle.Client.Tests.csproj", "{48C4D03B-F044-4089-942E-20DF102059F0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -176,7 +176,6 @@ Global
 		{86C4288E-9982-4DC6-994F-461C95640C7D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{86C4288E-9982-4DC6-994F-461C95640C7D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{86C4288E-9982-4DC6-994F-461C95640C7D}.Release-net48-win|Any CPU.ActiveCfg = Debug|Any CPU
-		{86C4288E-9982-4DC6-994F-461C95640C7D}.Release-net48-win|Any CPU.Build.0 = Debug|Any CPU
 		{86C4288E-9982-4DC6-994F-461C95640C7D}.Release-net6.0-linux-arm|Any CPU.ActiveCfg = Debug|Any CPU
 		{86C4288E-9982-4DC6-994F-461C95640C7D}.Release-net6.0-linux-arm|Any CPU.Build.0 = Debug|Any CPU
 		{86C4288E-9982-4DC6-994F-461C95640C7D}.Release-net6.0-linux-arm64|Any CPU.ActiveCfg = Debug|Any CPU
@@ -198,7 +197,6 @@ Global
 		{506D425E-10F0-49A1-826C-8B704B7140B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{506D425E-10F0-49A1-826C-8B704B7140B2}.Release|Any CPU.Build.0 = Release|Any CPU
 		{506D425E-10F0-49A1-826C-8B704B7140B2}.Release-net48-win|Any CPU.ActiveCfg = Release|Any CPU
-		{506D425E-10F0-49A1-826C-8B704B7140B2}.Release-net48-win|Any CPU.Build.0 = Release|Any CPU
 		{506D425E-10F0-49A1-826C-8B704B7140B2}.Release-net6.0-linux-arm|Any CPU.ActiveCfg = Release|Any CPU
 		{506D425E-10F0-49A1-826C-8B704B7140B2}.Release-net6.0-linux-arm|Any CPU.Build.0 = Release|Any CPU
 		{506D425E-10F0-49A1-826C-8B704B7140B2}.Release-net6.0-linux-arm64|Any CPU.ActiveCfg = Release|Any CPU
@@ -259,6 +257,27 @@ Global
 		{EBB212E4-C1B3-411E-98B8-F7BFF8DDD15F}.Release-net6.0-win-x64|Any CPU.Build.0 = Release|Any CPU
 		{EBB212E4-C1B3-411E-98B8-F7BFF8DDD15F}.Release-net6.0-win-x86|Any CPU.ActiveCfg = Release|Any CPU
 		{EBB212E4-C1B3-411E-98B8-F7BFF8DDD15F}.Release-net6.0-win-x86|Any CPU.Build.0 = Release|Any CPU
+		{48C4D03B-F044-4089-942E-20DF102059F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{48C4D03B-F044-4089-942E-20DF102059F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{48C4D03B-F044-4089-942E-20DF102059F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{48C4D03B-F044-4089-942E-20DF102059F0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{48C4D03B-F044-4089-942E-20DF102059F0}.Release-net48-win|Any CPU.ActiveCfg = Debug|Any CPU
+		{48C4D03B-F044-4089-942E-20DF102059F0}.Release-net6.0-linux-arm|Any CPU.ActiveCfg = Debug|Any CPU
+		{48C4D03B-F044-4089-942E-20DF102059F0}.Release-net6.0-linux-arm|Any CPU.Build.0 = Debug|Any CPU
+		{48C4D03B-F044-4089-942E-20DF102059F0}.Release-net6.0-linux-arm64|Any CPU.ActiveCfg = Debug|Any CPU
+		{48C4D03B-F044-4089-942E-20DF102059F0}.Release-net6.0-linux-arm64|Any CPU.Build.0 = Debug|Any CPU
+		{48C4D03B-F044-4089-942E-20DF102059F0}.Release-net6.0-linux-musl-x64|Any CPU.ActiveCfg = Debug|Any CPU
+		{48C4D03B-F044-4089-942E-20DF102059F0}.Release-net6.0-linux-musl-x64|Any CPU.Build.0 = Debug|Any CPU
+		{48C4D03B-F044-4089-942E-20DF102059F0}.Release-net6.0-linux-x64|Any CPU.ActiveCfg = Debug|Any CPU
+		{48C4D03B-F044-4089-942E-20DF102059F0}.Release-net6.0-linux-x64|Any CPU.Build.0 = Debug|Any CPU
+		{48C4D03B-F044-4089-942E-20DF102059F0}.Release-net6.0-osx-arm64|Any CPU.ActiveCfg = Debug|Any CPU
+		{48C4D03B-F044-4089-942E-20DF102059F0}.Release-net6.0-osx-arm64|Any CPU.Build.0 = Debug|Any CPU
+		{48C4D03B-F044-4089-942E-20DF102059F0}.Release-net6.0-osx-x64|Any CPU.ActiveCfg = Debug|Any CPU
+		{48C4D03B-F044-4089-942E-20DF102059F0}.Release-net6.0-osx-x64|Any CPU.Build.0 = Debug|Any CPU
+		{48C4D03B-F044-4089-942E-20DF102059F0}.Release-net6.0-win-x64|Any CPU.ActiveCfg = Debug|Any CPU
+		{48C4D03B-F044-4089-942E-20DF102059F0}.Release-net6.0-win-x64|Any CPU.Build.0 = Debug|Any CPU
+		{48C4D03B-F044-4089-942E-20DF102059F0}.Release-net6.0-win-x86|Any CPU.ActiveCfg = Debug|Any CPU
+		{48C4D03B-F044-4089-942E-20DF102059F0}.Release-net6.0-win-x86|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

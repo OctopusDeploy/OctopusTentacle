@@ -11,7 +11,7 @@ using NUnit.Framework;
 using Octopus.Tentacle.Client.Retries;
 using Polly.Timeout;
 
-namespace Octopus.Tentacle.Tests.Client
+namespace Octopus.Tentacle.Client.Tests
 {
     [TestFixture]
     [Parallelizable(ParallelScope.All)]
@@ -40,7 +40,7 @@ namespace Octopus.Tentacle.Tests.Client
 
             result.Should().Be(expectedResult);
         }
-        
+
         [TestCase(TimeoutStrategy.Optimistic)]
         [TestCase(TimeoutStrategy.Pessimistic)]
         public async Task ReturnsTheResultAfterARetry(TimeoutStrategy timeoutStrategy)
@@ -70,7 +70,7 @@ namespace Octopus.Tentacle.Tests.Client
             callCount.Should().BeGreaterThan(1);
             result.Should().Be(expectedResult);
         }
-        
+
         [TestCase(TimeoutStrategy.Optimistic)]
         [TestCase(TimeoutStrategy.Pessimistic)]
         public async Task RetriesHalibutExceptions(TimeoutStrategy timeoutStrategy)
@@ -345,7 +345,7 @@ namespace Octopus.Tentacle.Tests.Client
                     CancellationToken.None);
             }
             catch (HalibutClientException) { }
-            
+
             var lastExpectedRetry = retries.Last(x => x.elapsedDuration + x.sleepDuration < handler.RetryTimeout);
 
             stopWatch.Elapsed.Should()
@@ -379,7 +379,7 @@ namespace Octopus.Tentacle.Tests.Client
                     CancellationToken.None);
             }
             catch (HalibutClientException) { }
-            
+
             var lastExpectedRetry = retries.Last();
             (lastExpectedRetry.elapsedDuration + lastExpectedRetry.sleepDuration).Should().BeLessThan(handler.RetryTimeout);
         }
@@ -544,7 +544,7 @@ namespace Octopus.Tentacle.Tests.Client
             stopWatch.Elapsed.Should().BeGreaterOrEqualTo(TimeSpan.FromSeconds(8)).And.BeLessThan(TimeSpan.FromSeconds(20));
             callCount.Should().Be(1);
         }
-        
+
         [TestCase(TimeoutStrategy.Optimistic)]
         [TestCase(TimeoutStrategy.Pessimistic)]
         public async Task CanPerformAnActionBeforeARetry(TimeoutStrategy timeoutStrategy)
@@ -578,7 +578,7 @@ namespace Octopus.Tentacle.Tests.Client
             onRetryActions[0].Should().Be(1);
             onRetryActions[1].Should().Be(2);
         }
-        
+
         [TestCase(TimeoutStrategy.Optimistic)]
         [TestCase(TimeoutStrategy.Pessimistic)]
         public async Task CanPerformAnActionBeforeTimeoutWhenARetryCausedTheTimeout(TimeoutStrategy timeoutStrategy)

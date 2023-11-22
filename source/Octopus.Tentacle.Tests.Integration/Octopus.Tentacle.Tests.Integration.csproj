@@ -8,16 +8,11 @@
         <OutputPath>bin</OutputPath>
         <PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
         <RootNamespace>Octopus.Tentacle.Tests.Integration</RootNamespace>
-        <RuntimeIdentifiers>win;win-x86;win-x64;linux-x64;osx-x64;osx-arm64;linux-arm64;linux-arm;linux-musl-x64</RuntimeIdentifiers>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <LangVersion>9</LangVersion>
         <Nullable>annotations</Nullable>
-    </PropertyGroup>
-    <PropertyGroup Condition="!$([MSBuild]::IsOSUnixLike())">
-        <TargetFrameworks>net48;net6.0</TargetFrameworks>
-    </PropertyGroup>
-    <PropertyGroup Condition="$([MSBuild]::IsOSUnixLike())">
         <TargetFramework>net6.0</TargetFramework>
+        <RuntimeIdentifiers>win-x86;win-x64;linux-x64;osx-x64;osx-arm64;linux-arm64;linux-arm;linux-musl-x64</RuntimeIdentifiers>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(TargetFramework)' == 'net48' ">
@@ -26,8 +21,7 @@
 
   <ItemGroup>
         <PackageReference Include="CliWrap" Version="3.6.4" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.2" />
-        <ProjectReference Include="..\Octopus.Tentacle.CommonTestUtils\Octopus.Tentacle.CommonTestUtils.csproj" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.2" />                       
         <PackageReference Include="NetCoreStack.DispatchProxyAsync" Version="2.2.0" />
         <PackageReference Include="NSubstitute" Version="4.4.0" />
         <PackageReference Include="FluentAssertions" Version="6.7.0" />
@@ -43,6 +37,12 @@
         <Reference Include="System.IdentityModel" Condition="'$(TargetFramework)' == 'net48'" />
         <Reference Include="System.ServiceProcess" Condition="'$(TargetFramework)' == 'net48'" />
     </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Octopus.Tentacle.CommonTestUtils\Octopus.Tentacle.CommonTestUtils.csproj" /> 
+        <ProjectReference Include="..\Octopus.Tentacle.Client\Octopus.Tentacle.Client.csproj" />
+        <ProjectReference Include="..\Octopus.Tentacle.Contracts\Octopus.Tentacle.Contracts.csproj" />
+        <ProjectReference Include="..\Octopus.Tentacle\Octopus.Tentacle.csproj" />
+    </ItemGroup>    
     <ItemGroup>
       <Content Include="Startup\Packages\Acme.Service\Acme.Service.exe">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

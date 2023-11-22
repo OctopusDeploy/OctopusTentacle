@@ -4,7 +4,7 @@ using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Tentacle.Client.Scripts;
 
-namespace Octopus.Tentacle.Tests.Client
+namespace Octopus.Tentacle.Client.Tests
 {
     [TestFixture]
     [Parallelizable(ParallelScope.All)]
