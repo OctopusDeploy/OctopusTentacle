@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>net48;net6.0</TargetFrameworks>
+        <LangVersion>9</LangVersion>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+
+    <ItemGroup>
+      <PackageReference Include="NLog" Version="5.0.4" />
+      <PackageReference Include="Polly" Version="7.2.2" />
+      <PackageReference Include="System.Management" Version="4.7.0" />
+    </ItemGroup>
+    
+    <PropertyGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
+        <DefineConstants>$(DefineConstants);HAS_NULLABLE_REF_TYPES</DefineConstants>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Octopus.Tentacle.Contracts\Octopus.Tentacle.Contracts.csproj" />
+    </ItemGroup>
+
+</Project>

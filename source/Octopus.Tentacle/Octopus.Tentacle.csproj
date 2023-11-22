@@ -54,9 +54,7 @@
 		<PackageReference Include="Octopus.Configuration" Version="4.1.0" />
 		<PackageReference Include="Octopus.Diagnostics" Version="2.1.0" />
 		<PackageReference Include="Octopus.Time" Version="1.1.339" />
-		<PackageReference Include="Polly" Version="7.2.2" />
 		<PackageReference Include="Portable.BouncyCastle" Version="1.8.4" />
-		<PackageReference Include="System.Management" Version="4.7.0" />
 		<PackageReference Include="System.ValueTuple" Version="4.5.0" />
 		<PackageReference Include="System.Net.Primitives" Version="4.3.1" />
 		<PackageReference Include="TaskScheduler" Version="2.7.2" />
@@ -91,14 +89,12 @@
 		<PackageReference Include="System.ServiceModel.Primitives" Version="4.5.3" />
 		<PackageReference Include="System.ServiceProcess.ServiceController" Version="7.0.1" />
 		<PackageReference Include="System.IO.FileSystem.AccessControl" Version="5.0.0" />
-		<PackageReference Include="NLog" Version="5.0.4" />
 		<PackageReference Include="System.Diagnostics.EventLog" Version="7.0.0" />
 		<PackageReference Include="System.Text.Encoding.CodePages" Version="6.0.0" />
 		<PackageReference Include="System.DirectoryServices.AccountManagement" Version="4.5.0" />
 		<PackageReference Include="System.Security.Cryptography.ProtectedData" Version="5.0.0" />
 	</ItemGroup>
 	<ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
-		<PackageReference Include="NLog" Version="5.0.4" />
 		<PackageReference Include="System.Runtime" Version="4.3.0" />
 		<Reference Include="System.Security" />
 		<Reference Include="System.DirectoryServices" />
@@ -107,6 +103,7 @@
 		<Reference Include="System.Web" />
 	</ItemGroup>
 	<ItemGroup>
+		<ProjectReference Include="..\Octopus.Tentacle.Common\Octopus.Tentacle.Common.csproj" />
 		<ProjectReference Include="..\Octopus.Tentacle.Contracts\Octopus.Tentacle.Contracts.csproj" />
 	</ItemGroup>
 	<ItemGroup>
