@@ -7,11 +7,23 @@
     <OutputPath>bin</OutputPath>
     <PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
     <RootNamespace>Octopus.Tentacle.Tests</RootNamespace>
-    <RuntimeIdentifiers>win;win-x86;win-x64;linux-x64;osx-x64;osx-arm64;linux-arm64;linux-arm;linux-musl-x64</RuntimeIdentifiers>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <LangVersion>9</LangVersion>
     <Nullable>annotations</Nullable>
   </PropertyGroup>
+    
+    <Choose>
+        <When Condition="'$(TargetFramework)' == 'net48'">
+            <PropertyGroup>
+                <RuntimeIdentifiers>win</RuntimeIdentifiers><!-- This is AnyCPU -->
+            </PropertyGroup>
+        </When>
+        <Otherwise>
+            <PropertyGroup>
+                <RuntimeIdentifiers>win-x86;win-x64;linux-x64;osx-x64;osx-arm64;linux-arm64;linux-arm;linux-musl-x64</RuntimeIdentifiers>
+            </PropertyGroup>
+        </Otherwise>
+    </Choose>
 
   <PropertyGroup Condition="!$([MSBuild]::IsOSUnixLike())">
     <TargetFrameworks>net48;net6.0</TargetFrameworks>

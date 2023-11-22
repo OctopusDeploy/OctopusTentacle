@@ -1,18 +1,10 @@
 // ReSharper disable RedundantUsingDirective
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
 using System.Linq;
-using System.Security.AccessControl;
-using System.Security.Cryptography.X509Certificates;
-using System.Security.Principal;
-using System.Text.RegularExpressions;
 using System.Xml;
 using JetBrains.Annotations;
 using Nuke.Common;
 using Nuke.Common.CI;
-using Nuke.Common.CI.TeamCity;
 using Nuke.Common.Execution;
 using Nuke.Common.IO;
 using Nuke.Common.ProjectModel;
@@ -21,7 +13,6 @@ using Nuke.Common.Tools.Docker;
 using Nuke.Common.Tools.DotNet;
 using Nuke.Common.Tools.MSBuild;
 using Nuke.Common.Tools.OctoVersion;
-using Nuke.Common.Tools.SignTool;
 using Nuke.Common.Utilities.Collections;
 using static Nuke.Common.IO.FileSystemTasks;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
