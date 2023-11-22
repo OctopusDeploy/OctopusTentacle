@@ -67,7 +67,7 @@ namespace Octopus.Tentacle.Services.Scripts
                         {
                             results.Add(new ProcessOutput(ProcessOutputSource.StdErr, $"Corrupt Tentacle log at line {sequence}, no more logs will be read", lastLogLineOccured??DateTimeOffset.Now));
                             // Tentacle doesn't continue to write to logs after it has died so it is probably safe to assume we don't
-                            // need to try to read more JSONL lines. 
+                            // need to try to read more JSONL lines.
                             break;
                         }
                     }
