@@ -46,11 +46,11 @@ namespace Octopus.Tentacle.Tests.Integration
             ThenClientOperationMetricsShouldBeSuccessful(executeScriptMetrics);
 
             string expectedScriptService;
-            if (tentacleConfigurationTestCase.Version.HasScriptServiceV3Alpha())
+            if (tentacleConfigurationTestCase.ScriptServiceToTest == TentacleConfigurationTestCases.ScriptServiceV3AlphaType)
             {
                 expectedScriptService = nameof(IScriptServiceV3Alpha);
             }
-            else if (tentacleConfigurationTestCase.Version.HasScriptServiceV2())
+            else if (tentacleConfigurationTestCase.ScriptServiceToTest == TentacleConfigurationTestCases.ScriptServiceV2Type)
             {
                 expectedScriptService = nameof(IScriptServiceV2);
             }
