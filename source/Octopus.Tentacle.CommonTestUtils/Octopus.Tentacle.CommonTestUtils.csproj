@@ -2,8 +2,13 @@
 
     <PropertyGroup>
         <LangVersion>9</LangVersion>
-        <Nullable>enable</Nullable>
+        <Nullable>enable</Nullable>        
+    </PropertyGroup>
+    <PropertyGroup Condition="!$([MSBuild]::IsOSUnixLike())">
         <TargetFrameworks>net48;net6.0</TargetFrameworks>
+    </PropertyGroup>
+    <PropertyGroup Condition="$([MSBuild]::IsOSUnixLike())">
+        <TargetFramework>net6.0</TargetFramework>
     </PropertyGroup>
     <Choose>
         <When Condition="'$(TargetFramework)' == 'net48'">

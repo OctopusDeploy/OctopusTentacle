@@ -269,7 +269,8 @@ partial class Build
         // have to shunt them all around the place.
         // By doing things this way, we can have a seamless experience between local and remote builds.
         var octopusTentacleTestsDirectory = BuildDirectory / "Octopus.Tentacle.Tests" / testFramework / testRuntime;
-        var testAssembliesPath = octopusTentacleTestsDirectory.GlobFiles("*.Tests.dll");
+        var octopusTentacleClientTestsDirectory = BuildDirectory / "Octopus.Tentacle.Client.Tests" / testFramework / testRuntime;
+        var testAssembliesPath = octopusTentacleTestsDirectory.GlobFiles("*.Tests.dll").Union(octopusTentacleClientTestsDirectory.GlobFiles("*.Tests.dll"));
         
         try
         {
