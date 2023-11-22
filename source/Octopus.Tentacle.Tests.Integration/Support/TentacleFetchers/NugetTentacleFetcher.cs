@@ -61,18 +61,13 @@ namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
         {
             if (PlatformDetection.IsRunningOnWindows)
             {
-                var net48ArtifactName = "tentacle-net48-win.zip";
-                // TODO OE: Net8
-                var net60ArtifactName = $"tentacle-{RuntimeDetection.GetCurrentRuntime()}-win-{Architecture()}.zip";
-
-                var name = runtime switch
+                return runtime switch
                 {
-                    TentacleRuntime.DotNet6 => net60ArtifactName,
-                    TentacleRuntime.Framework48 => net48ArtifactName,
+                    // TODO OE: this is supposed to be $"tentacle-{RuntimeDetection.GetCurrentRuntime()}-win-{Architecture()}.zip",
+                    TentacleRuntime.DotNet6 or TentacleRuntime.DotNet8 => $"tentacle-net6.0-win-{Architecture()}.zip",
+                    TentacleRuntime.Framework48 => "tentacle-net48-win.zip",
                     _ => throw new ArgumentOutOfRangeException(nameof(runtime), runtime, null)
                 };
-
-                return name;
             }
 
             if (PlatformDetection.IsRunningOnMac)

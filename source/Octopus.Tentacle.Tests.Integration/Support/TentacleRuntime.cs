@@ -8,9 +8,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public const TentacleRuntime Value =
 #if NETFRAMEWORK
             TentacleRuntime.Framework48;
-#else
-            TentacleRuntime.DotNet6; // TODO OE: NET 8
-#endif
+#elif NET6_0
+            TentacleRuntime.DotNet6;
+#elif NET8_0
+            TentacleRuntime.DotNet8;
+#endif // no default "else" case; the code should intentionally not compile on other target frameworks unless we come and update it
     }
 
     public enum TentacleRuntime
