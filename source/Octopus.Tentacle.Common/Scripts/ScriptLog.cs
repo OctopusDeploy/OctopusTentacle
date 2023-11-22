@@ -124,7 +124,7 @@ namespace Octopus.Tentacle.Services.Scripts
             {
                 this.sync = sync;
                 this.sensitiveValueMasker = sensitiveValueMasker;
-                writeStream = fileSystem.OpenFile(logFile, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+                writeStream = fileSystem.OpenFile(logFile, FileMode.Append, FileAccess.Write);
                 writer = new StreamWriter(writeStream, Encoding.UTF8);
                 json = new JsonTextWriter(writer);
             }
