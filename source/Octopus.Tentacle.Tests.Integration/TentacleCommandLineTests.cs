@@ -268,6 +268,7 @@ Or one of the common options:
 
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        [NonParallelizable]
         public async Task HelpForInstanceSpecificCommandsAlwaysWorks(TentacleConfigurationTestCase tc)
         {
             var (_, stdout, stderr) = await RunCommand(tc, "help", "--format=json");
@@ -389,6 +390,7 @@ The details are logged above. These commands probably need to take Lazy<T> depen
 
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        [NonParallelizable]
         public async Task ShouldLogStartupDiagnosticsToInstanceLogFileOnly(TentacleConfigurationTestCase tc)
         {
             await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
@@ -477,6 +479,7 @@ Or one of the common options:
 
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        [NonParallelizable]
         public async Task ShowConfigurationCommand(TentacleConfigurationTestCase tc)
         {
             await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
@@ -492,6 +495,7 @@ Or one of the common options:
 
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        [NonParallelizable]
         public async Task ShowConfigurationCommandOnPartiallyConfiguredTentacle(TentacleConfigurationTestCase tc)
         {
             var instanceId = Guid.NewGuid().ToString();
