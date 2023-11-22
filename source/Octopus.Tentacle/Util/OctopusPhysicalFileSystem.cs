@@ -7,7 +7,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Diagnostics;
-using Octopus.Tentacle.Kubernetes;
 using Polly;
 
 namespace Octopus.Tentacle.Util

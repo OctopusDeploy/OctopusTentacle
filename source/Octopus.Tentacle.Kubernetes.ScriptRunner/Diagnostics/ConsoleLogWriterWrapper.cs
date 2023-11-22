@@ -1,7 +1,8 @@
-﻿using Octopus.Tentacle.Contracts;
+﻿using System;
+using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Scripts;
 
-namespace Octopus.Tentacle.Kubernetes.ScriptRunner.Util;
+namespace Octopus.Tentacle.Kubernetes.ScriptRunner.Diagnostics;
 
 class ConsoleLogWriterWrapper : IScriptLogWriter
 {

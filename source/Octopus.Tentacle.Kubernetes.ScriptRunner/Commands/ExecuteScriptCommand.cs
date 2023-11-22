@@ -1,7 +1,7 @@
 ﻿using System.CommandLine;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Diagnostics;
-using Octopus.Tentacle.Kubernetes.ScriptRunner.Util;
+using Octopus.Tentacle.Kubernetes.ScriptRunner.Diagnostics;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Services.Scripts;
 using Octopus.Tentacle.Util;

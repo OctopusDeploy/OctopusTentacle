@@ -178,10 +178,10 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                                 {
                                     Name = jobName,
                                     Image = executionContext.ContainerImage ?? await GetDefaultContainer(),
-                                    Command = new List<string> { "dotnet" },
+                                    Command = new List<string> { "bash" },
                                     Args = new List<string>
                                     {
-                                        "/data/tentacle-app/source/Octopus.Tentacle.Kubernetes.ScriptRunner/bin/net6.0/Octopus.Tentacle.Kubernetes.ScriptRunner.dll",
+                                        "/data/tentacle-app/source/Octopus.Tentacle.Kubernetes.ScriptRunner/publish/linux-x64/Octopus.Tentacle.Kubernetes.ScriptRunner",
                                         "--script",
                                         $"\"/data/tentacle-home/{instanceName}/Work/{scriptTicket.TaskId}/{scriptName}\"",
                                         "--logToConsole"
@@ -251,8 +251,8 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
 
             var tag = tagVersion?.ToString(3) ?? "latest";
 
-            //return $"octopuslabs/k8s-workertools:{tag}";
-            return "octopusdeploy/worker-tools:ubuntu.22.04";
+            return $"octopuslabs/k8s-workertools:{tag}";
+            //return "octopusdeploy/worker-tools:ubuntu.22.04";
         }
 
         void RecordScriptHasStarted(IScriptLogWriter writer)

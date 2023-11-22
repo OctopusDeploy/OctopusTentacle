@@ -33,12 +33,12 @@
     <option name="PASS_PARENT_ENVS" value="1" />
     <envs>
       <env name="KUBECONFIG" value="$PROJECT_DIR$/../../../../c/Users/alastair/.kube/config" />
-      <env name="OCTOPUS__TENTACLE__FORCEK8S" value="True" />
-      <env name="OCTOPUS__TENTACLE__K8SNAMESPACE" value="octopus-tentacle" />
-      <env name="OCTOPUS__TENTACLE__K8SSERVICEACCOUNTNAME" value="octopus-tentacle-job" />
       <env name="OCTOPUS__TENTACLE__K8SUSEJOBS" value="True" />
-      <env name="OCTOPUS__TENTACLE__K8SJOBVOLUMEYAML" value="[{name: tentacle-home, persistentVolumeClaim: {claimName: tentacle-home-pv-claim}}, {name: tentacle-app, persistentVolumeClaim: {claimName: tentacle-app-pv-claim}}]" />
+      <env name="OCTOPUS__TENTACLE__K8SSERVICEACCOUNTNAME" value="octopus-tentacle-job" />
+      <env name="OCTOPUS__TENTACLE__K8SNAMESPACE" value="octopus-tentacle" />
       <env name="OCTOPUS__TENTACLE__MACHINEHOMEDIRECTORY" value="$PROJECT_DIR$/../../../../c/ProgramData/Octopus" />
+      <env name="OCTOPUS__TENTACLE__FORCEK8S" value="True" />
+      <env name="OCTOPUS__TENTACLE__K8SJOBVOLUMEYAML" value="[{name: tentacle-home, persistentVolumeClaim: {claimName: tentacle-home-pv-claim}}, {name: tentacle-app, persistentVolumeClaim: {claimName: tentacle-app-pv-claim}}]" />
     </envs>
     <option name="USE_EXTERNAL_CONSOLE" value="0" />
     <option name="USE_MONO" value="0" />
@@ -51,7 +51,6 @@
     <option name="PROJECT_TFM" value="net6.0" />
     <method v="2">
       <option name="Build" />
-      <option name="Build" default="false" projectName="Octopus.Tentacle.Kubernetes.ScriptRunner" projectPath="$PROJECT_DIR$/Octopus.Tentacle.Kubernetes.ScriptRunner/Octopus.Tentacle.Kubernetes.ScriptRunner.csproj" />
     </method>
   </configuration>
 </component>
