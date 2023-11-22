@@ -20,6 +20,7 @@ namespace Octopus.Tentacle.Tests.Integration
             string expectedHash = null;
             using (var client = new HttpClient())
             {
+                client.Timeout = TimeSpan.FromSeconds(150);
                 using (var response = await client.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead))
                 {
                     response.EnsureSuccessStatusCode();
