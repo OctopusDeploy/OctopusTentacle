@@ -25,13 +25,15 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
             await CreateInstance(tentacleExe, configFilePath, instanceName, HomeDirectory, cancellationToken);
             await AddCertificateToTentacle(tentacleExe, instanceName, CertificatePfxPath, HomeDirectory, cancellationToken);
-            ConfigureTentacleToListen(configFilePath);
+            var applicationDirectory = Path.Combine(HomeDirectory.DirectoryPath, "appdir");
+            ConfigureTentacleToListen(configFilePath, applicationDirectory);
 
             var runningTentacle = await StartTentacle(
                 null,
                 tentacleExe,
                 instanceName,
                 HomeDirectory,
+                applicationDirectory,
                 TentacleThumbprint,
                 logger,
                 cancellationToken);
@@ -41,7 +43,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             return runningTentacle;
         }
 
-        private void ConfigureTentacleToListen(string configFilePath)
+        private void ConfigureTentacleToListen(string configFilePath, string applicationDirectory)
         {
             WithWritableTentacleConfiguration(configFilePath, writableTentacleConfiguration =>
             {
@@ -50,7 +52,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                     CommunicationStyle = CommunicationStyle.TentaclePassive,
                 });
 
-                writableTentacleConfiguration.SetApplicationDirectory(Path.Combine(new DirectoryInfo(configFilePath).Parent.FullName, "appdir"));
+                writableTentacleConfiguration.SetApplicationDirectory(applicationDirectory);
 
                 writableTentacleConfiguration.SetServicesPortNumber(0); // Find a random available port
                 writableTentacleConfiguration.SetNoListen(false);
