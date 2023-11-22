@@ -116,7 +116,6 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
             }
         }
 
-
         async Task<int> CheckIfPodHasCompleted(CancellationToken cancellationToken)
         {
             var resultStatusCode = 0;
@@ -150,6 +149,7 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
 
             var jobName = jobService.BuildJobName(scriptTicket);
 
+            //Deserialize the volume configuration
             var volumes = k8s.KubernetesYaml.Deserialize<List<V1Volume>>(KubernetesConfig.JobVolumeYaml);
 
             var job = new V1Job
@@ -178,10 +178,9 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                                 {
                                     Name = jobName,
                                     Image = executionContext.ContainerImage ?? await GetDefaultContainer(),
-                                    Command = new List<string> { "bash" },
+                                    Command = new List<string> { $"/data/tentacle-home/{instanceName}/KubernetesTools/Octopus.Tentacle.Kubernetes.ScriptRunner" },
                                     Args = new List<string>
                                     {
-                                        "/data/tentacle-app/source/Octopus.Tentacle.Kubernetes.ScriptRunner/publish/linux-x64/Octopus.Tentacle.Kubernetes.ScriptRunner",
                                         "--script",
                                         $"\"/data/tentacle-home/{instanceName}/Work/{scriptTicket.TaskId}/{scriptName}\"",
                                         "--logToConsole"
