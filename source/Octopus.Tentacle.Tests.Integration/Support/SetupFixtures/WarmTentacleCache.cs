@@ -36,7 +36,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.SetupFixtures
         private async Task GetTentacleVersion(ILogger logger, Version tentacleVersion)
         {
             // TODO OE: NET8
-            if (PlatformDetection.IsRunningOnWindows && RuntimeDetection.IsDotNet60)
+            if (PlatformDetection.IsRunningOnWindows && RuntimeDetection.IsDotNet6or8)
             {
                 await GetTentacleVersionWithRuntime(logger, tentacleVersion, TentacleRuntime.DotNet6);
                 await GetTentacleVersionWithRuntime(logger, tentacleVersion, TentacleRuntime.Framework48);
