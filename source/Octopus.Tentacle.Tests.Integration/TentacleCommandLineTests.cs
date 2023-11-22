@@ -27,7 +27,7 @@ namespace Octopus.Tentacle.Tests.Integration
     public class TentacleCommandLineTests : IntegrationTest
     {
         [Test]
-        [TentacleConfigurations(testCurrentVersionOnly: true)]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task TentacleExeNoArguments(TentacleConfigurationTestCase tc)
         {
             var (exitCode, stdout, stderr) = await RunCommand(tc);
@@ -39,7 +39,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
         
         [Test]
-        [TentacleConfigurations(testCurrentVersionOnly: true)]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task UnknownCommand(TentacleConfigurationTestCase tc)
         {
             var (exitCode, stdout, stderr) = await RunCommand(tc, "unknown-command");
@@ -50,7 +50,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }     
         
         [Test]
-        [TentacleConfigurations(testCurrentVersionOnly: true)]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task UnknownArgument(TentacleConfigurationTestCase tc)
         {
             var (exitCode, stdout, stderr) = await RunCommand(tc, "version", "--unknown=argument");
@@ -61,7 +61,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
         
         [Test]
-        [TentacleConfigurations(testCurrentVersionOnly: true)]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task InvalidArgument(TentacleConfigurationTestCase tc)
         {
             var (exitCode, stdout, stderr) = await RunCommand(tc, "version", "--format=unsupported");
@@ -72,7 +72,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
         
         [Test]
-        [TentacleConfigurations(testCurrentVersionOnly: true)]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task NoConsoleLoggingSwitchStillSilentlySupportedForBackwardsCompat(TentacleConfigurationTestCase tc)
         {
             var (_, _, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, "version", "--noconsolelogging");
@@ -81,7 +81,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
         
         [Test]
-        [TentacleConfigurations(testCurrentVersionOnly: true)]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task NoLogoSwitchStillSilentlySupportedForBackwardsCompat(TentacleConfigurationTestCase tc)
         {
             var (_, _, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, "version", "--nologo");
@@ -90,7 +90,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TentacleConfigurations(testCurrentVersionOnly: true)]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task ConsoleSwitchStillSilentlySupportedForBackwardsCompat(TentacleConfigurationTestCase tc)
         {
             var (_, _, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, "version", "--console");
@@ -99,7 +99,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
         
         [Test]
-        [TentacleConfigurations(testCurrentVersionOnly: true)]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task ShouldSupportFuzzyCommandParsing(TentacleConfigurationTestCase tc)
         {
             await RunCommandAndAssertExitsWithSuccessExitCode(tc, "version");
@@ -108,7 +108,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TentacleConfigurations(testCurrentVersionOnly: true)]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task VersionCommandTextFormat(TentacleConfigurationTestCase tc)
         {
             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, "version");
@@ -120,7 +120,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TentacleConfigurations(testCurrentVersionOnly: true)]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task VersionCommandJsonFormat(TentacleConfigurationTestCase tc)
         {
             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, "version", "--format=json");
@@ -137,7 +137,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TentacleConfigurations(testCurrentVersionOnly: true)]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task CanGetHelpForHelp(TentacleConfigurationTestCase tc)
         {
             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, "help", "--help");
@@ -158,7 +158,7 @@ Or one of the common options:
         }
 
         [Test]
-        [TentacleConfigurations(testCurrentVersionOnly: true)]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task HelpAsSwitchShouldShowCommandSpecificHelp(TentacleConfigurationTestCase tc)
         {
             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, "version", "--help");
@@ -179,7 +179,7 @@ Or one of the common options:
         }
 
         [Test]
-        [TentacleConfigurations(testCurrentVersionOnly: true)]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task GeneralHelpAsJsonCanBeParsedByAutomationScripts(TentacleConfigurationTestCase tc)
         {
             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, "help", "--format=json");
@@ -212,7 +212,7 @@ Or one of the common options:
         }
 
         [Test]
-        [TentacleConfigurations(testCurrentVersionOnly: true)]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task CommandSpecificHelpAsJsonCanBeParsedByAutomationScripts(TentacleConfigurationTestCase tc)
         {
             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, "version", "--help", "--format=json");
@@ -240,7 +240,7 @@ Or one of the common options:
         }
 
         [Test]
-        [TentacleConfigurations(testCurrentVersionOnly: true)]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task CommandSpecificHelpAsJsonLooksSensibleToHumans(TentacleConfigurationTestCase tc)
         {
             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, "version", "--help", "--format=json");
@@ -267,7 +267,7 @@ Or one of the common options:
         }
 
         [Test]
-        [TentacleConfigurations(testCurrentVersionOnly: true)]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task HelpForInstanceSpecificCommandsAlwaysWorks(TentacleConfigurationTestCase tc)
         {
             var (_, stdout, stderr) = await RunCommand(tc, "help", "--format=json");
@@ -325,7 +325,7 @@ The details are logged above. These commands probably need to take Lazy<T> depen
         }
         
         [Test]
-        [TentacleConfigurations(testCurrentVersionOnly: true)]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task InvalidInstance(TentacleConfigurationTestCase tc)
         {
             var (exitCode, stdout, stderr) = await RunCommand(tc, "show-thumbprint", "--instance=invalidinstance");
@@ -337,7 +337,7 @@ The details are logged above. These commands probably need to take Lazy<T> depen
         }
 
         [Test]
-        [TentacleConfigurations(testCurrentVersionOnly: true)]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task ShowThumbprintCommandText(TentacleConfigurationTestCase tc)
         {
             await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
@@ -349,7 +349,7 @@ The details are logged above. These commands probably need to take Lazy<T> depen
         }
 
         [Test]
-        [TentacleConfigurations(testCurrentVersionOnly: true)]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task ShowThumbprintCommandJson(TentacleConfigurationTestCase tc)
         {
             await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
@@ -361,7 +361,7 @@ The details are logged above. These commands probably need to take Lazy<T> depen
         }
 
         [Test]
-        [TentacleConfigurations(testCurrentVersionOnly: true)]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task ListInstancesCommandText(TentacleConfigurationTestCase tc)
         {
             await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
@@ -374,7 +374,7 @@ The details are logged above. These commands probably need to take Lazy<T> depen
         }
 
         [Test]
-        [TentacleConfigurations(testCurrentVersionOnly: true)]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task ListInstancesCommandJson(TentacleConfigurationTestCase tc)
         {
             await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
@@ -388,7 +388,7 @@ The details are logged above. These commands probably need to take Lazy<T> depen
         }
 
         [Test]
-        [TentacleConfigurations(testCurrentVersionOnly: true)]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task ShouldLogStartupDiagnosticsToInstanceLogFileOnly(TentacleConfigurationTestCase tc)
         {
             await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
@@ -455,7 +455,7 @@ The details are logged above. These commands probably need to take Lazy<T> depen
         }
 
         [Test]
-        [TentacleConfigurations(testCurrentVersionOnly: true)]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task HelpAsFirstArgumentShouldShowCommandSpecificHelp(TentacleConfigurationTestCase tc)
         {
             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, "help", "version");
@@ -476,7 +476,7 @@ Or one of the common options:
         }
 
         [Test]
-        [TentacleConfigurations(testCurrentVersionOnly: true)]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task ShowConfigurationCommand(TentacleConfigurationTestCase tc)
         {
             await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
@@ -491,7 +491,7 @@ Or one of the common options:
         }
 
         [Test]
-        [TentacleConfigurations(testCurrentVersionOnly: true)]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task ShowConfigurationCommandOnPartiallyConfiguredTentacle(TentacleConfigurationTestCase tc)
         {
             var instanceId = Guid.NewGuid().ToString();
@@ -506,7 +506,7 @@ Or one of the common options:
         }
 
         [Test]
-        [TentacleConfigurations(testCurrentVersionOnly: true)]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         [NonParallelizable]
         public async Task ShowConfigurationCommandLooksSensibleToHumans(TentacleConfigurationTestCase tc)
         {
@@ -597,7 +597,7 @@ Or one of the common options:
         }
 
         [Test]
-        [TentacleConfigurations(testCurrentVersionOnly: true)]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         [WindowsTest]
         [NonParallelizable]
         public async Task WatchdogCreateAndDeleteCommand(TentacleConfigurationTestCase tc)
