@@ -18,6 +18,9 @@
           <PropertyGroup>
               <RuntimeIdentifier>win</RuntimeIdentifier><!-- This is AnyCPU -->
           </PropertyGroup>
+          <ItemGroup>
+              <Reference Include="System.ServiceProcess" />
+          </ItemGroup>
       </When>
       <Otherwise>
           <PropertyGroup>
@@ -26,6 +29,9 @@
               <PublishTrimmed>true</PublishTrimmed>
               <DebugType>embedded</DebugType>
           </PropertyGroup>
+          <ItemGroup>
+              <PackageReference Include="System.ServiceProcess.ServiceController" Version="8.0.0" />
+          </ItemGroup>
       </Otherwise>
   </Choose>
     
@@ -49,13 +55,5 @@
 			<Link>Properties\VersionInfo.cs</Link>
 		</Compile>
 	</ItemGroup>
-
-	<ItemGroup Condition="'$(TargetFramework)'=='net48'">
-	  <Reference Include="System.ServiceProcess" />
-	</ItemGroup>
-
-    <ItemGroup  Condition="'$(TargetFramework)'=='net6.0' OR '$(TargetFramework)'=='net8.0'">
-        <PackageReference Include="System.ServiceProcess.ServiceController" Version="7.0.1" />
-    </ItemGroup>
 
 </Project>

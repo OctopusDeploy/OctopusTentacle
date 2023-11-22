@@ -74,7 +74,9 @@ namespace Octopus.Tentacle.Security
 
         static byte[] GetEncryptionKey(string encryptionPassword)
         {
+#pragma warning disable SYSLIB0041 // 'Rfc2898DeriveBytes.Rfc2898DeriveBytes(string, byte[], int)' is obsolete: 'The default hash algorithm and iteration counts in Rfc2898DeriveBytes constructors are outdated and insecure. Use a constructor that accepts the hash algorithm and the number of iterations.' (https://aka.ms/dotnet-warnings/SYSLIB0041)
             using var passwordGenerator = new Rfc2898DeriveBytes(encryptionPassword, PasswordPaddingSalt, PasswordSaltIterations);
+#pragma warning restore SYSLIB0041
             return passwordGenerator.GetBytes(16);
         }
     }

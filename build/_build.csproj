@@ -8,13 +8,13 @@
     <NukeScriptDirectory>..</NukeScriptDirectory>
     <NukeTelemetryVersion>1</NukeTelemetryVersion>
     <Nullable>enable</Nullable>
+      <!-- NET8: Remove this when Nuke releases a new version which sets it for us -->
+      <EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Nuke.Common" Version="7.0.6" />
     <PackageReference Include="System.IO.FileSystem.AccessControl" Version="4.5.0" />
-    <!-- NET8: Remove this when Nuke releases a new version which sets it for us -->
-    <EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
   </ItemGroup>
 
   <ItemGroup>
