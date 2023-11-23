@@ -160,8 +160,6 @@ namespace Octopus.Tentacle.Tests.Integration
                             }
                             else
                             {
-                                await tcpConnectionUtilities.RestartTcpConnection();
-
                                 if (rpcCallStage == RpcCallStage.Connecting)
                                 {
                                     // Kill the port forwarder so the next requests are in the connecting state when retries timeout
@@ -170,6 +168,8 @@ namespace Octopus.Tentacle.Tests.Integration
                                 }
                                 else
                                 {
+                                    // Ensure the is an active connection so it can be killed correctly
+                                    await tcpConnectionUtilities.RestartTcpConnection();
                                     // Pause the port forwarder so the next requests are in-flight when retries timeout
                                     responseMessageTcpKiller.PauseConnectionOnNextResponse();
                                 }
@@ -273,8 +273,6 @@ namespace Octopus.Tentacle.Tests.Integration
                             }
                             else
                             {
-                                await tcpConnectionUtilities.RestartTcpConnection();
-
                                 if (rpcCallStage == RpcCallStage.Connecting)
                                 {
                                     // Kill the port forwarder so the next requests are in the connecting state when retries timeout
@@ -283,6 +281,8 @@ namespace Octopus.Tentacle.Tests.Integration
                                 }
                                 else
                                 {
+                                    // Ensure the is an active connection so it can be killed correctly
+                                    await tcpConnectionUtilities.RestartTcpConnection();
                                     // Pause the port forwarder so the next requests are in-flight when retries timeout
                                     responseMessageTcpKiller.PauseConnectionOnNextResponse();
                                 }
@@ -391,8 +391,6 @@ namespace Octopus.Tentacle.Tests.Integration
                             }
                             else
                             {
-                                await tcpConnectionUtilities.RestartTcpConnection();
-
                                 if (rpcCallStage == RpcCallStage.Connecting)
                                 {
                                     // Kill the port forwarder so the next requests are in the connecting state when retries timeout
@@ -401,6 +399,8 @@ namespace Octopus.Tentacle.Tests.Integration
                                 }
                                 else
                                 {
+                                    // Ensure the is an active connection so it can be killed correctly
+                                    await tcpConnectionUtilities.RestartTcpConnection();
                                     // Pause the port forwarder so the next requests are in-flight when retries timeout
                                     responseMessageTcpKiller.PauseConnectionOnNextResponse();
                                 }

@@ -73,8 +73,7 @@ namespace Octopus.Tentacle.Client.Scripts
             {
                 if (scriptExecutionCancellationToken.IsCancellationRequested)
                 {
-                    // We don't want to cancel this operation as it is responsible for stopping the script executing on the Tentacle
-                    lastStatusResponse = await Cancel(lastStatusResponse, CancellationToken.None).ConfigureAwait(false);
+                    lastStatusResponse = await Cancel(lastStatusResponse, scriptExecutionCancellationToken).ConfigureAwait(false);
                 }
                 else
                 {
@@ -84,7 +83,11 @@ namespace Octopus.Tentacle.Client.Scripts
                     }
                     catch (Exception)
                     {
-                        if (scriptExecutionCancellationToken.IsCancellationRequested) continue; // Enter cancellation mode.
+                        if (scriptExecutionCancellationToken.IsCancellationRequested) 
+                        {
+                            continue; // Enter cancellation mode.
+                        }
+
                         throw;
                     }
                 }
@@ -116,15 +119,16 @@ namespace Octopus.Tentacle.Client.Scripts
         protected abstract TStartCommand Map(StartScriptCommandV3Alpha command);
 
         protected abstract ScriptExecutionStatus MapToStatus(TScriptStatusResponse response);
+
         protected abstract ScriptExecutionResult MapToResult(TScriptStatusResponse response);
 
         protected abstract ProcessState GetState(TScriptStatusResponse response);
 
         protected abstract Task<TScriptStatusResponse> StartScript(TStartCommand command, CancellationToken scriptExecutionCancellationToken);
 
-        protected abstract Task<TScriptStatusResponse> GetStatus(TScriptStatusResponse lastStatusResponse, CancellationToken cancellationToken);
+        protected abstract Task<TScriptStatusResponse> GetStatus(TScriptStatusResponse lastStatusResponse, CancellationToken scriptExecutionCancellationToken);
 
-        protected abstract Task<TScriptStatusResponse> Cancel(TScriptStatusResponse lastStatusResponse, CancellationToken cancellationToken);
+        protected abstract Task<TScriptStatusResponse> Cancel(TScriptStatusResponse lastStatusResponse, CancellationToken scriptExecutionCancellationToken);
 
         protected abstract Task<TScriptStatusResponse> Finish(TScriptStatusResponse lastStatusResponse, CancellationToken scriptExecutionCancellationToken);
 
