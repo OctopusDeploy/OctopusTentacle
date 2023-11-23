@@ -43,11 +43,11 @@ namespace Octopus.Tentacle.Tests.Integration
                     .HookServiceMethod<IAsyncClientCapabilitiesServiceV2>(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync),
                         async (_,_) =>
                         {
-                            await tcpConnectionUtilities.RestartTcpConnection();
-
                             // Kill the first GetCapabilities call to force the rpc call into retries
                             if (capabilitiesMethodUsages.For(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)).LastException is null)
                             {
+                                // Ensure the is an active connection so it can be killed correctly
+                                await tcpConnectionUtilities.RestartTcpConnection();
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
                             else
@@ -60,6 +60,8 @@ namespace Octopus.Tentacle.Tests.Integration
                                 }
                                 else
                                 {
+                                    // Ensure the is an active connection so it can be killed correctly
+                                    await tcpConnectionUtilities.RestartTcpConnection();
                                     // Pause the port forwarder so the next requests are in-flight when retries timeout
                                     responseMessageTcpKiller.PauseConnectionOnNextResponse();
                                 }
@@ -156,6 +158,8 @@ namespace Octopus.Tentacle.Tests.Integration
                             // Kill the first StartScript call to force the rpc call into retries
                             if (recordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).LastException == null)
                             {
+                                // Ensure the is an active connection so it can be killed correctly
+                                await tcpConnectionUtilities.RestartTcpConnection();
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
                             else
@@ -269,6 +273,8 @@ namespace Octopus.Tentacle.Tests.Integration
                             // Kill the first GetStatus call to force the rpc call into retries
                             if (recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).LastException == null)
                             {
+                                // Ensure the is an active connection so it can be killed correctly
+                                await tcpConnectionUtilities.RestartTcpConnection();
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
                             else
@@ -387,6 +393,8 @@ namespace Octopus.Tentacle.Tests.Integration
                             // Kill the first CancelScript call to force the rpc call into retries
                             if (recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).LastException == null)
                             {
+                                // Ensure the is an active connection so it can be killed correctly
+                                await tcpConnectionUtilities.RestartTcpConnection();
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
                             else
