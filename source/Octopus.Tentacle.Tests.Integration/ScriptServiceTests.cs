@@ -100,7 +100,7 @@ namespace Octopus.Tentacle.Tests.Integration
             await scriptExecutor.ObserverUntilScriptOutputReceived(ticket, "This is the start of the script", CancellationToken);
 
             Logger.Information("Cancelling script execution");
-            await clientAndTentacle.TentacleClient.ScriptService.CancelScriptAsync(new CancelScriptCommand(ticket, 0), new(CancellationToken, null));
+            await clientAndTentacle.TentacleClient.ScriptService.CancelScriptAsync(new CancelScriptCommand(ticket, 0), new(CancellationToken));
             
             var cancellationDuration = Stopwatch.StartNew();
 
