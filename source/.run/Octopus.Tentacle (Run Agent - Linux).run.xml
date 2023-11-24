@@ -1,4 +1,4 @@
-﻿<component name="ProjectRunConfigurationManager">
+<component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Octopus.Tentacle (Run Agent - Linux)" type="DotNetProject" factoryName=".NET Project">
     <option name="EXE_PATH" value="$PROJECT_DIR$/Octopus.Tentacle/bin/net6.0/Tentacle.exe" />
     <option name="PROGRAM_PARAMETERS" value="agent --instance ap-linux1 --noninteractive" />
@@ -33,12 +33,12 @@
     <option name="PASS_PARENT_ENVS" value="1" />
     <envs>
       <env name="KUBECONFIG" value="$PROJECT_DIR$/../../../../c/Users/alastair/.kube/config" />
-      <env name="OCTOPUS__TENTACLE__K8SUSEJOBS" value="True" />
-      <env name="OCTOPUS__TENTACLE__K8SSERVICEACCOUNTNAME" value="octopus-tentacle-job" />
-      <env name="OCTOPUS__TENTACLE__K8SNAMESPACE" value="octopus-tentacle" />
-      <env name="OCTOPUS__TENTACLE__MACHINEHOMEDIRECTORY" value="$PROJECT_DIR$/../../../../c/ProgramData/Octopus" />
       <env name="OCTOPUS__TENTACLE__FORCEK8S" value="True" />
-      <env name="OCTOPUS__TENTACLE__K8SJOBVOLUMEYAML" value="[{name: tentacle-home, persistentVolumeClaim: {claimName: tentacle-home-pv-claim}}, {name: tentacle-app, persistentVolumeClaim: {claimName: tentacle-app-pv-claim}}]" />
+      <env name="OCTOPUS__TENTACLE__K8SJOBVOLUMEYAML" value="[{name: tentacle-home, persistentVolumeClaim: {claimName: tentacle-home-pv-claim}}]" />
+      <env name="OCTOPUS__TENTACLE__K8SNAMESPACE" value="octopus-tentacle" />
+      <env name="OCTOPUS__TENTACLE__K8SSERVICEACCOUNTNAME" value="octopus-tentacle-job" />
+      <env name="OCTOPUS__TENTACLE__K8SUSEJOBS" value="True" />
+      <env name="OCTOPUS__TENTACLE__MACHINEHOMEDIRECTORY" value="$PROJECT_DIR$/../../../../c/ProgramData/Octopus" />
     </envs>
     <option name="USE_EXTERNAL_CONSOLE" value="0" />
     <option name="USE_MONO" value="0" />

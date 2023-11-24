@@ -124,19 +124,22 @@ namespace Octopus.Tentacle.Services.Scripts
             {
                 this.sync = sync;
                 this.sensitiveValueMasker = sensitiveValueMasker;
-                writeStream = fileSystem.OpenFile(logFile, FileMode.Append, FileAccess.Write);
+                writeStream = fileSystem.OpenFile(logFile, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
                 writer = new StreamWriter(writeStream, Encoding.UTF8);
                 json = new JsonTextWriter(writer);
             }
 
             public void WriteOutput(ProcessOutputSource source, string message)
+            => WriteOutput(source, message, DateTimeOffset.UtcNow);
+
+            public void WriteOutput(ProcessOutputSource source, string message, DateTimeOffset occurred)
             {
                 lock (sync)
                 {
                     json.WriteStartArray();
                     json.WriteValue(SourceToString(source));
                     json.WriteValue(MaskSensitiveValues(message));
-                    json.WriteValue(DateTimeOffset.UtcNow);
+                    json.WriteValue(occurred);
                     json.WriteEndArray();
                     json.Flush();
                 }

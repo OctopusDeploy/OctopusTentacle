@@ -120,5 +120,9 @@
 	  <EmbeddedResource Include="Internals\Options\_Readme.txt" />
 	  <EmbeddedResource Include="Startup\PathsToDeleteOnStartup.core.txt" />
 	  <EmbeddedResource Include="Startup\PathsToDeleteOnStartup.netfx.txt" />
+	  <None Remove="Kubernetes\bootstrapRunner.sh" />
+	  <EmbeddedResource Include="Kubernetes\bootstrapRunner.sh">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </EmbeddedResource>
 	</ItemGroup>
 </Project>

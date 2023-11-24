@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using k8s.Models;
+using Nito.AsyncEx;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Contracts;
@@ -27,6 +29,7 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
         readonly KubernetesJobScriptExecutionContext executionContext;
         readonly CancellationToken scriptCancellationToken;
         readonly string? instanceName;
+        readonly AsyncLazy<string> bootstrapRunnerScript;
 
         public int ExitCode { get; private set; }
         public ProcessState State { get; private set; }
@@ -56,6 +59,13 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
             this.scriptCancellationToken = scriptCancellationToken;
             ScriptLog = scriptLog;
             instanceName = appInstanceSelector.Current.InstanceName;
+
+            bootstrapRunnerScript = new AsyncLazy<string>(async () =>
+            {
+                using var stream = GetType().Assembly.GetManifestResourceStream("Octopus.Tentacle.Kubernetes.bootstrapRunner.sh");
+                using var reader = new StreamReader(stream!, Encoding.UTF8);
+                return await reader.ReadToEndAsync();
+            });
         }
 
         public async Task Execute(CancellationToken taskCancellationToken)
@@ -84,7 +94,7 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                         RecordScriptHasStarted(writer);
 
                         //we now need to monitor the resulting pod status
-                        exitCode = await CheckIfPodHasCompleted(cancellationToken);
+                        exitCode = await MonitorJobAndLogs(writer, cancellationToken);
                     }
                 }
                 catch (OperationCanceledException)
@@ -116,7 +126,25 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
             }
         }
 
-        async Task<int> CheckIfPodHasCompleted(CancellationToken cancellationToken)
+        async Task<int> MonitorJobAndLogs(IScriptLogWriter writer, CancellationToken cancellationToken)
+        {
+            var jobCompletionCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+            var checkJobTask = CheckIfJobHasCompleted(cancellationToken, jobCompletionCancellationTokenSource);
+
+            //we pass the job completion CTS here because
+            var monitorJobOutputTask = ReadJobOutputStreams(writer, jobCompletionCancellationTokenSource.Token);
+
+            await Task.WhenAll(checkJobTask, monitorJobOutputTask);
+
+            //once they have both finished, perform one last log read
+            await ReadJobOutputStreams(writer, cancellationToken);
+
+            //return the exit code of the jobs
+            return checkJobTask.Result;
+        }
+
+        async Task<int> CheckIfJobHasCompleted(CancellationToken cancellationToken, CancellationTokenSource jobCompletionCancellationTokenSource)
         {
             var resultStatusCode = 0;
             await jobService.Watch(scriptTicket, job =>
@@ -140,18 +168,104 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                 resultStatusCode = 0;
             }, cancellationToken);
 
+            jobCompletionCancellationTokenSource.Cancel();
+
             return resultStatusCode;
+        }
+
+        async Task ReadJobOutputStreams(IScriptLogWriter writer, CancellationToken cancellationToken)
+        {
+            //open the file streams for reading
+            using var stdOutStream = new StreamReader(workspace.OpenFileStreamForReading("stdout.log"), Encoding.UTF8);
+            using var stdErrStream = new StreamReader(workspace.OpenFileStreamForReading("stderr.log"), Encoding.UTF8);
+
+            long lastStdOutOffset = 0;
+            long lastStdErrOffset = 0;
+
+            while (true)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    break;
+
+                //Read both the stdout and stderr log files
+                var stdOutReadTask = ReadLogFileTail(writer, stdOutStream, ProcessOutputSource.StdOut, lastStdOutOffset);
+                var stdErrReadTask = ReadLogFileTail(writer, stdErrStream, ProcessOutputSource.StdErr, lastStdErrOffset);
+
+                //wait for them to both complete
+                await Task.WhenAll(stdOutReadTask, stdErrReadTask);
+
+                //store the final offsets
+                lastStdOutOffset = stdOutReadTask.Result.FinalOffset;
+                lastStdErrOffset = stdErrReadTask.Result.FinalOffset;
+
+                //stitch the log lines together and order by occurred, then write to actual log
+                var orderedLogLines = stdOutReadTask.Result.Logs
+                    .Concat(stdErrReadTask.Result.Logs)
+                    .OrderBy(ll => ll.Occurred);
+
+                //write all the read log lines to the output script log
+                foreach (var logLine in orderedLogLines)
+                {
+                    writer.WriteOutput(logLine.Source, logLine.Message, logLine.Occurred);
+                }
+
+                //wait for 250ms before reading the logs again
+                await Task.Delay(TimeSpan.FromMilliseconds(250), cancellationToken);
+            }
+        }
+
+        record LogLine(ProcessOutputSource Source, string Message, DateTimeOffset Occurred);
+
+        static async Task<(IEnumerable<LogLine> Logs, long FinalOffset)> ReadLogFileTail(IScriptLogWriter writer, StreamReader reader, ProcessOutputSource source, long lastOffset)
+        {
+            if (reader.BaseStream.Length == lastOffset)
+                return (Enumerable.Empty<LogLine>(), lastOffset);
+
+            reader.BaseStream.Seek(lastOffset, SeekOrigin.Begin);
+
+            var newLines = new List<LogLine>();
+            string? line;
+            do
+            {
+                line = await reader.ReadLineAsync();
+                if (line.IsNullOrEmpty())
+                    break;
+
+                var logParts = line!.Split(new[] { '|' }, 2);
+
+                if (logParts.Length != 2)
+                {
+                    writer.WriteOutput(ProcessOutputSource.StdErr, $"Invalid log line detected. '{line}' is not correctly pipe-delimited.");
+                    continue;
+                }
+
+                //part 1 is the datetimeoffset
+                if (!DateTimeOffset.TryParse(logParts[0], out var occurred))
+                {
+                    writer.WriteOutput(ProcessOutputSource.StdErr, $"Failed to parse '{logParts[0]}' as a DateTimeOffset. Using DateTimeOffset.UtcNow.");
+                    occurred = DateTimeOffset.UtcNow;
+                    ;
+                }
+
+                //add the new line
+                newLines.Add(new LogLine(source, logParts[1], occurred));
+            } while (!line.IsNullOrEmpty());
+
+            return (newLines, reader.BaseStream.Position);
         }
 
         async Task CreateJob(IScriptLogWriter writer, CancellationToken cancellationToken)
         {
+            //write the bootstrap runner script to the workspace
+            workspace.WriteFile("bootstrapRunner.sh", await bootstrapRunnerScript);
+
             var scriptName = Path.GetFileName(workspace.BootstrapScriptFilePath);
 
             var jobName = jobService.BuildJobName(scriptTicket);
 
             //Deserialize the volume configuration
             var volumes = k8s.KubernetesYaml.Deserialize<List<V1Volume>>(KubernetesConfig.JobVolumeYaml);
-
+            
             var job = new V1Job
             {
                 ApiVersion = "batch/v1",
@@ -178,24 +292,21 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                                 {
                                     Name = jobName,
                                     Image = executionContext.ContainerImage ?? await GetDefaultContainer(),
-                                    Command = new List<string> { $"/data/tentacle-home/{instanceName}/KubernetesTools/Octopus.Tentacle.Kubernetes.ScriptRunner" },
+                                    //do dark bash business #bash-wizards
+                                    Command = new List<string> { "bash" },
                                     Args = new List<string>
                                     {
-                                        "--script",
-                                        $"\"/data/tentacle-home/{instanceName}/Work/{scriptTicket.TaskId}/{scriptName}\"",
-                                        "--logToConsole"
-                                    }.Concat(
-                                        (workspace.ScriptArguments ?? Array.Empty<string>())
+                                        $"'/data/tentacle-home/{instanceName}/Work/{scriptTicket.TaskId}/bootstrapRunner.sh'",
+                                        $"'/data/tentacle-home/{instanceName}/Work/{scriptTicket.TaskId}'",
+                                        $"'/data/tentacle-home/{instanceName}/Work/{scriptTicket.TaskId}/{scriptName}'"
+                                    }.Concat((workspace.ScriptArguments ?? Array.Empty<string>())
                                         .SelectMany(arg => new[]
                                         {
-                                            "--args",
-                                            $"\"{arg}\""
-                                        })
-                                    ).ToList(),
+                                            $"'{arg}'"
+                                        })).ToList(),
                                     VolumeMounts = new List<V1VolumeMount>
                                     {
                                         new("/data/tentacle-home", "tentacle-home"),
-                                        new("/data/tentacle-app", "tentacle-app"),
                                     },
                                     Env = new List<V1EnvVar>
                                     {
@@ -215,12 +326,7 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                             //     {
                             //         Name = "tentacle-home",
                             //         PersistentVolumeClaim = new V1PersistentVolumeClaimVolumeSource("tentacle-home-pv-claim")
-                            //     },
-                            //     new()
-                            //     {
-                            //         Name = "tentacle-app",
-                            //         PersistentVolumeClaim = new V1PersistentVolumeClaimVolumeSource("tentacle-app-pv-claim"),
-                            //     },
+                            //     }
                             // }
                         }
                     },
