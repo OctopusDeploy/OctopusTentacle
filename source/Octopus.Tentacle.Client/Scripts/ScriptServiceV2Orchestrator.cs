@@ -94,13 +94,13 @@ namespace Octopus.Tentacle.Client.Scripts
             {
                 // If the call to StartScript is in-flight (being transferred to the Service) or we are retrying the StartScript call
                 // then we do not know if the script has been started or not on Tentacle so need to call CancelScript and CompleteScript
-                var startScriptCallIsBeingRetries = startScriptCallCount > 1;
+                var startScriptCallIsBeingRetried = startScriptCallCount > 1;
 
                 // We determine if the call was connecting when cancelled, then assume it's transferring if it is not connecting.
                 // This is the safest option as it will default to the CancelScript CompleteScript path if we are unsure
                 var startScriptCallIsConnecting = e is ConnectingRequestCancelledException || e.IsHalibutWrappedConnectingRequestCancelledException();
 
-                if (!startScriptCallIsConnecting || startScriptCallIsBeingRetries)
+                if (!startScriptCallIsConnecting || startScriptCallIsBeingRetried)
                 {
                     // We have to assume the script started executing and call CancelScript and CompleteScript
                     // We don't have a response so we need to create one to continue the execution flow

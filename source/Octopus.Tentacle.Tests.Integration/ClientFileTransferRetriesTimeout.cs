@@ -45,7 +45,7 @@ namespace Octopus.Tentacle.Tests.Integration
                         {                            
                             if (methodUsages.For(nameof(IAsyncClientFileTransferService.UploadFileAsync)).LastException is null)
                             {
-                                // Ensure the is an active connection so it can be killed correctly
+                                // Ensure there is an active connection so it can be killed correctly
                                 await tcpConnectionUtilities.RestartTcpConnection();
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
@@ -59,7 +59,7 @@ namespace Octopus.Tentacle.Tests.Integration
                                 }
                                 else
                                 {
-                                    // Ensure the is an active connection so it can be killed correctly
+                                    // Ensure there is an active connection so it can be killed correctly
                                     await tcpConnectionUtilities.RestartTcpConnection();
                                     // Pause the port forwarder so the next requests are in-flight when retries timeout
                                     responseMessageTcpKiller.PauseConnectionOnNextResponse();
@@ -152,7 +152,7 @@ namespace Octopus.Tentacle.Tests.Integration
                         {
                             if (recordedUsages.For(nameof(IAsyncClientFileTransferService.DownloadFileAsync)).LastException is null)
                             {
-                                // Ensure the is an active connection so it can be killed correctly
+                                // Ensure there is an active connection so it can be killed correctly
                                 await tcpConnectionUtilities.RestartTcpConnection();
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
@@ -167,7 +167,7 @@ namespace Octopus.Tentacle.Tests.Integration
                                 }
                                 else
                                 {
-                                    // Ensure the is an active connection so it can be killed correctly
+                                    // Ensure there is an active connection so it can be killed correctly
                                     await tcpConnectionUtilities.RestartTcpConnection();
                                     // Pause the port forwarder so the next requests are in-flight when retries timeout
                                     responseMessageTcpKiller.PauseConnectionOnNextResponse();

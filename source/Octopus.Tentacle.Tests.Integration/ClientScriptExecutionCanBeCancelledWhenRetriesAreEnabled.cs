@@ -211,7 +211,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 // Should have cancelled the RPC call and exited immediately
                 actualException.Should().BeRequestCancelledException(rpcCallStage);
 
-                // We should have cancelled the RPC call quickly and existed
+                // We should have cancelled the RPC call quickly
                 cancellationDuration.Should().BeLessOrEqualTo(TimeSpan.FromSeconds(15));
 
                 recordedUsages.ForStartScriptAsync().Started.Should().Be(1);
@@ -221,7 +221,7 @@ namespace Octopus.Tentacle.Tests.Integration
             }
             else if((rpcCall == RpcCall.RetryingCall && rpcCallStage == RpcCallStage.Connecting) || rpcCallStage == RpcCallStage.InFlight) 
             {
-                // Should have cancelled the RPC call and then called CancelScript and CompleteScript
+                // Assert that script execution was cancelled
                 actualException.Should().BeScriptExecutionCancelledException();
 
                 // Assert the CancelScript and CompleteScript flow happened fairly quickly
@@ -334,6 +334,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             latestException.Should().BeRequestCancelledException(rpcCallStage);
             
+            // Assert that script execution was cancelled
             actualException.Should().BeScriptExecutionCancelledException();
 
             // Script Execution should cancel quickly
@@ -424,7 +425,6 @@ namespace Octopus.Tentacle.Tests.Integration
             if (rpcCallStage == RpcCallStage.Connecting)
             {
                 Logger.Information("Killing the port forwarder so the next RPCs are in the connecting state when being cancelled");
-                //portForwarder.Stop();
                 portForwarder.EnterKillNewAndExistingConnectionsMode();
 
                 await SetRpcCallWeAreInterestedInAsStarted(rpcCallHasStarted);
