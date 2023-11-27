@@ -1,7 +1,6 @@
 ﻿using System;
 using Octopus.Tentacle.Client.Retries;
 using Octopus.Tentacle.Contracts.Observability;
-using Polly.Timeout;
 
 namespace Octopus.Tentacle.Client.Execution
 {
@@ -9,9 +8,8 @@ namespace Octopus.Tentacle.Client.Execution
     {
         internal static RpcCallExecutor Create(TimeSpan retryDuration, ITentacleClientObserver tentacleClientObserver)
         {
-            var rpcCallRetryHandler = new RpcCallRetryHandler(retryDuration, TimeoutStrategy.Pessimistic);
-            var rpcCallNoRetriesHandler = new RpcCallNoRetriesHandler();
-            var rpcCallExecutor = new RpcCallExecutor(rpcCallRetryHandler, rpcCallNoRetriesHandler, tentacleClientObserver);
+            var rpcCallRetryHandler = new RpcCallRetryHandler(retryDuration);
+            var rpcCallExecutor = new RpcCallExecutor(rpcCallRetryHandler, tentacleClientObserver);
 
             return rpcCallExecutor;
         }

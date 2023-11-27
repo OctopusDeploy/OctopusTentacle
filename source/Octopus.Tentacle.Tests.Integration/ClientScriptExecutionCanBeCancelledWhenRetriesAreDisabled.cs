@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Halibut;
 using NUnit.Framework;
-using Octopus.Tentacle.Client.Retries;
 using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Contracts;
@@ -18,6 +17,7 @@ using Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
 using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
+using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies;
 using Octopus.Tentacle.Tests.Integration.Util.PendingRequestQueueHelpers;
 using Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers;
 using Octopus.Tentacle.Util;
@@ -85,53 +85,27 @@ namespace Octopus.Tentacle.Tests.Integration
             var (_, actualException, cancellationDuration) = await ExecuteScriptThenCancelExecutionWhenRpcCallHasStarted(clientAndTentacle, startScriptCommand, rpcCallHasStarted, ensureCancellationOccursDuringAnRpcCall);
 
             // ASSERT
-            // The ExecuteScript operation threw an OperationCancelledException
-            actualException.Should().BeTaskOrOperationCancelledException();
+            // Assert that the cancellation was performed at the correct state e.g. Connecting or Transferring
+            capabilitiesMethodUsages.ForGetCapabilitiesAsync().LastException.Should().BeRequestCancelledException(rpcCallStage);
+            
+            // We should have cancelled the RPC call quickly and existed
+            actualException.Should().BeRequestCancelledException(rpcCallStage);
+            cancellationDuration.Should().BeLessOrEqualTo(TimeSpan.FromSeconds(15));
 
-            // If the rpc call could be cancelled then the correct error was recorded
-            var latestException = capabilitiesMethodUsages.For(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)).LastException;
-            switch (rpcCallStage)
-            {
-                case RpcCallStage.Connecting:
-                    latestException.Should().BeTaskOrOperationCancelledException().And.NotBeOfType<OperationAbandonedException>();
-                    break;
-                case RpcCallStage.InFlight:
-                    latestException?.Should().BeOfType<HalibutClientException>();
-                    break;
-            }
-
-            // If the rpc call could be cancelled we cancelled quickly
-            if (rpcCallStage == RpcCallStage.Connecting)
-            {
-                cancellationDuration.Should().BeLessOrEqualTo(TimeSpan.FromSeconds(12));
-            }
-
-            // Or if the rpc call could not be cancelled it cancelled fairly quickly e.g. we are not waiting for an rpc call to timeout
-            cancellationDuration.Should().BeLessOrEqualTo(TimeSpan.FromSeconds(30));
-
-            // The expected RPC calls were made - this also verifies the integrity of the test
-            capabilitiesMethodUsages.For(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)).Started.Should().Be(1);
-
-            scriptMethodUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().Be(0, "Should not have proceeded past GetCapabilities");
-            scriptMethodUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Started.Should().Be(0, "Should not have tried to call CancelScript");
+            capabilitiesMethodUsages.ForGetCapabilitiesAsync().Started.Should().Be(1);
+            scriptMethodUsages.ForStartScriptAsync().Started.Should().Be(0, "Should not have proceeded past GetCapabilities");
+            scriptMethodUsages.ForCancelScriptAsync().Started.Should().Be(0, "Should not have tried to call CancelScript");
         }
 
         [Test]
         [TentacleConfigurations(additionalParameterTypes: new object[] { typeof(RpcCallStage) })]
         public async Task DuringStartScript_ScriptExecutionCanBeCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase, RpcCallStage rpcCallStage)
         {
-            var expectedFlow = rpcCallStage switch
-            {
-                RpcCallStage.Connecting => ExpectedFlow.CancelRpcAndExitImmediately,
-                RpcCallStage.InFlight => ExpectedFlow.AbandonRpcThenCancelScriptThenCompleteScript,
-                _ => throw new ArgumentOutOfRangeException()
-            };
-
             // ARRANGE
             var rpcCallHasStarted = new Reference<bool>(false);
             var restartedPortForwarderForCancel = false;
             var hasPausedOrStoppedPortForwarder = false;
-            SemaphoreSlim ensureCancellationOccursDuringAnRpcCall = new SemaphoreSlim(0, 1);
+            var ensureCancellationOccursDuringAnRpcCall = new SemaphoreSlim(0, 1);
 
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithPendingRequestQueueFactory(new CancellationObservingPendingRequestQueueFactory()) // Partially works around disconnected polling tentacles take work from the queue
@@ -185,42 +159,34 @@ namespace Octopus.Tentacle.Tests.Integration
             var (_, actualException, cancellationDuration) = await ExecuteScriptThenCancelExecutionWhenRpcCallHasStarted(clientAndTentacle, startScriptCommand, rpcCallHasStarted, ensureCancellationOccursDuringAnRpcCall);
 
             // ASSERT
-            // The ExecuteScript operation threw an OperationCancelledException
-            actualException.Should().BeTaskOrOperationCancelledException();
+            // Assert that the cancellation was performed at the correct state e.g. Connecting or Transferring
+            recordedUsages.ForStartScriptAsync().LastException.Should().BeRequestCancelledException(rpcCallStage);
 
-            // If the rpc call could be cancelled then the correct error was recorded
-            var latestException = recordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).LastException;
-            switch (expectedFlow)
+            if (rpcCallStage == RpcCallStage.Connecting)
             {
-                case ExpectedFlow.CancelRpcAndExitImmediately:
-                    latestException.Should().BeTaskOrOperationCancelledException().And.NotBeOfType<OperationAbandonedException>();
-                    break;
-                case ExpectedFlow.AbandonRpcThenCancelScriptThenCompleteScript:
-                    latestException?.Should().BeOfType<HalibutClientException>();
-                    break;
-                default:
-                    throw new NotSupportedException();
+                // Should have cancelled the RPC call and exited immediately
+                actualException.Should().BeRequestCancelledException(rpcCallStage);
+
+                // We should have cancelled the RPC call quickly and existed
+                cancellationDuration.Should().BeLessOrEqualTo(TimeSpan.FromSeconds(15));
+
+                recordedUsages.ForStartScriptAsync().Started.Should().Be(1);
+                recordedUsages.ForGetStatusAsync().Started.Should().Be(0, "Test should not have not proceeded past StartScript before being Cancelled");
+                recordedUsages.ForCancelScriptAsync().Started.Should().Be(0);
+                recordedUsages.ForCompleteScriptAsync().Started.Should().Be(0);
             }
-
-            // If the rpc call could not be cancelled it cancelled fairly quickly e.g. we are not waiting for an rpc call to timeout
-            cancellationDuration.Should().BeLessOrEqualTo(TimeSpan.FromSeconds(30));
-
-            // The expected RPC calls were made - this also verifies the integrity of the test
-            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().Be(1);
-            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Started.Should().Be(0, "Test should not have not proceeded past StartScript before being Cancelled");
-
-            switch (expectedFlow)
+            else // Transferring
             {
-                case ExpectedFlow.CancelRpcAndExitImmediately:
-                    recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Started.Should().Be(0);
-                    recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).Started.Should().Be(0);
-                    break;
-                case ExpectedFlow.AbandonRpcThenCancelScriptThenCompleteScript:
-                    recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Started.Should().BeGreaterOrEqualTo(1);
-                    recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).Started.Should().Be(1);
-                    break;
-                default:
-                    throw new NotSupportedException();
+                // Assert that script execution was cancelled
+                actualException.Should().BeScriptExecutionCancelledException();
+
+                // Assert the CancelScript and CompleteScript flow happened fairly quickly
+                cancellationDuration.Should().BeLessOrEqualTo(TimeSpan.FromSeconds(30));
+
+                recordedUsages.ForStartScriptAsync().Started.Should().Be(1);
+                recordedUsages.ForGetStatusAsync().Started.Should().Be(0, "Test should not have not proceeded past StartScript before being Cancelled");
+                recordedUsages.ForCancelScriptAsync().Started.Should().BeGreaterOrEqualTo(1);
+                recordedUsages.ForCompleteScriptAsync().Started.Should().Be(1);
             }
         }
 
@@ -229,19 +195,11 @@ namespace Octopus.Tentacle.Tests.Integration
         public async Task DuringGetStatus_ScriptExecutionCanBeCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase, RpcCallStage rpcCallStage)
         {
             // ARRANGE
-            var expectedFlow = rpcCallStage switch
-            {
-                RpcCallStage.Connecting => ExpectedFlow.CancelRpcThenCancelScriptThenCompleteScript,
-                RpcCallStage.InFlight => ExpectedFlow.AbandonRpcThenCancelScriptThenCompleteScript,
-                _ => throw new ArgumentOutOfRangeException()
-            };
             var rpcCallHasStarted = new Reference<bool>(false);
-            TimeSpan? lastCallDuration = null;
             var restartedPortForwarderForCancel = false;
             var hasPausedOrStoppedPortForwarder = false;
-            SemaphoreSlim ensureCancellationOccursDuringAnRpcCall = new SemaphoreSlim(0, 1);
-            var timer = new Stopwatch();
-
+            var ensureCancellationOccursDuringAnRpcCall = new SemaphoreSlim(0, 1);
+            
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithPendingRequestQueueFactory(new CancellationObservingPendingRequestQueueFactory()) // Partially works around disconnected polling tentacles take work from the queue
                 .WithServiceEndpointModifier(point => point.TryAndConnectForALongTime())
@@ -268,14 +226,9 @@ namespace Octopus.Tentacle.Tests.Integration
                                     await tcpConnectionUtilities.EnsurePollingQueueWontSendMessageToDisconnectedTentacles();
                                 }
                             }
-
-                            timer.Restart();
                         },
                         async (_, _) =>
                         {
-                            timer.Stop();
-                            lastCallDuration = timer.Elapsed;
-
                             await ensureCancellationOccursDuringAnRpcCall.WaitAsync(CancellationToken);
                         })
                     .HookServiceMethod(tentacleConfigurationTestCase,
@@ -303,38 +256,18 @@ namespace Octopus.Tentacle.Tests.Integration
             var (_, actualException, cancellationDuration) = await ExecuteScriptThenCancelExecutionWhenRpcCallHasStarted(clientAndTentacle, startScriptCommand, rpcCallHasStarted, ensureCancellationOccursDuringAnRpcCall);
 
             // ASSERT
-            // The ExecuteScript operation threw an OperationCancelledException
-            actualException.Should().BeTaskOrOperationCancelledException();
+            // Assert that script execution was cancelled
+            actualException.Should().BeScriptExecutionCancelledException();
 
-            // If the rpc call could be cancelled then the correct error was recorded
-            var latestException = recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).LastException;
-            switch (expectedFlow)
-            {
-                case ExpectedFlow.CancelRpcThenCancelScriptThenCompleteScript:
-                    latestException.Should().BeTaskOrOperationCancelledException().And.NotBeOfType<OperationAbandonedException>();
-                    break;
-                case ExpectedFlow.AbandonRpcThenCancelScriptThenCompleteScript:
-                    latestException?.Should().BeOfType<HalibutClientException>();
-                    break;
-                default:
-                    throw new NotSupportedException();
-            }
+            // Assert that the cancellation was performed at the correct state e.g. Connecting or Transferring
+            recordedUsages.ForGetStatusAsync().LastException.Should().BeRequestCancelledException(rpcCallStage);
 
-            // If the rpc call could be cancelled we cancelled quickly
-            if (expectedFlow == ExpectedFlow.CancelRpcThenCancelScriptThenCompleteScript)
-            {
-                // This last call includes the time it takes to cancel and hence is why I kept pushing it up
-                lastCallDuration.Should().BeLessOrEqualTo(TimeSpan.FromSeconds(12 + 2)); // + 2 seconds for some error of margin
-            }
-
-            // Or if the rpc call could not be cancelled it cancelled fairly quickly e.g. we are not waiting for an rpc call to timeout
+            // Assert the CancelScript and CompleteScript flow happened fairly quickly
             cancellationDuration.Should().BeLessOrEqualTo(TimeSpan.FromSeconds(30));
 
-            // The expected RPC calls were made - this also verifies the integrity of the test
+            // The expected RPC calls were made
             recordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().Be(1);
-
             recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Started.Should().Be(1);
-
             recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Started.Should().BeGreaterOrEqualTo(1);
             recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).Started.Should().Be(1);
         }
@@ -391,14 +324,14 @@ namespace Octopus.Tentacle.Tests.Integration
             recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).LastException?.Should().Match<Exception>(x => x is HalibutClientException || x is OperationCanceledException || x is TaskCanceledException); // Complete Script was cancelled quickly
             cancellationDuration.Should().BeLessOrEqualTo(TimeSpan.FromSeconds(30));
 
-            // The expected RPC calls were made - this also verifies the integrity of the test
-            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().Be(1);
-            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Started.Should().BeGreaterThanOrEqualTo(1);
-            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Started.Should().Be(0);
-            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).Started.Should().BeGreaterOrEqualTo(1);
+            // The expected RPC calls were made
+            recordedUsages.ForStartScriptAsync().Started.Should().Be(1);
+            recordedUsages.ForGetStatusAsync().Started.Should().BeGreaterThanOrEqualTo(1);
+            recordedUsages.ForCancelScriptAsync().Started.Should().Be(0);
+            recordedUsages.ForCompleteScriptAsync().Started.Should().BeGreaterOrEqualTo(1);
         }
 
-        private void PauseOrStopPortForwarder(RpcCallStage rpcCallStage, PortForwarder portForwarder, IResponseMessageTcpKiller responseMessageTcpKiller, Reference<bool> rpcCallHasStarted)
+        void PauseOrStopPortForwarder(RpcCallStage rpcCallStage, PortForwarder portForwarder, IResponseMessageTcpKiller responseMessageTcpKiller, Reference<bool> rpcCallHasStarted)
         {
             if (rpcCallStage == RpcCallStage.Connecting)
             {
@@ -414,7 +347,7 @@ namespace Octopus.Tentacle.Tests.Integration
             }
         }
 
-        private void UnPauseOrRestartPortForwarder(TentacleType tentacleType, RpcCallStage rpcCallStage, Reference<PortForwarder> portForwarder)
+        void UnPauseOrRestartPortForwarder(TentacleType tentacleType, RpcCallStage rpcCallStage, Reference<PortForwarder> portForwarder)
         {
             if (rpcCallStage == RpcCallStage.Connecting)
             {
@@ -430,7 +363,7 @@ namespace Octopus.Tentacle.Tests.Integration
             }
         }
 
-        private async Task<(ScriptExecutionResult response, Exception? actualException, TimeSpan cancellationDuration)> ExecuteScriptThenCancelExecutionWhenRpcCallHasStarted(
+        async Task<(ScriptExecutionResult response, Exception? actualException, TimeSpan cancellationDuration)> ExecuteScriptThenCancelExecutionWhenRpcCallHasStarted(
             ClientAndTentacle clientAndTentacle,
             StartScriptCommandV3Alpha startScriptCommand,
             Reference<bool> rpcCallHasStarted,
@@ -473,13 +406,6 @@ namespace Octopus.Tentacle.Tests.Integration
 
             cancellationDuration.Stop();
             return (responseAndLogs?.Response, actualException, cancellationDuration.Elapsed);
-        }
-
-        public enum ExpectedFlow
-        {
-            CancelRpcAndExitImmediately,
-            CancelRpcThenCancelScriptThenCompleteScript,
-            AbandonRpcThenCancelScriptThenCompleteScript
         }
     }
 }
