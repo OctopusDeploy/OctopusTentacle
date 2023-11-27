@@ -42,4 +42,5 @@ exec 2> >(logStdErr >&2)
 
 /bin/bash $BOOTSTRAP_SCRIPT "$@"
 
-sleep 1
+# This ungodly hack is to stop the pod from being killed before the last log has been flushed
+sleep 0.250 #250ms
