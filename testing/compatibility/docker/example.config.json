@@ -1,0 +1,7 @@
+{
+  "pollingDeploymentTargets": true,
+  "listeningDeploymentTargets": true,
+  "pollingWorkers": true,
+  "listeningWorkers": true,
+  "tentacleVersions": "6.1.1531,6.2.277,6.3.417,6.3.605,latest"
+}

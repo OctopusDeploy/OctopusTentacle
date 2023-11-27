@@ -1,0 +1,35 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# All Vagrant configuration is done below. The "2" in Vagrant.configure
+# configures the configuration version (we support older styles for
+# backwards compatibility). Please don't change it unless you know what
+# you're doing.
+Vagrant.configure("2") do |config|
+
+  config.vm.box = "gusztavvargadr/windows-11"
+  config.vm.network "public_network"
+  config.env.enable # Enable vagrant-env(.env)
+
+  config.vm.synced_folder '.', '/vagrant', disabled: true
+
+  config.vm.box_check_update = false
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = 10240
+    vb.cpus = 6
+  end
+
+  config.vm.provider :hyperv do |v, override|
+    v.maxmemory = 10240
+    v.memory = 10240
+    v.cpus = 6
+  end
+
+  config.vm.provision "file", source: "./install.ps1", destination: "C:/tmp/install.ps1"
+  config.vm.provision "file", source: "./polling.ps1", destination: "C:/tmp/polling.ps1"
+  config.vm.provision "file", source: "./listening.ps1", destination: "C:/tmp/listening.ps1"
+
+  config.vm.provision :shell, path: "bootstrap.ps1", :args => "-serverUrl " + "'" + ENV['serverUrl'] + "'" + " -serverPollingPort " + ENV['serverPollingPort'] + " -serverApiKey " + "'" + ENV['serverApiKey'] + "'" + " -environment " + "'" + ENV['environment'] + "'" + " -listeningRole " + "'" + ENV['listeningRole'] + "'" + " -pollingRole " + "'" + ENV['pollingRole'] + "'" + " -space " + "'" + ENV['space'] + "'" + " -tentacleVersions " + "'" + ENV['tentacleVersions'] + "'" + " -listening " + ENV['listening'] + " -polling " + ENV['polling'] + " -serverThumbprint " + "'" + ENV['serverThumbprint'] + "'" + " -deploymentTargets " + ENV['deploymentTargets'] + " -workers " + ENV['workers'] + " -workerPool " + "'" + ENV['workerPool'] + "'"
+
+end
