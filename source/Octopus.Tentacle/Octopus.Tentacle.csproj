@@ -103,7 +103,6 @@
 		<Reference Include="System.Web" />
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\Octopus.Tentacle.Common\Octopus.Tentacle.Common.csproj" />
 		<ProjectReference Include="..\Octopus.Tentacle.Contracts\Octopus.Tentacle.Contracts.csproj" />
 	</ItemGroup>
 	<ItemGroup>
