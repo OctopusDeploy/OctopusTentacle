@@ -28,13 +28,13 @@ module.exports = {
 
     platform: "github",
     repositories: ["OctopusDeploy/OctopusTentacle"],
-    reviewers: ["raynhamdev"],
+    reviewers: ["OctopusDeploy/team-server-at-scale"],
     labels: ["dependencies", "Tentacle"],
     branchPrefix: "renovate-dotnet/",
 
     // Limit the amount of PRs created
-    prConcurrentLimit: 10,
-    prHourlyLimit: 2,
+    prConcurrentLimit: 2,
+    prHourlyLimit: 1,
 
     // If set to false, Renovate will upgrade dependencies to their latest release only. Renovate will not separate major or minor branches.
     // https://docs.renovatebot.com/configuration-options/#separatemajorminor
