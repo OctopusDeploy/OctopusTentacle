@@ -99,3 +99,6 @@ Currently we can only debug netcore apps running in WSL from VSCode, Visual Stud
     "problemMatcher": "$msCompile"
 }
 ```
+## Additional Resources
+
+- Scripts to help with manual testing can be found in [./testing](./testing/README.md).
