@@ -20,6 +20,13 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
 {
     public class RunningKubernetesJobScript : IRunningScript
     {
+        static readonly AsyncLazy<string> BootstrapRunnerScript = new(async () =>
+        {
+            using var stream = typeof(RunningKubernetesJobScript).Assembly.GetManifestResourceStream("Octopus.Tentacle.Kubernetes.bootstrapRunner.sh");
+            using var reader = new StreamReader(stream!, Encoding.UTF8);
+            return await reader.ReadToEndAsync();
+        });
+
         readonly IScriptWorkspace workspace;
         readonly ScriptTicket scriptTicket;
         readonly string taskId;
@@ -30,7 +37,6 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
         readonly KubernetesJobScriptExecutionContext executionContext;
         readonly CancellationToken scriptCancellationToken;
         readonly string? instanceName;
-        readonly AsyncLazy<string> bootstrapRunnerScript;
         readonly KubernetesJobOutputStreamWriter outputStreamWriter;
 
         public int ExitCode { get; private set; }
@@ -62,12 +68,6 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
             ScriptLog = scriptLog;
             instanceName = appInstanceSelector.Current.InstanceName;
 
-            bootstrapRunnerScript = new AsyncLazy<string>(async () =>
-            {
-                using var stream = GetType().Assembly.GetManifestResourceStream("Octopus.Tentacle.Kubernetes.bootstrapRunner.sh");
-                using var reader = new StreamReader(stream!, Encoding.UTF8);
-                return await reader.ReadToEndAsync();
-            });
             outputStreamWriter = new KubernetesJobOutputStreamWriter(workspace);
         }
 
@@ -176,18 +176,18 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
             return resultStatusCode;
         }
 
-        
+
 
         async Task CreateJob(IScriptLogWriter writer, CancellationToken cancellationToken)
         {
             //write the bootstrap runner script to the workspace
-            workspace.WriteFile("bootstrapRunner.sh", await bootstrapRunnerScript);
+            workspace.WriteFile("bootstrapRunner.sh", await BootstrapRunnerScript);
 
             var scriptName = Path.GetFileName(workspace.BootstrapScriptFilePath);
 
             var jobName = jobService.BuildJobName(scriptTicket);
 
-            //Deserialize the volume configuration
+            //Deserialize the volume configuration from the environment configuration
             var volumes = KubernetesYaml.Deserialize<List<V1Volume>>(KubernetesConfig.JobVolumeYaml);
 
             var job = new V1Job
@@ -215,8 +215,7 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                                 new()
                                 {
                                     Name = jobName,
-                                    Image = executionContext.ContainerImage ?? await GetDefaultContainer(),
-                                    //do dark bash business #bash-wizards
+                                    Image = await GetDefaultContainer(),
                                     Command = new List<string> { "bash" },
                                     Args = new List<string>
                                     {

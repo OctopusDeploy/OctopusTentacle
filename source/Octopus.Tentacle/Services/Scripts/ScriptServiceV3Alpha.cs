@@ -116,8 +116,7 @@ namespace Octopus.Tentacle.Services.Scripts
             }
 
             var workspace = workspaceFactory.GetWorkspace(command.ScriptTicket);
-            //await workspace.Delete(cancellationToken);
-            await Task.CompletedTask;
+            await workspace.Delete(cancellationToken);
         }
 
         async Task<ScriptStatusResponseV3Alpha> GetResponse(ScriptTicket ticket, long lastLogSequence, IRunningScript? runningScript)
