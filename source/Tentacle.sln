@@ -61,7 +61,6 @@ Global
 		Release-net6.0-osx-x64|Any CPU = Release-net6.0-osx-x64|Any CPU
 		Release-net6.0-win-x64|Any CPU = Release-net6.0-win-x64|Any CPU
 		Release-net6.0-win-x86|Any CPU = Release-net6.0-win-x86|Any CPU
-		ScriptRunner-Release-net6.0-linux-x64|Any CPU = ScriptRunner-Release-net6.0-linux-x64|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{0FCA52BD-3D2C-4F05-9F87-42920C1FA4F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -86,7 +85,6 @@ Global
 		{0FCA52BD-3D2C-4F05-9F87-42920C1FA4F4}.Release-net6.0-win-x64|Any CPU.Build.0 = Release|Any CPU
 		{0FCA52BD-3D2C-4F05-9F87-42920C1FA4F4}.Release-net6.0-win-x86|Any CPU.ActiveCfg = Release|Any CPU
 		{0FCA52BD-3D2C-4F05-9F87-42920C1FA4F4}.Release-net6.0-win-x86|Any CPU.Build.0 = Release|Any CPU
-		{0FCA52BD-3D2C-4F05-9F87-42920C1FA4F4}.ScriptRunner-Release-net6.0-linux-x64|Any CPU.ActiveCfg = Release|Any CPU
 		{A9E01394-4A21-418F-9ACC-D5A164E8491B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A9E01394-4A21-418F-9ACC-D5A164E8491B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A9E01394-4A21-418F-9ACC-D5A164E8491B}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -103,7 +101,6 @@ Global
 		{A9E01394-4A21-418F-9ACC-D5A164E8491B}.Release-net6.0-win-x64|Any CPU.Build.0 = Release|Any CPU
 		{A9E01394-4A21-418F-9ACC-D5A164E8491B}.Release-net6.0-win-x86|Any CPU.ActiveCfg = Release|Any CPU
 		{A9E01394-4A21-418F-9ACC-D5A164E8491B}.Release-net6.0-win-x86|Any CPU.Build.0 = Release|Any CPU
-		{A9E01394-4A21-418F-9ACC-D5A164E8491B}.ScriptRunner-Release-net6.0-linux-x64|Any CPU.ActiveCfg = Release|Any CPU
 		{8A33CADF-9D7F-4835-842C-B71700DB6A3B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8A33CADF-9D7F-4835-842C-B71700DB6A3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8A33CADF-9D7F-4835-842C-B71700DB6A3B}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -126,7 +123,6 @@ Global
 		{8A33CADF-9D7F-4835-842C-B71700DB6A3B}.Release-net6.0-win-x64|Any CPU.Build.0 = Debug|Any CPU
 		{8A33CADF-9D7F-4835-842C-B71700DB6A3B}.Release-net6.0-win-x86|Any CPU.ActiveCfg = Debug|Any CPU
 		{8A33CADF-9D7F-4835-842C-B71700DB6A3B}.Release-net6.0-win-x86|Any CPU.Build.0 = Debug|Any CPU
-		{8A33CADF-9D7F-4835-842C-B71700DB6A3B}.ScriptRunner-Release-net6.0-linux-x64|Any CPU.ActiveCfg = Debug|Any CPU
 		{8F604C33-4137-4C00-A9B3-847FD403811D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8F604C33-4137-4C00-A9B3-847FD403811D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8F604C33-4137-4C00-A9B3-847FD403811D}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -143,7 +139,6 @@ Global
 		{8F604C33-4137-4C00-A9B3-847FD403811D}.Release-net6.0-win-x64|Any CPU.Build.0 = Release|Any CPU
 		{8F604C33-4137-4C00-A9B3-847FD403811D}.Release-net6.0-win-x86|Any CPU.ActiveCfg = Release|Any CPU
 		{8F604C33-4137-4C00-A9B3-847FD403811D}.Release-net6.0-win-x86|Any CPU.Build.0 = Release|Any CPU
-		{8F604C33-4137-4C00-A9B3-847FD403811D}.ScriptRunner-Release-net6.0-linux-x64|Any CPU.ActiveCfg = Release|Any CPU
 		{5C47E1B4-F87A-4212-8C62-18AC2ECE789E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{5C47E1B4-F87A-4212-8C62-18AC2ECE789E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5C47E1B4-F87A-4212-8C62-18AC2ECE789E}.Release-net48-win|Any CPU.ActiveCfg = Release|Any CPU
@@ -155,7 +150,6 @@ Global
 		{5C47E1B4-F87A-4212-8C62-18AC2ECE789E}.Release-net6.0-osx-x64|Any CPU.ActiveCfg = Release|Any CPU
 		{5C47E1B4-F87A-4212-8C62-18AC2ECE789E}.Release-net6.0-win-x64|Any CPU.ActiveCfg = Release|Any CPU
 		{5C47E1B4-F87A-4212-8C62-18AC2ECE789E}.Release-net6.0-win-x86|Any CPU.ActiveCfg = Release|Any CPU
-		{5C47E1B4-F87A-4212-8C62-18AC2ECE789E}.ScriptRunner-Release-net6.0-linux-x64|Any CPU.ActiveCfg = Release|Any CPU
 		{407551C4-B4DF-4665-96B1-BFF6A6A74D36}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{407551C4-B4DF-4665-96B1-BFF6A6A74D36}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{407551C4-B4DF-4665-96B1-BFF6A6A74D36}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -178,8 +172,6 @@ Global
 		{407551C4-B4DF-4665-96B1-BFF6A6A74D36}.Release-net6.0-win-x64|Any CPU.Build.0 = Release|Any CPU
 		{407551C4-B4DF-4665-96B1-BFF6A6A74D36}.Release-net6.0-win-x86|Any CPU.ActiveCfg = Release|Any CPU
 		{407551C4-B4DF-4665-96B1-BFF6A6A74D36}.Release-net6.0-win-x86|Any CPU.Build.0 = Release|Any CPU
-		{407551C4-B4DF-4665-96B1-BFF6A6A74D36}.ScriptRunner-Release-net6.0-linux-x64|Any CPU.ActiveCfg = Release|Any CPU
-		{407551C4-B4DF-4665-96B1-BFF6A6A74D36}.ScriptRunner-Release-net6.0-linux-x64|Any CPU.Build.0 = Release|Any CPU
 		{86C4288E-9982-4DC6-994F-461C95640C7D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{86C4288E-9982-4DC6-994F-461C95640C7D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{86C4288E-9982-4DC6-994F-461C95640C7D}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -201,7 +193,6 @@ Global
 		{86C4288E-9982-4DC6-994F-461C95640C7D}.Release-net6.0-win-x64|Any CPU.Build.0 = Debug|Any CPU
 		{86C4288E-9982-4DC6-994F-461C95640C7D}.Release-net6.0-win-x86|Any CPU.ActiveCfg = Debug|Any CPU
 		{86C4288E-9982-4DC6-994F-461C95640C7D}.Release-net6.0-win-x86|Any CPU.Build.0 = Debug|Any CPU
-		{86C4288E-9982-4DC6-994F-461C95640C7D}.ScriptRunner-Release-net6.0-linux-x64|Any CPU.ActiveCfg = Debug|Any CPU
 		{506D425E-10F0-49A1-826C-8B704B7140B2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{506D425E-10F0-49A1-826C-8B704B7140B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{506D425E-10F0-49A1-826C-8B704B7140B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -223,7 +214,6 @@ Global
 		{506D425E-10F0-49A1-826C-8B704B7140B2}.Release-net6.0-win-x64|Any CPU.Build.0 = Release|Any CPU
 		{506D425E-10F0-49A1-826C-8B704B7140B2}.Release-net6.0-win-x86|Any CPU.ActiveCfg = Release|Any CPU
 		{506D425E-10F0-49A1-826C-8B704B7140B2}.Release-net6.0-win-x86|Any CPU.Build.0 = Release|Any CPU
-		{506D425E-10F0-49A1-826C-8B704B7140B2}.ScriptRunner-Release-net6.0-linux-x64|Any CPU.ActiveCfg = Release|Any CPU
 		{D0F2DBE7-017B-4AF1-9CA7-8C746220C6F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D0F2DBE7-017B-4AF1-9CA7-8C746220C6F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D0F2DBE7-017B-4AF1-9CA7-8C746220C6F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -246,7 +236,6 @@ Global
 		{D0F2DBE7-017B-4AF1-9CA7-8C746220C6F0}.Release-net6.0-win-x64|Any CPU.Build.0 = Debug|Any CPU
 		{D0F2DBE7-017B-4AF1-9CA7-8C746220C6F0}.Release-net6.0-win-x86|Any CPU.ActiveCfg = Debug|Any CPU
 		{D0F2DBE7-017B-4AF1-9CA7-8C746220C6F0}.Release-net6.0-win-x86|Any CPU.Build.0 = Debug|Any CPU
-		{D0F2DBE7-017B-4AF1-9CA7-8C746220C6F0}.ScriptRunner-Release-net6.0-linux-x64|Any CPU.ActiveCfg = Debug|Any CPU
 		{48C4D03B-F044-4089-942E-20DF102059F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{48C4D03B-F044-4089-942E-20DF102059F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{48C4D03B-F044-4089-942E-20DF102059F0}.Release|Any CPU.ActiveCfg = Release|Any CPU

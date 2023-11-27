@@ -1,0 +1,29 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Octopus.Tentacle (Run Agent - Linux)" type="DotNetProject" factoryName=".NET Project">
+    <option name="EXE_PATH" value="$PROJECT_DIR$/Octopus.Tentacle/bin/net6.0/Tentacle.exe" />
+    <option name="PROGRAM_PARAMETERS" value="agent --instance ap-linux1 --noninteractive" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Octopus.Tentacle/bin/net6.0" />
+    <option name="PASS_PARENT_ENVS" value="1" />
+    <envs>
+      <env name="OCTOPUS__TENTACLE__K8SUSEJOBS" value="True" />
+      <env name="KUBECONFIG" value="/../../../../c/Users/alastair/.kube/config" />
+      <env name="OCTOPUS__TENTACLE__K8SSERVICEACCOUNTNAME" value="octopus-tentacle-job" />
+      <env name="OCTOPUS__TENTACLE__K8SNAMESPACE" value="octopus-tentacle" />
+      <env name="OCTOPUS__TENTACLE__MACHINEHOMEDIRECTORY" value="/../../../../c/ProgramData/Octopus" />
+      <env name="OCTOPUS__TENTACLE__FORCEK8S" value="True" />
+    </envs>
+    <option name="USE_EXTERNAL_CONSOLE" value="0" />
+    <option name="USE_MONO" value="0" />
+    <option name="RUNTIME_ARGUMENTS" value="" />
+    <option name="PROJECT_PATH" value="$PROJECT_DIR$/Octopus.Tentacle/Octopus.Tentacle.csproj" />
+    <option name="PROJECT_EXE_PATH_TRACKING" value="1" />
+    <option name="PROJECT_ARGUMENTS_TRACKING" value="1" />
+    <option name="PROJECT_WORKING_DIRECTORY_TRACKING" value="1" />
+    <option name="PROJECT_KIND" value="DotNetCore" />
+    <option name="PROJECT_TFM" value="net6.0" />
+    <method v="2">
+      <option name="Build" />
+      <option name="Build" default="false" projectName="Octopus.Tentacle.Kubernetes.ScriptRunner" projectPath="$PROJECT_DIR$/Octopus.Tentacle.Kubernetes.ScriptRunner/Octopus.Tentacle.Kubernetes.ScriptRunner.csproj" />
+    </method>
+  </configuration>
+</component>
