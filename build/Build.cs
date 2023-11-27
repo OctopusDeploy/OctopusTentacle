@@ -125,10 +125,10 @@ partial class Build : NukeBuild
 
             RuntimeIds.Where(x => x.StartsWith("win"))
                 .ForEach(runtimeId => RunBuildFor(runtimeId.Equals("win") ? NetFramework : NetCore, runtimeId));
-
+            
             versionInfoFile.Dispose();
             productWxsFile.Dispose();
-
+            
             var hardenInstallationDirectoryScript = RootDirectory / "scripts" / "Harden-InstallationDirectory.ps1";
             var directoriesToCopyHardenScriptInto = new []
             {
@@ -137,7 +137,7 @@ partial class Build : NukeBuild
                 (BuildDirectory / "Tentacle" / NetCore / "win-x64")
             };
             directoriesToCopyHardenScriptInto.ForEach(dir => CopyFileToDirectory(hardenInstallationDirectoryScript, dir, FileExistsPolicy.Overwrite));
-
+            
             // Sign any unsigned libraries that Octopus Deploy authors so that they play nicely with security scanning tools.
             // Refer: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1551655877004400
             // Decision re: no signing everything: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1557938890227100
@@ -161,7 +161,7 @@ partial class Build : NukeBuild
 
             RuntimeIds.Where(x => x.StartsWith("linux-"))
                 .ForEach(runtimeId => RunBuildFor(NetCore, runtimeId));
-
+            
             versionInfoFile.Dispose();
             productWxsFile.Dispose();
         });
@@ -176,7 +176,7 @@ partial class Build : NukeBuild
 
             RuntimeIds.Where(x => x.StartsWith("osx-"))
                 .ForEach(runtimeId => RunBuildFor(NetCore, runtimeId));
-
+            
             versionInfoFile.Dispose();
             productWxsFile.Dispose();
         });
@@ -237,7 +237,7 @@ partial class Build : NukeBuild
     ModifiableFileWithRestoreContentsOnDispose UpdateMsiProductVersion()
     {
         var productWxsFilePath = RootDirectory / "installer" / "Octopus.Tentacle.Installer" / "Product.wxs";
-
+        
         var xmlDoc = new XmlDocument();
         xmlDoc.Load(productWxsFilePath);
 
@@ -260,7 +260,7 @@ partial class Build : NukeBuild
     void RunBuildFor(string framework, string runtimeId)
     {
         var configuration = $"Release-{framework}-{runtimeId}";
-
+        
         DotNetPublish(p => p
             .SetProject(SourceDirectory / "Tentacle.sln")
             .SetConfiguration(configuration)
