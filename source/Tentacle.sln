@@ -48,8 +48,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Octopus.Tentacle.Client.Tes
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Octopus.Tentacle.Kubernetes.ScriptRunner", "Octopus.Tentacle.Kubernetes.ScriptRunner\Octopus.Tentacle.Kubernetes.ScriptRunner.csproj", "{3C1A8996-0125-4551-AA83-C61CF38FEF09}"
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Octopus.Tentacle.Common", "Octopus.Tentacle.Common\Octopus.Tentacle.Common.csproj", "{EBB212E4-C1B3-411E-98B8-F7BFF8DDD15F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Octopus.Tentacle.Kubernetes.ScriptRunner", "Octopus.Tentacle.Kubernetes.ScriptRunner\Octopus.Tentacle.Kubernetes.ScriptRunner.csproj", "{3C1A8996-0125-4551-AA83-C61CF38FEF09}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -312,21 +310,6 @@ Global
 		{EBB212E4-C1B3-411E-98B8-F7BFF8DDD15F}.Release-net6.0-win-x86|Any CPU.Build.0 = Debug|Any CPU
 		{EBB212E4-C1B3-411E-98B8-F7BFF8DDD15F}.ScriptRunner-Release-net6.0-linux-x64|Any CPU.ActiveCfg = Release|Any CPU
 		{EBB212E4-C1B3-411E-98B8-F7BFF8DDD15F}.ScriptRunner-Release-net6.0-linux-x64|Any CPU.Build.0 = Release|Any CPU
-		{3C1A8996-0125-4551-AA83-C61CF38FEF09}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3C1A8996-0125-4551-AA83-C61CF38FEF09}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3C1A8996-0125-4551-AA83-C61CF38FEF09}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3C1A8996-0125-4551-AA83-C61CF38FEF09}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3C1A8996-0125-4551-AA83-C61CF38FEF09}.Release-net48-win|Any CPU.ActiveCfg = Debug|Any CPU
-		{3C1A8996-0125-4551-AA83-C61CF38FEF09}.Release-net6.0-linux-arm|Any CPU.ActiveCfg = Debug|Any CPU
-		{3C1A8996-0125-4551-AA83-C61CF38FEF09}.Release-net6.0-linux-arm64|Any CPU.ActiveCfg = Debug|Any CPU
-		{3C1A8996-0125-4551-AA83-C61CF38FEF09}.Release-net6.0-linux-musl-x64|Any CPU.ActiveCfg = Debug|Any CPU
-		{3C1A8996-0125-4551-AA83-C61CF38FEF09}.Release-net6.0-linux-x64|Any CPU.ActiveCfg = Debug|Any CPU
-		{3C1A8996-0125-4551-AA83-C61CF38FEF09}.Release-net6.0-osx-arm64|Any CPU.ActiveCfg = Debug|Any CPU
-		{3C1A8996-0125-4551-AA83-C61CF38FEF09}.Release-net6.0-osx-x64|Any CPU.ActiveCfg = Debug|Any CPU
-		{3C1A8996-0125-4551-AA83-C61CF38FEF09}.Release-net6.0-win-x64|Any CPU.ActiveCfg = Debug|Any CPU
-		{3C1A8996-0125-4551-AA83-C61CF38FEF09}.Release-net6.0-win-x86|Any CPU.ActiveCfg = Debug|Any CPU
-		{3C1A8996-0125-4551-AA83-C61CF38FEF09}.ScriptRunner-Release-net6.0-linux-x64|Any CPU.ActiveCfg = Release|Any CPU
-		{3C1A8996-0125-4551-AA83-C61CF38FEF09}.ScriptRunner-Release-net6.0-linux-x64|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
