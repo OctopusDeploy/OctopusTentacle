@@ -15,13 +15,23 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             bool testScriptIsolationLevelVersions = false,
             bool testDefaultTentacleRuntimeOnly = false,
             ScriptServiceVersionToTest scriptServiceToTest = ScriptServiceVersionToTest.TentacleSupported,
+            bool testPolling = true,
+            bool testListening = true,
             params object[] additionalParameterTypes)
             : base(
                 typeof(TentacleConfigurationTestCases),
                 nameof(TentacleConfigurationTestCases.GetEnumerator),
                 new object[]
                 {
-                    testCommonVersions, testCapabilitiesServiceVersions, testNoCapabilitiesServiceVersions, testScriptIsolationLevelVersions, testDefaultTentacleRuntimeOnly, scriptServiceToTest, additionalParameterTypes
+                    testCommonVersions, 
+                    testCapabilitiesServiceVersions, 
+                    testNoCapabilitiesServiceVersions, 
+                    testScriptIsolationLevelVersions, 
+                    testDefaultTentacleRuntimeOnly, 
+                    scriptServiceToTest, 
+                    testPolling,
+                    testListening,
+                    additionalParameterTypes
                 })
         {
         }
@@ -53,9 +63,27 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             bool testScriptIsolationLevel,
             bool testDefaultTentacleRuntimeOnly,
             ScriptServiceVersionToTest scriptServiceToTest,
+            bool testPolling,
+            bool testListening,
             object[] additionalParameterTypes)
         {
-            var tentacleTypes = new[] { TentacleType.Listening, TentacleType.Polling };
+            var tentacleTypes = new List<TentacleType>();
+
+            if (testPolling)
+            {
+                tentacleTypes.Add(TentacleType.Polling);
+            }
+
+            if (testListening)
+            {
+                tentacleTypes.Add(TentacleType.Listening);
+            }
+
+            if (!tentacleTypes.Any())
+            {
+                throw new ArgumentException("At least one TentacleType must be tested.");
+            }
+
             List<Version?> versions = new();
 
             if (testCommonVersions)
