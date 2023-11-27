@@ -182,28 +182,6 @@ partial class Build : NukeBuild
         });
 
     [PublicAPI]
-    Target BuildScriptRunnerLinux => _ => _
-        .Description("Builds the Kubernetes.ScriptRunner project only")
-        .DependsOn(Restore)
-        .Executes(() =>
-        {
-            using var versionInfoFile = ModifyTemplatedVersionAndProductFilesWithValues();
-            using var productWxsFile = UpdateMsiProductVersion();
-
-            var runtimeId = "linux-x64";
-            var configuration = $"ScriptRunner-Release-{NetCore}-{runtimeId}";
-
-            DotNetPublish(p => p
-                .SetProject(SourceDirectory / "Tentacle.sln")
-                .SetConfiguration(configuration)
-                .SetFramework(NetCore)
-                .SetRuntime(runtimeId)
-                .EnableSelfContained()
-                .EnableNoRestore()
-                .SetVersion(FullSemVer));
-        });
-
-    [PublicAPI]
     Target BuildAll => _ => _
         .Description("Build all the framework/runtime combinations. Notional task - running this on a single host is possible but cumbersome.")
         .DependsOn(BuildWindows)
