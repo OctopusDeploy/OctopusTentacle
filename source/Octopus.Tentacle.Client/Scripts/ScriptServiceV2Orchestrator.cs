@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
-using Halibut.Exceptions;
 using Halibut.ServiceModel;
 using Octopus.Tentacle.Client.Execution;
 using Octopus.Tentacle.Client.Observability;
+using Octopus.Tentacle.Client.Retries;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.Observability;
@@ -77,125 +76,163 @@ namespace Octopus.Tentacle.Client.Scripts
                 async Task<ScriptStatusResponseV2> StartScriptAction(CancellationToken ct)
                 {
                     ++startScriptCallCount;
-                    var result = await clientScriptServiceV2.StartScriptAsync(command, new HalibutProxyRequestOptions(ct));
+
+                    var result = await clientScriptServiceV2.StartScriptAsync(command, new HalibutProxyRequestOptions(ct, CancellationToken.None));
 
                     return result;
                 }
 
-                scriptStatusResponse = await rpcCallExecutor.Execute(
-                    retriesEnabled: ClientOptions.RpcRetrySettings.RetriesEnabled,
-                    RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.StartScript)),
-                    StartScriptAction,
-                    logger,
-                    clientOperationMetricsBuilder,
-                    scriptExecutionCancellationToken).ConfigureAwait(false);
-            }
-            catch (Exception e) when (scriptExecutionCancellationToken.IsCancellationRequested)
-            {
-                // If the call to StartScript is in-flight (being transferred to the Service) or we are retrying the StartScript call
-                // then we do not know if the script has been started or not on Tentacle so need to call CancelScript and CompleteScript
-                var startScriptCallIsBeingRetried = startScriptCallCount > 1;
-
-                // We determine if the call was connecting when cancelled, then assume it's transferring if it is not connecting.
-                // This is the safest option as it will default to the CancelScript CompleteScript path if we are unsure
-                var startScriptCallIsConnecting = e is ConnectingRequestCancelledException || e.IsHalibutWrappedConnectingRequestCancelledException();
-
-                if (!startScriptCallIsConnecting || startScriptCallIsBeingRetried)
+                if (ClientOptions.RpcRetrySettings.RetriesEnabled)
                 {
-                    // We have to assume the script started executing and call CancelScript and CompleteScript
-                    // We don't have a response so we need to create one to continue the execution flow
-                    scriptStatusResponse = new ScriptStatusResponseV2(
-                        command.ScriptTicket,
-                        ProcessState.Pending,
-                        ScriptExitCodes.RunningExitCode,
-                        new List<ProcessOutput>(),
-                        0);
-
-                    await ObserveUntilCompleteThenFinish(scriptStatusResponse, scriptExecutionCancellationToken).ConfigureAwait(false);
-
-                    // Throw an error so the caller knows that execution of the script was cancelled
-                    throw new OperationCanceledException("Script execution was cancelled");
+                    scriptStatusResponse = await rpcCallExecutor.ExecuteWithRetries(
+                        RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.StartScript)),
+                        StartScriptAction,
+                        logger,
+                        // If we are cancelling script execution we can abandon a call to start script
+                        // If we manage to cancel the start script call we can walk away
+                        // If we do abandon the start script call we have to assume the script is running so need
+                        // to call CancelScript and CompleteScript
+                        abandonActionOnCancellation: true,
+                        clientOperationMetricsBuilder,
+                        scriptExecutionCancellationToken).ConfigureAwait(false);
+                }
+                else
+                {
+                    scriptStatusResponse = await rpcCallExecutor.ExecuteWithNoRetries(
+                        RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.StartScript)),
+                        StartScriptAction,
+                        logger,
+                        abandonActionOnCancellation: true,
+                        clientOperationMetricsBuilder,
+                        scriptExecutionCancellationToken).ConfigureAwait(false);
+                }
+            }
+            catch (Exception e) when (e is OperationCanceledException && scriptExecutionCancellationToken.IsCancellationRequested)
+            {
+                // If we are not retrying and we managed to cancel execution it means the request was never sent so we can safely walk away from it.
+                if (e is not OperationAbandonedException && startScriptCallCount <= 1)
+                {
+                    throw;
                 }
 
-                // If the StartScript call was not in-flight or being retries then we know the script has not started executing on Tentacle
-                // So can exit without calling CancelScript or CompleteScript
-                throw;
+                // Otherwise we have to assume the script started executing and call CancelScript and CompleteScript
+                // We don't have a response so we need to create one to continue the execution flow
+                scriptStatusResponse = new ScriptStatusResponseV2(
+                    command.ScriptTicket,
+                    ProcessState.Pending,
+                    ScriptExitCodes.RunningExitCode,
+                    new List<ProcessOutput>(),
+                    0);
+
+                await ObserveUntilCompleteThenFinish(scriptStatusResponse, scriptExecutionCancellationToken).ConfigureAwait(false);
+
+                // Throw an error so the caller knows that execution of the script was cancelled
+                throw new OperationCanceledException("Script execution was cancelled");
             }
 
             return scriptStatusResponse;
         }
 
-        protected override async Task<ScriptStatusResponseV2> GetStatus(ScriptStatusResponseV2 lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        protected override async Task<ScriptStatusResponseV2> GetStatus(ScriptStatusResponseV2 lastStatusResponse, CancellationToken cancellationToken)
         {
             try
             {
                 async Task<ScriptStatusResponseV2> GetStatusAction(CancellationToken ct)
                 {
                     var request = new ScriptStatusRequestV2(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence);
-                    var result = await clientScriptServiceV2.GetStatusAsync(request, new HalibutProxyRequestOptions(ct));
+
+                    var result = await clientScriptServiceV2.GetStatusAsync(request, new HalibutProxyRequestOptions(ct, CancellationToken.None));
 
                     return result;
                 }
 
-                return await rpcCallExecutor.Execute(
-                    retriesEnabled: ClientOptions.RpcRetrySettings.RetriesEnabled,
+                if (ClientOptions.RpcRetrySettings.RetriesEnabled)
+                {
+                    return await rpcCallExecutor.ExecuteWithRetries(
+                        RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.GetStatus)),
+                        GetStatusAction,
+                        logger,
+                        // If cancelling script execution we can abandon a call to GetStatus and go straight into the CancelScript and CompleteScript flow
+                        abandonActionOnCancellation: true,
+                        clientOperationMetricsBuilder,
+                        cancellationToken).ConfigureAwait(false);
+                }
+
+                return await rpcCallExecutor.ExecuteWithNoRetries(
                     RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.GetStatus)),
                     GetStatusAction,
                     logger,
+                    abandonActionOnCancellation: true,
                     clientOperationMetricsBuilder,
-                    scriptExecutionCancellationToken).ConfigureAwait(false);
+                    cancellationToken).ConfigureAwait(false);
             }
-            catch (Exception e) when (e is OperationCanceledException && scriptExecutionCancellationToken.IsCancellationRequested)
+            catch (Exception e) when (e is OperationCanceledException && cancellationToken.IsCancellationRequested)
             {
                 // Return the last known response without logs when cancellation occurs and let the script execution go into the CancelScript and CompleteScript flow
                 return new ScriptStatusResponseV2(lastStatusResponse.Ticket, lastStatusResponse.State, lastStatusResponse.ExitCode, new List<ProcessOutput>(), lastStatusResponse.NextLogSequence);
             }
         }
 
-        protected override async Task<ScriptStatusResponseV2> Cancel(ScriptStatusResponseV2 lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        protected override async Task<ScriptStatusResponseV2> Cancel(ScriptStatusResponseV2 lastStatusResponse, CancellationToken cancellationToken)
         {
             async Task<ScriptStatusResponseV2> CancelScriptAction(CancellationToken ct)
             {
                 var request = new CancelScriptCommandV2(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence);
-                var result = await clientScriptServiceV2.CancelScriptAsync(request, new HalibutProxyRequestOptions(ct));
+
+                var result = await clientScriptServiceV2.CancelScriptAsync(request, new HalibutProxyRequestOptions(ct, CancellationToken.None));
 
                 return result;
             }
 
-            // TODO: SaST - This could be optimized for the failure scenario.
-            // If script execution is already triggering RPC Retries and then the script execution is cancelled there is a high chance that the cancel RPC call will fail as well and go into RPC retries.
-            // We could potentially reduce the time to failure by not retrying the cancel RPC Call if the previous RPC call was already triggering RPC Retries.
+            if (ClientOptions.RpcRetrySettings.RetriesEnabled)
+            {
+                return await rpcCallExecutor.ExecuteWithRetries(
+                    RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.CancelScript)),
+                    CancelScriptAction,
+                    logger,
+                    // We don't want to abandon this operation as it is responsible for stopping the script executing on the Tentacle
+                    abandonActionOnCancellation: false,
+                    clientOperationMetricsBuilder,
+                    cancellationToken).ConfigureAwait(false);
+            }
 
-            return await rpcCallExecutor.Execute(
-                retriesEnabled: ClientOptions.RpcRetrySettings.RetriesEnabled,
+            return await rpcCallExecutor.ExecuteWithNoRetries(
                 RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.CancelScript)),
                 CancelScriptAction,
                 logger,
+                abandonActionOnCancellation: false,
                 clientOperationMetricsBuilder,
-                // We don't want to cancel this operation as it is responsible for stopping the script executing on the Tentacle
-                CancellationToken.None).ConfigureAwait(false);
+                cancellationToken).ConfigureAwait(false);
         }
 
         protected override async Task<ScriptStatusResponseV2> Finish(ScriptStatusResponseV2 lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
+            // Best effort cleanup of Tentacle
             try
             {
-                // Finish performs a best effort cleanup of the Workspace on Tentacle
-                // If we are cancelling script execution we abandon a call to complete script after a period of time
-                using var completeScriptCancellationTokenSource = new CancellationTokenSource(onCancellationAbandonCompleteScriptAfter);
-
-                await rpcCallExecutor.ExecuteWithNoRetries(
+                var actionTask =
+                    rpcCallExecutor.ExecuteWithNoRetries(
                         RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.CompleteScript)),
                         async ct =>
                         {
                             var request = new CompleteScriptCommandV2(lastStatusResponse.Ticket);
-                            await clientScriptServiceV2.CompleteScriptAsync(request, new HalibutProxyRequestOptions(ct));
+
+                            await clientScriptServiceV2.CompleteScriptAsync(request, new HalibutProxyRequestOptions(ct, CancellationToken.None));
                         },
                         logger,
+                        abandonActionOnCancellation: false,
                         clientOperationMetricsBuilder,
-                        completeScriptCancellationTokenSource.Token); 
+                        CancellationToken.None);
+
+                var actionTaskCompletionResult = await actionTask.WaitTillCompletion(onCancellationAbandonCompleteScriptAfter, scriptExecutionCancellationToken);
+                if (actionTaskCompletionResult == TaskCompletionResult.Abandoned)
+                {
+                    throw new OperationAbandonedException(onCancellationAbandonCompleteScriptAfter);
+                }
+
+                await actionTask;
             }
-            catch (Exception ex) when (ex is HalibutClientException or OperationCanceledException)
+            catch (Exception ex) when (ex is HalibutClientException or OperationCanceledException or OperationAbandonedException)
             {
                 logger.Warn("Failed to cleanup the script working directory on Tentacle");
                 logger.Verbose(ex);

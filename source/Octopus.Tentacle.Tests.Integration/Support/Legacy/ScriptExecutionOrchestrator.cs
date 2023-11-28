@@ -42,7 +42,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
 
             cancellationToken.ThrowIfCancellationRequested();
 
-            var scriptTicket = await tentacleClient.ScriptService.StartScriptAsync(startScriptCommand, new(cancellationToken));
+            var scriptTicket = await tentacleClient.ScriptService.StartScriptAsync(startScriptCommand, new(cancellationToken, null));
             
             logger.Information("Started script execution");
 
@@ -62,7 +62,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
 
                 scriptStatusResponse = await tentacleClient.ScriptService.GetStatusAsync(
                     new ScriptStatusRequest(scriptTicket, scriptStatusResponse.NextLogSequence),
-                    new(cancellationToken));
+                    new(cancellationToken, null));
                 
                 logs.AddRange(scriptStatusResponse.Logs);
 
@@ -100,7 +100,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
 
                 scriptStatusResponse = await tentacleClient.ScriptService.GetStatusAsync(
                     new ScriptStatusRequest(scriptTicket, scriptStatusResponse.NextLogSequence),
-                    new(cancellationToken));
+                    new(cancellationToken, null));
                 
                 logger.Information("Current script status: {ScriptStatus}", scriptStatusResponse.State);
 
@@ -128,7 +128,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
 
             var finalStatus = await tentacleClient.ScriptService.CompleteScriptAsync(
                 new CompleteScriptCommand(scriptStatusResponse.Ticket, scriptStatusResponse.NextLogSequence),
-                new(cancellationToken));
+                new(cancellationToken, null));
             
             var logs = new List<ProcessOutput>();
             logs.AddRange(scriptStatusResponse.Logs);
