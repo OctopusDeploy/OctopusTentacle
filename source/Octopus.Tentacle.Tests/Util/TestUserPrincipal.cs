@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.DirectoryServices.AccountManagement;
 using System.Net;
 using System.Security.Principal;
 
 namespace Octopus.Tentacle.Tests.Util
 {
+    [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
     class TestUserPrincipal
     {
         public TestUserPrincipal(string username, string password = "Password01!")
