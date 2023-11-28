@@ -98,10 +98,10 @@
 		<PackageReference Include="System.ServiceModel.Primitives" Version="4.5.3" />
 		<PackageReference Include="System.ServiceProcess.ServiceController" Version="7.0.1" />
 		<PackageReference Include="System.IO.FileSystem.AccessControl" Version="5.0.0" />
-		<PackageReference Include="System.Diagnostics.EventLog" Version="7.0.0" />
+		<PackageReference Include="System.Diagnostics.EventLog" Version="8.0.0" />
 		<PackageReference Include="System.Text.Encoding.CodePages" Version="6.0.0" />
-		<PackageReference Include="System.DirectoryServices.AccountManagement" Version="4.5.0" />
-		<PackageReference Include="System.Security.Cryptography.ProtectedData" Version="5.0.0" />
+		<PackageReference Include="System.DirectoryServices.AccountManagement" Version="8.0.0" />
+		<PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
 	</ItemGroup>
 	<ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
 		<PackageReference Include="System.Runtime" Version="4.3.0" />

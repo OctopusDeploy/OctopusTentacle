@@ -29,7 +29,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     await fileStream.CopyToAsync(stream);
                 });
 
-            var uploadResult = await clientAndTentacle.TentacleClient.FileTransferService.UploadFileAsync("the_remote_uploaded_file", dataStream, new(CancellationToken));
+            var uploadResult = await clientAndTentacle.TentacleClient.FileTransferService.UploadFileAsync("the_remote_uploaded_file", dataStream, new(CancellationToken, null));
 
             Console.WriteLine($"Source: {fileToUpload.File.FullName}");
             Console.WriteLine($"Destination: {uploadResult.FullPath}");
@@ -50,7 +50,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var downloadedData = await clientAndTentacle.TentacleClient.FileTransferService.DownloadFileAsync(
                 fileToDownload.File.FullName,
-                new(CancellationToken));
+                new(CancellationToken, null));
 
             var sourceBytes = File.ReadAllBytes(fileToDownload.File.FullName);
             var destinationBytes = await downloadedData.ToBytes(CancellationToken);

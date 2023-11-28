@@ -10,12 +10,14 @@ namespace Octopus.Tentacle.Client.Retries
     internal class RpcCallRetryPolicyBuilder
     {
         TimeSpan retryTimeout = TimeSpan.FromSeconds(60);
+        TimeoutStrategy timeoutStrategy = TimeoutStrategy.Optimistic;
         Func<Context, TimeSpan, Task, Exception, Task>? onTimeoutAction;
         Func<Exception, TimeSpan, int, Context, Task>? onRetryAction;
 
-        public RpcCallRetryPolicyBuilder WithRetryTimeout(TimeSpan retryTimeout)
+        public RpcCallRetryPolicyBuilder WithRetryTimeout(TimeSpan retryTimeout, TimeoutStrategy timeoutStrategy)
         {
             this.retryTimeout = retryTimeout;
+            this.timeoutStrategy = timeoutStrategy;
 
             return this;
         }
@@ -39,7 +41,7 @@ namespace Octopus.Tentacle.Client.Retries
             var timeoutPolicy = Policy
                 .TimeoutAsync(
                     seconds: (int)retryTimeout.TotalSeconds,
-                    timeoutStrategy: TimeoutStrategy.Optimistic,
+                    timeoutStrategy: timeoutStrategy,
                     onTimeoutAsync: onTimeoutAction ?? DefaultOnTimeoutAction);
 
             return timeoutPolicy;

@@ -21,15 +21,15 @@ namespace Octopus.Tentacle.Tests.Integration.Util.PendingRequestQueueHelpers
             await pendingRequestQueue.ApplyResponse(response, destination);
         }
 
-        public async Task<RequestMessageWithCancellationToken> DequeueAsync(CancellationToken cancellationToken)
+        public async Task<RequestMessage> DequeueAsync(CancellationToken cancellationToken)
         {
             return await pendingRequestQueue.DequeueAsync(cancellationToken);
         }
 
-        public Task<ResponseMessage> QueueAndWaitAsync(RequestMessage request, CancellationToken cancellationToken)
+        public Task<ResponseMessage> QueueAndWaitAsync(RequestMessage request, RequestCancellationTokens requestCancellationTokens)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            return pendingRequestQueue.QueueAndWaitAsync(request, cancellationToken);
+            requestCancellationTokens.ConnectingCancellationToken.ThrowIfCancellationRequested();
+            return pendingRequestQueue.QueueAndWaitAsync(request, requestCancellationTokens);
         }
 
         public bool IsEmpty => pendingRequestQueue.IsEmpty;
