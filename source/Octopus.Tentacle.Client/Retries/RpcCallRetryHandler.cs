@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using Halibut.Exceptions;
 using Polly;
 using Polly.Timeout;
 
@@ -20,12 +19,15 @@ namespace Octopus.Tentacle.Client.Retries
         /// <param name="elapsedDuration">The duration that has elapsed already including the initial execution and any previous retries</param>
         /// <param name="cancellationToken">CancellationToken that will be cancelled when execution is cancelled by the caller</param>
         /// <returns></returns>
-        public delegate Task OnRetryAction(Exception lastException, TimeSpan retrySleepDuration, int retryCount, TimeSpan retryTimeout, TimeSpan elapsedDuration, CancellationToken cancellationToken);
+        public delegate Task OnRetyAction(Exception lastException, TimeSpan retrySleepDuration, int retryCount, TimeSpan retryTimeout, TimeSpan elapsedDuration, CancellationToken cancellationToken);
 
         public delegate Task OnTimeoutAction(TimeSpan retryTimeout, TimeSpan elapsedDuration, int retryCount, CancellationToken cancellationToken);
 
-        public RpcCallRetryHandler(TimeSpan retryTimeout)
+        readonly TimeoutStrategy timeoutStrategy;
+
+        public RpcCallRetryHandler(TimeSpan retryTimeout, TimeoutStrategy timeoutStrategy)
         {
+            this.timeoutStrategy = timeoutStrategy;
             RetryTimeout = retryTimeout;
         }
 
@@ -35,7 +37,7 @@ namespace Octopus.Tentacle.Client.Retries
 
         public async Task<T> ExecuteWithRetries<T>(
             Func<CancellationToken, Task<T>> action,
-            OnRetryAction? onRetryAction,
+            OnRetyAction? onRetryAction,
             OnTimeoutAction? onTimeoutAction,
             CancellationToken cancellationToken)
         {
@@ -73,7 +75,7 @@ namespace Octopus.Tentacle.Client.Retries
             }
 
             var policyBuilder = new RpcCallRetryPolicyBuilder()
-                .WithRetryTimeout(RetryTimeout)
+                .WithRetryTimeout(RetryTimeout, timeoutStrategy)
                 .WithOnRetryAction(OnRetryAction)
                 .WithOnTimeoutAction(OnTimeoutAction);
 
@@ -100,7 +102,7 @@ namespace Octopus.Tentacle.Client.Retries
 
                 var timeoutPolicy = policyBuilder
                     // Ensure the remaining retry time excludes the elapsed time
-                    .WithRetryTimeout(remainingRetryDuration)
+                    .WithRetryTimeout(remainingRetryDuration, timeoutStrategy)
                     .BuildTimeoutPolicy();
 
                 return await timeoutPolicy.ExecuteAsync(action, ct).ConfigureAwait(false);
@@ -109,12 +111,10 @@ namespace Octopus.Tentacle.Client.Retries
             try
             {
                 started.Start();
-                return await retryPolicy.ExecuteAsync(ExecuteAction, cancellationToken);
+                return await retryPolicy.ExecuteAsync(ExecuteAction, cancellationToken).ConfigureAwait(false);
             }
-            catch (Exception ex) when (ex is TimeoutRejectedException or TaskCanceledException)
+            catch (TimeoutRejectedException)
             {
-                // If the timeout policy timed out or the cancellation token caused a generic task cancellation 
-                // and we have captured an exception from a previous retry, then throw the more meaningful previous exception.
                 if (lastException != null)
                 {
                     throw lastException;
@@ -127,6 +127,37 @@ namespace Octopus.Tentacle.Client.Retries
             {
                 return remainingRetryDuration > RetryIfRemainingDurationAtLeast;
             }
+        }
+
+        public async Task<T> ExecuteWithRetries<T>(
+            Func<CancellationToken, Task<T>> action,
+            OnRetyAction? onRetryAction,
+            OnTimeoutAction? onTimeoutAction,
+            bool abandonActionOnCancellation,
+            TimeSpan abandonAfter,
+            CancellationToken cancellationToken)
+        {
+            return await ExecuteWithRetries(
+                async ct =>
+                {
+                    if (!abandonActionOnCancellation)
+                    {
+                        return await action(ct).ConfigureAwait(false);
+                    }
+
+                    var actionTask = action(ct);
+
+                    var actionTaskCompletionResult = await actionTask.WaitTillCompletion(abandonAfter, cancellationToken);
+                    if (actionTaskCompletionResult == TaskCompletionResult.Abandoned)
+                    {
+                        throw new OperationAbandonedException(abandonAfter);
+                    }
+
+                    return await actionTask.ConfigureAwait(false);
+                },
+                onRetryAction,
+                onTimeoutAction,
+                cancellationToken);
         }
     }
 }

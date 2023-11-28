@@ -29,7 +29,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
         public async Task RestartTcpConnection()
         {
             logger.Information("Call DownloadFile to work around an issue where the tcp killer kills setup of new connections");
-            await ExecuteDownloadFile(new HalibutProxyRequestOptions(CancellationToken.None));
+            await ExecuteDownloadFile(new HalibutProxyRequestOptions(CancellationToken.None, CancellationToken.None));
             logger.Information("Finished DownloadFile work around call");
         }
 
@@ -41,7 +41,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
                 var cts = new CancellationTokenSource();
                 cts.CancelAfter(TimeSpan.FromMilliseconds(500));
 
-                await ExecuteDownloadFile(new HalibutProxyRequestOptions(cts.Token));
+                await ExecuteDownloadFile(new HalibutProxyRequestOptions(cts.Token, null));
             }
             catch
             {
