@@ -240,17 +240,9 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                                     }
                                 }
                             },
-                            ServiceAccountName = KubernetesConfig.ServiceAccountName,
+                            ServiceAccountName = KubernetesConfig.JobServiceAccountName,
                             RestartPolicy = "Never",
                             Volumes = volumes
-                            // new List<V1Volume>
-                            // {
-                            //     new()
-                            //     {
-                            //         Name = "tentacle-home",
-                            //         PersistentVolumeClaim = new V1PersistentVolumeClaimVolumeSource("tentacle-home-pv-claim")
-                            //     }
-                            // }
                         }
                     },
                     BackoffLimit = 0, //we never want to rerun if it fails
