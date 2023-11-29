@@ -103,7 +103,7 @@ function validateVariables() {
 }
 
 function configureTentacle() {
-    tentacle create-instance --instance "$instanceName" --config "$configurationDirectory/tentacle.config"
+    tentacle create-instance --instance "$instanceName" --config "$configurationDirectory/tentacle.config" --home "$configurationDirectory"
 
     echo "Setting directory paths ..."
     tentacle configure --instance "$instanceName" --app "$applicationsDirectory"
