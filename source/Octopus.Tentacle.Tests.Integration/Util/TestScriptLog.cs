@@ -23,8 +23,11 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         }
 
         public void WriteOutput(ProcessOutputSource source, string message)
+            => WriteOutput(source, message, DateTimeOffset.UtcNow);
+
+        public void WriteOutput(ProcessOutputSource source, string message, DateTimeOffset occurred)
         {
-            Console.WriteLine($"{DateTime.UtcNow} {source} {message}");
+            Console.WriteLine($"{occurred} {source} {message}");
             switch (source)
             {
                 case ProcessOutputSource.Debug:

@@ -28,7 +28,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <PackageReference Include="Halibut" Version="7.0.209" />
+    <PackageReference Include="Halibut" Version="7.0.285" />
     <PackageReference Include="Octopus.Diagnostics" Version="2.1.0" />
   </ItemGroup>
   <ItemGroup>

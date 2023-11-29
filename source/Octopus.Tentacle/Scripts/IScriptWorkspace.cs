@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Tentacle.Contracts;
@@ -20,5 +21,7 @@ namespace Octopus.Tentacle.Scripts
         Task Delete(CancellationToken cancellationToken);
         IScriptLog CreateLog();
         string LogFilePath { get; }
+        void WriteFile(string filename, string contents);
+        Stream OpenFileStreamForReading(string filename);
     }
 }

@@ -40,6 +40,12 @@
 	<PropertyGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
 		<DefineConstants>$(DefineConstants);HTTP_CLIENT_SUPPORTS_SSL_OPTIONS;REQUIRES_EXPLICIT_LOG_CONFIG;REQUIRES_CODE_PAGE_PROVIDER;USER_INTERACTIVE_DOES_NOT_WORK;DEFAULT_PROXY_IS_NOT_AVAILABLE;HAS_NULLABLE_REF_TYPES</DefineConstants>
 	</PropertyGroup>
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
+		<PackageReference Include="KubernetesClient.Classic" Version="10.1.19" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
+		<PackageReference Include="KubernetesClient" Version="10.1.19" />
+	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Octopus.Client" Version="14.3.980" />
 	</ItemGroup>
@@ -54,14 +60,14 @@
 		<PackageReference Include="Octopus.Configuration" Version="4.1.0" />
 		<PackageReference Include="Octopus.Diagnostics" Version="2.1.0" />
 		<PackageReference Include="Octopus.Time" Version="1.1.339" />
-		<PackageReference Include="Portable.BouncyCastle" Version="1.8.4" />
+		<PackageReference Include="Polly" Version="7.2.2" />
+		<PackageReference Include="Portable.BouncyCastle" Version="1.9.0" />
+		<PackageReference Include="System.Management" Version="4.7.0" />
 		<PackageReference Include="System.ValueTuple" Version="4.5.0" />
 		<PackageReference Include="System.Net.Primitives" Version="4.3.1" />
 		<PackageReference Include="TaskScheduler" Version="2.7.2" />
 		<PackageReference Include="Nito.AsyncEx" Version="5.0.0" />
 		<PackageReference Include="NLog" Version="5.0.4" />
-		<PackageReference Include="Polly" Version="7.2.2" />
-		<PackageReference Include="System.Management" Version="4.7.0" />
 	</ItemGroup>
 	<ItemGroup>
 		<Compile Include="..\Solution Items\SolutionInfo.cs">
@@ -94,7 +100,6 @@
 		<PackageReference Include="System.IO.FileSystem.AccessControl" Version="5.0.0" />
 		<PackageReference Include="System.Diagnostics.EventLog" Version="8.0.0" />
 		<PackageReference Include="System.Text.Encoding.CodePages" Version="6.0.0" />
-		<PackageReference Include="System.DirectoryServices.AccountManagement" Version="8.0.0" />
 		<PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
 	</ItemGroup>
 	<ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
@@ -112,5 +117,9 @@
 	  <EmbeddedResource Include="Internals\Options\_Readme.txt" />
 	  <EmbeddedResource Include="Startup\PathsToDeleteOnStartup.core.txt" />
 	  <EmbeddedResource Include="Startup\PathsToDeleteOnStartup.netfx.txt" />
+	  <None Remove="Kubernetes\bootstrapRunner.sh" />
+	  <EmbeddedResource Include="Kubernetes\bootstrapRunner.sh">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </EmbeddedResource>
 	</ItemGroup>
 </Project>
