@@ -33,13 +33,10 @@ namespace Octopus.Tentacle.Kubernetes
             {
                 return await Client.ReadNamespacedJobStatusAsync(jobName, KubernetesConfig.Namespace, cancellationToken: cancellationToken);
             }
-            catch (HttpOperationException opException)
+          catch (HttpOperationException opException) 
+                when(opException.Response.StatusCode == HttpStatusCode.NotFound)
             {
-                if (opException.Response.StatusCode == HttpStatusCode.NotFound)
                     return null;
-
-                //if there is some other error, just throw the exception
-                throw;
             }
         }
 
