@@ -20,12 +20,14 @@ namespace Octopus.Tentacle.Tests.Integration.Startup
     public class LinuxConfigureServiceHelperFixture
     {
         [Test]
+        [RequiresSudoOnLinux]
         public void CanInstallServiceAsRoot()
         {
             CanInstallService(null, null);
         }
 
         [Test]
+        [RequiresSudoOnLinux]
         public void CanInstallServiceAsUser()
         {
             var user = new LinuxTestUserPrincipal("octo-shared-svc-test");
@@ -33,6 +35,7 @@ namespace Octopus.Tentacle.Tests.Integration.Startup
         }
 
         [Test]
+        [RequiresSudoOnLinux]
         public void CannotWriteToServiceFileAsUser()
         {
             const string serviceName = "OctopusShared.ServiceHelperTest";
