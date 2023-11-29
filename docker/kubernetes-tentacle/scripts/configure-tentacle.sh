@@ -45,12 +45,12 @@ function validateVariables() {
     fi
 
     if [[ -z "$TargetEnvironment" ]]; then
-        echo "Please specify an environment name with the 'TargetEnvironment' environment variable" >&2
+        echo "Please specify one or more environment names (comma delimited) with the 'TargetEnvironment' environment variable" >&2
         exit 1
     fi
 
     if [[ -z "$TargetRole" ]]; then
-        echo "Please specify a role name with the 'TargetRole' environment variable" >&2
+        echo "Please specify one or more role names (comma delimited) with the 'TargetRole' environment variable" >&2
         exit 1
     fi
 
