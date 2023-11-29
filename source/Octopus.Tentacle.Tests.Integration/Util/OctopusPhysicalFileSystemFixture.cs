@@ -4,6 +4,7 @@ using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
 using Octopus.Diagnostics;
+using Octopus.Tentacle.Tests.Integration.Support.TestAttributes;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Integration.Util
@@ -26,6 +27,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         }
 
         [Test]
+        [RequiresSudoOnLinux]
         public void DeleteDirectory_WithReadOnlyFiles_ShouldSucceed()
         {
             // Arrange
