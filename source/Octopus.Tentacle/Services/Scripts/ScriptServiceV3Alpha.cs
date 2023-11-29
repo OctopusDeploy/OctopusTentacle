@@ -14,17 +14,17 @@ namespace Octopus.Tentacle.Services.Scripts
     [Service(typeof(IScriptServiceV3Alpha))]
     public class ScriptServiceV3Alpha : IAsyncScriptServiceV3Alpha
     {
-        readonly IScriptExecutorFactory scriptExecutorFactory;
+        readonly IScriptExecutor scriptExecutor;
         readonly IScriptWorkspaceFactory workspaceFactory;
         readonly IScriptStateStoreFactory scriptStateStoreFactory;
         readonly ConcurrentDictionary<ScriptTicket, RunningScriptWrapper> runningScripts = new();
 
         public ScriptServiceV3Alpha(
-            IScriptExecutorFactory scriptExecutorFactory,
+            IScriptExecutor scriptExecutor,
             IScriptWorkspaceFactory workspaceFactory,
             IScriptStateStoreFactory scriptStateStoreFactory)
         {
-            this.scriptExecutorFactory = scriptExecutorFactory;
+            this.scriptExecutor = scriptExecutor;
             this.workspaceFactory = workspaceFactory;
             this.scriptStateStoreFactory = scriptStateStoreFactory;
         }
@@ -71,8 +71,10 @@ namespace Octopus.Tentacle.Services.Scripts
                     runningScript.ScriptStateStore.Create();
                 }
 
-                var executor = scriptExecutorFactory.GetExecutor();
-                var process = executor.ExecuteOnBackgroundThread(command, workspace, runningScript.ScriptStateStore, runningScript.CancellationToken);
+                if(!scriptExecutor.CanExecute(command))
+                    throw new InvalidOperationException($"The execution context type {command.ExecutionContext.GetType().Name} cannot be used with script executor {scriptExecutor.GetType().Name}.");
+
+                var process = scriptExecutor.ExecuteOnBackgroundThread(command, workspace, runningScript.ScriptStateStore, runningScript.CancellationToken);
 
                 runningScript.Process = process;
 

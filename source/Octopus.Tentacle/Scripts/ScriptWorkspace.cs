@@ -34,6 +34,9 @@ namespace Octopus.Tentacle.Scripts
 
         const string LogFileName = "Output.log";
         public string LogFilePath => GetLogFilePath(WorkingDirectory);
+        public void WriteFile(string filename, string contents) => FileSystem.OverwriteFile(ResolvePath(filename), contents);
+        public Stream OpenFileStreamForReading(string filename) => FileSystem.OpenFile(ResolvePath(filename), FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+
         public static string GetLogFilePath(string workingDirectory) => Path.Combine(workingDirectory, LogFileName);
 
         public ScriptTicket ScriptTicket { get; }

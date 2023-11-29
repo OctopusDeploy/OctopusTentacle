@@ -5,6 +5,7 @@ namespace Octopus.Tentacle.Scripts
 {
     public interface IScriptExecutor
     {
-        IRunningScript ExecuteOnBackgroundThread(StartScriptCommandV3Alpha command, IScriptWorkspace workspace, ScriptStateStore? scriptStateStore, CancellationToken cancellationToken);
+        bool CanExecute(StartScriptCommandV3Alpha command);
+        IRunningScript ExecuteOnBackgroundThread(StartScriptCommandV3Alpha command, IScriptWorkspace workspace, ScriptStateStore scriptStateStore, CancellationToken cancellationToken);
     }
 }

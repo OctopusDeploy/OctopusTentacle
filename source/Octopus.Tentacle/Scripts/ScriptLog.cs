@@ -130,13 +130,16 @@ namespace Octopus.Tentacle.Services.Scripts
             }
 
             public void WriteOutput(ProcessOutputSource source, string message)
+            => WriteOutput(source, message, DateTimeOffset.UtcNow);
+
+            public void WriteOutput(ProcessOutputSource source, string message, DateTimeOffset occurred)
             {
                 lock (sync)
                 {
                     json.WriteStartArray();
                     json.WriteValue(SourceToString(source));
                     json.WriteValue(MaskSensitiveValues(message));
-                    json.WriteValue(DateTimeOffset.UtcNow);
+                    json.WriteValue(occurred);
                     json.WriteEndArray();
                     json.Flush();
                 }
