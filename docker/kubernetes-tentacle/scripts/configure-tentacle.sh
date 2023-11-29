@@ -8,9 +8,19 @@ fi
 
 # Tentacle Docker images only support once instance per container. Running multiple instances can be achieved by running multiple containers.
 instanceName=Tentacle
-configurationDirectory=/etc/octopus
-applicationsDirectory=/home/Octopus/Applications
 internalListeningPort=10933
+
+#If TentacleHome environment variable exists, use that
+configurationDirectory=/etc/octopus
+if [[ -n "$TentacleHome"]]; then
+    configurationDirectory="$TentacleHome"
+fi
+
+#If TentacleApplications environment variable exists, use that
+applicationsDirectory=/home/Octopus/Applications
+if [[ -n "$TentacleApplications"]]; then
+    configurationDirectory="$TentacleApplications"
+fi
 
 mkdir -p $configurationDirectory
 mkdir -p $applicationsDirectory
