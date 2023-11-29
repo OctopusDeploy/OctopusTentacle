@@ -86,7 +86,7 @@ namespace Octopus.Tentacle.Tests.Integration
                             
                             totalTime.Stop();
 
-                            logger.Information("Download Finished in {totalTime}", totalTime.ElapsedMilliseconds);
+                            logger.Information("Download Finished in {totalTime}ms", totalTime.ElapsedMilliseconds);
                         }
                     }
                 }
