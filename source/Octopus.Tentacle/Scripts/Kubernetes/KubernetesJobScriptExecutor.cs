@@ -11,23 +11,23 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
     public class KubernetesJobScriptExecutor : IScriptExecutor
     {
         readonly IKubernetesJobService jobService;
-        readonly IKubernetesClusterService clusterService;
+        readonly IKubernetesJobContainerResolver containerResolver;
         readonly IApplicationInstanceSelector appInstanceSelector;
         readonly ISystemLog log;
 
-        public KubernetesJobScriptExecutor(IKubernetesJobService jobService, IKubernetesClusterService clusterService, IApplicationInstanceSelector appInstanceSelector, ISystemLog log)
+        public KubernetesJobScriptExecutor(IKubernetesJobService jobService, IKubernetesJobContainerResolver containerResolver, IApplicationInstanceSelector appInstanceSelector, ISystemLog log)
         {
             this.jobService = jobService;
-            this.clusterService = clusterService;
+            this.containerResolver = containerResolver;
             this.appInstanceSelector = appInstanceSelector;
             this.log = log;
         }
 
-        public bool ValidateExecutionContext(IScriptExecutionContext executionContext) => executionContext is KubernetesJobScriptExecutionContext;
+        public bool CanExecute(StartScriptCommandV3Alpha command) => command.ExecutionContext is KubernetesJobScriptExecutionContext;
 
         public IRunningScript ExecuteOnBackgroundThread(StartScriptCommandV3Alpha command, IScriptWorkspace workspace, ScriptStateStore scriptStateStore, CancellationToken cancellationToken)
         {
-            var runningScript = new RunningKubernetesJobScript(workspace, workspace.CreateLog(), command.ScriptTicket, command.TaskId, cancellationToken, log, scriptStateStore, jobService, clusterService, appInstanceSelector, (KubernetesJobScriptExecutionContext)command.ExecutionContext);
+            var runningScript = new RunningKubernetesJobScript(workspace, workspace.CreateLog(), command.ScriptTicket, command.TaskId, cancellationToken, log, scriptStateStore, jobService, containerResolver, appInstanceSelector);
 
             Task.Run(async () =>
             {

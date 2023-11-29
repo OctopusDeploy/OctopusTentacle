@@ -16,7 +16,7 @@ namespace Octopus.Tentacle.Scripts
             this.log = log;
         }
 
-        public bool ValidateExecutionContext(IScriptExecutionContext executionContext) => executionContext is LocalShellScriptExecutionContext;
+        public bool CanExecute(StartScriptCommandV3Alpha command) => command.ExecutionContext is LocalShellScriptExecutionContext;
 
         public IRunningScript ExecuteOnBackgroundThread(StartScriptCommandV3Alpha command, IScriptWorkspace workspace, ScriptStateStore scriptStateStore, CancellationToken cancellationToken)
         {

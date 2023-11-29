@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection;
 using Autofac;
 using Octopus.Tentacle.Communications;
+using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Packages;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Scripts.Kubernetes;
@@ -21,10 +22,15 @@ namespace Octopus.Tentacle.Services
 
             builder.RegisterType<NuGetPackageInstaller>().As<IPackageInstaller>();
 
-            // Register the script executor logic
-            builder.RegisterType<ScriptExecutorFactory>().As<IScriptExecutorFactory>();
-            builder.RegisterType<LocalShellScriptExecutor>().AsSelf().As<IScriptExecutor>();
-            builder.RegisterType<KubernetesJobScriptExecutor>().AsSelf().As<IScriptExecutor>();
+            // Register the script executor based on if we should
+            if (KubernetesConfig.UseJobs)
+            {
+                builder.RegisterType<KubernetesJobScriptExecutor>().AsSelf().As<IScriptExecutor>();
+            }
+            else
+            {
+                builder.RegisterType<LocalShellScriptExecutor>().AsSelf().As<IScriptExecutor>();
+            }
 
             // Register our Halibut services
             var knownServices = ThisAssembly.GetTypes()

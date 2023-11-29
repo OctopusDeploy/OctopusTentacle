@@ -40,20 +40,12 @@ namespace Octopus.Tentacle.Tests.Integration
             workspaceFactory = new ScriptWorkspaceFactory(octopusPhysicalFileSystem, homeConfiguration, new SensitiveValueMasker());
             stateStoreFactory = new ScriptStateStoreFactory(octopusPhysicalFileSystem);
 
-            var scriptExecutorFactory = new ScriptExecutorFactory(
-                new Lazy<LocalShellScriptExecutor>(() =>
-                    new LocalShellScriptExecutor(
-                        PlatformDetection.IsRunningOnWindows ? new PowerShell() : new Bash(),
-                        Substitute.For<ISystemLog>())),
-                new Lazy<KubernetesJobScriptExecutor>(() =>
-                    new KubernetesJobScriptExecutor(
-                        Substitute.For<IKubernetesJobService>(),
-                        Substitute.For<IKubernetesClusterService>(),
-                        Substitute.For<IApplicationInstanceSelector>(),
-                        Substitute.For<ISystemLog>())));
+            var localShellScriptExecutor = new LocalShellScriptExecutor(
+                PlatformDetection.IsRunningOnWindows ? new PowerShell() : new Bash(),
+                Substitute.For<ISystemLog>());
 
             service = new ScriptServiceV3Alpha(
-                scriptExecutorFactory,
+                localShellScriptExecutor,
                 workspaceFactory,
                 stateStoreFactory);
         }

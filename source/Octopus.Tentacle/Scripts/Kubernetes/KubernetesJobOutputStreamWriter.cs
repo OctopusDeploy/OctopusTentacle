@@ -33,6 +33,8 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                 if (stdOutStream is null || stdErrStream is null)
                     return;
 
+                // This loop is exited when either the cancellation token is cancelled (which is when the job is finished or the script is cancelled)
+                // or if this is the final read, at the end (so we read once and jump out)
                 while (true)
                 {
                     if (cancellationToken.IsCancellationRequested)

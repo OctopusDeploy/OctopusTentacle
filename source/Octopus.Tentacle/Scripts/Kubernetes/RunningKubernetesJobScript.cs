@@ -11,7 +11,6 @@ using Nito.AsyncEx;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Contracts;
-using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
 using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Util;
 using Octopus.Tentacle.Variables;
@@ -33,8 +32,7 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
         readonly ILog log;
         readonly IScriptStateStore stateStore;
         readonly IKubernetesJobService jobService;
-        readonly IKubernetesClusterService kubernetesClusterService;
-        readonly KubernetesJobScriptExecutionContext executionContext;
+        readonly IKubernetesJobContainerResolver containerResolver;
         readonly CancellationToken scriptCancellationToken;
         readonly string? instanceName;
         readonly KubernetesJobOutputStreamWriter outputStreamWriter;
@@ -52,9 +50,8 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
             ILog log,
             IScriptStateStore stateStore,
             IKubernetesJobService jobService,
-            IKubernetesClusterService kubernetesClusterService,
-            IApplicationInstanceSelector appInstanceSelector,
-            KubernetesJobScriptExecutionContext executionContext)
+            IKubernetesJobContainerResolver containerResolver,
+            IApplicationInstanceSelector appInstanceSelector)
         {
             this.workspace = workspace;
             this.scriptTicket = scriptTicket;
@@ -62,8 +59,7 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
             this.log = log;
             this.stateStore = stateStore;
             this.jobService = jobService;
-            this.kubernetesClusterService = kubernetesClusterService;
-            this.executionContext = executionContext;
+            this.containerResolver = containerResolver;
             this.scriptCancellationToken = scriptCancellationToken;
             ScriptLog = scriptLog;
             instanceName = appInstanceSelector.Current.InstanceName;
@@ -215,7 +211,7 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                                 new()
                                 {
                                     Name = jobName,
-                                    Image = await GetDefaultContainer(),
+                                    Image = await containerResolver.GetContainerImageForCluster(),
                                     Command = new List<string> { "bash" },
                                     Args = new List<string>
                                     {
@@ -234,6 +230,8 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                                     Env = new List<V1EnvVar>
                                     {
                                         new(EnvironmentVariables.TentacleHome, $"/data/tentacle-home/{instanceName}"),
+                                        new(EnvironmentVariables.TentacleJournal, $"/data/tentacle-home/{instanceName}/DeploymentJournal.xml"),
+                                        new(EnvironmentVariables.TentacleInstanceName, instanceName),
                                         new(EnvironmentVariables.TentacleVersion, Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleVersion)),
                                         new(EnvironmentVariables.TentacleCertificateSignatureAlgorithm, Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleCertificateSignatureAlgorithm)),
                                         new("OCTOPUS_RUNNING_IN_CONTAINER", "Y")
@@ -246,7 +244,7 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                         }
                     },
                     BackoffLimit = 0, //we never want to rerun if it fails
-                    TtlSecondsAfterFinished = 1800 //30min
+                    TtlSecondsAfterFinished = KubernetesConfig.JobTtlSeconds
                 }
             };
 
@@ -255,25 +253,6 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
             await jobService.CreateJob(job, cancellationToken);
         }
 
-        static readonly List<Version> KnownLatestContainerTags = new List<Version>
-        {
-            new(1, 26, 3),
-            new(1, 27, 3),
-            new(1, 28, 2),
-        };
-
-        async Task<string> GetDefaultContainer()
-        {
-            var clusterVersion = await kubernetesClusterService.GetClusterVersion();
-
-            //find the highest tag for this cluster version
-            var tagVersion = KnownLatestContainerTags.FirstOrDefault(tag => tag.Major == clusterVersion.Major && tag.Minor == clusterVersion.Minor);
-
-            var tag = tagVersion?.ToString(3) ?? "latest";
-
-            return $"octopuslabs/k8s-workertools:{tag}";
-            //return "octopusdeploy/worker-tools:ubuntu.22.04";
-        }
 
         void RecordScriptHasStarted(IScriptLogWriter writer)
         {

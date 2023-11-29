@@ -42,5 +42,10 @@ exec 2> >(logStdErr >&2)
 
 /bin/bash $BOOTSTRAP_SCRIPT "$@"
 
+# Write a message to say the job has completed
+echo "##octopus[stdout-verbose]"
+echo "Kubernetes Job completed"
+echo "##octopus[stdout-default]"
+
 # This ungodly hack is to stop the pod from being killed before the last log has been flushed
 sleep 0.250 #250ms

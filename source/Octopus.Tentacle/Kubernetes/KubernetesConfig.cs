@@ -4,15 +4,15 @@ namespace Octopus.Tentacle.Kubernetes
 {
     public static class KubernetesConfig
     {
-        public static string Namespace => Environment.GetEnvironmentVariable("OCTOPUS__K8STENTACLE__NAMESPACE")
-            ?? throw new InvalidOperationException("Unable to determine Kubernetes namespace. An environment variable 'OCTOPUS__K8STENTACLE__NAMESPACE' must be defined.");
-
+        public static string Namespace => GetRequiredEnvVar("OCTOPUS__K8STENTACLE__NAMESPACE", "Unable to determine Kubernetes namespace.");
+        public static string JobServiceAccountName => GetRequiredEnvVar("OCTOPUS__K8STENTACLE__JOBSERVICEACCOUNTNAME", "Unable to determine Kubernetes Job service account name.");
+        public static string JobVolumeYaml => GetRequiredEnvVar("OCTOPUS__K8STENTACLE__JOBVOLUMEYAML", "Unable to determine Kubernetes Job volume yaml.");
         public static bool UseJobs => bool.TryParse(Environment.GetEnvironmentVariable("OCTOPUS__K8STENTACLE__USEJOBS"), out var useJobs) && useJobs;
 
-        public static string JobServiceAccountName => Environment.GetEnvironmentVariable("OCTOPUS__K8STENTACLE__JOBSERVICEACCOUNTNAME")
-            ?? throw new InvalidOperationException("Unable to determine Kubernetes Job service account name. An environment variable 'OCTOPUS__K8STENTACLE__JOBSERVICEACCOUNTNAME' must be defined.");
+        public const int JobTtlSeconds = 1800; //30min
 
-        public static string JobVolumeYaml => Environment.GetEnvironmentVariable("OCTOPUS__K8STENTACLE__JOBVOLUMEYAML")
-            ?? throw new InvalidOperationException("Unable to determine Kubernetes Job volume yaml. An environment variable 'OCTOPUS__K8STENTACLE__JOBVOLUMEYAML' must be defined.");
+        static string GetRequiredEnvVar(string variable, string errorMessage)
+            => Environment.GetEnvironmentVariable(variable)
+                ?? throw new InvalidOperationException($"{errorMessage} The environment variable '{variable}' must be defined with a non-null value.");
     }
 }

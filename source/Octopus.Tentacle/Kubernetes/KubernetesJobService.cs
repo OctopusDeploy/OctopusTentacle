@@ -33,10 +33,10 @@ namespace Octopus.Tentacle.Kubernetes
             {
                 return await Client.ReadNamespacedJobStatusAsync(jobName, KubernetesConfig.Namespace, cancellationToken: cancellationToken);
             }
-          catch (HttpOperationException opException) 
-                when(opException.Response.StatusCode == HttpStatusCode.NotFound)
+            catch (HttpOperationException opException)
+                when (opException.Response.StatusCode == HttpStatusCode.NotFound)
             {
-                    return null;
+                return null;
             }
         }
 
@@ -49,7 +49,7 @@ namespace Octopus.Tentacle.Kubernetes
                 //only list this job
                 fieldSelector: $"metadata.name=={jobName}",
                 watch: true,
-                timeoutSeconds: 1800, //same as the TTL of the job itself
+                timeoutSeconds: KubernetesConfig.JobTtlSeconds,
                 cancellationToken: cancellationToken);
 
             await foreach (var (type, job) in response.WatchAsync<V1Job, V1JobList>(onError, cancellationToken: cancellationToken))
