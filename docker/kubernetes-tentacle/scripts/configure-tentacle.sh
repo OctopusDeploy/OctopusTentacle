@@ -12,14 +12,14 @@ internalListeningPort=10933
 
 #If TentacleHome environment variable exists, use that
 configurationDirectory=/etc/octopus
-if [[ -n "$TentacleHome"]]; then
+if [[ -n "$TentacleHome" ]]; then
     configurationDirectory="$TentacleHome"
 fi
 
 #If TentacleApplications environment variable exists, use that
 applicationsDirectory=/home/Octopus/Applications
-if [[ -n "$TentacleApplications"]]; then
-    configurationDirectory="$TentacleApplications"
+if [[ -n "$TentacleApplications" ]]; then
+    applicationsDirectory="$TentacleApplications"
 fi
 
 mkdir -p $configurationDirectory
