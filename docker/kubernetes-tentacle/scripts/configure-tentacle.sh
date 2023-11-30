@@ -8,9 +8,19 @@ fi
 
 # Tentacle Docker images only support once instance per container. Running multiple instances can be achieved by running multiple containers.
 instanceName=Tentacle
-configurationDirectory=/etc/octopus
-applicationsDirectory=/home/Octopus/Applications
 internalListeningPort=10933
+
+#If TentacleHome environment variable exists, use that
+configurationDirectory=/etc/octopus
+if [[ -n "$TentacleHome" ]]; then
+    configurationDirectory="$TentacleHome"
+fi
+
+#If TentacleApplications environment variable exists, use that
+applicationsDirectory=/home/Octopus/Applications
+if [[ -n "$TentacleApplications" ]]; then
+    applicationsDirectory="$TentacleApplications"
+fi
 
 mkdir -p $configurationDirectory
 mkdir -p $applicationsDirectory
@@ -57,13 +67,13 @@ function validateVariables() {
     echo " - server endpoint '$ServerUrl'"
     echo " - api key '##########'"
 
-    if [[ ! -z "$ServerCommsAddress" || ! -z "$ServerPort" ]]; then
+    if [[ -n "$ServerCommsAddress" || -n "$ServerPort" ]]; then
         echo " - communication mode 'Kubernetes' (Polling)"
 
-        if [[ ! -z "$ServerCommsAddress" ]]; then
+        if [[ -n "$ServerCommsAddress" ]]; then
             echo " - server comms address $ServerCommsAddress"
         fi
-        if [[ ! -z "$ServerPort" ]]; then
+        if [[ -n "$ServerPort" ]]; then
             echo " - server port $ServerPort"
         fi
     else
@@ -75,31 +85,31 @@ function validateVariables() {
     echo " - role '$TargetRole'"
     echo " - host '$PublicHostNameConfiguration'"
 
-    if [[ ! -z "$TargetName" ]]; then
+    if [[ -n "$TargetName" ]]; then
         echo " - name '$TargetName'"
     fi
-    if [[ ! -z "$TargetTenant" ]]; then
+    if [[ -n "$TargetTenant" ]]; then
         echo " - tenant '$TargetTenant'"
     fi
-    if [[ ! -z "$TargetTenantTag" ]]; then
+    if [[ -n "$TargetTenantTag" ]]; then
         echo " - tenant tag '$TargetTenantTag'"
     fi
-    if [[ ! -z "$TargetTenantedDeploymentParticipation" ]]; then
+    if [[ -n "$TargetTenantedDeploymentParticipation" ]]; then
         echo " - tenanted deployment participation '$TargetTenantedDeploymentParticipation'"
     fi
-    if [[ ! -z "$Space" ]]; then
+    if [[ -n "$Space" ]]; then
         echo " - space '$Space'"
     fi
 }
 
 function configureTentacle() {
-    tentacle create-instance --instance "$instanceName" --config "$configurationDirectory/tentacle.config"
+    tentacle create-instance --instance "$instanceName" --config "$configurationDirectory/tentacle.config" --home "$configurationDirectory"
 
     echo "Setting directory paths ..."
     tentacle configure --instance "$instanceName" --app "$applicationsDirectory"
 
     echo "Configuring communication type ..."
-    if [[ ! -z "$ServerCommsAddress" || ! -z "$ServerPort" ]]; then
+    if [[ -n "$ServerCommsAddress" || -n "$ServerPort" ]]; then
         tentacle configure --instance "$instanceName" --noListen "True"
     else
         tentacle configure --instance "$instanceName" --port $internalListeningPort --noListen "False"
@@ -119,28 +129,28 @@ function registerTentacle() {
 
     ARGS+=('register-k8s-cluster')
 
-    if [[ ! -z "$TargetEnvironment" ]]; then
+    if [[ -n "$TargetEnvironment" ]]; then
         IFS=',' read -ra ENVIRONMENTS <<<"$TargetEnvironment"
         for i in "${ENVIRONMENTS[@]}"; do
             ARGS+=('--environment' "$i")
         done
     fi
 
-    if [[ ! -z "$TargetRole" ]]; then
+    if [[ -n "$TargetRole" ]]; then
         IFS=',' read -ra ROLES <<<"$TargetRole"
         for i in "${ROLES[@]}"; do
             ARGS+=('--role' "$i")
         done
     fi
 
-    if [[ ! -z "$TargetTenant" ]]; then
+    if [[ -n "$TargetTenant" ]]; then
         IFS=',' read -ra TENANTS <<<"$TargetTenant"
         for i in "${TENANTS[@]}"; do
             ARGS+=('--tenant' "$i")
         done
     fi
 
-    if [[ ! -z "$TargetTenantTag" ]]; then
+    if [[ -n "$TargetTenantTag" ]]; then
         IFS=',' read -ra TENANTTAGS <<<"$TargetTenantTag"
         for i in "${TENANTTAGS[@]}"; do
             ARGS+=('--tenanttag' "$i")
@@ -153,14 +163,14 @@ function registerTentacle() {
         '--space' "$Space"
         '--policy' "$MachinePolicy")
 
-    if [[ ! -z "$ServerCommsAddress" || ! -z "$ServerPort" ]]; then
+    if [[ -n "$ServerCommsAddress" || -n "$ServerPort" ]]; then
         ARGS+=('--comms-style' 'TentacleActive')
 
-        if [[ ! -z "$ServerCommsAddress" ]]; then
+        if [[ -n "$ServerCommsAddress" ]]; then
             ARGS+=('--server-comms-address' $ServerCommsAddress)
         fi
 
-        if [[ ! -z "$ServerPort" ]]; then
+        if [[ -n "$ServerPort" ]]; then
             ARGS+=('--server-comms-port' $ServerPort)
         fi
     else
@@ -168,15 +178,15 @@ function registerTentacle() {
             '--comms-style' 'TentaclePassive'
             '--publicHostName' $(getPublicHostName))
 
-        if [[ ! -z "$ListeningPort" && "$ListeningPort" != "$internalListeningPort" ]]; then
+        if [[ -n "$ListeningPort" && "$ListeningPort" != "$internalListeningPort" ]]; then
             ARGS+=('--tentacle-comms-port' $ListeningPort)
         fi
     fi
 
-    if [[ ! -z "$ServerApiKey" ]]; then
+    if [[ -n "$ServerApiKey" ]]; then
         echo "Registering Tentacle with API key"
         ARGS+=('--apiKey' $ServerApiKey)
-    elif [[ ! -z "$BearerToken" ]]; then
+    elif [[ -n "$BearerToken" ]]; then
         echo "Registering Tentacle with Bearer Token"
         ARGS+=('--bearerToken' "$BearerToken")
     else
@@ -186,11 +196,11 @@ function registerTentacle() {
             '--password' "$ServerPassword")
     fi
 
-    if [[ ! -z "$TargetName" ]]; then
+    if [[ -n "$TargetName" ]]; then
         ARGS+=('--name' "$TargetName")
     fi
 
-    if [[ ! -z "$TargetTenantedDeploymentParticipation" ]]; then
+    if [[ -n "$TargetTenantedDeploymentParticipation" ]]; then
         ARGS+=('--tenanted-deployment-participation' "$TargetTenantedDeploymentParticipation")
     fi
 

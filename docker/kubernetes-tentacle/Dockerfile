@@ -46,6 +46,8 @@ ENV OCTOPUS__K8STENTACLE__NAMESPACE=""
 ENV OCTOPUS__K8STENTACLE__USEJOBS="True"
 ENV OCTOPUS__K8STENTACLE__JOBSERVICEACCOUNTNAME=""
 ENV OCTOPUS__K8STENTACLE__JOBVOLUMEYAML=""
+ENV TentacleHome=""
+ENV TentacleApplications=""
 
 CMD /scripts/configure-tentacle.sh && /scripts/run-tentacle.sh
 
