@@ -19,6 +19,6 @@ $env:BUILD_ARCH=$BuildArch
 
 & docker compose -f docker-compose.build.yml -v build --pull octopusdeploy-kubernetes-tentacle-linux
 
-& docker tag "docker.packages.octopushq.com/octopusdeploy/kubernetes-tentacle:$BuildNumber-linux-$BuildArch" "$LocalRegistryDomain/kubernetes-tentacle"
+& docker tag "docker.packages.octopushq.com/octopusdeploy/kubernetes-tentacle:$BuildNumber-linux-$BuildArch" "$LocalRegistryDomain/kubernetes-tentacle:$BuildNumber-linux-$BuildArch"
 
-& docker push "$LocalRegistryDomain/kubernetes-tentacle"
+& docker push "$LocalRegistryDomain/kubernetes-tentacle:$BuildNumber-linux-$BuildArch"
