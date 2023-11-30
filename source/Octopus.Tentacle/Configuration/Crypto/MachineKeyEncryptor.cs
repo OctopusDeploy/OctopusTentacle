@@ -21,11 +21,11 @@ namespace Octopus.Tentacle.Configuration.Crypto
             // first but still fallback to the existing Octopus generated one if that doesnt work.
             var keySources = new ICryptoKeyNixSource[]
             {
-                new LinuxMachineIdKey(filesystem), new LinuxGeneratedMachineKey(log, filesystem)
+                new LinuxMachineIdKey(filesystem),
+                new LinuxGeneratedMachineKey(log, filesystem)
             };
 
             return new LinuxMachineKeyEncryptor(log, keySources);
-
         }
 
         MachineKeyEncryptor()

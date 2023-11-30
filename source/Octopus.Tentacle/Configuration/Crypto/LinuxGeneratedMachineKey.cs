@@ -3,6 +3,7 @@ using System.IO;
 using System.Security.Cryptography;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Util;
+using Octopus.Tentacle.Variables;
 
 namespace Octopus.Tentacle.Configuration.Crypto
 {
@@ -10,7 +11,12 @@ namespace Octopus.Tentacle.Configuration.Crypto
     {
         readonly ISystemLog log;
         readonly IOctopusFileSystem fileSystem;
-        static string FileName = "/etc/octopus/machinekey";
+
+        static string FileName =>
+            PlatformDetection.Kubernetes.IsRunningInKubernetes
+                //if we are running in K8S, we want to save the machine key to the home directory, which is likely on a network drives
+                ? Path.Combine(Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleHome)!, "machinekey")
+                : "/etc/octopus/machinekey";
 
         public LinuxGeneratedMachineKey(ISystemLog log, IOctopusFileSystem fileSystem)
         {

@@ -14,8 +14,7 @@ namespace Octopus.Tentacle.Util
             /// <summary>
             /// Indicates if the Tentacle is running inside a Kubernetes cluster.
             /// </summary>
-            public static bool IsRunningInKubernetes => !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("KUBERNETES_SERVICE_HOST")) ||
-                (bool.TryParse(Environment.GetEnvironmentVariable("OCTOPUS__TENTACLE__FORCEK8S"), out var b) && b);
+            public static bool IsRunningInKubernetes => bool.TryParse(Environment.GetEnvironmentVariable("OCTOPUS__K8STENTACLE__FORCE"), out var b) && b;
         }
     }
 }
