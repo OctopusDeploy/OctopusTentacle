@@ -215,9 +215,9 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                                     Command = new List<string> { "bash" },
                                     Args = new List<string>
                                     {
-                                        $"/data/tentacle-home/{instanceName}/Work/{scriptTicket.TaskId}/bootstrapRunner.sh",
-                                        $"/data/tentacle-home/{instanceName}/Work/{scriptTicket.TaskId}",
-                                        $"/data/tentacle-home/{instanceName}/Work/{scriptTicket.TaskId}/{scriptName}"
+                                        $"/data/tentacle-home/Work/{scriptTicket.TaskId}/bootstrapRunner.sh",
+                                        $"/data/tentacle-home/Work/{scriptTicket.TaskId}",
+                                        $"/data/tentacle-home/Work/{scriptTicket.TaskId}/{scriptName}"
                                     }.Concat((workspace.ScriptArguments ?? Array.Empty<string>())
                                         .SelectMany(arg => new[]
                                         {
@@ -229,8 +229,8 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                                     },
                                     Env = new List<V1EnvVar>
                                     {
-                                        new(EnvironmentVariables.TentacleHome, $"/data/tentacle-home/{instanceName}"),
-                                        new(EnvironmentVariables.TentacleJournal, $"/data/tentacle-home/{instanceName}/DeploymentJournal.xml"),
+                                        new(EnvironmentVariables.TentacleHome, $"/data/tentacle-home"),
+                                        new(EnvironmentVariables.TentacleJournal, $"/data/tentacle-home/DeploymentJournal.xml"),
                                         new(EnvironmentVariables.TentacleInstanceName, instanceName),
                                         new(EnvironmentVariables.TentacleVersion, Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleVersion)),
                                         new(EnvironmentVariables.TentacleCertificateSignatureAlgorithm, Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleCertificateSignatureAlgorithm)),
