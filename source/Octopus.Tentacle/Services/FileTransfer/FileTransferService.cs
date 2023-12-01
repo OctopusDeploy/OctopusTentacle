@@ -60,7 +60,7 @@ namespace Octopus.Tentacle.Services.FileTransfer
 
         public async Task<UploadResult> UploadFileAsync(string remotePath, DataStream upload, CancellationToken cancellationToken)
         {
-            if (upload == null)
+            if (upload == null!)
             {
                 log.Trace("Client requested a file upload, but no content stream was provided.");
                 return new UploadResult(ResolvePath(remotePath), null!, 0);

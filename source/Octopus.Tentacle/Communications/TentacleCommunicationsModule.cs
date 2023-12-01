@@ -36,7 +36,7 @@ namespace Octopus.Tentacle.Communications
 
                 var halibutRuntime = new HalibutRuntimeBuilder()
                     .WithServiceFactory(services)
-                    .WithServerCertificate(configuration.TentacleCertificate)
+                    .WithServerCertificate(configuration.TentacleCertificate!)
                     .WithMessageSerializer(serializerBuilder => serializerBuilder.WithLegacyContractSupport())
                     .WithHalibutTimeoutsAndLimits(halibutTimeoutsAndLimits)
                     .Build();
