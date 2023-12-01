@@ -25,12 +25,7 @@ namespace Octopus.Tentacle.Communications
                 var configuration = c.Resolve<ITentacleConfiguration>();
                 var services = c.Resolve<IServiceFactory>();
 
-                if (!bool.TryParse(Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleTcpKeepAliveEnabled), out var tcpKeepAliveEnabled))
-                {
-                    // Default to enabled if the environment variable is not provided
-                    tcpKeepAliveEnabled = true;
-                }
-
+                bool.TryParse(Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleTcpKeepAliveEnabled), out var tcpKeepAliveEnabled);
                 bool.TryParse(Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleUseRecommendedTimeoutsAndLimits), out var useRecommendedTimeoutsAndLimits);
 
                 var halibutTimeoutsAndLimits = useRecommendedTimeoutsAndLimits 
