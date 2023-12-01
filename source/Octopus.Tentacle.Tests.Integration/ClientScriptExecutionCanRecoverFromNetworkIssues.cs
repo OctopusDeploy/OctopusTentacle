@@ -239,7 +239,9 @@ namespace Octopus.Tentacle.Tests.Integration
                 actualException = ex;
             }
 
-            actualException.Should().NotBeNull().And.BeOfType<OperationCanceledException>().And.Match<Exception>(x => x.Message == "Script execution was cancelled");
+            var expectedException = new ExceptionContractAssertionBuilder(FailureScenario.ScriptExecutionCancelled, tentacleConfigurationTestCase.TentacleType, clientTentacle).Build();
+            
+            actualException!.ShouldMatchExceptionContract(expectedException);
 
             var allLogs = logs.JoinLogs();
             allLogs.Should().Contain("hello");

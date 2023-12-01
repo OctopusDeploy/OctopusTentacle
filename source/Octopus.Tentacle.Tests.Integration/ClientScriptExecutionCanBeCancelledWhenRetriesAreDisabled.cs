@@ -85,8 +85,9 @@ namespace Octopus.Tentacle.Tests.Integration
             var (_, actualException, cancellationDuration) = await ExecuteScriptThenCancelExecutionWhenRpcCallHasStarted(clientAndTentacle, startScriptCommand, rpcCallHasStarted, ensureCancellationOccursDuringAnRpcCall);
 
             // ASSERT
-            // The ExecuteScript operation threw an OperationCancelledException
-            actualException.Should().BeTaskOrOperationCancelledException();
+            var expectedException = new ExceptionContractAssertionBuilder(FailureScenario.ScriptExecutionCancelled, tentacleConfigurationTestCase.TentacleType, clientAndTentacle).Build();
+            
+            actualException.ShouldMatchExceptionContract(expectedException);
 
             // If the rpc call could be cancelled then the correct error was recorded
             var latestException = capabilitiesMethodUsages.For(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)).LastException;
@@ -185,8 +186,9 @@ namespace Octopus.Tentacle.Tests.Integration
             var (_, actualException, cancellationDuration) = await ExecuteScriptThenCancelExecutionWhenRpcCallHasStarted(clientAndTentacle, startScriptCommand, rpcCallHasStarted, ensureCancellationOccursDuringAnRpcCall);
 
             // ASSERT
-            // The ExecuteScript operation threw an OperationCancelledException
-            actualException.Should().BeTaskOrOperationCancelledException();
+            var expectedException = new ExceptionContractAssertionBuilder(FailureScenario.ScriptExecutionCancelled, tentacleConfigurationTestCase.TentacleType, clientAndTentacle).Build();
+            
+            actualException.ShouldMatchExceptionContract(expectedException);
 
             // If the rpc call could be cancelled then the correct error was recorded
             var latestException = recordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).LastException;
@@ -303,8 +305,9 @@ namespace Octopus.Tentacle.Tests.Integration
             var (_, actualException, cancellationDuration) = await ExecuteScriptThenCancelExecutionWhenRpcCallHasStarted(clientAndTentacle, startScriptCommand, rpcCallHasStarted, ensureCancellationOccursDuringAnRpcCall);
 
             // ASSERT
-            // The ExecuteScript operation threw an OperationCancelledException
-            actualException.Should().BeTaskOrOperationCancelledException();
+            var expectedException = new ExceptionContractAssertionBuilder(FailureScenario.ScriptExecutionCancelled, tentacleConfigurationTestCase.TentacleType, clientAndTentacle).Build();
+            
+            actualException.ShouldMatchExceptionContract(expectedException);
 
             // If the rpc call could be cancelled then the correct error was recorded
             var latestException = recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).LastException;
@@ -384,9 +387,16 @@ namespace Octopus.Tentacle.Tests.Integration
                 .Build();
 
             // ACT
-            var (responseAndLogs, _, cancellationDuration) = await ExecuteScriptThenCancelExecutionWhenRpcCallHasStarted(clientAndTentacle, startScriptCommand, rpcCallHasStarted, new SemaphoreSlim(Int32.MaxValue, Int32.MaxValue));
+            var (_, actualException, cancellationDuration) = await ExecuteScriptThenCancelExecutionWhenRpcCallHasStarted(clientAndTentacle, startScriptCommand, rpcCallHasStarted, new SemaphoreSlim(int.MaxValue, int.MaxValue));
 
             // ASSERT
+            // The actual exception may be null if the script completed before the cancellation was observed
+            if (actualException != null)
+            {
+                var expectedException = new ExceptionContractAssertionBuilder(FailureScenario.ScriptExecutionCancelled, tentacleConfigurationTestCase.TentacleType, clientAndTentacle).Build();
+                actualException.ShouldMatchExceptionContract(expectedException);
+            }
+
             // Halibut Errors were recorded on CompleteScript
             recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).LastException?.Should().Match<Exception>(x => x is HalibutClientException || x is OperationCanceledException || x is TaskCanceledException); // Complete Script was cancelled quickly
             cancellationDuration.Should().BeLessOrEqualTo(TimeSpan.FromSeconds(30));

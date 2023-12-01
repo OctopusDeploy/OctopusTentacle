@@ -43,11 +43,11 @@ namespace Octopus.Tentacle.Tests.Integration
                 .Build(CancellationToken);
 
             var remotePath = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "UploadFile.txt");
-
             var uploadFileTask = clientTentacle.TentacleClient.UploadFile(remotePath, DataStream.FromString("Hello"), CancellationToken);
 
-            Func<Task> action = async () => await uploadFileTask;
-            await action.Should().ThrowAsync<HalibutClientException>();
+            var expectedException = new ExceptionContractAssertionBuilder(FailureScenario.ConnectionFaulted, tentacleConfigurationTestCase.TentacleType, clientTentacle).Build();
+
+            await AssertionExtensions.Should(async () => await uploadFileTask).ThrowExceptionContractAsync(expectedException);
 
             recordedUsages.For(nameof(IAsyncClientFileTransferService.UploadFileAsync)).LastException.Should().NotBeNull();
             recordedUsages.For(nameof(IAsyncClientFileTransferService.UploadFileAsync)).Started.Should().Be(1);
@@ -84,9 +84,10 @@ namespace Octopus.Tentacle.Tests.Integration
 
             await clientTentacle.TentacleClient.UploadFile(remotePath, DataStream.FromString("Hello"), CancellationToken);
             var downloadFileTask = clientTentacle.TentacleClient.DownloadFile(remotePath, CancellationToken);
+            
+            var expectedException = new ExceptionContractAssertionBuilder(FailureScenario.ConnectionFaulted, tentacleConfigurationTestCase.TentacleType, clientTentacle).Build();
 
-            Func<Task> action = async () => await downloadFileTask;
-            await action.Should().ThrowAsync<HalibutClientException>();
+            await AssertionExtensions.Should(async () => await downloadFileTask).ThrowExceptionContractAsync(expectedException);
 
             recordedUsages.For(nameof(IAsyncClientFileTransferService.DownloadFileAsync)).LastException.Should().NotBeNull();
             recordedUsages.For(nameof(IAsyncClientFileTransferService.DownloadFileAsync)).Started.Should().Be(1);
