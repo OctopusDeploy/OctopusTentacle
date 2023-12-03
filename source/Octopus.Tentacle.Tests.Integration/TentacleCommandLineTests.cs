@@ -268,7 +268,6 @@ Or one of the common options:
 
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-        [NonParallelizable]
         public async Task HelpForInstanceSpecificCommandsAlwaysWorks(TentacleConfigurationTestCase tc)
         {
             var (_, stdout, stderr) = await RunCommand(tc, "help", "--format=json");
@@ -327,6 +326,8 @@ The details are logged above. These commands probably need to take Lazy<T> depen
         
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        // Run these tests in serial to avoid conflicts
+        [NonParallelizable]
         public async Task InvalidInstance(TentacleConfigurationTestCase tc)
         {
             var (exitCode, stdout, stderr) = await RunCommand(tc, "show-thumbprint", "--instance=invalidinstance");
@@ -339,6 +340,8 @@ The details are logged above. These commands probably need to take Lazy<T> depen
 
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        // Run these tests in serial to avoid conflicts
+        [NonParallelizable]
         public async Task ShowThumbprintCommandText(TentacleConfigurationTestCase tc)
         {
             await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
@@ -351,6 +354,8 @@ The details are logged above. These commands probably need to take Lazy<T> depen
 
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        // Run these tests in serial to avoid conflicts
+        [NonParallelizable]
         public async Task ShowThumbprintCommandJson(TentacleConfigurationTestCase tc)
         {
             await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
@@ -363,6 +368,8 @@ The details are logged above. These commands probably need to take Lazy<T> depen
 
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        // Run these tests in serial to avoid conflicts
+        [NonParallelizable]
         public async Task ListInstancesCommandText(TentacleConfigurationTestCase tc)
         {
             await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
@@ -376,6 +383,8 @@ The details are logged above. These commands probably need to take Lazy<T> depen
 
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        // Run these tests in serial to avoid conflicts
+        [NonParallelizable]
         public async Task ListInstancesCommandJson(TentacleConfigurationTestCase tc)
         {
             await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
@@ -390,6 +399,7 @@ The details are logged above. These commands probably need to take Lazy<T> depen
 
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        // Run these tests in serial to avoid conflicts
         [NonParallelizable]
         public async Task ShouldLogStartupDiagnosticsToInstanceLogFileOnly(TentacleConfigurationTestCase tc)
         {
@@ -479,6 +489,7 @@ Or one of the common options:
 
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        // Run these tests in serial to avoid conflicts
         [NonParallelizable]
         public async Task ShowConfigurationCommand(TentacleConfigurationTestCase tc)
         {
@@ -495,6 +506,7 @@ Or one of the common options:
 
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        // Run these tests in serial to avoid conflicts
         [NonParallelizable]
         public async Task ShowConfigurationCommandOnPartiallyConfiguredTentacle(TentacleConfigurationTestCase tc)
         {
@@ -511,6 +523,7 @@ Or one of the common options:
 
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        // Run these tests in serial to avoid conflicts
         [NonParallelizable]
         public async Task ShowConfigurationCommandLooksSensibleToHumans(TentacleConfigurationTestCase tc)
         {
@@ -603,6 +616,7 @@ Or one of the common options:
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         [WindowsTest]
+        // Run these tests in serial to avoid conflicts
         [NonParallelizable]
         public async Task WatchdogCreateAndDeleteCommand(TentacleConfigurationTestCase tc)
         {
