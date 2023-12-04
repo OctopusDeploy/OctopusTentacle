@@ -8,6 +8,7 @@ namespace Octopus.Tentacle.Kubernetes
         public static string JobServiceAccountName => GetRequiredEnvVar("OCTOPUS__K8STENTACLE__JOBSERVICEACCOUNTNAME", "Unable to determine Kubernetes Job service account name.");
         public static string JobVolumeYaml => GetRequiredEnvVar("OCTOPUS__K8STENTACLE__JOBVOLUMEYAML", "Unable to determine Kubernetes Job volume yaml.");
         public static bool UseJobs => bool.TryParse(Environment.GetEnvironmentVariable("OCTOPUS__K8STENTACLE__USEJOBS"), out var useJobs) && useJobs;
+        public static bool DisableWorkspaceCleanup => bool.TryParse(Environment.GetEnvironmentVariable("OCTOPUS__K8STENTACLE__DISABLEWORKSPACECLEANUP"), out var disable) && disable;
 
         public const int JobTtlSeconds = 1800; //30min
 

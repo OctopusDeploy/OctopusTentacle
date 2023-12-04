@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
+using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Util;
 
@@ -71,7 +72,7 @@ namespace Octopus.Tentacle.Services.Scripts
                     runningScript.ScriptStateStore.Create();
                 }
 
-                if(!scriptExecutor.CanExecute(command))
+                if (!scriptExecutor.CanExecute(command))
                     throw new InvalidOperationException($"The execution context type {command.ExecutionContext.GetType().Name} cannot be used with script executor {scriptExecutor.GetType().Name}.");
 
                 var process = scriptExecutor.ExecuteOnBackgroundThread(command, workspace, runningScript.ScriptStateStore, runningScript.CancellationToken);
@@ -112,6 +113,11 @@ namespace Octopus.Tentacle.Services.Scripts
             if (runningScripts.TryRemove(command.ScriptTicket, out var runningScript))
             {
                 runningScript.Dispose();
+            }
+
+            if (KubernetesConfig.DisableWorkspaceCleanup)
+            {
+                return;
             }
 
             var workspace = workspaceFactory.GetWorkspace(command.ScriptTicket);
@@ -164,7 +170,7 @@ namespace Octopus.Tentacle.Services.Scripts
 
         class RunningScriptWrapper : IDisposable
         {
-            readonly CancellationTokenSource cancellationTokenSource = new ();
+            readonly CancellationTokenSource cancellationTokenSource = new();
 
             public RunningScriptWrapper(ScriptStateStore scriptStateStore)
             {

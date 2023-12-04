@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Communications;
+using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Services.Scripts;
 using Octopus.Time;
@@ -40,6 +41,11 @@ namespace Octopus.Tentacle.Maintenance
 
         public async Task Clean(CancellationToken cancellationToken)
         {
+            if (KubernetesConfig.DisableWorkspaceCleanup)
+            {
+                return;
+            }
+
             var deleteWorkspacesOlderThanDateTimeUtc = clock.GetUtcTime().DateTime.Subtract(configuration.DeleteWorkspacesOlderThanTimeSpan);
             log.Verbose($"Cleaning workspaces older than {deleteWorkspacesOlderThanDateTimeUtc:g}");
 
