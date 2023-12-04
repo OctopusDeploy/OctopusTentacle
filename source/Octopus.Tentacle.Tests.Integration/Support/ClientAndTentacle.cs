@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Halibut;
+using NUnit.Framework;
+using NUnit.Framework.Interfaces;
 using Octopus.Tentacle.Client;
 using Octopus.Tentacle.Client.Retries;
 using Octopus.Tentacle.Tests.Integration.Support.Legacy;
@@ -50,6 +53,22 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         public async ValueTask DisposeAsync()
         {
+#if DEBUG
+            var tentacleLog = RunningTentacle.ReadAllLogFileText();
+            logger.Information("############################################");
+            logger.Information("#########    START TENTACLE LOG    #########");
+            logger.Information("############################################");
+            logger.Information(tentacleLog);
+            logger.Information("############################################");
+            logger.Information("#########     END TENTACLE LOG     #########");
+            logger.Information("############################################");
+#endif
+
+            logger.Information("****** ****** ****** ****** ****** ****** ******");
+            logger.Information("****** CLIENT AND TENTACLE DISPOSE CALLED  *****");
+            logger.Information("*     Subsequent errors should be ignored      *");
+            logger.Information("****** ****** ****** ****** ****** ****** ******");
+
             logger.Information("Starting DisposeAsync");
 
             logger.Information("Starting RunningTentacle.DisposeAsync and Server.Dispose and PortForwarder.Dispose");

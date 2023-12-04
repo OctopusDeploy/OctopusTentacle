@@ -36,6 +36,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         Action<ITentacleBuilder>? tentacleBuilderAction;
         Action<TentacleClientOptions>? configureClientOptions;
         TcpConnectionUtilities? tcpConnectionUtilities;
+        bool installAsAService = false;
 
         public ClientAndTentacleBuilder(TentacleType tentacleType)
         {
@@ -140,6 +141,13 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             this.configureClientOptions = configureClientOptions;
             return this;
         }
+        
+        public ClientAndTentacleBuilder InstallAsAService()
+        {
+            installAsAService = true;
+
+            return this;
+        }
 
         PortForwarder? BuildPortForwarder(int localPort, int? listeningPort)
         {
@@ -192,6 +200,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
                 tentacleBuilderAction?.Invoke(pollingTentacleBuilder);
 
+                if (installAsAService)
+                { 
+                    pollingTentacleBuilder.InstallAsAService();
+                }
+
                 runningTentacle = await pollingTentacleBuilder.Build(logger, cancellationToken);
 
                 tentacleEndPoint = new ServiceEndPoint(runningTentacle.ServiceUri, runningTentacle.Thumbprint, serverHalibutRuntime.TimeoutsAndLimits);
@@ -202,6 +215,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                     .WithTentacleExe(tentacleExe);
 
                 tentacleBuilderAction?.Invoke(listeningTentacleBuilder);
+                
+                if (installAsAService)
+                { 
+                    listeningTentacleBuilder.InstallAsAService();
+                }
 
                 runningTentacle = await listeningTentacleBuilder.Build(logger, cancellationToken);
 
