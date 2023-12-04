@@ -34,6 +34,9 @@ $tentacleMsiFilename = "tentacle.msi"
 Write-Host "Downloading Tentacle installer from $tentacleUri"
 (New-Object System.Net.WebClient).DownloadFile($tentacleUri, $tentacleMsiFilename)
 
+# Set environment variables here e.g.:
+# [System.Environment]::SetEnvironmentVariable('TentacleTcpKeepAliveEnabled','true', 'Machine')
+
 Write-Host "Installing Tentacle"
 $result = start-process "msiexec" -ArgumentList @("/a", $tentacleMsiFilename, "/qn") -wait -passthru
 if ($result.ExitCode -ne 0) 
@@ -73,3 +76,4 @@ Write-Host "----------------------------"
 & $tentacleExe configure --instance "TentaclePolling" --home "C:\Octopus\TentaclePolling" --app "C:\Octopus\TentaclePolling\Applications" --noListen "True" --console
 & $tentacleExe register-with --instance "TentaclePolling" --server $octopusServerUrl --name "polling-$os" --apiKey=$octopusServerApiKey --role $octopusServerRole --environment $octopusServerEnvironment --comms-style TentacleActive --server-comms-port "10943" --force --console
 & $tentacleExe service --instance "TentaclePolling" --install --start --console
+
