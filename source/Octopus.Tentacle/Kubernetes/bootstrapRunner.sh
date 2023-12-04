@@ -40,7 +40,10 @@ shift
 exec > >(logStdOut)
 exec 2> >(logStdErr >&2)
 
-/bin/bash $BOOTSTRAP_SCRIPT "$@"
+# Change cwd to the working directory
+cd "$WORK_DIR" || return
+
+/bin/bash "$BOOTSTRAP_SCRIPT" "$@"
 
 # Write a message to say the job has completed
 echo "##octopus[stdout-verbose]"
