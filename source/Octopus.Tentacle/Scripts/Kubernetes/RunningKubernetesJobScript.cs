@@ -172,8 +172,6 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
             return resultStatusCode;
         }
 
-
-
         async Task CreateJob(IScriptLogWriter writer, CancellationToken cancellationToken)
         {
             //write the bootstrap runner script to the workspace
@@ -214,15 +212,12 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                                     Image = await containerResolver.GetContainerImageForCluster(),
                                     Command = new List<string> { "bash" },
                                     Args = new List<string>
-                                    {
-                                        $"/octopus/Work/{scriptTicket.TaskId}/bootstrapRunner.sh",
-                                        $"/octopus/Work/{scriptTicket.TaskId}",
-                                        $"/octopus/Work/{scriptTicket.TaskId}/{scriptName}"
-                                    }.Concat((workspace.ScriptArguments ?? Array.Empty<string>())
-                                        .SelectMany(arg => new[]
                                         {
-                                            $"'{arg}'"
-                                        })).ToList(),
+                                            $"/octopus/Work/{scriptTicket.TaskId}/bootstrapRunner.sh",
+                                            $"/octopus/Work/{scriptTicket.TaskId}",
+                                            $"/octopus/Work/{scriptTicket.TaskId}/{scriptName}"
+                                        }.Concat(workspace.ScriptArguments ?? Array.Empty<string>())
+                                        .ToList(),
                                     VolumeMounts = new List<V1VolumeMount>
                                     {
                                         new("/octopus", "tentacle-home"),
@@ -252,7 +247,6 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
 
             await jobService.CreateJob(job, cancellationToken);
         }
-
 
         void RecordScriptHasStarted(IScriptLogWriter writer)
         {
