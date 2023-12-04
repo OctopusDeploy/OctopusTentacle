@@ -40,7 +40,7 @@ Ensure the variables in `deploy.ps1` are correct. Some variables of note:
 
 ### Deploy
 Now, install the VMs and install Tentacle:
-> ./deploy.ps1 -octopusServerThumbprint {OctopusServerThumbprint} -octopusServerUrl {OctopusServerUri} -octopusServerApiKey {OctopusServerApiKey} -adminPassword {superSecretPasswordToTheVms}
+> ./deploy.ps1 -octopusServerThumbprint {OctopusServerThumbprint} -octopusServerUrl {OctopusServerUri} -octopusServerApiKey {OctopusServerApiKey} -adminPassword {superSecretPasswordToTheVms.2}
 Where:
 - OctopusServerUri - The URI of the instance you wish to register against. E.g. https://sast-rpc-retires.testoctopus.app
 - OctopusServerThumbprint - The thumbprint from the same Octopus Server (found in Settings => Thumbprint)

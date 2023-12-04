@@ -13,6 +13,7 @@ param octopusServerRole string
 param octopusServerEnvironment string
 param os string
 param tentacleUri string
+param tentacleNamePostfix string
 
 var networkSecurityGroupName = '${virtualMachineName}-nsg'
 var networkInterfaceName = '${virtualMachineName}-nic'
@@ -205,6 +206,10 @@ resource deploymentscript 'Microsoft.Compute/virtualMachines/runCommands@2022-03
       {
         name: 'tentacleUri'
         value: tentacleUri
+      }
+      {
+        name: 'tentacleNamePostfix'
+        value: tentacleNamePostfix
       }
     ]
     protectedParameters: [

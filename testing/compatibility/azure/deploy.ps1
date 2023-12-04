@@ -20,6 +20,8 @@ az group create --name $group --location australiaeast
 # .NET 6.0
 #---------------------------------
 $env:tentacleUri = "https://octopus-downloads-staging.s3.amazonaws.com/octopus/Octopus.Tentacle.$env:tentacleVersion-net6.0-win-x64.msi"
+$netFramworkVersion = 'net6'
+$env:tentacleNamePostfix = "$netFramworkVersion$env:tentacleVersion"
 
 # Windows 2012
 $env:virtualMachineName = 'Net6Tentacle-Window2012'
@@ -55,6 +57,8 @@ az deployment group create --name $group --resource-group $resourcegroup --templ
 # .NET 4.8
 #---------------------------------
 $env:tentacleUri = "https://octopus-downloads-staging.s3.amazonaws.com/octopus/Octopus.Tentacle.$env:tentacleVersion-x64.msi"
+$netFramworkVersion = 'net48'
+$env:tentacleNamePostfix = "$netFramworkVersion$env:tentacleVersion"
 
 # Windows 2012
 $env:virtualMachineName = 'Net48Tentacle-Window2012'
