@@ -26,34 +26,48 @@ namespace Octopus.Tentacle.Tests.Integration
                              .InstallAsAService()
                              .Build(CancellationToken))
             {
-                var startScriptCommand = new LatestStartScriptCommandBuilder()                    
-                    .WithScriptBodyForCurrentOs(
+                try
+                {
+                    var startScriptCommand = new LatestStartScriptCommandBuilder()                    
+                        .WithScriptBodyForCurrentOs(
 $@"cd ""{clientAndTentacle.RunningTentacle.TentacleExe.DirectoryName}""
 .\Tentacle.exe service --instance {clientAndTentacle.RunningTentacle.InstanceName} --stop --start",
 $@"#!/bin/sh
 cd ""{clientAndTentacle.RunningTentacle.TentacleExe.DirectoryName}""
 ./Tentacle service --instance {clientAndTentacle.RunningTentacle.InstanceName} --stop --start")
-                    .Build();
+                        .Build();
 
-                var result = await clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken);
+                    var result = await clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken);
 
-                var scriptOutput = new StringBuilder();
-                result.ProcessOutput.ForEach(x => scriptOutput.AppendLine($"{x.Source} {x.Occurred} {x.Text}"));
+                    var scriptOutput = new StringBuilder();
+                    result.ProcessOutput.ForEach(x => scriptOutput.AppendLine($"{x.Source} {x.Occurred} {x.Text}"));
 
-                Logger.Information($@"Script Output:
-{scriptOutput}");
+                    Logger.Information($@"Script Output:
+    {scriptOutput}");
 
-                result.ProcessOutput.Any(x => x.Text.Contains("Stopping service")).Should().BeTrue("Stopping service should be logged");
-                result.ScriptExecutionResult.State.Should().Be(ProcessState.Complete);
+                    result.ProcessOutput.Any(x => x.Text.Contains("Stopping service")).Should().BeTrue("Stopping service should be logged");
+                    result.ScriptExecutionResult.State.Should().Be(ProcessState.Complete);
 
-                startScriptCommand = new LatestStartScriptCommandBuilder()                    
-                    .WithScriptBody(new ScriptBuilder().Print("Running..."))
-                    .Build();
+                    startScriptCommand = new LatestStartScriptCommandBuilder()                    
+                        .WithScriptBody(new ScriptBuilder().Print("Running..."))
+                        .Build();
 
-                result = await clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken);
-                result.ProcessOutput.Any(x => x.Text.Contains("Running...")).Should().BeTrue("Running... should be logged");
-                result.ScriptExecutionResult.ExitCode.Should().Be(0);
-                result.ScriptExecutionResult.State.Should().Be(ProcessState.Complete);
+                    result = await clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken);
+                    result.ProcessOutput.Any(x => x.Text.Contains("Running...")).Should().BeTrue("Running... should be logged");
+                    result.ScriptExecutionResult.ExitCode.Should().Be(0);
+                    result.ScriptExecutionResult.State.Should().Be(ProcessState.Complete);
+                }
+                finally
+                {
+                    var tentacleLog = clientAndTentacle.RunningTentacle.ReadAllLogFileText();
+                    Logger.Information("############################################");
+                    Logger.Information("#########    START TENTACLE LOG    #########");
+                    Logger.Information("############################################");
+                    Logger.Information(tentacleLog);
+                    Logger.Information("############################################");
+                    Logger.Information("#########     END TENTACLE LOG     #########");
+                    Logger.Information("############################################");
+                }
             }
         }
     }

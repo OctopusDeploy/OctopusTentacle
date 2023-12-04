@@ -53,15 +53,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         public async ValueTask DisposeAsync()
         {
-            var tentacleLog = RunningTentacle.ReadAllLogFileText();
-            logger.Information("############################################");
-            logger.Information("#########    START TENTACLE LOG    #########");
-            logger.Information("############################################");
-            logger.Information(tentacleLog);
-            logger.Information("############################################");
-            logger.Information("#########     END TENTACLE LOG     #########");
-            logger.Information("############################################");
-
             logger.Information("****** ****** ****** ****** ****** ****** ******");
             logger.Information("****** CLIENT AND TENTACLE DISPOSE CALLED  *****");
             logger.Information("*     Subsequent errors should be ignored      *");
