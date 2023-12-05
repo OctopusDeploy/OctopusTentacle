@@ -136,7 +136,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             string tentacleExe,
             string instanceName,
             TemporaryDirectory tempDirectory, 
-            ILogger log,
+            ILogger logger,
             CancellationToken cancellationToken)
         {
             var hasTentacleStarted = new ManualResetEventSlim();
@@ -164,6 +164,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                                 }
                             },
                             runTentacleEnvironmentVariables, 
+                            logger,
                             cancellationToken);
 
                         if (!serviceInstalled)
@@ -183,6 +184,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                                 }
                             },
                             runTentacleEnvironmentVariables,
+                            logger,
                             cancellationToken);
 
                         if (!serviceStarted)
@@ -193,7 +195,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                         using var timeoutCancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(20));
                         using var linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCancellationTokenSource.Token);
                         
-                        log.Information("Waiting for the Tentacle Service to start up and assign a Listening Port / no port if Polling");
+                        logger.Information("Waiting for the Tentacle Service to start up and assign a Listening Port / no port if Polling");
                         var tentacleState = await WaitForTentacleToStart(tempDirectory, linkedCancellationTokenSource.Token);
                         
                         if (tentacleState.Started)
@@ -203,8 +205,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                         }
                         else
                         {
-                            log.Warning("The Tentacle failed to start correctly. Trying Again. Last Log File Content");
-                            log.Warning(tentacleState.LogContent);
+                            logger.Warning("The Tentacle failed to start correctly. Trying Again. Last Log File Content");
+                            logger.Warning(tentacleState.LogContent);
 
                             File.Delete(Path.Combine(tempDirectory.DirectoryPath, "Logs", "OctopusTentacle.txt"));
 
@@ -215,6 +217,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                                 s =>
                                 { },
                                 runTentacleEnvironmentVariables,
+                                logger,
                                 cancellationToken);
 
                             File.Delete(Path.Combine(tempDirectory.DirectoryPath, "Logs", "OctopusTentacle.txt"));
@@ -226,6 +229,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                                 s =>
                                 { },
                                 runTentacleEnvironmentVariables,
+                                logger,
                                 cancellationToken);
 
                             tentacleState = await WaitForTentacleToStart(tempDirectory, cancellationToken);
@@ -237,8 +241,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                             }
                             else
                             {
-                                log.Error("The Tentacle failed to start correctly. Last Log File Content");
-                                log.Error(tentacleState.LogContent);
+                                logger.Error("The Tentacle failed to start correctly. Last Log File Content");
+                                logger.Error(tentacleState.LogContent);
                             }
                         }
                     }
@@ -260,6 +264,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                                 }
                             },
                             runTentacleEnvironmentVariables, 
+                            logger,
                             cancellationToken);
                     }
                 }
@@ -323,15 +328,15 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             return (false, listeningPort, lastLogFileContents);
         }
 
-        protected async Task AddCertificateToTentacle(string tentacleExe, string instanceName, string tentaclePfxPath, TemporaryDirectory tmp, CancellationToken cancellationToken)
+        protected async Task AddCertificateToTentacle(string tentacleExe, string instanceName, string tentaclePfxPath, TemporaryDirectory tmp, ILogger logger, CancellationToken cancellationToken)
         {
-            await RunTentacleCommand(tentacleExe, new[] {"import-certificate", $"--from-file={tentaclePfxPath}", $"--instance={instanceName}"}, tmp, cancellationToken);
+            await RunTentacleCommand(tentacleExe, new[] {"import-certificate", $"--from-file={tentaclePfxPath}", $"--instance={instanceName}"}, tmp, logger, cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
         }
 
-        protected async Task CreateInstance(string tentacleExe, string configFilePath, string instanceName, TemporaryDirectory tmp, CancellationToken cancellationToken)
+        protected async Task CreateInstance(string tentacleExe, string configFilePath, string instanceName, TemporaryDirectory tmp, ILogger logger, CancellationToken cancellationToken)
         {
-            await RunTentacleCommand(tentacleExe, new[] {"create-instance", "--config", configFilePath, $"--instance={instanceName}"}, tmp, cancellationToken);
+            await RunTentacleCommand(tentacleExe, new[] {"create-instance", "--config", configFilePath, $"--instance={instanceName}"}, tmp, logger,cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
         }
 
@@ -347,6 +352,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                         tmp,
                         s => {},
                         runTentacleEnvironmentVariables,
+                        logger,
                         cancellationToken);
 
                     await RunTentacleCommandOutOfProcess(
@@ -355,6 +361,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                         tmp,
                         s => {},
                         runTentacleEnvironmentVariables, 
+                        logger,
                         cancellationToken);
                 }
                 catch (Exception e)
@@ -366,7 +373,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
             try
             {
-                await DeleteInstanceAsync(tentacleExe, instanceName, tmp, cancellationToken);
+                await DeleteInstanceAsync(tentacleExe, instanceName, tmp, logger,cancellationToken);
             }
             catch (Exception e)
             {
@@ -375,9 +382,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             }
         }
 
-        internal async Task DeleteInstanceAsync(string tentacleExe, string instanceName, TemporaryDirectory tmp, CancellationToken cancellationToken)
+        internal async Task DeleteInstanceAsync(string tentacleExe, string instanceName, TemporaryDirectory tmp, ILogger logger, CancellationToken cancellationToken)
         {
-            await RunTentacleCommand(tentacleExe, new[] {"delete-instance", $"--instance={instanceName}"}, tmp, cancellationToken);
+            await RunTentacleCommand(tentacleExe, new[] {"delete-instance", $"--instance={instanceName}"}, tmp, logger, cancellationToken);
         }
 
         internal string InstanceNameGenerator()
@@ -385,7 +392,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             return $"TentacleIT-{Guid.NewGuid():N}";
         }
 
-        async Task RunTentacleCommand(string tentacleExe, string[] args, TemporaryDirectory tmp, CancellationToken cancellationToken)
+        async Task RunTentacleCommand(string tentacleExe, string[] args, TemporaryDirectory tmp, ILogger logger, CancellationToken cancellationToken)
         {
             await RunTentacleCommandOutOfProcess(
                 tentacleExe,
@@ -393,6 +400,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 tmp, 
                 _ => { }, 
                 new Dictionary<string, string?>(), 
+                logger,
                 cancellationToken);
         }
 
@@ -402,14 +410,13 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             TemporaryDirectory tmp,
             Action<string> commandOutput, 
             IReadOnlyDictionary<string, string> environmentVariables,
+            ILogger logger,
             CancellationToken cancellationToken)
         {
-            var log = new SerilogLoggerBuilder().Build().ForContext<RunningTentacle>();
-
             async Task ProcessLogs(string s, CancellationToken ct)
             {
                 await Task.CompletedTask;
-                log.Information("[Tentacle] " + s);
+                logger.Information("[Tentacle] " + s);
                 commandOutput(s);
             }
 
@@ -433,7 +440,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             }
             catch (OperationCanceledException)
             {
-                return;
             }
         }
     }

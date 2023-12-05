@@ -1,10 +1,12 @@
 #nullable enable
-using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Halibut.Exceptions;
 using NUnit.Framework;
+using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Tests.Integration.Support;
@@ -37,7 +39,20 @@ cd ""{clientAndTentacle.RunningTentacle.TentacleExe.DirectoryName}""
 ./Tentacle service --instance {clientAndTentacle.RunningTentacle.InstanceName} --stop --start")
                         .Build();
 
-                    var result = await clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken);
+                    (ScriptExecutionResult ScriptExecutionResult, List<ProcessOutput> ProcessOutput) result;
+
+                    try
+                    {
+                        result = await clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken);
+                    }
+                    catch (ServiceInvocationHalibutClientException ex)
+                    {
+                        Logger.Information(ex, "ServiceInvocationHalibutClientException thrown while Tentacle was restarting itself. This can be ignored for the purpose of this test.");
+
+                        // Making Tentacle restart itself can cause internal errors with Script Service
+                        // Execute the script again to get the final result and logs. This will not rerun the script.
+                        result = await clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken);
+                    }
 
                     var scriptOutput = new StringBuilder();
                     result.ProcessOutput.ForEach(x => scriptOutput.AppendLine($"{x.Source} {x.Occurred} {x.Text}"));
