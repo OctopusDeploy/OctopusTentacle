@@ -58,7 +58,15 @@ namespace Octopus.Tentacle.Client.Scripts
 
         public async Task<IScriptOrchestrator> CreateOrchestrator(CancellationToken cancellationToken)
         {
-            var scriptServiceToUse = await DetermineScriptServiceVersionToUse(cancellationToken);
+            ScriptServiceVersion scriptServiceToUse;
+            try
+            {
+                scriptServiceToUse = await DetermineScriptServiceVersionToUse(cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw new OperationCanceledException("Script execution was cancelled");
+            }
 
             return scriptServiceToUse switch
             {
