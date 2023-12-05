@@ -19,6 +19,7 @@ namespace Octopus.Tentacle.Tests.Integration
     {
         private ISetupFixture[] setupFixtures = new ISetupFixture[]
         {
+            new TurnOnTraceLoggingForLogFileForLatestTentacle(),
             new BumpThreadPoolForAllTests(),
             new WarmTentacleCache()
         };

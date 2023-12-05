@@ -59,12 +59,12 @@ namespace Octopus.Tentacle.Configuration
             {
                 log.Info($"Agent will use the octopus configured proxy at {config.CustomProxyHost}:{config.CustomProxyPort} for server at {destination}");
                 return string.IsNullOrWhiteSpace(config.CustomProxyUsername)
-                    ? new ProxyDetails(config.CustomProxyHost,
+                    ? new ProxyDetails(config.CustomProxyHost!,
                         config.CustomProxyPort,
                         ProxyType.HTTP,
                         null,
                         null) //Don't use default creds for custom proxy if user has not supplied any
-                    : new ProxyDetails(config.CustomProxyHost,
+                    : new ProxyDetails(config.CustomProxyHost!,
                         config.CustomProxyPort,
                         ProxyType.HTTP,
                         config.CustomProxyUsername,

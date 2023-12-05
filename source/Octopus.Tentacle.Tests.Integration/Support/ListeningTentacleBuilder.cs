@@ -23,8 +23,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             var logger = log.ForContext<ListeningTentacleBuilder>();
             logger.Information($"Tentacle.exe location: {tentacleExe}");
 
-            await CreateInstance(tentacleExe, configFilePath, instanceName, HomeDirectory, cancellationToken);
-            await AddCertificateToTentacle(tentacleExe, instanceName, CertificatePfxPath, HomeDirectory, cancellationToken);
+            await CreateInstance(tentacleExe, configFilePath, instanceName, HomeDirectory, logger, cancellationToken);
+            await AddCertificateToTentacle(tentacleExe, instanceName, CertificatePfxPath, HomeDirectory, logger, cancellationToken);
             var applicationDirectory = Path.Combine(HomeDirectory.DirectoryPath, "appdir");
             ConfigureTentacleToListen(configFilePath, applicationDirectory);
 

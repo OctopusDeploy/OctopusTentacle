@@ -18,6 +18,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         private ILogger logger;
 
         public RunningTentacle(
+            FileInfo tentacleExe,
             TemporaryDirectory temporaryDirectory,
             Func<CancellationToken, Task<(Task, Uri)>> startTentacleFunction,
             string thumbprint, 
@@ -30,7 +31,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             this.startTentacleFunction = startTentacleFunction;
             this.temporaryDirectory = temporaryDirectory;
             this.deleteInstanceFunction = deleteInstanceFunction;
-            
+
+            TentacleExe = tentacleExe;
             Thumbprint = thumbprint;
             InstanceName = instanceName;
             HomeDirectory = homeDirectory;
@@ -44,6 +46,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public string Thumbprint { get; }
         public string HomeDirectory { get; }
         public string ApplicationDirectory { get; }
+        public FileInfo TentacleExe { get; }
 
         public async Task Start(CancellationToken cancellationToken)
         {

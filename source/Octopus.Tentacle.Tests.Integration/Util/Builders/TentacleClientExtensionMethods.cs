@@ -16,7 +16,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders
 {
     public static class TentacleClientExtensionMethods
     {
-        public static async Task<(ScriptExecutionResult, List<ProcessOutput>)> ExecuteScript(
+        public static async Task<(ScriptExecutionResult ScriptExecutionResult, List<ProcessOutput> ProcessOutput)> ExecuteScript(
             this TentacleClient tentacleClient,
             StartScriptCommandV3Alpha startScriptCommand,
             CancellationToken token,

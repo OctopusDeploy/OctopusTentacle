@@ -37,7 +37,7 @@ namespace Octopus.Tentacle.Client
             var innerHandler = halibutRuntime.OverrideErrorResponseMessageCaching;
             halibutRuntime.OverrideErrorResponseMessageCaching = response =>
             {
-                if (BackwardsCompatibleCapabilitiesV2Helper.ExceptionTypeLooksLikeTheServiceWasNotFound(response.Error.HalibutErrorType) ||
+                if (BackwardsCompatibleCapabilitiesV2Helper.ExceptionTypeLooksLikeTheServiceWasNotFound(response.Error!.HalibutErrorType!) ||
                     BackwardsCompatibleCapabilitiesV2Helper.ExceptionMessageLooksLikeTheServiceWasNotFound(response.Error.Message))
                 {
                     return true;
