@@ -11,17 +11,17 @@ using Nito.AsyncEx;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Contracts;
-using Octopus.Tentacle.Kubernetes;
+using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Util;
 using Octopus.Tentacle.Variables;
 
-namespace Octopus.Tentacle.Scripts.Kubernetes
+namespace Octopus.Tentacle.Kubernetes.Scripts
 {
-    public class RunningKubernetesJobScript : IRunningScript
+    public class RunningKubernetesJob : IRunningScript
     {
         static readonly AsyncLazy<string> BootstrapRunnerScript = new(async () =>
         {
-            using var stream = typeof(RunningKubernetesJobScript).Assembly.GetManifestResourceStream("Octopus.Tentacle.Kubernetes.bootstrapRunner.sh");
+            using var stream = typeof(RunningKubernetesJob).Assembly.GetManifestResourceStream("Octopus.Tentacle.Kubernetes.bootstrapRunner.sh");
             using var reader = new StreamReader(stream!, Encoding.UTF8);
             return await reader.ReadToEndAsync();
         });
@@ -41,7 +41,7 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
         public ProcessState State { get; private set; }
         public IScriptLog ScriptLog { get; }
 
-        public RunningKubernetesJobScript(
+        public RunningKubernetesJob(
             IScriptWorkspace workspace,
             IScriptLog scriptLog,
             ScriptTicket scriptTicket,
@@ -80,7 +80,7 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                 {
                     using (ScriptIsolationMutex.Acquire(workspace.IsolationLevel,
                                workspace.ScriptMutexAcquireTimeout,
-                               workspace.ScriptMutexName ?? nameof(RunningKubernetesJobScript),
+                               workspace.ScriptMutexName ?? nameof(RunningKubernetesJob),
                                message => writer.WriteOutput(ProcessOutputSource.StdOut, message),
                                taskId,
                                cancellationToken,
@@ -175,7 +175,7 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
         async Task CreateJob(IScriptLogWriter writer, CancellationToken cancellationToken)
         {
             //write the bootstrap runner script to the workspace
-            workspace.WriteFile("bootstrapRunner.sh", await BootstrapRunnerScript);
+            workspace.WriteFile("bootstrapRunner.sh", await BootstrapRunnerScript.Task);
 
             var scriptName = Path.GetFileName(workspace.BootstrapScriptFilePath);
 
@@ -235,7 +235,11 @@ namespace Octopus.Tentacle.Scripts.Kubernetes
                             },
                             ServiceAccountName = KubernetesConfig.JobServiceAccountName,
                             RestartPolicy = "Never",
-                            Volumes = volumes
+                            Volumes = volumes,
+                            NodeSelector = new Dictionary<string, string>
+                            {
+                                ["kubernetes.io/os"] = "linux"
+                            }
                         }
                     },
                     BackoffLimit = 0, //we never want to rerun if it fails
