@@ -4,9 +4,9 @@ using System.Reflection;
 using Autofac;
 using Octopus.Tentacle.Communications;
 using Octopus.Tentacle.Kubernetes;
+using Octopus.Tentacle.Kubernetes.Scripts;
 using Octopus.Tentacle.Packages;
 using Octopus.Tentacle.Scripts;
-using Octopus.Tentacle.Scripts.Kubernetes;
 using Module = Autofac.Module;
 
 namespace Octopus.Tentacle.Services

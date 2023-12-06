@@ -17,7 +17,6 @@ using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
 using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Scripts;
-using Octopus.Tentacle.Scripts.Kubernetes;
 using Octopus.Tentacle.Services.Scripts;
 using Octopus.Tentacle.Util;
 

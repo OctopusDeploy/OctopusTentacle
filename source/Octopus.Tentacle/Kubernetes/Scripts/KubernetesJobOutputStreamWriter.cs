@@ -6,9 +6,10 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Util;
 
-namespace Octopus.Tentacle.Scripts.Kubernetes
+namespace Octopus.Tentacle.Kubernetes.Scripts
 {
     public class KubernetesJobOutputStreamWriter
     {

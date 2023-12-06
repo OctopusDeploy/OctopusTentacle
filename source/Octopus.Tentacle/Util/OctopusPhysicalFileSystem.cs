@@ -318,6 +318,7 @@ namespace Octopus.Tentacle.Util
         public string[] ReadAllLines(string scriptFile)
             => File.ReadAllLines(scriptFile);
 
+
         static bool IsUncPath(string directoryPath)
             => Uri.TryCreate(directoryPath, UriKind.Absolute, out var uri) && uri.IsUnc;
 
