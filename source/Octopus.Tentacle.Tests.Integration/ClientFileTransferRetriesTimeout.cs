@@ -77,9 +77,10 @@ namespace Octopus.Tentacle.Tests.Integration
             // Start the script which will wait for a file to exist
             var duration = Stopwatch.StartNew();
             var executeScriptTask = clientAndTentacle.TentacleClient.UploadFile(remotePath, dataStream, CancellationToken, inMemoryLog);
+            
+            var expectedException = new ExceptionContractAssertionBuilder(FailureScenario.ConnectionFaulted, tentacleConfigurationTestCase.TentacleType, clientAndTentacle).Build();
 
-            Func<Task> action = async () => await executeScriptTask;
-            await action.Should().ThrowAsync<HalibutClientException>();
+            await AssertionExtensions.Should(async () => await executeScriptTask).ThrowExceptionContractAsync(expectedException);
             duration.Stop();
 
             methodUsages.For(nameof(IAsyncClientFileTransferService.UploadFileAsync)).Started.Should().BeGreaterOrEqualTo(2);
@@ -123,8 +124,9 @@ namespace Octopus.Tentacle.Tests.Integration
             var dataStream = DataStream.FromString("The Stream");
             var executeScriptTask = clientAndTentacle.TentacleClient.UploadFile(remotePath, dataStream, CancellationToken, inMemoryLog);
 
-            Func<Task> action = async () => await executeScriptTask;
-            await action.Should().ThrowAsync<HalibutClientException>();
+            var expectedException = new ExceptionContractAssertionBuilder(FailureScenario.ConnectionFaulted, tentacleConfigurationTestCase.TentacleType, clientAndTentacle).Build();
+
+            await AssertionExtensions.Should(async () => await executeScriptTask).ThrowExceptionContractAsync(expectedException);
 
             methodUsages.For(nameof(IAsyncClientFileTransferService.UploadFileAsync)).Started.Should().Be(1);
             methodUsages.For(nameof(IAsyncClientFileTransferService.DownloadFileAsync)).Started.Should().Be(0);
@@ -183,8 +185,10 @@ namespace Octopus.Tentacle.Tests.Integration
             var duration = Stopwatch.StartNew();
             var executeScriptTask = clientAndTentacle.TentacleClient.DownloadFile(tempFile.File.FullName, CancellationToken, inMemoryLog);
 
-            Func<Task<DataStream>> action = async () => await executeScriptTask;
-            await action.Should().ThrowAsync<HalibutClientException>();
+            var expectedException = new ExceptionContractAssertionBuilder(FailureScenario.ConnectionFaulted, tentacleConfigurationTestCase.TentacleType, clientAndTentacle).Build();
+
+            await AssertionExtensions.Should(async () => await executeScriptTask).ThrowExceptionContractAsync(expectedException);
+
             duration.Stop();
 
             recordedUsages.For(nameof(IAsyncClientFileTransferService.DownloadFileAsync)).Started.Should().BeGreaterOrEqualTo(2);

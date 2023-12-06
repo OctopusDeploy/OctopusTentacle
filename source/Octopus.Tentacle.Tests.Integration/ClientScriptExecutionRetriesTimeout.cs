@@ -76,10 +76,12 @@ namespace Octopus.Tentacle.Tests.Integration
                 .Build();
 
             var duration = Stopwatch.StartNew();
-            var executeScriptTask = clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, inMemoryLog);
-            Func<Task> action = async () => await executeScriptTask;
 
-            await action.Should().ThrowAsync<HalibutClientException>();
+            var executeScriptTask = clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, inMemoryLog);
+            
+            var expectedException = new ExceptionContractAssertionBuilder(FailureScenario.ConnectionFaulted, tentacleConfigurationTestCase.TentacleType, clientAndTentacle).Build();
+            await AssertionExtensions.Should(async () => await executeScriptTask).ThrowExceptionContractAsync(expectedException);
+            
             duration.Stop();
 
             capabilitiesMethodUsages.For(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)).Started.Should().BeGreaterOrEqualTo(2);
@@ -127,8 +129,10 @@ namespace Octopus.Tentacle.Tests.Integration
                 .Build();
 
             var executeScriptTask = clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, inMemoryLog);
-            Func<Task> action = async () => await executeScriptTask;
-            await action.Should().ThrowAsync<HalibutClientException>();
+
+            var expectedException = new ExceptionContractAssertionBuilder(FailureScenario.ConnectionFaulted, tentacleConfigurationTestCase.TentacleType, clientAndTentacle).Build();
+
+            await AssertionExtensions.Should(async () => await executeScriptTask).ThrowExceptionContractAsync(expectedException);
 
             capabilitiesMethodUsages.For(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)).Started.Should().Be(1);
             scriptMethodUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().Be(0, "Test should not have not proceeded past GetCapabilities");
@@ -189,8 +193,11 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var duration = Stopwatch.StartNew();
             var executeScriptTask = clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, inMemoryLog);
-            Func<Task> action = async () => await executeScriptTask;
-            await action.Should().ThrowAsync<HalibutClientException>();
+
+            var expectedException = new ExceptionContractAssertionBuilder(FailureScenario.ConnectionFaulted, tentacleConfigurationTestCase.TentacleType, clientAndTentacle).Build();
+
+            await AssertionExtensions.Should(async () => await executeScriptTask).ThrowExceptionContractAsync(expectedException);
+
             duration.Stop();
 
             recordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().BeGreaterOrEqualTo(2);
@@ -238,8 +245,10 @@ namespace Octopus.Tentacle.Tests.Integration
                 .Build();
 
             var executeScriptTask = clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, inMemoryLog);
-            Func<Task> action = async () => await executeScriptTask;
-            await action.Should().ThrowAsync<HalibutClientException>();
+            
+            var expectedException = new ExceptionContractAssertionBuilder(FailureScenario.ConnectionFaulted, tentacleConfigurationTestCase.TentacleType, clientAndTentacle).Build();
+
+            await AssertionExtensions.Should(async () => await executeScriptTask).ThrowExceptionContractAsync(expectedException);
 
             recordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().Be(1);
             recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Started.Should().Be(0);
@@ -304,8 +313,11 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var duration = Stopwatch.StartNew();
             var executeScriptTask = clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, inMemoryLog);
-            Func<Task> action = async () => await executeScriptTask;
-            await action.Should().ThrowAsync<HalibutClientException>();
+            
+            var expectedException = new ExceptionContractAssertionBuilder(FailureScenario.ConnectionFaulted, tentacleConfigurationTestCase.TentacleType, clientAndTentacle).Build();
+
+            await AssertionExtensions.Should(async () => await executeScriptTask).ThrowExceptionContractAsync(expectedException);
+
             duration.Stop();
 
 
@@ -356,8 +368,10 @@ namespace Octopus.Tentacle.Tests.Integration
                 .Build();
 
             var executeScriptTask = clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, inMemoryLog);
-            Func<Task> action = async () => await executeScriptTask;
-            await action.Should().ThrowAsync<HalibutClientException>();
+            
+            var expectedException = new ExceptionContractAssertionBuilder(FailureScenario.ConnectionFaulted, tentacleConfigurationTestCase.TentacleType, clientAndTentacle).Build();
+
+            await AssertionExtensions.Should(async () => await executeScriptTask).ThrowExceptionContractAsync(expectedException);
 
             recordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().Be(1);
             recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Started.Should().Be(1);
@@ -437,7 +451,10 @@ namespace Octopus.Tentacle.Tests.Integration
             // We cancel script execution via the cancellation token. This should trigger the CancelScript RPC call to be made
             testCancellationTokenSource.Cancel();
 
-            await action.Should().ThrowAsync<HalibutClientException>();
+            var expectedException = new ExceptionContractAssertionBuilder(FailureScenario.ConnectionFaulted, tentacleConfigurationTestCase.TentacleType, clientAndTentacle).Build();
+
+            await AssertionExtensions.Should(async () => await executeScriptTask).ThrowExceptionContractAsync(expectedException);
+
             duration.Stop();
 
             recordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().Be(1);
@@ -501,7 +518,9 @@ namespace Octopus.Tentacle.Tests.Integration
             // We cancel script execution via the cancellation token. This should trigger the CancelScript RPC call to be made
             testCancellationTokenSource.Cancel();
 
-            await action.Should().ThrowAsync<HalibutClientException>();
+            var expectedException = new ExceptionContractAssertionBuilder(FailureScenario.ConnectionFaulted, tentacleConfigurationTestCase.TentacleType, clientAndTentacle).Build();
+
+            await AssertionExtensions.Should(async () => await executeScriptTask).ThrowExceptionContractAsync(expectedException);
 
             recordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().Be(1);
             recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Started.Should().BeGreaterOrEqualTo(1);

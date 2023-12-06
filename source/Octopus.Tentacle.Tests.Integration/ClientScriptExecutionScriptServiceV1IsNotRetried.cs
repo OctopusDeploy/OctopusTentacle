@@ -4,7 +4,6 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Halibut;
 using NUnit.Framework;
 using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Contracts;
@@ -55,8 +54,12 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Print("AllDone"))
                 .Build();
 
-            List<ProcessOutput> logs = new List<ProcessOutput>();
-            Assert.ThrowsAsync<HalibutClientException>(async () => await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, logs, CancellationToken));
+            var logs = new List<ProcessOutput>();
+            var executeScriptTask = clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, logs, CancellationToken);
+
+            var expectedException = new ExceptionContractAssertionBuilder(FailureScenario.ConnectionFaulted, tentacleConfigurationTestCase.TentacleType, clientTentacle).Build();
+
+            await AssertionExtensions.Should(async () => await executeScriptTask).ThrowExceptionContractAsync(expectedException);
 
             // Let the script finish.
             File.WriteAllText(waitForFile, "");
@@ -109,10 +112,12 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Print("AllDone"))
                 .Build();
 
-            List<ProcessOutput> logs = new List<ProcessOutput>();
-            Logger.Information("Starting and waiting for script exec");
-            Assert.ThrowsAsync<HalibutClientException>(async () => await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, logs, CancellationToken));
-            Logger.Information("Exception thrown.");
+            var logs = new List<ProcessOutput>();
+            var executeScriptTask = clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, logs, CancellationToken);
+
+            var expectedException = new ExceptionContractAssertionBuilder(FailureScenario.ConnectionFaulted, tentacleConfigurationTestCase.TentacleType, clientTentacle).Build();
+
+            await AssertionExtensions.Should(async () => await executeScriptTask).ThrowExceptionContractAsync(expectedException);
 
             // Let the script finish.
             File.WriteAllText(waitForFile, "");
@@ -176,7 +181,11 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var logs = new List<ProcessOutput>();
 
-            Assert.ThrowsAsync<HalibutClientException>(async () => await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, logs, cts.Token));
+            var executeScriptTask = clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, logs, cts.Token);
+
+            var expectedException = new ExceptionContractAssertionBuilder(FailureScenario.ConnectionFaulted, tentacleConfigurationTestCase.TentacleType, clientTentacle).Build();
+
+            await AssertionExtensions.Should(async () => await executeScriptTask).ThrowExceptionContractAsync(expectedException);
 
             var allLogs = logs.JoinLogs();
             allLogs.Should().NotContain("AllDone");
@@ -219,13 +228,15 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var startScriptCommand = new LatestStartScriptCommandBuilder().WithScriptBody(new ScriptBuilder().Print("hello")).Build();
 
-            List<ProcessOutput> logs = new List<ProcessOutput>();
-            Assert.ThrowsAsync<HalibutClientException>(async () => await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, logs, CancellationToken));
+            var logs = new List<ProcessOutput>();
+            var executeScriptTask = clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, logs, CancellationToken);
+
+            var expectedException = new ExceptionContractAssertionBuilder(FailureScenario.ConnectionFaulted, tentacleConfigurationTestCase.TentacleType, clientTentacle).Build();
+
+            await AssertionExtensions.Should(async () => await executeScriptTask).ThrowExceptionContractAsync(expectedException);
 
             // We Can not verify what will be in the logs because of race conditions in tentacle.
             // The last complete script which we fail might come back with the logs.
-
-
             recordedUsages.For(nameof(IAsyncClientScriptService.CompleteScriptAsync)).LastException.Should().NotBeNull();
             recordedUsages.For(nameof(IAsyncClientScriptService.StartScriptAsync)).Started.Should().Be(1);
             recordedUsages.For(nameof(IAsyncClientScriptService.CompleteScriptAsync)).Started.Should().Be(1);
