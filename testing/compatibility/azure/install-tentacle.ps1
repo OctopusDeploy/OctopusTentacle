@@ -7,6 +7,11 @@ $os,
 $tentacleUri,
 $tentacleNamePostfix)
 
+
+myargs = "$octopusServerThumbprint $octopusServerUrl $octopusServerApiKey $octopusServerRole $octopusServerEnvironment $os $tentacleUri $tentacleNamePostfix"
+$altCmd = "$PSCommandPath $myargs"
+$altCmd > c:\\TentacleInstallRun.ps1
+
 [Enum]::GetNames([Net.SecurityProtocolType]) -contains 'Tls12'
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 
@@ -22,7 +27,7 @@ if ($installedVersion -lt $net48BuildNumber) {
     $process = start-process "C:\Windows\Temp\ndp48-x86-x64-allos-enu.exe" -argumentlist @("/q", "/norestart", "/log", "C:\Windows\Temp\ndp48-x86-x64-allos-enu.log") -wait -PassThru
     $process.WaitForExit()
 	Write-Host "Installed .NET 4.8"
-    refreshenv
+    # For net48 to work the machine must be rebooted and this scripted edited again.
 } else {
     Write-Host "Net framework 4.8 already installed"
 }
