@@ -82,7 +82,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                     new[]
                     {
                         "Script execution was cancelled",
-                        "A task was canceled." // Cancellation during StartScript while connecting throws the wrong error
+                        "A task was canceled.", // Cancellation during connection can throw this error
+                        "The operation was cancelled" // Cancellation during connection can throw this error
                     });
             }
 
