@@ -55,8 +55,6 @@ namespace Octopus.Tentacle.Tests.Integration
                         nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync),
                         async (_, _) =>
                         {
-                            ensureCancellationOccursDuringAnRpcCall.Release();
-
                             if (!hasPausedOrStoppedPortForwarder)
                             {
                                 hasPausedOrStoppedPortForwarder = true;
@@ -68,6 +66,8 @@ namespace Octopus.Tentacle.Tests.Integration
                                     await tcpConnectionUtilities.EnsurePollingQueueWontSendMessageToDisconnectedTentacles();
                                 }
                             }
+
+                            ensureCancellationOccursDuringAnRpcCall.Release();
                         }, async (_, _) =>
                         {
                             await ensureCancellationOccursDuringAnRpcCall.WaitAsync(CancellationToken);
@@ -148,8 +148,6 @@ namespace Octopus.Tentacle.Tests.Integration
                         nameof(IAsyncClientScriptServiceV2.StartScriptAsync),
                         async (_, _) =>
                         {
-                            ensureCancellationOccursDuringAnRpcCall.Release();
-
                             if (!hasPausedOrStoppedPortForwarder)
                             {
                                 hasPausedOrStoppedPortForwarder = true;
@@ -160,6 +158,8 @@ namespace Octopus.Tentacle.Tests.Integration
                                     await tcpConnectionUtilities.EnsurePollingQueueWontSendMessageToDisconnectedTentacles();
                                 }
                             }
+
+                            ensureCancellationOccursDuringAnRpcCall.Release();
                         })
                     .HookServiceMethod(tentacleConfigurationTestCase,
                         nameof(IAsyncClientScriptServiceV2.CancelScriptAsync),
@@ -258,8 +258,6 @@ namespace Octopus.Tentacle.Tests.Integration
                         nameof(IAsyncClientScriptServiceV2.GetStatusAsync),
                         async (_, _) =>
                         {
-                            ensureCancellationOccursDuringAnRpcCall.Release();
-
                             if (!hasPausedOrStoppedPortForwarder)
                             {
                                 hasPausedOrStoppedPortForwarder = true;
@@ -271,6 +269,7 @@ namespace Octopus.Tentacle.Tests.Integration
                                 }
                             }
 
+                            ensureCancellationOccursDuringAnRpcCall.Release();
                             timer.Restart();
                         },
                         async (_, _) =>
