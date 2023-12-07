@@ -12,6 +12,9 @@ $env:octopusServerRole = 'OsTestingListening'
 $env:octopusServerEnvironment = 'OsTesting'
 $env:tentacleVersion = '8.1.32'
 
+## Takes this on to the end of the tentacle's name as seen in octopus
+$env:tentacleNamePostfix = "$env:tentacleVersion"
+
 $group = 'TentacleOldTimeout'
 $resourcegroup = $group
 
@@ -21,7 +24,6 @@ az group create --name $group --location australiaeast
 #---------------------------------
 $env:tentacleUri = "https://octopus-downloads-staging.s3.amazonaws.com/octopus/Octopus.Tentacle.$env:tentacleVersion-net6.0-win-x64.msi"
 $netFramworkVersion = 'net6'
-$env:tentacleNamePostfix = "$netFramworkVersion$env:tentacleVersion"
 
 # Windows 2012
 $env:virtualMachineName = 'Net6Tentacle-Window2012'
@@ -58,7 +60,6 @@ az deployment group create --name $group --resource-group $resourcegroup --templ
 #---------------------------------
 $env:tentacleUri = "https://octopus-downloads-staging.s3.amazonaws.com/octopus/Octopus.Tentacle.$env:tentacleVersion-x64.msi"
 $netFramworkVersion = 'net48'
-$env:tentacleNamePostfix = "$netFramworkVersion$env:tentacleVersion"
 
 # Windows 2012
 $env:virtualMachineName = 'Net48Tentacle-Window2012'
@@ -89,3 +90,5 @@ $env:virtualMachineName = 'Net48Tentacle-Window2022'
 $env:virtualMachineSku = '2022-datacenter-azure-edition'
 $env:os = 'windows2022-48'
 az deployment group create --name $group --resource-group $resourcegroup --template-file vm.bicep --parameters vm.bicepparam
+
+echo "Net48 tentacles wont connect, restart all net48 VMs then re-run the script in c:\\TentacleInStallRun.ps1 OR after restart modify the install-tentacle.ps1 script (add an extra Write-Host) so bicep see's it as a differnt script and so will re-run the script on the VMs again."
