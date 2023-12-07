@@ -27,7 +27,7 @@ if ($installedVersion -lt $net48BuildNumber) {
     $process = start-process "C:\Windows\Temp\ndp48-x86-x64-allos-enu.exe" -argumentlist @("/q", "/norestart", "/log", "C:\Windows\Temp\ndp48-x86-x64-allos-enu.log") -wait -PassThru
     $process.WaitForExit()
 	Write-Host "Installed .NET 4.8"
-    # For net48 to work the machine must be rebooted and this scripted edited again.
+    # For net48 to work the machine must be rebooted, and this script re-run.
 } else {
     Write-Host "Net framework 4.8 already installed"
 }
