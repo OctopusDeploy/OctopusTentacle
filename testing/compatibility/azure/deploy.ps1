@@ -91,4 +91,4 @@ $env:virtualMachineSku = '2022-datacenter-azure-edition'
 $env:os = 'windows2022-48'
 az deployment group create --name $group --resource-group $resourcegroup --template-file vm.bicep --parameters vm.bicepparam
 
-echo "Net48 tentacles wont connect, restart all net48 VMs then re-run the script in c:\\TentacleInstallRun.ps1 OR after restart modify the install-tentacle.ps1 script (add an extra Write-Host) so bicep see's it as a differnt script and so will re-run the script on the VMs again."
+echo "Net48 tentacles will not connect, restart all net48 VMs then re-run the script in c:\\TentacleInstallRun.ps1 OR after restart modify the install-tentacle.ps1 script (add an extra Write-Host) so bicep see's it as a differnt script and so will re-run the script on the VMs again."
