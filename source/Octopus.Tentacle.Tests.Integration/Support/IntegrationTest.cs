@@ -27,10 +27,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         [TearDown]
         public void TearDown()
         {
+            var logFilePath = Path.Combine(TestContext.CurrentContext.TestDirectory, TestContext.CurrentContext.Test.Name + ".tentaclelog");
+
             if (TestContext.CurrentContext.Result.Outcome == ResultState.Error ||
                 TestContext.CurrentContext.Result.Outcome == ResultState.Failure)
             {
-                var logFilePath = Path.Combine(TestContext.CurrentContext.TestDirectory, TestContext.CurrentContext.Test.Name + ".tentaclelog");
                 if (File.Exists(logFilePath))
                 {
                     try
@@ -62,6 +63,16 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 else
                 {
                     Logger.Warning($"Unable to find Tentacle Log file at {logFilePath}");
+                }
+            }
+            else if (File.Exists(logFilePath))
+            {
+                try
+                {
+                    File.Delete(logFilePath);
+                }
+                catch
+                {
                 }
             }
 
