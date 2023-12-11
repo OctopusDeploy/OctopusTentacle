@@ -164,13 +164,13 @@ namespace Octopus.Tentacle.Client.Tests
                             throw exception;
                         },
                         RetryDuration, clientOperationMetricsBuilder, cancellationToken))
-                .ThrowAsync<TaskCanceledException>();
+                .ThrowAsync<HalibutClientException>();
 
             // Assert
             var metric = rpcCallObserver.RpcCallMetrics.Should().ContainSingle().Subject;
 
             metric.Succeeded.Should().BeFalse();
-            metric.Exception?.GetType().Should().Be(typeof(TaskCanceledException));
+            metric.Exception.Should().BeEquivalentTo(exception);
             metric.HasException.Should().BeTrue();
             metric.WasCancelled.Should().BeTrue();
 
@@ -301,8 +301,8 @@ namespace Octopus.Tentacle.Client.Tests
             await sut.ExecuteWithRetries(
                 new RpcCall(RpcService, RpcCallName),
                 action,
+                null,
                 Substitute.For<ILog>(),
-                false,
                 clientOperationMetricsBuilder,
                 cancellationToken);
         }
@@ -320,7 +320,6 @@ namespace Octopus.Tentacle.Client.Tests
                 new RpcCall(RpcService, RpcCallName),
                 action,
                 Substitute.For<ILog>(),
-                abandonActionOnCancellation: false,
                 clientOperationMetricsBuilder,
                 cancellationToken);
         }
@@ -342,7 +341,6 @@ namespace Octopus.Tentacle.Client.Tests
                     return true;
                 },
                 Substitute.For<ILog>(),
-                abandonActionOnCancellation: false,
                 clientOperationMetricsBuilder,
                 cancellationToken);
         }

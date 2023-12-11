@@ -123,7 +123,7 @@ namespace Octopus.Tentacle.Tests.Integration
             File.WriteAllText(waitForFile, "");
             var legacyTentacleClient = clientTentacle.LegacyTentacleClientBuilder().Build();
 
-            await Wait.For(async () => (await legacyTentacleClient.ScriptService.GetStatusAsync(scriptStatusRequest, new(CancellationToken, null)))
+            await Wait.For(async () => (await legacyTentacleClient.ScriptService.GetStatusAsync(scriptStatusRequest, new(CancellationToken)))
                 .State == ProcessState.Complete, CancellationToken);
 
             var allLogs = logs.JoinLogs();
@@ -198,7 +198,7 @@ namespace Octopus.Tentacle.Tests.Integration
             File.WriteAllText(waitForFile, "");
             var legacyTentacleClient = clientTentacle.LegacyTentacleClientBuilder().Build();
 
-            await Wait.For(async () => (await legacyTentacleClient.ScriptService.GetStatusAsync(scriptStatusRequest, new(CancellationToken, null)))
+            await Wait.For(async () => (await legacyTentacleClient.ScriptService.GetStatusAsync(scriptStatusRequest, new(CancellationToken)))
                 .State == ProcessState.Complete, CancellationToken);
         }
 

@@ -2,6 +2,8 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Halibut.Exceptions;
+using Octopus.Tentacle.Client.Scripts;
 using Polly;
 using Polly.Timeout;
 
@@ -19,15 +21,12 @@ namespace Octopus.Tentacle.Client.Retries
         /// <param name="elapsedDuration">The duration that has elapsed already including the initial execution and any previous retries</param>
         /// <param name="cancellationToken">CancellationToken that will be cancelled when execution is cancelled by the caller</param>
         /// <returns></returns>
-        public delegate Task OnRetyAction(Exception lastException, TimeSpan retrySleepDuration, int retryCount, TimeSpan retryTimeout, TimeSpan elapsedDuration, CancellationToken cancellationToken);
+        public delegate Task OnRetryAction(Exception lastException, TimeSpan retrySleepDuration, int retryCount, TimeSpan retryTimeout, TimeSpan elapsedDuration, CancellationToken cancellationToken);
 
         public delegate Task OnTimeoutAction(TimeSpan retryTimeout, TimeSpan elapsedDuration, int retryCount, CancellationToken cancellationToken);
 
-        readonly TimeoutStrategy timeoutStrategy;
-
-        public RpcCallRetryHandler(TimeSpan retryTimeout, TimeoutStrategy timeoutStrategy)
+        public RpcCallRetryHandler(TimeSpan retryTimeout)
         {
-            this.timeoutStrategy = timeoutStrategy;
             RetryTimeout = retryTimeout;
         }
 
@@ -37,7 +36,7 @@ namespace Octopus.Tentacle.Client.Retries
 
         public async Task<T> ExecuteWithRetries<T>(
             Func<CancellationToken, Task<T>> action,
-            OnRetyAction? onRetryAction,
+            OnRetryAction? onRetryAction,
             OnTimeoutAction? onTimeoutAction,
             CancellationToken cancellationToken)
         {
@@ -48,7 +47,18 @@ namespace Octopus.Tentacle.Client.Retries
 
             async Task OnRetryAction(Exception exception, TimeSpan sleepDuration, int retryCount, Context context)
             {
-                lastException = exception;
+                if (lastException == null)
+                {
+                    lastException = exception;
+                }
+                // Cancellation/Retry Timeout will result in a TransferringRequestCancelledException or ConnectingRequestCancelledException
+                // which will hide the original exception. We ignore a cancellation/retry timeout triggered exception so we don't hide the last real exception
+                // that occurred during the retry process
+                else if(cancellationToken.IsCancellationRequested || !exception.IsConnectingOrTransferringRequestCancelledException())
+                {
+                    lastException = exception;
+                }
+                
                 nextSleepDuration = sleepDuration;
                 var elapsedDuration = started.Elapsed;
                 var remainingRetryDuration = RetryTimeout - elapsedDuration - sleepDuration;
@@ -75,7 +85,7 @@ namespace Octopus.Tentacle.Client.Retries
             }
 
             var policyBuilder = new RpcCallRetryPolicyBuilder()
-                .WithRetryTimeout(RetryTimeout, timeoutStrategy)
+                .WithRetryTimeout(RetryTimeout)
                 .WithOnRetryAction(OnRetryAction)
                 .WithOnTimeoutAction(OnTimeoutAction);
 
@@ -102,7 +112,7 @@ namespace Octopus.Tentacle.Client.Retries
 
                 var timeoutPolicy = policyBuilder
                     // Ensure the remaining retry time excludes the elapsed time
-                    .WithRetryTimeout(remainingRetryDuration, timeoutStrategy)
+                    .WithRetryTimeout(remainingRetryDuration)
                     .BuildTimeoutPolicy();
 
                 return await timeoutPolicy.ExecuteAsync(action, ct).ConfigureAwait(false);
@@ -111,10 +121,13 @@ namespace Octopus.Tentacle.Client.Retries
             try
             {
                 started.Start();
-                return await retryPolicy.ExecuteAsync(ExecuteAction, cancellationToken).ConfigureAwait(false);
+                return await retryPolicy.ExecuteAsync(ExecuteAction, cancellationToken);
             }
-            catch (TimeoutRejectedException)
+            catch (Exception ex) when (ex is TimeoutRejectedException or TaskCanceledException || 
+                                       ex.IsConnectingOrTransferringRequestCancelledException())
             {
+                // If the timeout policy timed out or the cancellation token caused a generic task cancellation 
+                // and we have captured an exception from a previous retry, then throw the more meaningful previous exception.
                 if (lastException != null)
                 {
                     throw lastException;
@@ -127,37 +140,6 @@ namespace Octopus.Tentacle.Client.Retries
             {
                 return remainingRetryDuration > RetryIfRemainingDurationAtLeast;
             }
-        }
-
-        public async Task<T> ExecuteWithRetries<T>(
-            Func<CancellationToken, Task<T>> action,
-            OnRetyAction? onRetryAction,
-            OnTimeoutAction? onTimeoutAction,
-            bool abandonActionOnCancellation,
-            TimeSpan abandonAfter,
-            CancellationToken cancellationToken)
-        {
-            return await ExecuteWithRetries(
-                async ct =>
-                {
-                    if (!abandonActionOnCancellation)
-                    {
-                        return await action(ct).ConfigureAwait(false);
-                    }
-
-                    var actionTask = action(ct);
-
-                    var actionTaskCompletionResult = await actionTask.WaitTillCompletion(abandonAfter, cancellationToken);
-                    if (actionTaskCompletionResult == TaskCompletionResult.Abandoned)
-                    {
-                        throw new OperationAbandonedException(abandonAfter);
-                    }
-
-                    return await actionTask.ConfigureAwait(false);
-                },
-                onRetryAction,
-                onTimeoutAction,
-                cancellationToken);
         }
     }
 }

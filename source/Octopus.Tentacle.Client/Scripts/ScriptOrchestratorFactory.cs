@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Halibut;
 using Halibut.ServiceModel;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Client.Capabilities;
@@ -61,7 +62,7 @@ namespace Octopus.Tentacle.Client.Scripts
             ScriptServiceVersion scriptServiceToUse;
             try
             {
-                scriptServiceToUse = await DetermineScriptServiceVersionToUse(cancellationToken).ConfigureAwait(false);
+                scriptServiceToUse = await DetermineScriptServiceVersionToUse(cancellationToken);
             }
             catch (Exception ex) when (cancellationToken.IsCancellationRequested)
             {
@@ -110,36 +111,20 @@ namespace Octopus.Tentacle.Client.Scripts
         {
             logger.Verbose("Determining ScriptService version to use");
 
-            CapabilitiesResponseV2 tentacleCapabilities;
-
             async Task<CapabilitiesResponseV2> GetCapabilitiesFunc(CancellationToken ct)
             {
-                var result = await clientCapabilitiesServiceV2.GetCapabilitiesAsync(new HalibutProxyRequestOptions(ct, CancellationToken.None));
+                var result = await clientCapabilitiesServiceV2.GetCapabilitiesAsync(new HalibutProxyRequestOptions(ct));
 
                 return result;
             }
 
-            if (clientOptions.RpcRetrySettings.RetriesEnabled)
-            {
-                tentacleCapabilities = await rpcCallExecutor.ExecuteWithRetries(
-                    RpcCall.Create<ICapabilitiesServiceV2>(nameof(ICapabilitiesServiceV2.GetCapabilities)),
-                    GetCapabilitiesFunc,
-                    logger,
-                    // We can abandon a call to Get Capabilities and walk away as this is not running anything that needs to be cancelled on Tentacle
-                    abandonActionOnCancellation: true,
-                    clientOperationMetricsBuilder,
-                    cancellationToken).ConfigureAwait(false);
-            }
-            else
-            {
-                tentacleCapabilities = await rpcCallExecutor.ExecuteWithNoRetries(
-                    RpcCall.Create<ICapabilitiesServiceV2>(nameof(ICapabilitiesServiceV2.GetCapabilities)),
-                    GetCapabilitiesFunc,
-                    logger,
-                    abandonActionOnCancellation: true,
-                    clientOperationMetricsBuilder,
-                    cancellationToken).ConfigureAwait(false);
-            }
+            var tentacleCapabilities = await rpcCallExecutor.Execute(
+                retriesEnabled: clientOptions.RpcRetrySettings.RetriesEnabled,
+                RpcCall.Create<ICapabilitiesServiceV2>(nameof(ICapabilitiesServiceV2.GetCapabilities)),
+                GetCapabilitiesFunc,
+                logger,
+                clientOperationMetricsBuilder,
+                cancellationToken);
 
             logger.Verbose($"Discovered Tentacle capabilities: {string.Join(",", tentacleCapabilities.SupportedCapabilities)}");
 
