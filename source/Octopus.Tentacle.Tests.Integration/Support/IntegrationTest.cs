@@ -27,7 +27,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         [TearDown]
         public void TearDown()
         {
-            var logFilePath = Path.Combine(TestContext.CurrentContext.TestDirectory, TestContext.CurrentContext.Test.Name + ".tentaclelog");
+            var logFilePath = Path.Combine(TestContext.CurrentContext.TestDirectory, TestContext.CurrentContext.Test.ID + ".tentaclelog");
 
             if (TestContext.CurrentContext.Result.Outcome == ResultState.Error ||
                 TestContext.CurrentContext.Result.Outcome == ResultState.Failure)
