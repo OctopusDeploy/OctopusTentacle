@@ -7,7 +7,7 @@ $os,
 $tentacleUri,
 $tentacleNamePostfix)
 
-
+# Record the arguments this script was called with, so that it is easy to run later.
 myargs = "$octopusServerThumbprint $octopusServerUrl $octopusServerApiKey $octopusServerRole $octopusServerEnvironment $os $tentacleUri $tentacleNamePostfix"
 $altCmd = "$PSCommandPath $myargs"
 $altCmd > c:\\TentacleInstallRun.ps1
