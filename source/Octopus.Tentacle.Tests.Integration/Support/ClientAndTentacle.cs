@@ -54,10 +54,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         {
             try
             {
-                var logFilePAth = RunningTentacle.LogFilePath;
+                var logFilePath = RunningTentacle.LogFilePath;
                 var destinationFilePath = IntegrationTest.GetTempTentacleLogPath();
 
-                File.Move(logFilePAth, destinationFilePath);
+                File.Move(logFilePath, destinationFilePath);
             }
             catch (Exception e)
             {
