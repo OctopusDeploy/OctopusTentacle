@@ -92,16 +92,38 @@ namespace Octopus.Tentacle.Configuration.Instances
             var listFromRegistry = registryApplicationInstanceStore.GetListFromRegistry();
             var listFromFileSystem = new List<ApplicationInstanceRecord>();
             if (fileSystem.DirectoryExists(InstancesFolder))
-                listFromFileSystem = fileSystem.EnumerateFiles(InstancesFolder)
-                    .Select(LoadInstanceConfiguration)
-                    .Select(instance => new ApplicationInstanceRecord(instance.Name, instance.ConfigurationFilePath))
-                    .ToList();
+            {
+                var instanceConfigurationFiles = fileSystem.EnumerateFiles(InstancesFolder).ToList();
+
+                foreach (var instanceConfigFile in instanceConfigurationFiles)
+                {
+                    try
+                    {
+                        var config = LoadInstanceConfiguration(instanceConfigFile);
+
+                        if (config != null)
+                        {
+                            listFromFileSystem.Add(new ApplicationInstanceRecord(config.Name, config.ConfigurationFilePath));
+                        }  
+                    }
+                    catch
+                    {
+                        // Allow the file to be deleted while the command is running
+                        if (fileSystem.FileExists(instanceConfigFile))
+                        {
+                            throw;
+                        }
+                    }
+
+                }
+            }
 
             // for customers running multiple instances on a machine, they may have a version that only understood
             // using the registry. We need to list those too.
             var combinedInstanceList = listFromFileSystem
                 .Concat(listFromRegistry.Where(x => listFromFileSystem.All(y => y.InstanceName != x.InstanceName)))
                 .OrderBy(i => i.InstanceName);
+
             return combinedInstanceList.ToList();
         }
 
@@ -201,18 +223,23 @@ namespace Octopus.Tentacle.Configuration.Instances
 
         internal string InstancesFolder => Path.Combine(machineConfigurationHomeDirectory, applicationName.ToString(), "Instances");
 
-        Instance LoadInstanceConfiguration(string path)
+        Instance? LoadInstanceConfiguration(string path)
         {
             var result = TryLoadInstanceConfiguration(path);
             if (result == null)
+            {
                 throw new ArgumentException($"Could not load instance at path {path}");
+            }
+
             return result;
         }
 
         Instance? TryLoadInstanceConfiguration(string path)
         {
             if (!fileSystem.FileExists(path))
+            {
                 return null;
+            }
 
             var data = fileSystem.ReadFile(path);
             var instance = JsonConvert.DeserializeObject<Instance>(data);
