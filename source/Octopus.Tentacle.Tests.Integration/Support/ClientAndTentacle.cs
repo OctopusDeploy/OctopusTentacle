@@ -2,7 +2,6 @@
 using System.IO;
 using System.Threading.Tasks;
 using Halibut;
-using NUnit.Framework;
 using Octopus.Tentacle.Client;
 using Octopus.Tentacle.Client.Retries;
 using Octopus.Tentacle.Tests.Integration.Support.Legacy;
@@ -52,17 +51,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         public async ValueTask DisposeAsync()
         {
-            try
-            {
-                var logFilePath = RunningTentacle.LogFilePath;
-                var destinationFilePath = IntegrationTest.GetTempTentacleLogPath();
-
-                File.Move(logFilePath, destinationFilePath);
-            }
-            catch (Exception e)
-            {
-                logger.Warning(e, "Failed to move the Tentacle log file on Disposal");
-            }
+            SafelyMoveTentacleLogFileToSharedLocation();
 
             logger.Information("****** ****** ****** ****** ****** ****** ******");
             logger.Information("****** CLIENT AND TENTACLE DISPOSE CALLED  *****");
@@ -82,6 +71,21 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             logger.Information("Starting TemporaryDirectory.Dispose");
             TemporaryDirectory.Dispose();
             logger.Information("Finished DisposeAsync");
+        }
+
+        void SafelyMoveTentacleLogFileToSharedLocation()
+        {
+            try
+            {
+                var logFilePath = RunningTentacle.LogFilePath;
+                var destinationFilePath = IntegrationTest.GetTempTentacleLogPath();
+
+                File.Move(logFilePath, destinationFilePath);
+            }
+            catch (Exception e)
+            {
+                logger.Warning(e, "Failed to move the Tentacle log file on Disposal");
+            }
         }
     }
 }
