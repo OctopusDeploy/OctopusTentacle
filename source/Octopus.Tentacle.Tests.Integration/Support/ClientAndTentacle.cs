@@ -55,7 +55,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             try
             {
                 var logFilePAth = RunningTentacle.LogFilePath;
-                var destinationFilePath = Path.Combine(TestContext.CurrentContext.TestDirectory, TestContext.CurrentContext.Test.ID + ".tentaclelog");
+                var destinationFilePath = IntegrationTest.GetTempTentacleLogPath();
 
                 File.Move(logFilePAth, destinationFilePath);
             }

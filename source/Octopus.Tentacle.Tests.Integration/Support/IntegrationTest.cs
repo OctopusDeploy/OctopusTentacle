@@ -27,7 +27,19 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         [TearDown]
         public void TearDown()
         {
-            var logFilePath = Path.Combine(TestContext.CurrentContext.TestDirectory, TestContext.CurrentContext.Test.ID + ".tentaclelog");
+            WriteTentacleLogToOutputIfTestHasFailed();
+
+            Logger.Information("Staring Test Tearing Down");
+            Logger.Information("Cancelling CancellationTokenSource");
+            cancellationTokenSource?.Cancel();
+            Logger.Information("Disposing CancellationTokenSource");
+            cancellationTokenSource?.Dispose();
+            Logger.Information("Finished Test Tearing Down");
+        }
+
+        void WriteTentacleLogToOutputIfTestHasFailed()
+        {
+            var logFilePath = GetTempTentacleLogPath();
 
             if (TestContext.CurrentContext.Result.Outcome == ResultState.Error ||
                 TestContext.CurrentContext.Result.Outcome == ResultState.Failure)
@@ -51,13 +63,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                     }
                     finally
                     {
-                        try
-                        {
-                            File.Delete(logFilePath);
-                        }
-                        catch
-                        {
-                        }
+                        SafelyDeleteTempTentacleLog();
                     }
                 }
                 else
@@ -65,7 +71,17 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                     Logger.Warning($"Unable to find Tentacle Log file at {logFilePath}");
                 }
             }
-            else if (File.Exists(logFilePath))
+            else
+            {
+                SafelyDeleteTempTentacleLog();
+            }
+        }
+
+        static void SafelyDeleteTempTentacleLog()
+        {
+            var logFilePath = GetTempTentacleLogPath();
+
+            if (File.Exists(logFilePath))
             {
                 try
                 {
@@ -75,13 +91,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 {
                 }
             }
+        }
 
-            Logger.Information("Staring Test Tearing Down");
-            Logger.Information("Cancelling CancellationTokenSource");
-            cancellationTokenSource?.Cancel();
-            Logger.Information("Disposing CancellationTokenSource");
-            cancellationTokenSource?.Dispose();
-            Logger.Information("Finished Test Tearing Down");
+        public static string GetTempTentacleLogPath()
+        {
+            return Path.Combine(TestContext.CurrentContext.TestDirectory, TestContext.CurrentContext.Test.ID + ".tentaclelog");
         }
     }
 }
