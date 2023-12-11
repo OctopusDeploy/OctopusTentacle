@@ -47,6 +47,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public string HomeDirectory { get; }
         public string ApplicationDirectory { get; }
         public FileInfo TentacleExe { get; }
+        public string LogFilePath => Path.Combine(HomeDirectory, "Logs", "OctopusTentacle.txt");
 
         public async Task Start(CancellationToken cancellationToken)
         {
@@ -113,15 +114,13 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         public string ReadAllLogFileText()
         {
-            var filePath = Path.Combine(HomeDirectory, "Logs", "OctopusTentacle.txt");
-
             var content = Policy
                 .Handle<IOException>()
                 .WaitAndRetry(
                     10,
                     retryCount => TimeSpan.FromMilliseconds(100 * retryCount),
-                    (exception, _) => { logger.Information("Failed to read file {File}: {Message}. Retrying!", filePath, exception.Message); })
-                .Execute(() => File.ReadAllText(filePath));
+                    (exception, _) => { logger.Information("Failed to read file {File}: {Message}. Retrying!", LogFilePath, exception.Message); })
+                .Execute(() => File.ReadAllText(LogFilePath));
 
             return content;
         }

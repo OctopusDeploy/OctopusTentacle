@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Runtime.InteropServices;
+using System.IO;
 using System.Threading.Tasks;
 using Halibut;
 using NUnit.Framework;
-using NUnit.Framework.Interfaces;
 using Octopus.Tentacle.Client;
 using Octopus.Tentacle.Client.Retries;
 using Octopus.Tentacle.Tests.Integration.Support.Legacy;
@@ -53,6 +52,18 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         public async ValueTask DisposeAsync()
         {
+            try
+            {
+                var logFilePAth = RunningTentacle.LogFilePath;
+                var destinationFilePath = Path.Combine(TestContext.CurrentContext.TestDirectory, TestContext.CurrentContext.Test.Name + ".tentaclelog");
+
+                File.Move(logFilePAth, destinationFilePath);
+            }
+            catch (Exception e)
+            {
+                logger.Warning(e, "Failed to move the Tentacle log file on Disposal");
+            }
+
             logger.Information("****** ****** ****** ****** ****** ****** ******");
             logger.Information("****** CLIENT AND TENTACLE DISPOSE CALLED  *****");
             logger.Information("*     Subsequent errors should be ignored      *");
