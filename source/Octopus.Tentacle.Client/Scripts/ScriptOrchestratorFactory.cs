@@ -63,9 +63,9 @@ namespace Octopus.Tentacle.Client.Scripts
             {
                 scriptServiceToUse = await DetermineScriptServiceVersionToUse(cancellationToken).ConfigureAwait(false);
             }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            catch (Exception ex) when (cancellationToken.IsCancellationRequested)
             {
-                throw new OperationCanceledException("Script execution was cancelled");
+                throw new OperationCanceledException("Script execution was cancelled", ex);
             }
 
             return scriptServiceToUse switch

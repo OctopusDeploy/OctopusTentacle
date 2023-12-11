@@ -60,8 +60,6 @@ namespace Octopus.Tentacle.Tests.Integration
                         nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync),
                         async (_, _) =>
                         {
-                            ensureCancellationOccursDuringAnRpcCall.Release();
-
                             if (rpcCall == RpcCall.RetryingCall &&
                                 capabilitiesMethodUsages.For(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)).LastException == null)
                             {
@@ -81,6 +79,8 @@ namespace Octopus.Tentacle.Tests.Integration
                                     await tcpConnectionUtilities.EnsurePollingQueueWontSendMessageToDisconnectedTentacles();
                                 }
                             }
+
+                            ensureCancellationOccursDuringAnRpcCall.Release();
                         }, async (_, _) =>
                         {
                             await ensureCancellationOccursDuringAnRpcCall.WaitAsync(CancellationToken);
@@ -179,8 +179,6 @@ namespace Octopus.Tentacle.Tests.Integration
                         nameof(IAsyncClientScriptServiceV2.StartScriptAsync),
                         async (_, _) =>
                         {
-                            ensureCancellationOccursDuringAnRpcCall.Release();
-
                             if (rpcCall == RpcCall.RetryingCall &&
                                 recordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).LastException is null)
                             {
@@ -202,6 +200,7 @@ namespace Octopus.Tentacle.Tests.Integration
                                 }
                             }
 
+                            ensureCancellationOccursDuringAnRpcCall.Release();
                             timer.Restart();
                         },
                         async (_, _) =>
@@ -335,8 +334,6 @@ namespace Octopus.Tentacle.Tests.Integration
                         nameof(IAsyncClientScriptServiceV2.GetStatusAsync),
                         async (_, _) =>
                         {
-                            ensureCancellationOccursDuringAnRpcCall.Release();
-
                             if (rpcCall == RpcCall.RetryingCall &&
                                 recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).LastException is null)
                             {
@@ -358,6 +355,7 @@ namespace Octopus.Tentacle.Tests.Integration
                                 }
                             }
 
+                            ensureCancellationOccursDuringAnRpcCall.Release();
                             timer.Restart();
                         },
                         async (_, _) =>
