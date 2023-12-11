@@ -13,6 +13,7 @@ param octopusServerRole string
 param octopusServerEnvironment string
 param os string
 param tentacleUri string
+param tentacleNamePostfix string
 
 var networkSecurityGroupName = '${virtualMachineName}-nsg'
 var networkInterfaceName = '${virtualMachineName}-nic'
@@ -125,7 +126,7 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2022-03-01' = {
   location: location
   properties: {
     hardwareProfile: {
-      vmSize: 'Standard_B2als_v2'
+      vmSize: 'Standard_DS1_v2'
     }
     storageProfile: {
       osDisk: {
@@ -205,6 +206,10 @@ resource deploymentscript 'Microsoft.Compute/virtualMachines/runCommands@2022-03
       {
         name: 'tentacleUri'
         value: tentacleUri
+      }
+      {
+        name: 'tentacleNamePostfix'
+        value: tentacleNamePostfix
       }
     ]
     protectedParameters: [
