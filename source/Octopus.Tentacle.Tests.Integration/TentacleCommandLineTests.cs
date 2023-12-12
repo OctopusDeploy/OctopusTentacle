@@ -350,6 +350,7 @@ The details are logged above. These commands probably need to take Lazy<T> depen
         public async Task ShowThumbprintCommandText(TentacleConfigurationTestCase tc)
         {
             await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
+            await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
             var (exitCode, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
                 tc, 
                 clientAndTentacle.RunningTentacle.RunTentacleEnvironmentVariables, 
@@ -367,6 +368,7 @@ The details are logged above. These commands probably need to take Lazy<T> depen
         public async Task ShowThumbprintCommandJson(TentacleConfigurationTestCase tc)
         {
             await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
+            await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
             var (exitCode, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
                 tc, 
                 clientAndTentacle.RunningTentacle.RunTentacleEnvironmentVariables,
@@ -384,6 +386,7 @@ The details are logged above. These commands probably need to take Lazy<T> depen
         public async Task ListInstancesCommandText(TentacleConfigurationTestCase tc)
         {
             await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
+            await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
             var (exitCode, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
                 tc, 
                 clientAndTentacle.RunningTentacle.RunTentacleEnvironmentVariables, 
@@ -402,6 +405,7 @@ The details are logged above. These commands probably need to take Lazy<T> depen
         public async Task ListInstancesCommandJson(TentacleConfigurationTestCase tc)
         {
             await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
+            await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
                 tc, 
                 clientAndTentacle.RunningTentacle.RunTentacleEnvironmentVariables, 
@@ -421,6 +425,8 @@ The details are logged above. These commands probably need to take Lazy<T> depen
         public async Task ShouldLogStartupDiagnosticsToInstanceLogFileOnly(TentacleConfigurationTestCase tc)
         {
             await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
+            await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
+
             var startingLogText = clientAndTentacle.RunningTentacle.ReadAllLogFileText();
 
             var (exitCode, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
@@ -445,7 +451,6 @@ The details are logged above. These commands probably need to take Lazy<T> depen
                             {
                                 throw new NotLoggedYetException();
                             }
-
                             return newLog;
                         });
 
@@ -514,6 +519,7 @@ Or one of the common options:
         public async Task ShowConfigurationCommand(TentacleConfigurationTestCase tc)
         {
             await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
+            await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
                 tc, 
                 clientAndTentacle.RunningTentacle.RunTentacleEnvironmentVariables, 
@@ -564,6 +570,7 @@ Or one of the common options:
         public async Task ShowConfigurationCommandLooksSensibleToHumans(TentacleConfigurationTestCase tc)
         {
             await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
+            await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
                 tc, 
                 clientAndTentacle.RunningTentacle.RunTentacleEnvironmentVariables,
@@ -661,6 +668,7 @@ Or one of the common options:
         public async Task WatchdogCreateAndDeleteCommand(TentacleConfigurationTestCase tc)
         {
             await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
+            await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
             var create = await RunCommandAndAssertExitsWithSuccessExitCode(
                 tc, 
                 clientAndTentacle.RunningTentacle.RunTentacleEnvironmentVariables,
