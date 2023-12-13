@@ -399,7 +399,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 args, 
                 tmp, 
                 _ => { }, 
-                new Dictionary<string, string?>(), 
+                runTentacleEnvironmentVariables,
                 logger,
                 cancellationToken);
         }

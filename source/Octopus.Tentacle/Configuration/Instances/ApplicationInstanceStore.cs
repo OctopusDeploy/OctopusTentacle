@@ -5,6 +5,7 @@ using System.Linq;
 using Newtonsoft.Json;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Util;
+using Octopus.Tentacle.Variables;
 
 namespace Octopus.Tentacle.Configuration.Instances
 {
@@ -26,11 +27,19 @@ namespace Octopus.Tentacle.Configuration.Instances
             this.fileSystem = fileSystem;
             this.applicationName = applicationName;
             this.registryApplicationInstanceStore = registryApplicationInstanceStore;
+            
+            var customMachineConfigurationHomeDirectory = Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleMachineConfigurationHomeDirectory);
 
-            machineConfigurationHomeDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Octopus");
-
-            if (!PlatformDetection.IsRunningOnWindows)
-                machineConfigurationHomeDirectory = "/etc/octopus";
+            if(!string.IsNullOrWhiteSpace(customMachineConfigurationHomeDirectory))
+            {
+                machineConfigurationHomeDirectory = customMachineConfigurationHomeDirectory;
+            }
+            else
+            {
+                machineConfigurationHomeDirectory = PlatformDetection.IsRunningOnWindows ? 
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Octopus") : 
+                    "/etc/octopus";
+            }
         }
 
         public ApplicationInstanceRecord LoadInstanceDetails(string? instanceName)
