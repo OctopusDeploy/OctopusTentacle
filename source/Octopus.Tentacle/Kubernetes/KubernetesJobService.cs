@@ -54,12 +54,13 @@ namespace Octopus.Tentacle.Kubernetes
 
             await foreach (var (type, job) in response.WatchAsync<V1Job, V1JobList>(onError, cancellationToken: cancellationToken))
             {
-                //we are only watching for modifications
-                if (type != WatchEventType.Modified)
+                //watch for modifications and deletions
+                if (type is not (WatchEventType.Modified or WatchEventType.Deleted))
                     continue;
 
                 var stopWatching = onChange(job);
-                if (stopWatching)
+                //we stop watching when told to or if this is deleted
+                if (stopWatching || type is WatchEventType.Deleted)
                     break;
             }
         }
