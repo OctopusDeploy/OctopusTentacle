@@ -22,5 +22,6 @@ namespace Octopus.Tentacle.Variables
         public const string AgentProgramDirectoryPath = "AgentProgramDirectoryPath";
         public const string TentacleTcpKeepAliveEnabled = "TentacleTcpKeepAliveEnabled";
         public const string TentacleUseRecommendedTimeoutsAndLimits = "TentacleUseRecommendedTimeoutsAndLimits";
+        public const string TentacleMachineConfigurationHomeDirectory = "TentacleMachineConfigurationHomeDirectory";
     }
 }

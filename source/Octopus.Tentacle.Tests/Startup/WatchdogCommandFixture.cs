@@ -25,7 +25,7 @@ namespace Octopus.Tentacle.Tests.Startup
             var watchdog = new Lazy<IWatchdog>(() => Substitute.For<IWatchdog>());
 
             var fileLog = Substitute.For<ILogFileOnlyLogger>();
-            command = new WatchdogCommand(log, ApplicationName.OctopusServer, watchdog, windowsLocalAdminRightsChecker, fileLog);
+            command = new WatchdogCommand(log, ApplicationName.Tentacle, watchdog, windowsLocalAdminRightsChecker, fileLog);
         }
 
         [Test]
