@@ -26,7 +26,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             string homeDirectory,
             string applicationDirectory,
             Func<CancellationToken, Task> deleteInstanceFunction,
-            Dictionary<string, string> runTentacleEnvironmentVariables,
+            IReadOnlyDictionary<string, string> runTentacleEnvironmentVariables,
             ILogger logger)
         {
             this.startTentacleFunction = startTentacleFunction;

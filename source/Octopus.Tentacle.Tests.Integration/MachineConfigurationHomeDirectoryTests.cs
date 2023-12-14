@@ -28,7 +28,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
                 var expectedInstanceConfigurationFilePath = new FileInfo(Path.Combine(defaultMachineConfigurationHomeDirectory, $"{clientAndTentacle.RunningTentacle.InstanceName}.config"));
 
-                expectedInstanceConfigurationFilePath.Exists.Should().BeTrue("Instance configuration file should exist");
+                expectedInstanceConfigurationFilePath.Exists.Should().BeTrue($"Instance configuration file should exist {expectedInstanceConfigurationFilePath.FullName}");
             }
         }
 
@@ -48,7 +48,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var expectedInstanceConfigurationFilePath = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "Tentacle", "Instances", $"{clientAndTentacle.RunningTentacle.InstanceName}.config"));
 
-            expectedInstanceConfigurationFilePath.Exists.Should().BeTrue("Instance configuration file should exist");
+            expectedInstanceConfigurationFilePath.Exists.Should().BeTrue($"Instance configuration file should exist {expectedInstanceConfigurationFilePath.FullName}");
         }
     }
 }
