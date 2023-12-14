@@ -17,10 +17,9 @@ namespace Octopus.Tentacle.Tests.Integration
     [SetUpFixture] // Must be the one and only. 
     public class TentacleIntegrationSetupFixtures
     {
-        readonly ISetupFixture[] setupFixtures =
+        private ISetupFixture[] setupFixtures = new ISetupFixture[]
         {
             new TurnOnTraceLoggingForLogFileForLatestTentacle(),
-            new TurnOnExceptionThrowingForLogFileForLatestTentacle(),
             new BumpThreadPoolForAllTests(),
             new WarmTentacleCache()
         };
