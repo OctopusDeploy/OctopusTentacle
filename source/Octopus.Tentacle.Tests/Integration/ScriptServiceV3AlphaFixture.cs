@@ -362,7 +362,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             response.ExitCode.Should().Be(-46);
 
-            CleanupWorkspace(ticket);
+            await CleanupWorkspace(ticket, CancellationToken.None);
         }
 
         [Test]
@@ -376,7 +376,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             response.ExitCode.Should().Be(-46);
 
-            CleanupWorkspace(ticket);
+            await CleanupWorkspace(ticket, CancellationToken.None);
         }
 
         [Test]
@@ -468,10 +468,10 @@ namespace Octopus.Tentacle.Tests.Integration
             return stateWorkspace;
         }
 
-        private void CleanupWorkspace(ScriptTicket ticket)
+        private async Task CleanupWorkspace(ScriptTicket ticket, CancellationToken cancellationToken)
         {
             var workspace = workspaceFactory.GetWorkspace(ticket);
-            workspace.Delete();
+            await workspace.Delete(cancellationToken);
         }
 
         (StartScriptCommandV3Alpha StartScriptCommand, FileInfo FileScriptWillCreate) GetStartScriptCommandForScriptThatCreatesAFile(ScriptTicket scriptTicket, int? scriptDelayInSeconds = null)

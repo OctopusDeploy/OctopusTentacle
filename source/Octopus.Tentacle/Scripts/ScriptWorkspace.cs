@@ -82,11 +82,6 @@ namespace Octopus.Tentacle.Scripts
             return path;
         }
 
-        public void Delete()
-        {
-            FileSystem.DeleteDirectory(WorkingDirectory, DeletionOptions.TryThreeTimesIgnoreFailure);
-        }
-
         public async Task Delete(CancellationToken cancellationToken)
         {
             await FileSystem.DeleteDirectory(WorkingDirectory, cancellationToken, DeletionOptions.TryThreeTimesIgnoreFailure);

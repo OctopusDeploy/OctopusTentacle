@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using Halibut;
 using Octopus.Tentacle.Client;
@@ -53,10 +54,16 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         {
             SafelyMoveTentacleLogFileToSharedLocation();
 
-            logger.Information("****** ****** ****** ****** ****** ****** ******");
-            logger.Information("****** CLIENT AND TENTACLE DISPOSE CALLED  *****");
-            logger.Information("*     Subsequent errors should be ignored      *");
-            logger.Information("****** ****** ****** ****** ****** ****** ******");
+            var banner = new StringBuilder();
+            banner.AppendLine("");
+            banner.AppendLine("");
+
+            banner.AppendLine("****** ****** ****** ****** ****** ****** ******");
+            banner.AppendLine("****** CLIENT AND TENTACLE DISPOSE CALLED  *****");
+            banner.AppendLine("*     Subsequent errors should be ignored      *");
+            banner.AppendLine("****** ****** ****** ****** ****** ****** ******");
+
+            logger.Information(banner.ToString());
 
             logger.Information("Starting DisposeAsync");
 
