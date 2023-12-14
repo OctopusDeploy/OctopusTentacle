@@ -41,7 +41,7 @@ namespace Octopus.Tentacle.Configuration.Instances
                 "/etc/octopus";
             }
 
-            log.Info("Machine configuration home directory is " + machineConfigurationHomeDirectory);
+            log.Verbose("Machine configuration home directory is " + machineConfigurationHomeDirectory);
         }
 
         public ApplicationInstanceRecord LoadInstanceDetails(string? instanceName)

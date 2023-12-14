@@ -172,43 +172,13 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                             runTentacleEnvironmentVariables, 
                             logger,
                             cancellationToken);
-
-                        // Set environment variables for the Service
-                        if (PlatformDetection.IsRunningOnWindows)
-                        {
-                            var environment = runTentacleEnvironmentVariables.Select(x => $"{x.Key}={x.Value}").ToArray();
-
-#pragma warning disable CA1416
-                            Registry.LocalMachine.OpenSubKey($"SYSTEM\\CurrentControlSet\\Services\\OctopusDeploy Tentacle: {instanceName}", RegistryKeyPermissionCheck.ReadWriteSubTree, RegistryRights.SetValue)
-                                .SetValue("Environment", environment, RegistryValueKind.MultiString);
-#pragma warning restore CA1416
-                        }
-                        else
-                        {
-                            var environment = string.Join("", runTentacleEnvironmentVariables.Select(x => $"Environment={x.Key}={x.Value}{Environment.NewLine}"));
-
-                            var systemdDirectoryInfo = new DirectoryInfo("/etc/systemd/system");
-                            var serviceFileInfo = systemdDirectoryInfo.GetFiles($"{instanceName}.service").FirstOrDefault();
-
-                            var service = await File.ReadAllTextAsync(serviceFileInfo.FullName, cancellationToken);
-                            service = service.Replace("[Service]", $"[Service]{environment}{Environment.NewLine}");
-                            await File.WriteAllTextAsync(serviceFileInfo.FullName, service, cancellationToken);
-                            
-                            await RunCommandOutOfProcess(
-                                "systemctl", 
-                                new[] {"daemon-reload"}, 
-                                "systemctl",
-                                tempDirectory,
-                                s => {},
-                                new Dictionary<string, string>(),
-                                logger,
-                                cancellationToken);
-                        }
-
+                        
                         if (!serviceInstalled)
                         {
                             throw new Exception("Failed to install service");
                         }
+
+                        await SetEnvironmentVariablesForService(instanceName, tempDirectory, logger, cancellationToken);
 
                         await RunCommandOutOfProcess(
                             tentacleExe,
@@ -293,6 +263,40 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             }
 
             return (runningTentacle, serviceUri);
+        }
+
+        async Task SetEnvironmentVariablesForService(string instanceName, TemporaryDirectory tempDirectory, ILogger logger, CancellationToken cancellationToken)
+        {
+            if (PlatformDetection.IsRunningOnWindows)
+            {
+                var environment = runTentacleEnvironmentVariables.Select(x => $"{x.Key}={x.Value}").ToArray();
+
+#pragma warning disable CA1416
+                Registry.LocalMachine.OpenSubKey($"SYSTEM\\CurrentControlSet\\Services\\OctopusDeploy Tentacle: {instanceName}", RegistryKeyPermissionCheck.ReadWriteSubTree, RegistryRights.SetValue)
+                    .SetValue("Environment", environment, RegistryValueKind.MultiString);
+#pragma warning restore CA1416
+            }
+            else
+            {
+                var environment = string.Join("", runTentacleEnvironmentVariables.Select(x => $"Environment={x.Key}={x.Value}{Environment.NewLine}"));
+
+                var systemdDirectoryInfo = new DirectoryInfo("/etc/systemd/system");
+                var serviceFileInfo = systemdDirectoryInfo.GetFiles($"{instanceName}.service").Single();
+
+                var service = await File.ReadAllTextAsync(serviceFileInfo.FullName, cancellationToken);
+                service = service.Replace("[Service]", $"[Service]{Environment.NewLine}{environment}{Environment.NewLine}");
+                await File.WriteAllTextAsync(serviceFileInfo.FullName, service, cancellationToken);
+
+                await RunCommandOutOfProcess(
+                    "systemctl",
+                    new[] { "daemon-reload" },
+                    "systemctl",
+                    tempDirectory,
+                    _ => { },
+                    new Dictionary<string, string>(),
+                    logger,
+                    cancellationToken);
+            }
         }
 
         static async Task<(bool Started, int? ListeningPort, string LogContent)> WaitForTentacleToStart(TemporaryDirectory tempDirectory, CancellationToken localCancellationToken)
