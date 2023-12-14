@@ -332,11 +332,9 @@ The details are logged above. These commands probably need to take Lazy<T> depen
         [NonParallelizable]
         public async Task InvalidInstance(TentacleConfigurationTestCase tc)
         {
-            using var tempDirectory = new TemporaryDirectory();
-
             var (exitCode, stdout, stderr) = await RunCommand(
                 tc, 
-                new Dictionary<string, string?>{ { EnvironmentVariables.TentacleMachineConfigurationHomeDirectory, tempDirectory.DirectoryPath } },
+                null,
                 "show-thumbprint", "--instance=invalidinstance");
             
             exitCode.Should().Be(1, $"the exit code should be 1 if the instance is not able to be resolved");
@@ -707,6 +705,20 @@ Or one of the common options:
             IReadOnlyDictionary<string, string?>? environmentVariables,
             params string[] arguments)
         {
+            using var tempDirectory = new TemporaryDirectory();
+
+            var environmentVariablesToRunTentacleWith = new Dictionary<string, string?>();
+
+            if (environmentVariables?.Any() == true)
+            {
+                environmentVariablesToRunTentacleWith.AddRange(environmentVariables);
+            }
+
+            if (!environmentVariablesToRunTentacleWith.ContainsKey(EnvironmentVariables.TentacleMachineConfigurationHomeDirectory))
+            {
+                environmentVariablesToRunTentacleWith.Add(EnvironmentVariables.TentacleMachineConfigurationHomeDirectory, tempDirectory.DirectoryPath);
+            }
+
             var tentacleExe = TentacleExeFinder.FindTentacleExe(tentacleConfigurationTestCase.TentacleRuntime);
             var output = new StringBuilder();
             var errorOut = new StringBuilder();
@@ -717,7 +729,7 @@ Or one of the common options:
                     .WithValidation(CommandResultValidation.None)
                     .WithStandardOutputPipe(PipeTarget.ToStringBuilder(output))
                     .WithStandardErrorPipe(PipeTarget.ToStringBuilder(errorOut))
-                    .WithEnvironmentVariables(environmentVariables ?? new Dictionary<string, string?>())
+                    .WithEnvironmentVariables(environmentVariablesToRunTentacleWith)
                     .ExecuteAsync(CancellationToken));
 
             return (result.ExitCode, output.ToString(), errorOut.ToString());
