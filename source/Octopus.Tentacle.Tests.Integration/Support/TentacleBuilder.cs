@@ -1,14 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Security.AccessControl;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
 using CliWrap;
 using CliWrap.Exceptions;
+using Microsoft.Win32;
 using Nito.AsyncEx.Interop;
 using NUnit.Framework;
+using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Serilog;
@@ -168,6 +172,17 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                             logger,
                             cancellationToken);
 
+                        // Set environment variables for the Service
+                        if (PlatformDetection.IsRunningOnWindows)
+                        {
+                            var environment = runTentacleEnvironmentVariables.Select(x => $"{x.Key}={x.Value}").ToArray();
+
+#pragma warning disable CA1416
+                            Registry.LocalMachine.OpenSubKey($"SYSTEM\\CurrentControlSet\\Services\\OctopusDeploy Tentacle: {instanceName}", RegistryKeyPermissionCheck.ReadWriteSubTree, RegistryRights.SetValue)
+                                .SetValue("Environment", environment, RegistryValueKind.MultiString);
+#pragma warning restore CA1416
+                        }
+
                         if (!serviceInstalled)
                         {
                             throw new Exception("Failed to install service");
@@ -193,11 +208,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                             throw new Exception("Failed to start service");
                         }
 
-                        using var timeoutCancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(20));
-                        using var linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCancellationTokenSource.Token);
-                        
                         logger.Information("Waiting for the Tentacle Service to start up and assign a Listening Port / no port if Polling");
-                        var tentacleState = await WaitForTentacleToStart(tempDirectory, linkedCancellationTokenSource.Token);
+                        var tentacleState = await WaitForTentacleToStart(tempDirectory, cancellationToken);
                         
                         if (tentacleState.Started)
                         {
@@ -206,46 +218,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                         }
                         else
                         {
-                            logger.Warning("The Tentacle failed to start correctly. Trying Again. Last Log File Content");
-                            logger.Warning(tentacleState.LogContent);
-
-                            File.Delete(Path.Combine(tempDirectory.DirectoryPath, "Logs", "OctopusTentacle.txt"));
-
-                            await RunTentacleCommandOutOfProcess(
-                                tentacleExe,
-                                new[] { "service", "--stop", $"--instance={instanceName}" },
-                                tempDirectory,
-                                s =>
-                                { },
-                                runTentacleEnvironmentVariables,
-                                logger,
-                                cancellationToken);
-
-                            File.Delete(Path.Combine(tempDirectory.DirectoryPath, "Logs", "OctopusTentacle.txt"));
-
-                            await RunTentacleCommandOutOfProcess(
-                                tentacleExe,
-                                new[] { "service", "--start", $"--instance={instanceName}" },
-                                tempDirectory,
-                                s =>
-                                { },
-                                runTentacleEnvironmentVariables,
-                                logger,
-                                cancellationToken);
-
-                            tentacleState = await WaitForTentacleToStart(tempDirectory, cancellationToken);
-
-                            if (tentacleState.Started)
-                            {
-                                listeningPort = tentacleState.ListeningPort;
-                                hasTentacleStarted.Set();
-                            }
-                            else
-                            {
-                                logger.Error("The Tentacle failed to start correctly. Last Log File Content");
-                                logger.Error(tentacleState.LogContent);
-                            }
-                        }
+                            logger.Warning("The Tentacle failed to start correctly.");
+                            logger.Warning(tentacleState.LogContent); }
                     }
                     else
                     {
