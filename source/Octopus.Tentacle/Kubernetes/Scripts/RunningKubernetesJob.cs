@@ -80,12 +80,14 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             {
                 using var writer = ScriptLog.CreateWriter();
 
-                scriptCancellationToken.Register(() =>
+                //register a cancellation callback so that when the script is cancelled, we cancel the job
+                //we use a using to make sure this callback is deregistered
+                using var cancellationTokenRegistration = scriptCancellationToken.Register(() =>
                 {
                     writer.WriteOutput(ProcessOutputSource.StdOut, "Script execution canceled.");
                     writer.WriteVerbose($"Deleting Kubernetes Job '{jobName}'");
 
-                    //we spawn the job cancellation on a background thread
+                    //we spawn the job cancellation on a background thread (as this callback runs synchronously)
                     Task.Run(() => jobService.Delete(scriptTicket, CancellationToken.None), CancellationToken.None);
                 });
 
@@ -141,7 +143,6 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
         async Task<int> MonitorJobAndLogs(IScriptLogWriter writer)
         {
             var jobCompletionCancellationTokenSource = new CancellationTokenSource();
-
             var checkJobTask = CheckIfJobHasCompleted(jobCompletionCancellationTokenSource);
 
             //we pass the job completion CTS here because its used to cancel the writing of the job stream
@@ -312,13 +313,6 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                     //we don't care about errors here
                 }
             }
-        }
-
-
-        public async Task Cancel()
-        {
-            // The cancel cannot be cancelled (via cancellation token)
-            await jobService.Delete(scriptTicket, CancellationToken.None);
         }
     }
 }
