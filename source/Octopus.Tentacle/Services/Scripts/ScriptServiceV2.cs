@@ -121,7 +121,7 @@ namespace Octopus.Tentacle.Services.Scripts
             }
 
             var workspace = workspaceFactory.GetWorkspace(command.Ticket);
-            workspace.Delete();
+            await workspace.Delete(cancellationToken);
         }
 
         RunningScript LaunchShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, IScriptStateStore stateStore, CancellationToken cancellationToken)

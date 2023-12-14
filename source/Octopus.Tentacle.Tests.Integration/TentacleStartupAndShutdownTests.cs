@@ -1,7 +1,6 @@
 #nullable enable
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Halibut.Exceptions;
@@ -10,6 +9,7 @@ using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Tests.Integration.Support;
+using Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods;
 using Octopus.Tentacle.Tests.Integration.Support.TestAttributes;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
 
@@ -53,11 +53,7 @@ cd ""{clientAndTentacle.RunningTentacle.TentacleExe.DirectoryName}""
                     result = await clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken);
                 }
 
-                var scriptOutput = new StringBuilder();
-                result.ProcessOutput.ForEach(x => scriptOutput.AppendLine($"{x.Source} {x.Occurred} {x.Text}"));
-
-                Logger.Information($@"Script Output:
-{scriptOutput}");
+                result.LogExecuteScriptOutput(Logger);
 
                 result.ProcessOutput.Any(x => x.Text.Contains("Stopping service")).Should().BeTrue("Stopping service should be logged");
                 result.ScriptExecutionResult.State.Should().Be(ProcessState.Complete);
