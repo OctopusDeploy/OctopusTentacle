@@ -157,9 +157,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                         var serviceInstalled = false;
                         var serviceStarted = false;
 
-                        await RunTentacleCommandOutOfProcess(
+                        await RunCommandOutOfProcess(
                             tentacleExe, 
                             new[] {"service", "--install", $"--instance={instanceName}"}, 
+                            "Tentacle",
                             tempDirectory,
                             s =>
                             {
@@ -182,15 +183,37 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                                 .SetValue("Environment", environment, RegistryValueKind.MultiString);
 #pragma warning restore CA1416
                         }
+                        else
+                        {
+                            var environment = string.Join("", runTentacleEnvironmentVariables.Select(x => $"Environment={x.Key}={x.Value}{Environment.NewLine}"));
+
+                            var systemdDirectoryInfo = new DirectoryInfo("/etc/systemd/system");
+                            var serviceFileInfo = systemdDirectoryInfo.GetFiles($"{instanceName}.service").FirstOrDefault();
+
+                            var service = await File.ReadAllTextAsync(serviceFileInfo.FullName, cancellationToken);
+                            service = service.Replace("[Service]", $"[Service]{environment}{Environment.NewLine}");
+                            await File.WriteAllTextAsync(serviceFileInfo.FullName, service, cancellationToken);
+                            
+                            await RunCommandOutOfProcess(
+                                "systemctl", 
+                                new[] {"daemon-reload"}, 
+                                "systemctl",
+                                tempDirectory,
+                                s => {},
+                                new Dictionary<string, string>(),
+                                logger,
+                                cancellationToken);
+                        }
 
                         if (!serviceInstalled)
                         {
                             throw new Exception("Failed to install service");
                         }
 
-                        await RunTentacleCommandOutOfProcess(
+                        await RunCommandOutOfProcess(
                             tentacleExe,
                             new[] { "service", "--start", $"--instance={instanceName}" },
+                            "Tentacle",
                             tempDirectory,
                             s =>
                             {
@@ -223,9 +246,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                     }
                     else
                     {
-                        await RunTentacleCommandOutOfProcess(
+                        await RunCommandOutOfProcess(
                             tentacleExe, 
                             new[] {"agent", $"--instance={instanceName}", "--noninteractive"}, 
+                            "Tentacle",
                             tempDirectory,
                             s =>
                             {
@@ -321,18 +345,20 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             {
                 try
                 {
-                    await RunTentacleCommandOutOfProcess(
+                    await RunCommandOutOfProcess(
                         tentacleExe,
                         new[] { "service", $"--instance={instanceName}", "--stop" },
+                        "Tentacle",
                         tmp,
                         s => {},
                         runTentacleEnvironmentVariables,
                         logger,
                         cancellationToken);
 
-                    await RunTentacleCommandOutOfProcess(
+                    await RunCommandOutOfProcess(
                         tentacleExe, 
                         new[] {"service", "--uninstall", $"--instance={instanceName}"}, 
+                        "Tentacle",
                         tmp,
                         s => {},
                         runTentacleEnvironmentVariables, 
@@ -370,9 +396,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         async Task RunTentacleCommand(string tentacleExe, string[] args, TemporaryDirectory tmp, ILogger logger, CancellationToken cancellationToken)
         {
-            await RunTentacleCommandOutOfProcess(
+            await RunCommandOutOfProcess(
                 tentacleExe,
                 args, 
+                "Tentacle",
                 tmp, 
                 _ => { }, 
                 runTentacleEnvironmentVariables,
@@ -380,9 +407,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 cancellationToken);
         }
 
-        async Task RunTentacleCommandOutOfProcess(
-            string tentacleExe,
+        async Task RunCommandOutOfProcess(
+            string targetFilePath,
             string[] args,
+            string commandName,
             TemporaryDirectory tmp,
             Action<string> commandOutput, 
             IReadOnlyDictionary<string, string> environmentVariables,
@@ -392,14 +420,14 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             async Task ProcessLogs(string s, CancellationToken ct)
             {
                 await Task.CompletedTask;
-                logger.Information("[Tentacle] " + s);
+                logger.Information($"[{commandName}] " + s);
                 commandOutput(s);
             }
 
             try
             {
                 var commandResult = await RetryHelper.RetryAsync<CommandResult, CommandExecutionException>(
-                    () => Cli.Wrap(tentacleExe)
+                    () => Cli.Wrap(targetFilePath)
                         .WithArguments(args)
                         .WithEnvironmentVariables(environmentVariables)
                         .WithWorkingDirectory(tmp.DirectoryPath)
@@ -411,7 +439,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
                 if (commandResult.ExitCode != 0)
                 {
-                    throw new Exception("Tentacle returns non zero exit code: " + commandResult.ExitCode);
+                    throw new Exception($"{commandName} returns non zero exit code: " + commandResult.ExitCode);
                 }
             }
             catch (OperationCanceledException)
