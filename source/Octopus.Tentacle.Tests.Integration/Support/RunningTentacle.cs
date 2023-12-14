@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,15 +18,15 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         private readonly Func<CancellationToken, Task> deleteInstanceFunction;
         private ILogger logger;
 
-        public RunningTentacle(
-            FileInfo tentacleExe,
+        public RunningTentacle(FileInfo tentacleExe,
             TemporaryDirectory temporaryDirectory,
             Func<CancellationToken, Task<(Task, Uri)>> startTentacleFunction,
-            string thumbprint, 
-            string instanceName, 
-            string homeDirectory, 
-            string applicationDirectory, 
+            string thumbprint,
+            string instanceName,
+            string homeDirectory,
+            string applicationDirectory,
             Func<CancellationToken, Task> deleteInstanceFunction,
+            Dictionary<string, string> runTentacleEnvironmentVariables,
             ILogger logger)
         {
             this.startTentacleFunction = startTentacleFunction;
@@ -37,6 +38,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             InstanceName = instanceName;
             HomeDirectory = homeDirectory;
             ApplicationDirectory = applicationDirectory;
+            RunTentacleEnvironmentVariables = runTentacleEnvironmentVariables;
 
             this.logger = logger.ForContext<RunningTentacle>();
         }
@@ -46,6 +48,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public string Thumbprint { get; }
         public string HomeDirectory { get; }
         public string ApplicationDirectory { get; }
+        public IReadOnlyDictionary<string, string> RunTentacleEnvironmentVariables { get; }
         public FileInfo TentacleExe { get; }
         public string LogFilePath => Path.Combine(HomeDirectory, "Logs", "OctopusTentacle.txt");
 

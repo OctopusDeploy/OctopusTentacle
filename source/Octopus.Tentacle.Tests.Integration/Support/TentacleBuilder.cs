@@ -109,6 +109,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 HomeDirectory.DirectoryPath,
                 applicationDirectory,
                 deleteInstanceFunction: ct => DeleteInstanceIgnoringFailure(installAsService, tentacleExe, instanceName, tempDirectory, logger, ct),
+                runTentacleEnvironmentVariables,
                 logger);
 
             try
