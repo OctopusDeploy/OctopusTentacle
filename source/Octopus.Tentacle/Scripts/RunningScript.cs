@@ -47,8 +47,6 @@ namespace Octopus.Tentacle.Scripts
 
         public IScriptLog ScriptLog { get; }
 
-        //Cancellation of the local shell is handled by the cancellation token supplied
-
         public void Execute()
         {
             var exitCode = -1;

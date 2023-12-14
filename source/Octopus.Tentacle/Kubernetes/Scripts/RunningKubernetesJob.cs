@@ -68,7 +68,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
 
             outputStreamWriter = new KubernetesJobOutputStreamWriter(workspace);
 
-
+            // this doesn't change, so build it once
             jobName = jobService.BuildJobName(scriptTicket);
         }
 
