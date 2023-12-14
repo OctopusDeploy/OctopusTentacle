@@ -390,7 +390,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         internal string InstanceNameGenerator()
         {
-            return $"TentacleIT-{Guid.NewGuid():N}";
+            // Ensure this is lower case to avoid issues with tests on linux with case sensitive file paths.
+            return $"TentacleIT-{Guid.NewGuid():N}".ToLower();
         }
 
         async Task RunTentacleCommand(string tentacleExe, string[] args, TemporaryDirectory tmp, ILogger logger, CancellationToken cancellationToken)
