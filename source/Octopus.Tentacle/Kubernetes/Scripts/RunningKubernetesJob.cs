@@ -33,9 +33,10 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
         readonly IScriptStateStore stateStore;
         readonly IKubernetesJobService jobService;
         readonly IKubernetesJobContainerResolver containerResolver;
-        readonly CancellationToken scriptCancellationToken;
+        CancellationToken scriptCancellationToken;
         readonly string? instanceName;
         readonly KubernetesJobOutputStreamWriter outputStreamWriter;
+        readonly string jobName;
 
         public int ExitCode { get; private set; }
         public ProcessState State { get; private set; }
@@ -66,17 +67,28 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             instanceName = appInstanceSelector.Current.InstanceName;
 
             outputStreamWriter = new KubernetesJobOutputStreamWriter(workspace);
+
+
+            jobName = jobService.BuildJobName(scriptTicket);
         }
 
-        public async Task Execute(CancellationToken taskCancellationToken)
+        public async Task Execute()
         {
             var exitCode = -1;
 
-            var linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(scriptCancellationToken, taskCancellationToken);
-            var cancellationToken = linkedCancellationTokenSource.Token;
             try
             {
                 using var writer = ScriptLog.CreateWriter();
+
+                scriptCancellationToken.Register(() =>
+                {
+                    writer.WriteOutput(ProcessOutputSource.StdOut, "Script execution canceled.");
+                    writer.WriteVerbose($"Deleting Kubernetes Job '{jobName}'");
+
+                    //we spawn the job cancellation on a background thread
+                    Task.Run(() => jobService.Delete(scriptTicket, CancellationToken.None), CancellationToken.None);
+                });
+
                 try
                 {
                     using (ScriptIsolationMutex.Acquire(workspace.IsolationLevel,
@@ -84,17 +96,17 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                                workspace.ScriptMutexName ?? nameof(RunningKubernetesJob),
                                message => writer.WriteOutput(ProcessOutputSource.StdOut, message),
                                taskId,
-                               cancellationToken,
+                               scriptCancellationToken,
                                log))
                     {
                         //create the k8s job
-                        await CreateJob(writer, cancellationToken);
+                        await CreateJob(writer, scriptCancellationToken);
 
                         State = ProcessState.Running;
                         RecordScriptHasStarted(writer);
 
                         //we now need to monitor the resulting pod status
-                        exitCode = await MonitorJobAndLogs(writer, cancellationToken);
+                        exitCode = await MonitorJobAndLogs( writer);
                     }
                 }
                 catch (OperationCanceledException)
@@ -126,11 +138,11 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             }
         }
 
-        async Task<int> MonitorJobAndLogs(IScriptLogWriter writer, CancellationToken cancellationToken)
+        async Task<int> MonitorJobAndLogs(IScriptLogWriter writer)
         {
-            var jobCompletionCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            var jobCompletionCancellationTokenSource = new CancellationTokenSource();
 
-            var checkJobTask = CheckIfJobHasCompleted(cancellationToken, jobCompletionCancellationTokenSource);
+            var checkJobTask = CheckIfJobHasCompleted(jobCompletionCancellationTokenSource);
 
             //we pass the job completion CTS here because its used to cancel the writing of the job stream
             var monitorJobOutputTask = outputStreamWriter.StreamJobLogsToScriptLog(writer, jobCompletionCancellationTokenSource.Token);
@@ -144,7 +156,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             return checkJobTask.Result;
         }
 
-        async Task<int> CheckIfJobHasCompleted(CancellationToken cancellationToken, CancellationTokenSource jobCompletionCancellationTokenSource)
+        async Task<int> CheckIfJobHasCompleted(CancellationTokenSource jobCompletionCancellationTokenSource)
         {
             var resultStatusCode = 0;
             await jobService.Watch(scriptTicket, job =>
@@ -166,7 +178,13 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             {
                 log.Error(ex);
                 resultStatusCode = 0;
-            }, cancellationToken);
+            }, CancellationToken.None);
+
+            //if the job was killed by cancellation, then we need to change the exit code
+            if (scriptCancellationToken.IsCancellationRequested)
+            {
+                resultStatusCode =  ScriptExitCodes.CanceledExitCode;
+            }
 
             jobCompletionCancellationTokenSource.Cancel();
 
@@ -179,8 +197,6 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             workspace.WriteFile("bootstrapRunner.sh", await BootstrapRunnerScript.Task);
 
             var scriptName = Path.GetFileName(workspace.BootstrapScriptFilePath);
-
-            var jobName = jobService.BuildJobName(scriptTicket);
 
             //Deserialize the volume configuration from the environment configuration
             var volumes = KubernetesYaml.Deserialize<List<V1Volume>>(KubernetesConfig.JobVolumeYaml);

@@ -29,7 +29,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
         {
             var runningScript = new RunningKubernetesJob(workspace, workspace.CreateLog(), command.ScriptTicket, command.TaskId, cancellationToken, log, scriptStateStore, jobService, containerResolver, appInstanceSelector);
 
-            Task.Run(() => runningScript.Execute(cancellationToken), cancellationToken);
+            Task.Run(() => runningScript.Execute(), cancellationToken);
 
             return runningScript;
         }
