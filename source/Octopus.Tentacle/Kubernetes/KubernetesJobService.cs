@@ -14,7 +14,7 @@ namespace Octopus.Tentacle.Kubernetes
         Task<V1Job?> TryGet(ScriptTicket scriptTicket, CancellationToken cancellationToken);
         string BuildJobName(ScriptTicket scriptTicket);
         Task CreateJob(V1Job job, CancellationToken cancellationToken);
-        void Delete(ScriptTicket scriptTicket);
+        Task Delete(ScriptTicket scriptTicket, CancellationToken cancellationToken);
         Task Watch(ScriptTicket scriptTicket, Func<V1Job, bool> onChange, Action<Exception> onError, CancellationToken cancellationToken);
     }
 
@@ -71,15 +71,15 @@ namespace Octopus.Tentacle.Kubernetes
             await Client.CreateNamespacedJobAsync(job, KubernetesConfig.Namespace, cancellationToken: cancellationToken);
         }
 
-        public void Delete(ScriptTicket scriptTicket)
+        public async Task Delete(ScriptTicket scriptTicket, CancellationToken cancellationToken)
         {
             try
             {
-                Client.DeleteNamespacedJob(BuildJobName(scriptTicket), KubernetesConfig.Namespace);
+                await Client.DeleteNamespacedJobAsync(BuildJobName(scriptTicket), KubernetesConfig.Namespace, cancellationToken: cancellationToken);
             }
             catch
             {
-                //we are comfortable silently consuming this as the jobs have a TTL that will clean it up anyway
+                //we are comfortable silently consuming this as the jobs have a TTL that will clean it up anyway if this fails to cancel/be deleted
             }
         }
     }

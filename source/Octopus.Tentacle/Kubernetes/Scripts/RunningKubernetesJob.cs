@@ -41,6 +41,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
         public ProcessState State { get; private set; }
         public IScriptLog ScriptLog { get; }
 
+
         public RunningKubernetesJob(
             IScriptWorkspace workspace,
             IScriptLog scriptLog,
@@ -295,6 +296,13 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                     //we don't care about errors here
                 }
             }
+        }
+
+
+        public async Task Cancel()
+        {
+            // The cancel cannot be cancelled (via cancellation token)
+            await jobService.Delete(scriptTicket, CancellationToken.None);
         }
     }
 }

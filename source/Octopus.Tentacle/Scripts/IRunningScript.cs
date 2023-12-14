@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Octopus.Tentacle.Contracts;
 
 namespace Octopus.Tentacle.Scripts
@@ -8,5 +9,6 @@ namespace Octopus.Tentacle.Scripts
         int ExitCode { get; }
         ProcessState State { get; }
         IScriptLog ScriptLog { get; }
+        Task Cancel();
     }
 }

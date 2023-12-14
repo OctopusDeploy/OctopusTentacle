@@ -101,7 +101,7 @@ namespace Octopus.Tentacle.Services.Scripts
         {
             if (runningScripts.TryGetValue(command.ScriptTicket, out var runningScript))
             {
-                runningScript.Cancel();
+                await runningScript.Cancel();
             }
 
             return await GetResponse(command.ScriptTicket, command.LastLogSequence, runningScript?.Process);
@@ -179,9 +179,15 @@ namespace Octopus.Tentacle.Services.Scripts
 
             public CancellationToken CancellationToken { get; }
 
-            public void Cancel()
+            public async Task Cancel()
             {
                 cancellationTokenSource.Cancel();
+
+                //We don't want to just rel on the cancellation token performing the cancellation
+                //This is because the K8s Jobs need to be cancelled/deleted via an async API call
+                //and CancellationTokens cancellation registrations are synchronous callbacks
+                if (Process is not null)
+                    await Process.Cancel();
             }
 
             public void Dispose()

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using System.Threading.Tasks;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Util;
@@ -46,6 +47,9 @@ namespace Octopus.Tentacle.Scripts
         public int ExitCode { get; private set; }
 
         public IScriptLog ScriptLog { get; }
+
+        //Cancellation of the local shell is handled by the cancellation token supplied
+        public Task Cancel() => Task.CompletedTask;
 
         public void Execute()
         {
