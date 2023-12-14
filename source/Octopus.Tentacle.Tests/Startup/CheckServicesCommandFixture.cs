@@ -25,7 +25,7 @@ namespace Octopus.Tentacle.Tests.Startup
             windowsLocalAdminRightsChecker = Substitute.For<IWindowsLocalAdminRightsChecker>();
             var log = Substitute.For<ISystemLog>();
             var fileLog = Substitute.For<ILogFileOnlyLogger>();
-            command = new CheckServicesCommand(log, instanceStore, ApplicationName.OctopusServer, windowsLocalAdminRightsChecker, fileLog);
+            command = new CheckServicesCommand(log, instanceStore, ApplicationName.Tentacle, windowsLocalAdminRightsChecker, fileLog);
         }
 
         [Test]

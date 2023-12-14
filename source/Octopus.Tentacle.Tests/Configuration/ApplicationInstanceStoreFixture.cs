@@ -25,7 +25,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             registryStore = Substitute.For<IRegistryApplicationInstanceStore>();
             fileSystem = Substitute.For<IOctopusFileSystem>();
             var log = Substitute.For<ISystemLog>();
-            instanceStore = new ApplicationInstanceStore(ApplicationName.OctopusServer, log, fileSystem, registryStore);
+            instanceStore = new ApplicationInstanceStore(ApplicationName.Tentacle, log, fileSystem, registryStore);
         }
 
         [Test]

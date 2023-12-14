@@ -4,9 +4,11 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Tentacle.CommonTestUtils.Builders;
+using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Tests.Integration.Support;
+using Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
 using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
@@ -49,9 +51,13 @@ namespace Octopus.Tentacle.Tests.Integration
             Directory.Exists(startScriptWorkspaceDirectory).Should().BeTrue("Workspace should not have been cleaned up");
 
             File.WriteAllText(waitBeforeCompletingScriptFile, "Write file that makes script continue executing");
-            await runningScriptTask;
+            var runningScriptResult = await runningScriptTask;
 
-            Directory.Exists(startScriptWorkspaceDirectory).Should().BeFalse("Workspace should be naturally cleaned up after completion");
+            runningScriptResult.LogExecuteScriptOutput(Logger);
+
+            runningScriptResult.ScriptExecutionResult.ExitCode.Should().Be(0, "Script should have completed successfully");
+            runningScriptResult.ScriptExecutionResult.State.Should().Be(ProcessState.Complete, "Script should have completed successfully");
+            Directory.Exists(startScriptWorkspaceDirectory).Should().BeFalse($"Workspace {startScriptWorkspaceDirectory} should have been cleaned up when CompleteScript was called");
         }
 
         [Test]

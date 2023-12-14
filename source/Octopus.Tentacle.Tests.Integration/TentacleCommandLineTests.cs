@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -15,6 +16,7 @@ using NUnit.Framework;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.TestAttributes;
 using Octopus.Tentacle.Util;
+using Octopus.Tentacle.Variables;
 using Polly;
 
 namespace Octopus.Tentacle.Tests.Integration
@@ -30,7 +32,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task TentacleExeNoArguments(TentacleConfigurationTestCase tc)
         {
-            var (exitCode, stdout, stderr) = await RunCommand(tc);
+            var (exitCode, stdout, stderr) = await RunCommand(tc, null);
             
             exitCode.Should().Be(2, "the exit code should be 2 if the command wasn't understood");
             stdout.Should().StartWithEquivalentOf("Usage: Tentacle <command> [<options>]", "should show help by default if no other commands are specified");
@@ -42,7 +44,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task UnknownCommand(TentacleConfigurationTestCase tc)
         {
-            var (exitCode, stdout, stderr) = await RunCommand(tc, "unknown-command");
+            var (exitCode, stdout, stderr) = await RunCommand(tc, null, "unknown-command");
             
             exitCode.Should().Be(2, "the exit code should be 2 if the command wasn't understood");
             stderr.Should().StartWithEquivalentOf("Command 'unknown-command' is not supported", "the error should clearly indicate the command which is not understood");
@@ -53,7 +55,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task UnknownArgument(TentacleConfigurationTestCase tc)
         {
-            var (exitCode, stdout, stderr) = await RunCommand(tc, "version", "--unknown=argument");
+            var (exitCode, stdout, stderr) = await RunCommand(tc, null, "version", "--unknown=argument");
             
             exitCode.Should().Be(1, "the exit code should be 1 if the command has unknown arguments");
             stdout.Should().BeNullOrEmpty("the error message should be written to stderr, not stdout");
@@ -64,7 +66,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task InvalidArgument(TentacleConfigurationTestCase tc)
         {
-            var (exitCode, stdout, stderr) = await RunCommand(tc, "version", "--format=unsupported");
+            var (exitCode, stdout, stderr) = await RunCommand(tc, null, "version", "--format=unsupported");
             
             exitCode.Should().Be(1, "the exit code should be 1 if the command has unknown arguments");
             stdout.Should().BeNullOrEmpty("the error message should be written to stderr, not stdout");
@@ -75,7 +77,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task NoConsoleLoggingSwitchStillSilentlySupportedForBackwardsCompat(TentacleConfigurationTestCase tc)
         {
-            var (_, _, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, "version", "--noconsolelogging");
+            var (_, _, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "version", "--noconsolelogging");
 
             stderr.Should().BeNullOrEmpty();
         }
@@ -84,7 +86,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task NoLogoSwitchStillSilentlySupportedForBackwardsCompat(TentacleConfigurationTestCase tc)
         {
-            var (_, _, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, "version", "--nologo");
+            var (_, _, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "version", "--nologo");
 
             stderr.Should().BeNullOrEmpty();
         }
@@ -93,7 +95,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task ConsoleSwitchStillSilentlySupportedForBackwardsCompat(TentacleConfigurationTestCase tc)
         {
-            var (_, _, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, "version", "--console");
+            var (_, _, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "version", "--console");
 
             stderr.Should().BeNullOrEmpty();
         }
@@ -102,16 +104,16 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task ShouldSupportFuzzyCommandParsing(TentacleConfigurationTestCase tc)
         {
-            await RunCommandAndAssertExitsWithSuccessExitCode(tc, "version");
-            await RunCommandAndAssertExitsWithSuccessExitCode(tc, "--version");
-            await RunCommandAndAssertExitsWithSuccessExitCode(tc, "/version");
+            await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "version");
+            await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "--version");
+            await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "/version");
         }
 
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task VersionCommandTextFormat(TentacleConfigurationTestCase tc)
         {
-            var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, "version");
+            var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "version");
 
             var expectedVersion = GetVersionInfo(tc);
 
@@ -123,7 +125,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task VersionCommandJsonFormat(TentacleConfigurationTestCase tc)
         {
-            var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, "version", "--format=json");
+            var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "version", "--format=json");
 
             var expectedVersion = GetVersionInfo(tc);
             var output = JObject.Parse(stdout);
@@ -140,7 +142,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task CanGetHelpForHelp(TentacleConfigurationTestCase tc)
         {
-            var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, "help", "--help");
+            var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "help", "--help");
             stderr.Should().BeNullOrEmpty();
 
             stdout.Should().Be(
@@ -161,7 +163,7 @@ Or one of the common options:
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task HelpAsSwitchShouldShowCommandSpecificHelp(TentacleConfigurationTestCase tc)
         {
-            var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, "version", "--help");
+            var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "version", "--help");
             stderr.Should().BeNullOrEmpty();
 
             stdout.Should().Be(
@@ -182,7 +184,7 @@ Or one of the common options:
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task GeneralHelpAsJsonCanBeParsedByAutomationScripts(TentacleConfigurationTestCase tc)
         {
-            var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, "help", "--format=json");
+            var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "help", "--format=json");
 
             stderr.Should().BeNullOrEmpty();
             var help = JsonConvert.DeserializeAnonymousType(
@@ -215,7 +217,7 @@ Or one of the common options:
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task CommandSpecificHelpAsJsonCanBeParsedByAutomationScripts(TentacleConfigurationTestCase tc)
         {
-            var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, "version", "--help", "--format=json");
+            var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "version", "--help", "--format=json");
 
             stderr.Should().BeNullOrEmpty();
             var help = JsonConvert.DeserializeAnonymousType(
@@ -243,7 +245,7 @@ Or one of the common options:
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task CommandSpecificHelpAsJsonLooksSensibleToHumans(TentacleConfigurationTestCase tc)
         {
-            var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, "version", "--help", "--format=json");
+            var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "version", "--help", "--format=json");
             stderr.Should().BeNullOrEmpty();
 
             stdout.Should().Be(
@@ -270,7 +272,7 @@ Or one of the common options:
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task HelpForInstanceSpecificCommandsAlwaysWorks(TentacleConfigurationTestCase tc)
         {
-            var (_, stdout, stderr) = await RunCommand(tc, "help", "--format=json");
+            var (_, stdout, stderr) = await RunCommand(tc, null, "help", "--format=json");
 
             stderr.Should().BeNullOrEmpty();
             var help = JsonConvert.DeserializeAnonymousType(
@@ -292,7 +294,7 @@ Or one of the common options:
 
             var failed = help.Commands.Select(async c =>
                     {
-                        var (exitCode2, stdout2, stderr2) = await RunCommand(tc,$"{c.Name}", "--help");
+                        var (exitCode2, stdout2, stderr2) = await RunCommand(tc, null,$"{c.Name}", "--help");
                         return new
                         {
                             Command = c,
@@ -330,7 +332,10 @@ The details are logged above. These commands probably need to take Lazy<T> depen
         [NonParallelizable]
         public async Task InvalidInstance(TentacleConfigurationTestCase tc)
         {
-            var (exitCode, stdout, stderr) = await RunCommand(tc, "show-thumbprint", "--instance=invalidinstance");
+            var (exitCode, stdout, stderr) = await RunCommand(
+                tc, 
+                null,
+                "show-thumbprint", "--instance=invalidinstance");
             
             exitCode.Should().Be(1, $"the exit code should be 1 if the instance is not able to be resolved");
             stderr.Should().ContainEquivalentOf("Instance invalidinstance of tentacle has not been configured", "the error message should make it clear the instance has not been configured");
@@ -345,7 +350,11 @@ The details are logged above. These commands probably need to take Lazy<T> depen
         public async Task ShowThumbprintCommandText(TentacleConfigurationTestCase tc)
         {
             await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
-            var (exitCode, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, "show-thumbprint", $"--instance={clientAndTentacle.RunningTentacle.InstanceName}");
+            await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
+            var (exitCode, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
+                tc, 
+                clientAndTentacle.RunningTentacle.RunTentacleEnvironmentVariables, 
+                "show-thumbprint", $"--instance={clientAndTentacle.RunningTentacle.InstanceName}");
 
             exitCode.Should().Be(0, $"we expected the command to succeed.\r\nStdErr: '{stderr}'\r\nStdOut: '{stdout}'");
             stdout.Should().Be(Support.Certificates.TentaclePublicThumbprint, "the thumbprint should be written directly to stdout");
@@ -359,7 +368,11 @@ The details are logged above. These commands probably need to take Lazy<T> depen
         public async Task ShowThumbprintCommandJson(TentacleConfigurationTestCase tc)
         {
             await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
-            var (exitCode, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, "show-thumbprint", $"--instance={clientAndTentacle.RunningTentacle.InstanceName}", "--format=json");
+            await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
+            var (exitCode, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
+                tc, 
+                clientAndTentacle.RunningTentacle.RunTentacleEnvironmentVariables,
+                "show-thumbprint", $"--instance={clientAndTentacle.RunningTentacle.InstanceName}", "--format=json");
             
             exitCode.Should().Be(0, $"we expected the command to succeed.\r\nStdErr: '{stderr}'\r\nStdOut: '{stdout}'");
             stdout.Should().Be(JsonConvert.SerializeObject(new { Thumbprint = Support.Certificates.TentaclePublicThumbprint }), "the thumbprint should be written directly to stdout as JSON");
@@ -373,7 +386,11 @@ The details are logged above. These commands probably need to take Lazy<T> depen
         public async Task ListInstancesCommandText(TentacleConfigurationTestCase tc)
         {
             await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
-            var (exitCode, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, "list-instances", "--format=text");
+            await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
+            var (exitCode, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
+                tc, 
+                clientAndTentacle.RunningTentacle.RunTentacleEnvironmentVariables, 
+                "list-instances", "--format=text");
             
             exitCode.Should().Be(0, $"we expected the command to succeed.\r\nStdErr: '{stderr}'\r\nStdOut: '{stdout}'");
             var configPath = Path.Combine(clientAndTentacle.RunningTentacle.HomeDirectory, clientAndTentacle.RunningTentacle.InstanceName + ".cfg");
@@ -388,7 +405,11 @@ The details are logged above. These commands probably need to take Lazy<T> depen
         public async Task ListInstancesCommandJson(TentacleConfigurationTestCase tc)
         {
             await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
-            var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, "list-instances", "--format=json");
+            await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
+            var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
+                tc, 
+                clientAndTentacle.RunningTentacle.RunTentacleEnvironmentVariables, 
+                "list-instances", "--format=json");
             
             stdout.Should().Contain($"\"InstanceName\": \"{clientAndTentacle.RunningTentacle.InstanceName}\"", "the current instance should be listed");
             var configPath = Path.Combine(clientAndTentacle.RunningTentacle.HomeDirectory, clientAndTentacle.RunningTentacle.InstanceName + ".cfg");
@@ -404,9 +425,14 @@ The details are logged above. These commands probably need to take Lazy<T> depen
         public async Task ShouldLogStartupDiagnosticsToInstanceLogFileOnly(TentacleConfigurationTestCase tc)
         {
             await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
+            await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
+
             var startingLogText = clientAndTentacle.RunningTentacle.ReadAllLogFileText();
 
-            var (exitCode, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, "show-thumbprint", $"--instance={clientAndTentacle.RunningTentacle.InstanceName}");
+            var (exitCode, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
+                tc, 
+                clientAndTentacle.RunningTentacle.RunTentacleEnvironmentVariables, 
+                "show-thumbprint", $"--instance={clientAndTentacle.RunningTentacle.InstanceName}");
 
             try
             {
@@ -425,7 +451,6 @@ The details are logged above. These commands probably need to take Lazy<T> depen
                             {
                                 throw new NotLoggedYetException();
                             }
-
                             return newLog;
                         });
 
@@ -470,7 +495,7 @@ The details are logged above. These commands probably need to take Lazy<T> depen
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task HelpAsFirstArgumentShouldShowCommandSpecificHelp(TentacleConfigurationTestCase tc)
         {
-            var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, "help", "version");
+            var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "help", "version");
             stderr.Should().BeNullOrEmpty();
 
             stdout.Should().Be(
@@ -494,7 +519,12 @@ Or one of the common options:
         public async Task ShowConfigurationCommand(TentacleConfigurationTestCase tc)
         {
             await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
-            var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, "show-configuration", $"--instance={clientAndTentacle.RunningTentacle.InstanceName}");
+            await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
+            var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
+                tc, 
+                clientAndTentacle.RunningTentacle.RunTentacleEnvironmentVariables, 
+                "show-configuration", $"--instance={clientAndTentacle.RunningTentacle.InstanceName}");
+
             stderr.Should().BeNullOrEmpty();
 
             // Actually parse and query the document just like our consumer will
@@ -510,10 +540,22 @@ Or one of the common options:
         [NonParallelizable]
         public async Task ShowConfigurationCommandOnPartiallyConfiguredTentacle(TentacleConfigurationTestCase tc)
         {
+            using var homeDirectory = new TemporaryDirectory();
+            var environmentVariables = new Dictionary<string, string?> { { EnvironmentVariables.TentacleMachineConfigurationHomeDirectory, homeDirectory.DirectoryPath } };
+
             var instanceId = Guid.NewGuid().ToString();
             using var temporaryDirectory = new TemporaryDirectory();
-            await RunCommandAndAssertExitsWithSuccessExitCode(tc, "create-instance", $"--instance={instanceId}", "--config", Path.Combine(temporaryDirectory.DirectoryPath, instanceId + ".cfg"));
-            var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, "show-configuration", $"--instance={instanceId}");
+            await RunCommandAndAssertExitsWithSuccessExitCode(
+                tc, 
+                environmentVariables,
+                "create-instance", $"--instance={instanceId}", "--config", Path.Combine(temporaryDirectory.DirectoryPath, instanceId + ".cfg"));
+
+            var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
+                tc, 
+                environmentVariables,
+                "show-configuration", 
+                $"--instance={instanceId}");
+
             stderr.Should().BeNullOrEmpty();
 
             // Actually parse and query the document just like our consumer will
@@ -528,7 +570,12 @@ Or one of the common options:
         public async Task ShowConfigurationCommandLooksSensibleToHumans(TentacleConfigurationTestCase tc)
         {
             await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
-            var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, "show-configuration", $"--instance={clientAndTentacle.RunningTentacle.InstanceName}");
+            await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
+            var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
+                tc, 
+                clientAndTentacle.RunningTentacle.RunTentacleEnvironmentVariables,
+                "show-configuration", $"--instance={clientAndTentacle.RunningTentacle.InstanceName}");
+
             stderr.Should().BeNullOrEmpty();
 
             if (tc.TentacleType == TentacleType.Polling)
@@ -621,10 +668,19 @@ Or one of the common options:
         public async Task WatchdogCreateAndDeleteCommand(TentacleConfigurationTestCase tc)
         {
             await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
-            var create = await RunCommandAndAssertExitsWithSuccessExitCode(tc, "watchdog", "--create", $"--instances={clientAndTentacle.RunningTentacle.InstanceName}");
+            await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
+            var create = await RunCommandAndAssertExitsWithSuccessExitCode(
+                tc, 
+                clientAndTentacle.RunningTentacle.RunTentacleEnvironmentVariables,
+                "watchdog", "--create", $"--instances={clientAndTentacle.RunningTentacle.InstanceName}");
+
             create.StdError.Should().BeNullOrEmpty();
             create.StdOut.Should().ContainEquivalentOf("Creating watchdog task");
-            var delete = await RunCommandAndAssertExitsWithSuccessExitCode(tc, "watchdog", "--delete", $"--instances={clientAndTentacle.RunningTentacle.InstanceName}");
+            var delete = await RunCommandAndAssertExitsWithSuccessExitCode(
+                tc, 
+                clientAndTentacle.RunningTentacle.RunTentacleEnvironmentVariables,
+                "watchdog", "--delete", $"--instances={clientAndTentacle.RunningTentacle.InstanceName}");
+
             delete.StdError.Should().BeNullOrEmpty();
             delete.StdOut.Should().ContainEquivalentOf("Removing watchdog task");
         }
@@ -642,15 +698,35 @@ Or one of the common options:
             return FileVersionInfo.GetVersionInfo($"{tentacleExe}.dll");
         }
 
-        async Task<(int ExitCode, string StdOut, string StdError)> RunCommandAndAssertExitsWithSuccessExitCode(TentacleConfigurationTestCase tentacleConfigurationTestCase, params string[] arguments)
+        async Task<(int ExitCode, string StdOut, string StdError)> RunCommandAndAssertExitsWithSuccessExitCode(
+            TentacleConfigurationTestCase tentacleConfigurationTestCase, 
+            IReadOnlyDictionary<string, string?>? environmentVariables,
+            params string[] arguments)
         {
-            var (exitCode, stdout, stderr) = await RunCommand(tentacleConfigurationTestCase, arguments);
+            var (exitCode, stdout, stderr) = await RunCommand(tentacleConfigurationTestCase, environmentVariables, arguments);
             exitCode.Should().Be(0, $"we expected the command to succeed.\r\nStdErr: '{stderr}'\r\nStdOut: '{stdout}'");
             return (exitCode, stdout, stderr);
         }
 
-        async Task<(int ExitCode, string StdOut, string StdError)> RunCommand(TentacleConfigurationTestCase tentacleConfigurationTestCase, params string[] arguments)
+        async Task<(int ExitCode, string StdOut, string StdError)> RunCommand(
+            TentacleConfigurationTestCase tentacleConfigurationTestCase, 
+            IReadOnlyDictionary<string, string?>? environmentVariables,
+            params string[] arguments)
         {
+            using var tempDirectory = new TemporaryDirectory();
+
+            var environmentVariablesToRunTentacleWith = new Dictionary<string, string?>();
+
+            if (environmentVariables?.Any() == true)
+            {
+                environmentVariablesToRunTentacleWith.AddRange(environmentVariables);
+            }
+
+            if (!environmentVariablesToRunTentacleWith.ContainsKey(EnvironmentVariables.TentacleMachineConfigurationHomeDirectory))
+            {
+                environmentVariablesToRunTentacleWith.Add(EnvironmentVariables.TentacleMachineConfigurationHomeDirectory, tempDirectory.DirectoryPath);
+            }
+
             var tentacleExe = TentacleExeFinder.FindTentacleExe(tentacleConfigurationTestCase.TentacleRuntime);
             var output = new StringBuilder();
             var errorOut = new StringBuilder();
@@ -661,6 +737,7 @@ Or one of the common options:
                     .WithValidation(CommandResultValidation.None)
                     .WithStandardOutputPipe(PipeTarget.ToStringBuilder(output))
                     .WithStandardErrorPipe(PipeTarget.ToStringBuilder(errorOut))
+                    .WithEnvironmentVariables(environmentVariablesToRunTentacleWith)
                     .ExecuteAsync(CancellationToken));
 
             return (result.ExitCode, output.ToString(), errorOut.ToString());

@@ -19,7 +19,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
             ServerThumbprint = serverThumbprint;
         }
-
+        
         internal async Task<RunningTentacle> Build(ILogger log, CancellationToken cancellationToken)
         {
             var instanceName = InstanceNameGenerator();
@@ -46,7 +46,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 cancellationToken);
         }
 
-        private void ConfigureTentacleToPollOctopusServer(string configFilePath, Uri subscriptionId, string applicationDirectory)
+        void ConfigureTentacleToPollOctopusServer(string configFilePath, Uri subscriptionId, string applicationDirectory)
         {
             WithWritableTentacleConfiguration(configFilePath, writableTentacleConfiguration =>
             {

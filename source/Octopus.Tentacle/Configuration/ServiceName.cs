@@ -11,9 +11,6 @@ namespace Octopus.Tentacle.Configuration
 
             switch (application)
             {
-                case ApplicationName.OctopusServer:
-                    name = "OctopusDeploy";
-                    break;
                 case ApplicationName.Tentacle:
                     name = "OctopusDeploy Tentacle";
                     break;
