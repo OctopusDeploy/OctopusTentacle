@@ -37,9 +37,11 @@ namespace Octopus.Tentacle.Configuration.Instances
             else
             {
                 machineConfigurationHomeDirectory = PlatformDetection.IsRunningOnWindows ? 
-                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Octopus") : 
-                    "/etc/octopus";
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Octopus") :
+                "/etc/octopus";
             }
+
+            log.Verbose("Machine configuration home directory is " + machineConfigurationHomeDirectory);
         }
 
         public ApplicationInstanceRecord LoadInstanceDetails(string? instanceName)
