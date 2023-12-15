@@ -76,6 +76,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
         {
             var exitCode = -1;
 
+
             try
             {
                 using var writer = ScriptLog.CreateWriter();
@@ -88,7 +89,19 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                     writer.WriteVerbose($"Deleting Kubernetes Job '{jobName}'");
 
                     //we spawn the job cancellation on a background thread (as this callback runs synchronously)
-                    Task.Run(() => jobService.Delete(scriptTicket, CancellationToken.None), CancellationToken.None);
+                    Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await jobService.Delete(scriptTicket, CancellationToken.None);
+                            writer.WriteVerbose($"Deleted Kubernetes Job '{jobName}'");
+                        }
+                        catch (Exception e)
+                        {
+                            writer.WriteOutput(ProcessOutputSource.StdErr,$"Failed to delete Kubernetes job {jobName}. {e}");
+                        }
+
+                    }, CancellationToken.None);
                 });
 
                 try
