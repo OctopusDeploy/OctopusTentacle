@@ -52,7 +52,7 @@ namespace Octopus.Tentacle.Kubernetes
                     Suspend = true
                 }
             };
-            var patchYaml = KubernetesYaml.Serialize(patchJob);
+            var patchYaml = KubernetesJson.Serialize(patchJob);
             await Client.PatchNamespacedJobAsync(new V1Patch(patchYaml, V1Patch.PatchType.MergePatch), jobName, KubernetesConfig.Namespace, cancellationToken: cancellationToken);
         }
 
