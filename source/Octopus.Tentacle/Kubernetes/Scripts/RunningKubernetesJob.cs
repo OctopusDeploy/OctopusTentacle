@@ -32,7 +32,6 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
         readonly ILog log;
         readonly IScriptStateStore stateStore;
         readonly IKubernetesJobService jobService;
-        readonly IKubernetesPodService podService;
         readonly IKubernetesJobContainerResolver containerResolver;
         CancellationToken scriptCancellationToken;
         readonly string? instanceName;
@@ -51,7 +50,6 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             ILog log,
             IScriptStateStore stateStore,
             IKubernetesJobService jobService,
-            IKubernetesPodService podService,
             IKubernetesJobContainerResolver containerResolver,
             IApplicationInstanceSelector appInstanceSelector,
             CancellationToken scriptCancellationToken)
@@ -62,7 +60,6 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             this.log = log;
             this.stateStore = stateStore;
             this.jobService = jobService;
-            this.podService = podService;
             this.containerResolver = containerResolver;
             this.scriptCancellationToken = scriptCancellationToken;
             ScriptLog = scriptLog;

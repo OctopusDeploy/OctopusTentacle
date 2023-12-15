@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using k8s;
-using k8s.Autorest;
 using k8s.Models;
 using Octopus.Tentacle.Contracts;
 
@@ -11,7 +9,6 @@ namespace Octopus.Tentacle.Kubernetes
 {
     public interface IKubernetesJobService
     {
-        Task<V1Job?> TryGet(ScriptTicket scriptTicket, CancellationToken cancellationToken);
         string BuildJobName(ScriptTicket scriptTicket);
         Task CreateJob(V1Job job, CancellationToken cancellationToken);
         Task Delete(ScriptTicket scriptTicket, CancellationToken cancellationToken);
@@ -24,21 +21,6 @@ namespace Octopus.Tentacle.Kubernetes
         public KubernetesJobService(IKubernetesClientConfigProvider configProvider)
             : base(configProvider)
         {
-        }
-
-        public async Task<V1Job?> TryGet(ScriptTicket scriptTicket, CancellationToken cancellationToken)
-        {
-            var jobName = BuildJobName(scriptTicket);
-
-            try
-            {
-                return await Client.ReadNamespacedJobStatusAsync(jobName, KubernetesConfig.Namespace, cancellationToken: cancellationToken);
-            }
-            catch (HttpOperationException opException)
-                when (opException.Response.StatusCode == HttpStatusCode.NotFound)
-            {
-                return null;
-            }
         }
 
         public async Task SuspendJob(ScriptTicket scriptTicket, CancellationToken cancellationToken)
