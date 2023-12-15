@@ -32,6 +32,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
         readonly ILog log;
         readonly IScriptStateStore stateStore;
         readonly IKubernetesJobService jobService;
+        readonly IKubernetesPodService podService;
         readonly IKubernetesJobContainerResolver containerResolver;
         CancellationToken scriptCancellationToken;
         readonly string? instanceName;
@@ -52,6 +53,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             ILog log,
             IScriptStateStore stateStore,
             IKubernetesJobService jobService,
+            IKubernetesPodService podService,
             IKubernetesJobContainerResolver containerResolver,
             IApplicationInstanceSelector appInstanceSelector)
         {
@@ -61,6 +63,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             this.log = log;
             this.stateStore = stateStore;
             this.jobService = jobService;
+            this.podService = podService;
             this.containerResolver = containerResolver;
             this.scriptCancellationToken = scriptCancellationToken;
             ScriptLog = scriptLog;
@@ -76,7 +79,6 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
         {
             var exitCode = -1;
 
-
             try
             {
                 using var writer = ScriptLog.CreateWriter();
@@ -86,19 +88,20 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                 using var cancellationTokenRegistration = scriptCancellationToken.Register(() =>
                 {
                     writer.WriteOutput(ProcessOutputSource.StdOut, "Script execution canceled.");
-                    writer.WriteVerbose($"Deleting Kubernetes Job '{jobName}'");
+                    writer.WriteVerbose($"Cancelling Kubernetes Job '{jobName}'.");
 
-                    //we spawn the job cancellation on a background thread (as this callback runs synchronously)
+                    //we spawn the pod cancellation on a background thread (as this callback runs synchronously)
                     Task.Run(async () =>
                     {
                         try
                         {
-                            await jobService.Delete(scriptTicket, CancellationToken.None);
-                            writer.WriteVerbose($"Deleted Kubernetes Job '{jobName}'");
+                            //to cancel the job we just kill the underlying pod(s)
+                            await podService.DeletePodsForJob(jobName, CancellationToken.None);
+                            writer.WriteVerbose($"Cancelled Kubernetes Job '{jobName}'.");
                         }
                         catch (Exception e)
                         {
-                            writer.WriteOutput(ProcessOutputSource.StdErr,$"Failed to delete Kubernetes job {jobName}. {e}");
+                            writer.WriteOutput(ProcessOutputSource.StdErr,$"Failed to cancel Kubernetes job {jobName}. {e}");
                         }
 
                     }, CancellationToken.None);
@@ -278,7 +281,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                 }
             };
 
-            writer.WriteVerbose($"Executing script in Kubernetes Job '{job.Name()}'");
+            writer.WriteVerbose($"Executing script in Kubernetes Job '{job.Name()}'.");
 
             await jobService.CreateJob(job, cancellationToken);
         }
