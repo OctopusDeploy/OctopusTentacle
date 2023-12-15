@@ -87,15 +87,16 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                 //we use a using to make sure this callback is deregistered
                 using var cancellationTokenRegistration = scriptCancellationToken.Register(() =>
                 {
-                    writer.WriteVerbose($"Cancelling Kubernetes Job '{jobName}'.");
-
-                    //we spawn the pod cancellation on a background thread (as this callback runs synchronously)
+                    //we spawn the job cancellation on a background thread (as this callback runs synchronously)
                     Task.Run(async () =>
                     {
                         try
                         {
-                            //to cancel the job we just kill the underlying pod(s)
-                            await podService.DeletePodsForJob(jobName, CancellationToken.None);
+                            writer.WriteVerbose($"Cancelling Kubernetes Job '{jobName}'.");
+                            //first we suspend the job, which terminates the underlying pods
+                            await jobService.SuspendJob(scriptTicket, CancellationToken.None);
+                            //then we delete the job (because we no longer need it)
+                            await jobService.Delete(scriptTicket, CancellationToken.None);
                             writer.WriteVerbose($"Cancelled Kubernetes Job '{jobName}'.");
                         }
                         catch (Exception e)

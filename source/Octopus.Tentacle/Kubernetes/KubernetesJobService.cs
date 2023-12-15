@@ -16,6 +16,7 @@ namespace Octopus.Tentacle.Kubernetes
         Task CreateJob(V1Job job, CancellationToken cancellationToken);
         Task Delete(ScriptTicket scriptTicket, CancellationToken cancellationToken);
         Task Watch(ScriptTicket scriptTicket, Func<V1Job, bool> onChange, Action<Exception> onError, CancellationToken cancellationToken);
+        Task SuspendJob(ScriptTicket scriptTicket, CancellationToken cancellationToken);
     }
 
     public class KubernetesJobService : KubernetesService, IKubernetesJobService
@@ -38,6 +39,18 @@ namespace Octopus.Tentacle.Kubernetes
             {
                 return null;
             }
+        }
+
+        public async Task SuspendJob(ScriptTicket scriptTicket, CancellationToken cancellationToken)
+        {
+            var jobName = BuildJobName(scriptTicket);
+
+            var patchSpec = new V1JobSpec
+            {
+                Suspend = true
+            };
+            var patchYaml = KubernetesYaml.Serialize(patchSpec);
+            await Client.PatchNamespacedJobAsync(new V1Patch(patchYaml, V1Patch.PatchType.MergePatch), jobName, KubernetesConfig.Namespace, cancellationToken: cancellationToken);
         }
 
         public async Task Watch(ScriptTicket scriptTicket, Func<V1Job, bool> onChange, Action<Exception> onError, CancellationToken cancellationToken)
@@ -65,7 +78,7 @@ namespace Octopus.Tentacle.Kubernetes
             }
         }
 
-        public string BuildJobName(ScriptTicket scriptTicket) => $"octopus-{scriptTicket.TaskId}".ToLowerInvariant();
+        public string BuildJobName(ScriptTicket scriptTicket) => $"octopus-job-{scriptTicket.TaskId}".ToLowerInvariant();
 
         public async Task CreateJob(V1Job job, CancellationToken cancellationToken) => await Client.CreateNamespacedJobAsync(job, KubernetesConfig.Namespace, cancellationToken: cancellationToken);
 
