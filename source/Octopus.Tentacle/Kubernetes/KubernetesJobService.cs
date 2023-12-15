@@ -45,11 +45,14 @@ namespace Octopus.Tentacle.Kubernetes
         {
             var jobName = BuildJobName(scriptTicket);
 
-            var patchSpec = new V1JobSpec
+            var patchJob = new V1Job
             {
-                Suspend = true
+                Spec = new V1JobSpec
+                {
+                    Suspend = true
+                }
             };
-            var patchYaml = KubernetesYaml.Serialize(patchSpec);
+            var patchYaml = KubernetesYaml.Serialize(patchJob);
             await Client.PatchNamespacedJobAsync(new V1Patch(patchYaml, V1Patch.PatchType.MergePatch), jobName, KubernetesConfig.Namespace, cancellationToken: cancellationToken);
         }
 
