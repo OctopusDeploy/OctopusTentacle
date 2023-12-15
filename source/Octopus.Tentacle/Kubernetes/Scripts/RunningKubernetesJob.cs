@@ -43,19 +43,18 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
         public ProcessState State { get; private set; }
         public IScriptLog ScriptLog { get; }
 
-
         public RunningKubernetesJob(
             IScriptWorkspace workspace,
             IScriptLog scriptLog,
             ScriptTicket scriptTicket,
             string taskId,
-            CancellationToken scriptCancellationToken,
             ILog log,
             IScriptStateStore stateStore,
             IKubernetesJobService jobService,
             IKubernetesPodService podService,
             IKubernetesJobContainerResolver containerResolver,
-            IApplicationInstanceSelector appInstanceSelector)
+            IApplicationInstanceSelector appInstanceSelector,
+            CancellationToken scriptCancellationToken)
         {
             this.workspace = workspace;
             this.scriptTicket = scriptTicket;
@@ -101,7 +100,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                         }
                         catch (Exception e)
                         {
-                            writer.WriteOutput(ProcessOutputSource.StdErr,$"Failed to cancel Kubernetes job {jobName}. {e}");
+                            writer.WriteOutput(ProcessOutputSource.StdErr, $"Failed to cancel Kubernetes job {jobName}. {e}");
                         }
                     }, CancellationToken.None);
                 });
@@ -123,7 +122,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                         RecordScriptHasStarted(writer);
 
                         //we now need to monitor the resulting pod status
-                        exitCode = await MonitorJobAndLogs( writer);
+                        exitCode = await MonitorJobAndLogs(writer);
                     }
                 }
                 catch (OperationCanceledException)
@@ -199,7 +198,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             //if the job was killed by cancellation, then we need to change the exit code
             if (scriptCancellationToken.IsCancellationRequested)
             {
-                resultStatusCode =  ScriptExitCodes.CanceledExitCode;
+                resultStatusCode = ScriptExitCodes.CanceledExitCode;
             }
 
             jobCompletionCancellationTokenSource.Cancel();
