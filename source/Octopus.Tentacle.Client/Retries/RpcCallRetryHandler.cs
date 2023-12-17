@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using Halibut.Exceptions;
 using Octopus.Tentacle.Client.Scripts;
 using Polly;
 using Polly.Timeout;

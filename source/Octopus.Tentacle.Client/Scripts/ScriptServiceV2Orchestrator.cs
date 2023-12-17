@@ -109,7 +109,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
                 // We determine if the call was connecting when cancelled, then assume it's transferring if it is not connecting.
                 // This is the safest option as it will default to the CancelScript CompleteScript path if we are unsure
-                var startScriptCallIsConnecting = ex is ConnectingRequestCancelledException || ex.IsHalibutWrappedConnectingRequestCancelledException();
+                var startScriptCallIsConnecting = ex is ConnectingRequestCancelledException;
 
                 if (!startScriptCallIsConnecting || startScriptCallIsBeingRetried)
                 {
