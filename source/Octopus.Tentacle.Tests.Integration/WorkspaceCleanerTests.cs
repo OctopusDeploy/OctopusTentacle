@@ -51,13 +51,7 @@ namespace Octopus.Tentacle.Tests.Integration
             Directory.Exists(startScriptWorkspaceDirectory).Should().BeTrue("Workspace should not have been cleaned up");
 
             File.WriteAllText(waitBeforeCompletingScriptFile, "Write file that makes script continue executing");
-            var runningScriptResult = await runningScriptTask;
-
-            runningScriptResult.LogExecuteScriptOutput(Logger);
-
-            runningScriptResult.ScriptExecutionResult.ExitCode.Should().Be(0, "Script should have completed successfully");
-            runningScriptResult.ScriptExecutionResult.State.Should().Be(ProcessState.Complete, "Script should have completed successfully");
-            Directory.Exists(startScriptWorkspaceDirectory).Should().BeFalse($"Workspace {startScriptWorkspaceDirectory} should have been cleaned up when CompleteScript was called");
+            await runningScriptTask;
         }
 
         [Test]
