@@ -52,7 +52,10 @@ namespace Octopus.Tentacle.Tests.Integration
                 CancellationToken);
 
             // Wait for the script to start.
-            await Wait.For(() => File.Exists(scriptHasStartFile), CancellationToken);
+            await Wait.For(() => File.Exists(scriptHasStartFile), 
+                TimeSpan.FromSeconds(30),
+                () => throw new Exception("Script did not start"),
+                CancellationToken);
 
             // Now it has started, kill active connections killing the start script request.
             clientTentacle.PortForwarder.CloseExistingConnections();
@@ -111,7 +114,10 @@ namespace Octopus.Tentacle.Tests.Integration
                 async () => await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, inMemoryLog),
                 CancellationToken);
 
-            await Wait.For(() => recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).LastException != null, CancellationToken);
+            await Wait.For(() => recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).LastException != null, 
+                TimeSpan.FromSeconds(60),
+                () => throw new Exception("GetStatus did not error"),
+                CancellationToken);
 
             // Let the script finish.
             File.WriteAllText(waitForFile, "");
@@ -194,7 +200,10 @@ namespace Octopus.Tentacle.Tests.Integration
                         nameof(IAsyncClientScriptServiceV2.GetStatusAsync),
                         async (_, _) =>
                         {
-                            await Wait.For(() => File.Exists(scriptIsRunningFlag), CancellationToken);
+                            await Wait.For(() => File.Exists(scriptIsRunningFlag), 
+                                TimeSpan.FromSeconds(30),
+                                () => throw new Exception("Script did not start"),
+                                CancellationToken);
                             cts.Cancel();
                         })
                     .HookServiceMethod(tentacleConfigurationTestCase,

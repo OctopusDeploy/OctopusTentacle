@@ -452,7 +452,10 @@ namespace Octopus.Tentacle.Tests.Integration
                 null,
                 inMemoryLog);
             
-            await Wait.For(() => recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Completed > 0, CancellationToken);
+            await Wait.For(() => recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Completed > 0, 
+                TimeSpan.FromSeconds(60),
+                () => throw new Exception("Script execution did not complete"),
+                CancellationToken);
 
             // We cancel script execution via the cancellation token. This should trigger the CancelScript RPC call to be made
             testCancellationTokenSource.Cancel();
@@ -519,7 +522,11 @@ namespace Octopus.Tentacle.Tests.Integration
                 inMemoryLog);
 
             Func<Task> action = async () => await executeScriptTask;
-            await Wait.For(() => recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Completed > 0, CancellationToken);
+            await Wait.For(
+                () => recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Completed > 0, 
+                TimeSpan.FromSeconds(60),
+                () => throw new Exception("Script Execution did not complete"),
+                CancellationToken);
 
             // We cancel script execution via the cancellation token. This should trigger the CancelScript RPC call to be made
             testCancellationTokenSource.Cancel();

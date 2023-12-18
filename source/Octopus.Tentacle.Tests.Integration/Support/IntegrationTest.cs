@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading;
+using Halibut.Util;
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 using Octopus.Tentacle.Tests.Integration.Util;
@@ -9,7 +10,7 @@ using Serilog;
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
     [FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
-    public abstract class IntegrationTest
+    public abstract class IntegrationTest : IDisposable
     {
         CancellationTokenSource? cancellationTokenSource;
         public CancellationToken CancellationToken { get; private set; }
@@ -20,7 +21,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         {
             Logger = new SerilogLoggerBuilder().Build().ForContext(GetType());
             Logger.Information("Test started");
-            cancellationTokenSource = new CancellationTokenSource();
+
+            // Time out the cancellation token so we cancel the test if it takes too long
+            // The IntegrationTestTimeout attribute will also cancel the test if it takes too long, but nunit will not call TearDown on the test 
+            // in this scenario and so will fail to cancel the cancellation token and clean up the test gracefully, potentially leading to execution timeout errors
+            cancellationTokenSource = new CancellationTokenSource(IntegrationTestTimeout.TestTimeoutInMilliseconds() - TimeSpan.FromSeconds(5).Milliseconds);
             CancellationToken = cancellationTokenSource.Token;
         }
         
@@ -34,6 +39,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             cancellationTokenSource?.Cancel();
             Logger.Information("Disposing CancellationTokenSource");
             cancellationTokenSource?.Dispose();
+            cancellationTokenSource = null;
             Logger.Information("Finished Test Tearing Down");
         }
 
@@ -96,6 +102,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public static string GetTempTentacleLogPath()
         {
             return Path.Combine(TestContext.CurrentContext.TestDirectory, TestContext.CurrentContext.Test.ID + ".tentaclelog");
+        }
+
+        public void Dispose()
+        {
+            Try.CatchingError(() => cancellationTokenSource?.Cancel(), _ => {});
+            Try.CatchingError(() => cancellationTokenSource?.Dispose(), _ => {});
         }
     }
 }
