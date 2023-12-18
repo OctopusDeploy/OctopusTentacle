@@ -4,11 +4,9 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Tentacle.CommonTestUtils.Builders;
-using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Tests.Integration.Support;
-using Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
 using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
@@ -63,6 +61,8 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var startScriptCommand = new LatestStartScriptCommandBuilder().WithScriptBody(b => b.Print("Hello")).Build();
 
+            string workspaceDirectory = null;
+
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacle(b =>
                 {
@@ -72,17 +72,66 @@ namespace Octopus.Tentacle.Tests.Integration
                     .HookServiceMethod(
                         tentacleConfigurationTestCase,
                         nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync),
-                        (_,_) => throw new NotImplementedException("Force failure to simulate tentacle client crashing, and ensure we do not complete the script"))
+                        (_, _) =>
+                        {
+                            // Ensure the expected workspace directory exists
+                            if (!Directory.Exists(workspaceDirectory))
+                            {
+                                throw new ArgumentException($"Workspace {workspaceDirectory} should exist");
+                            }
+
+                            throw new NotImplementedException("Force failure to simulate tentacle client crashing, and ensure we do not complete the script");
+                        })
                     .Build())
                 .Build(CancellationToken);
+
+            workspaceDirectory = GetWorkspaceDirectoryPath(clientAndTentacle.RunningTentacle.HomeDirectory, startScriptCommand.ScriptTicket.TaskId);
+
+            // Ensure the workspace directory doesn't exist until the script starts to execute
+            if (Directory.Exists(workspaceDirectory))
+            {
+                throw new ArgumentException($"Workspace {workspaceDirectory} should not exist until the script has started running");
+            }
 
             await AssertionExtensions
                 .Should(() => clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, new InMemoryLog()))
                 .ThrowAsync<NotImplementedException>();
 
-            var workspaceDirectory = GetWorkspaceDirectoryPath(clientAndTentacle.RunningTentacle.HomeDirectory, startScriptCommand.ScriptTicket.TaskId);
+            await Wait.For(
+                () =>
+                {
+                    if (Directory.Exists(workspaceDirectory))
+                    {
+                        Logger.Information($"Workspace directory {workspaceDirectory} still exists. Will check again soon...");
 
-            await Wait.For(() => !Directory.Exists(workspaceDirectory), CancellationToken);
+                        return false;
+                    }
+
+                    return true;
+                },
+                TimeSpan.FromSeconds(30),
+                onTimeoutOrCancellation: () =>
+                {
+                    if (Directory.Exists(workspaceDirectory))
+                    {
+                        Logger.Information("Current folders in the directory.");
+                        var directories = Directory.GetDirectories(workspaceDirectory);
+                        foreach (var directory in directories)
+                        {
+                            Logger.Information(directory);
+                        }
+
+                        Logger.Information("Current files in the directory.");
+                        var files = Directory.GetFiles(workspaceDirectory);
+                        foreach (var file in files)
+                        {
+                            Logger.Information(file);
+                        }
+
+                        throw new Exception($"Workspace directory {workspaceDirectory} still exists. This should have been deleted.");
+                    }
+                },
+                CancellationToken);
         }
 
         [Test]

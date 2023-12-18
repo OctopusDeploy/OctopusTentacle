@@ -7,6 +7,21 @@ namespace Octopus.Tentacle.Tests.Integration.Util
 {
     public static class Wait
     {
+        public static async Task For(Func<bool> toBeTrue, TimeSpan timeout, Action onTimeoutOrCancellation, CancellationToken cancellationToken)
+        {
+            using var timeoutCancellationTokenSource = new CancellationTokenSource(timeout);
+            using var linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCancellationTokenSource.Token);
+
+            try
+            {
+                await For(toBeTrue, linkedCancellationTokenSource.Token);
+            }
+            catch (OperationCanceledException) when (linkedCancellationTokenSource.IsCancellationRequested)
+            {
+                onTimeoutOrCancellation();
+            }
+        }
+
         public static async Task For(Func<bool> toBeTrue, CancellationToken cancellationToken)
         {
             while (true)

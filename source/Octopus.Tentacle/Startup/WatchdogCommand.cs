@@ -39,7 +39,7 @@ namespace Octopus.Tentacle.Startup
                     log.Info("Creating watchdog task");
                 });
             Options.Add("delete",
-                "Delete the watchdog task for the given instances",
+                "TryDelete the watchdog task for the given instances",
                 v =>
                 {
                     deleteTask = true;

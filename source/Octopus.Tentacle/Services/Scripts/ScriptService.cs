@@ -76,7 +76,7 @@ namespace Octopus.Tentacle.Services.Scripts
             cancellationTokens.TryRemove(command.Ticket.TaskId, out _);
             var response = GetResponse(command.Ticket, script, command.LastLogSequence);
             var workspace = workspaceFactory.GetWorkspace(command.Ticket);
-            await workspace.Delete(cancellationToken);
+            await workspace.TryDelete(cancellationToken);
             return response;
         }
 

@@ -17,6 +17,7 @@ namespace Octopus.Tentacle.Scripts
         string? ScriptMutexName { get; set; }
         void BootstrapScript(string scriptBody);
         string ResolvePath(string fileName);
+        Task TryDelete(CancellationToken cancellationToken);
         Task Delete(CancellationToken cancellationToken);
         IScriptLog CreateLog();
         string LogFilePath { get; }

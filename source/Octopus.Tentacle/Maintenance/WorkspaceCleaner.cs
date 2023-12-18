@@ -72,10 +72,15 @@ namespace Octopus.Tentacle.Maintenance
 
                     await workspace.Delete(cancellationToken);
                     deletedCount++;
+
+                    log.Verbose($"Deleted workspace: {workspace.WorkingDirectory}");
                 }
                 catch (Exception e)
                 {
-                    log.Warn(e, $"Could not delete workspace {workspace.WorkingDirectory}.");
+                    // If we can't delete the workspace consistently then we could end up spamming the logs with errors
+                    // By default Tentacle only logs Info+ so by logging Verbose we limit the amount of spam to only Tentacles that 
+                    // have been configured for DEBUG logging
+                    log.Verbose(e, $"Could not delete workspace {workspace.WorkingDirectory}.");
                 }
             }
 

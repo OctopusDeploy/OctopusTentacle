@@ -475,7 +475,7 @@ namespace Octopus.Tentacle.Tests.Integration
         private async Task CleanupWorkspace(ScriptTicket ticket, CancellationToken cancellationToken)
         {
             var workspace = workspaceFactory.GetWorkspace(ticket);
-            await workspace.Delete(cancellationToken);
+            await workspace.TryDelete(cancellationToken);
         }
 
         (StartScriptCommandV2 StartScriptCommand, FileInfo FileScriptWillCreate) GetStartScriptCommandForScriptThatCreatesAFile(ScriptTicket scriptTicket, int? scriptDelayInSeconds = null)
