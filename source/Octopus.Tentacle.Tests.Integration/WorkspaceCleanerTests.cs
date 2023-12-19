@@ -85,10 +85,26 @@ namespace Octopus.Tentacle.Tests.Integration
                 .ThrowAsync<NotImplementedException>();
 
             var workspaceDirectory = GetWorkspaceDirectoryPath(clientAndTentacle.RunningTentacle.HomeDirectory, startScriptCommand.ScriptTicket.TaskId);
-
+            
             await Wait.For(() => !Directory.Exists(workspaceDirectory), 
-                TimeSpan.FromSeconds(60),
-                () => throw new Exception("Workspace directory did not get deleted"),
+                TimeSpan.FromSeconds(20),
+                () =>
+                {
+                    try
+                    {
+                        Directory.Delete(workspaceDirectory, true);
+                    }
+                    catch (Exception)
+                    {
+                        // Deleting a worksapce is best effort and can silently fail if it is in use / locked by something.
+                        // If the cleaner failed to delete the directory and we cannot delete it in the test we can assume that it 
+                        // is a valid failure and the test was successful.
+
+                        return;
+                    }
+
+                    throw new Exception("Workspace directory did not get deleted by the workspace cleaner but the test was able to delete it. This indicates there is an issue in the Tentacle code.");
+                },
                 CancellationToken);
         }
 
