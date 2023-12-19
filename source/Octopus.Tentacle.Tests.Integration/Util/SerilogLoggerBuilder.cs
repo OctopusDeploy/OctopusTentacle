@@ -28,12 +28,12 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         {
             const string teamCityOutputTemplate =
                 "{TestHash} "
-                + "{Timestamp:HH:mm:ss.fff zzz} "
+                + "{Timestamp:HH:mm:ss.fff zzz} {Level:u3} "
                 + "[{ShortContext}] "
                 + "{Message}{NewLine}{Exception}";
 
             const string localOutputTemplate =
-                "{Timestamp:HH:mm:ss.fff zzz} "
+                "{Timestamp:HH:mm:ss.fff zzz} {Level:u3} "
                 + "[{ShortContext}] "
                 + "{Message}{NewLine}{Exception}";
 
@@ -42,9 +42,9 @@ namespace Octopus.Tentacle.Tests.Integration.Util
                 : localOutputTemplate;
 
             Logger = new LoggerConfiguration()
-                .MinimumLevel.Verbose()
-                .WriteTo.Sink(new NonProgressNUnitSink(new MessageTemplateTextFormatter(nUnitOutputTemplate)), LogEventLevel.Debug)
-                .WriteTo.Sink(new TraceLogsForFailedTestsSink(new MessageTemplateTextFormatter(localOutputTemplate)))
+                .MinimumLevel.Debug()
+                .WriteTo.Sink(new NonProgressNUnitSink(new MessageTemplateTextFormatter(nUnitOutputTemplate)), LogEventLevel.Information)
+                .WriteTo.Sink(new TraceLogsForFailedTestsSink(new MessageTemplateTextFormatter(localOutputTemplate)), LogEventLevel.Debug)
                 .CreateLogger();
         }
 
@@ -151,7 +151,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
                 var testName = TestContext.CurrentContext.Test.FullName;
 
                 if (!TraceLoggers.TryGetValue(testName, out var traceLogger))
-                    throw new Exception($"Could not find trace logger for test '{testName}'");
+                    return;
 
                 var output = new StringWriter();
                 if (logEvent.Properties.TryGetValue("SourceContext", out var sourceContext))

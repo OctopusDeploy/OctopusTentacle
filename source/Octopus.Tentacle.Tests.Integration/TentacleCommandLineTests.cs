@@ -14,6 +14,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using Octopus.Tentacle.Tests.Integration.Support;
+using Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods;
 using Octopus.Tentacle.Tests.Integration.Support.TestAttributes;
 using Octopus.Tentacle.Util;
 using Octopus.Tentacle.Variables;
@@ -733,6 +734,15 @@ Or one of the common options:
             var output = new StringBuilder();
             var errorOut = new StringBuilder();
             
+            // The tests increase the logging level for Tentacle, this impacts the command line tests as the output 
+            // is now different than expected. We revert the loggign level just for these command line tests.
+            using var tempBinariesDirectory = new TemporaryDirectory();
+            var tentacleExeFileInfo = new FileInfo(tentacleExe);
+            tentacleExeFileInfo.Directory.CopyTo(tempBinariesDirectory.DirectoryPath);
+            File.Delete(Path.Combine(tempBinariesDirectory.DirectoryPath, "Tentacle.exe.nlog"));
+            File.Move(Path.Combine(tempBinariesDirectory.DirectoryPath, "Tentacle.exe.nlog_original"), Path.Combine(tempBinariesDirectory.DirectoryPath, "Tentacle.exe.nlog"));
+            tentacleExe = Path.Combine(tempBinariesDirectory.DirectoryPath, tentacleExeFileInfo.Name);
+
             var result = await RetryHelper.RetryAsync<CommandResult, CommandExecutionException>(
                 () => Cli.Wrap(tentacleExe)
                     .WithArguments(arguments)

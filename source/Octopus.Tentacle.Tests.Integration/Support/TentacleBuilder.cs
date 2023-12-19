@@ -424,7 +424,20 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             async Task ProcessLogs(string s, CancellationToken ct)
             {
                 await Task.CompletedTask;
-                logger.Information($"[{commandName}] " + s);
+
+                if (s.StartsWith("[TRACE]"))
+                {
+                    logger.Verbose($"[{commandName}] " + s);
+                }
+                else if (s.StartsWith("[DEBUG]"))
+                {
+                    logger.Debug($"[{commandName}] " + s);
+                }
+                else
+                {
+                    logger.Information($"[{commandName}] " + s);
+                }
+
                 commandOutput(s);
             }
 
