@@ -494,7 +494,10 @@ namespace Octopus.Tentacle.Tests.Integration
                 cancelExecutionCancellationTokenSource.Token);
 
             Logger.Information("Waiting for the RPC Call to start");
-            await Wait.For(() => rpcCallHasStarted.Value, CancellationToken);
+            await Wait.For(() => rpcCallHasStarted.Value, 
+                TimeSpan.FromSeconds(30),
+                () => throw new Exception("RPC call did not start"),
+                CancellationToken);
             Logger.Information("RPC Call has start");
 
             var cancellationDuration = new Stopwatch();

@@ -50,13 +50,19 @@ namespace Octopus.Tentacle.Tests.Integration
             var firstScriptExecution = Task.Run(async () => await tentacleClient.ExecuteScript(firstStartScriptCommand, CancellationToken));
 
             // Wait for the first script to start running
-            await Wait.For(() => File.Exists(firstScriptStartFile), CancellationToken);
+            await Wait.For(() => File.Exists(firstScriptStartFile), 
+                TimeSpan.FromSeconds(30),
+                () => throw new Exception("Script did not start"),
+                CancellationToken);
             Logger.Information("First script is now running");
 
             var secondScriptExecution = Task.Run(async () => await tentacleClient.ExecuteScript(secondStartScriptCommand, CancellationToken));
 
             // Wait for the second script start script RPC call to return.
-            await Wait.For(() => recordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Completed == 2, CancellationToken);
+            await Wait.For(() => recordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Completed == 2, 
+                TimeSpan.FromSeconds(60),
+                () => throw new Exception("Second execute script call did not complete"),
+                CancellationToken);
 
             // Give Tentacle some more time to run the script (although it should not).
             await Task.Delay(TimeSpan.FromSeconds(2));
@@ -104,12 +110,18 @@ namespace Octopus.Tentacle.Tests.Integration
             var firstScriptExecution = Task.Run(async () => await tentacleClient.ExecuteScript(firstStartScriptCommand, CancellationToken));
 
             // Wait for the first script to start running
-            await Wait.For(() => File.Exists(firstScriptStartFile), CancellationToken);
+            await Wait.For(() => File.Exists(firstScriptStartFile), 
+                TimeSpan.FromSeconds(30),
+                () => throw new Exception("Script did not start running"),
+                CancellationToken);
 
             var secondScriptExecution = Task.Run(async () => await tentacleClient.ExecuteScript(secondStartScriptCommand, CancellationToken));
 
             // Wait for the second script to start
-            await Wait.For(() => File.Exists(secondScriptStart), CancellationToken);
+            await Wait.For(() => File.Exists(secondScriptStart), 
+                TimeSpan.FromSeconds(30),
+                () => throw new Exception("Second script did not start"),
+                CancellationToken);
             // Both scripts are now running in parallel
 
             // Let the first script finish.

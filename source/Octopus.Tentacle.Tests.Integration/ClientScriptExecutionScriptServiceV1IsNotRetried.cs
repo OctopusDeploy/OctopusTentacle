@@ -123,8 +123,11 @@ namespace Octopus.Tentacle.Tests.Integration
             File.WriteAllText(waitForFile, "");
             var legacyTentacleClient = clientTentacle.LegacyTentacleClientBuilder().Build();
 
-            await Wait.For(async () => (await legacyTentacleClient.ScriptService.GetStatusAsync(scriptStatusRequest, new(CancellationToken)))
-                .State == ProcessState.Complete, CancellationToken);
+            await Wait.For(
+                async () => (await legacyTentacleClient.ScriptService.GetStatusAsync(scriptStatusRequest, new(CancellationToken))).State == ProcessState.Complete, 
+                TimeSpan.FromSeconds(60),
+                () => throw new Exception("Script Execution did not complete"),
+                CancellationToken);
 
             var allLogs = logs.JoinLogs();
 
@@ -198,8 +201,11 @@ namespace Octopus.Tentacle.Tests.Integration
             File.WriteAllText(waitForFile, "");
             var legacyTentacleClient = clientTentacle.LegacyTentacleClientBuilder().Build();
 
-            await Wait.For(async () => (await legacyTentacleClient.ScriptService.GetStatusAsync(scriptStatusRequest, new(CancellationToken)))
-                .State == ProcessState.Complete, CancellationToken);
+            await Wait.For(
+                async () => (await legacyTentacleClient.ScriptService.GetStatusAsync(scriptStatusRequest, new(CancellationToken))).State == ProcessState.Complete, 
+                TimeSpan.FromSeconds(60),
+                () => throw new Exception("Script Execution did not complete"),
+                CancellationToken);
         }
 
         [Test]
