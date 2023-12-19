@@ -122,8 +122,48 @@ function configureTentacle() {
     tentacle new-certificate --instance "$instanceName" --if-blank
 }
 
+function setupVariablesForRegistrationCheck() {
+    NAMESPACE=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
+    SERVICE_ACCOUNT_TOKEN_PATH="/var/run/secrets/kubernetes.io/serviceaccount/token"
+    CONFIG_MAP_NAME="TentacleConfigMap"
+}
+
+function getStatusOfRegistration() {
+    echo "Checking registration status..."
+
+    IS_REGISTERED=$(curl -s --request GET \
+    --url "https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT/api/v1/namespaces/$NAMESPACE/configmaps/$CONFIG_MAP_NAME" \
+    --header "Authorization: Bearer $(cat $SERVICE_ACCOUNT_TOKEN_PATH)" \
+    --header 'Accept: application/json' \
+    --insecure \
+    | grep -o '"is_registered": "[^"]*"' \
+    | cut -d'"' -f4)
+}
+
+function setStatusAsRegistered() {    
+    echo "Storing registration status..."
+
+    local json_patch='{"data":{"is_registered":"true"}}'
+
+    curl --request PATCH \
+        --url "${KUBE_API_SERVER}/api/v1/namespaces/${NAMESPACE}/configmaps/${CONFIG_MAP_NAME}" \
+        --header "Authorization: Bearer ${cat $SERVICE_ACCOUNT_TOKEN}" \
+        --header 'Content-Type: application/merge-patch+json' \
+        --data-raw "$json_patch"
+}
+
 function registerTentacle() {
-    echo "Registering with server ..."
+    setupEnvironmentVariablesForRegistrationCheck
+    getStatusOfRegistration
+    
+    if [ "$IS_REGISTERED" == "true" ]; then
+        echo "Tentacle is already registered with server."
+        return 0
+    else 
+        echo "Tentacle is not yet registered with server."
+    fi    
+
+    echo "Registering with server..."
 
     local ARGS=()
 
