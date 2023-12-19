@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
 using Halibut.ServiceModel;
-using Octopus.Tentacle.Client.Decorators;
 using Octopus.Tentacle.Client.Execution;
 using Octopus.Tentacle.Client.Observability;
 using Octopus.Tentacle.Client.Scripts;
@@ -82,12 +81,7 @@ namespace Octopus.Tentacle.Client
             scriptServiceV3Alpha = halibutRuntime.CreateAsyncClient<IScriptServiceV3Alpha, IAsyncClientScriptServiceV3Alpha>(serviceEndPoint);
             clientFileTransferServiceV1 = halibutRuntime.CreateAsyncClient<IFileTransferService, IAsyncClientFileTransferService>(serviceEndPoint);
             capabilitiesServiceV2 = halibutRuntime.CreateAsyncClient<ICapabilitiesServiceV2, IAsyncClientCapabilitiesServiceV2>(serviceEndPoint).WithBackwardsCompatability();
-
-            var exceptionDecoratorFactory = new HalibutExceptionTentacleServiceDecoratorFactory();
-            scriptServiceV2 = exceptionDecoratorFactory.Decorate(scriptServiceV2);
-            scriptServiceV3Alpha = exceptionDecoratorFactory.Decorate(scriptServiceV3Alpha);
-            capabilitiesServiceV2 = exceptionDecoratorFactory.Decorate(capabilitiesServiceV2);
-
+            
             if (tentacleServicesDecoratorFactory != null)
             {
                 scriptServiceV1 = tentacleServicesDecoratorFactory.Decorate(scriptServiceV1);
