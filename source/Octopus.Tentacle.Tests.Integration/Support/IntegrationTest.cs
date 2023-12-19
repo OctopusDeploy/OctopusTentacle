@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using Halibut.Util;
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
@@ -13,13 +14,23 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     public abstract class IntegrationTest : IDisposable
     {
         CancellationTokenSource? cancellationTokenSource;
+        TraceLogFileLogger? traceLogFileLogger;
+
         public CancellationToken CancellationToken { get; private set; }
         public ILogger Logger { get; private set; } = null!;
 
         [SetUp]
         public void SetUp()
         {
-            Logger = new SerilogLoggerBuilder().Build().ForContext(GetType());
+            traceLogFileLogger = new TraceLogFileLogger(SerilogLoggerBuilder.CurrentTestHash());
+
+            Logger = new SerilogLoggerBuilder()
+                .SetTraceLogFileLogger(traceLogFileLogger)
+                .Build()
+                .ForContext(GetType());
+
+            Logger.Information("Trace log file {LogFile}", traceLogFileLogger.logFilePath);
+
             Logger.Information("Test started");
 
             // Time out the cancellation token so we cancel the test if it takes too long
@@ -30,16 +41,23 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         }
         
         [TearDown]
-        public void TearDown()
+        public async Task TearDown()
         {
             WriteTentacleLogToOutputIfTestHasFailed();
 
-            Logger.Information("Staring Test Tearing Down");
+            Logger.Information("Staring Test Tear Down");
             Logger.Information("Cancelling CancellationTokenSource");
             cancellationTokenSource?.Cancel();
             Logger.Information("Disposing CancellationTokenSource");
             cancellationTokenSource?.Dispose();
             cancellationTokenSource = null;
+
+            Logger.Information("Disposing Trace Log File Logger");
+            if (traceLogFileLogger != null)
+            {
+                await traceLogFileLogger!.DisposeAsync();
+            }
+
             Logger.Information("Finished Test Tearing Down");
         }
 

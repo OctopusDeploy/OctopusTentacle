@@ -30,7 +30,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support.SetupFixtures
                 }));
             }
 
+#pragma warning disable VSTHRD002 // Avoid problematic synchronous waits
             Task.WhenAll(tasks).GetAwaiter().GetResult();
+#pragma warning restore VSTHRD002 // Avoid problematic synchronous waits
         }
 
         private async Task GetTentacleVersion(ILogger logger, Version tentacleVersion)

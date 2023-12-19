@@ -314,9 +314,11 @@ Or one of the common options:
 
                 foreach (var failure in failed)
                 {
-                    failureDetails += $@"{failure.Result.Command.Name}
-StdErr:{failure.Result.StdErr}
-StdOut:{failure.Result.StdOut}";
+                    var result = await failure;
+
+                    failureDetails += $@"{result.Command.Name}
+StdErr:{result.StdErr}
+StdOut:{result.StdOut}";
                 }
 
                 Assert.Fail(

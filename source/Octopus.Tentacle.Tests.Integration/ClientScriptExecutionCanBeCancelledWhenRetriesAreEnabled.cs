@@ -453,9 +453,9 @@ namespace Octopus.Tentacle.Tests.Integration
             else
             {
                 Logger.Information("Will Pause the port forwarder on next response so the next RPC is in-flight when being cancelled");
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+#pragma warning disable CS4014, VSTHRD110, VSTHRD110 // Because this call is not awaited, execution of the current method continues before the call is completed
                 responseMessageTcpKiller.PauseConnectionOnNextResponse(() => SetRpcCallWeAreInterestedInAsStarted(rpcCallHasStarted));
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+#pragma warning restore CS4014, VSTHRD110, VSTHRD110 // Because this call is not awaited, execution of the current method continues before the call is completed
             }
 
             static async Task SetRpcCallWeAreInterestedInAsStarted(Reference<bool> rpcCallHasStarted)
