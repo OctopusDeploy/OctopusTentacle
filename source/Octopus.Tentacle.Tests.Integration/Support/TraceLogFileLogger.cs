@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.Threading;
+using Octopus.Tentacle.CommonTestUtils;
 using IAsyncDisposable = System.IAsyncDisposable;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
@@ -78,12 +79,19 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             // The current directory is expected to have the following structure
             // (w/ variance depending on Debug/Release and dotnet framework used (net6.0, net48 etc):
             //
-            // <REPO ROOT>\source\Halibut.Tests\bin\Debug\net6.0
+            // <REPO ROOT>\source\Octopus.Tentacle.Tests.Integration\bin\Debug\net6.0
             //
             // Therefore we go up 5 levels to get to the <REPO ROOT> directory,
             // from which point we can navigate to the artifacts directory.
             var currentDirectory = Directory.GetCurrentDirectory();
+
             var rootDirectory = new DirectoryInfo(currentDirectory).Parent!.Parent!.Parent!.Parent!.Parent!;
+
+            if (PlatformDetection.IsRunningOnWindows)
+            {
+                // If running on Windows the Debug/Release directory is not created
+                rootDirectory = new DirectoryInfo(currentDirectory).Parent!.Parent!.Parent!.Parent!;
+            }
 
             var traceLogsDirectory = rootDirectory.CreateSubdirectory("artifacts").CreateSubdirectory("trace-logs");
             return traceLogsDirectory;
