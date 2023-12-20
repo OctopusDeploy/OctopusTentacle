@@ -123,19 +123,20 @@ function configureTentacle() {
 }
 
 function setupVariablesForRegistrationCheck() {
-    NAMESPACE=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
+    local namespace=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
+    local config_map_name="TentacleConfigMap"
+    SERVICE_URL="https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT/api/v1/namespaces/$namespace/configmaps/$config_map_name";    
     SERVICE_ACCOUNT_TOKEN_PATH="/var/run/secrets/kubernetes.io/serviceaccount/token"
-    CONFIG_MAP_NAME="TentacleConfigMap"
 }
 
 function getStatusOfRegistration() {
     echo "Checking registration status..."
 
     IS_REGISTERED=$(curl -s --request GET \
-    --url "https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT/api/v1/namespaces/$NAMESPACE/configmaps/$CONFIG_MAP_NAME" \
+    --url "$SERVICE_URL" \
     --header "Authorization: Bearer $(cat $SERVICE_ACCOUNT_TOKEN_PATH)" \
     --header 'Accept: application/json' \
-    --insecure \
+    --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
     | grep -o '"is_registered": "[^"]*"' \
     | cut -d'"' -f4)
 }
@@ -146,10 +147,11 @@ function setStatusAsRegistered() {
     local json_patch='{"data":{"is_registered":"true"}}'
 
     curl --request PATCH \
-        --url "${KUBE_API_SERVER}/api/v1/namespaces/${NAMESPACE}/configmaps/${CONFIG_MAP_NAME}" \
-        --header "Authorization: Bearer ${cat $SERVICE_ACCOUNT_TOKEN}" \
+        --url "$SERVICE_URL" \
+        --header "Authorization: Bearer $(cat $SERVICE_ACCOUNT_TOKEN_PATH)" \
         --header 'Content-Type: application/merge-patch+json' \
-        --data-raw "$json_patch"
+        --data-raw "$json_patch" \
+        --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
 }
 
 function registerTentacle() {
