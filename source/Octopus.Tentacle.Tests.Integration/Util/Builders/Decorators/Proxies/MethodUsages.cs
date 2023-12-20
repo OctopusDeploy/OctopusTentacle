@@ -21,6 +21,11 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies
             });
         }
 
+        public void Reset()
+        {
+            trackedMethods.Clear();
+        }
+
         public void RecordCallStart(MethodInfo targetMethod)
         {
             var stats = GetMethodStats(targetMethod);
@@ -47,6 +52,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies
     {
         IRecordedMethodUsage For(string methodName);
         IRecordedMethodUsage ForAll();
+        void Reset();
     }
 
     public class MethodUsage : IRecordedMethodUsage

@@ -73,8 +73,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 void OnErrorAction(Exception ex)
                 {
                     // If we can guarantee that the call to StartScript has not connected to the Service then we can decrement the count
-                    if (ex is ConnectingRequestCancelledException || 
-                        ex is HalibutClientException { ConnectionState: ConnectionState.Connecting })
+                    if (ex.IsConnectionException())
                     {
                         --startScriptCallsConnectedCount;
                     }
@@ -97,7 +96,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
                 // We determine if the call was connecting when cancelled, then assume it's transferring if it is not connecting.
                 // This is the safest option as it will default to the CancelScript CompleteScript path if we are unsure
-                var startScriptCallIsConnecting = ex is ConnectingRequestCancelledException;
+                var startScriptCallIsConnecting = ex.IsConnectionException();
 
                 if (!startScriptCallIsConnecting || startScriptCallIsBeingRetried)
                 {
