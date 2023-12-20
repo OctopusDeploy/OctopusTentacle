@@ -13,7 +13,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     {
         readonly int pollingPort;
 
-        public PollingTentacleBuilder(int pollingPort, string serverThumbprint)
+        public PollingTentacleBuilder(int pollingPort, string serverThumbprint, Version? tentacleVersion) : base(tentacleVersion)
+        
         {
             this.pollingPort = pollingPort;
 
@@ -31,20 +32,24 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             logger.Information($"Tentacle.exe location: {tentacleExe}");
 
             ConfigureTentacleMachineConfigurationHomeDirectory();
-            await CreateInstance(tentacleExe, configFilePath, instanceName, HomeDirectory, logger, cancellationToken);
-            var applicationDirectory = Path.Combine(HomeDirectory.DirectoryPath, "appdir");
-            ConfigureTentacleToPollOctopusServer(configFilePath, subscriptionId, applicationDirectory);
-            await AddCertificateToTentacle(tentacleExe, instanceName, CertificatePfxPath, HomeDirectory, logger,cancellationToken);
-            
-            return await StartTentacle(
-                subscriptionId,
-                tentacleExe,
-                instanceName,
-                HomeDirectory,
-                applicationDirectory,
-                TentacleThumbprint,
-                logger,
-                cancellationToken);
+
+            using (await GetConfigureAndStartTentacleLockIfRequired(logger, cancellationToken))
+            {
+                await CreateInstance(tentacleExe, configFilePath, instanceName, HomeDirectory, logger, cancellationToken);
+                var applicationDirectory = Path.Combine(HomeDirectory.DirectoryPath, "appdir");
+                ConfigureTentacleToPollOctopusServer(configFilePath, subscriptionId, applicationDirectory);
+                await AddCertificateToTentacle(tentacleExe, instanceName, CertificatePfxPath, HomeDirectory, logger, cancellationToken);
+
+                return await StartTentacle(
+                    subscriptionId,
+                    tentacleExe,
+                    instanceName,
+                    HomeDirectory,
+                    applicationDirectory,
+                    TentacleThumbprint,
+                    logger,
+                    cancellationToken);
+            }
         }
 
         void ConfigureTentacleToPollOctopusServer(string configFilePath, Uri subscriptionId, string applicationDirectory)

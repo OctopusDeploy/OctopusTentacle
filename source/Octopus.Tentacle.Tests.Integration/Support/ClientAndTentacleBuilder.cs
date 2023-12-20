@@ -204,7 +204,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             {
                 portForwarder = BuildPortForwarder(serverListeningPort, null);
 
-                var pollingTentacleBuilder = new PollingTentacleBuilder(portForwarder?.ListeningPort ?? serverListeningPort, Certificates.ServerPublicThumbprint)
+                var pollingTentacleBuilder = new PollingTentacleBuilder(portForwarder?.ListeningPort ?? serverListeningPort, Certificates.ServerPublicThumbprint, tentacleVersion)
                     .WithTentacleExe(tentacleExe);
 
                 if (useDefaultMachineConfigurationHomeDirectory)
@@ -225,7 +225,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             }
             else
             {
-                var listeningTentacleBuilder = new ListeningTentacleBuilder(Certificates.ServerPublicThumbprint)
+                var listeningTentacleBuilder = new ListeningTentacleBuilder(Certificates.ServerPublicThumbprint, tentacleVersion)
                     .WithTentacleExe(tentacleExe);
 
                 if (useDefaultMachineConfigurationHomeDirectory)
