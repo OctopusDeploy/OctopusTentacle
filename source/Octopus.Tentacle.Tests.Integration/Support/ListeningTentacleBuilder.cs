@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Client.Model;
@@ -9,7 +10,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 {
     public class ListeningTentacleBuilder : TentacleBuilder<ListeningTentacleBuilder>
     {
-        public ListeningTentacleBuilder(string serverThumbprint)
+        public ListeningTentacleBuilder(string serverThumbprint, Version? tentacleVersion) : base(tentacleVersion)
         {
             ServerThumbprint = serverThumbprint;
         }
@@ -24,24 +25,28 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             logger.Information($"Tentacle.exe location: {tentacleExe}");
 
             ConfigureTentacleMachineConfigurationHomeDirectory();
-            await CreateInstance(tentacleExe, configFilePath, instanceName, HomeDirectory, logger, cancellationToken);
-            await AddCertificateToTentacle(tentacleExe, instanceName, CertificatePfxPath, HomeDirectory, logger, cancellationToken);
-            var applicationDirectory = Path.Combine(HomeDirectory.DirectoryPath, "appdir");
-            ConfigureTentacleToListen(configFilePath, applicationDirectory);
 
-            var runningTentacle = await StartTentacle(
-                null,
-                tentacleExe,
-                instanceName,
-                HomeDirectory,
-                applicationDirectory,
-                TentacleThumbprint,
-                logger,
-                cancellationToken);
+            using (await GetConfigureAndStartTentacleLockIfRequired(logger, cancellationToken))
+            {
+                await CreateInstance(tentacleExe, configFilePath, instanceName, HomeDirectory, logger, cancellationToken);
+                await AddCertificateToTentacle(tentacleExe, instanceName, CertificatePfxPath, HomeDirectory, logger, cancellationToken);
+                var applicationDirectory = Path.Combine(HomeDirectory.DirectoryPath, "appdir");
+                ConfigureTentacleToListen(configFilePath, applicationDirectory);
 
-            SetThePort(configFilePath, runningTentacle.ServiceUri.Port);
+                var runningTentacle = await StartTentacle(
+                    null,
+                    tentacleExe,
+                    instanceName,
+                    HomeDirectory,
+                    applicationDirectory,
+                    TentacleThumbprint,
+                    logger,
+                    cancellationToken);
 
-            return runningTentacle;
+                SetThePort(configFilePath, runningTentacle.ServiceUri.Port);
+
+                return runningTentacle;
+            }
         }
 
         private void ConfigureTentacleToListen(string configFilePath, string applicationDirectory)

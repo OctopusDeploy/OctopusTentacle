@@ -2,14 +2,17 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Management;
 using System.Security.AccessControl;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
+using Autofac.Util;
 using CliWrap;
 using CliWrap.Exceptions;
 using Microsoft.Win32;
+using Nito.AsyncEx;
 using Nito.AsyncEx.Interop;
 using NUnit.Framework;
 using Octopus.Tentacle.CommonTestUtils;
@@ -29,6 +32,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     public abstract class TentacleBuilder<T> : ITentacleBuilder
         where T : TentacleBuilder<T>
     {
+        private readonly AsyncLock configureAndStartTentacleLock = new ();
+
+        protected readonly Version? TentacleVersion;
         protected string? ServerThumbprint;
         protected string? TentacleExePath;
         protected string CertificatePfxPath = Certificates.TentaclePfxPath;
@@ -41,6 +47,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         TemporaryDirectory? homeDirectory;
 
+        public TentacleBuilder(Version? tentacleVersion)
+        {
+            this.TentacleVersion = tentacleVersion;
+        }
+
         protected TemporaryDirectory HomeDirectory
         {
             get
@@ -49,7 +60,26 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 return homeDirectory;
             }
         }
-        
+
+        protected AwaitableDisposable<IDisposable> GetConfigureAndStartTentacleLockIfRequired(ILogger logger, CancellationToken cancellationToken)
+        {
+            // If we are using a Tentacle version prior to 8.1.284 then there is no way to isolate the tentacle instances
+            // so we take an exclusive lock around configuration, startup and deletion of the tentacle instance
+            if (TentacleVersion != null && TentacleVersion < new Version(8, 1, 284))
+            {
+                logger.Information($"Acquiring an exclusive lock to perform configuration / startup or deletion of Tentacle {TentacleVersion}");
+                return configureAndStartTentacleLock.LockAsync(cancellationToken);
+            }
+
+            return new AwaitableDisposable<IDisposable>(GetDummyDisposableAsync());
+
+            async Task<IDisposable> GetDummyDisposableAsync()
+            {
+                await Task.CompletedTask;
+                return new Disposable();
+            }
+        }
+
         public ITentacleBuilder WithHomeDirectory(TemporaryDirectory homeDirectory)
         {
             this.homeDirectory = homeDirectory;
@@ -364,45 +394,52 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         internal async Task DeleteInstanceIgnoringFailure(bool runningAsService, string tentacleExe, string instanceName, TemporaryDirectory tmp, ILogger logger, CancellationToken cancellationToken)
         {
-            if (runningAsService)
+            using (await GetConfigureAndStartTentacleLockIfRequired(logger, cancellationToken))
             {
+                if (runningAsService)
+                {
+                    try
+                    {
+                        await RunCommandOutOfProcess(
+                            tentacleExe,
+                            new[] { "service", $"--instance={instanceName}", "--stop" },
+                            "Tentacle",
+                            tmp,
+                            s =>
+                            {
+                            },
+                            runTentacleEnvironmentVariables,
+                            logger,
+                            cancellationToken);
+
+                        await RunCommandOutOfProcess(
+                            tentacleExe,
+                            new[] { "service", "--uninstall", $"--instance={instanceName}" },
+                            "Tentacle",
+                            tmp,
+                            s =>
+                            {
+                            },
+                            runTentacleEnvironmentVariables,
+                            logger,
+                            cancellationToken);
+                    }
+                    catch (Exception e)
+                    {
+                        logger.Warning(e, "Could not uninstall service for instance: {InstanceName}", instanceName);
+                        throw;
+                    }
+                }
+
                 try
                 {
-                    await RunCommandOutOfProcess(
-                        tentacleExe,
-                        new[] { "service", $"--instance={instanceName}", "--stop" },
-                        "Tentacle",
-                        tmp,
-                        s => {},
-                        runTentacleEnvironmentVariables,
-                        logger,
-                        cancellationToken);
-
-                    await RunCommandOutOfProcess(
-                        tentacleExe, 
-                        new[] {"service", "--uninstall", $"--instance={instanceName}"}, 
-                        "Tentacle",
-                        tmp,
-                        s => {},
-                        runTentacleEnvironmentVariables, 
-                        logger,
-                        cancellationToken);
+                    await DeleteInstanceAsync(tentacleExe, instanceName, tmp, logger, cancellationToken);
                 }
                 catch (Exception e)
                 {
-                    logger.Warning(e, "Could not uninstall service for instance: {InstanceName}", instanceName);
+                    logger.Warning(e, "Could not delete instance: {InstanceName}", instanceName);
                     throw;
                 }
-            }
-
-            try
-            {
-                await DeleteInstanceAsync(tentacleExe, instanceName, tmp, logger,cancellationToken);
-            }
-            catch (Exception e)
-            {
-                logger.Warning(e, "Could not delete instance: {InstanceName}", instanceName);
-                throw;
             }
         }
 
