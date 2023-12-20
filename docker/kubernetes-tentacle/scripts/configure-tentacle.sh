@@ -122,7 +122,7 @@ function configureTentacle() {
     tentacle new-certificate --instance "$instanceName" --if-blank
 }
 
-function setupVariablesForRegistrationCheck() {
+function setupVariablesForRegistrationCheck() { 
     local namespace=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
     local config_map_name="TentacleConfigMap"
     SERVICE_URL="https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT/api/v1/namespaces/$namespace/configmaps/$config_map_name";    
@@ -155,7 +155,7 @@ function setStatusAsRegistered() {
 }
 
 function registerTentacle() {
-    setupEnvironmentVariablesForRegistrationCheck
+    setupVariablesForRegistrationCheck
     getStatusOfRegistration
     
     if [ "$IS_REGISTERED" == "true" ]; then
