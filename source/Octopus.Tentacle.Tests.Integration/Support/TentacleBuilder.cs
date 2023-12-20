@@ -15,6 +15,7 @@ using NUnit.Framework;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Tests.Integration.Util;
+using Octopus.Tentacle.Variables;
 using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
@@ -33,6 +34,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         protected string CertificatePfxPath = Certificates.TentaclePfxPath;
         protected string TentacleThumbprint = Certificates.TentaclePublicThumbprint;
         bool installAsService = false;
+        bool useDefaultMachineConfigurationHomeDirectory = false;
 
         static readonly Regex ListeningPortRegex = new (@"listen:\/\/.+:(\d+)\/");
         readonly Dictionary<string, string> runTentacleEnvironmentVariables = new();
@@ -47,7 +49,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 return homeDirectory;
             }
         }
-
+        
         public ITentacleBuilder WithHomeDirectory(TemporaryDirectory homeDirectory)
         {
             this.homeDirectory = homeDirectory;
@@ -88,6 +90,13 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public ITentacleBuilder InstallAsAService()
         {
             installAsService = true;
+
+            return this;
+        }
+
+        public ITentacleBuilder UseDefaultMachineConfigurationHomeDirectory()
+        {
+            useDefaultMachineConfigurationHomeDirectory = true;
 
             return this;
         }
@@ -263,6 +272,16 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             }
 
             return (runningTentacle, serviceUri);
+        }
+
+        protected void ConfigureTentacleMachineConfigurationHomeDirectory()
+        {
+            if (!useDefaultMachineConfigurationHomeDirectory)
+            {
+                var directory = Path.Combine(HomeDirectory.DirectoryPath, "Octopus", "Tentacle", "Instances");
+
+                WithRunTentacleEnvironmentVariable(EnvironmentVariables.TentacleMachineConfigurationHomeDirectory, directory);
+            }
         }
 
         async Task SetEnvironmentVariablesForService(string instanceName, TemporaryDirectory tempDirectory, ILogger logger, CancellationToken cancellationToken)

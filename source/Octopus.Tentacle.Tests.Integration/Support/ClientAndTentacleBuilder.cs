@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,7 +14,6 @@ using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers;
-using Octopus.Tentacle.Variables;
 using Octopus.TestPortForwarder;
 using Serilog;
 
@@ -39,7 +37,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         Action<TentacleClientOptions>? configureClientOptions;
         TcpConnectionUtilities? tcpConnectionUtilities;
         bool installAsAService = false;
-        bool useCustomMachineConfigurationHomeDirectory = true;
+        bool useDefaultMachineConfigurationHomeDirectory = false;
 
         public ClientAndTentacleBuilder(TentacleType tentacleType)
         {
@@ -154,7 +152,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         public ClientAndTentacleBuilder UseDefaultMachineConfigurationHomeDirectory()
         {
-            useCustomMachineConfigurationHomeDirectory = false;
+            useDefaultMachineConfigurationHomeDirectory = true;
 
             return this;
         }
@@ -209,14 +207,17 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 var pollingTentacleBuilder = new PollingTentacleBuilder(portForwarder?.ListeningPort ?? serverListeningPort, Certificates.ServerPublicThumbprint)
                     .WithTentacleExe(tentacleExe);
 
+                if (useDefaultMachineConfigurationHomeDirectory)
+                {
+                    pollingTentacleBuilder.UseDefaultMachineConfigurationHomeDirectory();
+                }
+
                 tentacleBuilderAction?.Invoke(pollingTentacleBuilder);
 
                 if (installAsAService)
                 { 
                     pollingTentacleBuilder.InstallAsAService();
                 }
-
-                ConfigureTentacleMachineConfigurationHomeDirectory(pollingTentacleBuilder, temporaryDirectory);
 
                 runningTentacle = await pollingTentacleBuilder.Build(logger, cancellationToken);
 
@@ -227,14 +228,17 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 var listeningTentacleBuilder = new ListeningTentacleBuilder(Certificates.ServerPublicThumbprint)
                     .WithTentacleExe(tentacleExe);
 
+                if (useDefaultMachineConfigurationHomeDirectory)
+                {
+                    listeningTentacleBuilder.UseDefaultMachineConfigurationHomeDirectory();
+                }
+
                 tentacleBuilderAction?.Invoke(listeningTentacleBuilder);
                 
                 if (installAsAService)
                 { 
                     listeningTentacleBuilder.InstallAsAService();
                 }
-
-                ConfigureTentacleMachineConfigurationHomeDirectory(listeningTentacleBuilder, temporaryDirectory);
 
                 runningTentacle = await listeningTentacleBuilder.Build(logger, cancellationToken);
 
@@ -273,16 +277,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 tentacleServiceDecorator);
 
             return new ClientAndTentacle(server.ServerHalibutRuntime, tentacleEndPoint, server, portForwarder, runningTentacle, tentacleClient, temporaryDirectory, retrySettings, logger);
-        }
-
-        void ConfigureTentacleMachineConfigurationHomeDirectory(ITentacleBuilder tentacleBuilder, TemporaryDirectory temporaryDirectory)
-        {
-            if (useCustomMachineConfigurationHomeDirectory)
-            {
-                var directory = Path.Combine(temporaryDirectory.DirectoryPath, "Octopus", "Tentacle", "Instances");
-
-                tentacleBuilder.WithRunTentacleEnvironmentVariable(EnvironmentVariables.TentacleMachineConfigurationHomeDirectory, directory);
-            }
         }
     }
 }
