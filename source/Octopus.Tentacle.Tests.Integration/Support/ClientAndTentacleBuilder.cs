@@ -37,7 +37,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         Action<TentacleClientOptions>? configureClientOptions;
         TcpConnectionUtilities? tcpConnectionUtilities;
         bool installAsAService = false;
-        bool useCustomMachineConfigurationHomeDirectory = true;
+        bool useDefaultMachineConfigurationHomeDirectory = false;
 
         public ClientAndTentacleBuilder(TentacleType tentacleType)
         {
@@ -152,7 +152,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         public ClientAndTentacleBuilder UseDefaultMachineConfigurationHomeDirectory()
         {
-            useCustomMachineConfigurationHomeDirectory = false;
+            useDefaultMachineConfigurationHomeDirectory = true;
 
             return this;
         }
@@ -207,7 +207,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 var pollingTentacleBuilder = new PollingTentacleBuilder(portForwarder?.ListeningPort ?? serverListeningPort, Certificates.ServerPublicThumbprint)
                     .WithTentacleExe(tentacleExe);
 
-                if (!useCustomMachineConfigurationHomeDirectory)
+                if (useDefaultMachineConfigurationHomeDirectory)
                 {
                     pollingTentacleBuilder.UseDefaultMachineConfigurationHomeDirectory();
                 }
@@ -228,7 +228,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 var listeningTentacleBuilder = new ListeningTentacleBuilder(Certificates.ServerPublicThumbprint)
                     .WithTentacleExe(tentacleExe);
 
-                if (!useCustomMachineConfigurationHomeDirectory)
+                if (useDefaultMachineConfigurationHomeDirectory)
                 {
                     listeningTentacleBuilder.UseDefaultMachineConfigurationHomeDirectory();
                 }

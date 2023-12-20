@@ -34,7 +34,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         protected string CertificatePfxPath = Certificates.TentaclePfxPath;
         protected string TentacleThumbprint = Certificates.TentaclePublicThumbprint;
         bool installAsService = false;
-        bool useCustomMachineConfigurationHomeDirectory = true;
+        bool useDefaultMachineConfigurationHomeDirectory = false;
 
         static readonly Regex ListeningPortRegex = new (@"listen:\/\/.+:(\d+)\/");
         readonly Dictionary<string, string> runTentacleEnvironmentVariables = new();
@@ -96,7 +96,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         public ITentacleBuilder UseDefaultMachineConfigurationHomeDirectory()
         {
-            useCustomMachineConfigurationHomeDirectory = false;
+            useDefaultMachineConfigurationHomeDirectory = true;
 
             return this;
         }
@@ -276,7 +276,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         protected void ConfigureTentacleMachineConfigurationHomeDirectory()
         {
-            if (useCustomMachineConfigurationHomeDirectory)
+            if (!useDefaultMachineConfigurationHomeDirectory)
             {
                 var directory = Path.Combine(HomeDirectory.DirectoryPath, "Octopus", "Tentacle", "Instances");
 
