@@ -85,6 +85,20 @@ namespace Octopus.Tentacle.Scripts
         public async Task Delete(CancellationToken cancellationToken)
         {
             await FileSystem.DeleteDirectory(WorkingDirectory, cancellationToken, DeletionOptions.TryThreeTimesIgnoreFailure);
+
+            // It appears that the FileSystem.DeleteDirectory method can fail to delete the directory in cases where Directory.Delete(recursive: true) can be successful.
+            // Leaving the existing code as we would need to understand more about the intent of the logic before changing it but adding in another best effort attempt to delete the directory.
+            if (Directory.Exists(WorkingDirectory))
+            {
+                try
+                {
+                    Directory.Delete(WorkingDirectory, true);
+                }
+                catch
+                {
+                    // Best effort cleanup so don't throw
+                }
+            }
         }
 
         public IScriptLog CreateLog()
