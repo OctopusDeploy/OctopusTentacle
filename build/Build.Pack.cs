@@ -17,6 +17,9 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
 
 partial class Build
 {
+    //We don't sign linux packages when building locally
+    readonly bool SignLinuxPackages = !IsLocalBuild;
+
     [PublicAPI]
     Target PackOsxTarballs => _ => _
         .Description("Packs the OS/X tarballs containing the published binaries.")
@@ -45,11 +48,14 @@ partial class Build
         .Description("Legacy task until we can split creation of .rpm and .deb packages into their own tasks")
         .DependsOn(PackLinuxTarballs)
         .Requires(
-            () => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SIGN_PRIVATE_KEY")),
-            () => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SIGN_PASSPHRASE")))
+            () => !SignLinuxPackages || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SIGN_PRIVATE_KEY")),
+            () => !SignLinuxPackages || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SIGN_PASSPHRASE")))
         .Executes(() =>
         {
             const string dockerToolsContainerImage = "docker.packages.octopushq.com/octopusdeploy/tool-containers/tool-linux-packages:latest";
+
+            //this is just to stop messages such as scout vulnerability hints which are reported as errors (but don't actually fail anything)
+            Environment.SetEnvironmentVariable("DOCKER_CLI_HINTS", "false");
 
             void CreateLinuxPackages(string runtimeId)
             {
@@ -61,6 +67,11 @@ partial class Build
                 FileSystemTasks.EnsureExistingDirectory(debBuildDir / "output");
 
                 var packagingScriptsDirectory = RootDirectory / "linux-packages" / "packaging-scripts";
+
+                // if we aren't signing, use the unsigned scripts
+                if (!SignLinuxPackages)
+                    packagingScriptsDirectory /= "unsigned";
+
                 packagingScriptsDirectory.GlobFiles("*")
                     .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, debBuildDir / "scripts"));
 
@@ -122,6 +133,13 @@ partial class Build
         .DependsOn(PackRedHatPackage);
 
     [PublicAPI]
+    Target PackLinuxUnsigned => _ => _
+        .Description("Packages all the Linux targets without signing the packages.")
+        .DependsOn(PackDebianPackage)
+        .DependsOn(PackRedHatPackage)
+        .OnlyWhenStatic(() => !SignLinuxPackages);
+
+    [PublicAPI]
     Target PackWindowsZips => _ => _
         .Description("Packs the Windows .zip files containing the published binaries.")
         .DependsOn(BuildWindows)
@@ -159,7 +177,7 @@ partial class Build
                 var installerDirectory = BuildDirectory / "Installer";
                 FileSystemTasks.EnsureExistingDirectory(installerDirectory);
                 FileSystemTasks.EnsureCleanDirectory(installerDirectory);
-                
+
                 if (framework != NetCore)
                 {
                     (BuildDirectory / "Tentacle" / framework / "win").GlobFiles("*")
@@ -250,7 +268,7 @@ partial class Build
             if (wixNugetInstalledPackage == null) throw new Exception("Failed to find wix nuget package path");
 
             FileSystemTasks.EnsureExistingDirectory(ArtifactsDirectory / "msi");
-            
+
             PackWindowsInstallers(MSBuildTargetPlatform.x64, wixNugetInstalledPackage.Directory, NetFramework, "NetFramework");
             PackWindowsInstallers(MSBuildTargetPlatform.x86, wixNugetInstalledPackage.Directory, NetFramework, "NetFramework");
 
@@ -361,7 +379,7 @@ partial class Build
 
             FileSystemTasks.CopyFile(BuildDirectory / "Octopus.Tentacle.Upgrader" / NetCore / "win-x86" / "Octopus.Tentacle.Upgrader.exe", workingDirectory / "Octopus.Tentacle.Upgrader-net6.0-win-x86.exe");
             FileSystemTasks.CopyFile(BuildDirectory / "Octopus.Tentacle.Upgrader" / NetCore / "win-x64" / "Octopus.Tentacle.Upgrader.exe", workingDirectory / "Octopus.Tentacle.Upgrader-net6.0-win-x64.exe");
-            
+
             var octopusTentacleUpgraderDirectory = BuildDirectory / "Octopus.Tentacle.Upgrader" / NetFramework / "win";
             octopusTentacleUpgraderDirectory.GlobFiles("*").ForEach(x => FileSystemTasks.CopyFileToDirectory(x, workingDirectory));
             FileSystemTasks.CopyFile(ArtifactsDirectory / "deb" / debAmd64PackageFilename, workingDirectory / debAmd64PackageFilename);
@@ -371,7 +389,7 @@ partial class Build
             FileSystemTasks.CopyFile(ArtifactsDirectory / "rpm" / rpmArm32PackageFilename, workingDirectory / rpmArm32PackageFilename);
             FileSystemTasks.CopyFile(ArtifactsDirectory / "rpm" / rpmx64PackageFilename, workingDirectory / rpmx64PackageFilename);
 
-            foreach (var framework in new[] {NetFramework, NetCore})
+            foreach (var framework in new[] { NetFramework, NetCore })
             {
                 foreach (var runtimeId in RuntimeIds)
                 {
