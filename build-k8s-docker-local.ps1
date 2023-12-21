@@ -43,7 +43,7 @@ if (!$NonMinikubeRegistry) {
     
     Write-Output "Running network forwarding docker container"
     $minikubeIP = & minikube ip
-    $containerId = & docker run -rm -d --network=host alpine/socat "tcp-listen:$registryPort,reuseaddr,fork" "tcp-connect:host.docker.internal:$registryPort"
+    $containerId = & docker run --rm -d --network=host alpine/socat "tcp-listen:$registryPort,reuseaddr,fork" "tcp-connect:host.docker.internal:$registryPort"
 
     $isRunning = $false
     Write-Output "Waiting for network forwarding docker container to be running"
@@ -70,5 +70,5 @@ if (!$NonMinikubeRegistry) {
     Write-Output "Stopping network forwarding docker container"
     & docker stop $containerId | Out-Null
     Write-Output "Stopping minikube port forwarding"
-    Stop-Process -Id $portForwardProcess.Id
+    Stop-Process -Id $portForwardProcess.Id -ErrorAction SilentlyContinue
 }
