@@ -43,7 +43,7 @@ if (!$NonMinikubeRegistry) {
     
     Write-Output "Running network forwarding docker container"
     $minikubeIP = & minikube ip
-    $containerId = & docker run --rm -d --network=host alpine ash -c "apk add socat && socat TCP-LISTEN:$registryPort,reuseaddr,fork TCP:$($minikubeIP):$registryPort"
+    $containerId = & docker run -rm -d --network=host alpine/socat "tcp-listen:$registryPort,reuseaddr,fork" "tcp-connect:host.docker.internal:$registryPort"
 
     $isRunning = $false
     Write-Output "Waiting for network forwarding docker container to be running"
@@ -63,6 +63,8 @@ $imageName = "$LocalRegistryDomain/kubernetes-tentacle:$buildNumber-linux-$Build
 Write-Output "Pushing $imageName"
 
 & docker push $imageName
+
+Write-Output "Pushed $imageName"
 
 if (!$NonMinikubeRegistry) {
     Write-Output "Stopping network forwarding docker container"

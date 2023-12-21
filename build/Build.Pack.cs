@@ -137,6 +137,7 @@ partial class Build
         .Description("Packages all the Linux targets without signing the packages.")
         .DependsOn(PackDebianPackage)
         .DependsOn(PackRedHatPackage)
+        .OnlyWhenStatic(() => IsLocalBuild)
         .OnlyWhenStatic(() => !SignLinuxPackages);
 
     [PublicAPI]
