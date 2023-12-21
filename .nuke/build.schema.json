@@ -81,6 +81,9 @@
           "type": "string",
           "description": "Root directory during build execution"
         },
+        "RuntimeId": {
+          "type": "string"
+        },
         "signing_certificate_password": {
           "type": "string",
           "default": "Secrets must be entered via 'nuke :secrets [profile]'"
@@ -112,6 +115,7 @@
               "PackLinux",
               "PackLinuxPackagesLegacy",
               "PackLinuxTarballs",
+              "PackLinuxUnsigned",
               "PackOsx",
               "PackOsxTarballs",
               "PackRedHatPackage",
@@ -156,6 +160,7 @@
               "PackLinux",
               "PackLinuxPackagesLegacy",
               "PackLinuxTarballs",
+              "PackLinuxUnsigned",
               "PackOsx",
               "PackOsxTarballs",
               "PackRedHatPackage",
