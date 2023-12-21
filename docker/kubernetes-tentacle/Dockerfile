@@ -15,6 +15,7 @@ RUN chmod +x /scripts/*.sh
 COPY _artifacts/deb/tentacle_${BUILD_NUMBER}_${BUILD_ARCH}.deb /tmp/
 RUN apt-get update
 RUN apt install ./tentacle_${BUILD_NUMBER}_${BUILD_ARCH}.deb -y
+RUN apt install curl -y
 RUN apt-get clean
 RUN rm -rf /var/lib/apt/lists/*
 
