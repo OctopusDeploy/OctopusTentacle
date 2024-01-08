@@ -38,6 +38,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         TcpConnectionUtilities? tcpConnectionUtilities;
         bool installAsAService = false;
         bool useDefaultMachineConfigurationHomeDirectory = false;
+        HalibutTimeoutsAndLimits? halibutTimeoutsAndLimits;
 
         public ClientAndTentacleBuilder(TentacleType tentacleType)
         {
@@ -157,6 +158,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             return this;
         }
 
+        public ClientAndTentacleBuilder WithHalibutTimeoutsAndLimits(HalibutTimeoutsAndLimits halibutTimeoutsAndLimits)
+        {
+            this.halibutTimeoutsAndLimits = halibutTimeoutsAndLimits;
+            return this;
+        }
+
         PortForwarder? BuildPortForwarder(int localPort, int? listeningPort)
         {
             if (portForwarderModifiers.Count == 0) return null;
@@ -175,7 +182,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             // Server
             var serverHalibutRuntimeBuilder = new HalibutRuntimeBuilder()
                 .WithServerCertificate(Certificates.Server)
-                .WithHalibutTimeoutsAndLimits(HalibutTimeoutsAndLimits.RecommendedValues())
+                .WithHalibutTimeoutsAndLimits(halibutTimeoutsAndLimits ?? HalibutTimeoutsAndLimits.RecommendedValues())
                 .WithLegacyContractSupport();
             
             if (queueFactory != null)
