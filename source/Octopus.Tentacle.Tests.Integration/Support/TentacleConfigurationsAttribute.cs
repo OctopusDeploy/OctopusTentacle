@@ -79,6 +79,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 tentacleTypes.Add(TentacleType.Listening);
             }
 
+            if (!tentacleTypes.Any())
+            {
+                throw new ArgumentException("At least one tentacle type to test must be specified");
+            }
+
             List<Version?> versions = new();
 
             if (testCommonVersions)
