@@ -13,7 +13,9 @@ namespace Octopus.Tentacle.Tests.Communications
         public void ShouldDeserializeToMappedNamespace()
         {
             var inner = new RecordingSerializationBinder();
-            var subject = new NamespaceMappingSerializationBinderDecorator(inner, "Octopus.Shared.Contracts", "Octopus.Tentacle.Contracts");
+            var fromNamespace = "Octopus.Shared.Contracts";
+            var toNamespace = "Octopus.Tentacle.Contracts";
+            var subject = new NamespaceMappingSerializationBinderDecorator(inner, fromNamespace, toNamespace, new ReMappedLegacyTypes(fromNamespace, toNamespace));
             subject.BindToType("Octopus.Shared", "Octopus.Shared.Contracts.StartScriptCommand");
             inner.TypeName.Should().Be("Octopus.Tentacle.Contracts.StartScriptCommand");
         }
@@ -22,7 +24,10 @@ namespace Octopus.Tentacle.Tests.Communications
         public void ShouldSerializeToMappedNamespace()
         {
             var inner = new RecordingSerializationBinder();
-            var subject = new NamespaceMappingSerializationBinderDecorator(inner, "Octopus.Shared.Contracts", "Octopus.Tentacle.Contracts");
+            var fromNamespace = "Octopus.Shared.Contracts";
+            var toNamespace = "Octopus.Tentacle.Contracts";
+            
+            var subject = new NamespaceMappingSerializationBinderDecorator(inner, fromNamespace, toNamespace, new ReMappedLegacyTypes(fromNamespace, toNamespace));
             subject.BindToName(typeof(StartScriptCommand), out _, out var typeName);
             typeName.Should().Be("Octopus.Shared.Contracts.StartScriptCommand");
         }

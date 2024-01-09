@@ -23,7 +23,7 @@ namespace Octopus.Tentacle.Contracts.Legacy
 
         IReadOnlyCollection<string> FullNameOfTypesToRemap;
 
-        internal ReMappedLegacyTypes(params string[] nameSpaces)
+        public ReMappedLegacyTypes(params string[] nameSpaces)
         {
             var set = new HashSet<string>();
 
