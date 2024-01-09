@@ -16,8 +16,8 @@ namespace Octopus.Tentacle.Contracts.Legacy
         }
 
         /// <summary>
-        /// The types we need to remap are cached here to avoid needing to re-create the type on every call, as we were seeing
-        /// threads held up in the ctor of this type when under load.  
+        /// The types we need to remap are cached here to avoid needing to re-create the type on every call.
+        /// We were seeing threads held up in the ctor of this type when under load.  
         /// </summary>
         static readonly ReMappedLegacyTypes ReMappedLegacyTypes = new(LegacyNamespace, TentacleContracts.Namespace); 
 
