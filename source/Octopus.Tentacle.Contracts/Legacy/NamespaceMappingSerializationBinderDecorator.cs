@@ -10,12 +10,12 @@ namespace Octopus.Tentacle.Contracts.Legacy
         readonly string toNamespace;
         private readonly ReMappedLegacyTypes reMappedLegacyTypes;
 
-        public NamespaceMappingSerializationBinderDecorator(ISerializationBinder? inner, string fromNamespace, string toNamespace)
+        public NamespaceMappingSerializationBinderDecorator(ISerializationBinder? inner, string fromNamespace, string toNamespace, ReMappedLegacyTypes reMappedLegacyTypes)
         {
             this.inner = inner ?? new DefaultSerializationBinder();
             this.fromNamespace = fromNamespace;
             this.toNamespace = toNamespace;
-            this.reMappedLegacyTypes = new ReMappedLegacyTypes(fromNamespace, toNamespace);
+            this.reMappedLegacyTypes = reMappedLegacyTypes;
         }
 
         public Type BindToType(string? assemblyName, string typeName)

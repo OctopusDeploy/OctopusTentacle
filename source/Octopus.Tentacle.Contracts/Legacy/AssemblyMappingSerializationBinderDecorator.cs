@@ -8,18 +8,14 @@ namespace Octopus.Tentacle.Contracts.Legacy
         readonly ISerializationBinder inner;
         readonly string fromAssembly;
         readonly string toAssembly;
-        readonly string fromNamespace;
-        readonly string toNamespace;
         private readonly ReMappedLegacyTypes reMappedLegacyTypes;
 
-        public AssemblyMappingSerializationBinderDecorator(ISerializationBinder inner, string fromAssembly, string toAssembly, string fromNamespace, string toNamespace)
+        public AssemblyMappingSerializationBinderDecorator(ISerializationBinder inner, string fromAssembly, string toAssembly, ReMappedLegacyTypes reMappedLegacyTypes)
         {
             this.inner = inner;
             this.fromAssembly = fromAssembly;
             this.toAssembly = toAssembly;
-            this.fromNamespace = fromNamespace;
-            this.toNamespace = toNamespace;
-            this.reMappedLegacyTypes = new ReMappedLegacyTypes(fromNamespace, toNamespace);
+            this.reMappedLegacyTypes = reMappedLegacyTypes;
         }
         
         public Type BindToType(string? assemblyName, string typeName)

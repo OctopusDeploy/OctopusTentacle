@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 
 namespace Octopus.Tentacle.Contracts.Legacy
@@ -22,7 +23,7 @@ namespace Octopus.Tentacle.Contracts.Legacy
 
         IReadOnlyCollection<string> FullNameOfTypesToRemap;
 
-        internal ReMappedLegacyTypes(params string[] nameSpaces)
+        public ReMappedLegacyTypes(params string[] nameSpaces)
         {
             var set = new HashSet<string>();
 
@@ -34,7 +35,8 @@ namespace Octopus.Tentacle.Contracts.Legacy
                 }
             }
 
-            FullNameOfTypesToRemap = set;
+            
+            FullNameOfTypesToRemap = set.ToImmutableHashSet();
         }
 
         internal bool ShouldRemap(string? fullTypeName)
