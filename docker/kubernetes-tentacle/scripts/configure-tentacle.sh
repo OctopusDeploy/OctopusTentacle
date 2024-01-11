@@ -258,6 +258,7 @@ echo "==============================================="
 
 configureTentacle
 registerTentacle
+setStatusAsRegistered
 
 echo "Configuration successful."
 echo ""
