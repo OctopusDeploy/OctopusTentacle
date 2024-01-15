@@ -7,7 +7,11 @@ if [[ "$ACCEPT_EULA" != "Y" ]]; then
 fi
 
 # Tentacle Docker images only support once instance per container. Running multiple instances can be achieved by running multiple containers.
-instanceName=Tentacle
+if [[ -n "$InstanceName" ]]; then
+    instanceName="$InstanceName"
+else
+    instanceName=Tentacle
+fi
 internalListeningPort=10933
 
 #If TentacleHome environment variable exists, use that
