@@ -17,6 +17,7 @@ namespace Octopus.Tentacle.Configuration
 {
     internal class TentacleConfiguration : ITentacleConfiguration
     {
+        internal const string IsRegisteredSettingName = "Tentacle.Services.IsRegistered";
         internal const string ServicesPortSettingName = "Tentacle.Services.PortNumber";
         internal const string ServicesListenIPSettingName = "Tentacle.Services.ListenIP";
         internal const string ServicesNoListenSettingName = "Tentacle.Services.NoListen";
@@ -66,6 +67,8 @@ namespace Octopus.Tentacle.Configuration
         public IPollingProxyConfiguration PollingProxyConfiguration => pollingProxyConfiguration;
 
         public int ServicesPortNumber => settings.Get(ServicesPortSettingName, 10933);
+
+        public bool IsRegistered => settings.Get(IsRegisteredSettingName, false);
 
         public string ApplicationDirectory
         {
@@ -164,6 +167,12 @@ namespace Octopus.Tentacle.Configuration
         public bool SetServicesPortNumber(int port)
         {
             return settings.Set(ServicesPortSettingName, port);
+        }
+
+        public bool SetIsRegistered(bool isRegistered = true)
+        {
+            Console.WriteLine($"Setting as registered in Tentacle Configuration: {settings.GetType().Name}");
+            return settings.Set(IsRegisteredSettingName, isRegistered);
         }
 
         public bool SetListenIpAddress(string? address)
