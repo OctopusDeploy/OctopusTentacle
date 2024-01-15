@@ -3,6 +3,7 @@
 using System;
 using System.IO.Compression;
 using System.Linq;
+using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 using Nuke.Common;
 using Nuke.Common.IO;
@@ -76,9 +77,11 @@ partial class Build
                     .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, debBuildDir / "scripts"));
 
                 DockerTasks.DockerPull(settings => settings
+                    .When(RuntimeInformation.OSArchitecture == Architecture.Arm64, _ => _.SetPlatform("linux/amd64").SetQuiet(true))
                     .SetName(dockerToolsContainerImage));
 
                 DockerTasks.DockerRun(settings => settings
+                    .When(RuntimeInformation.OSArchitecture == Architecture.Arm64, _ => _.SetPlatform("linux/amd64"))
                     .EnableRm()
                     .EnableTty()
                     .SetEnv(
