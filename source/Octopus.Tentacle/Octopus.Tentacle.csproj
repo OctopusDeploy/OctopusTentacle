@@ -48,7 +48,6 @@
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Octopus.Client" Version="14.3.1013" />
-		<PackageReference Include="Octopus.Client" Version="14.3.997-20231114153900" />
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Autofac" Version="4.6.2" />
@@ -121,8 +120,5 @@
 	  <EmbeddedResource Include="Kubernetes\bootstrapRunner.sh">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </EmbeddedResource>
-	</ItemGroup>
-	<ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
-	  <PackageReference Include="KubernetesClient" Version="12.1.1" />
 	</ItemGroup>
 </Project>
