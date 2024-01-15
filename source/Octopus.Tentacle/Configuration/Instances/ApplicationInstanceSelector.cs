@@ -170,7 +170,7 @@ namespace Octopus.Tentacle.Configuration.Instances
     {
         const string Namespace = "octopus";
         readonly string name;
-        readonly Kubernetes client;
+        readonly k8s.Kubernetes client;
 
         V1ConfigMap configMap;
 
@@ -179,7 +179,7 @@ namespace Octopus.Tentacle.Configuration.Instances
         public ConfigMapKeyValueStore(string instanceName)
         {
             var kubeConfig = KubernetesClientConfiguration.InClusterConfig();
-            client = new Kubernetes(kubeConfig);
+            client = new k8s.Kubernetes(kubeConfig);
             name = $"{instanceName.ToLowerInvariant()}-configmap";
             V1ConfigMap? config;
             try

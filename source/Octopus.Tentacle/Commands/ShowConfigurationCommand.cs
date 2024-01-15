@@ -89,7 +89,7 @@ namespace Octopus.Tentacle.Commands
             var configStore = instanceSelector.Current.Configuration;
 
             var oldHomeConfiguration = new HomeConfiguration(ApplicationName.Tentacle, configStore!, instanceSelector);
-            var homeConfiguration = new WritableHomeConfiguration(ApplicationName.Tentacle, outputStore, instanceSelector);
+            var homeConfiguration = new WritableHomeConfiguration(ApplicationName.Tentacle, instanceSelector, outputStore);
             homeConfiguration.SetHomeDirectory(oldHomeConfiguration.HomeDirectory);
 
             var certificateGenerator = new CertificateGenerator(log);

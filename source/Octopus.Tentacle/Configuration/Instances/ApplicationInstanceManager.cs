@@ -60,8 +60,7 @@ namespace Octopus.Tentacle.Configuration.Instances
 
         void WriteHomeDirectory(string configurationFile, string homeDirectory)
         {
-            var keyValueStore = new XmlFileKeyValueStore(fileSystem, configurationFile);
-            var homeConfig = new WritableHomeConfiguration(applicationName, keyValueStore, instanceSelector);
+            var homeConfig = new WritableHomeConfiguration(applicationName, instanceSelector);
             log.Info($"Setting home directory to: {homeDirectory}");
             homeConfig.SetHomeDirectory(homeDirectory);
         }
