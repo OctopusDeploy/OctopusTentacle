@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace Octopus.Tentacle.Contracts.Builders
 {
-    internal class UniqueScriptTicketBuilder
+    public class UniqueScriptTicketBuilder
     {
         public ScriptTicket Build()
         {
