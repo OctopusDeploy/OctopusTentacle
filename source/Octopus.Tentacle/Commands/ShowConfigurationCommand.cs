@@ -6,7 +6,6 @@ using Octopus.Client;
 using Octopus.Client.Exceptions;
 using Octopus.Client.Model;
 using Octopus.Client.Model.Endpoints;
-using Octopus.Configuration;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Commands.OptionSets;
 using Octopus.Tentacle.Configuration;

@@ -1,6 +1,5 @@
 ﻿using System;
 using Newtonsoft.Json;
-using Octopus.Configuration;
 using Octopus.Tentacle.Configuration.EnvironmentVariableMappings;
 using Octopus.Tentacle.Configuration.Instances;
 

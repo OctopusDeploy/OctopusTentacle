@@ -6,7 +6,6 @@ using NSubstitute;
 using NUnit.Framework;
 using Octopus.Client;
 using Octopus.Client.Model;
-using Octopus.Configuration;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Commands;

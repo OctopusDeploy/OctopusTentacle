@@ -7,7 +7,6 @@ using System.Security.Cryptography.X509Certificates;
 using Newtonsoft.Json;
 using Octopus.Client.Model;
 using Octopus.Client.Model.Endpoints;
-using Octopus.Configuration;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Security;

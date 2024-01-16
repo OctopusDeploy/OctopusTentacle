@@ -2,7 +2,6 @@
 using System.Linq;
 using Octopus.Client.Model;
 using Octopus.Client.Model.Endpoints;
-using Octopus.Configuration;
 using Octopus.Manager.Tentacle.Controls;
 using Octopus.Manager.Tentacle.Infrastructure;
 using Octopus.Manager.Tentacle.Util;

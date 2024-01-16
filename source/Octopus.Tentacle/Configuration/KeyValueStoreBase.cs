@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
-using Octopus.Configuration;
 
 namespace Octopus.Tentacle.Configuration
 {

@@ -1,6 +1,5 @@
 ﻿using System;
 using Newtonsoft.Json;
-using Octopus.Configuration;
 using Octopus.Tentacle.Configuration.Crypto;
 
 namespace Octopus.Tentacle.Configuration
