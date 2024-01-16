@@ -77,7 +77,7 @@ partial class Build
                     .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, debBuildDir / "scripts"));
 
                 DockerTasks.DockerPull(settings => settings
-                    .When(RuntimeInformation.OSArchitecture == Architecture.Arm64, _ => _.SetPlatform("linux/amd64").SetQuiet(true))
+                    .When(RuntimeInformation.OSArchitecture == Architecture.Arm64, _ => _.SetPlatform("linux/amd64"))
                     .SetName(dockerToolsContainerImage));
 
                 DockerTasks.DockerRun(settings => settings
