@@ -4,14 +4,13 @@ using System.Collections.Generic;
 using k8s;
 using k8s.Models;
 using Newtonsoft.Json;
-using Octopus.Configuration;
 
 namespace Octopus.Tentacle.Configuration.Instances
 {
     class ConfigMapKeyValueStore : IWritableKeyValueStore, IAggregatableKeyValueStore
     {
         readonly string @namespace;
-        readonly string name;
+        const string Name = "tentacle-config";
         readonly k8s.Kubernetes client;
 
         V1ConfigMap configMap;
@@ -23,11 +22,10 @@ namespace Octopus.Tentacle.Configuration.Instances
             @namespace = Environment.GetEnvironmentVariable("OCTOPUS__K8STENTACLE__NAMESPACE") ?? "octopus";
             var kubeConfig = KubernetesClientConfiguration.InClusterConfig();
             client = new k8s.Kubernetes(kubeConfig);
-            name = $"{instanceName.ToLowerInvariant()}-configmap";
             V1ConfigMap? config;
             try
             {
-                config = client.CoreV1.ReadNamespacedConfigMap(name, @namespace);
+                config = client.CoreV1.ReadNamespacedConfigMap(Name, @namespace);
             }
             catch (Exception e)
             {
@@ -35,7 +33,7 @@ namespace Octopus.Tentacle.Configuration.Instances
                 config = null;
             }
 
-            configMap = config ?? client.CoreV1.CreateNamespacedConfigMap(new V1ConfigMap { Metadata = new V1ObjectMeta { Name = name, NamespaceProperty = @namespace }}, @namespace);
+            configMap = config ?? client.CoreV1.CreateNamespacedConfigMap(new V1ConfigMap { Metadata = new V1ObjectMeta { Name = Name, NamespaceProperty = @namespace }}, @namespace);
             Console.WriteLine($"ConfigMapKeyValueStore.ctor ConfigMap loaded: {JsonConvert.SerializeObject(configMap)}");
         }
 
@@ -49,6 +47,14 @@ namespace Octopus.Tentacle.Configuration.Instances
             var result = TryGet<TData>(name, protectionLevel);
 
             return result.foundResult ? result.value : defaultValue;
+        }
+
+        public void WriteTo(IWritableKeyValueStore outputStore)
+        {
+            foreach (var kvp in ConfigMapData)
+            {
+                outputStore.Set(kvp.Key, kvp.Value);
+            }
         }
 
         public bool Set(string name, string? value, ProtectionLevel protectionLevel = ProtectionLevel.None)
@@ -69,7 +75,7 @@ namespace Octopus.Tentacle.Configuration.Instances
 
         public bool Save()
         {
-            configMap = client.CoreV1.ReplaceNamespacedConfigMap(configMap, name, @namespace);
+            configMap = client.CoreV1.ReplaceNamespacedConfigMap(configMap, Name, @namespace);
             return true;
         }
 
