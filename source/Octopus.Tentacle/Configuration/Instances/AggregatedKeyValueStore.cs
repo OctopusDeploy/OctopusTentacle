@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Octopus.Configuration;
 
 namespace Octopus.Tentacle.Configuration.Instances
 {

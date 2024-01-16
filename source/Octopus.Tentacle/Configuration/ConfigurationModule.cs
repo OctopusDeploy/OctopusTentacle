@@ -1,6 +1,5 @@
 using System;
 using Autofac;
-using Octopus.Configuration;
 using Octopus.Tentacle.Configuration.EnvironmentVariableMappings;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Startup;

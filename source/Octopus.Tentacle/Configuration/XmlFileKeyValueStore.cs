@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Octopus.Configuration;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Configuration

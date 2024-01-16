@@ -1,7 +1,7 @@
 using System;
 using FluentAssertions;
 using NUnit.Framework;
-using Octopus.Configuration;
+using Octopus.Tentacle.Configuration;
 
 namespace Octopus.Tentacle.Tests.Configuration
 {

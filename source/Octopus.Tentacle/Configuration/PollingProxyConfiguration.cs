@@ -1,9 +1,6 @@
-#nullable enable
-using Octopus.Configuration;
-
 namespace Octopus.Tentacle.Configuration
 {
-    internal class PollingProxyConfiguration : IPollingProxyConfiguration
+    class PollingProxyConfiguration : IPollingProxyConfiguration
     {
         public const string UseDefaultProxySettingName = "Octopus.Server.Proxy.UseDefaultProxy";
         public const string ProxyUsernameSettingName = "Octopus.Server.Proxy.ProxyUsername";

@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using Octopus.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
 
 namespace Octopus.Tentacle.Configuration
