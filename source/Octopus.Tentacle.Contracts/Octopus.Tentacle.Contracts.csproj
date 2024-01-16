@@ -12,9 +12,6 @@
     <LangVersion>9</LangVersion>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-  <PropertyGroup>
-    <DefineConstants>DEFINE_VERSION_ATTRIBUTES</DefineConstants>
-  </PropertyGroup>
   <Choose>
     <When Condition="'$(TargetFramework)' == 'net48'">
       <PropertyGroup>
@@ -38,5 +35,8 @@
     <Compile Include="..\Solution Items\VersionInfo.cs">
       <Link>VersionInfo.cs</Link>
     </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Octopus.Tentacle.Util\Octopus.Tentacle.Util.csproj" />
   </ItemGroup>
 </Project>

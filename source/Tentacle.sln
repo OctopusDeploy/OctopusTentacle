@@ -46,6 +46,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Octopus.Tentacle.CommonTest
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Octopus.Tentacle.Client.Tests", "Octopus.Tentacle.Client.Tests\Octopus.Tentacle.Client.Tests.csproj", "{48C4D03B-F044-4089-942E-20DF102059F0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Octopus.Tentacle.Diagnostics", "Octopus.Tentacle.Diagnostics\Octopus.Tentacle.Diagnostics.csproj", "{994048CF-0DCC-45B4-8C6C-4A74AB882847}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Octopus.Tentacle.Util", "Octopus.Tentacle.Util\Octopus.Tentacle.Util.csproj", "{3C3FE4EE-855B-429A-8E89-A96BF24B7FA0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -255,6 +259,50 @@ Global
 		{48C4D03B-F044-4089-942E-20DF102059F0}.Release-net6.0-win-x64|Any CPU.Build.0 = Debug|Any CPU
 		{48C4D03B-F044-4089-942E-20DF102059F0}.Release-net6.0-win-x86|Any CPU.ActiveCfg = Debug|Any CPU
 		{48C4D03B-F044-4089-942E-20DF102059F0}.Release-net6.0-win-x86|Any CPU.Build.0 = Debug|Any CPU
+		{994048CF-0DCC-45B4-8C6C-4A74AB882847}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{994048CF-0DCC-45B4-8C6C-4A74AB882847}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{994048CF-0DCC-45B4-8C6C-4A74AB882847}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{994048CF-0DCC-45B4-8C6C-4A74AB882847}.Release|Any CPU.Build.0 = Release|Any CPU
+		{994048CF-0DCC-45B4-8C6C-4A74AB882847}.Release-net48-win|Any CPU.ActiveCfg = Release|Any CPU
+		{994048CF-0DCC-45B4-8C6C-4A74AB882847}.Release-net48-win|Any CPU.Build.0 = Release|Any CPU
+		{994048CF-0DCC-45B4-8C6C-4A74AB882847}.Release-net6.0-linux-arm|Any CPU.ActiveCfg = Release|Any CPU
+		{994048CF-0DCC-45B4-8C6C-4A74AB882847}.Release-net6.0-linux-arm|Any CPU.Build.0 = Release|Any CPU
+		{994048CF-0DCC-45B4-8C6C-4A74AB882847}.Release-net6.0-linux-arm64|Any CPU.ActiveCfg = Release|Any CPU
+		{994048CF-0DCC-45B4-8C6C-4A74AB882847}.Release-net6.0-linux-arm64|Any CPU.Build.0 = Release|Any CPU
+		{994048CF-0DCC-45B4-8C6C-4A74AB882847}.Release-net6.0-linux-musl-x64|Any CPU.ActiveCfg = Release|Any CPU
+		{994048CF-0DCC-45B4-8C6C-4A74AB882847}.Release-net6.0-linux-musl-x64|Any CPU.Build.0 = Release|Any CPU
+		{994048CF-0DCC-45B4-8C6C-4A74AB882847}.Release-net6.0-linux-x64|Any CPU.ActiveCfg = Release|Any CPU
+		{994048CF-0DCC-45B4-8C6C-4A74AB882847}.Release-net6.0-linux-x64|Any CPU.Build.0 = Release|Any CPU
+		{994048CF-0DCC-45B4-8C6C-4A74AB882847}.Release-net6.0-osx-arm64|Any CPU.ActiveCfg = Release|Any CPU
+		{994048CF-0DCC-45B4-8C6C-4A74AB882847}.Release-net6.0-osx-arm64|Any CPU.Build.0 = Release|Any CPU
+		{994048CF-0DCC-45B4-8C6C-4A74AB882847}.Release-net6.0-osx-x64|Any CPU.ActiveCfg = Release|Any CPU
+		{994048CF-0DCC-45B4-8C6C-4A74AB882847}.Release-net6.0-osx-x64|Any CPU.Build.0 = Release|Any CPU
+		{994048CF-0DCC-45B4-8C6C-4A74AB882847}.Release-net6.0-win-x64|Any CPU.ActiveCfg = Release|Any CPU
+		{994048CF-0DCC-45B4-8C6C-4A74AB882847}.Release-net6.0-win-x64|Any CPU.Build.0 = Release|Any CPU
+		{994048CF-0DCC-45B4-8C6C-4A74AB882847}.Release-net6.0-win-x86|Any CPU.ActiveCfg = Release|Any CPU
+		{994048CF-0DCC-45B4-8C6C-4A74AB882847}.Release-net6.0-win-x86|Any CPU.Build.0 = Release|Any CPU
+		{3C3FE4EE-855B-429A-8E89-A96BF24B7FA0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3C3FE4EE-855B-429A-8E89-A96BF24B7FA0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3C3FE4EE-855B-429A-8E89-A96BF24B7FA0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3C3FE4EE-855B-429A-8E89-A96BF24B7FA0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3C3FE4EE-855B-429A-8E89-A96BF24B7FA0}.Release-net48-win|Any CPU.ActiveCfg = Release|Any CPU
+		{3C3FE4EE-855B-429A-8E89-A96BF24B7FA0}.Release-net48-win|Any CPU.Build.0 = Release|Any CPU
+		{3C3FE4EE-855B-429A-8E89-A96BF24B7FA0}.Release-net6.0-linux-arm|Any CPU.ActiveCfg = Release|Any CPU
+		{3C3FE4EE-855B-429A-8E89-A96BF24B7FA0}.Release-net6.0-linux-arm|Any CPU.Build.0 = Release|Any CPU
+		{3C3FE4EE-855B-429A-8E89-A96BF24B7FA0}.Release-net6.0-linux-arm64|Any CPU.ActiveCfg = Release|Any CPU
+		{3C3FE4EE-855B-429A-8E89-A96BF24B7FA0}.Release-net6.0-linux-arm64|Any CPU.Build.0 = Release|Any CPU
+		{3C3FE4EE-855B-429A-8E89-A96BF24B7FA0}.Release-net6.0-linux-musl-x64|Any CPU.ActiveCfg = Release|Any CPU
+		{3C3FE4EE-855B-429A-8E89-A96BF24B7FA0}.Release-net6.0-linux-musl-x64|Any CPU.Build.0 = Release|Any CPU
+		{3C3FE4EE-855B-429A-8E89-A96BF24B7FA0}.Release-net6.0-linux-x64|Any CPU.ActiveCfg = Release|Any CPU
+		{3C3FE4EE-855B-429A-8E89-A96BF24B7FA0}.Release-net6.0-linux-x64|Any CPU.Build.0 = Release|Any CPU
+		{3C3FE4EE-855B-429A-8E89-A96BF24B7FA0}.Release-net6.0-osx-arm64|Any CPU.ActiveCfg = Release|Any CPU
+		{3C3FE4EE-855B-429A-8E89-A96BF24B7FA0}.Release-net6.0-osx-arm64|Any CPU.Build.0 = Release|Any CPU
+		{3C3FE4EE-855B-429A-8E89-A96BF24B7FA0}.Release-net6.0-osx-x64|Any CPU.ActiveCfg = Release|Any CPU
+		{3C3FE4EE-855B-429A-8E89-A96BF24B7FA0}.Release-net6.0-osx-x64|Any CPU.Build.0 = Release|Any CPU
+		{3C3FE4EE-855B-429A-8E89-A96BF24B7FA0}.Release-net6.0-win-x64|Any CPU.ActiveCfg = Release|Any CPU
+		{3C3FE4EE-855B-429A-8E89-A96BF24B7FA0}.Release-net6.0-win-x64|Any CPU.Build.0 = Release|Any CPU
+		{3C3FE4EE-855B-429A-8E89-A96BF24B7FA0}.Release-net6.0-win-x86|Any CPU.ActiveCfg = Release|Any CPU
+		{3C3FE4EE-855B-429A-8E89-A96BF24B7FA0}.Release-net6.0-win-x86|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -3,6 +3,7 @@ using System.Linq;
 using Autofac;
 using Octopus.Tentacle.Configuration.Proxy;
 using Octopus.Tentacle.Diagnostics;
+using Octopus.Tentacle.Diagnostics.Masking;
 
 namespace Octopus.Tentacle.Configuration
 {

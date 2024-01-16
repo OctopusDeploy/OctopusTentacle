@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Octopus.Tentacle.Client;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
-using Octopus.Tentacle.Tests.Integration.Support;
 
 namespace Octopus.Tentacle.Tests.Integration.Util
 {
@@ -19,7 +18,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
             await tentacleClient.ExecuteScript(startScriptCommand,
                 onScriptStatusResponseReceived => logs.AddRange(onScriptStatusResponseReceived.Logs),
                 cts => Task.CompletedTask,
-                new SerilogLoggerBuilder().Build().ForContext<TentacleClient>().ToILog(),
+                new SerilogLoggerBuilder().Build().ForContext<TentacleClient>(),
                 token);
         }
     }

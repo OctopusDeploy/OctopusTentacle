@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Diagnostics;
+using Octopus.Tentacle.Diagnostics.Masking;
 using Octopus.Tentacle.Security;
 using Octopus.Tentacle.Util;
 

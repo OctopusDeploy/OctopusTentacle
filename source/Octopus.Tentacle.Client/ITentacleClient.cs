@@ -5,15 +5,17 @@ using Halibut;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.Contracts;
-using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
+using Serilog;
 
 namespace Octopus.Tentacle.Client
 {
     public interface ITentacleClient : IDisposable
     {
         Task<UploadResult> UploadFile(string fileName, string path, DataStream package, ILog logger, CancellationToken cancellationToken);
+        Task<UploadResult> UploadFile(string fileName, string path, DataStream package, ILogger logger, CancellationToken cancellationToken);
         Task<DataStream?> DownloadFile(string remotePath, ILog logger, CancellationToken cancellationToken);
+        Task<DataStream?> DownloadFile(string remotePath, ILogger logger, CancellationToken cancellationToken);
 
         /// <summary>
         /// Execute a script on Tentacle
@@ -29,6 +31,12 @@ namespace Octopus.Tentacle.Client
             OnScriptStatusResponseReceived onScriptStatusResponseReceived,
             OnScriptCompleted onScriptCompleted,
             ILog logger,
+            CancellationToken scriptExecutionCancellationToken);
+
+        Task<ScriptExecutionResult> ExecuteScript(StartScriptCommandV3Alpha startScriptCommand,
+            OnScriptStatusResponseReceived onScriptStatusResponseReceived,
+            OnScriptCompleted onScriptCompleted,
+            ILogger logger,
             CancellationToken scriptExecutionCancellationToken);
     }
 }

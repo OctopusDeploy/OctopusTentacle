@@ -36,11 +36,7 @@
   <PropertyGroup Condition="('$(TargetFramework)'=='net48' OR '$(TargetFramework)'=='net6.0') AND ('$(RuntimeIdentifier)'=='win' OR '$(RuntimeIdentifier)'=='win-x86' OR '$(RuntimeIdentifier)'=='win-x64')">
     <IsPublishable>true</IsPublishable>
   </PropertyGroup>
-
-  <PropertyGroup>
-    <DefineConstants>DEFINE_VERSION_ATTRIBUTES</DefineConstants>
-  </PropertyGroup>
-
+    
 	<ItemGroup>
 		<Compile Include="..\Solution Items\SolutionInfo.cs">
 			<Link>Properties\SolutionInfo.cs</Link>
@@ -54,8 +50,12 @@
 	  <Reference Include="System.ServiceProcess" />
 	</ItemGroup>
 
-    <ItemGroup  Condition="'$(TargetFramework)'=='net6.0'">
+    <ItemGroup Condition="'$(TargetFramework)'=='net6.0'">
         <PackageReference Include="System.ServiceProcess.ServiceController" Version="7.0.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Octopus.Tentacle.Util\Octopus.Tentacle.Util.csproj" />
     </ItemGroup>
 
 </Project>

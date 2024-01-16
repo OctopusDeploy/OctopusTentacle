@@ -1,12 +1,11 @@
 using System;
-using System.Diagnostics.CodeAnalysis;
+using Octopus.Tentacle.Diagnostics.Util;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Diagnostics.Formatters
 {
     public class PluralStringFormatter : IFormatProvider, ICustomFormatter
     {
-        [return: NotNullIfNotNull("formatType")]
         public object? GetFormat(Type? formatType)
             => formatType == typeof(ICustomFormatter) ? this : null;
 

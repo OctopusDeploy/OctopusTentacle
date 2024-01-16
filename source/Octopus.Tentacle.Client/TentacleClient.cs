@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
 using Halibut.ServiceModel;
+using Octopus.Tentacle.Client.Diagnostics;
 using Octopus.Tentacle.Client.Execution;
 using Octopus.Tentacle.Client.Observability;
 using Octopus.Tentacle.Client.Scripts;
@@ -13,6 +14,7 @@ using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
+using Serilog;
 using ILog = Octopus.Diagnostics.ILog;
 using ITentacleClientObserver = Octopus.Tentacle.Contracts.Observability.ITentacleClientObserver;
 
@@ -131,6 +133,11 @@ namespace Octopus.Tentacle.Client
             }
         }
 
+        public async Task<UploadResult> UploadFile(string fileName, string path, DataStream package, ILogger logger, CancellationToken cancellationToken)
+        {
+            return await UploadFile(fileName, path, package, logger.ToILog(), cancellationToken);
+        }
+
         public async Task<DataStream?> DownloadFile(string remotePath, ILog logger, CancellationToken cancellationToken)
         {
             var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
@@ -164,6 +171,11 @@ namespace Octopus.Tentacle.Client
                 var operationMetrics = operationMetricsBuilder.Build();
                 tentacleClientObserver.DownloadFileCompleted(operationMetrics, logger);
             }
+        }
+
+        public async Task<DataStream?> DownloadFile(string remotePath, ILogger logger, CancellationToken cancellationToken)
+        {
+            return await DownloadFile(remotePath, logger.ToILog(), cancellationToken);
         }
 
         public async Task<ScriptExecutionResult> ExecuteScript(
@@ -207,6 +219,16 @@ namespace Octopus.Tentacle.Client
                 var operationMetrics = operationMetricsBuilder.Build();
                 tentacleClientObserver.ExecuteScriptCompleted(operationMetrics, logger);
             }
+        }
+
+        public async Task<ScriptExecutionResult> ExecuteScript(
+            StartScriptCommandV3Alpha startScriptCommand,
+            OnScriptStatusResponseReceived onScriptStatusResponseReceived,
+            OnScriptCompleted onScriptCompleted,
+            ILogger logger,
+            CancellationToken scriptExecutionCancellationToken)
+        {
+            return await ExecuteScript(startScriptCommand, onScriptStatusResponseReceived, onScriptCompleted, logger.ToILog(), scriptExecutionCancellationToken);
         }
 
         public void Dispose()

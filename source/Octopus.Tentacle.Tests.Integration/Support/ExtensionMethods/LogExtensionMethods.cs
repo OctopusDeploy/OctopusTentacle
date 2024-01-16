@@ -6,7 +6,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods
 {
     public static class LogExtensionMethods
     {
-        public static Log Chain(this Log log, Log? otherLog)
+        public static ILog Chain(this ILog log, Log? otherLog)
         {
             if (otherLog == null)
             {
@@ -18,10 +18,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods
 
         class LogChain : Log
         {
-            private readonly Log log1;
-            private readonly Log log2;
+            private readonly ILog log1;
+            private readonly ILog log2;
 
-            public LogChain(Log log1, Log log2)
+            public LogChain(ILog log1, ILog log2)
             {
                 this.log1 = log1;
                 this.log2 = log2;

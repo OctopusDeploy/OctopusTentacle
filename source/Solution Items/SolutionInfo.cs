@@ -7,7 +7,6 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCopyright("Copyright © Octopus Deploy Pty. Ltd. 2022")]
 [assembly: AssemblyCulture("")]
 #if DEBUG
-
 [assembly: AssemblyConfiguration("Debug")]
 #else
 [assembly: AssemblyConfiguration("Release")]

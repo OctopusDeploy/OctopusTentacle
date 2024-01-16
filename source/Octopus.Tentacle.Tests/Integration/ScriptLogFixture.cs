@@ -6,6 +6,7 @@ using NUnit.Framework;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Diagnostics;
+using Octopus.Tentacle.Diagnostics.Masking;
 using Octopus.Tentacle.Services.Scripts;
 using Octopus.Tentacle.Util;
 

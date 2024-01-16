@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
 using Octopus.Tentacle.Client;
+using Octopus.Tentacle.Client.Diagnostics;
 using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;

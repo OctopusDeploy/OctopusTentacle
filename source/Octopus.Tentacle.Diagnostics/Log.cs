@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Diagnostics.Formatters;
+using Octopus.Tentacle.Diagnostics.Masking;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Diagnostics
@@ -91,7 +93,7 @@ namespace Octopus.Tentacle.Diagnostics
             }
             catch (Exception ex)
             {
-                return (messageFormat ?? "") + " (" + string.Join(",", (args ?? new object[0]).WhereNotNull()) + ") => " + ex.Message;
+                return (messageFormat ?? "") + " (" + string.Join(",", (args ?? new object[0]).Where(i => i != null)) + ") => " + ex.Message;
             }
         }
 

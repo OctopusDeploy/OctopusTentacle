@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<AppConfig Condition="'$(TargetFramework)' == 'net6.0'">app.netcore.config</AppConfig>
 		<ApplicationManifest>Tentacle.exe.manifest</ApplicationManifest>
@@ -111,6 +111,8 @@
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\Octopus.Tentacle.Contracts\Octopus.Tentacle.Contracts.csproj" />
+		<ProjectReference Include="..\Octopus.Tentacle.Diagnostics\Octopus.Tentacle.Diagnostics.csproj" />
+		<ProjectReference Include="..\Octopus.Tentacle.Util\Octopus.Tentacle.Util.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 	  <EmbeddedResource Include="Internals\Options\_Readme.txt" />

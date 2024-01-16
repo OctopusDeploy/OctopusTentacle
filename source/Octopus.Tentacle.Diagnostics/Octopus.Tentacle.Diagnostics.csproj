@@ -1,30 +1,27 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <RootNamespace>Octopus.Tentacle.Client</RootNamespace>
-        <AssemblyName>Octopus.Tentacle.Client</AssemblyName>
+        <RootNamespace>Octopus.Tentacle.Diagnostics</RootNamespace>
+        <AssemblyName>Octopus.Tentacle.Diagnostics</AssemblyName>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
         <OutputPath>bin\</OutputPath>
-        <TargetFrameworks>net6.0</TargetFrameworks>
+        <TargetFrameworks>net48;net6.0</TargetFrameworks>
         <DisableImplicitPackageTargetFallback>true</DisableImplicitPackageTargetFallback>
         <Optimize Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">True</Optimize>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <LangVersion>9</LangVersion>
         <Nullable>enable</Nullable>
-        <RuntimeIdentifiers>win-x86;win-x64;linux-x64;osx-x64;osx-arm64;linux-arm64;linux-arm;linux-musl-x64</RuntimeIdentifiers>
     </PropertyGroup>
     <ItemGroup>
-      <Compile Include="..\Solution Items\SolutionInfo.cs" Link="SolutionInfo.cs" />
-      <Compile Include="..\Solution Items\VersionInfo.cs" Link="VersionInfo.cs" />
+        <Compile Include="..\Solution Items\SolutionInfo.cs" Link="SolutionInfo.cs" />
+        <Compile Include="..\Solution Items\VersionInfo.cs" Link="VersionInfo.cs" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="Polly" Version="7.2.2" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
         <PackageReference Include="Octopus.Diagnostics" Version="2.1.0" />
         <PackageReference Include="Serilog" Version="2.12.0" />
     </ItemGroup>
     <ItemGroup>
-      <ProjectReference Include="..\Octopus.Tentacle.Contracts\Octopus.Tentacle.Contracts.csproj" />
-      <ProjectReference Include="..\Octopus.Tentacle.Diagnostics\Octopus.Tentacle.Diagnostics.csproj" />
       <ProjectReference Include="..\Octopus.Tentacle.Util\Octopus.Tentacle.Util.csproj" />
     </ItemGroup>
 </Project>

@@ -5,6 +5,7 @@ using System.Text;
 using Newtonsoft.Json;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Diagnostics;
+using Octopus.Tentacle.Diagnostics.Masking;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Util;
 

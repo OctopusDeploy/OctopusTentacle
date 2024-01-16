@@ -5,6 +5,7 @@ using System.Reflection;
 using NLog;
 using NLog.Targets;
 using Octopus.Tentacle.Diagnostics;
+using Octopus.Tentacle.Diagnostics.Masking;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Startup

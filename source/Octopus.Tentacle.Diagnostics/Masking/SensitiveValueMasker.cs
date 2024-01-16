@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Linq;
-using Octopus.Tentacle.Security.Masking;
 
-namespace Octopus.Tentacle.Diagnostics
+namespace Octopus.Tentacle.Diagnostics.Masking
 {
     public class SensitiveValueMasker
     {
