@@ -27,6 +27,8 @@ namespace Octopus.Tentacle.Configuration
         [return: NotNullIfNotNull("defaultValue")]
         public abstract TData? Get<TData>(string name, TData? defaultValue = default, ProtectionLevel protectionLevel = ProtectionLevel.None);
 
+        public abstract void WriteTo(IWritableKeyValueStore outputStore);
+
         [Obsolete("Please use the generic overload instead")]
         public bool Set(string name, string? value, ProtectionLevel protectionLevel = ProtectionLevel.None)
         {

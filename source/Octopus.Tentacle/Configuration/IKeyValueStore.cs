@@ -8,5 +8,7 @@ namespace Octopus.Tentacle.Configuration
 
         [return: NotNullIfNotNull("defaultValue")]
         TData? Get<TData>(string name, TData? defaultValue = default, ProtectionLevel protectionLevel = ProtectionLevel.None);
+
+        void WriteTo(IWritableKeyValueStore outputStore);
     }
 }
