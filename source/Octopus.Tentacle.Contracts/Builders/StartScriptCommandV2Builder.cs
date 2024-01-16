@@ -1,48 +1,27 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
-using Octopus.Tentacle.Tests.Integration.Util.Builders;
 
-namespace Octopus.Tentacle.CommonTestUtils.Builders
+namespace Octopus.Tentacle.Contracts.Builders
 {
     public class StartScriptCommandV2Builder
     {
-        readonly List<ScriptFile> files = new List<ScriptFile>();
-        readonly List<string> arguments = new List<string>();
-        readonly Dictionary<ScriptType, string> additionalScripts = new Dictionary<ScriptType, string>();
-        StringBuilder scriptBody = new StringBuilder(string.Empty);
-        ScriptIsolationLevel isolation = ScriptIsolationLevel.NoIsolation;
+        readonly List<ScriptFile> files = new();
+        readonly List<string> arguments = new();
+        readonly Dictionary<ScriptType, string> additionalScripts = new();
+        StringBuilder scriptBody = new(string.Empty);
+        ScriptIsolationLevel isolation = ScriptIsolationLevel.FullIsolation;
         TimeSpan scriptIsolationMutexTimeout = TimeSpan.FromMilliseconds(int.MaxValue);
         string scriptIsolationMutexName = "RunningScript";
         string taskId = Guid.NewGuid().ToString();
-        ScriptTicket scriptTicket = new ScriptTicket(Guid.NewGuid().ToString());
-        TimeSpan? durationStartScriptCanWaitForScriptToFinish;
+        ScriptTicket scriptTicket = new UniqueScriptTicketBuilder().Build();
+        TimeSpan? durationStartScriptCanWaitForScriptToFinish = TimeSpan.FromSeconds(5);
 
         public StartScriptCommandV2Builder WithScriptBody(string scriptBody)
         {
             this.scriptBody = new StringBuilder(scriptBody);
             return this;
-        }
-
-        public StartScriptCommandV2Builder WithScriptBodyForCurrentOs(string windowsScript, string bashScript)
-        {
-            this.scriptBody = new StringBuilder(PlatformDetection.IsRunningOnWindows ? windowsScript : bashScript);
-            return this;
-        }
-
-        public StartScriptCommandV2Builder WithScriptBody(ScriptBuilder scriptBuilder)
-        {
-            scriptBody = new StringBuilder(scriptBuilder.BuildForCurrentOs());
-            return this;
-        }
-
-        public StartScriptCommandV2Builder WithScriptBody(Action<ScriptBuilder> builderFunc)
-        {
-            var scriptBuilder = new ScriptBuilder();
-            builderFunc(scriptBuilder);
-            return WithScriptBody(scriptBuilder);
         }
 
         public StartScriptCommandV2Builder WithAdditionalScriptTypes(ScriptType scriptType, string scriptBody)
@@ -104,7 +83,7 @@ namespace Octopus.Tentacle.CommonTestUtils.Builders
         }
 
         public StartScriptCommandV2 Build()
-            => new StartScriptCommandV2(scriptBody.ToString(),
+            => new(scriptBody.ToString(),
                 isolation,
                 scriptIsolationMutexTimeout,
                 scriptIsolationMutexName,
