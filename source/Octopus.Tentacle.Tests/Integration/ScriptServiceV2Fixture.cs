@@ -54,6 +54,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBodyForCurrentOs(windowsScript, bashScript)
                 .WithIsolation(ScriptIsolationLevel.NoIsolation)
+                .WithDurationStartScriptCanWaitForScriptToFinish(null)
                 .Build();
 
             var startScriptResponse = await service.StartScriptAsync(startScriptCommand, CancellationToken.None);
@@ -73,6 +74,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBodyForCurrentOs(windowsScript, bashScript)
                 .WithIsolation(ScriptIsolationLevel.NoIsolation)
+                .WithDurationStartScriptCanWaitForScriptToFinish(null)
                 .Build();
 
             var startScriptResponse = await service.StartScriptAsync(startScriptCommand, CancellationToken.None);
@@ -93,6 +95,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 new StartScriptCommandAndResponse(command: new StartScriptCommandV2Builder()
                     .WithScriptBodyForCurrentOs(windowsScript, bashScript)
                     .WithIsolation(ScriptIsolationLevel.NoIsolation)
+                    .WithDurationStartScriptCanWaitForScriptToFinish(null)
                     .Build())).ToList();
 
             var started = Stopwatch.StartNew();
@@ -133,6 +136,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody(script)
                 .WithIsolation(ScriptIsolationLevel.NoIsolation)
+                .WithDurationStartScriptCanWaitForScriptToFinish(null)
                 .Build();
 
             var durationUntilScriptStartedRunning = Stopwatch.StartNew();
@@ -167,6 +171,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBodyForCurrentOs(windowsScript, bashScript)
                 .WithIsolation(ScriptIsolationLevel.NoIsolation)
+                .WithDurationStartScriptCanWaitForScriptToFinish(null)
                 .Build();
 
             var startScriptResponse = await service.StartScriptAsync(startScriptCommand, CancellationToken.None);
@@ -288,6 +293,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBodyForCurrentOs(windowsScript, bashScript)
                 .WithIsolation(ScriptIsolationLevel.NoIsolation)
+                .WithDurationStartScriptCanWaitForScriptToFinish(null)
                 .Build();
 
             var cancellationTimer = new Stopwatch();
@@ -331,6 +337,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody(script)
                 .WithIsolation(ScriptIsolationLevel.NoIsolation)
+                .WithDurationStartScriptCanWaitForScriptToFinish(null)
                 .Build();
 
             var workspaceDirectory = workspaceFactory.GetWorkingDirectoryPath(startScriptCommand.ScriptTicket);
@@ -414,6 +421,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBodyForCurrentOs(windowsScript, bashScript)
                 .WithIsolation(ScriptIsolationLevel.NoIsolation)
+                .WithDurationStartScriptCanWaitForScriptToFinish(null)
                 .Build();
 
             var scriptStateStore = SetupScriptStateStore(startScriptCommand.ScriptTicket);
@@ -452,6 +460,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody("echo \"finished\"")
                 .WithIsolation(ScriptIsolationLevel.NoIsolation)
+                .WithDurationStartScriptCanWaitForScriptToFinish(null)
                 .Build();
 
             var response = await service.StartScriptAsync(startScriptCommand, CancellationToken.None);
@@ -507,6 +516,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithScriptBodyForCurrentOs(windowsScript, bashScript)
                 .WithScriptTicket(scriptTicket)
                 .WithIsolation(ScriptIsolationLevel.NoIsolation)
+                .WithDurationStartScriptCanWaitForScriptToFinish(null)
                 .Build();
 
             return (startScriptCommand, new FileInfo(filePath));

@@ -7,7 +7,9 @@ namespace Octopus.Tentacle.CommonTestUtils.Builders
     {
         public LatestStartScriptCommandBuilder()
         {
+            // Set defaults for the tests
             WithIsolation(ScriptIsolationLevel.NoIsolation);
+            WithDurationStartScriptCanWaitForScriptToFinish(null);
         }
     }
 }
