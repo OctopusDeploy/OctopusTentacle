@@ -70,8 +70,9 @@ namespace Octopus.Tentacle.Configuration
 
         public bool IsRegistered => settings.Get(IsRegisteredSettingName, false);
 
-        public void WriteTo(IWritableKeyValueStore outputStore, params string[] excluding)
+        public void WriteTo(IWritableKeyValueStore outputStore, IEnumerable<string> excluding)
         {
+            excluding = new HashSet<string>(excluding);
             SetIfNotExcluded(IsRegisteredSettingName, IsRegistered);
             SetIfNotExcluded(ServicesPortSettingName, ServicesPortNumber);
             SetIfNotExcluded(ServicesListenIPSettingName, ListenIpAddress);
