@@ -1,4 +1,5 @@
 ﻿using System;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Kubernetes
 {
