@@ -39,8 +39,8 @@ namespace Octopus.Tentacle.Configuration.Instances
         {
             (configurationFile, homeDirectory) = ValidateConfigDirectory(configurationFile, homeDirectory);
             EnsureConfigurationFileExists(configurationFile, homeDirectory);
-            WriteHomeDirectory(configurationFile, homeDirectory);
             RegisterInstanceInIndex(instanceName, configurationFile);
+            WriteHomeDirectory(homeDirectory);
         }
 
         public void DeleteInstance(string instanceName)
@@ -58,7 +58,7 @@ namespace Octopus.Tentacle.Configuration.Instances
             instanceStore.RegisterInstance(instance);
         }
 
-        void WriteHomeDirectory(string configurationFile, string homeDirectory)
+        void WriteHomeDirectory(string homeDirectory)
         {
             var homeConfig = new WritableHomeConfiguration(applicationName, instanceSelector);
             log.Info($"Setting home directory to: {homeDirectory}");
