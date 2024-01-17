@@ -138,7 +138,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
         {
             var keyStore = LoadConfiguration();
 
-            var home = new HomeConfiguration(ApplicationName.Tentacle, keyStore, selector);
+            var home = new HomeConfiguration(ApplicationName.Tentacle, selector);
 
             HomeDirectory = home.HomeDirectory;
 
@@ -150,8 +150,8 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
             ServiceWatcher = new ServiceWatcher(ApplicationName.Tentacle, applicationInstance.InstanceName, commandLinePath);
 
             var tencon = new Octopus.Tentacle.Configuration.TentacleConfiguration(
-                keyStore,
-                new HomeConfiguration(ApplicationName.Tentacle, keyStore, selector),
+                selector,
+                home,
                 new ProxyConfiguration(keyStore),
                 new PollingProxyConfiguration(keyStore),
                 new SystemLog()

@@ -7,6 +7,11 @@ namespace Octopus.Tentacle.Tests.Commands
     {
         public string ApplicationSpecificHomeDirectory { get; private set; } = string.Empty;
         public string HomeDirectory { get; set; }= string.Empty;
+        public void WriteTo(IWritableKeyValueStore outputStore)
+        {
+            throw new System.NotImplementedException();
+        }
+
         public string? CacheDirectory { get; set; }
 
         public void Save()

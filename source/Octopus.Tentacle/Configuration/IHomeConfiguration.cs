@@ -6,6 +6,8 @@ namespace Octopus.Tentacle.Configuration
     {
         string? ApplicationSpecificHomeDirectory { get; }
         string? HomeDirectory { get; }
+
+        void WriteTo(IWritableKeyValueStore outputStore);
     }
 
     public interface IWritableHomeConfiguration : IHomeConfiguration

@@ -84,6 +84,8 @@ namespace Octopus.Tentacle.Configuration
         IPollingProxyConfiguration PollingProxyConfiguration { get; }
 
         bool IsRegistered { get; }
+
+        void WriteTo(IWritableKeyValueStore outputStore, params string[] excluding);
     }
 
     public interface IWritableTentacleConfiguration : ITentacleConfiguration

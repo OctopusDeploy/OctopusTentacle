@@ -14,11 +14,10 @@ namespace Octopus.Tentacle.Configuration
         readonly IApplicationInstanceSelector applicationInstanceSelector;
 
         public HomeConfiguration(ApplicationName application,
-            IKeyValueStore? settings,
             IApplicationInstanceSelector applicationInstanceSelector)
         {
             this.application = application;
-            this.settings = settings;
+            settings = applicationInstanceSelector.Current.Configuration;
             this.applicationInstanceSelector = applicationInstanceSelector;
         }
 
@@ -31,6 +30,11 @@ namespace Octopus.Tentacle.Configuration
                 var value = settings?.Get<string?>(OctopusHomeSettingName);
                 return value == null ? null : EnsureRootedPath(value);
             }
+        }
+
+        public void WriteTo(IWritableKeyValueStore outputStore)
+        {
+            outputStore.Set(OctopusHomeSettingName, HomeDirectory);
         }
 
         string? EnsureRootedPath(string path)
@@ -63,7 +67,7 @@ namespace Octopus.Tentacle.Configuration
     {
         readonly IWritableKeyValueStore? settings;
 
-        public WritableHomeConfiguration(ApplicationName application, IApplicationInstanceSelector applicationInstanceSelector, IWritableKeyValueStore? writableConfiguration = null) : base(application, writableConfiguration ?? applicationInstanceSelector.Current.Configuration, applicationInstanceSelector)
+        public WritableHomeConfiguration(ApplicationName application, IApplicationInstanceSelector applicationInstanceSelector, IWritableKeyValueStore? writableConfiguration = null) : base(application, applicationInstanceSelector)
         {
             settings = writableConfiguration ?? applicationInstanceSelector.Current.WritableConfiguration;
         }

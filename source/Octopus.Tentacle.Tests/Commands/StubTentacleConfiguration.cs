@@ -39,6 +39,10 @@ namespace Octopus.Tentacle.Tests.Commands
         public IProxyConfiguration ProxyConfiguration { get; set; } = null!;
         public IPollingProxyConfiguration PollingProxyConfiguration { get; set; } = null!;
         public bool IsRegistered { get; set; } = false;
+        public void WriteTo(IWritableKeyValueStore outputStore, params string[] excluding)
+        {
+            throw new NotImplementedException();
+        }
 
         public bool SetApplicationDirectory(string directory)
         {

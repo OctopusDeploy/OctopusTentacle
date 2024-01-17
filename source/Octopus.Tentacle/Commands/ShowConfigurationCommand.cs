@@ -20,8 +20,8 @@ namespace Octopus.Tentacle.Commands
 {
     public class ShowConfigurationCommand : AbstractStandardCommand
     {
-        readonly IApplicationInstanceSelector instanceSelector;
         readonly IOctopusFileSystem fileSystem;
+        readonly Lazy<IHomeConfiguration> homeConfiguration;
         readonly Lazy<ITentacleConfiguration> tentacleConfiguration;
         readonly Lazy<IWatchdog> watchdog;
         string file = null!;
@@ -37,6 +37,7 @@ namespace Octopus.Tentacle.Commands
         public ShowConfigurationCommand(
             IApplicationInstanceSelector instanceSelector,
             IOctopusFileSystem fileSystem,
+            Lazy<IHomeConfiguration> homeConfiguration,
             Lazy<ITentacleConfiguration> tentacleConfiguration,
             Lazy<IWatchdog> watchdog,
             IProxyConfigParser proxyConfig,
@@ -45,8 +46,8 @@ namespace Octopus.Tentacle.Commands
             ISpaceRepositoryFactory spaceRepositoryFactory,
             ILogFileOnlyLogger logFileOnlyLogger) : base(instanceSelector, log, logFileOnlyLogger)
         {
-            this.instanceSelector = instanceSelector;
             this.fileSystem = fileSystem;
+            this.homeConfiguration = homeConfiguration;
             this.tentacleConfiguration = tentacleConfiguration;
             this.watchdog = watchdog;
             this.proxyConfig = proxyConfig;
@@ -86,26 +87,14 @@ namespace Octopus.Tentacle.Commands
 
         internal async Task CollectConfigurationSettings(DictionaryKeyValueStore outputStore)
         {
-            var configStore = instanceSelector.Current.Configuration;
+            homeConfiguration.Value.WriteTo(outputStore);
 
-            var oldHomeConfiguration = new HomeConfiguration(ApplicationName.Tentacle, configStore!, instanceSelector);
-            var homeConfiguration = new WritableHomeConfiguration(ApplicationName.Tentacle, instanceSelector, outputStore);
-            homeConfiguration.SetHomeDirectory(oldHomeConfiguration.HomeDirectory);
+            tentacleConfiguration.Value.WriteTo(outputStore,
+                TentacleConfiguration.CertificateSettingName,
+                TentacleConfiguration.LastReceivedHandshakeSettingName,
+                TentacleConfiguration.IsRegisteredSettingName);
 
-            var certificateGenerator = new CertificateGenerator(log);
-            var newTentacleConfiguration = new WritableTentacleConfiguration(outputStore, homeConfiguration, certificateGenerator, tentacleConfiguration.Value.ProxyConfiguration, tentacleConfiguration.Value.PollingProxyConfiguration, new NullLog());
-
-            newTentacleConfiguration.SetApplicationDirectory(tentacleConfiguration.Value.ApplicationDirectory);
-            newTentacleConfiguration.SetListenIpAddress(tentacleConfiguration.Value.ListenIpAddress);
-            newTentacleConfiguration.SetNoListen(tentacleConfiguration.Value.NoListen);
-            newTentacleConfiguration.SetServicesPortNumber(tentacleConfiguration.Value.ServicesPortNumber);
-            newTentacleConfiguration.SetTrustedOctopusServers(tentacleConfiguration.Value.TrustedOctopusServers);
-
-            //we dont want the actual certificate, as its encrypted, and we get a different output everytime
-            outputStore.Set<string>("Tentacle.CertificateThumbprint", tentacleConfiguration.Value.TentacleCertificate?.Thumbprint ?? string.Empty);
-
-            var watchdogConfiguration = watchdog.Value.GetConfiguration();
-            watchdogConfiguration.WriteTo(outputStore);
+            watchdog.Value.GetConfiguration().WriteTo(outputStore);
 
             //advanced settings
             if (apiEndpointOptions.IsSupplied)
