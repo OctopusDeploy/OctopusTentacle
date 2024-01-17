@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using Octopus.Diagnostics;
+using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Configuration.Instances
@@ -10,8 +11,8 @@ namespace Octopus.Tentacle.Configuration.Instances
         readonly IOctopusFileSystem fileSystem;
         readonly ISystemLog log;
         readonly IApplicationInstanceStore instanceStore;
-        readonly IApplicationInstanceSelector instanceSelector;
-        private readonly ApplicationName applicationName;
+        readonly Lazy<IWritableHomeConfiguration> homeConfiguration;
+        readonly ApplicationName applicationName;
         readonly StartUpInstanceRequest startUpInstanceRequest;
 
         public ApplicationInstanceManager(
@@ -20,14 +21,14 @@ namespace Octopus.Tentacle.Configuration.Instances
             IOctopusFileSystem fileSystem,
             ISystemLog log,
             IApplicationInstanceStore instanceStore,
-            IApplicationInstanceSelector instanceSelector)
+            Lazy<IWritableHomeConfiguration> homeConfiguration)
         {
             this.applicationName = applicationName;
             this.startUpInstanceRequest = startUpInstanceRequest;
             this.fileSystem = fileSystem;
             this.log = log;
             this.instanceStore = instanceStore;
-            this.instanceSelector = instanceSelector;
+            this.homeConfiguration = homeConfiguration;
         }
 
         public void CreateDefaultInstance(string configurationFile, string? homeDirectory = null)
@@ -60,13 +61,15 @@ namespace Octopus.Tentacle.Configuration.Instances
 
         void WriteHomeDirectory(string homeDirectory)
         {
-            var homeConfig = new WritableHomeConfiguration(applicationName, instanceSelector);
             log.Info($"Setting home directory to: {homeDirectory}");
-            homeConfig.SetHomeDirectory(homeDirectory);
+            homeConfiguration.Value.SetHomeDirectory(homeDirectory);
         }
 
         void EnsureConfigurationFileExists(string configurationFile, string homeDirectory)
         {
+            //Skip this step if we're running on Kubernetes
+            if (KubernetesConfig.IsRunningInKubernetesCluster) return;
+
             // Ensure we can write configuration file
             string configurationDirectory = Path.GetDirectoryName(configurationFile) ?? homeDirectory;
             fileSystem.EnsureDirectoryExists(configurationDirectory);
