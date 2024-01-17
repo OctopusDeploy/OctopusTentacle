@@ -72,7 +72,7 @@ namespace Octopus.Tentacle.Configuration.Instances
             if (appInstance is { instanceName: not null, configurationpath: null })
             {
                 Console.WriteLine($"Adding ConfigMap Key Value Store: instanceName: {appInstance.instanceName}");
-                var writeable = new ConfigMapKeyValueStore(appInstance.instanceName);
+                var writeable = new ConfigMapKeyValueStore();
                 writableConfig = writeable;
                 aggregatedKeyValueStore = ContributeAdditionalConfiguration(writeable);
             }

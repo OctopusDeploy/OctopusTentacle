@@ -17,7 +17,7 @@ namespace Octopus.Tentacle.Configuration.Instances
 
         IDictionary<string, string> ConfigMapData => configMap.Data ?? (configMap.Data = new Dictionary<string, string>());
 
-        public ConfigMapKeyValueStore(string instanceName)
+        public ConfigMapKeyValueStore()
         {
             @namespace = Environment.GetEnvironmentVariable("OCTOPUS__K8STENTACLE__NAMESPACE") ?? "octopus";
             var kubeConfig = KubernetesClientConfiguration.InClusterConfig();

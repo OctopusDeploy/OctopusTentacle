@@ -27,13 +27,5 @@ namespace Octopus.Tentacle.Configuration.Instances
 
             return result.foundResult ? result.value : defaultValue;
         }
-
-        public void WriteTo(IWritableKeyValueStore outputStore)
-        {
-            foreach (var configuration in configurations)
-            {
-                configuration.WriteTo(outputStore);
-            }
-        }
     }
 }

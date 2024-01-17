@@ -53,14 +53,6 @@ namespace Octopus.Tentacle.Configuration
         {
         }
 
-        public override void WriteTo(IWritableKeyValueStore outputStore)
-        {
-            foreach (var kvp in settings.Value)
-            {
-                outputStore.Set(kvp.Key, kvp.Value);
-            }
-        }
-
         public override string ToString()
         {
             return string.Concat(settings.Value.Select(x => $"{x.Key}: {x.Value}\n"));
