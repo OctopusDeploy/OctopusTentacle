@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using k8s;
 using k8s.Models;
 using Newtonsoft.Json;
+using Octopus.Diagnostics;
 
 namespace Octopus.Tentacle.Configuration.Instances
 {
@@ -17,7 +18,7 @@ namespace Octopus.Tentacle.Configuration.Instances
 
         IDictionary<string, string> ConfigMapData => configMap.Data ?? (configMap.Data = new Dictionary<string, string>());
 
-        public ConfigMapKeyValueStore(string @namespace)
+        public ConfigMapKeyValueStore(string @namespace, ISystemLog log)
         {
             this.@namespace = @namespace;
             var kubeConfig = KubernetesClientConfiguration.InClusterConfig();
@@ -27,14 +28,13 @@ namespace Octopus.Tentacle.Configuration.Instances
             {
                 config = client.CoreV1.ReadNamespacedConfigMap(Name, @namespace);
             }
-            catch (Exception e)
+            catch
             {
-                Console.WriteLine($"ConfigMapKeyValueStore.ctor Exception: {e}");
+                log.Verbose($"ConfigMap for Tentacle Configuration not found for namespace {@namespace}, creating new ConfigMap.");
                 config = null;
             }
 
             configMap = config ?? client.CoreV1.CreateNamespacedConfigMap(new V1ConfigMap { Metadata = new V1ObjectMeta { Name = Name, NamespaceProperty = @namespace }}, @namespace);
-            Console.WriteLine($"ConfigMapKeyValueStore.ctor ConfigMap loaded: {JsonConvert.SerializeObject(configMap)}");
         }
 
         public string? Get(string name, ProtectionLevel protectionLevel = ProtectionLevel.None)
@@ -89,9 +89,8 @@ namespace Octopus.Tentacle.Configuration.Instances
             {
                 return value is TData data ? (true, data) : (true, JsonConvert.DeserializeObject<TData>(value));
             }
-            catch (Exception e)
+            catch
             {
-                Console.WriteLine($"ConfigMapKeyValueStore.TryGet<TData>: Exception! {e}");
                 return (false, default);
             }
         }

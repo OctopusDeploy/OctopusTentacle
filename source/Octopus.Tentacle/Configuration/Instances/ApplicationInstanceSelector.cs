@@ -79,7 +79,7 @@ namespace Octopus.Tentacle.Configuration.Instances
                 KubernetesConfig.Namespace is {} @namespace)
             {
                 log.Verbose($"Loading configuration from ConfigMap for namespace {@namespace}");
-                var configMapWritableStore = new ConfigMapKeyValueStore(@namespace);
+                var configMapWritableStore = new ConfigMapKeyValueStore(@namespace, log);
                 return (ContributeAdditionalConfiguration(configMapWritableStore), configMapWritableStore);
             }
 #endif
