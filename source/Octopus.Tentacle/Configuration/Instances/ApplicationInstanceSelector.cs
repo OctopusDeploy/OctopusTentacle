@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Octopus.Diagnostics;
+using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Configuration.Instances
@@ -66,33 +67,30 @@ namespace Octopus.Tentacle.Configuration.Instances
         {
             var appInstance = LocateApplicationPrimaryConfiguration();
 
-            IKeyValueStore aggregatedKeyValueStore;
-            IWritableKeyValueStore writableConfig;
-#if !NETFRAMEWORK
-            if (appInstance is { instanceName: not null, configurationpath: null })
-            {
-                Console.WriteLine($"Adding ConfigMap Key Value Store: instanceName: {appInstance.instanceName}");
-                var writeable = new ConfigMapKeyValueStore();
-                writableConfig = writeable;
-                aggregatedKeyValueStore = ContributeAdditionalConfiguration(writeable);
-            }
-            else
-            {
-#endif
-                if (!ConfigurationFileExists(appInstance.configurationpath))
-                {
-                    ThrowConfigurationMissingException(appInstance.instanceName, appInstance.configurationpath);
-                }
-
-                log.Verbose($"Loading configuration from {appInstance.configurationpath}");
-                var writeable = new XmlFileKeyValueStore(fileSystem, appInstance.configurationpath!);
-                writableConfig = writeable;
-                aggregatedKeyValueStore = ContributeAdditionalConfiguration(writeable);
-#if !NETFRAMEWORK
-            }
-#endif
+            var (aggregatedKeyValueStore, writableConfig) = LoadConfigurationStore(appInstance);
 
             return new ApplicationInstanceConfiguration(appInstance.instanceName, appInstance.configurationpath, aggregatedKeyValueStore, writableConfig);
+        }
+
+        (IKeyValueStore, IWritableKeyValueStore) LoadConfigurationStore((string? instanceName, string? configurationpath) appInstance)
+        {
+#if !NETFRAMEWORK
+            if (appInstance is { instanceName: not null, configurationpath: null } &&
+                KubernetesConfig.Namespace is {} @namespace)
+            {
+                log.Verbose($"Loading configuration from ConfigMap for namespace {@namespace}");
+                var configMapWritableStore = new ConfigMapKeyValueStore(@namespace);
+                return (ContributeAdditionalConfiguration(configMapWritableStore), configMapWritableStore);
+            }
+#endif
+            if (!ConfigurationFileExists(appInstance.configurationpath))
+            {
+                ThrowConfigurationMissingException(appInstance.instanceName, appInstance.configurationpath);
+            }
+
+            log.Verbose($"Loading configuration from {appInstance.configurationpath}");
+            var writable = new XmlFileKeyValueStore(fileSystem, appInstance.configurationpath!);
+            return (ContributeAdditionalConfiguration(writable), writable);
         }
 
         bool ConfigurationFileExists([NotNullWhen(true)] string? configurationPath)
@@ -130,10 +128,12 @@ namespace Octopus.Tentacle.Configuration.Instances
         {
             switch (startUpInstanceRequest)
             {
+#if !NETFRAMEWORK
                 case StartUpKubernetesConfigMapInstanceRequest configMapInstanceRequest:
                 {   // `--instance` parameter provided and running on Kubernetes.
                     return (configMapInstanceRequest.InstanceName, null);
                 }
+#endif
                 case StartUpRegistryInstanceRequest registryInstanceRequest:
                 {   //  `--instance` parameter provided. Use That
                     var indexInstance = applicationInstanceStore.LoadInstanceDetails(registryInstanceRequest.InstanceName);
