@@ -14,7 +14,6 @@ namespace Octopus.Tentacle.Configuration
 
         protected KeyValueStoreBase(bool autoSaveOnSet)
         {
-            //Console.WriteLine($"KeyValueStoreBase Created! {GetType().Name}");
             AutoSaveOnSet = autoSaveOnSet;
         }
 

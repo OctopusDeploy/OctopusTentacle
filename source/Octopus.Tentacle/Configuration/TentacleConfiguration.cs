@@ -45,7 +45,6 @@ namespace Octopus.Tentacle.Configuration
             IPollingProxyConfiguration pollingProxyConfiguration,
             ISystemLog log)
         {
-            //Console.WriteLine($"Settings Type: {settings.GetType().FullName}");
             settings = instanceSelector.Current.Configuration ?? throw new Exception("Unable to get KeyValueStore from instanceSelector");
             this.home = home;
             this.proxyConfiguration = proxyConfiguration;
@@ -131,9 +130,7 @@ namespace Octopus.Tentacle.Configuration
             {
                 if (CachedCertificate != null)
                     return CachedCertificate;
-                //Console.WriteLine("get_TentacleCertificate");
                 var thumbprint = settings.Get(CertificateThumbprintSettingName);
-                //Console.WriteLine($"Thumbprint is {thumbprint}");
                 if (string.IsNullOrWhiteSpace(thumbprint))
                 {
                     return null;
@@ -193,7 +190,6 @@ namespace Octopus.Tentacle.Configuration
 
         public bool SetIsRegistered(bool isRegistered = true)
         {
-            //Console.WriteLine($"Setting as registered in Tentacle Configuration: {settings.GetType().Name}");
             return settings.Set(IsRegisteredSettingName, isRegistered);
         }
 
@@ -216,7 +212,6 @@ namespace Octopus.Tentacle.Configuration
 
         public bool SetTrustedOctopusServers(IEnumerable<OctopusServerConfiguration>? servers)
         {
-            //Console.WriteLine($"SetTrustedOctopusServers: {string.Join(",", servers?.Select(s => s.Thumbprint) ?? Array.Empty<string>())} Settings: {settings.GetType().FullName}");
             return settings.Set(TrustedServersSettingName, servers ?? new OctopusServerConfiguration[0]);
         }
 
