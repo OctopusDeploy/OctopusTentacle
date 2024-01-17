@@ -10,11 +10,9 @@ using Octopus.Diagnostics;
 using Octopus.Tentacle.Commands.OptionSets;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
-using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Startup;
 using Octopus.Tentacle.Util;
 using Octopus.Tentacle.Watchdog;
-using CertificateGenerator = Octopus.Tentacle.Certificates.CertificateGenerator;
 
 namespace Octopus.Tentacle.Commands
 {
@@ -86,20 +84,7 @@ namespace Octopus.Tentacle.Commands
 
         internal async Task CollectConfigurationSettings(DictionaryKeyValueStore outputStore)
         {
-            var configStore = instanceSelector.Current.Configuration;
-
-            var oldHomeConfiguration = new HomeConfiguration(ApplicationName.Tentacle, configStore!, instanceSelector);
-            var homeConfiguration = new WritableHomeConfiguration(ApplicationName.Tentacle, instanceSelector, outputStore);
-            homeConfiguration.SetHomeDirectory(oldHomeConfiguration.HomeDirectory);
-
-            var certificateGenerator = new CertificateGenerator(log);
-            var newTentacleConfiguration = new WritableTentacleConfiguration(outputStore, homeConfiguration, certificateGenerator, tentacleConfiguration.Value.ProxyConfiguration, tentacleConfiguration.Value.PollingProxyConfiguration, new NullLog());
-
-            newTentacleConfiguration.SetApplicationDirectory(tentacleConfiguration.Value.ApplicationDirectory);
-            newTentacleConfiguration.SetListenIpAddress(tentacleConfiguration.Value.ListenIpAddress);
-            newTentacleConfiguration.SetNoListen(tentacleConfiguration.Value.NoListen);
-            newTentacleConfiguration.SetServicesPortNumber(tentacleConfiguration.Value.ServicesPortNumber);
-            newTentacleConfiguration.SetTrustedOctopusServers(tentacleConfiguration.Value.TrustedOctopusServers);
+            instanceSelector.Current.Configuration?.WriteTo(outputStore);
 
             //we dont want the actual certificate, as its encrypted, and we get a different output everytime
             outputStore.Set<string>("Tentacle.CertificateThumbprint", tentacleConfiguration.Value.TentacleCertificate?.Thumbprint ?? string.Empty);
