@@ -115,9 +115,6 @@ function configureTentacle() {
         tentacle configure --instance "$instanceName" --port $internalListeningPort --noListen "False"
     fi
 
-    echo "Updating trust ..."
-    tentacle configure --instance "$instanceName" --reset-trust
-
     echo "Creating certificate ..."
     tentacle new-certificate --instance "$instanceName" --if-blank
 }
