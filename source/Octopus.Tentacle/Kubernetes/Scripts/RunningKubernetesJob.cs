@@ -2,15 +2,18 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using k8s;
 using k8s.Models;
+using Newtonsoft.Json;
 using Nito.AsyncEx;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Util;
 using Octopus.Tentacle.Variables;
@@ -32,8 +35,10 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
         readonly ILog log;
         readonly IScriptStateStore stateStore;
         readonly IKubernetesJobService jobService;
+        readonly IKubernetesSecretService secretService;
         readonly IKubernetesJobContainerResolver containerResolver;
-        CancellationToken scriptCancellationToken;
+        readonly KubernetesJobScriptExecutionContext executionContext;
+        readonly CancellationToken scriptCancellationToken;
         readonly string? instanceName;
         readonly KubernetesJobOutputStreamWriter outputStreamWriter;
         readonly string jobName;
@@ -42,16 +47,17 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
         public ProcessState State { get; private set; }
         public IScriptLog ScriptLog { get; }
 
-        public RunningKubernetesJob(
-            IScriptWorkspace workspace,
+        public RunningKubernetesJob(IScriptWorkspace workspace,
             IScriptLog scriptLog,
             ScriptTicket scriptTicket,
             string taskId,
             ILog log,
             IScriptStateStore stateStore,
             IKubernetesJobService jobService,
+            IKubernetesSecretService secretService,
             IKubernetesJobContainerResolver containerResolver,
             IApplicationInstanceSelector appInstanceSelector,
+            KubernetesJobScriptExecutionContext executionContext,
             CancellationToken scriptCancellationToken)
         {
             this.workspace = workspace;
@@ -60,7 +66,9 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             this.log = log;
             this.stateStore = stateStore;
             this.jobService = jobService;
+            this.secretService = secretService;
             this.containerResolver = containerResolver;
+            this.executionContext = executionContext;
             this.scriptCancellationToken = scriptCancellationToken;
             ScriptLog = scriptLog;
             instanceName = appInstanceSelector.Current.InstanceName;
@@ -112,8 +120,11 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                                scriptCancellationToken,
                                log))
                     {
+                        //Possibly create the image pull secret name
+                        var imagePullSecretName = await CreateImagePullSecret(scriptCancellationToken);
+
                         //create the k8s job
-                        await CreateJob(writer, scriptCancellationToken);
+                        await CreateJob(writer, imagePullSecretName, scriptCancellationToken);
 
                         State = ProcessState.Running;
                         RecordScriptHasStarted(writer);
@@ -203,7 +214,80 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             return resultStatusCode;
         }
 
-        async Task CreateJob(IScriptLogWriter writer, CancellationToken cancellationToken)
+        async Task<string?> CreateImagePullSecret(CancellationToken cancellationToken)
+        {
+            //if we have no feed url or no username, then we can't create image secrets
+            if (executionContext.FeedUrl is null || executionContext.FeedUsername is null)
+                return null;
+
+            var secretName = CreateImagePullSecretName(executionContext.FeedUrl, executionContext.FeedUsername);
+
+            // this structure is a docker config auth file
+            // https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/#inspecting-the-secret-regcred
+            var config = new Dictionary<string, object>
+            {
+                ["auths"] = new Dictionary<string, object>
+                {
+                    [executionContext.FeedUrl] = new
+                    {
+                        username = executionContext.FeedUsername,
+                        password = executionContext.FeedPassword,
+                        auth = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{executionContext.FeedUsername}:{executionContext.FeedPassword}"))
+                    }
+                }
+            };
+
+            var configJson = JsonConvert.SerializeObject(config, Formatting.None);
+            var secretData = new Dictionary<string, byte[]>
+            {
+                [".dockerconfigjson"] = Encoding.UTF8.GetBytes(configJson)
+            };
+
+            var existingSecret = await secretService.TryGetSecretAsync(secretName, cancellationToken);
+            if (existingSecret is null)
+            {
+                //if there is no secret, create one
+                var secret = new V1Secret
+                {
+                    Type = "kubernetes.io/dockerconfigjson",
+                    Metadata = new V1ObjectMeta
+                    {
+                        Name = secretName,
+                        NamespaceProperty = KubernetesConfig.Namespace
+                    },
+                    Data = new Dictionary<string, byte[]>
+                    {
+                        [".dockerconfigjson"] = Encoding.UTF8.GetBytes(configJson)
+                    }
+                };
+
+                await secretService.CreateSecretAsync(secret, cancellationToken);
+            }
+            else
+            {
+                //patch the existing secret with the data (just in case the password has changed for this feed/user combo)
+                await secretService.UpdateSecretDataAsync(secretName, secretData, cancellationToken);
+            }
+
+            return secretName;
+        }
+
+        static string CreateImagePullSecretName(string feedUrl, string? username)
+        {
+            //The secret name is the domain of the feed & the username in a hash
+            //We use MD5 because we want a small hash (as a secrets name is max 253 chars) and we aren't hashing secure data
+            using var sha1 = MD5.Create();
+            var feedUri = new Uri(feedUrl);
+
+            var hash = Convert.ToBase64String(sha1.ComputeHash(Encoding.UTF8.GetBytes($"{feedUri.DnsSafeHost}:{username}")));
+
+            //remove all special chars from the hash
+            var sanitizedHash = new string(hash.Where(c => c != '/' && c != '+' && c != '=').ToArray());
+
+            return $"octopus-feed-cred-{sanitizedHash}";
+        }
+
+        async Task CreateJob(IScriptLogWriter writer, string? imagePullSecretName, CancellationToken cancellationToken)
         {
             //write the bootstrap runner script to the workspace
             workspace.WriteFile("bootstrapRunner.sh", await BootstrapRunnerScript.Task);
@@ -239,6 +323,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                                 {
                                     Name = jobName,
                                     Image = await containerResolver.GetContainerImageForCluster(),
+
                                     Command = new List<string> { "bash" },
                                     Args = new List<string>
                                         {
@@ -262,9 +347,17 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                                     }
                                 }
                             },
+                            //only include the image pull secret name if it's actually been defined
+                            ImagePullSecrets = imagePullSecretName is not null
+                                ? new List<V1LocalObjectReference>
+                                {
+                                    new(imagePullSecretName)
+                                }
+                                : new List<V1LocalObjectReference>(),
                             ServiceAccountName = KubernetesConfig.JobServiceAccountName,
                             RestartPolicy = "Never",
                             Volumes = volumes,
+                            //currently we only support running on linux nodes
                             NodeSelector = new Dictionary<string, string>
                             {
                                 ["kubernetes.io/os"] = "linux"
