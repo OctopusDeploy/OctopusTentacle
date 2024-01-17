@@ -10,11 +10,9 @@ using Octopus.Diagnostics;
 using Octopus.Tentacle.Commands.OptionSets;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
-using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Startup;
 using Octopus.Tentacle.Util;
 using Octopus.Tentacle.Watchdog;
-using CertificateGenerator = Octopus.Tentacle.Certificates.CertificateGenerator;
 
 namespace Octopus.Tentacle.Commands
 {
@@ -85,14 +83,16 @@ namespace Octopus.Tentacle.Commands
             outputFile.Save();
         }
 
-        internal async Task CollectConfigurationSettings(DictionaryKeyValueStore outputStore)
+        async Task CollectConfigurationSettings(DictionaryKeyValueStore outputStore)
         {
             homeConfiguration.Value.WriteTo(outputStore);
 
             tentacleConfiguration.Value.WriteTo(outputStore,
-                TentacleConfiguration.CertificateSettingName,
-                TentacleConfiguration.LastReceivedHandshakeSettingName,
-                TentacleConfiguration.IsRegisteredSettingName);
+                excluding: new [] {
+                    TentacleConfiguration.CertificateSettingName,
+                    TentacleConfiguration.LastReceivedHandshakeSettingName,
+                    TentacleConfiguration.IsRegisteredSettingName
+                });
 
             watchdog.Value.GetConfiguration().WriteTo(outputStore);
 
