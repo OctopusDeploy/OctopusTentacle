@@ -24,7 +24,6 @@ namespace Octopus.Tentacle.Commands
             if (configuration.Value.IsRegistered) return;
 
             base.Start();
-            Console.WriteLine("Setting as registered");
             configuration.Value.SetIsRegistered();
         }
     }

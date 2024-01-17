@@ -35,9 +35,5 @@ namespace Octopus.Tentacle.Configuration
 
             return (true, JsonConvert.DeserializeObject<TData>((string)data));
         }
-
-        public void WriteTo(IWritableKeyValueStore outputStore)
-        {
-        }
     }
 }
