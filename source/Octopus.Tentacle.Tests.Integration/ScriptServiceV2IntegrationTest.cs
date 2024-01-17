@@ -180,5 +180,38 @@ namespace Octopus.Tentacle.Tests.Integration
             recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).Started.Should().Be(1);
             recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Started.Should().BeGreaterThanOrEqualTo(1);
         }
+        
+        [Test]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.Version2)]
+        public async Task WhenOnCompleteTakesLongerThan_OnCancellationAbandonCompleteScriptAfter_AndTheExecutionIsNotCancelled_TheOrchestratorWaitsForCleanUpToComplete(TentacleConfigurationTestCase tentacleConfigurationTestCase)
+        {
+            bool calledWithNonCancelledCT = false;
+            
+            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+                .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
+                    .RecordMethodUsages(tentacleConfigurationTestCase, out var recordedUsages)
+                    .DecorateScriptServiceV2With(b => b
+                        .BeforeCompleteScript(async (_, _, halibutProxyRequestOptions) =>
+                        {
+                            await Task.Delay(TimeSpan.FromSeconds(2), CancellationToken);
+                            calledWithNonCancelledCT = !halibutProxyRequestOptions.RequestCancellationToken.IsCancellationRequested;
+                        })
+                        .Build())
+                    .Build())
+                .Build(CancellationToken);
+
+            var scriptCommand = new LatestStartScriptCommandBuilder()
+                .WithScriptBody(b => b.Print("Hello"))
+                .Build();
+
+            var tentacleClient = clientTentacle.TentacleClient;
+
+            tentacleClient.OnCancellationAbandonCompleteScriptAfter = TimeSpan.FromMilliseconds(1);
+
+            await tentacleClient.ExecuteScript(scriptCommand, CancellationToken);
+
+
+            calledWithNonCancelledCT.Should().Be(true);
+        }
     }
 }

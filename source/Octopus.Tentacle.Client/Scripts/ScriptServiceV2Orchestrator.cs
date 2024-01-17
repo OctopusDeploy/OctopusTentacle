@@ -200,7 +200,10 @@ namespace Octopus.Tentacle.Client.Scripts
             {
                 // Finish performs a best effort cleanup of the Workspace on Tentacle
                 // If we are cancelling script execution we abandon a call to complete script after a period of time
-                using var completeScriptCancellationTokenSource = new CancellationTokenSource(onCancellationAbandonCompleteScriptAfter);
+                
+                using var completeScriptCancellationTokenSource = new CancellationTokenSource();
+
+                await using var _ = scriptExecutionCancellationToken.Register(() => completeScriptCancellationTokenSource.CancelAfter(onCancellationAbandonCompleteScriptAfter));
 
                 await rpcCallExecutor.ExecuteWithNoRetries(
                         RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.CompleteScript)),
