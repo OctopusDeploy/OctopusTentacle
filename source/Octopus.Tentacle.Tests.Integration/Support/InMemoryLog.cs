@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -14,7 +15,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     public class InMemoryLog : SystemLog
     {
         readonly ILog log;
-        readonly BlockingCollection<LogEvent> events = new BlockingCollection<LogEvent>(1000);
+        readonly BlockingCollection<LogEvent> events = new(1000);
 
         public InMemoryLog() : this(null)
         {
@@ -24,6 +25,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         {
             this.log = log ?? new TestConsoleLog();
         }
+
+        public IEnumerable<LogEvent> LogEvents => events.ToArray();
 
         protected override void WriteEvent(LogEvent logEvent)
         {

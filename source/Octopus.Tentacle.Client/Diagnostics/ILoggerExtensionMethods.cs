@@ -1,5 +1,4 @@
-﻿using System;
-using Octopus.Diagnostics;
+﻿using Octopus.Diagnostics;
 using Octopus.Tentacle.Diagnostics;
 using Serilog;
 using Log = Octopus.Tentacle.Diagnostics.Log;
@@ -8,18 +7,19 @@ namespace Octopus.Tentacle.Client.Diagnostics
 {
     public static class ILoggerExtensionMethods
     {
-        public static ILog ToILog(this ILogger logger)
+        public static ILog ToILog(this ILogger logger, string? correlationId = null)
         {
-            return new SerilogILoggerILog(logger);
+            return new SerilogILoggerILog(logger, correlationId ?? string.Empty);
         }
 
         class SerilogILoggerILog : Log
         {
-            private ILogger logger;
+            ILogger logger;
 
-            public SerilogILoggerILog(ILogger logger)
+            public SerilogILoggerILog(ILogger logger, string correlationId)
             {
                 this.logger = logger;
+                this.CorrelationId = correlationId;
             }
 
             public override bool IsEnabled(LogCategory category) => true;
@@ -47,7 +47,7 @@ namespace Octopus.Tentacle.Client.Diagnostics
                 }
             }
 
-            public override string CorrelationId => "system/" + Environment.MachineName;
+            public override string CorrelationId { get; }
         }
     }
 }
