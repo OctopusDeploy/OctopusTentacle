@@ -596,9 +596,6 @@ Or one of the common options:
         {{
           ""Thumbprint"": ""{clientAndTentacle.Server.Thumbprint}"",
           ""CommunicationStyle"": 2,
-          ""KubernetesTentacleCommunicationMode"": {{
-            ""Value"": ""Polling""
-          }},
           ""Address"": ""https://localhost:{clientAndTentacle.Server.ServerListeningPort}"",
           ""Squid"": null,
           ""SubscriptionId"": ""{clientAndTentacle.RunningTentacle.ServiceUri}""
@@ -635,9 +632,6 @@ Or one of the common options:
         {{
           ""Thumbprint"": ""{clientAndTentacle.Server.Thumbprint}"",
           ""CommunicationStyle"": 1,
-          ""KubernetesTentacleCommunicationMode"": {{
-            ""Value"": ""Polling""
-          }},
           ""Address"": null,
           ""Squid"": null,
           ""SubscriptionId"": null

@@ -45,6 +45,11 @@ namespace Octopus.Tentacle.Configuration
 
         public TentacleCommunicationModeResource KubernetesTentacleCommunicationMode { get; set; } = TentacleCommunicationModeResource.Polling;
 
+        public bool ShouldSerializeKubernetesTentacleCommunicationMode()
+        {
+            return CommunicationStyle == CommunicationStyle.Kubernetes;
+        }
+
         /// <summary>
         /// The URL used when connecting to the server, if available.
         /// </summary>
