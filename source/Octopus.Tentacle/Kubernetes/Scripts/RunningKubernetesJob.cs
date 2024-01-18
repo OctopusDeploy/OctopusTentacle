@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using k8s;
+using k8s.Autorest;
 using k8s.Models;
 using Newtonsoft.Json;
 using Nito.AsyncEx;
@@ -275,7 +276,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
         static string CreateImagePullSecretName(string feedUrl, string? username)
         {
             //The secret name is the domain of the feed & the username in a hash
-            //We use MD5 because we want a small hash (as a secrets name is max 253 chars) and we aren't hashing secure data
+            //We use SHA1 because we want a small hash (as a secrets name is max 253 chars) and we aren't hashing secure data
             using var sha1 = SHA1.Create();
             var feedUri = new Uri(feedUrl);
 
@@ -284,7 +285,9 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             //remove all special chars from the hash
             var sanitizedHash = new string(hash.Where(c => c != '/' && c != '+' && c != '=').ToArray());
 
-            return $"octopus-feed-cred-{sanitizedHash}";
+            //the secret name must be lowercase. We lose a bit of uniqueness as base64 is case-sensitive
+            //but the downside of a clash isn't _that_ bad (just overwriting an existing secret)
+            return $"octopus-feed-cred-{sanitizedHash}".ToLowerInvariant();
         }
 
         async Task CreateJob(IScriptLogWriter writer, string? imagePullSecretName, CancellationToken cancellationToken)
@@ -322,7 +325,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                                 new()
                                 {
                                     Name = jobName,
-                                    Image = await containerResolver.GetContainerImageForCluster(),
+                                    Image = executionContext.Image ?? await containerResolver.GetContainerImageForCluster(),
                                     Command = new List<string> { "bash" },
                                     Args = new List<string>
                                         {
