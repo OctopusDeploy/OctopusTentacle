@@ -370,7 +370,7 @@ namespace Octopus.Tentacle.Startup
 
             if (!string.IsNullOrWhiteSpace(instanceName))
             {
-                return KubernetesConfig.IsRunningInKubernetesCluster
+                return PlatformDetection.Kubernetes.IsRunningInKubernetes
                     ? new StartUpKubernetesConfigMapInstanceRequest(instanceName)
                     : new StartUpRegistryInstanceRequest(instanceName);
             }

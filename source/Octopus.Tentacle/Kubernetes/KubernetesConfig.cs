@@ -1,11 +1,9 @@
 ﻿using System;
-using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Kubernetes
 {
     public static class KubernetesConfig
     {
-        public static bool IsRunningInKubernetesCluster => !Environment.GetEnvironmentVariable("KUBERNETES_SERVICE_HOST").IsNullOrEmpty();
         public static string Namespace => GetRequiredEnvVar("OCTOPUS__K8STENTACLE__NAMESPACE", "Unable to determine Kubernetes namespace.");
         public static string JobServiceAccountName => GetRequiredEnvVar("OCTOPUS__K8STENTACLE__JOBSERVICEACCOUNTNAME", "Unable to determine Kubernetes Job service account name.");
         public static string JobVolumeYaml => GetRequiredEnvVar("OCTOPUS__K8STENTACLE__JOBVOLUMEYAML", "Unable to determine Kubernetes Job volume yaml.");
