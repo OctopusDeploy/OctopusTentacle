@@ -2,9 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
-using k8s;
-using k8s.Models;
+using System.Threading;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Kubernetes;
 
@@ -16,7 +14,6 @@ namespace Octopus.Tentacle.Configuration.Crypto
 
 public class KubernetesMachineKeyEncryptor : IKubernetesMachineKeyEncryptor
     {
-        readonly IKubernetesV1SecretService kubernetesSecretService;
         const string SecretName = "tentacle-secret";
         const string MachineKeyName = "machine-key";
         const string MachineIvName = "machine-iv";
@@ -25,20 +22,15 @@ public class KubernetesMachineKeyEncryptor : IKubernetesMachineKeyEncryptor
         readonly byte[]? machineIv;
         public KubernetesMachineKeyEncryptor(IKubernetesV1SecretService kubernetesSecretService, ILog log)
         {
-            this.kubernetesSecretService = kubernetesSecretService;
-
-            var @namespace = KubernetesConfig.Namespace;
-
-            var secret = CreateSecret(@namespace, log).GetAwaiter().GetResult();
+            var secret = kubernetesSecretService.TryGet(SecretName, CancellationToken.None).GetAwaiter().GetResult() ?? throw new InvalidOperationException($"Unable to retrieve MachineKey from secret for namespace {KubernetesConfig.Namespace}");
 
             if (!secret.Data.TryGetValue(MachineKeyName, out machineKey) ||
                 !secret.Data.TryGetValue(MachineIvName, out machineIv))
             {
                 var (key, iv) = GenerateMachineKey(log);
-                secret.Data[MachineKeyName] = machineKey = key;
-                secret.Data[MachineIvName] = machineIv = iv;
+                var data = new Dictionary<string, byte[]> { { MachineKeyName, machineKey = key }, { MachineIvName, machineIv = iv } };
 
-                kubernetesSecretService.Replace(secret).GetAwaiter().GetResult();
+                kubernetesSecretService.Patch(SecretName, data, CancellationToken.None).GetAwaiter().GetResult();
             }
 
             if (machineKey == null || machineIv == null)
@@ -72,30 +64,6 @@ public class KubernetesMachineKeyEncryptor : IKubernetesMachineKeyEncryptor
             aes.GenerateIV();
             aes.GenerateKey();
             return (aes.Key, aes.IV);
-        }
-
-        async Task<V1Secret> CreateSecret(string @namespace, ILog log)
-        {
-            V1Secret? secret;
-            try
-            {
-                secret = await kubernetesSecretService.Read(SecretName, @namespace);
-            }
-            catch
-            {
-                log.Info($"Secret for Tentacle Configuration not found for namespace {@namespace}, creating new Secret.");
-                secret = null;
-            }
-
-            if (secret is not null)
-                return secret;
-
-            var (key, iv) = GenerateMachineKey(log);
-            return await kubernetesSecretService.Create(new V1Secret
-            {
-                Metadata = new V1ObjectMeta { Name = SecretName, NamespaceProperty = @namespace },
-                Data = new Dictionary<string, byte[]> { { MachineKeyName, key }, { MachineIvName, iv } }
-            });
         }
     }
 }
