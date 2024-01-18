@@ -20,11 +20,12 @@ public class KubernetesMachineKeyEncryptor : IKubernetesMachineKeyEncryptor
 
         readonly byte[]? machineKey;
         readonly byte[]? machineIv;
-        public KubernetesMachineKeyEncryptor(IKubernetesV1SecretService kubernetesSecretService, ILog log)
+        public KubernetesMachineKeyEncryptor(IKubernetesV1SecretService kubernetesSecretService, ISystemLog log)
         {
             var secret = kubernetesSecretService.TryGet(SecretName, CancellationToken.None).GetAwaiter().GetResult() ?? throw new InvalidOperationException($"Unable to retrieve MachineKey from secret for namespace {KubernetesConfig.Namespace}");
 
-            if (!secret.Data.TryGetValue(MachineKeyName, out machineKey) ||
+            if (secret.Data is null ||
+                !secret.Data.TryGetValue(MachineKeyName, out machineKey) ||
                 !secret.Data.TryGetValue(MachineIvName, out machineIv))
             {
                 var (key, iv) = GenerateMachineKey(log);
