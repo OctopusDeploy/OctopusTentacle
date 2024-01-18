@@ -4,6 +4,7 @@ using System.Threading;
 using k8s.Models;
 using Newtonsoft.Json;
 using Octopus.Tentacle.Kubernetes;
+using Octopus.Tentacle.Configuration.Crypto;
 
 namespace Octopus.Tentacle.Configuration.Instances
 {
@@ -25,7 +26,7 @@ namespace Octopus.Tentacle.Configuration.Instances
 
         public string? Get(string name, ProtectionLevel protectionLevel = ProtectionLevel.None)
         {
-            return ConfigMapData.TryGetValue(name, out var value) ? value : null;
+            return ConfigMapData.TryGetValue(name, out var value) ? DecryptIfRequired(value, protectionLevel) : null;
         }
 
         public TData? Get<TData>(string name, TData? defaultValue = default, ProtectionLevel protectionLevel = ProtectionLevel.None)
@@ -81,6 +82,18 @@ namespace Octopus.Tentacle.Configuration.Instances
         {
             configMapService.Patch(Name, ConfigMapData, CancellationToken.None).GetAwaiter().GetResult();
             return true;
+        }
+
+        string EncryptIfRequired(string? input, ProtectionLevel protectionLevel)
+        {
+            input ??= string.Empty;
+            return protectionLevel == ProtectionLevel.MachineKey ? MachineKeyEncryptor.Current.Encrypt(input) : input;
+        }
+
+        string DecryptIfRequired(string? input, ProtectionLevel protectionLevel)
+        {
+            input ??= string.Empty;
+            return protectionLevel == ProtectionLevel.MachineKey ? MachineKeyEncryptor.Current.Decrypt(input) : input;
         }
     }
 }
