@@ -276,7 +276,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
         {
             //The secret name is the domain of the feed & the username in a hash
             //We use MD5 because we want a small hash (as a secrets name is max 253 chars) and we aren't hashing secure data
-            using var sha1 = MD5.Create();
+            using var sha1 = SHA1.Create();
             var feedUri = new Uri(feedUrl);
 
             var hash = Convert.ToBase64String(sha1.ComputeHash(Encoding.UTF8.GetBytes($"{feedUri.DnsSafeHost}:{username}")));
@@ -323,7 +323,6 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                                 {
                                     Name = jobName,
                                     Image = await containerResolver.GetContainerImageForCluster(),
-
                                     Command = new List<string> { "bash" },
                                     Args = new List<string>
                                         {
