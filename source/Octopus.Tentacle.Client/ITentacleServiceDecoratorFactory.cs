@@ -2,7 +2,7 @@ using Octopus.Tentacle.Contracts.ClientServices;
 
 namespace Octopus.Tentacle.Client
 {
-    public interface ITentacleServiceDecoratorFactory
+    interface ITentacleServiceDecoratorFactory
     {
         public IAsyncClientScriptService Decorate(IAsyncClientScriptService scriptService);
         

@@ -9,7 +9,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
     {
         readonly List<ITentacleServiceDecoratorFactory> decoratorsInReverse;
 
-        public CombiningTentacleServiceDecoratorFactory(List<ITentacleServiceDecoratorFactory> decorators)
+        internal CombiningTentacleServiceDecoratorFactory(List<ITentacleServiceDecoratorFactory> decorators)
         {
             // Reversing the decorators means the first decorator in the given list will be called first.
             decoratorsInReverse = new List<ITentacleServiceDecoratorFactory>(decorators);
