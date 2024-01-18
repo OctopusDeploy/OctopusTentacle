@@ -16,12 +16,18 @@ namespace Octopus.Tentacle.Configuration.Instances
         readonly ISystemLog log;
         readonly object @lock = new object();
         ApplicationInstanceConfiguration? current;
-        
+#if !NETFRAMEWORK
+        readonly ConfigMapKeyValueStore.Factory configMapStoreFactory;
+#endif
+
         public ApplicationInstanceSelector(
             ApplicationName applicationName,
             IApplicationInstanceStore applicationInstanceStore,
             StartUpInstanceRequest startUpInstanceRequest,
             IApplicationConfigurationContributor[] instanceStrategies,
+#if !NETFRAMEWORK
+            ConfigMapKeyValueStore.Factory configMapStoreFactory,
+#endif
             IOctopusFileSystem fileSystem,
             ISystemLog log)
         {
@@ -31,6 +37,9 @@ namespace Octopus.Tentacle.Configuration.Instances
             this.fileSystem = fileSystem;
             this.log = log;
             ApplicationName = applicationName;
+#if !NETFRAMEWORK
+            this.configMapStoreFactory = configMapStoreFactory;
+#endif
         }
 
         public bool CanLoadCurrentInstance()
@@ -79,7 +88,7 @@ namespace Octopus.Tentacle.Configuration.Instances
                 KubernetesConfig.Namespace is {} @namespace)
             {
                 log.Verbose($"Loading configuration from ConfigMap for namespace {@namespace}");
-                var configMapWritableStore = new ConfigMapKeyValueStore(@namespace, log);
+                var configMapWritableStore = configMapStoreFactory.Invoke(@namespace);
                 return (ContributeAdditionalConfiguration(configMapWritableStore), configMapWritableStore);
             }
 #endif
