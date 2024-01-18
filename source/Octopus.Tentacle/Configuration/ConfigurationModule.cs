@@ -1,5 +1,6 @@
 using System;
 using Autofac;
+using Octopus.Tentacle.Configuration.Crypto;
 using Octopus.Tentacle.Configuration.EnvironmentVariableMappings;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Startup;
@@ -55,6 +56,7 @@ namespace Octopus.Tentacle.Configuration
                 .As<IApplicationInstanceSelector>()
                 .SingleInstance();
 
+            builder.RegisterType<KubernetesMachineKeyEncryptor>().As<IKubernetesMachineKeyEncryptor>().SingleInstance();
             builder.RegisterType<ConfigMapKeyValueStore>().SingleInstance();
 
             builder.RegisterType<WindowsLocalAdminRightsChecker>()

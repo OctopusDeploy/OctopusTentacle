@@ -12,14 +12,16 @@ namespace Octopus.Tentacle.Configuration.Instances
     {
 
         readonly IKubernetesConfigMapService configMapService;
+        readonly IKubernetesMachineKeyEncryptor encryptor;
         const string Name = "tentacle-config";
 
         readonly Lazy<V1ConfigMap> configMap;
         IDictionary<string, string> ConfigMapData => configMap.Value.Data ??= new Dictionary<string, string>();
 
-        public ConfigMapKeyValueStore(IKubernetesConfigMapService configMapService)
+        public ConfigMapKeyValueStore(IKubernetesConfigMapService configMapService, IKubernetesMachineKeyEncryptor encryptor)
         {
             this.configMapService = configMapService;
+            this.encryptor = encryptor;
             configMap = new Lazy<V1ConfigMap>(() => configMapService.TryGet(Name, CancellationToken.None).GetAwaiter().GetResult()
                 ?? throw new InvalidOperationException($"Unable to retrieve Tentacle Configuration from config map for namespace {KubernetesConfig.Namespace}"));
         }
@@ -59,7 +61,7 @@ namespace Octopus.Tentacle.Configuration.Instances
                 return Remove(name);
             }
 
-            ConfigMapData[name] = value;
+            ConfigMapData[name] = EncryptIfRequired(value, protectionLevel);
             return Save();
         }
 
@@ -87,13 +89,13 @@ namespace Octopus.Tentacle.Configuration.Instances
         string EncryptIfRequired(string? input, ProtectionLevel protectionLevel)
         {
             input ??= string.Empty;
-            return protectionLevel == ProtectionLevel.MachineKey ? MachineKeyEncryptor.Current.Encrypt(input) : input;
+            return protectionLevel == ProtectionLevel.MachineKey ? encryptor.Encrypt(input) : input;
         }
 
         string DecryptIfRequired(string? input, ProtectionLevel protectionLevel)
         {
             input ??= string.Empty;
-            return protectionLevel == ProtectionLevel.MachineKey ? MachineKeyEncryptor.Current.Decrypt(input) : input;
+            return protectionLevel == ProtectionLevel.MachineKey ? encryptor.Decrypt(input) : input;
         }
     }
 }

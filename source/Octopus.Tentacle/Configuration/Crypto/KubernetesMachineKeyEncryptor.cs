@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 using k8s;
 using k8s.Models;
 using Octopus.Diagnostics;
@@ -9,21 +10,26 @@ using Octopus.Tentacle.Kubernetes;
 
 namespace Octopus.Tentacle.Configuration.Crypto
 {
-    public class KubernetesMachineKeyEncryptor : IMachineKeyEncryptor
+    public interface IKubernetesMachineKeyEncryptor : IMachineKeyEncryptor
     {
+    }
+
+public class KubernetesMachineKeyEncryptor : IKubernetesMachineKeyEncryptor
+    {
+        readonly IKubernetesV1SecretService kubernetesSecretService;
         const string SecretName = "tentacle-secret";
         const string MachineKeyName = "machine-key";
         const string MachineIvName = "machine-iv";
 
         readonly byte[]? machineKey;
         readonly byte[]? machineIv;
-        public KubernetesMachineKeyEncryptor(ILog log)
+        public KubernetesMachineKeyEncryptor(IKubernetesV1SecretService kubernetesSecretService, ILog log)
         {
-            var @namespace = KubernetesConfig.Namespace;
-            var kubeConfig = KubernetesClientConfiguration.InClusterConfig();
-            var client = new k8s.Kubernetes(kubeConfig);
+            this.kubernetesSecretService = kubernetesSecretService;
 
-            var secret = CreateSecret(@namespace, client, log);
+            var @namespace = KubernetesConfig.Namespace;
+
+            var secret = CreateSecret(@namespace, log).GetAwaiter().GetResult();
 
             if (!secret.Data.TryGetValue(MachineKeyName, out machineKey) ||
                 !secret.Data.TryGetValue(MachineIvName, out machineIv))
@@ -32,7 +38,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
                 secret.Data[MachineKeyName] = machineKey = key;
                 secret.Data[MachineIvName] = machineIv = iv;
 
-                client.CoreV1.ReplaceNamespacedSecret(secret, SecretName, @namespace);
+                kubernetesSecretService.Replace(secret).GetAwaiter().GetResult();
             }
 
             if (machineKey == null || machineIv == null)
@@ -68,12 +74,12 @@ namespace Octopus.Tentacle.Configuration.Crypto
             return (aes.Key, aes.IV);
         }
 
-        static V1Secret CreateSecret(string @namespace, AbstractKubernetes client, ILog log)
+        async Task<V1Secret> CreateSecret(string @namespace, ILog log)
         {
             V1Secret? secret;
             try
             {
-                secret = client.CoreV1.ReadNamespacedSecret(SecretName, @namespace);
+                secret = await kubernetesSecretService.Read(SecretName, @namespace);
             }
             catch
             {
@@ -85,12 +91,11 @@ namespace Octopus.Tentacle.Configuration.Crypto
                 return secret;
 
             var (key, iv) = GenerateMachineKey(log);
-            return client.CoreV1.CreateNamespacedSecret(
-                new V1Secret
-                {
-                    Metadata = new V1ObjectMeta { Name = SecretName, NamespaceProperty = @namespace },
-                    Data = new Dictionary<string, byte[]> { { MachineKeyName, key }, {MachineIvName, iv} }
-                }, @namespace);
+            return await kubernetesSecretService.Create(new V1Secret
+            {
+                Metadata = new V1ObjectMeta { Name = SecretName, NamespaceProperty = @namespace },
+                Data = new Dictionary<string, byte[]> { { MachineKeyName, key }, { MachineIvName, iv } }
+            });
         }
     }
 }

@@ -11,11 +11,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
 
         static MachineKeyEncryptor()
         {
-            if (KubernetesConfig.IsRunningInKubernetesCluster)
-            {
-                Current = new KubernetesMachineKeyEncryptor(new SystemLog());
-            }
-            else if (PlatformDetection.IsRunningOnWindows)
+            if (PlatformDetection.IsRunningOnWindows)
             {
                 Current = new WindowsMachineKeyEncryptor();
             }

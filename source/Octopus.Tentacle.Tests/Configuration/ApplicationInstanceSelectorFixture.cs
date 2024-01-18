@@ -5,6 +5,7 @@ using NSubstitute.ExceptionExtensions;
 using NUnit.Framework;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Configuration.Crypto;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Util;
@@ -189,7 +190,7 @@ namespace Octopus.Tentacle.Tests.Configuration
                 applicationInstanceStore,
                 instanceRequest ?? new StartUpDynamicInstanceRequest(),
                 additionalConfigurations ?? new IApplicationConfigurationContributor[0],
-                new Lazy<ConfigMapKeyValueStore>(() => new ConfigMapKeyValueStore(Substitute.For<IKubernetesConfigMapService>())),
+                new Lazy<ConfigMapKeyValueStore>(() => new ConfigMapKeyValueStore(Substitute.For<IKubernetesConfigMapService>(), Substitute.For<IKubernetesMachineKeyEncryptor>())),
                 octopusFileSystem,
                 log);
         }
