@@ -49,14 +49,6 @@ namespace Octopus.Tentacle.Configuration.Instances
             return result.foundResult ? result.value : defaultValue;
         }
 
-        public void WriteTo(IWritableKeyValueStore outputStore)
-        {
-            foreach (var kvp in ConfigMapData)
-            {
-                outputStore.Set(kvp.Key, kvp.Value);
-            }
-        }
-
         public bool Set(string name, string? value, ProtectionLevel protectionLevel = ProtectionLevel.None)
         {
             configMap.Data[name] = value;
