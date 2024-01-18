@@ -10,7 +10,7 @@ namespace Octopus.Tentacle.Kubernetes
 {
     public interface IKubernetesV1ConfigMapService
     {
-        Task<V1ConfigMap?> TryGet(string name);
+        Task<V1ConfigMap?> TryGet(string name, CancellationToken cancellationToken);
 
         Task<V1ConfigMap> Patch(string name, IDictionary<string, string> data, CancellationToken cancellationToken);
     }
@@ -21,11 +21,11 @@ namespace Octopus.Tentacle.Kubernetes
         {
         }
 
-        public async Task<V1ConfigMap?> TryGet(string name)
+        public async Task<V1ConfigMap?> TryGet(string name, CancellationToken cancellationToken)
         {
             try
             {
-                return await Client.CoreV1.ReadNamespacedConfigMapAsync(name, KubernetesConfig.Namespace);
+                return await Client.CoreV1.ReadNamespacedConfigMapAsync(name, KubernetesConfig.Namespace, cancellationToken: cancellationToken);
             }
             catch (HttpOperationException opException)
                 when (opException.Response.StatusCode == HttpStatusCode.NotFound)

@@ -19,7 +19,8 @@ namespace Octopus.Tentacle.Configuration.Instances
         public ConfigMapKeyValueStore(IKubernetesV1ConfigMapService configMapService)
         {
             this.configMapService = configMapService;
-            configMap = configMapService.TryGet(Name).GetAwaiter().GetResult() ?? throw new InvalidOperationException($"Unable to retrieve Tentacle Configuration from config map for namespace {KubernetesConfig.Namespace}");
+            configMap = configMapService.TryGet(Name, CancellationToken.None).GetAwaiter().GetResult()
+                ?? throw new InvalidOperationException($"Unable to retrieve Tentacle Configuration from config map for namespace {KubernetesConfig.Namespace}");
         }
 
         public string? Get(string name, ProtectionLevel protectionLevel = ProtectionLevel.None)
