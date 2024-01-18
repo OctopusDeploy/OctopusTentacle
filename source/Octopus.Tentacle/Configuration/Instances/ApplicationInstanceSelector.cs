@@ -16,18 +16,14 @@ namespace Octopus.Tentacle.Configuration.Instances
         readonly ISystemLog log;
         readonly object @lock = new object();
         ApplicationInstanceConfiguration? current;
-#if !NETFRAMEWORK
-        readonly ConfigMapKeyValueStore.Factory configMapStoreFactory;
-#endif
+        Lazy<ConfigMapKeyValueStore> configMapStoreFactory;
 
         public ApplicationInstanceSelector(
             ApplicationName applicationName,
             IApplicationInstanceStore applicationInstanceStore,
             StartUpInstanceRequest startUpInstanceRequest,
             IApplicationConfigurationContributor[] instanceStrategies,
-#if !NETFRAMEWORK
-            ConfigMapKeyValueStore.Factory configMapStoreFactory,
-#endif
+            Lazy<ConfigMapKeyValueStore> configMapStoreFactory,
             IOctopusFileSystem fileSystem,
             ISystemLog log)
         {
@@ -37,9 +33,7 @@ namespace Octopus.Tentacle.Configuration.Instances
             this.fileSystem = fileSystem;
             this.log = log;
             ApplicationName = applicationName;
-#if !NETFRAMEWORK
             this.configMapStoreFactory = configMapStoreFactory;
-#endif
         }
 
         public bool CanLoadCurrentInstance()
@@ -83,15 +77,13 @@ namespace Octopus.Tentacle.Configuration.Instances
 
         (IKeyValueStore, IWritableKeyValueStore) LoadConfigurationStore((string? instanceName, string? configurationpath) appInstance)
         {
-#if !NETFRAMEWORK
             if (appInstance is { instanceName: not null, configurationpath: null } &&
                 KubernetesConfig.Namespace is {} @namespace)
             {
                 log.Verbose($"Loading configuration from ConfigMap for namespace {@namespace}");
-                var configMapWritableStore = configMapStoreFactory.Invoke(@namespace);
+                var configMapWritableStore = configMapStoreFactory.Value;
                 return (ContributeAdditionalConfiguration(configMapWritableStore), configMapWritableStore);
             }
-#endif
             if (!ConfigurationFileExists(appInstance.configurationpath))
             {
                 ThrowConfigurationMissingException(appInstance.instanceName, appInstance.configurationpath);
@@ -137,12 +129,10 @@ namespace Octopus.Tentacle.Configuration.Instances
         {
             switch (startUpInstanceRequest)
             {
-#if !NETFRAMEWORK
                 case StartUpKubernetesConfigMapInstanceRequest configMapInstanceRequest:
                 {   // `--instance` parameter provided and running on Kubernetes.
                     return (configMapInstanceRequest.InstanceName, null);
                 }
-#endif
                 case StartUpRegistryInstanceRequest registryInstanceRequest:
                 {   //  `--instance` parameter provided. Use That
                     var indexInstance = applicationInstanceStore.LoadInstanceDetails(registryInstanceRequest.InstanceName);

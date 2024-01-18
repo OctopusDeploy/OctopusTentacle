@@ -189,7 +189,7 @@ namespace Octopus.Tentacle.Tests.Configuration
                 applicationInstanceStore,
                 instanceRequest ?? new StartUpDynamicInstanceRequest(),
                 additionalConfigurations ?? new IApplicationConfigurationContributor[0],
-                (n) => new ConfigMapKeyValueStore(n, Substitute.For<IKubernetesV1ConfigMapService>(), log),
+                new Lazy<ConfigMapKeyValueStore>(() => new ConfigMapKeyValueStore(Substitute.For<IKubernetesV1ConfigMapService>())),
                 octopusFileSystem,
                 log);
         }

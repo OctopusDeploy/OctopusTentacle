@@ -1,16 +1,18 @@
+using System.Collections.Generic;
+using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using k8s;
+using k8s.Autorest;
 using k8s.Models;
 
 namespace Octopus.Tentacle.Kubernetes
 {
     public interface IKubernetesV1ConfigMapService
     {
-        Task<V1ConfigMap> Read(string name, string @namespace);
+        Task<V1ConfigMap?> TryGet(string name);
 
-        Task<V1ConfigMap> Create(V1ConfigMap configMap);
-
-        Task<V1ConfigMap> Replace(V1ConfigMap configMap);
+        Task<V1ConfigMap> Patch(string name, IDictionary<string, string> data, CancellationToken cancellationToken);
     }
 
     public class KubernetesV1ConfigMapService : KubernetesService, IKubernetesV1ConfigMapService
@@ -19,19 +21,29 @@ namespace Octopus.Tentacle.Kubernetes
         {
         }
 
-        public async Task<V1ConfigMap> Read(string name, string @namespace)
+        public async Task<V1ConfigMap?> TryGet(string name)
         {
-            return await Client.CoreV1.ReadNamespacedConfigMapAsync(name, @namespace);
+            try
+            {
+                return await Client.CoreV1.ReadNamespacedConfigMapAsync(name, KubernetesConfig.Namespace);
+            }
+            catch (HttpOperationException opException)
+                when (opException.Response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return null;
+            }
         }
 
-        public async Task<V1ConfigMap> Create(V1ConfigMap configMap)
+        public async Task<V1ConfigMap> Patch(string name, IDictionary<string, string> data, CancellationToken cancellationToken)
         {
-            return await Client.CoreV1.CreateNamespacedConfigMapAsync(configMap, configMap.Namespace());
-        }
+            var configMap = new V1ConfigMap
+            {
+                Data = data
+            };
 
-        public async Task<V1ConfigMap> Replace(V1ConfigMap configMap)
-        {
-            return await Client.CoreV1.ReplaceNamespacedConfigMapAsync(configMap, configMap.Name(), configMap.Namespace());
+            var configMapJson = KubernetesJson.Serialize(configMap);
+
+            return await Client.CoreV1.PatchNamespacedConfigMapAsync(new V1Patch(configMapJson, V1Patch.PatchType.MergePatch), name, KubernetesConfig.Namespace, cancellationToken: cancellationToken);
         }
     }
 }
