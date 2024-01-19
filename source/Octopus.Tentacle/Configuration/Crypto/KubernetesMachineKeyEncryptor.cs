@@ -13,7 +13,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
     {
     }
 
-public class KubernetesMachineKeyEncryptor : IKubernetesMachineKeyEncryptor
+    public class KubernetesMachineKeyEncryptor : IKubernetesMachineKeyEncryptor
     {
         const string SecretName = "tentacle-secret";
         const string MachineKeyName = "machine-key";
