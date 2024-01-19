@@ -10,13 +10,13 @@ namespace Octopus.Tentacle.Configuration.Instances
     class ConfigMapKeyValueStore : IWritableKeyValueStore, IAggregatableKeyValueStore
     {
 
-        readonly IKubernetesV1ConfigMapService configMapService;
+        readonly IKubernetesConfigMapService configMapService;
         const string Name = "tentacle-config";
 
         V1ConfigMap configMap;
         IDictionary<string, string> ConfigMapData => configMap.Data ??= new Dictionary<string, string>();
 
-        public ConfigMapKeyValueStore(IKubernetesV1ConfigMapService configMapService)
+        public ConfigMapKeyValueStore(IKubernetesConfigMapService configMapService)
         {
             this.configMapService = configMapService;
             configMap = configMapService.TryGet(Name, CancellationToken.None).GetAwaiter().GetResult()

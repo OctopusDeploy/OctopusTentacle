@@ -8,16 +8,16 @@ using k8s.Models;
 
 namespace Octopus.Tentacle.Kubernetes
 {
-    public interface IKubernetesV1ConfigMapService
+    public interface IKubernetesConfigMapService
     {
         Task<V1ConfigMap?> TryGet(string name, CancellationToken cancellationToken);
 
         Task<V1ConfigMap> Patch(string name, IDictionary<string, string> data, CancellationToken cancellationToken);
     }
 
-    public class KubernetesV1ConfigMapService : KubernetesService, IKubernetesV1ConfigMapService
+    public class KubernetesConfigMapService : KubernetesService, IKubernetesConfigMapService
     {
-        public KubernetesV1ConfigMapService(IKubernetesClientConfigProvider configProvider) : base(configProvider)
+        public KubernetesConfigMapService(IKubernetesClientConfigProvider configProvider) : base(configProvider)
         {
         }
 
