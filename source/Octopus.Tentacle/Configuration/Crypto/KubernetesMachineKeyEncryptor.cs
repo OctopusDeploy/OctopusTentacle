@@ -52,7 +52,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
         }
         V1Secret GetSecret()
         {
-            return kubernetesSecretService.TryGet(SecretName, CancellationToken.None).GetAwaiter().GetResult() ?? throw new InvalidOperationException($"Unable to retrieve MachineKey from secret for namespace {KubernetesConfig.Namespace}");
+            return kubernetesSecretService.TryGetSecretAsync(SecretName, CancellationToken.None).GetAwaiter().GetResult() ?? throw new InvalidOperationException($"Unable to retrieve MachineKey from secret for namespace {KubernetesConfig.Namespace}");
         }
 
         (byte[] key, byte[] iv) GetMachineKey()
@@ -65,7 +65,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
                 (key, iv) = GenerateMachineKey(log);
                 data = new Dictionary<string, byte[]> { { MachineKeyName, key }, { MachineIvName, iv } };
 
-                kubernetesSecretService.Patch(SecretName, data, CancellationToken.None).GetAwaiter().GetResult();
+                kubernetesSecretService.UpdateSecretDataAsync(SecretName, data, CancellationToken.None).GetAwaiter().GetResult();
             }
 
             if (key == null || iv == null)
