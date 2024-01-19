@@ -13,14 +13,14 @@ namespace Octopus.Tentacle.Configuration.Instances
         readonly IKubernetesConfigMapService configMapService;
         const string Name = "tentacle-config";
 
-        V1ConfigMap configMap;
-        IDictionary<string, string> ConfigMapData => configMap.Data ??= new Dictionary<string, string>();
+        readonly Lazy<V1ConfigMap> configMap;
+        IDictionary<string, string> ConfigMapData => configMap.Value.Data ??= new Dictionary<string, string>();
 
         public ConfigMapKeyValueStore(IKubernetesConfigMapService configMapService)
         {
             this.configMapService = configMapService;
-            configMap = configMapService.TryGet(Name, CancellationToken.None).GetAwaiter().GetResult()
-                ?? throw new InvalidOperationException($"Unable to retrieve Tentacle Configuration from config map for namespace {KubernetesConfig.Namespace}");
+            configMap = new Lazy<V1ConfigMap>(() => configMapService.TryGet(Name, CancellationToken.None).GetAwaiter().GetResult()
+                ?? throw new InvalidOperationException($"Unable to retrieve Tentacle Configuration from config map for namespace {KubernetesConfig.Namespace}"));
         }
 
         public string? Get(string name, ProtectionLevel protectionLevel = ProtectionLevel.None)
@@ -53,7 +53,7 @@ namespace Octopus.Tentacle.Configuration.Instances
 
         public bool Set(string name, string? value, ProtectionLevel protectionLevel = ProtectionLevel.None)
         {
-            configMap.Data[name] = value;
+            ConfigMapData[name] = value;
             return Save();
         }
 
@@ -69,7 +69,7 @@ namespace Octopus.Tentacle.Configuration.Instances
 
         public bool Save()
         {
-            configMap = configMapService.Patch(Name, ConfigMapData, CancellationToken.None).GetAwaiter().GetResult();
+            configMapService.Patch(Name, ConfigMapData, CancellationToken.None).GetAwaiter().GetResult();
             return true;
         }
     }
