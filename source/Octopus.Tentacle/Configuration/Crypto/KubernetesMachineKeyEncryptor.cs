@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
+using k8s.Models;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Kubernetes;
 
@@ -18,32 +19,24 @@ public class KubernetesMachineKeyEncryptor : IKubernetesMachineKeyEncryptor
         const string MachineKeyName = "machine-key";
         const string MachineIvName = "machine-iv";
 
-        readonly byte[]? machineKey;
-        readonly byte[]? machineIv;
+        readonly IKubernetesSecretService kubernetesSecretService;
+        readonly ISystemLog log;
+
+        readonly Lazy<(byte[] Key, byte[] Iv)> machineKey;
+        readonly Lazy<V1Secret> secret;
+
         public KubernetesMachineKeyEncryptor(IKubernetesSecretService kubernetesSecretService, ISystemLog log)
         {
-            var secret = kubernetesSecretService.TryGet(SecretName, CancellationToken.None).GetAwaiter().GetResult() ?? throw new InvalidOperationException($"Unable to retrieve MachineKey from secret for namespace {KubernetesConfig.Namespace}");
-
-            if (secret.Data is null ||
-                !secret.Data.TryGetValue(MachineKeyName, out machineKey) ||
-                !secret.Data.TryGetValue(MachineIvName, out machineIv))
-            {
-                var (key, iv) = GenerateMachineKey(log);
-                var data = new Dictionary<string, byte[]> { { MachineKeyName, machineKey = key }, { MachineIvName, machineIv = iv } };
-
-                kubernetesSecretService.Patch(SecretName, data, CancellationToken.None).GetAwaiter().GetResult();
-            }
-
-            if (machineKey == null || machineIv == null)
-            {
-                throw new InvalidOperationException("Unable to retrieve or create a machine key for encryption.");
-            }
+            this.kubernetesSecretService = kubernetesSecretService;
+            this.log = log;
+            secret = new Lazy<V1Secret>(GetSecret);
+            machineKey = new Lazy<(byte[] Key, byte[] Iv)>(GetMachineKey);
         }
 
         public string Encrypt(string raw)
         {
             using var aes = Aes.Create();
-            using var enc = aes.CreateEncryptor(machineKey!, machineIv);
+            using var enc = aes.CreateEncryptor(machineKey.Value.Key, machineKey.Value.Iv);
             var inBlock = Encoding.UTF8.GetBytes(raw);
             var trans = enc.TransformFinalBlock(inBlock, 0, inBlock.Length);
             return Convert.ToBase64String(trans);
@@ -52,10 +45,35 @@ public class KubernetesMachineKeyEncryptor : IKubernetesMachineKeyEncryptor
         public string Decrypt(string encrypted)
         {
             using var aes = Aes.Create();
-            using var dec = aes.CreateDecryptor(machineKey!, machineIv);
+            using var dec = aes.CreateDecryptor(machineKey.Value.Key, machineKey.Value.Iv);
             var fromBase = Convert.FromBase64String(encrypted);
             var asd = dec.TransformFinalBlock(fromBase, 0, fromBase.Length);
             return Encoding.UTF8.GetString(asd);
+        }
+        V1Secret GetSecret()
+        {
+            return kubernetesSecretService.TryGet(SecretName, CancellationToken.None).GetAwaiter().GetResult() ?? throw new InvalidOperationException($"Unable to retrieve MachineKey from secret for namespace {KubernetesConfig.Namespace}");
+        }
+
+        (byte[] key, byte[] iv) GetMachineKey()
+        {
+            var data = secret.Value.Data;
+            if (data is null ||
+                !data.TryGetValue(MachineKeyName, out var key) ||
+                !data.TryGetValue(MachineIvName, out var iv))
+            {
+                (key, iv) = GenerateMachineKey(log);
+                data = new Dictionary<string, byte[]> { { MachineKeyName, key }, { MachineIvName, iv } };
+
+                kubernetesSecretService.Patch(SecretName, data, CancellationToken.None).GetAwaiter().GetResult();
+            }
+
+            if (key == null || iv == null)
+            {
+                throw new InvalidOperationException("Unable to retrieve or create a machine key for encryption.");
+            }
+
+            return (key, iv);
         }
 
         static (byte[] key, byte[] iv) GenerateMachineKey(ILog log)
