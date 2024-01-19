@@ -11,13 +11,15 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
     public class KubernetesJobScriptExecutor : IScriptExecutor
     {
         readonly IKubernetesJobService jobService;
+        readonly IKubernetesSecretService secretService;
         readonly IKubernetesJobContainerResolver containerResolver;
         readonly IApplicationInstanceSelector appInstanceSelector;
         readonly ISystemLog log;
 
-        public KubernetesJobScriptExecutor(IKubernetesJobService jobService, IKubernetesJobContainerResolver containerResolver, IApplicationInstanceSelector appInstanceSelector, ISystemLog log)
+        public KubernetesJobScriptExecutor(IKubernetesJobService jobService, IKubernetesSecretService secretService, IKubernetesJobContainerResolver containerResolver, IApplicationInstanceSelector appInstanceSelector, ISystemLog log)
         {
             this.jobService = jobService;
+            this.secretService = secretService;
             this.containerResolver = containerResolver;
             this.appInstanceSelector = appInstanceSelector;
             this.log = log;
@@ -27,7 +29,18 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
 
         public IRunningScript ExecuteOnBackgroundThread(StartScriptCommandV3Alpha command, IScriptWorkspace workspace, ScriptStateStore scriptStateStore, CancellationToken cancellationToken)
         {
-            var runningScript = new RunningKubernetesJob(workspace, workspace.CreateLog(), command.ScriptTicket, command.TaskId, log, scriptStateStore, jobService, containerResolver, appInstanceSelector, cancellationToken);
+            var runningScript = new RunningKubernetesJob(
+                workspace,
+                workspace.CreateLog(),
+                command.ScriptTicket,
+                command.TaskId, log,
+                scriptStateStore,
+                jobService,
+                secretService,
+                containerResolver,
+                appInstanceSelector,
+                (KubernetesJobScriptExecutionContext)command.ExecutionContext,
+                cancellationToken);
 
             Task.Run(() => runningScript.Execute(), cancellationToken);
 
