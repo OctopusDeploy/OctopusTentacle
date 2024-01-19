@@ -78,9 +78,9 @@ namespace Octopus.Tentacle.Configuration.Instances
         (IKeyValueStore, IWritableKeyValueStore) LoadConfigurationStore((string? instanceName, string? configurationpath) appInstance)
         {
             if (appInstance is { instanceName: not null, configurationpath: null } &&
-                KubernetesConfig.Namespace is {} @namespace)
+                PlatformDetection.Kubernetes.IsRunningInKubernetes)
             {
-                log.Verbose($"Loading configuration from ConfigMap for namespace {@namespace}");
+                log.Verbose($"Loading configuration from ConfigMap for namespace {KubernetesConfig.Namespace}");
                 var configMapWritableStore = configMapStoreFactory.Value;
                 return (ContributeAdditionalConfiguration(configMapWritableStore), configMapWritableStore);
             }
