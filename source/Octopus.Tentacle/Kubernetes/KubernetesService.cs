@@ -22,7 +22,7 @@ namespace Octopus.Tentacle.Kubernetes
             //Everything should be in the main namespace
             k8sObject.Metadata.NamespaceProperty = KubernetesConfig.Namespace;
 
-            //Add helm specific metadata so it's w
+            //Add helm specific metadata so it's removed if the helm release is uninstalled
             k8sObject.Metadata.Annotations["meta.helm.sh/release-name"] = KubernetesConfig.HelmReleaseName;
             k8sObject.Metadata.Annotations["meta.helm.sh/release-namespace"] = KubernetesConfig.Namespace;
             k8sObject.Metadata.Labels["app.kubernetes.io/managed-by"] = "Helm";
