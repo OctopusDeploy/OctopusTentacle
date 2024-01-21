@@ -53,6 +53,11 @@ namespace Octopus.Tentacle.Configuration.Instances
 
         public bool Set(string name, string? value, ProtectionLevel protectionLevel = ProtectionLevel.None)
         {
+            if (value is null)
+            {
+                return Remove(name);
+            }
+
             ConfigMapData[name] = value;
             return Save();
         }
@@ -64,7 +69,12 @@ namespace Octopus.Tentacle.Configuration.Instances
 
         public bool Remove(string name)
         {
-            return ConfigMapData.Remove(name) && Save();
+            if (ConfigMapData.ContainsKey(name))
+            {
+                return ConfigMapData.Remove(name) && Save();
+            }
+
+            return false;
         }
 
         public bool Save()
