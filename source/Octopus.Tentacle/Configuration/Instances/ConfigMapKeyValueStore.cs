@@ -86,15 +86,13 @@ namespace Octopus.Tentacle.Configuration.Instances
             return true;
         }
 
-        string EncryptIfRequired(string? input, ProtectionLevel protectionLevel)
+        string EncryptIfRequired(string input, ProtectionLevel protectionLevel)
         {
-            input ??= string.Empty;
             return protectionLevel == ProtectionLevel.MachineKey ? encryptor.Encrypt(input) : input;
         }
 
-        string DecryptIfRequired(string? input, ProtectionLevel protectionLevel)
+        string DecryptIfRequired(string input, ProtectionLevel protectionLevel)
         {
-            input ??= string.Empty;
             return protectionLevel == ProtectionLevel.MachineKey ? encryptor.Decrypt(input) : input;
         }
     }
