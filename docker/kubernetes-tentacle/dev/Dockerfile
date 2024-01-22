@@ -36,6 +36,6 @@ COPY docker/kubernetes-tentacle/scripts/* /scripts/
 RUN chmod +x /scripts/*.sh
 
 COPY docker/kubernetes-tentacle/dev/scripts/* /dev-scripts/
-RUN chmod +x /scripts/*.sh
+RUN chmod +x /dev-scripts/*.sh
 
 CMD /dev-scripts/bootstrap.sh
