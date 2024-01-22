@@ -67,7 +67,7 @@ namespace Octopus.Tentacle.Kubernetes
 
         public async Task CreateJob(V1Job job, CancellationToken cancellationToken)
         {
-            AddStandardMetadata(job.Metadata);
+            AddStandardMetadata(job);
             await Client.CreateNamespacedJobAsync(job, KubernetesConfig.Namespace, cancellationToken: cancellationToken);
         }
 

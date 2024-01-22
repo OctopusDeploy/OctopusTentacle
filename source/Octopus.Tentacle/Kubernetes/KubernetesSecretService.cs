@@ -38,7 +38,7 @@ namespace Octopus.Tentacle.Kubernetes
 
         public async Task CreateSecretAsync(V1Secret secret, CancellationToken cancellationToken)
         {
-            AddStandardMetadata(secret.Metadata);
+            AddStandardMetadata(secret);
             await Client.CreateNamespacedSecretAsync(secret, KubernetesConfig.Namespace, cancellationToken: cancellationToken);
         }
 
