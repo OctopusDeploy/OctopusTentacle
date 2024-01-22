@@ -1,5 +1,6 @@
 ﻿using System;
 using Octopus.Tentacle.Diagnostics;
+using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Configuration.Crypto
@@ -10,7 +11,14 @@ namespace Octopus.Tentacle.Configuration.Crypto
 
         static MachineKeyEncryptor()
         {
-            Current = PlatformDetection.IsRunningOnWindows ? new WindowsMachineKeyEncryptor() : LinuxEncryptor();
+            if (PlatformDetection.IsRunningOnWindows)
+            {
+                Current = new WindowsMachineKeyEncryptor();
+            }
+            else
+            {
+                Current = LinuxEncryptor();
+            }
         }
 
         static IMachineKeyEncryptor LinuxEncryptor()

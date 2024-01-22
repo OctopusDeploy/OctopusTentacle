@@ -13,7 +13,7 @@ namespace Octopus.Tentacle.Kubernetes
     {
         Task<V1Secret?> TryGetSecretAsync(string name, CancellationToken cancellationToken);
         Task CreateSecretAsync(V1Secret secret, CancellationToken cancellationToken);
-        Task UpdateSecretDataAsync(string secretName, Dictionary<string, byte[]> secretData, CancellationToken cancellationToken);
+        Task UpdateSecretDataAsync(string secretName, IDictionary<string, byte[]> secretData, CancellationToken cancellationToken);
     }
 
     public class KubernetesSecretService : KubernetesService, IKubernetesSecretService
@@ -42,7 +42,7 @@ namespace Octopus.Tentacle.Kubernetes
             await Client.CreateNamespacedSecretAsync(secret, KubernetesConfig.Namespace, cancellationToken: cancellationToken);
         }
 
-        public async Task UpdateSecretDataAsync(string secretName, Dictionary<string, byte[]> secretData, CancellationToken cancellationToken)
+        public async Task UpdateSecretDataAsync(string secretName, IDictionary<string, byte[]> secretData, CancellationToken cancellationToken)
         {
             var patchSecret = new V1Secret
             {
