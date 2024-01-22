@@ -84,30 +84,26 @@ namespace Octopus.Tentacle.Configuration.Instances
                 var configMapWritableStore = configMapStoreFactory.Value;
                 return (ContributeAdditionalConfiguration(configMapWritableStore), configMapWritableStore);
             }
-            if (!ConfigurationFileExists(appInstance.configurationpath))
-            {
-                ThrowConfigurationMissingException(appInstance.instanceName, appInstance.configurationpath);
-            }
+
+            EnsureConfigurationExists(appInstance.instanceName, appInstance.configurationpath);
 
             log.Verbose($"Loading configuration from {appInstance.configurationpath}");
             var writable = new XmlFileKeyValueStore(fileSystem, appInstance.configurationpath!);
             return (ContributeAdditionalConfiguration(writable), writable);
         }
 
-        bool ConfigurationFileExists([NotNullWhen(true)] string? configurationPath)
+        void EnsureConfigurationExists(string? instanceName, string? configurationPath)
         {
-            return fileSystem.FileExists(configurationPath ?? "");
-        }
+            if (!fileSystem.FileExists(configurationPath ?? string.Empty))
+            {
+                var message = !string.IsNullOrEmpty(instanceName)
+                    ? $"The configuration file for instance {instanceName} could not be located at the specified location {configurationPath}. " +
+                    "The file might have been manually removed without properly removing the instance and as such it is still listed as present." +
+                    "The instance must be created again before you can interact with it."
+                    : $"The configuration file at {configurationPath} could not be located at the specified location.";
 
-        void ThrowConfigurationMissingException(string? instanceName, string? configurationPath)
-        {
-            var message = !string.IsNullOrEmpty(instanceName)
-                ? $"The configuration file for instance {instanceName} could not be located at the specified location {configurationPath}. " +
-                "The file might have been manually removed without properly removing the instance and as such it is still listed as present." +
-                "The instance must be created again before you can interact with it."
-                : $"The configuration file at {configurationPath} could not be located at the specified location.";
-
-            throw new ControlledFailureException(message);
+                throw new ControlledFailureException(message);
+            }
         }
 
         AggregatedKeyValueStore ContributeAdditionalConfiguration(IAggregatableKeyValueStore writableConfig)
