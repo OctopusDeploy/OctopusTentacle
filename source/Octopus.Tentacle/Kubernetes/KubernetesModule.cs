@@ -9,6 +9,7 @@ namespace Octopus.Tentacle.Kubernetes
             builder.RegisterType<KubernetesJobService>().As<IKubernetesJobService>().SingleInstance();
             builder.RegisterType<KubernetesClusterService>().As<IKubernetesClusterService>().SingleInstance();
             builder.RegisterType<KubernetesJobContainerResolver>().As<IKubernetesJobContainerResolver>().SingleInstance();
+            builder.RegisterType<KubernetesConfigMapService>().As<IKubernetesConfigMapService>().SingleInstance();
             builder.RegisterType<KubernetesSecretService>().As<IKubernetesSecretService>().SingleInstance();
 
 #if DEBUG

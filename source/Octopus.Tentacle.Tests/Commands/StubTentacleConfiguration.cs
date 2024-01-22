@@ -38,6 +38,11 @@ namespace Octopus.Tentacle.Tests.Commands
         public OctopusServerConfiguration LastReceivedHandshake { get; set; } = null!;
         public IProxyConfiguration ProxyConfiguration { get; set; } = null!;
         public IPollingProxyConfiguration PollingProxyConfiguration { get; set; } = null!;
+        public bool IsRegistered { get; set; } = false;
+        public void WriteTo(IWritableKeyValueStore outputStore, IEnumerable<string> excluding)
+        {
+            throw new NotImplementedException();
+        }
 
         public bool SetApplicationDirectory(string directory)
         {
@@ -48,6 +53,12 @@ namespace Octopus.Tentacle.Tests.Commands
         public bool SetServicesPortNumber(int port)
         {
             ServicesPortNumber = port;
+            return true;
+        }
+
+        public bool SetIsRegistered(bool isRegistered = true)
+        {
+            IsRegistered = isRegistered;
             return true;
         }
 

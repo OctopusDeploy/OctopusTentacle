@@ -82,6 +82,10 @@ namespace Octopus.Tentacle.Configuration
         /// Gets the proxy used for halibut communications with the octopus server.
         /// </summary>
         IPollingProxyConfiguration PollingProxyConfiguration { get; }
+
+        bool IsRegistered { get; }
+
+        void WriteTo(IWritableKeyValueStore outputStore, IEnumerable<string> excluding);
     }
 
     public interface IWritableTentacleConfiguration : ITentacleConfiguration
@@ -95,6 +99,8 @@ namespace Octopus.Tentacle.Configuration
         /// Sets the TCP port number used by the Tentacle distribution service (default is 10933).
         /// </summary>
         bool SetServicesPortNumber(int port);
+
+        bool SetIsRegistered(bool isRegistered = true);
 
         /// <summary>
         /// Sets the IP address to listen on.

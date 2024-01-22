@@ -6,6 +6,7 @@ using NUnit.Framework;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
+using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Configuration
@@ -183,12 +184,14 @@ namespace Octopus.Tentacle.Tests.Configuration
         ApplicationInstanceSelector CreateApplicationInstanceSelector(StartUpInstanceRequest? instanceRequest = null,
             IApplicationConfigurationContributor[]? additionalConfigurations = null)
         {
+            var log = Substitute.For<ISystemLog>();
             return new ApplicationInstanceSelector(ApplicationName.Tentacle,
                 applicationInstanceStore,
                 instanceRequest ?? new StartUpDynamicInstanceRequest(),
                 additionalConfigurations ?? new IApplicationConfigurationContributor[0],
+                new Lazy<ConfigMapKeyValueStore>(() => new ConfigMapKeyValueStore(Substitute.For<IKubernetesConfigMapService>())),
                 octopusFileSystem,
-                Substitute.For<ISystemLog>());
+                log);
         }
     }
 }

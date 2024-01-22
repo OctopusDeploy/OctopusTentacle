@@ -55,6 +55,8 @@ namespace Octopus.Tentacle.Configuration
                 .As<IApplicationInstanceSelector>()
                 .SingleInstance();
 
+            builder.RegisterType<ConfigMapKeyValueStore>().SingleInstance();
+
             builder.RegisterType<WindowsLocalAdminRightsChecker>()
                 .As<IWindowsLocalAdminRightsChecker>()
                 .SingleInstance();

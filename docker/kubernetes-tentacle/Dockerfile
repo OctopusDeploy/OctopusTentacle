@@ -16,6 +16,7 @@ COPY _artifacts/deb/tentacle_${BUILD_NUMBER}_${BUILD_ARCH}.deb /tmp/
 RUN apt-get update
 RUN apt install ./tentacle_${BUILD_NUMBER}_${BUILD_ARCH}.deb -y
 RUN apt-get clean
+RUN apt install curl -y
 RUN rm -rf /var/lib/apt/lists/*
 
 WORKDIR /

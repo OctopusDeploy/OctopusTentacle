@@ -115,11 +115,27 @@ function configureTentacle() {
         tentacle configure --instance "$instanceName" --port $internalListeningPort --noListen "False"
     fi
 
-    echo "Updating trust ..."
-    tentacle configure --instance "$instanceName" --reset-trust
-
     echo "Creating certificate ..."
     tentacle new-certificate --instance "$instanceName" --if-blank
+}
+
+function setupVariablesForRegistrationCheck() {
+    local namespace=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
+    local config_map_name="tentacle-config"
+    SERVICE_URL="https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT/api/v1/namespaces/$namespace/configmaps/$config_map_name";
+    SERVICE_ACCOUNT_TOKEN_PATH="/var/run/secrets/kubernetes.io/serviceaccount/token"
+}
+
+function getStatusOfRegistration() {
+    echo "Checking registration status..."
+
+    IS_REGISTERED=$(curl -s --request GET \
+    --url "$SERVICE_URL" \
+    --header "Authorization: Bearer $(cat $SERVICE_ACCOUNT_TOKEN_PATH)" \
+    --header 'Accept: application/json' \
+    --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
+    | grep -o '"Tentacle.Services.IsRegistered": "[^"]*"' \
+    | cut -d'"' -f4)
 }
 
 function registerTentacle() {
@@ -206,6 +222,18 @@ function registerTentacle() {
 
     tentacle "${ARGS[@]}"
 }
+
+function verifyTentacleIsNotRegistered() {
+  setupVariablesForRegistrationCheck
+  getStatusOfRegistration
+
+  if [ "$IS_REGISTERED" == "true" ]; then
+      echo "Tentacle is already configured and registered with server."
+      exit 0
+  fi
+}
+
+verifyTentacleIsNotRegistered
 
 echo "==============================================="
 echo "Configuring Octopus Deploy Kubernetes Tentacle"

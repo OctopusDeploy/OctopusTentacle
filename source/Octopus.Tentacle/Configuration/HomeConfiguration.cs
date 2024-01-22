@@ -10,15 +10,14 @@ namespace Octopus.Tentacle.Configuration
         internal const string OctopusNodeCacheSettingName = "Octopus.Node.Cache";
 
         readonly ApplicationName application;
-        readonly IKeyValueStore settings;
+        readonly IKeyValueStore? settings;
         readonly IApplicationInstanceSelector applicationInstanceSelector;
 
         public HomeConfiguration(ApplicationName application,
-            IKeyValueStore settings,
             IApplicationInstanceSelector applicationInstanceSelector)
         {
             this.application = application;
-            this.settings = settings;
+            settings = applicationInstanceSelector.Current.Configuration;
             this.applicationInstanceSelector = applicationInstanceSelector;
         }
 
@@ -28,9 +27,14 @@ namespace Octopus.Tentacle.Configuration
         {
             get
             {
-                var value = settings.Get<string?>(OctopusHomeSettingName);
+                var value = settings?.Get<string?>(OctopusHomeSettingName);
                 return value == null ? null : EnsureRootedPath(value);
             }
+        }
+
+        public void WriteTo(IWritableKeyValueStore outputStore)
+        {
+            outputStore.Set(OctopusHomeSettingName, HomeDirectory);
         }
 
         string? EnsureRootedPath(string path)
@@ -61,14 +65,14 @@ namespace Octopus.Tentacle.Configuration
 
     public class WritableHomeConfiguration : HomeConfiguration, IWritableHomeConfiguration
     {
-        readonly IWritableKeyValueStore settings;
+        readonly IWritableKeyValueStore? settings;
 
-        public WritableHomeConfiguration(ApplicationName application, IWritableKeyValueStore writableConfiguration, IApplicationInstanceSelector applicationInstanceSelector) : base(application, writableConfiguration, applicationInstanceSelector)
+        public WritableHomeConfiguration(ApplicationName application, IApplicationInstanceSelector applicationInstanceSelector, IWritableKeyValueStore? writableConfiguration = null) : base(application, applicationInstanceSelector)
         {
-            settings = writableConfiguration;
+            settings = writableConfiguration ?? applicationInstanceSelector.Current.WritableConfiguration;
         }
 
         public bool SetHomeDirectory(string? homeDirectory)
-            => settings.Set(OctopusHomeSettingName, homeDirectory);
+            => settings?.Set(OctopusHomeSettingName, homeDirectory) ?? false;
     }
 }

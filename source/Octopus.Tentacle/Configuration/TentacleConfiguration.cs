@@ -9,6 +9,7 @@ using Octopus.Client.Model;
 using Octopus.Client.Model.Endpoints;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Certificates;
+using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Security;
 using Octopus.Tentacle.Security.Certificates;
 using Octopus.Tentacle.Util;
@@ -17,6 +18,7 @@ namespace Octopus.Tentacle.Configuration
 {
     internal class TentacleConfiguration : ITentacleConfiguration
     {
+        internal const string IsRegisteredSettingName = "Tentacle.Services.IsRegistered";
         internal const string ServicesPortSettingName = "Tentacle.Services.PortNumber";
         internal const string ServicesListenIPSettingName = "Tentacle.Services.ListenIP";
         internal const string ServicesNoListenSettingName = "Tentacle.Services.NoListen";
@@ -37,13 +39,13 @@ namespace Octopus.Tentacle.Configuration
         protected static OctopusServerConfiguration? OctopusServerConfiguration;
 
         public TentacleConfiguration(
-            IKeyValueStore settings,
+            IApplicationInstanceSelector instanceSelector,
             IHomeConfiguration home,
             IProxyConfiguration proxyConfiguration,
             IPollingProxyConfiguration pollingProxyConfiguration,
             ISystemLog log)
         {
-            this.settings = settings;
+            settings = instanceSelector.Current.Configuration ?? throw new Exception("Unable to get KeyValueStore from instanceSelector");
             this.home = home;
             this.proxyConfiguration = proxyConfiguration;
             this.pollingProxyConfiguration = pollingProxyConfiguration;
@@ -65,6 +67,30 @@ namespace Octopus.Tentacle.Configuration
         public IPollingProxyConfiguration PollingProxyConfiguration => pollingProxyConfiguration;
 
         public int ServicesPortNumber => settings.Get(ServicesPortSettingName, 10933);
+
+        public bool IsRegistered => settings.Get(IsRegisteredSettingName, false);
+
+        public void WriteTo(IWritableKeyValueStore outputStore, IEnumerable<string> excluding)
+        {
+            excluding = new HashSet<string>(excluding);
+            SetIfNotExcluded(IsRegisteredSettingName, IsRegistered);
+            SetIfNotExcluded(ServicesPortSettingName, ServicesPortNumber);
+            SetIfNotExcluded(ServicesListenIPSettingName, ListenIpAddress);
+            SetIfNotExcluded(ServicesNoListenSettingName, NoListen);
+            SetIfNotExcluded(TrustedServersSettingName, TrustedOctopusServers);
+            SetIfNotExcluded(DeploymentApplicationDirectorySettingName, ApplicationDirectory);
+            SetIfNotExcluded(CertificateSettingName, TentacleCertificate);
+            SetIfNotExcluded(CertificateThumbprintSettingName, TentacleCertificate?.Thumbprint ?? string.Empty);
+            SetIfNotExcluded(LastReceivedHandshakeSettingName, LastReceivedHandshake);
+
+            void SetIfNotExcluded<T>(string settingName, T value)
+            {
+                if (!excluding.Contains(settingName))
+                {
+                    outputStore.Set(settingName, value);
+                }
+            }
+        }
 
         public string ApplicationDirectory
         {
@@ -105,14 +131,13 @@ namespace Octopus.Tentacle.Configuration
             {
                 if (CachedCertificate != null)
                     return CachedCertificate;
-
-                var thumbprint = settings.Get<string?>(CertificateThumbprintSettingName);
+                var thumbprint = settings.Get(CertificateThumbprintSettingName);
                 if (string.IsNullOrWhiteSpace(thumbprint))
                 {
                     return null;
                 }
 
-                var encoded = settings.Get<string>(CertificateSettingName, protectionLevel: ProtectionLevel.MachineKey);
+                var encoded = settings.Get(CertificateSettingName, protectionLevel: ProtectionLevel.MachineKey);
                 return encoded is null || string.IsNullOrWhiteSpace(encoded) ? null : CertificateEncoder.FromBase64String(thumbprint!, encoded, log);
             }
         }
@@ -142,14 +167,14 @@ namespace Octopus.Tentacle.Configuration
         readonly ISystemLog log;
 
         public WritableTentacleConfiguration(
-            IWritableKeyValueStore settings,
+            IApplicationInstanceSelector instanceSelector,
             IHomeConfiguration home,
             ICertificateGenerator certificateGenerator,
             IProxyConfiguration proxyConfiguration,
             IPollingProxyConfiguration pollingProxyConfiguration,
-            ISystemLog log) : base(settings, home, proxyConfiguration, pollingProxyConfiguration, log)
+            ISystemLog log) : base(instanceSelector, home, proxyConfiguration, pollingProxyConfiguration, log)
         {
-            this.settings = settings;
+            settings = instanceSelector.Current.WritableConfiguration ?? throw new Exception("Unable to load WritableKeyValueStore from instanceSelector");
             this.certificateGenerator = certificateGenerator;
             this.log = log;
         }
@@ -162,6 +187,11 @@ namespace Octopus.Tentacle.Configuration
         public bool SetServicesPortNumber(int port)
         {
             return settings.Set(ServicesPortSettingName, port);
+        }
+
+        public bool SetIsRegistered(bool isRegistered = true)
+        {
+            return settings.Set(IsRegisteredSettingName, isRegistered);
         }
 
         public bool SetListenIpAddress(string? address)

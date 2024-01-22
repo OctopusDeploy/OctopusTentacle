@@ -18,6 +18,7 @@ using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Diagnostics.KnowledgeBase;
 using Octopus.Tentacle.Internals.Options;
+using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Startup
@@ -368,7 +369,11 @@ namespace Octopus.Tentacle.Startup
             options.Parse(commandLineArguments);
 
             if (!string.IsNullOrWhiteSpace(instanceName))
-                return new StartUpRegistryInstanceRequest(instanceName);
+            {
+                return PlatformDetection.Kubernetes.IsRunningInKubernetes
+                    ? new StartUpKubernetesConfigMapInstanceRequest(instanceName)
+                    : new StartUpRegistryInstanceRequest(instanceName);
+            }
             if (!string.IsNullOrWhiteSpace(configFile))
                 return new StartUpConfigFileInstanceRequest(configFile);
             

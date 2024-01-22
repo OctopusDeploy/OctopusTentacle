@@ -1,6 +1,8 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Octopus.Diagnostics;
+using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Configuration.Instances
@@ -14,12 +16,14 @@ namespace Octopus.Tentacle.Configuration.Instances
         readonly ISystemLog log;
         readonly object @lock = new object();
         ApplicationInstanceConfiguration? current;
-        
+        Lazy<ConfigMapKeyValueStore> configMapStoreFactory;
+
         public ApplicationInstanceSelector(
             ApplicationName applicationName,
             IApplicationInstanceStore applicationInstanceStore,
             StartUpInstanceRequest startUpInstanceRequest,
             IApplicationConfigurationContributor[] instanceStrategies,
+            Lazy<ConfigMapKeyValueStore> configMapStoreFactory,
             IOctopusFileSystem fileSystem,
             ISystemLog log)
         {
@@ -29,6 +33,7 @@ namespace Octopus.Tentacle.Configuration.Instances
             this.fileSystem = fileSystem;
             this.log = log;
             ApplicationName = applicationName;
+            this.configMapStoreFactory = configMapStoreFactory;
         }
 
         public bool CanLoadCurrentInstance()
@@ -64,30 +69,48 @@ namespace Octopus.Tentacle.Configuration.Instances
         ApplicationInstanceConfiguration LoadInstance()
         {
             var appInstance = LocateApplicationPrimaryConfiguration();
-            EnsureConfigurationExists(appInstance.instanceName, appInstance.configurationpath);
 
-            log.Verbose($"Loading configuration from {appInstance.configurationpath}");
-            var writableConfig = new XmlFileKeyValueStore(fileSystem, appInstance.configurationpath);
-            
-            var aggregatedKeyValueStore = ContributeAdditionalConfiguration(writableConfig);
+            var (aggregatedKeyValueStore, writableConfig) = LoadConfigurationStore(appInstance);
+
             return new ApplicationInstanceConfiguration(appInstance.instanceName, appInstance.configurationpath, aggregatedKeyValueStore, writableConfig);
         }
 
-        void EnsureConfigurationExists(string? instanceName, string configurationPath)
+        (IKeyValueStore, IWritableKeyValueStore) LoadConfigurationStore((string? instanceName, string? configurationpath) appInstance)
         {
-            if (!fileSystem.FileExists(configurationPath))
+            if (appInstance is { instanceName: not null, configurationpath: null } &&
+                PlatformDetection.Kubernetes.IsRunningInKubernetes)
             {
-                var message = !string.IsNullOrEmpty(instanceName)
-                    ? $"The configuration file for instance {instanceName} could not be located at the specified location {configurationPath}. " +
-                    "The file might have been manually removed without properly removing the instance and as such it is still listed as present." +
-                    "The instance must be created again before you can interact with it."
-                    : $"The configuration file at {configurationPath} could not be located at the specified location.";
-                    
-                throw new ControlledFailureException(message);
+                log.Verbose($"Loading configuration from ConfigMap for namespace {KubernetesConfig.Namespace}");
+                var configMapWritableStore = configMapStoreFactory.Value;
+                return (ContributeAdditionalConfiguration(configMapWritableStore), configMapWritableStore);
             }
+            if (!ConfigurationFileExists(appInstance.configurationpath))
+            {
+                ThrowConfigurationMissingException(appInstance.instanceName, appInstance.configurationpath);
+            }
+
+            log.Verbose($"Loading configuration from {appInstance.configurationpath}");
+            var writable = new XmlFileKeyValueStore(fileSystem, appInstance.configurationpath!);
+            return (ContributeAdditionalConfiguration(writable), writable);
         }
 
-        AggregatedKeyValueStore ContributeAdditionalConfiguration(XmlFileKeyValueStore writableConfig)
+        bool ConfigurationFileExists([NotNullWhen(true)] string? configurationPath)
+        {
+            return fileSystem.FileExists(configurationPath ?? "");
+        }
+
+        void ThrowConfigurationMissingException(string? instanceName, string? configurationPath)
+        {
+            var message = !string.IsNullOrEmpty(instanceName)
+                ? $"The configuration file for instance {instanceName} could not be located at the specified location {configurationPath}. " +
+                "The file might have been manually removed without properly removing the instance and as such it is still listed as present." +
+                "The instance must be created again before you can interact with it."
+                : $"The configuration file at {configurationPath} could not be located at the specified location.";
+
+            throw new ControlledFailureException(message);
+        }
+
+        AggregatedKeyValueStore ContributeAdditionalConfiguration(IAggregatableKeyValueStore writableConfig)
         {
             // build composite configuration pulling values out of the environment
             var keyValueStores = instanceStrategies
@@ -102,10 +125,14 @@ namespace Octopus.Tentacle.Configuration.Instances
             return new AggregatedKeyValueStore(keyValueStores.ToArray());
         }
 
-        (string? instanceName, string configurationpath) LocateApplicationPrimaryConfiguration()
+        (string? instanceName, string? configurationpath) LocateApplicationPrimaryConfiguration()
         {
             switch (startUpInstanceRequest)
             {
+                case StartUpKubernetesConfigMapInstanceRequest configMapInstanceRequest:
+                {   // `--instance` parameter provided and running on Kubernetes.
+                    return (configMapInstanceRequest.InstanceName, null);
+                }
                 case StartUpRegistryInstanceRequest registryInstanceRequest:
                 {   //  `--instance` parameter provided. Use That
                     var indexInstance = applicationInstanceStore.LoadInstanceDetails(registryInstanceRequest.InstanceName);
