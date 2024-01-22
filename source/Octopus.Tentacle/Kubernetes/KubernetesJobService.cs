@@ -65,7 +65,11 @@ namespace Octopus.Tentacle.Kubernetes
 
         public string BuildJobName(ScriptTicket scriptTicket) => $"octopus-job-{scriptTicket.TaskId}".ToLowerInvariant();
 
-        public async Task CreateJob(V1Job job, CancellationToken cancellationToken) => await Client.CreateNamespacedJobAsync(job, KubernetesConfig.Namespace, cancellationToken: cancellationToken);
+        public async Task CreateJob(V1Job job, CancellationToken cancellationToken)
+        {
+            AddStandardMetadata(job);
+            await Client.CreateNamespacedJobAsync(job, KubernetesConfig.Namespace, cancellationToken: cancellationToken);
+        }
 
         public async Task Delete(ScriptTicket scriptTicket, CancellationToken cancellationToken) => await Client.DeleteNamespacedJobAsync(BuildJobName(scriptTicket), KubernetesConfig.Namespace, cancellationToken: cancellationToken);
     }
