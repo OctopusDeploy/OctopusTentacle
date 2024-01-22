@@ -1,4 +1,5 @@
-﻿using k8s;
+﻿using System.Collections.Generic;
+using k8s;
 using k8s.Models;
 using k8sClient = k8s.Kubernetes;
 
@@ -23,8 +24,11 @@ namespace Octopus.Tentacle.Kubernetes
             k8sObject.Metadata.NamespaceProperty = KubernetesConfig.Namespace;
 
             //Add helm specific metadata so it's removed if the helm release is uninstalled
+            k8sObject.Metadata.Annotations ??= new Dictionary<string, string>();
             k8sObject.Metadata.Annotations["meta.helm.sh/release-name"] = KubernetesConfig.HelmReleaseName;
             k8sObject.Metadata.Annotations["meta.helm.sh/release-namespace"] = KubernetesConfig.Namespace;
+
+            k8sObject.Metadata.Labels ??= new Dictionary<string, string>();
             k8sObject.Metadata.Labels["app.kubernetes.io/managed-by"] = "Helm";
         }
     }
