@@ -129,6 +129,20 @@ partial class Build
         .DependsOn(PackLinuxPackagesLegacy);
 
     [PublicAPI]
+    Target BuildAndPushKubernetesTentacleContainerImage => _ => _
+        .Description("Builds and pushes the kubernetes tentacle multi-arch container image")
+        .Executes(() =>
+        {
+            DockerTasks.DockerBuildxBuild(settings =>
+                settings.AddBuildArg($"BUILD_NUMBER={FullSemVer}", $"BUILD_DATE={DateTime.UtcNow:O}")
+                    .SetPlatform("linux/arm/v7,linux/arm64,linux/amd64")
+                    .SetTag($"docker.packages.octopushq.com/octopusdeploy/kubernetes-tentacle:{FullSemVer}")
+                    .SetFile("./docker/kubernetes-tentacle/Dockerfile")
+                    .SetPath(RootDirectory)
+                    .SetPush(true));
+        });
+
+    [PublicAPI]
     Target PackRedHatPackage => _ => _
         .Description("TODO: Move .rpm creation into this task")
         .DependsOn(PackLinuxPackagesLegacy);
