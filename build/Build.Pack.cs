@@ -133,7 +133,6 @@ partial class Build
         .Description("Builds and pushes the kubernetes tentacle multi-arch container image")
         .Executes(() =>
         {
-            Log.Warning($"FullSemVer: {FullSemVer}, OctoVersionInfo.FullSemVer: {OctoVersionInfo.FullSemVer}");
             DockerTasks.DockerBuildxBuild(settings =>
                 settings.AddBuildArg($"BUILD_NUMBER={FullSemVer}", $"BUILD_DATE={DateTime.UtcNow:O}")
                     .SetPlatform("linux/arm64,linux/amd64")
