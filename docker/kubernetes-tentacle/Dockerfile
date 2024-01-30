@@ -2,19 +2,21 @@ FROM mcr.microsoft.com/dotnet/runtime-deps:6.0
 
 ARG BUILD_NUMBER
 ARG BUILD_DATE
-ARG BUILD_ARCH
+ARG TARGETARCH
+ARG TARGETOS
+ARG TARGETVARIANT
 
 EXPOSE 10933
-
-WORKDIR /tmp
 
 COPY docker/kubernetes-tentacle/scripts/* /scripts/
 RUN chmod +x /scripts/*.sh
 
+WORKDIR /tmp
+
 # Install Tentacle
-COPY _artifacts/deb/tentacle_${BUILD_NUMBER}_${BUILD_ARCH}.deb /tmp/
+COPY _artifacts/docker/tentacle_${BUILD_NUMBER}_${TARGETOS}-${TARGETARCH}${TARGETVARIANT}.deb /tmp/tentacle.deb
 RUN apt-get update
-RUN apt install ./tentacle_${BUILD_NUMBER}_${BUILD_ARCH}.deb -y
+RUN apt install ./tentacle.deb -y
 RUN apt-get clean
 RUN apt install curl -y
 RUN rm -rf /var/lib/apt/lists/*
