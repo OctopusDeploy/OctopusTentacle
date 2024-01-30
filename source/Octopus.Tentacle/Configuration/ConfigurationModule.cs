@@ -136,16 +136,6 @@ namespace Octopus.Tentacle.Configuration
 
             builder.RegisterType<ApplicationInstanceStore>()
                 .As<IApplicationInstanceStore>();
-
-            builder.RegisterType<KubernetesMachineKeyEncryptor>().As<IKubernetesMachineKeyEncryptor>().SingleInstance();
-            builder.RegisterType<ConfigMapKeyValueStore>().SingleInstance();
-
-            builder.RegisterType<HomeConfiguration>()
-                .As<IHomeConfiguration>()
-                .SingleInstance();
-            builder.RegisterType<WritableHomeConfiguration>()
-                .As<IWritableHomeConfiguration>()
-                .SingleInstance();
             
             builder.RegisterType<ApplicationInstanceManager>()
                 .As<IApplicationInstanceManager>();
