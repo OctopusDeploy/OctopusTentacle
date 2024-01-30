@@ -28,15 +28,15 @@ partial class Build : NukeBuild
     {
         // Docker typically logs everything to stderr so we're
         // redirecting it to Debug to make the logs look a bit nicer.
-        DockerTasks.DockerLogger = (t, s) =>
+        DockerTasks.DockerLogger = (outputType, message) =>
         {
-            if (t == OutputType.Std)
+            if (outputType == OutputType.Err)
             {
-                Log.Information(s);
+                Log.Debug(message);
             }
             else
             {
-                Log.Debug(s);
+                Log.Information(message);
             }
         };
     }
