@@ -133,13 +133,17 @@ partial class Build
         .Description("Builds and pushes the kubernetes tentacle multi-arch container image")
         .Executes(() =>
         {
-            DockerTasks.DockerBuildxBuild(settings =>
-                settings.AddBuildArg($"BUILD_NUMBER={FullSemVer}", $"BUILD_DATE={DateTime.UtcNow:O}")
-                    .SetPlatform("linux/arm64,linux/amd64")
-                    .SetTag($"docker.packages.octopushq.com/octopusdeploy/kubernetes-tentacle:{FullSemVer}")
-                    .SetFile("./docker/kubernetes-tentacle/Dockerfile")
-                    .SetPath(RootDirectory)
-                    .SetPush(true));
+            BuildAndPushOrLoadKubernetesTentacleContainerImage(push: true, load: false);
+        });
+
+    [PublicAPI]
+    Target BuildAndLoadLocallyKubernetesTentacleContainerImage => _ => _
+        .Description("Builds and loads locally the kubernetes tentacle multi-arch container image")
+        .OnlyWhenStatic(() => IsLocalBuild)
+        .DependsOn(PackDebianPackage)
+        .Executes(() =>
+        {
+            BuildAndPushOrLoadKubernetesTentacleContainerImage(push: false, load: true);
         });
 
     [PublicAPI]
@@ -471,6 +475,18 @@ partial class Build
             "tentacle",
             ArtifactsDirectory / "zip",
             $"tentacle-{FullSemVer}-{NetCore}-{runtimeId}.tar.gz");
+    }
+
+    void BuildAndPushOrLoadKubernetesTentacleContainerImage(bool push, bool load)
+    {
+        DockerTasks.DockerBuildxBuild(settings =>
+            settings.AddBuildArg($"BUILD_NUMBER={FullSemVer}", $"BUILD_DATE={DateTime.UtcNow:O}")
+                .SetPlatform("linux/arm64,linux/amd64")
+                .SetTag($"docker.packages.octopushq.com/octopusdeploy/kubernetes-tentacle:{FullSemVer}")
+                .SetFile("./docker/kubernetes-tentacle/Dockerfile")
+                .SetPath(RootDirectory)
+                .SetPush(push)
+                .SetLoad(load));
     }
 
     void CopyDebianPackageToDockerFolder(string runtimeId)
