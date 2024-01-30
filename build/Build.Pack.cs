@@ -1,6 +1,8 @@
 ﻿// ReSharper disable RedundantUsingDirective
 
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO.Compression;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -112,6 +114,8 @@ partial class Build
                 FileSystemTasks.EnsureExistingDirectory(ArtifactsDirectory / "deb");
                 debOutputDirectory.GlobFiles("*.deb")
                     .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, ArtifactsDirectory / "deb"));
+
+                CopyDebianPackageToDockerFolder(runtimeId);
 
                 FileSystemTasks.EnsureExistingDirectory(ArtifactsDirectory / "rpm");
                 debOutputDirectory.GlobFiles("*.rpm")
@@ -454,4 +458,25 @@ partial class Build
             ArtifactsDirectory / "zip",
             $"tentacle-{FullSemVer}-{NetCore}-{runtimeId}.tar.gz");
     }
+
+    void CopyDebianPackageToDockerFolder(string runtimeId)
+    {
+        if (!DebDockerMap.TryGetValue(runtimeId, out var debDockerArch)) return;
+
+        var (debArch, dockerArch) = debDockerArch;
+
+        var packageFilePath = ArtifactsDirectory / "deb" / $"tentacle_{FullSemVer}_{debArch}.deb";
+
+        var dockerDir = ArtifactsDirectory / "docker";
+        FileSystemTasks.EnsureExistingDirectory(dockerDir);
+
+        FileSystemTasks.CopyFile( packageFilePath, dockerDir / $"tentacle_{FullSemVer}_linux-{dockerArch}.deb");
+    }
+
+    static IReadOnlyDictionary<string, (string deb, string docker)> DebDockerMap { get; } = new Dictionary<string, (string deb, string docker)>
+    {
+        {"linux-x64", ("amd64", "amd64")},
+        {"linux-arm64", ("arm64", "arm64")},
+        {"linux-arm", ("armhf", "armv7")}
+    };
 }
