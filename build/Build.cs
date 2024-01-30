@@ -16,6 +16,7 @@ using Nuke.Common.Tools.DotNet;
 using Nuke.Common.Tools.MSBuild;
 using Nuke.Common.Tools.OctoVersion;
 using Nuke.Common.Utilities.Collections;
+using Serilog;
 using static Nuke.Common.IO.FileSystemTasks;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
 
@@ -23,6 +24,23 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
 [ShutdownDotNetAfterServerBuild]
 partial class Build : NukeBuild
 {
+    public Build()
+    {
+        // Docker typically logs everything to stderr so we're
+        // redirecting it to Debug to make the logs look a bit nicer.
+        DockerTasks.DockerLogger = (t, s) =>
+        {
+            if (t == OutputType.Std)
+            {
+                Log.Information(s);
+            }
+            else
+            {
+                Log.Debug(s);
+            }
+        };
+    }
+
     /// Support plugins are available for:
     /// - JetBrains ReSharper        https://nuke.build/resharper
     /// - JetBrains Rider            https://nuke.build/rider
