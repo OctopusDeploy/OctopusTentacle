@@ -1,4 +1,6 @@
 #!/bin/bash
+set -o xtrace
+set -e
 
 export DOTNET_ROOT=$HOME/.dotnet
 export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools

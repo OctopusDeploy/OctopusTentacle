@@ -1,4 +1,7 @@
 #!/bin/bash
+set -o xtrace
+set -e
+
 sudo dnf install krb5-libs libicu openssl-libs zlib iputils wget -y
 
 # https://github.com/OctopusDeploy/BuildAgentAutomation/blob/main/Fedora/scripts/install-openssl.sh
