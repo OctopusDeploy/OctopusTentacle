@@ -9,6 +9,7 @@ ARG TARGETVARIANT
 EXPOSE 10933
 
 COPY docker/kubernetes-tentacle/scripts/* /scripts/
+RUN chmod +x /scripts/*.sh
 
 WORKDIR /tmp
 
