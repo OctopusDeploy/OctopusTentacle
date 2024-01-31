@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using NUnit.Framework;
@@ -25,10 +26,12 @@ namespace Octopus.Tentacle.Tests.Integration
         };
 
         public static string OneTimeSetupLogOutput = "Nothing to show";
-        
+
+        public Stopwatch sw = new Stopwatch();
         [OneTimeSetUp]
         public void OneTimeSetup()
         {
+            sw.Start();
             var sb = new StringBuilder();
             var logger = new SerilogLoggerBuilder()
                 .WithLoggingToStringBuilder(sb)
@@ -59,6 +62,9 @@ namespace Octopus.Tentacle.Tests.Integration
                     exceptions.Add(e);
                 }
             }
+            
+            sw.Stop();
+            logger.Information("Total test time: {TotalSeconds}s", sw.Elapsed.TotalSeconds);
 
             if (exceptions.Any())
             {
