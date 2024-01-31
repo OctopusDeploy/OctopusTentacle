@@ -4,11 +4,14 @@ using System.Linq;
 using System.Net;
 using System.Windows;
 using Autofac;
+using Octopus.Manager.Tentacle.DeleteWizard;
 using Octopus.Manager.Tentacle.Dialogs;
 using Octopus.Manager.Tentacle.Infrastructure;
 using Octopus.Manager.Tentacle.PreReq;
+using Octopus.Manager.Tentacle.Proxy;
 using Octopus.Manager.Tentacle.Shell;
 using Octopus.Manager.Tentacle.TentacleConfiguration;
+using Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard;
 using Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager;
 using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Configuration;
@@ -30,8 +33,8 @@ namespace Octopus.Manager.Tentacle
 
         protected override void OnStartup(StartupEventArgs e)
         {
-            var systemLog = new SystemLog();
-            UnhandledErrorTrapper.Initialize(systemLog);
+            //var systemLog = new SystemLog();
+            //UnhandledErrorTrapper.Initialize(systemLog);
 
             if (!ElevationHelper.IsElevated)
             {
@@ -50,6 +53,9 @@ namespace Octopus.Manager.Tentacle
             base.OnStartup(e);
 
             ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            
+            if (!HasPrerequisites(new TentaclePrerequisiteProfile()))
+                Environment.Exit(0);
 
             var container = ConfigureContainer();
 
@@ -66,7 +72,9 @@ namespace Octopus.Manager.Tentacle
             CreateAndShowShell(container);
         }
 
-        static IContainer ConfigureContainer()
+        // TODO: This shouldn't be public
+        // But it's easier for now, while we figure out the best way to improve this area
+        public static IContainer ConfigureContainer()
         {
             var builder = new ContainerBuilder();
 
@@ -76,10 +84,6 @@ namespace Octopus.Manager.Tentacle
             builder.RegisterType<CertificateGenerator>().As<ICertificateGenerator>();
             builder.RegisterType<CommandLineRunner>().As<ICommandLineRunner>();
             builder.RegisterModule(new ManagerConfigurationModule(ApplicationName.Tentacle));
-
-            if (!HasPrerequisites(new TentaclePrerequisiteProfile()))
-                Environment.Exit(0);
-
             builder.RegisterModule(new TentacleConfigurationModule());
             builder.RegisterModule(new TentacleModule());
             return builder.Build();
@@ -108,10 +112,32 @@ namespace Octopus.Manager.Tentacle
 
         void CreateAndShowShell(IComponentContext container)
         {
-            var shell = container.Resolve<ShellView>();
+            var shell = CreateShell(container);
             MainWindow = shell;
             shell.ShowDialog();
             Shutdown(0);
+        }
+        
+        // Copy pasta from TentacleModule.cs
+        // TODO: Clean up and remove from Autofac modules
+        static ShellView CreateShell(IComponentContext container)
+        {
+            var newInstanceLauncher = container.Resolve<TentacleSetupWizardLauncher>();
+
+            var shellModel = container.Resolve<ShellViewModel>();
+            var shell = new ShellView("Tentacle Manager", shellModel);
+            shell.EnableInstanceSelection();
+            shell.Height = 550;
+            shell.SetViewContent(
+                new TentacleManagerView(
+                    container.Resolve<TentacleManagerModel>(),
+                    container.Resolve<InstanceSelectionModel>(),
+                    container.Resolve<IApplicationInstanceManager>(),
+                    container.Resolve<IApplicationInstanceStore>(),
+                    newInstanceLauncher,
+                    container.Resolve<ProxyWizardLauncher>(),
+                    container.Resolve<DeleteWizardLauncher>()));
+            return shell;
         }
     }
 }
