@@ -8,7 +8,7 @@ function install_dotnet {
     chmod +x dotnet-install.sh || exit 1
 
     echo "Installing dotnet $1"
-    sudo ./dotnet-install.sh --install-dir /usr/share/dotnet --channel $1 --verbose || exit 1
+    ./dotnet-install.sh  --channel $1 --verbose || exit 1
 
     echo "Removing dotnet-install.sh script"
     rm -f dotnet-install.sh || exit 1
