@@ -173,7 +173,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                         }
                         #endif
                         
-                        if (item is not TentacleConfigurationTestCase {Version: null} version)
+                        if (item is not TentacleConfigurationTestCase {Version: null})
                         {
                             parms.Properties.Add(PropertyNames.Category, TentacleBackwardsCompatibility);
                         }
