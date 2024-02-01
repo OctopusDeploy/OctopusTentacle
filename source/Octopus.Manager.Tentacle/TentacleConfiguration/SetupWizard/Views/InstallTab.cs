@@ -11,19 +11,17 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
 {
     public partial class InstallTab
     {
-        public static readonly DependencyProperty SuccessMessageProperty = DependencyProperty.Register("SuccessMessage", typeof (string), typeof (InstallTab), new PropertyMetadata(null));
-        public static readonly DependencyProperty ReadyMessageProperty = DependencyProperty.Register("ReadyMessage", typeof (string), typeof (InstallTab), new PropertyMetadata(null));
-        public static readonly DependencyProperty TitleProperty = DependencyProperty.Register("Title", typeof (string), typeof (InstallTab), new PropertyMetadata("Install"));
-        public static readonly DependencyProperty ExecuteButtonTextProperty = DependencyProperty.Register("ExecuteButtonText", typeof (string), typeof (InstallTab), new PropertyMetadata("INSTALL"));
+        public static readonly DependencyProperty SuccessMessageProperty = DependencyProperty.Register("SuccessMessage", typeof(string), typeof(InstallTab), new PropertyMetadata(null));
+        public static readonly DependencyProperty ReadyMessageProperty = DependencyProperty.Register("ReadyMessage", typeof(string), typeof(InstallTab), new PropertyMetadata(null));
+        public static readonly DependencyProperty TitleProperty = DependencyProperty.Register("Title", typeof(string), typeof(InstallTab), new PropertyMetadata("Install"));
+        public static readonly DependencyProperty ExecuteButtonTextProperty = DependencyProperty.Register("ExecuteButtonText", typeof(string), typeof(InstallTab), new PropertyMetadata("INSTALL"));
         readonly ICommandLineRunner commandLineRunner;
-        readonly Action<bool> onScriptCompletionCallback;
-        readonly IScriptableViewModel model;
+        readonly InstallTabViewModel model;
         readonly TextBoxLogger logger;
 
-        public InstallTab(IScriptableViewModel model, ICommandLineRunner commandLineRunner, ContentControl additionalContent = null, Action<bool> onScriptCompletionCallback = null)
+        public InstallTab(InstallTabViewModel model, ICommandLineRunner commandLineRunner, ContentControl additionalContent = null)
         {
             this.commandLineRunner = commandLineRunner;
-            this.onScriptCompletionCallback = onScriptCompletionCallback;
             InitializeComponent();
 
             DataContext = this.model = model;
@@ -36,6 +34,10 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
             };
 
             extraContent.Content = additionalContent;
+        }
+
+        public InstallTab(InstallTabViewModel viewModel)
+        {
         }
 
         public string Title
@@ -64,68 +66,85 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
 
         public Func<bool> FinishOnSuccessfulExecution { get; set; }
 
-        void StartClicked(object sender, RoutedEventArgs e)
+        async void StartClicked(object sender, RoutedEventArgs e)
         {
             startButton.IsEnabled = false;
             outputLog.Visibility = Visibility.Visible;
             outputLog.Clear();
 
-            ThreadPool.QueueUserWorkItem(delegate
+            var success = await model.GenerateAndExecuteScript();
+            // TODO: 
+            // if (!success)
+            // {
+            //     Rollback();
+            // }
+
+            var finished = success && (FinishOnSuccessfulExecution == null || FinishOnSuccessfulExecution());
+
+            IsNextEnabled = finished;
+            startButton.IsEnabled = !finished;
+
+            if (finished)
             {
-                var success = false;
-                try
-                {
-                    var script = model.GenerateScript();
-                    model.ContributeSensitiveValues(logger);
-                    success = commandLineRunner.Execute(script, logger);
-                }
-                catch (Exception ex)
-                {
-                    logger.Error(ex);
-                }
-                finally
-                {
-                    if (!success)
-                    {
-                        Rollback();
-                    }
-                    onScriptCompletionCallback?.Invoke(success);
-
-                    Dispatcher.Invoke(() =>
-                    {
-                        var finished = success && (FinishOnSuccessfulExecution == null || FinishOnSuccessfulExecution());
-
-                        IsNextEnabled = finished;
-                        startButton.IsEnabled = !finished;
-
-                        if (finished)
-                        {
-                            readyMessage.Visibility = Visibility.Collapsed;
-                            successMessage.Visibility = Visibility.Visible;
-                        }
-                    });
-                }
-            });
-        }
-
-        void Rollback()
-        {
-            try
-            {
-                var script = model.GenerateRollbackScript();
-                commandLineRunner.Execute(script, logger);
-            }
-            catch (Exception ex2)
-            {
-                logger.Error(ex2);
+                readyMessage.Visibility = Visibility.Collapsed;
+                successMessage.Visibility = Visibility.Visible;
             }
         }
 
-        void GenerateScriptClicked(object sender, RoutedEventArgs e)
-        {
-            var script = model.GenerateScript();
+        //     ThreadPool.QueueUserWorkItem(delegate
+            //     {
+            //         var success = false;
+            //         try
+            //         {
+            //             var script = model.GenerateScript();
+            //             model.ContributeSensitiveValues(logger);
+            //             success = commandLineRunner.Execute(script, logger);
+            //         }
+            //         catch (Exception ex)
+            //         {
+            //             logger.Error(ex);
+            //         }
+            //         finally
+            //         {
+            //             if (!success)
+            //             {
+            //                 Rollback();
+            //             }
+            //
+            //             Dispatcher.Invoke(() =>
+            //             {
+            //                 var finished = success && (FinishOnSuccessfulExecution == null || FinishOnSuccessfulExecution());
+            //
+            //                 IsNextEnabled = finished;
+            //                 startButton.IsEnabled = !finished;
+            //
+            //                 if (finished)
+            //                 {
+            //                     readyMessage.Visibility = Visibility.Collapsed;
+            //                     successMessage.Visibility = Visibility.Visible;
+            //                 }
+            //             });
+            //         }
+            //     });
+            // }
 
-            ViewScriptDialog.ShowDialog(Window.GetWindow(this), string.Join(Environment.NewLine, script.Select(s => s.ToString())));
+            // void Rollback()
+            // {
+            //     try
+            //     {
+            //         var script = model.GenerateRollbackScript();
+            //         commandLineRunner.Execute(script, logger);
+            //     }
+            //     catch (Exception ex2)
+            //     {
+            //         logger.Error(ex2);
+            //     }
+            // }
+            //
+            void GenerateScriptClicked(object sender, RoutedEventArgs e)
+            {
+                var script = model.GenerateScript();
+                ViewScriptDialog.ShowDialog(Window.GetWindow(this), string.Join(Environment.NewLine, script.Select(s => s.ToString())));
+            }
         }
     }
-}
