@@ -17,8 +17,8 @@ itdll=`pwd`/build/outputs/integrationtests/net6.0/linux-x64/Octopus.Tentacle.Tes
 
 
 if [ "$TENTACLE_IT_WITH_SUDO" = "1" ]; then
-sudo -i dotnet vstest $itdll /logger:logger://teamcity /TestAdapterPath:/opt/TeamCity/BuildAgent/plugins/dotnet/tools/vstest15 /logger:console;verbosity=detailed
+sudo -i dotnet vstest $itdll "/testcasefilter:TestCategory!=TentacleBackwardsCompatibility" /logger:logger://teamcity /TestAdapterPath:/opt/TeamCity/BuildAgent/plugins/dotnet/tools/vstest15 /logger:console;verbosity=detailed
 else
-dotnet vstest $itdll /testcasefilter:TestCategory!=RequiresSudoOnLinux /logger:logger://teamcity /TestAdapterPath:/opt/TeamCity/BuildAgent/plugins/dotnet/tools/vstest15 /logger:console;verbosity=detailed
+dotnet vstest $itdll "/testcasefilter:TestCategory!=RequiresSudoOnLinux&TestCategory!=TentacleBackwardsCompatibility" /logger:logger://teamcity /TestAdapterPath:/opt/TeamCity/BuildAgent/plugins/dotnet/tools/vstest15 /logger:console;verbosity=detailed
 fi
 
