@@ -1,6 +1,9 @@
 param (    
     [string]
     $BuildArch = "amd64",
+
+    [string]
+    $BuildArchVariant = "",
     
     [string]
     $LocalRegistryDomain = "localhost:5500",
@@ -32,6 +35,7 @@ Write-Output "Using package $($package.Name)"
 $env:BUILD_NUMBER = $buildNumber
 $env:BUILD_DATE = Get-Date -Format "yyyy-MM-dd"
 $env:BUILD_ARCH = $BuildArch
+$env:BUILD_VARIANT = $BuildArchVariant
 
 $baseTag = "$buildNumber-linux-$BuildArch"
 $tag = $baseTag
