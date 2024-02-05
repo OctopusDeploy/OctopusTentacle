@@ -27,7 +27,6 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         IScriptWorkspace workspace;
         TestScriptLog scriptLog;
         RunningScript runningScript;
-        TestUserPrincipal user;
 
         [SetUp]
         public void SetUpLocal()
@@ -39,7 +38,6 @@ namespace Octopus.Tentacle.Tests.Integration.Util
             {
                 testRootPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), $"OctopusTest-{nameof(RunningScriptFixture)}");
                 shell = new PowerShell();
-                user = new TestUserPrincipal("test-runningscript");
             }
             else
             {

@@ -14,7 +14,6 @@ namespace Octopus.Tentacle.Tests.Integration.Util
     {
         const int SIG_TERM = 143;
         const int SIG_KILL = 137;
-        TestUserPrincipal user;
         string command;
         string commandParam;
 
@@ -23,7 +22,6 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         {
             if (PlatformDetection.IsRunningOnWindows)
             {
-                user = new TestUserPrincipal("test-silentprocess");
                 command = "cmd.exe";
                 commandParam = "/c";
             }
