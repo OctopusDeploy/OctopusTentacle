@@ -47,7 +47,7 @@ namespace Octopus.Tentacle.Kubernetes
                 //only list this job
                 fieldSelector: $"metadata.name=={jobName}",
                 watch: true,
-                timeoutSeconds: KubernetesConfig.JobTtlSeconds,
+                timeoutSeconds: KubernetesConfig.JobMonitorTimeoutSeconds,
                 cancellationToken: cancellationToken);
 
             await foreach (var (type, job) in response.WatchAsync<V1Job, V1JobList>(onError, cancellationToken: cancellationToken))
