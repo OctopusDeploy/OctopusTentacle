@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using Octopus.Manager.Tentacle.Dialogs;
@@ -57,22 +58,27 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
 
         public Func<bool> FinishOnSuccessfulExecution { get; set; }
 
-        async void StartClicked(object sender, RoutedEventArgs e)
+        void StartClicked(object sender, RoutedEventArgs e)
         {
             startButton.IsEnabled = false;
             outputLog.Visibility = Visibility.Visible;
             outputLog.Clear();
-
-            var success = await model.GenerateAndExecuteScript();
-
-            var finished = success && (FinishOnSuccessfulExecution == null || FinishOnSuccessfulExecution());
-
-            IsNextEnabled = finished;
-            startButton.IsEnabled = !finished;
-
-            if (!finished) return;
-            readyMessage.Visibility = Visibility.Collapsed;
-            successMessage.Visibility = Visibility.Visible;
+            var success = false;
+            ThreadPool.QueueUserWorkItem(delegate
+            {
+                success = model.GenerateAndExecuteScript();
+                Dispatcher.Invoke(() =>
+                {
+                    var finished = success && (FinishOnSuccessfulExecution == null || FinishOnSuccessfulExecution());
+                    IsNextEnabled = finished;
+                    startButton.IsEnabled = !finished;
+                    if (finished)
+                    {
+                        readyMessage.Visibility = Visibility.Collapsed;
+                        successMessage.Visibility = Visibility.Visible;
+                    }
+                });
+            });
         }
         
         void GenerateScriptClicked(object sender, RoutedEventArgs e)

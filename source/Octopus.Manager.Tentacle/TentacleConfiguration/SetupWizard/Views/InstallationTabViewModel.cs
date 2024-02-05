@@ -29,7 +29,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
         
         public string Executable { get; set; }
         
-        public async Task<bool> GenerateAndExecuteScript()
+        public bool GenerateAndExecuteScript()
         {
             var success = false;
             try
@@ -50,7 +50,6 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
                 }
             }
 
-            await Task.CompletedTask;
             return success;
         }
             
