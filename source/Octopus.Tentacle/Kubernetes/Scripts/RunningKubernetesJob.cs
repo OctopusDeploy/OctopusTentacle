@@ -341,11 +341,12 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                                     Env = new List<V1EnvVar>
                                     {
                                         new(EnvironmentVariables.TentacleHome, $"/octopus"),
-                                        new(EnvironmentVariables.TentacleJournal, $"/octopus/DeploymentJournal.xml"),
                                         new(EnvironmentVariables.TentacleInstanceName, instanceName),
                                         new(EnvironmentVariables.TentacleVersion, Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleVersion)),
                                         new(EnvironmentVariables.TentacleCertificateSignatureAlgorithm, Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleCertificateSignatureAlgorithm)),
                                         new("OCTOPUS_RUNNING_IN_CONTAINER", "Y")
+                                        
+                                        //We intentionally exclude setting "TentacleJournal" since it doesn't make sense to keep a Deployment Journal for Kubernetes deployments
                                     }
                                 }
                             },
