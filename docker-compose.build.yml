@@ -18,7 +18,9 @@ services:
             args:
                 BUILD_DATE: ${BUILD_DATE:?err}
                 BUILD_NUMBER: ${BUILD_NUMBER:?err}
-                BUILD_ARCH: ${BUILD_ARCH:?err}
+                TARGETARCH: ${BUILD_ARCH:?err}
+                TARGETOS: linux
+                TARGETVARIANT: ${BUILD_VARIANT}
         image: docker.packages.octopushq.com/octopusdeploy/kubernetes-tentacle:${BUILD_NUMBER?err}-linux-${BUILD_ARCH:?err}
 
     octopusdeploy-tentacle-windows-2019:

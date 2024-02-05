@@ -1,6 +1,8 @@
 ﻿// ReSharper disable RedundantUsingDirective
 
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO.Compression;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -113,6 +115,8 @@ partial class Build
                 debOutputDirectory.GlobFiles("*.deb")
                     .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, ArtifactsDirectory / "deb"));
 
+                CopyDebianPackageToDockerFolder(runtimeId);
+
                 FileSystemTasks.EnsureExistingDirectory(ArtifactsDirectory / "rpm");
                 debOutputDirectory.GlobFiles("*.rpm")
                     .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, ArtifactsDirectory / "rpm"));
@@ -123,6 +127,24 @@ partial class Build
     Target PackDebianPackage => _ => _
         .Description("TODO: Move .deb creation into this task")
         .DependsOn(PackLinuxPackagesLegacy);
+
+    [PublicAPI]
+    Target BuildAndPushKubernetesTentacleContainerImage => _ => _
+        .Description("Builds and pushes the kubernetes tentacle multi-arch container image")
+        .Executes(() =>
+        {
+            BuildAndPushOrLoadKubernetesTentacleContainerImage(push: true, load: false);
+        });
+
+    [PublicAPI]
+    Target BuildAndLoadLocallyKubernetesTentacleContainerImage => _ => _
+        .Description("Builds and loads locally the kubernetes tentacle multi-arch container image")
+        .OnlyWhenStatic(() => IsLocalBuild)
+        .DependsOn(PackDebianPackage)
+        .Executes(() =>
+        {
+            BuildAndPushOrLoadKubernetesTentacleContainerImage(push: false, load: true);
+        });
 
     [PublicAPI]
     Target PackRedHatPackage => _ => _
@@ -454,4 +476,37 @@ partial class Build
             ArtifactsDirectory / "zip",
             $"tentacle-{FullSemVer}-{NetCore}-{runtimeId}.tar.gz");
     }
+
+    void BuildAndPushOrLoadKubernetesTentacleContainerImage(bool push, bool load)
+    {
+        DockerTasks.DockerBuildxBuild(settings =>
+            settings.AddBuildArg($"BUILD_NUMBER={FullSemVer}", $"BUILD_DATE={DateTime.UtcNow:O}")
+                .SetPlatform("linux/arm64,linux/amd64")
+                .SetTag($"docker.packages.octopushq.com/octopusdeploy/kubernetes-tentacle:{FullSemVer}")
+                .SetFile("./docker/kubernetes-tentacle/Dockerfile")
+                .SetPath(RootDirectory)
+                .SetPush(push)
+                .SetLoad(load));
+    }
+
+    void CopyDebianPackageToDockerFolder(string runtimeId)
+    {
+        if (!DebDockerMap.TryGetValue(runtimeId, out var debDockerArch)) return;
+
+        var (debArch, dockerArch) = debDockerArch;
+
+        var packageFilePath = ArtifactsDirectory / "deb" / $"tentacle_{FullSemVer}_{debArch}.deb";
+
+        var dockerDir = ArtifactsDirectory / "docker";
+        FileSystemTasks.EnsureExistingDirectory(dockerDir);
+
+        FileSystemTasks.CopyFile( packageFilePath, dockerDir / $"tentacle_{FullSemVer}_linux-{dockerArch}.deb");
+    }
+
+    static IReadOnlyDictionary<string, (string deb, string docker)> DebDockerMap { get; } = new Dictionary<string, (string deb, string docker)>
+    {
+        {"linux-x64", ("amd64", "amd64")},
+        {"linux-arm64", ("arm64", "arm64")},
+        {"linux-arm", ("armhf", "armv7")}
+    };
 }

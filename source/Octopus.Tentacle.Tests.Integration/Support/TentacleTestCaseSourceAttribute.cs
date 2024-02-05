@@ -44,6 +44,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         private readonly NUnitTestCaseBuilder _builder = new();
         
         public const string Net60ClientNet48Service = nameof(Net60ClientNet48Service);
+        
+        /// <summary>
+        /// Tests which are testing against a previous version of tentacle, e.g. testing tentacle client
+        /// with version 5.0.12 of tentacle.
+        /// </summary>
+        public const string TentacleBackwardsCompatibility = nameof(TentacleBackwardsCompatibility);
 
         /// <summary>
         /// Construct with a Type and name
@@ -166,6 +172,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                             parms.Properties.Add(PropertyNames.Category, Net60ClientNet48Service);
                         }
                         #endif
+                        
+                        if (item is not TentacleConfigurationTestCase {Version: null})
+                        {
+                            parms.Properties.Add(PropertyNames.Category, TentacleBackwardsCompatibility);
+                        }
 
                         data.Add(parms);
                     }
