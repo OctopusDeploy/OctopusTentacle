@@ -23,6 +23,7 @@ namespace Octopus.Tentacle.Tests.Integration.Startup
     public class WindowsServiceConfiguratorFixture
     {
         [Test]
+        [RequiresAdminOnWindows]
         public void CanInstallWindowsService()
         {
             const string serviceName = "OctopusShared.ServiceHelperTest";
@@ -70,6 +71,7 @@ namespace Octopus.Tentacle.Tests.Integration.Startup
         }
 
         [Test]
+        [RequiresAdminOnWindows]
         public void ThrowsOnBadServiceDependency()
         {
             const string serviceName = "OctopusShared.ServiceHelperTest";
