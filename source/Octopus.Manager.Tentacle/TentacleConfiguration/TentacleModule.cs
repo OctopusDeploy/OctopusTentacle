@@ -1,14 +1,12 @@
-﻿using Autofac;
-using Octopus.Diagnostics;
+﻿using System;
+using Autofac;
+using Octopus.Client.Model;
 using Octopus.Manager.Tentacle.DeleteWizard;
 using Octopus.Manager.Tentacle.Proxy;
 using Octopus.Manager.Tentacle.Shell;
 using Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard;
 using Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager;
 using Octopus.Tentacle.Configuration;
-using Octopus.Tentacle.Configuration.Instances;
-using InstanceSelectionModel = Octopus.Manager.Tentacle.Shell.InstanceSelectionModel;
-using ShellViewModel = Octopus.Manager.Tentacle.Shell.ShellViewModel;
 
 namespace Octopus.Manager.Tentacle.TentacleConfiguration
 {
@@ -18,33 +16,18 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration
         {
             base.Load(builder);
 
-            builder.RegisterType<ShellViewModel>().OnActivating(e => e.Instance.ShowEAPVersion = false);
-            builder.Register(CreateShell).As<ShellView>();
+            // TODO: Remove ShellViewModel registration
+            // Views should depend on their specific view model,
+            // which will likely *derive* from ShellViewModel
+            builder.RegisterType<ShellViewModel>();
+            
             builder.RegisterType<TentacleManagerModel>();
             builder.RegisterType<TentacleSetupWizardLauncher>();
             builder.RegisterType<ProxyWizardLauncher>();
-            builder.RegisterType<DeleteWizardLauncher>();
             builder.RegisterType<InstanceSelectionModel>().AsSelf().SingleInstance().WithParameter("applicationName", ApplicationName.Tentacle);
-        }
 
-        static ShellView CreateShell(IComponentContext container)
-        {
-            var newInstanceLauncher = container.Resolve<TentacleSetupWizardLauncher>();
-
-            var shellModel = container.Resolve<ShellViewModel>();
-            var shell = new ShellView("Tentacle Manager", shellModel);
-            shell.EnableInstanceSelection();
-            shell.Height = 550;
-            shell.SetViewContent(
-                new TentacleManagerView(
-                    container.Resolve<TentacleManagerModel>(),
-                    container.Resolve<InstanceSelectionModel>(),
-                    container.Resolve<IApplicationInstanceManager>(),
-                    container.Resolve<IApplicationInstanceStore>(),
-                    newInstanceLauncher,
-                    container.Resolve<ProxyWizardLauncher>(),
-                    container.Resolve<DeleteWizardLauncher>()));
-            return shell;
+            // View Model registration
+            builder.RegisterType<DeleteWizardModel>().AsSelf();
         }
     }
 }

@@ -2,26 +2,26 @@
 using FluentValidation;
 using Octopus.Diagnostics;
 using Octopus.Manager.Tentacle.Infrastructure;
+using Octopus.Manager.Tentacle.Shell;
 using Octopus.Manager.Tentacle.Util;
-using Octopus.Tentacle.Configuration;
-using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Manager.Tentacle.DeleteWizard
 {
-    public class DeleteWizardModel : ViewModel, IScriptableViewModel
+    public class DeleteWizardModel : ShellViewModel, IScriptableViewModel
     {
-        public DeleteWizardModel(ApplicationName application)
+        public DeleteWizardModel(InstanceSelectionModel instanceSelectionModel)
+            : base(instanceSelectionModel)
         {
-            InstanceName = ApplicationInstanceRecord.GetDefaultInstance(application);
+            InstanceName = instanceSelectionModel.SelectedInstance;
             Executable = CommandLine.PathToTentacleExe();
             ApplicationName = "Tentacle";
             Validator = CreateValidator();
         }
 
-        public string InstanceName { get; set; }
-        public string Executable { get; set; }
-        public string ApplicationName { get; set; }
+        public string InstanceName { get; }
+        public string Executable { get; }
+        public string ApplicationName { get; }
 
         public IEnumerable<CommandLineInvocation> GenerateScript()
         {

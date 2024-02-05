@@ -6,7 +6,9 @@ namespace Octopus.Tentacle.Versioning
     {
         public static bool IsEarlyAccessProgram(this SemanticVersionInfo semanticVersionInfo)
         {
-            return semanticVersionInfo.SemanticVersion.IsPrerelease;
+            return semanticVersionInfo.SemanticVersion.IsPrerelease &&
+                // Exclude local dev builds
+                semanticVersionInfo.SemanticVersion.Major != 0;
         }
     }
 }

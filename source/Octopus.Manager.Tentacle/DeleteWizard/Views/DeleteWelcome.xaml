@@ -4,7 +4,6 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:views="clr-namespace:Octopus.Manager.Tentacle.DeleteWizard.Views"
     xmlns:shell="clr-namespace:Octopus.Manager.Tentacle.Shell"
     xmlns:controls="clr-namespace:Octopus.Manager.Tentacle.Controls"
     mc:Ignorable="d" 
@@ -30,7 +29,7 @@
 
                 <StackPanel Margin="10,0,10,0">
                     <TextBlock Style="{StaticResource TextBlock.Big}" TextWrapping="Wrap">
-                    <Run Text="{Binding Path=ApplicationName, StringFormat='Are you sure you want to delete your {0} instance?'}" />
+                    <Run Text="{Binding Mode=OneWay, Path=ApplicationName, StringFormat='Are you sure you want to delete your {0} instance?'}" />
                     </TextBlock>
                     <TextBlock Style="{StaticResource TextBlock.Big}" TextWrapping="Wrap">
                         <Run>Deleting this instance will stop and uninstall the Windows Service, and remove information about the instance from the registry. Files in the home directory will not be changed.</Run>
