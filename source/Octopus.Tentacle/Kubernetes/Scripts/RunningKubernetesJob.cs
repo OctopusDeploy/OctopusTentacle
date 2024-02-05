@@ -339,7 +339,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                                         new("/octopus", "tentacle-home"),
                                     },
                                     Env = new List<V1EnvVar>
-                                    {                                        
+                                    {
                                         new(EnvironmentVariables.TentacleHome, $"/octopus"),
                                         new(EnvironmentVariables.TentacleInstanceName, instanceName),
                                         new(EnvironmentVariables.TentacleVersion, Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleVersion)),
