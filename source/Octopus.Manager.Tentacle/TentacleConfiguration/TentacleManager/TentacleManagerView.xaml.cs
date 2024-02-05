@@ -5,15 +5,19 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Data;
+using Autofac;
 using MaterialDesignThemes.Wpf;
 using Octopus.Manager.Tentacle.DeleteWizard;
+using Octopus.Manager.Tentacle.DeleteWizard.Views;
 using Octopus.Manager.Tentacle.Dialogs;
 using Octopus.Manager.Tentacle.Proxy;
 using Octopus.Manager.Tentacle.Shell;
 using Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard;
+using Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Diagnostics;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
 {
@@ -22,28 +26,33 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
     /// </summary>
     public partial class TentacleManagerView
     {
+        readonly IComponentContext container;
         readonly InstanceSelectionModel instanceSelection;
         readonly IApplicationInstanceManager instanceManager;
         readonly IApplicationInstanceStore instanceStore;
         readonly TentacleSetupWizardLauncher tentacleSetupWizardLauncher;
         readonly ProxyWizardLauncher proxyWizardLauncher;
-        readonly DeleteWizardLauncher deleteWizardLaunchers;
         readonly TentacleManagerModel model;
 
-        public TentacleManagerView(TentacleManagerModel model,
+        public TentacleManagerView(
+            IComponentContext container,
+            TentacleManagerModel model,
             InstanceSelectionModel instanceSelection,
             IApplicationInstanceManager instanceManager,
             IApplicationInstanceStore instanceStore,
             TentacleSetupWizardLauncher tentacleSetupWizardLauncher,
-            ProxyWizardLauncher proxyWizardLauncher,
-            DeleteWizardLauncher deleteWizardLaunchers)
+            ProxyWizardLauncher proxyWizardLauncher)
         {
+            // TODO: Remove explicit usages of the container from views
+            // This is a temporary mechanism, until we can have all dependencies
+            // being sourced from models created by the TentacleManagerViewModel
+            this.container = container;
+            
             this.instanceSelection = instanceSelection;
             this.instanceManager = instanceManager;
             this.instanceStore = instanceStore;
             this.tentacleSetupWizardLauncher = tentacleSetupWizardLauncher;
             this.proxyWizardLauncher = proxyWizardLauncher;
-            this.deleteWizardLaunchers = deleteWizardLaunchers;
             InitializeComponent();
             findingInstallation.Visibility = Visibility.Visible;
             newInstallation.Visibility = Visibility.Collapsed;
@@ -125,9 +134,39 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
 
         void DeleteInstance(object sender, EventArgs e)
         {
-            deleteWizardLaunchers.ShowDialog(Window.GetWindow(this), ApplicationName.Tentacle, instanceSelection.SelectedInstance);
+            var deleteWizardViewModel = model.StartDeleteWizard();
+            var deleteWizardView = CreateDeleteWizardView(deleteWizardViewModel);
+            deleteWizardView.ShowDialog();
+            
             instanceSelection.Refresh();
             Refresh();
+        }
+
+        Window CreateDeleteWizardView(DeleteWizardModel deleteWizardViewModel)
+        {
+            var wizard = new TabbedWizard();
+            wizard.AddTab(new DeleteWelcome(deleteWizardViewModel));
+            wizard.AddTab(new InstallTab(
+                deleteWizardViewModel,
+                container.Resolve<ICommandLineRunner>())
+            {
+                // TODO: These read-only properties should probably be on the DeleteWizardViewModel 
+                ReadyMessage = "When you click the button below, the Windows Service will be stopped and uninstalled, and your instance will be deleted.",
+                SuccessMessage = "Instance deleted",
+                ExecuteButtonText = "DELETE",
+                Title = "Delete",
+                Header = "Delete"
+            });
+
+            var shell = new ShellView("Delete Instance Wizard", deleteWizardViewModel)
+            {
+                Height = 580,
+                Width = 890
+            };
+            shell.SetViewContent(wizard);
+            shell.Owner = Window.GetWindow(this);
+
+            return shell;
         }
 
         void BrowseLogs(object sender, RoutedEventArgs e)

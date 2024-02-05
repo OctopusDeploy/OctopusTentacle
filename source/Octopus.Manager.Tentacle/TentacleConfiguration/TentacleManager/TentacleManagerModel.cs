@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Octopus.Client.Model;
 using Octopus.Client.Model.Endpoints;
 using Octopus.Manager.Tentacle.Controls;
-using Octopus.Manager.Tentacle.Infrastructure;
+using Octopus.Manager.Tentacle.DeleteWizard;
+using Octopus.Manager.Tentacle.Shell;
 using Octopus.Manager.Tentacle.Util;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
@@ -12,7 +14,7 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
 {
-    public class TentacleManagerModel : ViewModel
+    public class TentacleManagerModel : ShellViewModel
     {
         string configurationFilePath;
         string homeDirectory;
@@ -24,13 +26,20 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
         string trust;
         bool pollsServers;
 
-        IOctopusFileSystem fileSystem;
-        private readonly IApplicationInstanceSelector selector;
+        readonly IOctopusFileSystem fileSystem;
+        readonly IApplicationInstanceSelector selector;
+        readonly Func<DeleteWizardModel> deleteWizardModelFactory;
 
-        public TentacleManagerModel(IOctopusFileSystem fileSystem, IApplicationInstanceSelector selector)
+        public TentacleManagerModel(
+            IOctopusFileSystem fileSystem,
+            IApplicationInstanceSelector selector,
+            InstanceSelectionModel instanceSelectionModel,
+            Func<DeleteWizardModel> deleteWizardModelFactory)
+            : base(instanceSelectionModel)
         {
             this.fileSystem = fileSystem;
             this.selector = selector;
+            this.deleteWizardModelFactory = deleteWizardModelFactory;
         }
 
         public string InstanceName { get; set; }
@@ -217,6 +226,11 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
         IWritableKeyValueStore LoadConfiguration()
         {
             return new XmlFileKeyValueStore(fileSystem, ConfigurationFilePath);
+        }
+
+        public DeleteWizardModel StartDeleteWizard()
+        {
+            return deleteWizardModelFactory();
         }
     }
 }

@@ -5,10 +5,9 @@
     /// </summary>
     public partial class DeleteWelcome
     {
-        public DeleteWelcome(object model)
+        public DeleteWelcome(DeleteWizardModel model)
         {
             InitializeComponent();
-
             DataContext = model;
         }
     }
