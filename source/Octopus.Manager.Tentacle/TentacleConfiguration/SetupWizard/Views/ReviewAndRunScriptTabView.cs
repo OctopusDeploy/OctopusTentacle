@@ -9,18 +9,18 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
 {
-    public partial class InstallTab
+    public partial class ReviewAndRunScriptTabView
     {
-        public static readonly DependencyProperty SuccessMessageProperty = DependencyProperty.Register("SuccessMessage", typeof (string), typeof (InstallTab), new PropertyMetadata(null));
-        public static readonly DependencyProperty ReadyMessageProperty = DependencyProperty.Register("ReadyMessage", typeof (string), typeof (InstallTab), new PropertyMetadata(null));
-        public static readonly DependencyProperty TitleProperty = DependencyProperty.Register("Title", typeof (string), typeof (InstallTab), new PropertyMetadata("Install"));
-        public static readonly DependencyProperty ExecuteButtonTextProperty = DependencyProperty.Register("ExecuteButtonText", typeof (string), typeof (InstallTab), new PropertyMetadata("INSTALL"));
+        public static readonly DependencyProperty SuccessMessageProperty = DependencyProperty.Register("SuccessMessage", typeof (string), typeof (ReviewAndRunScriptTabView), new PropertyMetadata(null));
+        public static readonly DependencyProperty ReadyMessageProperty = DependencyProperty.Register("ReadyMessage", typeof (string), typeof (ReviewAndRunScriptTabView), new PropertyMetadata(null));
+        public static readonly DependencyProperty TitleProperty = DependencyProperty.Register("Title", typeof (string), typeof (ReviewAndRunScriptTabView), new PropertyMetadata("Install"));
+        public static readonly DependencyProperty ExecuteButtonTextProperty = DependencyProperty.Register("ExecuteButtonText", typeof (string), typeof (ReviewAndRunScriptTabView), new PropertyMetadata("INSTALL"));
         readonly ICommandLineRunner commandLineRunner;
         readonly Action<bool> onScriptCompletionCallback;
         readonly IScriptableViewModel model;
         readonly TextBoxLogger logger;
 
-        public InstallTab(IScriptableViewModel model, ICommandLineRunner commandLineRunner, ContentControl additionalContent = null, Action<bool> onScriptCompletionCallback = null)
+        public ReviewAndRunScriptTabView(IScriptableViewModel model, ICommandLineRunner commandLineRunner, ContentControl additionalContent = null, Action<bool> onScriptCompletionCallback = null)
         {
             this.commandLineRunner = commandLineRunner;
             this.onScriptCompletionCallback = onScriptCompletionCallback;

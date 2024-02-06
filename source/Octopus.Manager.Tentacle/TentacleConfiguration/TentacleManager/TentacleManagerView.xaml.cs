@@ -146,7 +146,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
         {
             var wizard = new TabbedWizard();
             wizard.AddTab(new DeleteWelcome(deleteWizardViewModel));
-            wizard.AddTab(new InstallTab(
+            wizard.AddTab(new ReviewAndRunScriptTabView(
                 deleteWizardViewModel,
                 container.Resolve<ICommandLineRunner>())
             {
