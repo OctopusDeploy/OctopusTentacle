@@ -5,30 +5,24 @@ using System.Windows;
 using System.Windows.Controls;
 using Octopus.Manager.Tentacle.Dialogs;
 using Octopus.Manager.Tentacle.Infrastructure;
-using Octopus.Tentacle.Util;
 
 namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
 {
     public partial class ReviewAndRunScriptTabView
     {
-        public static readonly DependencyProperty SuccessMessageProperty = DependencyProperty.Register("SuccessMessage", typeof (string), typeof (ReviewAndRunScriptTabView), new PropertyMetadata(null));
-        public static readonly DependencyProperty ReadyMessageProperty = DependencyProperty.Register("ReadyMessage", typeof (string), typeof (ReviewAndRunScriptTabView), new PropertyMetadata(null));
-        public static readonly DependencyProperty TitleProperty = DependencyProperty.Register("Title", typeof (string), typeof (ReviewAndRunScriptTabView), new PropertyMetadata("Install"));
-        public static readonly DependencyProperty ExecuteButtonTextProperty = DependencyProperty.Register("ExecuteButtonText", typeof (string), typeof (ReviewAndRunScriptTabView), new PropertyMetadata("INSTALL"));
-        readonly ICommandLineRunner commandLineRunner;
-        readonly Action<bool> onScriptCompletionCallback;
-        readonly IScriptableViewModel model;
-        readonly TextBoxLogger logger;
+        public static readonly DependencyProperty SuccessMessageProperty = DependencyProperty.Register("SuccessMessage", typeof(string), typeof(ReviewAndRunScriptTabView), new PropertyMetadata(null));
+        public static readonly DependencyProperty ReadyMessageProperty = DependencyProperty.Register("ReadyMessage", typeof(string), typeof(ReviewAndRunScriptTabView), new PropertyMetadata(null));
+        public static readonly DependencyProperty TitleProperty = DependencyProperty.Register("Title", typeof(string), typeof(ReviewAndRunScriptTabView), new PropertyMetadata("Install"));
+        public static readonly DependencyProperty ExecuteButtonTextProperty = DependencyProperty.Register("ExecuteButtonText", typeof(string), typeof(ReviewAndRunScriptTabView), new PropertyMetadata("INSTALL"));
+        readonly ReviewAndRunScriptTabViewModel viewModel;
 
-        public ReviewAndRunScriptTabView(IScriptableViewModel model, ICommandLineRunner commandLineRunner, ContentControl additionalContent = null, Action<bool> onScriptCompletionCallback = null)
+        public ReviewAndRunScriptTabView(ReviewAndRunScriptTabViewModel viewModel, ContentControl additionalContent = null)
         {
-            this.commandLineRunner = commandLineRunner;
-            this.onScriptCompletionCallback = onScriptCompletionCallback;
             InitializeComponent();
-
-            DataContext = this.model = model;
-            logger = new TextBoxLogger(outputLog);
+            var logger = new TextBoxLogger(outputLog);
+            viewModel.SetLogger(logger);
             IsNextEnabled = false;
+            DataContext = this.viewModel = viewModel;
 
             outputLog.Loaded += (sender, args) =>
             {
@@ -69,62 +63,26 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
             startButton.IsEnabled = false;
             outputLog.Visibility = Visibility.Visible;
             outputLog.Clear();
-
+            bool success;
+            // TODO: Find a way to avoid thread switching during the script execution.
             ThreadPool.QueueUserWorkItem(delegate
             {
-                var success = false;
-                try
+                success = viewModel.GenerateAndExecuteScript();
+                Dispatcher.Invoke(() =>
                 {
-                    var script = model.GenerateScript();
-                    model.ContributeSensitiveValues(logger);
-                    success = commandLineRunner.Execute(script, logger);
-                }
-                catch (Exception ex)
-                {
-                    logger.Error(ex);
-                }
-                finally
-                {
-                    if (!success)
-                    {
-                        Rollback();
-                    }
-                    onScriptCompletionCallback?.Invoke(success);
-
-                    Dispatcher.Invoke(() =>
-                    {
-                        var finished = success && (FinishOnSuccessfulExecution == null || FinishOnSuccessfulExecution());
-
-                        IsNextEnabled = finished;
-                        startButton.IsEnabled = !finished;
-
-                        if (finished)
-                        {
-                            readyMessage.Visibility = Visibility.Collapsed;
-                            successMessage.Visibility = Visibility.Visible;
-                        }
-                    });
-                }
+                    var finished = success && (FinishOnSuccessfulExecution == null || FinishOnSuccessfulExecution());
+                    IsNextEnabled = finished;
+                    startButton.IsEnabled = !finished;
+                    if (!finished) return;
+                    readyMessage.Visibility = Visibility.Collapsed;
+                    successMessage.Visibility = Visibility.Visible;
+                });
             });
         }
-
-        void Rollback()
-        {
-            try
-            {
-                var script = model.GenerateRollbackScript();
-                commandLineRunner.Execute(script, logger);
-            }
-            catch (Exception ex2)
-            {
-                logger.Error(ex2);
-            }
-        }
-
+        
         void GenerateScriptClicked(object sender, RoutedEventArgs e)
         {
-            var script = model.GenerateScript();
-
+            var script = viewModel.GenerateScript();
             ViewScriptDialog.ShowDialog(Window.GetWindow(this), string.Join(Environment.NewLine, script.Select(s => s.ToString())));
         }
     }
