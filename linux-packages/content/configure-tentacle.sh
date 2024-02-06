@@ -100,6 +100,7 @@ function setupPollingTentacle {
     rolesstring=""
     workerpoolsstring=""
     machinetype=1
+    servercommsport=10943
 
     read -p "Where would you like Tentacle to store log files? ($logpath):" inputlogpath
     logpath=$(assignNonEmptyValue "$inputlogpath" $logpath)
@@ -149,6 +150,25 @@ function setupPollingTentacle {
     read -p "What name would you like to register this Tentacle with? ($displayname): " displaynameinput
     displayname=$(assignNonEmptyValue "$displaynameinput" $displayname)
 
+    $doesconnecttosamedomain=1
+    read -p 'Is the comms port on the same domain as the Octopus Server : 1) Yes or 2) No (default 1): ' doesconnecttosamedomain
+
+    
+    
+    case $doesconnecttosamedomain in
+        2)
+            read -p "What is the Octopus Server comms address including port e.g. 'https://polling.<yoururl>.octopus.app:443' ?: " commsAddress
+            commsAddressOrPortArgs="--server-comms-address \"$commsAddress\""
+            ;;
+            
+        *)
+            read -p "What port is the Octopus Server comms port? ($servercommsport): " servercommsportinput
+            servercommsport=$(assignNonEmptyValue "$servercommsportinput" $servercommsport)
+
+            commsAddressOrPortArgs="--server-comms-port \"$servercommsport\""
+            ;;
+    esac
+
     case $machinetype in
         2 | worker)
             #Get worker pools
@@ -181,9 +201,9 @@ function setupPollingTentacle {
     echo -e "sudo /opt/octopus/tentacle/Tentacle configure --instance \"$instancename\" --app \"$applicationpath\" --noListen \"True\" --reset-trust"
 
     if [ $machinetype = 2 ] || [ $machinetype = "worker" ]; then
-        echo -e "sudo /opt/octopus/tentacle/Tentacle register-worker --instance \"$instancename\" --server \"$octopusserverurl\" --name \"$displayname\" --comms-style \"TentacleActive\" --server-comms-port \"10943\" $displayauth --space \"$space\" $workerpoolsstring"
+        echo -e "sudo /opt/octopus/tentacle/Tentacle register-worker --instance \"$instancename\" --server \"$octopusserverurl\" --name \"$displayname\" --comms-style \"TentacleActive\" $commsAddressOrPortArgs $displayauth --space \"$space\" $workerpoolsstring"
     else
-        echo -e "sudo /opt/octopus/tentacle/Tentacle register-with --instance \"$instancename\" --server \"$octopusserverurl\" --name \"$displayname\" --comms-style \"TentacleActive\" --server-comms-port \"10943\" $displayauth --space \"$space\" $envstring $rolesstring"
+        echo -e "sudo /opt/octopus/tentacle/Tentacle register-with --instance \"$instancename\" --server \"$octopusserverurl\" --name \"$displayname\" --comms-style \"TentacleActive\" $commsAddressOrPortArgs $displayauth --space \"$space\" $envstring $rolesstring"
     fi
 
     echo -e "sudo /opt/octopus/tentacle/Tentacle service --install --start --instance \"$instancename\"${NC}"
@@ -200,9 +220,9 @@ function setupPollingTentacle {
     exitIfCommandFailed 
 
     if [ $machinetype = 2 ] || [ $machinetype = "worker" ]; then
-        eval sudo /opt/octopus/tentacle/Tentacle register-worker --instance \"$instancename\" --server \"$octopusserverurl\" --name \"$displayname\" --comms-style \"TentacleActive\" --server-comms-port \"10943\" $auth --space \"$space\" $workerpoolsstring
+        eval sudo /opt/octopus/tentacle/Tentacle register-worker --instance \"$instancename\" --server \"$octopusserverurl\" --name \"$displayname\" --comms-style \"TentacleActive\" $commsAddressOrPortArgs $auth --space \"$space\" $workerpoolsstring
     else
-        eval sudo /opt/octopus/tentacle/Tentacle register-with --instance \"$instancename\" --server \"$octopusserverurl\" --name \"$displayname\" --comms-style \"TentacleActive\" --server-comms-port \"10943\" $auth --space \"$space\" $envstring $rolesstring
+        eval sudo /opt/octopus/tentacle/Tentacle register-with --instance \"$instancename\" --server \"$octopusserverurl\" --name \"$displayname\" --comms-style \"TentacleActive\" $commsAddressOrPortArgs $auth --space \"$space\" $envstring $rolesstring
     fi
 
     exitIfCommandFailed
