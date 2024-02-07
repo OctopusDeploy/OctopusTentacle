@@ -24,6 +24,7 @@ namespace Octopus.Tentacle.Kubernetes
             new(1, 26, 3),
             new(1, 27, 3),
             new(1, 28, 2),
+            new(1, 29, 1),
         };
 
         public async Task<string> GetContainerImageForCluster()
