@@ -16,18 +16,18 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         readonly IScriptableViewModel wizardModel;
         TextBoxLogger logger;
 
-        public ReviewAndRunScriptTabViewModel(IScriptableViewModel wizardModel, IComponentContext container)
+        public ReviewAndRunScriptTabViewModel(IScriptableViewModel wizardModel, ICommandLineRunner commandLineRunner)
         {
             this.wizardModel = wizardModel;
+            this.commandLineRunner = commandLineRunner;
             InstanceName = wizardModel.InstanceName;
             Executable = CommandLine.PathToTentacleExe();
             Validator = CreateValidator();
-            commandLineRunner = container.Resolve<ICommandLineRunner>();
         }
         
         public string InstanceName { get; }
         
-        public string Executable { get; set; }
+        public string Executable { get; }
         
         public async Task<bool> GenerateAndExecuteScript()
         {

@@ -17,6 +17,7 @@ using Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Diagnostics;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
 {
@@ -145,7 +146,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
         {
             var wizard = new TabbedWizard();
             wizard.AddTab(new DeleteWelcome(deleteWizardViewModel));
-            wizard.AddTab(new ReviewAndRunScriptTabView(new ReviewAndRunScriptTabViewModel(deleteWizardViewModel, container))
+            wizard.AddTab(new ReviewAndRunScriptTabView(new ReviewAndRunScriptTabViewModel(deleteWizardViewModel, container.Resolve<ICommandLineRunner>()))
             {
                 // TODO: These read-only properties should probably be on the DeleteWizardViewModel 
                 ReadyMessage = "When you click the button below, the Windows Service will be stopped and uninstalled, and your instance will be deleted.",

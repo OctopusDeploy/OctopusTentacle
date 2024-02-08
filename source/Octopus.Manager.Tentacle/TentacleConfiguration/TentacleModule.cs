@@ -7,6 +7,7 @@ using Octopus.Manager.Tentacle.Shell;
 using Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard;
 using Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Manager.Tentacle.TentacleConfiguration
 {
@@ -25,6 +26,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration
             builder.RegisterType<TentacleSetupWizardLauncher>();
             builder.RegisterType<ProxyWizardLauncher>();
             builder.RegisterType<InstanceSelectionModel>().AsSelf().SingleInstance().WithParameter("applicationName", ApplicationName.Tentacle);
+            builder.RegisterType<CommandLineRunner>().As<ICommandLineRunner>();
 
             // View Model registration
             builder.RegisterType<DeleteWizardModel>().AsSelf();

@@ -3,6 +3,7 @@ using Autofac;
 using Octopus.Manager.Tentacle.Proxy;
 using Octopus.Manager.Tentacle.Shell;
 using Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 {
@@ -28,7 +29,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             wizard.AddTab(new Views.MachineType(wizardModel));
             wizard.AddTab(new TentacleActiveDetailsTab(wizardModel));
             wizard.AddTab(new TentaclePassiveTab(wizardModel));
-            wizard.AddTab(new ReviewAndRunScriptTabView(new ReviewAndRunScriptTabViewModel(wizardModel, container)) {ReadyMessage = "You're ready to install an Octopus Tentacle.", SuccessMessage = "Installation complete!"});
+            wizard.AddTab(new ReviewAndRunScriptTabView(new ReviewAndRunScriptTabViewModel(wizardModel, container.Resolve<ICommandLineRunner>())) {ReadyMessage = "You're ready to install an Octopus Tentacle.", SuccessMessage = "Installation complete!"});
 
             var shellModel = container.Resolve<ShellViewModel>();
             var shell = new ShellView("Tentacle Setup Wizard", shellModel)

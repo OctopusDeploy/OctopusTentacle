@@ -17,7 +17,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
         public static readonly DependencyProperty ExecuteButtonTextProperty = DependencyProperty.Register("ExecuteButtonText", typeof(string), typeof(ReviewAndRunScriptTabView), new PropertyMetadata("INSTALL"));
         readonly ReviewAndRunScriptTabViewModel viewModel;
 
-        public ReviewAndRunScriptTabView(ReviewAndRunScriptTabViewModel viewModel, ContentControl additionalContent = null)
+        public ReviewAndRunScriptTabView(ReviewAndRunScriptTabViewModel viewModel)
         {
             InitializeComponent();
             var logger = new TextBoxLogger(outputLog);
@@ -29,8 +29,6 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
             {
                 outputLog.Visibility = outputLog.Text.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
             };
-
-            extraContent.Content = additionalContent;
         }
 
         public string Title

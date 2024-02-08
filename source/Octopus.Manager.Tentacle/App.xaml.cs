@@ -76,7 +76,6 @@ namespace Octopus.Manager.Tentacle
             builder.RegisterModule(new LoggingModule());
             builder.RegisterModule(new OctopusFileSystemModule());
             builder.RegisterType<CertificateGenerator>().As<ICertificateGenerator>();
-            builder.RegisterType<CommandLineRunner>().As<ICommandLineRunner>();
             builder.RegisterModule(new ManagerConfigurationModule(ApplicationName.Tentacle));
 
             if (!HasPrerequisites(new TentaclePrerequisiteProfile()))
