@@ -30,7 +30,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             wizard.AddTab(new Views.MachineType(wizardModel));
             wizard.AddTab(new TentacleActiveDetailsTab(wizardModel));
             wizard.AddTab(new TentaclePassiveTab(wizardModel));
-            wizard.AddTab(new InstallTab(wizardModel, container.Resolve<ICommandLineRunner>()) {ReadyMessage = "You're ready to install an Octopus Tentacle.", SuccessMessage = "Installation complete!"});
+            wizard.AddTab(new ReviewAndRunScriptTabView(new ReviewAndRunScriptTabViewModel(wizardModel, container.Resolve<ICommandLineRunner>())) {ReadyMessage = "You're ready to install an Octopus Tentacle.", SuccessMessage = "Installation complete!"});
 
             var shellModel = container.Resolve<ShellViewModel>();
             var shell = new ShellView("Tentacle Setup Wizard", shellModel)

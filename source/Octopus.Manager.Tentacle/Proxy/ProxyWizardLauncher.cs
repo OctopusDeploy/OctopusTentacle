@@ -1,6 +1,7 @@
 ﻿using System.Windows;
 using Autofac;
 using Octopus.Manager.Tentacle.Shell;
+using Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard;
 using Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views;
 using Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager;
 using Octopus.Tentacle.Configuration;
@@ -32,7 +33,7 @@ namespace Octopus.Manager.Tentacle.Proxy
                 wrapper.AddPollingModel(pollingWizardModel);
             }
 
-            wizard.AddTab(new InstallTab(wrapper, container.Resolve<ICommandLineRunner>()) {ReadyMessage = "That's all the information we need. When you click the button below, your proxy settings will be saved and the service will be restarted.", SuccessMessage = "Happy deployments!", ExecuteButtonText = "APPLY", Title = "Apply", Header = "Apply"});
+            wizard.AddTab(new ReviewAndRunScriptTabView(new ReviewAndRunScriptTabViewModel(wizardModel, container.Resolve<ICommandLineRunner>())) {ReadyMessage = "That's all the information we need. When you click the button below, your proxy settings will be saved and the service will be restarted.", SuccessMessage = "Happy deployments!", ExecuteButtonText = "APPLY", Title = "Apply", Header = "Apply"});
 
             return BuildShell(owner, wizard).ShowDialog();
         }
