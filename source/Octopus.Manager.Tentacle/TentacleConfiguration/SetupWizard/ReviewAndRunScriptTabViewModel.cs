@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Autofac;
 using FluentValidation;
 using Octopus.Diagnostics;
@@ -28,7 +29,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         
         public string Executable { get; set; }
         
-        public bool GenerateAndExecuteScript()
+        public async Task<bool> GenerateAndExecuteScript()
         {
             var success = false;
             try
@@ -48,7 +49,8 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                     Rollback();
                 }
             }
-            
+
+            await Task.CompletedTask;
             return success;
         }
             

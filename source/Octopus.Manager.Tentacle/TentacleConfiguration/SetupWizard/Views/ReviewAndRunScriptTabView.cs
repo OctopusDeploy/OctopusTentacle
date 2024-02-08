@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using Octopus.Manager.Tentacle.Dialogs;
@@ -58,28 +59,22 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
 
         public Func<bool> FinishOnSuccessfulExecution { get; set; }
 
-        void StartClicked(object sender, RoutedEventArgs e)
+        async void StartClicked(object sender, RoutedEventArgs e)
         {
             startButton.IsEnabled = false;
             outputLog.Visibility = Visibility.Visible;
             outputLog.Clear();
-            bool success;
-            // TODO: Find a way to avoid thread switching during the script execution.
-            ThreadPool.QueueUserWorkItem(delegate
-            {
-                success = viewModel.GenerateAndExecuteScript();
-                Dispatcher.Invoke(() =>
-                {
-                    var finished = success && (FinishOnSuccessfulExecution == null || FinishOnSuccessfulExecution());
-                    IsNextEnabled = finished;
-                    startButton.IsEnabled = !finished;
-                    if (!finished) return;
-                    readyMessage.Visibility = Visibility.Collapsed;
-                    successMessage.Visibility = Visibility.Visible;
-                });
-            });
+            
+            bool success = await Task.Run(viewModel.GenerateAndExecuteScript);
+
+            var finished = success && (FinishOnSuccessfulExecution == null || FinishOnSuccessfulExecution());
+            IsNextEnabled = finished;
+            startButton.IsEnabled = !finished;
+            if (!finished) return;
+            readyMessage.Visibility = Visibility.Collapsed;
+            successMessage.Visibility = Visibility.Visible;
         }
-        
+
         void GenerateScriptClicked(object sender, RoutedEventArgs e)
         {
             var script = viewModel.GenerateScript();
