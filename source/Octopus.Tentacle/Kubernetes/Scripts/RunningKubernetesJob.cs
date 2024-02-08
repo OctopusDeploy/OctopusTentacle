@@ -345,8 +345,17 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                                         new(EnvironmentVariables.TentacleVersion, Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleVersion)),
                                         new(EnvironmentVariables.TentacleCertificateSignatureAlgorithm, Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleCertificateSignatureAlgorithm)),
                                         new("OCTOPUS_RUNNING_IN_CONTAINER", "Y")
-                                        
+
                                         //We intentionally exclude setting "TentacleJournal" since it doesn't make sense to keep a Deployment Journal for Kubernetes deployments
+                                    },
+                                    Resources = new V1ResourceRequirements
+                                    {
+                                        //set resource requests to be quite low for now as the jobs tend to run fairly quickly
+                                        Requests = new Dictionary<string, ResourceQuantity>
+                                        {
+                                            ["cpu"] = new("25m"),
+                                            ["memory"] = new ("100Mi")
+                                        }
                                     }
                                 }
                             },
