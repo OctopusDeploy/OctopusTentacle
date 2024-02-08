@@ -31,7 +31,6 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
         readonly IApplicationInstanceManager instanceManager;
         readonly IApplicationInstanceStore instanceStore;
         readonly TentacleSetupWizardLauncher tentacleSetupWizardLauncher;
-        readonly ProxyWizardLauncher proxyWizardLauncher;
         readonly TentacleManagerModel model;
 
         public TentacleManagerView(
@@ -40,8 +39,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
             InstanceSelectionModel instanceSelection,
             IApplicationInstanceManager instanceManager,
             IApplicationInstanceStore instanceStore,
-            TentacleSetupWizardLauncher tentacleSetupWizardLauncher,
-            ProxyWizardLauncher proxyWizardLauncher)
+            TentacleSetupWizardLauncher tentacleSetupWizardLauncher)
         {
             // TODO: Remove explicit usages of the container from views
             // This is a temporary mechanism, until we can have all dependencies
@@ -52,7 +50,6 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
             this.instanceManager = instanceManager;
             this.instanceStore = instanceStore;
             this.tentacleSetupWizardLauncher = tentacleSetupWizardLauncher;
-            this.proxyWizardLauncher = proxyWizardLauncher;
             InitializeComponent();
             findingInstallation.Visibility = Visibility.Visible;
             newInstallation.Visibility = Visibility.Collapsed;
@@ -128,8 +125,47 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
 
         void ShowProxy(object sender, EventArgs e)
         {
-            proxyWizardLauncher.ShowDialog(Window.GetWindow(this), model);
+            var proxyWizardModel = model.GetProxyWizardModel(model.ProxyConfiguration);
+            var proxyWizardView = CreateProxyWizardView(proxyWizardModel);
+            proxyWizardView.ShowDialog();
+            
+            instanceSelection.Refresh();
             Refresh();
+        }
+
+        Window CreateProxyWizardView(ProxyWizardModel proxyWizardModel)
+        {
+            var wizard = new TabbedWizard();
+            
+            wizard.AddTab(new ProxyConfigurationTab(proxyWizardModel));
+            var wrapper = new ProxyWizardModelWrapper(proxyWizardModel);
+
+            if (model.PollingProxyConfiguration != null)
+            {
+                var pollingWizardModel = model.GetProxyWizardModel(model.PollingProxyConfiguration);
+                wizard.AddTab(new ProxyConfigurationTab(pollingWizardModel));
+                wrapper.AddPollingModel(pollingWizardModel);
+            }
+
+            wizard.AddTab(
+                new ReviewAndRunScriptTabView(new ReviewAndRunScriptTabViewModel(proxyWizardModel, container.Resolve<ICommandLineRunner>()))
+                {
+                    ReadyMessage = "That's all the information we need. When you click the button below, your proxy settings will be saved and the service will be restarted.",
+                    SuccessMessage = "Happy deployments!",
+                    ExecuteButtonText = "APPLY",
+                    Title = "Apply",
+                    Header = "Apply"
+                }
+            );
+            
+            var shell = new ShellView("Proxy Configuration Wizard", proxyWizardModel)
+            {
+                Height = 590,
+                Width = 890
+            };
+            shell.SetViewContent(wizard);
+            shell.Owner = Window.GetWindow(this);
+            return shell;
         }
 
         void DeleteInstance(object sender, EventArgs e)
