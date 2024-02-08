@@ -354,7 +354,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                                         Requests = new Dictionary<string, ResourceQuantity>
                                         {
                                             ["cpu"] = new("25m"),
-                                            ["memory"] = new ("50Mi")
+                                            ["memory"] = new ("100Mi")
                                         }
                                     }
                                 }
