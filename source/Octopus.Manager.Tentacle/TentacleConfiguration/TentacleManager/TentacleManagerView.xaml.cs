@@ -99,7 +99,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
 
         void SetupTentacle(object sender, RoutedEventArgs e)
         {
-            tentacleSetupWizardLauncher.ShowDialog(Window.GetWindow(this), instanceSelection.SelectedInstance);
+            tentacleSetupWizardLauncher.ShowDialog(Window.GetWindow(this));
             instanceSelection.Refresh();
             Refresh();
         }
@@ -128,7 +128,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
 
         void ShowProxy(object sender, EventArgs e)
         {
-            proxyWizardLauncher.ShowDialog(Window.GetWindow(this), ApplicationName.Tentacle, instanceSelection.SelectedInstance, model.ProxyConfiguration, model.PollingProxyConfiguration);
+            proxyWizardLauncher.ShowDialog(Window.GetWindow(this), model);
             Refresh();
         }
 

@@ -2,6 +2,7 @@
 using Autofac;
 using Octopus.Manager.Tentacle.Shell;
 using Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views;
+using Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Util;
 
@@ -16,17 +17,17 @@ namespace Octopus.Manager.Tentacle.Proxy
             this.container = container;
         }
 
-        public bool? ShowDialog(Window owner, ApplicationName application, string selectedInstance, IProxyConfiguration proxyConfiguration, IProxyConfiguration pollingProxyConfiguration = null)
+        public bool? ShowDialog(Window owner, TentacleManagerModel tentacleManagerModel)
         {
             var wizard = new TabbedWizard();
 
-            var wizardModel = LoadModel(application, proxyConfiguration, selectedInstance);
+            var wizardModel = tentacleManagerModel.GetProxyWizardModel(tentacleManagerModel.ProxyConfiguration);
             wizard.AddTab(new ProxyConfigurationTab(wizardModel));
             var wrapper = new ProxyWizardModelWrapper(wizardModel);
 
-            if (pollingProxyConfiguration != null)
+            if (tentacleManagerModel.PollingProxyConfiguration != null)
             {
-                var pollingWizardModel = LoadModel(application, pollingProxyConfiguration, selectedInstance);
+                var pollingWizardModel = tentacleManagerModel.GetProxyWizardModel(tentacleManagerModel.PollingProxyConfiguration);
                 wizard.AddTab(new ProxyConfigurationTab(pollingWizardModel));
                 wrapper.AddPollingModel(pollingWizardModel);
             }
@@ -47,40 +48,6 @@ namespace Octopus.Manager.Tentacle.Proxy
             shell.SetViewContent(wizard);
             shell.Owner = owner;
             return shell;
-        }
-
-        static ProxyWizardModel LoadModel(ApplicationName application, IProxyConfiguration proxyConfiguration, string selectedInstance)
-        {
-            var wizardModel = proxyConfiguration is IPollingProxyConfiguration
-                ? new PollingProxyWizardModel(selectedInstance, application) { ShowProxySettings = true, ToggleService = false }
-                : new ProxyWizardModel(selectedInstance, application) { ShowProxySettings = true, ToggleService = false };
-
-            if (!proxyConfiguration.UseDefaultProxy && string.IsNullOrWhiteSpace(proxyConfiguration.CustomProxyHost))
-            {
-                wizardModel.ProxyConfigType = ProxyConfigType.NoProxy;
-            }
-            else
-            {
-                if (!string.IsNullOrWhiteSpace(proxyConfiguration.CustomProxyHost))
-                {
-                    wizardModel.ProxyConfigType = ProxyConfigType.CustomProxy;
-                    wizardModel.ProxyPassword = string.Empty;
-                    wizardModel.ProxyUsername = proxyConfiguration.CustomProxyUsername;
-                    wizardModel.ProxyServerHost = proxyConfiguration.CustomProxyHost;
-                    wizardModel.ProxyServerPort = proxyConfiguration.CustomProxyPort;
-                }
-                else if (!string.IsNullOrWhiteSpace(proxyConfiguration.CustomProxyUsername))
-                {
-                    wizardModel.ProxyConfigType = ProxyConfigType.DefaultProxyCustomCredentials;
-                    wizardModel.ProxyPassword = string.Empty;
-                    wizardModel.ProxyUsername = proxyConfiguration.CustomProxyUsername;
-                }
-                else
-                {
-                    wizardModel.ProxyConfigType = ProxyConfigType.DefaultProxy;
-                }
-            }
-            return wizardModel;
         }
     }
 }

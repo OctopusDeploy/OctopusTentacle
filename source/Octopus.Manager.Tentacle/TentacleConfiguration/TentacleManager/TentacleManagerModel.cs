@@ -5,6 +5,7 @@ using Octopus.Client.Model;
 using Octopus.Client.Model.Endpoints;
 using Octopus.Manager.Tentacle.Controls;
 using Octopus.Manager.Tentacle.DeleteWizard;
+using Octopus.Manager.Tentacle.Proxy;
 using Octopus.Manager.Tentacle.Shell;
 using Octopus.Manager.Tentacle.Util;
 using Octopus.Tentacle.Configuration;
@@ -29,17 +30,23 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
         readonly IOctopusFileSystem fileSystem;
         readonly IApplicationInstanceSelector selector;
         readonly Func<DeleteWizardModel> deleteWizardModelFactory;
+        readonly Func<ProxyWizardModel> proxyWizardModelFactory;
+        readonly Func<PollingProxyWizardModel> pollingProxyWizardModelFactory;
 
         public TentacleManagerModel(
             IOctopusFileSystem fileSystem,
             IApplicationInstanceSelector selector,
             InstanceSelectionModel instanceSelectionModel,
-            Func<DeleteWizardModel> deleteWizardModelFactory)
+            Func<DeleteWizardModel> deleteWizardModelFactory,
+            Func<ProxyWizardModel> proxyWizardModelFactory,
+            Func<PollingProxyWizardModel> pollingProxyWizardModelFactory)
             : base(instanceSelectionModel)
         {
             this.fileSystem = fileSystem;
             this.selector = selector;
             this.deleteWizardModelFactory = deleteWizardModelFactory;
+            this.proxyWizardModelFactory = proxyWizardModelFactory;
+            this.pollingProxyWizardModelFactory = pollingProxyWizardModelFactory;
         }
 
         public string InstanceName { get; set; }
@@ -231,6 +238,44 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
         public DeleteWizardModel StartDeleteWizard()
         {
             return deleteWizardModelFactory();
+        }
+
+        public ProxyWizardModel GetProxyWizardModel(IProxyConfiguration proxyConfiguration)
+        {
+            var proxyWizardModel = proxyConfiguration is IPollingProxyConfiguration
+                ? pollingProxyWizardModelFactory()
+                : proxyWizardModelFactory();
+
+            proxyWizardModel.ShowProxySettings = true;
+            proxyWizardModel.ToggleService = false;
+            
+            if (!proxyConfiguration.UseDefaultProxy && string.IsNullOrWhiteSpace(proxyConfiguration.CustomProxyHost))
+            {
+                proxyWizardModel.ProxyConfigType = ProxyConfigType.NoProxy;
+            }
+            else
+            {
+                if (!string.IsNullOrWhiteSpace(proxyConfiguration.CustomProxyHost))
+                {
+                    proxyWizardModel.ProxyConfigType = ProxyConfigType.CustomProxy;
+                    proxyWizardModel.ProxyPassword = string.Empty;
+                    proxyWizardModel.ProxyUsername = proxyConfiguration.CustomProxyUsername;
+                    proxyWizardModel.ProxyServerHost = proxyConfiguration.CustomProxyHost;
+                    proxyWizardModel.ProxyServerPort = proxyConfiguration.CustomProxyPort;
+                }
+                else if (!string.IsNullOrWhiteSpace(proxyConfiguration.CustomProxyUsername))
+                {
+                    proxyWizardModel.ProxyConfigType = ProxyConfigType.DefaultProxyCustomCredentials;
+                    proxyWizardModel.ProxyPassword = string.Empty;
+                    proxyWizardModel.ProxyUsername = proxyConfiguration.CustomProxyUsername;
+                }
+                else
+                {
+                    proxyWizardModel.ProxyConfigType = ProxyConfigType.DefaultProxy;
+                }
+            }
+
+            return proxyWizardModel;
         }
     }
 }

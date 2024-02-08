@@ -28,6 +28,8 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration
 
             // View Model registration
             builder.RegisterType<DeleteWizardModel>().AsSelf();
+            builder.RegisterType<ProxyWizardModel>().AsSelf();
+            builder.RegisterType<PollingProxyWizardModel>().AsSelf();
         }
     }
 }

@@ -4,6 +4,7 @@ using FluentValidation;
 using Octopus.Diagnostics;
 using Octopus.Manager.Tentacle.Controls;
 using Octopus.Manager.Tentacle.Infrastructure;
+using Octopus.Manager.Tentacle.Shell;
 using Octopus.Manager.Tentacle.Util;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Util;
@@ -20,7 +21,7 @@ namespace Octopus.Manager.Tentacle.Proxy
     }
     public class PollingProxyWizardModel : ProxyWizardModel
     {
-        public PollingProxyWizardModel(string selectedInstance, ApplicationName application) : base(selectedInstance, application)
+        public PollingProxyWizardModel(InstanceSelectionModel instanceSelectionModel) : base(instanceSelectionModel)
         {
             ProxyConfigType = ProxyConfigType.NoProxy;
         }
@@ -31,7 +32,7 @@ namespace Octopus.Manager.Tentacle.Proxy
         public override string Description => "Select the proxy mode for the Tentacle to use to connect to the Octopus Server.";
     }
 
-    public class ProxyWizardModel : ViewModel, IScriptableViewModel
+    public class ProxyWizardModel : ShellViewModel, IScriptableViewModel
     {
         ProxyConfigType proxyConfigType;
         string proxyUsername;
@@ -40,22 +41,20 @@ namespace Octopus.Manager.Tentacle.Proxy
         string proxyServerHost;
         int proxyServerPort;
 
-        public ProxyWizardModel(string selectedInstance, ApplicationName application)
+        public ProxyWizardModel(InstanceSelectionModel instanceSelectionModel) : base(instanceSelectionModel)
         {
             ProxyConfigTypes = new List<KeyValuePair<ProxyConfigType, string>>();
             ProxyConfigTypes.Add(new KeyValuePair<ProxyConfigType, string>(ProxyConfigType.NoProxy, "No Proxy"));
             ProxyConfigTypes.Add(new KeyValuePair<ProxyConfigType, string>(ProxyConfigType.DefaultProxy, "Default Proxy"));
             ProxyConfigTypes.Add(new KeyValuePair<ProxyConfigType, string>(ProxyConfigType.DefaultProxyCustomCredentials, "Default Proxy With Custom Credentials"));
             ProxyConfigTypes.Add(new KeyValuePair<ProxyConfigType, string>(ProxyConfigType.CustomProxy, "Custom Proxy"));
-
-            var commandLinePath = CommandLine.PathToTentacleExe();
-            var serviceWatcher = new ServiceWatcher(application, selectedInstance, commandLinePath);
+            
+            InstanceName = instanceSelectionModel.SelectedInstance;
+            Executable = CommandLine.PathToTentacleExe();
+            var serviceWatcher = new ServiceWatcher(ApplicationName.Tentacle, InstanceName, Executable);
             ProxyConfigType = ProxyConfigType.DefaultProxy;
             ToggleService = serviceWatcher.IsRunning;
             ProxyServerPort = 80;
-
-            InstanceName = selectedInstance;
-            Executable = CommandLine.PathToTentacleExe();
 
             Validator = CreateValidator();
         }
@@ -65,7 +64,7 @@ namespace Octopus.Manager.Tentacle.Proxy
         public virtual string Title => "Web Request Proxy Settings";
         public virtual string Description => "Settings for the proxy that Octopus will use to make web requests.";
 
-        public string InstanceName { get; set; }
+        public string InstanceName { get; }
 
         public bool ToggleService { get; set; }
 
