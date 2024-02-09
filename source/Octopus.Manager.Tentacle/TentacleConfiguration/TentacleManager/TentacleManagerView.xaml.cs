@@ -148,7 +148,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
             }
 
             wizard.AddTab(
-                new ReviewAndRunScriptTabView(new ReviewAndRunScriptTabViewModel(proxyWizardModel, container.Resolve<ICommandLineRunner>()))
+                new ReviewAndRunScriptTabView(new ReviewAndRunScriptTabViewModel(wrapper, container.Resolve<ICommandLineRunner>()))
                 {
                     ReadyMessage = "That's all the information we need. When you click the button below, your proxy settings will be saved and the service will be restarted.",
                     SuccessMessage = "Happy deployments!",
@@ -158,7 +158,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
                 }
             );
             
-            var shell = new ShellView("Proxy Configuration Wizard", proxyWizardModel)
+            var shell = new ShellView("Proxy Configuration Wizard", wrapper)
             {
                 Height = 590,
                 Width = 890

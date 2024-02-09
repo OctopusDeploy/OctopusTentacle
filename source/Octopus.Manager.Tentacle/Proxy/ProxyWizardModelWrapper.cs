@@ -1,16 +1,17 @@
 ﻿using System.Collections.Generic;
 using Octopus.Diagnostics;
 using Octopus.Manager.Tentacle.Infrastructure;
+using Octopus.Manager.Tentacle.Shell;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Manager.Tentacle.Proxy
 {
-    public class ProxyWizardModelWrapper : ViewModel, IScriptableViewModel
+    public class ProxyWizardModelWrapper : ShellViewModel, IScriptableViewModel
     {
         readonly ProxyWizardModel proxyWizardModel;
         ProxyWizardModel pollingProxyWizardModel;
 
-        public ProxyWizardModelWrapper(ProxyWizardModel proxyWizardModel)
+        public ProxyWizardModelWrapper(ProxyWizardModel proxyWizardModel) : base(proxyWizardModel.InstanceSelectionModel)
         {
             this.proxyWizardModel = proxyWizardModel;
             proxyWizardModel.ToggleService = false;
