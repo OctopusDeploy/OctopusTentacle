@@ -125,30 +125,27 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
 
         void ShowProxy(object sender, EventArgs e)
         {
-            var proxyWizardModel = model.GetProxyWizardModel(model.ProxyConfiguration);
-            var proxyWizardView = CreateProxyWizardView(proxyWizardModel);
+            var proxyWizardModelWrapper = model.CreateProxyWizardModelWrapper();
+            var proxyWizardView = CreateProxyWizardView(proxyWizardModelWrapper);
             proxyWizardView.ShowDialog();
             
             instanceSelection.Refresh();
             Refresh();
         }
 
-        Window CreateProxyWizardView(ProxyWizardModel proxyWizardModel)
+        Window CreateProxyWizardView(ProxyWizardModelWrapper proxyWizardModelWrapper)
         {
             var wizard = new TabbedWizard();
             
-            wizard.AddTab(new ProxyConfigurationTab(proxyWizardModel));
-            var wrapper = new ProxyWizardModelWrapper(proxyWizardModel);
+            wizard.AddTab(new ProxyConfigurationTab(proxyWizardModelWrapper.ProxyWizardModel));
 
-            if (model.PollingProxyConfiguration != null)
+            if (proxyWizardModelWrapper.PollingProxyWizardModel != null)
             {
-                var pollingWizardModel = model.GetProxyWizardModel(model.PollingProxyConfiguration);
-                wizard.AddTab(new ProxyConfigurationTab(pollingWizardModel));
-                wrapper.AddPollingModel(pollingWizardModel);
+                wizard.AddTab(new ProxyConfigurationTab(proxyWizardModelWrapper.PollingProxyWizardModel));
             }
 
             wizard.AddTab(
-                new ReviewAndRunScriptTabView(new ReviewAndRunScriptTabViewModel(wrapper, container.Resolve<ICommandLineRunner>()))
+                new ReviewAndRunScriptTabView(new ReviewAndRunScriptTabViewModel(proxyWizardModelWrapper, container.Resolve<ICommandLineRunner>()))
                 {
                     ReadyMessage = "That's all the information we need. When you click the button below, your proxy settings will be saved and the service will be restarted.",
                     SuccessMessage = "Happy deployments!",
@@ -158,7 +155,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
                 }
             );
             
-            var shell = new ShellView("Proxy Configuration Wizard", wrapper)
+            var shell = new ShellView("Proxy Configuration Wizard", proxyWizardModelWrapper)
             {
                 Height = 590,
                 Width = 890

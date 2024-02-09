@@ -240,12 +240,34 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
             return deleteWizardModelFactory();
         }
 
-        public ProxyWizardModel GetProxyWizardModel(IProxyConfiguration proxyConfiguration)
+        public ProxyWizardModelWrapper CreateProxyWizardModelWrapper()
         {
-            var proxyWizardModel = proxyConfiguration is IPollingProxyConfiguration
-                ? pollingProxyWizardModelFactory()
-                : proxyWizardModelFactory();
+            var proxyWizardModel = CreateProxyWizardModel();
+            var wrapper = new ProxyWizardModelWrapper(proxyWizardModel);
 
+            if (PollingProxyConfiguration == null) return wrapper;
+            
+            var pollingWizardModel = CreatePollingWizardModel();
+            wrapper.AddPollingModel(pollingWizardModel);
+            return wrapper;
+        }
+
+        PollingProxyWizardModel CreatePollingWizardModel()
+        {
+            var pollingProxyWizardModel = pollingProxyWizardModelFactory();
+            ConfigureDefaultValues(pollingProxyWizardModel, PollingProxyConfiguration);
+            return pollingProxyWizardModel;
+        } 
+
+        ProxyWizardModel CreateProxyWizardModel()
+        {
+            var proxyWizardModel = proxyWizardModelFactory();
+            ConfigureDefaultValues(proxyWizardModel, ProxyConfiguration);
+            return proxyWizardModel;
+        }
+
+        static void ConfigureDefaultValues(ProxyWizardModel proxyWizardModel, IProxyConfiguration proxyConfiguration)
+        {
             proxyWizardModel.ShowProxySettings = true;
             proxyWizardModel.ToggleService = false;
             
@@ -274,8 +296,6 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
                     proxyWizardModel.ProxyConfigType = ProxyConfigType.DefaultProxy;
                 }
             }
-
-            return proxyWizardModel;
         }
     }
 }

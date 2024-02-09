@@ -8,36 +8,35 @@ namespace Octopus.Manager.Tentacle.Proxy
 {
     public class ProxyWizardModelWrapper : ShellViewModel, IScriptableViewModel
     {
-        readonly ProxyWizardModel proxyWizardModel;
-        ProxyWizardModel pollingProxyWizardModel;
-
         public ProxyWizardModelWrapper(ProxyWizardModel proxyWizardModel) : base(proxyWizardModel.InstanceSelectionModel)
         {
-            this.proxyWizardModel = proxyWizardModel;
+            ProxyWizardModel = proxyWizardModel;
             proxyWizardModel.ToggleService = false;
             InstanceName = proxyWizardModel.InstanceName;
         }
 
         public string InstanceName { get; }
+        public  ProxyWizardModel ProxyWizardModel { get; }
+        public PollingProxyWizardModel PollingProxyWizardModel { get; private set; }
 
         public IEnumerable<CommandLineInvocation> GenerateScript()
         {
-            yield return CliBuilder.ForTool(proxyWizardModel.Executable, "service", InstanceName).Flag("stop").Build();
+            yield return CliBuilder.ForTool(ProxyWizardModel.Executable, "service", InstanceName).Flag("stop").Build();
 
-            foreach (var line in proxyWizardModel.GenerateScript())
+            foreach (var line in ProxyWizardModel.GenerateScript())
             {
                 yield return line;
             }
 
-            if (pollingProxyWizardModel != null)
+            if (PollingProxyWizardModel != null)
             {
-                foreach (var line in pollingProxyWizardModel.GenerateScript())
+                foreach (var line in PollingProxyWizardModel.GenerateScript())
                 {
                     yield return line;
                 }
             }
 
-            yield return CliBuilder.ForTool(proxyWizardModel.Executable, "service", InstanceName).Flag("start").Build();
+            yield return CliBuilder.ForTool(ProxyWizardModel.Executable, "service", InstanceName).Flag("start").Build();
         }
 
         public IEnumerable<CommandLineInvocation> GenerateRollbackScript()
@@ -45,15 +44,15 @@ namespace Octopus.Manager.Tentacle.Proxy
             yield break;
         }
 
-        public void AddPollingModel(ProxyWizardModel pollingWizardModel)
+        public void AddPollingModel(PollingProxyWizardModel pollingWizardModel)
         {
-            pollingProxyWizardModel = pollingWizardModel;
-            pollingProxyWizardModel.ToggleService = false;
+            PollingProxyWizardModel = pollingWizardModel;
+            PollingProxyWizardModel.ToggleService = false;
         }
 
         public void ContributeSensitiveValues(ILog log)
         {
-            proxyWizardModel.ContributeSensitiveValues(log);
+            ProxyWizardModel.ContributeSensitiveValues(log);
         }
     }
 }
