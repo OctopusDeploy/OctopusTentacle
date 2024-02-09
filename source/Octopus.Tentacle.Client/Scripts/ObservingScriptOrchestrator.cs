@@ -2,12 +2,11 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Tentacle.Contracts;
-using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
 
 namespace Octopus.Tentacle.Client.Scripts
 {
-    abstract class ObservingScriptOrchestrator<TStartCommand, TScriptStatusResponse> : IScriptOrchestrator
+    abstract class ObservingScriptOrchestrator : IScriptOrchestrator
     {
         readonly IScriptObserverBackoffStrategy scriptObserverBackOffStrategy;
         readonly OnScriptStatusResponseReceived onScriptStatusResponseReceived;
@@ -29,9 +28,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
         public async Task<ScriptExecutionResult> ExecuteScript(StartScriptCommandV3Alpha startScriptCommand, CancellationToken scriptExecutionCancellationToken)
         {
-            var mappedStartCommand = Map(startScriptCommand);
-
-            var scriptStatusResponse = await StartScript(mappedStartCommand, scriptExecutionCancellationToken).ConfigureAwait(false);
+            var scriptStatusResponse = await StartScript(startScriptCommand, scriptExecutionCancellationToken).ConfigureAwait(false);
 
             scriptStatusResponse = await ObserveUntilCompleteThenFinish(scriptStatusResponse, scriptExecutionCancellationToken).ConfigureAwait(false);
 
@@ -41,13 +38,12 @@ namespace Octopus.Tentacle.Client.Scripts
                 throw new OperationCanceledException("Script execution was cancelled");
             }
 
-            var mappedResponse = MapToResult(scriptStatusResponse);
-
-            return new ScriptExecutionResult(mappedResponse.State, mappedResponse.ExitCode);
+            var mappedResponse = new ScriptExecutionResult(scriptStatusResponse.State, scriptStatusResponse.ExitCode);
+            return mappedResponse;
         }
-
-        protected async Task<TScriptStatusResponse> ObserveUntilCompleteThenFinish(
-            TScriptStatusResponse scriptStatusResponse,
+        
+        protected async Task<ScriptStatusResponseV3Alpha> ObserveUntilCompleteThenFinish(
+            ScriptStatusResponseV3Alpha scriptStatusResponse,
             CancellationToken scriptExecutionCancellationToken)
         {
             OnScriptStatusResponseReceived(scriptStatusResponse);
@@ -61,15 +57,15 @@ namespace Octopus.Tentacle.Client.Scripts
             return lastScriptStatus;
         }
 
-        async Task<TScriptStatusResponse> ObserveUntilComplete(
-            TScriptStatusResponse scriptStatusResponse,
+        async Task<ScriptStatusResponseV3Alpha> ObserveUntilComplete(
+            ScriptStatusResponseV3Alpha scriptStatusResponse,
             CancellationToken scriptExecutionCancellationToken)
         {
             var lastStatusResponse = scriptStatusResponse;
             var iteration = 0;
             var cancellationIteration = 0;
 
-            while (GetState(lastStatusResponse) != ProcessState.Complete)
+            while (lastStatusResponse.State != ProcessState.Complete)
             {
                 if (scriptExecutionCancellationToken.IsCancellationRequested)
                 {
@@ -94,7 +90,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
                 OnScriptStatusResponseReceived(lastStatusResponse);
 
-                if (GetState(lastStatusResponse) == ProcessState.Complete)
+                if (lastStatusResponse.State == ProcessState.Complete)
                 {
                     continue;
                 }
@@ -115,26 +111,18 @@ namespace Octopus.Tentacle.Client.Scripts
 
             return lastStatusResponse;
         }
+        
+        protected abstract Task<ScriptStatusResponseV3Alpha> StartScript(StartScriptCommandV3Alpha command, CancellationToken scriptExecutionCancellationToken);
 
-        protected abstract TStartCommand Map(StartScriptCommandV3Alpha command);
+        protected abstract Task<ScriptStatusResponseV3Alpha> GetStatus(ScriptStatusResponseV3Alpha lastStatusResponse, CancellationToken scriptExecutionCancellationToken);
 
-        protected abstract ScriptExecutionStatus MapToStatus(TScriptStatusResponse response);
+        protected abstract Task<ScriptStatusResponseV3Alpha> Cancel(ScriptStatusResponseV3Alpha lastStatusResponse, CancellationToken scriptExecutionCancellationToken);
 
-        protected abstract ScriptExecutionResult MapToResult(TScriptStatusResponse response);
+        protected abstract Task<ScriptStatusResponseV3Alpha> Finish(ScriptStatusResponseV3Alpha lastStatusResponse, CancellationToken scriptExecutionCancellationToken);
 
-        protected abstract ProcessState GetState(TScriptStatusResponse response);
-
-        protected abstract Task<TScriptStatusResponse> StartScript(TStartCommand command, CancellationToken scriptExecutionCancellationToken);
-
-        protected abstract Task<TScriptStatusResponse> GetStatus(TScriptStatusResponse lastStatusResponse, CancellationToken scriptExecutionCancellationToken);
-
-        protected abstract Task<TScriptStatusResponse> Cancel(TScriptStatusResponse lastStatusResponse, CancellationToken scriptExecutionCancellationToken);
-
-        protected abstract Task<TScriptStatusResponse> Finish(TScriptStatusResponse lastStatusResponse, CancellationToken scriptExecutionCancellationToken);
-
-        protected void OnScriptStatusResponseReceived(TScriptStatusResponse scriptStatusResponse)
+        protected void OnScriptStatusResponseReceived(ScriptStatusResponseV3Alpha scriptStatusResponse)
         {
-            onScriptStatusResponseReceived(MapToStatus(scriptStatusResponse));
+            onScriptStatusResponseReceived(new(scriptStatusResponse.Logs));
         }
     }
 }
