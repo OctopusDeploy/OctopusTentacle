@@ -20,7 +20,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public bool? ShowDialog(Window owner)
         {
-            var wizardModel = new TentacleSetupWizardModel(instanceSelection.SelectedInstance, instanceSelection.ApplicationName, new PollingProxyWizardModel(instanceSelection));
+            var wizardModel = new SetupWizardViewModel(instanceSelection);
             var wizard = new TabbedWizard();
             wizard.AddTab(new CommunicationStyleTab(wizardModel));
             wizard.AddTab(new StorageTab(wizardModel));
@@ -31,8 +31,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             wizard.AddTab(new TentaclePassiveTab(wizardModel));
             wizard.AddTab(new ReviewAndRunScriptTabView(new ReviewAndRunScriptTabViewModel(wizardModel, container.Resolve<ICommandLineRunner>())) {ReadyMessage = "You're ready to install an Octopus Tentacle.", SuccessMessage = "Installation complete!"});
 
-            var shellModel = container.Resolve<ShellViewModel>();
-            var shell = new ShellView("Tentacle Setup Wizard", shellModel)
+            var shell = new ShellView("Tentacle Setup Wizard", wizardModel)
             {
                 Height = 650,
                 Width = 890

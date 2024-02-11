@@ -10,31 +10,31 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
     /// </summary>
     public partial class TentacleActiveDetailsTab
     {
-        readonly TentacleSetupWizardModel model;
+        readonly SetupWizardViewModel viewModel;
 
-        public TentacleActiveDetailsTab(TentacleSetupWizardModel model)
+        public TentacleActiveDetailsTab(SetupWizardViewModel viewModel)
         {
-            this.model = model;
+            this.viewModel = viewModel;
             InitializeComponent();
 
-            DataContext = this.model = model;
+            DataContext = this.viewModel = viewModel;
         }
 
         public override async Task OnNext(CancelEventArgs e)
         {
             await base.OnNext(e);
-            model.SkipServerRegistration = false;
+            viewModel.SkipServerRegistration = false;
         }
 
         public override async Task OnSkip(CancelEventArgs e)
         {
             await base.OnSkip(e);
-            model.SkipServerRegistration = true;
+            viewModel.SkipServerRegistration = true;
         }
 
         async void RefreshClicked(object sender, RoutedEventArgs e)
         {
-            await model.RefreshSpaceData();
+            await viewModel.RefreshSpaceData();
         }
     }
 }
