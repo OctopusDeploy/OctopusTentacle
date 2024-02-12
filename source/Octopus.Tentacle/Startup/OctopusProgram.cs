@@ -312,7 +312,13 @@ namespace Octopus.Tentacle.Startup
             LogManager.Configuration = new XmlLoggingConfiguration(nLogFile);
 #endif
             SystemLog.Appenders.Add(new NLogAppender());
-            LogManager.Configuration.Variables["logLevel"] = Environment.GetEnvironmentVariable("OCTOPUS__TENTACLE__LOGLEVEL") ?? "Info";
+
+            if (Environment.GetEnvironmentVariable("OCTOPUS__TENTACLE__LOGLEVEL") is { } logLevel &&
+                LogLevel.AllLevels.Any(l => l.Name == logLevel))
+            {
+                LogManager.Configuration.Variables["logLevel"] = logLevel;
+            }
+
             AssertLoggingConfigurationIsCorrect();
         }
 
