@@ -5,10 +5,9 @@
     /// </summary>
     public partial class ProxyConfigurationTab
     {
-        public ProxyConfigurationTab(object model)
+        public ProxyConfigurationTab(ProxyWizardModel model)
         {
             InitializeComponent();
-
             DataContext = model;
         }
 

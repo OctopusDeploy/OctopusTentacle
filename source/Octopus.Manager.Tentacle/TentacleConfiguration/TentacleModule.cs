@@ -24,12 +24,13 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration
             
             builder.RegisterType<TentacleManagerModel>();
             builder.RegisterType<TentacleSetupWizardLauncher>();
-            builder.RegisterType<ProxyWizardLauncher>();
             builder.RegisterType<InstanceSelectionModel>().AsSelf().SingleInstance().WithParameter("applicationName", ApplicationName.Tentacle);
             builder.RegisterType<CommandLineRunner>().As<ICommandLineRunner>();
 
             // View Model registration
             builder.RegisterType<DeleteWizardModel>().AsSelf();
+            builder.RegisterType<ProxyWizardModel>().AsSelf();
+            builder.RegisterType<PollingProxyWizardModel>().AsSelf();
         }
     }
 }

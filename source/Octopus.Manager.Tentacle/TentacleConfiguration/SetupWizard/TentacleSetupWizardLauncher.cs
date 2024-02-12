@@ -18,9 +18,9 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             this.instanceSelection = instanceSelection;
         }
 
-        public bool? ShowDialog(Window owner, string selectedInstance)
+        public bool? ShowDialog(Window owner)
         {
-            var wizardModel = new TentacleSetupWizardModel(selectedInstance, instanceSelection.ApplicationName, new PollingProxyWizardModel(selectedInstance, instanceSelection.ApplicationName));
+            var wizardModel = new TentacleSetupWizardModel(instanceSelection.SelectedInstance, instanceSelection.ApplicationName, new PollingProxyWizardModel(instanceSelection));
             var wizard = new TabbedWizard();
             wizard.AddTab(new CommunicationStyleTab(wizardModel));
             wizard.AddTab(new StorageTab(wizardModel));

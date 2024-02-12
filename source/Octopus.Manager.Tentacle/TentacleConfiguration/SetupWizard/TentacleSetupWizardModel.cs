@@ -73,10 +73,6 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         bool areSpacesSupported;
         bool areWorkersSupported;
 
-        public TentacleSetupWizardModel(string selectedInstance) : this(selectedInstance, ApplicationName.Tentacle, new ProxyWizardModel(selectedInstance, ApplicationName.Tentacle))
-        {
-        }
-
         public TentacleSetupWizardModel(string selectedInstance, ApplicationName applicationName, ProxyWizardModel proxyWizardModel)
         {
             AuthModes = new List<KeyValuePair<AuthMode, string>>();

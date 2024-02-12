@@ -125,8 +125,7 @@ namespace Octopus.Manager.Tentacle
                 container.Resolve<InstanceSelectionModel>(),
                 container.Resolve<IApplicationInstanceManager>(),
                 container.Resolve<IApplicationInstanceStore>(),
-                container.Resolve<TentacleSetupWizardLauncher>(),
-                container.Resolve<ProxyWizardLauncher>());
+                container.Resolve<TentacleSetupWizardLauncher>());
             
             var shell = new ShellView("Tentacle Manager", tentacleViewModel);
             shell.EnableInstanceSelection();
