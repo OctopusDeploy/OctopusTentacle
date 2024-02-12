@@ -1,6 +1,5 @@
 ﻿using System;
 using Autofac;
-using Octopus.Client.Model;
 using Octopus.Manager.Tentacle.DeleteWizard;
 using Octopus.Manager.Tentacle.Proxy;
 using Octopus.Manager.Tentacle.Shell;
