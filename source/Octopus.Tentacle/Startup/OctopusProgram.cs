@@ -310,9 +310,9 @@ namespace Octopus.Tentacle.Startup
             var nLogFile = Path.ChangeExtension(GetType().Assembly.Location, "exe.nlog");
             LogManager.ThrowConfigExceptions = true;
             LogManager.Configuration = new XmlLoggingConfiguration(nLogFile);
-            LogManager.Configuration.Variables["logLevel"] = Environment.GetEnvironmentVariable("OCTOPUS__TENTACLE__LOGLEVEL") ?? "Info";
 #endif
             SystemLog.Appenders.Add(new NLogAppender());
+            LogManager.Configuration.Variables["logLevel"] = Environment.GetEnvironmentVariable("OCTOPUS__TENTACLE__LOGLEVEL") ?? "Info";
             AssertLoggingConfigurationIsCorrect();
         }
 
