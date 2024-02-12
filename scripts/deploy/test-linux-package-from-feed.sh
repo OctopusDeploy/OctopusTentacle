@@ -12,7 +12,7 @@ if [[ "$OSRELID" == "rhel" && ( -z "$REDHAT_SUBSCRIPTION_USERNAME" || -z "$REDHA
   exit 1
 fi
 
-# Install the packages from our package feed (with any needed docker config, system registration) using a script from 'linux-package-feeds'.
+# Install the packages from our package feed (with any needed docker config, system registration) using the script from 'tool-linux-packages'.
 export PKG_NAMES="octopuscli tentacle"
 bash install-linux-feed-package.sh || exit
 
