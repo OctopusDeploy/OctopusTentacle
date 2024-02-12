@@ -9,13 +9,13 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
     /// </summary>
     public partial class MachineType
     {
-        readonly SetupWizardViewModel viewModel;
+        readonly SetupTentacleWizardModel model;
 
-        public MachineType(SetupWizardViewModel viewModel)
+        public MachineType(SetupTentacleWizardModel model)
         {
             InitializeComponent();
 
-            DataContext = this.viewModel = viewModel;
+            DataContext = this.model = model;
         }
 
         void Navigate(object sender, RequestNavigateEventArgs e)

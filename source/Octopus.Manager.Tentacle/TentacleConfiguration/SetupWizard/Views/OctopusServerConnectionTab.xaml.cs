@@ -17,12 +17,12 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
     /// </summary>
     public partial class OctopusServerConnectionTab
     {
-        readonly SetupWizardViewModel viewModel;
+        readonly SetupTentacleWizardModel model;
 
-        public OctopusServerConnectionTab(SetupWizardViewModel viewModel)
+        public OctopusServerConnectionTab(SetupTentacleWizardModel model)
         {
             InitializeComponent();
-            DataContext = this.viewModel = viewModel;
+            DataContext = this.model = model;
         }
 
         void Navigate(object sender, RequestNavigateEventArgs e)
@@ -34,16 +34,16 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
         public override async Task OnNext(CancelEventArgs e)
         {
             await base.OnNext(e);
-            viewModel.PushRuleSet("TentacleActive");
-            viewModel.Validate();
-            if (!viewModel.IsValid || !viewModel.ProxyWizardModel.IsValid)
+            model.PushRuleSet("TentacleActive");
+            model.Validate();
+            if (!model.IsValid || !model.ProxyWizardModel.IsValid)
             {
                 e.Cancel = true;
                 return;
             }
 
             await ShowConnectionDialog();
-            if (!viewModel.HaveCredentialsBeenVerified)
+            if (!model.HaveCredentialsBeenVerified)
             {
                 e.Cancel = true;
             }
@@ -51,7 +51,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
 
         async Task ShowConnectionDialog()
         {
-            await DialogHost.Show(new ServerConnectionDialog(viewModel) { DataContext = viewModel }, "Tentacle Setup Wizard");
+            await DialogHost.Show(new ServerConnectionDialog(model) { DataContext = model }, "Tentacle Setup Wizard");
         }
     }
 }

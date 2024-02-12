@@ -7,6 +7,7 @@ using Octopus.Manager.Tentacle.Controls;
 using Octopus.Manager.Tentacle.DeleteWizard;
 using Octopus.Manager.Tentacle.Proxy;
 using Octopus.Manager.Tentacle.Shell;
+using Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard;
 using Octopus.Manager.Tentacle.Util;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
@@ -32,6 +33,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
         readonly Func<DeleteWizardModel> deleteWizardModelFactory;
         readonly Func<ProxyWizardModel> proxyWizardModelFactory;
         readonly Func<PollingProxyWizardModel> pollingProxyWizardModelFactory;
+        readonly Func<SetupTentacleWizardModel> setupTentacleWizardModel;
 
         public TentacleManagerModel(
             IOctopusFileSystem fileSystem,
@@ -39,7 +41,8 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
             InstanceSelectionModel instanceSelectionModel,
             Func<DeleteWizardModel> deleteWizardModelFactory,
             Func<ProxyWizardModel> proxyWizardModelFactory,
-            Func<PollingProxyWizardModel> pollingProxyWizardModelFactory)
+            Func<PollingProxyWizardModel> pollingProxyWizardModelFactory,
+            Func<SetupTentacleWizardModel> setupTentacleWizardModel)
             : base(instanceSelectionModel)
         {
             this.fileSystem = fileSystem;
@@ -47,6 +50,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
             this.deleteWizardModelFactory = deleteWizardModelFactory;
             this.proxyWizardModelFactory = proxyWizardModelFactory;
             this.pollingProxyWizardModelFactory = pollingProxyWizardModelFactory;
+            this.setupTentacleWizardModel = setupTentacleWizardModel;
         }
 
         public string InstanceName { get; set; }
@@ -296,6 +300,11 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
                     proxyWizardModel.ProxyConfigType = ProxyConfigType.DefaultProxy;
                 }
             }
+        }
+        
+        public SetupTentacleWizardModel CreateSetupTentacleWizardModel()
+        {
+            return setupTentacleWizardModel();
         }
     }
 }

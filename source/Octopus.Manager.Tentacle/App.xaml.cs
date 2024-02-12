@@ -7,7 +7,6 @@ using Autofac;
 using Octopus.Manager.Tentacle.Dialogs;
 using Octopus.Manager.Tentacle.Infrastructure;
 using Octopus.Manager.Tentacle.PreReq;
-using Octopus.Manager.Tentacle.Proxy;
 using Octopus.Manager.Tentacle.Shell;
 using Octopus.Manager.Tentacle.TentacleConfiguration;
 using Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard;
@@ -124,8 +123,7 @@ namespace Octopus.Manager.Tentacle
                 tentacleViewModel,
                 container.Resolve<InstanceSelectionModel>(),
                 container.Resolve<IApplicationInstanceManager>(),
-                container.Resolve<IApplicationInstanceStore>(),
-                container.Resolve<TentacleSetupWizardLauncher>());
+                container.Resolve<IApplicationInstanceStore>());
             
             var shell = new ShellView("Tentacle Manager", tentacleViewModel);
             shell.EnableInstanceSelection();

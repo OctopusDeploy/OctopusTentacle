@@ -8,13 +8,13 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
     /// </summary>
     public partial class CommunicationStyleTab
     {
-        readonly SetupWizardViewModel viewModel;
+        readonly SetupTentacleWizardModel model;
 
-        public CommunicationStyleTab(SetupWizardViewModel viewModel)
+        public CommunicationStyleTab(SetupTentacleWizardModel model)
         {
             InitializeComponent();
 
-            DataContext = this.viewModel = viewModel;
+            DataContext = this.model = model;
         }
 
         void Navigate(object sender, RequestNavigateEventArgs e)

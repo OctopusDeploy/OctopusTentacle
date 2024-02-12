@@ -10,23 +10,23 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
     /// </summary>
     public partial class StorageTab
     {
-        readonly SetupWizardViewModel viewModel;
+        readonly SetupTentacleWizardModel model;
 
-        public StorageTab(SetupWizardViewModel viewModel)
+        public StorageTab(SetupTentacleWizardModel model)
         {
             InitializeComponent();
 
-            DataContext = this.viewModel = viewModel;
+            DataContext = this.model = model;
         }
 
         void BrowseHomeDirButtonClicked(object sender, RoutedEventArgs e)
         {
-            DoBrowse("Select a Tentacle home directory", viewModel.HomeDirectory, s => viewModel.HomeDirectory = s);
+            DoBrowse("Select a Tentacle home directory", model.HomeDirectory, s => model.HomeDirectory = s);
         }
 
         void BrowseAppDirButtonClicked(object sender, RoutedEventArgs e)
         {
-            DoBrowse("Select where Tentacle should install applications", viewModel.ApplicationInstallDirectory, s => viewModel.ApplicationInstallDirectory = s);
+            DoBrowse("Select where Tentacle should install applications", model.ApplicationInstallDirectory, s => model.ApplicationInstallDirectory = s);
         }
 
         void DoBrowse(string description, string currentDirectory, Action<string> store)
@@ -37,7 +37,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
             folderBrowser.Description = description;
             if (Directory.Exists(currentDirectory))
             {
-                folderBrowser.SelectedPath = viewModel.HomeDirectory;
+                folderBrowser.SelectedPath = model.HomeDirectory;
             }
             else
             {

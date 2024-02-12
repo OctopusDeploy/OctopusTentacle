@@ -34,7 +34,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         APIKey
     }
 
-    public class SetupWizardViewModel : ShellViewModel, IScriptableViewModel, IHaveServices
+    public class SetupTentacleWizardModel : ShellViewModel, IScriptableViewModel, IHaveServices
     {
         readonly ApplicationName applicationName;
         CommunicationStyle communicationStyle;
@@ -74,7 +74,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         bool areSpacesSupported;
         bool areWorkersSupported;
 
-        public SetupWizardViewModel(InstanceSelectionModel instanceSelectionModel) : base(instanceSelectionModel)
+        public SetupTentacleWizardModel(InstanceSelectionModel instanceSelectionModel) : base(instanceSelectionModel)
         {
             AuthModes = new List<KeyValuePair<AuthMode, string>>();
 
@@ -807,7 +807,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         IValidator CreateValidator()
         {
-            var validator = new InlineValidator<SetupWizardViewModel>();
+            var validator = new InlineValidator<SetupTentacleWizardModel>();
             validator.RuleSet("TentacleActive", delegate
             {
                 validator.RuleFor(m => m.OctopusServerUrl).Must(BeAValidUrl).WithMessage("Please enter a valid Octopus Server URL");

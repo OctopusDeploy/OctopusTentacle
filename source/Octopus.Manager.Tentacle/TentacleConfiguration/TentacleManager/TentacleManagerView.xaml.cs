@@ -18,6 +18,7 @@ using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Util;
+using MachineType = Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views.MachineType;
 
 namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
 {
@@ -30,7 +31,6 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
         readonly InstanceSelectionModel instanceSelection;
         readonly IApplicationInstanceManager instanceManager;
         readonly IApplicationInstanceStore instanceStore;
-        readonly TentacleSetupWizardLauncher tentacleSetupWizardLauncher;
         readonly TentacleManagerModel model;
 
         public TentacleManagerView(
@@ -38,8 +38,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
             TentacleManagerModel model,
             InstanceSelectionModel instanceSelection,
             IApplicationInstanceManager instanceManager,
-            IApplicationInstanceStore instanceStore,
-            TentacleSetupWizardLauncher tentacleSetupWizardLauncher)
+            IApplicationInstanceStore instanceStore)
         {
             // TODO: Remove explicit usages of the container from views
             // This is a temporary mechanism, until we can have all dependencies
@@ -49,7 +48,6 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
             this.instanceSelection = instanceSelection;
             this.instanceManager = instanceManager;
             this.instanceStore = instanceStore;
-            this.tentacleSetupWizardLauncher = tentacleSetupWizardLauncher;
             InitializeComponent();
             findingInstallation.Visibility = Visibility.Visible;
             newInstallation.Visibility = Visibility.Collapsed;
@@ -96,9 +94,34 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
 
         void SetupTentacle(object sender, RoutedEventArgs e)
         {
-            tentacleSetupWizardLauncher.ShowDialog(Window.GetWindow(this));
+            var setupTentacleWizardModel = model.CreateSetupTentacleWizardModel();
+            var setupTentacleWizardView = CreateSetUpTentacleWizardView(setupTentacleWizardModel);
+            setupTentacleWizardView.ShowDialog();
+            
             instanceSelection.Refresh();
             Refresh();
+        }
+
+        Window CreateSetUpTentacleWizardView(SetupTentacleWizardModel setupTentacleWizardModel)
+        {
+            var wizard = new TabbedWizard();
+            wizard.AddTab(new CommunicationStyleTab(setupTentacleWizardModel));
+            wizard.AddTab(new StorageTab(setupTentacleWizardModel));
+            wizard.AddTab(new ProxyConfigurationTab(setupTentacleWizardModel.ProxyWizardModel));
+            wizard.AddTab(new OctopusServerConnectionTab(setupTentacleWizardModel));
+            wizard.AddTab(new MachineType(setupTentacleWizardModel));
+            wizard.AddTab(new TentacleActiveDetailsTab(setupTentacleWizardModel));
+            wizard.AddTab(new TentaclePassiveTab(setupTentacleWizardModel));
+            wizard.AddTab(new ReviewAndRunScriptTabView(new ReviewAndRunScriptTabViewModel(setupTentacleWizardModel, container.Resolve<ICommandLineRunner>())) {ReadyMessage = "You're ready to install an Octopus Tentacle.", SuccessMessage = "Installation complete!"});
+
+            var shell = new ShellView("Tentacle Setup Wizard", setupTentacleWizardModel)
+            {
+                Height = 650,
+                Width = 890
+            };
+            shell.SetViewContent(wizard);
+            shell.Owner = Window.GetWindow(this);
+            return shell;
         }
 
         void StartServiceClicked(object sender, EventArgs e)
