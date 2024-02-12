@@ -21,10 +21,10 @@ namespace Octopus.Tentacle.Kubernetes
 
         static readonly List<Version> KnownLatestContainerTags = new()
         {
-            new(1, 26, 3),
-            new(1, 27, 3),
-            new(1, 28, 2),
-            new(1, 29, 1),
+            new(1, 26),
+            new(1, 27),
+            new(1, 28),
+            new(1, 29),
         };
 
         public async Task<string> GetContainerImageForCluster()
@@ -34,7 +34,7 @@ namespace Octopus.Tentacle.Kubernetes
             //find the highest tag for this cluster version
             var tagVersion = KnownLatestContainerTags.FirstOrDefault(tag => tag.Major == clusterVersion.Major && tag.Minor == clusterVersion.Minor);
 
-            var tag = tagVersion?.ToString(3) ?? "latest";
+            var tag = tagVersion?.ToString(2) ?? "latest";
 
             return $"octopuslabs/k8s-workertools:{tag}";
         }
