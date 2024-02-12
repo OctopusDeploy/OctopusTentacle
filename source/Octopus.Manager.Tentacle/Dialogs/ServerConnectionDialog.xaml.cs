@@ -23,20 +23,20 @@ namespace Octopus.Manager.Tentacle.Dialogs
     /// </summary>
     public partial class ServerConnectionDialog : UserControl
     {
-        readonly SetupTentacleWizardModel model;
+        readonly SetupTentacleWizardModel viewModel;
         readonly TextBoxLogger logger;
 
-        public ServerConnectionDialog(SetupTentacleWizardModel model)
+        public ServerConnectionDialog(SetupTentacleWizardModel viewModel)
         {
             InitializeComponent();
 
-            DataContext = this.model = model;
+            DataContext = this.viewModel = viewModel;
             logger = new TextBoxLogger(outputLog);
             Loaded += async (a, e) =>
             {
-                model.ContributeSensitiveValues(logger);
-                await model.VerifyCredentials(logger);
-                if (model.HaveCredentialsBeenVerified)
+                viewModel.ContributeSensitiveValues(logger);
+                await viewModel.VerifyCredentials(logger);
+                if (viewModel.HaveCredentialsBeenVerified)
                 {
                     setProgressBarToStatus(false, true);
                     CloseButton.Visibility = Visibility.Collapsed;
