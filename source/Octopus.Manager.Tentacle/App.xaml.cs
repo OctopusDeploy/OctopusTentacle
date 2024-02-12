@@ -9,7 +9,6 @@ using Octopus.Manager.Tentacle.Infrastructure;
 using Octopus.Manager.Tentacle.PreReq;
 using Octopus.Manager.Tentacle.Shell;
 using Octopus.Manager.Tentacle.TentacleConfiguration;
-using Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard;
 using Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager;
 using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Configuration;
@@ -119,7 +118,6 @@ namespace Octopus.Manager.Tentacle
             var tentacleViewModel = container.Resolve<TentacleManagerModel>();
             
             var tentacleManagerView = new TentacleManagerView(
-                container.Resolve<IComponentContext>(),
                 tentacleViewModel,
                 container.Resolve<InstanceSelectionModel>(),
                 container.Resolve<IApplicationInstanceManager>(),

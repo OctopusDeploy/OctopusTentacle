@@ -38,6 +38,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
         public TentacleManagerModel(
             IOctopusFileSystem fileSystem,
             IApplicationInstanceSelector selector,
+            ICommandLineRunner commandLineRunner,
             InstanceSelectionModel instanceSelectionModel,
             Func<DeleteWizardModel> deleteWizardModelFactory,
             Func<ProxyWizardModel> proxyWizardModelFactory,
@@ -51,6 +52,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
             this.proxyWizardModelFactory = proxyWizardModelFactory;
             this.pollingProxyWizardModelFactory = pollingProxyWizardModelFactory;
             this.setupTentacleWizardModel = setupTentacleWizardModel;
+            CommandLineRunner = commandLineRunner;
         }
 
         public string InstanceName { get; set; }
@@ -146,6 +148,8 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
         public IProxyConfiguration ProxyConfiguration { get; set; }
 
         public IPollingProxyConfiguration PollingProxyConfiguration { get; set; }
+        
+        public ICommandLineRunner CommandLineRunner { get; }
 
         public void Load(ApplicationInstanceRecord applicationInstance)
         {
