@@ -7,16 +7,14 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
     /// </summary>
     public partial class TentaclePassiveTab
     {
-        TentacleSetupWizardModel model;
-
-        public TentaclePassiveTab(TentacleSetupWizardModel model)
+        public TentaclePassiveTab(SetupTentacleWizardModel viewModel)
         {
             InitializeComponent();
 
-            DataContext = this.model = model;
+            DataContext = viewModel;
 
             // Default to true only when using the UI
-            model.FirewallException = true;
+            viewModel.FirewallException = true;
         }
     }
 }

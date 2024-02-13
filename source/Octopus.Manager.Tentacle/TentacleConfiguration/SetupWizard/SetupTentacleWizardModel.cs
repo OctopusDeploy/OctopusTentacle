@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -13,6 +13,7 @@ using Octopus.Client.Model;
 using Octopus.Diagnostics;
 using Octopus.Manager.Tentacle.Infrastructure;
 using Octopus.Manager.Tentacle.Proxy;
+using Octopus.Manager.Tentacle.Shell;
 using Octopus.Manager.Tentacle.Util;
 using Octopus.Tentacle.Commands;
 using Octopus.Tentacle.Configuration;
@@ -33,7 +34,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         APIKey
     }
 
-    public class TentacleSetupWizardModel : ViewModel, IScriptableViewModel, IHaveServices
+    public class SetupTentacleWizardModel : ShellViewModel, IScriptableViewModel, IHaveServices
     {
         readonly ApplicationName applicationName;
         CommunicationStyle communicationStyle;
@@ -73,7 +74,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         bool areSpacesSupported;
         bool areWorkersSupported;
 
-        public TentacleSetupWizardModel(string selectedInstance, ApplicationName applicationName, ProxyWizardModel proxyWizardModel)
+        public SetupTentacleWizardModel(InstanceSelectionModel instanceSelectionModel) : base(instanceSelectionModel)
         {
             AuthModes = new List<KeyValuePair<AuthMode, string>>();
 
@@ -86,14 +87,14 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             SelectedTenantTags = new ObservableCollection<string>();
             SelectedWorkerPools = new ObservableCollection<string>();
 
-            this.applicationName = applicationName;
-            this.proxyWizardModel = proxyWizardModel;
+            this.applicationName = ApplicationName.Tentacle;
+            this.proxyWizardModel = new PollingProxyWizardModel(instanceSelectionModel);
 
-            InstanceName = selectedInstance;
+            InstanceName = instanceSelectionModel.SelectedInstance;
             var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
             HomeDirectory = Path.Combine(Path.GetPathRoot(programFiles), "Octopus");
             ApplicationInstallDirectory = Path.Combine(Path.GetPathRoot(programFiles), "Octopus\\Applications");
-            if (InstanceName != ApplicationInstanceRecord.GetDefaultInstance(applicationName))
+            if (InstanceName != ApplicationInstanceRecord.GetDefaultInstance(ApplicationName.Tentacle))
             {
                 HomeDirectory = Path.Combine(HomeDirectory, InstanceName);
                 ApplicationInstallDirectory = Path.Combine(ApplicationInstallDirectory, InstanceName);
@@ -806,7 +807,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         IValidator CreateValidator()
         {
-            var validator = new InlineValidator<TentacleSetupWizardModel>();
+            var validator = new InlineValidator<SetupTentacleWizardModel>();
             validator.RuleSet("TentacleActive", delegate
             {
                 validator.RuleFor(m => m.OctopusServerUrl).Must(BeAValidUrl).WithMessage("Please enter a valid Octopus Server URL");

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -17,7 +17,7 @@ using Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Diagnostics;
-using Octopus.Tentacle.Util;
+using MachineType = Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views.MachineType;
 
 namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
 {
@@ -26,30 +26,20 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
     /// </summary>
     public partial class TentacleManagerView
     {
-        readonly IComponentContext container;
         readonly InstanceSelectionModel instanceSelection;
         readonly IApplicationInstanceManager instanceManager;
         readonly IApplicationInstanceStore instanceStore;
-        readonly TentacleSetupWizardLauncher tentacleSetupWizardLauncher;
         readonly TentacleManagerModel model;
 
         public TentacleManagerView(
-            IComponentContext container,
             TentacleManagerModel model,
             InstanceSelectionModel instanceSelection,
             IApplicationInstanceManager instanceManager,
-            IApplicationInstanceStore instanceStore,
-            TentacleSetupWizardLauncher tentacleSetupWizardLauncher)
+            IApplicationInstanceStore instanceStore)
         {
-            // TODO: Remove explicit usages of the container from views
-            // This is a temporary mechanism, until we can have all dependencies
-            // being sourced from models created by the TentacleManagerViewModel
-            this.container = container;
-            
             this.instanceSelection = instanceSelection;
             this.instanceManager = instanceManager;
             this.instanceStore = instanceStore;
-            this.tentacleSetupWizardLauncher = tentacleSetupWizardLauncher;
             InitializeComponent();
             findingInstallation.Visibility = Visibility.Visible;
             newInstallation.Visibility = Visibility.Collapsed;
@@ -96,9 +86,40 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
 
         void SetupTentacle(object sender, RoutedEventArgs e)
         {
-            tentacleSetupWizardLauncher.ShowDialog(Window.GetWindow(this));
+            var setupTentacleWizardModel = model.CreateSetupTentacleWizardModel();
+            var setupTentacleWizardView = CreateSetUpTentacleWizardView(setupTentacleWizardModel);
+            setupTentacleWizardView.ShowDialog();
+            
             instanceSelection.Refresh();
             Refresh();
+        }
+
+        Window CreateSetUpTentacleWizardView(SetupTentacleWizardModel setupTentacleWizardModel)
+        {
+            var wizard = new TabbedWizard();
+            wizard.AddTab(new CommunicationStyleTab(setupTentacleWizardModel));
+            wizard.AddTab(new StorageTab(setupTentacleWizardModel));
+            wizard.AddTab(new ProxyConfigurationTab(setupTentacleWizardModel.ProxyWizardModel));
+            wizard.AddTab(new OctopusServerConnectionTab(setupTentacleWizardModel));
+            wizard.AddTab(new MachineType(setupTentacleWizardModel));
+            wizard.AddTab(new TentacleActiveDetailsTab(setupTentacleWizardModel));
+            wizard.AddTab(new TentaclePassiveTab(setupTentacleWizardModel));
+            wizard.AddTab(
+                new ReviewAndRunScriptTabView(new ReviewAndRunScriptTabViewModel(setupTentacleWizardModel, model.CommandLineRunner))
+                {
+                    ReadyMessage = "You're ready to install an Octopus Tentacle.",
+                    SuccessMessage = "Installation complete!"
+                }
+            );
+
+            var shell = new ShellView("Tentacle Setup Wizard", setupTentacleWizardModel)
+            {
+                Height = 650,
+                Width = 890
+            };
+            shell.SetViewContent(wizard);
+            shell.Owner = Window.GetWindow(this);
+            return shell;
         }
 
         void StartServiceClicked(object sender, EventArgs e)
@@ -145,7 +166,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
             }
 
             wizard.AddTab(
-                new ReviewAndRunScriptTabView(new ReviewAndRunScriptTabViewModel(proxyWizardModelWrapper, container.Resolve<ICommandLineRunner>()))
+                new ReviewAndRunScriptTabView(new ReviewAndRunScriptTabViewModel(proxyWizardModelWrapper, model.CommandLineRunner))
                 {
                     ReadyMessage = "That's all the information we need. When you click the button below, your proxy settings will be saved and the service will be restarted.",
                     SuccessMessage = "Happy deployments!",
@@ -179,15 +200,17 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
         {
             var wizard = new TabbedWizard();
             wizard.AddTab(new DeleteWelcome(deleteWizardViewModel));
-            wizard.AddTab(new ReviewAndRunScriptTabView(new ReviewAndRunScriptTabViewModel(deleteWizardViewModel, container.Resolve<ICommandLineRunner>()))
-            {
-                // TODO: These read-only properties should probably be on the DeleteWizardViewModel 
-                ReadyMessage = "When you click the button below, the Windows Service will be stopped and uninstalled, and your instance will be deleted.",
-                SuccessMessage = "Instance deleted",
-                ExecuteButtonText = "DELETE",
-                Title = "Delete",
-                Header = "Delete"
-            });
+            wizard.AddTab(
+                new ReviewAndRunScriptTabView(new ReviewAndRunScriptTabViewModel(deleteWizardViewModel, model.CommandLineRunner))
+                {
+                    // TODO: These read-only properties should probably be on the DeleteWizardViewModel 
+                    ReadyMessage = "When you click the button below, the Windows Service will be stopped and uninstalled, and your instance will be deleted.",
+                    SuccessMessage = "Instance deleted",
+                    ExecuteButtonText = "DELETE",
+                    Title = "Delete",
+                    Header = "Delete"
+                }
+            );
 
             var shell = new ShellView("Delete Instance Wizard", deleteWizardViewModel)
             {
