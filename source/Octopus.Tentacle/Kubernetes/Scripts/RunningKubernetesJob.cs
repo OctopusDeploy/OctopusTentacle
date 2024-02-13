@@ -291,7 +291,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
 
         async Task CreateJob(IScriptLogWriter writer, string? imagePullSecretName, CancellationToken cancellationToken)
         {
-            WriteVerbose(writer, $"Creating Job '{jobName}'.");
+            WriteVerbose(writer, $"Creating Kubernetes Job '{jobName}'.");
 
             //write the bootstrap runner script to the workspace
             workspace.WriteFile("bootstrapRunner.sh", await BootstrapRunnerScript.Task);
