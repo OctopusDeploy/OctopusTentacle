@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Autofac;
 using Octopus.Manager.Tentacle.DeleteWizard;
 using Octopus.Manager.Tentacle.Proxy;
