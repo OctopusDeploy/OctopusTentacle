@@ -417,7 +417,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                 var scriptState = stateStore.Load();
                 scriptState.Complete(exitCode);
                 stateStore.Save(scriptState);
-                WriteInfo(writer, $"Job '{jobName}' has completed with exit code {exitCode}");
+                WriteInfo(writer, $"Kubernetes Job '{jobName}' completed with exit code {exitCode}");
             }
             catch (Exception ex)
             {
