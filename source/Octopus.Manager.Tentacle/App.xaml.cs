@@ -53,6 +53,9 @@ namespace Octopus.Manager.Tentacle
 
             var container = ConfigureContainer();
 
+            if (!HasPrerequisites(new TentaclePrerequisiteProfile()))
+                Environment.Exit(0);
+
             if (reconfigure)
             {
                 if (!EventLog.SourceExists(EventLogSource))
@@ -75,9 +78,6 @@ namespace Octopus.Manager.Tentacle
             builder.RegisterModule(new OctopusFileSystemModule());
             builder.RegisterType<CertificateGenerator>().As<ICertificateGenerator>();
             builder.RegisterModule(new ManagerConfigurationModule(ApplicationName.Tentacle));
-
-            if (!HasPrerequisites(new TentaclePrerequisiteProfile()))
-                Environment.Exit(0);
 
             builder.RegisterModule(new TentacleConfigurationModule());
             builder.RegisterModule(new TentacleModule());
