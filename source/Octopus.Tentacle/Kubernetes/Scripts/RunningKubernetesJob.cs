@@ -7,7 +7,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using k8s;
-using k8s.Autorest;
 using k8s.Models;
 using Newtonsoft.Json;
 using Nito.AsyncEx;
@@ -97,16 +96,16 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                     {
                         try
                         {
-                            writer.WriteVerbose($"Cancelling Kubernetes Job '{jobName}'.");
+                            WriteVerbose(writer, $"Cancelling Kubernetes Job '{jobName}'.");
                             //first we suspend the job, which terminates the underlying pods
                             await jobService.SuspendJob(scriptTicket, CancellationToken.None);
                             //then we delete the job (because we no longer need it)
                             await jobService.Delete(scriptTicket, CancellationToken.None);
-                            writer.WriteVerbose($"Cancelled Kubernetes Job '{jobName}'.");
+                            WriteVerbose(writer, $"Cancelled Kubernetes Job '{jobName}'.");
                         }
                         catch (Exception e)
                         {
-                            writer.WriteOutput(ProcessOutputSource.StdErr, $"Failed to cancel Kubernetes job {jobName}. {e}");
+                            WriteError(writer, $"Failed to cancel Kubernetes job {jobName}. {e}");
                         }
                     }, CancellationToken.None);
                 });
@@ -136,12 +135,12 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                 }
                 catch (OperationCanceledException)
                 {
-                    writer.WriteOutput(ProcessOutputSource.StdOut, "Script execution canceled.");
+                    WriteInfo(writer, "Script execution canceled.");
                     exitCode = ScriptExitCodes.CanceledExitCode;
                 }
                 catch (TimeoutException)
                 {
-                    writer.WriteOutput(ProcessOutputSource.StdOut, "Script execution timed out.");
+                    WriteInfo(writer, "Script execution timed out.");
                     exitCode = ScriptExitCodes.TimeoutExitCode;
                 }
             }
@@ -292,6 +291,8 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
 
         async Task CreateJob(IScriptLogWriter writer, string? imagePullSecretName, CancellationToken cancellationToken)
         {
+            WriteVerbose(writer, $"Creating Kubernetes Job '{jobName}'.");
+
             //write the bootstrap runner script to the workspace
             workspace.WriteFile("bootstrapRunner.sh", await BootstrapRunnerScript.Task);
 
@@ -381,9 +382,9 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                 }
             };
 
-            writer.WriteVerbose($"Executing script in Kubernetes Job '{job.Name()}'.");
-
             await jobService.CreateJob(job, cancellationToken);
+
+            WriteVerbose(writer, $"Executing script in Kubernetes Job '{jobName}'.");
         }
 
         void RecordScriptHasStarted(IScriptLogWriter writer)
@@ -398,8 +399,8 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             {
                 try
                 {
-                    writer.WriteOutput(ProcessOutputSource.StdOut, $"Warning: An exception occurred saving the ScriptState: {ex.Message}");
-                    writer.WriteOutput(ProcessOutputSource.StdOut, ex.ToString());
+                    WriteInfo(writer, $"Warning: An exception occurred saving the ScriptState for job '{jobName}': {ex.Message}");
+                    WriteInfo(writer, ex.ToString());
                 }
                 catch
                 {
@@ -410,25 +411,44 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
 
         void RecordScriptHasCompleted(int exitCode)
         {
+            using var writer = ScriptLog.CreateWriter();
             try
             {
                 var scriptState = stateStore.Load();
                 scriptState.Complete(exitCode);
                 stateStore.Save(scriptState);
+                WriteVerbose(writer, $"Kubernetes Job '{jobName}' completed with exit code {exitCode}");
             }
             catch (Exception ex)
             {
                 try
                 {
-                    using var writer = ScriptLog.CreateWriter();
-                    writer.WriteOutput(ProcessOutputSource.StdOut, $"Warning: An exception occurred saving the ScriptState: {ex.Message}");
-                    writer.WriteOutput(ProcessOutputSource.StdOut, ex.ToString());
+                    WriteInfo(writer, $"Warning: An exception occurred saving the ScriptState for job '{jobName}': {ex.Message}");
+                    WriteInfo(writer, ex.ToString());
                 }
                 catch
                 {
                     //we don't care about errors here
                 }
             }
+        }
+
+        void WriteInfo(IScriptLogWriter writer, string message)
+        {
+            writer.WriteOutput(ProcessOutputSource.StdOut, message);
+            log.Info(message);
+        }
+
+        void WriteError(IScriptLogWriter writer, string message)
+        {
+            writer.WriteOutput(ProcessOutputSource.StdErr, message);
+            log.Error(message);
+        }
+
+        void WriteVerbose(IScriptLogWriter writer, string message)
+        {
+            writer.WriteVerbose(message);
+            log.Verbose(message);
         }
     }
 }
