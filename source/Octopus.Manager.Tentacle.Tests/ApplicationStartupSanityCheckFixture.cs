@@ -45,12 +45,13 @@ namespace Octopus.Manager.Tentacle.Tests
         {
             var watch = new Stopwatch();
             watch.Start();
-            while (application.MainWindow is null || application.MainWindow.Title != App.MainWindowTitle || watch.Elapsed >= TimeSpan.FromSeconds(30))
+            while (application.MainWindow is null || application.MainWindow.Title != App.MainWindowTitle || watch.Elapsed >= TimeSpan.FromSeconds(10))
             {
                 await Task.Delay(TimeSpan.FromSeconds(2));
             }
+            watch.Stop();
 
-            if (application.MainWindow is null)
+            if (application.MainWindow.Title != App.MainWindowTitle)
             {
                 throw new ApplicationException("Unable to start Tentacle Manager");
             }
