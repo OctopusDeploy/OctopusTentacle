@@ -1,7 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Threading;
-using Serilog;
+using NLog;
+using ILogger = Serilog.ILogger;
 
 namespace Octopus.Tentacle.Tests.Integration.Support.SetupFixtures
 {
@@ -19,13 +20,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.SetupFixtures
         {
             try
             {
-                var exePath = TentacleExeFinder.FindTentacleExe(runtime);
-                var exeFileInfo = new FileInfo(exePath);
-                var nlogFileInfo = new FileInfo(Path.Combine(exeFileInfo.DirectoryName!, "Tentacle.exe.nlog"));
-
-                var content = File.ReadAllText(nlogFileInfo.FullName);
-                content = content.Replace("<logger name=\"*\" minlevel=\"Info\" writeTo=\"octopus-log-file\" />", "<logger name=\"*\" minlevel=\"Trace\" writeTo=\"octopus-log-file\" />");
-                File.WriteAllText(nlogFileInfo.FullName, content);
+                LogManager.Configuration.Variables["logLevel"] = "Trace";
             }
             catch (Exception e)
             {

@@ -14,6 +14,7 @@
   <variable name="appName" value="Octopus Tentacle" />
   <variable name="messageLayout" value="${message}${onexception:${newline}${exception:format=ToString}}"/>
   <variable name="normalLayout" value="${longdate}  ${processid:padding=5}  ${threadid:padding=5} ${uppercase:${level}:padding=5}  ${messageLayout}"/>
+  <variable name="logLevel" value="Info" />
 
   <targets async="false">
     <target xsi:type="ColoredConsole" name="stdout" layout="${messageLayout}" />
@@ -32,9 +33,9 @@
 
   <rules>
     <logger name="LogFileOnlyLogger" writeTo="octopus-log-file" final="true" />
-    <logger name="*" minlevel="Info" maxLevel="Warn" writeTo="stdout" />
+    <logger name="*" minlevel="${var:logLevel}" maxLevel="Warn" writeTo="stdout" />
     <logger name="*" minlevel="Error" writeTo="stderr" />
-    <logger name="*" minlevel="Info" writeTo="octopus-log-file" />
+    <logger name="*" minlevel="${var:logLevel}" writeTo="octopus-log-file" />
     <logger name="*" minlevel="Fatal" writeTo="eventlog" />
 </rules>
 </nlog>
