@@ -1,7 +1,10 @@
 using System;
-using Autofac;
+using System.Diagnostics;
+using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows;
 using NUnit.Framework;
-using Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager;
 
 namespace Octopus.Manager.Tentacle.Tests
 {
@@ -10,12 +13,48 @@ namespace Octopus.Manager.Tentacle.Tests
     {
         [Test]
         public void ApplicationCanStartWithoutCrashing()
+        { 
+            Exception threadException = null;
+            var thread = new Thread(() =>
+            {
+                try
+                {
+                    var application = new App();
+                    Application.ResourceAssembly = Assembly.GetAssembly(typeof (App));
+                    application.InitializeComponent();
+                    application.Dispatcher.InvokeAsync(() =>
+                    {
+                        ExitTentacleManager(application);
+                    }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+                    application.Run();
+                }
+                catch (Exception ex)
+                {
+                    threadException = ex;
+                }
+            });
+
+            thread.SetApartmentState(ApartmentState.STA);
+            thread.Start();
+            thread.Join();
+            
+            if (threadException is not null) throw threadException;
+        }
+        
+        static async void ExitTentacleManager(Application application)
         {
-            // If we can resolve the main view model without errors,
-            // then we can safely assume all the necessary components
-            // have been correctly registered in the IoC container
-            var container = App.ConfigureContainer();
-            _ = container.Resolve<TentacleManagerModel>();
+            var watch = new Stopwatch();
+            watch.Start();
+            while (application.MainWindow is null || application.MainWindow.Title != App.MainWindowTitle || watch.Elapsed >= TimeSpan.FromSeconds(30))
+            {
+                await Task.Delay(TimeSpan.FromSeconds(2));
+            }
+
+            if (application.MainWindow is null)
+            {
+                throw new ApplicationException("Unable to start Tentacle Manager");
+            }
+            application.MainWindow.Close();
         }
     }
 }
