@@ -34,8 +34,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Octopus.Manager.Tentacle\Octopus.Manager.Tentacle.csproj" />
-    <ProjectReference Include="..\Octopus.Tentacle.CommonTestUtils\Octopus.Tentacle.CommonTestUtils.csproj" />
-    <ProjectReference Include="..\Octopus.Tentacle\Octopus.Tentacle.csproj" />
   </ItemGroup>
 
   <ItemGroup>
