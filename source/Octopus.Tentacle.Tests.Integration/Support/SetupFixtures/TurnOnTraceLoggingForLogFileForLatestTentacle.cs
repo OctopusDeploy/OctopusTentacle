@@ -21,10 +21,16 @@ namespace Octopus.Tentacle.Tests.Integration.Support.SetupFixtures
             {
                 var exePath = TentacleExeFinder.FindTentacleExe(runtime);
                 var exeFileInfo = new FileInfo(exePath);
+
+                File.Copy(Path.Combine(exeFileInfo.DirectoryName!, "Tentacle.exe.nlog"), Path.Combine(exeFileInfo.DirectoryName!, "Tentacle.exe.nlog_original"));
+
                 var nlogFileInfo = new FileInfo(Path.Combine(exeFileInfo.DirectoryName!, "Tentacle.exe.nlog"));
 
                 var content = File.ReadAllText(nlogFileInfo.FullName);
                 content = content.Replace("<logger name=\"*\" minlevel=\"Info\" writeTo=\"octopus-log-file\" />", "<logger name=\"*\" minlevel=\"Trace\" writeTo=\"octopus-log-file\" />");
+                content = content.Replace("<logger name=\"*\" minlevel=\"Info\" maxLevel=\"Warn\" writeTo=\"stdout\" />", "<logger name=\"*\" minlevel=\"Trace\" maxLevel=\"Warn\" writeTo=\"stdout\" />");
+                content = content.Replace("<variable name=\"messageLayout\" value=\"${message}${onexception:${newline}${exception:format=ToString}}\"/>", "<variable name=\"messageLayout\" value=\"[${level}] ${message}${onexception:${newline}${exception:format=ToString}}\"/>");
+                
                 File.WriteAllText(nlogFileInfo.FullName, content);
             }
             catch (Exception e)

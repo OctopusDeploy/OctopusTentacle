@@ -54,3 +54,4 @@ _test
 .DS_Store
 .env
 scripts/development/
+artifacts/trace-logs

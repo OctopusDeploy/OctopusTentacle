@@ -31,9 +31,9 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             var sb = new StringBuilder();
             var logger = new SerilogLoggerBuilder()
-                .WithLoggingToStringBuilder(sb)
                 .Build()
                 .ForContext<TentacleIntegrationSetupFixtures>();
+
             foreach (var setupFixture in setupFixtures)
             {
                 setupFixture.OneTimeSetUp(logger.ForContext(setupFixture.GetType()));
