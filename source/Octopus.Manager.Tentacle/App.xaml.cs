@@ -66,7 +66,7 @@ namespace Octopus.Manager.Tentacle
             CreateAndShowShell(container);
         }
 
-        static IContainer ConfigureContainer()
+        public static IContainer ConfigureContainer()
         {
             var builder = new ContainerBuilder();
 

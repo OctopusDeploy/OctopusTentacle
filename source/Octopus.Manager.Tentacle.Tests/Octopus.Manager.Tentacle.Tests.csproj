@@ -1,12 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <AssemblyName>Octopus.Tentacle.Client.Tests</AssemblyName>
+    <AssemblyName>Octopus.Manager.Tentacle.Tests</AssemblyName>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <IsPublishable>true</IsPublishable>
     <OutputPath>bin</OutputPath>
     <PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
-    <RootNamespace>Octopus.Tentacle.Client.Tests</RootNamespace>
+    <RootNamespace>Octopus.Manager.Tentacle.Tests</RootNamespace>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <LangVersion>9</LangVersion>
     <Nullable>annotations</Nullable>
@@ -33,8 +33,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Octopus.Tentacle.Client\Octopus.Tentacle.Client.csproj" />
-    <ProjectReference Include="..\Octopus.Tentacle.CommonTestUtils\Octopus.Tentacle.CommonTestUtils.csproj" />
-    <ProjectReference Include="..\Octopus.Tentacle.Contracts\Octopus.Tentacle.Contracts.csproj" />
+    <ProjectReference Include="..\Octopus.Manager.Tentacle\Octopus.Manager.Tentacle.csproj" />
   </ItemGroup>
 </Project>
