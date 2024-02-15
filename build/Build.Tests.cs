@@ -1,4 +1,4 @@
-﻿// ReSharper disable RedundantUsingDirective
+// ReSharper disable RedundantUsingDirective
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -273,7 +273,9 @@ partial class Build
         var octopusTentacleManagerTestsDirectory = BuildDirectory / "Octopus.Manager.Tentacle.Tests" / testFramework / testRuntime;
         var testAssembliesPath = octopusTentacleTestsDirectory.GlobFiles("*.Tests.dll")
             .Union(octopusTentacleClientTestsDirectory.GlobFiles("*.Tests.dll"))
-            .Union(octopusTentacleManagerTestsDirectory.GlobFiles("*.Tests.dll"));
+            .Union(octopusTentacleManagerTestsDirectory.GlobFiles("*.Tests.dll")).ToArray();
+        
+        Log.Warning(string.Join(Environment.NewLine, testAssembliesPath.Select(z => z.ToString())));
         
         try
         {
