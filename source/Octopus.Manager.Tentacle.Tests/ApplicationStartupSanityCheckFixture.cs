@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Navigation;
 using NUnit.Framework;
 
 namespace Octopus.Manager.Tentacle.Tests
@@ -13,14 +14,14 @@ namespace Octopus.Manager.Tentacle.Tests
     {
         [Test]
         public void ApplicationCanStartWithoutCrashing()
-        { 
+        {
             Exception threadException = null;
             var thread = new Thread(() =>
             {
                 try
                 {
+                    SetResourceAssembly(typeof(App).Assembly);
                     var application = new App();
-                    Application.ResourceAssembly = Assembly.GetAssembly(typeof (App));
                     application.InitializeComponent();
                     application.Dispatcher.InvokeAsync(() =>
                     {
@@ -34,13 +35,15 @@ namespace Octopus.Manager.Tentacle.Tests
                 }
             });
 
+#pragma warning disable CA1416
             thread.SetApartmentState(ApartmentState.STA);
+#pragma warning restore CA1416
             thread.Start();
             thread.Join();
-            
+
             if (threadException is not null) throw threadException;
         }
-        
+
         static async void ExitTentacleManager(Application application)
         {
             var watch = new Stopwatch();
@@ -49,13 +52,28 @@ namespace Octopus.Manager.Tentacle.Tests
             {
                 await Task.Delay(TimeSpan.FromSeconds(2));
             }
+
             watch.Stop();
 
             if (application.MainWindow.Title != App.MainWindowTitle)
             {
                 throw new ApplicationException("Unable to start Tentacle Manager");
             }
+
             application.MainWindow.Close();
+        }
+        
+        // Workaround for issue described at https://github.com/microsoft/testfx/issues/975
+        // Implementation taken from the comments: https://github.com/microsoft/testfx/issues/975#issuecomment-1041554712
+        static void SetResourceAssembly(Assembly assembly)
+        {
+            var resourceAssemblyField = typeof(Application).GetField("_resourceAssembly", BindingFlags.Static | BindingFlags.NonPublic);
+            if (resourceAssemblyField != null)
+                resourceAssemblyField.SetValue(null, assembly);
+
+            var resourceAssemblyProperty = typeof(BaseUriHelper).GetProperty("ResourceAssembly", BindingFlags.Static | BindingFlags.NonPublic);
+            if (resourceAssemblyProperty != null)
+                resourceAssemblyProperty.SetValue(null, assembly);
         }
     }
 }
