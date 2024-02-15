@@ -8,8 +8,10 @@ namespace Octopus.Manager.Tentacle.Infrastructure
 {
     public class ElevationHelper
     {
+#pragma warning disable CA1416
         public static bool IsElevated => new WindowsPrincipal(WindowsIdentity.GetCurrent())
             .IsInRole(WindowsBuiltInRole.Administrator);
+#pragma warning restore CA1416
 
         public static void Elevate(IEnumerable<string> args)
         {

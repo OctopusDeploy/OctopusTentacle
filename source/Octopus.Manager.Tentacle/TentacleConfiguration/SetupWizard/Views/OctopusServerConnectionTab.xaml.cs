@@ -51,7 +51,9 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
 
         async Task ShowConnectionDialog()
         {
+#pragma warning disable CA1416
             await DialogHost.Show(new ServerConnectionDialog(viewModel) { DataContext = viewModel }, "Tentacle Setup Wizard");
+#pragma warning restore CA1416
         }
     }
 }

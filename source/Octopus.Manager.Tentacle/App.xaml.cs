@@ -41,8 +41,7 @@ namespace Octopus.Manager.Tentacle
             }
 
             ServicePointManager.SecurityProtocol =
-                SecurityProtocolType.Ssl3
-                | SecurityProtocolType.Tls
+                SecurityProtocolType.Tls
                 | SecurityProtocolType.Tls11
                 | SecurityProtocolType.Tls12;
 
@@ -56,9 +55,13 @@ namespace Octopus.Manager.Tentacle
 
             if (reconfigure)
             {
+#pragma warning disable CA1416
                 if (!EventLog.SourceExists(EventLogSource))
+#pragma warning restore CA1416
                 {
+#pragma warning disable CA1416
                     EventLog.CreateEventSource(EventLogSource, "Application");
+#pragma warning restore CA1416
                 }
 
                 ReconfigureTentacleService(container);
