@@ -37,8 +37,8 @@ BOOTSTRAP_SCRIPT=$1
 #This is the args for the Bootstrap script
 shift
 
-exec > >(stdbuf -i0 -o0 -e0 logStdOut)
-exec 2> >(stdbuf -i0 -o0 -e0 logStdErr >&2)
+stdbuf -iL -oL -eL exec > >(logStdOut)
+stdbuf -iL -oL -eL exec 2> >(logStdErr >&2)
 
 # Change cwd to the working directory
 cd "$WORK_DIR" || return
