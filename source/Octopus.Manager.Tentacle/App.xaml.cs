@@ -24,6 +24,7 @@ namespace Octopus.Manager.Tentacle
     public partial class App
     {
         const string EventLogSource = "Octopus Tentacle";
+        public const string MainWindowTitle = "Tentacle Manager";
 
         readonly OptionSet commonOptions = new OptionSet();
         bool reconfigure;
@@ -123,7 +124,7 @@ namespace Octopus.Manager.Tentacle
                 container.Resolve<IApplicationInstanceManager>(),
                 container.Resolve<IApplicationInstanceStore>());
             
-            var shell = new ShellView("Tentacle Manager", tentacleViewModel);
+            var shell = new ShellView(MainWindowTitle, tentacleViewModel);
             shell.EnableInstanceSelection();
             shell.Height = 550;
             shell.SetViewContent(tentacleManagerView);
