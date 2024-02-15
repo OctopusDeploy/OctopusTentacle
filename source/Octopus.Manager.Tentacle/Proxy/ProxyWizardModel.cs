@@ -153,48 +153,51 @@ namespace Octopus.Manager.Tentacle.Proxy
                 yield return Cli("service").Flag("stop").Build();
             }
 
-            if (ProxyConfigType == ProxyConfigType.NoProxy)
+            switch (ProxyConfigType)
             {
-                yield return Cli(Command)
-                    .Argument("proxyEnable", false)
-                    .Argument("proxyUsername", string.Empty)
-                    .Argument("proxyPassword", string.Empty)
-                    .Argument("proxyHost", string.Empty)
-                    .Argument("proxyPort", string.Empty)
-                    .Build();
-            }
-            else if (ProxyConfigType == ProxyConfigType.DefaultProxy)
-            {
-                // Explicitly clear the credentials
-                yield return Cli(Command)
-                    .Argument("proxyEnable", true)
-                    .Argument("proxyUsername", string.Empty)
-                    .Argument("proxyPassword", string.Empty)
-                    .Argument("proxyHost", string.Empty)
-                    .Argument("proxyPort", string.Empty)
-                    .Build();
-            }
-            else if (ProxyConfigType == ProxyConfigType.DefaultProxyCustomCredentials)
-            {
-                yield return Cli(Command)
-                    .Argument("proxyEnable", true)
-                    .Argument("proxyUsername", ProxyUsername)
-                    .Argument("proxyPassword", ProxyPassword)
-                    .Argument("proxyHost", string.Empty)
-                    .Argument("proxyPort", string.Empty)
-                    .Build();
-            }
-            else if (ProxyConfigType == ProxyConfigType.CustomProxy)
-            {
-                var host = new UriBuilder(ProxyServerHost).Host;
+                case ProxyConfigType.NoProxy:
+                    yield return Cli(Command)
+                        .Argument("proxyEnable", false)
+                        .Argument("proxyUsername", string.Empty)
+                        .Argument("proxyPassword", string.Empty)
+                        .Argument("proxyHost", string.Empty)
+                        .Argument("proxyPort", string.Empty)
+                        .Build();
+                    break;
+                case ProxyConfigType.DefaultProxy:
+                    // Explicitly clear the credentials
+                    yield return Cli(Command)
+                        .Argument("proxyEnable", true)
+                        .Argument("proxyUsername", string.Empty)
+                        .Argument("proxyPassword", string.Empty)
+                        .Argument("proxyHost", string.Empty)
+                        .Argument("proxyPort", string.Empty)
+                        .Build();
+                    break;
+                case ProxyConfigType.DefaultProxyCustomCredentials:
+                    yield return Cli(Command)
+                        .Argument("proxyEnable", true)
+                        .Argument("proxyUsername", ProxyUsername)
+                        .Argument("proxyPassword", ProxyPassword)
+                        .Argument("proxyHost", string.Empty)
+                        .Argument("proxyPort", string.Empty)
+                        .Build();
+                    break;
+                case ProxyConfigType.CustomProxy:
+                {
+                    var host = new UriBuilder(ProxyServerHost).Host;
 
-                yield return Cli(Command)
-                    .Argument("proxyEnable", true)
-                    .Argument("proxyUsername", ProxyUsername)
-                    .Argument("proxyPassword", ProxyPassword)
-                    .Argument("proxyHost", host)
-                    .Argument("proxyPort", ProxyServerPort)
-                    .Build();
+                    yield return Cli(Command)
+                        .Argument("proxyEnable", true)
+                        .Argument("proxyUsername", ProxyUsername)
+                        .Argument("proxyPassword", ProxyPassword)
+                        .Argument("proxyHost", host)
+                        .Argument("proxyPort", ProxyServerPort)
+                        .Build();
+                    break;
+                }
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
 
             if (ToggleService)
