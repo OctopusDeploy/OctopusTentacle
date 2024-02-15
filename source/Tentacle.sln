@@ -47,6 +47,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Octopus.Tentacle.Client.Tests", "Octopus.Tentacle.Client.Tests\Octopus.Tentacle.Client.Tests.csproj", "{48C4D03B-F044-4089-942E-20DF102059F0}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Octopus.Manager.Tentacle.Tests", "Octopus.Manager.Tentacle.Tests\Octopus.Manager.Tentacle.Tests.csproj", "{20B8E669-D121-426B-97C9-84A866430635}"
+  ProjectSection(ProjectDependencies) = postProject
+  		{A9E01394-4A21-418F-9ACC-D5A164E8491B} = {A9E01394-4A21-418F-9ACC-D5A164E8491B}
+  EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
