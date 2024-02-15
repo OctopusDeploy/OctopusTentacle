@@ -6,7 +6,7 @@ STDERR_LOG="$WORK_DIR/stderr.log"
 
 format() {
 	now=$(date -u +"%Y-%m-%dT%H:%M:%S.%N%z")
-	echo "$now|$2" | tee -a "$1"
+	stdbuf -iL -oL -eL echo "$now|$2" | tee -a "$1"
 }
 
 logStdOut() {
@@ -37,13 +37,13 @@ BOOTSTRAP_SCRIPT=$1
 #This is the args for the Bootstrap script
 shift
 
-stdbuf -iL -oL -eL exec > >(logStdOut)
-stdbuf -iL -oL -eL exec 2> >(logStdErr >&2)
+exec > >(logStdOut)
+exec 2> >(logStdErr >&2)
 
 # Change cwd to the working directory
 cd "$WORK_DIR" || return
 
-/bin/bash "$BOOTSTRAP_SCRIPT" "$@"
+stdbuf -iL -oL -eL /bin/bash "$BOOTSTRAP_SCRIPT" "$@"
 
 #Get the return value from the previous script
 RETURN_VAL=$?
