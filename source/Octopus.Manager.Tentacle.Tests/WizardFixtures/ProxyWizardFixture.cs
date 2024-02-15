@@ -25,7 +25,7 @@ namespace Octopus.Manager.Tentacle.Tests.WizardFixtures
             var script = model.GenerateScript().ToCommandLineString();
 
             // Assert
-            var pathToTentacleExe = $"\"{CommandLine.PathToTentacleExe()}\"";
+            var pathToTentacleExe = $"\"{model.Executable}\"";
             var expectedOutput = $"{pathToTentacleExe} proxy --instance \"{model.InstanceName}\" --proxyEnable \"True\" --proxyUsername \"\" --proxyPassword \"\" --proxyHost \"\" --proxyPort \"\"";
             script.Should().Be(expectedOutput);
         }
@@ -41,7 +41,7 @@ namespace Octopus.Manager.Tentacle.Tests.WizardFixtures
             var script = model.GenerateScript().ToCommandLineString();
 
             // Assert
-            var pathToTentacleExe = $"\"{CommandLine.PathToTentacleExe()}\"";
+            var pathToTentacleExe = $"\"{model.Executable}\"";
             var expectedOutput = $"{pathToTentacleExe} service --instance \"{model.InstanceName}\" --stop" +
                 Environment.NewLine + $"{pathToTentacleExe} proxy --instance \"{model.InstanceName}\" --proxyEnable \"True\" --proxyUsername \"\" --proxyPassword \"\" --proxyHost \"\" --proxyPort \"\"" +
                 Environment.NewLine + $"{pathToTentacleExe} service --instance \"{model.InstanceName}\" --start";
