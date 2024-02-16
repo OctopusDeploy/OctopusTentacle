@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.33627.172
@@ -47,6 +47,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Octopus.Tentacle.Client.Tests", "Octopus.Tentacle.Client.Tests\Octopus.Tentacle.Client.Tests.csproj", "{48C4D03B-F044-4089-942E-20DF102059F0}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Octopus.Manager.Tentacle.Tests", "Octopus.Manager.Tentacle.Tests\Octopus.Manager.Tentacle.Tests.csproj", "{20B8E669-D121-426B-97C9-84A866430635}"
+  ProjectSection(ProjectDependencies) = postProject
+    {A9E01394-4A21-418F-9ACC-D5A164E8491B} = {A9E01394-4A21-418F-9ACC-D5A164E8491B}
+  EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -260,8 +263,17 @@ Global
 		{20B8E669-D121-426B-97C9-84A866430635}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{20B8E669-D121-426B-97C9-84A866430635}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{20B8E669-D121-426B-97C9-84A866430635}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{20B8E669-D121-426B-97C9-84A866430635}.Release|Any CPU.Build.0 = Release|Any CPU
 		{20B8E669-D121-426B-97C9-84A866430635}.Release-net48-win|Any CPU.ActiveCfg = Debug|Any CPU
+		{20B8E669-D121-426B-97C9-84A866430635}.Release-net6.0-win-x64|Any CPU.ActiveCfg = Debug|Any CPU
+		{20B8E669-D121-426B-97C9-84A866430635}.Release-net6.0-win-x86|Any CPU.ActiveCfg = Debug|Any CPU
+		{20B8E669-D121-426B-97C9-84A866430635}.Release|Any CPU.Build.0 = Release|Any CPU
+		{20B8E669-D121-426B-97C9-84A866430635}.Release-net48-win|Any CPU.Build.0 = Debug|Any CPU
+		{20B8E669-D121-426B-97C9-84A866430635}.Release-net6.0-linux-arm|Any CPU.ActiveCfg = Debug|Any CPU
+		{20B8E669-D121-426B-97C9-84A866430635}.Release-net6.0-linux-arm64|Any CPU.ActiveCfg = Debug|Any CPU
+		{20B8E669-D121-426B-97C9-84A866430635}.Release-net6.0-linux-musl-x64|Any CPU.ActiveCfg = Debug|Any CPU
+		{20B8E669-D121-426B-97C9-84A866430635}.Release-net6.0-linux-x64|Any CPU.ActiveCfg = Debug|Any CPU
+		{20B8E669-D121-426B-97C9-84A866430635}.Release-net6.0-osx-arm64|Any CPU.ActiveCfg = Debug|Any CPU
+		{20B8E669-D121-426B-97C9-84A866430635}.Release-net6.0-osx-x64|Any CPU.ActiveCfg = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

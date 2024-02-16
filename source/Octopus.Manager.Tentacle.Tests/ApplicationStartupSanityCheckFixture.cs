@@ -4,7 +4,9 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using Autofac;
 using NUnit.Framework;
+using Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager;
 
 namespace Octopus.Manager.Tentacle.Tests
 {
@@ -12,6 +14,17 @@ namespace Octopus.Manager.Tentacle.Tests
     public class ApplicationStartupSanityCheckFixture
     {
         [Test]
+        public void TentacleManagerModelCanBeResolved()
+        {
+            // If we can resolve the main view model without errors,
+            // then we can safely assume all the necessary components
+            // have been correctly registered in the IoC container
+            var container = App.ConfigureContainer();
+            _ = container.Resolve<TentacleManagerModel>();
+        }
+        
+        [Test]
+        [Ignore("Run in local environment only. Programmatically starting WPF app will crash TeamCity host.")]
         public void ApplicationCanStartWithoutCrashing()
         { 
             Exception threadException = null;
