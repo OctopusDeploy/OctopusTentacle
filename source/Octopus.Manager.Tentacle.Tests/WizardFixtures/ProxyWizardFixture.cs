@@ -2,11 +2,9 @@ using System;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
-using NUnit.Framework.Constraints;
 using Octopus.Manager.Tentacle.Proxy;
 using Octopus.Manager.Tentacle.Shell;
 using Octopus.Manager.Tentacle.Tests.Utils;
-using Octopus.Manager.Tentacle.Util;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
 
