@@ -2,6 +2,7 @@
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
+using NUnit.Framework.Constraints;
 using Octopus.Manager.Tentacle.Proxy;
 using Octopus.Manager.Tentacle.Shell;
 using Octopus.Manager.Tentacle.Tests.Utils;
@@ -47,6 +48,73 @@ namespace Octopus.Manager.Tentacle.Tests.WizardFixtures
                 Environment.NewLine + $"{pathToTentacleExe} service --instance \"{model.InstanceName}\" --start";
             script.Should().Be(expectedOutput);
         }
+        
+        [Test]
+        public void WhenUsingCustomProxyConfig_GeneratedScriptShouldHaveConfiguredArguments()
+        {
+            // Arrange
+            var model = CreateTestProxyWizardModel();
+            model.ProxyConfigType = ProxyConfigType.CustomProxy;
+
+            // Act
+            var script = model.GenerateScript().ToCommandLineString();
+            
+            // Assert
+            var pathToTentacleExe = $"\"{model.Executable}\"";
+            var expectedOutput = $"{pathToTentacleExe} proxy --instance \"{model.InstanceName}\" --proxyEnable \"True\" " +
+                $"--proxyUsername \"{model.ProxyUsername}\" --proxyPassword \"{model.ProxyPassword}\" --proxyHost \"{model.ProxyServerHost}\" --proxyPort \"{model.ProxyServerPort}\"";
+            script.Should().Be(expectedOutput);
+        }
+        
+        [Test]
+        public void WhenUsingNoProxyConfig_GeneratedScriptShouldNotHaveConfiguredArguments()
+        {
+            // Arrange
+            var model = CreateTestProxyWizardModel();
+            model.ProxyConfigType = ProxyConfigType.NoProxy;
+
+            // Act
+            var script = model.GenerateScript().ToCommandLineString();
+
+            // Assert
+            var pathToTentacleExe = $"\"{model.Executable}\"";
+            var expectedOutput = $"{pathToTentacleExe} proxy --instance \"{model.InstanceName}\" --proxyEnable \"False\" " +
+                "--proxyUsername \"\" --proxyPassword \"\" --proxyHost \"\" --proxyPort \"\"";
+            script.Should().Be(expectedOutput);
+        }
+        
+        [Test]
+        public void WhenUsingDefaultProxyConfig_GeneratedScriptShouldNotHaveConfiguredArguments()
+        {
+            // Arrange
+            var model = CreateTestProxyWizardModel();
+            model.ProxyConfigType = ProxyConfigType.DefaultProxy;
+
+            // Act
+            var script = model.GenerateScript().ToCommandLineString();
+
+            // Assert
+            var pathToTentacleExe = $"\"{model.Executable}\"";
+            var expectedOutput = $"{pathToTentacleExe} proxy --instance \"{model.InstanceName}\" --proxyEnable \"True\" " +
+                "--proxyUsername \"\" --proxyPassword \"\" --proxyHost \"\" --proxyPort \"\"";
+            script.Should().Be(expectedOutput);
+        }
+
+        [Test] public void WhenUsingDefaultProxyCustomCredentialsConfig_GeneratedScriptShouldOnlyHaveUserNameAndPasswordConfigured()
+        {
+            // Arrange
+            var model = CreateTestProxyWizardModel();
+            model.ProxyConfigType = ProxyConfigType.DefaultProxyCustomCredentials;
+
+            // Act
+            var script = model.GenerateScript().ToCommandLineString();
+
+            // Assert
+            var pathToTentacleExe = $"\"{model.Executable}\"";
+            var expectedOutput = $"{pathToTentacleExe} proxy --instance \"{model.InstanceName}\" --proxyEnable \"True\" " +
+                $"--proxyUsername \"{model.ProxyUsername}\" --proxyPassword \"{model.ProxyPassword}\" --proxyHost \"\" --proxyPort \"\"";
+            script.Should().Be(expectedOutput);
+        }
 
         static ProxyWizardModel CreateTestProxyWizardModel()
         {
@@ -55,7 +123,13 @@ namespace Octopus.Manager.Tentacle.Tests.WizardFixtures
             const string tentacleInstanceName = "TestInstance";
             instanceSelectionModel.New(tentacleInstanceName);
 
-            var model = new ProxyWizardModel(instanceSelectionModel);
+            var model = new ProxyWizardModel(instanceSelectionModel)
+            {
+                ProxyUsername = "TestProxyUserName",
+                ProxyPassword = "TestProxyPassword",
+                ProxyServerHost = "localhost",
+                ProxyServerPort = 8080
+            };
             return model;
         }
     }
