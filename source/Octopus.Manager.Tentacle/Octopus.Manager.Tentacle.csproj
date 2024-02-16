@@ -1,5 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
   <PropertyGroup>
+    <AssemblyName>Octopus.Manager.Tentacle</AssemblyName>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <RootNamespace>Octopus.Manager.Tentacle</RootNamespace>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <IsPublishable>false</IsPublishable>
     <OutputPath>bin</OutputPath>
