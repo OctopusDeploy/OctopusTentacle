@@ -24,7 +24,7 @@ namespace Octopus.Manager.Tentacle.Tests
         }
         
         [Test]
-        [Ignore("Run in local environment only")]
+        [Ignore("Run in local environment only. Programmatically starting WPF app will crash TeamCity host.")]
         public void ApplicationCanStartWithoutCrashing()
         { 
             Exception threadException = null;
