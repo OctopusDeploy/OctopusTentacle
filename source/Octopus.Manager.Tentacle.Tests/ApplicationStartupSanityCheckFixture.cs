@@ -23,7 +23,8 @@ namespace Octopus.Manager.Tentacle.Tests
             _ = container.Resolve<TentacleManagerModel>();
         }
         
-        [Ignore("Run in local enviroment only")]
+        [Test]
+        [Ignore("Run in local environment only")]
         public void ApplicationCanStartWithoutCrashing()
         { 
             Exception threadException = null;
