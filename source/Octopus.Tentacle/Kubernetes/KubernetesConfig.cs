@@ -13,8 +13,11 @@ namespace Octopus.Tentacle.Kubernetes
         public static int JobTtlSeconds => int.TryParse(Environment.GetEnvironmentVariable($"{EnvVarPrefix}__JOBTTL"), out var jobTtl) ? jobTtl : 60; //Default 1min
         public static int JobMonitorTimeoutSeconds => int.TryParse(Environment.GetEnvironmentVariable($"{EnvVarPrefix}__JOBMONITORTIMEOUT"), out var jobMonitorTimeout) ? jobMonitorTimeout : 1800; //30min
 
-        public static string HelmReleaseName => GetRequiredEnvVar($"{EnvVarPrefix}__HELMRELEASENAME", "Unable to determine Helm release name.");
-        public static string HelmChartVersion => GetRequiredEnvVar($"{EnvVarPrefix}__HELMCHARTVERSION", "Unable to determine Helm chart version.");
+        public static string HelmReleaseNameVariableName => $"{EnvVarPrefix}__HELMRELEASENAME";
+        public static string HelmReleaseName => GetRequiredEnvVar(HelmReleaseNameVariableName, "Unable to determine Helm release name.");
+
+        public static string HelmChartVersionVariableName => $"{EnvVarPrefix}__HELMCHARTVERSION";
+        public static string HelmChartVersion => GetRequiredEnvVar(HelmChartVersionVariableName, "Unable to determine Helm chart version.");
 
         static string GetRequiredEnvVar(string variable, string errorMessage)
             => Environment.GetEnvironmentVariable(variable)
