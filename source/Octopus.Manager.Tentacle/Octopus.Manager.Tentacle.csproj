@@ -4,7 +4,7 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <RootNamespace>Octopus.Manager.Tentacle</RootNamespace>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <IsPublishable>false</IsPublishable>
+    <IsPublishable>true</IsPublishable>
     <OutputPath>bin</OutputPath>
     <OutputType>WinExe</OutputType>
     <PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
@@ -18,10 +18,6 @@
   <PropertyGroup>
     <ApplicationIcon>Properties\Icon.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(TargetFramework)'=='net48'">
-    <IsPublishable>true</IsPublishable>
   </PropertyGroup>
 
   <ItemGroup>
