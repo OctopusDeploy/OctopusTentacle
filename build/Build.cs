@@ -155,7 +155,6 @@ partial class Build : NukeBuild
 
                 var runtimeIds = RuntimeIds.Where(x => x.StartsWith("win"));
                 
-                
                 foreach (var runtimeId in runtimeIds)
                 {
                     switch (runtimeId)

@@ -175,22 +175,38 @@ partial class Build
 
             foreach (var runtimeId in RuntimeIds.Where(x => x.StartsWith("win")))
             {
-                var framework = runtimeId.Equals("win") ? NetFramework : NetCore;
-
-                var workingDirectory = BuildDirectory / "zip" / framework / runtimeId;
-                var workingTentacleDirectory = workingDirectory / "tentacle";
-
-                FileSystemTasks.EnsureCleanDirectory(workingDirectory);
-                FileSystemTasks.EnsureCleanDirectory(workingTentacleDirectory);
-
-                (BuildDirectory / "Tentacle" / framework / runtimeId).GlobFiles($"*")
-                    .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, workingTentacleDirectory));
-
-                ZipFile.CreateFromDirectory(
-                    workingDirectory,
-                    ArtifactsDirectory / "zip" / $"tentacle-{FullSemVer}-{framework}-{runtimeId}.zip");
+                switch (runtimeId)
+                {
+                    case "win":
+                        PackWindowsZip(NetFramework, runtimeId);
+                        break;
+                    case "win-x86":
+                    case "win-x64":
+                        PackWindowsZip(NetCoreWindows, runtimeId);
+                        PackWindowsZip(NetCore, runtimeId);
+                        break;
+                    default:
+                        PackWindowsZip(NetCore, runtimeId);
+                        break;
+                }
             }
         });
+
+    void PackWindowsZip(string framework, string runtimeId)
+    {
+        var workingDirectory = BuildDirectory / "zip" / framework / runtimeId;
+        var workingTentacleDirectory = workingDirectory / "tentacle";
+
+        FileSystemTasks.EnsureCleanDirectory(workingDirectory);
+        FileSystemTasks.EnsureCleanDirectory(workingTentacleDirectory);
+
+        (BuildDirectory / "Tentacle" / framework / runtimeId).GlobFiles($"*")
+            .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, workingTentacleDirectory));
+
+        ZipFile.CreateFromDirectory(
+            workingDirectory,
+            ArtifactsDirectory / "zip" / $"tentacle-{FullSemVer}-{framework}-{runtimeId}.zip");
+    }
 
     [PublicAPI]
     Target PackWindowsInstallers => _ => _
@@ -204,12 +220,17 @@ partial class Build
                 FileSystemTasks.EnsureExistingDirectory(installerDirectory);
                 FileSystemTasks.EnsureCleanDirectory(installerDirectory);
 
-                if (framework != NetCore)
+                if (framework == NetFramework)
                 {
                     (BuildDirectory / "Tentacle" / framework / "win").GlobFiles("*")
                         .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, installerDirectory, FileExistsPolicy.Overwrite));
 
                     (BuildDirectory / "Octopus.Manager.Tentacle" / framework / "win").GlobFiles("*")
+                        .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, installerDirectory, FileExistsPolicy.Overwrite));
+                }
+                else if (framework == NetCoreWindows)
+                {
+                    (BuildDirectory / "Octopus.Manager.Tentacle" / framework / $"win-{platform}").GlobFiles("*")
                         .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, installerDirectory, FileExistsPolicy.Overwrite));
                 }
                 else
@@ -278,6 +299,10 @@ partial class Build
                     {
                         platformString = platform == MSBuildTargetPlatform.x64 ? "-x64" : "";
                     }
+                    else if (framework == NetCoreWindows)
+                    {
+                        platformString = $"-{NetCoreWindows}-win" + (platform == MSBuildTargetPlatform.x64 ? "-x64" : "-x86");
+                    }
                     else
                     {
                         platformString = $"-{NetCore}-win" + (platform == MSBuildTargetPlatform.x64 ? "-x64" : "-x86");
@@ -300,6 +325,9 @@ partial class Build
 
             PackWindowsInstallers(MSBuildTargetPlatform.x64, wixNugetInstalledPackage.Directory, NetCore, "NetCore");
             PackWindowsInstallers(MSBuildTargetPlatform.x86, wixNugetInstalledPackage.Directory, NetCore, "NetCore");
+            
+            PackWindowsInstallers(MSBuildTargetPlatform.x64, wixNugetInstalledPackage.Directory, NetCoreWindows, "NetCoreWindows");
+            PackWindowsInstallers(MSBuildTargetPlatform.x86, wixNugetInstalledPackage.Directory, NetCoreWindows, "NetCoreWindows");
         });
 
     [PublicAPI]
