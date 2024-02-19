@@ -8,17 +8,30 @@
     <OutputPath>bin</OutputPath>
     <OutputType>WinExe</OutputType>
     <PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
-    <RuntimeIdentifiers>win</RuntimeIdentifiers>
     <UseWindowsForms>true</UseWindowsForms>
     <UseWPF>true</UseWPF>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>   
-    <TargetFrameworks>net48;net6.0-windows</TargetFrameworks>   
+    <TargetFrameworks>net48;net6.0-windows</TargetFrameworks>
+    <SelfContained>false</SelfContained>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Properties\Icon.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
+
+  <Choose>
+    <When Condition="'$(TargetFramework)' == 'net48'">
+      <PropertyGroup>
+        <RuntimeIdentifiers>win</RuntimeIdentifiers><!-- This is AnyCPU -->
+      </PropertyGroup>
+    </When>
+    <When Condition="'$(TargetFramework)' == 'net6.0-windows'">
+      <PropertyGroup>
+        <RuntimeIdentifiers>win-x86;win-x64;</RuntimeIdentifiers><!-- This is AnyCPU -->
+      </PropertyGroup>
+    </When>
+  </Choose>
 
   <ItemGroup>
     <Compile Include="..\Solution Items\SolutionInfo.cs">
