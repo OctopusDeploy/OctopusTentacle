@@ -33,6 +33,7 @@
                     <StackPanel Width="400" HorizontalAlignment="Left">
 
                         <TextBox Text="{Binding Path=OctopusServerUrl, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Name="OctopusServerUrlTextBox" Margin="0,10,0,20" materialDesign:ValidationAssist.Background="Transparent" materialDesign:HintAssist.Hint="Octopus Server URL"/>
+                        <TextBox Text="{Binding Path=ServerCommsPort, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Name="ServerCommsPortTextBox" Margin="0,10,0,20" materialDesign:ValidationAssist.Background="Transparent" materialDesign:HintAssist.Hint="Server Communications Port"/>
 
 
                         <ComboBox
