@@ -12,7 +12,7 @@
   </extensions>
 
   <variable name="appName" value="Octopus Tentacle" />
-  <variable name="messageLayout" value="${message}${onexception:${newline}${exception:format=ToString}}"/>
+  <variable name="messageLayout" value="${longdate} | ${message}${onexception:${newline}${exception:format=ToString}}"/>
   <variable name="normalLayout" value="${longdate}  ${processid:padding=5}  ${threadid:padding=5} ${uppercase:${level}:padding=5}  ${messageLayout}"/>
   <variable name="logLevel" value="Info" />
 
