@@ -63,6 +63,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support.PendingRequestQueueFactorie
 
                 return await queueAndWait;
             }
+
+            public ValueTask DisposeAsync()
+            {
+                return inner.DisposeAsync();
+            }
         }
     }
 }
