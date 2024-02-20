@@ -479,11 +479,11 @@ partial class Build
 
     void BuildAndPushOrLoadKubernetesTentacleContainerImage(bool push, bool load, string? host = null)
     {
-        host = host is not null ? $"{host}/" : null;
+        var hostPrefix = host is not null ? $"{host}/" : string.Empty;
         DockerTasks.DockerBuildxBuild(settings =>
             settings.AddBuildArg($"BUILD_NUMBER={FullSemVer}", $"BUILD_DATE={DateTime.UtcNow:O}")
                 .SetPlatform("linux/arm64,linux/amd64")
-                .SetTag($"{host}octopusdeploy/kubernetes-tentacle:{FullSemVer}")
+                .SetTag($"{hostPrefix}octopusdeploy/kubernetes-tentacle:{FullSemVer}")
                 .SetFile("./docker/kubernetes-tentacle/Dockerfile")
                 .SetPath(RootDirectory)
                 .SetPush(push)
