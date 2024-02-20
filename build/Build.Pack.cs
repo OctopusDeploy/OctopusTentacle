@@ -230,6 +230,9 @@ partial class Build
                 }
                 else if (framework == NetCoreWindows)
                 {
+                    (BuildDirectory / "Tentacle" / framework / $"win-{platform}").GlobFiles("*")
+                        .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, installerDirectory, FileExistsPolicy.Overwrite));
+                    
                     (BuildDirectory / "Octopus.Manager.Tentacle" / framework / $"win-{platform}").GlobFiles("*")
                         .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, installerDirectory, FileExistsPolicy.Overwrite));
                 }
