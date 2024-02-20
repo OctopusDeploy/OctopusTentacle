@@ -98,6 +98,8 @@
             "type": "string",
             "enum": [
               "BuildAll",
+              "BuildAndLoadLocallyKubernetesTentacleContainerImage",
+              "BuildAndPushKubernetesTentacleContainerImage",
               "BuildLinux",
               "BuildOsx",
               "BuildWindows",
@@ -143,6 +145,8 @@
             "type": "string",
             "enum": [
               "BuildAll",
+              "BuildAndLoadLocallyKubernetesTentacleContainerImage",
+              "BuildAndPushKubernetesTentacleContainerImage",
               "BuildLinux",
               "BuildOsx",
               "BuildWindows",
