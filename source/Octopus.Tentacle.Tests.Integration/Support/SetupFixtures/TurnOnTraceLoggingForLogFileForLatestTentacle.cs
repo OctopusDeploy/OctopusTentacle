@@ -21,6 +21,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.SetupFixtures
             try
             {
                 LogManager.Configuration.Variables["logLevel"] = "Trace";
+                LogManager.ReconfigExistingLoggers();
             }
             catch (Exception e)
             {
