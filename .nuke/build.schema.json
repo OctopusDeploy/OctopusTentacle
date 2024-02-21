@@ -30,6 +30,12 @@
           "type": "boolean",
           "description": "Indicates to continue a previously failed build attempt"
         },
+        "DockerBuilder": {
+          "type": "string"
+        },
+        "DockerPlatform": {
+          "type": "string"
+        },
         "Help": {
           "type": "boolean",
           "description": "Shows the help text for this build assembly"
@@ -98,6 +104,7 @@
             "type": "string",
             "enum": [
               "BuildAll",
+              "BuildAndLoadLocalDebugKubernetesTentacleContainerImage",
               "BuildAndLoadLocallyKubernetesTentacleContainerImage",
               "BuildAndPushKubernetesTentacleContainerImage",
               "BuildLinux",
@@ -145,6 +152,7 @@
             "type": "string",
             "enum": [
               "BuildAll",
+              "BuildAndLoadLocalDebugKubernetesTentacleContainerImage",
               "BuildAndLoadLocallyKubernetesTentacleContainerImage",
               "BuildAndPushKubernetesTentacleContainerImage",
               "BuildLinux",
