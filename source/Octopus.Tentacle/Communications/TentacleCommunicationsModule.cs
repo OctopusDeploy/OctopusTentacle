@@ -31,7 +31,11 @@ namespace Octopus.Tentacle.Communications
                     tcpKeepAliveEnabled = true;
                 }
 
-                bool.TryParse(Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleUseRecommendedTimeoutsAndLimits), out var useRecommendedTimeoutsAndLimits);
+                if (!bool.TryParse(Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleUseRecommendedTimeoutsAndLimits), out var useRecommendedTimeoutsAndLimits))
+                {
+                    // Default to enabled if the environment variable is not provided
+                    useRecommendedTimeoutsAndLimits = true;
+                }
 
                 var halibutTimeoutsAndLimits = useRecommendedTimeoutsAndLimits 
                     ? HalibutTimeoutsAndLimits.RecommendedValues() 
