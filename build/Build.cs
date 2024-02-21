@@ -312,7 +312,7 @@ partial class Build : NukeBuild
         return new ModifiableFileWithRestoreContentsOnDispose(productWxsFilePath);
     }
 
-    void RunBuildFor(string framework, string? runtimeId)
+    void RunBuildFor(string framework, string runtimeId)
     {
         var configuration = $"Release-{framework}-{runtimeId}";
 

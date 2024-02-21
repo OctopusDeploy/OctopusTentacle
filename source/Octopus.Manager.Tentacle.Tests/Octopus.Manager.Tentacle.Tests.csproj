@@ -22,7 +22,7 @@
     </When>
     <When Condition="'$(TargetFramework)' == 'net6.0-windows'">
       <PropertyGroup>
-        <RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers><!-- This is AnyCPU -->
+        <RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
       </PropertyGroup>
     </When>
   </Choose>

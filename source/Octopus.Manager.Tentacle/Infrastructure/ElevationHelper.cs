@@ -18,7 +18,6 @@ namespace Octopus.Manager.Tentacle.Infrastructure
             {
                 // We removed this class in favour of using the application manifest for elevation... but then!
                 // See https://github.com/OctopusDeploy/Issues/issues/3875
-                //var fileName = Assembly.GetEntryAssembly().Location;
                 using (var currentProcess = Process.GetCurrentProcess())
                 {
                     var fileName = currentProcess.MainModule.FileName;
