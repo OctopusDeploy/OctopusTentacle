@@ -341,6 +341,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                                     },
                                     Env = new List<V1EnvVar>
                                     {
+                                        new(KubernetesConfig.NamespaceVariableName, KubernetesConfig.Namespace),
                                         new(KubernetesConfig.HelmReleaseNameVariableName, KubernetesConfig.HelmReleaseName),
                                         new(KubernetesConfig.HelmChartVersionVariableName, KubernetesConfig.HelmChartVersion),
                                         new(EnvironmentVariables.TentacleHome, $"/octopus"),

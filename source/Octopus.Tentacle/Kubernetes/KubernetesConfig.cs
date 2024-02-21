@@ -6,7 +6,8 @@ namespace Octopus.Tentacle.Kubernetes
     {
         const string EnvVarPrefix = "OCTOPUS__K8STENTACLE";
 
-        public static string Namespace => GetRequiredEnvVar($"{EnvVarPrefix}__NAMESPACE", "Unable to determine Kubernetes namespace.");
+        public static string NamespaceVariableName => $"{EnvVarPrefix}__NAMESPACE";
+        public static string Namespace => GetRequiredEnvVar(NamespaceVariableName, "Unable to determine Kubernetes namespace.");
         public static string JobServiceAccountName => GetRequiredEnvVar($"{EnvVarPrefix}__JOBSERVICEACCOUNTNAME", "Unable to determine Kubernetes Job service account name.");
         public static string JobVolumeYaml => GetRequiredEnvVar($"{EnvVarPrefix}__JOBVOLUMEYAML", "Unable to determine Kubernetes Job volume yaml.");
         public static bool UseJobs => bool.TryParse(Environment.GetEnvironmentVariable($"{EnvVarPrefix}__USEJOBS"), out var useJobs) && useJobs;
