@@ -133,7 +133,7 @@ partial class Build
         .Description("Builds and pushes the kubernetes tentacle multi-arch container image")
         .Executes(() =>
         {
-            BuildAndPushOrLoadKubernetesTentacleContainerImage(push: true, load: false);
+            BuildAndPushOrLoadKubernetesTentacleContainerImage(push: true, load: false, "docker.packages.octopushq.com");
         });
 
     [PublicAPI]
@@ -508,12 +508,13 @@ partial class Build
             $"tentacle-{FullSemVer}-{NetCore}-{runtimeId}.tar.gz");
     }
 
-    void BuildAndPushOrLoadKubernetesTentacleContainerImage(bool push, bool load)
+    void BuildAndPushOrLoadKubernetesTentacleContainerImage(bool push, bool load, string? host = null)
     {
+        var hostPrefix = host is not null ? $"{host}/" : string.Empty;
         DockerTasks.DockerBuildxBuild(settings =>
             settings.AddBuildArg($"BUILD_NUMBER={FullSemVer}", $"BUILD_DATE={DateTime.UtcNow:O}")
                 .SetPlatform("linux/arm64,linux/amd64")
-                .SetTag($"docker.packages.octopushq.com/octopusdeploy/kubernetes-tentacle:{FullSemVer}")
+                .SetTag($"{hostPrefix}octopusdeploy/kubernetes-tentacle:{FullSemVer}")
                 .SetFile("./docker/kubernetes-tentacle/Dockerfile")
                 .SetPath(RootDirectory)
                 .SetPush(push)

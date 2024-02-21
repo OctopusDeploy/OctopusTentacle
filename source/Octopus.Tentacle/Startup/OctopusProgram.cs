@@ -317,6 +317,7 @@ namespace Octopus.Tentacle.Startup
                 LogLevel.AllLevels.Any(l => l.Name == logLevel))
             {
                 LogManager.Configuration.Variables["logLevel"] = logLevel;
+                LogManager.ReconfigExistingLoggers();
             }
 
             AssertLoggingConfigurationIsCorrect();
