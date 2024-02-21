@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using k8s;
@@ -14,6 +15,8 @@ namespace Octopus.Tentacle.Kubernetes
         Task Delete(ScriptTicket scriptTicket, CancellationToken cancellationToken);
         Task Watch(ScriptTicket scriptTicket, Func<V1Job, bool> onChange, Action<Exception> onError, CancellationToken cancellationToken);
         Task SuspendJob(ScriptTicket scriptTicket, CancellationToken cancellationToken);
+        Task WatchAllJobsAsync(Func<WatchEventType, V1Job, Task> onChange, Action<Exception> onError, CancellationToken cancellationToken);
+        Task<V1JobList> ListAllJobsAsync(CancellationToken cancellationToken);
     }
 
     public class KubernetesJobService : KubernetesService, IKubernetesJobService
@@ -60,6 +63,27 @@ namespace Octopus.Tentacle.Kubernetes
                 //we stop watching when told to or if this is deleted
                 if (stopWatching || type is WatchEventType.Deleted)
                     break;
+            }
+        }
+
+        public async Task<V1JobList> ListAllJobsAsync(CancellationToken cancellationToken)
+        {
+            return await Client.ListNamespacedJobAsync(KubernetesConfig.Namespace,
+                labelSelector: OctopusLabels.ScriptTicketId,
+                cancellationToken: cancellationToken);
+        }
+
+        public async Task WatchAllJobsAsync(Func<WatchEventType, V1Job, Task> onChange, Action<Exception> onError, CancellationToken cancellationToken)
+        {
+            using var response = Client.BatchV1.ListNamespacedJobWithHttpMessagesAsync(
+                KubernetesConfig.Namespace,
+                labelSelector: OctopusLabels.ScriptTicketId,
+                watch: true,
+                cancellationToken: cancellationToken);
+
+            await foreach (var (type, job) in response.WatchAsync<V1Job, V1JobList>(onError, cancellationToken: cancellationToken))
+            {
+                await onChange(type, job);
             }
         }
 

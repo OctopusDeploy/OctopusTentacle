@@ -14,14 +14,16 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
         readonly IKubernetesSecretService secretService;
         readonly IKubernetesJobContainerResolver containerResolver;
         readonly IApplicationInstanceSelector appInstanceSelector;
+        readonly IKubernetesJobStatusProvider jobsStatusProvider;
         readonly ISystemLog log;
 
-        public KubernetesJobScriptExecutor(IKubernetesJobService jobService, IKubernetesSecretService secretService, IKubernetesJobContainerResolver containerResolver, IApplicationInstanceSelector appInstanceSelector, ISystemLog log)
+        public KubernetesJobScriptExecutor(IKubernetesJobService jobService, IKubernetesSecretService secretService, IKubernetesJobContainerResolver containerResolver, IApplicationInstanceSelector appInstanceSelector, IKubernetesJobStatusProvider jobsStatusProvider, ISystemLog log)
         {
             this.jobService = jobService;
             this.secretService = secretService;
             this.containerResolver = containerResolver;
             this.appInstanceSelector = appInstanceSelector;
+            this.jobsStatusProvider = jobsStatusProvider;
             this.log = log;
         }
 
@@ -36,6 +38,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                 command.TaskId, log,
                 scriptStateStore,
                 jobService,
+                jobsStatusProvider,
                 secretService,
                 containerResolver,
                 appInstanceSelector,

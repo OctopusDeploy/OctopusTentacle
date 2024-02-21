@@ -10,6 +10,7 @@ using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Diagnostics;
+using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Startup;
 using Octopus.Tentacle.Util;
 using Octopus.Time;
@@ -26,6 +27,7 @@ namespace Octopus.Tentacle.Tests.Commands
         IHomeConfiguration home = null!;
         IApplicationInstanceSelector selector = null!;
         IWorkspaceCleanerTask workspaceCleanerTask = null!;
+        IKubernetesJobMonitorTask kubernetesJobMonitorTask = null!;
 
         [SetUp]
         public override void SetUp()
@@ -39,6 +41,7 @@ namespace Octopus.Tentacle.Tests.Commands
             home = Substitute.For<IHomeConfiguration>();
             sleep = Substitute.For<ISleep>();
             workspaceCleanerTask = Substitute.For<IWorkspaceCleanerTask>();
+            kubernetesJobMonitorTask = Substitute.For<IKubernetesJobMonitorTask>();
 
             Command = new RunAgentCommand(
                 new Lazy<IHalibutInitializer>(() => halibut),
@@ -52,7 +55,8 @@ namespace Octopus.Tentacle.Tests.Commands
                 Substitute.For<IWindowsLocalAdminRightsChecker>(),
                 new AppVersion(GetType().Assembly),
                 Substitute.For<ILogFileOnlyLogger>(),
-                new Lazy<IWorkspaceCleanerTask>(() => workspaceCleanerTask));
+                new Lazy<IWorkspaceCleanerTask>(() => workspaceCleanerTask),
+                new Lazy<IKubernetesJobMonitorTask>(() => kubernetesJobMonitorTask));
 
             selector.Current.Returns(new ApplicationInstanceConfiguration("MyTentacle", null, null, null));
         }

@@ -35,6 +35,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
         readonly ILog log;
         readonly IScriptStateStore stateStore;
         readonly IKubernetesJobService jobService;
+        readonly IKubernetesJobStatusProvider jobStatusProvider;
         readonly IKubernetesSecretService secretService;
         readonly IKubernetesJobContainerResolver containerResolver;
         readonly KubernetesJobScriptExecutionContext executionContext;
@@ -54,6 +55,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             ILog log,
             IScriptStateStore stateStore,
             IKubernetesJobService jobService,
+            IKubernetesJobStatusProvider jobStatusProvider,
             IKubernetesSecretService secretService,
             IKubernetesJobContainerResolver containerResolver,
             IApplicationInstanceSelector appInstanceSelector,
@@ -66,6 +68,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             this.log = log;
             this.stateStore = stateStore;
             this.jobService = jobService;
+            this.jobStatusProvider = jobStatusProvider;
             this.secretService = secretService;
             this.containerResolver = containerResolver;
             this.executionContext = executionContext;
@@ -74,6 +77,8 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             instanceName = appInstanceSelector.Current.InstanceName;
 
             outputStreamWriter = new KubernetesJobOutputStreamWriter(workspace);
+
+            State = ProcessState.Pending;
 
             // this doesn't change, so build it once
             jobName = jobService.BuildJobName(scriptTicket);
@@ -182,26 +187,23 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
         async Task<int> CheckIfJobHasCompleted(CancellationTokenSource jobCompletionCancellationTokenSource)
         {
             var resultStatusCode = 0;
-            await jobService.Watch(scriptTicket, job =>
+            while (!scriptCancellationToken.IsCancellationRequested)
             {
-                var firstCondition = job.Status?.Conditions?.FirstOrDefault();
-                switch (firstCondition)
+                var status = jobStatusProvider.TryGetJobStatus(scriptTicket);
+                if (status is not null && status.Success)
                 {
-                    case { Status: "True", Type: "Complete" }:
-                        resultStatusCode = 0;
-                        return true;
-                    case { Status: "True", Type: "Failed" }:
-                        resultStatusCode = 1;
-                        return true;
-                    default:
-                        //continue watching
-                        return false;
+                    resultStatusCode = 0;
+                    break;
                 }
-            }, ex =>
-            {
-                log.Error(ex);
-                resultStatusCode = 0;
-            }, CancellationToken.None);
+
+                if (status is not null && status.Failed)
+                {
+                    resultStatusCode = status.ExitCode!.Value;
+                    break;
+                }
+
+                await Task.Delay(250, scriptCancellationToken);
+            }
 
             //if the job was killed by cancellation, then we need to change the exit code
             if (scriptCancellationToken.IsCancellationRequested)
@@ -312,7 +314,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                     Labels = new Dictionary<string, string>
                     {
                         ["octopus.com/serverTaskId"] = taskId,
-                        ["octopus.com/scriptTicketId"] = scriptTicket.TaskId
+                        [OctopusLabels.ScriptTicketId] = scriptTicket.TaskId
                     }
                 },
                 Spec = new V1JobSpec

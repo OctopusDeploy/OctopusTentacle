@@ -11,6 +11,10 @@ namespace Octopus.Tentacle.Kubernetes
             builder.RegisterType<KubernetesJobContainerResolver>().As<IKubernetesJobContainerResolver>().SingleInstance();
             builder.RegisterType<KubernetesConfigMapService>().As<IKubernetesConfigMapService>().SingleInstance();
             builder.RegisterType<KubernetesSecretService>().As<IKubernetesSecretService>().SingleInstance();
+            builder.RegisterType<KubernetesPodService>().As<IKubernetesPodService>().SingleInstance();
+
+            builder.RegisterType<KubernetesJobMonitorTask>().As<IKubernetesJobMonitorTask>().SingleInstance();
+            builder.RegisterType<KubernetesJobMonitor>().As<IKubernetesJobMonitor>().As<IKubernetesJobStatusProvider>().SingleInstance();
 
 #if DEBUG
             builder.RegisterType<LocalMachineKubernetesClientConfigProvider>().As<IKubernetesClientConfigProvider>().SingleInstance();

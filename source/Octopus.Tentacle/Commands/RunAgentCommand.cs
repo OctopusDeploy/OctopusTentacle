@@ -7,6 +7,7 @@ using Octopus.Diagnostics;
 using Octopus.Tentacle.Communications;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
+using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Maintenance;
 using Octopus.Tentacle.Startup;
 using Octopus.Tentacle.Util;
@@ -26,6 +27,7 @@ namespace Octopus.Tentacle.Commands
         readonly Lazy<IProxyConfiguration> proxyConfiguration;
         readonly Lazy<IProxyInitializer> proxyInitializer;
         readonly Lazy<IWorkspaceCleanerTask> workspaceCleanerTask;
+        readonly Lazy<IKubernetesJobMonitorTask> kubernetesJobMonitorTask;
 
         readonly ISleep sleep;
         readonly ISystemLog log;
@@ -35,6 +37,7 @@ namespace Octopus.Tentacle.Commands
         int wait;
         bool halibutHasStarted;
         bool workspaceCleanerHasStarted;
+        bool kubernetesJobMonitorHasStarted;
 
         public override bool CanRunAsService => true;
 
@@ -50,7 +53,8 @@ namespace Octopus.Tentacle.Commands
             IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker,
             AppVersion appVersion,
             ILogFileOnlyLogger logFileOnlyLogger,
-            Lazy<IWorkspaceCleanerTask> workspaceCleanerTask) : base(selector, log, logFileOnlyLogger)
+            Lazy<IWorkspaceCleanerTask> workspaceCleanerTask,
+            Lazy<IKubernetesJobMonitorTask> kubernetesJobMonitorTask) : base(selector, log, logFileOnlyLogger)
         {
             this.halibut = halibut;
             this.configuration = configuration;
@@ -63,6 +67,7 @@ namespace Octopus.Tentacle.Commands
             this.windowsLocalAdminRightsChecker = windowsLocalAdminRightsChecker;
             this.appVersion = appVersion;
             this.workspaceCleanerTask = workspaceCleanerTask;
+            this.kubernetesJobMonitorTask = kubernetesJobMonitorTask;
 
             Options.Add("wait=", "Delay (ms) before starting", arg => wait = int.Parse(arg));
             Options.Add("console", "Don't attempt to run as a service, even if the user is non-interactive", v =>
@@ -129,6 +134,12 @@ namespace Octopus.Tentacle.Commands
             workspaceCleanerTask.Value.Start();
             workspaceCleanerHasStarted = true;
 
+            if (PlatformDetection.Kubernetes.IsRunningInKubernetes)
+            {
+                kubernetesJobMonitorTask.Value.Start();
+                kubernetesJobMonitorHasStarted = true;
+            }
+
             Runtime.WaitForUserToExit();
         }
 
@@ -154,6 +165,11 @@ namespace Octopus.Tentacle.Commands
             if (workspaceCleanerHasStarted)
             {
                 workspaceCleanerTask.Value.Stop();
+            }
+
+            if (kubernetesJobMonitorHasStarted)
+            {
+                kubernetesJobMonitorTask.Value.Stop();
             }
         }
     }
