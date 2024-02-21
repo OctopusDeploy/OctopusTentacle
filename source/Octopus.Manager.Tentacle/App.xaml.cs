@@ -34,12 +34,6 @@ namespace Octopus.Manager.Tentacle
             var systemLog = new SystemLog();
             UnhandledErrorTrapper.Initialize(systemLog);
 
-            if (!ElevationHelper.IsElevated)
-            {
-                ElevationHelper.Elevate(e.Args);
-                Environment.Exit(0);
-            }
-
             ServicePointManager.SecurityProtocol =
                 SecurityProtocolType.Tls
                 | SecurityProtocolType.Tls11
