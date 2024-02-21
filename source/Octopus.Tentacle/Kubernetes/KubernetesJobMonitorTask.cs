@@ -37,7 +37,7 @@ namespace Octopus.Tentacle.Kubernetes
                     return;
                 }
 
-                monitorTask = jobMonitor.StartAsync(cancellationTokenSource.Token);
+                monitorTask = Task.Run(() => jobMonitor.StartAsync(cancellationTokenSource.Token));
             }
         }
 
