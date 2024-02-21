@@ -13,7 +13,12 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>   
     <TargetFrameworks>net48;net6.0-windows</TargetFrameworks>
-    <SelfContained>false</SelfContained>
+    <!-- 
+      Suppressing those validations error due to validation bugs in .NET 6.
+      This can be removed when we upgrade to .NET7 or above.
+      More info: https://octopusdeploy.slack.com/archives/C039PL7PCUE/p1708490934364109
+    -->
+    <ValidateExecutableReferencesMatchSelfContained>false</ValidateExecutableReferencesMatchSelfContained>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Properties\Icon.ico</ApplicationIcon>
