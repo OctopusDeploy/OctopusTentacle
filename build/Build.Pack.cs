@@ -273,7 +273,7 @@ partial class Build
 
             void BuildMsiInstallerForPlatform(MSBuildTargetPlatform platform, AbsolutePath wixNugetPackagePath, string framework, string frameworkName)
             {
-                Logging.InBlock($"Building {platform} installer", () =>
+                Logging.InBlock($"Building {framework}-{platform} installer", () =>
                 {
                     var tentacleInstallerWixProject = RootDirectory / "installer" / "Octopus.Tentacle.Installer" / "Octopus.Tentacle.Installer.wixproj";
                     using var wixProjectFile = new ModifiableFileWithRestoreContentsOnDispose(tentacleInstallerWixProject);
