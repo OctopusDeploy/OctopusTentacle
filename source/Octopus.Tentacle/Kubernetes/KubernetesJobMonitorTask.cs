@@ -37,6 +37,7 @@ namespace Octopus.Tentacle.Kubernetes
                     return;
                 }
 
+                log.Info("Starting Kubernetes Job Monitor");
                 monitorTask = Task.Run(() => jobMonitor.StartAsync(cancellationTokenSource.Token));
             }
         }
@@ -45,11 +46,11 @@ namespace Octopus.Tentacle.Kubernetes
         {
             lock (LockObj)
             {
-
                 if (monitorTask is null) return;
 
                 try
                 {
+                    log.Info("Stopping Kubernetes Job Monitor");
                     cancellationTokenSource.Cancel();
 
                     monitorTask.Wait();
@@ -60,6 +61,7 @@ namespace Octopus.Tentacle.Kubernetes
                 }
                 finally
                 {
+                    log.Info("Stopped Kubernetes Job Monitor");
                     monitorTask = null;
                 }
             }
@@ -67,6 +69,7 @@ namespace Octopus.Tentacle.Kubernetes
 
         public void Dispose()
         {
+            log.Info("Disposing of Kubernetes Job Monitor");
             Stop();
             cancellationTokenSource.Dispose();
         }

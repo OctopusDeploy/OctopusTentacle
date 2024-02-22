@@ -187,9 +187,10 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
         async Task<int> CheckIfJobHasCompleted(CancellationTokenSource jobCompletionCancellationTokenSource)
         {
             var resultStatusCode = 0;
+            JobStatus? status = null;
             while (!scriptCancellationToken.IsCancellationRequested)
             {
-                var status = jobStatusProvider.TryGetJobStatus(scriptTicket);
+                status = jobStatusProvider.TryGetJobStatus(scriptTicket);
                 if (status is not null && status.Success)
                 {
                     resultStatusCode = 0;
@@ -212,6 +213,8 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             }
 
             jobCompletionCancellationTokenSource.Cancel();
+
+            log.Verbose($"Job {jobName} completed. Status: {status}");
 
             return resultStatusCode;
         }

@@ -37,36 +37,43 @@ namespace Octopus.Tentacle.Kubernetes
 
         async Task IKubernetesJobMonitor.StartAsync(CancellationToken cancellationToken)
         {
-            //initially load all the jobs and their status's
-            await InitialLoadAsync(cancellationToken);
-
             await jobService.WatchAllJobsAsync(async (type, job) =>
                 {
-                    await Task.CompletedTask;
-
-                    var scriptTicket = job.GetScriptTicket();
-
-                    switch (type)
+                    try
                     {
-                        case WatchEventType.Added or WatchEventType.Modified:
+                        log.Verbose($"Received {type} event for job {job.Name()}");
+
+                        var scriptTicket = job.GetScriptTicket();
+
+                        switch (type)
                         {
-                            if (!jobStatusLookup.TryGetValue(scriptTicket, out var status))
+                            case WatchEventType.Added or WatchEventType.Modified:
                             {
-                                status = new JobStatus(job.GetScriptTicket());
-                                jobStatusLookup[scriptTicket] = status;
+                                if (!jobStatusLookup.TryGetValue(scriptTicket, out var status))
+                                {
+                                    status = new JobStatus(job.GetScriptTicket());
+                                    jobStatusLookup[scriptTicket] = status;
+                                }
+
+                                await status.UpdateAsync(job, podService, cancellationToken);
+                                log.Verbose($"Updated job {job.Name()} status. {status}");
+
+                                break;
                             }
+                            case WatchEventType.Deleted:
+                                log.Verbose($"Removed {type} job {job.Name()} status");
 
-                            await status.UpdateAsync(job, podService, cancellationToken);
-
-                            break;
+                                //if the job is deleted, remove it
+                                jobStatusLookup.Remove(scriptTicket);
+                                break;
+                            default:
+                                log.Warn($"Received watch event type {type} for job {job.Name()}. Ignoring as we don't need it");
+                                break;
                         }
-                        case WatchEventType.Deleted:
-                            //if the job is deleted, remove it
-                            jobStatusLookup.Remove(scriptTicket);
-                            break;
-                        default:
-                            log.Warn($"Received watch event type {type} for job {job.Name()}. Ignoring");
-                            break;
+                    }
+                    catch (Exception e)
+                    {
+                        log.Error(e, $"Failed to process event {type} for job {job.Name()}.");
                     }
                 }, ex =>
                 {
@@ -77,18 +84,6 @@ namespace Octopus.Tentacle.Kubernetes
 
         JobStatus? IKubernetesJobStatusProvider.TryGetJobStatus(ScriptTicket scriptTicket)
             => jobStatusLookup.TryGetValue(scriptTicket, out var status) ? status : null;
-
-        async Task InitialLoadAsync(CancellationToken cancellationToken)
-        {
-            var allJobs = await jobService.ListAllJobsAsync(cancellationToken);
-            foreach (var job in allJobs.Items)
-            {
-                var status = new JobStatus(job.GetScriptTicket());
-                await status.UpdateAsync(job, podService, cancellationToken);
-
-                jobStatusLookup[status.ScriptTicket] = status;
-            }
-        }
     }
 
     public class JobStatus
@@ -129,6 +124,9 @@ namespace Octopus.Tentacle.Kubernetes
                     break;
             }
         }
+
+        public override string ToString()
+            => $"ScriptTicket: {ScriptTicket}, Success: {Success}, Failed: {Failed}, ExitCode: {ExitCode}";
     }
 
     public static class V1JobExtensions
