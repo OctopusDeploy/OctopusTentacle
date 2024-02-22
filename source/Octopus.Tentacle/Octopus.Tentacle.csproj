@@ -46,10 +46,10 @@
 		<DefineConstants>$(DefineConstants);HTTP_CLIENT_SUPPORTS_SSL_OPTIONS;REQUIRES_EXPLICIT_LOG_CONFIG;REQUIRES_CODE_PAGE_PROVIDER;USER_INTERACTIVE_DOES_NOT_WORK;DEFAULT_PROXY_IS_NOT_AVAILABLE;HAS_NULLABLE_REF_TYPES</DefineConstants>
 	</PropertyGroup>
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
-		<PackageReference Include="KubernetesClient.Classic" Version="10.1.19" />
+		<PackageReference Include="KubernetesClient.Classic" Version="13.0.26" />
 	</ItemGroup>
 	<ItemGroup Condition="'$(TargetFramework)' == 'net6.0' Or '$(TargetFramework)' == 'net6.0-windows'">
-		<PackageReference Include="KubernetesClient" Version="10.1.19" />
+		<PackageReference Include="KubernetesClient" Version="13.0.26" />
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Octopus.Client" Version="14.3.1277" />
