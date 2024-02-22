@@ -105,7 +105,7 @@ namespace Octopus.Tentacle.Kubernetes
                 jobStatusLookup[status.ScriptTicket] = status;
             }
 
-            log.Verbose($"Preloaded job statuses. ResourceVersion: {allJobs.ResourceVersion()}");
+            log.Verbose($"Preloaded {allJobs.Items.Count} job statuses. ResourceVersion: {allJobs.ResourceVersion()}");
 
             //this is the resource version for the list. We use this to start the watch at this particular point
             return allJobs.ResourceVersion();
