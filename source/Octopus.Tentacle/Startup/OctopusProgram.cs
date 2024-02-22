@@ -11,6 +11,7 @@ using Autofac;
 using Autofac.Core;
 using NLog;
 using NLog.Config;
+using NLog.Layouts;
 using NLog.Targets;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration;
@@ -311,6 +312,14 @@ namespace Octopus.Tentacle.Startup
             LogManager.ThrowConfigExceptions = true;
             LogManager.Configuration = new XmlLoggingConfiguration(nLogFile);
 #endif
+            //if we are running in kubernetes, make the console log more helpful
+            if (PlatformDetection.Kubernetes.IsRunningInKubernetes)
+            {
+                var consoleLayout = new SimpleLayout("${longdate}  ${uppercase:${level}:padding=5}  ${message}${onexception:${newline}${exception:format=ToString}}");
+                LogManager.Configuration.FindTargetByName<ColoredConsoleTarget>("stdout").Layout = consoleLayout;
+                LogManager.Configuration.FindTargetByName<ColoredConsoleTarget>("stderr").Layout = consoleLayout;
+            }
+
             SystemLog.Appenders.Add(new NLogAppender());
 
             if (Environment.GetEnvironmentVariable("OCTOPUS__TENTACLE__LOGLEVEL") is { } logLevel &&
@@ -384,7 +393,7 @@ namespace Octopus.Tentacle.Startup
             }
             if (!string.IsNullOrWhiteSpace(configFile))
                 return new StartUpConfigFileInstanceRequest(configFile);
-            
+
             return new StartUpDynamicInstanceRequest();
         }
 
