@@ -1,4 +1,4 @@
-﻿// ReSharper disable RedundantUsingDirective
+// ReSharper disable RedundantUsingDirective
 
 using System;
 using System.Collections.Generic;
@@ -325,9 +325,6 @@ partial class Build
 
             PackWindowsInstallers(MSBuildTargetPlatform.x64, wixNugetInstalledPackage.Directory, NetFramework, "NetFramework");
             PackWindowsInstallers(MSBuildTargetPlatform.x86, wixNugetInstalledPackage.Directory, NetFramework, "NetFramework");
-
-            PackWindowsInstallers(MSBuildTargetPlatform.x64, wixNugetInstalledPackage.Directory, NetCore, "NetCore");
-            PackWindowsInstallers(MSBuildTargetPlatform.x86, wixNugetInstalledPackage.Directory, NetCore, "NetCore");
             
             PackWindowsInstallers(MSBuildTargetPlatform.x64, wixNugetInstalledPackage.Directory, NetCoreWindows, "NetCoreWindows");
             PackWindowsInstallers(MSBuildTargetPlatform.x86, wixNugetInstalledPackage.Directory, NetCoreWindows, "NetCoreWindows");
