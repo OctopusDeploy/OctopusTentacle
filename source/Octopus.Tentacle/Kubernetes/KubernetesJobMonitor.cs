@@ -37,49 +37,78 @@ namespace Octopus.Tentacle.Kubernetes
 
         async Task IKubernetesJobMonitor.StartAsync(CancellationToken cancellationToken)
         {
-            await jobService.WatchAllJobsAsync(async (type, job) =>
-                {
-                    try
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                //initially load all the jobs and their status's
+                var initialResourceVersion = await InitialLoadAsync(cancellationToken);
+
+                //we start the watch from the resource version we initially loaded. This means we receive w
+                await jobService.WatchAllJobsAsync(initialResourceVersion,async (type, job) =>
                     {
-                        log.Verbose($"Received {type} event for job {job.Name()}");
-
-                        var scriptTicket = job.GetScriptTicket();
-
-                        switch (type)
+                        try
                         {
-                            case WatchEventType.Added or WatchEventType.Modified:
+                            log.Verbose($"Received {type} event for job {job.Name()}");
+
+                            var scriptTicket = job.GetScriptTicket();
+
+                            switch (type)
                             {
-                                if (!jobStatusLookup.TryGetValue(scriptTicket, out var status))
+                                case WatchEventType.Added or WatchEventType.Modified:
                                 {
-                                    status = new JobStatus(job.GetScriptTicket());
-                                    jobStatusLookup[scriptTicket] = status;
+                                    if (!jobStatusLookup.TryGetValue(scriptTicket, out var status))
+                                    {
+                                        status = new JobStatus(job.GetScriptTicket());
+                                        jobStatusLookup[scriptTicket] = status;
+                                    }
+
+                                    await status.UpdateAsync(job, podService, cancellationToken);
+                                    log.Verbose($"Updated job {job.Name()} status. {status}");
+
+                                    break;
                                 }
+                                case WatchEventType.Deleted:
+                                    log.Verbose($"Removed {type} job {job.Name()} status");
 
-                                await status.UpdateAsync(job, podService, cancellationToken);
-                                log.Verbose($"Updated job {job.Name()} status. {status}");
-
-                                break;
+                                    //if the job is deleted, remove it
+                                    jobStatusLookup.Remove(scriptTicket);
+                                    break;
+                                default:
+                                    log.Warn($"Received watch event type {type} for job {job.Name()}. Ignoring as we don't need it");
+                                    break;
                             }
-                            case WatchEventType.Deleted:
-                                log.Verbose($"Removed {type} job {job.Name()} status");
-
-                                //if the job is deleted, remove it
-                                jobStatusLookup.Remove(scriptTicket);
-                                break;
-                            default:
-                                log.Warn($"Received watch event type {type} for job {job.Name()}. Ignoring as we don't need it");
-                                break;
                         }
-                    }
-                    catch (Exception e)
+                        catch (Exception e)
+                        {
+                            log.Error(e, $"Failed to process event {type} for job {job.Name()}.");
+                        }
+                    }, ex =>
                     {
-                        log.Error(e, $"Failed to process event {type} for job {job.Name()}.");
-                    }
-                }, ex =>
-                {
-                    log.Error(ex, "An unhandled error occured in monitoring the jobs");
-                }, cancellationToken
-            );
+                        log.Error(ex, "An unhandled error occured in monitoring the jobs");
+                    }, cancellationToken
+                );
+            }
+        }
+
+        async Task<string> InitialLoadAsync(CancellationToken cancellationToken)
+        {
+            log.Verbose("Preloading job statuses");
+            //clear the status'
+            jobStatusLookup.Clear();
+
+            var allJobs = await jobService.ListAllJobsAsync(cancellationToken);
+            foreach (var job in allJobs.Items)
+            {
+                var status = new JobStatus(job.GetScriptTicket());
+                await status.UpdateAsync(job, podService, cancellationToken);
+
+                log.Verbose($"Preloaded job {job.Name()}. {status}");
+                jobStatusLookup[status.ScriptTicket] = status;
+            }
+
+            log.Verbose($"Preloaded job statuses. ResourceVersion: {allJobs.ResourceVersion()}");
+
+            //this is the resource version for the list. We use this to start the watch at this particular point
+            return allJobs.ResourceVersion();
         }
 
         JobStatus? IKubernetesJobStatusProvider.TryGetJobStatus(ScriptTicket scriptTicket)

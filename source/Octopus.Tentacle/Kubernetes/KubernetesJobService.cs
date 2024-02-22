@@ -15,7 +15,7 @@ namespace Octopus.Tentacle.Kubernetes
         Task Delete(ScriptTicket scriptTicket, CancellationToken cancellationToken);
         Task Watch(ScriptTicket scriptTicket, Func<V1Job, bool> onChange, Action<Exception> onError, CancellationToken cancellationToken);
         Task SuspendJob(ScriptTicket scriptTicket, CancellationToken cancellationToken);
-        Task WatchAllJobsAsync(Func<WatchEventType, V1Job, Task> onChange, Action<Exception> onError, CancellationToken cancellationToken);
+        Task WatchAllJobsAsync(string initialResourceVersion, Func<WatchEventType, V1Job, Task> onChange, Action<Exception> onError, CancellationToken cancellationToken);
         Task<V1JobList> ListAllJobsAsync(CancellationToken cancellationToken);
     }
 
@@ -73,15 +73,27 @@ namespace Octopus.Tentacle.Kubernetes
                 cancellationToken: cancellationToken);
         }
 
-        public async Task WatchAllJobsAsync(Func<WatchEventType, V1Job, Task> onChange, Action<Exception> onError, CancellationToken cancellationToken)
+        public async Task WatchAllJobsAsync(string initialResourceVersion, Func<WatchEventType, V1Job, Task> onChange, Action<Exception> onError, CancellationToken cancellationToken)
         {
             using var response = Client.BatchV1.ListNamespacedJobWithHttpMessagesAsync(
                 KubernetesConfig.Namespace,
                 labelSelector: OctopusLabels.ScriptTicketId,
+                resourceVersion: initialResourceVersion,
                 watch: true,
                 cancellationToken: cancellationToken);
 
-            await foreach (var (type, job) in response.WatchAsync<V1Job, V1JobList>(onError, cancellationToken: cancellationToken))
+            var watchErrorCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+            Action<Exception> internalOnError = ex =>
+            {
+                //We cancel the watch explicitly (so it can be restarted)
+                watchErrorCancellationTokenSource.Cancel();
+
+                //notify there was an error
+                onError(ex);
+            };
+
+            await foreach (var (type, job) in response.WatchAsync<V1Job, V1JobList>(internalOnError, cancellationToken: watchErrorCancellationTokenSource.Token))
             {
                 await onChange(type, job);
             }

@@ -214,7 +214,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
 
             jobCompletionCancellationTokenSource.Cancel();
 
-            log.Verbose($"Job {jobName} completed. Status: {status}");
+            log.Verbose($"Job {jobName} completed.{status}");
 
             return resultStatusCode;
         }
