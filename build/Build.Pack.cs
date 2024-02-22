@@ -23,8 +23,13 @@ partial class Build
     //We don't sign linux packages when building locally
     readonly bool SignLinuxPackages = !IsLocalBuild;
 
-    [Parameter(Name = "DockerBuilder")] string? DockerBuildxBuilder;
-    [Parameter(Name = "DockerPlatform")] string DockerPlatform = "linux/arm64,linux/amd64";
+    [Parameter("Used to set a custom docker builder when executing DockerBuildxBuild tasks",
+        Name = "DockerBuilder")]
+    string? DockerBuildxBuilder;
+
+    [Parameter("Specifies the platforms to build the docker images in. Multiple platforms must be comma-separated. Defaults to 'linux/arm64,linux/amd64'.",
+        Name = "DockerPlatform")]
+    string DockerPlatform = "linux/arm64,linux/amd64";
 
     [PublicAPI]
     Target PackOsxTarballs => _ => _
@@ -156,7 +161,7 @@ partial class Build
         .DependsOn(PackDebianPackage)
         .Executes(() =>
         {
-            BuildAndPushOrLoadKubernetesTentacleContainerImage(push: false, load: true, includeDebugger:true);
+            BuildAndPushOrLoadKubernetesTentacleContainerImage(push: false, load: true, includeDebugger: true);
         });
 
     [PublicAPI]
@@ -539,13 +544,13 @@ partial class Build
         var dockerDir = ArtifactsDirectory / "docker";
         FileSystemTasks.EnsureExistingDirectory(dockerDir);
 
-        FileSystemTasks.CopyFile( packageFilePath, dockerDir / $"tentacle_{FullSemVer}_linux-{dockerArch}.deb");
+        FileSystemTasks.CopyFile(packageFilePath, dockerDir / $"tentacle_{FullSemVer}_linux-{dockerArch}.deb");
     }
 
     static IReadOnlyDictionary<string, (string deb, string docker)> DebDockerMap { get; } = new Dictionary<string, (string deb, string docker)>
     {
-        {"linux-x64", ("amd64", "amd64")},
-        {"linux-arm64", ("arm64", "arm64")},
-        {"linux-arm", ("armhf", "armv7")}
+        { "linux-x64", ("amd64", "amd64") },
+        { "linux-arm64", ("arm64", "arm64") },
+        { "linux-arm", ("armhf", "armv7") }
     };
 }
