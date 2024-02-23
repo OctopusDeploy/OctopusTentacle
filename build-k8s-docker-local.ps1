@@ -1,9 +1,6 @@
 param (    
     [string]
     $BuildArch = "amd64",
-
-    [string]
-    $BuildArchVariant = "",
     
     [string]
     $LocalRegistryDomain = "localhost:5500",
@@ -12,60 +9,31 @@ param (
     $NonMinikubeRegistry = $false,
 
     [switch]
-    $BuildDebugImage,
-
-    [switch]
-    $SkipBuild
+    $BuildDebugImage
 )
 
-$runtimeToBuild = "linux-$BuildArch".Replace("amd", "x")
+$nukeTargetName = if (!$BuildDebugImage) { "BuildAndLoadLocallyKubernetesTentacleContainerImage" } else { "BuildAndLoadLocalDebugKubernetesTentacleContainerImage" }
 
-#First we pack the unsigned builds
-if (!$SkipBuild) {
-    & .\build.ps1 -Target "PackLinuxUnsigned" -RuntimeId $runtimeToBuild
+& .\build.ps1 -Target $nukeTargetName -DockerBuilder "container" -DockerPlatform "linux/$BuildArch"
+
+if(!$?){
+    Write-Error "Failed to build"
+    exit 1
 }
 
-#Now find the latest package version
-$package = Get-ChildItem -Path "$PSScriptRoot/_artifacts/deb" -Filter "tentacle_*_$BuildArch.deb"
-$packageNameParts = $package.Name -Split "_"
-$buildNumber = $packageNameParts[1]
 
-Write-Output "Using package $($package.Name)"
+#find the most recent tag
+$tags = & docker images octopusdeploy/kubernetes-tentacle --format "{{.Tag}}"
+$splitTags = $tags.Split([System.Environment]::NewLine)
+$tag = $splitTags[0]
 
-$env:BUILD_NUMBER = $buildNumber
-$env:BUILD_DATE = Get-Date -Format "yyyy-MM-dd"
-$env:BUILD_ARCH = $BuildArch
-$env:BUILD_VARIANT = $BuildArchVariant
-
-$baseTag = "$buildNumber-linux-$BuildArch"
-$tag = $baseTag
-
-$artifactoryImage = "docker.packages.octopushq.com/octopusdeploy/kubernetes-tentacle"
+$artifactoryImage = "octopusdeploy/kubernetes-tentacle"
 $localImage = "$LocalRegistryDomain/kubernetes-tentacle"
-
-Write-Output "Building image"
-
-& docker compose -f docker-compose.build.yml -v build --pull octopusdeploy-kubernetes-tentacle-linux
 
 $builtImage = "$($artifactoryImage):$tag"
 $builtLocalImage = "$($localImage):$tag"
 
-if ($BuildDebugImage) {
-    Write-Output "Building debug image"
-    
-    $env:IMAGE_TAG = $tag
-    $env:DEBUGGER_ARCH = $runtimeToBuild
-
-    & docker compose -f docker-compose.build-dev.yml -v build octopusdeploy-kubernetes-tentacle-linux
-    
-    $tag = "$tag-debug"    
-    $builtImage = "$($artifactoryImage):$tag"
-    $builtLocalImage = "$($localImage):$tag"
-}
-
-
 & docker tag $builtImage $builtLocalImage
-
 
 if (!$NonMinikubeRegistry) {
     $registryPort = ($LocalRegistryDomain -split ":")[-1]
@@ -75,6 +43,11 @@ if (!$NonMinikubeRegistry) {
 
     Write-Output "Forwarding minikube registry on port $registryPort"
     $portForwardProcess = Start-Process kubectl -ArgumentList "port-forward --namespace kube-system service/registry $($registryPort):80" -NoNewWindow -PassThru
+
+    # if this a chocolately shim'd kubectl, find the original process
+    if ($portForwardProcess.Description -imatch "shimgen") {
+        $portForwardProcess = Get-Process kubectl | Where-Object { $_.Parent.Id -eq $portForwardProcess.Id }
+    }
     
     Write-Output "Running network forwarding docker container"
     $containerId = & docker run --rm -d --network=host alpine/socat "tcp-listen:$registryPort,reuseaddr,fork" "tcp-connect:host.docker.internal:$registryPort"

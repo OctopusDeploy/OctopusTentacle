@@ -23,6 +23,14 @@ partial class Build
     //We don't sign linux packages when building locally
     readonly bool SignLinuxPackages = !IsLocalBuild;
 
+    [Parameter("Used to set a custom docker builder when executing DockerBuildxBuild tasks",
+        Name = "DockerBuilder")]
+    string? DockerBuildxBuilder;
+
+    [Parameter("Specifies the platforms to build the docker images in. Multiple platforms must be comma-separated. Defaults to 'linux/arm64,linux/amd64'.",
+        Name = "DockerPlatform")]
+    string DockerPlatform = "linux/arm64,linux/amd64";
+
     [PublicAPI]
     Target PackOsxTarballs => _ => _
         .Description("Packs the OS/X tarballs containing the published binaries.")
@@ -144,6 +152,16 @@ partial class Build
         .Executes(() =>
         {
             BuildAndPushOrLoadKubernetesTentacleContainerImage(push: false, load: true);
+        });
+
+    [PublicAPI]
+    Target BuildAndLoadLocalDebugKubernetesTentacleContainerImage => _ => _
+        .Description("Builds and loads locally the kubernetes tentacle multi-arch container image")
+        .OnlyWhenStatic(() => IsLocalBuild)
+        .DependsOn(PackDebianPackage)
+        .Executes(() =>
+        {
+            BuildAndPushOrLoadKubernetesTentacleContainerImage(push: false, load: true, includeDebugger: true);
         });
 
     [PublicAPI]
@@ -508,17 +526,42 @@ partial class Build
             $"tentacle-{FullSemVer}-{NetCore}-{runtimeId}.tar.gz");
     }
 
-    void BuildAndPushOrLoadKubernetesTentacleContainerImage(bool push, bool load, string? host = null)
+    void BuildAndPushOrLoadKubernetesTentacleContainerImage(bool push, bool load, string? host = null, bool includeDebugger = false)
     {
         var hostPrefix = host is not null ? $"{host}/" : string.Empty;
         DockerTasks.DockerBuildxBuild(settings =>
-            settings.AddBuildArg($"BUILD_NUMBER={FullSemVer}", $"BUILD_DATE={DateTime.UtcNow:O}")
-                .SetPlatform("linux/arm64,linux/amd64")
-                .SetTag($"{hostPrefix}octopusdeploy/kubernetes-tentacle:{FullSemVer}")
-                .SetFile("./docker/kubernetes-tentacle/Dockerfile")
+        {
+            if (includeDebugger && DockerPlatform.Contains(','))
+                throw new InvalidOperationException("Only a single DockerPlatform can be defined when build the docker image with the debugger");
+
+            if (DockerBuildxBuilder is not null)
+                settings = settings.SetBuilder(DockerBuildxBuilder);
+
+            var dockerfile = !includeDebugger
+                ? "./docker/kubernetes-tentacle/Dockerfile"
+                : "./docker/kubernetes-tentacle/dev/Dockerfile";
+
+            var tag = $"{hostPrefix}octopusdeploy/kubernetes-tentacle:{FullSemVer}";
+            if (includeDebugger)
+                tag += "-debug";
+
+            settings = settings
+                .AddBuildArg($"BUILD_NUMBER={FullSemVer}", $"BUILD_DATE={DateTime.UtcNow:O}")
+                .SetPlatform(DockerPlatform)
+                .SetTag(tag)
+                .SetFile(dockerfile)
                 .SetPath(RootDirectory)
                 .SetPush(push)
-                .SetLoad(load));
+                .SetLoad(load);
+
+            if (includeDebugger)
+            {
+                var debuggerArch = DockerPlatform.Replace("/", "-").Replace("amd", "x");
+                settings = settings.AddBuildArg($"DEBUGGER_ARCH={debuggerArch}");
+            }
+
+            return settings;
+        });
     }
 
     void CopyDebianPackageToDockerFolder(string runtimeId)
@@ -532,13 +575,13 @@ partial class Build
         var dockerDir = ArtifactsDirectory / "docker";
         FileSystemTasks.EnsureExistingDirectory(dockerDir);
 
-        FileSystemTasks.CopyFile( packageFilePath, dockerDir / $"tentacle_{FullSemVer}_linux-{dockerArch}.deb");
+        FileSystemTasks.CopyFile(packageFilePath, dockerDir / $"tentacle_{FullSemVer}_linux-{dockerArch}.deb");
     }
 
     static IReadOnlyDictionary<string, (string deb, string docker)> DebDockerMap { get; } = new Dictionary<string, (string deb, string docker)>
     {
-        {"linux-x64", ("amd64", "amd64")},
-        {"linux-arm64", ("arm64", "arm64")},
-        {"linux-arm", ("armhf", "armv7")}
+        { "linux-x64", ("amd64", "amd64") },
+        { "linux-arm64", ("arm64", "arm64") },
+        { "linux-arm", ("armhf", "armv7") }
     };
 }
