@@ -5,16 +5,16 @@ using System.Threading.Tasks;
 
 namespace Octopus.Tentacle.Kubernetes
 {
-    public interface IKubernetesJobContainerResolver
+    public interface IKubernetesPodContainerResolver
     {
         Task<string> GetContainerImageForCluster();
     }
 
-    public class KubernetesJobContainerResolver : IKubernetesJobContainerResolver
+    public class KubernetesPodContainerResolver : IKubernetesPodContainerResolver
     {
         readonly IKubernetesClusterService clusterService;
 
-        public KubernetesJobContainerResolver(IKubernetesClusterService clusterService)
+        public KubernetesPodContainerResolver(IKubernetesClusterService clusterService)
         {
             this.clusterService = clusterService;
         }

@@ -23,13 +23,13 @@ namespace Octopus.Tentacle.Services
             builder.RegisterType<NuGetPackageInstaller>().As<IPackageInstaller>();
 
             // Register the script executor based on if we should
-            if (KubernetesConfig.UseJobs)
+            if (KubernetesConfig.ExecuteScriptsInLocalShell)
             {
-                builder.RegisterType<KubernetesJobScriptExecutor>().AsSelf().As<IScriptExecutor>();
+                builder.RegisterType<LocalShellScriptExecutor>().AsSelf().As<IScriptExecutor>();
             }
             else
             {
-                builder.RegisterType<LocalShellScriptExecutor>().AsSelf().As<IScriptExecutor>();
+                builder.RegisterType<KubernetesPodScriptExecutor>().AsSelf().As<IScriptExecutor>();
             }
 
             // Register our Halibut services
