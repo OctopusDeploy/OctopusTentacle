@@ -2,11 +2,11 @@
 using System;
 using System.Reflection;
 
-[assembly: AssemblyVersion("8.1.938")]
-[assembly: AssemblyFileVersion("8.1.938")]
-[assembly: AssemblyInformationalVersion("8.1.938-ap-pods-not-jobs+Branch.ap-pods-not-jobs.Sha.9f4edd246f37fd377ea853cf4a52719d6c7739e7")]
-[assembly: AssemblyGitBranch("")]
-[assembly: AssemblyNuGetVersion("8.1.938-ap-pods-not-jobs-20240223122851")]
+[assembly: AssemblyVersion("0.0.0.0")]
+[assembly: AssemblyFileVersion("0.0.0.0")]
+[assembly: AssemblyInformationalVersion("0.0.0-local")]
+[assembly: AssemblyGitBranch("UNKNOWNBRANCH")]
+[assembly: AssemblyNuGetVersion("0.0.0-local")]
 
 #if DEFINE_VERSION_ATTRIBUTES
     [AttributeUsage(AttributeTargets.Assembly)]
