@@ -1,4 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices;
+using Octopus.Tentacle.CommonTestUtils;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
@@ -29,16 +33,43 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         // The version compiled from the current source
         public static readonly Version? Current = null;
 
-        public static Version[] AllTestedVersionsToDownload =
+        public static Version[] AllTestedVersionsToDownload = GetAllTestedVersionsToDownload();
+
+        public static Version[] VersionsToSkip = GetVersionsToSkip();
+
+        static Version[] GetVersionsToSkip()
         {
-            v5_0_4_FirstLinuxRelease,
-            v5_0_12_AutofacServiceFactoryIsInShared,
-            v5_0_15_LastOfVersion5,
-            v6_3_417_LastWithScriptServiceV1Only,
-            v6_3_451_NoCapabilitiesService,
-            v7_1_189_SyncHalibutAndScriptServiceV2,
-            v8_0_81_AsyncHalibutAndLastWithoutScriptServiceV3Alpha
-        };
+            if (!PlatformDetection.IsRunningOnMac && RuntimeInformation.ProcessArchitecture != Architecture.Arm64) return Array.Empty<Version>();
+
+            if (PlatformDetection.IsRunningOnWindows) return Array.Empty<Version>(); 
+
+            // These versions are not available on MacOS or ARM
+            return new []
+            {
+                v5_0_4_FirstLinuxRelease,
+                v5_0_12_AutofacServiceFactoryIsInShared,
+                v5_0_15_LastOfVersion5
+            };
+        }
+        static Version[] GetAllTestedVersionsToDownload()
+        {
+            var versions = new List<Version>();
+
+            if (PlatformDetection.IsRunningOnWindows || (!PlatformDetection.IsRunningOnMac && RuntimeInformation.ProcessArchitecture != Architecture.Arm64))
+            {
+                // These versions are not available on MacOS or ARM
+                versions.Add(v5_0_4_FirstLinuxRelease);
+                versions.Add(v5_0_12_AutofacServiceFactoryIsInShared);
+                versions.Add(v5_0_15_LastOfVersion5);
+            }
+
+            versions.Add(v6_3_417_LastWithScriptServiceV1Only);
+            versions.Add(v6_3_451_NoCapabilitiesService);
+            versions.Add(v7_1_189_SyncHalibutAndScriptServiceV2);
+            versions.Add(v8_0_81_AsyncHalibutAndLastWithoutScriptServiceV3Alpha);
+
+            return versions.ToArray();
+        }
     }
 
     public static class VersionExtensionMethods
