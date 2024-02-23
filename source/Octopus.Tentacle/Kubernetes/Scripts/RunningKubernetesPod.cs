@@ -144,8 +144,9 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                     exitCode = ScriptExitCodes.TimeoutExitCode;
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                log.Error(ex, $"Failed to execute script {scriptTicket.TaskId} in pod {podName}");
                 exitCode = ScriptExitCodes.FatalExitCode;
             }
             finally
