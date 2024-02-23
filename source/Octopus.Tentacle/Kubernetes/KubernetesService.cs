@@ -1,5 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Threading.Tasks;
 using k8s;
+using k8s.Autorest;
 using k8s.Models;
 using k8sClient = k8s.Kubernetes;
 
@@ -30,6 +34,19 @@ namespace Octopus.Tentacle.Kubernetes
 
             k8sObject.Metadata.Labels ??= new Dictionary<string, string>();
             k8sObject.Metadata.Labels["app.kubernetes.io/managed-by"] = "Helm";
+        }
+
+        protected async Task<T?> TryGetAsync<T>(Func<Task<T>> loadAction) where T: class
+        {
+            try
+            {
+                return await loadAction();
+            }
+            catch (HttpOperationException opException)
+                when (opException.Response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return null;
+            }
         }
     }
 }
