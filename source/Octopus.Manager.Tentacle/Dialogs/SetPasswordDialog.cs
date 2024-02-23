@@ -15,7 +15,9 @@ namespace Octopus.Manager.Tentacle.Dialogs
 
         void SaveClicked(object sender, RoutedEventArgs e)
         {
+#pragma warning disable CA1416
             DialogHost.CloseDialogCommand.Execute(true, null);
+#pragma warning restore CA1416
         }
     }
 }

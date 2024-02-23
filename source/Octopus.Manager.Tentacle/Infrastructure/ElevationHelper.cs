@@ -1,15 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Reflection;
 using System.Security.Principal;
 
 namespace Octopus.Manager.Tentacle.Infrastructure
 {
     public class ElevationHelper
     {
+#pragma warning disable CA1416
         public static bool IsElevated => new WindowsPrincipal(WindowsIdentity.GetCurrent())
             .IsInRole(WindowsBuiltInRole.Administrator);
+#pragma warning restore CA1416
 
         public static void Elevate(IEnumerable<string> args)
         {
@@ -17,12 +18,19 @@ namespace Octopus.Manager.Tentacle.Infrastructure
             {
                 // We removed this class in favour of using the application manifest for elevation... but then!
                 // See https://github.com/OctopusDeploy/Issues/issues/3875
-                var info = new ProcessStartInfo(Assembly.GetEntryAssembly().Location, String.Join(" ", args));
-                info.Verb = "runas";
+                using (var currentProcess = Process.GetCurrentProcess())
+                {
+                    var fileName = currentProcess.MainModule.FileName;
+                    var info = new ProcessStartInfo(fileName, String.Join(" ", args))
+                    {
+                        Verb = "runas",
+                        UseShellExecute = true
+                    };
 
-                var process = new Process {StartInfo = info};
+                    var process = new Process {StartInfo = info};
 
-                process.Start();
+                    process.Start();
+                }
             }
             catch (Exception e)
             {

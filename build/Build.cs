@@ -98,6 +98,7 @@ partial class Build : NukeBuild
 
     const string NetFramework = "net48";
     const string NetCore = "net6.0";
+    const string NetCoreWindows = "net6.0-windows";
 
     IEnumerable<string> RuntimeIds => SpecificRuntimeId != null
         ? new[] { SpecificRuntimeId }
@@ -152,8 +153,25 @@ partial class Build : NukeBuild
                 using var versionInfoFile = ModifyTemplatedVersionAndProductFilesWithValues();
                 using var productWxsFile = UpdateMsiProductVersion();
 
-                RuntimeIds.Where(x => x.StartsWith("win"))
-                    .ForEach(runtimeId => RunBuildFor(runtimeId.Equals("win") ? NetFramework : NetCore, runtimeId));
+                var runtimeIds = RuntimeIds.Where(x => x.StartsWith("win"));
+                
+                foreach (var runtimeId in runtimeIds)
+                {
+                    switch (runtimeId)
+                    {
+                        case "win":
+                            RunBuildFor(NetFramework, runtimeId);
+                            break;
+                        case "win-x86":
+                        case "win-x64":
+                            RunBuildFor(NetCore, runtimeId);
+                            RunBuildFor(NetCoreWindows, runtimeId);
+                            break;
+                        default:
+                            RunBuildFor(NetCore, runtimeId);
+                            break;
+                    }
+                }
 
                 versionInfoFile.Dispose();
                 productWxsFile.Dispose();
@@ -163,7 +181,9 @@ partial class Build : NukeBuild
                 {
                     (BuildDirectory / "Tentacle" / NetFramework / "win"),
                     (BuildDirectory / "Tentacle" / NetCore / "win-x86"),
-                    (BuildDirectory / "Tentacle" / NetCore / "win-x64")
+                    (BuildDirectory / "Tentacle" / NetCore / "win-x64"),
+                    (BuildDirectory / "Tentacle" / NetCoreWindows / "win-x86"),
+                    (BuildDirectory / "Tentacle" / NetCoreWindows / "win-x64"),
                 };
                 directoriesToCopyHardenScriptInto.ForEach(dir => CopyFileToDirectory(hardenInstallationDirectoryScript, dir, FileExistsPolicy.Overwrite));
 

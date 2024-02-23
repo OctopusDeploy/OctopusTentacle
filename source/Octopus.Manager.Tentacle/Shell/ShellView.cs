@@ -16,7 +16,9 @@ namespace Octopus.Manager.Tentacle.Shell
         {
             InitializeComponent();
 
+#pragma warning disable CA1416
             DialogHost.Identifier = title;
+#pragma warning restore CA1416
 
             this.viewModel = viewModel;
             DataContext = viewModel;
@@ -37,7 +39,9 @@ namespace Octopus.Manager.Tentacle.Shell
 
         async void OnAddNewInstance(object sender, ExecutedRoutedEventArgs e)
         {
+#pragma warning disable CA1416
             var result = await DialogHost.Show(new NewInstanceNameDialog(viewModel.InstanceSelectionModel.Instances.Select(q => q.InstanceName)), Title);
+#pragma warning restore CA1416
             /*
             var dialog = new NewInstanceNameDialog(viewModel.InstanceSelectionModel.Instances.Select(q => q.InstanceName));
             dialog.Owner = this;

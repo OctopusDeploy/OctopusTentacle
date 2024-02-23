@@ -235,7 +235,9 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
 
         async void CreateNewInstance(object sender, RoutedEventArgs e)
         {
+#pragma warning disable CA1416
             var result = await DialogHost.Show(new NewInstanceNameDialog(instanceSelection.Instances.Select(q => q.InstanceName)), Window.GetWindow(this)?.Title);
+#pragma warning restore CA1416
 
             if (result is string typedResult)
             {

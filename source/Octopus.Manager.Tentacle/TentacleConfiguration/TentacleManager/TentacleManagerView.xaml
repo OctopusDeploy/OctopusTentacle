@@ -33,7 +33,7 @@
                     </Border.Effect>
                     <Grid Margin="20,10">
                         <Button Content="ADD NEW TENTACLE" FontSize="12" FontWeight="Medium" HorizontalAlignment="Right" Style="{StaticResource Button.Success}" VerticalAlignment="Center" Click="CreateNewInstance"/>
-                        <TextBlock Text="Tentacle Windows Service" Style="{StaticResource MaterialDesignHeadlineTextBlock}" FontSize="20" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="Tentacle Windows Service" Style="{StaticResource MaterialDesignHeadline1TextBlock}" FontSize="20" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                     </Grid>
                 </Border>
                 <ScrollViewer Margin="20" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" VerticalScrollBarVisibility="Auto">
@@ -91,7 +91,7 @@
                                         </Canvas>
                                     </Canvas>
                                 </Viewbox>
-                                <TextBlock Text="{Binding InstanceName}" Style="{StaticResource MaterialDesignTitleTextBlock}" FontSize="24"  VerticalAlignment="Center" Margin="7,0,0,0"/>
+                                <TextBlock Text="{Binding InstanceName}" Style="{StaticResource MaterialDesignHeadline2TextBlock}" FontSize="24"  VerticalAlignment="Center" Margin="7,0,0,0"/>
                             </StackPanel>
                             <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" VerticalAlignment="Center">
                                 <Button Content="START SERVICE" Click="StartServiceClicked" Visibility="{Binding Path=ServiceWatcher.CanStart, Mode=OneWay, Converter={StaticResource Converter.BooleanToVisibilityConverter}}"/>
