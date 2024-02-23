@@ -31,8 +31,6 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             KubernetesAgentScriptExecutionContext executionContext,
             CancellationToken scriptCancellationToken);
 
-
-
         static readonly AsyncLazy<string> BootstrapRunnerScript = new(async () =>
         {
             using var stream = typeof(RunningKubernetesPod).Assembly.GetManifestResourceStream("Octopus.Tentacle.Kubernetes.bootstrapRunner.sh");
