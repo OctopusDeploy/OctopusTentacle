@@ -8,38 +8,38 @@ using Octopus.Tentacle.Scripts;
 
 namespace Octopus.Tentacle.Kubernetes.Scripts
 {
-    public class KubernetesJobScriptExecutor : IScriptExecutor
+    public class KubernetesPodScriptExecutor : IScriptExecutor
     {
-        readonly IKubernetesJobService jobService;
+        readonly IKubernetesPodService podService;
         readonly IKubernetesSecretService secretService;
-        readonly IKubernetesJobContainerResolver containerResolver;
+        readonly IKubernetesPodContainerResolver containerResolver;
         readonly IApplicationInstanceSelector appInstanceSelector;
         readonly ISystemLog log;
 
-        public KubernetesJobScriptExecutor(IKubernetesJobService jobService, IKubernetesSecretService secretService, IKubernetesJobContainerResolver containerResolver, IApplicationInstanceSelector appInstanceSelector, ISystemLog log)
+        public KubernetesPodScriptExecutor(IKubernetesPodService podService, IKubernetesSecretService secretService, IKubernetesPodContainerResolver containerResolver, IApplicationInstanceSelector appInstanceSelector, ISystemLog log)
         {
-            this.jobService = jobService;
+            this.podService = podService;
             this.secretService = secretService;
             this.containerResolver = containerResolver;
             this.appInstanceSelector = appInstanceSelector;
             this.log = log;
         }
 
-        public bool CanExecute(StartScriptCommandV3Alpha command) => command.ExecutionContext is KubernetesJobScriptExecutionContext;
+        public bool CanExecute(StartScriptCommandV3Alpha command) => command.ExecutionContext is KubernetesAgentScriptExecutionContext;
 
         public IRunningScript ExecuteOnBackgroundThread(StartScriptCommandV3Alpha command, IScriptWorkspace workspace, ScriptStateStore scriptStateStore, CancellationToken cancellationToken)
         {
-            var runningScript = new RunningKubernetesJob(
+            var runningScript = new RunningKubernetesPod(
                 workspace,
                 workspace.CreateLog(),
                 command.ScriptTicket,
                 command.TaskId, log,
                 scriptStateStore,
-                jobService,
+                podService,
                 secretService,
                 containerResolver,
                 appInstanceSelector,
-                (KubernetesJobScriptExecutionContext)command.ExecutionContext,
+                (KubernetesAgentScriptExecutionContext)command.ExecutionContext,
                 cancellationToken);
 
             Task.Run(() => runningScript.Execute(), cancellationToken);

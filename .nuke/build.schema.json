@@ -31,10 +31,12 @@
           "description": "Indicates to continue a previously failed build attempt"
         },
         "DockerBuilder": {
-          "type": "string"
+          "type": "string",
+          "description": "Used to set a custom docker builder when executing DockerBuildxBuild tasks"
         },
         "DockerPlatform": {
-          "type": "string"
+          "type": "string",
+          "description": "Specifies the platforms to build the docker images in. Multiple platforms must be comma-separated. Defaults to 'linux/arm64,linux/amd64'"
         },
         "Help": {
           "type": "boolean",

@@ -2,10 +2,10 @@
 
 namespace Octopus.Tentacle.Contracts.ScriptServiceV3Alpha
 {
-    public class KubernetesJobScriptExecutionContext : IScriptExecutionContext
+    public class KubernetesAgentScriptExecutionContext : IScriptExecutionContext
     {
         [JsonConstructor]
-        public KubernetesJobScriptExecutionContext(string image, string? feedUrl, string? feedUsername, string? feedPassword)
+        public KubernetesAgentScriptExecutionContext(string image, string? feedUrl, string? feedUsername, string? feedPassword)
         {
             Image = image;
             FeedUrl = feedUrl;
@@ -13,7 +13,7 @@ namespace Octopus.Tentacle.Contracts.ScriptServiceV3Alpha
             FeedPassword = feedPassword;
         }
 
-        public KubernetesJobScriptExecutionContext()
+        public KubernetesAgentScriptExecutionContext()
         {
         }
 
