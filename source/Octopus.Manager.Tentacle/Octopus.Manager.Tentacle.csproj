@@ -4,25 +4,39 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <RootNamespace>Octopus.Manager.Tentacle</RootNamespace>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <IsPublishable>false</IsPublishable>
+    <IsPublishable>true</IsPublishable>
     <OutputPath>bin</OutputPath>
     <OutputType>WinExe</OutputType>
     <PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
-    <RuntimeIdentifiers>win</RuntimeIdentifiers>
-    <TargetFramework>net48</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <UseWPF>true</UseWPF>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>   
+    <TargetFrameworks>net48;net6.0-windows</TargetFrameworks>
+    <!-- 
+      Suppressing those validations error due to validation bugs in .NET 6.
+      This can be removed when we upgrade to .NET7 or above.
+      More info: https://octopusdeploy.slack.com/archives/C039PL7PCUE/p1708490934364109
+    -->
+    <ValidateExecutableReferencesMatchSelfContained>false</ValidateExecutableReferencesMatchSelfContained>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Properties\Icon.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)'=='net48'">
-    <IsPublishable>true</IsPublishable>
-  </PropertyGroup>
+  <Choose>
+    <When Condition="'$(TargetFramework)' == 'net48'">
+      <PropertyGroup>
+        <RuntimeIdentifiers>win</RuntimeIdentifiers><!-- This is AnyCPU -->
+      </PropertyGroup>
+    </When>
+    <When Condition="'$(TargetFramework)' == 'net6.0-windows'">
+      <PropertyGroup>
+        <RuntimeIdentifiers>win-x86;win-x64;</RuntimeIdentifiers>
+      </PropertyGroup>
+    </When>
+  </Choose>
 
   <ItemGroup>
     <Compile Include="..\Solution Items\SolutionInfo.cs">
@@ -109,19 +123,10 @@
     <Resource Include="Resources\Images\warning.png" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="System.Configuration" />
-    <Reference Include="System.IdentityModel" />
-    <Reference Include="System.IO.Compression" />
-    <Reference Include="System.Security" />
-    <Reference Include="System.ServiceModel" />
-    <Reference Include="System.ServiceProcess" />
-    <Reference Include="System.Transactions" />
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="Autofac" Version="4.6.2" />
     <PackageReference Include="FluentValidation" Version="7.2.1" />
-    <PackageReference Include="MaterialDesignColors" Version="1.2.0" />
-    <PackageReference Include="MaterialDesignThemes" Version="2.5.0.1205" />
+    <PackageReference Include="MaterialDesignColors" Version="2.1.4" />
+    <PackageReference Include="MaterialDesignThemes" Version="4.9.0" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="NETStandard.Library" Version="2.0.3" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
@@ -166,6 +171,5 @@
     <PackageReference Include="System.Xml.ReaderWriter" Version="4.3.1" />
     <PackageReference Include="System.Xml.XDocument" Version="4.3.0" />
     <PackageReference Include="TaskScheduler" Version="2.7.2" />
-    <PackageReference Include="WPFToolkit" Version="3.5.50211.1" />
   </ItemGroup>
 </Project>

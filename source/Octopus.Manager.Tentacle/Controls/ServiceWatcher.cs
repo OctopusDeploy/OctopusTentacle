@@ -176,7 +176,9 @@ namespace Octopus.Manager.Tentacle.Controls
             {
                 isBusy = true;
 
+#pragma warning disable CA1416
                 var serviceController = ServiceController.GetServices().FirstOrDefault(x => x.DisplayName == ServiceName || x.ServiceName == ServiceName);
+#pragma warning restore CA1416
                 if (serviceController == null)
                 {
                     IsInstalled = false;
@@ -191,9 +193,13 @@ namespace Octopus.Manager.Tentacle.Controls
 
                 IsInstalled = true;
 
+#pragma warning disable CA1416
                 switch (serviceController.Status)
+#pragma warning restore CA1416
                 {
+#pragma warning disable CA1416
                     case ServiceControllerStatus.ContinuePending:
+#pragma warning restore CA1416
                         IsRunning = false;
                         IsNotRunning = true;
                         CanStart = false;
@@ -201,7 +207,9 @@ namespace Octopus.Manager.Tentacle.Controls
                         CanRestart = false;
                         StatusSummary = "pending continuation";
                         break;
+#pragma warning disable CA1416
                     case ServiceControllerStatus.Paused:
+#pragma warning restore CA1416
                         IsRunning = false;
                         IsNotRunning = true;
                         CanStart = false;
@@ -209,7 +217,9 @@ namespace Octopus.Manager.Tentacle.Controls
                         CanRestart = false;
                         StatusSummary = "paused";
                         break;
+#pragma warning disable CA1416
                     case ServiceControllerStatus.PausePending:
+#pragma warning restore CA1416
                         IsRunning = false;
                         IsNotRunning = true;
                         CanStart = false;
@@ -217,7 +227,9 @@ namespace Octopus.Manager.Tentacle.Controls
                         CanRestart = false;
                         StatusSummary = "pending pause";
                         break;
+#pragma warning disable CA1416
                     case ServiceControllerStatus.Running:
+#pragma warning restore CA1416
                         IsRunning = true;
                         IsNotRunning = false;
                         CanStart = false;
@@ -225,7 +237,9 @@ namespace Octopus.Manager.Tentacle.Controls
                         CanRestart = true;
                         StatusSummary = "running";
                         break;
+#pragma warning disable CA1416
                     case ServiceControllerStatus.StartPending:
+#pragma warning restore CA1416
                         IsRunning = true;
                         IsNotRunning = false;
                         CanStart = false;
@@ -233,7 +247,9 @@ namespace Octopus.Manager.Tentacle.Controls
                         CanRestart = false;
                         StatusSummary = "pending start";
                         break;
+#pragma warning disable CA1416
                     case ServiceControllerStatus.Stopped:
+#pragma warning restore CA1416
                         IsRunning = false;
                         IsNotRunning = true;
                         CanStart = true;
@@ -241,7 +257,9 @@ namespace Octopus.Manager.Tentacle.Controls
                         CanRestart = false;
                         StatusSummary = "stopped";
                         break;
+#pragma warning disable CA1416
                     case ServiceControllerStatus.StopPending:
+#pragma warning restore CA1416
                         IsRunning = false;
                         IsNotRunning = true;
                         CanStart = false;

@@ -14,7 +14,7 @@
     - Product/Version      : Change this every major build
     - Product/UpgradeCode  : Never change this
   -->
-  <Product Id="*" Name="Octopus Deploy Tentacle" Language="1033" Version="7.0.203" Manufacturer="Octopus Deploy Pty. Ltd." UpgradeCode="1B32E04F-49C2-4907-8879-A556986F7F16">
+  <Product Id="*" Name="Octopus Deploy Tentacle" Language="1033" Version="8.1.902" Manufacturer="Octopus Deploy Pty. Ltd." UpgradeCode="1B32E04F-49C2-4907-8879-A556986F7F16">
     <Package InstallerVersion="200" Compressed="yes" Description="Octopus Deploy Tentacle" Platform="$(var.Platform)" InstallScope="perMachine" />
     <Media Id="1" Cabinet="Files.cab" EmbedCab="yes" />
     <Property Id="MSIFASTINSTALL" Value="3" />
@@ -64,7 +64,7 @@
     <WixVariable Id="WixUIExclamationIco" Value="..\Resources\Warning.ico" />
     <WixVariable Id="WixUIInfoIco" Value="..\Resources\Information.ico" />
     <UI>
-      <?if $(var.TargetFramework) = NetFramework ?>
+      <?if $(var.TargetFramework) = NetFramework Or $(var.TargetFramework) = NetCoreWindows ?>
       <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchTentacleManager">NOT Installed</Publish>
       <?endif ?>
       <?if $(var.TargetFramework) = NetCore ?>
@@ -97,7 +97,7 @@
     -->
     <DirectoryRef Id="ApplicationProgramsFolder">
       <Component Id="ApplicationShortcut" Guid="C54C6569-E8E6-4137-B32C-B3EFCD3D52B4">
-        <?if $(var.TargetFramework) = NetFramework ?>
+        <?if $(var.TargetFramework) = NetFramework Or $(var.TargetFramework) = NetCoreWindows ?>
         <Shortcut Id="ToolsStartMenuShortcut" Name="Octopus Tentacle Manager" Description="Configure the Octopus Deploy Tentacle agent" Target="[#Octopus.Manager.Tentacle.exe]" Arguments="tentacle" WorkingDirectory="INSTALLLOCATION" />
         <?endif ?>
         <?if $(var.TargetFramework) = NetCore ?>
@@ -120,7 +120,7 @@
     <!--
     Launch tools after installer finishes
     -->
-    <?if $(var.TargetFramework) = NetFramework ?>
+    <?if $(var.TargetFramework) = NetFramework Or $(var.TargetFramework) = NetCoreWindows ?>
     <CustomAction Id="LaunchTentacleManager" FileKey="Octopus.Manager.Tentacle.exe" ExeCommand="tentacle --reconfigure" Execute="immediate" Impersonate="yes" Return="asyncNoWait" />
     <?endif ?>
     <CustomAction Id="LaunchTentacle" Directory="INSTALLLOCATION" ExeCommand="cmd.exe /K Tentacle.exe --help" Execute="immediate" Impersonate="yes" Return="asyncNoWait" />

@@ -10,7 +10,7 @@
 		<OutputType>Exe</OutputType>
 		<PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
 		<RootNamespace>Octopus.Tentacle</RootNamespace>
-		<TargetFrameworks>net48;net6.0</TargetFrameworks>
+		<TargetFrameworks>net48;net6.0;net6.0-windows</TargetFrameworks>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<LangVersion>9</LangVersion>
 		<Nullable>enable</Nullable>
@@ -20,6 +20,11 @@
 		<When Condition="'$(TargetFramework)' == 'net48'">
 			<PropertyGroup>
 				<RuntimeIdentifiers>win</RuntimeIdentifiers><!-- This is AnyCPU -->
+			</PropertyGroup>
+		</When>
+		<When Condition="'$(TargetFramework)' == 'net6.0-windows'">
+			<PropertyGroup>
+				<RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
 			</PropertyGroup>
 		</When>
 		<Otherwise>
@@ -37,13 +42,13 @@
 		<NoWarn>8601</NoWarn>
 		<DefineConstants>$(DefineConstants);HAS_SYSTEM_IDENTITYMODEL_TOKENS;NLOG_HAS_EVENT_LOG_TARGET;NETFX;FULL_FRAMEWORK</DefineConstants>
 	</PropertyGroup>
-	<PropertyGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
+	<PropertyGroup Condition=" '$(TargetFramework)' == 'net6.0' Or '$(TargetFramework)' == 'net6.0-windows'">
 		<DefineConstants>$(DefineConstants);HTTP_CLIENT_SUPPORTS_SSL_OPTIONS;REQUIRES_EXPLICIT_LOG_CONFIG;REQUIRES_CODE_PAGE_PROVIDER;USER_INTERACTIVE_DOES_NOT_WORK;DEFAULT_PROXY_IS_NOT_AVAILABLE;HAS_NULLABLE_REF_TYPES</DefineConstants>
 	</PropertyGroup>
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
 		<PackageReference Include="KubernetesClient.Classic" Version="10.1.19" />
 	</ItemGroup>
-	<ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
+	<ItemGroup Condition="'$(TargetFramework)' == 'net6.0' Or '$(TargetFramework)' == 'net6.0-windows'">
 		<PackageReference Include="KubernetesClient" Version="10.1.19" />
 	</ItemGroup>
 	<ItemGroup>
