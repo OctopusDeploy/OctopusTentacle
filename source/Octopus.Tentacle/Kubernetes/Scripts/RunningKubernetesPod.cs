@@ -66,7 +66,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             IScriptStateStore stateStore,
             KubernetesAgentScriptExecutionContext executionContext,
             CancellationToken scriptCancellationToken,
-            ILog log,
+            ISystemLog log,
             IKubernetesPodService podService,
             IKubernetesPodStatusProvider podStatusProvider,
             IKubernetesSecretService secretService,
@@ -196,18 +196,18 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
 
         async Task<int> CheckIfPodHasCompleted(CancellationTokenSource podCompletionCancellationTokenSource)
         {
-            var resultStatusCode = 0;
+            var resultStatusCode = ScriptExitCodes.UnknownScriptExitCode;
             PodStatus? status = null;
             while (!scriptCancellationToken.IsCancellationRequested)
             {
                 status = podStatusProvider.TryGetPodStatus(scriptTicket);
-                if (status is not null && status.Success)
+                if (status is not null && status.State == PodState.Succeeded)
                 {
                     resultStatusCode = 0;
                     break;
                 }
 
-                if (status is not null && status.Failed)
+                if (status is not null && status.State == PodState.Failed)
                 {
                     resultStatusCode = status.ExitCode!.Value;
                     break;

@@ -118,15 +118,14 @@ namespace Octopus.Tentacle.Kubernetes
     {
         public ScriptTicket ScriptTicket { get; }
 
-        public bool Success { get; private set; }
-
-        public bool Failed { get; private set; }
+        public PodState State { get; private set; }
 
         public int? ExitCode { get; private set; }
 
         public PodStatus(ScriptTicket ticket)
         {
             ScriptTicket = ticket;
+            State = PodState.Running;
         }
 
         public void Update(V1Pod pod)
@@ -134,13 +133,11 @@ namespace Octopus.Tentacle.Kubernetes
             switch (pod.Status?.Phase)
             {
                 case "Succeeded":
-                    Success = true;
-                    Failed = false;
+                    State = PodState.Succeeded;
                     ExitCode = 0;
                     break;
                 case "Failed":
-                    Success = false;
-                    Failed = true;
+                    State = PodState.Failed;
 
                     //find the status for the container
                     //we we can't determine the exit code from the pod container, just return 1
@@ -151,7 +148,14 @@ namespace Octopus.Tentacle.Kubernetes
         }
 
         public override string ToString()
-            => $"ScriptTicket: {ScriptTicket}, Success: {Success}, Failed: {Failed}, ExitCode: {ExitCode}";
+            => $"ScriptTicket: {ScriptTicket}, State: {State}, ExitCode: {ExitCode}";
+    }
+
+    public enum PodState
+    {
+        Running,
+        Succeeded,
+        Failed
     }
 
     public static class V1PodExtensions
