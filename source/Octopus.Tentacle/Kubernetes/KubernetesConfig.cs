@@ -10,7 +10,9 @@ namespace Octopus.Tentacle.Kubernetes
         public static string Namespace => GetRequiredEnvVar(NamespaceVariableName, "Unable to determine Kubernetes namespace.");
         public static string PodServiceAccountName => GetRequiredEnvVar($"{EnvVarPrefix}__PODSERVICEACCOUNTNAME", "Unable to determine Kubernetes Pod service account name.");
         public static string PodVolumeJson => GetRequiredEnvVar($"{EnvVarPrefix}__PODVOLUMEJSON", "Unable to determine Kubernetes Pod volume json.");
-        public static bool ExecuteScriptsInLocalShell => bool.TryParse(Environment.GetEnvironmentVariable($"{EnvVarPrefix}__EXECUTEINLOCALSHELL"), out var executeInLocalShell) && executeInLocalShell;
+
+        // We default this to true if we can't parse the environment variable
+        public static bool ExecuteScriptsInLocalShell => !bool.TryParse(Environment.GetEnvironmentVariable($"{EnvVarPrefix}__EXECUTEINLOCALSHELL"), out var executeInLocalShell) || executeInLocalShell;
         public static int PodMonitorTimeoutSeconds => int.TryParse(Environment.GetEnvironmentVariable($"{EnvVarPrefix}__PODMONITORTIMEOUT"), out var podMonitorTimeout) ? podMonitorTimeout : 1800; //30min
         public static bool DisableAutomaticPodCleanup => bool.TryParse(Environment.GetEnvironmentVariable($"{EnvVarPrefix}__DISABLEAUTOPODCLEANUP"), out var disableAutoCleanup) && disableAutoCleanup;
 
