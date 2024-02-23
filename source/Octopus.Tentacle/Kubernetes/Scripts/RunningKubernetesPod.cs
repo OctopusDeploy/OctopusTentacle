@@ -379,6 +379,26 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             WriteVerbose(writer, $"Executing script in Kubernetes Pod '{podName}'.");
         }
 
+        public async Task Cleanup(CancellationToken cancellationToken)
+        {
+            if (KubernetesConfig.DisableAutomaticPodCleanup)
+            {
+                log.Verbose($"Not deleting completed pod {podName} as automatic cleanup is disabled.");
+                return;
+            }
+
+            try
+            {
+                log.Verbose($"Deleting completed pod {podName}.");
+                await podService.Delete(scriptTicket, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                //we can't write this back to the script log as it's already cleaned up at this point
+                log.Error(ex, $"Failed to delete Pod {podName}.");
+            }
+        }
+
         void RecordScriptHasStarted(IScriptLogWriter writer)
         {
             try

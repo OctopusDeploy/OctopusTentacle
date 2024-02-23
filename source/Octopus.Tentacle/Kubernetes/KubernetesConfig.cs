@@ -12,6 +12,7 @@ namespace Octopus.Tentacle.Kubernetes
         public static string PodVolumeJson => GetRequiredEnvVar($"{EnvVarPrefix}__PODVOLUMEJSON", "Unable to determine Kubernetes Pod volume json.");
         public static bool ExecuteScriptsInLocalShell => bool.TryParse(Environment.GetEnvironmentVariable($"{EnvVarPrefix}__EXECUTEINLOCALSHELL"), out var executeInLocalShell) && executeInLocalShell;
         public static int PodMonitorTimeoutSeconds => int.TryParse(Environment.GetEnvironmentVariable($"{EnvVarPrefix}__PODMONITORTIMEOUT"), out var podMonitorTimeout) ? podMonitorTimeout : 1800; //30min
+        public static bool DisableAutomaticPodCleanup => bool.TryParse(Environment.GetEnvironmentVariable($"{EnvVarPrefix}__DISABLEAUTOPODCLEANUP"), out var disableAutoCleanup) && disableAutoCleanup;
 
         public static string HelmReleaseNameVariableName => $"{EnvVarPrefix}__HELMRELEASENAME";
         public static string HelmReleaseName => GetRequiredEnvVar(HelmReleaseNameVariableName, "Unable to determine Helm release name.");
