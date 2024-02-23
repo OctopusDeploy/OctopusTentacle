@@ -1,8 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using k8s;
 using k8s.Models;
+using Nito.AsyncEx;
 using Octopus.Tentacle.Contracts;
 
 namespace Octopus.Tentacle.Kubernetes
@@ -10,10 +14,14 @@ namespace Octopus.Tentacle.Kubernetes
     public interface IKubernetesPodService
     {
         Task<V1Pod?> TryGetPod(ScriptTicket scriptTicket, CancellationToken cancellationToken);
-        Task<V1PodList> ListAllPodsAsync(CancellationToken cancellationToken);
+        Task<V1PodList> ListAllPods(CancellationToken cancellationToken);
         Task WatchAllPods(string initialResourceVersion, Func<WatchEventType, V1Pod, Task> onChange, Action<Exception> onError, CancellationToken cancellationToken);
         Task Create(V1Pod pod, CancellationToken cancellationToken);
         Task Delete(ScriptTicket scriptTicket, CancellationToken cancellationToken);
+
+#pragma warning disable CS8424 // The EnumeratorCancellationAttribute will have no effect. The attribute is only effective on a parameter of type CancellationToken in an async-iterator method returning IAsyncEnumerable
+        IAsyncEnumerable<string?> StreamPodLogs(string podName, string containerName, [EnumeratorCancellation] CancellationToken cancellationToken = default);
+#pragma warning restore CS8424 // The EnumeratorCancellationAttribute will have no effect. The attribute is only effective on a parameter of type CancellationToken in an async-iterator method returning IAsyncEnumerable
     }
 
     public class KubernetesPodService : KubernetesService, IKubernetesPodService
@@ -26,7 +34,7 @@ namespace Octopus.Tentacle.Kubernetes
         public async Task<V1Pod?> TryGetPod(ScriptTicket scriptTicket, CancellationToken cancellationToken) =>
             await TryGetAsync(() => Client.ReadNamespacedPodAsync(scriptTicket.ToKubernetesScriptPobName(), KubernetesConfig.Namespace, cancellationToken: cancellationToken));
 
-        public async Task<V1PodList> ListAllPodsAsync(CancellationToken cancellationToken)
+        public async Task<V1PodList> ListAllPods(CancellationToken cancellationToken)
         {
             return await Client.ListNamespacedPodAsync(KubernetesConfig.Namespace,
                 labelSelector: OctopusLabels.ScriptTicketId,
@@ -58,6 +66,35 @@ namespace Octopus.Tentacle.Kubernetes
                 await onChange(type, pod);
             }
         }
+
+        public async IAsyncEnumerable<string?> StreamPodLogs(string podName, string containerName, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            var response = await Client.CoreV1.ReadNamespacedPodLogWithHttpMessagesAsync(
+                    podName,
+                    KubernetesConfig.Namespace,
+                    containerName,
+                    follow: true,
+                    cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
+
+            var stream = response.Body;
+
+            using var streamReader = new StreamReader(stream);
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                string? line;
+                try
+                {
+                    line = await streamReader.ReadLineAsync().WaitAsync(cancellationToken).ConfigureAwait(false);
+                }
+                catch (TaskCanceledException)
+                {
+                    yield break;
+                }
+                yield return line;
+            }
+        }
+
         public async Task Create(V1Pod pod, CancellationToken cancellationToken)
         {
             AddStandardMetadata(pod);

@@ -55,7 +55,7 @@ namespace Octopus.Tentacle.Kubernetes
             //clear the status'
             podStatusLookup.Clear();
 
-            var allPods = await podService.ListAllPodsAsync(cancellationToken);
+            var allPods = await podService.ListAllPods(cancellationToken);
             foreach (var pod in allPods.Items)
             {
                 var status = new PodStatus(pod.GetScriptTicket());
@@ -116,6 +116,11 @@ namespace Octopus.Tentacle.Kubernetes
 
         PodStatus? IKubernetesPodStatusProvider.TryGetPodStatus(ScriptTicket scriptTicket)
             => podStatusLookup.TryGetValue(scriptTicket, out var status) ? status : null;
+    }
+
+    public class ScriptPodStatus
+    {
+
     }
 
     public class PodStatus
