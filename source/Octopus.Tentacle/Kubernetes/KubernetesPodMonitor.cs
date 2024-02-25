@@ -39,8 +39,9 @@ namespace Octopus.Tentacle.Kubernetes
                 //initially load all the pods and their status's
                 var initialResourceVersion = await InitialLoadAsync(cancellationToken);
 
-                //we start the watch from the resource version we initially loaded. This means we receive w
-                await podService.WatchAllPods(initialResourceVersion,async (type, pod) =>
+                // We start the watch from the resource version we initially loaded.
+                // This means we only receive events that occur after the resource version
+                await podService.WatchAllPods(initialResourceVersion, async (type, pod) =>
                     {
                         await Task.CompletedTask;
 
