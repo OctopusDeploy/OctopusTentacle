@@ -53,7 +53,8 @@ namespace Octopus.Tentacle.Kubernetes
                     log.Info("Stopping Kubernetes Pod Monitor");
                     cancellationTokenSource.Cancel();
 
-                    monitorTask.Wait();
+                    // give the monitor 30 to gracefully shutdown
+                    monitorTask.Wait(TimeSpan.FromSeconds(30));
                 }
                 catch (Exception e)
                 {
