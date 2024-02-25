@@ -17,7 +17,7 @@ namespace Octopus.Tentacle.Kubernetes
         readonly ISystemLog log;
         readonly CancellationTokenSource cancellationTokenSource = new ();
 
-        static readonly object LockObj = new();
+        readonly object LockObj = new();
 
         Task? monitorTask;
 
@@ -57,7 +57,7 @@ namespace Octopus.Tentacle.Kubernetes
                 }
                 catch (Exception e)
                 {
-                    log.Error(e, "Could not stop Kubernetes Pod Monitor cleaner");
+                    log.Error(e, "Could not stop Kubernetes Pod Monitor");
                 }
                 finally
                 {
