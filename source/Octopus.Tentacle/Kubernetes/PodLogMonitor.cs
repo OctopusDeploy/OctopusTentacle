@@ -4,13 +4,17 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using k8s.Models;
+using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
 
 namespace Octopus.Tentacle.Kubernetes
 {
     public class PodLogMonitor
     {
+        public delegate PodLogMonitor Factory(V1Pod pod);
+
         readonly IKubernetesPodService podService;
+        readonly ISystemLog log;
         Task? backgroundTask;
         CancellationTokenSource? cancellationTokenSource;
 
@@ -22,9 +26,10 @@ namespace Octopus.Tentacle.Kubernetes
 
         long currentSequenceNumber;
 
-        public PodLogMonitor(V1Pod pod, IKubernetesPodService podService)
+        public PodLogMonitor(V1Pod pod, IKubernetesPodService podService, ISystemLog log)
         {
             this.podService = podService;
+            this.log = log;
             podName = pod.Name();
             containerName = pod.Spec.Containers.First().Name;
         }

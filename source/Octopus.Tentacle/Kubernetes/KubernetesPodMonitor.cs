@@ -17,19 +17,21 @@ namespace Octopus.Tentacle.Kubernetes
 
     public interface IKubernetesPodStatusProvider
     {
-        PodStatus? TryGetPodStatus(ScriptTicket scriptTicket);
+        ITrackedKubernetesPod? TryGetPodStatus(ScriptTicket scriptTicket);
     }
 
     public class KubernetesPodMonitor : IKubernetesPodMonitor, IKubernetesPodStatusProvider
     {
         readonly IKubernetesPodService podService;
         readonly ISystemLog log;
-        readonly Dictionary<ScriptTicket, PodStatus> podStatusLookup = new();
+        readonly PodLogMonitor.Factory podLogMonitorFactory;
+        readonly Dictionary<ScriptTicket, TrackedPodPod> podStatusLookup = new();
 
-        public KubernetesPodMonitor(IKubernetesPodService podService, ISystemLog log)
+        public KubernetesPodMonitor(IKubernetesPodService podService, ISystemLog log, PodLogMonitor.Factory podLogMonitorFactory)
         {
             this.podService = podService;
             this.log = log;
+            this.podLogMonitorFactory = podLogMonitorFactory;
         }
 
         async Task IKubernetesPodMonitor.StartAsync(CancellationToken cancellationToken)
@@ -41,7 +43,7 @@ namespace Octopus.Tentacle.Kubernetes
 
                 // We start the watch from the resource version we initially loaded.
                 // This means we only receive events that occur after the resource version
-                await podService.WatchAllPods(initialResourceVersion, OnNewEvent, ex =>
+                await podService.WatchAllPods(initialResourceVersion, (type, pod) => OnNewEvent(type, pod, cancellationToken), ex =>
                     {
                         log.Error(ex, "An unhandled error occured in monitoring the pods");
                     }, cancellationToken
@@ -58,8 +60,8 @@ namespace Octopus.Tentacle.Kubernetes
             var allPods = await podService.ListAllPods(cancellationToken);
             foreach (var pod in allPods.Items)
             {
-                var status = new PodStatus(pod.GetScriptTicket());
-                status.Update(pod);
+                var status = new TrackedPodPod(pod.GetScriptTicket(), podLogMonitorFactory(pod));
+                status.UpdateState(pod);
 
                 log.Verbose($"Preloaded pod {pod.Name()}. {status}");
                 podStatusLookup[status.ScriptTicket] = status;
@@ -72,7 +74,7 @@ namespace Octopus.Tentacle.Kubernetes
         }
 
         //This is internal so it's accessible via unit tests
-        internal async Task OnNewEvent(WatchEventType type, V1Pod pod)
+        internal async Task OnNewEvent(WatchEventType type, V1Pod pod, CancellationToken cancellationToken)
         {
             await Task.CompletedTask;
 
@@ -84,25 +86,51 @@ namespace Octopus.Tentacle.Kubernetes
 
                 switch (type)
                 {
-                    case WatchEventType.Added or WatchEventType.Modified:
+                    case WatchEventType.Added:{
+                        if (podStatusLookup.ContainsKey(scriptTicket))
+                        {
+                            log.Warn($"Pod status for pod {pod.Name()} is already being tracked, but an Added event was received.");
+                            return;
+                        }
+
+                        var newStatus = new TrackedPodPod(pod.GetScriptTicket(), podLogMonitorFactory(pod));
+
+                        log.Verbose($"Starting tracking pod {pod.Name()}. {newStatus}");
+                        podStatusLookup[scriptTicket] = newStatus;
+
+                        newStatus.StartMonitoringLogs(cancellationToken);
+
+                        break;
+                    }
+                    case WatchEventType.Modified:
                     {
                         if (!podStatusLookup.TryGetValue(scriptTicket, out var status))
                         {
-                            status = new PodStatus(pod.GetScriptTicket());
-                            podStatusLookup[scriptTicket] = status;
+                            log.Warn($"Pod status for pod {pod.Name()} is not being tracked, but a Modified event was received.");
+                            return;
                         }
-
-                        status.Update(pod);
+                        status.UpdateState(pod);
                         log.Verbose($"Updated pod {pod.Name()} status. {status}");
 
                         break;
                     }
                     case WatchEventType.Deleted:
+                    {
+                        if (!podStatusLookup.TryGetValue(scriptTicket, out var status))
+                        {
+                            log.Warn($"Pod status for pod {pod.Name()} is not being tracked, but a Deleted event was received.");
+                            return;
+                        }
+                        status.StopMonitoringLogs();
+
                         log.Verbose($"Removed {type} pod {pod.Name()} status");
 
                         //if the pod is deleted, remove it
                         podStatusLookup.Remove(scriptTicket);
+
+                        log.Verbose($"Stopped tracking pod {pod.Name()}");
                         break;
+                    }
                     default:
                         log.Warn($"Received watch event type {type} for pod {pod.Name()}. Ignoring as we don't need it");
                         break;
@@ -114,34 +142,40 @@ namespace Octopus.Tentacle.Kubernetes
             }
         }
 
-        PodStatus? IKubernetesPodStatusProvider.TryGetPodStatus(ScriptTicket scriptTicket)
+        ITrackedKubernetesPod? IKubernetesPodStatusProvider.TryGetPodStatus(ScriptTicket scriptTicket)
             => podStatusLookup.TryGetValue(scriptTicket, out var status) ? status : null;
     }
 
-    public class PodStatus
+    public class TrackedPodPod : ITrackedKubernetesPod
     {
+        readonly PodLogMonitor podLogMonitor;
         public ScriptTicket ScriptTicket { get; }
 
-        public PodState State { get; private set; }
+        public TrackedPodState State { get; private set; }
 
         public int? ExitCode { get; private set; }
 
-        public PodStatus(ScriptTicket ticket)
+        public TrackedPodPod(ScriptTicket ticket, PodLogMonitor podLogMonitor)
         {
+            this.podLogMonitor = podLogMonitor;
             ScriptTicket = ticket;
-            State = PodState.Running;
+            State = TrackedPodState.Running;
         }
 
-        public void Update(V1Pod pod)
+        public void StartMonitoringLogs(CancellationToken cancellationToken) => podLogMonitor.StartMonitoring(cancellationToken);
+
+        public void StopMonitoringLogs() => podLogMonitor.StopMonitoring();
+
+        public void UpdateState(V1Pod pod)
         {
             switch (pod.Status?.Phase)
             {
                 case "Succeeded":
-                    State = PodState.Succeeded;
+                    State = TrackedPodState.Succeeded;
                     ExitCode = 0;
                     break;
                 case "Failed":
-                    State = PodState.Failed;
+                    State = TrackedPodState.Failed;
 
                     //find the status for the container
                     //we we can't determine the exit code from the pod container, just return 1
@@ -151,11 +185,21 @@ namespace Octopus.Tentacle.Kubernetes
             }
         }
 
+        public (long newSequence, List<PodLogLine>) GetLogs(long lastLogSequence)
+            => podLogMonitor.GetLogs(lastLogSequence);
+
         public override string ToString()
             => $"ScriptTicket: {ScriptTicket}, State: {State}, ExitCode: {ExitCode}";
     }
 
-    public enum PodState
+    public interface ITrackedKubernetesPod
+    {
+        (long newSequence, List<PodLogLine>) GetLogs(long lastLogSequence);
+        TrackedPodState State { get; }
+        int? ExitCode { get; }
+    }
+
+    public enum TrackedPodState
     {
         Running,
         Succeeded,

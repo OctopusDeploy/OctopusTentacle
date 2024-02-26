@@ -55,9 +55,9 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             var status = ((IKubernetesPodStatusProvider)monitor).TryGetPodStatus(scriptTicket);
             status.Should().NotBeNull();
 
-            status.Should().Match<PodStatus>(status =>
+            status.Should().Match<TrackedPodPod>(status =>
                 status.ScriptTicket == scriptTicket &&
-                status.State == PodState.Running &&
+                status.State == TrackedPodState.Running &&
                 status.ExitCode == null
             );
         }
@@ -78,7 +78,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                 }
             };
 
-            podService.ListAllPodsAsync(Arg.Any<CancellationToken>())
+            podService.ListAllPods(Arg.Any<CancellationToken>())
                 .Returns(new V1PodList
                 {
                     Items = new List<V1Pod>
@@ -103,9 +103,9 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             var status = ((IKubernetesPodStatusProvider)monitor).TryGetPodStatus(scriptTicket);
             status.Should().NotBeNull();
 
-            status.Should().Match<PodStatus>(status =>
+            status.Should().Match<TrackedPodPod>(status =>
                 status.ScriptTicket == scriptTicket &&
-                status.State == PodState.Succeeded &&
+                status.State == TrackedPodState.Succeeded &&
                 status.ExitCode == 0
             );
         }
@@ -126,7 +126,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                 }
             };
 
-            podService.ListAllPodsAsync(Arg.Any<CancellationToken>())
+            podService.ListAllPods(Arg.Any<CancellationToken>())
                 .Returns(new V1PodList
                 {
                     Items = new List<V1Pod>
@@ -164,9 +164,9 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             var status = ((IKubernetesPodStatusProvider)monitor).TryGetPodStatus(scriptTicket);
             status.Should().NotBeNull();
 
-            status.Should().Match<PodStatus>(status =>
+            status.Should().Match<TrackedPodPod>(status =>
                 status.ScriptTicket == scriptTicket &&
-                status.State == PodState.Failed &&
+                status.State == TrackedPodState.Failed &&
                 status.ExitCode == -99
             );
         }
@@ -187,7 +187,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                 }
             };
 
-            podService.ListAllPodsAsync(Arg.Any<CancellationToken>())
+            podService.ListAllPods(Arg.Any<CancellationToken>())
                 .Returns(new V1PodList
                 {
                     Items = new List<V1Pod>
