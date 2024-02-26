@@ -41,47 +41,7 @@ namespace Octopus.Tentacle.Kubernetes
 
                 // We start the watch from the resource version we initially loaded.
                 // This means we only receive events that occur after the resource version
-                await podService.WatchAllPods(initialResourceVersion, async (type, pod) =>
-                    {
-                        await Task.CompletedTask;
-
-                        try
-                        {
-                            log.Verbose($"Received {type} event for pod {pod.Name()}");
-
-                            var scriptTicket = pod.GetScriptTicket();
-
-                            switch (type)
-                            {
-                                case WatchEventType.Added or WatchEventType.Modified:
-                                {
-                                    if (!podStatusLookup.TryGetValue(scriptTicket, out var status))
-                                    {
-                                        status = new PodStatus(pod.GetScriptTicket());
-                                        podStatusLookup[scriptTicket] = status;
-                                    }
-
-                                    status.Update(pod);
-                                    log.Verbose($"Updated pod {pod.Name()} status. {status}");
-
-                                    break;
-                                }
-                                case WatchEventType.Deleted:
-                                    log.Verbose($"Removed {type} pod {pod.Name()} status");
-
-                                    //if the pod is deleted, remove it
-                                    podStatusLookup.Remove(scriptTicket);
-                                    break;
-                                default:
-                                    log.Warn($"Received watch event type {type} for pod {pod.Name()}. Ignoring as we don't need it");
-                                    break;
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            log.Error(e, $"Failed to process event {type} for pod {pod.Name()}.");
-                        }
-                    }, ex =>
+                await podService.WatchAllPods(initialResourceVersion, OnNewEvent, ex =>
                     {
                         log.Error(ex, "An unhandled error occured in monitoring the pods");
                     }, cancellationToken
@@ -89,7 +49,7 @@ namespace Octopus.Tentacle.Kubernetes
             }
         }
 
-        async Task<string> InitialLoadAsync(CancellationToken cancellationToken)
+        internal async Task<string> InitialLoadAsync(CancellationToken cancellationToken)
         {
             log.Verbose("Preloading pod statuses");
             //clear the status'
@@ -109,6 +69,49 @@ namespace Octopus.Tentacle.Kubernetes
 
             //this is the resource version for the list. We use this to start the watch at this particular point
             return allPods.ResourceVersion();
+        }
+
+        //This is internal so it's accessible via unit tests
+        internal async Task OnNewEvent(WatchEventType type, V1Pod pod)
+        {
+            await Task.CompletedTask;
+
+            try
+            {
+                log.Verbose($"Received {type} event for pod {pod.Name()}");
+
+                var scriptTicket = pod.GetScriptTicket();
+
+                switch (type)
+                {
+                    case WatchEventType.Added or WatchEventType.Modified:
+                    {
+                        if (!podStatusLookup.TryGetValue(scriptTicket, out var status))
+                        {
+                            status = new PodStatus(pod.GetScriptTicket());
+                            podStatusLookup[scriptTicket] = status;
+                        }
+
+                        status.Update(pod);
+                        log.Verbose($"Updated pod {pod.Name()} status. {status}");
+
+                        break;
+                    }
+                    case WatchEventType.Deleted:
+                        log.Verbose($"Removed {type} pod {pod.Name()} status");
+
+                        //if the pod is deleted, remove it
+                        podStatusLookup.Remove(scriptTicket);
+                        break;
+                    default:
+                        log.Warn($"Received watch event type {type} for pod {pod.Name()}. Ignoring as we don't need it");
+                        break;
+                }
+            }
+            catch (Exception e)
+            {
+                log.Error(e, $"Failed to process event {type} for pod {pod.Name()}.");
+            }
         }
 
         PodStatus? IKubernetesPodStatusProvider.TryGetPodStatus(ScriptTicket scriptTicket)
