@@ -43,14 +43,19 @@ exec 2> >(logStdErr >&2)
 # Change cwd to the working directory
 cd "$WORK_DIR" || return
 
+# Write a message to say the job is starting
+echo "##octopus[stdout-default]"
+echo "Kubernetes Pod starting" $(date)
+echo "##octopus[stdout-default]"
+
 /bin/bash "$BOOTSTRAP_SCRIPT" "$@"
 
 #Get the return value from the previous script
 RETURN_VAL=$?
 
-# Write a message to say the pod has completed
-echo "##octopus[stdout-verbose]"
-echo "Kubernetes Pod completed"
+# Write a message to say the job has completed
+echo "##octopus[stdout-default]"
+echo "Kubernetes Pod completed" $(date)
 echo "##octopus[stdout-default]"
 
 # This ungodly hack is to stop the pod from being killed before the last log has been flushed

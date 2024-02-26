@@ -173,6 +173,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
 
             await Task.WhenAll(checkPodTask, monitorPodOutputTask);
 
+            writer.WriteOutput(ProcessOutputSource.StdOut, DateTimeOffset.UtcNow + ", " + "Doing final read");
             //once they have both finished, perform one last log read (and don't cancel on it)
             await outputStreamWriter.StreamPodLogsToScriptLog(writer, CancellationToken.None, true);
 
@@ -203,7 +204,10 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                 resultStatusCode = 0;
             }, CancellationToken.None);
 
-            //if the pod was killed by cancellation, then we need to change the exit code
+            using var writer = ScriptLog.CreateWriter();
+
+            WriteVerbose(writer, "Script complete! " + scriptTicket.TaskId);
+            //if the job was killed by cancellation, then we need to change the exit code
             if (scriptCancellationToken.IsCancellationRequested)
             {
                 resultStatusCode = ScriptExitCodes.CanceledExitCode;
@@ -444,23 +448,24 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                     //we don't care about errors here
                 }
             }
+
         }
 
         void WriteInfo(IScriptLogWriter writer, string message)
         {
-            writer.WriteOutput(ProcessOutputSource.StdOut, message);
+            writer.WriteOutput(ProcessOutputSource.StdOut, DateTimeOffset.UtcNow + ", " + message);
             log.Info(message);
         }
 
         void WriteError(IScriptLogWriter writer, string message)
         {
-            writer.WriteOutput(ProcessOutputSource.StdErr, message);
+            writer.WriteOutput(ProcessOutputSource.StdErr, DateTimeOffset.UtcNow + ", " + message);
             log.Error(message);
         }
 
         void WriteVerbose(IScriptLogWriter writer, string message)
         {
-            writer.WriteVerbose(message);
+            writer.WriteVerbose(DateTimeOffset.UtcNow + ", " + message);
             log.Verbose(message);
         }
     }
