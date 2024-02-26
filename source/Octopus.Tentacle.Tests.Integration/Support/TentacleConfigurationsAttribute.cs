@@ -143,7 +143,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             }
 #endif
 
-            versions.RemoveWhere(v => TentacleVersions.VersionsToSkip.Contains(v));
+            versions.RemoveWhere(v => TentacleVersions.VersionsUnsupportedByCurrentOperatingSystemAndArchitecture.Contains(v));
 
             var testCases =
                 from tentacleType in tentacleTypes

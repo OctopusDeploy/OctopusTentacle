@@ -35,9 +35,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         public static Version[] AllTestedVersionsToDownload = GetAllTestedVersionsToDownload();
 
-        public static Version[] VersionsToSkip = GetVersionsToSkip();
+        public static readonly Version[] VersionsUnsupportedByCurrentOperatingSystemAndArchitecture = GetVersionsUnsupportedByCurrentOperatingSystemAndArchitecture();
 
-        static Version[] GetVersionsToSkip()
+        static Version[] GetVersionsUnsupportedByCurrentOperatingSystemAndArchitecture()
         {
             if (!PlatformDetection.IsRunningOnMac && RuntimeInformation.ProcessArchitecture != Architecture.Arm64) return Array.Empty<Version>();
 
