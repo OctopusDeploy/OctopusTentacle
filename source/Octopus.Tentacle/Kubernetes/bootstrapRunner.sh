@@ -62,7 +62,6 @@ echo "##octopus[stdout-default]"
 sleep 1.250 #250ms
 
 echo "Hahahahhaha"
-cat "$STDOUT_LOG"
 
 #Propagate the return value from the bootstrap script to the output host
 exit "$RETURN_VAL"

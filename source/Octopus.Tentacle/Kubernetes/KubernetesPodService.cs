@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using k8s;
@@ -12,6 +13,7 @@ namespace Octopus.Tentacle.Kubernetes
         Task Create(V1Pod pod, CancellationToken cancellationToken);
         Task Delete(ScriptTicket scriptTicket, CancellationToken cancellationToken);
         Task Watch(ScriptTicket scriptTicket, Func<V1Pod, bool> onChange, Action<Exception> onError, CancellationToken cancellationToken);
+        Task<string> GetLogs(ScriptTicket scriptTicket, CancellationToken cancellationToken);
     }
 
     public class KubernetesPodService : KubernetesService, IKubernetesPodService
@@ -19,6 +21,19 @@ namespace Octopus.Tentacle.Kubernetes
         public KubernetesPodService(IKubernetesClientConfigProvider configProvider)
             : base(configProvider)
         {
+        }
+
+        public async Task<string> GetLogs(ScriptTicket scriptTicket, CancellationToken cancellationToken)
+        {
+            
+            using var response = await Client.ReadNamespacedPodLogAsync(
+                scriptTicket.ToKubernetesScriptPobName(),
+                KubernetesConfig.Namespace,
+                cancellationToken: cancellationToken);
+
+            using var reader = new StreamReader(response);
+
+            return await reader.ReadToEndAsync();
         }
 
         public async Task Watch(ScriptTicket scriptTicket, Func<V1Pod, bool> onChange, Action<Exception> onError, CancellationToken cancellationToken)

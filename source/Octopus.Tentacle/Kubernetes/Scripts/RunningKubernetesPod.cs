@@ -175,8 +175,32 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
 
             writer.WriteOutput(ProcessOutputSource.StdOut, DateTimeOffset.UtcNow + ", " + "Doing final read");
             //once they have both finished, perform one last log read (and don't cancel on it)
-            await outputStreamWriter.StreamPodLogsToScriptLog(writer, CancellationToken.None, true);
+            //await outputStreamWriter.StreamPodLogsToScriptLog(writer, CancellationToken.None, true);
 
+            var logs = await podService.GetLogs(scriptTicket, scriptCancellationToken);
+            foreach (var line in logs.Split('\n'))
+            {
+                var logParts = line!.Split(new[] { '|' }, 2);
+
+                if (logParts.Length != 2)
+                {
+                    writer.WriteOutput(ProcessOutputSource.StdErr, $"Invalid log line detected. '{line}' is not correctly pipe-delimited.");
+                    continue;
+                }
+
+                //part 1 is the datetimeoffset
+                if (!DateTimeOffset.TryParse(logParts[0], out var occurred))
+                {
+                    writer.WriteOutput(ProcessOutputSource.StdErr, $"Failed to parse '{logParts[0]}' as a DateTimeOffset. Using DateTimeOffset.UtcNow.");
+                    occurred = DateTimeOffset.UtcNow;
+                }
+
+                //add the new line
+                var message = logParts[1];
+                var logLineMessage = message.StartsWith("##") ? message : $"{occurred} ({DateTimeOffset.UtcNow}), {message}";
+                writer.WriteOutput(ProcessOutputSource.StdOut, logLineMessage, occurred);
+            }
+            
             //return the exit code of the pod
             return checkPodTask.Result;
         }
