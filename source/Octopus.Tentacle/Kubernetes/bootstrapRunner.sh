@@ -58,10 +58,11 @@ echo "##octopus[stdout-default]"
 echo "Kubernetes Pod completed" $(date)
 echo "##octopus[stdout-default]"
 
+# This ungodly hack is to stop the pod from being killed before the last log has been flushed
+sleep 1.250 #250ms
+
 echo "Hahahahhaha"
 cat "$STDOUT_LOG"
-# This ungodly hack is to stop the pod from being killed before the last log has been flushed
-sleep 0.250 #250ms
 
 #Propagate the return value from the bootstrap script to the output host
 exit "$RETURN_VAL"
