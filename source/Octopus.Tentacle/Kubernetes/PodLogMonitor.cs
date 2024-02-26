@@ -16,7 +16,7 @@ namespace Octopus.Tentacle.Kubernetes
 
         List<PodLogLine> logLines = new();
 
-        static readonly object LogLock = new();
+        readonly object logLock = new();
         readonly string podName;
         readonly string containerName;
 
@@ -42,12 +42,12 @@ namespace Octopus.Tentacle.Kubernetes
                 return;
 
             cancellationTokenSource.Cancel();
-            backgroundTask.Wait();
+            backgroundTask.Wait(TimeSpan.FromSeconds(30));
         }
 
         public (long newSequence, List<PodLogLine>) GetLogs(long lastLogSequence)
         {
-            lock (LogLock)
+            lock (logLock)
             {
                 // we determine how many lines to retrieve
                 // this number is how many tail lines we need to return
@@ -103,7 +103,7 @@ namespace Octopus.Tentacle.Kubernetes
                     _ => throw new InvalidOperationException($"Unknown source {parts[1]}")
                 };
 
-                lock (LogLock)
+                lock (logLock)
                 {
                     //we are making a bold assumption that the pod logs are coming in sequential order
                     logLines.Add(new PodLogLine(occured, source, parts[2]));
