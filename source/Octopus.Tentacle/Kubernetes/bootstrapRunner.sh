@@ -6,7 +6,6 @@ STDERR_LOG="$WORK_DIR/stderr.log"
 
 format() {
 	now=$(date -u +"%Y-%m-%dT%H:%M:%S.%N%z")
-	echo "$now|$2" | tee -a "$WORK_DIR/s2.log"
 	echo "$now|$2" | tee -a "$1"
 }
 
@@ -59,6 +58,8 @@ echo "##octopus[stdout-default]"
 echo "Kubernetes Pod completed" $(date)
 echo "##octopus[stdout-default]"
 
+echo "Hahahahhaha"
+cat "$STDOUT_LOG"
 # This ungodly hack is to stop the pod from being killed before the last log has been flushed
 sleep 0.250 #250ms
 
