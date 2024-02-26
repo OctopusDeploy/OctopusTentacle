@@ -180,6 +180,9 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             var logs = await podService.GetLogs(scriptTicket, scriptCancellationToken);
             foreach (var line in logs.Split('\n'))
             {
+                if (line.IsNullOrEmpty())
+                    continue;
+                
                 var logParts = line!.Split(new[] { '|' }, 2);
 
                 if (logParts.Length != 2)
