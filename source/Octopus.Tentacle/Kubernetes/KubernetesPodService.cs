@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using k8s;
 using k8s.Models;
 using Nito.AsyncEx;
+using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
 
 namespace Octopus.Tentacle.Kubernetes
@@ -26,9 +27,12 @@ namespace Octopus.Tentacle.Kubernetes
 
     public class KubernetesPodService : KubernetesService, IKubernetesPodService
     {
-        public KubernetesPodService(IKubernetesClientConfigProvider configProvider)
+        readonly ISystemLog log;
+
+        public KubernetesPodService(IKubernetesClientConfigProvider configProvider, ISystemLog log)
             : base(configProvider)
         {
+            this.log = log;
         }
 
         public async Task<V1Pod?> TryGetPod(ScriptTicket scriptTicket, CancellationToken cancellationToken) =>
@@ -86,6 +90,11 @@ namespace Octopus.Tentacle.Kubernetes
                 try
                 {
                     line = await streamReader.ReadLineAsync().WaitAsync(cancellationToken).ConfigureAwait(false);
+
+                    if(line is not null)
+                    {
+                        log.Verbose($"Read log line {line} for pod {podName}");
+                    }
                 }
                 catch (TaskCanceledException)
                 {

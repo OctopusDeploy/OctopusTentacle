@@ -9,9 +9,9 @@ using Octopus.Tentacle.Contracts;
 
 namespace Octopus.Tentacle.Kubernetes
 {
-    public class PodLogMonitor
+    public class KubernetesPodLogMonitor
     {
-        public delegate PodLogMonitor Factory(V1Pod pod);
+        public delegate KubernetesPodLogMonitor Factory(V1Pod pod);
 
         readonly IKubernetesPodService podService;
         readonly ISystemLog log;
@@ -26,7 +26,7 @@ namespace Octopus.Tentacle.Kubernetes
 
         long currentSequenceNumber;
 
-        public PodLogMonitor(V1Pod pod, IKubernetesPodService podService, ISystemLog log)
+        public KubernetesPodLogMonitor(V1Pod pod, IKubernetesPodService podService, ISystemLog log)
         {
             this.podService = podService;
             this.log = log;
@@ -36,6 +36,7 @@ namespace Octopus.Tentacle.Kubernetes
 
         public void StartMonitoring(CancellationToken cancellationToken)
         {
+            log.Verbose($"Starting log monitoring for pod {podName}");
             cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
             backgroundTask = Task.Run(() => WatchPodLogsAsync(cancellationTokenSource.Token), cancellationToken);
@@ -46,12 +47,26 @@ namespace Octopus.Tentacle.Kubernetes
             if (backgroundTask is null || cancellationTokenSource is null)
                 return;
 
-            cancellationTokenSource.Cancel();
-            backgroundTask.Wait(TimeSpan.FromSeconds(30));
+            log.Verbose($"Stopping log monitoring for pod {podName}");
+            try
+            {
+                cancellationTokenSource.Cancel();
+                backgroundTask.Wait(TimeSpan.FromSeconds(30));
+            }
+            catch (Exception e)
+            {
+                log.Verbose(e, $"Failed to stop log monitoring for pod {podName}");
+            }
+            finally
+            {
+                log.Verbose($"Stopped log monitoring for pod {podName}");
+                backgroundTask = null;
+            }
         }
 
         public (long newSequence, List<PodLogLine>) GetLogs(long lastLogSequence)
         {
+            log.Verbose($"Get logs for pod {podName}. Sequence {lastLogSequence}");
             lock (logLock)
             {
                 // we determine how many lines to retrieve
@@ -70,6 +85,7 @@ namespace Octopus.Tentacle.Kubernetes
                 //update our sequence number
                 currentSequenceNumber = newSequence;
 
+                log.Verbose($"Got logs for pod {podName}. New sequence {newSequence}, Log lines: {linesToReturn.Count}");
                 return (newSequence, linesToReturn);
 
                 // Because we are mixing longs and int's, this becomes the easiest way to do this.
@@ -98,7 +114,10 @@ namespace Octopus.Tentacle.Kubernetes
 
                 var parts = logLine.Split('|');
                 if (parts.Length != 3)
+                {
+                    log.Verbose($"Received pod log in the wrong format: '{logLine}'");
                     continue;
+                }
 
                 var occured = DateTimeOffset.Parse(parts[0]);
                 var source = parts[1] switch

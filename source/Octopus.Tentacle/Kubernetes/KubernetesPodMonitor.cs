@@ -24,10 +24,10 @@ namespace Octopus.Tentacle.Kubernetes
     {
         readonly IKubernetesPodService podService;
         readonly ISystemLog log;
-        readonly PodLogMonitor.Factory podLogMonitorFactory;
+        readonly KubernetesPodLogMonitor.Factory podLogMonitorFactory;
         readonly Dictionary<ScriptTicket, TrackedPodPod> podStatusLookup = new();
 
-        public KubernetesPodMonitor(IKubernetesPodService podService, ISystemLog log, PodLogMonitor.Factory podLogMonitorFactory)
+        public KubernetesPodMonitor(IKubernetesPodService podService, ISystemLog log, KubernetesPodLogMonitor.Factory podLogMonitorFactory)
         {
             this.podService = podService;
             this.log = log;
@@ -86,7 +86,8 @@ namespace Octopus.Tentacle.Kubernetes
 
                 switch (type)
                 {
-                    case WatchEventType.Added:{
+                    case WatchEventType.Added:
+                    {
                         if (podStatusLookup.ContainsKey(scriptTicket))
                         {
                             log.Warn($"Pod status for pod {pod.Name()} is already being tracked, but an Added event was received.");
@@ -109,6 +110,7 @@ namespace Octopus.Tentacle.Kubernetes
                             log.Warn($"Pod status for pod {pod.Name()} is not being tracked, but a Modified event was received.");
                             return;
                         }
+
                         status.UpdateState(pod);
                         log.Verbose($"Updated pod {pod.Name()} status. {status}");
 
@@ -121,6 +123,7 @@ namespace Octopus.Tentacle.Kubernetes
                             log.Warn($"Pod status for pod {pod.Name()} is not being tracked, but a Deleted event was received.");
                             return;
                         }
+
                         status.StopMonitoringLogs();
 
                         log.Verbose($"Removed {type} pod {pod.Name()} status");
@@ -148,14 +151,14 @@ namespace Octopus.Tentacle.Kubernetes
 
     public class TrackedPodPod : ITrackedKubernetesPod
     {
-        readonly PodLogMonitor podLogMonitor;
+        readonly KubernetesPodLogMonitor podLogMonitor;
         public ScriptTicket ScriptTicket { get; }
 
         public TrackedPodState State { get; private set; }
 
         public int? ExitCode { get; private set; }
 
-        public TrackedPodPod(ScriptTicket ticket, PodLogMonitor podLogMonitor)
+        public TrackedPodPod(ScriptTicket ticket, KubernetesPodLogMonitor podLogMonitor)
         {
             this.podLogMonitor = podLogMonitor;
             ScriptTicket = ticket;
@@ -185,7 +188,7 @@ namespace Octopus.Tentacle.Kubernetes
             }
         }
 
-        public (long newSequence, List<PodLogLine>) GetLogs(long lastLogSequence)
+        public (long NewSequence, List<PodLogLine> LogLines) GetLogs(long lastLogSequence)
             => podLogMonitor.GetLogs(lastLogSequence);
 
         public override string ToString()
@@ -194,7 +197,7 @@ namespace Octopus.Tentacle.Kubernetes
 
     public interface ITrackedKubernetesPod
     {
-        (long newSequence, List<PodLogLine>) GetLogs(long lastLogSequence);
+        (long NewSequence, List<PodLogLine> LogLines) GetLogs(long lastLogSequence);
         TrackedPodState State { get; }
         int? ExitCode { get; }
     }
