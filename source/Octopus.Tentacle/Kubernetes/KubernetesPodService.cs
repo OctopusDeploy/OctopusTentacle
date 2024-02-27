@@ -10,9 +10,11 @@ namespace Octopus.Tentacle.Kubernetes
 {
     public interface IKubernetesPodService
     {
+        Task<V1Pod?> TryGetPod(ScriptTicket scriptTicket, CancellationToken cancellationToken);
+        Task<V1PodList> ListAllPodsAsync(CancellationToken cancellationToken);
+        Task WatchAllPods(string initialResourceVersion, Func<WatchEventType, V1Pod, Task> onChange, Action<Exception> onError, CancellationToken cancellationToken);
         Task Create(V1Pod pod, CancellationToken cancellationToken);
         Task Delete(ScriptTicket scriptTicket, CancellationToken cancellationToken);
-        Task Watch(ScriptTicket scriptTicket, Func<V1Pod, bool> onChange, Action<Exception> onError, CancellationToken cancellationToken);
         Task<string> GetLogs(ScriptTicket scriptTicket, CancellationToken cancellationToken);
     }
 
@@ -36,29 +38,41 @@ namespace Octopus.Tentacle.Kubernetes
             return await reader.ReadToEndAsync();
         }
 
-        public async Task Watch(ScriptTicket scriptTicket, Func<V1Pod, bool> onChange, Action<Exception> onError, CancellationToken cancellationToken)
+        public async Task<V1Pod?> TryGetPod(ScriptTicket scriptTicket, CancellationToken cancellationToken) =>
+            await TryGetAsync(() => Client.ReadNamespacedPodAsync(scriptTicket.ToKubernetesScriptPobName(), KubernetesConfig.Namespace, cancellationToken: cancellationToken));
+
+        public async Task<V1PodList> ListAllPodsAsync(CancellationToken cancellationToken)
+        {
+            return await Client.ListNamespacedPodAsync(KubernetesConfig.Namespace,
+                labelSelector: OctopusLabels.ScriptTicketId,
+                cancellationToken: cancellationToken);
+        }
+
+        public async Task WatchAllPods(string initialResourceVersion, Func<WatchEventType, V1Pod, Task> onChange, Action<Exception> onError, CancellationToken cancellationToken)
         {
             using var response = Client.CoreV1.ListNamespacedPodWithHttpMessagesAsync(
                 KubernetesConfig.Namespace,
-                //only list this pod
-                fieldSelector: $"metadata.name=={scriptTicket.ToKubernetesScriptPobName()}",
+                labelSelector: OctopusLabels.ScriptTicketId,
+                resourceVersion: initialResourceVersion,
                 watch: true,
-                timeoutSeconds: KubernetesConfig.PodMonitorTimeoutSeconds,
                 cancellationToken: cancellationToken);
 
-            await foreach (var (type, pod) in response.WatchAsync<V1Pod, V1PodList>(onError, cancellationToken: cancellationToken))
-            {
-                //watch for modifications and deletions
-                if (type is not (WatchEventType.Modified or WatchEventType.Deleted))
-                    continue;
+            var watchErrorCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-                var stopWatching = onChange(pod);
-                //we stop watching when told to or if this is deleted
-                if (stopWatching || type is WatchEventType.Deleted)
-                    break;
+            Action<Exception> internalOnError = ex =>
+            {
+                //We cancel the watch explicitly (so it can be restarted)
+                watchErrorCancellationTokenSource.Cancel();
+
+                //notify there was an error
+                onError(ex);
+            };
+
+            await foreach (var (type, pod) in response.WatchAsync<V1Pod, V1PodList>(internalOnError, cancellationToken: watchErrorCancellationTokenSource.Token))
+            {
+                await onChange(type, pod);
             }
         }
-
         public async Task Create(V1Pod pod, CancellationToken cancellationToken)
         {
             AddStandardMetadata(pod);

@@ -22,6 +22,15 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
 {
     public class RunningKubernetesPod : IRunningScript
     {
+        public delegate RunningKubernetesPod Factory(
+            IScriptWorkspace workspace,
+            IScriptLog scriptLog,
+            ScriptTicket scriptTicket,
+            string taskId,
+            IScriptStateStore stateStore,
+            KubernetesAgentScriptExecutionContext executionContext,
+            CancellationToken scriptCancellationToken);
+
         static readonly AsyncLazy<string> BootstrapRunnerScript = new(async () =>
         {
             using var stream = typeof(RunningKubernetesPod).Assembly.GetManifestResourceStream("Octopus.Tentacle.Kubernetes.bootstrapRunner.sh");
@@ -35,6 +44,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
         readonly ILog log;
         readonly IScriptStateStore stateStore;
         readonly IKubernetesPodService podService;
+        readonly IKubernetesPodStatusProvider podStatusProvider;
         readonly IKubernetesSecretService secretService;
         readonly IKubernetesPodContainerResolver containerResolver;
         readonly KubernetesAgentScriptExecutionContext executionContext;
@@ -51,14 +61,15 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             IScriptLog scriptLog,
             ScriptTicket scriptTicket,
             string taskId,
-            ILog log,
             IScriptStateStore stateStore,
+            KubernetesAgentScriptExecutionContext executionContext,
+            CancellationToken scriptCancellationToken,
+            ISystemLog log,
             IKubernetesPodService podService,
+            IKubernetesPodStatusProvider podStatusProvider,
             IKubernetesSecretService secretService,
             IKubernetesPodContainerResolver containerResolver,
-            IApplicationInstanceSelector appInstanceSelector,
-            KubernetesAgentScriptExecutionContext executionContext,
-            CancellationToken scriptCancellationToken)
+            IApplicationInstanceSelector appInstanceSelector)
         {
             this.workspace = workspace;
             this.scriptTicket = scriptTicket;
@@ -66,6 +77,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             this.log = log;
             this.stateStore = stateStore;
             this.podService = podService;
+            this.podStatusProvider = podStatusProvider;
             this.secretService = secretService;
             this.containerResolver = containerResolver;
             this.executionContext = executionContext;
@@ -210,26 +222,25 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
 
         async Task<int> CheckIfPodHasCompleted(CancellationTokenSource podCompletionCancellationTokenSource, IScriptLogWriter writer)
         {
-            var resultStatusCode = 0;
-            await podService.Watch(scriptTicket, pod =>
+            var resultStatusCode = ScriptExitCodes.UnknownScriptExitCode;
+            PodStatus? status = null;
+            while (!scriptCancellationToken.IsCancellationRequested)
             {
-                switch (pod.Status?.Phase)
+                status = podStatusProvider.TryGetPodStatus(scriptTicket);
+                if (status is not null && status.State == PodState.Succeeded)
                 {
-                    case "Succeeded":
-                        resultStatusCode = 0;
-                        return true;
-                    case "Failed":
-                        resultStatusCode =  pod.Status?.ContainerStatuses?.FirstOrDefault()?.State?.Terminated?.ExitCode ?? 1;
-                        return true;
-                    default:
-                        //continue watching
-                        return false;
+                    resultStatusCode = 0;
+                    break;
                 }
-            }, ex =>
-            {
-                log.Error(ex);
-                resultStatusCode = 0;
-            }, CancellationToken.None);
+
+                if (status is not null && status.State == PodState.Failed)
+                {
+                    resultStatusCode = status.ExitCode!.Value;
+                    break;
+                }
+
+                await Task.Delay(250, scriptCancellationToken);
+            }
 
             WriteVerbose(writer, "Script complete! " + scriptTicket.TaskId);
             //if the job was killed by cancellation, then we need to change the exit code
@@ -239,6 +250,8 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             }
 
             podCompletionCancellationTokenSource.Cancel();
+
+            log.Verbose($"Pod {podName} completed.{status}");
 
             return resultStatusCode;
         }
