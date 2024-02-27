@@ -42,46 +42,54 @@ namespace Octopus.Tentacle.Services.Scripts
             nextSequenceNumber = afterSequenceNumber;
             lock (SyncObjects[logFile])
             {
-                using (var writer = new StreamReader(fileSystem.OpenFile(logFile, FileAccess.Read, FileShare.ReadWrite), Encoding.UTF8))
-                using (var json = new JsonTextReader(writer))
+                using (var reader = new StreamReader(fileSystem.OpenFile(logFile, FileAccess.Read, FileShare.ReadWrite), Encoding.UTF8))
+                using (var json = new JsonTextReader(reader))
                 {
-                    json.SupportMultipleContent = true;
-
-                    var sequence = 0L;
-                    DateTimeOffset? lastLogLineOccured = null;
-                    while (json.Read())
+                    try
                     {
-                        if (json.TokenType != JsonToken.StartArray)
-                            continue;
+                        json.SupportMultipleContent = true;
 
-                        sequence++;
-                        if (sequence <= afterSequenceNumber)
+                        var sequence = 0L;
+                        DateTimeOffset? lastLogLineOccured = null;
+                        while (json.Read())
                         {
-                            continue;
+                            if (json.TokenType != JsonToken.StartArray)
+                                continue;
+
+                            sequence++;
+                            if (sequence <= afterSequenceNumber)
+                            {
+                                continue;
+                            }
+
+                            try
+                            {
+                                var source = StringToSource(json.ReadAsString());
+                                var message = json.ReadAsString();
+                                var occurred = json.ReadAsDateTimeOffset();
+                                lastLogLineOccured = occurred;
+                                if (occurred == null || message == null) continue;
+
+                                results.Add(new ProcessOutput(source, message, occurred.Value));
+                            }
+                            catch (Exception)
+                            {
+                                results.Add(new ProcessOutput(ProcessOutputSource.StdErr, $"Corrupt Tentacle log at line {sequence}, no more logs will be read", lastLogLineOccured ?? DateTimeOffset.Now));
+                                // Tentacle doesn't continue to write to logs after it has died so it is probably safe to assume we don't
+                                // need to try to read more JSONL lines.
+                                break;
+                            }
                         }
 
-                        try
+                        if (sequence > nextSequenceNumber)
                         {
-                            var source = StringToSource(json.ReadAsString());
-                            var message = json.ReadAsString();
-                            var occurred = json.ReadAsDateTimeOffset();
-                            lastLogLineOccured = occurred;
-                            if (occurred == null || message == null) continue;
-
-                            results.Add(new ProcessOutput(source, message, occurred.Value));
-                        }
-                        catch (Exception)
-                        {
-                            results.Add(new ProcessOutput(ProcessOutputSource.StdErr, $"Corrupt Tentacle log at line {sequence}, no more logs will be read", lastLogLineOccured??DateTimeOffset.Now));
-                            // Tentacle doesn't continue to write to logs after it has died so it is probably safe to assume we don't
-                            // need to try to read more JSONL lines.
-                            break;
+                            nextSequenceNumber = sequence;
                         }
                     }
-
-                    if (sequence > nextSequenceNumber)
+                    catch (Exception ex)
                     {
-                        nextSequenceNumber = sequence;
+                        string logText = fileSystem.ReadAllText(logFile);
+                        throw new Exception($"Logfile: '{logText}'", ex);
                     }
                 }
             }
