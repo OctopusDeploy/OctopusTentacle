@@ -166,14 +166,14 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
         async Task<int> MonitorPodAndLogs(IScriptLogWriter writer)
         {
             var podCompletionCancellationTokenSource = new CancellationTokenSource();
-            var checkPodTask = CheckIfPodHasCompleted(podCompletionCancellationTokenSource);
+            var checkPodTask = CheckIfPodHasCompleted(podCompletionCancellationTokenSource, writer);
 
             //we pass the pod completion CTS here because its used to cancel the writing of the pod stream
             //var monitorPodOutputTask = outputStreamWriter.StreamPodLogsToScriptLog(writer, podCompletionCancellationTokenSource.Token);
 
             await Task.WhenAll(checkPodTask);//, monitorPodOutputTask);
 
-            writer.WriteOutput(ProcessOutputSource.StdOut, DateTimeOffset.UtcNow + ", " + "Doing final read");
+            writer.WriteOutput(ProcessOutputSource.StdOut, DateTimeOffset.UtcNow + ", " + "Doing final read of logs");
             //once they have both finished, perform one last log read (and don't cancel on it)
             //await outputStreamWriter.StreamPodLogsToScriptLog(writer, CancellationToken.None, true);
 
@@ -208,7 +208,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             return checkPodTask.Result;
         }
 
-        async Task<int> CheckIfPodHasCompleted(CancellationTokenSource podCompletionCancellationTokenSource)
+        async Task<int> CheckIfPodHasCompleted(CancellationTokenSource podCompletionCancellationTokenSource, IScriptLogWriter writer)
         {
             var resultStatusCode = 0;
             await podService.Watch(scriptTicket, pod =>
@@ -230,8 +230,6 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                 log.Error(ex);
                 resultStatusCode = 0;
             }, CancellationToken.None);
-
-            using var writer = ScriptLog.CreateWriter();
 
             WriteVerbose(writer, "Script complete! " + scriptTicket.TaskId);
             //if the job was killed by cancellation, then we need to change the exit code
