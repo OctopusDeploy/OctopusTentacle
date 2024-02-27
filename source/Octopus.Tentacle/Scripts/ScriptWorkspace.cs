@@ -84,6 +84,8 @@ namespace Octopus.Tentacle.Scripts
 
         public async Task Delete(CancellationToken cancellationToken)
         {
+            ScriptLog.ReleaseLock(ResolvePath(LogFileName));
+            
             await FileSystem.DeleteDirectory(WorkingDirectory, cancellationToken, DeletionOptions.TryThreeTimesIgnoreFailure);
 
             // It appears that the FileSystem.DeleteDirectory method can fail to delete the directory in cases where Directory.Delete(recursive: true) can be successful.

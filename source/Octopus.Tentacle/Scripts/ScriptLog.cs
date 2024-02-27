@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -15,25 +16,31 @@ namespace Octopus.Tentacle.Services.Scripts
         readonly string logFile;
         readonly IOctopusFileSystem fileSystem;
         readonly SensitiveValueMasker sensitiveValueMasker;
-        readonly object sync = new object();
+        static readonly ConcurrentDictionary<string, object> SyncObjects = new();
+
+        public static void ReleaseLock(string logFile)
+        {
+            SyncObjects.TryRemove(logFile, out object _);
+        }
 
         public ScriptLog(string logFile, IOctopusFileSystem fileSystem, SensitiveValueMasker sensitiveValueMasker)
         {
             this.logFile = logFile;
             this.fileSystem = fileSystem;
             this.sensitiveValueMasker = sensitiveValueMasker;
+            SyncObjects.TryAdd(logFile, new object());
         }
 
         public IScriptLogWriter CreateWriter()
         {
-            return new Writer(logFile, fileSystem, sync, sensitiveValueMasker);
+            return new Writer(logFile, fileSystem, SyncObjects[logFile], sensitiveValueMasker);
         }
 
         public List<ProcessOutput> GetOutput(long afterSequenceNumber, out long nextSequenceNumber)
         {
             var results = new List<ProcessOutput>();
             nextSequenceNumber = afterSequenceNumber;
-            lock (sync)
+            lock (SyncObjects[logFile])
             {
                 using (var writer = new StreamReader(fileSystem.OpenFile(logFile, FileAccess.Read, FileShare.ReadWrite), Encoding.UTF8))
                 using (var json = new JsonTextReader(writer))
