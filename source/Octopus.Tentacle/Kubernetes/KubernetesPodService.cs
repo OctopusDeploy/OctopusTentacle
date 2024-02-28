@@ -75,6 +75,80 @@ namespace Octopus.Tentacle.Kubernetes
 
         public async IAsyncEnumerable<string?> StreamPodLogs(string podName, string containerName, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
+            var enumerable = StreamPodLogsViaPolling(podName, containerName, cancellationToken);
+            //var enumerable = StreamPodLogsViaOpenStream(podName, containerName, cancellationToken);
+
+            await foreach (var line in enumerable)
+            {
+                yield return line;
+            }
+        }
+
+        async IAsyncEnumerable<string?> StreamPodLogsViaOpenStream(string podName, string containerName, [EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            Stream? logStream = null;
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                HttpOperationResponse<Stream> response;
+                try
+                {
+                    response = await Client.CoreV1.ReadNamespacedPodLogWithHttpMessagesAsync(
+                            podName,
+                            KubernetesConfig.Namespace,
+                            containerName,
+                            follow: true,
+                            cancellationToken: cancellationToken)
+                        .ConfigureAwait(false);
+                }
+                catch (HttpOperationException ex) when (ex.Response.StatusCode == HttpStatusCode.BadRequest)
+                {
+                    // A BadRequest probably means the pod is still starting, so lets silently delay and retry
+                    await Task.Delay(250, cancellationToken);
+                    continue;
+                }
+                catch (HttpOperationException ex)
+                {
+                    log.Warn(ex, $"Failed to read namespaced logs for pod {podName}. Response.: {ex.Response.Content}");
+                    await Task.Delay(250, cancellationToken);
+                    continue;
+                }
+                catch (TaskCanceledException)
+                {
+                    break;
+                }
+
+                logStream = response.Body;
+            }
+
+            //if the log stream is null at this point, just jump out
+            if (logStream is null)
+                yield break;
+
+            log.Verbose($"Reading open log stream for pod {podName}");
+            using var streamReader = new StreamReader(logStream);
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                string? line;
+                try
+                {
+                    line = await streamReader.ReadLineAsync().WaitAsync(cancellationToken).ConfigureAwait(false);
+
+                    if (line is not null)
+                    {
+                        log.Verbose($"Read log line {line} for pod {podName}");
+                    }
+                }
+                catch (TaskCanceledException)
+                {
+                    yield break;
+                }
+
+                yield return line;
+            }
+        }
+
+        async IAsyncEnumerable<string?> StreamPodLogsViaPolling(string podName, string containerName, [EnumeratorCancellation] CancellationToken cancellationToken)
+        {
             DateTime? lastRetrievedTime = null;
             var hasReadEndOfScriptControlMessage = false;
             while (!cancellationToken.IsCancellationRequested)
@@ -126,7 +200,7 @@ namespace Octopus.Tentacle.Kubernetes
                 }
 
                 //don't loop again
-                if(hasReadEndOfScriptControlMessage)
+                if (hasReadEndOfScriptControlMessage)
                     break;
 
                 //we add the number of seconds onto the last retrieved time, just in case it took us a while to read the previous logs from the stream
@@ -135,37 +209,6 @@ namespace Octopus.Tentacle.Kubernetes
                 //delay for 1 second
                 await Task.Delay(1000, cancellationToken);
             }
-            //
-            //
-            // var response = await Client.CoreV1.ReadNamespacedPodLogWithHttpMessagesAsync(
-            //         podName,
-            //         KubernetesConfig.Namespace,
-            //         containerName,
-            //         follow: true,
-            //         cancellationToken: cancellationToken)
-            //     .ConfigureAwait(false);
-            //
-            // var stream = response.Body;
-            //
-            // using var streamReader = new StreamReader(stream);
-            // while (!cancellationToken.IsCancellationRequested)
-            // {
-            //     string? line;
-            //     try
-            //     {
-            //         line = await streamReader.ReadLineAsync().WaitAsync(cancellationToken).ConfigureAwait(false);
-            //
-            //         if(line is not null)
-            //         {
-            //             log.Verbose($"Read log line {line} for pod {podName}");
-            //         }
-            //     }
-            //     catch (TaskCanceledException)
-            //     {
-            //         yield break;
-            //     }
-            //     yield return line;
-            // }
         }
 
         public async Task Create(V1Pod pod, CancellationToken cancellationToken)
