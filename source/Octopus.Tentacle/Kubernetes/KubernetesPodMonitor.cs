@@ -25,7 +25,7 @@ namespace Octopus.Tentacle.Kubernetes
         readonly IKubernetesPodService podService;
         readonly ISystemLog log;
         readonly KubernetesPodLogMonitor.Factory podLogMonitorFactory;
-        readonly Dictionary<ScriptTicket, TrackedPodPod> podStatusLookup = new();
+        readonly Dictionary<ScriptTicket, TrackedKubernetesPod> podStatusLookup = new();
 
         public KubernetesPodMonitor(IKubernetesPodService podService, ISystemLog log, KubernetesPodLogMonitor.Factory podLogMonitorFactory)
         {
@@ -60,7 +60,7 @@ namespace Octopus.Tentacle.Kubernetes
             var allPods = await podService.ListAllPods(cancellationToken);
             foreach (var pod in allPods.Items)
             {
-                var status = new TrackedPodPod(pod.GetScriptTicket(), podLogMonitorFactory(pod));
+                var status = new TrackedKubernetesPod(pod.GetScriptTicket(), podLogMonitorFactory, pod);
                 status.UpdateState(pod);
 
                 log.Verbose($"Preloaded pod {pod.Name()}. {status}");
@@ -94,7 +94,7 @@ namespace Octopus.Tentacle.Kubernetes
                             return;
                         }
 
-                        var newStatus = new TrackedPodPod(pod.GetScriptTicket(), podLogMonitorFactory(pod));
+                        var newStatus = new TrackedKubernetesPod(pod.GetScriptTicket(), podLogMonitorFactory, pod);
 
                         log.Verbose($"Starting tracking pod {pod.Name()}. {newStatus}");
                         podStatusLookup[scriptTicket] = newStatus;
@@ -113,6 +113,12 @@ namespace Octopus.Tentacle.Kubernetes
 
                         status.UpdateState(pod);
                         log.Verbose($"Updated pod {pod.Name()} status. {status}");
+
+                        //if we are in a running phase, start the log monitoring
+                        if (pod.Status.Phase == "Running")
+                        {
+                            status.StartMonitoringLogs(cancellationToken);
+                        }
 
                         break;
                     }
@@ -149,7 +155,7 @@ namespace Octopus.Tentacle.Kubernetes
             => podStatusLookup.TryGetValue(scriptTicket, out var status) ? status : null;
     }
 
-    public class TrackedPodPod : ITrackedKubernetesPod
+    public class TrackedKubernetesPod : ITrackedKubernetesPod
     {
         readonly KubernetesPodLogMonitor podLogMonitor;
         public ScriptTicket ScriptTicket { get; }
@@ -158,9 +164,9 @@ namespace Octopus.Tentacle.Kubernetes
 
         public int? ExitCode { get; private set; }
 
-        public TrackedPodPod(ScriptTicket ticket, KubernetesPodLogMonitor podLogMonitor)
+        public TrackedKubernetesPod(ScriptTicket ticket, KubernetesPodLogMonitor.Factory podLogMonitorFactory, V1Pod pod)
         {
-            this.podLogMonitor = podLogMonitor;
+            this.podLogMonitor = podLogMonitorFactory(pod, OnScriptFinished);
             ScriptTicket = ticket;
             State = TrackedPodState.Running;
         }
@@ -171,6 +177,10 @@ namespace Octopus.Tentacle.Kubernetes
 
         public void UpdateState(V1Pod pod)
         {
+            //if we are already finished
+            if (State is not TrackedPodState.Running)
+                return;
+
             switch (pod.Status?.Phase)
             {
                 case "Succeeded":
@@ -190,6 +200,12 @@ namespace Octopus.Tentacle.Kubernetes
 
         public (long NewSequence, List<PodLogLine> LogLines) GetLogs(long lastLogSequence)
             => podLogMonitor.GetLogs(lastLogSequence);
+
+        void OnScriptFinished(TrackedPodState state, int exitCode)
+        {
+            State = state;
+            ExitCode = exitCode;
+        }
 
         public override string ToString()
             => $"ScriptTicket: {ScriptTicket}, State: {State}, ExitCode: {ExitCode}";

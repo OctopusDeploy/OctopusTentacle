@@ -4,6 +4,8 @@ namespace Octopus.Tentacle.Kubernetes
 {
     public static class KubernetesConfig
     {
+        public const string EndOfScriptControlMessage = "<<EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE>>";
+
         const string EnvVarPrefix = "OCTOPUS__K8STENTACLE";
 
         public static string NamespaceVariableName => $"{EnvVarPrefix}__NAMESPACE";

@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using k8s;
+using k8s.Autorest;
 using k8s.Models;
 using Nito.AsyncEx;
 using Octopus.Diagnostics;
@@ -74,20 +76,40 @@ namespace Octopus.Tentacle.Kubernetes
         public async IAsyncEnumerable<string?> StreamPodLogs(string podName, string containerName, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             DateTime? lastRetrievedTime = null;
+            var hasReadEndOfScriptControlMessage = false;
             while (!cancellationToken.IsCancellationRequested)
             {
                 var now = DateTime.Now;
                 var secondsSinceLastCheck = lastRetrievedTime.HasValue ? (int)Math.Floor((now - lastRetrievedTime.Value).TotalSeconds) : (int?)null;
 
-                var logStream = await Client.ReadNamespacedPodLogAsync(podName,
-                    KubernetesConfig.Namespace,
-                    containerName,
-                    sinceSeconds: secondsSinceLastCheck,
-                    cancellationToken: cancellationToken);
+                log.Verbose($"Getting logs for pod {podName}, seconds since last check {secondsSinceLastCheck}");
+
+                Stream logStream;
+                try
+                {
+                    logStream = await Client.ReadNamespacedPodLogAsync(podName,
+                        KubernetesConfig.Namespace,
+                        containerName,
+                        sinceSeconds: secondsSinceLastCheck,
+                        cancellationToken: cancellationToken);
+                }
+                catch (HttpOperationException ex) when (ex.Response.StatusCode == HttpStatusCode.BadRequest)
+                {
+                    //a BadRequest probably means the pod is still starting, so lets silently delay and retry
+                    await Task.Delay(250, cancellationToken);
+                    continue;
+                }
+                catch (HttpOperationException ex)
+                {
+                    log.Warn(ex, $"Failed to read namespaced logs for pod {podName}. Response.: {ex.Response.Content}");
+                    await Task.Delay(250, cancellationToken);
+                    continue;
+                }
 
                 using var streamReader = new StreamReader(logStream);
                 while (!streamReader.EndOfStream && !cancellationToken.IsCancellationRequested)
                 {
+                    log.Verbose($"Reading log line for pod {podName}");
                     var line = await streamReader.ReadLineAsync().ConfigureAwait(false);
                     if (line is not null)
                     {
@@ -95,7 +117,17 @@ namespace Octopus.Tentacle.Kubernetes
                     }
 
                     yield return line;
+
+                    if (line is not null && line.Contains(KubernetesConfig.EndOfScriptControlMessage))
+                    {
+                        hasReadEndOfScriptControlMessage = true;
+                        break;
+                    }
                 }
+
+                //don't loop again
+                if(hasReadEndOfScriptControlMessage)
+                    break;
 
                 //we add the number of seconds onto the last retrieved time, just in case it took us a while to read the previous logs from the stream
                 lastRetrievedTime = (lastRetrievedTime ?? now).AddSeconds(secondsSinceLastCheck.GetValueOrDefault(0));

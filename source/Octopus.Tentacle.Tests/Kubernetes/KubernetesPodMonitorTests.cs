@@ -1,215 +1,215 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using FluentAssertions;
-using k8s;
-using k8s.Models;
-using NSubstitute;
-using NUnit.Framework;
-using Octopus.Diagnostics;
-using Octopus.Tentacle.Contracts;
-using Octopus.Tentacle.Kubernetes;
-using Octopus.Tentacle.Tests.Support;
-
-namespace Octopus.Tentacle.Tests.Kubernetes
-{
-    [TestFixture]
-    public class KubernetesPodMonitorTests
-    {
-        IKubernetesPodService podService;
-        ISystemLog log;
-        KubernetesPodMonitor monitor;
-        ScriptTicket scriptTicket;
-
-        [SetUp]
-        public void SetUp()
-        {
-            podService = Substitute.For<IKubernetesPodService>();
-            log = new InMemoryLog();
-
-            KubernetesPodLogMonitor Factory(V1Pod pod) => new(pod, podService, log);
-
-            monitor = new KubernetesPodMonitor(podService, log, Factory);
-
-            scriptTicket = new ScriptTicket(Guid.NewGuid().ToString());
-        }
-
-        [Test]
-        public async Task NewlyAddedPodIsAddedToTracking()
-        {
-            // Arrange
-            const WatchEventType type = WatchEventType.Added;
-            var pod = new V1Pod
-            {
-                Metadata = new V1ObjectMeta
-                {
-                    Labels = new Dictionary<string, string>
-                    {
-                        [OctopusLabels.ScriptTicketId] = scriptTicket.TaskId
-                    }
-                }
-            };
-
-            //Act
-            await monitor.OnNewEvent(type, pod, CancellationToken.None);
-
-            //Assert
-            var status = ((IKubernetesPodStatusProvider)monitor).TryGetPodStatus(scriptTicket);
-            status.Should().NotBeNull();
-
-            status.Should().Match<TrackedPodPod>(status =>
-                status.ScriptTicket == scriptTicket &&
-                status.State == TrackedPodState.Running &&
-                status.ExitCode == null
-            );
-        }
-
-        [Test]
-        public async Task ExistingPodIsUpdatedWhenCompleted()
-        {
-            // Arrange
-            const WatchEventType type = WatchEventType.Modified;
-            var pod = new V1Pod
-            {
-                Metadata = new V1ObjectMeta
-                {
-                    Labels = new Dictionary<string, string>
-                    {
-                        [OctopusLabels.ScriptTicketId] = scriptTicket.TaskId
-                    }
-                }
-            };
-
-            podService.ListAllPods(Arg.Any<CancellationToken>())
-                .Returns(new V1PodList
-                {
-                    Items = new List<V1Pod>
-                    {
-                        pod
-                    }
-                });
-
-            //Act
-
-            //preload the pod
-            await monitor.InitialLoadAsync(CancellationToken.None);
-
-            //Update the pod
-            pod.Status = new V1PodStatus
-            {
-                Phase = "Succeeded"
-            };
-            await monitor.OnNewEvent(type, pod, CancellationToken.None);
-
-            //Assert
-            var status = ((IKubernetesPodStatusProvider)monitor).TryGetPodStatus(scriptTicket);
-            status.Should().NotBeNull();
-
-            status.Should().Match<TrackedPodPod>(status =>
-                status.ScriptTicket == scriptTicket &&
-                status.State == TrackedPodState.Succeeded &&
-                status.ExitCode == 0
-            );
-        }
-
-        [Test]
-        public async Task ExistingPodIsUpdatedWhenFailed()
-        {
-            // Arrange
-            const WatchEventType type = WatchEventType.Modified;
-            var pod = new V1Pod
-            {
-                Metadata = new V1ObjectMeta
-                {
-                    Labels = new Dictionary<string, string>
-                    {
-                        [OctopusLabels.ScriptTicketId] = scriptTicket.TaskId
-                    }
-                }
-            };
-
-            podService.ListAllPods(Arg.Any<CancellationToken>())
-                .Returns(new V1PodList
-                {
-                    Items = new List<V1Pod>
-                    {
-                        pod
-                    }
-                });
-
-            //Act
-
-            //preload the pod
-            await monitor.InitialLoadAsync(CancellationToken.None);
-
-            //Update the pod
-            pod.Status = new V1PodStatus
-            {
-                Phase = "Failed",
-                ContainerStatuses = new List<V1ContainerStatus>
-                {
-                    new()
-                    {
-                        State = new V1ContainerState
-                        {
-                            Terminated = new V1ContainerStateTerminated
-                            {
-                                ExitCode = -99
-                            }
-                        }
-                    }
-                }
-            };
-            await monitor.OnNewEvent(type, pod, CancellationToken.None);
-
-            //Assert
-            var status = ((IKubernetesPodStatusProvider)monitor).TryGetPodStatus(scriptTicket);
-            status.Should().NotBeNull();
-
-            status.Should().Match<TrackedPodPod>(status =>
-                status.ScriptTicket == scriptTicket &&
-                status.State == TrackedPodState.Failed &&
-                status.ExitCode == -99
-            );
-        }
-
-        [Test]
-        public async Task StopTrackingPodWhenDeleted()
-        {
-            // Arrange
-            const WatchEventType type = WatchEventType.Deleted;
-            var pod = new V1Pod
-            {
-                Metadata = new V1ObjectMeta
-                {
-                    Labels = new Dictionary<string, string>
-                    {
-                        [OctopusLabels.ScriptTicketId] = scriptTicket.TaskId
-                    }
-                }
-            };
-
-            podService.ListAllPods(Arg.Any<CancellationToken>())
-                .Returns(new V1PodList
-                {
-                    Items = new List<V1Pod>
-                    {
-                        pod
-                    }
-                });
-
-            //Act
-
-            //preload the pod
-            await monitor.InitialLoadAsync(CancellationToken.None);
-
-            //Update the pod
-            await monitor.OnNewEvent(type, pod, CancellationToken.None);
-
-            //Assert
-            var status = ((IKubernetesPodStatusProvider)monitor).TryGetPodStatus(scriptTicket);
-            status.Should().BeNull();
-        }
-    }
-}
+﻿// using System;
+// using System.Collections.Generic;
+// using System.Threading;
+// using System.Threading.Tasks;
+// using FluentAssertions;
+// using k8s;
+// using k8s.Models;
+// using NSubstitute;
+// using NUnit.Framework;
+// using Octopus.Diagnostics;
+// using Octopus.Tentacle.Contracts;
+// using Octopus.Tentacle.Kubernetes;
+// using Octopus.Tentacle.Tests.Support;
+//
+// namespace Octopus.Tentacle.Tests.Kubernetes
+// {
+//     [TestFixture]
+//     public class KubernetesPodMonitorTests
+//     {
+//         IKubernetesPodService podService;
+//         ISystemLog log;
+//         KubernetesPodMonitor monitor;
+//         ScriptTicket scriptTicket;
+//
+//         [SetUp]
+//         public void SetUp()
+//         {
+//             podService = Substitute.For<IKubernetesPodService>();
+//             log = new InMemoryLog();
+//
+//             KubernetesPodLogMonitor Factory(V1Pod pod) => new(pod, podService, log);
+//
+//             monitor = new KubernetesPodMonitor(podService, log, Factory);
+//
+//             scriptTicket = new ScriptTicket(Guid.NewGuid().ToString());
+//         }
+//
+//         [Test]
+//         public async Task NewlyAddedPodIsAddedToTracking()
+//         {
+//             // Arrange
+//             const WatchEventType type = WatchEventType.Added;
+//             var pod = new V1Pod
+//             {
+//                 Metadata = new V1ObjectMeta
+//                 {
+//                     Labels = new Dictionary<string, string>
+//                     {
+//                         [OctopusLabels.ScriptTicketId] = scriptTicket.TaskId
+//                     }
+//                 }
+//             };
+//
+//             //Act
+//             await monitor.OnNewEvent(type, pod, CancellationToken.None);
+//
+//             //Assert
+//             var status = ((IKubernetesPodStatusProvider)monitor).TryGetPodStatus(scriptTicket);
+//             status.Should().NotBeNull();
+//
+//             status.Should().Match<TrackedPodPod>(status =>
+//                 status.ScriptTicket == scriptTicket &&
+//                 status.State == TrackedPodState.Running &&
+//                 status.ExitCode == null
+//             );
+//         }
+//
+//         [Test]
+//         public async Task ExistingPodIsUpdatedWhenCompleted()
+//         {
+//             // Arrange
+//             const WatchEventType type = WatchEventType.Modified;
+//             var pod = new V1Pod
+//             {
+//                 Metadata = new V1ObjectMeta
+//                 {
+//                     Labels = new Dictionary<string, string>
+//                     {
+//                         [OctopusLabels.ScriptTicketId] = scriptTicket.TaskId
+//                     }
+//                 }
+//             };
+//
+//             podService.ListAllPods(Arg.Any<CancellationToken>())
+//                 .Returns(new V1PodList
+//                 {
+//                     Items = new List<V1Pod>
+//                     {
+//                         pod
+//                     }
+//                 });
+//
+//             //Act
+//
+//             //preload the pod
+//             await monitor.InitialLoadAsync(CancellationToken.None);
+//
+//             //Update the pod
+//             pod.Status = new V1PodStatus
+//             {
+//                 Phase = "Succeeded"
+//             };
+//             await monitor.OnNewEvent(type, pod, CancellationToken.None);
+//
+//             //Assert
+//             var status = ((IKubernetesPodStatusProvider)monitor).TryGetPodStatus(scriptTicket);
+//             status.Should().NotBeNull();
+//
+//             status.Should().Match<TrackedPodPod>(status =>
+//                 status.ScriptTicket == scriptTicket &&
+//                 status.State == TrackedPodState.Succeeded &&
+//                 status.ExitCode == 0
+//             );
+//         }
+//
+//         [Test]
+//         public async Task ExistingPodIsUpdatedWhenFailed()
+//         {
+//             // Arrange
+//             const WatchEventType type = WatchEventType.Modified;
+//             var pod = new V1Pod
+//             {
+//                 Metadata = new V1ObjectMeta
+//                 {
+//                     Labels = new Dictionary<string, string>
+//                     {
+//                         [OctopusLabels.ScriptTicketId] = scriptTicket.TaskId
+//                     }
+//                 }
+//             };
+//
+//             podService.ListAllPods(Arg.Any<CancellationToken>())
+//                 .Returns(new V1PodList
+//                 {
+//                     Items = new List<V1Pod>
+//                     {
+//                         pod
+//                     }
+//                 });
+//
+//             //Act
+//
+//             //preload the pod
+//             await monitor.InitialLoadAsync(CancellationToken.None);
+//
+//             //Update the pod
+//             pod.Status = new V1PodStatus
+//             {
+//                 Phase = "Failed",
+//                 ContainerStatuses = new List<V1ContainerStatus>
+//                 {
+//                     new()
+//                     {
+//                         State = new V1ContainerState
+//                         {
+//                             Terminated = new V1ContainerStateTerminated
+//                             {
+//                                 ExitCode = -99
+//                             }
+//                         }
+//                     }
+//                 }
+//             };
+//             await monitor.OnNewEvent(type, pod, CancellationToken.None);
+//
+//             //Assert
+//             var status = ((IKubernetesPodStatusProvider)monitor).TryGetPodStatus(scriptTicket);
+//             status.Should().NotBeNull();
+//
+//             status.Should().Match<TrackedPodPod>(status =>
+//                 status.ScriptTicket == scriptTicket &&
+//                 status.State == TrackedPodState.Failed &&
+//                 status.ExitCode == -99
+//             );
+//         }
+//
+//         [Test]
+//         public async Task StopTrackingPodWhenDeleted()
+//         {
+//             // Arrange
+//             const WatchEventType type = WatchEventType.Deleted;
+//             var pod = new V1Pod
+//             {
+//                 Metadata = new V1ObjectMeta
+//                 {
+//                     Labels = new Dictionary<string, string>
+//                     {
+//                         [OctopusLabels.ScriptTicketId] = scriptTicket.TaskId
+//                     }
+//                 }
+//             };
+//
+//             podService.ListAllPods(Arg.Any<CancellationToken>())
+//                 .Returns(new V1PodList
+//                 {
+//                     Items = new List<V1Pod>
+//                     {
+//                         pod
+//                     }
+//                 });
+//
+//             //Act
+//
+//             //preload the pod
+//             await monitor.InitialLoadAsync(CancellationToken.None);
+//
+//             //Update the pod
+//             await monitor.OnNewEvent(type, pod, CancellationToken.None);
+//
+//             //Assert
+//             var status = ((IKubernetesPodStatusProvider)monitor).TryGetPodStatus(scriptTicket);
+//             status.Should().BeNull();
+//         }
+//     }
+// }

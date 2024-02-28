@@ -11,14 +11,15 @@ namespace Octopus.Tentacle.Kubernetes
 {
     public class KubernetesPodLogMonitor
     {
-        public delegate KubernetesPodLogMonitor Factory(V1Pod pod);
+        public delegate KubernetesPodLogMonitor Factory(V1Pod pod, Action<TrackedPodState, int> onScriptFinished);
 
+        readonly Action<TrackedPodState, int> onScriptFinished;
         readonly IKubernetesPodService podService;
         readonly ISystemLog log;
         Task? backgroundTask;
         CancellationTokenSource? cancellationTokenSource;
 
-        List<PodLogLine> logLines = new();
+        readonly List<PodLogLine> logLines = new();
 
         readonly object logLock = new();
         readonly string podName;
@@ -26,8 +27,9 @@ namespace Octopus.Tentacle.Kubernetes
 
         long currentSequenceNumber;
 
-        public KubernetesPodLogMonitor(V1Pod pod, IKubernetesPodService podService, ISystemLog log)
+        public KubernetesPodLogMonitor(V1Pod pod, Action<TrackedPodState, int> onScriptFinished, IKubernetesPodService podService, ISystemLog log)
         {
+            this.onScriptFinished = onScriptFinished;
             this.podService = podService;
             this.log = log;
             podName = pod.Name();
@@ -36,6 +38,10 @@ namespace Octopus.Tentacle.Kubernetes
 
         public void StartMonitoring(CancellationToken cancellationToken)
         {
+            //We are already running, so don't bother trying again
+            if(backgroundTask is not null)
+                return;
+
             log.Verbose($"Starting log monitoring for pod {podName}");
             cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
@@ -117,6 +123,18 @@ namespace Octopus.Tentacle.Kubernetes
                 {
                     log.Verbose($"Received pod log in the wrong format: '{logLine}'");
                     continue;
+                }
+
+                var message = parts[2];
+
+                //if this is the end of m
+                if (message.StartsWith(KubernetesConfig.EndOfScriptControlMessage, StringComparison.OrdinalIgnoreCase))
+                {
+                    //the second value is always the exit code
+                    var exitCode = int.Parse(message.Split('|')[1]);
+
+                    onScriptFinished(exitCode == 0 ? TrackedPodState.Succeeded : TrackedPodState.Failed , exitCode);
+                    break;
                 }
 
                 var occured = DateTimeOffset.Parse(parts[0]);
