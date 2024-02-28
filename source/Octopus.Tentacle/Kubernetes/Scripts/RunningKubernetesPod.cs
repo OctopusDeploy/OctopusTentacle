@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using k8s;
+using k8s.Autorest;
 using k8s.Models;
 using Newtonsoft.Json;
 using Nito.AsyncEx;
@@ -241,13 +242,20 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
 
                 if (status?.State == PodState.Running)
                 {
-                    var logs = await podService.GetLogs(scriptTicket, scriptCancellationToken);
-                    var finishLine = logs.Split('\n').SingleOrDefault(l => l.StartsWith("End of script 075CD4F0-8C76-491D-BA76-0879D35E9CFE", StringComparison.Ordinal));
-                    if (finishLine != null)
+                    try
                     {
-                        WriteVerbose(writer, $"Used FinishLine to detect finish '{finishLine}'");
-                        resultStatusCode = int.Parse(finishLine.Replace("End of script 075CD4F0-8C76-491D-BA76-0879D35E9CFE ", ""));
-                        break;
+                        var logs = await podService.GetLogs(scriptTicket, scriptCancellationToken);
+                        var finishLine = logs.Split('\n').SingleOrDefault(l => l.Contains("End of script 075CD4F0-8C76-491D-BA76-0879D35E9CFE"));
+                        if (finishLine != null)
+                        {
+                            WriteVerbose(writer, $"Used FinishLine to detect finish '{finishLine}'");
+                            resultStatusCode = int.Parse(finishLine.Split(new[] { '|' }, 2)[1].Replace("End of script 075CD4F0-8C76-491D-BA76-0879D35E9CFE ", ""));
+                            break;
+                        }
+                    }
+                    catch (HttpOperationException ex)
+                    {
+                        WriteVerbose(writer, "GetLogs failed: " + ex);
                     }
                 }
 
