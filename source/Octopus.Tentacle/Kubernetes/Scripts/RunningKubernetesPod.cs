@@ -212,7 +212,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
 
                 //add the new line
                 var message = logParts[1];
-                var logLineMessage = message.StartsWith("##") ? message : $"{occurred} ({DateTimeOffset.UtcNow}), {message}";
+                var logLineMessage = message.StartsWith("##") ? message : $"{occurred}, {message}";
                 writer.WriteOutput(ProcessOutputSource.StdOut, logLineMessage, occurred);
             }
             
@@ -236,6 +236,15 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                 if (status is not null && status.State == PodState.Failed)
                 {
                     resultStatusCode = status.ExitCode!.Value;
+                    break;
+                }
+
+                var logs = await podService.GetLogs(scriptTicket, scriptCancellationToken);
+                var finishLine = logs.Split('\n').SingleOrDefault(l => l.StartsWith("End of script 075CD4F0-8C76-491D-BA76-0879D35E9CFE", StringComparison.Ordinal));
+                if (finishLine != null)
+                {
+                    WriteVerbose(writer, $"Used FinishLine to detect finish '{finishLine}'");
+                    resultStatusCode = int.Parse(finishLine.Replace("End of script 075CD4F0-8C76-491D-BA76-0879D35E9CFE ", ""));
                     break;
                 }
 
