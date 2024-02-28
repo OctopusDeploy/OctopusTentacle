@@ -227,25 +227,28 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             while (!scriptCancellationToken.IsCancellationRequested)
             {
                 status = podStatusProvider.TryGetPodStatus(scriptTicket);
-                if (status is not null && status.State == PodState.Succeeded)
+                if (status?.State == PodState.Succeeded)
                 {
                     resultStatusCode = 0;
                     break;
                 }
 
-                if (status is not null && status.State == PodState.Failed)
+                if (status?.State == PodState.Failed)
                 {
                     resultStatusCode = status.ExitCode!.Value;
                     break;
                 }
 
-                var logs = await podService.GetLogs(scriptTicket, scriptCancellationToken);
-                var finishLine = logs.Split('\n').SingleOrDefault(l => l.StartsWith("End of script 075CD4F0-8C76-491D-BA76-0879D35E9CFE", StringComparison.Ordinal));
-                if (finishLine != null)
+                if (status?.State == PodState.Running)
                 {
-                    WriteVerbose(writer, $"Used FinishLine to detect finish '{finishLine}'");
-                    resultStatusCode = int.Parse(finishLine.Replace("End of script 075CD4F0-8C76-491D-BA76-0879D35E9CFE ", ""));
-                    break;
+                    var logs = await podService.GetLogs(scriptTicket, scriptCancellationToken);
+                    var finishLine = logs.Split('\n').SingleOrDefault(l => l.StartsWith("End of script 075CD4F0-8C76-491D-BA76-0879D35E9CFE", StringComparison.Ordinal));
+                    if (finishLine != null)
+                    {
+                        WriteVerbose(writer, $"Used FinishLine to detect finish '{finishLine}'");
+                        resultStatusCode = int.Parse(finishLine.Replace("End of script 075CD4F0-8C76-491D-BA76-0879D35E9CFE ", ""));
+                        break;
+                    }
                 }
 
                 await Task.Delay(250, scriptCancellationToken);
