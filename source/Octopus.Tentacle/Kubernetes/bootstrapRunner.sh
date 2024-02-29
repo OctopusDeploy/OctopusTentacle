@@ -1,5 +1,7 @@
 ﻿#! /usr/bin/bash
 
+WORK_DIR=$1
+
 format() {
 	now=$(date -u +"%Y-%m-%dT%H:%M:%S.%N%z")
 	echo "$now|$1|$2"
@@ -18,6 +20,9 @@ logStdErr() {
     format "stderr" "$IN"
   done
 }
+
+#pass the remaining args (skipping the first which is the working directory)
+shift
 
 BOOTSTRAP_SCRIPT=$1
 

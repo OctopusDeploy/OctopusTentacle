@@ -39,7 +39,7 @@ namespace Octopus.Tentacle.Kubernetes
         public void StartMonitoring(CancellationToken cancellationToken)
         {
             //We are already running, so don't bother trying again
-            if(backgroundTask is not null)
+            if (backgroundTask is not null)
                 return;
 
             log.Verbose($"Starting log monitoring for pod {podName}");
@@ -47,6 +47,7 @@ namespace Octopus.Tentacle.Kubernetes
 
             backgroundTask = Task.Run(async () => await WatchPodLogsAsync(cancellationTokenSource.Token).ConfigureAwait(false), cancellationToken);
         }
+
 
         public void StopMonitoring()
         {
@@ -77,8 +78,13 @@ namespace Octopus.Tentacle.Kubernetes
         public (long newSequence, List<PodLogLine>) GetLogs(long lastLogSequence)
         {
             log.Verbose($"Get logs for pod {podName}. Sequence {lastLogSequence}");
+
             lock (logLock)
             {
+                //no lines, nothing to return
+                if (logLines.Count == 0)
+                    return (lastLogSequence, new List<PodLogLine>());
+
                 // we determine how many lines to retrieve
                 // this number is how many tail lines we need to return
                 var linesToGet = (logLines.Count + currentSequenceNumber) - lastLogSequence;
@@ -135,9 +141,9 @@ namespace Octopus.Tentacle.Kubernetes
                 if (message.StartsWith(KubernetesConfig.EndOfScriptControlMessage, StringComparison.OrdinalIgnoreCase))
                 {
                     //the second value is always the exit code
-                    var exitCode = int.Parse(message.Split(new []{"<<>>"}, StringSplitOptions.None)[1]);
+                    var exitCode = int.Parse(message.Split(new[] { "<<>>" }, StringSplitOptions.None)[1]);
 
-                    onScriptFinished(exitCode == 0 ? TrackedPodState.Succeeded : TrackedPodState.Failed , exitCode);
+                    onScriptFinished(exitCode == 0 ? TrackedPodState.Succeeded : TrackedPodState.Failed, exitCode);
                     break;
                 }
 

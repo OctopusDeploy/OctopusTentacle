@@ -26,7 +26,6 @@ namespace Octopus.Tentacle.Services.Scripts
         readonly ISystemLog log;
 
         readonly ConcurrentDictionary<ScriptTicket, Lazy<SemaphoreSlim>> startScriptMutexes = new();
-        readonly AsyncTimeoutPolicy<ScriptStatusResponseV3Alpha> podStartupTimeout;
 
         public ScriptServiceV3Alpha(
             IKubernetesPodService podService,
@@ -40,8 +39,6 @@ namespace Octopus.Tentacle.Services.Scripts
             this.statusProvider = statusProvider;
             this.podCreator = podCreator;
             this.log = log;
-
-            podStartupTimeout = Policy.TimeoutAsync<ScriptStatusResponseV3Alpha>(60, TimeoutStrategy.Optimistic);
         }
 
         public async Task<ScriptStatusResponseV3Alpha> StartScriptAsync(StartScriptCommandV3Alpha command, CancellationToken cancellationToken)
@@ -69,33 +66,7 @@ namespace Octopus.Tentacle.Services.Scripts
                 //create the pod
                 await podCreator.CreatePod(command, workspace, cancellationToken);
 
-                var pendingResponse = new ScriptStatusResponseV3Alpha(command.ScriptTicket, ProcessState.Pending, 0, new List<ProcessOutput>(), 0);
-
-                try
-                {
-                    //we look in the start script until we are sure the pod has actually started...
-                    return await podStartupTimeout.ExecuteAsync(async ct =>
-                    {
-                        do
-                        {
-                            trackedPod = statusProvider.TryGetPodStatus(command.ScriptTicket);
-                            if (trackedPod != null)
-                            {
-                                return GetResponse(trackedPod, 0);
-                            }
-
-                            await Task.Delay(25, ct);
-                        } while (trackedPod is null);
-
-                        //if the pod hasn't started yet, just return pending
-                        return pendingResponse;
-                    }, cancellationToken);
-                }
-                catch (TimeoutRejectedException)
-                {
-                    log.Verbose($"The pod for script ticket {command.ScriptTicket} did not start in 60s.");
-                    return pendingResponse;
-                }
+                return new ScriptStatusResponseV3Alpha(command.ScriptTicket, ProcessState.Pending, 0, new List<ProcessOutput>(), 0);
             }
         }
 

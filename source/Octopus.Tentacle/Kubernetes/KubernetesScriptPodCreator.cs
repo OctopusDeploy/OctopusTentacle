@@ -185,6 +185,7 @@ namespace Octopus.Tentacle.Kubernetes
                             Args = new List<string>
                                 {
                                     $"/octopus/Work/{command.ScriptTicket.TaskId}/bootstrapRunner.sh",
+                                    $"/octopus/Work/{command.ScriptTicket.TaskId}",
                                     $"/octopus/Work/{command.ScriptTicket.TaskId}/{scriptName}"
                                 }.Concat(workspace.ScriptArguments ?? Array.Empty<string>())
                                 .ToList(),

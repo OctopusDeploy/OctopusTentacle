@@ -171,5 +171,6 @@ namespace Octopus.Tentacle.Kubernetes
 
         public async Task TryDelete(ScriptTicket scriptTicket, CancellationToken cancellationToken)
             => await TryExecuteAsync(async () => await Delete(scriptTicket, cancellationToken));
+
     }
 }

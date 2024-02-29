@@ -72,6 +72,9 @@ namespace Octopus.Tentacle.Kubernetes
 
                 log.Verbose($"Preloaded pod {pod.Name()}. {status}");
                 podStatusLookup[status.ScriptTicket] = status;
+
+                //start monitoring logs for all existing pods
+                status.StartMonitoringLogs(cancellationToken);
             }
 
             log.Verbose($"Preloaded {allPods.Items.Count} pod statuses. ResourceVersion: {allPods.ResourceVersion()}");
@@ -120,12 +123,6 @@ namespace Octopus.Tentacle.Kubernetes
 
                         status.UpdateState(pod);
                         log.Verbose($"Updated pod {pod.Name()} status. {status}");
-
-                        //if we are in a running phase, start the log monitoring
-                        if (pod.Status.Phase == "Running")
-                        {
-                            status.StartMonitoringLogs(cancellationToken);
-                        }
 
                         break;
                     }
