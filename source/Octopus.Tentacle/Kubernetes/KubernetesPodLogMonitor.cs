@@ -45,7 +45,7 @@ namespace Octopus.Tentacle.Kubernetes
             log.Verbose($"Starting log monitoring for pod {podName}");
             cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-            backgroundTask = Task.Run(() => WatchPodLogsAsync(cancellationTokenSource.Token), cancellationToken);
+            backgroundTask = Task.Run(async () => await WatchPodLogsAsync(cancellationTokenSource.Token).ConfigureAwait(false), cancellationToken);
         }
 
         public void StopMonitoring()
@@ -131,7 +131,7 @@ namespace Octopus.Tentacle.Kubernetes
                 if (message.StartsWith(KubernetesConfig.EndOfScriptControlMessage, StringComparison.OrdinalIgnoreCase))
                 {
                     //the second value is always the exit code
-                    var exitCode = int.Parse(message.Split('|')[1]);
+                    var exitCode = int.Parse(message.Split(new []{"<<>>"}, StringSplitOptions.None)[1]);
 
                     onScriptFinished(exitCode == 0 ? TrackedPodState.Succeeded : TrackedPodState.Failed , exitCode);
                     break;

@@ -78,7 +78,9 @@ namespace Octopus.Tentacle.Kubernetes
                 KubernetesConfig.Namespace,
                 labelSelector: OctopusLabels.ScriptTicketId,
                 resourceVersion: initialResourceVersion,
+                //resourceVersionMatch: "NotOlderThan",
                 watch: true,
+                timeoutSeconds: KubernetesConfig.PodMonitorTimeoutSeconds,
                 cancellationToken: cancellationToken);
 
             var watchErrorCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -115,7 +117,7 @@ namespace Octopus.Tentacle.Kubernetes
             while (!cancellationToken.IsCancellationRequested)
             {
                 var now = DateTime.Now;
-                var secondsSinceLastCheck = lastRetrievedTime.HasValue ? (int)Math.Floor((now - lastRetrievedTime.Value).TotalSeconds) : (int?)null;
+                var secondsSinceLastCheck = lastRetrievedTime.HasValue ? Math.Max((int)Math.Floor((now - lastRetrievedTime.Value).TotalSeconds), 1) : (int?)null;
 
                 var retryContext = new Context
                 {

@@ -40,10 +40,10 @@ echo "##octopus[stdout-verbose]"
 echo "Kubernetes Job completed"
 echo "##octopus[stdout-default]"
 
-echo "<<EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE>>|$RETURN_VAL"
+echo "EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE<<>>$RETURN_VAL"
 
 # This ungodly hack is to stop the pod from being killed before the last log has been flushed
-sleep 0.250 #250ms
+#sleep 0.250 #250ms
 
 #Propagate the return value from the bootstrap script to the output host
 exit "$RETURN_VAL"

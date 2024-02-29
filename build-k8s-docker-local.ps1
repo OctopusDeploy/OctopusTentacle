@@ -9,7 +9,10 @@ param (
     $NonMinikubeRegistry = $false,
 
     [switch]
-    $BuildDebugImage
+    $BuildDebugImage,
+
+    [string]
+    $DeploymentNamespace = ""
 )
 
 $nukeTargetName = if (!$BuildDebugImage) { "BuildAndLoadLocallyKubernetesTentacleContainerImage" } else { "BuildAndLoadLocalDebugKubernetesTentacleContainerImage" }
@@ -81,14 +84,22 @@ if (!$NonMinikubeRegistry) {
 
 Write-Output "---------"
 
-if ($BuildDebugImage) {
-    Write-Output "Base Image: $($artifactoryImage):$baseTag"
-}
 Write-Output "Built Image: $builtImage"
 Write-Output "Built Local Image: $builtLocalImage"
 Write-Output "Built Tag: $tag"
 if (!$NonMinikubeRegistry) {
     Write-Output "Minikube Image: $($builtLocalImage.Replace($LocalRegistryDomain, "localhost:5000"))"
+    Set-Clipboard -Value "$($builtLocalImage.Replace($LocalRegistryDomain, "localhost:5000"))"
 }
 
 Write-Output "---------"
+
+if($DeploymentNamespace -ne ""){
+    $updatingImage = $builtImage
+    if(!$NonMinikubeRegistry){
+        $updatingImage = "$($builtLocalImage.Replace($LocalRegistryDomain, "localhost:5000"))"
+    }
+
+    Write-Output "Updating deployment/octopus-agent-tentacle in $DeploymentNamespace"
+    & kubectl set image deployment/octopus-agent-tentacle octopus-agent-tentacle=$updatingImage -n $DeploymentNamespace
+}

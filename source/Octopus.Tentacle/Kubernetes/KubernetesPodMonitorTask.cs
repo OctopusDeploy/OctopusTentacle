@@ -38,7 +38,7 @@ namespace Octopus.Tentacle.Kubernetes
                 }
 
                 log.Info("Starting Kubernetes Pod Monitor");
-                monitorTask = Task.Run(() => podMonitor.StartAsync(cancellationTokenSource.Token));
+                monitorTask = Task.Run(async () => await podMonitor.StartAsync(cancellationTokenSource.Token).ConfigureAwait(false));
             }
         }
 

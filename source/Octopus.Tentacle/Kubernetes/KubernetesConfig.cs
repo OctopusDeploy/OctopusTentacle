@@ -4,7 +4,7 @@ namespace Octopus.Tentacle.Kubernetes
 {
     public static class KubernetesConfig
     {
-        public const string EndOfScriptControlMessage = "<<EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE>>";
+        public const string EndOfScriptControlMessage = "EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE";
 
         const string EnvVarPrefix = "OCTOPUS__K8STENTACLE";
 
@@ -15,7 +15,7 @@ namespace Octopus.Tentacle.Kubernetes
 
         // We default this to true if we can't parse the environment variable
         public static bool ExecuteScriptsInLocalShell => !bool.TryParse(Environment.GetEnvironmentVariable($"{EnvVarPrefix}__EXECUTEINLOCALSHELL"), out var executeInLocalShell) || executeInLocalShell;
-        public static int PodMonitorTimeoutSeconds => int.TryParse(Environment.GetEnvironmentVariable($"{EnvVarPrefix}__PODMONITORTIMEOUT"), out var podMonitorTimeout) ? podMonitorTimeout : 1800; //30min
+        public static int PodMonitorTimeoutSeconds => int.TryParse(Environment.GetEnvironmentVariable($"{EnvVarPrefix}__PODMONITORTIMEOUT"), out var podMonitorTimeout) ? podMonitorTimeout : 900; //15min
         public static bool DisableAutomaticPodCleanup => bool.TryParse(Environment.GetEnvironmentVariable($"{EnvVarPrefix}__DISABLEAUTOPODCLEANUP"), out var disableAutoCleanup) && disableAutoCleanup;
 
         public static string HelmReleaseNameVariableName => $"{EnvVarPrefix}__HELMRELEASENAME";
