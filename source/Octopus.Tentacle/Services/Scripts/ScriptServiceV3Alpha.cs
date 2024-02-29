@@ -114,7 +114,7 @@ namespace Octopus.Tentacle.Services.Scripts
         {
             var trackedPod = statusProvider.TryGetPodStatus(command.ScriptTicket);
             //if we are cancelling a pod that doesn't exist, just return complete with an unknown script exit code
-            if(trackedPod == null)
+            if (trackedPod == null)
                 return new ScriptStatusResponseV3Alpha(command.ScriptTicket, ProcessState.Complete, ScriptExitCodes.UnknownScriptExitCode, new List<ProcessOutput>(), command.LastLogSequence);
 
             var response = GetResponse(trackedPod, command.LastLogSequence);
@@ -133,7 +133,8 @@ namespace Octopus.Tentacle.Services.Scripts
             await workspace.Delete(cancellationToken);
 
             //we do a try delete as the cancel might have already deleted it
-            await podService.TryDelete(command.ScriptTicket, cancellationToken);
+            if (!KubernetesConfig.DisableAutomaticPodCleanup)
+                await podService.TryDelete(command.ScriptTicket, cancellationToken);
         }
 
         static ScriptStatusResponseV3Alpha GetResponse(ITrackedKubernetesPod trackedPod, long lastLogSequence)
