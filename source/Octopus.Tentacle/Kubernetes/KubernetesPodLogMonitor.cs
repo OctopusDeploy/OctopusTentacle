@@ -59,7 +59,7 @@ namespace Octopus.Tentacle.Kubernetes
                 cancellationTokenSource.Cancel();
                 backgroundTask.Wait(TimeSpan.FromSeconds(30));
             }
-            catch (Exception e)
+            catch (Exception e) when (e is not TaskCanceledException)
             {
                 log.Verbose(e, $"Failed to stop log monitoring for pod {podName}");
             }
