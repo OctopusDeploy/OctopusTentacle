@@ -20,6 +20,7 @@ namespace Octopus.Tentacle.Kubernetes
             builder.RegisterType<KubernetesPodMonitor>().As<IKubernetesPodMonitor>().As<IKubernetesPodStatusProvider>().SingleInstance();
 
             builder.RegisterType<KubernetesPodLogMonitor>().InstancePerDependency();
+            builder.RegisterType<KubernetesScriptPodCreator>().As<IKubernetesScriptPodCreator>();
 
 #if DEBUG
             builder.RegisterType<LocalMachineKubernetesClientConfigProvider>().As<IKubernetesClientConfigProvider>().SingleInstance();

@@ -1,196 +1,166 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
+using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Util;
+using Polly;
+using Polly.Timeout;
 
 namespace Octopus.Tentacle.Services.Scripts
 {
     [Service(typeof(IScriptServiceV3Alpha))]
     public class ScriptServiceV3Alpha : IAsyncScriptServiceV3Alpha
     {
-        readonly IScriptExecutor scriptExecutor;
+        readonly IKubernetesPodService podService;
         readonly IScriptWorkspaceFactory workspaceFactory;
-        readonly IScriptStateStoreFactory scriptStateStoreFactory;
-        readonly ConcurrentDictionary<ScriptTicket, RunningScriptWrapper> runningScripts = new();
+        readonly IKubernetesPodStatusProvider statusProvider;
+        readonly IKubernetesScriptPodCreator podCreator;
+        readonly ISystemLog log;
+
+        readonly ConcurrentDictionary<ScriptTicket, Lazy<SemaphoreSlim>> startScriptMutexes = new();
+        readonly AsyncTimeoutPolicy<ScriptStatusResponseV3Alpha> podStartupTimeout;
 
         public ScriptServiceV3Alpha(
-            IScriptExecutor scriptExecutor,
+            IKubernetesPodService podService,
             IScriptWorkspaceFactory workspaceFactory,
-            IScriptStateStoreFactory scriptStateStoreFactory)
+            IKubernetesPodStatusProvider statusProvider,
+            IKubernetesScriptPodCreator podCreator,
+            ISystemLog log)
         {
-            this.scriptExecutor = scriptExecutor;
+            this.podService = podService;
             this.workspaceFactory = workspaceFactory;
-            this.scriptStateStoreFactory = scriptStateStoreFactory;
+            this.statusProvider = statusProvider;
+            this.podCreator = podCreator;
+            this.log = log;
+
+            podStartupTimeout = Policy.TimeoutAsync<ScriptStatusResponseV3Alpha>(60, TimeoutStrategy.Optimistic);
         }
 
         public async Task<ScriptStatusResponseV3Alpha> StartScriptAsync(StartScriptCommandV3Alpha command, CancellationToken cancellationToken)
         {
-            var runningScript = runningScripts.GetOrAdd(
-                command.ScriptTicket,
-                _ =>
-                {
-                    var workspace = workspaceFactory.GetWorkspace(command.ScriptTicket);
-                    var scriptState = scriptStateStoreFactory.Create(workspace);
-                    return new RunningScriptWrapper(scriptState);
-                });
+            var mutex = startScriptMutexes.GetOrAdd(command.ScriptTicket, _ => new Lazy<SemaphoreSlim>(() => new SemaphoreSlim(1, 1))).Value;
 
-            using (await runningScript.StartScriptMutex.LockAsync(cancellationToken))
+            using (await mutex.LockAsync(cancellationToken))
             {
-                IScriptWorkspace workspace;
-
-                // If the state already exists then this runningScript is already running/has already run and we should not run it again
-                if (runningScript.ScriptStateStore.Exists())
+                var trackedPod = statusProvider.TryGetPodStatus(command.ScriptTicket);
+                if (trackedPod != null)
                 {
-                    var state = runningScript.ScriptStateStore.Load();
+                    return GetResponse(trackedPod, 0);
+                }
 
-                    if (state.HasStarted() || runningScript.Process != null)
+                var workspace = await workspaceFactory.PrepareWorkspace(command.ScriptTicket,
+                    command.ScriptBody,
+                    command.Scripts,
+                    command.Isolation,
+                    command.ScriptIsolationMutexTimeout,
+                    command.IsolationMutexName,
+                    command.Arguments,
+                    command.Files,
+                    cancellationToken);
+
+                //create the pod
+                await podCreator.CreatePod(command, workspace, cancellationToken);
+
+                var pendingResponse = new ScriptStatusResponseV3Alpha(command.ScriptTicket, ProcessState.Pending, 0, new List<ProcessOutput>(), 0);
+
+                try
+                {
+                    //we look in the start script until we are sure the pod has actually started...
+                    return await podStartupTimeout.ExecuteAsync(async ct =>
                     {
-                        return await GetResponse(command.ScriptTicket, 0, runningScript.Process);
-                    }
+                        do
+                        {
+                            trackedPod = statusProvider.TryGetPodStatus(command.ScriptTicket);
+                            if (trackedPod != null)
+                            {
+                                return GetResponse(trackedPod, 0);
+                            }
 
-                    workspace = workspaceFactory.GetWorkspace(command.ScriptTicket);
+                            await Task.Delay(25, ct);
+                        } while (trackedPod is null);
+
+                        //if the pod hasn't started yet, just return pending
+                        return pendingResponse;
+                    }, cancellationToken);
                 }
-                else
+                catch (TimeoutRejectedException)
                 {
-                    workspace = await workspaceFactory.PrepareWorkspace(command.ScriptTicket,
-                        command.ScriptBody,
-                        command.Scripts,
-                        command.Isolation,
-                        command.ScriptIsolationMutexTimeout,
-                        command.IsolationMutexName,
-                        command.Arguments,
-                        command.Files,
-                        cancellationToken);
-
-                    runningScript.ScriptStateStore.Create();
+                    log.Verbose($"The pod for script ticket {command.ScriptTicket} did not start in 60s.");
+                    return pendingResponse;
                 }
-
-                if(!scriptExecutor.CanExecute(command))
-                    throw new InvalidOperationException($"The execution context type {command.ExecutionContext.GetType().Name} cannot be used with script executor {scriptExecutor.GetType().Name}.");
-
-                var process = scriptExecutor.ExecuteOnBackgroundThread(command, workspace, runningScript.ScriptStateStore, runningScript.CancellationToken);
-
-                runningScript.Process = process;
-
-                if (command.DurationToWaitForScriptToFinish != null)
-                {
-                    var waited = Stopwatch.StartNew();
-                    while (process.State != ProcessState.Complete && waited.Elapsed < command.DurationToWaitForScriptToFinish.Value)
-                    {
-                        Thread.Sleep(TimeSpan.FromMilliseconds(10));
-                    }
-                }
-
-                return await GetResponse(command.ScriptTicket, 0, runningScript.Process);
             }
         }
 
         public async Task<ScriptStatusResponseV3Alpha> GetStatusAsync(ScriptStatusRequestV3Alpha request, CancellationToken cancellationToken)
         {
-            runningScripts.TryGetValue(request.ScriptTicket, out var runningScript);
-            return await GetResponse(request.ScriptTicket, request.LastLogSequence, runningScript?.Process);
+            await Task.CompletedTask;
+
+            var trackedPod = statusProvider.TryGetPodStatus(request.ScriptTicket);
+            return trackedPod != null
+                ? GetResponse(trackedPod, request.LastLogSequence)
+                //if we are getting the status of an unknown pod, return that it's still pending
+                : new ScriptStatusResponseV3Alpha(request.ScriptTicket, ProcessState.Pending, 0, new List<ProcessOutput>(), request.LastLogSequence);
         }
 
         public async Task<ScriptStatusResponseV3Alpha> CancelScriptAsync(CancelScriptCommandV3Alpha command, CancellationToken cancellationToken)
         {
-            if (runningScripts.TryGetValue(command.ScriptTicket, out var runningScript))
-            {
-                runningScript.Cancel();
-            }
+            var trackedPod = statusProvider.TryGetPodStatus(command.ScriptTicket);
+            //if we are cancelling a pod that doesn't exist, just return complete with an unknown script exit code
+            if(trackedPod == null)
+                return new ScriptStatusResponseV3Alpha(command.ScriptTicket, ProcessState.Complete, ScriptExitCodes.UnknownScriptExitCode, new List<ProcessOutput>(), command.LastLogSequence);
 
-            return await GetResponse(command.ScriptTicket, command.LastLogSequence, runningScript?.Process);
+            var response = GetResponse(trackedPod, command.LastLogSequence);
+
+            //delete the pod
+            await podService.Delete(command.ScriptTicket, cancellationToken);
+
+            return response;
         }
 
         public async Task CompleteScriptAsync(CompleteScriptCommandV3Alpha command, CancellationToken cancellationToken)
         {
-            if (runningScripts.TryRemove(command.ScriptTicket, out var runningScript))
-            {
-                runningScript.Dispose();
-            }
+            startScriptMutexes.TryRemove(command.ScriptTicket, out _);
 
             var workspace = workspaceFactory.GetWorkspace(command.ScriptTicket);
             await workspace.Delete(cancellationToken);
 
-            if (runningScript?.Process is not null)
-                await runningScript.Process.Cleanup(cancellationToken);
+            //we do a try delete as the cancel might have already deleted it
+            await podService.TryDelete(command.ScriptTicket, cancellationToken);
         }
 
-        async Task<ScriptStatusResponseV3Alpha> GetResponse(ScriptTicket ticket, long lastLogSequence, IRunningScript? runningScript)
+        static ScriptStatusResponseV3Alpha GetResponse(ITrackedKubernetesPod trackedPod, long lastLogSequence)
         {
-            await Task.CompletedTask;
-
-            var workspace = workspaceFactory.GetWorkspace(ticket);
-            var scriptLog = runningScript?.ScriptLog ?? workspace.CreateLog();
-            var logs = scriptLog.GetOutput(lastLogSequence, out var next);
-
-            if (runningScript != null)
+            var processState = trackedPod.State switch
             {
-                return new ScriptStatusResponseV3Alpha(ticket, runningScript.State, runningScript.ExitCode, logs, next);
-            }
+                TrackedPodState.Running => ProcessState.Running,
+                TrackedPodState.Succeeded => ProcessState.Complete,
+                TrackedPodState.Failed => ProcessState.Complete,
+                _ => throw new ArgumentOutOfRangeException()
+            };
 
-            // If we don't have a RunningProcess we check the ScriptStateStore to see if we have persisted a script result
-            var scriptStateStore = scriptStateStoreFactory.Create(workspace);
-            if (scriptStateStore.Exists())
-            {
-                var scriptState = scriptStateStore.Load();
+            var (nextLogSequence, logLines) = trackedPod.GetLogs(lastLogSequence);
 
-                if (!scriptState.HasCompleted())
-                {
-                    scriptState.Complete(ScriptExitCodes.UnknownResultExitCode, false);
-                    scriptStateStore.Save(scriptState);
-                }
+            var outputLogs = logLines.Select(ll => new ProcessOutput(ll.Source, ll.Message, ll.Occurred)).ToList();
 
-                return new ScriptStatusResponseV3Alpha(ticket, scriptState.State, scriptState.ExitCode ?? ScriptExitCodes.UnknownResultExitCode, logs, next);
-            }
-
-            return new ScriptStatusResponseV3Alpha(ticket, ProcessState.Complete, ScriptExitCodes.UnknownScriptExitCode, logs, next);
+            return new ScriptStatusResponseV3Alpha(trackedPod.ScriptTicket,
+                processState,
+                trackedPod.ExitCode ?? 0,
+                outputLogs,
+                nextLogSequence
+            );
         }
 
         public bool IsRunningScript(ScriptTicket ticket)
         {
-            if (runningScripts.TryGetValue(ticket, out var script))
-            {
-                if (script.Process?.State != ProcessState.Complete)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        class RunningScriptWrapper : IDisposable
-        {
-            readonly CancellationTokenSource cancellationTokenSource = new ();
-
-            public RunningScriptWrapper(ScriptStateStore scriptStateStore)
-            {
-                ScriptStateStore = scriptStateStore;
-
-                CancellationToken = cancellationTokenSource.Token;
-            }
-
-            public IRunningScript? Process { get; set; }
-            public ScriptStateStore ScriptStateStore { get; }
-            public SemaphoreSlim StartScriptMutex { get; } = new(1, 1);
-
-            public CancellationToken CancellationToken { get; }
-
-            public void Cancel()
-            {
-                cancellationTokenSource.Cancel();
-            }
-
-            public void Dispose()
-            {
-                cancellationTokenSource.Dispose();
-            }
+            return statusProvider.TryGetPodStatus(ticket) is not null;
         }
     }
 }

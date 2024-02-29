@@ -223,6 +223,7 @@ namespace Octopus.Tentacle.Kubernetes
         (long NewSequence, List<PodLogLine> LogLines) GetLogs(long lastLogSequence);
         TrackedPodState State { get; }
         int? ExitCode { get; }
+        ScriptTicket ScriptTicket { get; }
     }
 
     public enum TrackedPodState

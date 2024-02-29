@@ -36,7 +36,7 @@ namespace Octopus.Tentacle.Kubernetes
             k8sObject.Metadata.Labels["app.kubernetes.io/managed-by"] = "Helm";
         }
 
-        protected async Task<T?> TryGetAsync<T>(Func<Task<T>> loadAction) where T: class
+        protected static async Task<T?> TryGetAsync<T>(Func<Task<T>> loadAction) where T: class
         {
             try
             {
@@ -47,6 +47,17 @@ namespace Octopus.Tentacle.Kubernetes
             {
                 return null;
             }
+        }
+
+        protected static async Task TryExecuteAsync(Func<Task> action)
+        {
+            try
+            {
+                await action();
+            }
+            catch (HttpOperationException opException)
+                when (opException.Response.StatusCode == HttpStatusCode.NotFound)
+            { }
         }
     }
 }

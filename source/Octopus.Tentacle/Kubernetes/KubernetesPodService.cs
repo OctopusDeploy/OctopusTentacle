@@ -18,7 +18,6 @@ namespace Octopus.Tentacle.Kubernetes
 {
     public interface IKubernetesPodService
     {
-        Task<V1Pod?> TryGetPod(ScriptTicket scriptTicket, CancellationToken cancellationToken);
         Task<V1PodList> ListAllPods(CancellationToken cancellationToken);
         Task WatchAllPods(string initialResourceVersion, Func<WatchEventType, V1Pod, Task> onChange, Action<Exception> onError, CancellationToken cancellationToken);
         Task Create(V1Pod pod, CancellationToken cancellationToken);
@@ -27,6 +26,7 @@ namespace Octopus.Tentacle.Kubernetes
 #pragma warning disable CS8424 // The EnumeratorCancellationAttribute will have no effect. The attribute is only effective on a parameter of type CancellationToken in an async-iterator method returning IAsyncEnumerable
         IAsyncEnumerable<string?> StreamPodLogs(string podName, string containerName, [EnumeratorCancellation] CancellationToken cancellationToken = default);
 #pragma warning restore CS8424 // The EnumeratorCancellationAttribute will have no effect. The attribute is only effective on a parameter of type CancellationToken in an async-iterator method returning IAsyncEnumerable
+        Task TryDelete(ScriptTicket scriptTicket, CancellationToken cancellationToken);
     }
 
     public class KubernetesPodService : KubernetesService, IKubernetesPodService
@@ -61,9 +61,6 @@ namespace Octopus.Tentacle.Kubernetes
                         }
                     });
         }
-
-        public async Task<V1Pod?> TryGetPod(ScriptTicket scriptTicket, CancellationToken cancellationToken) =>
-            await TryGetAsync(() => Client.ReadNamespacedPodAsync(scriptTicket.ToKubernetesScriptPobName(), KubernetesConfig.Namespace, cancellationToken: cancellationToken));
 
         public async Task<V1PodList> ListAllPods(CancellationToken cancellationToken)
         {
@@ -171,5 +168,8 @@ namespace Octopus.Tentacle.Kubernetes
 
         public async Task Delete(ScriptTicket scriptTicket, CancellationToken cancellationToken)
             => await Client.DeleteNamespacedPodAsync(scriptTicket.ToKubernetesScriptPobName(), KubernetesConfig.Namespace, cancellationToken: cancellationToken);
+
+        public async Task TryDelete(ScriptTicket scriptTicket, CancellationToken cancellationToken)
+            => await TryExecuteAsync(async () => await Delete(scriptTicket, cancellationToken));
     }
 }
