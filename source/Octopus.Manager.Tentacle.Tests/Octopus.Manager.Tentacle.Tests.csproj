@@ -8,6 +8,7 @@
     <PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
     <RootNamespace>Octopus.Manager.Tentacle.Tests</RootNamespace>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <LangVersion>9</LangVersion>
     <Nullable>annotations</Nullable>
     <TargetFrameworks>net48;net6.0-windows</TargetFrameworks>

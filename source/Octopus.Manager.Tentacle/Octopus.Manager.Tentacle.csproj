@@ -11,7 +11,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <UseWPF>true</UseWPF>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <EnableWindowsTargeting>true</EnableWindowsTargeting>   
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <TargetFrameworks>net48;net6.0-windows</TargetFrameworks>
     <!-- 
       Suppressing those validations error due to validation bugs in .NET 6.
