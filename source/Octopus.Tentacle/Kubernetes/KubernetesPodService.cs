@@ -91,6 +91,7 @@ namespace Octopus.Tentacle.Kubernetes
                 onError(ex);
             };
 
+            log.Verbose("Starting pod watch");
             await foreach (var (type, pod) in response.WatchAsync<V1Pod, V1PodList>(internalOnError, cancellationToken: watchErrorCancellationTokenSource.Token))
             {
                 await onChange(type, pod);
@@ -109,12 +110,15 @@ namespace Octopus.Tentacle.Kubernetes
 
         async IAsyncEnumerable<string?> StreamPodLogsViaPolling(string podName, string containerName, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            DateTime? lastRetrievedTime = null;
+            ulong? lastReadLineHash =null;
+            DateTimeOffset? lastLogLineTime = null;
             var hasReadEndOfScriptControlMessage = false;
+
             while (!cancellationToken.IsCancellationRequested)
             {
-                var now = DateTime.Now;
-                var secondsSinceLastCheck = lastRetrievedTime.HasValue ? Math.Max((int)Math.Floor((now - lastRetrievedTime.Value).TotalSeconds), 1) : (int?)null;
+                var secondsSince = lastLogLineTime.HasValue
+                    ? (int)Math.Ceiling((DateTimeOffset.UtcNow - lastLogLineTime.Value).TotalSeconds) + 5 //we always read back 5 seconds longer than the last read log message
+                    : (int?)null;
 
                 var retryContext = new Context
                 {
@@ -125,22 +129,43 @@ namespace Octopus.Tentacle.Kubernetes
                     async (_, ct) => await Client.ReadNamespacedPodLogAsync(podName,
                         KubernetesConfig.Namespace,
                         containerName,
-                        sinceSeconds: secondsSinceLastCheck,
+                        //we go back in time 5 seconds before the last read log message
+                        sinceSeconds: secondsSince,
                         cancellationToken: ct),
                     retryContext,
                     cancellationToken);
 
                 using var streamReader = new StreamReader(logStream);
+                string? lastLine = null;
+                var hasSeenLastReadLine = false;
                 while (!streamReader.EndOfStream && !cancellationToken.IsCancellationRequested)
                 {
                     var line = await streamReader.ReadLineAsync().ConfigureAwait(false);
+
+                    // if there was a last line read and we haven't passed it
+                    if (lastReadLineHash.HasValue && !hasSeenLastReadLine && line is not null)
+                    {
+                        //calculate the new line hash
+                        var hash = CalculateHash(line);
+
+                        //if the hashes are the same, the we have reached the last line read
+                        hasSeenLastReadLine = lastReadLineHash == hash;
+
+                        var description = hasSeenLastReadLine ? "Is" : "Is not";
+                        log.Verbose($"Read log line {line} for pod {podName} but we have seen it before so ignoring. {description} the last read line.");
+
+                        //continue as we'll now be starting from new logs (if there are any
+                        continue;
+                    }
+
                     if (line is not null)
                     {
-                        log.Verbose($"Read log line {line} for pod {podName}");
+                        log.Verbose($"Read new log line {line} for pod {podName}");
                     }
 
                     yield return line;
 
+                    lastLine = line;
                     if (line is not null && line.Contains(KubernetesConfig.EndOfScriptControlMessage))
                     {
                         hasReadEndOfScriptControlMessage = true;
@@ -152,12 +177,28 @@ namespace Octopus.Tentacle.Kubernetes
                 if (hasReadEndOfScriptControlMessage)
                     break;
 
-                //we add the number of seconds onto the last retrieved time, just in case it took us a while to read the previous logs from the stream
-                lastRetrievedTime = (lastRetrievedTime ?? now).AddSeconds(secondsSinceLastCheck.GetValueOrDefault(0));
+                if (lastLine is not null)
+                {
+                    lastReadLineHash = CalculateHash(lastLine);
+                    var timestamp = lastLine.Substring(0, lastLine.IndexOf('|'));
+                    lastLogLineTime = DateTimeOffset.Parse(timestamp);
+                }
 
                 //delay for 1 second
                 await Task.Delay(1000, cancellationToken);
             }
+        }
+
+        static ulong CalculateHash(string read)
+        {
+            var hashedValue = 3074457345618258791ul;
+            for (var i = 0; i < read.Length; i++)
+            {
+                hashedValue += read[i];
+                hashedValue *= 3074457345618258799ul;
+            }
+
+            return hashedValue;
         }
 
         public async Task Create(V1Pod pod, CancellationToken cancellationToken)
@@ -171,6 +212,5 @@ namespace Octopus.Tentacle.Kubernetes
 
         public async Task TryDelete(ScriptTicket scriptTicket, CancellationToken cancellationToken)
             => await TryExecuteAsync(async () => await Delete(scriptTicket, cancellationToken));
-
     }
 }
