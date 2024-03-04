@@ -117,7 +117,7 @@ namespace Octopus.Tentacle.Kubernetes
             while (!cancellationToken.IsCancellationRequested)
             {
                 var secondsSince = lastLogLineTime.HasValue
-                    ? (int)Math.Ceiling((DateTimeOffset.UtcNow - lastLogLineTime.Value).TotalSeconds) + 5 //we always read back 5 seconds longer than the last read log message
+                    ? (int)Math.Ceiling((DateTimeOffset.UtcNow - lastLogLineTime.Value).TotalSeconds) + 10 //we always read back 10 seconds longer than the last read log message
                     : (int?)null;
 
                 var retryContext = new Context
@@ -129,7 +129,6 @@ namespace Octopus.Tentacle.Kubernetes
                     async (_, ct) => await Client.ReadNamespacedPodLogAsync(podName,
                         KubernetesConfig.Namespace,
                         containerName,
-                        //we go back in time 5 seconds before the last read log message
                         sinceSeconds: secondsSince,
                         cancellationToken: ct),
                     retryContext,
