@@ -1,58 +1,40 @@
 using System;
 using System.IO;
 using System.Text;
-using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Scripts
 {
-    public class PowerShellCore : IShell
+    public class PowerShellDesktop : IShell
     {
-        const string EnvPowerShellPath = "pwsh";
-        readonly string powerShellPath;
+        const string EnvPowerShellPath = "PowerShell.exe";
+        static string? powerShellPath;
 
-        public string Name => nameof(PowerShellCore);
-        public bool PowerShellCoreExists { get; }
+        public string Name => nameof(PowerShellDesktop);
 
-        public PowerShellCore()
+        public string GetFullPath()
+            => GetFullPowerShellPath();
+
+        public static string GetFullPowerShellPath()
         {
+            if (powerShellPath != null)
+                return powerShellPath;
+
             try
             {
-                var path = SearchPathForPathExecutable(EnvPowerShellPath);
-                PowerShellCoreExists = path != null;
-                powerShellPath = path ?? EnvPowerShellPath;
+                var systemFolder = Environment.GetFolderPath(Environment.SpecialFolder.System);
+                powerShellPath = Path.Combine(systemFolder, @"WindowsPowershell\v1.0\", EnvPowerShellPath);
+
+                if (!File.Exists(powerShellPath))
+                    powerShellPath = EnvPowerShellPath;
             }
             catch (Exception)
             {
                 powerShellPath = EnvPowerShellPath;
             }
+
+            return powerShellPath;
         }
-        
-        public string GetFullPath()
-            => GetFullPowerShellPath();
 
-        public string GetFullPowerShellPath() => powerShellPath;
-
-        static string? SearchPathForPathExecutable(string pathExecutable)
-        {
-            if (File.Exists(pathExecutable))
-                return Path.GetFullPath(pathExecutable);
-
-            var environmentVariable = Environment.GetEnvironmentVariable("PATH");
-            if (string.IsNullOrEmpty(environmentVariable))
-                return null;
-
-            foreach (var path in environmentVariable.Split(Path.PathSeparator))
-            {
-                var fullPath = Path.Combine(path, pathExecutable);
-                if (string.IsNullOrEmpty(Path.GetExtension(fullPath)) && PlatformDetection.IsRunningOnWindows)
-                    fullPath += ".exe";
-                if (File.Exists(fullPath))
-                    return fullPath;
-            }
-
-            return null;
-        }
-        
         public string FormatCommandArguments(string bootstrapFile, string[]? scriptArguments, bool allowInteractive)
         {
             var commandArguments = new StringBuilder();
