@@ -11,7 +11,7 @@ namespace Octopus.Tentacle.Util
             base.Load(builder);
 
             if (PlatformDetection.IsRunningOnWindows)
-                builder.RegisterType<PowerShell>().As<IShell>();
+                builder.RegisterType<PowerShellCore>().As<IShell>();
             else
                 builder.RegisterType<Bash>().As<IShell>();
         }
