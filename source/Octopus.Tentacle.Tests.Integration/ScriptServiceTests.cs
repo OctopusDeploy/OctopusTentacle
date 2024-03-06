@@ -70,7 +70,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             scriptStatusResponse.State.Should().Be(ProcessState.Complete);
             scriptStatusResponse.ExitCode.Should().NotBe(0);
-            scriptStatusResponse.Logs.Select(x => x.Text.TrimStart(' ', '|')).Should().Contain("Whoopsy Daisy!");
+            scriptStatusResponse.Logs.Select(x => x.Text.TrimStart(' ', '|', '\t')).Should().Contain("Whoopsy Daisy!");
             scriptStatusResponse.Logs.Select(x => x.Text).Should().NotContain("This is the end of the script");
         }
 
