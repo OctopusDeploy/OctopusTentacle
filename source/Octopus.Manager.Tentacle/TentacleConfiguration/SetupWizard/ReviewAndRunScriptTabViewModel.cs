@@ -12,13 +12,23 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
     public class ReviewAndRunScriptTabViewModel : ViewModel, IScriptableViewModel
     {
         readonly ICommandLineRunner commandLineRunner;
+        readonly Func<Task> onScriptSucceeded;
+        readonly Func<Task> onScriptFailed;
         readonly IScriptableViewModel wizardModel;
         TextBoxLogger logger;
 
-        public ReviewAndRunScriptTabViewModel(IScriptableViewModel wizardModel, ICommandLineRunner commandLineRunner)
+        public ReviewAndRunScriptTabViewModel(
+            IScriptableViewModel wizardModel,
+            ICommandLineRunner commandLineRunner,
+            Func<Task> onScriptSucceeded = null,
+            Func<Task> onScriptFailed = null
+            )
         {
             this.wizardModel = wizardModel;
             this.commandLineRunner = commandLineRunner;
+            this.onScriptSucceeded = onScriptSucceeded;
+            this.onScriptFailed = onScriptFailed;
+            
             InstanceName = wizardModel.InstanceName;
             Executable = CommandLine.PathToTentacleExe();
             Validator = CreateValidator();
@@ -43,9 +53,20 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             }
             finally
             {
-                if (!success)
+                if (success)
+                {
+                    if (onScriptSucceeded != null)
+                    {
+                        await onScriptSucceeded();
+                    }
+                }
+                else
                 {
                     Rollback();
+                    if (onScriptFailed != null)
+                    {
+                        await onScriptFailed();
+                    }
                 }
             }
 
