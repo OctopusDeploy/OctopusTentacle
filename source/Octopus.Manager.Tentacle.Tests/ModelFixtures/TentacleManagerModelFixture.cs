@@ -20,9 +20,6 @@ namespace Octopus.Manager.Tentacle.Tests.ModelFixtures
     public class TentacleManagerModelFixture
     {
         static readonly string CommandLinePath = CommandLine.PathToTentacleExe();
-        public TentacleManagerModelFixture()
-        {
-        }
         
         [Test]
         public void WhenStartingATentacle_ScriptShouldBeGeneratedCorrectly()
