@@ -70,6 +70,35 @@ namespace Octopus.Manager.Tentacle.Tests.WizardFixtures
             script.Should().Be(expectedOutput);
         }
         
+        [Test]
+        public void WhenSettingUpPollingTentacle_AndServerRegistrationIsSkipped_ScriptShouldBeCorrectlyGenerated()
+        {
+            // Arrange
+            var model = CreateTestSetupTentacleWizardModel();
+            model.CommunicationStyle = CommunicationStyle.TentacleActive;
+            model.OctopusServerUrl = "localhost";
+            model.AuthMode = AuthMode.APIKey;
+            model.ApiKey = "TestApiKey";
+            model.MachineType = MachineType.DeploymentTarget;
+            model.MachineName = "TestMachineName";
+            model.SelectedSpace = "Default";
+            model.HaveCredentialsBeenVerified = true;
+            model.ServerCommsPort = "10943";
+            model.SkipServerRegistration = true;
+
+            // Act
+            var script = model.GenerateScript().ToCommandLineString();
+
+            // Assert
+            var pathToTentacleExe = $"\"{model.PathToTentacleExe ?? CommandLine.PathToTentacleExe()}\"";
+            var expectedOutput = $"{pathToTentacleExe} create-instance --instance \"{model.InstanceName}\" --config \"C:\\Octopus\\{model.InstanceName}\\Tentacle-{model.InstanceName}.config\"" +
+                Environment.NewLine + $"{pathToTentacleExe} new-certificate --instance \"{model.InstanceName}\" --if-blank" +
+                Environment.NewLine + $"{pathToTentacleExe} configure --instance \"{model.InstanceName}\" --reset-trust" +
+                Environment.NewLine + $"{pathToTentacleExe} configure --instance \"{model.InstanceName}\" --app \"C:\\Octopus\\Applications\\{model.InstanceName}\" --port \"{model.ListenPort}\" --noListen \"True\"" +
+                Environment.NewLine + $"{pathToTentacleExe} service --instance \"{model.InstanceName}\" --install --stop --start";
+            script.Should().Be(expectedOutput);
+        }
+        
         static SetupTentacleWizardModel CreateTestSetupTentacleWizardModel()
         {
             var instanceStore = Substitute.For<IApplicationInstanceStore>();
