@@ -99,6 +99,32 @@ namespace Octopus.Manager.Tentacle.Tests.WizardFixtures
             script.Should().Be(expectedOutput);
         }
         
+        [Test]
+        public void WhenSettingUpPollingTentacle_ProxySettingsShouldBeDisplay()
+        {
+            // Arrange
+            var model = CreateTestSetupTentacleWizardModel();
+
+            // Act
+            model.CommunicationStyle = CommunicationStyle.TentacleActive;
+
+            // Assert
+            model.ProxyWizardModel.ShowProxySettings.Should().BeTrue();
+        }
+        
+        [Test]
+        public void WhenSettingUpListeningTentacle_ProxySettingsShouldNotBeDisplay()
+        {
+            // Arrange
+            var model = CreateTestSetupTentacleWizardModel();
+
+            // Act
+            model.CommunicationStyle = CommunicationStyle.TentaclePassive;
+
+            // Assert
+            model.ProxyWizardModel.ShowProxySettings.Should().BeFalse();
+        }
+        
         static SetupTentacleWizardModel CreateTestSetupTentacleWizardModel()
         {
             var instanceStore = Substitute.For<IApplicationInstanceStore>();
