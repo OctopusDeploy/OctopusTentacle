@@ -17,7 +17,7 @@ using Octopus.Tentacle.Util;
 namespace Octopus.Manager.Tentacle.Tests.ModelFixtures
 {
     [TestFixture]
-    public class TentacleManagerModelFixture
+    public class ConfiguringTentacleServiceFixture
     {
         static readonly string CommandLinePath = CommandLine.PathToTentacleExe();
         
