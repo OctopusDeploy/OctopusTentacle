@@ -84,7 +84,7 @@ namespace Octopus.Manager.Tentacle
             builder.RegisterModule(new ManagerConfigurationModule(ApplicationName.Tentacle));
 
             builder.RegisterModule(new TentacleConfigurationModule());
-            builder.RegisterModule(new TentacleModule());
+            builder.RegisterModule(new TentacleManagerModule());
             return builder.Build();
         }
 
