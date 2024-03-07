@@ -43,6 +43,7 @@ namespace Octopus.Tentacle.Services.Scripts
 
         public async Task<ScriptStatusResponseV3Alpha> StartScriptAsync(StartScriptCommandV3Alpha command, CancellationToken cancellationToken)
         {
+            log.VerboseFormat("{0} - Start StartScriptAsync", command.ScriptTicket);
             var mutex = startScriptMutexes.GetOrAdd(command.ScriptTicket, _ => new Lazy<SemaphoreSlim>(() => new SemaphoreSlim(1, 1))).Value;
 
             using (await mutex.LockAsync(cancellationToken))
@@ -50,8 +51,11 @@ namespace Octopus.Tentacle.Services.Scripts
                 var trackedPod = statusProvider.TryGetPodStatus(command.ScriptTicket);
                 if (trackedPod != null)
                 {
+                    log.VerboseFormat("{0} - Pod exists, getting status", command.ScriptTicket);
                     return GetResponse(trackedPod, 0);
                 }
+
+                log.VerboseFormat("{0} - Preparing workspace", command.ScriptTicket);
 
                 var workspace = await workspaceFactory.PrepareWorkspace(command.ScriptTicket,
                     command.ScriptBody,
@@ -63,8 +67,12 @@ namespace Octopus.Tentacle.Services.Scripts
                     command.Files,
                     cancellationToken);
 
+                log.VerboseFormat("{0} - Prepared workspace", command.ScriptTicket);
+
                 //create the pod
+                log.VerboseFormat("{0} - Creating pod", command.ScriptTicket);
                 await podCreator.CreatePod(command, workspace, cancellationToken);
+                log.VerboseFormat("{0} - Created pod", command.ScriptTicket);
 
                 return new ScriptStatusResponseV3Alpha(command.ScriptTicket, ProcessState.Pending, 0, new List<ProcessOutput>(), 0);
             }
@@ -72,13 +80,21 @@ namespace Octopus.Tentacle.Services.Scripts
 
         public async Task<ScriptStatusResponseV3Alpha> GetStatusAsync(ScriptStatusRequestV3Alpha request, CancellationToken cancellationToken)
         {
+            log.VerboseFormat("{0} - Start GetStatusAsync", request.ScriptTicket);
             await Task.CompletedTask;
 
-            var trackedPod = statusProvider.TryGetPodStatus(request.ScriptTicket);
-            return trackedPod != null
-                ? GetResponse(trackedPod, request.LastLogSequence)
-                //if we are getting the status of an unknown pod, return that it's still pending
-                : new ScriptStatusResponseV3Alpha(request.ScriptTicket, ProcessState.Pending, 0, new List<ProcessOutput>(), request.LastLogSequence);
+            try
+            {
+                var trackedPod = statusProvider.TryGetPodStatus(request.ScriptTicket);
+                return trackedPod != null
+                    ? GetResponse(trackedPod, request.LastLogSequence)
+                    //if we are getting the status of an unknown pod, return that it's still pending
+                    : new ScriptStatusResponseV3Alpha(request.ScriptTicket, ProcessState.Pending, 0, new List<ProcessOutput>(), request.LastLogSequence);
+            }
+            finally
+            {
+                log.VerboseFormat("{0} - End StartScriptAsync", request.ScriptTicket);
+            }
         }
 
         public async Task<ScriptStatusResponseV3Alpha> CancelScriptAsync(CancelScriptCommandV3Alpha command, CancellationToken cancellationToken)
