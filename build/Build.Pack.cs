@@ -451,7 +451,7 @@ partial class Build
             FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-x64.msi", workingDirectory / "Octopus.Tentacle-x64.msi");
             FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net6.0-win-x86.msi", workingDirectory / "Octopus.Tentacle-net6.0-win-x86.msi");
             FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net6.0-win-x64.msi", workingDirectory / "Octopus.Tentacle-net6.0-win-x64.msi");
-            FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net6.0-windows-win-x64.msi", workingDirectory / "Octopus.Tentacle-net6.0-windows-win-x64.msi");
+            FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net6.0-windows-win-x86.msi", workingDirectory / "Octopus.Tentacle-net6.0-windows-win-x86.msi");
             FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net6.0-windows-win-x64.msi", workingDirectory / "Octopus.Tentacle-net6.0-windows-win-x64.msi");
 
             FileSystemTasks.CopyFile(BuildDirectory / "Octopus.Tentacle.Upgrader" / NetCore / "win-x86" / "Octopus.Tentacle.Upgrader.exe", workingDirectory / "Octopus.Tentacle.Upgrader-net6.0-win-x86.exe");
