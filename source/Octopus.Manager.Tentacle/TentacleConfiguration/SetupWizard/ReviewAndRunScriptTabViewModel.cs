@@ -5,6 +5,7 @@ using FluentValidation;
 using Octopus.Diagnostics;
 using Octopus.Manager.Tentacle.Infrastructure;
 using Octopus.Manager.Tentacle.Util;
+using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
@@ -12,13 +13,23 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
     public class ReviewAndRunScriptTabViewModel : ViewModel, IScriptableViewModel
     {
         readonly ICommandLineRunner commandLineRunner;
+        readonly Func<Task> onScriptSucceeded;
+        readonly Func<Task> onScriptFailed;
         readonly IScriptableViewModel wizardModel;
-        TextBoxLogger logger;
+        SystemLog logger;
 
-        public ReviewAndRunScriptTabViewModel(IScriptableViewModel wizardModel, ICommandLineRunner commandLineRunner)
+        public ReviewAndRunScriptTabViewModel(
+            IScriptableViewModel wizardModel,
+            ICommandLineRunner commandLineRunner,
+            Func<Task> onScriptSucceeded = null,
+            Func<Task> onScriptFailed = null
+            )
         {
             this.wizardModel = wizardModel;
             this.commandLineRunner = commandLineRunner;
+            this.onScriptSucceeded = onScriptSucceeded;
+            this.onScriptFailed = onScriptFailed;
+            
             InstanceName = wizardModel.InstanceName;
             Executable = CommandLine.PathToTentacleExe();
             Validator = CreateValidator();
@@ -43,9 +54,20 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             }
             finally
             {
-                if (!success)
+                if (success)
+                {
+                    if (onScriptSucceeded != null)
+                    {
+                        await onScriptSucceeded();
+                    }
+                }
+                else
                 {
                     Rollback();
+                    if (onScriptFailed != null)
+                    {
+                        await onScriptFailed();
+                    }
                 }
             }
 
@@ -87,7 +109,12 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             return validator;
         }
 
-        public void SetLogger(TextBoxLogger newLogger)
+        // TODO: Remove this workaround
+        // This only exists so that a TextBoxLogger, a UI component,
+        // can be set from the view.
+        // We should change this so that the model doesn't depend
+        // on a UI component.
+        public void SetLogger(SystemLog newLogger)
         {
             logger = newLogger;
         }
