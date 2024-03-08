@@ -94,7 +94,8 @@ namespace Octopus.Manager.Tentacle.Tests.WizardFixtures
                         t.EventProperties.ContainsKey("Communication Style") &&
                         t.EventProperties["Communication Style"] == CommunicationStyle.TentacleActive.ToString() &&
                         t.EventProperties.ContainsKey("Machine Type") &&
-                        t.EventProperties["Machine Type"] == MachineType.DeploymentTarget.ToString()));
+                        t.EventProperties["Machine Type"] == MachineType.DeploymentTarget.ToString()),
+                    Arg.Any<IWebProxy>());
         }
 
         [Test]
@@ -111,8 +112,8 @@ namespace Octopus.Manager.Tentacle.Tests.WizardFixtures
             _ = await model.ReviewAndRunScriptTabViewModel.GenerateAndExecuteScript();
 
             await telemetryService
-                .Received(0)
-                .SendTelemetryEvent(Arg.Any<Uri>(), Arg.Any<TelemetryEvent>());
+                .DidNotReceiveWithAnyArgs()
+                .SendTelemetryEvent(null, null, null);
         }
     }
 }

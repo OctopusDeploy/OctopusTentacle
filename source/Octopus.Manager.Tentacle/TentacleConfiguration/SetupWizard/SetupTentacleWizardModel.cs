@@ -110,6 +110,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 HomeDirectory = Path.Combine(HomeDirectory, InstanceName);
                 ApplicationInstallDirectory = Path.Combine(ApplicationInstallDirectory, InstanceName);
             }
+
             OctopusServerUrl = "https://";
             ListenPort = "10933";
             Username = string.Empty;
@@ -120,7 +121,6 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             Validator = CreateValidator();
             ServerCommsPort = "10943";
             CommunicationStyle = CommunicationStyle.TentaclePassive;
-
 
             // It would be nice to do this by sniffing for the advfirewall command, but doing
             // so would slow down showing the wizard. This check identifies and excludes Windows Server 2003.
@@ -353,6 +353,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 OnPropertyChanged();
             }
         }
+
         public string[] PotentialMachinePolicies
         {
             get => potentialMachinePolicies;
@@ -674,18 +675,23 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
             if (ProxyWizardModel.ProxyConfigType != ProxyConfigType.NoProxy)
             {
-                var proxy = string.IsNullOrWhiteSpace(ProxyWizardModel.ProxyServerHost)
-                    ? WebRequest.GetSystemWebProxy()
-                    : new WebProxy(new UriBuilder("http", ProxyWizardModel.ProxyServerHost, ProxyWizardModel.ProxyServerPort).Uri);
-
-                proxy.Credentials = string.IsNullOrWhiteSpace(ProxyWizardModel.ProxyUsername)
-                    ? CredentialCache.DefaultNetworkCredentials
-                    : new NetworkCredential(ProxyWizardModel.ProxyUsername, ProxyWizardModel.ProxyPassword);
-
-                endpoint.Proxy = proxy;
+                endpoint.Proxy = GetProxy();
             }
 
             return OctopusAsyncClient.Create(endpoint, new OctopusClientOptions());
+        }
+
+        IWebProxy GetProxy()
+        {
+            var proxy = string.IsNullOrWhiteSpace(ProxyWizardModel.ProxyServerHost)
+                ? WebRequest.GetSystemWebProxy()
+                : new WebProxy(new UriBuilder("http", ProxyWizardModel.ProxyServerHost, ProxyWizardModel.ProxyServerPort).Uri);
+
+            proxy.Credentials = string.IsNullOrWhiteSpace(ProxyWizardModel.ProxyUsername)
+                ? CredentialCache.DefaultNetworkCredentials
+                : new NetworkCredential(ProxyWizardModel.ProxyUsername, ProxyWizardModel.ProxyPassword);
+
+            return proxy;
         }
 
         async Task LoadSpaceSpecificData(IOctopusAsyncClient client)
@@ -705,6 +711,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 // A better alternative might be to cancel the current load, but this way is simpler :)
                 return;
             }
+
             SpaceDataLoadError = null;
             IsLoadingSpaceData = true;
 
@@ -716,6 +723,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                     {
                         await client.SignIn(new LoginCommand {Username = username, Password = password}, CancellationToken.None);
                     }
+
                     await loadAction(client);
                 }
             }
@@ -856,7 +864,6 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 && (uri.Scheme == "http" || uri.Scheme == "https");
         }
 
-
         public IEnumerable<CommandLineInvocation> GenerateScript()
         {
             pathToConfig = Path.Combine(HomeDirectory, ((ApplicationInstanceRecord.GetDefaultInstance(applicationName) != InstanceName) ? "Tentacle-" + InstanceName : InstanceName) + ".config");
@@ -937,6 +944,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
                 yield return register.Build();
             }
+
             if (IsTentaclePassive)
             {
                 if (!string.IsNullOrWhiteSpace(OctopusThumbprint))
@@ -975,7 +983,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             {
                 return;
             }
-            
+
             var deviceId = await tentacleManagerInstanceIdentifierService.GetIdentifier();
 
             var eventObj = new TentacleManagerScriptExecuted(
@@ -986,7 +994,8 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 CommunicationStyle);
 
             var uri = new Uri(OctopusServerUrl);
-            _ = await telemetryService.SendTelemetryEvent(uri, eventObj);
+            var proxy = ProxyWizardModel.ProxyConfigType != ProxyConfigType.NoProxy ? GetProxy() : null;
+            _ = await telemetryService.SendTelemetryEvent(uri, eventObj, proxy);
         }
     }
 
