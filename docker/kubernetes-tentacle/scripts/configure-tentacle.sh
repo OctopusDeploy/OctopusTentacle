@@ -100,6 +100,9 @@ function validateVariables() {
     if [[ -n "$Space" ]]; then
         echo " - space '$Space'"
     fi
+    if [[ -n "$DefaultNamespace" ]]; then
+        echo " - default namespace '$DefaultNamespace'"
+    fi
 }
 
 function configureTentacle() {
@@ -171,6 +174,10 @@ function registerTentacle() {
         for i in "${TENANTTAGS[@]}"; do
             ARGS+=('--tenanttag' "$i")
         done
+    fi
+
+    if [[ -n "$DefaultNamespace" ]]; then
+        ARGS+=('--default-namespace' "$DefaultNamespace")
     fi
 
     ARGS+=(
