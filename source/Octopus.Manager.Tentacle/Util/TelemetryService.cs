@@ -23,8 +23,15 @@ namespace Octopus.Manager.Tentacle.Util
                 var eventBatch = new TelemetryEventBatch(eventObj);
                 var stringPayload = JsonConvert.SerializeObject(eventBatch);
 
-                var response = await httpClient.PostAsync("api/telemetry/process", new StringContent(stringPayload, Encoding.UTF8, "application/json"));
-                return response.IsSuccessStatusCode;
+                try
+                {
+                    var response = await httpClient.PostAsync("api/telemetry/process", new StringContent(stringPayload, Encoding.UTF8, "application/json"));
+                    return response.IsSuccessStatusCode;
+                }
+                catch
+                {
+                    return false;
+                }
             }
         }
     }
