@@ -96,5 +96,23 @@ namespace Octopus.Manager.Tentacle.Tests.WizardFixtures
                         t.EventProperties.ContainsKey("Machine Type") &&
                         t.EventProperties["Machine Type"] == MachineType.DeploymentTarget.ToString()));
         }
+
+        [Test]
+        public async Task WhenSettingUpAListeningTentacle_TelemetryEventShouldNotBeSent()
+        {
+            var telemetryService = new TelemetryServiceBuilder().Build();
+
+            var model = new SetupTentacleWizardModelBuilder()
+                .WithTelemetryService(telemetryService)
+                .Build();
+
+            model.CommunicationStyle = CommunicationStyle.TentaclePassive;
+
+            _ = await model.ReviewAndRunScriptTabViewModel.GenerateAndExecuteScript();
+
+            await telemetryService
+                .Received(0)
+                .SendTelemetryEvent(Arg.Any<Uri>(), Arg.Any<TelemetryEvent>());
+        }
     }
 }

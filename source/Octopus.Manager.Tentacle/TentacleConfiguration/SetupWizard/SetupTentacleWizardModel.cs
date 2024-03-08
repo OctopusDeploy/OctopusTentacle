@@ -969,6 +969,13 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         async Task SendTentacleInstalledTelemetryEvent()
         {
+            // Do not try to send telemetry if we are installing a 
+            // listening Tentacle
+            if (CommunicationStyle == CommunicationStyle.TentaclePassive)
+            {
+                return;
+            }
+            
             var deviceId = await tentacleManagerInstanceIdentifierService.GetIdentifier();
 
             var eventObj = new TentacleManagerScriptExecuted(
