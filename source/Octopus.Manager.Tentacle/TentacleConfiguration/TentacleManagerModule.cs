@@ -44,7 +44,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration
             builder.RegisterType<TentacleManagerInstanceIdentifierService>()
                 .As<ITentacleManagerInstanceIdentifierService>()
                 .SingleInstance()
-                .WithParameter("identifierLocation", new DirectoryInfo(processExecutableLocation));
+                .WithParameter("identifierFilePath", Path.Combine(processExecutableLocation, "TentacleManagerInstanceID"));
         }
     }
 }

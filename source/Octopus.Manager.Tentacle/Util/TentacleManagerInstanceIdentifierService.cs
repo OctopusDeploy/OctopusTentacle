@@ -12,19 +12,15 @@ namespace Octopus.Manager.Tentacle.Util
 
     public class TentacleManagerInstanceIdentifierService : ITentacleManagerInstanceIdentifierService
     {
-        public const string IdentifierFileName = "TentacleManagerInstanceID";
+        readonly string identifierFilePath;
 
-        readonly DirectoryInfo identifierLocation;
-
-        public TentacleManagerInstanceIdentifierService(DirectoryInfo identifierLocation)
+        public TentacleManagerInstanceIdentifierService(string identifierFilePath)
         {
-            this.identifierLocation = identifierLocation;
+            this.identifierFilePath = identifierFilePath;
         }
 
         public async Task<string> GetIdentifier()
         {
-            var identifierFilePath = Path.Combine(identifierLocation.FullName, IdentifierFileName);
-
             if (File.Exists(identifierFilePath))
             {
                 var fileContentsLines = File.ReadAllLines(identifierFilePath);
