@@ -40,6 +40,7 @@ namespace Octopus.Tentacle.Kubernetes
                 labelSelector: OctopusLabels.ScriptTicketId,
                 resourceVersion: initialResourceVersion,
                 watch: true,
+                timeoutSeconds: KubernetesConfig.PodMonitorTimeoutSeconds,
                 cancellationToken: cancellationToken);
 
             var watchErrorCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
