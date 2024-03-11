@@ -461,19 +461,19 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
 
         void WriteInfo(IScriptLogWriter writer, string message)
         {
-            writer.WriteOutput(ProcessOutputSource.StdOut, message);
+            writer.WriteOutput(ProcessOutputSource.StdOut, DateTimeOffset.UtcNow + ", " + message);
             log.Info(message);
         }
 
         void WriteError(IScriptLogWriter writer, string message)
         {
-            writer.WriteOutput(ProcessOutputSource.StdErr, message);
+            writer.WriteOutput(ProcessOutputSource.StdErr, DateTimeOffset.UtcNow + ", " + message);
             log.Error(message);
         }
 
         void WriteVerbose(IScriptLogWriter writer, string message)
         {
-            writer.WriteVerbose(message);
+            writer.WriteVerbose(DateTimeOffset.UtcNow + ", " + message);
             log.Verbose(message);
         }
     }

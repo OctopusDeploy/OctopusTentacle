@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -26,20 +27,33 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
         {
             try
             {
+                Stopwatch stdoutWatch = Stopwatch.StartNew();
                 //open the file streams for reading
-                using var stdOutStream = await SafelyOpenLogStreamReader("stdout.log", cancellationToken);
-                using var stdErrStream = await SafelyOpenLogStreamReader("stderr.log", cancellationToken);
+                using var stdOutStream = await SafelyOpenLogStreamReader("stdout.log", cancellationToken, writer);
+                writer.WriteOutput(ProcessOutputSource.StdOut, $"Opening streams for stdout logs took: {stdoutWatch.Elapsed} (FinalRead: {isFinalRead})");
+
+                Stopwatch stderrWatch = Stopwatch.StartNew();
+                using var stdErrStream = await SafelyOpenLogStreamReader("stderr.log", cancellationToken, writer);
+                writer.WriteOutput(ProcessOutputSource.StdOut, $"Opening streams for stderr logs took: {stderrWatch.Elapsed} (FinalRead: {isFinalRead})");
 
                 //if either of these is null, just return
                 if (stdOutStream is null || stdErrStream is null)
+                {
+                    writer.WriteOutput(ProcessOutputSource.StdOut, DateTimeOffset.UtcNow + ", " + "Cancelling stream reader open due to job completion");
                     return;
+                }
 
                 // This loop is exited when either the cancellation token is cancelled (which is when the pod is finished or the script is cancelled)
                 // or if this is the final read, at the end (so we read once and jump out)
                 while (true)
                 {
                     if (cancellationToken.IsCancellationRequested)
+                    {
+                        writer.WriteOutput(ProcessOutputSource.StdOut, DateTimeOffset.UtcNow + ", " + "Cancelling stream writing due to job completion");
                         break;
+                    }
+
+                    Stopwatch watch = Stopwatch.StartNew();
 
                     //Read both the stdout and stderr log files
                     var stdOutReadTask = ReadLogFileTail(writer, stdOutStream, ProcessOutputSource.StdOut, lastStdOutOffset);
@@ -60,13 +74,15 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                     //write all the read log lines to the output script log
                     foreach (var logLine in orderedLogLines)
                     {
-                        writer.WriteOutput(logLine.Source, logLine.Message, logLine.Occurred);
+                        var logLineMessage = logLine.Message.StartsWith("##") ? logLine.Message : $"{logLine.Occurred} ({DateTimeOffset.UtcNow}), {logLine.Message}";
+                        writer.WriteOutput(logLine.Source, logLineMessage, logLine.Occurred);
                     }
-
+                    
+writer.WriteOutput(ProcessOutputSource.StdOut, $"{DateTimeOffset.UtcNow}, Reading logs took: {watch.Elapsed}");
                     //wait for 250ms before reading the logs again (except on the final read)
                     if (!isFinalRead)
                     {
-                        await Task.Delay(TimeSpan.FromMilliseconds(250), cancellationToken);
+                        await Task.Delay(TimeSpan.FromMilliseconds(500), cancellationToken);
                     }
                     else
                     {
@@ -78,10 +94,11 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             catch (TaskCanceledException)
             {
                 //ignore all task cancelled exceptions as they may be thrown by the pod finishing (and thus signally)
+                writer.WriteOutput(ProcessOutputSource.StdOut, DateTimeOffset.UtcNow + ", " + "TaskCanceledException due to job completion");
             }
         }
 
-        async Task<StreamReader?> SafelyOpenLogStreamReader(string filename, CancellationToken cancellationToken)
+        async Task<StreamReader?> SafelyOpenLogStreamReader(string filename, CancellationToken cancellationToken, IScriptLogWriter writer)
         {
             while (true)
             {
@@ -94,10 +111,12 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                     //Eventually the file should exist
                     return new StreamReader(workspace.OpenFileStreamForReading(filename), Encoding.UTF8);
                 }
-                catch (FileNotFoundException)
+                catch (FileNotFoundException ex)
                 {
+                    writer.WriteOutput(ProcessOutputSource.Debug, $"{DateTimeOffset.UtcNow}, FileNotFound: {filename} - {ex.Message}");
+
                     //wait for 50ms before reading the logs again
-                    await Task.Delay(TimeSpan.FromMilliseconds(50), cancellationToken);
+                    await Task.Delay(TimeSpan.FromMilliseconds(500), cancellationToken);
                 }
             }
         }
