@@ -11,18 +11,18 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Kubernetes.Scripts
 {
-    public class KubernetesJobOutputStreamWriter
+    public class KubernetesPodOutputStreamWriter
     {
         readonly IScriptWorkspace workspace;
         long lastStdOutOffset;
         long lastStdErrOffset;
 
-        public KubernetesJobOutputStreamWriter(IScriptWorkspace workspace)
+        public KubernetesPodOutputStreamWriter(IScriptWorkspace workspace)
         {
             this.workspace = workspace;
         }
 
-        public async Task StreamJobLogsToScriptLog(IScriptLogWriter writer, CancellationToken cancellationToken, bool isFinalRead = false)
+        public async Task StreamPodLogsToScriptLog(IScriptLogWriter writer, CancellationToken cancellationToken, bool isFinalRead = false)
         {
             try
             {
@@ -34,7 +34,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                 if (stdOutStream is null || stdErrStream is null)
                     return;
 
-                // This loop is exited when either the cancellation token is cancelled (which is when the job is finished or the script is cancelled)
+                // This loop is exited when either the cancellation token is cancelled (which is when the pod is finished or the script is cancelled)
                 // or if this is the final read, at the end (so we read once and jump out)
                 while (true)
                 {
@@ -77,7 +77,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             }
             catch (TaskCanceledException)
             {
-                //ignore all task cancelled exceptions as they may be thrown by the job finishing (and thus signally)
+                //ignore all task cancelled exceptions as they may be thrown by the pod finishing (and thus signally)
             }
         }
 
@@ -90,7 +90,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
 
                 try
                 {
-                    //we expect that we will receive a number of FileNotFoundException's while the job is spinning up
+                    //we expect that we will receive a number of FileNotFoundException's while the pod is spinning up
                     //Eventually the file should exist
                     return new StreamReader(workspace.OpenFileStreamForReading(filename), Encoding.UTF8);
                 }

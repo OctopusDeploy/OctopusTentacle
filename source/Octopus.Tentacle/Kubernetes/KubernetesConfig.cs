@@ -6,12 +6,15 @@ namespace Octopus.Tentacle.Kubernetes
     {
         const string EnvVarPrefix = "OCTOPUS__K8STENTACLE";
 
-        public static string Namespace => GetRequiredEnvVar($"{EnvVarPrefix}__NAMESPACE", "Unable to determine Kubernetes namespace.");
-        public static string JobServiceAccountName => GetRequiredEnvVar($"{EnvVarPrefix}__JOBSERVICEACCOUNTNAME", "Unable to determine Kubernetes Job service account name.");
-        public static string JobVolumeYaml => GetRequiredEnvVar($"{EnvVarPrefix}__JOBVOLUMEYAML", "Unable to determine Kubernetes Job volume yaml.");
-        public static bool UseJobs => bool.TryParse(Environment.GetEnvironmentVariable($"{EnvVarPrefix}__USEJOBS"), out var useJobs) && useJobs;
-        public static int JobTtlSeconds => int.TryParse(Environment.GetEnvironmentVariable($"{EnvVarPrefix}__JOBTTL"), out var jobTtl) ? jobTtl : 60; //Default 1min
-        public static int JobMonitorTimeoutSeconds => int.TryParse(Environment.GetEnvironmentVariable($"{EnvVarPrefix}__JOBMONITORTIMEOUT"), out var jobMonitorTimeout) ? jobMonitorTimeout : 1800; //30min
+        public static string NamespaceVariableName => $"{EnvVarPrefix}__NAMESPACE";
+        public static string Namespace => GetRequiredEnvVar(NamespaceVariableName, "Unable to determine Kubernetes namespace.");
+        public static string PodServiceAccountName => GetRequiredEnvVar($"{EnvVarPrefix}__PODSERVICEACCOUNTNAME", "Unable to determine Kubernetes Pod service account name.");
+        public static string PodVolumeJson => GetRequiredEnvVar($"{EnvVarPrefix}__PODVOLUMEJSON", "Unable to determine Kubernetes Pod volume json.");
+
+        // We default this to true if we can't parse the environment variable
+        public static bool ExecuteScriptsInLocalShell => !bool.TryParse(Environment.GetEnvironmentVariable($"{EnvVarPrefix}__EXECUTEINLOCALSHELL"), out var executeInLocalShell) || executeInLocalShell;
+        public static int PodMonitorTimeoutSeconds => int.TryParse(Environment.GetEnvironmentVariable($"{EnvVarPrefix}__PODMONITORTIMEOUT"), out var podMonitorTimeout) ? podMonitorTimeout : 1800; //30min
+        public static bool DisableAutomaticPodCleanup => bool.TryParse(Environment.GetEnvironmentVariable($"{EnvVarPrefix}__DISABLEAUTOPODCLEANUP"), out var disableAutoCleanup) && disableAutoCleanup;
 
         public static string HelmReleaseNameVariableName => $"{EnvVarPrefix}__HELMRELEASENAME";
         public static string HelmReleaseName => GetRequiredEnvVar(HelmReleaseNameVariableName, "Unable to determine Helm release name.");

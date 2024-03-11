@@ -8,11 +8,26 @@
     <PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
     <RootNamespace>Octopus.Manager.Tentacle.Tests</RootNamespace>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <LangVersion>9</LangVersion>
     <Nullable>annotations</Nullable>
-    <TargetFramework>net48</TargetFramework>
-    <RuntimeIdentifiers>win</RuntimeIdentifiers>
-  </PropertyGroup>      
+    <TargetFrameworks>net48;net6.0-windows</TargetFrameworks>
+    <ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
+  </PropertyGroup>
+
+  <Choose>
+    <When Condition="'$(TargetFramework)' == 'net48'">
+      <PropertyGroup>
+        <RuntimeIdentifiers>win</RuntimeIdentifiers><!-- This is AnyCPU -->
+      </PropertyGroup>
+    </When>
+    <When Condition="'$(TargetFramework)' == 'net6.0-windows'">
+      <PropertyGroup>
+        <RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
+      </PropertyGroup>
+    </When>
+  </Choose>
+  
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.2" />
     <PackageReference Include="NSubstitute" Version="4.4.0" />
@@ -34,10 +49,5 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Octopus.Manager.Tentacle\Octopus.Manager.Tentacle.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="PresentationCore" />
-    <Reference Include="PresentationFramework" />
   </ItemGroup>
 </Project>

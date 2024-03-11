@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Tentacle.Util;
@@ -16,7 +17,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
             this.logger = logger;
         }
 
-        static string LinuxDownloadUrlForVersion(string versionString) => $"https://download.octopusdeploy.com/linux-tentacle/tentacle-{versionString}-linux_x64.tar.gz";
+        static string LinuxDownloadUrlForVersion(string versionString)
+        {
+            var architecture = RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ? "arm64" : "x64";
+            return $"https://download.octopusdeploy.com/linux-tentacle/tentacle-{versionString}-linux_{architecture}.tar.gz";
+        }
 
         public async Task<string> GetTentacleVersion(string downloadPath, Version version, TentacleRuntime _, CancellationToken cancellationToken)
         {

@@ -145,7 +145,6 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithServiceEndpointModifier(serviceEndpoint =>
                 {
                     serviceEndpoint.PollingRequestQueueTimeout = TimeSpan.FromSeconds(10);
-                    serviceEndpoint.PollingRequestMaximumMessageProcessingTimeout = TimeSpan.FromSeconds(10);
                     serviceEndpoint.RetryCountLimit = 1;
                 })
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()

@@ -34,5 +34,9 @@ namespace Octopus.Tentacle.Tests.Integration.Util.PendingRequestQueueHelpers
 
         public bool IsEmpty => pendingRequestQueue.IsEmpty;
         public int Count => pendingRequestQueue.Count;
+        public ValueTask DisposeAsync()
+        {
+            return pendingRequestQueue.DisposeAsync();
+        }
     }
 }

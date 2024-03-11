@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Data;
-using Autofac;
 using MaterialDesignThemes.Wpf;
 using Octopus.Manager.Tentacle.DeleteWizard;
 using Octopus.Manager.Tentacle.DeleteWizard.Views;
@@ -104,13 +103,11 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
             wizard.AddTab(new MachineType(setupTentacleWizardModel));
             wizard.AddTab(new TentacleActiveDetailsTab(setupTentacleWizardModel));
             wizard.AddTab(new TentaclePassiveTab(setupTentacleWizardModel));
-            wizard.AddTab(
-                new ReviewAndRunScriptTabView(new ReviewAndRunScriptTabViewModel(setupTentacleWizardModel, model.CommandLineRunner))
-                {
-                    ReadyMessage = "You're ready to install an Octopus Tentacle.",
-                    SuccessMessage = "Installation complete!"
-                }
-            );
+            wizard.AddTab(new ReviewAndRunScriptTabView(setupTentacleWizardModel.ReviewAndRunScriptTabViewModel)
+            {
+                ReadyMessage = "You're ready to install an Octopus Tentacle.",
+                SuccessMessage = "Installation complete!"
+            });
 
             var shell = new ShellView("Tentacle Setup Wizard", setupTentacleWizardModel)
             {
@@ -235,7 +232,9 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
 
         async void CreateNewInstance(object sender, RoutedEventArgs e)
         {
+#pragma warning disable CA1416
             var result = await DialogHost.Show(new NewInstanceNameDialog(instanceSelection.Instances.Select(q => q.InstanceName)), Window.GetWindow(this)?.Title);
+#pragma warning restore CA1416
 
             if (result is string typedResult)
             {

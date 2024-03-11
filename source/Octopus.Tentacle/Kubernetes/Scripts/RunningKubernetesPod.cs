@@ -20,11 +20,20 @@ using Octopus.Tentacle.Variables;
 
 namespace Octopus.Tentacle.Kubernetes.Scripts
 {
-    public class RunningKubernetesJob : IRunningScript
+    public class RunningKubernetesPod : IRunningScript
     {
+        public delegate RunningKubernetesPod Factory(
+            IScriptWorkspace workspace,
+            IScriptLog scriptLog,
+            ScriptTicket scriptTicket,
+            string taskId,
+            IScriptStateStore stateStore,
+            KubernetesAgentScriptExecutionContext executionContext,
+            CancellationToken scriptCancellationToken);
+
         static readonly AsyncLazy<string> BootstrapRunnerScript = new(async () =>
         {
-            using var stream = typeof(RunningKubernetesJob).Assembly.GetManifestResourceStream("Octopus.Tentacle.Kubernetes.bootstrapRunner.sh");
+            using var stream = typeof(RunningKubernetesPod).Assembly.GetManifestResourceStream("Octopus.Tentacle.Kubernetes.bootstrapRunner.sh");
             using var reader = new StreamReader(stream!, Encoding.UTF8);
             return await reader.ReadToEndAsync();
         });
@@ -34,38 +43,41 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
         readonly string taskId;
         readonly ILog log;
         readonly IScriptStateStore stateStore;
-        readonly IKubernetesJobService jobService;
+        readonly IKubernetesPodService podService;
+        readonly IKubernetesPodStatusProvider podStatusProvider;
         readonly IKubernetesSecretService secretService;
-        readonly IKubernetesJobContainerResolver containerResolver;
-        readonly KubernetesJobScriptExecutionContext executionContext;
+        readonly IKubernetesPodContainerResolver containerResolver;
+        readonly KubernetesAgentScriptExecutionContext executionContext;
         readonly CancellationToken scriptCancellationToken;
         readonly string? instanceName;
-        readonly KubernetesJobOutputStreamWriter outputStreamWriter;
-        readonly string jobName;
+        readonly KubernetesPodOutputStreamWriter outputStreamWriter;
+        readonly string podName;
 
         public int ExitCode { get; private set; }
         public ProcessState State { get; private set; }
         public IScriptLog ScriptLog { get; }
 
-        public RunningKubernetesJob(IScriptWorkspace workspace,
+        public RunningKubernetesPod(IScriptWorkspace workspace,
             IScriptLog scriptLog,
             ScriptTicket scriptTicket,
             string taskId,
-            ILog log,
             IScriptStateStore stateStore,
-            IKubernetesJobService jobService,
+            KubernetesAgentScriptExecutionContext executionContext,
+            CancellationToken scriptCancellationToken,
+            ISystemLog log,
+            IKubernetesPodService podService,
+            IKubernetesPodStatusProvider podStatusProvider,
             IKubernetesSecretService secretService,
-            IKubernetesJobContainerResolver containerResolver,
-            IApplicationInstanceSelector appInstanceSelector,
-            KubernetesJobScriptExecutionContext executionContext,
-            CancellationToken scriptCancellationToken)
+            IKubernetesPodContainerResolver containerResolver,
+            IApplicationInstanceSelector appInstanceSelector)
         {
             this.workspace = workspace;
             this.scriptTicket = scriptTicket;
             this.taskId = taskId;
             this.log = log;
             this.stateStore = stateStore;
-            this.jobService = jobService;
+            this.podService = podService;
+            this.podStatusProvider = podStatusProvider;
             this.secretService = secretService;
             this.containerResolver = containerResolver;
             this.executionContext = executionContext;
@@ -73,10 +85,12 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             ScriptLog = scriptLog;
             instanceName = appInstanceSelector.Current.InstanceName;
 
-            outputStreamWriter = new KubernetesJobOutputStreamWriter(workspace);
+            outputStreamWriter = new KubernetesPodOutputStreamWriter(workspace);
+
+            State = ProcessState.Pending;
 
             // this doesn't change, so build it once
-            jobName = jobService.BuildJobName(scriptTicket);
+            podName = scriptTicket.ToKubernetesScriptPobName();
         }
 
         public async Task Execute()
@@ -87,25 +101,23 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             {
                 using var writer = ScriptLog.CreateWriter();
 
-                //register a cancellation callback so that when the script is cancelled, we cancel the job
+                //register a cancellation callback so that when the script is cancelled, we cancel the pod
                 //we use a using to make sure this callback is deregistered
                 using var cancellationTokenRegistration = scriptCancellationToken.Register(() =>
                 {
-                    //we spawn the job cancellation on a background thread (as this callback runs synchronously)
+                    //we spawn the pod cancellation on a background thread (as this callback runs synchronously)
                     Task.Run(async () =>
                     {
                         try
                         {
-                            WriteVerbose(writer, $"Cancelling Kubernetes Job '{jobName}'.");
-                            //first we suspend the job, which terminates the underlying pods
-                            await jobService.SuspendJob(scriptTicket, CancellationToken.None);
-                            //then we delete the job (because we no longer need it)
-                            await jobService.Delete(scriptTicket, CancellationToken.None);
-                            WriteVerbose(writer, $"Cancelled Kubernetes Job '{jobName}'.");
+                            WriteVerbose(writer, $"Deleting Kubernetes Pod '{podName}'.");
+                            //We delete the pob (because we no longer need it)
+                            await podService.Delete(scriptTicket, CancellationToken.None);
+                            WriteVerbose(writer, $"Deleted Kubernetes Pod '{podName}'.");
                         }
                         catch (Exception e)
                         {
-                            WriteError(writer, $"Failed to cancel Kubernetes job {jobName}. {e}");
+                            WriteError(writer, $"Failed to delete Kubernetes Pod {podName}. {e}");
                         }
                     }, CancellationToken.None);
                 });
@@ -114,7 +126,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                 {
                     using (ScriptIsolationMutex.Acquire(workspace.IsolationLevel,
                                workspace.ScriptMutexAcquireTimeout,
-                               workspace.ScriptMutexName ?? nameof(RunningKubernetesJob),
+                               workspace.ScriptMutexName ?? nameof(RunningKubernetesPod),
                                message => writer.WriteOutput(ProcessOutputSource.StdOut, message),
                                taskId,
                                scriptCancellationToken,
@@ -123,14 +135,14 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                         //Possibly create the image pull secret name
                         var imagePullSecretName = await CreateImagePullSecret(scriptCancellationToken);
 
-                        //create the k8s job
-                        await CreateJob(writer, imagePullSecretName, scriptCancellationToken);
+                        //create the k8s pod
+                        await CreatePod(writer, imagePullSecretName, scriptCancellationToken);
 
                         State = ProcessState.Running;
                         RecordScriptHasStarted(writer);
 
                         //we now need to monitor the resulting pod status
-                        exitCode = await MonitorJobAndLogs(writer);
+                        exitCode = await MonitorPodAndLogs(writer);
                     }
                 }
                 catch (OperationCanceledException)
@@ -144,8 +156,9 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                     exitCode = ScriptExitCodes.TimeoutExitCode;
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                log.Error(ex, $"Failed to execute script {scriptTicket.TaskId} in pod {podName}");
                 exitCode = ScriptExitCodes.FatalExitCode;
             }
             finally
@@ -162,54 +175,54 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             }
         }
 
-        async Task<int> MonitorJobAndLogs(IScriptLogWriter writer)
+        async Task<int> MonitorPodAndLogs(IScriptLogWriter writer)
         {
-            var jobCompletionCancellationTokenSource = new CancellationTokenSource();
-            var checkJobTask = CheckIfJobHasCompleted(jobCompletionCancellationTokenSource);
+            var podCompletionCancellationTokenSource = new CancellationTokenSource();
+            var checkPodTask = CheckIfPodHasCompleted(podCompletionCancellationTokenSource);
 
-            //we pass the job completion CTS here because its used to cancel the writing of the job stream
-            var monitorJobOutputTask = outputStreamWriter.StreamJobLogsToScriptLog(writer, jobCompletionCancellationTokenSource.Token);
+            //we pass the pod completion CTS here because its used to cancel the writing of the pod stream
+            var monitorPodOutputTask = outputStreamWriter.StreamPodLogsToScriptLog(writer, podCompletionCancellationTokenSource.Token);
 
-            await Task.WhenAll(checkJobTask, monitorJobOutputTask);
+            await Task.WhenAll(checkPodTask, monitorPodOutputTask);
 
             //once they have both finished, perform one last log read (and don't cancel on it)
-            await outputStreamWriter.StreamJobLogsToScriptLog(writer, CancellationToken.None, true);
+            await outputStreamWriter.StreamPodLogsToScriptLog(writer, CancellationToken.None, true);
 
-            //return the exit code of the jobs
-            return checkJobTask.Result;
+            //return the exit code of the pod
+            return checkPodTask.Result;
         }
 
-        async Task<int> CheckIfJobHasCompleted(CancellationTokenSource jobCompletionCancellationTokenSource)
+        async Task<int> CheckIfPodHasCompleted(CancellationTokenSource podCompletionCancellationTokenSource)
         {
-            var resultStatusCode = 0;
-            await jobService.Watch(scriptTicket, job =>
+            var resultStatusCode = ScriptExitCodes.UnknownScriptExitCode;
+            PodStatus? status = null;
+            while (!scriptCancellationToken.IsCancellationRequested)
             {
-                var firstCondition = job.Status?.Conditions?.FirstOrDefault();
-                switch (firstCondition)
+                status = podStatusProvider.TryGetPodStatus(scriptTicket);
+                if (status is not null && status.State == PodState.Succeeded)
                 {
-                    case { Status: "True", Type: "Complete" }:
-                        resultStatusCode = 0;
-                        return true;
-                    case { Status: "True", Type: "Failed" }:
-                        resultStatusCode = 1;
-                        return true;
-                    default:
-                        //continue watching
-                        return false;
+                    resultStatusCode = 0;
+                    break;
                 }
-            }, ex =>
-            {
-                log.Error(ex);
-                resultStatusCode = 0;
-            }, CancellationToken.None);
 
-            //if the job was killed by cancellation, then we need to change the exit code
+                if (status is not null && status.State == PodState.Failed)
+                {
+                    resultStatusCode = status.ExitCode!.Value;
+                    break;
+                }
+
+                await Task.Delay(250, scriptCancellationToken);
+            }
+
+            //if the pod was killed by cancellation, then we need to change the exit code
             if (scriptCancellationToken.IsCancellationRequested)
             {
                 resultStatusCode = ScriptExitCodes.CanceledExitCode;
             }
 
-            jobCompletionCancellationTokenSource.Cancel();
+            podCompletionCancellationTokenSource.Cancel();
+
+            log.Verbose($"Pod {podName} completed.{status}");
 
             return resultStatusCode;
         }
@@ -289,9 +302,9 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             return $"octopus-feed-cred-{sanitizedHash}".ToLowerInvariant();
         }
 
-        async Task CreateJob(IScriptLogWriter writer, string? imagePullSecretName, CancellationToken cancellationToken)
+        async Task CreatePod(IScriptLogWriter writer, string? imagePullSecretName, CancellationToken cancellationToken)
         {
-            WriteVerbose(writer, $"Creating Kubernetes Job '{jobName}'.");
+            WriteVerbose(writer, $"Creating Kubernetes Pod '{podName}'.");
 
             //write the bootstrap runner script to the workspace
             workspace.WriteFile("bootstrapRunner.sh", await BootstrapRunnerScript.Task);
@@ -299,15 +312,13 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             var scriptName = Path.GetFileName(workspace.BootstrapScriptFilePath);
 
             //Deserialize the volume configuration from the environment configuration
-            var volumes = KubernetesYaml.Deserialize<List<V1Volume>>(KubernetesConfig.JobVolumeYaml);
+            var volumes = KubernetesJson.Deserialize<List<V1Volume>>(KubernetesConfig.PodVolumeJson);
 
-            var job = new V1Job
+            var pod = new V1Pod
             {
-                ApiVersion = "batch/v1",
-                Kind = "Job",
                 Metadata = new V1ObjectMeta
                 {
-                    Name = jobName,
+                    Name = podName,
                     NamespaceProperty = KubernetesConfig.Namespace,
                     Labels = new Dictionary<string, string>
                     {
@@ -315,78 +326,91 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                         ["octopus.com/scriptTicketId"] = scriptTicket.TaskId
                     }
                 },
-                Spec = new V1JobSpec
+                Spec = new V1PodSpec
                 {
-                    Template = new V1PodTemplateSpec
+                    Containers = new List<V1Container>
                     {
-                        Spec = new V1PodSpec
+                        new()
                         {
-                            Containers = new List<V1Container>
-                            {
-                                new()
+                            Name = podName,
+                            Image = executionContext.Image ?? await containerResolver.GetContainerImageForCluster(),
+                            Command = new List<string> { "bash" },
+                            Args = new List<string>
                                 {
-                                    Name = jobName,
-                                    Image = executionContext.Image ?? await containerResolver.GetContainerImageForCluster(),
-                                    Command = new List<string> { "bash" },
-                                    Args = new List<string>
-                                        {
-                                            $"/octopus/Work/{scriptTicket.TaskId}/bootstrapRunner.sh",
-                                            $"/octopus/Work/{scriptTicket.TaskId}",
-                                            $"/octopus/Work/{scriptTicket.TaskId}/{scriptName}"
-                                        }.Concat(workspace.ScriptArguments ?? Array.Empty<string>())
-                                        .ToList(),
-                                    VolumeMounts = new List<V1VolumeMount>
-                                    {
-                                        new("/octopus", "tentacle-home"),
-                                    },
-                                    Env = new List<V1EnvVar>
-                                    {
-                                        new(KubernetesConfig.HelmReleaseNameVariableName, KubernetesConfig.HelmReleaseName),
-                                        new(KubernetesConfig.HelmChartVersionVariableName, KubernetesConfig.HelmChartVersion),
-                                        new(EnvironmentVariables.TentacleHome, $"/octopus"),
-                                        new(EnvironmentVariables.TentacleInstanceName, instanceName),
-                                        new(EnvironmentVariables.TentacleVersion, Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleVersion)),
-                                        new(EnvironmentVariables.TentacleCertificateSignatureAlgorithm, Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleCertificateSignatureAlgorithm)),
-                                        new("OCTOPUS_RUNNING_IN_CONTAINER", "Y")
-
-                                        //We intentionally exclude setting "TentacleJournal" since it doesn't make sense to keep a Deployment Journal for Kubernetes deployments
-                                    },
-                                    Resources = new V1ResourceRequirements
-                                    {
-                                        //set resource requests to be quite low for now as the jobs tend to run fairly quickly
-                                        Requests = new Dictionary<string, ResourceQuantity>
-                                        {
-                                            ["cpu"] = new("25m"),
-                                            ["memory"] = new ("100Mi")
-                                        }
-                                    }
-                                }
+                                    $"/octopus/Work/{scriptTicket.TaskId}/bootstrapRunner.sh",
+                                    $"/octopus/Work/{scriptTicket.TaskId}",
+                                    $"/octopus/Work/{scriptTicket.TaskId}/{scriptName}"
+                                }.Concat(workspace.ScriptArguments ?? Array.Empty<string>())
+                                .ToList(),
+                            VolumeMounts = new List<V1VolumeMount>
+                            {
+                                new("/octopus", "tentacle-home"),
                             },
-                            //only include the image pull secret name if it's actually been defined
-                            ImagePullSecrets = imagePullSecretName is not null
-                                ? new List<V1LocalObjectReference>
-                                {
-                                    new(imagePullSecretName)
-                                }
-                                : new List<V1LocalObjectReference>(),
-                            ServiceAccountName = KubernetesConfig.JobServiceAccountName,
-                            RestartPolicy = "Never",
-                            Volumes = volumes,
-                            //currently we only support running on linux nodes
-                            NodeSelector = new Dictionary<string, string>
+                            Env = new List<V1EnvVar>
                             {
-                                ["kubernetes.io/os"] = "linux"
+                                new(KubernetesConfig.NamespaceVariableName, KubernetesConfig.Namespace),
+                                new(KubernetesConfig.HelmReleaseNameVariableName, KubernetesConfig.HelmReleaseName),
+                                new(KubernetesConfig.HelmChartVersionVariableName, KubernetesConfig.HelmChartVersion),
+                                new(EnvironmentVariables.TentacleHome, $"/octopus"),
+                                new(EnvironmentVariables.TentacleInstanceName, instanceName),
+                                new(EnvironmentVariables.TentacleVersion, Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleVersion)),
+                                new(EnvironmentVariables.TentacleCertificateSignatureAlgorithm, Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleCertificateSignatureAlgorithm)),
+                                new("OCTOPUS_RUNNING_IN_CONTAINER", "Y")
+
+                                //We intentionally exclude setting "TentacleJournal" since it doesn't make sense to keep a Deployment Journal for Kubernetes deployments
+                            },
+                            Resources = new V1ResourceRequirements
+                            {
+                                //set resource requests to be quite low for now as the scripts tend to run fairly quickly
+                                Requests = new Dictionary<string, ResourceQuantity>
+                                {
+                                    ["cpu"] = new("25m"),
+                                    ["memory"] = new("100Mi")
+                                }
                             }
                         }
                     },
-                    BackoffLimit = 0, //we never want to rerun if it fails
-                    TtlSecondsAfterFinished = KubernetesConfig.JobTtlSeconds
+                    //only include the image pull secret name if it's actually been defined
+                    ImagePullSecrets = imagePullSecretName is not null
+                        ? new List<V1LocalObjectReference>
+                        {
+                            new(imagePullSecretName)
+                        }
+                        : new List<V1LocalObjectReference>(),
+                    ServiceAccountName = KubernetesConfig.PodServiceAccountName,
+                    RestartPolicy = "Never",
+                    Volumes = volumes,
+                    //currently we only support running on linux nodes
+                    NodeSelector = new Dictionary<string, string>
+                    {
+                        ["kubernetes.io/os"] = "linux"
+                    }
                 }
             };
 
-            await jobService.CreateJob(job, cancellationToken);
+            await podService.Create(pod, cancellationToken);
 
-            WriteVerbose(writer, $"Executing script in Kubernetes Job '{jobName}'.");
+            WriteVerbose(writer, $"Executing script in Kubernetes Pod '{podName}'.");
+        }
+
+        public async Task Cleanup(CancellationToken cancellationToken)
+        {
+            if (KubernetesConfig.DisableAutomaticPodCleanup)
+            {
+                log.Verbose($"Not deleting completed pod {podName} as automatic cleanup is disabled.");
+                return;
+            }
+
+            try
+            {
+                log.Verbose($"Deleting completed pod {podName}.");
+                await podService.Delete(scriptTicket, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                //we can't write this back to the script log as it's already cleaned up at this point
+                log.Error(ex, $"Failed to delete Pod {podName}.");
+            }
         }
 
         void RecordScriptHasStarted(IScriptLogWriter writer)
@@ -401,7 +425,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             {
                 try
                 {
-                    WriteInfo(writer, $"Warning: An exception occurred saving the ScriptState for job '{jobName}': {ex.Message}");
+                    WriteInfo(writer, $"Warning: An exception occurred saving the ScriptState for pod '{podName}': {ex.Message}");
                     WriteInfo(writer, ex.ToString());
                 }
                 catch
@@ -419,13 +443,13 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                 var scriptState = stateStore.Load();
                 scriptState.Complete(exitCode);
                 stateStore.Save(scriptState);
-                WriteVerbose(writer, $"Kubernetes Job '{jobName}' completed with exit code {exitCode}");
+                WriteVerbose(writer, $"Kubernetes Pod '{podName}' completed with exit code {exitCode}");
             }
             catch (Exception ex)
             {
                 try
                 {
-                    WriteInfo(writer, $"Warning: An exception occurred saving the ScriptState for job '{jobName}': {ex.Message}");
+                    WriteInfo(writer, $"Warning: An exception occurred saving the ScriptState for pod '{podName}': {ex.Message}");
                     WriteInfo(writer, ex.ToString());
                 }
                 catch

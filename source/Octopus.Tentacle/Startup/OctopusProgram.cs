@@ -11,6 +11,7 @@ using Autofac;
 using Autofac.Core;
 using NLog;
 using NLog.Config;
+using NLog.Layouts;
 using NLog.Targets;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration;
@@ -307,16 +308,22 @@ namespace Octopus.Tentacle.Startup
                 Target.Register<NullLogTarget>("EventLog");
 #endif
 #if REQUIRES_EXPLICIT_LOG_CONFIG
-            var nLogFile = Path.ChangeExtension(GetType().Assembly.Location, "exe.nlog");
+            var nLogFileExtension = !PlatformDetection.Kubernetes.IsRunningInKubernetes
+                ? "exe.nlog"
+                : "exe.k8s.nlog";
+
+            var nLogFile = Path.ChangeExtension(GetType().Assembly.Location, nLogFileExtension);
             LogManager.ThrowConfigExceptions = true;
             LogManager.Configuration = new XmlLoggingConfiguration(nLogFile);
 #endif
+
             SystemLog.Appenders.Add(new NLogAppender());
 
             if (Environment.GetEnvironmentVariable("OCTOPUS__TENTACLE__LOGLEVEL") is { } logLevel &&
                 LogLevel.AllLevels.Any(l => l.Name == logLevel))
             {
                 LogManager.Configuration.Variables["logLevel"] = logLevel;
+                LogManager.ReconfigExistingLoggers();
             }
 
             AssertLoggingConfigurationIsCorrect();
@@ -383,7 +390,7 @@ namespace Octopus.Tentacle.Startup
             }
             if (!string.IsNullOrWhiteSpace(configFile))
                 return new StartUpConfigFileInstanceRequest(configFile);
-            
+
             return new StartUpDynamicInstanceRequest();
         }
 

@@ -23,6 +23,14 @@ partial class Build
     //We don't sign linux packages when building locally
     readonly bool SignLinuxPackages = !IsLocalBuild;
 
+    [Parameter("Used to set a custom docker builder when executing DockerBuildxBuild tasks",
+        Name = "DockerBuilder")]
+    string? DockerBuildxBuilder;
+
+    [Parameter("Specifies the platforms to build the docker images in. Multiple platforms must be comma-separated. Defaults to 'linux/arm64,linux/amd64'.",
+        Name = "DockerPlatform")]
+    string DockerPlatform = "linux/arm64,linux/amd64";
+
     [PublicAPI]
     Target PackOsxTarballs => _ => _
         .Description("Packs the OS/X tarballs containing the published binaries.")
@@ -133,7 +141,7 @@ partial class Build
         .Description("Builds and pushes the kubernetes tentacle multi-arch container image")
         .Executes(() =>
         {
-            BuildAndPushOrLoadKubernetesTentacleContainerImage(push: true, load: false);
+            BuildAndPushOrLoadKubernetesTentacleContainerImage(push: true, load: false, "docker.packages.octopushq.com");
         });
 
     [PublicAPI]
@@ -144,6 +152,16 @@ partial class Build
         .Executes(() =>
         {
             BuildAndPushOrLoadKubernetesTentacleContainerImage(push: false, load: true);
+        });
+
+    [PublicAPI]
+    Target BuildAndLoadLocalDebugKubernetesTentacleContainerImage => _ => _
+        .Description("Builds and loads locally the kubernetes tentacle multi-arch container image")
+        .OnlyWhenStatic(() => IsLocalBuild)
+        .DependsOn(PackDebianPackage)
+        .Executes(() =>
+        {
+            BuildAndPushOrLoadKubernetesTentacleContainerImage(push: false, load: true, includeDebugger: true);
         });
 
     [PublicAPI]
@@ -175,22 +193,38 @@ partial class Build
 
             foreach (var runtimeId in RuntimeIds.Where(x => x.StartsWith("win")))
             {
-                var framework = runtimeId.Equals("win") ? NetFramework : NetCore;
-
-                var workingDirectory = BuildDirectory / "zip" / framework / runtimeId;
-                var workingTentacleDirectory = workingDirectory / "tentacle";
-
-                FileSystemTasks.EnsureCleanDirectory(workingDirectory);
-                FileSystemTasks.EnsureCleanDirectory(workingTentacleDirectory);
-
-                (BuildDirectory / "Tentacle" / framework / runtimeId).GlobFiles($"*")
-                    .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, workingTentacleDirectory));
-
-                ZipFile.CreateFromDirectory(
-                    workingDirectory,
-                    ArtifactsDirectory / "zip" / $"tentacle-{FullSemVer}-{framework}-{runtimeId}.zip");
+                switch (runtimeId)
+                {
+                    case "win":
+                        PackWindowsZip(NetFramework, runtimeId);
+                        break;
+                    case "win-x86":
+                    case "win-x64":
+                        PackWindowsZip(NetCoreWindows, runtimeId);
+                        PackWindowsZip(NetCore, runtimeId);
+                        break;
+                    default:
+                        PackWindowsZip(NetCore, runtimeId);
+                        break;
+                }
             }
         });
+
+    void PackWindowsZip(string framework, string runtimeId)
+    {
+        var workingDirectory = BuildDirectory / "zip" / framework / runtimeId;
+        var workingTentacleDirectory = workingDirectory / "tentacle";
+
+        FileSystemTasks.EnsureCleanDirectory(workingDirectory);
+        FileSystemTasks.EnsureCleanDirectory(workingTentacleDirectory);
+
+        (BuildDirectory / "Tentacle" / framework / runtimeId).GlobFiles($"*")
+            .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, workingTentacleDirectory));
+
+        ZipFile.CreateFromDirectory(
+            workingDirectory,
+            ArtifactsDirectory / "zip" / $"tentacle-{FullSemVer}-{framework}-{runtimeId}.zip");
+    }
 
     [PublicAPI]
     Target PackWindowsInstallers => _ => _
@@ -204,12 +238,20 @@ partial class Build
                 FileSystemTasks.EnsureExistingDirectory(installerDirectory);
                 FileSystemTasks.EnsureCleanDirectory(installerDirectory);
 
-                if (framework != NetCore)
+                if (framework == NetFramework)
                 {
                     (BuildDirectory / "Tentacle" / framework / "win").GlobFiles("*")
                         .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, installerDirectory, FileExistsPolicy.Overwrite));
 
                     (BuildDirectory / "Octopus.Manager.Tentacle" / framework / "win").GlobFiles("*")
+                        .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, installerDirectory, FileExistsPolicy.Overwrite));
+                }
+                else if (framework == NetCoreWindows)
+                {
+                    (BuildDirectory / "Tentacle" / framework / $"win-{platform}").GlobFiles("*")
+                        .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, installerDirectory, FileExistsPolicy.Overwrite));
+                    
+                    (BuildDirectory / "Octopus.Manager.Tentacle" / framework / $"win-{platform}").GlobFiles("*")
                         .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, installerDirectory, FileExistsPolicy.Overwrite));
                 }
                 else
@@ -249,7 +291,7 @@ partial class Build
 
             void BuildMsiInstallerForPlatform(MSBuildTargetPlatform platform, AbsolutePath wixNugetPackagePath, string framework, string frameworkName)
             {
-                Logging.InBlock($"Building {platform} installer", () =>
+                Logging.InBlock($"Building {framework}-{platform} installer", () =>
                 {
                     var tentacleInstallerWixProject = RootDirectory / "installer" / "Octopus.Tentacle.Installer" / "Octopus.Tentacle.Installer.wixproj";
                     using var wixProjectFile = new ModifiableFileWithRestoreContentsOnDispose(tentacleInstallerWixProject);
@@ -278,6 +320,10 @@ partial class Build
                     {
                         platformString = platform == MSBuildTargetPlatform.x64 ? "-x64" : "";
                     }
+                    else if (framework == NetCoreWindows)
+                    {
+                        platformString = $"-{NetCoreWindows}-win" + (platform == MSBuildTargetPlatform.x64 ? "-x64" : "-x86");
+                    }
                     else
                     {
                         platformString = $"-{NetCore}-win" + (platform == MSBuildTargetPlatform.x64 ? "-x64" : "-x86");
@@ -300,6 +346,9 @@ partial class Build
 
             PackWindowsInstallers(MSBuildTargetPlatform.x64, wixNugetInstalledPackage.Directory, NetCore, "NetCore");
             PackWindowsInstallers(MSBuildTargetPlatform.x86, wixNugetInstalledPackage.Directory, NetCore, "NetCore");
+            
+            PackWindowsInstallers(MSBuildTargetPlatform.x64, wixNugetInstalledPackage.Directory, NetCoreWindows, "NetCoreWindows");
+            PackWindowsInstallers(MSBuildTargetPlatform.x86, wixNugetInstalledPackage.Directory, NetCoreWindows, "NetCoreWindows");
         });
 
     [PublicAPI]
@@ -402,6 +451,8 @@ partial class Build
             FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-x64.msi", workingDirectory / "Octopus.Tentacle-x64.msi");
             FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net6.0-win-x86.msi", workingDirectory / "Octopus.Tentacle-net6.0-win-x86.msi");
             FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net6.0-win-x64.msi", workingDirectory / "Octopus.Tentacle-net6.0-win-x64.msi");
+            FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net6.0-windows-win-x86.msi", workingDirectory / "Octopus.Tentacle-net6.0-windows-win-x86.msi");
+            FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net6.0-windows-win-x64.msi", workingDirectory / "Octopus.Tentacle-net6.0-windows-win-x64.msi");
 
             FileSystemTasks.CopyFile(BuildDirectory / "Octopus.Tentacle.Upgrader" / NetCore / "win-x86" / "Octopus.Tentacle.Upgrader.exe", workingDirectory / "Octopus.Tentacle.Upgrader-net6.0-win-x86.exe");
             FileSystemTasks.CopyFile(BuildDirectory / "Octopus.Tentacle.Upgrader" / NetCore / "win-x64" / "Octopus.Tentacle.Upgrader.exe", workingDirectory / "Octopus.Tentacle.Upgrader-net6.0-win-x64.exe");
@@ -419,19 +470,26 @@ partial class Build
             {
                 foreach (var runtimeId in RuntimeIds)
                 {
-                    if (runtimeId == "win" && framework != "net48"
-                        || runtimeId != "win" && framework == "net48") continue;
+                    if (runtimeId == "win" && framework != NetFramework
+                        || runtimeId != "win" && framework == NetFramework) continue;
 
                     var fileExtension = runtimeId.StartsWith("win") ? "zip" : "tar.gz";
                     FileSystemTasks.CopyFile(ArtifactsDirectory / "zip" / $"tentacle-{FullSemVer}-{framework}-{runtimeId}.{fileExtension}",
                         workingDirectory / $"tentacle-{framework}-{runtimeId}.{fileExtension}");
                 }
             }
+            
+            FileSystemTasks.CopyFile(ArtifactsDirectory / "zip" / $"tentacle-{FullSemVer}-{NetCoreWindows}-win-x86.zip",
+                workingDirectory / $"tentacle-{NetCoreWindows}-win-x86.zip");
+            FileSystemTasks.CopyFile(ArtifactsDirectory / "zip" / $"tentacle-{FullSemVer}-{NetCoreWindows}-win-x64.zip",
+                workingDirectory / $"tentacle-{NetCoreWindows}-win-x64.zip");
 
             Assert.True((workingDirectory / "Octopus.Tentacle.msi").FileExists(), "Missing Octopus.Tentacle.msi");
             Assert.True((workingDirectory / "Octopus.Tentacle-x64.msi").FileExists(), "Missing Octopus.Tentacle-x64.msi");
             Assert.True((workingDirectory / "Octopus.Tentacle-net6.0-win-x86.msi").FileExists(), "Missing Octopus.Tentacle-net6.0-win-x86.msi");
             Assert.True((workingDirectory / "Octopus.Tentacle-net6.0-win-x64.msi").FileExists(), "Missing Octopus.Tentacle-net6.0-win-x64.msi");
+            Assert.True((workingDirectory / "Octopus.Tentacle-net6.0-windows-win-x86.msi").FileExists(), "Missing Octopus.Tentacle-net6.0-windows-win-x86.msi");
+            Assert.True((workingDirectory / "Octopus.Tentacle-net6.0-windows-win-x64.msi").FileExists(), "Missing Octopus.Tentacle-net6.0-windows-win-x64.msi");
             Assert.True((workingDirectory / "Octopus.Tentacle.Upgrader.exe").FileExists(), "Missing Octopus.Tentacle.Upgrader.exe");
             Assert.True((workingDirectory / "Octopus.Tentacle.Upgrader-net6.0-win-x86.exe").FileExists(), "Missing Octopus.Tentacle.Upgrader-net6.0-win-x86.exe");
             Assert.True((workingDirectory / "Octopus.Tentacle.Upgrader-net6.0-win-x64.exe").FileExists(), "Missing Octopus.Tentacle.Upgrader-net6.0-win-x64.exe");
@@ -477,16 +535,42 @@ partial class Build
             $"tentacle-{FullSemVer}-{NetCore}-{runtimeId}.tar.gz");
     }
 
-    void BuildAndPushOrLoadKubernetesTentacleContainerImage(bool push, bool load)
+    void BuildAndPushOrLoadKubernetesTentacleContainerImage(bool push, bool load, string? host = null, bool includeDebugger = false)
     {
+        var hostPrefix = host is not null ? $"{host}/" : string.Empty;
         DockerTasks.DockerBuildxBuild(settings =>
-            settings.AddBuildArg($"BUILD_NUMBER={FullSemVer}", $"BUILD_DATE={DateTime.UtcNow:O}")
-                .SetPlatform("linux/arm64,linux/amd64")
-                .SetTag($"docker.packages.octopushq.com/octopusdeploy/kubernetes-tentacle:{FullSemVer}")
-                .SetFile("./docker/kubernetes-tentacle/Dockerfile")
+        {
+            if (includeDebugger && DockerPlatform.Contains(','))
+                throw new InvalidOperationException("Only a single DockerPlatform can be defined when build the docker image with the debugger");
+
+            if (DockerBuildxBuilder is not null)
+                settings = settings.SetBuilder(DockerBuildxBuilder);
+
+            var dockerfile = !includeDebugger
+                ? "./docker/kubernetes-tentacle/Dockerfile"
+                : "./docker/kubernetes-tentacle/dev/Dockerfile";
+
+            var tag = $"{hostPrefix}octopusdeploy/kubernetes-tentacle:{FullSemVer}";
+            if (includeDebugger)
+                tag += "-debug";
+
+            settings = settings
+                .AddBuildArg($"BUILD_NUMBER={FullSemVer}", $"BUILD_DATE={DateTime.UtcNow:O}")
+                .SetPlatform(DockerPlatform)
+                .SetTag(tag)
+                .SetFile(dockerfile)
                 .SetPath(RootDirectory)
                 .SetPush(push)
-                .SetLoad(load));
+                .SetLoad(load);
+
+            if (includeDebugger)
+            {
+                var debuggerArch = DockerPlatform.Replace("/", "-").Replace("amd", "x");
+                settings = settings.AddBuildArg($"DEBUGGER_ARCH={debuggerArch}");
+            }
+
+            return settings;
+        });
     }
 
     void CopyDebianPackageToDockerFolder(string runtimeId)
@@ -500,13 +584,13 @@ partial class Build
         var dockerDir = ArtifactsDirectory / "docker";
         FileSystemTasks.EnsureExistingDirectory(dockerDir);
 
-        FileSystemTasks.CopyFile( packageFilePath, dockerDir / $"tentacle_{FullSemVer}_linux-{dockerArch}.deb");
+        FileSystemTasks.CopyFile(packageFilePath, dockerDir / $"tentacle_{FullSemVer}_linux-{dockerArch}.deb");
     }
 
     static IReadOnlyDictionary<string, (string deb, string docker)> DebDockerMap { get; } = new Dictionary<string, (string deb, string docker)>
     {
-        {"linux-x64", ("amd64", "amd64")},
-        {"linux-arm64", ("arm64", "arm64")},
-        {"linux-arm", ("armhf", "armv7")}
+        { "linux-x64", ("amd64", "amd64") },
+        { "linux-arm64", ("arm64", "arm64") },
+        { "linux-arm", ("armhf", "armv7") }
     };
 }

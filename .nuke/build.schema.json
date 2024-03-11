@@ -30,6 +30,14 @@
           "type": "boolean",
           "description": "Indicates to continue a previously failed build attempt"
         },
+        "DockerBuilder": {
+          "type": "string",
+          "description": "Used to set a custom docker builder when executing DockerBuildxBuild tasks"
+        },
+        "DockerPlatform": {
+          "type": "string",
+          "description": "Specifies the platforms to build the docker images in. Multiple platforms must be comma-separated. Defaults to 'linux/arm64,linux/amd64'"
+        },
         "Help": {
           "type": "boolean",
           "description": "Shows the help text for this build assembly"
@@ -98,6 +106,9 @@
             "type": "string",
             "enum": [
               "BuildAll",
+              "BuildAndLoadLocalDebugKubernetesTentacleContainerImage",
+              "BuildAndLoadLocallyKubernetesTentacleContainerImage",
+              "BuildAndPushKubernetesTentacleContainerImage",
               "BuildLinux",
               "BuildOsx",
               "BuildWindows",
@@ -143,6 +154,9 @@
             "type": "string",
             "enum": [
               "BuildAll",
+              "BuildAndLoadLocalDebugKubernetesTentacleContainerImage",
+              "BuildAndLoadLocallyKubernetesTentacleContainerImage",
+              "BuildAndPushKubernetesTentacleContainerImage",
               "BuildLinux",
               "BuildOsx",
               "BuildWindows",
