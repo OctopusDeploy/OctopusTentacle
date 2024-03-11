@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
@@ -60,14 +61,15 @@ namespace Octopus.Manager.Tentacle.Tests.WizardFixtures
 
             // Assert
             var pathToTentacleExe = $"\"{model.PathToTentacleExe ?? CommandLine.PathToTentacleExe()}\"";
-            var expectedOutput = $"{pathToTentacleExe} create-instance --instance \"{model.InstanceName}\" --config \"C:\\Octopus\\{model.InstanceName}\\Tentacle-{model.InstanceName}.config\"" +
-                Environment.NewLine + $"{pathToTentacleExe} new-certificate --instance \"{model.InstanceName}\" --if-blank" +
-                Environment.NewLine + $"{pathToTentacleExe} configure --instance \"{model.InstanceName}\" --reset-trust" +
-                Environment.NewLine + $"{pathToTentacleExe} configure --instance \"{model.InstanceName}\" --app \"C:\\Octopus\\Applications\\{model.InstanceName}\" --port \"{model.ListenPort}\" --noListen \"True\"" +
-                Environment.NewLine + $"{pathToTentacleExe} polling-proxy --instance \"{model.InstanceName}\" --proxyEnable \"False\" --proxyUsername \"\" --proxyPassword \"\" --proxyHost \"\" --proxyPort \"\"" +
-                Environment.NewLine + $"{pathToTentacleExe} register-with --instance \"{model.InstanceName}\" --server \"{model.OctopusServerUrl}\" --name \"{model.MachineName}\" --comms-style \"TentacleActive\" --server-comms-port \"{model.ServerCommsPort}\" --apiKey \"{model.ApiKey}\" --policy \"{model.SelectedMachinePolicy}\"" +
-                Environment.NewLine + $"{pathToTentacleExe} service --instance \"{model.InstanceName}\" --install --stop --start";
-            script.Should().Be(expectedOutput);
+            var expectedOutput = new StringBuilder();
+            expectedOutput.AppendLine($"{pathToTentacleExe} create-instance --instance \"{model.InstanceName}\" --config \"C:\\Octopus\\{model.InstanceName}\\Tentacle-{model.InstanceName}.config\"");
+            expectedOutput.AppendLine($"{pathToTentacleExe} new-certificate --instance \"{model.InstanceName}\" --if-blank");
+            expectedOutput.AppendLine($"{pathToTentacleExe} configure --instance \"{model.InstanceName}\" --reset-trust");
+            expectedOutput.AppendLine($"{pathToTentacleExe} configure --instance \"{model.InstanceName}\" --app \"C:\\Octopus\\Applications\\{model.InstanceName}\" --port \"{model.ListenPort}\" --noListen \"True\"");
+            expectedOutput.AppendLine($"{pathToTentacleExe} polling-proxy --instance \"{model.InstanceName}\" --proxyEnable \"False\" --proxyUsername \"\" --proxyPassword \"\" --proxyHost \"\" --proxyPort \"\"");
+            expectedOutput.AppendLine($"{pathToTentacleExe} register-with --instance \"{model.InstanceName}\" --server \"{model.OctopusServerUrl}\" --name \"{model.MachineName}\" --comms-style \"TentacleActive\" --server-comms-port \"{model.ServerCommsPort}\" --apiKey \"{model.ApiKey}\" --policy \"{model.SelectedMachinePolicy}\"");
+            expectedOutput.AppendLine($"{pathToTentacleExe} service --instance \"{model.InstanceName}\" --install --stop --start");
+            script.Should().Be(expectedOutput.ToString().Trim());
         }
         
         [Test]
@@ -91,12 +93,13 @@ namespace Octopus.Manager.Tentacle.Tests.WizardFixtures
 
             // Assert
             var pathToTentacleExe = $"\"{model.PathToTentacleExe ?? CommandLine.PathToTentacleExe()}\"";
-            var expectedOutput = $"{pathToTentacleExe} create-instance --instance \"{model.InstanceName}\" --config \"C:\\Octopus\\{model.InstanceName}\\Tentacle-{model.InstanceName}.config\"" +
-                Environment.NewLine + $"{pathToTentacleExe} new-certificate --instance \"{model.InstanceName}\" --if-blank" +
-                Environment.NewLine + $"{pathToTentacleExe} configure --instance \"{model.InstanceName}\" --reset-trust" +
-                Environment.NewLine + $"{pathToTentacleExe} configure --instance \"{model.InstanceName}\" --app \"C:\\Octopus\\Applications\\{model.InstanceName}\" --port \"{model.ListenPort}\" --noListen \"True\"" +
-                Environment.NewLine + $"{pathToTentacleExe} service --instance \"{model.InstanceName}\" --install --stop --start";
-            script.Should().Be(expectedOutput);
+            var expectedOutput = new StringBuilder();
+            expectedOutput.AppendLine($"{pathToTentacleExe} create-instance --instance \"{model.InstanceName}\" --config \"C:\\Octopus\\{model.InstanceName}\\Tentacle-{model.InstanceName}.config\"");
+            expectedOutput.AppendLine($"{pathToTentacleExe} new-certificate --instance \"{model.InstanceName}\" --if-blank");
+            expectedOutput.AppendLine($"{pathToTentacleExe} configure --instance \"{model.InstanceName}\" --reset-trust");
+            expectedOutput.AppendLine($"{pathToTentacleExe} configure --instance \"{model.InstanceName}\" --app \"C:\\Octopus\\Applications\\{model.InstanceName}\" --port \"{model.ListenPort}\" --noListen \"True\"");
+            expectedOutput.AppendLine($"{pathToTentacleExe} service --instance \"{model.InstanceName}\" --install --stop --start");
+            script.Should().Be(expectedOutput.ToString().Trim());
         }
         
         [Test]

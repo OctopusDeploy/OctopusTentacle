@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
@@ -24,9 +25,10 @@ namespace Octopus.Manager.Tentacle.Tests.WizardFixtures
 
             // Assert
             var pathToTentacleExe = $"\"{model.Executable}\"";
-            var expectedOutput = $"{pathToTentacleExe} service --instance \"{model.InstanceName}\" --stop --uninstall" +
-                Environment.NewLine + $"{pathToTentacleExe} delete-instance --instance \"{model.InstanceName}\"";
-            script.Should().Be(expectedOutput);
+            var expectedOutput = new StringBuilder();
+            expectedOutput.AppendLine($"{pathToTentacleExe} service --instance \"{model.InstanceName}\" --stop --uninstall");
+            expectedOutput.AppendLine($"{pathToTentacleExe} delete-instance --instance \"{model.InstanceName}\"");
+            script.Should().Be(expectedOutput.ToString().Trim());
         }
         
         static DeleteWizardModel CreateTestDeleteWizardModel()

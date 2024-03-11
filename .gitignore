@@ -54,3 +54,17 @@ _test
 .DS_Store
 .env
 scripts/development/
+
+build/.idea/.idea.build.dir/.idea/encodings.xml
+
+build/.idea/.idea.build.dir/.idea/indexLayout.xml
+
+build/.idea/.idea.build.dir/.idea/projectSettingsUpdater.xml
+
+build/.idea/.idea.build.dir/.idea/vcs.xml
+
+build/.idea/.idea.build.dir/.idea/workspace.xml
+
+installer/.idea/.idea.Installer/.idea/projectSettingsUpdater.xml
+
+installer/.idea/.idea.Installer/.idea/workspace.xml

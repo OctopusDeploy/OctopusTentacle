@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
@@ -62,10 +63,11 @@ namespace Octopus.Manager.Tentacle.Tests.ModelFixtures
 
             // Assert
             var pathToTentacleExe = $"\"{CommandLinePath}\"";
-            var expectedOutput = $"{pathToTentacleExe} service --instance \"{model.InstanceName}\" --stop" +
-                Environment.NewLine + $"{pathToTentacleExe} service --instance \"{model.InstanceName}\" --uninstall" +
-                Environment.NewLine + $"{pathToTentacleExe} service --instance \"{model.InstanceName}\" --install --start";
-            script.Should().Be(expectedOutput);
+            var expectedOutput = new StringBuilder();
+            expectedOutput.AppendLine($"{pathToTentacleExe} service --instance \"{model.InstanceName}\" --stop");
+            expectedOutput.AppendLine($"{pathToTentacleExe} service --instance \"{model.InstanceName}\" --uninstall");
+            expectedOutput.AppendLine($"{pathToTentacleExe} service --instance \"{model.InstanceName}\" --install --start");
+            script.Should().Be(expectedOutput.ToString().Trim());
         }
         
         [Test]
@@ -79,9 +81,10 @@ namespace Octopus.Manager.Tentacle.Tests.ModelFixtures
 
             // Assert
             var pathToTentacleExe = $"\"{CommandLinePath}\"";
-            var expectedOutput = $"{pathToTentacleExe} service --instance \"{model.InstanceName}\" --stop" +
-                Environment.NewLine + $"{pathToTentacleExe} service --instance \"{model.InstanceName}\" --install --start";
-            script.Should().Be(expectedOutput);
+            var expectedOutput = new StringBuilder();
+            expectedOutput.AppendLine($"{pathToTentacleExe} service --instance \"{model.InstanceName}\" --stop");
+            expectedOutput.AppendLine($"{pathToTentacleExe} service --instance \"{model.InstanceName}\" --install --start");
+            script.Should().Be(expectedOutput.ToString().Trim());
         }
         
         static TentacleManagerModel CreateTestTentacleManagerViewModel()
