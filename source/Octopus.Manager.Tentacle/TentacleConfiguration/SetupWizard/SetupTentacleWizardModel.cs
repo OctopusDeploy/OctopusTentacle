@@ -523,6 +523,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             }
         }
 
+        // TODO: Clean up this property. SkipServerRegistration seems deprecated and can never be set to true via the UI.
         public bool SkipServerRegistration
         {
             get => skipServerRegistration;
