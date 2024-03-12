@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
@@ -77,9 +77,35 @@ namespace Octopus.Manager.Tentacle.Tests.WizardFixtures
             
             script.Should().Be(expectedOutput.ToString());
         }
-
+        
         [Test]
-        public async Task WhenSettingUpPollingTentacle_TelemetryEventShouldBeSent()
+        public void WhenSettingUpPollingTentacle_ProxySettingsShouldBeDisplay()
+        {
+            // Arrange
+            var model = new SetupTentacleWizardModelBuilder().Build();
+
+            // Act
+            model.CommunicationStyle = CommunicationStyle.TentacleActive;
+
+            // Assert
+            model.ProxyWizardModel.ShowProxySettings.Should().BeTrue();
+        }
+        
+        [Test]
+        public void WhenSettingUpListeningTentacle_ProxySettingsShouldNotBeDisplay()
+        {
+            // Arrange
+            var model = new SetupTentacleWizardModelBuilder().Build();
+
+            // Act
+            model.CommunicationStyle = CommunicationStyle.TentaclePassive;
+
+            // Assert
+            model.ProxyWizardModel.ShowProxySettings.Should().BeFalse();
+        }
+        
+        [Test]
+        public async Task WhenSettingUpPollingTentacle_TelemetryEventShouldBeSent()   
         {
             var telemetryService = new TelemetryServiceBuilder().Build();
 
