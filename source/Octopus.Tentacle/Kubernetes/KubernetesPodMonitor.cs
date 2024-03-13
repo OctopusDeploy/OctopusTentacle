@@ -39,13 +39,21 @@ namespace Octopus.Tentacle.Kubernetes
                 //initially load all the pods and their status's
                 var initialResourceVersion = await InitialLoadAsync(cancellationToken);
 
-                // We start the watch from the resource version we initially loaded.
-                // This means we only receive events that occur after the resource version
-                await podService.WatchAllPods(initialResourceVersion, OnNewEvent, ex =>
-                    {
-                        log.Error(ex, "An unhandled error occured in monitoring the pods");
-                    }, cancellationToken
-                );
+                try
+                {
+                    // We start the watch from the resource version we initially loaded.
+                    // This means we only receive events that occur after the resource version
+                    await podService.WatchAllPods(initialResourceVersion, OnNewEvent, ex =>
+                        {
+                            log.Error(ex, "An unhandled error occured in monitoring the pods");
+                        }, cancellationToken
+                    );
+
+                }
+                catch (Exception ex)
+                {
+                    log.Error(ex, "Watch expired");
+                }
             }
         }
 
