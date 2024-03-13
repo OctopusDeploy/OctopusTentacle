@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using k8s;
@@ -40,6 +41,7 @@ namespace Octopus.Tentacle.Kubernetes
                 labelSelector: OctopusLabels.ScriptTicketId,
                 resourceVersion: initialResourceVersion,
                 watch: true,
+                timeoutSeconds: KubernetesConfig.PodMonitorTimeoutSeconds,
                 cancellationToken: cancellationToken);
 
             var watchErrorCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -53,11 +55,29 @@ namespace Octopus.Tentacle.Kubernetes
                 onError(ex);
             };
 
-            await foreach (var (type, pod) in response.WatchAsync<V1Pod, V1PodList>(internalOnError, cancellationToken: watchErrorCancellationTokenSource.Token))
+            try
             {
-                await onChange(type, pod);
+                await foreach (var (type, pod) in response.WatchAsync<V1Pod, V1PodList>(internalOnError, cancellationToken: watchErrorCancellationTokenSource.Token))
+                {
+                    
+                    await onChange(type, pod);
+                }
+            }
+            catch (Exception ex)
+            {
+                //Unfortunately we get an exception when the timeout hits (Server closes the connection) 
+                //https://github.com/kubernetes-client/csharp/issues/828
+                if (ex is EndOfStreamException || ex.InnerException is EndOfStreamException)
+                {
+                    //Watch closed by api server, ignore this exception
+                }
+                else
+                {
+                    throw;
+                }
             }
         }
+        
         public async Task Create(V1Pod pod, CancellationToken cancellationToken)
         {
             AddStandardMetadata(pod);
