@@ -100,9 +100,15 @@ namespace Octopus.Tentacle.Communications
 
                 var halibutTimeoutsAndLimits = new HalibutTimeoutsAndLimits();
                 var serviceEndPoint = new ServiceEndPoint(pollingEndPoint.Address, pollingEndPoint.Thumbprint, halibutProxy, halibutTimeoutsAndLimits);
-                halibut.Poll(new Uri(pollingEndPoint.SubscriptionId), serviceEndPoint, CancellationToken.None);
-                halibut.Poll(new Uri(pollingEndPoint.SubscriptionId), serviceEndPoint, CancellationToken.None);
-                halibut.Poll(new Uri(pollingEndPoint.SubscriptionId), serviceEndPoint, CancellationToken.None);
+
+                var howManyPolls = Environment.GetEnvironmentVariable("howmanypolls");
+                var pollingPoints = howManyPolls == null ? 1 : int.Parse(howManyPolls);
+                log.Info($"howmanypolls={howManyPolls}, Agent will poll {pollingPoints}");
+
+                for (int i = 0; i < pollingPoints; i++)
+                {
+                    halibut.Poll(new Uri(pollingEndPoint.SubscriptionId), serviceEndPoint, CancellationToken.None);
+                }
             }
         }
 

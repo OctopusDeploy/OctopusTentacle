@@ -23,7 +23,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             this.workspace = workspace;
         }
 
-        public async Task StreamPodLogsToScriptLog(IScriptLogWriter writer, CancellationToken cancellationToken, bool isFinalRead = false)
+        public async Task StreamPodLogsToScriptLog(IScriptLogWriter writer, CancellationToken cancellationToken, bool isFinalRead, int result)
         {
             try
             {
@@ -43,6 +43,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                     return;
                 }
 
+                int finalReadTries = 0;
                 // This loop is exited when either the cancellation token is cancelled (which is when the pod is finished or the script is cancelled)
                 // or if this is the final read, at the end (so we read once and jump out)
                 while (true)
@@ -86,8 +87,17 @@ writer.WriteOutput(ProcessOutputSource.StdOut, $"{DateTimeOffset.UtcNow}, Readin
                     }
                     else
                     {
-                        //if this is the last read we need to jump out (and not spin forever)
-                        break;
+                        if (result == 0 && finalReadTries < 3 && !orderedLogLines.Any(l => l.Message.StartsWith("End of script 075CD4F0-8C76-491D-BA76-0879D35E9CFE")))
+                        {
+                            finalReadTries++;
+                            writer.WriteOutput(ProcessOutputSource.StdOut, $"{DateTimeOffset.UtcNow}, Didn't see final log line yet, waiting a bit longer...");
+                            await Task.Delay(TimeSpan.FromMilliseconds(500), cancellationToken);
+                        }
+                        else
+                        {
+                            //if this is the last read we need to jump out (and not spin forever)
+                            break;
+                        }
                     }
                 }
             }
