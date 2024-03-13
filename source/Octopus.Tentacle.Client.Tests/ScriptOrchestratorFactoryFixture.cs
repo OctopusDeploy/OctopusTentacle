@@ -78,5 +78,37 @@ namespace Octopus.Tentacle.Client.Tests
             orchestrator.Should().NotBeNull();
             orchestrator.Should().BeOfType<ScriptServiceV1Orchestrator>();
         }
+
+        [Test]
+        public async Task CreateOrchestratorReturnsV2WhenV2IsMaxVersion()
+        {
+            // Arrange
+            var factory = new ScriptOrchestratorFactoryBuilder()
+                .WithMaxScriptServiceVersion(ScriptServiceVersion.Version2)
+                .Build();
+
+            // Act
+            var orchestrator = await factory.CreateOrchestrator(CancellationToken);
+
+            // Assert
+            orchestrator.Should().NotBeNull();
+            orchestrator.Should().BeOfType<ScriptServiceV2Orchestrator>();
+        }
+
+        [Test]
+        public async Task CreateOrchestratorReturnsV1WhenV1IsMaxVersion()
+        {
+            // Arrange
+            var factory = new ScriptOrchestratorFactoryBuilder()
+                .WithMaxScriptServiceVersion(ScriptServiceVersion.Version1)
+                .Build();
+
+            // Act
+            var orchestrator = await factory.CreateOrchestrator(CancellationToken);
+
+            // Assert
+            orchestrator.Should().NotBeNull();
+            orchestrator.Should().BeOfType<ScriptServiceV1Orchestrator>();
+        }
     }
 }

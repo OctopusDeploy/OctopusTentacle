@@ -23,6 +23,7 @@ namespace Octopus.Tentacle.Client.Tests.Builders
         TimeSpan? onCancellationAbandonCompleteScriptAfter;
         TentacleClientOptions? clientOptions;
         ILog? logger;
+        ScriptServiceVersion? maxScriptServiceVersion;
 
         public ScriptOrchestratorFactoryBuilder WithClientScriptServiceV1(IAsyncClientScriptService clientScriptServiceV1)
         {
@@ -144,6 +145,12 @@ namespace Octopus.Tentacle.Client.Tests.Builders
             return this;
         }
 
+        public ScriptOrchestratorFactoryBuilder WithMaxScriptServiceVersion(ScriptServiceVersion maxScriptServiceVersion)
+        {
+            this.maxScriptServiceVersion = maxScriptServiceVersion;
+            return this;
+        }
+
         public ScriptOrchestratorFactory Build() =>
             new(
                 clientScriptServiceV1 ?? AsyncClientScriptServiceBuilder.Default(),
@@ -159,7 +166,8 @@ namespace Octopus.Tentacle.Client.Tests.Builders
                 onScriptCompleted ?? (_ => Task.CompletedTask),
                 onCancellationAbandonCompleteScriptAfter ?? TimeSpan.FromSeconds(5),
                 clientOptions ?? TentacleClientOptionsBuilder.Default(),
-                logger ?? Substitute.For<ILog>()
+                logger ?? Substitute.For<ILog>(),
+                maxScriptServiceVersion.GetValueOrDefault(ScriptServiceVersion.Version3Alpha)
             );
 
         public static ScriptOrchestratorFactory Default() => new ScriptOrchestratorFactoryBuilder().Build();

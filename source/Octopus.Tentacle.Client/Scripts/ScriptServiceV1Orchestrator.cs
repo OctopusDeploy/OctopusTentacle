@@ -7,6 +7,7 @@ using Octopus.Tentacle.Client.Observability;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.Observability;
+using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
 using ILog = Octopus.Diagnostics.ILog;
 
@@ -40,6 +41,17 @@ namespace Octopus.Tentacle.Client.Scripts
             this.clientOperationMetricsBuilder = clientOperationMetricsBuilder;
             this.logger = logger;
         }
+
+        protected override StartScriptCommand Map(StartScriptCommandV2 command)
+            => new(
+                command.ScriptBody,
+                command.Isolation,
+                command.ScriptIsolationMutexTimeout,
+                command.IsolationMutexName!,
+                command.Arguments,
+                command.TaskId,
+                command.Scripts,
+                command.Files.ToArray());
 
         protected override StartScriptCommand Map(StartScriptCommandV3Alpha command)
             => new(

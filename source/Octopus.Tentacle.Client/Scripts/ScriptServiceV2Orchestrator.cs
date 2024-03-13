@@ -47,6 +47,8 @@ namespace Octopus.Tentacle.Client.Scripts
             this.logger = logger;
         }
 
+        protected override StartScriptCommandV2 Map(StartScriptCommandV2 command) => command;
+
         protected override StartScriptCommandV2 Map(StartScriptCommandV3Alpha command)
             => new(
                 command.ScriptBody,

@@ -167,7 +167,7 @@ namespace Octopus.Tentacle.Client
         }
 
         public async Task<ScriptExecutionResult> ExecuteScript(
-            StartScriptCommandV3Alpha startScriptCommand,
+            StartScriptCommandV2 startScriptCommand,
             OnScriptStatusResponseReceived onScriptStatusResponseReceived,
             OnScriptCompleted onScriptCompleted,
             ILog logger,
@@ -177,19 +177,12 @@ namespace Octopus.Tentacle.Client
 
             try
             {
-                var factory = new ScriptOrchestratorFactory(
-                    scriptServiceV1,
-                    scriptServiceV2,
-                    scriptServiceV3Alpha,
-                    capabilitiesServiceV2,
-                    scriptObserverBackOffStrategy,
-                    rpcCallExecutor,
-                    operationMetricsBuilder,
+                var factory = GetScriptOrchestratorFactory(
                     onScriptStatusResponseReceived,
                     onScriptCompleted,
-                    OnCancellationAbandonCompleteScriptAfter,
-                    clientOptions,
-                    logger);
+                    logger,
+                    operationMetricsBuilder,
+                    ScriptServiceVersion.Version2);
 
                 var orchestrator = await factory.CreateOrchestrator(scriptExecutionCancellationToken);
 
@@ -207,6 +200,65 @@ namespace Octopus.Tentacle.Client
                 var operationMetrics = operationMetricsBuilder.Build();
                 tentacleClientObserver.ExecuteScriptCompleted(operationMetrics, logger);
             }
+        }
+
+        public async Task<ScriptExecutionResult> ExecuteScript(
+            StartScriptCommandV3Alpha startScriptCommand,
+            OnScriptStatusResponseReceived onScriptStatusResponseReceived,
+            OnScriptCompleted onScriptCompleted,
+            ILog logger,
+            CancellationToken scriptExecutionCancellationToken)
+        {
+            var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
+
+            try
+            {
+                var factory = GetScriptOrchestratorFactory(
+                    onScriptStatusResponseReceived,
+                    onScriptCompleted,
+                    logger,
+                    operationMetricsBuilder,
+                    ScriptServiceVersion.Version3Alpha);
+
+                var orchestrator = await factory.CreateOrchestrator(scriptExecutionCancellationToken);
+
+                var result = await orchestrator.ExecuteScript(startScriptCommand, scriptExecutionCancellationToken);
+
+                return new ScriptExecutionResult(result.State, result.ExitCode);
+            }
+            catch (Exception e)
+            {
+                operationMetricsBuilder.Failure(e, scriptExecutionCancellationToken);
+                throw;
+            }
+            finally
+            {
+                var operationMetrics = operationMetricsBuilder.Build();
+                tentacleClientObserver.ExecuteScriptCompleted(operationMetrics, logger);
+            }
+        }
+
+        ScriptOrchestratorFactory GetScriptOrchestratorFactory(
+            OnScriptStatusResponseReceived onScriptStatusResponseReceived,
+            OnScriptCompleted onScriptCompleted,
+            ILog logger,
+            ClientOperationMetricsBuilder operationMetricsBuilder,
+            ScriptServiceVersion maxScriptServiceVersion)
+        {
+            return new ScriptOrchestratorFactory(
+                scriptServiceV1,
+                scriptServiceV2,
+                scriptServiceV3Alpha,
+                capabilitiesServiceV2,
+                scriptObserverBackOffStrategy,
+                rpcCallExecutor,
+                operationMetricsBuilder,
+                onScriptStatusResponseReceived,
+                onScriptCompleted,
+                OnCancellationAbandonCompleteScriptAfter,
+                clientOptions,
+                logger,
+                maxScriptServiceVersion);
         }
 
         public void Dispose()

@@ -27,11 +27,21 @@ namespace Octopus.Tentacle.Client.Scripts
             this.onScriptCompleted = onScriptCompleted;
         }
 
+        public async Task<ScriptExecutionResult> ExecuteScript(StartScriptCommandV2 startScriptCommand, CancellationToken scriptExecutionCancellationToken)
+        {
+            var mappedStartCommand = Map(startScriptCommand);
+            return await ExecuteCommand(mappedStartCommand, scriptExecutionCancellationToken);
+        }
+
         public async Task<ScriptExecutionResult> ExecuteScript(StartScriptCommandV3Alpha startScriptCommand, CancellationToken scriptExecutionCancellationToken)
         {
             var mappedStartCommand = Map(startScriptCommand);
+            return await ExecuteCommand(mappedStartCommand, scriptExecutionCancellationToken);
+        }
 
-            var scriptStatusResponse = await StartScript(mappedStartCommand, scriptExecutionCancellationToken).ConfigureAwait(false);
+        async Task<ScriptExecutionResult> ExecuteCommand(TStartCommand startCommand, CancellationToken scriptExecutionCancellationToken)
+        {
+            var scriptStatusResponse = await StartScript(startCommand, scriptExecutionCancellationToken).ConfigureAwait(false);
 
             scriptStatusResponse = await ObserveUntilCompleteThenFinish(scriptStatusResponse, scriptExecutionCancellationToken).ConfigureAwait(false);
 
@@ -117,6 +127,8 @@ namespace Octopus.Tentacle.Client.Scripts
         }
 
         protected abstract TStartCommand Map(StartScriptCommandV3Alpha command);
+
+        protected abstract TStartCommand Map(StartScriptCommandV2 command);
 
         protected abstract ScriptExecutionStatus MapToStatus(TScriptStatusResponse response);
 

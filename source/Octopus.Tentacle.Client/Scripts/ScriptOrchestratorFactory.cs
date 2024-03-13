@@ -28,6 +28,7 @@ namespace Octopus.Tentacle.Client.Scripts
         readonly IAsyncClientScriptServiceV3Alpha clientScriptServiceV3Alpha;
         readonly IAsyncClientCapabilitiesServiceV2 clientCapabilitiesServiceV2;
         readonly TentacleClientOptions clientOptions;
+        readonly ScriptServiceVersion maxScriptServiceVersion;
 
         public ScriptOrchestratorFactory(
             IAsyncClientScriptService clientScriptServiceV1,
@@ -41,7 +42,8 @@ namespace Octopus.Tentacle.Client.Scripts
             OnScriptCompleted onScriptCompleted,
             TimeSpan onCancellationAbandonCompleteScriptAfter,
             TentacleClientOptions clientOptions,
-            ILog logger)
+            ILog logger,
+            ScriptServiceVersion maxScriptServiceVersion)
         {
             this.clientScriptServiceV1 = clientScriptServiceV1;
             this.clientScriptServiceV2 = clientScriptServiceV2;
@@ -55,6 +57,7 @@ namespace Octopus.Tentacle.Client.Scripts
             this.onCancellationAbandonCompleteScriptAfter = onCancellationAbandonCompleteScriptAfter;
             this.clientOptions = clientOptions;
             this.logger = logger;
+            this.maxScriptServiceVersion = maxScriptServiceVersion;
         }
 
         public async Task<IScriptOrchestrator> CreateOrchestrator(CancellationToken cancellationToken)
@@ -109,6 +112,12 @@ namespace Octopus.Tentacle.Client.Scripts
 
         async Task<ScriptServiceVersion> DetermineScriptServiceVersionToUse(CancellationToken cancellationToken)
         {
+            if (maxScriptServiceVersion == ScriptServiceVersion.Version1)
+            {
+                logger.Verbose("Maximum ScriptService version constrained to Version1");
+                logger.Verbose("Using ScriptServiceV1");
+                return ScriptServiceVersion.Version1;
+            }
             logger.Verbose("Determining ScriptService version to use");
 
             async Task<CapabilitiesResponseV2> GetCapabilitiesFunc(CancellationToken ct)
@@ -128,7 +137,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
             logger.Verbose($"Discovered Tentacle capabilities: {string.Join(",", tentacleCapabilities.SupportedCapabilities)}");
 
-            if (tentacleCapabilities.HasScriptServiceV3Alpha())
+            if (maxScriptServiceVersion >= ScriptServiceVersion.Version3Alpha && tentacleCapabilities.HasScriptServiceV3Alpha())
             {
                 //if the service is not disabled, we can use it :)
                 if (!clientOptions.DisableScriptServiceV3Alpha)
