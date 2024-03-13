@@ -87,7 +87,7 @@ writer.WriteOutput(ProcessOutputSource.StdOut, $"{DateTimeOffset.UtcNow}, Readin
                     }
                     else
                     {
-                        if (result == 0 && finalReadTries < 3 && !orderedLogLines.Any(l => l.Message.StartsWith("End of script 075CD4F0-8C76-491D-BA76-0879D35E9CFE")))
+                        if (result == 0 && finalReadTries < 10 && !orderedLogLines.Any(l => l.Message.StartsWith("End of script 075CD4F0-8C76-491D-BA76-0879D35E9CFE")))
                         {
                             finalReadTries++;
                             writer.WriteOutput(ProcessOutputSource.StdOut, $"{DateTimeOffset.UtcNow}, Didn't see final log line yet, waiting a bit longer...");
