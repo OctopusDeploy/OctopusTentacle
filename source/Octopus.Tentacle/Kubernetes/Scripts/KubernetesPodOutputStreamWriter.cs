@@ -23,7 +23,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             this.workspace = workspace;
         }
 
-        public async Task StreamPodLogsToScriptLog(IScriptLogWriter writer, CancellationToken cancellationToken, bool isFinalRead, int result)
+        public async Task<bool> StreamPodLogsToScriptLog(IScriptLogWriter writer, CancellationToken cancellationToken, bool isFinalRead, int result, bool seenEnd)
         {
             try
             {
@@ -40,7 +40,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                 if (stdOutStream is null || stdErrStream is null)
                 {
                     writer.WriteOutput(ProcessOutputSource.StdOut, DateTimeOffset.UtcNow + ", " + "Cancelling stream reader open due to job completion");
-                    return;
+                    return false;
                 }
 
                 int finalReadTries = 0;
@@ -75,6 +75,11 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                     //write all the read log lines to the output script log
                     foreach (var logLine in orderedLogLines)
                     {
+                        if (logLine.Message.StartsWith("End of script 075CD4F0-8C76-491D-BA76-0879D35E9CFE"))
+                        {
+                            seenEnd = true;
+                        }
+
                         var logLineMessage = logLine.Message.StartsWith("##") ? logLine.Message : $"{logLine.Occurred} ({DateTimeOffset.UtcNow}), {logLine.Message}";
                         writer.WriteOutput(logLine.Source, logLineMessage, logLine.Occurred);
                     }
@@ -87,7 +92,7 @@ writer.WriteOutput(ProcessOutputSource.StdOut, $"{DateTimeOffset.UtcNow}, Readin
                     }
                     else
                     {
-                        if (result == 0 && finalReadTries < 10 && !orderedLogLines.Any(l => l.Message.StartsWith("End of script 075CD4F0-8C76-491D-BA76-0879D35E9CFE")))
+                        if (result == 0 && finalReadTries < 10 && !seenEnd)
                         {
                             finalReadTries++;
                             writer.WriteOutput(ProcessOutputSource.StdOut, $"{DateTimeOffset.UtcNow}, Didn't see final log line yet, waiting a bit longer...");
@@ -106,6 +111,8 @@ writer.WriteOutput(ProcessOutputSource.StdOut, $"{DateTimeOffset.UtcNow}, Readin
                 //ignore all task cancelled exceptions as they may be thrown by the pod finishing (and thus signally)
                 writer.WriteOutput(ProcessOutputSource.StdOut, DateTimeOffset.UtcNow + ", " + "TaskCanceledException due to job completion");
             }
+
+            return seenEnd;
         }
 
         async Task<StreamReader?> SafelyOpenLogStreamReader(string filename, CancellationToken cancellationToken, IScriptLogWriter writer)

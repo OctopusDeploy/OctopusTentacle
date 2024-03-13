@@ -181,12 +181,17 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             var checkPodTask = CheckIfPodHasCompleted(podCompletionCancellationTokenSource);
 
             //we pass the pod completion CTS here because its used to cancel the writing of the pod stream
-            var monitorPodOutputTask = outputStreamWriter.StreamPodLogsToScriptLog(writer, podCompletionCancellationTokenSource.Token, false, 0);
+            var monitorPodOutputTask = outputStreamWriter.StreamPodLogsToScriptLog(writer, podCompletionCancellationTokenSource.Token, false, 0, false);
 
             await Task.WhenAll(checkPodTask, monitorPodOutputTask);
 
             //once they have both finished, perform one last log read (and don't cancel on it)
-            await outputStreamWriter.StreamPodLogsToScriptLog(writer, CancellationToken.None, true, checkPodTask.Result);
+            var seenEnd = await outputStreamWriter.StreamPodLogsToScriptLog(writer, CancellationToken.None, true, checkPodTask.Result, monitorPodOutputTask.Result);
+
+            if (checkPodTask.Result == 0 && !seenEnd)
+            {
+                WriteError(writer, "Didn't see end message");
+            }
 
             //return the exit code of the pod
             return checkPodTask.Result;
