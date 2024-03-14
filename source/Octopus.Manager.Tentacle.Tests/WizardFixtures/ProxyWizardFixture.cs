@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
@@ -41,10 +42,11 @@ namespace Octopus.Manager.Tentacle.Tests.WizardFixtures
 
             // Assert
             var pathToTentacleExe = $"\"{model.Executable}\"";
-            var expectedOutput = $"{pathToTentacleExe} service --instance \"{model.InstanceName}\" --stop" +
-                Environment.NewLine + $"{pathToTentacleExe} proxy --instance \"{model.InstanceName}\" --proxyEnable \"True\" --proxyUsername \"\" --proxyPassword \"\" --proxyHost \"\" --proxyPort \"\"" +
-                Environment.NewLine + $"{pathToTentacleExe} service --instance \"{model.InstanceName}\" --start";
-            script.Should().Be(expectedOutput);
+            var expectedOutput = new StringBuilder();
+            expectedOutput.AppendLine($"{pathToTentacleExe} service --instance \"{model.InstanceName}\" --stop");
+            expectedOutput.AppendLine($"{pathToTentacleExe} proxy --instance \"{model.InstanceName}\" --proxyEnable \"True\" --proxyUsername \"\" --proxyPassword \"\" --proxyHost \"\" --proxyPort \"\"");
+            expectedOutput.AppendLine($"{pathToTentacleExe} service --instance \"{model.InstanceName}\" --start");
+            script.Should().Be(expectedOutput.ToString().Trim());
         }
         
         [Test]

@@ -7,6 +7,8 @@ using k8s;
 using k8s.Models;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Time;
+using Polly;
 
 namespace Octopus.Tentacle.Kubernetes
 {
@@ -34,26 +36,33 @@ namespace Octopus.Tentacle.Kubernetes
 
         async Task IKubernetesPodMonitor.StartAsync(CancellationToken cancellationToken)
         {
+            const int maxDurationSeconds = 70;
+            
+            //We don't want the monitoring to ever stop
+            var policy = Policy.Handle<Exception>().WaitAndRetryForeverAsync(
+                retry => TimeSpan.FromSeconds(ExponentialBackoff.GetDuration(retry, maxDurationSeconds)),
+                (ex, duration) =>
+                {
+                    log.Error(ex, "An unexpected error occured while monitoring Pods, waiting for: " + duration);
+                });
+
+            await policy.ExecuteAsync(async ct => await UpdateLoop(ct), cancellationToken);
+        }
+
+        async Task UpdateLoop(CancellationToken cancellationToken)
+        {
             while (!cancellationToken.IsCancellationRequested)
             {
                 //initially load all the pods and their status's
                 var initialResourceVersion = await InitialLoadAsync(cancellationToken);
 
-                try
-                {
-                    // We start the watch from the resource version we initially loaded.
-                    // This means we only receive events that occur after the resource version
-                    await podService.WatchAllPods(initialResourceVersion, OnNewEvent, ex =>
-                        {
-                            log.Error(ex, "An unhandled error occured in monitoring the pods");
-                        }, cancellationToken
-                    );
-
-                }
-                catch (Exception ex)
-                {
-                    log.Error(ex, "Watch expired");
-                }
+                // We start the watch from the resource version we initially loaded.
+                // This means we only receive events that occur after the resource version
+                await podService.WatchAllPods(initialResourceVersion, OnNewEvent, ex =>
+                    {
+                        log.Error(ex, "An unhandled error occured while watching Pods");
+                    }, cancellationToken
+                );
             }
         }
 
