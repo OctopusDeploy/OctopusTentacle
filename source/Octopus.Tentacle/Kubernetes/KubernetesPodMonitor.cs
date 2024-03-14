@@ -36,7 +36,7 @@ namespace Octopus.Tentacle.Kubernetes
 
         async Task IKubernetesPodMonitor.StartAsync(CancellationToken cancellationToken)
         {
-            var maxDurationSeconds = 70;
+            const int maxDurationSeconds = 70;
             
             //We don't want the monitoring to ever stop
             var policy = Policy.Handle<Exception>().WaitAndRetryForeverAsync(
