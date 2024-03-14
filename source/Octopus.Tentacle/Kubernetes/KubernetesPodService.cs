@@ -59,7 +59,6 @@ namespace Octopus.Tentacle.Kubernetes
             {
                 await foreach (var (type, pod) in response.WatchAsync<V1Pod, V1PodList>(internalOnError, cancellationToken: watchErrorCancellationTokenSource.Token))
                 {
-                    
                     await onChange(type, pod);
                 }
             }
