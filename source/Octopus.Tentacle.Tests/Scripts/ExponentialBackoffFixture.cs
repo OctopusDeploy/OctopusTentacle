@@ -9,8 +9,6 @@ namespace Octopus.Tentacle.Tests.Scripts
     [TestFixture]
     public class ExponentialBackoffFixture
     {
-        readonly Foo foo = new Foo();
-
         [TestCase(1, 1)]
         [TestCase(2, 2)]
         [TestCase(3, 4)]
