@@ -52,7 +52,7 @@
 		<PackageReference Include="KubernetesClient" Version="10.1.19" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="Octopus.Client" Version="14.3.1265-scme-k8s-agent-default-namespace" />
+		<PackageReference Include="Octopus.Client" Version="14.3.1277" />
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Autofac" Version="4.6.2" />
