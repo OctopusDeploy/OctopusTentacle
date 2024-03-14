@@ -30,11 +30,9 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                 Stopwatch stdoutWatch = Stopwatch.StartNew();
                 //open the file streams for reading
                 using var stdOutStream = await SafelyOpenLogStreamReader("stdout.log", cancellationToken, writer);
-                writer.WriteOutput(ProcessOutputSource.StdOut, $"Opening streams for stdout logs took: {stdoutWatch.Elapsed} (FinalRead: {isFinalRead})");
+                writer.WriteOutput(ProcessOutputSource.Debug, $"Opening streams for stdout logs took: {stdoutWatch.Elapsed} (FinalRead: {isFinalRead})");
 
-                Stopwatch stderrWatch = Stopwatch.StartNew();
                 using var stdErrStream = await SafelyOpenLogStreamReader("stderr.log", cancellationToken, writer);
-                writer.WriteOutput(ProcessOutputSource.StdOut, $"Opening streams for stderr logs took: {stderrWatch.Elapsed} (FinalRead: {isFinalRead})");
 
                 //if either of these is null, just return
                 if (stdOutStream is null || stdErrStream is null)
@@ -84,7 +82,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                         writer.WriteOutput(logLine.Source, logLineMessage, logLine.Occurred);
                     }
                     
-writer.WriteOutput(ProcessOutputSource.StdOut, $"{DateTimeOffset.UtcNow}, Reading logs took: {watch.Elapsed}");
+//writer.WriteOutput(ProcessOutputSource.StdOut, $"{DateTimeOffset.UtcNow}, Reading logs took: {watch.Elapsed}");
                     //wait for 250ms before reading the logs again (except on the final read)
                     if (!isFinalRead)
                     {
