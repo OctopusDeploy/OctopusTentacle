@@ -38,6 +38,10 @@
           "type": "string",
           "description": "Specifies the platforms to build the docker images in. Multiple platforms must be comma-separated. Defaults to 'linux/arm64,linux/amd64'"
         },
+        "GolangContainerImageTag": {
+          "type": "string",
+          "description": "The tag to use when building the bootstrapRunner with the Golang Container Image"
+        },
         "Help": {
           "type": "boolean",
           "description": "Shows the help text for this build assembly"
@@ -199,6 +203,10 @@
         },
         "TestRuntime": {
           "type": "string"
+        },
+        "UpxVersion": {
+          "type": "string",
+          "description": "The version of upx to use when building the bootstrapRunner executable for the Kubernetes Tentacle"
         },
         "Verbosity": {
           "type": "string",

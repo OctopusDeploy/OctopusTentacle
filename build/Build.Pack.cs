@@ -31,6 +31,10 @@ partial class Build
         Name = "DockerPlatform")]
     string DockerPlatform = "linux/arm64,linux/amd64";
 
+    [Parameter("The version of upx to use when building the bootstrapRunner executable for the Kubernetes Tentacle")] string UpxVersion = "4.2.2";
+
+    [Parameter("The tag to use when building the bootstrapRunner with the Golang Container Image")] string GolangContainerImageTag = "1.22";
+
     [PublicAPI]
     Target PackOsxTarballs => _ => _
         .Description("Packs the OS/X tarballs containing the published binaries.")
@@ -151,7 +155,10 @@ partial class Build
         .DependsOn(PackDebianPackage)
         .Executes(() =>
         {
-            BuildAndPushOrLoadKubernetesTentacleContainerImage(push: false, load: true);
+            BuildAndPushOrLoadKubernetesTentacleContainerImage(
+                push: false,
+                load: true,
+                useUpx: true);
         });
 
     [PublicAPI]
@@ -161,7 +168,11 @@ partial class Build
         .DependsOn(PackDebianPackage)
         .Executes(() =>
         {
-            BuildAndPushOrLoadKubernetesTentacleContainerImage(push: false, load: true, includeDebugger: true);
+            BuildAndPushOrLoadKubernetesTentacleContainerImage(
+                push: false,
+                load: true,
+                includeDebugger: true,
+                useUpx: true);
         });
 
     [PublicAPI]
@@ -535,8 +546,15 @@ partial class Build
             $"tentacle-{FullSemVer}-{NetCore}-{runtimeId}.tar.gz");
     }
 
-    void BuildAndPushOrLoadKubernetesTentacleContainerImage(bool push, bool load, string? host = null, bool includeDebugger = false)
+    void BuildAndPushOrLoadKubernetesTentacleContainerImage(bool push, bool load, string? host = null, bool includeDebugger = false, bool useUpx = true)
     {
+        DockerTasks.DockerRun(settings => settings.EnableRm()
+            .SetVolume("./docker/kubernetes-tentacle/bootstrapRunner:/usr/src/bootstrapRunner")
+            .SetWorkdir("/usr/src/bootstrapRunner")
+            .SetEnv($"UPX_VERSION={UpxVersion}", $"PLATFORMS={DockerPlatform}", $"USE_UPX={useUpx.ToString().ToLowerInvariant()}")
+            .SetImage($"golang:{GolangContainerImageTag}")
+            .SetCommand("./build.sh"));
+
         var hostPrefix = host is not null ? $"{host}/" : string.Empty;
         DockerTasks.DockerBuildxBuild(settings =>
         {
