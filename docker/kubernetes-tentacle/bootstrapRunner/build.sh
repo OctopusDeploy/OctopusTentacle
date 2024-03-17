@@ -35,11 +35,11 @@ for platform in ${PLATFORMS//,/$IFS}; do
 
   echo "Building BootstrapRunner for $platform"
   # the given ldflags remove debug symbols
-  go build -ldflags "-s -w" -o "$exeName"
+  go build -ldflags "-s -w" -o "./bin/$exeName"
 
   if ${USE_UPX}; then
     echo "Compressing executable $exeName with upx"
-    "./$tarName/upx" "$exeName"
+    "./$tarName/upx" "./bin/$exeName"
   fi
 done
 
