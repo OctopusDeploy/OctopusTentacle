@@ -9,7 +9,7 @@ ARG TARGETVARIANT
 EXPOSE 10933
 
 COPY docker/kubernetes-tentacle/scripts/* /scripts/
-COPY docker/kubernetes-tentacle/bootstrapRunner/bootstrapRunner-${TARGETOS}-${TARGETARCH} /bootstrapRunner
+COPY docker/kubernetes-tentacle/bootstrapRunner/bin/bootstrapRunner-${TARGETOS}-${TARGETARCH} /bootstrapRunner
 RUN chmod +x /scripts/*.sh
 
 WORKDIR /tmp
