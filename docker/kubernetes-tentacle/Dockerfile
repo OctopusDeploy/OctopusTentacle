@@ -9,6 +9,7 @@ ARG TARGETVARIANT
 EXPOSE 10933
 
 COPY docker/kubernetes-tentacle/scripts/* /scripts/
+COPY docker/kubernetes-tentacle/bootstrapRunner/bootstrapRunner-${TARGETOS}-${TARGETARCH} /bootstrapRunner
 RUN chmod +x /scripts/*.sh
 
 WORKDIR /tmp
@@ -26,6 +27,7 @@ WORKDIR /
 # We know this won't reduce the image size at all. It's just to make the filesystem a little tidier.
 RUN rm -rf /tmp/*
 
+ENV BOOTSTRAP_RUNNER_EXECUTABLE_PATH=/bootstrapRunner
 ENV OCTOPUS_RUNNING_IN_CONTAINER=Y
 ENV ACCEPT_EULA=N
 ENV CustomPublicHostName=""
