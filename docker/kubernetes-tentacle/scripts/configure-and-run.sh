@@ -235,6 +235,7 @@ function run() {
     echo "Starting Octopus Deploy Kubernetes Tentacle"
     echo "==============================================="
 
+    # the exec here means that the host bash process is replaced by the tentacle process
     exec tentacle agent --instance Tentacle --noninteractive
 }
 
