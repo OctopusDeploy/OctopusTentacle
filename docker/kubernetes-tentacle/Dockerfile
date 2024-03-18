@@ -18,7 +18,7 @@ COPY _artifacts/docker/tentacle_${BUILD_NUMBER}_${TARGETOS}-${TARGETARCH}${TARGE
 RUN apt-get update
 RUN apt install ./tentacle.deb -y
 RUN apt-get clean
-RUN apt install curl tini -y
+RUN apt install curl -y
 RUN rm -rf /var/lib/apt/lists/*
 
 WORKDIR /
@@ -53,8 +53,7 @@ ENV OCTOPUS__K8STENTACLE__DISABLEAUTOPODCLEANUP="False"
 ENV TentacleHome=""
 ENV TentacleApplications=""
 
-# We use tini here as the entrypoint so it correctly propagates SIGTERM signals to the tentacle child process (allowing for graceful shutdown to occur)
-ENTRYPOINT ["/usr/bin/tini", "-g", "--", "/scripts/configure-and-run.sh"]
+ENTRYPOINT ["/scripts/configure-and-run.sh"]
 
 LABEL \
     org.label-schema.schema-version="1.0" \

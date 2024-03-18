@@ -65,7 +65,7 @@ ENV OCTOPUS__K8STENTACLE__DISABLEAUTOPODCLEANUP="False"
 ENV TentacleHome=""
 ENV TentacleApplications=""
 
-CMD /dev-scripts/bootstrap.sh
+ENTRYPOINT [ "/dev-scripts/bootstrap.sh" ] 
 
 LABEL \
     org.label-schema.schema-version="1.0" \
