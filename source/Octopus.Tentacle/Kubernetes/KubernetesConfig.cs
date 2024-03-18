@@ -16,6 +16,8 @@ namespace Octopus.Tentacle.Kubernetes
         public static int PodMonitorTimeoutSeconds => int.TryParse(Environment.GetEnvironmentVariable($"{EnvVarPrefix}__PODMONITORTIMEOUT"), out var podMonitorTimeout) ? podMonitorTimeout : 10*60; //10min
         public static bool DisableAutomaticPodCleanup => bool.TryParse(Environment.GetEnvironmentVariable($"{EnvVarPrefix}__DISABLEAUTOPODCLEANUP"), out var disableAutoCleanup) && disableAutoCleanup;
 
+        public static int HalibutConnectionCount => int.TryParse(Environment.GetEnvironmentVariable($"{EnvVarPrefix}__HALIBUTCONNECTIONCOUNT"), out var count) ? count : 1;
+
         public static string HelmReleaseNameVariableName => $"{EnvVarPrefix}__HELMRELEASENAME";
         public static string HelmReleaseName => GetRequiredEnvVar(HelmReleaseNameVariableName, "Unable to determine Helm release name.");
 
