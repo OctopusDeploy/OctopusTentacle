@@ -230,39 +230,28 @@ function registerTentacle() {
     tentacle "${ARGS[@]}"
 }
 
-function run() {
+setupVariablesForRegistrationCheck
+getStatusOfRegistration
+
+if [ "$IS_REGISTERED" == "true" ]; then
+    echo "Tentacle is already configured and registered with server."
+else
     echo "==============================================="
-    echo "Starting Octopus Deploy Kubernetes Tentacle"
+    echo "Configuring Octopus Deploy Kubernetes Tentacle"
+
+    validateVariables
+
     echo "==============================================="
 
-    # the exec here means that the host bash process is replaced by the tentacle process
-    exec tentacle agent --instance Tentacle --noninteractive
-}
+    configureTentacle
+    registerTentacle
 
-
-function verifyTentacleIsNotRegistered() {
-  setupVariablesForRegistrationCheck
-  getStatusOfRegistration
-
-  if [ "$IS_REGISTERED" == "true" ]; then
-      echo "Tentacle is already configured and registered with server."
-      run
-  fi
-}
-
-verifyTentacleIsNotRegistered
+    echo "Configuration successful"
+fi
 
 echo "==============================================="
-echo "Configuring Octopus Deploy Kubernetes Tentacle"
-
-validateVariables
-
+echo "Starting Octopus Deploy Kubernetes Tentacle"
 echo "==============================================="
 
-configureTentacle
-registerTentacle
-
-echo "Configuration successful."
-echo ""
-
-run
+# the exec here means that the host bash process is replaced by the tentacle process
+exec tentacle agent --instance Tentacle --noninteractive
