@@ -10,6 +10,8 @@ using Octopus.Client.Model;
 using Octopus.Client.Model.Endpoints;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Kubernetes;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Communications
 {
@@ -100,7 +102,20 @@ namespace Octopus.Tentacle.Communications
 
                 var halibutTimeoutsAndLimits = new HalibutTimeoutsAndLimits();
                 var serviceEndPoint = new ServiceEndPoint(pollingEndPoint.Address, pollingEndPoint.Thumbprint, halibutProxy, halibutTimeoutsAndLimits);
-                halibut.Poll(new Uri(pollingEndPoint.SubscriptionId), serviceEndPoint, CancellationToken.None);
+
+
+                var count = 1;
+                if (PlatformDetection.Kubernetes.IsRunningInKubernetes)
+                {
+                    //if we are running in Kubernetes, enable the ability configure the number of open connections
+                    count = KubernetesConfig.HalibutConnectionCount;
+                    log.Info($"Agent will poll using {count} connections.");
+                }
+
+                for (var i = 0; i < count; i++)
+                {
+                    halibut.Poll(new Uri(pollingEndPoint.SubscriptionId), serviceEndPoint, CancellationToken.None);
+                }
             }
         }
 
