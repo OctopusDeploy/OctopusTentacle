@@ -53,7 +53,7 @@ ENV OCTOPUS__K8STENTACLE__DISABLEAUTOPODCLEANUP="False"
 ENV TentacleHome=""
 ENV TentacleApplications=""
 
-# Change the entrypoint to be tini
+# We use tini here as the entrypoint so it correctly propagates SIGTERM signals to the tentacle child process (allowing for graceful shutdown to occur)
 ENTRYPOINT ["/usr/bin/tini", "-g", "--", "/scripts/configure-and-run.sh"]
 
 LABEL \
