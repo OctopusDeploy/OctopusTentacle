@@ -451,6 +451,8 @@ partial class Build
             FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-x64.msi", workingDirectory / "Octopus.Tentacle-x64.msi");
             FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net6.0-win-x86.msi", workingDirectory / "Octopus.Tentacle-net6.0-win-x86.msi");
             FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net6.0-win-x64.msi", workingDirectory / "Octopus.Tentacle-net6.0-win-x64.msi");
+            FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net6.0-windows-win-x86.msi", workingDirectory / "Octopus.Tentacle-net6.0-windows-win-x86.msi");
+            FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net6.0-windows-win-x64.msi", workingDirectory / "Octopus.Tentacle-net6.0-windows-win-x64.msi");
 
             FileSystemTasks.CopyFile(BuildDirectory / "Octopus.Tentacle.Upgrader" / NetCore / "win-x86" / "Octopus.Tentacle.Upgrader.exe", workingDirectory / "Octopus.Tentacle.Upgrader-net6.0-win-x86.exe");
             FileSystemTasks.CopyFile(BuildDirectory / "Octopus.Tentacle.Upgrader" / NetCore / "win-x64" / "Octopus.Tentacle.Upgrader.exe", workingDirectory / "Octopus.Tentacle.Upgrader-net6.0-win-x64.exe");
@@ -468,19 +470,26 @@ partial class Build
             {
                 foreach (var runtimeId in RuntimeIds)
                 {
-                    if (runtimeId == "win" && framework != "net48"
-                        || runtimeId != "win" && framework == "net48") continue;
+                    if (runtimeId == "win" && framework != NetFramework
+                        || runtimeId != "win" && framework == NetFramework) continue;
 
                     var fileExtension = runtimeId.StartsWith("win") ? "zip" : "tar.gz";
                     FileSystemTasks.CopyFile(ArtifactsDirectory / "zip" / $"tentacle-{FullSemVer}-{framework}-{runtimeId}.{fileExtension}",
                         workingDirectory / $"tentacle-{framework}-{runtimeId}.{fileExtension}");
                 }
             }
+            
+            FileSystemTasks.CopyFile(ArtifactsDirectory / "zip" / $"tentacle-{FullSemVer}-{NetCoreWindows}-win-x86.zip",
+                workingDirectory / $"tentacle-{NetCoreWindows}-win-x86.zip");
+            FileSystemTasks.CopyFile(ArtifactsDirectory / "zip" / $"tentacle-{FullSemVer}-{NetCoreWindows}-win-x64.zip",
+                workingDirectory / $"tentacle-{NetCoreWindows}-win-x64.zip");
 
             Assert.True((workingDirectory / "Octopus.Tentacle.msi").FileExists(), "Missing Octopus.Tentacle.msi");
             Assert.True((workingDirectory / "Octopus.Tentacle-x64.msi").FileExists(), "Missing Octopus.Tentacle-x64.msi");
             Assert.True((workingDirectory / "Octopus.Tentacle-net6.0-win-x86.msi").FileExists(), "Missing Octopus.Tentacle-net6.0-win-x86.msi");
             Assert.True((workingDirectory / "Octopus.Tentacle-net6.0-win-x64.msi").FileExists(), "Missing Octopus.Tentacle-net6.0-win-x64.msi");
+            Assert.True((workingDirectory / "Octopus.Tentacle-net6.0-windows-win-x86.msi").FileExists(), "Missing Octopus.Tentacle-net6.0-windows-win-x86.msi");
+            Assert.True((workingDirectory / "Octopus.Tentacle-net6.0-windows-win-x64.msi").FileExists(), "Missing Octopus.Tentacle-net6.0-windows-win-x64.msi");
             Assert.True((workingDirectory / "Octopus.Tentacle.Upgrader.exe").FileExists(), "Missing Octopus.Tentacle.Upgrader.exe");
             Assert.True((workingDirectory / "Octopus.Tentacle.Upgrader-net6.0-win-x86.exe").FileExists(), "Missing Octopus.Tentacle.Upgrader-net6.0-win-x86.exe");
             Assert.True((workingDirectory / "Octopus.Tentacle.Upgrader-net6.0-win-x64.exe").FileExists(), "Missing Octopus.Tentacle.Upgrader-net6.0-win-x64.exe");

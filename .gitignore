@@ -54,3 +54,5 @@ _test
 .DS_Store
 .env
 scripts/development/
+
+**/.idea/*

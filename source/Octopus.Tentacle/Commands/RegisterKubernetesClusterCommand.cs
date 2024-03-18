@@ -13,11 +13,14 @@ namespace Octopus.Tentacle.Commands
     {
         readonly Lazy<IWritableTentacleConfiguration> configuration;
         readonly ISystemLog log;
+        string? defaultNamespace;
 
         public RegisterKubernetesClusterCommand(Lazy<IRegisterKubernetesClusterOperation> lazyRegisterMachineOperation, Lazy<IWritableTentacleConfiguration> configuration, ISystemLog log, IApplicationInstanceSelector selector, Lazy<IOctopusServerChecker> octopusServerChecker, IProxyConfigParser proxyConfig, IOctopusClientInitializer octopusClientInitializer, ISpaceRepositoryFactory spaceRepositoryFactory, ILogFileOnlyLogger logFileOnlyLogger) : base(lazyRegisterMachineOperation, configuration, log, selector, octopusServerChecker, proxyConfig, octopusClientInitializer, spaceRepositoryFactory, logFileOnlyLogger)
         {
             this.configuration = configuration;
             this.log = log;
+
+            Options.Add("default-namespace=", "The default namespace by kubernetes steps if no namespace is supplied (if unset, defaults to 'default')", n => defaultNamespace = n);
         }
 
         protected override void Start()
@@ -31,6 +34,13 @@ namespace Octopus.Tentacle.Commands
             base.Start();
             configuration.Value.SetIsRegistered();
             log.Info("Tentacle has been registered successfully.");
+        }
+
+        protected override void EnhanceOperation(IRegisterKubernetesClusterOperation registerOperation)
+        {
+            base.EnhanceOperation(registerOperation);
+
+            registerOperation.DefaultNamespace = defaultNamespace;
         }
     }
 }

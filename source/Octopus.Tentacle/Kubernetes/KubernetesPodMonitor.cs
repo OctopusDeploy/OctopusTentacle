@@ -7,6 +7,8 @@ using k8s;
 using k8s.Models;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Time;
+using Polly;
 
 namespace Octopus.Tentacle.Kubernetes
 {
@@ -35,6 +37,21 @@ namespace Octopus.Tentacle.Kubernetes
         }
 
         async Task IKubernetesPodMonitor.StartAsync(CancellationToken cancellationToken)
+        {
+            const int maxDurationSeconds = 70;
+            
+            //We don't want the monitoring to ever stop
+            var policy = Policy.Handle<Exception>().WaitAndRetryForeverAsync(
+                retry => TimeSpan.FromSeconds(ExponentialBackoff.GetDuration(retry, maxDurationSeconds)),
+                (ex, duration) =>
+                {
+                    log.Error(ex, "An unexpected error occured while monitoring Pods, waiting for: " + duration);
+                });
+
+            await policy.ExecuteAsync(async ct => await UpdateLoop(ct), cancellationToken);
+        }
+
+        async Task UpdateLoop(CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
             {

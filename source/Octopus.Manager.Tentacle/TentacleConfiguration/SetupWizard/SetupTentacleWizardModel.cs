@@ -36,6 +36,8 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
     public class SetupTentacleWizardModel : ShellViewModel, IScriptableViewModel, IHaveServices
     {
+        readonly ITentacleManagerInstanceIdentifierService tentacleManagerInstanceIdentifierService;
+        readonly ITelemetryService telemetryService;
         readonly ApplicationName applicationName;
         CommunicationStyle communicationStyle;
         MachineType machineType;
@@ -68,14 +70,22 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         string serverCommsPort;
         string serverWebSocket;
         bool skipServerRegistration;
-        readonly ProxyWizardModel proxyWizardModel;
         bool areTenantsSupported;
         bool areTenantsAvailable;
         bool areSpacesSupported;
         bool areWorkersSupported;
+        string currentUserId;
 
-        public SetupTentacleWizardModel(InstanceSelectionModel instanceSelectionModel) : base(instanceSelectionModel)
+        public SetupTentacleWizardModel(
+            InstanceSelectionModel instanceSelectionModel,
+            ITentacleManagerInstanceIdentifierService tentacleManagerInstanceIdentifierService,
+            ICommandLineRunner commandLineRunner,
+            ITelemetryService telemetryService
+        ) : base(instanceSelectionModel)
         {
+            this.tentacleManagerInstanceIdentifierService = tentacleManagerInstanceIdentifierService;
+            this.telemetryService = telemetryService;
+
             AuthModes = new List<KeyValuePair<AuthMode, string>>();
 
             AuthModes.Add(new KeyValuePair<AuthMode, string>(AuthMode.UsernamePassword, "Username / Password"));
@@ -88,7 +98,8 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             SelectedWorkerPools = new ObservableCollection<string>();
 
             this.applicationName = ApplicationName.Tentacle;
-            this.proxyWizardModel = new PollingProxyWizardModel(instanceSelectionModel);
+            this.ProxyWizardModel = new PollingProxyWizardModel(instanceSelectionModel);
+            this.ReviewAndRunScriptTabViewModel = new ReviewAndRunScriptTabViewModel(this, commandLineRunner, SendTentacleInstalledTelemetryEvent);
 
             InstanceName = instanceSelectionModel.SelectedInstance;
             var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
@@ -99,6 +110,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 HomeDirectory = Path.Combine(HomeDirectory, InstanceName);
                 ApplicationInstallDirectory = Path.Combine(ApplicationInstallDirectory, InstanceName);
             }
+
             OctopusServerUrl = "https://";
             ListenPort = "10933";
             Username = string.Empty;
@@ -109,7 +121,6 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             Validator = CreateValidator();
             ServerCommsPort = "10943";
             CommunicationStyle = CommunicationStyle.TentaclePassive;
-
 
             // It would be nice to do this by sniffing for the advfirewall command, but doing
             // so would slow down showing the wizard. This check identifies and excludes Windows Server 2003.
@@ -342,6 +353,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 OnPropertyChanged();
             }
         }
+
         public string[] PotentialMachinePolicies
         {
             get => potentialMachinePolicies;
@@ -523,6 +535,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             }
         }
 
+        // TODO: Clean up this property. SkipServerRegistration seems deprecated and can never be set to true via the UI.
         public bool SkipServerRegistration
         {
             get => skipServerRegistration;
@@ -552,7 +565,9 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             get { yield return new OctoService(TentacleExe, InstanceName); }
         }
 
-        public ProxyWizardModel ProxyWizardModel => proxyWizardModel;
+        public ProxyWizardModel ProxyWizardModel { get; }
+
+        public ReviewAndRunScriptTabViewModel ReviewAndRunScriptTabViewModel { get; }
 
         public async Task VerifyCredentials(ILog logger)
         {
@@ -569,7 +584,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                     if (AuthMode == AuthMode.UsernamePassword)
                     {
                         logger.Info($"Authenticating as {username}...");
-                        await repository.Users.SignIn(new LoginCommand { Username = username, Password = password });
+                        await repository.Users.SignIn(new LoginCommand {Username = username, Password = password});
                     }
 
                     logger.Info("Authenticated successfully");
@@ -597,6 +612,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
                     logger.Info("Credentials verified");
                     HaveCredentialsBeenVerified = true;
+                    currentUserId = (await repository.Users.GetCurrent()).Id;
                 }
             }
             catch (OctopusValidationException ex)
@@ -660,18 +676,23 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
             if (ProxyWizardModel.ProxyConfigType != ProxyConfigType.NoProxy)
             {
-                var proxy = string.IsNullOrWhiteSpace(ProxyWizardModel.ProxyServerHost)
-                    ? WebRequest.GetSystemWebProxy()
-                    : new WebProxy(new UriBuilder("http", ProxyWizardModel.ProxyServerHost, ProxyWizardModel.ProxyServerPort).Uri);
-
-                proxy.Credentials = string.IsNullOrWhiteSpace(ProxyWizardModel.ProxyUsername)
-                    ? CredentialCache.DefaultNetworkCredentials
-                    : new NetworkCredential(ProxyWizardModel.ProxyUsername, ProxyWizardModel.ProxyPassword);
-
-                endpoint.Proxy = proxy;
+                endpoint.Proxy = GetProxy();
             }
 
             return OctopusAsyncClient.Create(endpoint, new OctopusClientOptions());
+        }
+
+        IWebProxy GetProxy()
+        {
+            var proxy = string.IsNullOrWhiteSpace(ProxyWizardModel.ProxyServerHost)
+                ? WebRequest.GetSystemWebProxy()
+                : new WebProxy(new UriBuilder("http", ProxyWizardModel.ProxyServerHost, ProxyWizardModel.ProxyServerPort).Uri);
+
+            proxy.Credentials = string.IsNullOrWhiteSpace(ProxyWizardModel.ProxyUsername)
+                ? CredentialCache.DefaultNetworkCredentials
+                : new NetworkCredential(ProxyWizardModel.ProxyUsername, ProxyWizardModel.ProxyPassword);
+
+            return proxy;
         }
 
         async Task LoadSpaceSpecificData(IOctopusAsyncClient client)
@@ -691,6 +712,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 // A better alternative might be to cancel the current load, but this way is simpler :)
                 return;
             }
+
             SpaceDataLoadError = null;
             IsLoadingSpaceData = true;
 
@@ -700,8 +722,9 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 {
                     if (AuthMode == AuthMode.UsernamePassword)
                     {
-                        await client.SignIn(new LoginCommand { Username = username, Password = password }, CancellationToken.None);
+                        await client.SignIn(new LoginCommand {Username = username, Password = password}, CancellationToken.None);
                     }
+
                     await loadAction(client);
                 }
             }
@@ -842,7 +865,6 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 && (uri.Scheme == "http" || uri.Scheme == "https");
         }
 
-
         public IEnumerable<CommandLineInvocation> GenerateScript()
         {
             pathToConfig = Path.Combine(HomeDirectory, ((ApplicationInstanceRecord.GetDefaultInstance(applicationName) != InstanceName) ? "Tentacle-" + InstanceName : InstanceName) + ".config");
@@ -858,7 +880,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
             yield return config.Build();
 
-            if(!SkipServerRegistration && HaveCredentialsBeenVerified)
+            if (!SkipServerRegistration && HaveCredentialsBeenVerified)
             {
                 if (CommunicationStyle == CommunicationStyle.TentacleActive)
                 {
@@ -913,7 +935,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                     foreach (var role in SelectedRoles)
                         register.Argument("role", role);
                 }
-                else if(MachineType == MachineType.Worker)
+                else if (MachineType == MachineType.Worker)
                 {
                     foreach (var workerPool in SelectedWorkerPools)
                         register.Argument("workerpool", workerPool);
@@ -923,6 +945,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
                 yield return register.Build();
             }
+
             if (IsTentaclePassive)
             {
                 if (!string.IsNullOrWhiteSpace(OctopusThumbprint))
@@ -951,6 +974,29 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 log.WithSensitiveValue(password);
             if (apiKey != null)
                 log.WithSensitiveValue(apiKey);
+        }
+
+        async Task SendTentacleInstalledTelemetryEvent()
+        {
+            // Do not try to send telemetry if we are installing a 
+            // listening Tentacle
+            if (CommunicationStyle == CommunicationStyle.TentaclePassive)
+            {
+                return;
+            }
+
+            var deviceId = await tentacleManagerInstanceIdentifierService.GetIdentifier();
+
+            var eventObj = new TentacleManagerScriptExecuted(
+                currentUserId,
+                deviceId,
+                "Instance installed",
+                MachineType,
+                CommunicationStyle);
+
+            var uri = new Uri(OctopusServerUrl);
+            var proxy = ProxyWizardModel.ProxyConfigType != ProxyConfigType.NoProxy ? GetProxy() : null;
+            _ = await telemetryService.SendTelemetryEvent(uri, eventObj, proxy);
         }
     }
 

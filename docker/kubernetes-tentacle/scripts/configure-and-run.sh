@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -eu
 
 if [[ "$ACCEPT_EULA" != "Y" ]]; then
     echo "ERROR: You must accept the EULA at https://octopus.com/company/legal by passing an environment variable 'ACCEPT_EULA=Y'"
@@ -100,6 +100,9 @@ function validateVariables() {
     if [[ -n "$Space" ]]; then
         echo " - space '$Space'"
     fi
+    if [[ -n "$DefaultNamespace" ]]; then
+        echo " - default namespace '$DefaultNamespace'"
+    fi
 }
 
 function configureTentacle() {
@@ -173,6 +176,10 @@ function registerTentacle() {
         done
     fi
 
+    if [[ -n "$DefaultNamespace" ]]; then
+        ARGS+=('--default-namespace' "$DefaultNamespace")
+    fi
+
     ARGS+=(
         '--instance' "$instanceName"
         '--server' "$ServerUrl"
@@ -223,13 +230,23 @@ function registerTentacle() {
     tentacle "${ARGS[@]}"
 }
 
+function run() {
+    echo "==============================================="
+    echo "Starting Octopus Deploy Kubernetes Tentacle"
+    echo "==============================================="
+
+    # the exec here means that the host bash process is replaced by the tentacle process
+    exec tentacle agent --instance Tentacle --noninteractive
+}
+
+
 function verifyTentacleIsNotRegistered() {
   setupVariablesForRegistrationCheck
   getStatusOfRegistration
 
   if [ "$IS_REGISTERED" == "true" ]; then
       echo "Tentacle is already configured and registered with server."
-      exit 0
+      run
   fi
 }
 
@@ -247,3 +264,5 @@ registerTentacle
 
 echo "Configuration successful."
 echo ""
+
+run

@@ -91,10 +91,26 @@ namespace Octopus.Tentacle.Kubernetes
                 onError(ex);
             };
 
-            log.Verbose("Starting pod watch");
-            await foreach (var (type, pod) in response.WatchAsync<V1Pod, V1PodList>(internalOnError, cancellationToken: watchErrorCancellationTokenSource.Token))
+            try
             {
-                await onChange(type, pod);
+            	log.Verbose("Starting pod watch");
+                await foreach (var (type, pod) in response.WatchAsync<V1Pod, V1PodList>(internalOnError, cancellationToken: watchErrorCancellationTokenSource.Token))
+                {
+                    await onChange(type, pod);
+                }
+            }
+            catch (Exception ex)
+            {
+                //Unfortunately we get an exception when the timeout hits (Server closes the connection) 
+                //https://github.com/kubernetes-client/csharp/issues/828
+                if (ex is EndOfStreamException || ex.InnerException is EndOfStreamException)
+                {
+                    //Watch closed by api server, ignore this exception
+                }
+                else
+                {
+                    throw;
+                }
             }
         }
 
