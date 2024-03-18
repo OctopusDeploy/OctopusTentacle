@@ -155,8 +155,7 @@ partial class Build
         {
             BuildAndPushOrLoadKubernetesTentacleContainerImage(
                 push: false,
-                load: true,
-                useUpx: true);
+                load: true);
         });
 
     [PublicAPI]
@@ -169,8 +168,7 @@ partial class Build
             BuildAndPushOrLoadKubernetesTentacleContainerImage(
                 push: false,
                 load: true,
-                includeDebugger: true,
-                useUpx: true);
+                includeDebugger: true);
         });
 
     [PublicAPI]
@@ -544,7 +542,7 @@ partial class Build
             $"tentacle-{FullSemVer}-{NetCore}-{runtimeId}.tar.gz");
     }
 
-    void BuildAndPushOrLoadKubernetesTentacleContainerImage(bool push, bool load, string? host = null, bool includeDebugger = false, bool useUpx = true)
+    void BuildAndPushOrLoadKubernetesTentacleContainerImage(bool push, bool load, string? host = null, bool includeDebugger = false)
     {
         var hostPrefix = host is not null ? $"{host}/" : string.Empty;
         DockerTasks.DockerBuildxBuild(settings =>
