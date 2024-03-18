@@ -101,7 +101,7 @@ namespace Octopus.Tentacle.Kubernetes
             }
             catch (Exception ex)
             {
-                //Unfortunately we get an exception when the timeout hits (Server closes the connection) 
+                //Unfortunately we get an exception when the timeout hits (Server closes the connection)
                 //https://github.com/kubernetes-client/csharp/issues/828
                 if (ex is EndOfStreamException || ex.InnerException is EndOfStreamException)
                 {
@@ -127,14 +127,16 @@ namespace Octopus.Tentacle.Kubernetes
         async IAsyncEnumerable<string?> StreamPodLogsViaPolling(string podName, string containerName, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             ulong? lastReadLineHash =null;
-            DateTimeOffset? lastLogLineTime = null;
+            DateTimeOffset? lastReadTime = null;
             var hasReadEndOfScriptControlMessage = false;
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                var secondsSince = lastLogLineTime.HasValue
-                    ? (int)Math.Ceiling((DateTimeOffset.UtcNow - lastLogLineTime.Value).TotalSeconds) + 10 //we always read back 10 seconds longer than the last read log message
-                    : (int?)null;
+                //read back one extra second just in case
+                var sinceTime = lastReadTime?.Subtract(TimeSpan.FromSeconds(1));
+
+                //update that we've read from now
+                lastReadTime = DateTimeOffset.UtcNow;
 
                 var retryContext = new Context
                 {
@@ -142,10 +144,10 @@ namespace Octopus.Tentacle.Kubernetes
                 };
                 //we use a polly retry policy to handle all the
                 var logStream = await logRetryPolicy.ExecuteAsync(
-                    async (_, ct) => await Client.ReadNamespacedPodLogAsync(podName,
+                    async (_, ct) => await Client.GetNamespacedPodLogsAsync(podName,
                         KubernetesConfig.Namespace,
                         containerName,
-                        sinceSeconds: secondsSince,
+                        sinceTime: sinceTime,
                         cancellationToken: ct),
                     retryContext,
                     cancellationToken);
@@ -195,8 +197,6 @@ namespace Octopus.Tentacle.Kubernetes
                 if (lastLine is not null)
                 {
                     lastReadLineHash = CalculateHash(lastLine);
-                    var timestamp = lastLine.Substring(0, lastLine.IndexOf('|'));
-                    lastLogLineTime = DateTimeOffset.Parse(timestamp);
                 }
 
                 //delay for 1 second
