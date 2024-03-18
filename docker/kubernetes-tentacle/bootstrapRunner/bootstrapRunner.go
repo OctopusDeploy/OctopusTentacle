@@ -17,7 +17,7 @@ import (
 //
 // Note: all arguments given after the <script> argument are passed directly to the script as arguments.
 func main() {
-    workspacePath := os.Args[1]
+	workspacePath := os.Args[1]
 	args := os.Args[2:]
 	cmd := exec.Command("bash", args[0:]...)
 	cmd.Dir = workspacePath
@@ -30,10 +30,38 @@ func main() {
 	doneStd := make(chan bool)
 	doneErr := make(chan bool)
 
-	go reader(stdOutScanner, "stdout", &doneStd)
-	go reader(stdErrScanner, "stderr", &doneErr)
+	//stdout log file
+	so, err := os.Create(workspacePath + "/stdout.log")
+	if err != nil {
+		panic(err)
+	}
+	// close fo on exit and check for its returned error
+	defer func() {
+		if err := so.Close(); err != nil {
+			panic(err)
+		}
+	}()
+	// make a write buffer
+	stdoutLogFile := bufio.NewWriter(so)
 
-	err := cmd.Start()
+	//stderr log file
+	se, err := os.Create(workspacePath + "/stderr.log")
+	if err != nil {
+		panic(err)
+	}
+	// close fo on exit and check for its returned error
+	defer func() {
+		if err := se.Close(); err != nil {
+			panic(err)
+		}
+	}()
+	// make a write buffer
+	stderrLogFile := bufio.NewWriter(se)
+
+	go reader(stdOutScanner, stdoutLogFile, &doneStd)
+	go reader(stdErrScanner, stderrLogFile, &doneErr)
+
+	err = cmd.Start()
 	if err != nil {
 		panic(err)
 	}
@@ -49,9 +77,17 @@ func main() {
 	}
 }
 
-func reader(scanner *bufio.Scanner, logLevel string, done *chan bool) {
+func reader(scanner *bufio.Scanner, writer *bufio.Writer, done *chan bool) {
 	for scanner.Scan() {
-		fmt.Printf("%s|%s|%s\n", time.Now().UTC().Format(time.RFC3339Nano), logLevel, scanner.Text())
+		message := fmt.Sprintf("%s|%s\n", time.Now().UTC().Format(time.RFC3339Nano), scanner.Text())
+		fmt.Print(message)
+		if _, err := writer.WriteString(message); err != nil {
+			panic(err)
+		}
+
+		if err := writer.Flush(); err != nil {
+			panic(err)
+		}
 	}
 	*done <- true
 }
