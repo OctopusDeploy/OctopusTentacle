@@ -1,3 +1,26 @@
+FROM golang:1.22 as bootstrapRunnerBuilder
+
+ARG TARGETARCH
+ARG TARGETOS
+ARG UPX_VERSION="4.2.2"
+
+COPY docker/kubernetes-tentacle/bootstrapRunner/* /bootstrapRunner/
+WORKDIR /bootstrapRunner
+
+# need to install xz-utils to unpack upx
+RUN apt update
+RUN apt install -y xz-utils
+
+#download upx and unpack
+RUN curl -OL "https://github.com/upx/upx/releases/download/v${UPX_VERSION}/upx-${UPX_VERSION}-${TARGETARCH}_${TARGETOS}.tar.xz"
+RUN tar -x -f "upx-${UPX_VERSION}-${TARGETARCH}_${TARGETOS}.tar.xz"
+
+# build bootstrapRunner
+# Note: the given ldflags remove debug symbols
+RUN go build -ldflags "-s -w" -o "bin/bootstrapRunner"
+# upx reduces the size of the exe
+RUN "./upx-${UPX_VERSION}-${TARGETARCH}_${TARGETOS}/upx" "bin/bootstrapRunner"
+
 FROM mcr.microsoft.com/dotnet/runtime-deps:6.0
 
 ARG BUILD_NUMBER
@@ -9,7 +32,7 @@ ARG TARGETVARIANT
 EXPOSE 10933
 
 COPY docker/kubernetes-tentacle/scripts/* /scripts/
-COPY docker/kubernetes-tentacle/bootstrapRunner/bin/bootstrapRunner-${TARGETOS}-${TARGETARCH} /bootstrapRunner
+COPY --from=bootstrapRunnerBuilder bootstrapRunner/bin/bootstrapRunner /bootstrapRunner
 RUN chmod +x /scripts/*.sh
 
 WORKDIR /tmp

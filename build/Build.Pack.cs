@@ -33,8 +33,6 @@ partial class Build
 
     [Parameter("The version of upx to use when building the bootstrapRunner executable for the Kubernetes Tentacle")] string UpxVersion = "4.2.2";
 
-    [Parameter("The tag to use when building the bootstrapRunner with the Golang Container Image")] string GolangContainerImageTag = "1.22";
-
     [PublicAPI]
     Target PackOsxTarballs => _ => _
         .Description("Packs the OS/X tarballs containing the published binaries.")
@@ -548,13 +546,6 @@ partial class Build
 
     void BuildAndPushOrLoadKubernetesTentacleContainerImage(bool push, bool load, string? host = null, bool includeDebugger = false, bool useUpx = true)
     {
-        DockerTasks.DockerRun(settings => settings.EnableRm()
-            .SetVolume("./docker/kubernetes-tentacle/bootstrapRunner:/usr/src/bootstrapRunner")
-            .SetWorkdir("/usr/src/bootstrapRunner")
-            .SetEnv($"UPX_VERSION={UpxVersion}", $"PLATFORMS={DockerPlatform}", $"USE_UPX={useUpx.ToString().ToLowerInvariant()}")
-            .SetImage($"golang:{GolangContainerImageTag}")
-            .SetCommand("./build.sh"));
-
         var hostPrefix = host is not null ? $"{host}/" : string.Empty;
         DockerTasks.DockerBuildxBuild(settings =>
         {
@@ -573,7 +564,7 @@ partial class Build
                 tag += "-debug";
 
             settings = settings
-                .AddBuildArg($"BUILD_NUMBER={FullSemVer}", $"BUILD_DATE={DateTime.UtcNow:O}")
+                .AddBuildArg($"BUILD_NUMBER={FullSemVer}", $"BUILD_DATE={DateTime.UtcNow:O}", $"UPX_VERSION={UpxVersion}")
                 .SetPlatform(DockerPlatform)
                 .SetTag(tag)
                 .SetFile(dockerfile)
