@@ -38,6 +38,14 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             return this;
         }
 
+        public TentacleServiceDecoratorBuilder DecorateAllScriptServicesWith(Action<UniversalScriptServiceDecoratorBuilder> universalScriptServiceDecorator)
+        {
+            var b = new UniversalScriptServiceDecoratorBuilder();
+            universalScriptServiceDecorator(b);
+            b.Build().Decorate(this);
+            return this;
+        }
+
         public TentacleServiceDecoratorBuilder DecorateScriptServiceV2With(Action<ScriptServiceV2DecoratorBuilder> scriptServiceV2Decorator)
         {
             var b = new ScriptServiceV2DecoratorBuilder();
