@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Diagnostics;
-using Octopus.Tentacle.Diagnostics;
 
 namespace Octopus.Tentacle.Kubernetes
 {
@@ -54,7 +53,7 @@ namespace Octopus.Tentacle.Kubernetes
                     log.Info("Stopping Kubernetes Orphaned Pod Cleaner");
                     cancellationTokenSource.Cancel();
 
-                    // give the monitor 30 to gracefully shutdown
+                    // give the cleaner 30 to gracefully shutdown
                     cleanerTask.Wait(TimeSpan.FromSeconds(30));
                 }
                 catch (Exception e)
