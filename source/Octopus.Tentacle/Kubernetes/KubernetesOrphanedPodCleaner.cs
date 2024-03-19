@@ -63,8 +63,13 @@ namespace Octopus.Tentacle.Kubernetes
             var orphanedPods = podStatusProvider.GetAllPodStatuses()
                 .Where(p => p.State != PodState.Running && p.LastUpdated <= cutOffDateTime).ToList();
 
-            log.Info($"OrphanedPodCleaner: Found {orphanedPods.Count} Orphaned Pods, they will now be deleted");
+            if (orphanedPods.Count == 0)
+            {
+                log.Verbose("OrphanedPodCleaner: No orphaned pods found");
+                return;
+            }
 
+            log.Info($"OrphanedPodCleaner: Found {orphanedPods.Count} Orphaned Pods, they will now be deleted");
             foreach (var pod in orphanedPods)
             {
                 if (KubernetesConfig.DisableAutomaticPodCleanup)
