@@ -3,6 +3,7 @@ using System.IO;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using k8s.Autorest;
 
 namespace Octopus.Tentacle.Kubernetes
 {
@@ -15,7 +16,7 @@ namespace Octopus.Tentacle.Kubernetes
             if (sinceTime is not null)
             {
                 var sinceTimeStr = sinceTime.Value.ToString("O");
-                url += $"sinceTime={Uri.EscapeDataString(sinceTimeStr)}";
+                url += $"&sinceTime={Uri.EscapeDataString(sinceTimeStr)}";
             }
 
             url = string.Concat(client.BaseUri, url);
@@ -27,9 +28,26 @@ namespace Octopus.Tentacle.Kubernetes
                 await client.Credentials.ProcessHttpRequestAsync(httpRequest, CancellationToken.None);
             }
 
-            var response = await client.HttpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            var httpResponse = await client.HttpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
 
-            return await response.Content.ReadAsStreamAsync();
+            if (httpResponse.IsSuccessStatusCode)
+                return await httpResponse.Content.ReadAsStreamAsync();
+
+            // an exception occurred, throw
+            var responseContent = httpResponse.Content != null
+                ? await httpResponse.Content.ReadAsStringAsync().ConfigureAwait(false)
+                : string.Empty;
+
+            var ex = new HttpOperationException($"Operation returned an invalid status code '{httpResponse.StatusCode}', response body {responseContent}")
+            {
+                Request = new HttpRequestMessageWrapper(httpRequest, null),
+                Response = new HttpResponseMessageWrapper(httpResponse, responseContent)
+            };
+
+            httpRequest.Dispose();
+            httpResponse.Dispose();
+
+            throw ex;
         }
     }
 }
