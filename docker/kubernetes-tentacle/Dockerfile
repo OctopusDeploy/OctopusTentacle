@@ -19,7 +19,7 @@ RUN tar -x -f "upx-${UPX_VERSION}-${TARGETARCH}_${TARGETOS}.tar.xz"
 # Note: the given ldflags remove debug symbols
 RUN go build -ldflags "-s -w" -o "bin/bootstrapRunner"
 # upx reduces the size of the exe
-RUN "./upx-${UPX_VERSION}-${TARGETARCH}_${TARGETOS}/upx" "bin/bootstrapRunner"
+#disablign to test perf: RUN "./upx-${UPX_VERSION}-${TARGETARCH}_${TARGETOS}/upx" "bin/bootstrapRunner"
 
 FROM mcr.microsoft.com/dotnet/runtime-deps:6.0
 
