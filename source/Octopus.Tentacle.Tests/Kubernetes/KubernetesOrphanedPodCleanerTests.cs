@@ -23,6 +23,8 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         KubernetesPodMonitor monitor;
         ScriptTicket scriptTicket;
         KubernetesOrphanedPodCleaner cleaner;
+        TimeSpan overCutoff;
+        TimeSpan underCutoff;
 
         [SetUp]
         public void Setup()
@@ -35,6 +37,9 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             scriptTicket = new ScriptTicket(Guid.NewGuid().ToString());
 
             cleaner = new KubernetesOrphanedPodCleaner(monitor, podService, log, clock);
+
+            overCutoff = cleaner.CompletedPodConsideredOrphanedAfterTimeSpan + 1.Minutes();
+            underCutoff = cleaner.CompletedPodConsideredOrphanedAfterTimeSpan - 1.Minutes();
         }
 
         [Test]
@@ -58,7 +63,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             };
             await monitor.OnNewEvent(type, pod);
 
-            clock.WindForward(11.Minutes());
+            clock.WindForward(overCutoff);
 
             //Act
             await cleaner.CheckForOrphanedPods(CancellationToken.None);
@@ -91,7 +96,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             };
             await monitor.OnNewEvent(type, pod);
 
-            clock.WindForward(11.Minutes());
+            clock.WindForward(overCutoff);
 
             //Act
             await cleaner.CheckForOrphanedPods(CancellationToken.None);
@@ -128,7 +133,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             };
             await monitor.OnNewEvent(type, pod);
 
-            clock.WindForward(9.Minutes());
+            clock.WindForward(underCutoff);
 
             //Act
             await cleaner.CheckForOrphanedPods(CancellationToken.None);
@@ -159,7 +164,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             };
             await monitor.OnNewEvent(type, pod);
 
-            clock.WindForward(11.Minutes());
+            clock.WindForward(overCutoff);
 
             //Act
             await cleaner.CheckForOrphanedPods(CancellationToken.None);
