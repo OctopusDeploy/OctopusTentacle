@@ -9,14 +9,14 @@ namespace Octopus.Tentacle.Client.Scripts.Models
         public ExecuteKubernetesScriptCommand(
             ScriptTicket scriptTicket,
             string taskId,
-            string[] arguments,
             string scriptBody,
+            string[] arguments,
             ScriptIsolationLevel isolationLevel,
             TimeSpan isolationMutexTimeout,
             string? isolationMutexName,
             Dictionary<ScriptType, string>? additionalScripts,
             ScriptFile[] additionalFiles,
-            string image,
+            string? image,
             string? feedUrl,
             string? feedUsername,
             string? feedPassword)
@@ -28,7 +28,7 @@ namespace Octopus.Tentacle.Client.Scripts.Models
             FeedPassword = feedPassword;
         }
 
-        public string Image { get; }
+        public string? Image { get; }
         public string? FeedUrl { get; }
         public string? FeedUsername { get; }
         public string? FeedPassword { get; }
