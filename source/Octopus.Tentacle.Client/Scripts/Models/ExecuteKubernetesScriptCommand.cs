@@ -13,7 +13,7 @@ namespace Octopus.Tentacle.Client.Scripts.Models
             string[] arguments,
             ScriptIsolationLevel isolationLevel,
             TimeSpan isolationMutexTimeout,
-            string? isolationMutexName,
+            string isolationMutexName,
             Dictionary<ScriptType, string>? additionalScripts,
             ScriptFile[] additionalFiles,
             string? image,

@@ -14,7 +14,7 @@ namespace Octopus.Tentacle.Client.Scripts.Models
             string[] arguments,
             ScriptIsolationLevel isolationLevel,
             TimeSpan isolationMutexTimeout,
-            string? isolationMutexName = null,
+            string isolationMutexName,
             TimeSpan? durationToWaitForScriptToFinish = null,
             Dictionary<ScriptType, string>? additionalScripts = null,
             ScriptFile[]? additionalFiles = null)
@@ -43,7 +43,7 @@ namespace Octopus.Tentacle.Client.Scripts.Models
         public TimeSpan? DurationToWaitForScriptToFinish { get;  }
         public ScriptIsolationLevel IsolationLevel { get;  }
         public TimeSpan IsolationMutexTimeout { get;  }
-        public string? IsolationMutexName { get;  }
+        public string IsolationMutexName { get;  }
 
         public Dictionary<ScriptType, string> Scripts { get; } = new();
 
