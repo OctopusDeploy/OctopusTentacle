@@ -7,6 +7,7 @@ using Halibut.ServiceModel;
 using Octopus.Tentacle.Client.Execution;
 using Octopus.Tentacle.Client.Observability;
 using Octopus.Tentacle.Client.Scripts;
+using Octopus.Tentacle.Client.Scripts.Models;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Capabilities;
 using Octopus.Tentacle.Contracts.ClientServices;
@@ -166,8 +167,7 @@ namespace Octopus.Tentacle.Client
             }
         }
 
-        public async Task<ScriptExecutionResult> ExecuteScript(
-            StartScriptCommandV3Alpha startScriptCommand,
+        public async Task<ScriptExecutionResult> ExecuteScript(ExecuteScriptCommand command,
             OnScriptStatusResponseReceived onScriptStatusResponseReceived,
             OnScriptCompleted onScriptCompleted,
             ILog logger,
@@ -193,7 +193,7 @@ namespace Octopus.Tentacle.Client
 
                 var orchestrator = await factory.CreateOrchestrator(scriptExecutionCancellationToken);
 
-                var result = await orchestrator.ExecuteScript(startScriptCommand, scriptExecutionCancellationToken);
+                var result = await orchestrator.ExecuteScript(command, scriptExecutionCancellationToken);
 
                 return new ScriptExecutionResult(result.State, result.ExitCode);
             }

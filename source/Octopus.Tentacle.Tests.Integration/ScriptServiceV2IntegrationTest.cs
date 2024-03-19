@@ -28,7 +28,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new LatestStartScriptCommandBuilder()
+            var startScriptCommand = new ExecuteScriptCommandBuilder()
                 .WithScriptBody(new ScriptBuilder()
                     .Print("Lets do it")
                     .PrintNTimesWithDelay("another one", 10, TimeSpan.FromSeconds(1))
@@ -61,7 +61,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new LatestStartScriptCommandBuilder()
+            var startScriptCommand = new ExecuteScriptCommandBuilder()
                 .WithScriptBody(new ScriptBuilder()
                     .Print("Lets do it")
                     .PrintNTimesWithDelay("another one", 10, TimeSpan.FromSeconds(1))
@@ -95,7 +95,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new LatestStartScriptCommandBuilder()
+            var startScriptCommand = new ExecuteScriptCommandBuilder()
                 .WithScriptBody(new ScriptBuilder()
                     .Print("hello")
                     .Sleep(TimeSpan.FromSeconds(1))
@@ -143,7 +143,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new LatestStartScriptCommandBuilder()
+            var startScriptCommand = new ExecuteScriptCommandBuilder()
                 .WithScriptBody(new ScriptBuilder()
                     .Print("hello")
                     .Sleep(TimeSpan.FromSeconds(1))
@@ -200,7 +200,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var scriptCommand = new LatestStartScriptCommandBuilder()
+            var scriptCommand = new ExecuteScriptCommandBuilder()
                 .WithScriptBody(b => b.Print("Hello"))
                 .Build();
 

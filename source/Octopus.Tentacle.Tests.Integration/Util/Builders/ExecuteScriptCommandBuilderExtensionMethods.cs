@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Text;
-using Octopus.Tentacle.Contracts.Builders;
-using Octopus.Tentacle.Tests.Integration.Util.Builders;
+using Octopus.Tentacle.CommonTestUtils;
 
-namespace Octopus.Tentacle.CommonTestUtils.Builders
+namespace Octopus.Tentacle.Tests.Integration.Util.Builders
 {
     public static class ExecuteScriptCommandBuilderExtensionMethods
     {
-        public static StartScriptCommandV3AlphaBuilder WithScriptBodyForCurrentOs(this StartScriptCommandV3AlphaBuilder builder, string windowsScript, string bashScript)
+        public static ExecuteScriptCommandBuilder WithScriptBodyForCurrentOs(this ExecuteScriptCommandBuilder builder, string windowsScript, string bashScript)
         {
             var scriptBody = new StringBuilder(PlatformDetection.IsRunningOnWindows ? windowsScript : bashScript);
 
@@ -16,7 +15,7 @@ namespace Octopus.Tentacle.CommonTestUtils.Builders
             return builder;
         }
 
-        public static StartScriptCommandV3AlphaBuilder WithScriptBody(this StartScriptCommandV3AlphaBuilder builder, ScriptBuilder scriptBuilder)
+        public static ExecuteScriptCommandBuilder WithScriptBody(this ExecuteScriptCommandBuilder builder, ScriptBuilder scriptBuilder)
         {
             var scriptBody = new StringBuilder(scriptBuilder.BuildForCurrentOs());
 
@@ -25,7 +24,7 @@ namespace Octopus.Tentacle.CommonTestUtils.Builders
             return builder;
         }
 
-        public static StartScriptCommandV3AlphaBuilder WithScriptBody(this StartScriptCommandV3AlphaBuilder builder, Action<ScriptBuilder> builderFunc)
+        public static ExecuteScriptCommandBuilder WithScriptBody(this ExecuteScriptCommandBuilder builder, Action<ScriptBuilder> builderFunc)
         {
             var scriptBuilder = new ScriptBuilder();
             builderFunc(scriptBuilder);

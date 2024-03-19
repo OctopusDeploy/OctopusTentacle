@@ -26,7 +26,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var existingHomeDirectory = new TemporaryDirectory();
 
             var waitBeforeCompletingScriptFile = Path.Combine(existingHomeDirectory.DirectoryPath, "WaitForMeToExist.txt");
-            var startScriptCommand = new LatestStartScriptCommandBuilder().WithScriptBody(b => b.WaitForFileToExist(waitBeforeCompletingScriptFile)).Build();
+            var startScriptCommand = new ExecuteScriptCommandBuilder().WithScriptBody(b => b.WaitForFileToExist(waitBeforeCompletingScriptFile)).Build();
             var startScriptWorkspaceDirectory = GetWorkspaceDirectoryPath(existingHomeDirectory.DirectoryPath, startScriptCommand.ScriptTicket.TaskId);
 
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
@@ -65,7 +65,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var cleanerDelay = TimeSpan.FromMilliseconds(500);
             var deleteWorkspacesOlderThan = TimeSpan.FromMilliseconds(500);
 
-            var startScriptCommand = new LatestStartScriptCommandBuilder().WithScriptBody(b => b.Print("Hello")).Build();
+            var startScriptCommand = new ExecuteScriptCommandBuilder().WithScriptBody(b => b.Print("Hello")).Build();
 
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacle(b =>

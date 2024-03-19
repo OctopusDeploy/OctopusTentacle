@@ -8,6 +8,7 @@ using Halibut.ServiceModel;
 using Halibut.Transport;
 using Octopus.Tentacle.Client.Execution;
 using Octopus.Tentacle.Client.Observability;
+using Octopus.Tentacle.Client.Scripts.Models;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.Observability;
@@ -46,7 +47,27 @@ namespace Octopus.Tentacle.Client.Scripts
             this.logger = logger;
         }
 
-        protected override StartScriptCommandV3Alpha Map(StartScriptCommandV3Alpha command) => command;
+        protected override StartScriptCommandV3Alpha Map(ExecuteScriptCommand command)
+        {
+            IScriptExecutionContext executionContext = command switch
+            {
+                ExecuteKubernetesScriptCommand kubernetesScriptCommand => new KubernetesAgentScriptExecutionContext(kubernetesScriptCommand.Image, kubernetesScriptCommand.FeedUrl, kubernetesScriptCommand.FeedUsername, kubernetesScriptCommand.FeedPassword),
+                _ => new LocalShellScriptExecutionContext()
+            };
+
+            return new StartScriptCommandV3Alpha(
+                command.ScriptBody,
+                command.Isolation,
+                command.ScriptIsolationMutexTimeout,
+                command.IsolationMutexName!,
+                command.Arguments,
+                command.TaskId,
+                command.ScriptTicket,
+                command.DurationToWaitForScriptToFinish,
+                executionContext,
+                command.Scripts,
+                command.Files.ToArray());
+        }
 
         protected override ScriptExecutionStatus MapToStatus(ScriptStatusResponseV3Alpha response)
             => new(response.Logs);
@@ -201,7 +222,7 @@ namespace Octopus.Tentacle.Client.Scripts
                         },
                         logger,
                         clientOperationMetricsBuilder,
-                        completeScriptCancellationTokenSource.Token); 
+                        completeScriptCancellationTokenSource.Token);
             }
             catch (Exception ex) when (ex is HalibutClientException or OperationCanceledException)
             {

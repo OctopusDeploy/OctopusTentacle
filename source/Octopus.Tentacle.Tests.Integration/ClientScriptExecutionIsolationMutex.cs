@@ -32,7 +32,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var secondScriptStart = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "secondScriptStartFile");
 
-            var firstStartScriptCommand = new LatestStartScriptCommandBuilder()
+            var firstStartScriptCommand = new ExecuteScriptCommandBuilder()
                 .WithScriptBody(new ScriptBuilder()
                     .CreateFile(firstScriptStartFile)
                     .WaitForFileToExist(firstScriptWaitFile))
@@ -40,7 +40,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithMutexName("mymutex")
                 .Build();
 
-            var secondStartScriptCommand = new LatestStartScriptCommandBuilder()
+            var secondStartScriptCommand = new ExecuteScriptCommandBuilder()
                 .WithScriptBody(new ScriptBuilder().CreateFile(secondScriptStart))
                 .WithIsolation(levelOfSecondScript)
                 .WithMutexName("mymutex")
@@ -92,7 +92,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var secondScriptStart = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "secondScriptStartFile");
 
-            var firstStartScriptCommand = new LatestStartScriptCommandBuilder()
+            var firstStartScriptCommand = new ExecuteScriptCommandBuilder()
                 .WithScriptBody(new ScriptBuilder()
                     .CreateFile(firstScriptStartFile)
                     .WaitForFileToExist(firstScriptWaitFile))
@@ -100,7 +100,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithMutexName(scriptsInParallelTestCase.MutexForFirstScript)
                 .Build();
 
-            var secondStartScriptCommand = new LatestStartScriptCommandBuilder()
+            var secondStartScriptCommand = new ExecuteScriptCommandBuilder()
                 .WithScriptBody(new ScriptBuilder().CreateFile(secondScriptStart))
                 .WithIsolation(scriptsInParallelTestCase.LevelOfSecondScript)
                 .WithMutexName(scriptsInParallelTestCase.MutexForSecondScript)

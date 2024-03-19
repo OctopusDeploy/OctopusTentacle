@@ -36,7 +36,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var scriptHasStartFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "scripthasstarted");
             var waitForFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "waitforme");
 
-            var startScriptCommand = new LatestStartScriptCommandBuilder()
+            var startScriptCommand = new ExecuteScriptCommandBuilder()
                 .WithScriptBody(new ScriptBuilder()
                     .CreateFile(scriptHasStartFile)
                     .WaitForFileToExist(waitForFile)
@@ -52,7 +52,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 CancellationToken);
 
             // Wait for the script to start.
-            await Wait.For(() => File.Exists(scriptHasStartFile), 
+            await Wait.For(() => File.Exists(scriptHasStartFile),
                 TimeSpan.FromSeconds(30),
                 () => throw new Exception("Script did not start"),
                 CancellationToken);
@@ -101,7 +101,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var waitForFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "waitforme");
 
-            var startScriptCommand = new LatestStartScriptCommandBuilder()
+            var startScriptCommand = new ExecuteScriptCommandBuilder()
                 .WithScriptBody(new ScriptBuilder()
                     .Print("hello")
                     .WaitForFileToExist(waitForFile)
@@ -114,7 +114,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 async () => await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, inMemoryLog),
                 CancellationToken);
 
-            await Wait.For(() => recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).LastException != null, 
+            await Wait.For(() => recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).LastException != null,
                 TimeSpan.FromSeconds(60),
                 () => throw new Exception("GetStatus did not error"),
                 CancellationToken);
@@ -165,7 +165,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .Build(CancellationToken);
             portForwarder = clientTentacle.PortForwarder;
 
-            var startScriptCommand = new LatestStartScriptCommandBuilder()
+            var startScriptCommand = new ExecuteScriptCommandBuilder()
                 .WithScriptBody(new ScriptBuilder().Print("hello").Sleep(TimeSpan.FromSeconds(1)))
                 .Build();
 
@@ -199,7 +199,7 @@ namespace Octopus.Tentacle.Tests.Integration
                         nameof(IAsyncClientScriptServiceV2.GetStatusAsync),
                         async (_, _) =>
                         {
-                            await Wait.For(() => File.Exists(scriptIsRunningFlag), 
+                            await Wait.For(() => File.Exists(scriptIsRunningFlag),
                                 TimeSpan.FromSeconds(30),
                                 () => throw new Exception("Script did not start"),
                                 CancellationToken);
@@ -219,7 +219,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new LatestStartScriptCommandBuilder()
+            var startScriptCommand = new ExecuteScriptCommandBuilder()
                 .WithScriptBody(new ScriptBuilder()
                     .Print("hello")
                     .CreateFile(scriptIsRunningFlag)
@@ -248,7 +248,7 @@ namespace Octopus.Tentacle.Tests.Integration
             }
 
             var expectedException = new ExceptionContractAssertionBuilder(FailureScenario.ScriptExecutionCancelled, tentacleConfigurationTestCase.TentacleType, clientTentacle).Build();
-            
+
             actualException!.ShouldMatchExceptionContract(expectedException);
 
             var allLogs = logs.JoinLogs();
@@ -286,7 +286,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var inMemoryLog = new InMemoryLog();
 
-            var startScriptCommand = new LatestStartScriptCommandBuilder()
+            var startScriptCommand = new ExecuteScriptCommandBuilder()
                 .WithScriptBody(new ScriptBuilder().Print("hello"))
                 .Build();
 

@@ -19,7 +19,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder().Build(CancellationToken);
 
-            var startScriptCommand = new LatestStartScriptCommandBuilder()
+            var startScriptCommand = new ExecuteScriptCommandBuilder()
                 .WithScriptBody(new ScriptBuilder()
                     .Print("hello")
                     .PrintNTimesWithDelay("another one", 10, TimeSpan.FromSeconds(1))

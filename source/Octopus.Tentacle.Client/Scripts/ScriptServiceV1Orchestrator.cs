@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Halibut.ServiceModel;
 using Octopus.Tentacle.Client.Execution;
 using Octopus.Tentacle.Client.Observability;
+using Octopus.Tentacle.Client.Scripts.Models;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.Observability;
@@ -41,7 +42,7 @@ namespace Octopus.Tentacle.Client.Scripts
             this.logger = logger;
         }
 
-        protected override StartScriptCommand Map(StartScriptCommandV3Alpha command)
+        protected override StartScriptCommand Map(ExecuteScriptCommand command)
             => new(
                 command.ScriptBody,
                 command.Isolation,

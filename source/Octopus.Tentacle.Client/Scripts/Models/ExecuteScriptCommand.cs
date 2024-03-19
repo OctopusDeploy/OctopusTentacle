@@ -1,0 +1,54 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Octopus.Tentacle.Contracts;
+
+namespace Octopus.Tentacle.Client.Scripts.Models
+{
+    public class ExecuteScriptCommand
+    {
+        public ExecuteScriptCommand(
+            string scriptBody,
+            string taskId,
+            ScriptTicket scriptTicket,
+            TimeSpan? durationToWaitForScriptToFinish,
+            ScriptIsolationLevel isolation,
+            TimeSpan scriptIsolationMutexTimeout,
+            string? isolationMutexName,
+            string[] arguments,
+            Dictionary<ScriptType, string>? additionalScripts,
+            params ScriptFile[]? additionalFiles)
+        {
+            ScriptBody = scriptBody;
+            TaskId = taskId;
+            ScriptTicket = scriptTicket;
+            DurationToWaitForScriptToFinish = durationToWaitForScriptToFinish;
+            Isolation = isolation;
+            ScriptIsolationMutexTimeout = scriptIsolationMutexTimeout;
+            IsolationMutexName = isolationMutexName;
+            Arguments = arguments;
+
+            foreach (var additionalScript in additionalScripts ?? Enumerable.Empty<KeyValuePair<ScriptType, string>>())
+            {
+                Scripts.Add(additionalScript.Key, additionalScript.Value);
+            }
+
+            if (additionalFiles is not null)
+                Files.AddRange(additionalFiles);
+        }
+
+        public string ScriptBody { get;  }
+        public string TaskId { get; }
+        public ScriptTicket ScriptTicket { get;  }
+        public TimeSpan? DurationToWaitForScriptToFinish { get;  }
+        public ScriptIsolationLevel Isolation { get;  }
+        public TimeSpan ScriptIsolationMutexTimeout { get;  }
+        public string? IsolationMutexName { get;  }
+
+        public Dictionary<ScriptType, string> Scripts { get; } = new();
+
+        public List<ScriptFile> Files { get; } = new();
+
+        public string[] Arguments { get;  }
+    }
+}

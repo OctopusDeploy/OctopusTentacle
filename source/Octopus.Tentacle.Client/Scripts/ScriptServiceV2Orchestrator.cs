@@ -8,6 +8,7 @@ using Halibut.ServiceModel;
 using Halibut.Transport;
 using Octopus.Tentacle.Client.Execution;
 using Octopus.Tentacle.Client.Observability;
+using Octopus.Tentacle.Client.Scripts.Models;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.Observability;
@@ -47,7 +48,7 @@ namespace Octopus.Tentacle.Client.Scripts
             this.logger = logger;
         }
 
-        protected override StartScriptCommandV2 Map(StartScriptCommandV3Alpha command)
+        protected override StartScriptCommandV2 Map(ExecuteScriptCommand command)
             => new(
                 command.ScriptBody,
                 command.Isolation,
@@ -200,7 +201,7 @@ namespace Octopus.Tentacle.Client.Scripts
             {
                 // Finish performs a best effort cleanup of the Workspace on Tentacle
                 // If we are cancelling script execution we abandon a call to complete script after a period of time
-                
+
                 using var completeScriptCancellationTokenSource = new CancellationTokenSource();
 
                 await using var _ = scriptExecutionCancellationToken.Register(() => completeScriptCancellationTokenSource.CancelAfter(onCancellationAbandonCompleteScriptAfter));
@@ -214,7 +215,7 @@ namespace Octopus.Tentacle.Client.Scripts
                         },
                         logger,
                         clientOperationMetricsBuilder,
-                        completeScriptCancellationTokenSource.Token); 
+                        completeScriptCancellationTokenSource.Token);
             }
             catch (Exception ex) when (ex is HalibutClientException or OperationCanceledException)
             {
