@@ -151,9 +151,7 @@ partial class Build
         .DependsOn(PackDebianPackage)
         .Executes(() =>
         {
-            BuildAndPushOrLoadKubernetesTentacleContainerImage(
-                push: false,
-                load: true);
+            BuildAndPushOrLoadKubernetesTentacleContainerImage(push: false, load: true);
         });
 
     [PublicAPI]
@@ -163,10 +161,7 @@ partial class Build
         .DependsOn(PackDebianPackage)
         .Executes(() =>
         {
-            BuildAndPushOrLoadKubernetesTentacleContainerImage(
-                push: false,
-                load: true,
-                includeDebugger: true);
+            BuildAndPushOrLoadKubernetesTentacleContainerImage(push: false, load: true, includeDebugger: true);
         });
 
     [PublicAPI]
