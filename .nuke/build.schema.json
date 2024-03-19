@@ -200,10 +200,6 @@
         "TestRuntime": {
           "type": "string"
         },
-        "UpxVersion": {
-          "type": "string",
-          "description": "The version of upx to use when building the bootstrapRunner executable for the Kubernetes Tentacle"
-        },
         "Verbosity": {
           "type": "string",
           "description": "Logging verbosity during build execution. Default is 'Normal'",

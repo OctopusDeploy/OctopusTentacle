@@ -31,8 +31,6 @@ partial class Build
         Name = "DockerPlatform")]
     string DockerPlatform = "linux/arm64,linux/amd64";
 
-    [Parameter("The version of upx to use when building the bootstrapRunner executable for the Kubernetes Tentacle")] string UpxVersion = "4.2.2";
-
     [PublicAPI]
     Target PackOsxTarballs => _ => _
         .Description("Packs the OS/X tarballs containing the published binaries.")
@@ -562,7 +560,7 @@ partial class Build
                 tag += "-debug";
 
             settings = settings
-                .AddBuildArg($"BUILD_NUMBER={FullSemVer}", $"BUILD_DATE={DateTime.UtcNow:O}", $"UPX_VERSION={UpxVersion}")
+                .AddBuildArg($"BUILD_NUMBER={FullSemVer}", $"BUILD_DATE={DateTime.UtcNow:O}")
                 .SetPlatform(DockerPlatform)
                 .SetTag(tag)
                 .SetFile(dockerfile)
