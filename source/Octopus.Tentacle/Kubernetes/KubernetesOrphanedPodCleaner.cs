@@ -20,6 +20,7 @@ namespace Octopus.Tentacle.Kubernetes
         readonly IKubernetesPodService podService;
         readonly ISystemLog log;
         readonly IClock clock;
+        readonly TimeSpan initialDelay = TimeSpan.FromMinutes(1);
         internal readonly TimeSpan CompletedPodConsideredOrphanedAfterTimeSpan = TimeSpan.FromMinutes(10);
 
         public KubernetesOrphanedPodCleaner(IKubernetesPodStatusProvider podStatusProvider, IKubernetesPodService podService, ISystemLog log, IClock clock)
@@ -47,6 +48,9 @@ namespace Octopus.Tentacle.Kubernetes
 
         async Task CleanupOrphanedPodsLoop(CancellationToken cancellationToken)
         {
+            // We wait a small initial period, so that Tentacle has a chance to fully load.
+            await Task.Delay(initialDelay, cancellationToken);
+
             while (!cancellationToken.IsCancellationRequested)
             {
                 log.Verbose("OrphanedPodCleaner: Checking for orphaned pods");
