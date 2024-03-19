@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using k8s;
 using k8s.Models;
 using Newtonsoft.Json;
-using Nito.AsyncEx;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Contracts;
@@ -30,13 +29,6 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             IScriptStateStore stateStore,
             KubernetesAgentScriptExecutionContext executionContext,
             CancellationToken scriptCancellationToken);
-
-        static readonly AsyncLazy<string> BootstrapRunnerScript = new(async () =>
-        {
-            using var stream = typeof(RunningKubernetesPod).Assembly.GetManifestResourceStream("Octopus.Tentacle.Kubernetes.bootstrapRunner.sh");
-            using var reader = new StreamReader(stream!, Encoding.UTF8);
-            return await reader.ReadToEndAsync();
-        });
 
         readonly IScriptWorkspace workspace;
         readonly ScriptTicket scriptTicket;
@@ -312,7 +304,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             WriteVerbose(writer, $"Creating Kubernetes Pod '{podName}'.");
 
             //write the bootstrap runner script to the workspace
-            workspace.WriteFile("bootstrapRunner.sh", await BootstrapRunnerScript.Task);
+            workspace.CopyFile(KubernetesConfig.BootstrapRunnerExecutablePath, "bootstrapRunner");
 
             var scriptName = Path.GetFileName(workspace.BootstrapScriptFilePath);
 
@@ -339,10 +331,9 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                         {
                             Name = podName,
                             Image = executionContext.Image ?? await containerResolver.GetContainerImageForCluster(),
-                            Command = new List<string> { "bash" },
+                            Command = new List<string> { $"/octopus/Work/{scriptTicket.TaskId}/bootstrapRunner" },
                             Args = new List<string>
                                 {
-                                    $"/octopus/Work/{scriptTicket.TaskId}/bootstrapRunner.sh",
                                     $"/octopus/Work/{scriptTicket.TaskId}",
                                     $"/octopus/Work/{scriptTicket.TaskId}/{scriptName}"
                                 }.Concat(workspace.ScriptArguments ?? Array.Empty<string>())
