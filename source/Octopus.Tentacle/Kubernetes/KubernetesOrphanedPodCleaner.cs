@@ -52,7 +52,8 @@ namespace Octopus.Tentacle.Kubernetes
                 log.Verbose("OrphanedPodCleaner: Checking for orphaned pods");
                 await CheckForOrphanedPods(cancellationToken);
 
-                log.Verbose($"OrphanedPodCleaner: Next check will happen at {clock.GetUtcTime() + CompletedPodConsideredOrphanedAfterTimeSpan}");
+                var nextCheckTime = clock.GetUtcTime() + CompletedPodConsideredOrphanedAfterTimeSpan;
+                log.Verbose($"OrphanedPodCleaner: Next check will happen at {nextCheckTime:O}");
                 await Task.Delay(CompletedPodConsideredOrphanedAfterTimeSpan, cancellationToken);
             }
         }
