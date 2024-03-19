@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -71,10 +72,14 @@ func main() {
 	<-doneErr
 
 	err = cmd.Wait()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error waiting for Cmd", err)
-		os.Exit(1)
+
+	var exitErr *exec.ExitError
+	// If the error is not related to the script returning a failure exit code we log it.
+	if err != nil && !errors.As(err, &exitErr) {
+		fmt.Fprintln(os.Stderr, "bootstrapRunner.go: Failed to execute bootstrap script", err)
 	}
+
+	os.Exit(cmd.ProcessState.ExitCode())
 }
 
 func reader(scanner *bufio.Scanner, writer *bufio.Writer, done *chan bool) {
