@@ -16,10 +16,6 @@ internalListeningPort=10933
 mkdir -p $configurationDirectory
 mkdir -p $applicationsDirectory
 
-if [ ! -f /usr/bin/tentacle ]; then
-    ln -s /opt/octopus/tentacle/Tentacle /usr/bin/tentacle
-fi
-
 if [ -f "$alreadyConfiguredSemaphore" ]; then
     echo "Octopus Tentacle is already configured. Skipping reconfiguration."
     echo "If you want to force reconfiguration, please delete the file $alreadyConfiguredSemaphore and re-launch the container."
