@@ -79,6 +79,9 @@ func main() {
 		fmt.Fprintln(os.Stderr, "bootstrapRunner.go: Failed to execute bootstrap script", err)
 	}
 
+	stdoutLogFile.Flush()
+	stderrLogFile.Flush()
+
 	os.Exit(cmd.ProcessState.ExitCode())
 }
 
