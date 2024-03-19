@@ -73,10 +73,9 @@ namespace Octopus.Tentacle.Tests.Integration
                     b.WithWorkspaceCleaningSettings(cleanerDelay, deleteWorkspacesOlderThan);
                 })
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .HookServiceMethod(
-                        tentacleConfigurationTestCase,
-                        nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync),
-                        (_,_) => throw new NotImplementedException("Force failure to simulate tentacle client crashing, and ensure we do not complete the script"))
+                    .DecorateAllScriptServicesWith(u => u
+                        .BeforeCompleteScript(
+                            () => throw new NotImplementedException("Force failure to simulate tentacle client crashing, and ensure we do not complete the script")))
                     .Build())
                 .Build(CancellationToken);
 
