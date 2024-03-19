@@ -39,7 +39,7 @@ namespace Octopus.Tentacle.Kubernetes
                 retry => TimeSpan.FromSeconds(ExponentialBackoff.GetDuration(retry, maxDurationSeconds)),
                 (ex, duration) =>
                 {
-                    log.Error(ex, "An unexpected error occured while monitoring Pods, waiting for: " + duration);
+                    log.Error(ex, "OrphanedPodCleaner: An unexpected error occured while running clean up loop, re-running in: " + duration);
                 });
 
             await policy.ExecuteAsync(async ct => await CleanupOrphanedPodsLoop(ct), cancellationToken);
@@ -49,25 +49,32 @@ namespace Octopus.Tentacle.Kubernetes
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                log.Verbose("Checking for orphaned pods");
+                log.Verbose("OrphanedPodCleaner: Checking for orphaned pods");
                 var orphanedPods = podStatusProvider.GetAllPodStatuses()
                     .Where(p => p.State != PodState.Running && p.LastUpdated <= clock.GetUtcTime() - completedPodConsideredOrphanedAfter).ToList();
 
-                log.Verbose($"Found {orphanedPods.Count} Orphaned Pods");
+                log.Info($"OrphanedPodCleaner: Found {orphanedPods.Count} Orphaned Pods, they will now be deleted");
 
                 foreach (var pod in orphanedPods)
                 {
+                    if (KubernetesConfig.DisableAutomaticPodCleanup)
+                    {
+                        log.Verbose($"OrphanedPodCleaner: Not deleting orphaned pod {pod.ScriptTicket} as automatic cleanup is disabled");
+                        continue;
+                    }
+
                     try
                     {
-                        log.Verbose($"Attempting to delete orphaned pod: {pod.ScriptTicket}");
+                        log.Verbose($"OrphanedPodCleaner: Deleting orphaned pod: {pod.ScriptTicket}");
                         await podService.Delete(pod.ScriptTicket, cancellationToken);
                     }
                     catch
                     {
-                        log.Warn($"Unable to delete orphaned pod: {pod.ScriptTicket}, will try again next check.");
+                        log.Warn($"OrphanedPodCleaner: Unable to delete orphaned pod: {pod.ScriptTicket}, will try again next check");
                     }
                 }
 
+                log.Verbose($"OrphanedPodCleaner: Next check will happen at {clock.GetUtcTime() + completedPodConsideredOrphanedAfter}");
                 await Task.Delay(completedPodConsideredOrphanedAfter, cancellationToken);
             }
         }
