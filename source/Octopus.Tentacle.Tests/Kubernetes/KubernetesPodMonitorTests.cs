@@ -52,7 +52,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             };
 
             //Act
-            await monitor.OnNewEvent(type, pod);
+            await monitor.OnNewEvent(type, pod, CancellationToken.None);
 
             //Assert
             var status = ((IKubernetesPodStatusProvider)monitor).TryGetPodStatus(scriptTicket);
@@ -100,7 +100,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             {
                 Phase = "Succeeded"
             };
-            await monitor.OnNewEvent(type, pod);
+            await monitor.OnNewEvent(type, pod, CancellationToken.None);
 
             //Assert
             var status = ((IKubernetesPodStatusProvider)monitor).TryGetPodStatus(scriptTicket);
@@ -161,7 +161,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                     }
                 }
             };
-            await monitor.OnNewEvent(type, pod);
+            await monitor.OnNewEvent(type, pod, CancellationToken.None);
 
             //Assert
             var status = ((IKubernetesPodStatusProvider)monitor).TryGetPodStatus(scriptTicket);
@@ -205,7 +205,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             await monitor.InitialLoadAsync(CancellationToken.None);
 
             //Update the pod
-            await monitor.OnNewEvent(type, pod);
+            await monitor.OnNewEvent(type, pod, CancellationToken.None);
 
             //Assert
             var status = ((IKubernetesPodStatusProvider)monitor).TryGetPodStatus(scriptTicket);

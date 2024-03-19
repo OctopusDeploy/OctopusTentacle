@@ -61,7 +61,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                     Phase = "Succeeded"
                 }
             };
-            await monitor.OnNewEvent(type, pod);
+            await monitor.OnNewEvent(type, pod, CancellationToken.None);
 
             clock.WindForward(overCutoff);
 
@@ -94,7 +94,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                     Phase = phase
                 }
             };
-            await monitor.OnNewEvent(type, pod);
+            await monitor.OnNewEvent(type, pod, CancellationToken.None);
 
             clock.WindForward(overCutoff);
 
@@ -131,7 +131,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                     Phase = "Succeeded"
                 }
             };
-            await monitor.OnNewEvent(type, pod);
+            await monitor.OnNewEvent(type, pod, CancellationToken.None);
 
             clock.WindForward(underCutoff);
 
@@ -162,7 +162,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                     Phase = "Succeeded"
                 }
             };
-            await monitor.OnNewEvent(type, pod);
+            await monitor.OnNewEvent(type, pod, CancellationToken.None);
 
             clock.WindForward(overCutoff);
 
