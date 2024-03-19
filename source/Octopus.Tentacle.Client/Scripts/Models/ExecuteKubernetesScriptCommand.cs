@@ -7,20 +7,20 @@ namespace Octopus.Tentacle.Client.Scripts.Models
     public class ExecuteKubernetesScriptCommand : ExecuteScriptCommand
     {
         public ExecuteKubernetesScriptCommand(
-            string scriptBody,
-            string taskId,
             ScriptTicket scriptTicket,
-            ScriptIsolationLevel isolation,
-            TimeSpan scriptIsolationMutexTimeout,
-            string? isolationMutexName,
+            string taskId,
             string[] arguments,
+            string scriptBody,
+            ScriptIsolationLevel isolationLevel,
+            TimeSpan isolationMutexTimeout,
+            string? isolationMutexName,
             Dictionary<ScriptType, string>? additionalScripts,
+            ScriptFile[] additionalFiles,
             string image,
             string? feedUrl,
             string? feedUsername,
-            string? feedPassword,
-            params ScriptFile[] additionalFiles)
-            : base(scriptBody, taskId, scriptTicket, null, isolation, scriptIsolationMutexTimeout, isolationMutexName, arguments, additionalScripts, additionalFiles)
+            string? feedPassword)
+            : base(scriptTicket, taskId, scriptBody, arguments, isolationLevel, isolationMutexTimeout, isolationMutexName, null, additionalScripts, additionalFiles)
         {
             Image = image;
             FeedUrl = feedUrl;

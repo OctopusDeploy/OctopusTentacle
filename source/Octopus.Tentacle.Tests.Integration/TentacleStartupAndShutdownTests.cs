@@ -38,7 +38,7 @@ cd ""{clientAndTentacle.RunningTentacle.TentacleExe.DirectoryName}""
 ./Tentacle service --instance {clientAndTentacle.RunningTentacle.InstanceName} --stop --start")
                     .Build();
 
-                (ScriptExecutionResult ScriptExecutionResult, List<ProcessOutput> ProcessOutput) result;
+                (Client.Scripts.Models.ScriptExecutionResult ScriptExecutionResult, List<ProcessOutput> ProcessOutput) result;
 
                 try
                 {

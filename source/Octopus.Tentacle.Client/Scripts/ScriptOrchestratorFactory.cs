@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Halibut;
 using Halibut.ServiceModel;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Client.Capabilities;

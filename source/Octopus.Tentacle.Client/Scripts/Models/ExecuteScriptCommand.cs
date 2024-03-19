@@ -8,23 +8,23 @@ namespace Octopus.Tentacle.Client.Scripts.Models
     public class ExecuteScriptCommand
     {
         public ExecuteScriptCommand(
-            string scriptBody,
-            string taskId,
             ScriptTicket scriptTicket,
-            TimeSpan? durationToWaitForScriptToFinish,
-            ScriptIsolationLevel isolation,
-            TimeSpan scriptIsolationMutexTimeout,
-            string? isolationMutexName,
+            string taskId,
+            string scriptBody,
             string[] arguments,
-            Dictionary<ScriptType, string>? additionalScripts,
-            params ScriptFile[]? additionalFiles)
+            ScriptIsolationLevel isolationLevel,
+            TimeSpan isolationMutexTimeout,
+            string? isolationMutexName = null,
+            TimeSpan? durationToWaitForScriptToFinish = null,
+            Dictionary<ScriptType, string>? additionalScripts = null,
+            ScriptFile[]? additionalFiles = null)
         {
             ScriptBody = scriptBody;
             TaskId = taskId;
             ScriptTicket = scriptTicket;
             DurationToWaitForScriptToFinish = durationToWaitForScriptToFinish;
-            Isolation = isolation;
-            ScriptIsolationMutexTimeout = scriptIsolationMutexTimeout;
+            IsolationLevel = isolationLevel;
+            IsolationMutexTimeout = isolationMutexTimeout;
             IsolationMutexName = isolationMutexName;
             Arguments = arguments;
 
@@ -41,8 +41,8 @@ namespace Octopus.Tentacle.Client.Scripts.Models
         public string TaskId { get; }
         public ScriptTicket ScriptTicket { get;  }
         public TimeSpan? DurationToWaitForScriptToFinish { get;  }
-        public ScriptIsolationLevel Isolation { get;  }
-        public TimeSpan ScriptIsolationMutexTimeout { get;  }
+        public ScriptIsolationLevel IsolationLevel { get;  }
+        public TimeSpan IsolationMutexTimeout { get;  }
         public string? IsolationMutexName { get;  }
 
         public Dictionary<ScriptType, string> Scripts { get; } = new();

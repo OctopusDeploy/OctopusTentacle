@@ -92,15 +92,8 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders
         }
 
         public ExecuteScriptCommand Build()
-            => new(scriptBody.ToString(),
+            => new(scriptTicket,
                 taskId,
-                scriptTicket,
-                durationStartScriptCanWaitForScriptToFinish,
-                isolation,
-                scriptIsolationMutexTimeout,
-                scriptIsolationMutexName,
-                arguments.ToArray(),
-                additionalScripts,
-                files.ToArray());
+                scriptBody.ToString(), arguments.ToArray(), isolation, scriptIsolationMutexTimeout, scriptIsolationMutexName, durationStartScriptCanWaitForScriptToFinish, additionalScripts, files.ToArray());
     }
 }

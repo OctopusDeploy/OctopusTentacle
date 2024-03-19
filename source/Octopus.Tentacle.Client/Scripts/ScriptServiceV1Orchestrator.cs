@@ -8,7 +8,6 @@ using Octopus.Tentacle.Client.Scripts.Models;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.Observability;
-using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
 using ILog = Octopus.Diagnostics.ILog;
 
 namespace Octopus.Tentacle.Client.Scripts
@@ -45,8 +44,8 @@ namespace Octopus.Tentacle.Client.Scripts
         protected override StartScriptCommand Map(ExecuteScriptCommand command)
             => new(
                 command.ScriptBody,
-                command.Isolation,
-                command.ScriptIsolationMutexTimeout,
+                command.IsolationLevel,
+                command.IsolationMutexTimeout,
                 command.IsolationMutexName!,
                 command.Arguments,
                 command.TaskId,

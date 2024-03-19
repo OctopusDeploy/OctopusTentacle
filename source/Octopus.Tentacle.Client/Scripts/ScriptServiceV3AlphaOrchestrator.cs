@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
-using Halibut.Exceptions;
 using Halibut.ServiceModel;
-using Halibut.Transport;
 using Octopus.Tentacle.Client.Execution;
 using Octopus.Tentacle.Client.Observability;
 using Octopus.Tentacle.Client.Scripts.Models;
@@ -57,8 +55,8 @@ namespace Octopus.Tentacle.Client.Scripts
 
             return new StartScriptCommandV3Alpha(
                 command.ScriptBody,
-                command.Isolation,
-                command.ScriptIsolationMutexTimeout,
+                command.IsolationLevel,
+                command.IsolationMutexTimeout,
                 command.IsolationMutexName!,
                 command.Arguments,
                 command.TaskId,

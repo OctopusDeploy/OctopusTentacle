@@ -1,7 +1,6 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
+﻿using Octopus.Tentacle.Client.Scripts.Models;
+
 namespace Octopus.Tentacle.Client.Scripts
 {
     public delegate void OnScriptStatusResponseReceived(ScriptExecutionStatus status);
-    public delegate Task OnScriptCompleted(CancellationToken cancellationToken);
 }

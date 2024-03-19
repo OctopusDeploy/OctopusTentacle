@@ -8,7 +8,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods
 {
     public static class ScriptExecutionResultExtensionMethods
     {
-        public static void LogExecuteScriptOutput(this (ScriptExecutionResult ScriptExecutionResult, List<ProcessOutput> ProcessOutput) result, ILogger logger)
+        public static void LogExecuteScriptOutput(this (Client.Scripts.Models.ScriptExecutionResult ScriptExecutionResult, List<ProcessOutput> ProcessOutput) result, ILogger logger)
         {
             var scriptOutput = new StringBuilder();
 
