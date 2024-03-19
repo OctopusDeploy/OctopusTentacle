@@ -11,6 +11,7 @@ using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Tests.Support;
+using Octopus.Time;
 
 namespace Octopus.Tentacle.Tests.Kubernetes
 {
@@ -21,13 +22,15 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         ISystemLog log;
         KubernetesPodMonitor monitor;
         ScriptTicket scriptTicket;
+        IClock clock;
 
         [SetUp]
         public void SetUp()
         {
             podService = Substitute.For<IKubernetesPodService>();
             log = new InMemoryLog();
-            monitor = new KubernetesPodMonitor(podService, log);
+            clock = new FixedClock(DateTimeOffset.MinValue);
+            monitor = new KubernetesPodMonitor(podService, log, clock);
 
             scriptTicket = new ScriptTicket(Guid.NewGuid().ToString());
         }

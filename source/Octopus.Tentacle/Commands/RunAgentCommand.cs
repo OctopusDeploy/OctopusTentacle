@@ -28,6 +28,7 @@ namespace Octopus.Tentacle.Commands
         readonly Lazy<IProxyInitializer> proxyInitializer;
         readonly Lazy<IWorkspaceCleanerTask> workspaceCleanerTask;
         readonly Lazy<IKubernetesPodMonitorTask> kubernetesPodMonitorTask;
+        readonly Lazy<IKubernetesOrphanedPodCleanerTask> kubernetesOrphanedPodCleanerTask;
 
         readonly ISleep sleep;
         readonly ISystemLog log;
@@ -37,7 +38,6 @@ namespace Octopus.Tentacle.Commands
         int wait;
         bool halibutHasStarted;
         bool workspaceCleanerHasStarted;
-        bool kubernetesPodMonitorHasStarted;
 
         public override bool CanRunAsService => true;
 
@@ -54,7 +54,8 @@ namespace Octopus.Tentacle.Commands
             AppVersion appVersion,
             ILogFileOnlyLogger logFileOnlyLogger,
             Lazy<IWorkspaceCleanerTask> workspaceCleanerTask,
-            Lazy<IKubernetesPodMonitorTask> kubernetesPodMonitorTask) : base(selector, log, logFileOnlyLogger)
+            Lazy<IKubernetesPodMonitorTask> kubernetesPodMonitorTask,
+            Lazy<IKubernetesOrphanedPodCleanerTask> kubernetesOrphanedPodCleanerTask) : base(selector, log, logFileOnlyLogger)
         {
             this.halibut = halibut;
             this.configuration = configuration;
@@ -68,6 +69,7 @@ namespace Octopus.Tentacle.Commands
             this.appVersion = appVersion;
             this.workspaceCleanerTask = workspaceCleanerTask;
             this.kubernetesPodMonitorTask = kubernetesPodMonitorTask;
+            this.kubernetesOrphanedPodCleanerTask = kubernetesOrphanedPodCleanerTask;
 
             Options.Add("wait=", "Delay (ms) before starting", arg => wait = int.Parse(arg));
             Options.Add("console", "Don't attempt to run as a service, even if the user is non-interactive", v =>
@@ -137,7 +139,7 @@ namespace Octopus.Tentacle.Commands
             if (!KubernetesConfig.ExecuteScriptsInLocalShell)
             {
                 kubernetesPodMonitorTask.Value.Start();
-                kubernetesPodMonitorHasStarted = true;
+                kubernetesOrphanedPodCleanerTask.Value.Start();
             }
 
             Runtime.WaitForUserToExit();
@@ -167,10 +169,16 @@ namespace Octopus.Tentacle.Commands
                 workspaceCleanerTask.Value.Stop();
             }
 
-            if (kubernetesPodMonitorHasStarted)
+            if (kubernetesPodMonitorTask.IsValueCreated)
             {
                 kubernetesPodMonitorTask.Value.Stop();
             }
+
+            if (kubernetesOrphanedPodCleanerTask.IsValueCreated)
+            {
+                kubernetesOrphanedPodCleanerTask.Value.Stop();
+            }
+
         }
     }
 }

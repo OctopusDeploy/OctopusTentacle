@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -8,6 +9,7 @@ using k8s.Models;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Time;
+using Octopus.Time;
 using Polly;
 
 namespace Octopus.Tentacle.Kubernetes
@@ -19,6 +21,7 @@ namespace Octopus.Tentacle.Kubernetes
 
     public interface IKubernetesPodStatusProvider
     {
+        IList<PodStatus> GetAllPodStatuses();
         PodStatus? TryGetPodStatus(ScriptTicket scriptTicket);
     }
 
@@ -26,12 +29,14 @@ namespace Octopus.Tentacle.Kubernetes
     {
         readonly IKubernetesPodService podService;
         readonly ISystemLog log;
-        readonly Dictionary<ScriptTicket, PodStatus> podStatusLookup = new();
+        readonly IClock clock;
+        readonly ConcurrentDictionary<ScriptTicket, PodStatus> podStatusLookup = new();
 
-        public KubernetesPodMonitor(IKubernetesPodService podService, ISystemLog log)
+        public KubernetesPodMonitor(IKubernetesPodService podService, ISystemLog log, IClock clock)
         {
             this.podService = podService;
             this.log = log;
+            this.clock = clock;
         }
 
         async Task IKubernetesPodMonitor.StartAsync(CancellationToken cancellationToken)
@@ -75,7 +80,7 @@ namespace Octopus.Tentacle.Kubernetes
             var allPods = await podService.ListAllPodsAsync(cancellationToken);
             foreach (var pod in allPods.Items)
             {
-                var status = new PodStatus(pod.GetScriptTicket());
+                var status = new PodStatus(pod.GetScriptTicket(), clock);
                 status.Update(pod);
 
                 log.Verbose($"Preloaded pod {pod.Name()}. {status}");
@@ -103,12 +108,7 @@ namespace Octopus.Tentacle.Kubernetes
                 {
                     case WatchEventType.Added or WatchEventType.Modified:
                     {
-                        if (!podStatusLookup.TryGetValue(scriptTicket, out var status))
-                        {
-                            status = new PodStatus(pod.GetScriptTicket());
-                            podStatusLookup[scriptTicket] = status;
-                        }
-
+                        var status = podStatusLookup.GetOrAdd(scriptTicket, st => new PodStatus(st, clock));
                         status.Update(pod);
                         log.Verbose($"Updated pod {pod.Name()} status. {status}");
 
@@ -118,7 +118,7 @@ namespace Octopus.Tentacle.Kubernetes
                         log.Verbose($"Removed {type} pod {pod.Name()} status");
 
                         //if the pod is deleted, remove it
-                        podStatusLookup.Remove(scriptTicket);
+                        podStatusLookup.TryRemove(scriptTicket, out _);
                         break;
                     default:
                         log.Warn($"Received watch event type {type} for pod {pod.Name()}. Ignoring as we don't need it");
@@ -131,22 +131,29 @@ namespace Octopus.Tentacle.Kubernetes
             }
         }
 
+        IList<PodStatus> IKubernetesPodStatusProvider.GetAllPodStatuses() => podStatusLookup.Values.ToList();
+
         PodStatus? IKubernetesPodStatusProvider.TryGetPodStatus(ScriptTicket scriptTicket)
             => podStatusLookup.TryGetValue(scriptTicket, out var status) ? status : null;
     }
 
     public class PodStatus
     {
+        readonly IClock clock;
         public ScriptTicket ScriptTicket { get; }
 
         public PodState State { get; private set; }
 
         public int? ExitCode { get; private set; }
 
-        public PodStatus(ScriptTicket ticket)
+        public DateTimeOffset LastUpdated { get; private set; }
+
+        public PodStatus(ScriptTicket ticket, IClock clock)
         {
+            this.clock = clock;
             ScriptTicket = ticket;
             State = PodState.Running;
+            LastUpdated = clock.GetUtcTime();
         }
 
         public void Update(V1Pod pod)
@@ -166,6 +173,8 @@ namespace Octopus.Tentacle.Kubernetes
 
                     break;
             }
+
+            LastUpdated = clock.GetUtcTime();
         }
 
         public override string ToString()
