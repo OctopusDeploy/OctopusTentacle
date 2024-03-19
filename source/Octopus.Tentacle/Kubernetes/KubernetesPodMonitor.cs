@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -30,7 +29,8 @@ namespace Octopus.Tentacle.Kubernetes
         readonly IKubernetesPodService podService;
         readonly ISystemLog log;
         readonly IClock clock;
-        readonly ConcurrentDictionary<ScriptTicket, PodStatus> podStatusLookup = new();
+        readonly Dictionary<ScriptTicket, PodStatus> podStatusLookup = new();
+        readonly SemaphoreSlim lookupLock = new(1, 1);
 
         public KubernetesPodMonitor(IKubernetesPodService podService, ISystemLog log, IClock clock)
         {
@@ -73,56 +73,72 @@ namespace Octopus.Tentacle.Kubernetes
 
         internal async Task<string> InitialLoadAsync(CancellationToken cancellationToken)
         {
-            log.Verbose("Preloading pod statuses");
-            //clear the status'
-            podStatusLookup.Clear();
-
-            var allPods = await podService.ListAllPodsAsync(cancellationToken);
-            foreach (var pod in allPods.Items)
+            await lookupLock.WaitAsync(cancellationToken);
+            try
             {
-                var status = new PodStatus(pod.GetScriptTicket(), clock);
-                status.Update(pod);
+                log.Verbose("Preloading pod statuses");
+                //clear the status'
+                podStatusLookup.Clear();
 
-                log.Verbose($"Preloaded pod {pod.Name()}. {status}");
-                podStatusLookup[status.ScriptTicket] = status;
+                var allPods = await podService.ListAllPodsAsync(cancellationToken);
+                foreach (var pod in allPods.Items)
+                {
+                    var status = new PodStatus(pod.GetScriptTicket(), clock);
+                    status.Update(pod);
+
+                    log.Verbose($"Preloaded pod {pod.Name()}. {status}");
+                    podStatusLookup[status.ScriptTicket] = status;
+                }
+
+                log.Verbose($"Preloaded {allPods.Items.Count} pod statuses. ResourceVersion: {allPods.ResourceVersion()}");
+
+                //this is the resource version for the list. We use this to start the watch at this particular point
+                return allPods.ResourceVersion();
             }
-
-            log.Verbose($"Preloaded {allPods.Items.Count} pod statuses. ResourceVersion: {allPods.ResourceVersion()}");
-
-            //this is the resource version for the list. We use this to start the watch at this particular point
-            return allPods.ResourceVersion();
+            finally
+            {
+                lookupLock.Release();
+            }
         }
 
         //This is internal so it's accessible via unit tests
-        internal async Task OnNewEvent(WatchEventType type, V1Pod pod)
+        internal async Task OnNewEvent(WatchEventType type, V1Pod pod, CancellationToken cancellationToken)
         {
-            await Task.CompletedTask;
-
             try
             {
                 log.Verbose($"Received {type} event for pod {pod.Name()}");
 
                 var scriptTicket = pod.GetScriptTicket();
-
-                switch (type)
+                await lookupLock.WaitAsync(cancellationToken);
+                try
                 {
-                    case WatchEventType.Added or WatchEventType.Modified:
+                    switch (type)
                     {
-                        var status = podStatusLookup.GetOrAdd(scriptTicket, st => new PodStatus(st, clock));
-                        status.Update(pod);
-                        log.Verbose($"Updated pod {pod.Name()} status. {status}");
+                        case WatchEventType.Added or WatchEventType.Modified:
+                        {
+                            if (!podStatusLookup.TryGetValue(scriptTicket, out var status))
+                            {
+                                podStatusLookup[scriptTicket] = status = new PodStatus(scriptTicket, clock);
+                            }
+                            status.Update(pod);
+                            log.Verbose($"Updated pod {pod.Name()} status. {status}");
 
-                        break;
+                            break;
+                        }
+                        case WatchEventType.Deleted:
+                            log.Verbose($"Removed {type} pod {pod.Name()} status");
+
+                            //if the pod is deleted, remove it
+                            podStatusLookup.Remove(scriptTicket);
+                            break;
+                        default:
+                            log.Warn($"Received watch event type {type} for pod {pod.Name()}. Ignoring as we don't need it");
+                            break;
                     }
-                    case WatchEventType.Deleted:
-                        log.Verbose($"Removed {type} pod {pod.Name()} status");
-
-                        //if the pod is deleted, remove it
-                        podStatusLookup.TryRemove(scriptTicket, out _);
-                        break;
-                    default:
-                        log.Warn($"Received watch event type {type} for pod {pod.Name()}. Ignoring as we don't need it");
-                        break;
+                }
+                finally
+                {
+                    lookupLock.Release();
                 }
             }
             catch (Exception e)
@@ -131,10 +147,31 @@ namespace Octopus.Tentacle.Kubernetes
             }
         }
 
-        IList<PodStatus> IKubernetesPodStatusProvider.GetAllPodStatuses() => podStatusLookup.Values.ToList();
+        IList<PodStatus> IKubernetesPodStatusProvider.GetAllPodStatuses()
+        {
+            lookupLock.Wait();
+            try
+            {
+                return podStatusLookup.Values.ToList();
+            }
+            finally
+            {
+                lookupLock.Release();
+            }
+        }
 
         PodStatus? IKubernetesPodStatusProvider.TryGetPodStatus(ScriptTicket scriptTicket)
-            => podStatusLookup.TryGetValue(scriptTicket, out var status) ? status : null;
+        {
+            lookupLock.Wait();
+            try
+            {
+                return podStatusLookup.TryGetValue(scriptTicket, out var status) ? status : null;
+            }
+            finally
+            {
+                lookupLock.Release();
+            }
+        }
     }
 
     public class PodStatus
