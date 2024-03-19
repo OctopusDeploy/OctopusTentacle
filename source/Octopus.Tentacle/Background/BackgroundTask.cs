@@ -17,7 +17,7 @@ namespace Octopus.Tentacle.Background
         readonly CancellationTokenSource cancellationTokenSource = new ();
         readonly object @lock = new();
 
-        protected readonly ISystemLog log;
+        protected readonly ISystemLog Log;
         readonly TimeSpan terminationGracePeriod;
 
         Task? backgroundTask;
@@ -25,7 +25,7 @@ namespace Octopus.Tentacle.Background
         protected BackgroundTask(ISystemLog log, TimeSpan terminationGracePeriod)
         {
             name = GetType().Name;
-            this.log = log;
+            this.Log = log;
             this.terminationGracePeriod = terminationGracePeriod;
         }
 
@@ -37,11 +37,11 @@ namespace Octopus.Tentacle.Background
             {
                 if (backgroundTask is not null)
                 {
-                    log.Error($"{name}.Start(): Already running.");
+                    Log.Error($"{name}.Start(): Already running.");
                     return;
                 }
 
-                log.Info($"{name}.Start(): Starting");
+                Log.Info($"{name}.Start(): Starting");
                 backgroundTask = Task.Run(() => RunTask(cancellationTokenSource.Token));
             }
         }
@@ -54,18 +54,18 @@ namespace Octopus.Tentacle.Background
 
                 try
                 {
-                    log.Info($"{name}.Stop(): Stopping");
+                    Log.Info($"{name}.Stop(): Stopping");
                     cancellationTokenSource.Cancel();
 
                     backgroundTask.Wait(terminationGracePeriod);
                 }
                 catch (Exception e)
                 {
-                    log.Error(e, $"{name}.Stop(): Could not stop");
+                    Log.Error(e, $"{name}.Stop(): Could not stop");
                 }
                 finally
                 {
-                    log.Info($"{name}.Stop(): Stopped");
+                    Log.Info($"{name}.Stop(): Stopped");
                     backgroundTask = null;
                 }
             }
@@ -73,7 +73,7 @@ namespace Octopus.Tentacle.Background
 
         public void Dispose()
         {
-            log.Info($"{name}.Dispose(): Disposing");
+            Log.Info($"{name}.Dispose(): Disposing");
             Stop();
             cancellationTokenSource.Dispose();
         }

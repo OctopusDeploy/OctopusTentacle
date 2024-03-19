@@ -178,7 +178,6 @@ namespace Octopus.Tentacle.Commands
             {
                 kubernetesOrphanedPodCleanerTask.Value.Stop();
             }
-
         }
     }
 }

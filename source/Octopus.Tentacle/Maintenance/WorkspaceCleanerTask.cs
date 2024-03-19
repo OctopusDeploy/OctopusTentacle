@@ -37,7 +37,7 @@ namespace Octopus.Tentacle.Maintenance
                 }
                 catch (Exception e)
                 {
-                    log.Error(e, "WorkspaceCleanerTask.RunTask:");
+                    Log.Error(e, "WorkspaceCleanerTask.RunTask:");
                 }
 
                 try
