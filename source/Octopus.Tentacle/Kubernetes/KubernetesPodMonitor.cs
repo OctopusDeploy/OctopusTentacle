@@ -77,13 +77,18 @@ namespace Octopus.Tentacle.Kubernetes
             try
             {
                 log.Verbose("Preloading pod statuses");
+                var oldLookup = podStatusLookup.ToDictionary(x => x.Key, x => x.Value);
                 //clear the status'
                 podStatusLookup.Clear();
 
                 var allPods = await podService.ListAllPodsAsync(cancellationToken);
                 foreach (var pod in allPods.Items)
                 {
-                    var status = new PodStatus(pod.GetScriptTicket(), clock);
+                    var scriptTicket = pod.GetScriptTicket();
+                    if (!oldLookup.TryGetValue(scriptTicket, out var status))
+                    {
+                        status = new PodStatus(pod.GetScriptTicket(), clock);
+                    }
                     status.Update(pod);
 
                     log.Verbose($"Preloaded pod {pod.Name()}. {status}");
@@ -198,20 +203,19 @@ namespace Octopus.Tentacle.Kubernetes
             switch (pod.Status?.Phase)
             {
                 case "Succeeded":
+                    if (State != PodState.Succeeded) LastUpdated = clock.GetUtcTime();
                     State = PodState.Succeeded;
                     ExitCode = 0;
                     break;
                 case "Failed":
+                    if (State != PodState.Failed) LastUpdated = clock.GetUtcTime();
                     State = PodState.Failed;
 
                     //find the status for the container
                     //we we can't determine the exit code from the pod container, just return 1
                     ExitCode = pod.Status?.ContainerStatuses?.FirstOrDefault()?.State?.Terminated?.ExitCode ?? 1;
-
                     break;
             }
-
-            LastUpdated = clock.GetUtcTime();
         }
 
         public override string ToString()
