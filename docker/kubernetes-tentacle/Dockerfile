@@ -1,3 +1,14 @@
+FROM golang:1.22 as bootstrapRunnerBuilder
+
+ARG TARGETARCH
+ARG TARGETOS
+
+COPY docker/kubernetes-tentacle/bootstrapRunner/* /bootstrapRunner/
+WORKDIR /bootstrapRunner
+
+# Note: the given ldflags remove debug symbols
+RUN go build -ldflags "-s -w" -o "bin/bootstrapRunner"
+
 FROM mcr.microsoft.com/dotnet/runtime-deps:6.0
 
 ARG BUILD_NUMBER
@@ -9,6 +20,7 @@ ARG TARGETVARIANT
 EXPOSE 10933
 
 COPY docker/kubernetes-tentacle/scripts/* /scripts/
+COPY --from=bootstrapRunnerBuilder bootstrapRunner/bin/bootstrapRunner /bootstrapRunner
 RUN chmod +x /scripts/*.sh
 
 WORKDIR /tmp
@@ -26,6 +38,7 @@ WORKDIR /
 # We know this won't reduce the image size at all. It's just to make the filesystem a little tidier.
 RUN rm -rf /tmp/*
 
+ENV BOOTSTRAPRUNNEREXECUTABLEPATH=/bootstrapRunner
 ENV OCTOPUS_RUNNING_IN_CONTAINER=Y
 ENV ACCEPT_EULA=N
 ENV CustomPublicHostName=""
