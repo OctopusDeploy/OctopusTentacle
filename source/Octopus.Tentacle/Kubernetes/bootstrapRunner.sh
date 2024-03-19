@@ -6,7 +6,7 @@ STDERR_LOG="$WORK_DIR/stderr.log"
 
 format() {
 	now=$(date -u +"%Y-%m-%dT%H:%M:%S.%N%z")
-	echo "$now|$2" | tee -a "$1"
+	echo "$now|$2"
 }
 
 logStdOut() {
@@ -43,18 +43,27 @@ exec 2> >(logStdErr >&2)
 # Change cwd to the working directory
 cd "$WORK_DIR" || return
 
+# Write a message to say the job is starting
+echo "##octopus[stdout-default]"
+echo "Kubernetes Pod starting" $(date)
+echo "##octopus[stdout-default]"
+
 /bin/bash "$BOOTSTRAP_SCRIPT" "$@"
 
 #Get the return value from the previous script
 RETURN_VAL=$?
 
-# Write a message to say the pod has completed
-echo "##octopus[stdout-verbose]"
-echo "Kubernetes Pod completed"
+# Write a message to say the job has completed
 echo "##octopus[stdout-default]"
+echo "Kubernetes Pod completed" $(date)
+echo "##octopus[stdout-default]"
+
+echo "End of script 075CD4F0-8C76-491D-BA76-0879D35E9CFE" $RETURN_VAL
 
 # This ungodly hack is to stop the pod from being killed before the last log has been flushed
 sleep 0.250 #250ms
+
+echo "Hahahahhaha Probably missing"
 
 #Propagate the return value from the bootstrap script to the output host
 exit "$RETURN_VAL"

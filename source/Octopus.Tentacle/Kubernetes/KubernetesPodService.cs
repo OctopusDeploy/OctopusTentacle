@@ -15,6 +15,7 @@ namespace Octopus.Tentacle.Kubernetes
         Task WatchAllPods(string initialResourceVersion, Func<WatchEventType, V1Pod, Task> onChange, Action<Exception> onError, CancellationToken cancellationToken);
         Task Create(V1Pod pod, CancellationToken cancellationToken);
         Task Delete(ScriptTicket scriptTicket, CancellationToken cancellationToken);
+        Task<string> GetLogs(ScriptTicket scriptTicket, CancellationToken cancellationToken);
     }
 
     public class KubernetesPodService : KubernetesService, IKubernetesPodService
@@ -22,6 +23,19 @@ namespace Octopus.Tentacle.Kubernetes
         public KubernetesPodService(IKubernetesClientConfigProvider configProvider)
             : base(configProvider)
         {
+        }
+
+        public async Task<string> GetLogs(ScriptTicket scriptTicket, CancellationToken cancellationToken)
+        {
+            
+            using var response = await Client.ReadNamespacedPodLogAsync(
+                scriptTicket.ToKubernetesScriptPobName(),
+                KubernetesConfig.Namespace,
+                cancellationToken: cancellationToken);
+
+            using var reader = new StreamReader(response);
+
+            return await reader.ReadToEndAsync();
         }
 
         public async Task<V1Pod?> TryGetPod(ScriptTicket scriptTicket, CancellationToken cancellationToken) =>

@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using k8s;
+using k8s.Autorest;
 using k8s.Models;
 using Newtonsoft.Json;
 using Nito.AsyncEx;
@@ -178,43 +179,91 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
         async Task<int> MonitorPodAndLogs(IScriptLogWriter writer)
         {
             var podCompletionCancellationTokenSource = new CancellationTokenSource();
-            var checkPodTask = CheckIfPodHasCompleted(podCompletionCancellationTokenSource);
+            var checkPodTask = CheckIfPodHasCompleted(podCompletionCancellationTokenSource, writer);
 
             //we pass the pod completion CTS here because its used to cancel the writing of the pod stream
-            var monitorPodOutputTask = outputStreamWriter.StreamPodLogsToScriptLog(writer, podCompletionCancellationTokenSource.Token);
+            //var monitorPodOutputTask = outputStreamWriter.StreamPodLogsToScriptLog(writer, podCompletionCancellationTokenSource.Token);
 
-            await Task.WhenAll(checkPodTask, monitorPodOutputTask);
+            await Task.WhenAll(checkPodTask);//, monitorPodOutputTask);
 
+            writer.WriteOutput(ProcessOutputSource.StdOut, DateTimeOffset.UtcNow + ", " + "Doing final read of logs");
             //once they have both finished, perform one last log read (and don't cancel on it)
-            await outputStreamWriter.StreamPodLogsToScriptLog(writer, CancellationToken.None, true);
+            //await outputStreamWriter.StreamPodLogsToScriptLog(writer, CancellationToken.None, true);
 
+            var logs = await podService.GetLogs(scriptTicket, scriptCancellationToken);
+            foreach (var line in logs.Split('\n'))
+            {
+                if (line.IsNullOrEmpty())
+                    continue;
+                
+                var logParts = line!.Split(new[] { '|' }, 2);
+
+                if (logParts.Length != 2)
+                {
+                    writer.WriteOutput(ProcessOutputSource.StdErr, $"Invalid log line detected. '{line}' is not correctly pipe-delimited.");
+                    continue;
+                }
+
+                //part 1 is the datetimeoffset
+                if (!DateTimeOffset.TryParse(logParts[0], out var occurred))
+                {
+                    writer.WriteOutput(ProcessOutputSource.StdErr, $"Failed to parse '{logParts[0]}' as a DateTimeOffset. Using DateTimeOffset.UtcNow.");
+                    occurred = DateTimeOffset.UtcNow;
+                }
+
+                //add the new line
+                var message = logParts[1];
+                var logLineMessage = message.StartsWith("##") ? message : $"{occurred}, {message}";
+                writer.WriteOutput(ProcessOutputSource.StdOut, logLineMessage, occurred);
+            }
+            
             //return the exit code of the pod
             return checkPodTask.Result;
         }
 
-        async Task<int> CheckIfPodHasCompleted(CancellationTokenSource podCompletionCancellationTokenSource)
+        async Task<int> CheckIfPodHasCompleted(CancellationTokenSource podCompletionCancellationTokenSource, IScriptLogWriter writer)
         {
             var resultStatusCode = ScriptExitCodes.UnknownScriptExitCode;
             PodStatus? status = null;
             while (!scriptCancellationToken.IsCancellationRequested)
             {
                 status = podStatusProvider.TryGetPodStatus(scriptTicket);
-                if (status is not null && status.State == PodState.Succeeded)
+                if (status?.State == PodState.Succeeded)
                 {
                     resultStatusCode = 0;
                     break;
                 }
 
-                if (status is not null && status.State == PodState.Failed)
+                if (status?.State == PodState.Failed)
                 {
                     resultStatusCode = status.ExitCode!.Value;
                     break;
                 }
 
+                if (status?.State == PodState.Running)
+                {
+                    try
+                    {
+                        var logs = await podService.GetLogs(scriptTicket, scriptCancellationToken);
+                        var finishLine = logs.Split('\n').SingleOrDefault(l => l.Contains("End of script 075CD4F0-8C76-491D-BA76-0879D35E9CFE"));
+                        if (finishLine != null)
+                        {
+                            WriteVerbose(writer, $"Used FinishLine to detect finish '{finishLine}'");
+                            resultStatusCode = int.Parse(finishLine.Split(new[] { '|' }, 2)[1].Replace("End of script 075CD4F0-8C76-491D-BA76-0879D35E9CFE ", ""));
+                            break;
+                        }
+                    }
+                    catch (HttpOperationException ex)
+                    {
+                        WriteVerbose(writer, "GetLogs failed: " + ex);
+                    }
+                }
+
                 await Task.Delay(250, scriptCancellationToken);
             }
 
-            //if the pod was killed by cancellation, then we need to change the exit code
+            WriteVerbose(writer, "Script complete! " + scriptTicket.TaskId);
+            //if the job was killed by cancellation, then we need to change the exit code
             if (scriptCancellationToken.IsCancellationRequested)
             {
                 resultStatusCode = ScriptExitCodes.CanceledExitCode;
@@ -457,23 +506,24 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                     //we don't care about errors here
                 }
             }
+
         }
 
         void WriteInfo(IScriptLogWriter writer, string message)
         {
-            writer.WriteOutput(ProcessOutputSource.StdOut, message);
+            writer.WriteOutput(ProcessOutputSource.StdOut, DateTimeOffset.UtcNow + ", " + message);
             log.Info(message);
         }
 
         void WriteError(IScriptLogWriter writer, string message)
         {
-            writer.WriteOutput(ProcessOutputSource.StdErr, message);
+            writer.WriteOutput(ProcessOutputSource.StdErr, DateTimeOffset.UtcNow + ", " + message);
             log.Error(message);
         }
 
         void WriteVerbose(IScriptLogWriter writer, string message)
         {
-            writer.WriteVerbose(message);
+            writer.WriteVerbose(DateTimeOffset.UtcNow + ", " + message);
             log.Verbose(message);
         }
     }
