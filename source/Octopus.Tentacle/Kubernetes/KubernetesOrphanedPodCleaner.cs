@@ -50,32 +50,38 @@ namespace Octopus.Tentacle.Kubernetes
             while (!cancellationToken.IsCancellationRequested)
             {
                 log.Verbose("OrphanedPodCleaner: Checking for orphaned pods");
-                var orphanedPods = podStatusProvider.GetAllPodStatuses()
-                    .Where(p => p.State != PodState.Running && p.LastUpdated <= clock.GetUtcTime() - completedPodConsideredOrphanedAfterTimeSpan).ToList();
-
-                log.Info($"OrphanedPodCleaner: Found {orphanedPods.Count} Orphaned Pods, they will now be deleted");
-
-                foreach (var pod in orphanedPods)
-                {
-                    if (KubernetesConfig.DisableAutomaticPodCleanup)
-                    {
-                        log.Verbose($"OrphanedPodCleaner: Not deleting orphaned pod {pod.ScriptTicket} as automatic cleanup is disabled");
-                        continue;
-                    }
-
-                    try
-                    {
-                        log.Verbose($"OrphanedPodCleaner: Deleting orphaned pod: {pod.ScriptTicket}");
-                        await podService.Delete(pod.ScriptTicket, cancellationToken);
-                    }
-                    catch
-                    {
-                        log.Warn($"OrphanedPodCleaner: Unable to delete orphaned pod: {pod.ScriptTicket}, will try again next check");
-                    }
-                }
+                await CheckForOrphanedPods(cancellationToken);
 
                 log.Verbose($"OrphanedPodCleaner: Next check will happen at {clock.GetUtcTime() + completedPodConsideredOrphanedAfterTimeSpan}");
                 await Task.Delay(completedPodConsideredOrphanedAfterTimeSpan, cancellationToken);
+            }
+        }
+
+        internal async Task CheckForOrphanedPods(CancellationToken cancellationToken)
+        {
+            var cutOffDateTime = clock.GetUtcTime() - completedPodConsideredOrphanedAfterTimeSpan;
+            var orphanedPods = podStatusProvider.GetAllPodStatuses()
+                .Where(p => p.State != PodState.Running && p.LastUpdated <= cutOffDateTime).ToList();
+
+            log.Info($"OrphanedPodCleaner: Found {orphanedPods.Count} Orphaned Pods, they will now be deleted");
+
+            foreach (var pod in orphanedPods)
+            {
+                if (KubernetesConfig.DisableAutomaticPodCleanup)
+                {
+                    log.Verbose($"OrphanedPodCleaner: Not deleting orphaned pod {pod.ScriptTicket} as automatic cleanup is disabled");
+                    continue;
+                }
+
+                try
+                {
+                    log.Verbose($"OrphanedPodCleaner: Deleting orphaned pod: {pod.ScriptTicket}");
+                    await podService.Delete(pod.ScriptTicket, cancellationToken);
+                }
+                catch
+                {
+                    log.Warn($"OrphanedPodCleaner: Unable to delete orphaned pod: {pod.ScriptTicket}, will try again next check");
+                }
             }
         }
     }
