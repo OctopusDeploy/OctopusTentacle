@@ -48,17 +48,21 @@ namespace Octopus.Tentacle.Kubernetes
 
         async Task CleanupOrphanedPodsLoop(CancellationToken cancellationToken)
         {
-            // We wait a small initial period, so that Tentacle has a chance to fully load.
+            // We do a small initial delay to ensure that the first time we check,
+            // it's actually possible to have orphaned pods.
             await Task.Delay(initialDelay, cancellationToken);
 
             while (!cancellationToken.IsCancellationRequested)
             {
+                // Delay first because the time we check against on the PodStatus is generated in Tentacle.
+                // So pods are only orphaned once this tentacle is at least the poll period long.
+                await Task.Delay(CompletedPodConsideredOrphanedAfterTimeSpan, cancellationToken);
+
                 log.Verbose("OrphanedPodCleaner: Checking for orphaned pods");
                 await CheckForOrphanedPods(cancellationToken);
 
                 var nextCheckTime = clock.GetUtcTime() + CompletedPodConsideredOrphanedAfterTimeSpan;
                 log.Verbose($"OrphanedPodCleaner: Next check will happen at {nextCheckTime:O}");
-                await Task.Delay(CompletedPodConsideredOrphanedAfterTimeSpan, cancellationToken);
             }
         }
 
