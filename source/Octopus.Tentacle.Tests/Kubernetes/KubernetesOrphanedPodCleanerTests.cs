@@ -181,7 +181,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         public async Task EnvironmentVariableDictatesWhenPodsAreConsideredOrphaned(int checkAfterMinutes, bool shouldDelete)
         {
             //Arrange
-            Environment.SetEnvironmentVariable("OCTOPUS__K8STENTACLE__PODSCONSIDEREDORPHANEDAFTERTIMESPAN", "2");
+            Environment.SetEnvironmentVariable("OCTOPUS__K8STENTACLE__PODSCONSIDEREDORPHANEDAFTERMINUTES", "2");
 
             // We need to reinitialise the sut after changing the env var value
             cleaner = new KubernetesOrphanedPodCleaner(monitor, podService, log, clock);
@@ -218,7 +218,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             }
 
             //Cleanup
-            Environment.SetEnvironmentVariable("OCTOPUS__K8STENTACLE__PODSCONSIDEREDORPHANEDAFTERTIMESPAN", null);
+            Environment.SetEnvironmentVariable("OCTOPUS__K8STENTACLE__PODSCONSIDEREDORPHANEDAFTERMINUTES", null);
         }
     }
 }
