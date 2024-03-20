@@ -117,11 +117,7 @@ namespace Octopus.Tentacle.Kubernetes
                 {
                     case WatchEventType.Added or WatchEventType.Modified:
                     {
-                        if (!podStatusLookup.TryGetValue(scriptTicket, out var status))
-                        {
-                            podStatusLookup[scriptTicket] = status = new PodStatus(scriptTicket, clock);
-                        }
-
+                        var status = podStatusLookup.GetOrAdd(scriptTicket, st => new PodStatus(st, clock));
                         status.Update(pod);
                         log.Verbose($"Updated pod {pod.Name()} status. {status}");
 
