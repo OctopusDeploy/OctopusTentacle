@@ -125,7 +125,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                     //Eventually the file should exist
                     return new StreamReader(workspace.OpenFileStreamForReading(filename), Encoding.UTF8);
                 }
-                catch (FileNotFoundException ex)
+                catch (FileNotFoundException)
                 {
                     //wait for 500ms before reading the logs again
                     await Task.Delay(TimeSpan.FromMilliseconds(500), cancellationToken);
