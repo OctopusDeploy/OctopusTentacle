@@ -21,7 +21,7 @@ namespace Octopus.Tentacle.Kubernetes
         readonly ISystemLog log;
         readonly IClock clock;
         readonly TimeSpan initialDelay = TimeSpan.FromMinutes(1);
-        internal readonly TimeSpan CompletedPodConsideredOrphanedAfterTimeSpan = TimeSpan.FromMinutes(10);
+        internal readonly TimeSpan CompletedPodConsideredOrphanedAfterTimeSpan = KubernetesConfig.PodsConsideredOrphanedAfterTimeSpan;
 
         public KubernetesOrphanedPodCleaner(IKubernetesPodStatusProvider podStatusProvider, IKubernetesPodService podService, ISystemLog log, IClock clock)
         {

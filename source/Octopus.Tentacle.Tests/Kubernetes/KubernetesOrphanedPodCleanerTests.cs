@@ -173,7 +173,52 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             await podService.DidNotReceive().Delete(scriptTicket, Arg.Any<CancellationToken>());
 
             //Cleanup
-            Environment.SetEnvironmentVariable("OCTOPUS__K8STENTACLE__DISABLEAUTOPODCLEANUP", "false");
+            Environment.SetEnvironmentVariable("OCTOPUS__K8STENTACLE__DISABLEAUTOPODCLEANUP", null);
+        }
+
+        [TestCase(1, false)]
+        [TestCase(3, true)]
+        public async Task EnvironmentVariableDictatesWhenPodsAreConsideredOrphaned(int checkAfterMinutes, bool shouldDelete)
+        {
+            //Arrange
+            Environment.SetEnvironmentVariable("OCTOPUS__K8STENTACLE__PODSCONSIDEREDORPHANEDAFTERTIMESPAN", "2");
+
+            // We need to reinitialise the sut after changing the env var value
+            cleaner = new KubernetesOrphanedPodCleaner(monitor, podService, log, clock);
+            const WatchEventType type = WatchEventType.Added;
+            var pod = new V1Pod
+            {
+                Metadata = new V1ObjectMeta
+                {
+                    Labels = new Dictionary<string, string>
+                    {
+                        [OctopusLabels.ScriptTicketId] = scriptTicket.TaskId
+                    }
+                },
+                Status = new V1PodStatus
+                {
+                    Phase = "Succeeded"
+                }
+            };
+            await monitor.OnNewEvent(type, pod, CancellationToken.None);
+
+            clock.WindForward(TimeSpan.FromMinutes(checkAfterMinutes));
+
+            //Act
+            await cleaner.CheckForOrphanedPods(CancellationToken.None);
+
+            //Assert
+            if (shouldDelete)
+            {
+                await podService.Received().Delete(scriptTicket, Arg.Any<CancellationToken>());
+            }
+            else
+            {
+                await podService.DidNotReceive().Delete(scriptTicket, Arg.Any<CancellationToken>());
+            }
+
+            //Cleanup
+            Environment.SetEnvironmentVariable("OCTOPUS__K8STENTACLE__PODSCONSIDEREDORPHANEDAFTERTIMESPAN", null);
         }
     }
 }
