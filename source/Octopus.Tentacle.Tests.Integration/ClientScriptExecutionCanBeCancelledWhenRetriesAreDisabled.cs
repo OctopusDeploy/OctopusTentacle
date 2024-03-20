@@ -51,27 +51,29 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages<IAsyncClientCapabilitiesServiceV2>(out var capabilitiesMethodUsages)
                     .RecordMethodUsages(tentacleConfigurationTestCase, out var scriptMethodUsages)
-                    .HookServiceMethod<IAsyncClientCapabilitiesServiceV2, object, CapabilitiesResponseV2>(
-                        nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync),
-                        async (_, _) =>
-                        {
-                            if (!hasPausedOrStoppedPortForwarder)
+                    .DecorateCapabilitiesServiceV2With(d => d
+                        .BeforeGetCapabilities(
+                            async () =>
                             {
-                                hasPausedOrStoppedPortForwarder = true;
-                                await tcpConnectionUtilities.RestartTcpConnection();
-
-                                PauseOrStopPortForwarder(rpcCallStage, portForwarder.Value, responseMessageTcpKiller, rpcCallHasStarted);
-                                if (rpcCallStage == RpcCallStage.Connecting)
+                                if (!hasPausedOrStoppedPortForwarder)
                                 {
-                                    await tcpConnectionUtilities.EnsurePollingQueueWontSendMessageToDisconnectedTentacles();
-                                }
-                            }
+                                    hasPausedOrStoppedPortForwarder = true;
+                                    await tcpConnectionUtilities.RestartTcpConnection();
 
-                            ensureCancellationOccursDuringAnRpcCall.Release();
-                        }, async (_, _) =>
-                        {
-                            await ensureCancellationOccursDuringAnRpcCall.WaitAsync(CancellationToken);
-                        })
+                                    PauseOrStopPortForwarder(rpcCallStage, portForwarder.Value, responseMessageTcpKiller, rpcCallHasStarted);
+                                    if (rpcCallStage == RpcCallStage.Connecting)
+                                    {
+                                        await tcpConnectionUtilities.EnsurePollingQueueWontSendMessageToDisconnectedTentacles();
+                                    }
+                                }
+
+                                ensureCancellationOccursDuringAnRpcCall.Release();
+                            })
+                        .AfterGetCapabilities(
+                            async _ =>
+                            {
+                                await ensureCancellationOccursDuringAnRpcCall.WaitAsync(CancellationToken);
+                            }))
                     .Build())
                 .Build(CancellationToken);
 

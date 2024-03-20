@@ -269,17 +269,17 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages<IAsyncClientCapabilitiesServiceV2>(out var recordedUsages)
-                    .HookServiceMethod<IAsyncClientCapabilitiesServiceV2>(
-                        nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync),
-                        async (_, _) =>
-                        {
-                            if (recordedUsages.For(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)).LastException == null)
+                    .DecorateCapabilitiesServiceV2With(d => d
+                        .BeforeGetCapabilities(
+                            async () =>
                             {
-                                await tcpConnectionUtilities.RestartTcpConnection();
+                                if (recordedUsages.For(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)).LastException == null)
+                                {
+                                    await tcpConnectionUtilities.RestartTcpConnection();
 
-                                responseMessageTcpKiller.KillConnectionOnNextResponse();
-                            }
-                        })
+                                    responseMessageTcpKiller.KillConnectionOnNextResponse();
+                                }
+                            }))
                     .Build())
                 .Build(CancellationToken);
 

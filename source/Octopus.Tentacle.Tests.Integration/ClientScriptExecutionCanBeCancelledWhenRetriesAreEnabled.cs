@@ -56,35 +56,37 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages<IAsyncClientCapabilitiesServiceV2>(out var recordedUsages)
                     .RecordMethodUsages(tentacleConfigurationTestCase, out var scriptMethodUsages)
-                    .HookServiceMethod<IAsyncClientCapabilitiesServiceV2, object, CapabilitiesResponseV2>(
-                        nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync),
-                        async (_, _) =>
-                        {
-                            if (rpcCall == RpcCall.RetryingCall &&
-                                recordedUsages.ForGetCapabilitiesAsync().LastException == null)
+                    .DecorateCapabilitiesServiceV2With(d => d
+                        .BeforeGetCapabilities(
+                            async () =>
                             {
-                                await tcpConnectionUtilities.RestartTcpConnection();
-
-                                // Kill the first GetCapabilities call to force the rpc call into retries
-                                responseMessageTcpKiller.KillConnectionOnNextResponse();
-                            }
-                            else if (!hasPausedOrStoppedPortForwarder)
-                            {
-                                hasPausedOrStoppedPortForwarder = true;
-                                await tcpConnectionUtilities.RestartTcpConnection();
-
-                                await PauseOrStopPortForwarder(rpcCallStage, portForwarder.Value, responseMessageTcpKiller, rpcCallHasStarted);
-                                if (rpcCallStage == RpcCallStage.Connecting && tentacleConfigurationTestCase.TentacleType == TentacleType.Polling)
+                                if (rpcCall == RpcCall.RetryingCall &&
+                                    recordedUsages.ForGetCapabilitiesAsync().LastException == null)
                                 {
-                                    await tcpConnectionUtilities.EnsurePollingQueueWontSendMessageToDisconnectedTentacles();
-                                }
-                            }
+                                    await tcpConnectionUtilities.RestartTcpConnection();
 
-                            ensureCancellationOccursDuringAnRpcCall.Release();
-                        }, async (_, _) =>
-                        {
-                            await ensureCancellationOccursDuringAnRpcCall.WaitAsync(CancellationToken);
-                        })
+                                    // Kill the first GetCapabilities call to force the rpc call into retries
+                                    responseMessageTcpKiller.KillConnectionOnNextResponse();
+                                }
+                                else if (!hasPausedOrStoppedPortForwarder)
+                                {
+                                    hasPausedOrStoppedPortForwarder = true;
+                                    await tcpConnectionUtilities.RestartTcpConnection();
+
+                                    await PauseOrStopPortForwarder(rpcCallStage, portForwarder.Value, responseMessageTcpKiller, rpcCallHasStarted);
+                                    if (rpcCallStage == RpcCallStage.Connecting && tentacleConfigurationTestCase.TentacleType == TentacleType.Polling)
+                                    {
+                                        await tcpConnectionUtilities.EnsurePollingQueueWontSendMessageToDisconnectedTentacles();
+                                    }
+                                }
+
+                                ensureCancellationOccursDuringAnRpcCall.Release();
+                            })
+                        .AfterGetCapabilities(
+                            async _ =>
+                            {
+                                await ensureCancellationOccursDuringAnRpcCall.WaitAsync(CancellationToken);
+                            }))
                     .Build())
                 .Build(CancellationToken);
 
