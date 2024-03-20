@@ -79,6 +79,7 @@ func main() {
 		fmt.Fprintln(os.Stderr, "bootstrapRunner.go: Failed to execute bootstrap script", err)
 	}
 
+	// Perform a final flush of the file buffers, just in case they didn't get flushed before
 	stdoutLogFile.Flush()
 	stderrLogFile.Flush()
 
