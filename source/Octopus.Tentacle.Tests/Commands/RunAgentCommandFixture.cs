@@ -28,6 +28,7 @@ namespace Octopus.Tentacle.Tests.Commands
         IApplicationInstanceSelector selector = null!;
         IWorkspaceCleanerTask workspaceCleanerTask = null!;
         IKubernetesPodMonitorTask kubernetesPodMonitorTask = null!;
+        IKubernetesOrphanedPodCleanerTask kubernetesOrphanedPodCleanerTask = null!;
 
         [SetUp]
         public override void SetUp()
@@ -42,6 +43,7 @@ namespace Octopus.Tentacle.Tests.Commands
             sleep = Substitute.For<ISleep>();
             workspaceCleanerTask = Substitute.For<IWorkspaceCleanerTask>();
             kubernetesPodMonitorTask = Substitute.For<IKubernetesPodMonitorTask>();
+            kubernetesOrphanedPodCleanerTask = Substitute.For<IKubernetesOrphanedPodCleanerTask>();
 
             Command = new RunAgentCommand(
                 new Lazy<IHalibutInitializer>(() => halibut),
@@ -56,7 +58,8 @@ namespace Octopus.Tentacle.Tests.Commands
                 new AppVersion(GetType().Assembly),
                 Substitute.For<ILogFileOnlyLogger>(),
                 new Lazy<IWorkspaceCleanerTask>(() => workspaceCleanerTask),
-                new Lazy<IKubernetesPodMonitorTask>(() => kubernetesPodMonitorTask));
+                new Lazy<IKubernetesPodMonitorTask>(() => kubernetesPodMonitorTask),
+                new Lazy<IKubernetesOrphanedPodCleanerTask>(() => kubernetesOrphanedPodCleanerTask));
 
             selector.Current.Returns(new ApplicationInstanceConfiguration("MyTentacle", null, null, null));
         }
