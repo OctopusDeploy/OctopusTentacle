@@ -37,7 +37,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                 //if either of these is null, just return
                 if (stdOutStream is null || stdErrStream is null)
                 {
-                    writer.WriteOutput(ProcessOutputSource.StdOut, DateTimeOffset.UtcNow + ", " + "Cancelling stream reader open due to job completion");
+                    writer.WriteOutput(ProcessOutputSource.Debug, DateTimeOffset.UtcNow + ", " + "Cancelling stream reader open due to job completion");
                     return false;
                 }
 
@@ -48,7 +48,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                 {
                     if (cancellationToken.IsCancellationRequested)
                     {
-                        writer.WriteOutput(ProcessOutputSource.StdOut, DateTimeOffset.UtcNow + ", " + "Cancelling stream writing due to job completion");
+                        writer.WriteOutput(ProcessOutputSource.Debug, DateTimeOffset.UtcNow + ", " + "Cancelling stream writing due to job completion");
                         break;
                     }
 
@@ -82,7 +82,6 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                         writer.WriteOutput(logLine.Source, logLineMessage, logLine.Occurred);
                     }
                     
-//writer.WriteOutput(ProcessOutputSource.StdOut, $"{DateTimeOffset.UtcNow}, Reading logs took: {watch.Elapsed}");
                     //wait for 250ms before reading the logs again (except on the final read)
                     if (!isFinalRead)
                     {
@@ -107,7 +106,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             catch (TaskCanceledException)
             {
                 //ignore all task cancelled exceptions as they may be thrown by the pod finishing (and thus signally)
-                writer.WriteOutput(ProcessOutputSource.StdOut, DateTimeOffset.UtcNow + ", " + "TaskCanceledException due to job completion");
+                writer.WriteOutput(ProcessOutputSource.Debug, DateTimeOffset.UtcNow + ", " + "TaskCanceledException due to job completion");
             }
 
             return seenEnd;
@@ -128,9 +127,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                 }
                 catch (FileNotFoundException ex)
                 {
-                    writer.WriteOutput(ProcessOutputSource.Debug, $"{DateTimeOffset.UtcNow}, FileNotFound: {filename} - {ex.Message}");
-
-                    //wait for 50ms before reading the logs again
+                    //wait for 500ms before reading the logs again
                     await Task.Delay(TimeSpan.FromMilliseconds(500), cancellationToken);
                 }
             }

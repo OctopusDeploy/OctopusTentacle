@@ -67,6 +67,8 @@ func main() {
 		panic(err)
 	}
 
+	fmt.Fprintln(os.Stdout, "End of script 075CD4F0-8C76-491D-BA76-0879D35E9CFE")
+
 	// Wait for output buffering first
 	<-doneStd
 	<-doneErr
