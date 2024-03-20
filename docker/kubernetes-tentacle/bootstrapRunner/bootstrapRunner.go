@@ -67,8 +67,6 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Fprintln(os.Stdout, "End of script 075CD4F0-8C76-491D-BA76-0879D35E9CFE")
-
 	// Wait for output buffering first
 	<-doneStd
 	<-doneErr
@@ -79,7 +77,13 @@ func main() {
 	// If the error is not related to the script returning a failure exit code we log it.
 	if err != nil && !errors.As(err, &exitErr) {
 		fmt.Fprintln(os.Stderr, "bootstrapRunner.go: Failed to execute bootstrap script", err)
+		//stderrLogFile.WriteString("bootstrapRunner.go: Failed to execute bootstrap script" + err)
 	}
+
+	if _, err := stderrLogFile.WriteString("End of script 075CD4F0-8C76-491D-BA76-0879D35E9CFE"); err != nil {
+		panic(err)
+	}
+	fmt.Fprintln(os.Stdout, "End of script 075CD4F0-8C76-491D-BA76-0879D35E9CFE")
 
 	os.Exit(cmd.ProcessState.ExitCode())
 }
