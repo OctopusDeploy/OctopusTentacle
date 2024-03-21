@@ -12,7 +12,7 @@ using Octopus.Tentacle.Contracts.Capabilities;
 using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
-using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
+using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
 using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
@@ -48,7 +48,7 @@ namespace Octopus.Tentacle.Tests.Integration
             string expectedScriptService;
             if (tentacleConfigurationTestCase.ScriptServiceToTest == TentacleConfigurationTestCases.ScriptServiceV3AlphaType)
             {
-                expectedScriptService = nameof(IScriptServiceV3Alpha);
+                expectedScriptService = nameof(IKubernetesScriptServiceV1Alpha);
             }
             else if (tentacleConfigurationTestCase.ScriptServiceToTest == TentacleConfigurationTestCases.ScriptServiceV2Type)
             {

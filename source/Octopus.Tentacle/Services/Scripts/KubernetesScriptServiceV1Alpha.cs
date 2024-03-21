@@ -1,35 +1,34 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
-using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
+using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha;
+using Octopus.Tentacle.Kubernetes.Scripts;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Services.Scripts
 {
-    [Service(typeof(IScriptServiceV3Alpha))]
-    public class ScriptServiceV3Alpha : IAsyncScriptServiceV3Alpha
+    [Service(typeof(IKubernetesScriptServiceV1Alpha))]
+    public class KubernetesScriptServiceV1Alpha : IAsyncKubernetesScriptServiceV1Alpha
     {
-        readonly IScriptExecutor scriptExecutor;
         readonly IScriptWorkspaceFactory workspaceFactory;
         readonly IScriptStateStoreFactory scriptStateStoreFactory;
+        readonly KubernetesPodScriptExecutor executor;
         readonly ConcurrentDictionary<ScriptTicket, RunningScriptWrapper> runningScripts = new();
 
-        public ScriptServiceV3Alpha(
-            IScriptExecutor scriptExecutor,
+        public KubernetesScriptServiceV1Alpha(
             IScriptWorkspaceFactory workspaceFactory,
-            IScriptStateStoreFactory scriptStateStoreFactory)
+            IScriptStateStoreFactory scriptStateStoreFactory,
+            KubernetesPodScriptExecutor executor)
         {
-            this.scriptExecutor = scriptExecutor;
             this.workspaceFactory = workspaceFactory;
             this.scriptStateStoreFactory = scriptStateStoreFactory;
+            this.executor = executor;
         }
 
-        public async Task<ScriptStatusResponseV3Alpha> StartScriptAsync(StartScriptCommandV3Alpha command, CancellationToken cancellationToken)
+        public async Task<KubernetesScriptStatusResponseV1Alpha> StartScriptAsync(StartKubernetesScriptCommandV1Alpha command, CancellationToken cancellationToken)
         {
             var runningScript = runningScripts.GetOrAdd(
                 command.ScriptTicket,
@@ -71,33 +70,21 @@ namespace Octopus.Tentacle.Services.Scripts
                     runningScript.ScriptStateStore.Create();
                 }
 
-                if(!scriptExecutor.CanExecute(command))
-                    throw new InvalidOperationException($"The execution context type {command.ExecutionContext.GetType().Name} cannot be used with script executor {scriptExecutor.GetType().Name}.");
-
-                var process = scriptExecutor.ExecuteOnBackgroundThread(command, workspace, runningScript.ScriptStateStore, runningScript.CancellationToken);
+                var process = executor.ExecuteOnBackgroundThread(command, workspace, runningScript.ScriptStateStore, runningScript.CancellationToken);
 
                 runningScript.Process = process;
-
-                if (command.DurationToWaitForScriptToFinish != null)
-                {
-                    var waited = Stopwatch.StartNew();
-                    while (process.State != ProcessState.Complete && waited.Elapsed < command.DurationToWaitForScriptToFinish.Value)
-                    {
-                        Thread.Sleep(TimeSpan.FromMilliseconds(10));
-                    }
-                }
 
                 return await GetResponse(command.ScriptTicket, 0, runningScript.Process);
             }
         }
 
-        public async Task<ScriptStatusResponseV3Alpha> GetStatusAsync(ScriptStatusRequestV3Alpha request, CancellationToken cancellationToken)
+        public async Task<KubernetesScriptStatusResponseV1Alpha> GetStatusAsync(KubernetesScriptStatusRequestV1Alpha request, CancellationToken cancellationToken)
         {
             runningScripts.TryGetValue(request.ScriptTicket, out var runningScript);
             return await GetResponse(request.ScriptTicket, request.LastLogSequence, runningScript?.Process);
         }
 
-        public async Task<ScriptStatusResponseV3Alpha> CancelScriptAsync(CancelScriptCommandV3Alpha command, CancellationToken cancellationToken)
+        public async Task<KubernetesScriptStatusResponseV1Alpha> CancelScriptAsync(CancelKubernetesScriptCommandV1Alpha command, CancellationToken cancellationToken)
         {
             if (runningScripts.TryGetValue(command.ScriptTicket, out var runningScript))
             {
@@ -107,7 +94,7 @@ namespace Octopus.Tentacle.Services.Scripts
             return await GetResponse(command.ScriptTicket, command.LastLogSequence, runningScript?.Process);
         }
 
-        public async Task CompleteScriptAsync(CompleteScriptCommandV3Alpha command, CancellationToken cancellationToken)
+        public async Task CompleteScriptAsync(CompleteKubernetesScriptCommandV1Alpha command, CancellationToken cancellationToken)
         {
             if (runningScripts.TryRemove(command.ScriptTicket, out var runningScript))
             {
@@ -121,7 +108,7 @@ namespace Octopus.Tentacle.Services.Scripts
                 await runningScript.Process.Cleanup(cancellationToken);
         }
 
-        async Task<ScriptStatusResponseV3Alpha> GetResponse(ScriptTicket ticket, long lastLogSequence, IRunningScript? runningScript)
+        async Task<KubernetesScriptStatusResponseV1Alpha> GetResponse(ScriptTicket ticket, long lastLogSequence, IRunningScript? runningScript)
         {
             await Task.CompletedTask;
 
@@ -131,7 +118,7 @@ namespace Octopus.Tentacle.Services.Scripts
 
             if (runningScript != null)
             {
-                return new ScriptStatusResponseV3Alpha(ticket, runningScript.State, runningScript.ExitCode, logs, next);
+                return new KubernetesScriptStatusResponseV1Alpha(ticket, runningScript.State, runningScript.ExitCode, logs, next);
             }
 
             // If we don't have a RunningProcess we check the ScriptStateStore to see if we have persisted a script result
@@ -146,10 +133,10 @@ namespace Octopus.Tentacle.Services.Scripts
                     scriptStateStore.Save(scriptState);
                 }
 
-                return new ScriptStatusResponseV3Alpha(ticket, scriptState.State, scriptState.ExitCode ?? ScriptExitCodes.UnknownResultExitCode, logs, next);
+                return new KubernetesScriptStatusResponseV1Alpha(ticket, scriptState.State, scriptState.ExitCode ?? ScriptExitCodes.UnknownResultExitCode, logs, next);
             }
 
-            return new ScriptStatusResponseV3Alpha(ticket, ProcessState.Complete, ScriptExitCodes.UnknownScriptExitCode, logs, next);
+            return new KubernetesScriptStatusResponseV1Alpha(ticket, ProcessState.Complete, ScriptExitCodes.UnknownScriptExitCode, logs, next);
         }
 
         public bool IsRunningScript(ScriptTicket ticket)

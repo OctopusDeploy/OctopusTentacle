@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 
-namespace Octopus.Tentacle.Contracts.ScriptServiceV3Alpha
+namespace Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha
 {
-    public class ScriptStatusResponseV3Alpha
+    public class KubernetesScriptStatusResponseV1Alpha
     {
-        public ScriptStatusResponseV3Alpha(ScriptTicket scriptTicket,
+        public KubernetesScriptStatusResponseV1Alpha(ScriptTicket scriptTicket,
             ProcessState state,
             int exitCode,
             List<ProcessOutput> logs,

@@ -1,15 +1,15 @@
 using System;
 using System.Threading.Tasks;
 using Halibut.ServiceModel;
-using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
+using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha;
 
 namespace Octopus.Tentacle.Contracts.ClientServices
 {
     public interface IAsyncClientScriptServiceV3Alpha
     {
-        Task<ScriptStatusResponseV3Alpha> StartScriptAsync(StartScriptCommandV3Alpha command, HalibutProxyRequestOptions proxyRequestOptions);
-        Task<ScriptStatusResponseV3Alpha> GetStatusAsync(ScriptStatusRequestV3Alpha request, HalibutProxyRequestOptions proxyRequestOptions);
-        Task<ScriptStatusResponseV3Alpha> CancelScriptAsync(CancelScriptCommandV3Alpha command, HalibutProxyRequestOptions proxyRequestOptions);
-        Task CompleteScriptAsync(CompleteScriptCommandV3Alpha command, HalibutProxyRequestOptions proxyRequestOptions);
+        Task<KubernetesScriptStatusResponseV1Alpha> StartScriptAsync(StartKubernetesScriptCommandV1Alpha command, HalibutProxyRequestOptions proxyRequestOptions);
+        Task<KubernetesScriptStatusResponseV1Alpha> GetStatusAsync(KubernetesScriptStatusRequestV1Alpha request, HalibutProxyRequestOptions proxyRequestOptions);
+        Task<KubernetesScriptStatusResponseV1Alpha> CancelScriptAsync(CancelKubernetesScriptCommandV1Alpha command, HalibutProxyRequestOptions proxyRequestOptions);
+        Task CompleteScriptAsync(CompleteKubernetesScriptCommandV1Alpha command, HalibutProxyRequestOptions proxyRequestOptions);
     }
 }

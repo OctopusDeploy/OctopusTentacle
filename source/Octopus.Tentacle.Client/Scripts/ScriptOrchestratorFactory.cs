@@ -68,9 +68,9 @@ namespace Octopus.Tentacle.Client.Scripts
                 throw new OperationCanceledException("Script execution was cancelled", ex);
             }
 
-            return scriptServiceToUse switch
+            if (scriptServiceToUse == ScriptServiceVersion.ScriptServiceVersion1)
             {
-                ScriptServiceVersion.Version1 => new ScriptServiceV1Orchestrator(
+                return new ScriptServiceV1Orchestrator(
                     clientScriptServiceV1,
                     scriptObserverBackOffStrategy,
                     rpcCallExecutor,
@@ -78,9 +78,12 @@ namespace Octopus.Tentacle.Client.Scripts
                     onScriptStatusResponseReceived,
                     onScriptCompleted,
                     clientOptions,
-                    logger),
+                    logger);
 
-                ScriptServiceVersion.Version2 => new ScriptServiceV2Orchestrator(
+            }
+            if (scriptServiceToUse == ScriptServiceVersion.ScriptServiceVersion2)
+            {
+                return new ScriptServiceV2Orchestrator(
                     clientScriptServiceV2,
                     scriptObserverBackOffStrategy,
                     rpcCallExecutor,
@@ -89,9 +92,11 @@ namespace Octopus.Tentacle.Client.Scripts
                     onScriptCompleted,
                     onCancellationAbandonCompleteScriptAfter,
                     clientOptions,
-                    logger),
-
-                ScriptServiceVersion.Version3Alpha => new ScriptServiceV3AlphaOrchestrator(
+                    logger);
+            }
+            if (scriptServiceToUse == ScriptServiceVersion.KubernetesScriptServiceVersion1Alpha)
+            {
+                return new KubernetesScriptServiceV1AlphaOrchestrator(
                     clientScriptServiceV3Alpha,
                     scriptObserverBackOffStrategy,
                     rpcCallExecutor,
@@ -100,10 +105,11 @@ namespace Octopus.Tentacle.Client.Scripts
                     onScriptCompleted,
                     onCancellationAbandonCompleteScriptAfter,
                     clientOptions,
-                    logger),
+                    logger);
 
-                _ => throw new ArgumentOutOfRangeException()
-            };
+            }
+
+            throw new InvalidOperationException($"Unknown ScriptServiceVersion {scriptServiceToUse}");
         }
 
         async Task<ScriptServiceVersion> DetermineScriptServiceVersionToUse(CancellationToken cancellationToken)
@@ -127,19 +133,11 @@ namespace Octopus.Tentacle.Client.Scripts
 
             logger.Verbose($"Discovered Tentacle capabilities: {string.Join(",", tentacleCapabilities.SupportedCapabilities)}");
 
-            if (tentacleCapabilities.HasScriptServiceV3Alpha())
+            // Check if we support any kubernetes script service.
+            // It's implied (and tested) that GetCapabilities will only return Kubernetes or non-Kubernetes script services, never a mix
+            if (tentacleCapabilities.HasAnyKubernetesScriptService())
             {
-                //if the service is not disabled, we can use it :)
-                if (!clientOptions.DisableScriptServiceV3Alpha)
-                {
-                    logger.Verbose("Using ScriptServiceV3Alpha");
-                    logger.Verbose(clientOptions.RpcRetrySettings.RetriesEnabled
-                        ? $"RPC call retries are enabled. Retry timeout {rpcCallExecutor.RetryTimeout.TotalSeconds} seconds"
-                        : "RPC call retries are disabled.");
-                    return ScriptServiceVersion.Version3Alpha;
-                }
-
-                logger.Verbose("ScriptServiceV3Alpha is disabled and will not be used.");
+                return DetermineKubernetesScriptServiceToUse();
             }
 
             if (tentacleCapabilities.HasScriptServiceV2())
@@ -148,12 +146,23 @@ namespace Octopus.Tentacle.Client.Scripts
                 logger.Verbose(clientOptions.RpcRetrySettings.RetriesEnabled
                     ? $"RPC call retries are enabled. Retry timeout {rpcCallExecutor.RetryTimeout.TotalSeconds} seconds"
                     : "RPC call retries are disabled.");
-                return ScriptServiceVersion.Version2;
+                return ScriptServiceVersion.ScriptServiceVersion2;
             }
 
             logger.Verbose("RPC call retries are enabled but will not be used for Script Execution as a compatible ScriptService was not found. Please upgrade Tentacle to enable this feature.");
             logger.Verbose("Using ScriptServiceV1");
-            return ScriptServiceVersion.Version1;
+            return ScriptServiceVersion.ScriptServiceVersion1;
+        }
+
+        ScriptServiceVersion DetermineKubernetesScriptServiceToUse()
+        {
+            logger.Verbose("Using KubernetesScriptServiceV1Alpha");
+            logger.Verbose(clientOptions.RpcRetrySettings.RetriesEnabled
+                ? $"RPC call retries are enabled. Retry timeout {rpcCallExecutor.RetryTimeout.TotalSeconds} seconds"
+                : "RPC call retries are disabled.");
+
+            //this is the only supported kubernetes script service
+            return ScriptServiceVersion.KubernetesScriptServiceVersion1Alpha;
         }
     }
 }

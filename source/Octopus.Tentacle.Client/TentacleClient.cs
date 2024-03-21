@@ -13,7 +13,7 @@ using Octopus.Tentacle.Contracts.Capabilities;
 using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
-using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
+using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha;
 using ILog = Octopus.Diagnostics.ILog;
 using ITentacleClientObserver = Octopus.Tentacle.Contracts.Observability.ITentacleClientObserver;
 
@@ -79,7 +79,7 @@ namespace Octopus.Tentacle.Client
 
             scriptServiceV1 = halibutRuntime.CreateAsyncClient<IScriptService, IAsyncClientScriptService>(serviceEndPoint);
             scriptServiceV2 = halibutRuntime.CreateAsyncClient<IScriptServiceV2, IAsyncClientScriptServiceV2>(serviceEndPoint);
-            scriptServiceV3Alpha = halibutRuntime.CreateAsyncClient<IScriptServiceV3Alpha, IAsyncClientScriptServiceV3Alpha>(serviceEndPoint);
+            scriptServiceV3Alpha = halibutRuntime.CreateAsyncClient<IKubernetesScriptServiceV1Alpha, IAsyncClientScriptServiceV3Alpha>(serviceEndPoint);
             clientFileTransferServiceV1 = halibutRuntime.CreateAsyncClient<IFileTransferService, IAsyncClientFileTransferService>(serviceEndPoint);
             capabilitiesServiceV2 = halibutRuntime.CreateAsyncClient<ICapabilitiesServiceV2, IAsyncClientCapabilitiesServiceV2>(serviceEndPoint).WithBackwardsCompatability();
 

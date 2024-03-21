@@ -3,41 +3,43 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 
-namespace Octopus.Tentacle.Contracts.ScriptServiceV3Alpha
+namespace Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha
 {
-    public class StartScriptCommandV3Alpha
+    public class StartKubernetesScriptCommandV1Alpha
     {
         [JsonConstructor]
-        public StartScriptCommandV3Alpha(string scriptBody,
+        public StartKubernetesScriptCommandV1Alpha(string scriptBody,
             ScriptIsolationLevel isolation,
             TimeSpan scriptIsolationMutexTimeout,
             string? isolationMutexName,
             string[] arguments,
             string taskId,
-            ScriptTicket scriptTicket,
-            TimeSpan? durationToWaitForScriptToFinish,
-            IScriptExecutionContext executionContext)
+            ScriptTicket scriptTicket,string? image, string? feedUrl, string? feedUsername, string? feedPassword)
         {
             Arguments = arguments;
             TaskId = taskId;
             ScriptTicket = scriptTicket;
-            DurationToWaitForScriptToFinish = durationToWaitForScriptToFinish;
-            ExecutionContext = executionContext;
             ScriptBody = scriptBody;
             Isolation = isolation;
             ScriptIsolationMutexTimeout = scriptIsolationMutexTimeout;
             IsolationMutexName = isolationMutexName;
+            Image = image;
+            FeedUrl = feedUrl;
+            FeedUsername = feedUsername;
+            FeedPassword = feedPassword;
         }
 
-        public StartScriptCommandV3Alpha(string scriptBody,
+        public StartKubernetesScriptCommandV1Alpha(string scriptBody,
             ScriptIsolationLevel isolation,
             TimeSpan scriptIsolationMutexTimeout,
             string isolationMutexName,
             string[] arguments,
             string taskId,
             ScriptTicket scriptTicket,
-            TimeSpan? durationToWaitForScriptToFinish,
-            IScriptExecutionContext executionContext,
+            string? image,
+            string? feedUrl,
+            string? feedUsername,
+            string? feedPassword,
             params ScriptFile[]? additionalFiles)
             : this(scriptBody,
                 isolation,
@@ -46,22 +48,26 @@ namespace Octopus.Tentacle.Contracts.ScriptServiceV3Alpha
                 arguments,
                 taskId,
                 scriptTicket,
-                durationToWaitForScriptToFinish,
-                executionContext)
+                image,
+                feedUrl,
+                feedUsername,
+                feedPassword)
         {
             if (additionalFiles != null)
                 Files.AddRange(additionalFiles);
         }
 
-        public StartScriptCommandV3Alpha(string scriptBody,
+        public StartKubernetesScriptCommandV1Alpha(string scriptBody,
             ScriptIsolationLevel isolation,
             TimeSpan scriptIsolationMutexTimeout,
             string isolationMutexName,
             string[] arguments,
             string taskId,
             ScriptTicket scriptTicket,
-            TimeSpan? durationToWaitForScriptToFinish,
-            IScriptExecutionContext executionContext,
+            string? image,
+            string? feedUrl,
+            string? feedUsername,
+            string? feedPassword,
             Dictionary<ScriptType, string>? additionalScripts,
             params ScriptFile[]? additionalFiles)
             : this(scriptBody,
@@ -71,8 +77,10 @@ namespace Octopus.Tentacle.Contracts.ScriptServiceV3Alpha
                 arguments,
                 taskId,
                 scriptTicket,
-                durationToWaitForScriptToFinish,
-                executionContext,
+                image,
+                feedUrl,
+                feedUsername,
+                feedPassword,
                 additionalFiles)
         {
             if (additionalScripts == null || !additionalScripts.Any())
@@ -87,8 +95,6 @@ namespace Octopus.Tentacle.Contracts.ScriptServiceV3Alpha
         public string ScriptBody { get; }
         public string TaskId { get; }
         public ScriptTicket ScriptTicket { get; }
-        public TimeSpan? DurationToWaitForScriptToFinish { get; }
-        public IScriptExecutionContext ExecutionContext { get; }
 
         public ScriptIsolationLevel Isolation { get; }
         public TimeSpan ScriptIsolationMutexTimeout { get; }
@@ -97,5 +103,13 @@ namespace Octopus.Tentacle.Contracts.ScriptServiceV3Alpha
         public Dictionary<ScriptType, string> Scripts { get; } = new();
         public List<ScriptFile> Files { get; } = new();
         public string[] Arguments { get; }
+
+        public string? Image { get; }
+
+        public string? FeedUrl { get; }
+
+        public string? FeedUsername { get; }
+
+        public string? FeedPassword { get; }
     }
 }

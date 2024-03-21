@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using Octopus.Tentacle.Kubernetes;
 
 namespace Octopus.Tentacle.Util
 {
@@ -12,9 +13,9 @@ namespace Octopus.Tentacle.Util
         public static class Kubernetes
         {
             /// <summary>
-            /// Indicates if the Tentacle is running inside a Kubernetes cluster.
+            /// Indicates if the Tentacle is running inside a Kubernetes cluster as the Kubernetes Agent. This is done by checking if the namespace environment variable is set
             /// </summary>
-            public static bool IsRunningInKubernetes => bool.TryParse(Environment.GetEnvironmentVariable("OCTOPUS__K8STENTACLE__FORCE"), out var b) && b;
+            public static bool IsRunningAsKubernetesAgent => !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(KubernetesConfig.NamespaceVariableName));
         }
     }
 }

@@ -14,6 +14,7 @@ namespace Octopus.Tentacle.Kubernetes
             builder.RegisterType<KubernetesSecretService>().As<IKubernetesSecretService>().SingleInstance();
 
             // this needs to be per-dependency, otherwise it re-uses the RunningKubernetesPod
+            builder.RegisterType<KubernetesPodScriptExecutor>().AsSelf();
             builder.RegisterType<RunningKubernetesPod>().InstancePerDependency();
 
             builder.RegisterType<KubernetesPodMonitorTask>().As<IKubernetesPodMonitorTask>().SingleInstance();
