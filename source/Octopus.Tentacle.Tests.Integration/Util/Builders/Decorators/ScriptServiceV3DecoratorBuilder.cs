@@ -8,13 +8,13 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
 {
     public class ScriptServiceV3AlphaDecoratorBuilder
     {
-        public delegate Task<KubernetesScriptStatusResponseV1Alpha> StartScriptClientDecorator(IAsyncClientScriptServiceV3Alpha inner, StartKubernetesScriptCommandV1Alpha command, HalibutProxyRequestOptions proxyRequestOptions);
+        public delegate Task<KubernetesScriptStatusResponseV1Alpha> StartScriptClientDecorator(IAsyncClientKubernetesScriptServiceV1Alpha inner, StartKubernetesScriptCommandV1Alpha command, HalibutProxyRequestOptions proxyRequestOptions);
 
-        public delegate Task<KubernetesScriptStatusResponseV1Alpha> GetStatusClientDecorator(IAsyncClientScriptServiceV3Alpha inner, KubernetesScriptStatusRequestV1Alpha request, HalibutProxyRequestOptions proxyRequestOptions);
+        public delegate Task<KubernetesScriptStatusResponseV1Alpha> GetStatusClientDecorator(IAsyncClientKubernetesScriptServiceV1Alpha inner, KubernetesScriptStatusRequestV1Alpha request, HalibutProxyRequestOptions proxyRequestOptions);
 
-        public delegate Task<KubernetesScriptStatusResponseV1Alpha> CancelScriptClientDecorator(IAsyncClientScriptServiceV3Alpha inner, CancelKubernetesScriptCommandV1Alpha command, HalibutProxyRequestOptions proxyRequestOptions);
+        public delegate Task<KubernetesScriptStatusResponseV1Alpha> CancelScriptClientDecorator(IAsyncClientKubernetesScriptServiceV1Alpha inner, CancelKubernetesScriptCommandV1Alpha command, HalibutProxyRequestOptions proxyRequestOptions);
 
-        public delegate Task CompleteScriptClientDecorator(IAsyncClientScriptServiceV3Alpha inner, CompleteKubernetesScriptCommandV1Alpha command, HalibutProxyRequestOptions proxyRequestOptions);
+        public delegate Task CompleteScriptClientDecorator(IAsyncClientKubernetesScriptServiceV1Alpha inner, CompleteKubernetesScriptCommandV1Alpha command, HalibutProxyRequestOptions proxyRequestOptions);
 
         private StartScriptClientDecorator startScriptFunc = async (inner, command, options) => await inner.StartScriptAsync(command, options);
         private GetStatusClientDecorator getStatusFunc = async (inner, command, options) => await inner.GetStatusAsync(command, options);
@@ -26,7 +26,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             return BeforeStartScript(async (_, _, _) => await beforeStartScript());
         }
 
-        public ScriptServiceV3AlphaDecoratorBuilder BeforeStartScript(Func<IAsyncClientScriptServiceV3Alpha, StartKubernetesScriptCommandV1Alpha, HalibutProxyRequestOptions, Task> beforeStartScript)
+        public ScriptServiceV3AlphaDecoratorBuilder BeforeStartScript(Func<IAsyncClientKubernetesScriptServiceV1Alpha, StartKubernetesScriptCommandV1Alpha, HalibutProxyRequestOptions, Task> beforeStartScript)
         {
             return DecorateStartScriptWith(async (inner, startScriptCommandV3Alpha, options) =>
             {
@@ -74,7 +74,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             return BeforeGetStatus(async (_, _, _) => await beforeGetStatus());
         }
 
-        public ScriptServiceV3AlphaDecoratorBuilder BeforeGetStatus(Func<IAsyncClientScriptServiceV3Alpha, KubernetesScriptStatusRequestV1Alpha, HalibutProxyRequestOptions, Task> beforeGetStatus)
+        public ScriptServiceV3AlphaDecoratorBuilder BeforeGetStatus(Func<IAsyncClientKubernetesScriptServiceV1Alpha, KubernetesScriptStatusRequestV1Alpha, HalibutProxyRequestOptions, Task> beforeGetStatus)
         {
             return DecorateGetStatusWith(async (inner, scriptStatusRequestV3Alpha, options) =>
             {
@@ -116,7 +116,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             return BeforeCancelScript(async (_, _, _) => await beforeCancelScript());
         }
 
-        public ScriptServiceV3AlphaDecoratorBuilder BeforeCancelScript(Func<IAsyncClientScriptServiceV3Alpha, CancelKubernetesScriptCommandV1Alpha, HalibutProxyRequestOptions, Task> beforeCancelScript)
+        public ScriptServiceV3AlphaDecoratorBuilder BeforeCancelScript(Func<IAsyncClientKubernetesScriptServiceV1Alpha, CancelKubernetesScriptCommandV1Alpha, HalibutProxyRequestOptions, Task> beforeCancelScript)
         {
             return DecorateCancelScriptWith(async (inner, command, options) =>
             {
@@ -136,7 +136,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             return BeforeCompleteScript(async (_, _, _) => await beforeCompleteScript());
         }
 
-        public ScriptServiceV3AlphaDecoratorBuilder BeforeCompleteScript(Func<IAsyncClientScriptServiceV3Alpha, CompleteKubernetesScriptCommandV1Alpha, HalibutProxyRequestOptions, Task> beforeCompleteScript)
+        public ScriptServiceV3AlphaDecoratorBuilder BeforeCompleteScript(Func<IAsyncClientKubernetesScriptServiceV1Alpha, CompleteKubernetesScriptCommandV1Alpha, HalibutProxyRequestOptions, Task> beforeCompleteScript)
         {
             return DecorateCompleteScriptWith(async (inner, command, options) =>
             {
@@ -145,25 +145,25 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             });
         }
 
-        public Decorator<IAsyncClientScriptServiceV3Alpha> Build()
+        public Decorator<IAsyncClientKubernetesScriptServiceV1Alpha> Build()
         {
-            return inner => new FuncDecoratingScriptServiceV3Alpha(inner,
+            return inner => new FuncDecoratingKubernetesScriptServiceV1Alpha(inner,
                 startScriptFunc,
                 getStatusFunc,
                 cancelScriptFunc,
                 completeScriptAction);
         }
 
-        private class FuncDecoratingScriptServiceV3Alpha : IAsyncClientScriptServiceV3Alpha
+        private class FuncDecoratingKubernetesScriptServiceV1Alpha : IAsyncClientKubernetesScriptServiceV1Alpha
         {
-            private readonly IAsyncClientScriptServiceV3Alpha inner;
+            private readonly IAsyncClientKubernetesScriptServiceV1Alpha inner;
             private readonly StartScriptClientDecorator startScriptFunc;
             private readonly GetStatusClientDecorator getStatusFunc;
             private readonly CancelScriptClientDecorator cancelScriptFunc;
             private readonly CompleteScriptClientDecorator completeScriptAction;
 
-            public FuncDecoratingScriptServiceV3Alpha(
-                IAsyncClientScriptServiceV3Alpha inner,
+            public FuncDecoratingKubernetesScriptServiceV1Alpha(
+                IAsyncClientKubernetesScriptServiceV1Alpha inner,
                 StartScriptClientDecorator startScriptFunc,
                 GetStatusClientDecorator getStatusFunc,
                 CancelScriptClientDecorator cancelScriptFunc,

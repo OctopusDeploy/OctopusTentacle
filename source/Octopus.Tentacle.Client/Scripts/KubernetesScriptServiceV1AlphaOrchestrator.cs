@@ -17,14 +17,14 @@ namespace Octopus.Tentacle.Client.Scripts
 {
     class KubernetesScriptServiceV1AlphaOrchestrator : ObservingScriptOrchestrator<StartKubernetesScriptCommandV1Alpha, KubernetesScriptStatusResponseV1Alpha>
     {
-        readonly IAsyncClientScriptServiceV3Alpha clientScriptServiceV3Alpha;
+        readonly IAsyncClientKubernetesScriptServiceV1Alpha clientKubernetesScriptServiceV1Alpha;
         readonly RpcCallExecutor rpcCallExecutor;
         readonly ClientOperationMetricsBuilder clientOperationMetricsBuilder;
         readonly TimeSpan onCancellationAbandonCompleteScriptAfter;
         readonly ILog logger;
 
         public KubernetesScriptServiceV1AlphaOrchestrator(
-            IAsyncClientScriptServiceV3Alpha clientScriptServiceV3Alpha,
+            IAsyncClientKubernetesScriptServiceV1Alpha clientKubernetesScriptServiceV1Alpha,
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
             RpcCallExecutor rpcCallExecutor,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
@@ -38,7 +38,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 onScriptCompleted,
                 clientOptions)
         {
-            this.clientScriptServiceV3Alpha = clientScriptServiceV3Alpha;
+            this.clientKubernetesScriptServiceV1Alpha = clientKubernetesScriptServiceV1Alpha;
             this.rpcCallExecutor = rpcCallExecutor;
             this.clientOperationMetricsBuilder = clientOperationMetricsBuilder;
             this.onCancellationAbandonCompleteScriptAfter = onCancellationAbandonCompleteScriptAfter;
@@ -83,7 +83,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 async Task<KubernetesScriptStatusResponseV1Alpha> StartScriptAction(CancellationToken ct)
                 {
                     ++startScriptCallsConnectedCount;
-                    var result = await clientScriptServiceV3Alpha.StartScriptAsync(command, new HalibutProxyRequestOptions(ct));
+                    var result = await clientKubernetesScriptServiceV1Alpha.StartScriptAsync(command, new HalibutProxyRequestOptions(ct));
 
                     return result;
                 }
@@ -156,7 +156,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 async Task<KubernetesScriptStatusResponseV1Alpha> GetStatusAction(CancellationToken ct)
                 {
                     var request = new KubernetesScriptStatusRequestV1Alpha(lastStatusResponse.ScriptTicket, lastStatusResponse.NextLogSequence);
-                    var result = await clientScriptServiceV3Alpha.GetStatusAsync(request, new HalibutProxyRequestOptions(ct));
+                    var result = await clientKubernetesScriptServiceV1Alpha.GetStatusAsync(request, new HalibutProxyRequestOptions(ct));
 
                     return result;
                 }
@@ -181,7 +181,7 @@ namespace Octopus.Tentacle.Client.Scripts
             async Task<KubernetesScriptStatusResponseV1Alpha> CancelScriptAction(CancellationToken ct)
             {
                 var request = new CancelKubernetesScriptCommandV1Alpha(lastStatusResponse.ScriptTicket, lastStatusResponse.NextLogSequence);
-                var result = await clientScriptServiceV3Alpha.CancelScriptAsync(request, new HalibutProxyRequestOptions(ct));
+                var result = await clientKubernetesScriptServiceV1Alpha.CancelScriptAsync(request, new HalibutProxyRequestOptions(ct));
 
                 return result;
             }
@@ -215,7 +215,7 @@ namespace Octopus.Tentacle.Client.Scripts
                         async ct =>
                         {
                             var request = new CompleteKubernetesScriptCommandV1Alpha(lastStatusResponse.ScriptTicket);
-                            await clientScriptServiceV3Alpha.CompleteScriptAsync(request, new HalibutProxyRequestOptions(ct));
+                            await clientKubernetesScriptServiceV1Alpha.CompleteScriptAsync(request, new HalibutProxyRequestOptions(ct));
                         },
                         logger,
                         clientOperationMetricsBuilder,

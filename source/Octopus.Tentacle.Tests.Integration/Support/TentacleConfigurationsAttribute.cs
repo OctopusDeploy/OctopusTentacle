@@ -39,7 +39,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
     static class TentacleConfigurationTestCases
     {
-        public static readonly Type ScriptServiceV3AlphaType = typeof(IAsyncClientScriptServiceV3Alpha);
+        public static readonly Type ScriptServiceV3AlphaType = typeof(IAsyncClientKubernetesScriptServiceV1Alpha);
         public static readonly Type ScriptServiceV2Type = typeof(IAsyncClientScriptServiceV2);
         public static readonly Type ScriptServiceV1Type = typeof(IAsyncClientScriptService);
 

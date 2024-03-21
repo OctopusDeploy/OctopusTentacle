@@ -24,14 +24,14 @@ namespace Octopus.Tentacle.Client.Scripts
 
         readonly IAsyncClientScriptService clientScriptServiceV1;
         readonly IAsyncClientScriptServiceV2 clientScriptServiceV2;
-        readonly IAsyncClientScriptServiceV3Alpha clientScriptServiceV3Alpha;
+        readonly IAsyncClientKubernetesScriptServiceV1Alpha clientKubernetesScriptServiceV1Alpha;
         readonly IAsyncClientCapabilitiesServiceV2 clientCapabilitiesServiceV2;
         readonly TentacleClientOptions clientOptions;
 
         public ScriptOrchestratorFactory(
             IAsyncClientScriptService clientScriptServiceV1,
             IAsyncClientScriptServiceV2 clientScriptServiceV2,
-            IAsyncClientScriptServiceV3Alpha clientScriptServiceV3Alpha,
+            IAsyncClientKubernetesScriptServiceV1Alpha clientKubernetesScriptServiceV1Alpha,
             IAsyncClientCapabilitiesServiceV2 clientCapabilitiesServiceV2,
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
             RpcCallExecutor rpcCallExecutor,
@@ -44,7 +44,7 @@ namespace Octopus.Tentacle.Client.Scripts
         {
             this.clientScriptServiceV1 = clientScriptServiceV1;
             this.clientScriptServiceV2 = clientScriptServiceV2;
-            this.clientScriptServiceV3Alpha = clientScriptServiceV3Alpha;
+            this.clientKubernetesScriptServiceV1Alpha = clientKubernetesScriptServiceV1Alpha;
             this.clientCapabilitiesServiceV2 = clientCapabilitiesServiceV2;
             this.scriptObserverBackOffStrategy = scriptObserverBackOffStrategy;
             this.rpcCallExecutor = rpcCallExecutor;
@@ -97,7 +97,7 @@ namespace Octopus.Tentacle.Client.Scripts
             if (scriptServiceToUse == ScriptServiceVersion.KubernetesScriptServiceVersion1Alpha)
             {
                 return new KubernetesScriptServiceV1AlphaOrchestrator(
-                    clientScriptServiceV3Alpha,
+                    clientKubernetesScriptServiceV1Alpha,
                     scriptObserverBackOffStrategy,
                     rpcCallExecutor,
                     clientOperationMetricsBuilder,

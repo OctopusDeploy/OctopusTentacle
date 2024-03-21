@@ -22,7 +22,7 @@ namespace Octopus.Tentacle.Tests.Integration
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages<IAsyncClientScriptServiceV2>(out var scriptServiceV2Usages)
-                    .RecordMethodUsages<IAsyncClientScriptServiceV3Alpha>(out var scriptServiceV3AlphaUsages)
+                    .RecordMethodUsages<IAsyncClientKubernetesScriptServiceV1Alpha>(out var scriptServiceV3AlphaUsages)
                     .Build())
                 .WithClientOptions(options =>
                 {

@@ -27,7 +27,7 @@ namespace Octopus.Tentacle.Client
 
         readonly IAsyncClientScriptService scriptServiceV1;
         readonly IAsyncClientScriptServiceV2 scriptServiceV2;
-        readonly IAsyncClientScriptServiceV3Alpha scriptServiceV3Alpha;
+        readonly IAsyncClientKubernetesScriptServiceV1Alpha kubernetesScriptServiceV1Alpha;
         readonly IAsyncClientFileTransferService clientFileTransferServiceV1;
         readonly IAsyncClientCapabilitiesServiceV2 capabilitiesServiceV2;
         readonly TentacleClientOptions clientOptions;
@@ -79,7 +79,7 @@ namespace Octopus.Tentacle.Client
 
             scriptServiceV1 = halibutRuntime.CreateAsyncClient<IScriptService, IAsyncClientScriptService>(serviceEndPoint);
             scriptServiceV2 = halibutRuntime.CreateAsyncClient<IScriptServiceV2, IAsyncClientScriptServiceV2>(serviceEndPoint);
-            scriptServiceV3Alpha = halibutRuntime.CreateAsyncClient<IKubernetesScriptServiceV1Alpha, IAsyncClientScriptServiceV3Alpha>(serviceEndPoint);
+            kubernetesScriptServiceV1Alpha = halibutRuntime.CreateAsyncClient<IKubernetesScriptServiceV1Alpha, IAsyncClientKubernetesScriptServiceV1Alpha>(serviceEndPoint);
             clientFileTransferServiceV1 = halibutRuntime.CreateAsyncClient<IFileTransferService, IAsyncClientFileTransferService>(serviceEndPoint);
             capabilitiesServiceV2 = halibutRuntime.CreateAsyncClient<ICapabilitiesServiceV2, IAsyncClientCapabilitiesServiceV2>(serviceEndPoint).WithBackwardsCompatability();
 
@@ -87,7 +87,7 @@ namespace Octopus.Tentacle.Client
             {
                 scriptServiceV1 = tentacleServicesDecoratorFactory.Decorate(scriptServiceV1);
                 scriptServiceV2 = tentacleServicesDecoratorFactory.Decorate(scriptServiceV2);
-                scriptServiceV3Alpha = tentacleServicesDecoratorFactory.Decorate(scriptServiceV3Alpha);
+                kubernetesScriptServiceV1Alpha = tentacleServicesDecoratorFactory.Decorate(kubernetesScriptServiceV1Alpha);
                 clientFileTransferServiceV1 = tentacleServicesDecoratorFactory.Decorate(clientFileTransferServiceV1);
                 capabilitiesServiceV2 = tentacleServicesDecoratorFactory.Decorate(capabilitiesServiceV2);
             }
@@ -180,7 +180,7 @@ namespace Octopus.Tentacle.Client
                 var factory = new ScriptOrchestratorFactory(
                     scriptServiceV1,
                     scriptServiceV2,
-                    scriptServiceV3Alpha,
+                    kubernetesScriptServiceV1Alpha,
                     capabilitiesServiceV2,
                     scriptObserverBackOffStrategy,
                     rpcCallExecutor,

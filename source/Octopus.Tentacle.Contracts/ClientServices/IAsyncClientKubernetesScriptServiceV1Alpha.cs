@@ -5,7 +5,7 @@ using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha;
 
 namespace Octopus.Tentacle.Contracts.ClientServices
 {
-    public interface IAsyncClientScriptServiceV3Alpha
+    public interface IAsyncClientKubernetesScriptServiceV1Alpha
     {
         Task<KubernetesScriptStatusResponseV1Alpha> StartScriptAsync(StartKubernetesScriptCommandV1Alpha command, HalibutProxyRequestOptions proxyRequestOptions);
         Task<KubernetesScriptStatusResponseV1Alpha> GetStatusAsync(KubernetesScriptStatusRequestV1Alpha request, HalibutProxyRequestOptions proxyRequestOptions);
