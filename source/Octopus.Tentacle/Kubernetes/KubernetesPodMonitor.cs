@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -8,6 +9,7 @@ using k8s.Models;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Time;
+using Octopus.Time;
 using Polly;
 
 namespace Octopus.Tentacle.Kubernetes
@@ -20,6 +22,7 @@ namespace Octopus.Tentacle.Kubernetes
     public interface IKubernetesPodStatusProvider
     {
         ITrackedKubernetesPod? TryGetPodStatus(ScriptTicket scriptTicket);
+        IList<ITrackedKubernetesPod> GetAllPodStatuses();
     }
 
     public class KubernetesPodMonitor : IKubernetesPodMonitor, IKubernetesPodStatusProvider
@@ -27,12 +30,14 @@ namespace Octopus.Tentacle.Kubernetes
         readonly IKubernetesPodService podService;
         readonly ISystemLog log;
         readonly KubernetesPodLogMonitor.Factory podLogMonitorFactory;
-        readonly Dictionary<ScriptTicket, TrackedKubernetesPod> podStatusLookup = new();
+        readonly ConcurrentDictionary<ScriptTicket, TrackedKubernetesPod> podStatusLookup = new();
+        readonly IClock clock;
 
-        public KubernetesPodMonitor(IKubernetesPodService podService, ISystemLog log, KubernetesPodLogMonitor.Factory podLogMonitorFactory)
+        public KubernetesPodMonitor(IKubernetesPodService podService, ISystemLog log, KubernetesPodLogMonitor.Factory podLogMonitorFactory, IClock clock)
         {
             this.podService = podService;
             this.log = log;
+            this.clock = clock;
             this.podLogMonitorFactory = podLogMonitorFactory;
         }
 
@@ -40,7 +45,7 @@ namespace Octopus.Tentacle.Kubernetes
         {
             const int maxDurationSeconds = 70;
             
-            //We don't want the monitoring to ever stop
+            // We don't want the monitoring to ever stop
             var policy = Policy.Handle<Exception>().WaitAndRetryForeverAsync(
                 retry => TimeSpan.FromSeconds(ExponentialBackoff.GetDuration(retry, maxDurationSeconds)),
                 (ex, duration) =>
@@ -55,7 +60,7 @@ namespace Octopus.Tentacle.Kubernetes
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                //initially load all the pods and their status's
+                // Initially load all the pods and their status's
                 var initialResourceVersion = await InitialLoadAsync(cancellationToken);
 
                 // We start the watch from the resource version we initially loaded.
@@ -78,21 +83,29 @@ namespace Octopus.Tentacle.Kubernetes
         internal async Task<string> InitialLoadAsync(CancellationToken cancellationToken)
         {
             log.Verbose("Preloading pod statuses");
-            //clear the status'
-            podStatusLookup.Clear();
 
-            var allPods = await podService.ListAllPods(cancellationToken);
+            var newStatuses = new ConcurrentDictionary<ScriptTicket, TrackedKubernetesPod>();
+            var allPods = await podService.ListAllPodsAsync(cancellationToken);
             foreach (var pod in allPods.Items)
             {
-                var status = new TrackedKubernetesPod(pod.GetScriptTicket(), podLogMonitorFactory, pod);
-                status.UpdateState(pod);
+                var scriptTicket = pod.GetScriptTicket();
+                if (!podStatusLookup.TryGetValue(scriptTicket, out var status))
+                {
+                    status = new PodStatus(scriptTicket, clock);
+                }
+                status.Update(pod);
 
                 log.Verbose($"Preloaded pod {pod.Name()}. {status}");
-                podStatusLookup[status.ScriptTicket] = status;
+                newStatuses[scriptTicket] = status;
 
                 //start monitoring logs for all existing pods
                 status.StartMonitoringLogs(cancellationToken);
             }
+
+            // Updating a reference is an atomic operation
+            // and we only add data to this dictionary
+            // in this class so this is thread safe.
+            podStatusLookup = newStatuses;
 
             log.Verbose($"Preloaded {allPods.Items.Count} pod statuses. ResourceVersion: {allPods.ResourceVersion()}");
 
@@ -100,7 +113,7 @@ namespace Octopus.Tentacle.Kubernetes
             return allPods.ResourceVersion();
         }
 
-        //This is internal so it's accessible via unit tests
+        // This is internal so it's accessible to unit tests
         internal async Task OnNewEvent(WatchEventType type, V1Pod pod, CancellationToken cancellationToken)
         {
             await Task.CompletedTask;
@@ -137,7 +150,6 @@ namespace Octopus.Tentacle.Kubernetes
                             log.Warn($"Pod status for pod {pod.Name()} is not being tracked, but a Modified event was received.");
                             return;
                         }
-
                         status.UpdateState(pod);
                         log.Verbose($"Updated pod {pod.Name()} status. {status}");
 
@@ -153,12 +165,15 @@ namespace Octopus.Tentacle.Kubernetes
 
                         status.StopMonitoringLogs();
 
-                        log.Verbose($"Removed {type} pod {pod.Name()} status");
-
                         //if the pod is deleted, remove it
-                        podStatusLookup.Remove(scriptTicket);
-
-                        log.Verbose($"Stopped tracking pod {pod.Name()}");
+                        if (podStatusLookup.TryRemove(scriptTicket, out _))
+                        {
+                            log.Verbose($"Removed {type} pod {pod.Name()} status");
+                        }
+                        else
+                        {
+                            log.Warn($"Unable to remove {type} pod {pod.Name()} status");
+                        }
                         break;
                     }
                     default:
@@ -172,12 +187,16 @@ namespace Octopus.Tentacle.Kubernetes
             }
         }
 
+        IList<ITrackedKubernetesPod> IKubernetesPodStatusProvider.GetAllPodStatuses() =>
+            podStatusLookup.Values.ToList();
+
         ITrackedKubernetesPod? IKubernetesPodStatusProvider.TryGetPodStatus(ScriptTicket scriptTicket)
             => podStatusLookup.TryGetValue(scriptTicket, out var status) ? status : null;
     }
 
     public class TrackedKubernetesPod : ITrackedKubernetesPod
     {
+        readonly IClock clock;
         readonly KubernetesPodLogMonitor podLogMonitor;
         public ScriptTicket ScriptTicket { get; }
 
@@ -185,10 +204,15 @@ namespace Octopus.Tentacle.Kubernetes
 
         public int? ExitCode { get; private set; }
 
-        public TrackedKubernetesPod(ScriptTicket ticket, KubernetesPodLogMonitor.Factory podLogMonitorFactory, V1Pod pod)
+        public DateTimeOffset LastUpdated { get; private set; }
+
+        public TrackedKubernetesPod(ScriptTicket ticket, KubernetesPodLogMonitor.Factory podLogMonitorFactory, V1Pod pod, IClock clock)
         {
+            this.clock = clock;
             this.podLogMonitor = podLogMonitorFactory(pod, OnScriptFinished);
             ScriptTicket = ticket;
+            State = PodState.Running;
+            LastUpdated = clock.GetUtcTime();
             State = TrackedPodState.Running;
         }
 
@@ -205,16 +229,17 @@ namespace Octopus.Tentacle.Kubernetes
             switch (pod.Status?.Phase)
             {
                 case "Succeeded":
+                    if (State != TrackedPodState.Succeeded) LastUpdated = clock.GetUtcTime();
                     State = TrackedPodState.Succeeded;
                     ExitCode = 0;
                     break;
                 case "Failed":
+                    if (State != TrackedPodState.Failed) LastUpdated = clock.GetUtcTime();
                     State = TrackedPodState.Failed;
 
                     //find the status for the container
                     //we we can't determine the exit code from the pod container, just return 1
                     ExitCode = pod.Status?.ContainerStatuses?.FirstOrDefault()?.State?.Terminated?.ExitCode ?? 1;
-
                     break;
             }
         }

@@ -32,8 +32,9 @@ COPY _artifacts/deb/tentacle_${BUILD_NUMBER}_amd64.deb /tmp/
 RUN apt-get update && \
     apt install ./tentacle_${BUILD_NUMBER}_amd64.deb && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
+    rm -rf /var/lib/apt/lists/* && \
+    ln -s /opt/octopus/tentacle/Tentacle /usr/bin/tentacle
+    
 WORKDIR /
 
 # We know this won't reduce the image size at all. It's just to make the filesystem a little tidier.

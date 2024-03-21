@@ -124,6 +124,11 @@ namespace Octopus.Tentacle.Util
             File.WriteAllText(path, contents, encoding);
         }
 
+        public void CopyFile(string source, string destination)
+        {
+            File.Copy(source, destination);
+        }
+
         public Stream OpenFile(string path, FileAccess access, FileShare share)
             => OpenFile(path, FileMode.OpenOrCreate, access, share);
 
@@ -317,7 +322,6 @@ namespace Octopus.Tentacle.Util
 
         public string[] ReadAllLines(string scriptFile)
             => File.ReadAllLines(scriptFile);
-
 
         static bool IsUncPath(string directoryPath)
             => Uri.TryCreate(directoryPath, UriKind.Absolute, out var uri) && uri.IsUnc;

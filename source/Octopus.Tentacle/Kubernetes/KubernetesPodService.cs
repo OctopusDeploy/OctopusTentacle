@@ -19,7 +19,7 @@ namespace Octopus.Tentacle.Kubernetes
     public interface IKubernetesPodService
     {
         Task<V1PodList> ListAllPods(CancellationToken cancellationToken);
-        Task WatchAllPods(string initialResourceVersion, Func<WatchEventType, V1Pod, Task> onChange, Action<Exception> onError, CancellationToken cancellationToken);
+        Task WatchAllPods(string initialResourceVersion, Func<WatchEventType, V1Pod, CancellationToken, Task> onChange, Action<Exception> onError, CancellationToken cancellationToken);
         Task Create(V1Pod pod, CancellationToken cancellationToken);
         Task Delete(ScriptTicket scriptTicket, CancellationToken cancellationToken);
 
@@ -69,7 +69,7 @@ namespace Octopus.Tentacle.Kubernetes
                 cancellationToken: cancellationToken);
         }
 
-        public async Task WatchAllPods(string initialResourceVersion, Func<WatchEventType, V1Pod, Task> onChange, Action<Exception> onError, CancellationToken cancellationToken)
+        public async Task WatchAllPods(string initialResourceVersion, Func<WatchEventType, V1Pod, CancellationToken, Task> onChange, Action<Exception> onError, CancellationToken cancellationToken)
         {
             using var response = Client.CoreV1.ListNamespacedPodWithHttpMessagesAsync(
                 KubernetesConfig.Namespace,
@@ -96,7 +96,7 @@ namespace Octopus.Tentacle.Kubernetes
             	log.Verbose("Starting pod watch");
                 await foreach (var (type, pod) in response.WatchAsync<V1Pod, V1PodList>(internalOnError, cancellationToken: watchErrorCancellationTokenSource.Token))
                 {
-                    await onChange(type, pod);
+                    await onChange(type, pod, cancellationToken);
                 }
             }
             catch (Exception ex)
