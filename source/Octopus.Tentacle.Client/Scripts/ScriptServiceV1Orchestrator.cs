@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -42,15 +43,20 @@ namespace Octopus.Tentacle.Client.Scripts
         }
 
         protected override StartScriptCommand Map(ExecuteScriptCommand command)
-            => new(
-                command.ScriptBody,
-                command.IsolationLevel,
-                command.IsolationMutexTimeout,
-                command.IsolationMutexName!,
-                command.Arguments,
-                command.TaskId,
-                command.Scripts,
-                command.Files.ToArray());
+        {
+            if (command is not ExecuteShellScriptCommand shellScriptCommand)
+                throw new InvalidOperationException($"{nameof(ScriptServiceV2Orchestrator)} only supports commands of type {nameof(ExecuteShellScriptCommand)}.");
+
+            return new StartScriptCommand(
+                shellScriptCommand.ScriptBody,
+                shellScriptCommand.IsolationConfiguration.IsolationLevel,
+                shellScriptCommand.IsolationConfiguration.MutexTimeout,
+                shellScriptCommand.IsolationConfiguration.MutexName,
+                shellScriptCommand.Arguments,
+                shellScriptCommand.TaskId,
+                shellScriptCommand.Scripts,
+                shellScriptCommand.Files.ToArray());
+        }
 
         protected override ScriptExecutionStatus MapToStatus(ScriptStatusResponse response)
             => new(response.Logs);

@@ -31,8 +31,8 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new ExecuteScriptCommandBuilder()
-                .WithScriptBody(b => b.Print("Hello"))
+            var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(b => b.Print("Hello"))
                 .Build();
 
             // Act
@@ -57,8 +57,8 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new ExecuteScriptCommandBuilder()
-                .WithScriptBody(b => b.Print("Hello"))
+            var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(b => b.Print("Hello"))
                 .Build();
 
             // Act

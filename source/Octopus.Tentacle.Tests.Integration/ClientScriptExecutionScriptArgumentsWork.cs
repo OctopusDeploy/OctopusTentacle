@@ -20,9 +20,9 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder().Build(CancellationToken);
 
-            var startScriptCommand = new ExecuteScriptCommandBuilder()
-                .WithScriptBody(new ScriptBuilder().PrintArguments())
-                .WithArguments("First", "Second", "AndSpacesAreNotHandledWellInTentacle")
+            var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(new ScriptBuilder().PrintArguments())
+                .SetArguments(new[] { "First", "Second", "AndSpacesAreNotHandledWellInTentacle" })
                 .Build();
 
             var tentacleServicesDecorator = new TentacleServiceDecoratorBuilder().Build();

@@ -5,28 +5,22 @@ using Octopus.Tentacle.Contracts;
 
 namespace Octopus.Tentacle.Client.Scripts.Models
 {
-    public class ExecuteScriptCommand
+    public abstract class ExecuteScriptCommand
     {
-        public ExecuteScriptCommand(
+        protected ExecuteScriptCommand(
             ScriptTicket scriptTicket,
             string taskId,
             string scriptBody,
             string[] arguments,
-            ScriptIsolationLevel isolationLevel,
-            TimeSpan isolationMutexTimeout,
-            string isolationMutexName,
-            TimeSpan? durationToWaitForScriptToFinish = null,
+            ScriptIsolationConfiguration isolationConfiguration,
             Dictionary<ScriptType, string>? additionalScripts = null,
             ScriptFile[]? additionalFiles = null)
         {
             ScriptBody = scriptBody;
             TaskId = taskId;
             ScriptTicket = scriptTicket;
-            DurationToWaitForScriptToFinish = durationToWaitForScriptToFinish;
-            IsolationLevel = isolationLevel;
-            IsolationMutexTimeout = isolationMutexTimeout;
-            IsolationMutexName = isolationMutexName;
             Arguments = arguments;
+            IsolationConfiguration = isolationConfiguration;
 
             foreach (var additionalScript in additionalScripts ?? Enumerable.Empty<KeyValuePair<ScriptType, string>>())
             {
@@ -38,17 +32,14 @@ namespace Octopus.Tentacle.Client.Scripts.Models
         }
 
         public string ScriptBody { get;  }
+        public string[] Arguments { get;  }
         public string TaskId { get; }
         public ScriptTicket ScriptTicket { get;  }
-        public TimeSpan? DurationToWaitForScriptToFinish { get;  }
-        public ScriptIsolationLevel IsolationLevel { get;  }
-        public TimeSpan IsolationMutexTimeout { get;  }
-        public string IsolationMutexName { get;  }
+        public ScriptIsolationConfiguration IsolationConfiguration { get; }
 
         public Dictionary<ScriptType, string> Scripts { get; } = new();
 
         public List<ScriptFile> Files { get; } = new();
 
-        public string[] Arguments { get;  }
     }
 }

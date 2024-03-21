@@ -1,25 +1,25 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Octopus.Tentacle.Contracts;
 
 namespace Octopus.Tentacle.Client.Scripts.Models
 {
-    public class ExecuteKubernetesScriptCommand : ExecuteScriptCommand
+    public class ExecuteShellScriptCommand : ExecuteScriptCommand
     {
-        public KubernetesImageConfiguration? ImageConfiguration { get; }
-
-        public ExecuteKubernetesScriptCommand(
+        public ExecuteShellScriptCommand(
             ScriptTicket scriptTicket,
             string taskId,
             string scriptBody,
             string[] arguments,
             ScriptIsolationConfiguration isolationConfiguration,
-            Dictionary<ScriptType, string>? additionalScripts,
-            ScriptFile[] additionalFiles,
-            KubernetesImageConfiguration? imageConfiguration)
+            Dictionary<ScriptType, string>? additionalScripts = null,
+            ScriptFile[]? additionalFiles = null,
+            TimeSpan? durationToWaitForScriptToFinish = null)
             : base(scriptTicket, taskId, scriptBody, arguments, isolationConfiguration, additionalScripts, additionalFiles)
         {
-            ImageConfiguration = imageConfiguration;
+            DurationToWaitForScriptToFinish = durationToWaitForScriptToFinish;
         }
+
+        public TimeSpan? DurationToWaitForScriptToFinish { get;  }
     }
 }

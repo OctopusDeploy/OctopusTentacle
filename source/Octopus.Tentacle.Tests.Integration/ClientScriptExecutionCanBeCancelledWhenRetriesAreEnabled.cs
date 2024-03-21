@@ -89,8 +89,8 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new ExecuteScriptCommandBuilder()
-                .WithScriptBody(b => b
+            var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(b => b
                     .Print("Should not run this script")
                     .Sleep(TimeSpan.FromHours(1)))
                 .Build();
@@ -197,8 +197,8 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new ExecuteScriptCommandBuilder()
-                .WithScriptBody(b => b
+            var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(b => b
                     .Print("The script")
                     .Sleep(TimeSpan.FromHours(1)))
                 .Build();
@@ -297,7 +297,7 @@ namespace Octopus.Tentacle.Tests.Integration
             // Arrange
             Logger.Information("Execute a script so that GetCapabilities will be cached");
             await clientAndTentacle.TentacleClient.ExecuteScript(
-                new ExecuteScriptCommandBuilder().WithScriptBody(b => b.Print("The script")).Build(),
+                new TestExecuteShellScriptCommandBuilder().SetScriptBody(b => b.Print("The script")).Build(),
                 cancelExecutionCancellationTokenSource.Token);
 
             Logger.Information("Stop Tentacle so no more requests are picked up");
@@ -311,8 +311,8 @@ namespace Octopus.Tentacle.Tests.Integration
             started = true;
 
             // ACT
-            var startScriptCommand = new ExecuteScriptCommandBuilder()
-                .WithScriptBody(b => b.Print("The script").Sleep(TimeSpan.FromHours(1)))
+            var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(b => b.Print("The script").Sleep(TimeSpan.FromHours(1)))
                 .Build();
 
             Logger.Information("Start Executing the Script");
@@ -349,7 +349,7 @@ namespace Octopus.Tentacle.Tests.Integration
             // Arrange
             Logger.Information("Execute a script so that GetCapabilities will be cached");
             await clientAndTentacle.TentacleClient.ExecuteScript(
-                new ExecuteScriptCommandBuilder().WithScriptBody(b => b.Print("The script")).Build(),
+                new TestExecuteShellScriptCommandBuilder().SetScriptBody(b => b.Print("The script")).Build(),
                 cancelExecutionCancellationTokenSource.Token);
 
             Logger.Information("Stop Tentacle so no more requests are picked up");
@@ -362,8 +362,8 @@ namespace Octopus.Tentacle.Tests.Integration
             scriptServiceRecordedUsages.Reset();
 
             // ACT
-            var startScriptCommand = new ExecuteScriptCommandBuilder()
-                .WithScriptBody(b => b.Print("The script").Sleep(TimeSpan.FromHours(1)))
+            var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(b => b.Print("The script").Sleep(TimeSpan.FromHours(1)))
                 .Build();
 
             Logger.Information("Start Executing the Script");
@@ -462,8 +462,8 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new ExecuteScriptCommandBuilder()
-                .WithScriptBody(b => b
+            var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(b => b
                     .Print("The script")
                     .Sleep(TimeSpan.FromHours(1)))
                 .Build();
@@ -543,8 +543,8 @@ namespace Octopus.Tentacle.Tests.Integration
 
             clientAndTentacle.TentacleClient.OnCancellationAbandonCompleteScriptAfter = TimeSpan.FromSeconds(20);
 
-            var startScriptCommand = new ExecuteScriptCommandBuilder()
-                .WithScriptBody(b => b
+            var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(b => b
                     .Print("The script")
                     .Sleep(TimeSpan.FromSeconds(5)))
                 .Build();

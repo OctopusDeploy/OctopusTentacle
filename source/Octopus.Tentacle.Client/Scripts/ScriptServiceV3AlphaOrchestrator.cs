@@ -49,19 +49,34 @@ namespace Octopus.Tentacle.Client.Scripts
         {
             IScriptExecutionContext executionContext = command switch
             {
-                ExecuteKubernetesScriptCommand kubernetesScriptCommand => new KubernetesAgentScriptExecutionContext(kubernetesScriptCommand.Image, kubernetesScriptCommand.FeedUrl, kubernetesScriptCommand.FeedUsername, kubernetesScriptCommand.FeedPassword),
-                _ => new LocalShellScriptExecutionContext()
+                ExecuteKubernetesScriptCommand { ImageConfiguration: not null } kubernetesScriptCommand => new KubernetesAgentScriptExecutionContext(
+                    kubernetesScriptCommand.ImageConfiguration.Image,
+                    kubernetesScriptCommand.ImageConfiguration.FeedUrl,
+                    kubernetesScriptCommand.ImageConfiguration.FeedUsername,
+                    kubernetesScriptCommand.ImageConfiguration.FeedPassword),
+
+                ExecuteKubernetesScriptCommand => new KubernetesAgentScriptExecutionContext(),
+
+                ExecuteShellScriptCommand => new LocalShellScriptExecutionContext(),
+                _ => throw new ArgumentOutOfRangeException(nameof(command), command, null)
+            };
+
+            var durationToWait = command switch
+            {
+                ExecuteKubernetesScriptCommand => null,
+                ExecuteShellScriptCommand executeShellScriptCommand => executeShellScriptCommand.DurationToWaitForScriptToFinish,
+                _ => throw new ArgumentOutOfRangeException(nameof(command), command, null)
             };
 
             return new StartScriptCommandV3Alpha(
                 command.ScriptBody,
-                command.IsolationLevel,
-                command.IsolationMutexTimeout,
-                command.IsolationMutexName!,
+                command.IsolationConfiguration.IsolationLevel,
+                command.IsolationConfiguration.MutexTimeout,
+                command.IsolationConfiguration.MutexName,
                 command.Arguments,
                 command.TaskId,
                 command.ScriptTicket,
-                command.DurationToWaitForScriptToFinish,
+                durationToWait,
                 executionContext,
                 command.Scripts,
                 command.Files.ToArray());
@@ -212,15 +227,15 @@ namespace Octopus.Tentacle.Client.Scripts
                 await using var _ = scriptExecutionCancellationToken.Register(() => completeScriptCancellationTokenSource.CancelAfter(onCancellationAbandonCompleteScriptAfter));
 
                 await rpcCallExecutor.ExecuteWithNoRetries(
-                        RpcCall.Create<IScriptServiceV3Alpha>(nameof(IScriptServiceV3Alpha.CompleteScript)),
-                        async ct =>
-                        {
-                            var request = new CompleteScriptCommandV3Alpha(lastStatusResponse.ScriptTicket);
-                            await clientScriptServiceV3Alpha.CompleteScriptAsync(request, new HalibutProxyRequestOptions(ct));
-                        },
-                        logger,
-                        clientOperationMetricsBuilder,
-                        completeScriptCancellationTokenSource.Token);
+                    RpcCall.Create<IScriptServiceV3Alpha>(nameof(IScriptServiceV3Alpha.CompleteScript)),
+                    async ct =>
+                    {
+                        var request = new CompleteScriptCommandV3Alpha(lastStatusResponse.ScriptTicket);
+                        await clientScriptServiceV3Alpha.CompleteScriptAsync(request, new HalibutProxyRequestOptions(ct));
+                    },
+                    logger,
+                    clientOperationMetricsBuilder,
+                    completeScriptCancellationTokenSource.Token);
             }
             catch (Exception ex) when (ex is HalibutClientException or OperationCanceledException)
             {

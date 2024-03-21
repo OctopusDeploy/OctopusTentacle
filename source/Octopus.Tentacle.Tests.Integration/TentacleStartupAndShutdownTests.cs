@@ -29,8 +29,8 @@ namespace Octopus.Tentacle.Tests.Integration
                              .Build(CancellationToken))
             {
                 
-                var startScriptCommand = new ExecuteScriptCommandBuilder()                    
-                    .WithScriptBodyForCurrentOs(
+                var startScriptCommand = new TestExecuteShellScriptCommandBuilder()                    
+                    .SetScriptBodyForCurrentOs(
 $@"cd ""{clientAndTentacle.RunningTentacle.TentacleExe.DirectoryName}""
 .\Tentacle.exe service --instance {clientAndTentacle.RunningTentacle.InstanceName} --stop --start",
 $@"#!/bin/sh
@@ -58,8 +58,8 @@ cd ""{clientAndTentacle.RunningTentacle.TentacleExe.DirectoryName}""
                 result.ProcessOutput.Any(x => x.Text.Contains("Stopping service")).Should().BeTrue("Stopping service should be logged");
                 result.ScriptExecutionResult.State.Should().Be(ProcessState.Complete);
 
-                startScriptCommand = new ExecuteScriptCommandBuilder()                    
-                    .WithScriptBody(new ScriptBuilder().Print("Running..."))
+                startScriptCommand = new TestExecuteShellScriptCommandBuilder()                    
+                    .SetScriptBody(new ScriptBuilder().Print("Running..."))
                     .Build();
 
                 result = await clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken);
