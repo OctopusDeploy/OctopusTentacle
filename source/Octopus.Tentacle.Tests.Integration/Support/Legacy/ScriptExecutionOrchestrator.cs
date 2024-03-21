@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Builders;
 using Octopus.Tentacle.Util;
@@ -24,7 +25,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
         public async Task<ScriptStatusResponse> ExecuteScript(string windowsScript, string nixScript, CancellationToken cancellationToken)
         {
             var scriptTicket = await StartScript(windowsScript, nixScript, cancellationToken);
-            
+
             var scriptStatusResponse = await ObserverUntilComplete(scriptTicket, cancellationToken);
 
             scriptStatusResponse = await CompleteScript(scriptStatusResponse, cancellationToken);
@@ -43,7 +44,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
             cancellationToken.ThrowIfCancellationRequested();
 
             var scriptTicket = await tentacleClient.ScriptService.StartScriptAsync(startScriptCommand, new(cancellationToken));
-            
+
             logger.Information("Started script execution");
 
             return scriptTicket;
@@ -63,7 +64,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
                 scriptStatusResponse = await tentacleClient.ScriptService.GetStatusAsync(
                     new ScriptStatusRequest(scriptTicket, scriptStatusResponse.NextLogSequence),
                     new(cancellationToken));
-                
+
                 logs.AddRange(scriptStatusResponse.Logs);
 
                 logger.Information("Current script status: {ScriptStatus}", scriptStatusResponse.State);
@@ -101,7 +102,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
                 scriptStatusResponse = await tentacleClient.ScriptService.GetStatusAsync(
                     new ScriptStatusRequest(scriptTicket, scriptStatusResponse.NextLogSequence),
                     new(cancellationToken));
-                
+
                 logger.Information("Current script status: {ScriptStatus}", scriptStatusResponse.State);
 
                 foreach (var log in scriptStatusResponse.Logs)
@@ -123,13 +124,13 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
         public async Task<ScriptStatusResponse> CompleteScript(ScriptStatusResponse scriptStatusResponse, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            
+
             logger.Information("Starting CompleteScript call");
 
             var finalStatus = await tentacleClient.ScriptService.CompleteScriptAsync(
                 new CompleteScriptCommand(scriptStatusResponse.Ticket, scriptStatusResponse.NextLogSequence),
                 new(cancellationToken));
-            
+
             var logs = new List<ProcessOutput>();
             logs.AddRange(scriptStatusResponse.Logs);
             logs.AddRange(finalStatus.Logs);
