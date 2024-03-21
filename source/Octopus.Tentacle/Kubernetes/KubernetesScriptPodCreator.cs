@@ -25,13 +25,6 @@ namespace Octopus.Tentacle.Kubernetes
 
     public class KubernetesScriptPodCreator : IKubernetesScriptPodCreator
     {
-        static readonly AsyncLazy<string> BootstrapRunnerScript = new(async () =>
-        {
-            using var stream = typeof(KubernetesScriptPodCreator).Assembly.GetManifestResourceStream("Octopus.Tentacle.Kubernetes.bootstrapRunner.sh");
-            using var reader = new StreamReader(stream!, Encoding.UTF8);
-            return await reader.ReadToEndAsync();
-        });
-
         readonly IKubernetesPodService podService;
         readonly IKubernetesSecretService secretService;
         readonly IKubernetesPodContainerResolver containerResolver;
@@ -155,7 +148,7 @@ namespace Octopus.Tentacle.Kubernetes
             log.Verbose( $"Creating Kubernetes Pod '{podName}'.");
 
             //write the bootstrap runner script to the workspace
-            workspace.WriteFile("bootstrapRunner.sh", await BootstrapRunnerScript.Task);
+            workspace.CopyFile(KubernetesConfig.BootstrapRunnerExecutablePath, "bootstrapRunner");
 
             var scriptName = Path.GetFileName(workspace.BootstrapScriptFilePath);
 
@@ -181,11 +174,9 @@ namespace Octopus.Tentacle.Kubernetes
                         {
                             Name = podName,
                             Image = agentExecutionContext.Image ?? await containerResolver.GetContainerImageForCluster(),
-                            Command = new List<string> { "bash" },
+                            Command = new List<string> { $"/octopus/Work/{command.ScriptTicket.TaskId}/bootstrapRunner" },
                             Args = new List<string>
                                 {
-                                    $"/octopus/Work/{command.ScriptTicket.TaskId}/bootstrapRunner.sh",
-                                    $"/octopus/Work/{command.ScriptTicket.TaskId}",
                                     $"/octopus/Work/{command.ScriptTicket.TaskId}/{scriptName}"
                                 }.Concat(workspace.ScriptArguments ?? Array.Empty<string>())
                                 .ToList(),
