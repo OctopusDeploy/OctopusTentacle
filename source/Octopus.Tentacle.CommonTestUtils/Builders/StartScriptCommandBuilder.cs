@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Octopus.Tentacle.Contracts;
 
-namespace Octopus.Tentacle.Contracts.Builders
+namespace Octopus.Tentacle.CommonTestUtils.Builders
 {
     public class StartScriptCommandBuilder
     {

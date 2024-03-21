@@ -13,12 +13,12 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders
         readonly List<string> arguments = new();
         readonly Dictionary<ScriptType, string> additionalScripts = new();
         StringBuilder scriptBody = new(string.Empty);
-        ScriptIsolationLevel isolation = ScriptIsolationLevel.FullIsolation;
+        ScriptIsolationLevel isolation = ScriptIsolationLevel.NoIsolation;
         TimeSpan scriptIsolationMutexTimeout = TimeSpan.FromMilliseconds(int.MaxValue);
         string scriptIsolationMutexName = "RunningScript";
         string taskId = Guid.NewGuid().ToString();
         ScriptTicket scriptTicket = new UniqueScriptTicketBuilder().Build();
-        TimeSpan? durationStartScriptCanWaitForScriptToFinish = TimeSpan.FromSeconds(5);
+        TimeSpan? durationStartScriptCanWaitForScriptToFinish;
 
         public ExecuteScriptCommandBuilder()
         {
