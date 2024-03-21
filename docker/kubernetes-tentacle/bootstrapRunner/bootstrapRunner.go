@@ -65,19 +65,25 @@ func main() {
 	if _, err := stdoutLogFile.WriteString(format("Script starting")); err != nil {
 		panic(err)
 	}
-
-	err = cmd.Start()
-	if err != nil {
+	if err := stdoutLogFile.Flush(); err != nil {
 		panic(err)
 	}
+
+	err = cmd.Start()
 
 	// Wait for output buffering first
 	<-doneStd
 	<-doneErr
 
+	if err != nil {
+		panic(err)
+	}
 	err = cmd.Wait()
 
 	if _, err := stdoutLogFile.WriteString(format("Script Completed")); err != nil {
+		panic(err)
+	}
+	if err := stdoutLogFile.Flush(); err != nil {
 		panic(err)
 	}
 
@@ -92,9 +98,15 @@ func main() {
 	if _, err := stdoutLogFile.WriteString(eosMarker); err != nil {
 		panic(err)
 	}
+	if err := stdoutLogFile.Flush(); err != nil {
+		panic(err)
+	}
 	fmt.Fprintln(os.Stdout, eosMarker)
 
 	if err := stdoutLogFile.Flush(); err != nil {
+		panic(err)
+	}
+	if err := stderrLogFile.Flush(); err != nil {
 		panic(err)
 	}
 
