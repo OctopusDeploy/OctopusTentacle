@@ -80,9 +80,13 @@ func main() {
 	}
 
 	// Perform a final flush of the file buffers, just in case they didn't get flushed before
-	stdoutLogFile.Flush()
-	stderrLogFile.Flush()
-
+	if err := stdoutLogFile.Flush(); err != nil {	
+		fmt.Fprintln(os.Stderr, "bootstrapRunner.go: Failed to perform final flush of stdoutLogFile", err)
+	}
+	if err := stderrLogFile.Flush(); err != nil {	
+		fmt.Fprintln(os.Stderr, "bootstrapRunner.go: Failed to perform final flush of stderrLogFile", err)
+	}
+	
 	os.Exit(cmd.ProcessState.ExitCode())
 }
 
