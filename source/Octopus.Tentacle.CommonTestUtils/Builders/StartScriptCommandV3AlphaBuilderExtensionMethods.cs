@@ -5,7 +5,7 @@ using Octopus.Tentacle.Tests.Integration.Util.Builders;
 
 namespace Octopus.Tentacle.CommonTestUtils.Builders
 {
-    public static class ExecuteScriptCommandBuilderExtensionMethods
+    public static class StartScriptCommandV3AlphaBuilderExtensionMethods
     {
         public static StartScriptCommandV3AlphaBuilder WithScriptBodyForCurrentOs(this StartScriptCommandV3AlphaBuilder builder, string windowsScript, string bashScript)
         {
