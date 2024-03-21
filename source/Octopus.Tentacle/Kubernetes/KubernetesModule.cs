@@ -21,6 +21,10 @@ namespace Octopus.Tentacle.Kubernetes
 
             builder.RegisterType<KubernetesOrphanedPodCleanerTask>().As<IKubernetesOrphanedPodCleanerTask>().SingleInstance();
             builder.RegisterType<KubernetesOrphanedPodCleaner>().As<IKubernetesOrphanedPodCleaner>().SingleInstance();
+
+            builder.RegisterType<KubernetesPodLogMonitor>().InstancePerDependency();
+            builder.RegisterType<KubernetesScriptPodCreator>().As<IKubernetesScriptPodCreator>();
+
 #if DEBUG
             builder.RegisterType<LocalMachineKubernetesClientConfigProvider>().As<IKubernetesClientConfigProvider>().SingleInstance();
 #else

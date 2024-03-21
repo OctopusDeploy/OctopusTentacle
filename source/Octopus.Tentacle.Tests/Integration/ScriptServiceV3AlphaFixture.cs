@@ -14,8 +14,10 @@ using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
 using Octopus.Tentacle.Diagnostics;
+using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Services.Scripts;
+using Octopus.Tentacle.Tests.Support;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Integration
@@ -37,14 +39,13 @@ namespace Octopus.Tentacle.Tests.Integration
             workspaceFactory = new ScriptWorkspaceFactory(octopusPhysicalFileSystem, homeConfiguration, new SensitiveValueMasker());
             stateStoreFactory = new ScriptStateStoreFactory(octopusPhysicalFileSystem);
 
-            var localShellScriptExecutor = new LocalShellScriptExecutor(
-                PlatformDetection.IsRunningOnWindows ? new PowerShell() : new Bash(),
-                Substitute.For<ISystemLog>());
 
             service = new ScriptServiceV3Alpha(
-                localShellScriptExecutor,
+                Substitute.For<IKubernetesPodService>(),
                 workspaceFactory,
-                stateStoreFactory);
+                Substitute.For<IKubernetesPodStatusProvider>(),
+                Substitute.For<IKubernetesScriptPodCreator>(),
+                new InMemoryLog());
         }
 
         [Test]
