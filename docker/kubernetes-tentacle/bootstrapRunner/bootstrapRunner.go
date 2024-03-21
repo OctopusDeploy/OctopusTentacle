@@ -35,13 +35,14 @@ func main() {
 	go reader(stdErrScanner, "stderr", &doneErr)
 
 	err := cmd.Start()
-	if err != nil {
-		panic(err)
-	}
 
 	// Wait for output buffering first
 	<-doneStd
 	<-doneErr
+
+	if err != nil {
+		panic(err)
+	}
 
 	err = cmd.Wait()
 
