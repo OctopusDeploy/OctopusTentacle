@@ -2,84 +2,29 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Diagnostics;
+using Octopus.Tentacle.Background;
 
 namespace Octopus.Tentacle.Maintenance
 {
-    public interface IWorkspaceCleanerTask
-    {
-        void Start();
-        void Stop();
-    }
+    public interface IWorkspaceCleanerTask : IBackgroundTask
+    {}
 
-    class WorkspaceCleanerTask : IWorkspaceCleanerTask, IDisposable
+    class WorkspaceCleanerTask : BackgroundTask, IWorkspaceCleanerTask
     {
         readonly WorkspaceCleanerConfiguration configuration;
         readonly WorkspaceCleaner workspaceCleaner;
-        readonly ISystemLog log;
-
-        readonly CancellationTokenSource cancellationTokenSource = new ();
-        readonly object taskLock = new();
-
-        Task? cleanerTask;
 
         public WorkspaceCleanerTask(
             WorkspaceCleanerConfiguration configuration,
             WorkspaceCleaner workspaceCleaner, 
-            ISystemLog log)
+            ISystemLog log) : base(log, TimeSpan.FromSeconds(30))
         {
             this.configuration = configuration;
             this.workspaceCleaner = workspaceCleaner;
-            this.log = log;
         }
 
-        public void Dispose()
+        protected override async Task RunTask(CancellationToken cancellationToken)
         {
-            Stop();
-
-            cancellationTokenSource.Dispose();
-        }
-
-        public void Start()
-        {
-            lock (taskLock)
-            {
-                if (cleanerTask is not null)
-                {
-                    log.Error("Workspace cleaner task already running.");
-                    return;
-                }
-
-                cleanerTask = Task.Run(RunTask);
-            }
-        }
-
-        public void Stop()
-        {
-            lock (taskLock)
-            {
-                if (cleanerTask is null) return;
-
-                try
-                {
-                    cancellationTokenSource.Cancel();
-
-                    cleanerTask.Wait();
-                }
-                catch (Exception e)
-                {
-                    log.Error(e, "Could not stop workspace cleaner");
-                }
-                finally
-                {
-                    cleanerTask = null;
-                }
-            }
-        }
-
-        async Task RunTask()
-        {
-            var cancellationToken = cancellationTokenSource.Token;
-
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
@@ -92,7 +37,7 @@ namespace Octopus.Tentacle.Maintenance
                 }
                 catch (Exception e)
                 {
-                    log.Error(e, "Error running workspace cleaner");
+                    Log.Error(e, "WorkspaceCleanerTask.RunTask:");
                 }
 
                 try
