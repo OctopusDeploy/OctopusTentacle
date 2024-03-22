@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Contracts.Builders;
 using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
 
-namespace Octopus.Tentacle.Contracts.Builders
+namespace Octopus.Tentacle.CommonTestUtils.Builders
 {
     public class StartScriptCommandV3AlphaBuilder
     {
@@ -11,12 +13,12 @@ namespace Octopus.Tentacle.Contracts.Builders
         readonly List<string> arguments = new();
         readonly Dictionary<ScriptType, string> additionalScripts = new();
         StringBuilder scriptBody = new(string.Empty);
-        ScriptIsolationLevel isolation = ScriptIsolationLevel.FullIsolation;
+        ScriptIsolationLevel isolation = ScriptIsolationLevel.NoIsolation;
         TimeSpan scriptIsolationMutexTimeout = TimeSpan.FromMilliseconds(int.MaxValue);
         string scriptIsolationMutexName = "RunningScript";
         string taskId = Guid.NewGuid().ToString();
         ScriptTicket scriptTicket = new UniqueScriptTicketBuilder().Build();
-        TimeSpan? durationStartScriptCanWaitForScriptToFinish = TimeSpan.FromSeconds(5);
+        TimeSpan? durationStartScriptCanWaitForScriptToFinish;
         IScriptExecutionContext executionContext = new LocalShellScriptExecutionContext();
 
         public StartScriptCommandV3AlphaBuilder WithScriptBody(string scriptBody)
