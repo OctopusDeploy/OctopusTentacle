@@ -78,7 +78,9 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .WithRetryDuration(TimeSpan.FromSeconds(1))
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .HookServiceMethod(tentacleConfigurationTestCase, nameof(IAsyncClientScriptServiceV2.StartScriptAsync), (_, _) => throw exception)
+                    .DecorateAllScriptServicesWith(u => u
+                        .BeforeStartScript(
+                            () => throw exception))
                     .Build())
                 .Build(CancellationToken);
 

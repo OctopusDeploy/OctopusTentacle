@@ -155,34 +155,34 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages(tentacleConfigurationTestCase, out var recordedUsages)
-                    .HookServiceMethod(tentacleConfigurationTestCase,
-                        nameof(IAsyncClientScriptServiceV2.StartScriptAsync),
-                        async (_, _) =>
-                        {
-                            // Kill the first StartScript call to force the rpc call into retries
-                            if (recordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).LastException == null)
+                    .DecorateAllScriptServicesWith(u => u
+                        .BeforeStartScript(
+                            async () =>
                             {
-                                // Ensure there is an active connection so it can be killed correctly
-                                await tcpConnectionUtilities.RestartTcpConnection();
-                                responseMessageTcpKiller.KillConnectionOnNextResponse();
-                            }
-                            else
-                            {
-                                if (rpcCallStage == RpcCallStage.Connecting)
-                                {
-                                    // Kill the port forwarder so the next requests are in the connecting state when retries timeout
-                                    Logger.Information("Killing PortForwarder");
-                                    portForwarder.Value.EnterKillNewAndExistingConnectionsMode();
-                                }
-                                else
+                                // Kill the first StartScript call to force the rpc call into retries
+                                if (recordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).LastException == null)
                                 {
                                     // Ensure there is an active connection so it can be killed correctly
                                     await tcpConnectionUtilities.RestartTcpConnection();
-                                    // Pause the port forwarder so the next requests are in-flight when retries timeout
-                                    responseMessageTcpKiller.PauseConnectionOnNextResponse();
+                                    responseMessageTcpKiller.KillConnectionOnNextResponse();
                                 }
-                            }
-                        })
+                                else
+                                {
+                                    if (rpcCallStage == RpcCallStage.Connecting)
+                                    {
+                                        // Kill the port forwarder so the next requests are in the connecting state when retries timeout
+                                        Logger.Information("Killing PortForwarder");
+                                        portForwarder.Value.EnterKillNewAndExistingConnectionsMode();
+                                    }
+                                    else
+                                    {
+                                        // Ensure there is an active connection so it can be killed correctly
+                                        await tcpConnectionUtilities.RestartTcpConnection();
+                                        // Pause the port forwarder so the next requests are in-flight when retries timeout
+                                        responseMessageTcpKiller.PauseConnectionOnNextResponse();
+                                    }
+                                }
+                            }))
                     .Build())
                 .Build(CancellationToken);
 
@@ -228,16 +228,16 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages(tentacleConfigurationTestCase, out var recordedUsages)
-                    .HookServiceMethod(tentacleConfigurationTestCase,
-                        nameof(IAsyncClientScriptServiceV2.StartScriptAsync),
-                        async (_, _) =>
+                    .DecorateAllScriptServicesWith(u => u
+                        .BeforeStartScript(
+                            async () =>
                             {
                                 // Sleep to make the initial RPC call take longer than the allowed retry duration
                                 await Task.Delay(retryDuration + TimeSpan.FromSeconds(1));
 
                                 // Kill the first StartScript call to force the rpc call into retries
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
-                            })
+                            }))
                     .Build())
                 .Build(CancellationToken);
 
@@ -275,35 +275,35 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages(tentacleConfigurationTestCase, out var recordedUsages)
-                    .HookServiceMethod(tentacleConfigurationTestCase,
-                        nameof(IAsyncClientScriptServiceV2.GetStatusAsync),
-                        async (_, _) =>
-                        {
-                            // Kill the first GetStatus call to force the rpc call into retries
-                            if (recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).LastException == null)
+                    .DecorateAllScriptServicesWith(u => u
+                        .BeforeGetStatus(
+                            async () =>
                             {
-                                // Ensure there is an active connection so it can be killed correctly
-                                await tcpConnectionUtilities.RestartTcpConnection();
-                                responseMessageTcpKiller.KillConnectionOnNextResponse();
-                            }
-                            else
-                            {
-                                if (rpcCallStage == RpcCallStage.Connecting)
-                                {
-                                    // Kill the port forwarder so the next requests are in the connecting state when retries timeout
-                                    Logger.Information("Killing PortForwarder");
-                                    portForwarder.Value.EnterKillNewAndExistingConnectionsMode();
-                                }
-                                else
+                                // Kill the first GetStatus call to force the rpc call into retries
+                                if (recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).LastException == null)
                                 {
                                     // Ensure there is an active connection so it can be killed correctly
                                     await tcpConnectionUtilities.RestartTcpConnection();
-                                    // Pause the port forwarder so the next requests are in-flight when retries timeout
-                                    responseMessageTcpKiller.PauseConnectionOnNextResponse();
+                                    responseMessageTcpKiller.KillConnectionOnNextResponse();
                                 }
-                            }
-                        })
-                        .Build())
+                                else
+                                {
+                                    if (rpcCallStage == RpcCallStage.Connecting)
+                                    {
+                                        // Kill the port forwarder so the next requests are in the connecting state when retries timeout
+                                        Logger.Information("Killing PortForwarder");
+                                        portForwarder.Value.EnterKillNewAndExistingConnectionsMode();
+                                    }
+                                    else
+                                    {
+                                        // Ensure there is an active connection so it can be killed correctly
+                                        await tcpConnectionUtilities.RestartTcpConnection();
+                                        // Pause the port forwarder so the next requests are in-flight when retries timeout
+                                        responseMessageTcpKiller.PauseConnectionOnNextResponse();
+                                    }
+                                }
+                            }))
+                    .Build())
                 .Build(CancellationToken);
 
             var inMemoryLog = new InMemoryLog();
@@ -351,16 +351,16 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages(tentacleConfigurationTestCase, out var recordedUsages)
-                    .HookServiceMethod(tentacleConfigurationTestCase,
-                        nameof(IAsyncClientScriptServiceV2.GetStatusAsync),
-                        async (_, _) =>
-                        {
-                            // Sleep to make the initial RPC call take longer than the allowed retry duration
-                            await Task.Delay(retryDuration + TimeSpan.FromSeconds(1));
+                    .DecorateAllScriptServicesWith(u => u
+                        .BeforeGetStatus(
+                            async () =>
+                            {
+                                // Sleep to make the initial RPC call take longer than the allowed retry duration
+                                await Task.Delay(retryDuration + TimeSpan.FromSeconds(1));
 
-                            // Kill the first GetStatus call to force the rpc call into retries
-                            responseMessageTcpKiller.KillConnectionOnNextResponse();
-                        })
+                                // Kill the first GetStatus call to force the rpc call into retries
+                                responseMessageTcpKiller.KillConnectionOnNextResponse();
+                            }))
                     .Build())
                 .Build(CancellationToken);
 
@@ -400,34 +400,34 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages(tentacleConfigurationTestCase, out var recordedUsages)
-                    .HookServiceMethod(tentacleConfigurationTestCase,
-                        nameof(IAsyncClientScriptServiceV2.CancelScriptAsync),
-                        async (_, _) =>
-                        {
-                            // Kill the first CancelScript call to force the rpc call into retries
-                            if (recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).LastException == null)
+                    .DecorateAllScriptServicesWith(u => u
+                        .BeforeCancelScript(
+                            async () =>
                             {
-                                // Ensure there is an active connection so it can be killed correctly
-                                await tcpConnectionUtilities.RestartTcpConnection();
-                                responseMessageTcpKiller.KillConnectionOnNextResponse();
-                            }
-                            else
-                            {
-                                if (rpcCallStage == RpcCallStage.Connecting)
-                                {
-                                    // Kill the port forwarder so the next requests are in the connecting state when retries timeout
-                                    Logger.Information("Killing PortForwarder");
-                                    portForwarder.Value.EnterKillNewAndExistingConnectionsMode();
-                                }
-                                else
+                                // Kill the first CancelScript call to force the rpc call into retries
+                                if (recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).LastException == null)
                                 {
                                     // Ensure there is an active connection so it can be killed correctly
                                     await tcpConnectionUtilities.RestartTcpConnection();
-                                    // Pause the port forwarder so the next requests are in-flight when retries timeout
-                                    responseMessageTcpKiller.PauseConnectionOnNextResponse();
+                                    responseMessageTcpKiller.KillConnectionOnNextResponse();
                                 }
-                            }
-                        })
+                                else
+                                {
+                                    if (rpcCallStage == RpcCallStage.Connecting)
+                                    {
+                                        // Kill the port forwarder so the next requests are in the connecting state when retries timeout
+                                        Logger.Information("Killing PortForwarder");
+                                        portForwarder.Value.EnterKillNewAndExistingConnectionsMode();
+                                    }
+                                    else
+                                    {
+                                        // Ensure there is an active connection so it can be killed correctly
+                                        await tcpConnectionUtilities.RestartTcpConnection();
+                                        // Pause the port forwarder so the next requests are in-flight when retries timeout
+                                        responseMessageTcpKiller.PauseConnectionOnNextResponse();
+                                    }
+                                }
+                            }))
                     .Build())
                 .Build(CancellationToken);
 
@@ -490,16 +490,16 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages(tentacleConfigurationTestCase, out var recordedUsages)
-                    .HookServiceMethod(tentacleConfigurationTestCase,
-                        nameof(IAsyncClientScriptServiceV2.CancelScriptAsync),
-                        async (_, _) =>
-                        {
-                            // Sleep to make the initial RPC call take longer than the allowed retry duration
-                            await Task.Delay(retryDuration + TimeSpan.FromSeconds(1));
+                    .DecorateAllScriptServicesWith(u => u
+                        .BeforeCancelScript(
+                            async () =>
+                            {
+                                // Sleep to make the initial RPC call take longer than the allowed retry duration
+                                await Task.Delay(retryDuration + TimeSpan.FromSeconds(1));
 
-                            // Kill the first CancelScript call to force the rpc call into retries
-                            responseMessageTcpKiller.KillConnectionOnNextResponse();
-                        })
+                                // Kill the first CancelScript call to force the rpc call into retries
+                                responseMessageTcpKiller.KillConnectionOnNextResponse();
+                            }))
                     .Build())
                 .Build(CancellationToken);
 
