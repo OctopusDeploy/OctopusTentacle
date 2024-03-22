@@ -26,19 +26,19 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages<IAsyncClientFileTransferService>(out var recordedUsages)
-                    .HookServiceMethod<IAsyncClientFileTransferService>(
-                        nameof(IAsyncClientFileTransferService.UploadFileAsync),
-                        async (_, _) =>
-                        {
-                            await tcpConnectionUtilities.RestartTcpConnection();
-
-                            // Only kill the connection the first time, causing the upload
-                            // to succeed - and therefore failing the test - if retries are attempted
-                            if (recordedUsages.For(nameof(IAsyncClientFileTransferService.UploadFileAsync)).LastException is null)
+                    .DecorateFileTransferServiceWith(d => d
+                        .BeforeUploadFile(
+                            async () =>
                             {
-                                responseMessageTcpKiller.KillConnectionOnNextResponse();
-                            }
-                        })
+                                await tcpConnectionUtilities.RestartTcpConnection();
+
+                                // Only kill the connection the first time, causing the upload
+                                // to succeed - and therefore failing the test - if retries are attempted
+                                if (recordedUsages.For(nameof(IAsyncClientFileTransferService.UploadFileAsync)).LastException is null)
+                                {
+                                    responseMessageTcpKiller.KillConnectionOnNextResponse();
+                                }
+                            }))
                     .Build())
                 .Build(CancellationToken);
 
@@ -69,19 +69,19 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages<IAsyncClientFileTransferService>(out var recordedUsages)
-                    .HookServiceMethod<IAsyncClientFileTransferService>(
-                        nameof(IAsyncClientFileTransferService.DownloadFileAsync),
-                        async (_, _) =>
-                        {
-                            await tcpConnectionUtilities.RestartTcpConnection();
-
-                            // Only kill the connection the first time, causing the upload
-                            // to succeed - and therefore failing the test - if retries are attempted
-                            if (recordedUsages.For(nameof(IAsyncClientFileTransferService.DownloadFileAsync)).LastException is null)
+                    .DecorateFileTransferServiceWith(d => d
+                        .BeforeDownloadFile(
+                            async () =>
                             {
-                                responseMessageTcpKiller.KillConnectionOnNextResponse();
-                            }
-                        })
+                                await tcpConnectionUtilities.RestartTcpConnection();
+
+                                // Only kill the connection the first time, causing the upload
+                                // to succeed - and therefore failing the test - if retries are attempted
+                                if (recordedUsages.For(nameof(IAsyncClientFileTransferService.DownloadFileAsync)).LastException is null)
+                                {
+                                    responseMessageTcpKiller.KillConnectionOnNextResponse();
+                                }
+                            }))
                     .Build())
                 .Build(CancellationToken);
 

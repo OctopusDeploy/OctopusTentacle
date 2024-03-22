@@ -137,7 +137,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .WithRetryDuration(TimeSpan.FromSeconds(1))
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .HookServiceMethod<IAsyncClientFileTransferService>(nameof(IAsyncClientFileTransferService.UploadFileAsync), (_, _) => throw exception)
+                    .DecorateFileTransferServiceWith(d => d.BeforeUploadFile(() => throw exception))
                     .Build())
                 .Build(CancellationToken);
 
@@ -195,7 +195,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .WithRetryDuration(TimeSpan.FromSeconds(1))
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .HookServiceMethod<IAsyncClientFileTransferService>(nameof(IAsyncClientFileTransferService.DownloadFileAsync), (_, _) => throw exception)
+                    .DecorateFileTransferServiceWith(d => d.BeforeDownloadFile(() => throw exception))
                     .Build())
                 .Build(CancellationToken);
 

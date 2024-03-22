@@ -40,32 +40,33 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages<IAsyncClientFileTransferService>(out var methodUsages)
-                    .HookServiceMethod<IAsyncClientFileTransferService>(nameof(IAsyncClientFileTransferService.UploadFileAsync),
-                        async (_,_) =>
-                        {                            
-                            if (methodUsages.For(nameof(IAsyncClientFileTransferService.UploadFileAsync)).LastException is null)
+                    .DecorateFileTransferServiceWith(d => d
+                        .BeforeUploadFile(
+                            async () =>
                             {
-                                // Ensure there is an active connection so it can be killed correctly
-                                await tcpConnectionUtilities.RestartTcpConnection();
-                                responseMessageTcpKiller.KillConnectionOnNextResponse();
-                            }
-                            else
-                            {
-                                if (stopPortForwarderAfterFirstCall)
-                                {
-                                    // Kill the port forwarder so the next requests are in the connecting state when retries timeout
-                                    Logger.Information("Killing PortForwarder");
-                                    portForwarder!.EnterKillNewAndExistingConnectionsMode();
-                                }
-                                else
+                                if (methodUsages.For(nameof(IAsyncClientFileTransferService.UploadFileAsync)).LastException is null)
                                 {
                                     // Ensure there is an active connection so it can be killed correctly
                                     await tcpConnectionUtilities.RestartTcpConnection();
-                                    // Pause the port forwarder so the next requests are in-flight when retries timeout
-                                    responseMessageTcpKiller.PauseConnectionOnNextResponse();
+                                    responseMessageTcpKiller.KillConnectionOnNextResponse();
                                 }
-                            }
-                        })
+                                else
+                                {
+                                    if (stopPortForwarderAfterFirstCall)
+                                    {
+                                        // Kill the port forwarder so the next requests are in the connecting state when retries timeout
+                                        Logger.Information("Killing PortForwarder");
+                                        portForwarder!.EnterKillNewAndExistingConnectionsMode();
+                                    }
+                                    else
+                                    {
+                                        // Ensure there is an active connection so it can be killed correctly
+                                        await tcpConnectionUtilities.RestartTcpConnection();
+                                        // Pause the port forwarder so the next requests are in-flight when retries timeout
+                                        responseMessageTcpKiller.PauseConnectionOnNextResponse();
+                                    }
+                                }
+                            }))
                     .Build())
                 .Build(CancellationToken);
 
@@ -107,17 +108,18 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages<IAsyncClientFileTransferService>(out var methodUsages)
-                    .HookServiceMethod<IAsyncClientFileTransferService>(nameof(IAsyncClientFileTransferService.UploadFileAsync),
-                        async (_,_) =>
-                        {
-                            await tcpConnectionUtilities.RestartTcpConnection();
+                    .DecorateFileTransferServiceWith(d => d
+                        .BeforeUploadFile(
+                            async () =>
+                            {
+                                await tcpConnectionUtilities.RestartTcpConnection();
 
-                            // Sleep to make the initial RPC call take longer than the allowed retry duration
-                            await Task.Delay(retryDuration + TimeSpan.FromSeconds(1));
+                                // Sleep to make the initial RPC call take longer than the allowed retry duration
+                                await Task.Delay(retryDuration + TimeSpan.FromSeconds(1));
 
-                            // Kill the first UploadFile call to force the rpc call into retries
-                            responseMessageTcpKiller.KillConnectionOnNextResponse();
-                        })
+                                // Kill the first UploadFile call to force the rpc call into retries
+                                responseMessageTcpKiller.KillConnectionOnNextResponse();
+                            }))
                     .Build())
                 .Build(CancellationToken);
 
@@ -149,33 +151,34 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages<IAsyncClientFileTransferService>(out var recordedUsages)
-                    .HookServiceMethod<IAsyncClientFileTransferService>(nameof(IAsyncClientFileTransferService.DownloadFileAsync),
-                        async (_,_) =>
-                        {
-                            if (recordedUsages.For(nameof(IAsyncClientFileTransferService.DownloadFileAsync)).LastException is null)
+                    .DecorateFileTransferServiceWith(d => d
+                        .BeforeDownloadFile(
+                            async () =>
                             {
-                                // Ensure there is an active connection so it can be killed correctly
-                                await tcpConnectionUtilities.RestartTcpConnection();
-                                responseMessageTcpKiller.KillConnectionOnNextResponse();
-                            }
-                            else
-                            {
-
-                                if (stopPortForwarderAfterFirstCall)
-                                {
-                                    // Kill the port forwarder so the next requests are in the connecting state when retries timeout
-                                    Logger.Information("Killing PortForwarder");
-                                    portForwarder!.Dispose();
-                                }
-                                else
+                                if (recordedUsages.For(nameof(IAsyncClientFileTransferService.DownloadFileAsync)).LastException is null)
                                 {
                                     // Ensure there is an active connection so it can be killed correctly
                                     await tcpConnectionUtilities.RestartTcpConnection();
-                                    // Pause the port forwarder so the next requests are in-flight when retries timeout
-                                    responseMessageTcpKiller.PauseConnectionOnNextResponse();
+                                    responseMessageTcpKiller.KillConnectionOnNextResponse();
                                 }
-                            }
-                        })
+                                else
+                                {
+
+                                    if (stopPortForwarderAfterFirstCall)
+                                    {
+                                        // Kill the port forwarder so the next requests are in the connecting state when retries timeout
+                                        Logger.Information("Killing PortForwarder");
+                                        portForwarder!.Dispose();
+                                    }
+                                    else
+                                    {
+                                        // Ensure there is an active connection so it can be killed correctly
+                                        await tcpConnectionUtilities.RestartTcpConnection();
+                                        // Pause the port forwarder so the next requests are in-flight when retries timeout
+                                        responseMessageTcpKiller.PauseConnectionOnNextResponse();
+                                    }
+                                }
+                            }))
                     .Build())
                 .Build(CancellationToken);
 
@@ -217,17 +220,18 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages<IAsyncClientFileTransferService>(out var recordedUsages)
-                    .HookServiceMethod<IAsyncClientFileTransferService>(nameof(IAsyncClientFileTransferService.DownloadFileAsync),
-                        async (_,_) =>
-                        {
-                            await tcpConnectionUtilities.RestartTcpConnection();
+                    .DecorateFileTransferServiceWith(d => d
+                        .BeforeDownloadFile(
+                            async () =>
+                            {
+                                await tcpConnectionUtilities.RestartTcpConnection();
 
-                            // Sleep to make the initial RPC call take longer than the allowed retry duration
-                            await Task.Delay(retryDuration + TimeSpan.FromSeconds(1));
+                                // Sleep to make the initial RPC call take longer than the allowed retry duration
+                                await Task.Delay(retryDuration + TimeSpan.FromSeconds(1));
 
-                            // Kill the first DownloadFile call to force the rpc call into retries
-                            responseMessageTcpKiller.KillConnectionOnNextResponse();
-                        })
+                                // Kill the first DownloadFile call to force the rpc call into retries
+                                responseMessageTcpKiller.KillConnectionOnNextResponse();
+                            }))
                     .Build())
                 .Build(CancellationToken);
 
