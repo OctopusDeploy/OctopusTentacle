@@ -9,7 +9,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders
         public TestExecuteShellScriptCommandBuilder()
             : base(Guid.NewGuid().ToString(), ScriptIsolationLevel.NoIsolation)
         {
-            SetNoIsolationMutexTimeout();
+            SetDurationStartScriptCanWaitForScriptToFinish(null);
         }
     }
 }

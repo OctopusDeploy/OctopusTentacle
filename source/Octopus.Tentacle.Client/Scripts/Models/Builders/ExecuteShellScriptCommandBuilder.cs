@@ -11,7 +11,7 @@ namespace Octopus.Tentacle.Client.Scripts.Models.Builders
         {
         }
 
-        public ExecuteScriptCommandBuilder WithDurationStartScriptCanWaitForScriptToFinish(TimeSpan? duration)
+        public ExecuteScriptCommandBuilder SetDurationStartScriptCanWaitForScriptToFinish(TimeSpan? duration)
         {
             durationStartScriptCanWaitForScriptToFinish = duration;
             return this;
