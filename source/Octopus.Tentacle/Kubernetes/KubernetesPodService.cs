@@ -169,16 +169,16 @@ namespace Octopus.Tentacle.Kubernetes
                         hasSeenLastReadLine = lastReadLineHash == hash;
 
                         var description = hasSeenLastReadLine ? "Is" : "Is not";
-                        log.Verbose($"Read log line {line} for pod {podName} but we have seen it before so ignoring. {description} the last read line.");
+                        //log.Verbose($"Read log line {line} for pod {podName} but we have seen it before so ignoring. {description} the last read line.");
 
                         //continue as we'll now be starting from new logs (if there are any
                         continue;
                     }
 
-                    if (line is not null)
-                    {
-                        log.Verbose($"Read new log line {line} for pod {podName}");
-                    }
+                    // if (line is not null)
+                    // {
+                    //     log.Verbose($"Read new log line {line} for pod {podName}");
+                    // }
 
                     yield return line;
 
@@ -200,7 +200,7 @@ namespace Octopus.Tentacle.Kubernetes
                 }
 
                 //delay for 1 second
-                await Task.Delay(1000, cancellationToken);
+                await Task.Delay(50, cancellationToken);
             }
         }
 
