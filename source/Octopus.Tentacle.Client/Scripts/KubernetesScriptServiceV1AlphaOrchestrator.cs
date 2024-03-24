@@ -58,10 +58,10 @@ namespace Octopus.Tentacle.Client.Scripts
                 kubernetesScriptCommand.Arguments,
                 kubernetesScriptCommand.TaskId,
                 kubernetesScriptCommand.ScriptTicket,
-                kubernetesScriptCommand.ImageConfiguration.Image,
-                kubernetesScriptCommand.ImageConfiguration.FeedUrl,
-                kubernetesScriptCommand.ImageConfiguration.FeedUsername,
-                kubernetesScriptCommand.ImageConfiguration.FeedPassword
+                kubernetesScriptCommand.ImageConfiguration?.Image,
+                kubernetesScriptCommand.ImageConfiguration?.FeedUrl,
+                kubernetesScriptCommand.ImageConfiguration?.FeedUsername,
+                kubernetesScriptCommand.ImageConfiguration?.FeedPassword,
                 kubernetesScriptCommand.Scripts,
                 kubernetesScriptCommand.Files.ToArray());
         }
