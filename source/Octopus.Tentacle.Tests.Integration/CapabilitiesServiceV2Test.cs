@@ -56,21 +56,23 @@ namespace Octopus.Tentacle.Tests.Integration
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithPortForwarder(out var portForwarder)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .HookServiceMethod<IAsyncClientCapabilitiesServiceV2, object, CapabilitiesResponseV2>(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync),
-                        null,
-                        async (_, response) =>
-                        {
-                            await Task.CompletedTask;
-
-                            capabilitiesResponses.Add(response);
-
-                            if (resumePortForwarder)
+                    .DecorateCapabilitiesServiceV2With(d => d
+                        .DecorateGetCapabilitiesWith(
+                            async (inner, options) =>
                             {
-                                // (2) Once a get capabilities call has been made which uses the cached response then resume normal RPC calls
-                                // to allow script execution to continue
-                                portForwarder.Value.ReturnToNormalMode();
-                            }
-                        })
+                                var response = await inner.GetCapabilitiesAsync(options);
+
+                                capabilitiesResponses.Add(response);
+
+                                if (resumePortForwarder)
+                                {
+                                    // (2) Once a get capabilities call has been made which uses the cached response then resume normal RPC calls
+                                    // to allow script execution to continue
+                                    portForwarder.Value.ReturnToNormalMode();
+                                }
+
+                                return response;
+                            }))
                     .Build())
                 .Build(CancellationToken);
 

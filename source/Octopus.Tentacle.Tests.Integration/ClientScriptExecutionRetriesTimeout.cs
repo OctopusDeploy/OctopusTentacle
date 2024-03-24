@@ -40,33 +40,34 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages<IAsyncClientCapabilitiesServiceV2>(out var capabilitiesMethodUsages)
                     .RecordMethodUsages(tentacleConfigurationTestCase, out var scriptMethodUsages)
-                    .HookServiceMethod<IAsyncClientCapabilitiesServiceV2>(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync),
-                        async (_,_) =>
-                        {
-                            // Kill the first GetCapabilities call to force the rpc call into retries
-                            if (capabilitiesMethodUsages.For(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)).LastException is null)
+                    .DecorateCapabilitiesServiceV2With(d => d
+                        .BeforeGetCapabilities(
+                            async () =>
                             {
-                                // Ensure there is an active connection so it can be killed correctly
-                                await tcpConnectionUtilities.RestartTcpConnection();
-                                responseMessageTcpKiller.KillConnectionOnNextResponse();
-                            }
-                            else
-                            {
-                                if (rpcCallStage == RpcCallStage.Connecting)
-                                {
-                                    // Kill the port forwarder so the next requests are in the connecting state when retries timeout
-                                    Logger.Information("Killing PortForwarder");
-                                    portForwarder.Value.EnterKillNewAndExistingConnectionsMode();
-                                }
-                                else
+                                // Kill the first GetCapabilities call to force the rpc call into retries
+                                if (capabilitiesMethodUsages.For(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)).LastException is null)
                                 {
                                     // Ensure there is an active connection so it can be killed correctly
                                     await tcpConnectionUtilities.RestartTcpConnection();
-                                    // Pause the port forwarder so the next requests are in-flight when retries timeout
-                                    responseMessageTcpKiller.PauseConnectionOnNextResponse();
+                                    responseMessageTcpKiller.KillConnectionOnNextResponse();
                                 }
-                            }
-                        })
+                                else
+                                {
+                                    if (rpcCallStage == RpcCallStage.Connecting)
+                                    {
+                                        // Kill the port forwarder so the next requests are in the connecting state when retries timeout
+                                        Logger.Information("Killing PortForwarder");
+                                        portForwarder.Value.EnterKillNewAndExistingConnectionsMode();
+                                    }
+                                    else
+                                    {
+                                        // Ensure there is an active connection so it can be killed correctly
+                                        await tcpConnectionUtilities.RestartTcpConnection();
+                                        // Pause the port forwarder so the next requests are in-flight when retries timeout
+                                        responseMessageTcpKiller.PauseConnectionOnNextResponse();
+                                    }
+                                }
+                            }))
                     .Build())
                 .Build(CancellationToken);
 
@@ -110,18 +111,18 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages<IAsyncClientCapabilitiesServiceV2>(out var capabilitiesMethodUsages)
                     .RecordMethodUsages(tentacleConfigurationTestCase, out var scriptMethodUsages)
-                    .HookServiceMethod<IAsyncClientCapabilitiesServiceV2>(
-                        nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync),
-                        async (_,_) =>
-                        {
-                            await tcpConnectionUtilities.RestartTcpConnection();
+                    .DecorateCapabilitiesServiceV2With(d => d
+                        .BeforeGetCapabilities(
+                            async () =>
+                            {
+                                await tcpConnectionUtilities.RestartTcpConnection();
 
-                            // Sleep to make the initial RPC call take longer than the allowed retry duration
-                            await Task.Delay(retryDuration + TimeSpan.FromSeconds(1));
+                                // Sleep to make the initial RPC call take longer than the allowed retry duration
+                                await Task.Delay(retryDuration + TimeSpan.FromSeconds(1));
 
-                            // Kill the first GetCapabilities call to force the rpc call into retries
-                            responseMessageTcpKiller.KillConnectionOnNextResponse();
-                        })
+                                // Kill the first GetCapabilities call to force the rpc call into retries
+                                responseMessageTcpKiller.KillConnectionOnNextResponse();
+                            }))
                     .Build())
                 .Build(CancellationToken);
 

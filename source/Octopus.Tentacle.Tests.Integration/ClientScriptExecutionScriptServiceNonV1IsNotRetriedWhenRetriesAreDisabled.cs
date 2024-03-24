@@ -32,20 +32,21 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages<IAsyncClientCapabilitiesServiceV2>(out var capabilitiesRecordedUsages)
                     .RecordMethodUsages(tentacleConfigurationTestCase, out var scriptRecordedUsages)
-                    .HookServiceMethod<IAsyncClientCapabilitiesServiceV2>(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync),
-                        async (_,_) =>
-                        {
-                            // Due to the GetCapabilities response getting cached, we must
-                            // use a different service to ensure Tentacle is connected to Server.
-                            // Otherwise, the response to the 'ensure connection' will get cached
-                            // and any subsequent calls will succeed w/o using the network.
-                            await tcpConnectionUtilities.RestartTcpConnection();
-
-                            if (capabilitiesRecordedUsages.For(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)).LastException is null)
+                    .DecorateCapabilitiesServiceV2With(d => d
+                        .BeforeGetCapabilities(
+                            async () =>
                             {
-                                responseMessageTcpKiller.KillConnectionOnNextResponse();
-                            }
-                        })
+                                // Due to the GetCapabilities response getting cached, we must
+                                // use a different service to ensure Tentacle is connected to Server.
+                                // Otherwise, the response to the 'ensure connection' will get cached
+                                // and any subsequent calls will succeed w/o using the network.
+                                await tcpConnectionUtilities.RestartTcpConnection();
+
+                                if (capabilitiesRecordedUsages.For(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)).LastException is null)
+                                {
+                                    responseMessageTcpKiller.KillConnectionOnNextResponse();
+                                }
+                            }))
                     .Build())
                 .Build(CancellationToken);
 
