@@ -7,6 +7,7 @@ using Halibut.ServiceModel;
 using Octopus.Tentacle.Client.Execution;
 using Octopus.Tentacle.Client.Observability;
 using Octopus.Tentacle.Client.Scripts;
+using Octopus.Tentacle.Client.Scripts.Execution;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Capabilities;
 using Octopus.Tentacle.Contracts.ClientServices;
@@ -177,11 +178,12 @@ namespace Octopus.Tentacle.Client
 
             try
             {
+                var scriptServiceVersion = await DetermineScriptServiceVersionToUse(operationMetricsBuilder, logger, scriptExecutionCancellationToken);
+
                 var factory = new ScriptOrchestratorFactory(
                     scriptServiceV1,
                     scriptServiceV2,
                     scriptServiceV3Alpha,
-                    capabilitiesServiceV2,
                     scriptObserverBackOffStrategy,
                     rpcCallExecutor,
                     operationMetricsBuilder,
@@ -191,11 +193,11 @@ namespace Octopus.Tentacle.Client
                     clientOptions,
                     logger);
 
-                var orchestrator = await factory.CreateOrchestrator(scriptExecutionCancellationToken);
+                var orchestrator = factory.CreateOrchestrator(scriptServiceVersion);
 
                 var result = await orchestrator.ExecuteScript(startScriptCommand, scriptExecutionCancellationToken);
 
-                return new ScriptExecutionResult(result.State, result.ExitCode);
+                return result;
             }
             catch (Exception e)
             {
@@ -207,6 +209,145 @@ namespace Octopus.Tentacle.Client
                 var operationMetrics = operationMetricsBuilder.Build();
                 tentacleClientObserver.ExecuteScriptCompleted(operationMetrics, logger);
             }
+        }
+
+
+        public async Task<CommandResponseV3Alpha> StartScript(
+            StartScriptCommandV3Alpha startScriptCommand,
+            ILog logger,
+            CancellationToken scriptExecutionCancellationToken)
+        {
+            //TODO: sast - think about metrics. This isn't right, so we have ignored it for now. But we need to ask what we want to report on in an async event based world.
+            var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
+
+            var scriptServiceVersion = await DetermineScriptServiceVersionToUse(operationMetricsBuilder, logger, scriptExecutionCancellationToken);
+
+            var factory = new ScriptServiceExecutorFactory(
+                scriptServiceV1,
+                scriptServiceV2,
+                scriptServiceV3Alpha,
+                rpcCallExecutor,
+                operationMetricsBuilder,
+                OnCancellationAbandonCompleteScriptAfter,
+                clientOptions,
+                logger);
+
+            var executor = factory.CreateExecutor(scriptServiceVersion);
+
+            var result = await executor.StartScript(startScriptCommand, scriptExecutionCancellationToken);
+
+            return MapToCommandResponse(result);
+        }
+
+        public async Task<CommandResponseV3Alpha> GetStatus(
+            CommandContextV3Alpha commandContext,
+            ILog logger,
+            CancellationToken scriptExecutionCancellationToken)
+        {
+            //TODO: sast - think about metrics. This isn't right, so we have ignored it for now. But we need to ask what we want to report on in an async event based world.
+            var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
+
+            var scriptServiceVersion = await DetermineScriptServiceVersionToUse(operationMetricsBuilder, logger, scriptExecutionCancellationToken);
+
+            var factory = new ScriptServiceExecutorFactory(
+                scriptServiceV1,
+                scriptServiceV2,
+                scriptServiceV3Alpha,
+                rpcCallExecutor,
+                operationMetricsBuilder,
+                OnCancellationAbandonCompleteScriptAfter,
+                clientOptions,
+                logger);
+
+            var executor = factory.CreateExecutor(scriptServiceVersion);
+
+            var result = await executor.GetStatus(commandContext, scriptExecutionCancellationToken);
+
+            return MapToCommandResponse(result);
+        }
+
+        public async Task<CommandResponseV3Alpha> Cancel(
+            CommandContextV3Alpha commandContext,
+            ILog logger,
+            CancellationToken scriptExecutionCancellationToken)
+        {
+            //TODO: sast - think about metrics. This isn't right, so we have ignored it for now. But we need to ask what we want to report on in an async event based world.
+            var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
+
+            var scriptServiceVersion = await DetermineScriptServiceVersionToUse(operationMetricsBuilder, logger, scriptExecutionCancellationToken);
+
+            var factory = new ScriptServiceExecutorFactory(
+                scriptServiceV1,
+                scriptServiceV2,
+                scriptServiceV3Alpha,
+                rpcCallExecutor,
+                operationMetricsBuilder,
+                OnCancellationAbandonCompleteScriptAfter,
+                clientOptions,
+                logger);
+
+            var executor = factory.CreateExecutor(scriptServiceVersion);
+
+            var result = await executor.Cancel(commandContext, scriptExecutionCancellationToken);
+
+            return MapToCommandResponse(result);
+        }
+
+        public async Task Finish(CommandContextV3Alpha commandContext,
+            ILog logger,
+            CancellationToken scriptExecutionCancellationToken)
+        {
+            //TODO: sast - think about metrics. This isn't right, so we have ignored it for now. But we need to ask what we want to report on in an async event based world.
+            var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
+
+            var scriptServiceVersion = await DetermineScriptServiceVersionToUse(operationMetricsBuilder, logger, scriptExecutionCancellationToken);
+
+            var factory = new ScriptServiceExecutorFactory(
+                scriptServiceV1,
+                scriptServiceV2,
+                scriptServiceV3Alpha,
+                rpcCallExecutor,
+                operationMetricsBuilder,
+                OnCancellationAbandonCompleteScriptAfter,
+                clientOptions,
+                logger);
+
+            var executor = factory.CreateExecutor(scriptServiceVersion);
+
+            await executor.Finish(commandContext, scriptExecutionCancellationToken);
+        }
+
+        async Task<ScriptServiceVersion> DetermineScriptServiceVersionToUse(
+            ClientOperationMetricsBuilder operationMetricsBuilder, 
+            ILog logger, 
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                var scriptServiceVersionFactory = new ScriptServiceVersionFactory(
+                    capabilitiesServiceV2,
+                    rpcCallExecutor,
+                    operationMetricsBuilder,
+                    clientOptions,
+                    logger);
+
+                return await scriptServiceVersionFactory.DetermineScriptServiceVersionToUse(cancellationToken);
+            }
+            catch (Exception ex) when (cancellationToken.IsCancellationRequested)
+            {
+                throw new OperationCanceledException("Script execution was cancelled", ex);
+            }
+        }
+
+        static CommandResponseV3Alpha MapToCommandResponse(ScriptStatusResponseV3Alpha result)
+        {
+            var nextCommandContext = new CommandContextV3Alpha(result.ScriptTicket, result.NextLogSequence);
+
+            return new CommandResponseV3Alpha(
+                nextCommandContext,
+                result.State,
+                result.ExitCode,
+                result.Logs);
         }
 
         public void Dispose()

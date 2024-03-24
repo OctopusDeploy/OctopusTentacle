@@ -40,6 +40,53 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders
             return (finalResponse, logs);
         }
 
+        public static async Task<CommandResponseV3Alpha> StartScript(
+            this TentacleClient tentacleClient,
+            StartScriptCommandV3Alpha startScriptCommand,
+            CancellationToken token)
+        {
+            var finalResponse = await tentacleClient.StartScript(
+                startScriptCommand,
+                new SerilogLoggerBuilder().Build().ForContext<TentacleClient>().ToILog(),
+                token).ConfigureAwait(false);
+            return finalResponse;
+        }
+
+        public static async Task<CommandResponseV3Alpha> GetStatus(
+            this TentacleClient tentacleClient,
+            CommandContextV3Alpha commandContext,
+            CancellationToken token)
+        {
+            var finalResponse = await tentacleClient.GetStatus(
+                commandContext,
+                new SerilogLoggerBuilder().Build().ForContext<TentacleClient>().ToILog(),
+                token).ConfigureAwait(false);
+            return finalResponse;
+        }
+
+        public static async Task<CommandResponseV3Alpha> Cancel(
+            this TentacleClient tentacleClient,
+            CommandContextV3Alpha commandContext,
+            CancellationToken token)
+        {
+            var finalResponse = await tentacleClient.Cancel(
+                commandContext,
+                new SerilogLoggerBuilder().Build().ForContext<TentacleClient>().ToILog(),
+                token).ConfigureAwait(false);
+            return finalResponse;
+        }
+
+        public static async Task Finish(
+            this TentacleClient tentacleClient,
+            CommandContextV3Alpha commandContext,
+            CancellationToken token)
+        {
+            await tentacleClient.Finish(
+                commandContext,
+                new SerilogLoggerBuilder().Build().ForContext<TentacleClient>().ToILog(),
+                token).ConfigureAwait(false);
+        }
+
         public static async Task<UploadResult> UploadFile(
             this TentacleClient tentacleClient,
             string remotePath,
