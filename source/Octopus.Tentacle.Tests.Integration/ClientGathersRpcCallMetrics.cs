@@ -6,13 +6,10 @@ using FluentAssertions;
 using Halibut;
 using NUnit.Framework;
 using Octopus.Tentacle.CommonTestUtils;
-using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Capabilities;
-using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
-using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
 using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
@@ -46,11 +43,7 @@ namespace Octopus.Tentacle.Tests.Integration
             ThenClientOperationMetricsShouldBeSuccessful(executeScriptMetrics);
 
             string expectedScriptService;
-            if (tentacleConfigurationTestCase.ScriptServiceToTest == TentacleConfigurationTestCases.ScriptServiceV3AlphaType)
-            {
-                expectedScriptService = nameof(IKubernetesScriptServiceV1Alpha);
-            }
-            else if (tentacleConfigurationTestCase.ScriptServiceToTest == TentacleConfigurationTestCases.ScriptServiceV2Type)
+            if (tentacleConfigurationTestCase.ScriptServiceToTest == TentacleConfigurationTestCases.ScriptServiceV2Type)
             {
                 expectedScriptService = nameof(IScriptServiceV2);
             }

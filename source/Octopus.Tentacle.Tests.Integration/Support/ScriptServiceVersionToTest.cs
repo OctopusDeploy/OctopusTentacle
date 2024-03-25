@@ -19,10 +19,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         /// <summary>
         /// Test ScriptService V2 only
         /// </summary>
-        Version2,
-        /// <summary>
-        /// Test ScriptService V3Alpha only
-        /// </summary>
-        Version3Alpha
+        Version2
     }
 }

@@ -22,7 +22,9 @@ namespace Octopus.Tentacle.Tests.Integration
         public async Task CanRunScript(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
-                .WithClientOptions(options => options.DisableScriptServiceV3Alpha = true)
+                .WithClientOptions(options =>
+                {
+                })
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages<IAsyncClientScriptServiceV2>(out var methodUsages)
                     .Build())
@@ -55,7 +57,9 @@ namespace Octopus.Tentacle.Tests.Integration
         public async Task DelayInStartScriptSavesNetworkCalls(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
-                .WithClientOptions(options => options.DisableScriptServiceV3Alpha = true)
+                .WithClientOptions(options =>
+                {
+                })
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages<IAsyncClientScriptServiceV2>(out var recordedUsages)
                     .Build())
@@ -89,7 +93,9 @@ namespace Octopus.Tentacle.Tests.Integration
         public async Task WhenTentacleRestartsWhileRunningAScript_TheExitCodeShouldBe_UnknownResultExitCode(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
-                .WithClientOptions(options => options.DisableScriptServiceV3Alpha = true)
+                .WithClientOptions(options =>
+                {
+                })
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages<IAsyncClientScriptServiceV2>(out var recordedUsages)
                     .Build())
@@ -137,7 +143,9 @@ namespace Octopus.Tentacle.Tests.Integration
         public async Task WhenALongRunningScriptIsCancelled_TheScriptShouldStop(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
-                .WithClientOptions(options => options.DisableScriptServiceV3Alpha = true)
+                .WithClientOptions(options =>
+                {
+                })
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages<IAsyncClientScriptServiceV2>(out var recordedUsages)
                     .Build())

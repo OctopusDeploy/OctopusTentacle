@@ -26,7 +26,6 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .WithClientOptions(options =>
                 {
-                    options.DisableScriptServiceV3Alpha = true;
                 })
                 .Build(CancellationToken);
 
