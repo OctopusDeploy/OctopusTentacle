@@ -201,8 +201,7 @@ namespace Octopus.Tentacle.Kubernetes
                     lastReadLineHash = CalculateHash(lastLine);
                 }
 
-                //delay for 1 second
-                await Task.Delay(1000, cancellationToken);
+                await Task.Delay(10, cancellationToken);
             }
         }
 
