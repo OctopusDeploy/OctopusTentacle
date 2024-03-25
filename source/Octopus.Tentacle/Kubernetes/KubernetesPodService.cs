@@ -32,34 +32,34 @@ namespace Octopus.Tentacle.Kubernetes
     public class KubernetesPodService : KubernetesService, IKubernetesPodService
     {
         readonly ISystemLog log;
-        readonly AsyncRetryPolicy<Stream> logRetryPolicy;
+       // readonly AsyncRetryPolicy<Stream> logRetryPolicy;
 
         public KubernetesPodService(IKubernetesClientConfigProvider configProvider, ISystemLog log)
             : base(configProvider)
         {
             this.log = log;
 
-            var jitterer = new Random();
-            logRetryPolicy = Policy<Stream>
-                .Handle<HttpOperationException>()
-                .WaitAndRetryForeverAsync((retryAttempt, _) =>
-                        TimeSpan.FromMilliseconds(25 * Math.Pow(2, retryAttempt))
-                        + TimeSpan.FromMilliseconds(jitterer.Next(0, 50)),
-                    (result, _, _, ctx) =>
-                    {
-                        if (result.Exception is null)
-                            return;
-
-                        var podName = ctx["podName"];
-                        if (result.Exception is HttpOperationException httpOp && httpOp.Response.StatusCode != HttpStatusCode.BadRequest)
-                        {
-                            log.Warn(result.Exception, $"Failed to read namespaced logs for pod {podName}. Response: {httpOp.Response.Content}");
-                        }
-                        else if (result.Exception is not HttpOperationException)
-                        {
-                            log.Warn(result.Exception, $"Failed to read namespaced logs for pod {podName}.");
-                        }
-                    });
+            // var jitterer = new Random();
+            // logRetryPolicy = Policy<Stream>
+            //     .Handle<HttpOperationException>()
+            //     .WaitAndRetryForeverAsync((retryAttempt, _) =>
+            //             TimeSpan.FromMilliseconds(25 * Math.Pow(2, retryAttempt))
+            //             + TimeSpan.FromMilliseconds(jitterer.Next(0, 50)),
+            //         (result, _, _, ctx) =>
+            //         {
+            //             if (result.Exception is null)
+            //                 return;
+            //
+            //             var podName = ctx["podName"];
+            //             if (result.Exception is HttpOperationException httpOp && httpOp.Response.StatusCode != HttpStatusCode.BadRequest)
+            //             {
+            //                 log.Warn(result.Exception, $"Failed to read namespaced logs for pod {podName}. Response: {httpOp.Response.Content}");
+            //             }
+            //             else if (result.Exception is not HttpOperationException)
+            //             {
+            //                 log.Warn(result.Exception, $"Failed to read namespaced logs for pod {podName}.");
+            //             }
+            //         });
         }
 
         public async Task<V1PodList> ListAllPods(CancellationToken cancellationToken)
@@ -142,16 +142,22 @@ namespace Octopus.Tentacle.Kubernetes
                 {
                     ["podName"] = podName
                 };
-                //we use a polly retry policy to handle all the
-                var logStream = await logRetryPolicy.ExecuteAsync(
-                    async (_, ct) => await Client.GetNamespacedPodLogsAsync(podName,
-                        KubernetesConfig.Namespace,
-                        containerName,
-                        sinceTime: sinceTime,
-                        cancellationToken: ct),
-                    retryContext,
-                    cancellationToken);
+                // //we use a polly retry policy to handle all the
+                // var logStream = await logRetryPolicy.ExecuteAsync(
+                //     async (_, ct) => await Client.GetNamespacedPodLogsAsync(podName,
+                //         KubernetesConfig.Namespace,
+                //         containerName,
+                //         sinceTime: sinceTime,
+                //         cancellationToken: ct),
+                //     retryContext,
+                //     cancellationToken);
 
+                var logStream = await Client.GetNamespacedPodLogsAsync(podName,
+                    KubernetesConfig.Namespace,
+                    containerName,
+                    sinceTime: sinceTime,
+                    cancellationToken: cancellationToken);
+                
                 using var streamReader = new StreamReader(logStream);
                 string? lastLine = null;
                 var hasSeenLastReadLine = false;
