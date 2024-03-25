@@ -31,10 +31,10 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             this.scriptServiceV2Decorator.Add(scriptServiceV2Decorator);
             return this;
         }
-        
-        public TentacleServiceDecoratorBuilder DecorateScriptServiceV3AlphaWith(Decorator<IAsyncClientKubernetesScriptServiceV1Alpha> scriptServiceV3AlphaDecorator)
+
+        public TentacleServiceDecoratorBuilder DecorateKubernetesScriptServiceV1AlphaWith(Decorator<IAsyncClientKubernetesScriptServiceV1Alpha> kubernetesScriptServiceV1AlphaDecorator)
         {
-            this.scriptServiceV3AlphaDecorator.Add(scriptServiceV3AlphaDecorator);
+            this.scriptServiceV3AlphaDecorator.Add(kubernetesScriptServiceV1AlphaDecorator);
             return this;
         }
 
@@ -53,12 +53,12 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             this.DecorateScriptServiceV2With(b.Build());
             return this;
         }
-        
-        public TentacleServiceDecoratorBuilder DecorateScriptServiceV3AlphaWith(Action<ScriptServiceV3AlphaDecoratorBuilder> scriptServiceV3AlphaDecorator)
+
+        public TentacleServiceDecoratorBuilder DecorateKubernetesScriptServiceV1AlphaWith(Action<KubernetesScriptServiceV1AlphaDecoratorBuilder> scriptServiceV3AlphaDecorator)
         {
-            var b = new ScriptServiceV3AlphaDecoratorBuilder();
+            var b = new KubernetesScriptServiceV1AlphaDecoratorBuilder();
             scriptServiceV3AlphaDecorator(b);
-            this.DecorateScriptServiceV3AlphaWith(b.Build());
+            this.DecorateKubernetesScriptServiceV1AlphaWith(b.Build());
             return this;
         }
 
