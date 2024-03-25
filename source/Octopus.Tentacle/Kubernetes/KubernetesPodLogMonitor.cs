@@ -137,15 +137,15 @@ namespace Octopus.Tentacle.Kubernetes
 
                 var message = parts[2];
 
-                //if this is the end of m
-                if (message.StartsWith(KubernetesConfig.EndOfScriptControlMessage, StringComparison.OrdinalIgnoreCase))
-                {
-                    //the second value is always the exit code
-                    var exitCode = int.Parse(message.Split(new[] { "<<>>" }, StringSplitOptions.None)[1]);
-
-                    onScriptFinished(exitCode == 0 ? TrackedPodState.Succeeded : TrackedPodState.Failed, exitCode);
-                    break;
-                }
+                // //if this is the end of m
+                // if (message.StartsWith(KubernetesConfig.EndOfScriptControlMessage, StringComparison.OrdinalIgnoreCase))
+                // {
+                //     //the second value is always the exit code
+                //     var exitCode = int.Parse(message.Split(new[] { "<<>>" }, StringSplitOptions.None)[1]);
+                //
+                //     onScriptFinished(exitCode == 0 ? TrackedPodState.Succeeded : TrackedPodState.Failed, exitCode);
+                //     break;
+                // }
 
                 var occured = DateTimeOffset.Parse(parts[0]);
                 var source = parts[1] switch
@@ -158,7 +158,7 @@ namespace Octopus.Tentacle.Kubernetes
                 lock (logLock)
                 {
                     //we are making a bold assumption that the pod logs are coming in sequential order
-                    logLines.Add(new PodLogLine(occured, source, parts[2]));
+                    logLines.Add(new PodLogLine(occured, source, message));
                 }
             }
         }
