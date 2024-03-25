@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Halibut.ServiceModel;
+using Halibut.Transport.Protocol;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ClientServices;
 
@@ -13,20 +14,37 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
         public delegate Task<ScriptStatusResponse> CancelScriptClientDecorator(IAsyncClientScriptService inner, CancelScriptCommand command, HalibutProxyRequestOptions options);
         public delegate Task<ScriptStatusResponse> CompleteScriptClientDecorator(IAsyncClientScriptService inner, CompleteScriptCommand command, HalibutProxyRequestOptions options);
         
-        private StartScriptClientDecorator startScriptFunc = async (inner, command, options) => await inner.StartScriptAsync(command, options);
-        private GetStatusClientDecorator getStatusFunc = async (inner, command, options) => await inner.GetStatusAsync(command, options);
-        private CancelScriptClientDecorator cancelScriptFunc = async (inner, command, options) => await inner.CancelScriptAsync(command, options);
-        private CompleteScriptClientDecorator completeScriptAction = async (inner, command, options) => await inner.CompleteScriptAsync(command, options);
+        StartScriptClientDecorator startScriptFunc = async (inner, command, options) => await inner.StartScriptAsync(command, options);
+        GetStatusClientDecorator getStatusFunc = async (inner, command, options) => await inner.GetStatusAsync(command, options);
+        CancelScriptClientDecorator cancelScriptFunc = async (inner, command, options) => await inner.CancelScriptAsync(command, options);
+        CompleteScriptClientDecorator completeScriptAction = async (inner, command, options) => await inner.CompleteScriptAsync(command, options);
 
-        public ScriptServiceDecoratorBuilder BeforeStartScript(Func<Task> beforeGetStatus)
+        public ScriptServiceDecoratorBuilder BeforeStartScript(Func<Task> beforeStartScript)
         {
-            return DecorateStartScriptWith(async (inner, scriptStatusRequest, options) =>
+            return DecorateStartScriptWith(async (inner, startScriptCommand, options) =>
             {
-                await beforeGetStatus();
-                return await inner.StartScriptAsync(scriptStatusRequest, options);
+                await beforeStartScript();
+                return await inner.StartScriptAsync(startScriptCommand, options);
             });
         }
-        
+
+        public ScriptServiceDecoratorBuilder AfterStartScript(Func<Task> afterStartScript)
+        {
+            return DecorateStartScriptWith(async (inner, startScriptCommand, options) =>
+            {
+                ScriptTicket response = null;
+                try
+                {
+                    response = await inner.StartScriptAsync(startScriptCommand, options);
+                }
+                finally
+                {
+                    await afterStartScript();
+                }
+                return response;
+            });
+        }
+
         public ScriptServiceDecoratorBuilder DecorateStartScriptWith(StartScriptClientDecorator startScriptFunc)
         {
             this.startScriptFunc = startScriptFunc;
@@ -50,6 +68,28 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             {
                 await beforeGetStatus(inner, scriptStatusRequest);
                 return await inner.GetStatusAsync(scriptStatusRequest, options);
+            });
+        }
+
+        public ScriptServiceDecoratorBuilder AfterGetStatus(Func<Task> afterGetStatus)
+        {
+            return AfterGetStatus(async (_, _, _) => await afterGetStatus());
+        }
+
+        public ScriptServiceDecoratorBuilder AfterGetStatus(Func<IAsyncClientScriptService, ScriptStatusRequest, ScriptStatusResponse, Task> afterGetStatus)
+        {
+            return DecorateGetStatusWith(async (inner, scriptStatusRequest, options) =>
+            {
+                ScriptStatusResponse response = null;
+                try
+                {
+                    response = await inner.GetStatusAsync(scriptStatusRequest, options);
+                }
+                finally
+                {
+                    await afterGetStatus(inner, scriptStatusRequest, response);
+                }
+                return response;
             });
         }
 

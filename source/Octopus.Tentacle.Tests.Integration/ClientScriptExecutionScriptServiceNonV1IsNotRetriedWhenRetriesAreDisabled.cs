@@ -32,20 +32,21 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages<IAsyncClientCapabilitiesServiceV2>(out var capabilitiesRecordedUsages)
                     .RecordMethodUsages(tentacleConfigurationTestCase, out var scriptRecordedUsages)
-                    .HookServiceMethod<IAsyncClientCapabilitiesServiceV2>(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync),
-                        async (_,_) =>
-                        {
-                            // Due to the GetCapabilities response getting cached, we must
-                            // use a different service to ensure Tentacle is connected to Server.
-                            // Otherwise, the response to the 'ensure connection' will get cached
-                            // and any subsequent calls will succeed w/o using the network.
-                            await tcpConnectionUtilities.RestartTcpConnection();
-
-                            if (capabilitiesRecordedUsages.For(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)).LastException is null)
+                    .DecorateCapabilitiesServiceV2With(d => d
+                        .BeforeGetCapabilities(
+                            async () =>
                             {
-                                responseMessageTcpKiller.KillConnectionOnNextResponse();
-                            }
-                        })
+                                // Due to the GetCapabilities response getting cached, we must
+                                // use a different service to ensure Tentacle is connected to Server.
+                                // Otherwise, the response to the 'ensure connection' will get cached
+                                // and any subsequent calls will succeed w/o using the network.
+                                await tcpConnectionUtilities.RestartTcpConnection();
+
+                                if (capabilitiesRecordedUsages.For(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)).LastException is null)
+                                {
+                                    responseMessageTcpKiller.KillConnectionOnNextResponse();
+                                }
+                            }))
                     .Build())
                 .Build(CancellationToken);
 
@@ -85,18 +86,17 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithRetryDuration(TimeSpan.FromMinutes(4))
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages(tentacleConfigurationTestCase, out var recordedUsages)
-                    .HookServiceMethod(
-                        tentacleConfigurationTestCase,
-                        nameof(IAsyncClientScriptServiceV2.StartScriptAsync),
-                        async (_,_) =>
-                        {
-                            await Task.CompletedTask;
-
-                            if (recordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).LastException is null)
+                    .DecorateAllScriptServicesWith(u => u
+                        .BeforeStartScript(
+                            async () =>
                             {
-                                responseMessageTcpKiller.KillConnectionOnNextResponse();
-                            }
-                        })
+                                await Task.CompletedTask;
+
+                                if (recordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).LastException is null)
+                                {
+                                    responseMessageTcpKiller.KillConnectionOnNextResponse();
+                                }
+                            }))
                     .Build())
                 .Build(CancellationToken);
 
@@ -138,18 +138,17 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithRetryDuration(TimeSpan.FromMinutes(4))
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages(tentacleConfigurationTestCase, out var recordedUsages)
-                    .HookServiceMethod(
-                        tentacleConfigurationTestCase,
-                        nameof(IAsyncClientScriptServiceV2.GetStatusAsync),
-                        async (_,_) =>
-                        {
-                            await Task.CompletedTask;
-
-                            if (recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).LastException is null)
+                    .DecorateAllScriptServicesWith(u => u
+                        .BeforeGetStatus(
+                            async () =>
                             {
-                                responseMessageTcpKiller.KillConnectionOnNextResponse();
-                            }
-                        })
+                                await Task.CompletedTask;
+
+                                if (recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).LastException is null)
+                                {
+                                    responseMessageTcpKiller.KillConnectionOnNextResponse();
+                                }
+                            }))
                     .Build())
                 .Build(CancellationToken);
 
@@ -197,26 +196,23 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages(tentacleConfigurationTestCase, out var recordedUsages)
-                    .HookServiceMethod(
-                        tentacleConfigurationTestCase,
-                        nameof(IAsyncClientScriptServiceV2.GetStatusAsync),
-                        async (_,_) =>
-                        {
-                            await Task.CompletedTask;
-
-                            cts.Cancel();
-                        })
-                    .HookServiceMethod(
-                        tentacleConfigurationTestCase,
-                        nameof(IAsyncClientScriptServiceV2.CancelScriptAsync),
-                        async (_,_) =>
-                        {
-                            if (recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).LastException is null)
+                    .DecorateAllScriptServicesWith(u => u
+                        .BeforeGetStatus(
+                            async () =>
                             {
-                                await tcpConnectionUtilities.RestartTcpConnection();
-                                responseMessageTcpKiller.KillConnectionOnNextResponse();
-                            }
-                        })
+                                await Task.CompletedTask;
+
+                                cts.Cancel();
+                            })
+                        .BeforeCancelScript(
+                            async () =>
+                            {
+                                if (recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).LastException is null)
+                                {
+                                    await tcpConnectionUtilities.RestartTcpConnection();
+                                    responseMessageTcpKiller.KillConnectionOnNextResponse();
+                                }
+                            }))
                     .Build())
                 .Build(CancellationToken);
 
@@ -261,18 +257,17 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithRetryDuration(TimeSpan.FromMinutes(4))
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages(tentacleConfigurationTestCase, out var recordedUsages)
-                    .HookServiceMethod(
-                        tentacleConfigurationTestCase,
-                        nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync),
-                        async (_,_) =>
-                        {
-                            await Task.CompletedTask;
-
-                            if (recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).LastException is null)
+                    .DecorateAllScriptServicesWith(u => u
+                        .BeforeCompleteScript(
+                            async () =>
                             {
-                                responseMessageTcpKiller.KillConnectionOnNextResponse();
-                            }
-                        })
+                                await Task.CompletedTask;
+
+                                if (recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).LastException is null)
+                                {
+                                    responseMessageTcpKiller.KillConnectionOnNextResponse();
+                                }
+                            }))
                     .Build())
                 .Build(CancellationToken);
 

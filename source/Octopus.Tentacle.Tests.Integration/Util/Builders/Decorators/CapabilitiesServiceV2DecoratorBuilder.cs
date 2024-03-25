@@ -10,7 +10,9 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
     {
         public delegate Task<CapabilitiesResponseV2> GetCapabilitiesClientDecorator(IAsyncClientCapabilitiesServiceV2 inner, HalibutProxyRequestOptions halibutProxyRequestOptions);
 
-        private GetCapabilitiesClientDecorator getCapabilitiesFunc = async (inner, options) => await inner.GetCapabilitiesAsync(options);
+        GetCapabilitiesClientDecorator getCapabilitiesFunc = async (inner, options) => await inner.GetCapabilitiesAsync(options);
+        Func<IAsyncClientCapabilitiesServiceV2, Task> beforeGetCapabilities = async _ => await Task.CompletedTask;
+        Func<CapabilitiesResponseV2?, Task> afterGetCapabilities = async _ => await Task.CompletedTask;
 
         public CapabilitiesServiceV2DecoratorBuilder BeforeGetCapabilities(Func<Task> beforeGetCapabilities)
         {
@@ -19,21 +21,14 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
 
         public CapabilitiesServiceV2DecoratorBuilder BeforeGetCapabilities(Func<IAsyncClientCapabilitiesServiceV2, Task> beforeGetCapabilities)
         {
-            return DecorateGetCapabilitiesWith(async (inner, options) =>
-            {
-                await beforeGetCapabilities(inner);
-                return await inner.GetCapabilitiesAsync(options);
-            });
+            this.beforeGetCapabilities = beforeGetCapabilities;
+            return this;
         }
 
-        public CapabilitiesServiceV2DecoratorBuilder AfterGetCapabilities(Func<CapabilitiesResponseV2, Task> afterGetCapabilities)
+        public CapabilitiesServiceV2DecoratorBuilder AfterGetCapabilities(Func<CapabilitiesResponseV2?, Task> afterGetCapabilities)
         {
-            return DecorateGetCapabilitiesWith(async (inner, options) =>
-            {
-                var response = await inner.GetCapabilitiesAsync(options);
-                await afterGetCapabilities(response);
-                return response;
-            });
+            this.afterGetCapabilities = afterGetCapabilities;
+            return this;
         }
 
         public CapabilitiesServiceV2DecoratorBuilder DecorateGetCapabilitiesWith(GetCapabilitiesClientDecorator getCapabilitiesFunc)
@@ -44,23 +39,47 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
 
         public Decorator<IAsyncClientCapabilitiesServiceV2> Build()
         {
-            return inner => new FuncCapabilitiesServiceV2Decorator(inner, getCapabilitiesFunc);
+            return inner => new FuncCapabilitiesServiceV2Decorator(
+                inner,
+                getCapabilitiesFunc,
+                beforeGetCapabilities,
+                afterGetCapabilities
+            );
         }
 
-        private class FuncCapabilitiesServiceV2Decorator : IAsyncClientCapabilitiesServiceV2
+        class FuncCapabilitiesServiceV2Decorator : IAsyncClientCapabilitiesServiceV2
         {
-            private readonly IAsyncClientCapabilitiesServiceV2 inner;
-            private readonly GetCapabilitiesClientDecorator getCapabilitiesFunc;
+            readonly IAsyncClientCapabilitiesServiceV2 inner;
+            readonly GetCapabilitiesClientDecorator getCapabilitiesFunc;
+            readonly Func<IAsyncClientCapabilitiesServiceV2, Task> beforeGetCapabilities;
+            readonly Func<CapabilitiesResponseV2?, Task> afterGetCapabilities;
 
-            public FuncCapabilitiesServiceV2Decorator(IAsyncClientCapabilitiesServiceV2 inner, GetCapabilitiesClientDecorator getCapabilitiesFunc)
+            public FuncCapabilitiesServiceV2Decorator(
+                IAsyncClientCapabilitiesServiceV2 inner,
+                GetCapabilitiesClientDecorator getCapabilitiesFunc,
+                Func<IAsyncClientCapabilitiesServiceV2, Task> beforeGetCapabilities,
+                Func<CapabilitiesResponseV2?, Task> afterGetCapabilities
+            )
             {
                 this.inner = inner;
                 this.getCapabilitiesFunc = getCapabilitiesFunc;
+                this.beforeGetCapabilities = beforeGetCapabilities;
+                this.afterGetCapabilities = afterGetCapabilities;
             }
 
             public async Task<CapabilitiesResponseV2> GetCapabilitiesAsync(HalibutProxyRequestOptions options)
             {
-                return await getCapabilitiesFunc(inner, options);
+                CapabilitiesResponseV2? response = null;
+                try
+                {
+                    await beforeGetCapabilities(inner);
+                    response = await getCapabilitiesFunc(inner, options);
+                    return response;
+                }
+                finally
+                {
+                    await afterGetCapabilities(response);
+                }
             }
         }
     }
