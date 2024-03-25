@@ -50,8 +50,8 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new LatestStartScriptCommandBuilder()
-                .WithScriptBody(new ScriptBuilder().Print("hello")).Build();
+            var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(new ScriptBuilder().Print("hello")).Build();
 
             var logs = new List<ProcessOutput>();
             var executeScriptTask = clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, logs, CancellationToken);
@@ -100,8 +100,8 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new LatestStartScriptCommandBuilder()
-                .WithScriptBody(new ScriptBuilder()
+            var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(new ScriptBuilder()
                     .Print("hello")
                     .Print("AllDone"))
                 .Build();
@@ -154,8 +154,8 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var waitForFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "waitforme");
 
-            var startScriptCommand = new LatestStartScriptCommandBuilder()
-                .WithScriptBody(new ScriptBuilder()
+            var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(new ScriptBuilder()
                     .Print("hello")
                     .WaitForFileToExist(waitForFile)
                     .Print("AllDone"))
@@ -218,8 +218,8 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var waitForFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "waitforme");
 
-            var startScriptCommand = new LatestStartScriptCommandBuilder()
-                .WithScriptBody(new ScriptBuilder()
+            var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(new ScriptBuilder()
                     .Print("hello")
                     .WaitForFileToExist(waitForFile)
                     .Print("AllDone"))
@@ -271,8 +271,8 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new LatestStartScriptCommandBuilder()
-                .WithScriptBody(new ScriptBuilder()
+            var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(new ScriptBuilder()
                     .Print("hello")
                     .Print("AllDone"))
                 .Build();

@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 using Halibut;
 using Octopus.Tentacle.Client;
 using Octopus.Tentacle.Client.Scripts;
+using Octopus.Tentacle.Client.Scripts.Models;
 using Octopus.Tentacle.Contracts;
-using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
 using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods;
@@ -18,13 +18,13 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders
     {
         public static async Task<(ScriptExecutionResult ScriptExecutionResult, List<ProcessOutput> ProcessOutput)> ExecuteScript(
             this TentacleClient tentacleClient,
-            StartScriptCommandV3Alpha startScriptCommand,
+            ExecuteScriptCommand executeScriptCommand,
             CancellationToken token,
             OnScriptStatusResponseReceived? onScriptStatusResponseReceivedAction = null,
             Log? log = null)
         {
             var logs = new List<ProcessOutput>();
-            var finalResponse = await tentacleClient.ExecuteScript(startScriptCommand,
+            var finalResponse = await tentacleClient.ExecuteScript(executeScriptCommand,
                 onScriptStatusResponseReceived =>
                 {
                     if (onScriptStatusResponseReceivedAction != null)

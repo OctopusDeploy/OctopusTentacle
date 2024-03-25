@@ -32,25 +32,25 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var secondScriptStart = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "secondScriptStartFile");
 
-            var firstStartScriptCommand = new LatestStartScriptCommandBuilder()
-                .WithScriptBody(new ScriptBuilder()
+            var firstStartScriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(new ScriptBuilder()
                     .CreateFile(firstScriptStartFile)
                     .WaitForFileToExist(firstScriptWaitFile))
-                .WithIsolation(ScriptIsolationLevel.FullIsolation)
-                .WithMutexName("mymutex")
+                .SetIsolationLevel(ScriptIsolationLevel.FullIsolation)
+                .SetIsolationMutexName("mymutex")
                 .Build();
 
-            var secondStartScriptCommand = new LatestStartScriptCommandBuilder()
-                .WithScriptBody(new ScriptBuilder().CreateFile(secondScriptStart))
-                .WithIsolation(levelOfSecondScript)
-                .WithMutexName("mymutex")
+            var secondStartScriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(new ScriptBuilder().CreateFile(secondScriptStart))
+                .SetIsolationLevel(levelOfSecondScript)
+                .SetIsolationMutexName("mymutex")
                 .Build();
 
             var tentacleClient = clientTentacle.TentacleClient;
             var firstScriptExecution = Task.Run(async () => await tentacleClient.ExecuteScript(firstStartScriptCommand, CancellationToken));
 
             // Wait for the first script to start running
-            await Wait.For(() => File.Exists(firstScriptStartFile), 
+            await Wait.For(() => File.Exists(firstScriptStartFile),
                 TimeSpan.FromSeconds(30),
                 () => throw new Exception("Script did not start"),
                 CancellationToken);
@@ -59,7 +59,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var secondScriptExecution = Task.Run(async () => await tentacleClient.ExecuteScript(secondStartScriptCommand, CancellationToken));
 
             // Wait for the second script start script RPC call to return.
-            await Wait.For(() => recordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Completed == 2, 
+            await Wait.For(() => recordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Completed == 2,
                 TimeSpan.FromSeconds(60),
                 () => throw new Exception("Second execute script call did not complete"),
                 CancellationToken);
@@ -92,25 +92,25 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var secondScriptStart = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "secondScriptStartFile");
 
-            var firstStartScriptCommand = new LatestStartScriptCommandBuilder()
-                .WithScriptBody(new ScriptBuilder()
+            var firstStartScriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(new ScriptBuilder()
                     .CreateFile(firstScriptStartFile)
                     .WaitForFileToExist(firstScriptWaitFile))
-                .WithIsolation(scriptsInParallelTestCase.LevelOfFirstScript)
-                .WithMutexName(scriptsInParallelTestCase.MutexForFirstScript)
+                .SetIsolationLevel(scriptsInParallelTestCase.LevelOfFirstScript)
+                .SetIsolationMutexName(scriptsInParallelTestCase.MutexForFirstScript)
                 .Build();
 
-            var secondStartScriptCommand = new LatestStartScriptCommandBuilder()
-                .WithScriptBody(new ScriptBuilder().CreateFile(secondScriptStart))
-                .WithIsolation(scriptsInParallelTestCase.LevelOfSecondScript)
-                .WithMutexName(scriptsInParallelTestCase.MutexForSecondScript)
+            var secondStartScriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(new ScriptBuilder().CreateFile(secondScriptStart))
+                .SetIsolationLevel(scriptsInParallelTestCase.LevelOfSecondScript)
+                .SetIsolationMutexName(scriptsInParallelTestCase.MutexForSecondScript)
                 .Build();
 
             var tentacleClient = clientTentacle.TentacleClient;
             var firstScriptExecution = Task.Run(async () => await tentacleClient.ExecuteScript(firstStartScriptCommand, CancellationToken));
 
             // Wait for the first script to start running
-            await Wait.For(() => File.Exists(firstScriptStartFile), 
+            await Wait.For(() => File.Exists(firstScriptStartFile),
                 TimeSpan.FromSeconds(30),
                 () => throw new Exception("Script did not start running"),
                 CancellationToken);
@@ -118,7 +118,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var secondScriptExecution = Task.Run(async () => await tentacleClient.ExecuteScript(secondStartScriptCommand, CancellationToken));
 
             // Wait for the second script to start
-            await Wait.For(() => File.Exists(secondScriptStart), 
+            await Wait.For(() => File.Exists(secondScriptStart),
                 TimeSpan.FromSeconds(30),
                 () => throw new Exception("Second script did not start"),
                 CancellationToken);

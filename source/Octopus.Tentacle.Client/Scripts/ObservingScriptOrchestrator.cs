@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Octopus.Tentacle.Client.Scripts.Models;
 using Octopus.Tentacle.Contracts;
-using Octopus.Tentacle.Contracts.ScriptServiceV2;
-using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
 
 namespace Octopus.Tentacle.Client.Scripts
 {
@@ -27,9 +26,9 @@ namespace Octopus.Tentacle.Client.Scripts
             this.onScriptCompleted = onScriptCompleted;
         }
 
-        public async Task<ScriptExecutionResult> ExecuteScript(StartScriptCommandV3Alpha startScriptCommand, CancellationToken scriptExecutionCancellationToken)
+        public async Task<ScriptExecutionResult> ExecuteScript(ExecuteScriptCommand command, CancellationToken scriptExecutionCancellationToken)
         {
-            var mappedStartCommand = Map(startScriptCommand);
+            var mappedStartCommand = Map(command);
 
             var scriptStatusResponse = await StartScript(mappedStartCommand, scriptExecutionCancellationToken).ConfigureAwait(false);
 
@@ -83,7 +82,7 @@ namespace Octopus.Tentacle.Client.Scripts
                     }
                     catch (Exception)
                     {
-                        if (scriptExecutionCancellationToken.IsCancellationRequested) 
+                        if (scriptExecutionCancellationToken.IsCancellationRequested)
                         {
                             continue; // Enter cancellation mode.
                         }
@@ -116,7 +115,7 @@ namespace Octopus.Tentacle.Client.Scripts
             return lastStatusResponse;
         }
 
-        protected abstract TStartCommand Map(StartScriptCommandV3Alpha command);
+        protected abstract TStartCommand Map(ExecuteScriptCommand command);
 
         protected abstract ScriptExecutionStatus MapToStatus(TScriptStatusResponse response);
 

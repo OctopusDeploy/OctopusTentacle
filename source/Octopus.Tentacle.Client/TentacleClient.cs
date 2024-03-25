@@ -7,6 +7,7 @@ using Halibut.ServiceModel;
 using Octopus.Tentacle.Client.Execution;
 using Octopus.Tentacle.Client.Observability;
 using Octopus.Tentacle.Client.Scripts;
+using Octopus.Tentacle.Client.Scripts.Models;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Capabilities;
 using Octopus.Tentacle.Contracts.ClientServices;
@@ -81,7 +82,7 @@ namespace Octopus.Tentacle.Client
             scriptServiceV3Alpha = halibutRuntime.CreateAsyncClient<IScriptServiceV3Alpha, IAsyncClientScriptServiceV3Alpha>(serviceEndPoint);
             clientFileTransferServiceV1 = halibutRuntime.CreateAsyncClient<IFileTransferService, IAsyncClientFileTransferService>(serviceEndPoint);
             capabilitiesServiceV2 = halibutRuntime.CreateAsyncClient<ICapabilitiesServiceV2, IAsyncClientCapabilitiesServiceV2>(serviceEndPoint).WithBackwardsCompatability();
-            
+
             if (tentacleServicesDecoratorFactory != null)
             {
                 scriptServiceV1 = tentacleServicesDecoratorFactory.Decorate(scriptServiceV1);
@@ -166,8 +167,7 @@ namespace Octopus.Tentacle.Client
             }
         }
 
-        public async Task<ScriptExecutionResult> ExecuteScript(
-            StartScriptCommandV3Alpha startScriptCommand,
+        public async Task<ScriptExecutionResult> ExecuteScript(ExecuteScriptCommand executeScriptCommand,
             OnScriptStatusResponseReceived onScriptStatusResponseReceived,
             OnScriptCompleted onScriptCompleted,
             ILog logger,
@@ -193,7 +193,7 @@ namespace Octopus.Tentacle.Client
 
                 var orchestrator = await factory.CreateOrchestrator(scriptExecutionCancellationToken);
 
-                var result = await orchestrator.ExecuteScript(startScriptCommand, scriptExecutionCancellationToken);
+                var result = await orchestrator.ExecuteScript(executeScriptCommand, scriptExecutionCancellationToken);
 
                 return new ScriptExecutionResult(result.State, result.ExitCode);
             }

@@ -7,6 +7,7 @@ using FluentAssertions;
 using Halibut;
 using NUnit.Framework;
 using Octopus.Tentacle.Client.Scripts;
+using Octopus.Tentacle.Client.Scripts.Models;
 using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Capabilities;
@@ -77,8 +78,8 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new LatestStartScriptCommandBuilder()
-                .WithScriptBody(b => b
+            var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(b => b
                     .Print("Should not run this script")
                     .Sleep(TimeSpan.FromHours(1)))
                 .Build();
@@ -89,9 +90,9 @@ namespace Octopus.Tentacle.Tests.Integration
             // ASSERT
             // Assert that the cancellation was performed at the correct state e.g. Connecting or Transferring
             capabilitiesMethodUsages.ForGetCapabilitiesAsync().LastException.Should().BeRequestCancelledException(rpcCallStage);
-            
+
             var expectedException = new ExceptionContractAssertionBuilder(FailureScenario.ScriptExecutionCancelled, tentacleConfigurationTestCase.TentacleType, clientAndTentacle).Build();
-            
+
             actualException.ShouldMatchExceptionContract(expectedException);
 
             cancellationDuration.Should().BeLessOrEqualTo(TimeSpan.FromSeconds(15));
@@ -152,8 +153,8 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new LatestStartScriptCommandBuilder()
-                .WithScriptBody(b => b
+            var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(b => b
                     .Print("The script")
                     .Sleep(TimeSpan.FromHours(1)))
                 .Build();
@@ -170,7 +171,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 // Should have cancelled the RPC call and exited immediately
                 var expectedException = new ExceptionContractAssertionBuilder(FailureScenario.ScriptExecutionCancelled, tentacleConfigurationTestCase.TentacleType, clientAndTentacle).Build();
 
-            
+
                 actualException.ShouldMatchExceptionContract(expectedException);
 
                 // We should have cancelled the RPC call quickly and existed
@@ -184,7 +185,7 @@ namespace Octopus.Tentacle.Tests.Integration
             else // Transferring
             {
                 var expectedException = new ExceptionContractAssertionBuilder(FailureScenario.ScriptExecutionCancelled, tentacleConfigurationTestCase.TentacleType, clientAndTentacle).Build();
-            
+
                 actualException.ShouldMatchExceptionContract(expectedException);
 
                 // Assert the CancelScript and CompleteScript flow happened fairly quickly
@@ -206,7 +207,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var restartedPortForwarderForCancel = false;
             var hasPausedOrStoppedPortForwarder = false;
             var ensureCancellationOccursDuringAnRpcCall = new SemaphoreSlim(0, 1);
-            
+
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithPendingRequestQueueFactory(new CancellationObservingPendingRequestQueueFactory()) // Partially works around disconnected polling tentacles take work from the queue
                 .WithServiceEndpointModifier(point => point.TryAndConnectForALongTime())
@@ -253,8 +254,8 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new LatestStartScriptCommandBuilder()
-                .WithScriptBody(b => b
+            var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(b => b
                     .Print("The script")
                     .Sleep(TimeSpan.FromHours(1)))
                 .Build();
@@ -267,7 +268,7 @@ namespace Octopus.Tentacle.Tests.Integration
             actualException.Should().BeScriptExecutionCancelledException();
 
             var expectedException = new ExceptionContractAssertionBuilder(FailureScenario.ScriptExecutionCancelled, tentacleConfigurationTestCase.TentacleType, clientAndTentacle).Build();
-            
+
             actualException.ShouldMatchExceptionContract(expectedException);
 
             // Assert that the cancellation was performed at the correct state e.g. Connecting or Transferring
@@ -321,8 +322,8 @@ namespace Octopus.Tentacle.Tests.Integration
 
             clientAndTentacle.TentacleClient.OnCancellationAbandonCompleteScriptAfter = TimeSpan.FromSeconds(20);
 
-            var startScriptCommand = new LatestStartScriptCommandBuilder()
-                .WithScriptBody(b => b
+            var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(b => b
                     .Print("The script")
                     .Sleep(TimeSpan.FromSeconds(5)))
                 .Build();
@@ -383,7 +384,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
         async Task<(ScriptExecutionResult response, Exception? actualException, TimeSpan cancellationDuration)> ExecuteScriptThenCancelExecutionWhenRpcCallHasStarted(
             ClientAndTentacle clientAndTentacle,
-            StartScriptCommandV3Alpha startScriptCommand,
+            ExecuteScriptCommand executeScriptCommand,
             Reference<bool> rpcCallHasStarted,
             SemaphoreSlim whenTheRequestCanBeCancelled)
         {
@@ -391,7 +392,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var cancelExecutionCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
 
             var executeScriptTask = clientAndTentacle.TentacleClient.ExecuteScript(
-                startScriptCommand,
+                executeScriptCommand,
                 cancelExecutionCancellationTokenSource.Token);
 
             Logger.Information("Create action");
@@ -399,7 +400,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             Logger.Information("Waiting for the RPC Call to start");
             await Wait.For(
-                () => rpcCallHasStarted.Value, 
+                () => rpcCallHasStarted.Value,
                 TimeSpan.FromSeconds(30),
                 () => throw new Exception("RPC call did not start")
                 ,CancellationToken);

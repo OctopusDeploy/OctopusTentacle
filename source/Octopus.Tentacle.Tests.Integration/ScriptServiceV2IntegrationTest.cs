@@ -28,8 +28,8 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new LatestStartScriptCommandBuilder()
-                .WithScriptBody(new ScriptBuilder()
+            var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(new ScriptBuilder()
                     .Print("Lets do it")
                     .PrintNTimesWithDelay("another one", 10, TimeSpan.FromSeconds(1))
                     .Print("All done"))
@@ -61,12 +61,12 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new LatestStartScriptCommandBuilder()
-                .WithScriptBody(new ScriptBuilder()
+            var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(new ScriptBuilder()
                     .Print("Lets do it")
                     .PrintNTimesWithDelay("another one", 10, TimeSpan.FromSeconds(1))
                     .Print("All done"))
-                .WithDurationStartScriptCanWaitForScriptToFinish(TimeSpan.FromMinutes(1))
+                .SetDurationStartScriptCanWaitForScriptToFinish(TimeSpan.FromMinutes(1))
                 .Build();
 
             var (finalResponse, logs) = await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken);
@@ -95,8 +95,8 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new LatestStartScriptCommandBuilder()
-                .WithScriptBody(new ScriptBuilder()
+            var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(new ScriptBuilder()
                     .Print("hello")
                     .Sleep(TimeSpan.FromSeconds(1))
                     .Print("waitingtobestopped")
@@ -143,8 +143,8 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new LatestStartScriptCommandBuilder()
-                .WithScriptBody(new ScriptBuilder()
+            var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(new ScriptBuilder()
                     .Print("hello")
                     .Sleep(TimeSpan.FromSeconds(1))
                     .Print("waitingtobestopped")
@@ -180,13 +180,13 @@ namespace Octopus.Tentacle.Tests.Integration
             recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).Started.Should().Be(1);
             recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Started.Should().BeGreaterThanOrEqualTo(1);
         }
-        
+
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.Version2)]
         public async Task WhenOnCompleteTakesLongerThan_OnCancellationAbandonCompleteScriptAfter_AndTheExecutionIsNotCancelled_TheOrchestratorWaitsForCleanUpToComplete(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             bool calledWithNonCancelledCT = false;
-            
+
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages(tentacleConfigurationTestCase, out var recordedUsages)
@@ -200,8 +200,8 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var scriptCommand = new LatestStartScriptCommandBuilder()
-                .WithScriptBody(b => b.Print("Hello"))
+            var scriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(b => b.Print("Hello"))
                 .Build();
 
             var tentacleClient = clientTentacle.TentacleClient;

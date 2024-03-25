@@ -73,8 +73,8 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var inMemoryLog = new InMemoryLog();
 
-            var startScriptCommand = new LatestStartScriptCommandBuilder()
-                .WithScriptBody(b => b
+            var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(b => b
                     .Print("Should not run this script"))
                 .Build();
 
@@ -128,7 +128,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var inMemoryLog = new InMemoryLog();
 
-            var startScriptCommand = new LatestStartScriptCommandBuilder()
+            var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
                 .Build();
 
             var executeScriptTask = clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, inMemoryLog);
@@ -189,8 +189,8 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var inMemoryLog = new InMemoryLog();
 
-            var startScriptCommand = new LatestStartScriptCommandBuilder()
-                .WithScriptBody(b => b
+            var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(b => b
                     .Print("Start Script")
                     .Sleep(TimeSpan.FromHours(1))
                     .Print("End Script"))
@@ -244,8 +244,8 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var inMemoryLog = new InMemoryLog();
 
-            var startScriptCommand = new LatestStartScriptCommandBuilder()
-                .WithScriptBody(b => b
+            var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(b => b
                     .Sleep(TimeSpan.FromHours(1)))
                 .Build();
 
@@ -309,13 +309,13 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var inMemoryLog = new InMemoryLog();
 
-            var startScriptCommand = new LatestStartScriptCommandBuilder()
-                .WithScriptBody(b => b
+            var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(b => b
                     .Print("Start Script")
                     .Sleep(TimeSpan.FromHours(1))
                     .Print("End Script"))
                 // Don't wait in start script as we want to tst get status
-                .WithDurationStartScriptCanWaitForScriptToFinish(null)
+                .SetDurationStartScriptCanWaitForScriptToFinish(null)
                 .Build();
 
             var duration = Stopwatch.StartNew();
@@ -367,11 +367,11 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var inMemoryLog = new InMemoryLog();
 
-            var startScriptCommand = new LatestStartScriptCommandBuilder()
-                .WithScriptBody(b => b
+            var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(b => b
                     .Sleep(TimeSpan.FromHours(1)))
                 // Don't wait in start script as we want to test get status
-                .WithDurationStartScriptCanWaitForScriptToFinish(null)
+                .SetDurationStartScriptCanWaitForScriptToFinish(null)
                 .Build();
 
             var executeScriptTask = clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, inMemoryLog);
@@ -434,13 +434,13 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var inMemoryLog = new InMemoryLog();
 
-            var startScriptCommand = new LatestStartScriptCommandBuilder()
-                .WithScriptBody(b => b
+            var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(b => b
                     .Print("Start Script")
                     .Sleep(TimeSpan.FromHours(1))
                     .Print("End Script"))
                 // Don't wait in start script as we want to tst get status
-                .WithDurationStartScriptCanWaitForScriptToFinish(null)
+                .SetDurationStartScriptCanWaitForScriptToFinish(null)
                 .Build();
 
             // Start the script which will wait for a file to exist
@@ -506,11 +506,11 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var inMemoryLog = new InMemoryLog();
 
-            var startScriptCommand = new LatestStartScriptCommandBuilder()
-                .WithScriptBody(b => b
+            var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(b => b
                     .Sleep(TimeSpan.FromHours(1)))
                 // Don't wait in start script as we want to test get status
-                .WithDurationStartScriptCanWaitForScriptToFinish(null)
+                .SetDurationStartScriptCanWaitForScriptToFinish(null)
                 .Build();
 
             // Start the script which will wait for a file to exist

@@ -1,13 +1,14 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Halibut.ServiceModel;
 using Octopus.Tentacle.Client.Execution;
 using Octopus.Tentacle.Client.Observability;
+using Octopus.Tentacle.Client.Scripts.Models;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.Observability;
-using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
 using ILog = Octopus.Diagnostics.ILog;
 
 namespace Octopus.Tentacle.Client.Scripts
@@ -41,16 +42,21 @@ namespace Octopus.Tentacle.Client.Scripts
             this.logger = logger;
         }
 
-        protected override StartScriptCommand Map(StartScriptCommandV3Alpha command)
-            => new(
-                command.ScriptBody,
-                command.Isolation,
-                command.ScriptIsolationMutexTimeout,
-                command.IsolationMutexName!,
-                command.Arguments,
-                command.TaskId,
-                command.Scripts,
-                command.Files.ToArray());
+        protected override StartScriptCommand Map(ExecuteScriptCommand command)
+        {
+            if (command is not ExecuteShellScriptCommand shellScriptCommand)
+                throw new InvalidOperationException($"{nameof(ScriptServiceV2Orchestrator)} only supports commands of type {nameof(ExecuteShellScriptCommand)}.");
+
+            return new StartScriptCommand(
+                shellScriptCommand.ScriptBody,
+                shellScriptCommand.IsolationConfiguration.IsolationLevel,
+                shellScriptCommand.IsolationConfiguration.MutexTimeout,
+                shellScriptCommand.IsolationConfiguration.MutexName,
+                shellScriptCommand.Arguments,
+                shellScriptCommand.TaskId,
+                shellScriptCommand.Scripts,
+                shellScriptCommand.Files.ToArray());
+        }
 
         protected override ScriptExecutionStatus MapToStatus(ScriptStatusResponse response)
             => new(response.Logs);

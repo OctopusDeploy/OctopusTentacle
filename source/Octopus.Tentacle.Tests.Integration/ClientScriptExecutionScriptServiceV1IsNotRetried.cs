@@ -45,13 +45,13 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var waitForFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "waitforme");
 
-            var startScriptCommand = new LatestStartScriptCommandBuilder()
-                .WithIsolation(ScriptIsolationLevel.FullIsolation)
-                .WithMutexName("bob")
-                .WithScriptBody(new ScriptBuilder()
+            var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(new ScriptBuilder()
                     .Print("hello")
                     .WaitForFileToExist(waitForFile)
                     .Print("AllDone"))
+                .SetIsolationLevel(ScriptIsolationLevel.FullIsolation)
+                .SetIsolationMutexName("bob")
                 .Build();
 
             var logs = new List<ProcessOutput>();
@@ -105,8 +105,8 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var waitForFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "waitforme");
 
-            var startScriptCommand = new LatestStartScriptCommandBuilder()
-                .WithScriptBody(new ScriptBuilder()
+            var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(new ScriptBuilder()
                     .Print("hello")
                     .WaitForFileToExist(waitForFile)
                     .Print("AllDone"))
@@ -124,7 +124,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var legacyTentacleClient = clientTentacle.LegacyTentacleClientBuilder().Build();
 
             await Wait.For(
-                async () => (await legacyTentacleClient.ScriptService.GetStatusAsync(scriptStatusRequest, new(CancellationToken))).State == ProcessState.Complete, 
+                async () => (await legacyTentacleClient.ScriptService.GetStatusAsync(scriptStatusRequest, new(CancellationToken))).State == ProcessState.Complete,
                 TimeSpan.FromSeconds(60),
                 () => throw new Exception("Script Execution did not complete"),
                 CancellationToken);
@@ -175,8 +175,8 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var waitForFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "waitforme");
 
-            var startScriptCommand = new LatestStartScriptCommandBuilder()
-                .WithScriptBody(new ScriptBuilder()
+            var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(new ScriptBuilder()
                     .Print("hello")
                     .WaitForFileToExist(waitForFile)
                     .Print("AllDone"))
@@ -202,7 +202,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var legacyTentacleClient = clientTentacle.LegacyTentacleClientBuilder().Build();
 
             await Wait.For(
-                async () => (await legacyTentacleClient.ScriptService.GetStatusAsync(scriptStatusRequest, new(CancellationToken))).State == ProcessState.Complete, 
+                async () => (await legacyTentacleClient.ScriptService.GetStatusAsync(scriptStatusRequest, new(CancellationToken))).State == ProcessState.Complete,
                 TimeSpan.FromSeconds(60),
                 () => throw new Exception("Script Execution did not complete"),
                 CancellationToken);
@@ -232,7 +232,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new LatestStartScriptCommandBuilder().WithScriptBody(new ScriptBuilder().Print("hello")).Build();
+            var startScriptCommand = new TestExecuteShellScriptCommandBuilder().SetScriptBody(new ScriptBuilder().Print("hello")).Build();
 
             var logs = new List<ProcessOutput>();
             var executeScriptTask = clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, logs, CancellationToken);

@@ -1,7 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using Octopus.Tentacle.Contracts;
 
-namespace Octopus.Tentacle.Client.Scripts
+namespace Octopus.Tentacle.Client.Scripts.Models
 {
     public class ScriptExecutionResult
     {

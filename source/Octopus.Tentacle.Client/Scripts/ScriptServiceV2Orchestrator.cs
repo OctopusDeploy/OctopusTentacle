@@ -3,16 +3,14 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
-using Halibut.Exceptions;
 using Halibut.ServiceModel;
-using Halibut.Transport;
 using Octopus.Tentacle.Client.Execution;
 using Octopus.Tentacle.Client.Observability;
+using Octopus.Tentacle.Client.Scripts.Models;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
-using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
 using ILog = Octopus.Diagnostics.ILog;
 
 namespace Octopus.Tentacle.Client.Scripts
@@ -47,18 +45,23 @@ namespace Octopus.Tentacle.Client.Scripts
             this.logger = logger;
         }
 
-        protected override StartScriptCommandV2 Map(StartScriptCommandV3Alpha command)
-            => new(
-                command.ScriptBody,
-                command.Isolation,
-                command.ScriptIsolationMutexTimeout,
-                command.IsolationMutexName!,
-                command.Arguments,
-                command.TaskId,
-                command.ScriptTicket,
-                command.DurationToWaitForScriptToFinish,
-                command.Scripts,
-                command.Files.ToArray());
+        protected override StartScriptCommandV2 Map(ExecuteScriptCommand command)
+        {
+            if (command is not ExecuteShellScriptCommand shellScriptCommand)
+                throw new InvalidOperationException($"{nameof(ScriptServiceV2Orchestrator)} only supports commands of type {nameof(ExecuteShellScriptCommand)}.");
+
+            return new StartScriptCommandV2(
+                shellScriptCommand.ScriptBody,
+                shellScriptCommand.IsolationConfiguration.IsolationLevel,
+                shellScriptCommand.IsolationConfiguration.MutexTimeout,
+                shellScriptCommand.IsolationConfiguration.MutexName,
+                shellScriptCommand.Arguments,
+                shellScriptCommand.TaskId,
+                shellScriptCommand.ScriptTicket,
+                shellScriptCommand.DurationToWaitForScriptToFinish,
+                shellScriptCommand.Scripts,
+                shellScriptCommand.Files.ToArray());
+        }
 
         protected override ScriptExecutionStatus MapToStatus(ScriptStatusResponseV2 response)
             => new(response.Logs);
@@ -200,7 +203,7 @@ namespace Octopus.Tentacle.Client.Scripts
             {
                 // Finish performs a best effort cleanup of the Workspace on Tentacle
                 // If we are cancelling script execution we abandon a call to complete script after a period of time
-                
+
                 using var completeScriptCancellationTokenSource = new CancellationTokenSource();
 
                 await using var _ = scriptExecutionCancellationToken.Register(() => completeScriptCancellationTokenSource.CancelAfter(onCancellationAbandonCompleteScriptAfter));
@@ -214,7 +217,7 @@ namespace Octopus.Tentacle.Client.Scripts
                         },
                         logger,
                         clientOperationMetricsBuilder,
-                        completeScriptCancellationTokenSource.Token); 
+                        completeScriptCancellationTokenSource.Token);
             }
             catch (Exception ex) when (ex is HalibutClientException or OperationCanceledException)
             {
