@@ -14,7 +14,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
     {
         private readonly List<Decorator<IAsyncClientScriptService>> scriptServiceDecorator = new ();
         private readonly List<Decorator<IAsyncClientScriptServiceV2>> scriptServiceV2Decorator = new ();
-        private readonly List<Decorator<IAsyncClientKubernetesScriptServiceV1Alpha>> scriptServiceV3AlphaDecorator = new ();
+        private readonly List<Decorator<IAsyncClientKubernetesScriptServiceV1Alpha>> kubernetesScriptServiceV1AlphaDecorator = new ();
         private readonly List<Decorator<IAsyncClientFileTransferService>> fileTransferServiceDecorator = new ();
         private readonly List<Decorator<IAsyncClientCapabilitiesServiceV2>> capabilitiesServiceV2Decorator = new ();
 
@@ -34,7 +34,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
 
         public TentacleServiceDecoratorBuilder DecorateKubernetesScriptServiceV1AlphaWith(Decorator<IAsyncClientKubernetesScriptServiceV1Alpha> kubernetesScriptServiceV1AlphaDecorator)
         {
-            this.scriptServiceV3AlphaDecorator.Add(kubernetesScriptServiceV1AlphaDecorator);
+            this.kubernetesScriptServiceV1AlphaDecorator.Add(kubernetesScriptServiceV1AlphaDecorator);
             return this;
         }
 
@@ -54,10 +54,10 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             return this;
         }
 
-        public TentacleServiceDecoratorBuilder DecorateKubernetesScriptServiceV1AlphaWith(Action<KubernetesScriptServiceV1AlphaDecoratorBuilder> scriptServiceV3AlphaDecorator)
+        public TentacleServiceDecoratorBuilder DecorateKubernetesScriptServiceV1AlphaWith(Action<KubernetesScriptServiceV1AlphaDecoratorBuilder> kubernetesScriptServiceV1AlphaDecorator)
         {
             var b = new KubernetesScriptServiceV1AlphaDecoratorBuilder();
-            scriptServiceV3AlphaDecorator(b);
+            kubernetesScriptServiceV1AlphaDecorator(b);
             this.DecorateKubernetesScriptServiceV1AlphaWith(b.Build());
             return this;
         }
@@ -96,7 +96,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             // e.g. for logging or counting. It will always make sense for this decorator to be called first.
             var genericDecorators = new ProxyTentacleServiceDecoratorFactory(registeredProxyDecorators);
 
-            var perMethodDecorators = new CombinePerServiceTentacleServiceDecoratorFactory(Combine(scriptServiceDecorator), Combine(scriptServiceV2Decorator), Combine(scriptServiceV3AlphaDecorator), Combine(fileTransferServiceDecorator), Combine(capabilitiesServiceV2Decorator));
+            var perMethodDecorators = new CombinePerServiceTentacleServiceDecoratorFactory(Combine(scriptServiceDecorator), Combine(scriptServiceV2Decorator), Combine(kubernetesScriptServiceV1AlphaDecorator), Combine(fileTransferServiceDecorator), Combine(capabilitiesServiceV2Decorator));
 
             return new CombiningTentacleServiceDecoratorFactory(new List<ITentacleServiceDecoratorFactory>(){genericDecorators, perMethodDecorators});
         }
@@ -122,14 +122,14 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
         {
             readonly Decorator<IAsyncClientScriptService> scriptServiceDecorator;
             readonly Decorator<IAsyncClientScriptServiceV2> scriptServiceV2Decorator;
-            readonly Decorator<IAsyncClientKubernetesScriptServiceV1Alpha> scriptServiceV3AlphaDecorator;
+            readonly Decorator<IAsyncClientKubernetesScriptServiceV1Alpha> kubernetesScriptServiceV1AlphaDecorator;
             readonly Decorator<IAsyncClientFileTransferService> fileTransferServiceDecorator;
             readonly Decorator<IAsyncClientCapabilitiesServiceV2> capabilitiesServiceV2Decorator;
 
             public CombinePerServiceTentacleServiceDecoratorFactory(
                 Decorator<IAsyncClientScriptService> scriptServiceDecorator,
                 Decorator<IAsyncClientScriptServiceV2> scriptServiceV2Decorator,
-                Decorator<IAsyncClientKubernetesScriptServiceV1Alpha> scriptServiceV3AlphaDecorator,
+                Decorator<IAsyncClientKubernetesScriptServiceV1Alpha> kubernetesScriptServiceV1AlphaDecorator,
                 Decorator<IAsyncClientFileTransferService> fileTransferServiceDecorator,
                 Decorator<IAsyncClientCapabilitiesServiceV2> capabilitiesServiceV2Decorator)
             {
@@ -137,7 +137,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
                 this.scriptServiceV2Decorator = scriptServiceV2Decorator;
                 this.fileTransferServiceDecorator = fileTransferServiceDecorator;
                 this.capabilitiesServiceV2Decorator = capabilitiesServiceV2Decorator;
-                this.scriptServiceV3AlphaDecorator = scriptServiceV3AlphaDecorator;
+                this.kubernetesScriptServiceV1AlphaDecorator = kubernetesScriptServiceV1AlphaDecorator;
             }
 
             public IAsyncClientScriptService Decorate(IAsyncClientScriptService scriptService)
@@ -162,7 +162,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
 
             public IAsyncClientKubernetesScriptServiceV1Alpha Decorate(IAsyncClientKubernetesScriptServiceV1Alpha service)
             {
-                return scriptServiceV3AlphaDecorator(service);
+                return kubernetesScriptServiceV1AlphaDecorator(service);
             }
         }
 
