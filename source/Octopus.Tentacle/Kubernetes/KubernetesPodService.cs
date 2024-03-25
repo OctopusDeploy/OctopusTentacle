@@ -206,7 +206,7 @@ namespace Octopus.Tentacle.Kubernetes
                 }
 
                 //delay for 1 second
-                await Task.Delay(50, cancellationToken);
+                await Task.Delay(1000, cancellationToken);
             }
         }
 
