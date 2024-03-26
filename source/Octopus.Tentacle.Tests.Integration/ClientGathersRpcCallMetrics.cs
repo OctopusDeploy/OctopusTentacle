@@ -6,13 +6,10 @@ using FluentAssertions;
 using Halibut;
 using NUnit.Framework;
 using Octopus.Tentacle.CommonTestUtils;
-using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Capabilities;
-using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
-using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
 using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
@@ -45,19 +42,9 @@ namespace Octopus.Tentacle.Tests.Integration
             var executeScriptMetrics = tentacleClientObserver.ExecuteScriptMetrics.Should().ContainSingle().Subject;
             ThenClientOperationMetricsShouldBeSuccessful(executeScriptMetrics);
 
-            string expectedScriptService;
-            if (tentacleConfigurationTestCase.ScriptServiceToTest == TentacleConfigurationTestCases.ScriptServiceV3AlphaType)
-            {
-                expectedScriptService = nameof(IScriptServiceV3Alpha);
-            }
-            else if (tentacleConfigurationTestCase.ScriptServiceToTest == TentacleConfigurationTestCases.ScriptServiceV2Type)
-            {
-                expectedScriptService = nameof(IScriptServiceV2);
-            }
-            else
-            {
-                expectedScriptService = nameof(IScriptService);
-            }
+            var expectedScriptService = tentacleConfigurationTestCase.ScriptServiceToTest == TentacleConfigurationTestCases.ScriptServiceV2Type
+                ? nameof(IScriptServiceV2)
+                : nameof(IScriptService);
 
             tentacleClientObserver.RpcCallMetrics.Should().NotBeEmpty();
             tentacleClientObserver.RpcCallMetrics.Should().ContainSingle(m => m.RpcCall.Name == nameof(ICapabilitiesServiceV2.GetCapabilities) && m.RpcCall.Service == nameof(ICapabilitiesServiceV2));

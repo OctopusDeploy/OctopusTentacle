@@ -11,6 +11,6 @@ namespace Octopus.Tentacle.Client
         public IAsyncClientFileTransferService Decorate(IAsyncClientFileTransferService service);
 
         public IAsyncClientCapabilitiesServiceV2 Decorate(IAsyncClientCapabilitiesServiceV2 service);
-        public IAsyncClientScriptServiceV3Alpha Decorate(IAsyncClientScriptServiceV3Alpha service);
+        public IAsyncClientKubernetesScriptServiceV1Alpha Decorate(IAsyncClientKubernetesScriptServiceV1Alpha service);
     }
 }

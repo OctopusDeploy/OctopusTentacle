@@ -3,9 +3,9 @@ using System.Text;
 
 namespace Octopus.Tentacle.CommonTestUtils.Builders
 {
-    public static class StartScriptCommandV3AlphaBuilderExtensionMethods
+    public static class StartKubernetesScriptCommandV1AlphaBuilderExtensionMethods
     {
-        public static StartScriptCommandV3AlphaBuilder WithScriptBodyForCurrentOs(this StartScriptCommandV3AlphaBuilder builder, string windowsScript, string bashScript)
+        public static StartKubernetesScriptCommandV1AlphaBuilder WithScriptBodyForCurrentOs(this StartKubernetesScriptCommandV1AlphaBuilder builder, string windowsScript, string bashScript)
         {
             var scriptBody = new StringBuilder(PlatformDetection.IsRunningOnWindows ? windowsScript : bashScript);
 

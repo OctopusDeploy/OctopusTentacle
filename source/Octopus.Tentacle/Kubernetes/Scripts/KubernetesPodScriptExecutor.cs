@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
+using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha;
 using Octopus.Tentacle.Scripts;
 
 namespace Octopus.Tentacle.Kubernetes.Scripts
 {
-    public class KubernetesPodScriptExecutor : IScriptExecutor
+    public class KubernetesPodScriptExecutor
     {
         readonly RunningKubernetesPod.Factory runningKubernetesPodFactory;
 
@@ -15,17 +15,13 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             this.runningKubernetesPodFactory = runningKubernetesPodFactory;
         }
 
-        public bool CanExecute(StartScriptCommandV3Alpha command) => command.ExecutionContext is KubernetesAgentScriptExecutionContext;
-
-        public IRunningScript ExecuteOnBackgroundThread(StartScriptCommandV3Alpha command, IScriptWorkspace workspace, ScriptStateStore scriptStateStore, CancellationToken cancellationToken)
+        public IRunningScript ExecuteOnBackgroundThread(StartKubernetesScriptCommandV1Alpha command, IScriptWorkspace workspace, ScriptStateStore scriptStateStore, CancellationToken cancellationToken)
         {
             var runningScript = runningKubernetesPodFactory(
                 workspace,
                 workspace.CreateLog(),
-                command.ScriptTicket,
-                command.TaskId,
+                command,
                 scriptStateStore,
-                (KubernetesAgentScriptExecutionContext)command.ExecutionContext,
                 cancellationToken);
 
             Task.Run(() => runningScript.Execute(), cancellationToken);

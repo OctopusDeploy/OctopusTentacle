@@ -23,12 +23,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 nameof(TentacleConfigurationTestCases.GetEnumerator),
                 new object[]
                 {
-                    testCommonVersions, 
+                    testCommonVersions,
                     testCapabilitiesServiceVersions,
-                    testNoCapabilitiesServiceVersions, 
-                    testScriptIsolationLevelVersions, 
-                    testDefaultTentacleRuntimeOnly, 
-                    scriptServiceToTest, 
+                    testNoCapabilitiesServiceVersions,
+                    testScriptIsolationLevelVersions,
+                    testDefaultTentacleRuntimeOnly,
+                    scriptServiceToTest,
                     testPolling,
                     testListening,
                     additionalParameterTypes
@@ -39,11 +39,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
     static class TentacleConfigurationTestCases
     {
-        public static readonly Type ScriptServiceV3AlphaType = typeof(IAsyncClientScriptServiceV3Alpha);
         public static readonly Type ScriptServiceV2Type = typeof(IAsyncClientScriptServiceV2);
         public static readonly Type ScriptServiceV1Type = typeof(IAsyncClientScriptService);
 
-        static readonly IEnumerable<Type> CurrentScriptServiceVersionsToTest = new[] { ScriptServiceV2Type, ScriptServiceV3AlphaType };
+        static readonly IEnumerable<Type> CurrentScriptServiceVersionsToTest = new[] { ScriptServiceV2Type };
 
         static readonly Dictionary<Version, IEnumerable<Type>> ScriptServiceVersionsToTestMap = new()
         {
@@ -170,7 +169,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             {
                 ScriptServiceVersionToTest.Version1 => new[] { ScriptServiceV1Type },
                 ScriptServiceVersionToTest.Version2 => new[] { ScriptServiceV2Type },
-                ScriptServiceVersionToTest.Version3Alpha => new[] { ScriptServiceV3AlphaType },
                 //if no specific script service version was specified, fallback on the services in the tentacle version
                 ScriptServiceVersionToTest.TentacleSupported => version != null
                     ? ScriptServiceVersionsToTestMap[version]
