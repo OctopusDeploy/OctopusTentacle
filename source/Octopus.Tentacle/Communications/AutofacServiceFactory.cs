@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Autofac;
 using Halibut.ServiceModel;
@@ -85,8 +84,9 @@ namespace Octopus.Tentacle.Communications
             scope.Dispose();
         }
 
-        public T GetService<T>() => scope.Resolve<T>();
-
-        bool IServiceRegistration.TryGetService<T>([NotNullWhen(true)]out T? service) where T : class => scope.TryResolve(out service);
+        public T GetService<T>()
+        {
+            return scope.Resolve<T>();
+        }
     }
 }
