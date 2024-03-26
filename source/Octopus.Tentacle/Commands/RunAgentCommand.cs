@@ -129,9 +129,9 @@ namespace Octopus.Tentacle.Commands
             halibut.Value.Start();
             halibutHasStarted = true;
 
-            foreach (var backgroundTask in backgroundTasks)
+            foreach (var backgroundTaskLazy in backgroundTasks)
             {
-                backgroundTask.Value.Start();
+                backgroundTaskLazy.Value.Start();
             }
 
             Runtime.WaitForUserToExit();
