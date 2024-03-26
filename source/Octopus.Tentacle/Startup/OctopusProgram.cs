@@ -308,7 +308,7 @@ namespace Octopus.Tentacle.Startup
                 Target.Register<NullLogTarget>("EventLog");
 #endif
 #if REQUIRES_EXPLICIT_LOG_CONFIG
-            var nLogFileExtension = !PlatformDetection.Kubernetes.IsRunningInKubernetes
+            var nLogFileExtension = !PlatformDetection.Kubernetes.IsRunningAsKubernetesAgent
                 ? "exe.nlog"
                 : "exe.k8s.nlog";
 
@@ -384,7 +384,7 @@ namespace Octopus.Tentacle.Startup
 
             if (!string.IsNullOrWhiteSpace(instanceName))
             {
-                return PlatformDetection.Kubernetes.IsRunningInKubernetes
+                return PlatformDetection.Kubernetes.IsRunningAsKubernetesAgent
                     ? new StartUpKubernetesConfigMapInstanceRequest(instanceName)
                     : new StartUpRegistryInstanceRequest(instanceName);
             }

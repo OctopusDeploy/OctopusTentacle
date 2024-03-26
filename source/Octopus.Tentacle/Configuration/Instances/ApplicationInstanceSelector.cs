@@ -78,7 +78,7 @@ namespace Octopus.Tentacle.Configuration.Instances
         (IKeyValueStore, IWritableKeyValueStore) LoadConfigurationStore((string? instanceName, string? configurationpath) appInstance)
         {
             if (appInstance is { instanceName: not null, configurationpath: null } &&
-                PlatformDetection.Kubernetes.IsRunningInKubernetes)
+                PlatformDetection.Kubernetes.IsRunningAsKubernetesAgent)
             {
                 log.Verbose($"Loading configuration from ConfigMap for namespace {KubernetesConfig.Namespace}");
                 var configMapWritableStore = configMapStoreFactory.Value;
@@ -117,7 +117,7 @@ namespace Octopus.Tentacle.Configuration.Instances
 
             // Allow contributed values to override the core writable values.
             keyValueStores.Add(writableConfig);
-            
+
             return new AggregatedKeyValueStore(keyValueStores.ToArray());
         }
 
@@ -134,8 +134,8 @@ namespace Octopus.Tentacle.Configuration.Instances
                     var indexInstance = applicationInstanceStore.LoadInstanceDetails(registryInstanceRequest.InstanceName);
                     return (indexInstance.InstanceName, indexInstance.ConfigurationFilePath);
                 }
-                case StartUpConfigFileInstanceRequest configFileInstanceRequest: 
-                {   // `--config` parameter provided. Use that 
+                case StartUpConfigFileInstanceRequest configFileInstanceRequest:
+                {   // `--config` parameter provided. Use that
                     return (null, configFileInstanceRequest.ConfigFile);
                 }
                 default:
@@ -146,7 +146,7 @@ namespace Octopus.Tentacle.Configuration.Instances
 
                     // This will throw a ControlledFailureException if it can't find the instance so it won't be null
                     var indexDefaultInstance = applicationInstanceStore.LoadInstanceDetails(null);
-                    
+
                     return (indexDefaultInstance.InstanceName, indexDefaultInstance.ConfigurationFilePath);
                 }
             }
