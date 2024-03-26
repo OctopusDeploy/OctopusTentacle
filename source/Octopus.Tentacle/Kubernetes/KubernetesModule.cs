@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using Octopus.Tentacle.Background;
 using Octopus.Tentacle.Kubernetes.Scripts;
 
 namespace Octopus.Tentacle.Kubernetes
@@ -17,10 +18,10 @@ namespace Octopus.Tentacle.Kubernetes
             builder.RegisterType<KubernetesPodScriptExecutor>().AsSelf();
             builder.RegisterType<RunningKubernetesPod>().InstancePerDependency();
 
-            builder.RegisterType<KubernetesPodMonitorTask>().As<IKubernetesPodMonitorTask>().SingleInstance();
+            builder.RegisterType<KubernetesPodMonitorTask>().As<IKubernetesPodMonitorTask>().As<IBackgroundTask>().SingleInstance();
             builder.RegisterType<KubernetesPodMonitor>().As<IKubernetesPodMonitor>().As<IKubernetesPodStatusProvider>().SingleInstance();
 
-            builder.RegisterType<KubernetesOrphanedPodCleanerTask>().As<IKubernetesOrphanedPodCleanerTask>().SingleInstance();
+            builder.RegisterType<KubernetesOrphanedPodCleanerTask>().As<IKubernetesOrphanedPodCleanerTask>().As<IBackgroundTask>().SingleInstance();
             builder.RegisterType<KubernetesOrphanedPodCleaner>().As<IKubernetesOrphanedPodCleaner>().SingleInstance();
 #if DEBUG
             builder.RegisterType<LocalMachineKubernetesClientConfigProvider>().As<IKubernetesClientConfigProvider>().SingleInstance();
