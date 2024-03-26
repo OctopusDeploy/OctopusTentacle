@@ -58,7 +58,7 @@ namespace Octopus.Tentacle.Tests.Commands
                 Substitute.For<IWindowsLocalAdminRightsChecker>(),
                 new AppVersion(GetType().Assembly),
                 Substitute.For<ILogFileOnlyLogger>(),
-                backgroundTasks.Select(bt => new Lazy<IBackgroundTask>(() => bt)));
+                backgroundTasks.Select(bt => new Lazy<IBackgroundTask>(() => bt)).ToList());
 
             selector.Current.Returns(new ApplicationInstanceConfiguration("MyTentacle", null, null, null));
         }
