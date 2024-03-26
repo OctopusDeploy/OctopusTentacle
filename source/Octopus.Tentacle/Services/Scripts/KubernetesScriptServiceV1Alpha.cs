@@ -15,13 +15,13 @@ namespace Octopus.Tentacle.Services.Scripts
     {
         readonly IScriptWorkspaceFactory workspaceFactory;
         readonly IScriptStateStoreFactory scriptStateStoreFactory;
-        readonly KubernetesPodScriptExecutor executor;
+        readonly Lazy<KubernetesPodScriptExecutor> executor;
         readonly ConcurrentDictionary<ScriptTicket, RunningScriptWrapper> runningScripts = new();
 
         public KubernetesScriptServiceV1Alpha(
             IScriptWorkspaceFactory workspaceFactory,
             IScriptStateStoreFactory scriptStateStoreFactory,
-            KubernetesPodScriptExecutor executor)
+            Lazy<KubernetesPodScriptExecutor> executor)
         {
             this.workspaceFactory = workspaceFactory;
             this.scriptStateStoreFactory = scriptStateStoreFactory;
@@ -70,7 +70,7 @@ namespace Octopus.Tentacle.Services.Scripts
                     runningScript.ScriptStateStore.Create();
                 }
 
-                var process = executor.ExecuteOnBackgroundThread(command, workspace, runningScript.ScriptStateStore, runningScript.CancellationToken);
+                var process = executor.Value.ExecuteOnBackgroundThread(command, workspace, runningScript.ScriptStateStore, runningScript.CancellationToken);
 
                 runningScript.Process = process;
 
