@@ -22,6 +22,9 @@ namespace Octopus.Tentacle.Util
                     var envVar = Environment.GetEnvironmentVariable(KubernetesConfig.NamespaceVariableName);
                     Console.Error.WriteLine($"{KubernetesConfig.NamespaceVariableName}: '{envVar}'");
 
+                    if (!string.IsNullOrWhiteSpace(envVar))
+                        throw new InvalidOperationException($"Namespace variable is incorrectly set: '{envVar}'");
+
                     return !string.IsNullOrWhiteSpace(envVar);
                 }
             }
