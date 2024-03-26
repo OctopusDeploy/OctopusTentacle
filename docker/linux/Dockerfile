@@ -42,6 +42,8 @@ RUN rm -rf /tmp/*
 
 ENV OCTOPUS_RUNNING_IN_CONTAINER=Y
 ENV ACCEPT_EULA=N
+ENV AsKubernetesTentacle=""
+ENV BearerToken=""
 ENV CustomPublicHostName=""
 ENV DISABLE_DIND=N
 ENV ListeningPort=""
