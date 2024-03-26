@@ -35,12 +35,10 @@ namespace Octopus.Tentacle.Maintenance
 
             scriptService = serviceRegistration.GetService<ScriptService>();
             scriptServiceV2 = serviceRegistration.GetService<ScriptServiceV2>();
-            if (serviceRegistration.TryGetService<KubernetesScriptServiceV1Alpha>(out var svc))
+            if (serviceRegistration.TryGetService<KubernetesScriptServiceV1Alpha>(true, out var svc))
             {
                 kubernetesScriptServiceV1Alpha = svc;
             }
-
-            ;
         }
 
         public async Task Clean(CancellationToken cancellationToken)

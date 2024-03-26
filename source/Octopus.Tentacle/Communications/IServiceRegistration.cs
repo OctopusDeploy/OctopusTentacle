@@ -6,6 +6,6 @@ namespace Octopus.Tentacle.Communications
     {
         T GetService<T>();
 
-        bool TryGetService<T>(out T service);
+        bool TryGetService<T>(bool b, out T? service) where T : class;
     }
 }

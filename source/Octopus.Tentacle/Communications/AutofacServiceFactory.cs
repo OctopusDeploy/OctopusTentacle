@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Autofac;
+using Autofac.Core;
 using Halibut.ServiceModel;
 using Octopus.Tentacle.Util;
 
@@ -89,6 +90,22 @@ namespace Octopus.Tentacle.Communications
             return scope.Resolve<T>();
         }
 
-        bool IServiceRegistration.TryGetService<T>(out T service) => scope.TryResolve(out service);
+        bool IServiceRegistration.TryGetService<T>(bool ignoreDependencyResolutionExceptions, out T? service) where T : class
+        {
+            try
+            {
+                return scope.TryResolve(out service);
+            }
+            catch (DependencyResolutionException)
+            {
+                if (ignoreDependencyResolutionExceptions)
+                {
+                    service = default;
+                    return false;
+                }
+
+                throw;
+            }
+        }
     }
 }
