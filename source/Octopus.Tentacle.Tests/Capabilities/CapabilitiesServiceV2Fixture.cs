@@ -1,7 +1,9 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
+using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Services.Capabilities;
 
 namespace Octopus.Tentacle.Tests.Capabilities
@@ -19,7 +21,27 @@ namespace Octopus.Tentacle.Tests.Capabilities
             capabilities.Should().Contain("IFileTransferService");
             capabilities.Should().Contain("IScriptServiceV2");
             capabilities.Should().Contain("IScriptServiceV3Alpha");
-            capabilities.Count.Should().Be(4);
+            capabilities.Count.Should().Be(3);
+
+            capabilities.Should().NotContainMatch("IKubernetesScriptService*");
+        }
+
+        [Test]
+        public async Task OnlyKubernetesScriptServicesAreReturnedWhenRunningAsKubernetesAgent()
+        {
+            Environment.SetEnvironmentVariable(KubernetesConfig.NamespaceVariableName, "ABC");
+
+            var capabilities = (await new CapabilitiesServiceV2()
+                    .GetCapabilitiesAsync(CancellationToken.None))
+                .SupportedCapabilities;
+
+            capabilities.Should().Contain("IFileTransferService");
+            capabilities.Should().Contain("IKubernetesScriptServiceV1Alpha");
+            capabilities.Count.Should().Be(2);
+
+            capabilities.Should().NotContainMatch("IScriptService*");
+
+            Environment.SetEnvironmentVariable(KubernetesConfig.NamespaceVariableName, null);
         }
     }
 }
