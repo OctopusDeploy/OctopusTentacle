@@ -42,6 +42,32 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
+        [TentacleConfigurations()]
+        public async Task CapabilitiesServiceDoesNotReturnKubernetesScriptServiceForNonKubernetesTentacle(TentacleConfigurationTestCase tentacleConfigurationTestCase)
+        {
+            var version = tentacleConfigurationTestCase.Version;
+
+            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateLegacyBuilder().Build(CancellationToken);
+
+            var capabilities = (await clientAndTentacle.TentacleClient.CapabilitiesServiceV2.GetCapabilitiesAsync(new(CancellationToken))).SupportedCapabilities;
+
+            capabilities.Should().Contain("IScriptService");
+            capabilities.Should().Contain("IFileTransferService");
+
+            //all versions have ScriptServiceV1 & IFileTransferService
+            var expectedCapabilitiesCount = 2;
+            if (version.HasScriptServiceV2())
+            {
+                capabilities.Should().Contain("IScriptServiceV2");
+                expectedCapabilitiesCount++;
+            }
+
+            capabilities.Should().NotContain("IKubernetesServiceV1Alpha");
+
+            capabilities.Count.Should().Be(expectedCapabilitiesCount);
+        }
+
+        [Test]
         [TentacleConfigurations(testCapabilitiesServiceVersions: true)]
         public async Task CapabilitiesResponseShouldBeCached(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
