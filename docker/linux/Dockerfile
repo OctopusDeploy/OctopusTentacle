@@ -64,7 +64,7 @@ ENV TargetWorkerPool=""
 
 VOLUME /var/lib/docker
 
-CMD /scripts/configure-tentacle.sh && /scripts/run-tentacle.sh
+ENTRYPOINT [ "/scripts/configure-and-run.sh" ]
 
 LABEL \
     org.label-schema.schema-version="1.0" \
