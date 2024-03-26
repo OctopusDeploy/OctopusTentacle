@@ -54,7 +54,7 @@ namespace Octopus.Tentacle.Configuration.Instances
             // If completely dynamic (no instance or configFile provided) then dont bother setting anything
             if (startUpInstanceRequest is StartUpDynamicInstanceRequest)
                 return;
-            
+
             var instance = new ApplicationInstanceRecord(instanceName, configurationFile);
             instanceStore.RegisterInstance(instance);
         }
@@ -68,7 +68,7 @@ namespace Octopus.Tentacle.Configuration.Instances
         void EnsureConfigurationFileExists(string configurationFile, string homeDirectory)
         {
             //Skip this step if we're running on Kubernetes
-            if (PlatformDetection.Kubernetes.IsRunningInKubernetes) return;
+            if (PlatformDetection.Kubernetes.IsRunningAsKubernetesAgent) return;
 
             // Ensure we can write configuration file
             string configurationDirectory = Path.GetDirectoryName(configurationFile) ?? homeDirectory;
@@ -97,15 +97,15 @@ namespace Octopus.Tentacle.Configuration.Instances
                 ? $"{applicationName}.config"
                 : configurationFile!;
 
-            // If configuration File isn't rooted, root it to the home directory 
+            // If configuration File isn't rooted, root it to the home directory
             if (!Path.IsPathRooted(configurationFilePath))
             {
                 configurationFilePath = Path.Combine(homeDirectory, configurationFilePath);
             }
-            
+
             // get the configurationPath for writing, even if it is a relative path
             configurationFilePath = fileSystem.GetFullPath(configurationFilePath);
-            
+
             return (configurationFilePath, homeDirectory);
         }
     }
