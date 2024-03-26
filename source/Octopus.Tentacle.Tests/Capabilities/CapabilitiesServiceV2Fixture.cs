@@ -40,6 +40,8 @@ namespace Octopus.Tentacle.Tests.Capabilities
 
 
             capabilities.Should().NotContainMatch("IScriptService*");
+
+            Environment.SetEnvironmentVariable(KubernetesConfig.NamespaceVariableName, null);
         }
     }
 }
