@@ -88,5 +88,7 @@ namespace Octopus.Tentacle.Communications
         {
             return scope.Resolve<T>();
         }
+
+        bool IServiceRegistration.TryGetService<T>(out T service) => scope.TryResolve(out service);
     }
 }
