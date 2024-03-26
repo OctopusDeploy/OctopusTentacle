@@ -19,7 +19,7 @@ namespace Octopus.Tentacle.Maintenance
 
         readonly ScriptService scriptService;
         readonly ScriptServiceV2 scriptServiceV2;
-        readonly KubernetesScriptServiceV1Alpha? kubernetesScriptServiceV1Alpha;
+        readonly KubernetesScriptServiceV1Alpha kubernetesScriptServiceV1Alpha;
 
         public WorkspaceCleaner(
             WorkspaceCleanerConfiguration configuration,
@@ -35,10 +35,7 @@ namespace Octopus.Tentacle.Maintenance
 
             scriptService = serviceRegistration.GetService<ScriptService>();
             scriptServiceV2 = serviceRegistration.GetService<ScriptServiceV2>();
-            if (serviceRegistration.TryGetService<KubernetesScriptServiceV1Alpha>(true, out var svc))
-            {
-                kubernetesScriptServiceV1Alpha = svc;
-            }
+            kubernetesScriptServiceV1Alpha = serviceRegistration.GetService<KubernetesScriptServiceV1Alpha>();
         }
 
         public async Task Clean(CancellationToken cancellationToken)
@@ -56,7 +53,7 @@ namespace Octopus.Tentacle.Maintenance
                 {
                     if (scriptService.IsRunningScript(workspace.ScriptTicket)) continue;
                     if (scriptServiceV2.IsRunningScript(workspace.ScriptTicket)) continue;
-                    if (kubernetesScriptServiceV1Alpha?.IsRunningScript(workspace.ScriptTicket) ?? false) continue;
+                    if (kubernetesScriptServiceV1Alpha.IsRunningScript(workspace.ScriptTicket)) continue;
 
                     var workspaceLogFilePath = workspace.LogFilePath;
 
