@@ -10,7 +10,7 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Services.Scripts
 {
-    [Service(typeof(IKubernetesScriptServiceV1Alpha))]
+    [KubernetesService(typeof(IKubernetesScriptServiceV1Alpha))]
     public class KubernetesScriptServiceV1Alpha : IAsyncKubernetesScriptServiceV1Alpha
     {
         readonly IScriptWorkspaceFactory workspaceFactory;
