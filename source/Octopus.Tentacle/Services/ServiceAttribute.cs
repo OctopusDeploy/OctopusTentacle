@@ -3,7 +3,7 @@
 namespace Octopus.Tentacle.Services
 {
     [AttributeUsage(AttributeTargets.Class)]
-    public class ServiceAttribute : Attribute, IServiceAttribute
+    public class ServiceAttribute : Attribute
     {
         public Type ContractType { get; }
 
