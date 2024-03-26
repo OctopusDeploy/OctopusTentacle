@@ -89,23 +89,5 @@ namespace Octopus.Tentacle.Communications
         {
             return scope.Resolve<T>();
         }
-
-        bool IServiceRegistration.TryGetService<T>(bool ignoreDependencyResolutionExceptions, out T? service) where T : class
-        {
-            try
-            {
-                return scope.TryResolve(out service);
-            }
-            catch (DependencyResolutionException)
-            {
-                if (ignoreDependencyResolutionExceptions)
-                {
-                    service = default;
-                    return false;
-                }
-
-                throw;
-            }
-        }
     }
 }
