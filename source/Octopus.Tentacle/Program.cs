@@ -57,7 +57,11 @@ namespace Octopus.Tentacle
             builder.RegisterModule(new ServicesModule());
             builder.RegisterModule(new VersioningModule(GetType().Assembly));
             builder.RegisterModule(new MaintenanceModule());
-            builder.RegisterModule<KubernetesModule>();
+
+            if (PlatformDetection.Kubernetes.IsRunningAsKubernetesAgent)
+            {
+                builder.RegisterModule<KubernetesModule>();
+            }
 
             builder.RegisterCommand<CreateInstanceCommand>("create-instance", "Registers a new instance of the Tentacle service");
             builder.RegisterCommand<DeleteInstanceCommand>("delete-instance", "Deletes an instance of the Tentacle service");
