@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eu
+set -u
 
 /scripts/configure-tentacle.sh
 CONFIGURE_RESULT=$?
