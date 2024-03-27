@@ -35,6 +35,7 @@ namespace Octopus.Tentacle.Tests.Communications
         {
             var builder = new ContainerBuilder();
             builder.RegisterType<AutofacServiceFactory>().AsImplementedInterfaces().SingleInstance();
+            builder.RegisterType<SimpleService>().AsSelf().SingleInstance();
             builder.RegisterInstance(simpleSource).AsImplementedInterfaces();
 
             var container = builder.Build();
@@ -53,6 +54,7 @@ namespace Octopus.Tentacle.Tests.Communications
         {
             var builder = new ContainerBuilder();
             builder.RegisterType<AutofacServiceFactory>().AsImplementedInterfaces().SingleInstance();
+            builder.RegisterType<AsyncSimpleService>().AsSelf().SingleInstance();
             builder.RegisterInstance(asyncSimpleSource).AsImplementedInterfaces();
 
             var container = builder.Build();
@@ -67,11 +69,53 @@ namespace Octopus.Tentacle.Tests.Communications
         }
 
         [Test]
+        public void Resolved_WithPerLifetimeScopeSingleSource_EachCreateServiceReturnsNewInstance()
+        {
+            var builder = new ContainerBuilder();
+            builder.RegisterType<AutofacServiceFactory>().AsImplementedInterfaces().SingleInstance();
+            builder.RegisterType<SimpleService>().AsSelf().InstancePerLifetimeScope();
+            builder.RegisterInstance(simpleSource).AsImplementedInterfaces();
+
+            var container = builder.Build();
+
+            var factory = container.Resolve<IServiceFactory>();
+            factory.RegisteredServiceTypes.Count.Should().Be(1);
+            factory.RegisteredServiceTypes.Select(x => x.Name).Should().Contain(nameof(ISimpleService));
+
+            var service1 = factory.CreateService(nameof(ISimpleService));
+            var service2 = factory.CreateService(nameof(ISimpleService));
+
+            service1.Service.Should().NotBeSameAs(service2.Service);
+        }
+
+        [Test]
+        public void Resolved_WithSingleInstanceSingleSource_EachCreateServiceReturnsSameInstance()
+        {
+            var builder = new ContainerBuilder();
+            builder.RegisterType<AutofacServiceFactory>().AsImplementedInterfaces().SingleInstance();
+            builder.RegisterType<SimpleService>().AsSelf().SingleInstance();
+            builder.RegisterInstance(simpleSource).AsImplementedInterfaces();
+
+            var container = builder.Build();
+
+            var factory = container.Resolve<IServiceFactory>();
+            factory.RegisteredServiceTypes.Count.Should().Be(1);
+            factory.RegisteredServiceTypes.Select(x => x.Name).Should().Contain(nameof(ISimpleService));
+
+            var service1 = factory.CreateService(nameof(ISimpleService));
+            var service2 = factory.CreateService(nameof(ISimpleService));
+
+            service1.Service.Should().BeSameAs(service2.Service);
+        }
+
+        [Test]
         public void Resolved_WithMultipleSources_CanCreateServices()
         {
             var builder = new ContainerBuilder();
             builder.RegisterType<AutofacServiceFactory>().AsImplementedInterfaces().SingleInstance();
+            builder.RegisterType<SimpleService>().AsSelf().SingleInstance();
             builder.RegisterInstance(simpleSource).AsImplementedInterfaces();
+            builder.RegisterType<PieService>().AsSelf().SingleInstance();
             builder.RegisterInstance(pieSource).AsImplementedInterfaces();
 
             var container = builder.Build();
