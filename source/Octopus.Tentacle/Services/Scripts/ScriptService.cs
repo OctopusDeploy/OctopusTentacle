@@ -4,12 +4,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Maintenance;
 using Octopus.Tentacle.Scripts;
 
 namespace Octopus.Tentacle.Services.Scripts
 {
     [Service(typeof(IScriptService))]
-    public class ScriptService : IAsyncScriptService
+    public class ScriptService : IAsyncScriptService, IRunningScriptReporter
     {
         readonly IShell shell;
         readonly IScriptWorkspaceFactory workspaceFactory;
