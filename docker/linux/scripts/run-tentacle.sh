@@ -17,19 +17,12 @@ TENTACLE_PID=$!
 
 EXTERNAL_SIGNAL=""
 
-function handle_interrupt() {
-    EXTERNAL_SIGNAL="INT"
-    echo "Received SIGINT. Forwarding..."
-    kill -s INT $TENTACLE_PID $DIND_PID
-}
-
 function handle_term() {
     EXTERNAL_SIGNAL="TERM"
     echo "Received SIGTERM. Forwarding..."
     kill -s TERM $TENTACLE_PID $DIND_PID
 }
 
-trap handle_interrupt SIGINT
 trap handle_term SIGTERM
 
 exited_process=0
