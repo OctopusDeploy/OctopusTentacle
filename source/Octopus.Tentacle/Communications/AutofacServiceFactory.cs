@@ -37,12 +37,8 @@ namespace Octopus.Tentacle.Communications
             {
                 if (knownServices.TryGetValue(serviceName, out var knownService))
                 {
-                    //create a nested scope for the service lease. Halibut will automatically dispose of this lease at the end of the RPC call,
-                    //so pass the nested scope to the lease for disposal
-                    var nestedScope = scope.BeginLifetimeScope();
-
-                    //because the service implementations are registered `AsSelf()`, we can resolve them directly from the nested scope
-                    return new Lease(nestedScope.Resolve(knownService.ServiceImplementationType), nestedScope);
+                    //because the service implementations are registered `AsSelf()`, we can resolve them directly from the scope
+                    return new Lease(scope.Resolve(knownService.ServiceImplementationType));
                 }
 
                 throw new UnknownServiceNameException(serviceName);
@@ -57,11 +53,8 @@ namespace Octopus.Tentacle.Communications
 
         class Lease : IServiceLease
         {
-            readonly ILifetimeScope scope;
-
-            public Lease(object service, ILifetimeScope scope)
+            public Lease(object service)
             {
-                this.scope = scope;
                 Service = service;
             }
 
@@ -69,7 +62,6 @@ namespace Octopus.Tentacle.Communications
 
             public void Dispose()
             {
-                scope.Dispose();
                 if (Service is IDisposable disposable)
                     disposable.Dispose();
             }

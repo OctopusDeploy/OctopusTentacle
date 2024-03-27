@@ -69,7 +69,7 @@ namespace Octopus.Tentacle.Tests.Communications
         }
 
         [Test]
-        public void Resolved_WithPerLifetimeScopeSingleSource_EachCreateServiceReturnsNewInstance()
+        public void Resolved_WithPerLifetimeScopeSingleSource_EachCreateServiceReturnsSameInstance()
         {
             var builder = new ContainerBuilder();
             builder.RegisterType<AutofacServiceFactory>().AsImplementedInterfaces().SingleInstance();
@@ -85,7 +85,7 @@ namespace Octopus.Tentacle.Tests.Communications
             var service1 = factory.CreateService(nameof(ISimpleService));
             var service2 = factory.CreateService(nameof(ISimpleService));
 
-            service1.Service.Should().NotBeSameAs(service2.Service);
+            service1.Service.Should().BeSameAs(service2.Service);
         }
 
         [Test]
