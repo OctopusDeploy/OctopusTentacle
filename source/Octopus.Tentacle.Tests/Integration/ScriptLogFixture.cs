@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
@@ -34,16 +35,14 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        public void ShouldAppend()
+        public async Task ShouldAppend()
         {
-
             using (var appender = sut.CreateWriter())
             {
                 appender.WriteOutput(ProcessOutputSource.StdOut, "Hello");
                 appender.WriteOutput(ProcessOutputSource.StdOut, "World");
 
-                long next;
-                var logs = sut.GetOutput(long.MinValue, out next);
+                var (logs, next) = await sut.GetOutput(long.MinValue);
                 Assert.That(logs.Count, Is.EqualTo(2));
                 Assert.That(logs[0].Text, Is.EqualTo("Hello"));
                 Assert.That(logs[0].Source, Is.EqualTo(ProcessOutputSource.StdOut));
@@ -52,14 +51,14 @@ namespace Octopus.Tentacle.Tests.Integration
                 appender.WriteOutput(ProcessOutputSource.StdOut, "More");
                 appender.WriteOutput(ProcessOutputSource.StdOut, "Output");
 
-                logs = sut.GetOutput(next, out next);
+                (logs, next) = await sut.GetOutput(next);
                 Assert.That(logs.Count, Is.EqualTo(2));
                 Assert.That(logs[0].Text, Is.EqualTo("More"));
                 Assert.That(logs[1].Text, Is.EqualTo("Output"));
 
                 appender.WriteOutput(ProcessOutputSource.StdErr, "ErrorHappened");
 
-                logs = sut.GetOutput(next, out next);
+                (logs, _) = await sut.GetOutput(next);
                 Assert.That(logs.Count, Is.EqualTo(1));
                 Assert.That(logs[0].Text, Is.EqualTo("ErrorHappened"));
                 Assert.That(logs[0].Source, Is.EqualTo(ProcessOutputSource.StdErr));
@@ -67,7 +66,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
         
         [Test]
-        public void ShouldHandleIncompleteLine()
+        public async Task ShouldHandleIncompleteLine()
         {
             using (var appender = sut.CreateWriter())
             {
@@ -81,21 +80,21 @@ namespace Octopus.Tentacle.Tests.Integration
                 logFileStream.SetLength(logFileInfo.Length - 10);
             }
             
-            var logs = sut.GetOutput(long.MinValue, out _);
+            var (logs, next) = await sut.GetOutput(long.MinValue);
             logs.Count.Should().Be(2);
 
             logs[1].Text.Should().Be("Corrupt Tentacle log at line 2, no more logs will be read");
         }
 
         [Test]
-        public void MaskSensitiveValues_SingleMessage_Masked()
+        public async Task MaskSensitiveValues_SingleMessage_Masked()
         {
             sensitiveValueMasker.WithSensitiveValues(new[] {"abcde"});
             using (var writer = sut.CreateWriter())
             {
                 writer.WriteOutput(ProcessOutputSource.Debug, "hello abcde123");
 
-                var logs = sut.GetOutput(0, out long next);
+                var (logs, next) = await sut.GetOutput(0);
 
                 logs.Should().ContainSingle().Subject.Text.Should().Be("hello ********123");
             }
@@ -114,7 +113,7 @@ namespace Octopus.Tentacle.Tests.Integration
         //
         //        Write-Host "hello end"
         [Test]
-        public void MaskSensitiveValues_MultiMessage_2ndMessageMasked()
+        public async Task MaskSensitiveValues_MultiMessage_2ndMessageMasked()
         {
             sensitiveValueMasker.WithSensitiveValues(new[] {"abcde12345"});
             using (var writer = sut.CreateWriter())
@@ -122,7 +121,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 writer.WriteOutput(ProcessOutputSource.Debug, "hello abcde");
                 writer.WriteOutput(ProcessOutputSource.Debug, "12345 bye");
 
-                var logs = sut.GetOutput(0, out long next);
+                var (logs, next) = await sut.GetOutput(0);
 
                 logs.Select(l => l.Text).Should().ContainInOrder("hello abcde", "******** bye");
             }

@@ -54,7 +54,7 @@ namespace Octopus.Tentacle.Services.Scripts
 
                     if (state.HasStarted() || runningScript.Process != null)
                     {
-                        return GetResponse(command.ScriptTicket, 0, runningScript.Process);
+                        return await GetResponse(command.ScriptTicket, 0, runningScript.Process);
                     }
 
                     workspace = workspaceFactory.GetWorkspace(command.ScriptTicket);
@@ -87,7 +87,7 @@ namespace Octopus.Tentacle.Services.Scripts
                     }
                 }
 
-                return GetResponse(command.ScriptTicket, 0, runningScript.Process);
+                return await GetResponse(command.ScriptTicket, 0, runningScript.Process);
             }
         }
 
@@ -96,19 +96,17 @@ namespace Octopus.Tentacle.Services.Scripts
             await Task.CompletedTask;
 
             runningScripts.TryGetValue(request.Ticket, out var runningScript);
-            return GetResponse(request.Ticket, request.LastLogSequence, runningScript?.Process);
+            return await GetResponse(request.Ticket, request.LastLogSequence, runningScript?.Process);
         }
 
         public async Task<ScriptStatusResponseV2> CancelScriptAsync(CancelScriptCommandV2 command, CancellationToken cancellationToken)
         {
-            await Task.CompletedTask;
-
             if (runningScripts.TryGetValue(command.Ticket, out var runningScript))
             {
                 runningScript.Cancel();
             }
 
-            return GetResponse(command.Ticket, command.LastLogSequence, runningScript?.Process);
+            return await GetResponse(command.Ticket, command.LastLogSequence, runningScript?.Process);
         }
 
         public async Task CompleteScriptAsync(CompleteScriptCommandV2 command, CancellationToken cancellationToken)
@@ -132,11 +130,11 @@ namespace Octopus.Tentacle.Services.Scripts
             return runningScript;
         }
 
-        ScriptStatusResponseV2 GetResponse(ScriptTicket ticket, long lastLogSequence, RunningScript? runningScript)
+        async Task<ScriptStatusResponseV2> GetResponse(ScriptTicket ticket, long lastLogSequence, RunningScript? runningScript)
         {
             var workspace = workspaceFactory.GetWorkspace(ticket);
             var scriptLog = runningScript?.ScriptLog ?? workspace.CreateLog();
-            var logs = scriptLog.GetOutput(lastLogSequence, out var next);
+            var (logs, next) = await scriptLog.GetOutput(lastLogSequence);
 
             if (runningScript != null)
             {

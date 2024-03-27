@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Scripts;
 
@@ -15,7 +16,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         public IScriptLogWriter CreateWriter()
             => this;
 
-        public List<ProcessOutput> GetOutput(long afterSequenceNumber, out long nextSequenceNumber)
+        public Task<(List<ProcessOutput> Outputs, long NextSequenceNumber)> GetOutput(long afterSequenceNumber)
             => throw new NotImplementedException();
 
         public void Dispose()

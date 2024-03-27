@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Diagnostics;
@@ -29,10 +30,12 @@ namespace Octopus.Tentacle.Services.Scripts
             return new Writer(logFile, fileSystem, sync, sensitiveValueMasker);
         }
 
-        public List<ProcessOutput> GetOutput(long afterSequenceNumber, out long nextSequenceNumber)
+        public async Task<(List<ProcessOutput> Outputs, long NextSequenceNumber)> GetOutput(long afterSequenceNumber)
         {
+            await Task.CompletedTask;
+            
             var results = new List<ProcessOutput>();
-            nextSequenceNumber = afterSequenceNumber;
+            var nextSequenceNumber = afterSequenceNumber;
             lock (sync)
             {
                 using (var writer = new StreamReader(fileSystem.OpenFile(logFile, FileAccess.Read, FileShare.ReadWrite), Encoding.UTF8))
@@ -79,7 +82,7 @@ namespace Octopus.Tentacle.Services.Scripts
                 }
             }
 
-            return results;
+            return (results, nextSequenceNumber);
         }
 
         static string SourceToString(ProcessOutputSource source)
