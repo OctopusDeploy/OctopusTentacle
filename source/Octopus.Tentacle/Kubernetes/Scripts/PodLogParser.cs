@@ -37,7 +37,12 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             }
             
             //add the new line
-            return new LogLine(lineNumber, source, logParts[3], occurred);
+            var message = logParts[3];
+
+            if (message.StartsWith("EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE"))
+                source = ProcessOutputSource.Debug;
+            
+            return new LogLine(lineNumber, source, message, occurred);
         }
     }
 }

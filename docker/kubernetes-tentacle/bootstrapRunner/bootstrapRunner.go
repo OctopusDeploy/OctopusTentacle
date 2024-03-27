@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-var line = 0
+var line = 1
 
 // The bootstrapRunner applet is designed to execute a script in a specific folder
 // and format the script's output from stdout and stderr into the following format:

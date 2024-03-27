@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
+using k8s.Autorest;
 using Newtonsoft.Json;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Diagnostics;
@@ -36,8 +38,30 @@ namespace Octopus.Tentacle.Kubernetes
         public List<ProcessOutput> GetOutput(long afterSequenceNumber, out long nextSequenceNumber)
         {
             var podName = scriptTicket.ToKubernetesScriptPodName();
-            var logStream = kubernetesLogService.GetLogs(podName, KubernetesConfig.Namespace, podName).Result;   
             
+            Stream logStream;
+
+            var writer = CreateWriter();
+            try
+            {
+                //TODO: Only grab recent
+                logStream = kubernetesLogService.GetLogs(podName, KubernetesConfig.Namespace, podName).Result;
+            }
+            catch (AggregateException ex)
+            {
+                //writer.WriteOutput(ProcessOutputSource.Debug, "ABC123: " + ex.ToString());
+
+                if (ex.InnerExceptions.Single() is HttpOperationException httpOperationException && 
+                    httpOperationException.Response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.BadRequest)
+                {
+                    nextSequenceNumber = afterSequenceNumber;
+                    return new List<ProcessOutput>();
+                    
+                }
+
+                throw;
+            }
+
             var results = new List<ProcessOutput>();
             nextSequenceNumber = afterSequenceNumber;
             lock (sync)
@@ -49,14 +73,19 @@ namespace Octopus.Tentacle.Kubernetes
                         var line = reader.ReadLineAsync().Result;
                         if (line.IsNullOrEmpty())
                         {
-                            return results.Concat(inMemoryTentacleLogs).ToList();
+                            var output = results.Concat(inMemoryTentacleLogs).OrderBy(m => m.Occurred).ToList();
+                            
+                            inMemoryTentacleLogs.Clear();
+                            return output;
                         }
 
-                        var parsedLine = PodLogParser.ParseLine(CreateWriter(), line!);
+                        var parsedLine = PodLogParser.ParseLine(writer, line!);
                         if (parsedLine != null)
                         {
-                            results.Add(new ProcessOutput(parsedLine.Source, parsedLine.Message, parsedLine.Occurred));
-                            nextSequenceNumber = parsedLine.LineNumber - 1;
+                            if (parsedLine.LineNumber > afterSequenceNumber)
+                                results.Add(new ProcessOutput(parsedLine.Source, parsedLine.Message, parsedLine.Occurred));
+                            
+                            nextSequenceNumber = parsedLine.LineNumber;
                         }
                     }
                 }
@@ -83,7 +112,7 @@ namespace Octopus.Tentacle.Kubernetes
             {
                 lock (sync)
                 {
-                    var output = new ProcessOutput(source, MaskSensitiveValues("T: " + message), occurred);
+                    var output = new ProcessOutput(source, MaskSensitiveValues(message), occurred);
                     processOutputs.Add(output);
                 }
             }
