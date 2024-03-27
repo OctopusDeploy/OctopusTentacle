@@ -37,13 +37,13 @@ else
     if [ "$exited_process" == "$DIND_PID" ]; then
         echo "Docker-in-Docker Daemon exited with code $waited_exit_code"
         echo "Terminating Tentacle..."
-        kill -s INT $TENTACLE_PID
+        kill -s TERM $TENTACLE_PID
         wait $TENTACLE_PID
         tentacle_exit_code=$?
     else
         echo "Tentacle exited with code $waited_exit_code"
         echo "Terminating Docker-in-Docker..."
-        kill -s INT $DIND_PID
+        kill -s TERM $DIND_PID
         wait $DIND_PID
         tentacle_exit_code=$waited_exit_code
     fi
