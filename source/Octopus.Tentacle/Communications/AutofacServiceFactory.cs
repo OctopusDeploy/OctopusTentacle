@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IdentityModel;
 using System.Linq;
 using Autofac;
 using Halibut.ServiceModel;
@@ -17,30 +18,17 @@ namespace Octopus.Tentacle.Communications
         // Must never be modified as it is required for backwards compatability in BackwardsCompatibleCapabilitiesV2Decorator
         const string TentacleServiceShuttingDownMessage = "The Tentacle service is shutting down and cannot process this request.";
         readonly ILifetimeScope scope;
-        readonly Dictionary<string, KnownService> knownServices = new();
+        readonly Dictionary<string, KnownService> knownServices;
 
         public AutofacServiceFactory(ILifetimeScope scope, IEnumerable<IAutofacServiceSource> sources)
         {
-            this.scope = scope.BeginLifetimeScope(b =>
-            {
-                foreach (var knownService in sources.SelectMany(x => x.KnownServices.EmptyIfNull()))
-                {
-                    BuildService(b, knownService);
-                }
-            });
-        }
-
-        void BuildService(ContainerBuilder builder, KnownService knownService)
-        {
-            //register the service implementation AsSelf(), so we can resolve it in the future
-            builder
-                .RegisterType(knownService.ServiceImplementationType)
-                .AsSelf()
-                .SingleInstance();
+            this.scope = scope;
 
             //track the contract type to their known service implementations
             //the contract type is the one that is sent across the wire (typically an IService sync contract)
-            knownServices[knownService.ServiceContractType.Name] = knownService;
+            knownServices = sources
+                .SelectMany(x => x.KnownServices.EmptyIfNull())
+                .ToDictionary(ks => ks.ServiceContractType.Name);
         }
 
         public IServiceLease CreateService(string serviceName)
@@ -49,7 +37,7 @@ namespace Octopus.Tentacle.Communications
             {
                 if (knownServices.TryGetValue(serviceName, out var knownService))
                 {
-                    //because the service implementations are registered `AsSelf()`, we can resolve them directly
+                    //because the service implementations are registered `AsSelf()`, we can resolve them directly from the scope
                     return new Lease(scope.Resolve(knownService.ServiceImplementationType));
                 }
 
