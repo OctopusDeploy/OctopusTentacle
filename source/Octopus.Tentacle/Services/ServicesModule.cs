@@ -39,8 +39,18 @@ namespace Octopus.Tentacle.Services
                 .Select(x => new KnownService(x.ServiceImplementationType, x.ServiceAttribute!.ContractType))
                 .ToArray();
 
-            var assemblyServices = new KnownServiceSource(knownServices);
-            builder.RegisterInstance(assemblyServices).AsImplementedInterfaces();
+            var knownServiceSources = new KnownServiceSource(knownServices);
+            builder.RegisterInstance(knownServiceSources).AsImplementedInterfaces();
+
+            //register all halibut services with the root container
+            foreach (var knownServiceSource in knownServices)
+            {
+                builder
+                    .RegisterType(knownServiceSource.ServiceImplementationType)
+                    .AsSelf()
+                    .AsImplementedInterfaces()
+                    .SingleInstance();
+            }
         }
     }
 }

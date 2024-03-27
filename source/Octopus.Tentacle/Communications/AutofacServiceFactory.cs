@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IdentityModel;
 using System.Linq;
 using Autofac;
 using Halibut.ServiceModel;
@@ -17,30 +18,17 @@ namespace Octopus.Tentacle.Communications
         // Must never be modified as it is required for backwards compatability in BackwardsCompatibleCapabilitiesV2Decorator
         const string TentacleServiceShuttingDownMessage = "The Tentacle service is shutting down and cannot process this request.";
         readonly ILifetimeScope scope;
-        readonly Dictionary<string, KnownService> knownServices = new();
+        readonly Dictionary<string, KnownService> knownServices;
 
         public AutofacServiceFactory(ILifetimeScope scope, IEnumerable<IAutofacServiceSource> sources)
         {
-            this.scope = scope.BeginLifetimeScope(b =>
-            {
-                foreach (var knownService in sources.SelectMany(x => x.KnownServices.EmptyIfNull()))
-                {
-                    BuildService(b, knownService);
-                }
-            });
-        }
-
-        void BuildService(ContainerBuilder builder, KnownService knownService)
-        {
-            //register the service implementation AsSelf(), so we can resolve it in the future
-            builder
-                .RegisterType(knownService.ServiceImplementationType)
-                .AsSelf()
-                .SingleInstance();
+            this.scope = scope;
 
             //track the contract type to their known service implementations
             //the contract type is the one that is sent across the wire (typically an IService sync contract)
-            knownServices[knownService.ServiceContractType.Name] = knownService;
+            knownServices = sources
+                .SelectMany(x => x.KnownServices.EmptyIfNull())
+                .ToDictionary(ks => ks.ServiceContractType.Name);
         }
 
         public IServiceLease CreateService(string serviceName)
@@ -49,8 +37,12 @@ namespace Octopus.Tentacle.Communications
             {
                 if (knownServices.TryGetValue(serviceName, out var knownService))
                 {
-                    //because the service implementations are registered `AsSelf()`, we can resolve them directly
-                    return new Lease(scope.Resolve(knownService.ServiceImplementationType));
+                    //create a nested scope for the service lease. Halibut will automatically dispose of this lease at the end of the RPC call,
+                    //so pass the nested scope to the lease for disposal
+                    var nestedScope = scope.BeginLifetimeScope();
+
+                    //because the service implementations are registered `AsSelf()`, we can resolve them directly from the nested scope
+                    return new Lease(nestedScope.Resolve(knownService.ServiceImplementationType), nestedScope);
                 }
 
                 throw new UnknownServiceNameException(serviceName);
@@ -65,8 +57,11 @@ namespace Octopus.Tentacle.Communications
 
         class Lease : IServiceLease
         {
-            public Lease(object service)
+            readonly ILifetimeScope scope;
+
+            public Lease(object service, ILifetimeScope scope)
             {
+                this.scope = scope;
                 Service = service;
             }
 
@@ -74,6 +69,7 @@ namespace Octopus.Tentacle.Communications
 
             public void Dispose()
             {
+                scope.Dispose();
                 if (Service is IDisposable disposable)
                     disposable.Dispose();
             }
