@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
+using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Util;
 
@@ -126,13 +128,15 @@ namespace Octopus.Tentacle.Services.Scripts
             await Task.CompletedTask;
 
             var workspace = workspaceFactory.GetWorkspace(ticket);
-            var scriptLog = runningScript?.ScriptLog ?? workspace.CreateLog();
-            var logs = scriptLog.GetOutput(lastLogSequence, out var next);
 
             if (runningScript != null)
             {
+                var scriptLog = runningScript.ScriptLog;
+                var logs = scriptLog.GetOutput(lastLogSequence, out var next);
                 return new ScriptStatusResponseV3Alpha(ticket, runningScript.State, runningScript.ExitCode, logs, next);
             }
+
+            var emptyLogs = new List<ProcessOutput>();
 
             // If we don't have a RunningProcess we check the ScriptStateStore to see if we have persisted a script result
             var scriptStateStore = scriptStateStoreFactory.Create(workspace);
@@ -146,10 +150,10 @@ namespace Octopus.Tentacle.Services.Scripts
                     scriptStateStore.Save(scriptState);
                 }
 
-                return new ScriptStatusResponseV3Alpha(ticket, scriptState.State, scriptState.ExitCode ?? ScriptExitCodes.UnknownResultExitCode, logs, next);
+                return new ScriptStatusResponseV3Alpha(ticket, scriptState.State, scriptState.ExitCode ?? ScriptExitCodes.UnknownResultExitCode, emptyLogs, lastLogSequence);
             }
 
-            return new ScriptStatusResponseV3Alpha(ticket, ProcessState.Complete, ScriptExitCodes.UnknownScriptExitCode, logs, next);
+            return new ScriptStatusResponseV3Alpha(ticket, ProcessState.Complete, ScriptExitCodes.UnknownScriptExitCode, emptyLogs, lastLogSequence);
         }
 
         public bool IsRunningScript(ScriptTicket ticket)

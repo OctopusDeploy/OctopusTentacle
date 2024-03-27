@@ -25,7 +25,7 @@ namespace Octopus.Tentacle.Kubernetes
         }
 
         public async Task<V1Pod?> TryGetPod(ScriptTicket scriptTicket, CancellationToken cancellationToken) =>
-            await TryGetAsync(() => Client.ReadNamespacedPodAsync(scriptTicket.ToKubernetesScriptPobName(), KubernetesConfig.Namespace, cancellationToken: cancellationToken));
+            await TryGetAsync(() => Client.ReadNamespacedPodAsync(scriptTicket.ToKubernetesScriptPodName(), KubernetesConfig.Namespace, cancellationToken: cancellationToken));
 
         public async Task<V1PodList> ListAllPodsAsync(CancellationToken cancellationToken)
         {
@@ -84,6 +84,6 @@ namespace Octopus.Tentacle.Kubernetes
         }
 
         public async Task Delete(ScriptTicket scriptTicket, CancellationToken cancellationToken)
-            => await Client.DeleteNamespacedPodAsync(scriptTicket.ToKubernetesScriptPobName(), KubernetesConfig.Namespace, cancellationToken: cancellationToken);
+            => await Client.DeleteNamespacedPodAsync(scriptTicket.ToKubernetesScriptPodName(), KubernetesConfig.Namespace, cancellationToken: cancellationToken);
     }
 }
