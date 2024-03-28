@@ -42,8 +42,8 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
         readonly KubernetesAgentScriptExecutionContext executionContext;
         readonly CancellationToken scriptCancellationToken;
         readonly string? instanceName;
-        readonly KubernetesPodOutputStreamWriter outputStreamWriter;
         readonly string podName;
+        long lastLogSequence;
 
         public int ExitCode { get; private set; }
         public ProcessState State { get; private set; }
@@ -76,8 +76,6 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             this.scriptCancellationToken = scriptCancellationToken;
             ScriptLog = scriptLog;
             instanceName = appInstanceSelector.Current.InstanceName;
-
-            outputStreamWriter = new KubernetesPodOutputStreamWriter(workspace);
 
             State = ProcessState.Pending;
 
@@ -173,12 +171,14 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             var checkPodTask = CheckIfPodHasCompleted(podCompletionCancellationTokenSource);
 
             //we pass the pod completion CTS here because its used to cancel the writing of the pod stream
-            var monitorPodOutputTask = outputStreamWriter.StreamPodLogsToScriptLog(writer, podCompletionCancellationTokenSource.Token);
+            var writeLogsTask = WriteLogsFromPod(writer, podCompletionCancellationTokenSource.Token);
 
-            await Task.WhenAll(checkPodTask, monitorPodOutputTask);
+            //we pass the pod completion CTS here because its used to cancel the writing of the pod stream
+
+            await Task.WhenAll(checkPodTask, writeLogsTask);
 
             //once they have both finished, perform one last log read (and don't cancel on it)
-            await outputStreamWriter.StreamPodLogsToScriptLog(writer, CancellationToken.None, true);
+            await WriteLogsFromPod(writer, CancellationToken.None, true);
 
             //return the exit code of the pod
             return checkPodTask.Result;
@@ -187,19 +187,19 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
         async Task<int> CheckIfPodHasCompleted(CancellationTokenSource podCompletionCancellationTokenSource)
         {
             var resultStatusCode = ScriptExitCodes.UnknownScriptExitCode;
-            PodStatus? status = null;
+            ITrackedKubernetesPod? trackedPod = null;
             while (!scriptCancellationToken.IsCancellationRequested)
             {
-                status = podStatusProvider.TryGetPodStatus(scriptTicket);
-                if (status is not null && status.State == PodState.Succeeded)
+                trackedPod = podStatusProvider.TryGetPodStatus(scriptTicket);
+                if (trackedPod is not null && trackedPod.State == TrackedPodState.Succeeded)
                 {
                     resultStatusCode = 0;
                     break;
                 }
 
-                if (status is not null && status.State == PodState.Failed)
+                if (trackedPod is not null && trackedPod.State == TrackedPodState.Failed)
                 {
-                    resultStatusCode = status.ExitCode!.Value;
+                    resultStatusCode = trackedPod.ExitCode!.Value;
                     break;
                 }
 
@@ -214,9 +214,42 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
 
             podCompletionCancellationTokenSource.Cancel();
 
-            log.Verbose($"Pod {podName} completed.{status}");
+            log.Verbose($"Pod {podName} completed.{trackedPod}");
 
             return resultStatusCode;
+        }
+
+        async Task WriteLogsFromPod(IScriptLogWriter writer, CancellationToken cancellationToken, bool isFinalRead = false)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                var trackedPod = podStatusProvider.TryGetPodStatus(scriptTicket);
+                if (trackedPod is null)
+                {
+                    //if this is the final read, jump out
+                    if (isFinalRead)
+                        break;
+
+                    continue;
+                }
+
+                var x = trackedPod.GetLogs(lastLogSequence);
+                lastLogSequence = x.NewSequence;
+
+                foreach (var logLine in x.LogLines)
+                {
+                    writer.WriteOutput(logLine.Source, logLine.Message, logLine.Occurred);
+                }
+
+                if (!isFinalRead)
+                {
+                    await Task.Delay(250, scriptCancellationToken);
+                }
+                else
+                {
+                    break;
+                }
+            }
         }
 
         async Task<string?> CreateImagePullSecret(CancellationToken cancellationToken)
@@ -329,7 +362,6 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                             Command = new List<string> { $"/octopus/Work/{scriptTicket.TaskId}/bootstrapRunner" },
                             Args = new List<string>
                                 {
-                                    $"/octopus/Work/{scriptTicket.TaskId}",
                                     $"/octopus/Work/{scriptTicket.TaskId}/{scriptName}"
                                 }.Concat(workspace.ScriptArguments ?? Array.Empty<string>())
                                 .ToList(),
