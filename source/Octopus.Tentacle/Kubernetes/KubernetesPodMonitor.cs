@@ -29,7 +29,7 @@ namespace Octopus.Tentacle.Kubernetes
         readonly IKubernetesPodService podService;
         readonly ISystemLog log;
 
-        ConcurrentDictionary<ScriptTicket, PodStatus> podStatusLookup = new();
+        ConcurrentDictionary<ScriptTicket, TrackedScriptPod> podStatusLookup = new();
 
         public KubernetesPodMonitor(IKubernetesPodService podService, ISystemLog log)
         {
@@ -80,7 +80,7 @@ namespace Octopus.Tentacle.Kubernetes
         {
             log.Verbose("Preloading pod statuses");
 
-            var newStatuses = new ConcurrentDictionary<ScriptTicket, PodStatus>();
+            var newStatuses = new ConcurrentDictionary<ScriptTicket, TrackedScriptPod>();
             var allPods = await podService.ListAllPods(cancellationToken);
             foreach (var pod in allPods.Items)
             {
@@ -158,7 +158,7 @@ namespace Octopus.Tentacle.Kubernetes
             podStatusLookup.TryGetValue(scriptTicket, out var status) ? status : null;
     }
 
-    public class PodStatus : ITrackedScriptPod
+    public class TrackedScriptPod : ITrackedScriptPod
     {
         public ScriptTicket ScriptTicket { get; }
 

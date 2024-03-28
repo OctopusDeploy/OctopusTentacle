@@ -58,7 +58,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             var status = ((IKubernetesPodStatusProvider)monitor).TryGetTrackedScriptPod(scriptTicket);
             status.Should().NotBeNull();
 
-            status.Should().Match<PodStatus>(status =>
+            status.Should().Match<TrackedScriptPod>(status =>
                 status.ScriptTicket == scriptTicket &&
                 status.State == TrackedScriptPodState.Running &&
                 status.ExitCode == null
@@ -114,7 +114,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             var status = ((IKubernetesPodStatusProvider)monitor).TryGetTrackedScriptPod(scriptTicket);
             status.Should().NotBeNull();
 
-            status.Should().Match<PodStatus>(status =>
+            status.Should().Match<TrackedScriptPod>(status =>
                 status.ScriptTicket == scriptTicket &&
                 status.State == TrackedScriptPodState.Succeeded &&
                 status.ExitCode == 0
@@ -176,7 +176,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             var status = ((IKubernetesPodStatusProvider)monitor).TryGetTrackedScriptPod(scriptTicket);
             status.Should().NotBeNull();
 
-            status.Should().Match<PodStatus>(status =>
+            status.Should().Match<TrackedScriptPod>(status =>
                 status.ScriptTicket == scriptTicket &&
                 status.State == TrackedScriptPodState.Failed &&
                 status.ExitCode == -99
