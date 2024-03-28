@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Diagnostics;
@@ -14,28 +17,22 @@ namespace Octopus.Tentacle.Maintenance
     {
         readonly WorkspaceCleanerConfiguration configuration;
         readonly IScriptWorkspaceFactory scriptWorkspaceFactory;
+        readonly IEnumerable<IRunningScriptReporter> runningScriptReporters;
         readonly IClock clock;
         readonly ISystemLog log;
-
-        readonly ScriptService scriptService;
-        readonly ScriptServiceV2 scriptServiceV2;
-        readonly ScriptServiceV3Alpha scriptServiceV3Alpha;
 
         public WorkspaceCleaner(
             WorkspaceCleanerConfiguration configuration,
             IScriptWorkspaceFactory scriptWorkspaceFactory,
-            IServiceRegistration serviceRegistration,
+            IEnumerable<IRunningScriptReporter> runningScriptReporters,
             IClock clock,
             ISystemLog log)
         {
             this.configuration = configuration;
             this.scriptWorkspaceFactory = scriptWorkspaceFactory;
+            this.runningScriptReporters = runningScriptReporters;
             this.clock = clock;
             this.log = log;
-
-            scriptService = serviceRegistration.GetService<ScriptService>();
-            scriptServiceV2 = serviceRegistration.GetService<ScriptServiceV2>();
-            scriptServiceV3Alpha = serviceRegistration.GetService<ScriptServiceV3Alpha>();
         }
 
         public async Task Clean(CancellationToken cancellationToken)
@@ -51,9 +48,10 @@ namespace Octopus.Tentacle.Maintenance
 
                 try
                 {
-                    if (scriptService.IsRunningScript(workspace.ScriptTicket)) continue;
-                    if (scriptServiceV2.IsRunningScript(workspace.ScriptTicket)) continue;
-                    if(scriptServiceV3Alpha.IsRunningScript(workspace.ScriptTicket)) continue;
+                    if (runningScriptReporters.Any(x => x.IsRunningScript(workspace.ScriptTicket)))
+                    {
+                        continue;
+                    }
 
                     var workspaceLogFilePath = workspace.LogFilePath;
 
