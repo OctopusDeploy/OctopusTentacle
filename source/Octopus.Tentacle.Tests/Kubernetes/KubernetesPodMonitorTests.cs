@@ -55,7 +55,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             await monitor.OnNewEvent(type, pod, CancellationToken.None);
 
             //Assert
-            var status = ((IKubernetesPodStatusProvider)monitor).TryGetPodStatus(scriptTicket);
+            var status = ((IKubernetesPodStatusProvider)monitor).TryGetTrackedScriptPod(scriptTicket);
             status.Should().NotBeNull();
 
             status.Should().Match<PodStatus>(status =>
@@ -111,7 +111,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             await monitor.OnNewEvent(type, pod, CancellationToken.None);
 
             //Assert
-            var status = ((IKubernetesPodStatusProvider)monitor).TryGetPodStatus(scriptTicket);
+            var status = ((IKubernetesPodStatusProvider)monitor).TryGetTrackedScriptPod(scriptTicket);
             status.Should().NotBeNull();
 
             status.Should().Match<PodStatus>(status =>
@@ -173,7 +173,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             await monitor.OnNewEvent(type, pod, CancellationToken.None);
 
             //Assert
-            var status = ((IKubernetesPodStatusProvider)monitor).TryGetPodStatus(scriptTicket);
+            var status = ((IKubernetesPodStatusProvider)monitor).TryGetTrackedScriptPod(scriptTicket);
             status.Should().NotBeNull();
 
             status.Should().Match<PodStatus>(status =>
@@ -217,7 +217,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             await monitor.OnNewEvent(type, pod, CancellationToken.None);
 
             //Assert
-            var status = ((IKubernetesPodStatusProvider)monitor).TryGetPodStatus(scriptTicket);
+            var status = ((IKubernetesPodStatusProvider)monitor).TryGetTrackedScriptPod(scriptTicket);
             status.Should().BeNull();
         }
     }
