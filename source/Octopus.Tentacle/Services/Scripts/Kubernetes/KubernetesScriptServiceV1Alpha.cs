@@ -49,7 +49,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
                 var trackedPod = podStatusProvider.TryGetTrackedScriptPod(command.ScriptTicket);
                 if (trackedPod != null)
                 {
-                    return GetResponse(trackedPod, 0);
+                    return await GetResponse(trackedPod, 0, cancellationToken);
                 }
 
                 var workspace = await workspaceFactory.PrepareWorkspace(command.ScriptTicket,
@@ -65,10 +65,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
                 //create the pod
                 await podCreator.CreatePod(command, workspace, cancellationToken);
 
-                var writer = logService.CreateWriter(command.ScriptTicket);
-                writer.WriteVerbose("Created new pod sdfkjhgfiuj");
-
-                var (logs, _) = await logService.GetLogs(command.ScriptTicket, cancellationToken);
+                var (logs, _) = await logService.GetLogs(command.ScriptTicket, 0, cancellationToken);
 
                 //return a status that say's we are pending
                 return new KubernetesScriptStatusResponseV1Alpha(command.ScriptTicket, ProcessState.Pending, 0, logs.ToList(), 0);
@@ -81,7 +78,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
 
             var trackedPod = podStatusProvider.TryGetTrackedScriptPod(request.ScriptTicket);
             return trackedPod != null
-                ? GetResponse(trackedPod, request.LastLogSequence)
+                ? await GetResponse(trackedPod, request.LastLogSequence, cancellationToken)
                 //if we are getting the status of an unknown pod, return that it's still pending
                 : new KubernetesScriptStatusResponseV1Alpha(request.ScriptTicket, ProcessState.Pending, 0, new List<ProcessOutput>(), request.LastLogSequence);
         }
@@ -93,7 +90,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             if (trackedPod == null)
                 return new KubernetesScriptStatusResponseV1Alpha(command.ScriptTicket, ProcessState.Complete, ScriptExitCodes.UnknownScriptExitCode, new List<ProcessOutput>(), command.LastLogSequence);
 
-            var response = GetResponse(trackedPod, command.LastLogSequence);
+            var response = await GetResponse(trackedPod, command.LastLogSequence, cancellationToken);
 
             //delete the pod
             await podService.Delete(command.ScriptTicket, cancellationToken);
@@ -113,7 +110,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
                 await podService.TryDelete(command.ScriptTicket, cancellationToken);
         }
 
-        static KubernetesScriptStatusResponseV1Alpha GetResponse(ITrackedScriptPod trackedPod, long lastLogSequence)
+        async Task<KubernetesScriptStatusResponseV1Alpha> GetResponse(ITrackedScriptPod trackedPod, long lastLogSequence, CancellationToken cancellationToken)
         {
             var processState = trackedPod.State switch
             {
@@ -123,9 +120,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
                 _ => throw new ArgumentOutOfRangeException()
             };
 
-            var (nextLogSequence, logLines) = trackedPod.GetLogs(lastLogSequence);
-
-            var outputLogs = logLines.Select(ll => new ProcessOutput(ll.Source, ll.Message, ll.Occurred)).ToList();
+            var (outputLogs, nextLogSequence) = await logService.GetLogs(trackedPod.ScriptTicket, lastLogSequence, cancellationToken);
 
             return new KubernetesScriptStatusResponseV1Alpha(
                 trackedPod.ScriptTicket,
