@@ -123,11 +123,9 @@ namespace Octopus.Tentacle.Services.Scripts
 
         async Task<ScriptStatusResponseV3Alpha> GetResponse(ScriptTicket ticket, long lastLogSequence, IRunningScript? runningScript)
         {
-            await Task.CompletedTask;
-
             var workspace = workspaceFactory.GetWorkspace(ticket);
             var scriptLog = runningScript?.ScriptLog ?? workspace.CreateLog();
-            var logs = scriptLog.GetOutput(lastLogSequence, out var next);
+            var (logs, next) = await scriptLog.GetOutput(lastLogSequence);
 
             if (runningScript != null)
             {
