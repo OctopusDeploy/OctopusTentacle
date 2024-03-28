@@ -62,21 +62,52 @@ func main() {
 	go reader(stdOutScanner, stdoutLogFile, &doneStd)
 	go reader(stdErrScanner, stderrLogFile, &doneErr)
 
-	err = cmd.Start()
-	if err != nil {
+	if _, err := stdoutLogFile.WriteString(format("Script starting")); err != nil {
 		panic(err)
 	}
+	if err := stdoutLogFile.Flush(); err != nil {
+		panic(err)
+	}
+
+	err = cmd.Start()
 
 	// Wait for output buffering first
 	<-doneStd
 	<-doneErr
 
+	if err != nil {
+		panic(err)
+	}
 	err = cmd.Wait()
+
+	if _, err := stdoutLogFile.WriteString(format("Script Completed")); err != nil {
+		panic(err)
+	}
+	if err := stdoutLogFile.Flush(); err != nil {
+		panic(err)
+	}
 
 	var exitErr *exec.ExitError
 	// If the error is not related to the script returning a failure exit code we log it.
 	if err != nil && !errors.As(err, &exitErr) {
 		fmt.Fprintln(os.Stderr, "bootstrapRunner.go: Failed to execute bootstrap script", err)
+		//stderrLogFile.WriteString("bootstrapRunner.go: Failed to execute bootstrap script" + err)
+	}
+
+	eosMarker := format("End of script 075CD4F0-8C76-491D-BA76-0879D35E9CFE")
+	if _, err := stdoutLogFile.WriteString(eosMarker); err != nil {
+		panic(err)
+	}
+	if err := stdoutLogFile.Flush(); err != nil {
+		panic(err)
+	}
+	fmt.Fprintln(os.Stdout, eosMarker)
+
+	if err := stdoutLogFile.Flush(); err != nil {
+		panic(err)
+	}
+	if err := stderrLogFile.Flush(); err != nil {
+		panic(err)
 	}
 
 	// Perform a final flush of the file buffers, just in case they didn't get flushed before
@@ -90,9 +121,13 @@ func main() {
 	os.Exit(cmd.ProcessState.ExitCode())
 }
 
+func format(line string) string {
+	return fmt.Sprintf("%s|%s\n", time.Now().UTC().Format(time.RFC3339Nano), line)
+}
+
 func reader(scanner *bufio.Scanner, writer *bufio.Writer, done *chan bool) {
 	for scanner.Scan() {
-		message := fmt.Sprintf("%s|%s\n", time.Now().UTC().Format(time.RFC3339Nano), scanner.Text())
+		message := format(scanner.Text())
 		fmt.Print(message)
 		if _, err := writer.WriteString(message); err != nil {
 			panic(err)
