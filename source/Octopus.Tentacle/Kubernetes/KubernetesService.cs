@@ -48,5 +48,16 @@ namespace Octopus.Tentacle.Kubernetes
                 return null;
             }
         }
+
+        protected static async Task TryExecuteAsync(Func<Task> action)
+        {
+            try
+            {
+                await action();
+            }
+            catch (HttpOperationException opException)
+                when (opException.Response.StatusCode == HttpStatusCode.NotFound)
+            { }
+        }
     }
 }
