@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Security.Principal;
 using Octopus.Diagnostics;
+using Octopus.Tentacle.Background;
 using Octopus.Tentacle.Communications;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
@@ -26,18 +29,15 @@ namespace Octopus.Tentacle.Commands
         readonly Lazy<IHomeConfiguration> home;
         readonly Lazy<IProxyConfiguration> proxyConfiguration;
         readonly Lazy<IProxyInitializer> proxyInitializer;
-        readonly Lazy<IWorkspaceCleanerTask> workspaceCleanerTask;
-        readonly Lazy<IKubernetesPodMonitorTask> kubernetesPodMonitorTask;
-        readonly Lazy<IKubernetesOrphanedPodCleanerTask> kubernetesOrphanedPodCleanerTask;
 
         readonly ISleep sleep;
         readonly ISystemLog log;
         readonly IApplicationInstanceSelector selector;
         readonly IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker;
         readonly AppVersion appVersion;
+        readonly IEnumerable<Lazy<IBackgroundTask>> backgroundTasks;
         int wait;
         bool halibutHasStarted;
-        bool workspaceCleanerHasStarted;
 
         public override bool CanRunAsService => true;
 
@@ -53,9 +53,7 @@ namespace Octopus.Tentacle.Commands
             IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker,
             AppVersion appVersion,
             ILogFileOnlyLogger logFileOnlyLogger,
-            Lazy<IWorkspaceCleanerTask> workspaceCleanerTask,
-            Lazy<IKubernetesPodMonitorTask> kubernetesPodMonitorTask,
-            Lazy<IKubernetesOrphanedPodCleanerTask> kubernetesOrphanedPodCleanerTask) : base(selector, log, logFileOnlyLogger)
+            IEnumerable<Lazy<IBackgroundTask>> backgroundTasks) : base(selector, log, logFileOnlyLogger)
         {
             this.halibut = halibut;
             this.configuration = configuration;
@@ -67,9 +65,7 @@ namespace Octopus.Tentacle.Commands
             this.proxyInitializer = proxyInitializer;
             this.windowsLocalAdminRightsChecker = windowsLocalAdminRightsChecker;
             this.appVersion = appVersion;
-            this.workspaceCleanerTask = workspaceCleanerTask;
-            this.kubernetesPodMonitorTask = kubernetesPodMonitorTask;
-            this.kubernetesOrphanedPodCleanerTask = kubernetesOrphanedPodCleanerTask;
+            this.backgroundTasks = backgroundTasks;
 
             Options.Add("wait=", "Delay (ms) before starting", arg => wait = int.Parse(arg));
             Options.Add("console", "Don't attempt to run as a service, even if the user is non-interactive", v =>
@@ -133,13 +129,9 @@ namespace Octopus.Tentacle.Commands
             halibut.Value.Start();
             halibutHasStarted = true;
 
-            workspaceCleanerTask.Value.Start();
-            workspaceCleanerHasStarted = true;
-
-            if (PlatformDetection.Kubernetes.IsRunningAsKubernetesAgent)
+            foreach (var backgroundTaskLazy in backgroundTasks)
             {
-                kubernetesPodMonitorTask.Value.Start();
-                kubernetesOrphanedPodCleanerTask.Value.Start();
+                backgroundTaskLazy.Value.Start();
             }
 
             Runtime.WaitForUserToExit();
@@ -164,19 +156,9 @@ namespace Octopus.Tentacle.Commands
                 halibut.Value.Stop();
             }
 
-            if (workspaceCleanerHasStarted)
+            foreach (var backgroundTaskLazy in backgroundTasks.Where(bt => bt.IsValueCreated))
             {
-                workspaceCleanerTask.Value.Stop();
-            }
-
-            if (kubernetesPodMonitorTask.IsValueCreated)
-            {
-                kubernetesPodMonitorTask.Value.Stop();
-            }
-
-            if (kubernetesOrphanedPodCleanerTask.IsValueCreated)
-            {
-                kubernetesOrphanedPodCleanerTask.Value.Stop();
+                backgroundTaskLazy.Value.Stop();
             }
         }
     }

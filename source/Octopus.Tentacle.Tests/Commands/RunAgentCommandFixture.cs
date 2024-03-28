@@ -1,7 +1,9 @@
 using System;
+using System.Linq;
 using NSubstitute;
 using NUnit.Framework;
 using Octopus.Diagnostics;
+using Octopus.Tentacle.Background;
 using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Versioning;
 using Octopus.Tentacle.Commands;
@@ -26,9 +28,7 @@ namespace Octopus.Tentacle.Tests.Commands
         ISleep sleep = null!;
         IHomeConfiguration home = null!;
         IApplicationInstanceSelector selector = null!;
-        IWorkspaceCleanerTask workspaceCleanerTask = null!;
-        IKubernetesPodMonitorTask kubernetesPodMonitorTask = null!;
-        IKubernetesOrphanedPodCleanerTask kubernetesOrphanedPodCleanerTask = null!;
+        IBackgroundTask[] backgroundTasks = null!;
 
         [SetUp]
         public override void SetUp()
@@ -41,9 +41,12 @@ namespace Octopus.Tentacle.Tests.Commands
             tentacleConfiguration.TentacleCertificate.Returns(certificate);
             home = Substitute.For<IHomeConfiguration>();
             sleep = Substitute.For<ISleep>();
-            workspaceCleanerTask = Substitute.For<IWorkspaceCleanerTask>();
-            kubernetesPodMonitorTask = Substitute.For<IKubernetesPodMonitorTask>();
-            kubernetesOrphanedPodCleanerTask = Substitute.For<IKubernetesOrphanedPodCleanerTask>();
+
+            backgroundTasks = new[]
+            {
+                Substitute.For<IBackgroundTask>(),
+                Substitute.For<IBackgroundTask>()
+            };
 
             Command = new RunAgentCommand(
                 new Lazy<IHalibutInitializer>(() => halibut),
@@ -57,9 +60,7 @@ namespace Octopus.Tentacle.Tests.Commands
                 Substitute.For<IWindowsLocalAdminRightsChecker>(),
                 new AppVersion(GetType().Assembly),
                 Substitute.For<ILogFileOnlyLogger>(),
-                new Lazy<IWorkspaceCleanerTask>(() => workspaceCleanerTask),
-                new Lazy<IKubernetesPodMonitorTask>(() => kubernetesPodMonitorTask),
-                new Lazy<IKubernetesOrphanedPodCleanerTask>(() => kubernetesOrphanedPodCleanerTask));
+                backgroundTasks.Select(bt => new Lazy<IBackgroundTask>(() => bt)).ToList());
 
             selector.Current.Returns(new ApplicationInstanceConfiguration("MyTentacle", null, null, null));
         }
@@ -70,7 +71,11 @@ namespace Octopus.Tentacle.Tests.Commands
             Start();
 
             halibut.Received().Start();
-            workspaceCleanerTask.Received().Start();
+
+            foreach (var backgroundTask in backgroundTasks)
+            {
+                backgroundTask.Received().Start();
+            }
         }
 
         [Test]
@@ -81,7 +86,11 @@ namespace Octopus.Tentacle.Tests.Commands
             Stop();
 
             halibut.Received().Stop();
-            workspaceCleanerTask.Received().Stop();
+
+            foreach (var backgroundTask in backgroundTasks)
+            {
+                backgroundTask.Received().Stop();
+            }
         }
 
         [Test]

@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using Octopus.Tentacle.Background;
 
 namespace Octopus.Tentacle.Maintenance
 {
@@ -10,7 +11,7 @@ namespace Octopus.Tentacle.Maintenance
 
             builder.RegisterType<WorkspaceCleanerConfiguration>().SingleInstance();
             builder.RegisterType<WorkspaceCleaner>().SingleInstance();
-            builder.RegisterType<WorkspaceCleanerTask>().As<IWorkspaceCleanerTask>().SingleInstance();
+            builder.RegisterType<WorkspaceCleanerTask>().As<IWorkspaceCleanerTask>().As<IBackgroundTask>().SingleInstance();
         }
     }
 }
