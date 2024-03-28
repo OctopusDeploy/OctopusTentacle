@@ -20,6 +20,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
         readonly IScriptWorkspaceFactory workspaceFactory;
         readonly IKubernetesPodStatusProvider podStatusProvider;
         readonly IKubernetesScriptPodCreator podCreator;
+        readonly IKubernetesPodLogService logService;
         readonly ISystemLog log;
 
         readonly ConcurrentDictionary<ScriptTicket, Lazy<SemaphoreSlim>> startScriptMutexes = new();
@@ -29,12 +30,14 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             IScriptWorkspaceFactory workspaceFactory,
             IKubernetesPodStatusProvider podStatusProvider,
             IKubernetesScriptPodCreator podCreator,
+            IKubernetesPodLogService logService,
             ISystemLog log)
         {
             this.podService = podService;
             this.workspaceFactory = workspaceFactory;
             this.podStatusProvider = podStatusProvider;
             this.podCreator = podCreator;
+            this.logService = logService;
             this.log = log;
         }
 
@@ -43,7 +46,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             var mutex = startScriptMutexes.GetOrAdd(command.ScriptTicket, _ => new Lazy<SemaphoreSlim>(() => new SemaphoreSlim(1, 1))).Value;
             using (await mutex.LockAsync(cancellationToken))
             {
-                var trackedPod = podStatusProvider.TryGetPodStatus(command.ScriptTicket);
+                var trackedPod = podStatusProvider.TryGetTrackedScriptPod(command.ScriptTicket);
                 if (trackedPod != null)
                 {
                     return GetResponse(trackedPod, 0);
@@ -62,8 +65,13 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
                 //create the pod
                 await podCreator.CreatePod(command, workspace, cancellationToken);
 
+                var writer = logService.CreateWriter(command.ScriptTicket);
+                writer.WriteVerbose("Created new pod sdfkjhgfiuj");
+
+                var (logs, _) = await logService.GetLogs(command.ScriptTicket, cancellationToken);
+
                 //return a status that say's we are pending
-                return new KubernetesScriptStatusResponseV1Alpha(command.ScriptTicket, ProcessState.Pending, 0, new List<ProcessOutput>(), 0);
+                return new KubernetesScriptStatusResponseV1Alpha(command.ScriptTicket, ProcessState.Pending, 0, logs.ToList(), 0);
             }
         }
 
@@ -71,7 +79,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
         {
             await Task.CompletedTask;
 
-            var trackedPod = podStatusProvider.TryGetPodStatus(request.ScriptTicket);
+            var trackedPod = podStatusProvider.TryGetTrackedScriptPod(request.ScriptTicket);
             return trackedPod != null
                 ? GetResponse(trackedPod, request.LastLogSequence)
                 //if we are getting the status of an unknown pod, return that it's still pending
@@ -80,7 +88,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
 
         public async Task<KubernetesScriptStatusResponseV1Alpha> CancelScriptAsync(CancelKubernetesScriptCommandV1Alpha command, CancellationToken cancellationToken)
         {
-            var trackedPod = podStatusProvider.TryGetPodStatus(command.ScriptTicket);
+            var trackedPod = podStatusProvider.TryGetTrackedScriptPod(command.ScriptTicket);
             //if we are cancelling a pod that doesn't exist, just return complete with an unknown script exit code
             if (trackedPod == null)
                 return new KubernetesScriptStatusResponseV1Alpha(command.ScriptTicket, ProcessState.Complete, ScriptExitCodes.UnknownScriptExitCode, new List<ProcessOutput>(), command.LastLogSequence);
@@ -130,7 +138,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
 
         public bool IsRunningScript(ScriptTicket ticket)
         {
-            return podStatusProvider.TryGetPodStatus(ticket) is not null;
+            return podStatusProvider.TryGetTrackedScriptPod(ticket) is not null;
         }
     }
 }

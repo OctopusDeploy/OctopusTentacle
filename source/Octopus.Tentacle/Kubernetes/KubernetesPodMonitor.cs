@@ -21,8 +21,8 @@ namespace Octopus.Tentacle.Kubernetes
 
     public interface IKubernetesPodStatusProvider
     {
-        IList<PodStatus> GetAllPodStatuses();
-        PodStatus? TryGetPodStatus(ScriptTicket scriptTicket);
+        IList<ITrackedScriptPod> GetAllTrackedScriptPod();
+        ITrackedScriptPod? TryGetTrackedScriptPod(ScriptTicket scriptTicket);
     }
 
     public class KubernetesPodMonitor : IKubernetesPodMonitor, IKubernetesPodStatusProvider
@@ -154,10 +154,10 @@ namespace Octopus.Tentacle.Kubernetes
             }
         }
 
-        IList<PodStatus> IKubernetesPodStatusProvider.GetAllPodStatuses() =>
+        IList<PodStatus> IKubernetesPodStatusProvider.GetAllTrackedScriptPod() =>
             podStatusLookup.Values.ToList();
 
-        PodStatus? IKubernetesPodStatusProvider.TryGetPodStatus(ScriptTicket scriptTicket) =>
+        PodStatus? IKubernetesPodStatusProvider.TryGetTrackedScriptPod(ScriptTicket scriptTicket) =>
             podStatusLookup.TryGetValue(scriptTicket, out var status) ? status : null;
     }
 
