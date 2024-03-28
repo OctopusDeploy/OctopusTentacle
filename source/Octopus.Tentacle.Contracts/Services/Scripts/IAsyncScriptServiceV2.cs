@@ -3,6 +3,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
 
+// Don't "fix" this namespace, this is what we originally did and perhaps
+// what we need to keep doing. 
 namespace Octopus.Tentacle.Services.Scripts
 {
     public interface IAsyncScriptServiceV2
