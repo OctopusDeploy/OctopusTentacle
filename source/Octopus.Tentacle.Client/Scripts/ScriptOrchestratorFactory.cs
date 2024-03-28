@@ -137,9 +137,14 @@ namespace Octopus.Tentacle.Client.Scripts
             // It's implied (and tested) that GetCapabilities will only return Kubernetes or non-Kubernetes script services, never a mix
             if (tentacleCapabilities.HasAnyKubernetesScriptService())
             {
-                return DetermineKubernetesScriptServiceToUse();
+                return DetermineKubernetesScriptServiceVersionToUse();
             }
 
+            return DetermineShellScriptServiceVersionToUse(tentacleCapabilities);
+        }
+
+        ScriptServiceVersion DetermineShellScriptServiceVersionToUse(CapabilitiesResponseV2 tentacleCapabilities)
+        {
             if (tentacleCapabilities.HasScriptServiceV2())
             {
                 logger.Verbose("Using ScriptServiceV2");
@@ -154,7 +159,7 @@ namespace Octopus.Tentacle.Client.Scripts
             return ScriptServiceVersion.ScriptServiceVersion1;
         }
 
-        ScriptServiceVersion DetermineKubernetesScriptServiceToUse()
+        ScriptServiceVersion DetermineKubernetesScriptServiceVersionToUse()
         {
             logger.Verbose("Using KubernetesScriptServiceV1Alpha");
             logger.Verbose(clientOptions.RpcRetrySettings.RetriesEnabled
