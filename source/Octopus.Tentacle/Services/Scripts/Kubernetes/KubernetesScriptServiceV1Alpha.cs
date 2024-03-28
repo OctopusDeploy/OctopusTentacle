@@ -9,10 +9,10 @@ using Octopus.Tentacle.Maintenance;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Util;
 
-namespace Octopus.Tentacle.Services.Scripts
+namespace Octopus.Tentacle.Services.Scripts.Kubernetes
 {
-    [Service(typeof(IKubernetesScriptServiceV1Alpha))]
-    public class KubernetesScriptServiceV1Alpha : IAsyncScriptServiceV3Alpha, IRunningScriptReporter
+    [KubernetesService(typeof(IKubernetesScriptServiceV1Alpha))]
+    public class KubernetesScriptServiceV1Alpha : IAsyncKubernetesScriptServiceV1Alpha, IRunningScriptReporter
     {
         readonly Lazy<KubernetesPodScriptExecutor> executor;
         readonly IScriptWorkspaceFactory workspaceFactory;
