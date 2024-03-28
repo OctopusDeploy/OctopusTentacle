@@ -110,6 +110,8 @@ namespace Octopus.Tentacle.Util
                 debug($"Executable name or full path: {exeFileNameOrFullPath}");
 
                 var encoding = EncodingDetector.GetOEMEncoding();
+                var stopwatch = new Stopwatch();
+                stopwatch.Start();
 
                 debug($"Starting {exeFileNameOrFullPath} in working directory '{workingDirectory}' using '{encoding.EncodingName}' encoding running as '{ProcessIdentity.CurrentUserName}'");
 
@@ -164,7 +166,7 @@ namespace Octopus.Tentacle.Util
                         SafelyWaitForAllOutput(errorResetEvent, cancel, debug);
 
                         var exitCode = SafelyGetExitCode(process);
-                        debug($"Process {exeFileNameOrFullPath} in {workingDirectory} exited with code {exitCode}");
+                        debug($"Process {exeFileNameOrFullPath} in {workingDirectory} exited with code {exitCode} after {stopwatch.ElapsedMilliseconds}ms");
 
                         running = false;
                         return exitCode;
