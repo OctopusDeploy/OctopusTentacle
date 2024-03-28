@@ -19,7 +19,7 @@
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="Polly" Version="7.2.2" />
-        <PackageReference Include="Octopus.Diagnostics" Version="2.1.0" />
+        <PackageReference Include="Octopus.Diagnostics" Version="2.1.285" />
     </ItemGroup>
     <ItemGroup>
       <ProjectReference Include="..\Octopus.Tentacle.Contracts\Octopus.Tentacle.Contracts.csproj" />
