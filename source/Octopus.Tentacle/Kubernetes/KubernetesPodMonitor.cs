@@ -31,7 +31,7 @@ namespace Octopus.Tentacle.Kubernetes
         readonly ISystemLog log;
         readonly IClock clock;
 
-        ConcurrentDictionary<ScriptTicket, PodStatus> podStatusLookup = new();
+        ConcurrentDictionary<ScriptTicket, TrackedScriptPod> podStatusLookup = new();
 
         public KubernetesPodMonitor(IKubernetesPodService podService, ISystemLog log, IClock clock)
         {
@@ -83,14 +83,14 @@ namespace Octopus.Tentacle.Kubernetes
         {
             log.Verbose("Preloading pod statuses");
 
-            var newStatuses = new ConcurrentDictionary<ScriptTicket, PodStatus>();
+            var newStatuses = new ConcurrentDictionary<ScriptTicket, TrackedScriptPod>();
             var allPods = await podService.ListAllPods(cancellationToken);
             foreach (var pod in allPods.Items)
             {
                 var scriptTicket = pod.GetScriptTicket();
                 if (!podStatusLookup.TryGetValue(scriptTicket, out var status))
                 {
-                    status = new PodStatus(scriptTicket, clock);
+                    status = new TrackedScriptPod(scriptTicket, clock);
                 }
 
                 status.Update(pod);
@@ -125,7 +125,7 @@ namespace Octopus.Tentacle.Kubernetes
                 {
                     case WatchEventType.Added or WatchEventType.Modified:
                     {
-                        var status = podStatusLookup.GetOrAdd(scriptTicket, st => new PodStatus(st, clock));
+                        var status = podStatusLookup.GetOrAdd(scriptTicket, st => new TrackedScriptPod(st, clock));
                         status.Update(pod);
                         log.Verbose($"Updated pod {pod.Name()} status. {status}");
 
@@ -161,7 +161,7 @@ namespace Octopus.Tentacle.Kubernetes
             podStatusLookup.TryGetValue(scriptTicket, out var status) ? status : null;
     }
 
-    public class PodStatus : ITrackedScriptPod
+    public class TrackedScriptPod : ITrackedScriptPod
     {
         readonly IClock clock;
         public ScriptTicket ScriptTicket { get; }
@@ -172,7 +172,7 @@ namespace Octopus.Tentacle.Kubernetes
 
         public DateTimeOffset LastUpdated { get; private set; }
 
-        public PodStatus(ScriptTicket ticket, IClock clock)
+        public TrackedScriptPod(ScriptTicket ticket, IClock clock)
         {
             this.clock = clock;
             ScriptTicket = ticket;
