@@ -1,6 +1,5 @@
 ﻿using Autofac;
 using Octopus.Tentacle.Background;
-using Octopus.Tentacle.Kubernetes.Scripts;
 
 namespace Octopus.Tentacle.Kubernetes
 {
@@ -14,9 +13,7 @@ namespace Octopus.Tentacle.Kubernetes
             builder.RegisterType<KubernetesConfigMapService>().As<IKubernetesConfigMapService>().SingleInstance();
             builder.RegisterType<KubernetesSecretService>().As<IKubernetesSecretService>().SingleInstance();
 
-            // this needs to be per-dependency, otherwise it re-uses the RunningKubernetesPod
-            builder.RegisterType<RunningKubernetesPod>().InstancePerDependency();
-            builder.RegisterType<KubernetesPodScriptExecutor>().AsSelf();
+            builder.RegisterType<KubernetesScriptPodCreator>().As<IKubernetesScriptPodCreator>();
 
             builder.RegisterType<KubernetesPodMonitorTask>().As<IKubernetesPodMonitorTask>().As<IBackgroundTask>().SingleInstance();
             builder.RegisterType<KubernetesPodMonitor>().As<IKubernetesPodMonitor>().As<IKubernetesPodStatusProvider>().SingleInstance();

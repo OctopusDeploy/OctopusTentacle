@@ -60,7 +60,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
 
             status.Should().Match<PodStatus>(status =>
                 status.ScriptTicket == scriptTicket &&
-                status.State == PodState.Running &&
+                status.State == TrackedScriptPodState.Running &&
                 status.ExitCode == null
             );
         }
@@ -81,7 +81,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                 }
             };
 
-            podService.ListAllPodsAsync(Arg.Any<CancellationToken>())
+            podService.ListAllPods(Arg.Any<CancellationToken>())
                 .Returns(new V1PodList
                 {
                     Items = new List<V1Pod>
@@ -116,7 +116,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
 
             status.Should().Match<PodStatus>(status =>
                 status.ScriptTicket == scriptTicket &&
-                status.State == PodState.Succeeded &&
+                status.State == TrackedScriptPodState.Succeeded &&
                 status.ExitCode == 0
             );
         }
@@ -137,7 +137,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                 }
             };
 
-            podService.ListAllPodsAsync(Arg.Any<CancellationToken>())
+            podService.ListAllPods(Arg.Any<CancellationToken>())
                 .Returns(new V1PodList
                 {
                     Items = new List<V1Pod>
@@ -178,7 +178,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
 
             status.Should().Match<PodStatus>(status =>
                 status.ScriptTicket == scriptTicket &&
-                status.State == PodState.Failed &&
+                status.State == TrackedScriptPodState.Failed &&
                 status.ExitCode == -99
             );
         }
@@ -199,7 +199,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                 }
             };
 
-            podService.ListAllPodsAsync(Arg.Any<CancellationToken>())
+            podService.ListAllPods(Arg.Any<CancellationToken>())
                 .Returns(new V1PodList
                 {
                     Items = new List<V1Pod>

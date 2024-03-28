@@ -40,7 +40,7 @@ namespace Octopus.Tentacle.Kubernetes
         async Task IKubernetesPodMonitor.StartAsync(CancellationToken cancellationToken)
         {
             const int maxDurationSeconds = 70;
-            
+
             // We don't want the monitoring to ever stop
             var policy = Policy.Handle<Exception>().WaitAndRetryForeverAsync(
                 retry => TimeSpan.FromSeconds(ExponentialBackoff.GetDuration(retry, maxDurationSeconds)),
@@ -59,13 +59,20 @@ namespace Octopus.Tentacle.Kubernetes
                 // Initially load all the pods and their status's
                 var initialResourceVersion = await InitialLoadAsync(cancellationToken);
 
-                // We start the watch from the resource version we initially loaded.
-                // This means we only receive events that occur after the resource version
-                await podService.WatchAllPods(initialResourceVersion, OnNewEvent, ex =>
-                    {
-                        log.Error(ex, "An unhandled error occured while watching Pods");
-                    }, cancellationToken
-                );
+                try
+                {
+                    // We start the watch from the resource version we initially loaded.
+                    // This means we only receive events that occur after the resource version
+                    await podService.WatchAllPods(initialResourceVersion, OnNewEvent, ex =>
+                        {
+                            log.Error(ex, "An unhandled error occured while watching Pods");
+                        }, cancellationToken
+                    );
+                }
+                catch (Exception e)
+                {
+                    log.Warn(e, "An unhandled exception occured during KubernetesPodService.WatchAllPods.");
+                }
             }
         }
 
@@ -74,7 +81,7 @@ namespace Octopus.Tentacle.Kubernetes
             log.Verbose("Preloading pod statuses");
 
             var newStatuses = new ConcurrentDictionary<ScriptTicket, PodStatus>();
-            var allPods = await podService.ListAllPodsAsync(cancellationToken);
+            var allPods = await podService.ListAllPods(cancellationToken);
             foreach (var pod in allPods.Items)
             {
                 var scriptTicket = pod.GetScriptTicket();
@@ -82,6 +89,7 @@ namespace Octopus.Tentacle.Kubernetes
                 {
                     status = new PodStatus(scriptTicket);
                 }
+
                 status.Update(pod);
 
                 log.Verbose($"Preloaded pod {pod.Name()}. {status}");
@@ -130,6 +138,7 @@ namespace Octopus.Tentacle.Kubernetes
                         {
                             log.Warn($"Unable to remove {type} pod {pod.Name()} status");
                         }
+
                         break;
                     default:
                         log.Warn($"Received watch event type {type} for pod {pod.Name()}. Ignoring as we don't need it");
@@ -149,11 +158,11 @@ namespace Octopus.Tentacle.Kubernetes
             podStatusLookup.TryGetValue(scriptTicket, out var status) ? status : null;
     }
 
-    public class PodStatus
+    public class PodStatus : ITrackedScriptPod
     {
         public ScriptTicket ScriptTicket { get; }
 
-        public PodState State { get; private set; }
+        public TrackedScriptPodState State { get; private set; }
 
         public int? ExitCode { get; private set; }
 
@@ -197,7 +206,15 @@ namespace Octopus.Tentacle.Kubernetes
             => $"ScriptTicket: {ScriptTicket}, State: {State}, ExitCode: {ExitCode}";
     }
 
-    public enum PodState
+    public interface ITrackedScriptPod
+    {
+        TrackedScriptPodState State { get; }
+        int? ExitCode { get; }
+        ScriptTicket ScriptTicket { get; }
+        public DateTimeOffset LastUpdated { get; }
+    }
+
+    public enum TrackedScriptPodState
     {
         Running,
         Succeeded,
