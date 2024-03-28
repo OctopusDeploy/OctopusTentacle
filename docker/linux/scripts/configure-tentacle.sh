@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -eu
 
 if [[ "$ACCEPT_EULA" != "Y" ]]; then
     echo "ERROR: You must accept the EULA at https://octopus.com/company/legal by passing an environment variable 'ACCEPT_EULA=Y'"
