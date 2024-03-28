@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+var line = 1
+
 // The bootstrapRunner applet is designed to execute a script in a specific folder
 // and format the script's output from stdout and stderr into the following format:
 // <line number>|<RFC3339Nano date time>|<"stdout" or "stderr">|<original string>
@@ -31,45 +33,22 @@ func main() {
 	doneStd := make(chan bool)
 	doneErr := make(chan bool)
 
-	//stdout log file
-	so, err := os.Create(workspacePath + "/stdout.log")
-	if err != nil {
-		panic(err)
-	}
-	// close fo on exit and check for its returned error
-	defer func() {
-		if err := so.Close(); err != nil {
-			panic(err)
-		}
-	}()
-	// make a write buffer
-	stdoutLogFile := bufio.NewWriter(so)
+	go reader(stdOutScanner, "stdout", &doneStd)
+	go reader(stdErrScanner, "stderr", &doneErr)
 
-	//stderr log file
-	se, err := os.Create(workspacePath + "/stderr.log")
-	if err != nil {
-		panic(err)
-	}
-	// close fo on exit and check for its returned error
-	defer func() {
-		if err := se.Close(); err != nil {
-			panic(err)
-		}
-	}()
-	// make a write buffer
-	stderrLogFile := bufio.NewWriter(se)
+	Write("stdout", "##octopus[stdout-verbose]")
+	Write("stdout", "Kubernetes Script Pod started")
+	Write("stdout", "##octopus[stdout-default]")
 
-	go reader(stdOutScanner, stdoutLogFile, &doneStd)
-	go reader(stdErrScanner, stderrLogFile, &doneErr)
-
-	err = cmd.Start()
-	if err != nil {
-		panic(err)
-	}
+	err := cmd.Start()
 
 	// Wait for output buffering first
 	<-doneStd
 	<-doneErr
+
+	if err != nil {
+		panic(err)
+	}
 
 	err = cmd.Wait()
 
@@ -79,28 +58,25 @@ func main() {
 		fmt.Fprintln(os.Stderr, "bootstrapRunner.go: Failed to execute bootstrap script", err)
 	}
 
-	// Perform a final flush of the file buffers, just in case they didn't get flushed before
-	if err := stdoutLogFile.Flush(); err != nil {	
-		fmt.Fprintln(os.Stderr, "bootstrapRunner.go: Failed to perform final flush of stdoutLogFile", err)
-	}
-	if err := stderrLogFile.Flush(); err != nil {	
-		fmt.Fprintln(os.Stderr, "bootstrapRunner.go: Failed to perform final flush of stderrLogFile", err)
-	}
-	
-	os.Exit(cmd.ProcessState.ExitCode())
+	exitCode := cmd.ProcessState.ExitCode()
+
+	Write("stdout", "##octopus[stdout-verbose]")
+	Write("stdout", "Kubernetes Script Pod completed")
+	Write("stdout", "##octopus[stdout-default]")
+
+	Write("stdout", fmt.Sprintf("EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE<<>>%d", exitCode))
+
+	os.Exit(exitCode)
 }
 
-func reader(scanner *bufio.Scanner, writer *bufio.Writer, done *chan bool) {
+func reader(scanner *bufio.Scanner, stream string, done *chan bool) {
 	for scanner.Scan() {
-		message := fmt.Sprintf("%s|%s\n", time.Now().UTC().Format(time.RFC3339Nano), scanner.Text())
-		fmt.Print(message)
-		if _, err := writer.WriteString(message); err != nil {
-			panic(err)
-		}
-
-		if err := writer.Flush(); err != nil {
-			panic(err)
-		}
+		Write(stream, scanner.Text())
 	}
 	*done <- true
+}
+
+func Write(stream string, text string) {
+	fmt.Printf("%d|%s|%s|%s\n", line, time.Now().UTC().Format(time.RFC3339Nano), stream, text)
+	line++
 }

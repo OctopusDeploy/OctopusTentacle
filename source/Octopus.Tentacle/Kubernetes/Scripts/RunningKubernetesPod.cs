@@ -42,7 +42,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
         readonly KubernetesAgentScriptExecutionContext executionContext;
         readonly CancellationToken scriptCancellationToken;
         readonly string? instanceName;
-        readonly KubernetesPodOutputStreamWriter outputStreamWriter;
+        //readonly KubernetesPodOutputStreamWriter outputStreamWriter;
         readonly string podName;
 
         public int ExitCode { get; private set; }
@@ -77,12 +77,12 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             ScriptLog = scriptLog;
             instanceName = appInstanceSelector.Current.InstanceName;
 
-            outputStreamWriter = new KubernetesPodOutputStreamWriter(workspace);
+            //outputStreamWriter = new KubernetesPodOutputStreamWriter(workspace);
 
             State = ProcessState.Pending;
 
             // this doesn't change, so build it once
-            podName = scriptTicket.ToKubernetesScriptPobName();
+            podName = scriptTicket.ToKubernetesScriptPodName();
         }
 
         public async Task Execute()
@@ -173,12 +173,12 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             var checkPodTask = CheckIfPodHasCompleted(podCompletionCancellationTokenSource);
 
             //we pass the pod completion CTS here because its used to cancel the writing of the pod stream
-            var monitorPodOutputTask = outputStreamWriter.StreamPodLogsToScriptLog(writer, podCompletionCancellationTokenSource.Token);
+            //var monitorPodOutputTask = outputStreamWriter.StreamPodLogsToScriptLog(writer, podCompletionCancellationTokenSource.Token);
 
-            await Task.WhenAll(checkPodTask, monitorPodOutputTask);
+            await checkPodTask;
 
             //once they have both finished, perform one last log read (and don't cancel on it)
-            await outputStreamWriter.StreamPodLogsToScriptLog(writer, CancellationToken.None, true);
+            //await outputStreamWriter.StreamPodLogsToScriptLog(writer, CancellationToken.None, true);
 
             //return the exit code of the pod
             return checkPodTask.Result;
