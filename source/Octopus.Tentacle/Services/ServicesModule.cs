@@ -3,7 +3,6 @@ using System.Linq;
 using System.Reflection;
 using Autofac;
 using Octopus.Tentacle.Communications;
-using Octopus.Tentacle.Kubernetes.Scripts;
 using Octopus.Tentacle.Packages;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Util;
@@ -22,19 +21,21 @@ namespace Octopus.Tentacle.Services
 
             builder.RegisterType<NuGetPackageInstaller>().As<IPackageInstaller>();
 
-            // Register the script executor based on if we should
+            // Register our Halibut services
+            var allTypes = ThisAssembly.GetTypes();
+            RegisterHalibutServices<ServiceAttribute>(builder, allTypes);
+
+            //only register kubernetes services when
             if (PlatformDetection.Kubernetes.IsRunningAsKubernetesAgent)
             {
-                builder.RegisterType<KubernetesPodScriptExecutor>().AsSelf().As<IScriptExecutor>();
+                RegisterHalibutServices<KubernetesServiceAttribute>(builder, allTypes);
             }
-            else
-            {
-                builder.RegisterType<LocalShellScriptExecutor>().AsSelf().As<IScriptExecutor>();
-            }
+        }
 
-            // Register our Halibut services
-            var knownServices = ThisAssembly.GetTypes()
-                .Select(t => (ServiceImplementationType: t, ServiceAttribute: t.GetCustomAttribute<ServiceAttribute>()))
+        static void RegisterHalibutServices<T>(ContainerBuilder builder, Type[] allTypes) where T: Attribute, IServiceAttribute
+        {
+            var knownServices = allTypes
+                .Select(t => (ServiceImplementationType: t, ServiceAttribute: t.GetCustomAttribute<T>()))
                 .Where(x => x.ServiceAttribute != null)
                 .Select(x => new KnownService(x.ServiceImplementationType, x.ServiceAttribute!.ContractType))
                 .ToArray();

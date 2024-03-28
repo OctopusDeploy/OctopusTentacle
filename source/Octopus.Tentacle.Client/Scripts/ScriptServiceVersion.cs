@@ -1,9 +1,11 @@
 ﻿namespace Octopus.Tentacle.Client.Scripts
 {
-    internal enum ScriptServiceVersion
+    record ScriptServiceVersion(string Value)
     {
-        Version1,
-        Version2,
-        Version3Alpha
+        public static ScriptServiceVersion ScriptServiceVersion1 = new(nameof(ScriptServiceVersion1));
+        public static ScriptServiceVersion ScriptServiceVersion2 = new(nameof(ScriptServiceVersion2));
+        public static ScriptServiceVersion KubernetesScriptServiceVersion1Alpha = new(nameof(KubernetesScriptServiceVersion1Alpha));
+
+        public override string ToString() => Value;
     }
 }

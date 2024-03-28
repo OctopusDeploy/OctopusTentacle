@@ -53,7 +53,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             return service;
         }
 
-        public IAsyncClientScriptServiceV3Alpha Decorate(IAsyncClientScriptServiceV3Alpha service)
+        public IAsyncClientKubernetesScriptServiceV1Alpha Decorate(IAsyncClientKubernetesScriptServiceV1Alpha service)
         {
             foreach (var decoratorFactory in decoratorsInReverse)
             {

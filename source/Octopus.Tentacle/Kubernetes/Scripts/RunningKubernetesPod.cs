@@ -12,7 +12,7 @@ using Newtonsoft.Json;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Contracts;
-using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
+using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Util;
 using Octopus.Tentacle.Variables;
@@ -24,13 +24,12 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
         public delegate RunningKubernetesPod Factory(
             IScriptWorkspace workspace,
             IScriptLog scriptLog,
-            ScriptTicket scriptTicket,
-            string taskId,
+            StartKubernetesScriptCommandV1Alpha command,
             IScriptStateStore stateStore,
-            KubernetesAgentScriptExecutionContext executionContext,
             CancellationToken scriptCancellationToken);
 
         readonly IScriptWorkspace workspace;
+        readonly StartKubernetesScriptCommandV1Alpha command;
         readonly ScriptTicket scriptTicket;
         readonly string taskId;
         readonly ILog log;
@@ -39,7 +38,6 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
         readonly IKubernetesPodStatusProvider podStatusProvider;
         readonly IKubernetesSecretService secretService;
         readonly IKubernetesPodContainerResolver containerResolver;
-        readonly KubernetesAgentScriptExecutionContext executionContext;
         readonly CancellationToken scriptCancellationToken;
         readonly string? instanceName;
         readonly KubernetesPodOutputStreamWriter outputStreamWriter;
@@ -51,10 +49,8 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
 
         public RunningKubernetesPod(IScriptWorkspace workspace,
             IScriptLog scriptLog,
-            ScriptTicket scriptTicket,
-            string taskId,
+            StartKubernetesScriptCommandV1Alpha command,
             IScriptStateStore stateStore,
-            KubernetesAgentScriptExecutionContext executionContext,
             CancellationToken scriptCancellationToken,
             ISystemLog log,
             IKubernetesPodService podService,
@@ -64,15 +60,15 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             IApplicationInstanceSelector appInstanceSelector)
         {
             this.workspace = workspace;
-            this.scriptTicket = scriptTicket;
-            this.taskId = taskId;
+            this.command = command;
+            scriptTicket = command.ScriptTicket;
+            taskId = command.TaskId;
             this.log = log;
             this.stateStore = stateStore;
             this.podService = podService;
             this.podStatusProvider = podStatusProvider;
             this.secretService = secretService;
             this.containerResolver = containerResolver;
-            this.executionContext = executionContext;
             this.scriptCancellationToken = scriptCancellationToken;
             ScriptLog = scriptLog;
             instanceName = appInstanceSelector.Current.InstanceName;
@@ -222,10 +218,10 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
         async Task<string?> CreateImagePullSecret(CancellationToken cancellationToken)
         {
             //if we have no feed url or no username, then we can't create image secrets
-            if (executionContext.FeedUrl is null || executionContext.FeedUsername is null)
+            if (command.PodImageConfiguration?.FeedUrl is null || command.PodImageConfiguration?.FeedUsername is null)
                 return null;
 
-            var secretName = CreateImagePullSecretName(executionContext.FeedUrl, executionContext.FeedUsername);
+            var secretName = CreateImagePullSecretName(command.PodImageConfiguration.FeedUrl, command.PodImageConfiguration.FeedUsername);
 
             // this structure is a docker config auth file
             // https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/#inspecting-the-secret-regcred
@@ -233,11 +229,11 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             {
                 ["auths"] = new Dictionary<string, object>
                 {
-                    [executionContext.FeedUrl] = new
+                    [command.PodImageConfiguration.FeedUrl] = new
                     {
-                        username = executionContext.FeedUsername,
-                        password = executionContext.FeedPassword,
-                        auth = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{executionContext.FeedUsername}:{executionContext.FeedPassword}"))
+                        username = command.PodImageConfiguration.FeedUsername,
+                        password = command.PodImageConfiguration.FeedPassword,
+                        auth = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{command.PodImageConfiguration.FeedUsername}:{command.PodImageConfiguration.FeedPassword}"))
                     }
                 }
             };
@@ -325,7 +321,7 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                         new()
                         {
                             Name = podName,
-                            Image = executionContext.Image ?? await containerResolver.GetContainerImageForCluster(),
+                            Image = command.PodImageConfiguration?.Image ?? await containerResolver.GetContainerImageForCluster(),
                             Command = new List<string> { $"/octopus/Work/{scriptTicket.TaskId}/bootstrapRunner" },
                             Args = new List<string>
                                 {

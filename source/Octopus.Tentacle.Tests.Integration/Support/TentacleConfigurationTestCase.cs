@@ -29,10 +29,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         internal ClientAndTentacleBuilder CreateBuilder()
         {
             return new ClientAndTentacleBuilder(TentacleType)
-                .WithClientOptions(opt =>
-                {
-                    opt.DisableScriptServiceV3Alpha = ScriptServiceToTest != TentacleConfigurationTestCases.ScriptServiceV3AlphaType;
-                })
                 .WithTentacleVersion(Version)
                 .WithTentacleRuntime(TentacleRuntime);
         }

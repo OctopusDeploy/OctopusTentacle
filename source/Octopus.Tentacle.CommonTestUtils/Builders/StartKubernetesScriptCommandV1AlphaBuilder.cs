@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Text;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Builders;
-using Octopus.Tentacle.Contracts.ScriptServiceV3Alpha;
+using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha;
 
 namespace Octopus.Tentacle.CommonTestUtils.Builders
 {
-    public class StartScriptCommandV3AlphaBuilder
+    public class StartKubernetesScriptCommandV1AlphaBuilder
     {
         readonly List<ScriptFile> files = new();
         readonly List<string> arguments = new();
@@ -18,28 +18,27 @@ namespace Octopus.Tentacle.CommonTestUtils.Builders
         string scriptIsolationMutexName = "RunningScript";
         string taskId = Guid.NewGuid().ToString();
         ScriptTicket scriptTicket = new UniqueScriptTicketBuilder().Build();
-        TimeSpan? durationStartScriptCanWaitForScriptToFinish;
-        IScriptExecutionContext executionContext = new LocalShellScriptExecutionContext();
+        PodImageConfiguration? podImageConfiguration = null;
 
-        public StartScriptCommandV3AlphaBuilder WithScriptBody(string scriptBody)
+        public StartKubernetesScriptCommandV1AlphaBuilder WithScriptBody(string scriptBody)
         {
             this.scriptBody = new StringBuilder(scriptBody);
             return this;
         }
 
-        public StartScriptCommandV3AlphaBuilder WithAdditionalScriptTypes(ScriptType scriptType, string scriptBody)
+        public StartKubernetesScriptCommandV1AlphaBuilder WithAdditionalScriptTypes(ScriptType scriptType, string scriptBody)
         {
             additionalScripts.Add(scriptType, scriptBody);
             return this;
         }
 
-        public StartScriptCommandV3AlphaBuilder WithIsolation(ScriptIsolationLevel isolation)
+        public StartKubernetesScriptCommandV1AlphaBuilder WithIsolation(ScriptIsolationLevel isolation)
         {
             this.isolation = isolation;
             return this;
         }
 
-        public StartScriptCommandV3AlphaBuilder WithFiles(params ScriptFile[] files)
+        public StartKubernetesScriptCommandV1AlphaBuilder WithFiles(params ScriptFile[] files)
         {
             if (files != null)
                 this.files.AddRange(files);
@@ -47,7 +46,7 @@ namespace Octopus.Tentacle.CommonTestUtils.Builders
             return this;
         }
 
-        public StartScriptCommandV3AlphaBuilder WithArguments(params string[] arguments)
+        public StartKubernetesScriptCommandV1AlphaBuilder WithArguments(params string[] arguments)
         {
             if (arguments != null)
                 this.arguments.AddRange(arguments);
@@ -55,52 +54,46 @@ namespace Octopus.Tentacle.CommonTestUtils.Builders
             return this;
         }
 
-        public StartScriptCommandV3AlphaBuilder WithMutexTimeout(TimeSpan scriptIsolationMutexTimeout)
+        public StartKubernetesScriptCommandV1AlphaBuilder WithMutexTimeout(TimeSpan scriptIsolationMutexTimeout)
         {
             this.scriptIsolationMutexTimeout = scriptIsolationMutexTimeout;
             return this;
         }
 
-        public StartScriptCommandV3AlphaBuilder WithMutexName(string name)
+        public StartKubernetesScriptCommandV1AlphaBuilder WithMutexName(string name)
         {
             scriptIsolationMutexName = name;
             return this;
         }
 
-        public StartScriptCommandV3AlphaBuilder WithTaskId(string taskId)
+        public StartKubernetesScriptCommandV1AlphaBuilder WithTaskId(string taskId)
         {
             this.taskId = taskId;
             return this;
         }
 
-        public StartScriptCommandV3AlphaBuilder WithScriptTicket(ScriptTicket scriptTicket)
+        public StartKubernetesScriptCommandV1AlphaBuilder WithScriptTicket(ScriptTicket scriptTicket)
         {
             this.scriptTicket = scriptTicket;
             return this;
         }
 
-        public StartScriptCommandV3AlphaBuilder WithDurationStartScriptCanWaitForScriptToFinish(TimeSpan? duration)
+        public StartKubernetesScriptCommandV1AlphaBuilder WithPodImageConfiguration(PodImageConfiguration imageConfiguration)
         {
-            this.durationStartScriptCanWaitForScriptToFinish = duration;
+            this.podImageConfiguration = imageConfiguration;
             return this;
         }
 
-        public StartScriptCommandV3AlphaBuilder WithExecutionContext(IScriptExecutionContext executionContext)
-        {
-            this.executionContext = executionContext;
-            return this;
-        }
-
-        public StartScriptCommandV3Alpha Build()
-            => new(scriptBody.ToString(),
+        public StartKubernetesScriptCommandV1Alpha Build()
+            => new(
+                scriptTicket,
+                taskId,
+                scriptBody.ToString(),
+                arguments.ToArray(),
                 isolation,
                 scriptIsolationMutexTimeout,
                 scriptIsolationMutexName,
-                arguments.ToArray(),
-                taskId,
-                scriptTicket,
-                durationStartScriptCanWaitForScriptToFinish,
-                executionContext,
+                podImageConfiguration,
                 additionalScripts,
                 files.ToArray());
     }
