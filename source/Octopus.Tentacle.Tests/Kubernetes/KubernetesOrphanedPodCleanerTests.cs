@@ -25,14 +25,16 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         KubernetesOrphanedPodCleaner cleaner;
         TimeSpan overCutoff;
         TimeSpan underCutoff;
+        DateTimeOffset startTime;
 
         [SetUp]
         public void Setup()
         {
+            startTime = DateTimeOffset.MinValue.ToUniversalTime() + 1.Days();
             podService = Substitute.For<IKubernetesPodService>();
             log = new InMemoryLog();
-            clock = new FixedClock(DateTimeOffset.MinValue + 1.Days());
-            monitor = new KubernetesPodMonitor(podService, log, clock);
+            clock = new FixedClock(startTime);
+            monitor = new KubernetesPodMonitor(podService, log);
 
             scriptTicket = new ScriptTicket(Guid.NewGuid().ToString());
 
@@ -47,20 +49,8 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         {
             //Arrange
             const WatchEventType type = WatchEventType.Added;
-            var pod = new V1Pod
-            {
-                Metadata = new V1ObjectMeta
-                {
-                    Labels = new Dictionary<string, string>
-                    {
-                        [OctopusLabels.ScriptTicketId] = scriptTicket.TaskId
-                    }
-                },
-                Status = new V1PodStatus
-                {
-                    Phase = "Succeeded"
-                }
-            };
+            var pod = CreatePod(PodState.Succeeded, startTime);
+
             await monitor.OnNewEvent(type, pod, CancellationToken.None);
 
             clock.WindForward(overCutoff);
@@ -72,28 +62,15 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             await podService.Received().Delete(scriptTicket, Arg.Any<CancellationToken>());
         }
 
-        [TestCase("Succeeded", true)]
-        [TestCase("Failed", true)]
-        [TestCase("Running", false)]
+        [TestCase(PodState.Succeeded, true)]
+        [TestCase(PodState.Failed, true)]
+        [TestCase(PodState.Running, false)]
         [TestCase(null, false)]
-        public async Task OrphanedPodOnlyCleanedUpWhenNotRunning(string? phase, bool shouldBeDeleted)
+        public async Task OrphanedPodOnlyCleanedUpWhenNotRunning(PodState? phase, bool shouldBeDeleted)
         {
             //Arrange
             const WatchEventType type = WatchEventType.Added;
-            var pod = new V1Pod
-            {
-                Metadata = new V1ObjectMeta
-                {
-                    Labels = new Dictionary<string, string>
-                    {
-                        [OctopusLabels.ScriptTicketId] = scriptTicket.TaskId
-                    }
-                },
-                Status = new V1PodStatus
-                {
-                    Phase = phase
-                }
-            };
+            var pod = CreatePod(phase, startTime, phase == PodState.Failed ? -1 : 0);
             await monitor.OnNewEvent(type, pod, CancellationToken.None);
 
             clock.WindForward(overCutoff);
@@ -117,20 +94,8 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         {
             //Arrange
             const WatchEventType type = WatchEventType.Added;
-            var pod = new V1Pod
-            {
-                Metadata = new V1ObjectMeta
-                {
-                    Labels = new Dictionary<string, string>
-                    {
-                        [OctopusLabels.ScriptTicketId] = scriptTicket.TaskId
-                    }
-                },
-                Status = new V1PodStatus
-                {
-                    Phase = "Succeeded"
-                }
-            };
+            var pod = CreatePod(PodState.Succeeded, startTime);
+
             await monitor.OnNewEvent(type, pod, CancellationToken.None);
 
             clock.WindForward(underCutoff);
@@ -148,20 +113,8 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             //Arrange
             Environment.SetEnvironmentVariable("OCTOPUS__K8STENTACLE__DISABLEAUTOPODCLEANUP", "true");
             const WatchEventType type = WatchEventType.Added;
-            var pod = new V1Pod
-            {
-                Metadata = new V1ObjectMeta
-                {
-                    Labels = new Dictionary<string, string>
-                    {
-                        [OctopusLabels.ScriptTicketId] = scriptTicket.TaskId
-                    }
-                },
-                Status = new V1PodStatus
-                {
-                    Phase = "Succeeded"
-                }
-            };
+            var pod = CreatePod(PodState.Succeeded, startTime);
+
             await monitor.OnNewEvent(type, pod, CancellationToken.None);
 
             clock.WindForward(overCutoff);
@@ -186,20 +139,8 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             // We need to reinitialise the sut after changing the env var value
             cleaner = new KubernetesOrphanedPodCleaner(monitor, podService, log, clock);
             const WatchEventType type = WatchEventType.Added;
-            var pod = new V1Pod
-            {
-                Metadata = new V1ObjectMeta
-                {
-                    Labels = new Dictionary<string, string>
-                    {
-                        [OctopusLabels.ScriptTicketId] = scriptTicket.TaskId
-                    }
-                },
-                Status = new V1PodStatus
-                {
-                    Phase = "Succeeded"
-                }
-            };
+            var pod = CreatePod(PodState.Succeeded, startTime);
+
             await monitor.OnNewEvent(type, pod, CancellationToken.None);
 
             clock.WindForward(TimeSpan.FromMinutes(checkAfterMinutes));
@@ -219,6 +160,33 @@ namespace Octopus.Tentacle.Tests.Kubernetes
 
             //Cleanup
             Environment.SetEnvironmentVariable("OCTOPUS__K8STENTACLE__PODSCONSIDEREDORPHANEDAFTERMINUTES", null);
+        }
+
+        V1Pod CreatePod(PodState? phase, DateTimeOffset? finishedAt = null, int exitCode = 0)
+        {
+            return new V1Pod
+            {
+                Metadata = new V1ObjectMeta
+                {
+                    Labels = new Dictionary<string, string>
+                    {
+                        [OctopusLabels.ScriptTicketId] = scriptTicket.TaskId
+                    }
+                },
+                Status = new V1PodStatus
+                {
+                    Phase = phase?.ToString(),
+                    ContainerStatuses = new List<V1ContainerStatus>
+                    {
+                        new()
+                        {
+                            Name = scriptTicket.ToKubernetesScriptPobName(),
+                            State = new V1ContainerState(
+                                terminated: new V1ContainerStateTerminated(exitCode: exitCode, finishedAt: finishedAt?.DateTime))
+                        }
+                    }
+                }
+            };
         }
     }
 }

@@ -9,7 +9,6 @@ using k8s.Models;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Time;
-using Octopus.Time;
 using Polly;
 
 namespace Octopus.Tentacle.Kubernetes
@@ -29,15 +28,13 @@ namespace Octopus.Tentacle.Kubernetes
     {
         readonly IKubernetesPodService podService;
         readonly ISystemLog log;
-        readonly IClock clock;
 
         ConcurrentDictionary<ScriptTicket, PodStatus> podStatusLookup = new();
 
-        public KubernetesPodMonitor(IKubernetesPodService podService, ISystemLog log, IClock clock)
+        public KubernetesPodMonitor(IKubernetesPodService podService, ISystemLog log)
         {
             this.podService = podService;
             this.log = log;
-            this.clock = clock;
         }
 
         async Task IKubernetesPodMonitor.StartAsync(CancellationToken cancellationToken)
@@ -83,7 +80,7 @@ namespace Octopus.Tentacle.Kubernetes
                 var scriptTicket = pod.GetScriptTicket();
                 if (!podStatusLookup.TryGetValue(scriptTicket, out var status))
                 {
-                    status = new PodStatus(scriptTicket, clock);
+                    status = new PodStatus(scriptTicket);
                 }
                 status.Update(pod);
 
@@ -117,7 +114,7 @@ namespace Octopus.Tentacle.Kubernetes
                 {
                     case WatchEventType.Added or WatchEventType.Modified:
                     {
-                        var status = podStatusLookup.GetOrAdd(scriptTicket, st => new PodStatus(st, clock));
+                        var status = podStatusLookup.GetOrAdd(scriptTicket, st => new PodStatus(st));
                         status.Update(pod);
                         log.Verbose($"Updated pod {pod.Name()} status. {status}");
 
@@ -154,39 +151,44 @@ namespace Octopus.Tentacle.Kubernetes
 
     public class PodStatus
     {
-        readonly IClock clock;
         public ScriptTicket ScriptTicket { get; }
 
         public PodState State { get; private set; }
 
         public int? ExitCode { get; private set; }
 
-        public DateTimeOffset LastUpdated { get; private set; }
+        public DateTimeOffset? FinishedAt { get; private set; }
 
-        public PodStatus(ScriptTicket ticket, IClock clock)
+        public PodStatus(ScriptTicket ticket)
         {
-            this.clock = clock;
             ScriptTicket = ticket;
             State = PodState.Running;
-            LastUpdated = clock.GetUtcTime();
         }
 
         public void Update(V1Pod pod)
         {
+            var terminatedState = pod.Status?.ContainerStatuses.FirstOrDefault(c => c.Name == ScriptTicket.ToKubernetesScriptPobName())?.State.Terminated;
+
+            DateTimeOffset? GetFinishedAt()
+            {
+                var finishedAtDateTime = terminatedState?.FinishedAt;
+                return finishedAtDateTime is not null ? new DateTimeOffset(finishedAtDateTime.Value, TimeSpan.Zero) : null;
+            }
+
             switch (pod.Status?.Phase)
             {
                 case "Succeeded":
-                    if (State != PodState.Succeeded) LastUpdated = clock.GetUtcTime();
+                    FinishedAt = GetFinishedAt();
                     State = PodState.Succeeded;
                     ExitCode = 0;
                     break;
                 case "Failed":
-                    if (State != PodState.Failed) LastUpdated = clock.GetUtcTime();
+                    FinishedAt = GetFinishedAt();
                     State = PodState.Failed;
 
                     //find the status for the container
-                    //we we can't determine the exit code from the pod container, just return 1
-                    ExitCode = pod.Status?.ContainerStatuses?.FirstOrDefault()?.State?.Terminated?.ExitCode ?? 1;
+                    //if we can't determine the exit code from the pod container, just return 1
+                    ExitCode = terminatedState?.ExitCode ?? 1;
                     break;
             }
         }

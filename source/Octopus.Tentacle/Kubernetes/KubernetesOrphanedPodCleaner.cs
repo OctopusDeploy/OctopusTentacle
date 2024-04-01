@@ -70,7 +70,10 @@ namespace Octopus.Tentacle.Kubernetes
         {
             var cutOffDateTime = clock.GetUtcTime() - CompletedPodConsideredOrphanedAfterTimeSpan;
             var allPods = podStatusProvider.GetAllPodStatuses();
-            var orphanedPods = allPods.Where(p => p.State != PodState.Running && p.LastUpdated <= cutOffDateTime).ToList();
+            var orphanedPods = allPods.Where(p =>
+                p.State is not PodState.Running &&
+                p.FinishedAt is not null &&
+                p.FinishedAt <= cutOffDateTime).ToList();
 
             if (orphanedPods.Count == 0)
             {
