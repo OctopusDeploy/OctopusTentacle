@@ -62,15 +62,17 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             await podService.Received().Delete(scriptTicket, Arg.Any<CancellationToken>());
         }
 
-        [TestCase(PodState.Succeeded, true)]
-        [TestCase(PodState.Failed, true)]
-        [TestCase(PodState.Running, false)]
+        [TestCase("Succeeded", true)]
+        [TestCase("Failed", true)]
+        [TestCase("Running", false)]
+        [TestCase("Unknown", false)]
+        [TestCase("Pending", false)]
         [TestCase(null, false)]
-        public async Task OrphanedPodOnlyCleanedUpWhenNotRunning(PodState? phase, bool shouldBeDeleted)
+        public async Task OrphanedPodOnlyCleanedUpWhenNotRunning(string? phase, bool shouldBeDeleted)
         {
             //Arrange
             const WatchEventType type = WatchEventType.Added;
-            var pod = CreatePod(phase, startTime, phase == PodState.Failed ? -1 : 0);
+            var pod = CreatePod(phase, startTime, phase == "Failed" ? -1 : 0);
             await monitor.OnNewEvent(type, pod, CancellationToken.None);
 
             clock.WindForward(overCutoff);
@@ -162,7 +164,9 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             Environment.SetEnvironmentVariable("OCTOPUS__K8STENTACLE__PODSCONSIDEREDORPHANEDAFTERMINUTES", null);
         }
 
-        V1Pod CreatePod(PodState? phase, DateTimeOffset? finishedAt = null, int exitCode = 0)
+        V1Pod CreatePod(PodState? phase, DateTimeOffset? finishedAt = null, int exitCode = 0) => CreatePod(phase?.ToString(), finishedAt, exitCode);
+
+        V1Pod CreatePod(string? phase, DateTimeOffset? finishedAt = null, int exitCode = 0)
         {
             return new V1Pod
             {
@@ -175,7 +179,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                 },
                 Status = new V1PodStatus
                 {
-                    Phase = phase?.ToString(),
+                    Phase = phase,
                     ContainerStatuses = new List<V1ContainerStatus>
                     {
                         new()
