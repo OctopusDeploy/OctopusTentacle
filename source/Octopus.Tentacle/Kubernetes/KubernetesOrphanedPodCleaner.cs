@@ -54,15 +54,13 @@ namespace Octopus.Tentacle.Kubernetes
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                // Delay first because the time we check against on the PodStatus is generated in Tentacle.
-                // So pods are only orphaned once this tentacle is at least the poll period long.
-                await Task.Delay(CompletedPodConsideredOrphanedAfterTimeSpan, cancellationToken);
-
                 log.Verbose("OrphanedPodCleaner: Checking for orphaned pods");
                 await CheckForOrphanedPods(cancellationToken);
 
                 var nextCheckTime = clock.GetUtcTime() + CompletedPodConsideredOrphanedAfterTimeSpan;
                 log.Verbose($"OrphanedPodCleaner: Next check will happen at {nextCheckTime:O}");
+
+                await Task.Delay(CompletedPodConsideredOrphanedAfterTimeSpan, cancellationToken);
             }
         }
 
@@ -70,7 +68,10 @@ namespace Octopus.Tentacle.Kubernetes
         {
             var cutOffDateTime = clock.GetUtcTime() - CompletedPodConsideredOrphanedAfterTimeSpan;
             var allPods = podStatusProvider.GetAllPodStatuses();
-            var orphanedPods = allPods.Where(p => p.State != PodState.Running && p.LastUpdated <= cutOffDateTime).ToList();
+            var orphanedPods = allPods.Where(p =>
+                p.State is not PodState.Running &&
+                p.FinishedAt is not null &&
+                p.FinishedAt <= cutOffDateTime).ToList();
 
             if (orphanedPods.Count == 0)
             {

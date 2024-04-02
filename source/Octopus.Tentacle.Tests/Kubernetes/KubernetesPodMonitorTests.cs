@@ -30,7 +30,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             podService = Substitute.For<IKubernetesPodService>();
             log = new InMemoryLog();
             clock = new FixedClock(DateTimeOffset.MinValue);
-            monitor = new KubernetesPodMonitor(podService, log, clock);
+            monitor = new KubernetesPodMonitor(podService, log);
 
             scriptTicket = new ScriptTicket(Guid.NewGuid().ToString());
         }
@@ -98,7 +98,15 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             //Update the pod
             pod.Status = new V1PodStatus
             {
-                Phase = "Succeeded"
+                Phase = "Succeeded",
+                ContainerStatuses = new List<V1ContainerStatus>
+                {
+                    new()
+                    {
+                        Name = scriptTicket.ToKubernetesScriptPobName(),
+                        State = new V1ContainerState(terminated: new V1ContainerStateTerminated(0))
+                    }
+                }
             };
             await monitor.OnNewEvent(type, pod, CancellationToken.None);
 
@@ -151,6 +159,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                 {
                     new()
                     {
+                        Name = scriptTicket.ToKubernetesScriptPobName(),
                         State = new V1ContainerState
                         {
                             Terminated = new V1ContainerStateTerminated
