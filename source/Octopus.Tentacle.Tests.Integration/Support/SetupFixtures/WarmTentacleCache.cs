@@ -12,7 +12,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.SetupFixtures
     {
         private CancellationTokenSource cts = new();
 
-        public void OneTimeSetUp(ILogger logger)
+        public async Task OneTimeSetUp(ILogger logger)
         {
             logger.Fatal("Downloading all tentacles now");
 
@@ -30,7 +30,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.SetupFixtures
                 }));
             }
 
-            Task.WhenAll(tasks).GetAwaiter().GetResult();
+            await Task.WhenAll(tasks);
         }
 
         private async Task GetTentacleVersion(ILogger logger, Version tentacleVersion)
@@ -54,8 +54,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support.SetupFixtures
             logger.Information($"Tentacle {tentacleVersion} ({tentacleRuntime.GetDescription()}) is now in cache");
         }
 
-        public void OneTimeTearDown(ILogger logger)
+        public async Task OneTimeTearDown(ILogger logger)
         {
+            await Task.CompletedTask;
+
             cts.Cancel();
             cts.Dispose();
         }

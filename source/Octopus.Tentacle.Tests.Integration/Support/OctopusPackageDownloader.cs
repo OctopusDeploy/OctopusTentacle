@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography;
+using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Tentacle.Util;
 using Serilog;
@@ -16,14 +17,14 @@ namespace Octopus.Tentacle.Tests.Integration
     /// </summary>
     public class OctopusPackageDownloader
     {
-        public static async Task DownloadPackage(string downloadUrl, string filePath, ILogger logger)
+        public static async Task DownloadPackage(string downloadUrl, string filePath, ILogger logger, CancellationToken cancellationToken = default)
         {
             var exceptions = new List<Exception>();
             for (int i = 0; i < 5; i++)
             {
                 try
                 {
-                    await AttemptToDownloadPackage(downloadUrl, filePath, logger);
+                    await AttemptToDownloadPackage(downloadUrl, filePath, logger, cancellationToken);
                     return;
                 }
                 catch (Exception e)
@@ -34,7 +35,8 @@ namespace Octopus.Tentacle.Tests.Integration
 
             throw new AggregateException(exceptions);
         }
-        static async Task AttemptToDownloadPackage(string downloadUrl, string filePath, ILogger logger)
+
+        static async Task AttemptToDownloadPackage(string downloadUrl, string filePath, ILogger logger, CancellationToken cancellationToken)
         {
             var totalTime = Stopwatch.StartNew();
             var totalRead = 0L;
@@ -45,7 +47,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 {
                     // This appears to be the time it takes to do a single read/write, not the entire download.
                     client.Timeout = TimeSpan.FromSeconds(20);
-                    using (var response = await client.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead))
+                    using (var response = await client.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead, cancellationToken))
                     {
                         response.EnsureSuccessStatusCode();
                         var totalLength = response.Content.Headers.ContentLength;
@@ -55,7 +57,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
                         var sw = new Stopwatch();
                         sw.Start();
-                        using (Stream contentStream = await response.Content.ReadAsStreamAsync(),
+                        using (Stream contentStream = await response.Content.ReadAsStreamAsync(cancellationToken),
                                fileStream = new FileStream(
                                    filePath,
                                    FileMode.Create,
@@ -67,10 +69,10 @@ namespace Octopus.Tentacle.Tests.Integration
 
                             var buffer = new byte[8192];
 
-                            var read = await contentStream.ReadAsync(buffer, 0, buffer.Length);
+                            var read = await contentStream.ReadAsync(buffer, 0, buffer.Length, cancellationToken);
                             while (read != 0)
                             {
-                                await fileStream.WriteAsync(buffer, 0, read);
+                                await fileStream.WriteAsync(buffer, 0, read, cancellationToken);
 
                                 if (totalLength.HasValue && sw.ElapsedMilliseconds >= TimeSpan.FromSeconds(7).TotalMilliseconds)
                                 {
@@ -80,10 +82,10 @@ namespace Octopus.Tentacle.Tests.Integration
                                     sw.Start();
                                 }
 
-                                read = await contentStream.ReadAsync(buffer, 0, buffer.Length);
+                                read = await contentStream.ReadAsync(buffer, 0, buffer.Length, cancellationToken);
                                 totalRead += read;
                             }
-                            
+
                             totalTime.Stop();
 
                             logger.Information("Download Finished in {totalTime}ms", totalTime.ElapsedMilliseconds);

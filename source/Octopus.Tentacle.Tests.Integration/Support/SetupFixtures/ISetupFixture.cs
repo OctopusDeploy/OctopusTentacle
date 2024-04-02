@@ -1,11 +1,15 @@
-﻿using Serilog;
+﻿using System.Threading.Tasks;
+using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Support.SetupFixtures
 {
     public interface ISetupFixture
     {
-        public void OneTimeSetUp(ILogger logger);
-        
-        public void OneTimeTearDown(ILogger logger);
+        public Task OneTimeSetUp(ILogger logger);
+
+        public Task OneTimeTearDown(ILogger logger)
+        {
+            return Task.CompletedTask;
+        }
     }
 }

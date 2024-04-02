@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using Octopus.Tentacle.Tests.Integration.Support.SetupFixtures;
 using Octopus.Tentacle.Tests.Integration.Util;
@@ -12,31 +13,33 @@ namespace Octopus.Tentacle.Tests.Integration
 {
     /// <summary>
     /// We have just one of these since, if we have many logging sometimes doesn't work.
-    /// 
+    ///
     /// </summary>
-    [SetUpFixture] // Must be the one and only. 
+    [SetUpFixture] // Must be the one and only.
     public class TentacleIntegrationSetupFixtures
     {
         private ISetupFixture[] setupFixtures = new ISetupFixture[]
         {
             new TurnOnTraceLoggingForLogFileForLatestTentacle(),
             new BumpThreadPoolForAllTests(),
-            new WarmTentacleCache()
+            new WarmTentacleCache(),
+            new InitializeKubernetesCluster()
         };
 
         public static string OneTimeSetupLogOutput = "Nothing to show";
-        
+
         [OneTimeSetUp]
-        public void OneTimeSetup()
+        public async Task OneTimeSetup()
         {
             var sb = new StringBuilder();
             var logger = new SerilogLoggerBuilder()
                 .WithLoggingToStringBuilder(sb)
                 .Build()
                 .ForContext<TentacleIntegrationSetupFixtures>();
+
             foreach (var setupFixture in setupFixtures)
             {
-                setupFixture.OneTimeSetUp(logger.ForContext(setupFixture.GetType()));
+                await setupFixture.OneTimeSetUp(logger.ForContext(setupFixture.GetType()));
             }
 
             OneTimeSetupLogOutput = sb.ToString();
