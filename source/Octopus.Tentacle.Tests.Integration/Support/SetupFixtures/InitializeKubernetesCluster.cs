@@ -26,7 +26,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.SetupFixtures
             var exitCode = SilentProcessRunner.ExecuteCommand(
                 kindExe,
                 //we give the cluster a unique name
-                $"create cluster --name={clusterName}",
+                $"create cluster --name={clusterName} --kubeconfig=\"{clusterName}.config\"",
                 tempDir.DirectoryPath,
                 logger.Debug,
                 logger.Information,
@@ -35,7 +35,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.SetupFixtures
 
             if (exitCode != 0)
             {
-                throw new InvalidOperationException("Failed to create KIND Kubernetes Cluster");
+                throw new InvalidOperationException("Failed to create Kind Kubernetes cluster");
             }
         }
 

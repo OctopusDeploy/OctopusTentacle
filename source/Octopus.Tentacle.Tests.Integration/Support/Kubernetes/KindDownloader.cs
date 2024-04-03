@@ -39,7 +39,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Kubernetes
             {
                 var exitCode = SilentProcessRunner.ExecuteCommand(
                     "chmod",
-                    $"+x ./kind",
+                    $"+x {downloadFilePath}",
                     tempDirPath,
                     logger.Debug,
                     logger.Information,
@@ -57,7 +57,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Kubernetes
                 throw new InvalidOperationException($"Kind executable was not downloaded from {downloadUrl} to {downloadFilePath}.");
             }
 
-            return executable;
+            return downloadFilePath;
         }
 
         static string BuildDownloadUrl()
