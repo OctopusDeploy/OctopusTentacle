@@ -42,6 +42,8 @@ RUN rm -rf /tmp/*
 
 ENV OCTOPUS_RUNNING_IN_CONTAINER=Y
 ENV ACCEPT_EULA=N
+ENV AsKubernetesTentacle=""
+ENV BearerToken=""
 ENV CustomPublicHostName=""
 ENV DISABLE_DIND=N
 ENV ListeningPort=""
@@ -64,7 +66,7 @@ ENV TargetWorkerPool=""
 
 VOLUME /var/lib/docker
 
-CMD /scripts/configure-tentacle.sh && /scripts/run-tentacle.sh
+ENTRYPOINT [ "/scripts/configure-and-run.sh" ]
 
 LABEL \
     org.label-schema.schema-version="1.0" \
