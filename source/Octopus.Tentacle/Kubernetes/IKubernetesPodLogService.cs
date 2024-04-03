@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using k8s;
 using k8s.Autorest;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Util;
@@ -29,8 +30,6 @@ namespace Octopus.Tentacle.Kubernetes
             var podName = scriptTicket.ToKubernetesScriptPobName();
             DateTimeOffset? sinceTime = null;
 
-            
-            
             Stream logStream;
 
             try
@@ -48,38 +47,44 @@ namespace Octopus.Tentacle.Kubernetes
 
                 throw;
             }
-
-            var results = new List<ProcessOutput>();
-            var nextSequenceNumber = lastLogSequence;
+            
+            using (var reader = new StreamReader(logStream))
             {
-                using (var reader = new StreamReader(logStream))
-                {
-                    while (true)
-                    {
-                        var line = await reader.ReadLineAsync();
-
-                        //No more to read
-                        if (line.IsNullOrEmpty())
-                        {
-                            return (results, nextSequenceNumber);
-                        }
-
-                        //TODO: print parse errors
-                        //TODO: detect missing line
-                        var (parsedLine, error) = PodLogParser.ParseLine(line!);
-                        if (parsedLine != null && parsedLine.LineNumber > lastLogSequence)
-                        {
-                            results.Add(new ProcessOutput(parsedLine.Source, parsedLine.Message, parsedLine.Occurred));
-                            nextSequenceNumber = parsedLine.LineNumber;
-                            sinceTime = parsedLine.Occurred - TimeSpan.FromSeconds(1);
-                        }
-
-                        //TODO: try not to read any more if we see a panic?
-                    }
-                }
+                return await ValueTuple(lastLogSequence, async () => await reader.ReadLineAsync());
             }
+            
+
         }
 
+        static async Task<(IReadOnlyCollection<ProcessOutput>, long)> ValueTuple(long lastLogSequence, Func<Task<string?>> readLine)
+        {
+            var results = new List<ProcessOutput>();
+            var nextSequenceNumber = lastLogSequence;
+
+            while (true)
+            {
+                var line = await readLine();
+
+                //No more to read
+                if (line.IsNullOrEmpty())
+                {
+                    return (results, nextSequenceNumber);
+                }
+
+                //TODO: print parse errors
+                //TODO: detect missing line
+                var parseResult = PodLogParser.ParseLine(line!);
+                var podLogLine = parseResult.LogLine;
+                if (podLogLine != null && podLogLine.LineNumber > lastLogSequence)
+                {
+                    results.Add(new ProcessOutput(podLogLine.Source, podLogLine.Message, podLogLine.Occurred));
+                    nextSequenceNumber = podLogLine.LineNumber;
+                }
+
+                //TODO: try not to read any more if we see a panic?
+                    
+            }
+        }
 
         public IKubernetesInMemoryLogWriter CreateWriter(ScriptTicket scriptTicket)
         {
