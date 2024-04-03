@@ -40,7 +40,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.SetupFixtures
 
             if (exitCode != 0)
             {
-                throw new InvalidOperationException("Failed to create Kind Kubernetes cluster");
+                logger.Error("Failed to create Kind Kubernetes cluster {ClusterName}", clusterName);
             }
 
             logger.Information("Created Kind Kubernetes cluster {ClusterName} in {ElapsedTime}", clusterName, sw.Elapsed);

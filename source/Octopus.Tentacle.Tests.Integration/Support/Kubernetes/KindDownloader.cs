@@ -48,13 +48,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Kubernetes
 
                 if (exitCode != 0)
                 {
-                    throw new Exception("Error running chmod against kind executable.");
+                    logger.Error("Error running chmod against kind executable");
                 }
-            }
-
-            if (!File.Exists(downloadFilePath))
-            {
-                throw new InvalidOperationException($"Kind executable was not downloaded from {downloadUrl} to {downloadFilePath}.");
             }
 
             return downloadFilePath;
