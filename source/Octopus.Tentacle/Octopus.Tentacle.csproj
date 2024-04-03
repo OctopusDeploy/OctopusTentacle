@@ -126,7 +126,4 @@
 	  <EmbeddedResource Include="Startup\PathsToDeleteOnStartup.netfx.txt" />
 	  <None Remove="Kubernetes\bootstrapRunner.sh" />
 	</ItemGroup>
-	<ItemGroup>
-	  <Folder Include="Kubernetes\Scripts\" />
-	</ItemGroup>
 </Project>

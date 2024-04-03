@@ -29,7 +29,7 @@ namespace Octopus.Tentacle.Kubernetes
         }
     }
 
-    static class PodLogParser
+    static class PodLogLineParser
     {
         public static PodLogParseResult ParseLine(string line)
         {

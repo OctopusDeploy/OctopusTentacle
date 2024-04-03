@@ -26,7 +26,7 @@ namespace Octopus.Tentacle.Kubernetes
                 }
 
                 //TODO: print parse errors
-                var parseResult = PodLogParser.ParseLine(line!);
+                var parseResult = PodLogLineParser.ParseLine(line!);
                 var podLogLine = parseResult.LogLine;
                 
                 //Pod log line numbers are 1-based, log sequence is 0-based

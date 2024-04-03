@@ -8,40 +8,40 @@ using Octopus.Tentacle.Kubernetes;
 namespace Octopus.Tentacle.Tests.Kubernetes
 {
     [TestFixture]
-    public class PodLogParserFixture
+    public class PodLogLineParserFixture
     {
         [TestCase("a|b|c", Reason = "Doesn't have 4 parts")]
         public void NotCorrectlyPipeDelimited(string line)
         {
-            var result = PodLogParser.ParseLine(line);
+            var result = PodLogLineParser.ParseLine(line);
             result.Error.Should().Contain("delimited");
         }
         
         [TestCase("a|b|c|d", Reason = "Not a line number")]
         public void FirstPartIsNotALineNumber(string line)
         {
-            var result = PodLogParser.ParseLine(line);
+            var result = PodLogLineParser.ParseLine(line);
             result.Error.Should().Contain("line number");
         }
         
         [TestCase("1|b|c|d", Reason = "Not a date")]
         public void SecondPartIsNotALineDate(string line)
         {
-            var result = PodLogParser.ParseLine(line);
+            var result = PodLogLineParser.ParseLine(line);
             result.Error.Should().Contain("DateTimeOffset");
         }
         
         [TestCase("1|2024-04-03T06:03:10.501025551Z|c|d", Reason = "Not a valid source")]
         public void ThirdPartIsNotAValidSource(string line)
         {
-            var result = PodLogParser.ParseLine(line);
+            var result = PodLogLineParser.ParseLine(line);
             result.Error.Should().Contain("source");
         }
         
         [Test]
         public void SimpleMessage()
         {
-            var logLine = PodLogParser.ParseLine("123|2024-04-03T06:03:10.501025551Z|stdout|This is the message").LogLine;
+            var logLine = PodLogLineParser.ParseLine("123|2024-04-03T06:03:10.501025551Z|stdout|This is the message").LogLine;
             logLine.Should().NotBeNull();
 
             logLine.LineNumber.Should().Be(123);
@@ -53,7 +53,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         [Test]
         public void ServiceMessage()
         {
-            var logLine = PodLogParser.ParseLine("123|2024-04-03T06:03:10.501025551Z|stdout|##octopus[stdout-verbose]").LogLine;
+            var logLine = PodLogLineParser.ParseLine("123|2024-04-03T06:03:10.501025551Z|stdout|##octopus[stdout-verbose]").LogLine;
             logLine.Should().NotBeNull();
 
             logLine.LineNumber.Should().Be(123);
@@ -65,7 +65,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         [Test]
         public void ErrorMessage()
         {
-            var logLine = PodLogParser.ParseLine("123|2024-04-03T06:03:10.501025551Z|stderr|Error!").LogLine;
+            var logLine = PodLogLineParser.ParseLine("123|2024-04-03T06:03:10.501025551Z|stderr|Error!").LogLine;
             logLine.Should().NotBeNull();
 
             logLine.LineNumber.Should().Be(123);
