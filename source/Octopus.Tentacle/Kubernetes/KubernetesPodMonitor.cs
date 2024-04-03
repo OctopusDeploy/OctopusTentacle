@@ -87,7 +87,7 @@ namespace Octopus.Tentacle.Kubernetes
                 var scriptTicket = pod.GetScriptTicket();
                 if (!podStatusLookup.TryGetValue(scriptTicket, out var status))
                 {
-                    status = new PodStatus(scriptTicket);
+                    status = new TrackedScriptPod(scriptTicket);
                 }
 
                 status.Update(pod);
@@ -122,7 +122,7 @@ namespace Octopus.Tentacle.Kubernetes
                 {
                     case WatchEventType.Added or WatchEventType.Modified:
                     {
-                        var status = podStatusLookup.GetOrAdd(scriptTicket, st => new PodStatus(st));
+                        var status = podStatusLookup.GetOrAdd(scriptTicket, st => new TrackedScriptPod(st));
                         status.Update(pod);
                         log.Verbose($"Updated pod {pod.Name()} status. {status}");
 
@@ -168,10 +168,10 @@ namespace Octopus.Tentacle.Kubernetes
 
         public DateTimeOffset? FinishedAt { get; private set; }
 
-        public PodStatus(ScriptTicket ticket)
+        public TrackedScriptPod(ScriptTicket ticket)
         {
             ScriptTicket = ticket;
-            State = PodState.Running;
+            State = TrackedScriptPodState.Running;
         }
 
         public void Update(V1Pod pod)
@@ -188,12 +188,12 @@ namespace Octopus.Tentacle.Kubernetes
             {
                 case "Succeeded":
                     FinishedAt = GetFinishedAt();
-                    State = PodState.Succeeded;
+                    State = TrackedScriptPodState.Succeeded;
                     ExitCode = 0;
                     break;
                 case "Failed":
                     FinishedAt = GetFinishedAt();
-                    State = PodState.Failed;
+                    State = TrackedScriptPodState.Failed;
 
                     //find the status for the container
                     //if we can't determine the exit code from the pod container, just return 1
@@ -211,7 +211,7 @@ namespace Octopus.Tentacle.Kubernetes
         TrackedScriptPodState State { get; }
         int? ExitCode { get; }
         ScriptTicket ScriptTicket { get; }
-        public DateTimeOffset LastUpdated { get; }
+        DateTimeOffset? FinishedAt { get; }
     }
 
     public enum TrackedScriptPodState

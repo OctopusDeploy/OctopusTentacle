@@ -49,7 +49,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         {
             //Arrange
             const WatchEventType type = WatchEventType.Added;
-            var pod = CreatePod(PodState.Succeeded, startTime);
+            var pod = CreatePod(TrackedScriptPodState.Succeeded, startTime);
 
             await monitor.OnNewEvent(type, pod, CancellationToken.None);
 
@@ -96,7 +96,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         {
             //Arrange
             const WatchEventType type = WatchEventType.Added;
-            var pod = CreatePod(PodState.Succeeded, startTime);
+            var pod = CreatePod(TrackedScriptPodState.Succeeded, startTime);
 
             await monitor.OnNewEvent(type, pod, CancellationToken.None);
 
@@ -115,7 +115,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             //Arrange
             Environment.SetEnvironmentVariable("OCTOPUS__K8STENTACLE__DISABLEAUTOPODCLEANUP", "true");
             const WatchEventType type = WatchEventType.Added;
-            var pod = CreatePod(PodState.Succeeded, startTime);
+            var pod = CreatePod(TrackedScriptPodState.Succeeded, startTime);
 
             await monitor.OnNewEvent(type, pod, CancellationToken.None);
 
@@ -141,7 +141,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             // We need to reinitialise the sut after changing the env var value
             cleaner = new KubernetesOrphanedPodCleaner(monitor, podService, log, clock);
             const WatchEventType type = WatchEventType.Added;
-            var pod = CreatePod(PodState.Succeeded, startTime);
+            var pod = CreatePod(TrackedScriptPodState.Succeeded, startTime);
 
             await monitor.OnNewEvent(type, pod, CancellationToken.None);
 
@@ -164,7 +164,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             Environment.SetEnvironmentVariable("OCTOPUS__K8STENTACLE__PODSCONSIDEREDORPHANEDAFTERMINUTES", null);
         }
 
-        V1Pod CreatePod(PodState? phase, DateTimeOffset? finishedAt = null, int exitCode = 0) => CreatePod(phase?.ToString(), finishedAt, exitCode);
+        V1Pod CreatePod(TrackedScriptPodState? phase, DateTimeOffset? finishedAt = null, int exitCode = 0) => CreatePod(phase?.ToString(), finishedAt, exitCode);
 
         V1Pod CreatePod(string? phase, DateTimeOffset? finishedAt = null, int exitCode = 0)
         {
