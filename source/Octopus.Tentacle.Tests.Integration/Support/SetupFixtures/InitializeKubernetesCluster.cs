@@ -28,9 +28,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support.SetupFixtures
                 //we give the cluster a unique name
                 $"create cluster --name={clusterName}",
                 tempDir.DirectoryPath,
-                s => logger.Debug(s),
-                s => logger.Information(s),
-                s => logger.Error(s),
+                logger.Debug,
+                logger.Information,
+                logger.Error,
                 cts.Token);
 
             if (exitCode != 0)

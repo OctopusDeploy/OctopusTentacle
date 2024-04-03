@@ -19,7 +19,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Kubernetes
             this.logger = logger;
         }
 
-        public async Task<string> DownloadLatest(string directoryPath, CancellationToken cancellationToken)
+        public async Task<string> DownloadLatest(string tempDirPath, CancellationToken cancellationToken)
         {
             var downloadUrl = BuildDownloadUrl();
 
@@ -29,7 +29,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Kubernetes
                 executable += ".exe";
             }
 
-            var downloadFilePath = Path.Combine(directoryPath, executable);
+            var downloadFilePath = Path.Combine(tempDirPath, executable);
 
             logger.Information("Downloading {DownloadUrl} to {DownloadFilePath}", downloadUrl, downloadFilePath);
             await OctopusPackageDownloader.DownloadPackage(downloadUrl, downloadFilePath, logger, cancellationToken);
@@ -37,20 +37,24 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Kubernetes
             //if this is not running on windows, chmod kind to be executable
             if (!PlatformDetection.IsRunningOnWindows)
             {
-                Action<string> log = s => logger.Information(s);
                 var exitCode = SilentProcessRunner.ExecuteCommand(
                     "chmod",
                     $"+x ./kind",
-                    directoryPath,
-                    log,
-                    log,
-                    log,
+                    tempDirPath,
+                    logger.Debug,
+                    logger.Information,
+                    logger.Error,
                     CancellationToken.None);
 
                 if (exitCode != 0)
                 {
-                    throw new Exception("Error running chmod against kind executable");
+                    throw new Exception("Error running chmod against kind executable.");
                 }
+            }
+
+            if (!File.Exists(downloadFilePath))
+            {
+                throw new InvalidOperationException($"Kind executable was not downloaded from {downloadUrl} to {downloadFilePath}.");
             }
 
             return executable;
