@@ -67,7 +67,7 @@ namespace Octopus.Tentacle.Kubernetes
         internal async Task CheckForOrphanedPods(CancellationToken cancellationToken)
         {
             var cutOffDateTime = clock.GetUtcTime() - CompletedPodConsideredOrphanedAfterTimeSpan;
-            var allPods = podStatusProvider.GetAllTrackedScriptPod();
+            var allPods = podStatusProvider.GetAllTrackedScriptPods();
             var orphanedPods = allPods.Where(p =>
                 p.State is not TrackedScriptPodState.Running &&
                 p.FinishedAt is not null &&

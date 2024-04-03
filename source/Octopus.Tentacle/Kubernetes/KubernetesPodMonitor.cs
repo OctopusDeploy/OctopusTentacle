@@ -20,7 +20,7 @@ namespace Octopus.Tentacle.Kubernetes
 
     public interface IKubernetesPodStatusProvider
     {
-        IList<ITrackedScriptPod> GetAllTrackedScriptPod();
+        IList<ITrackedScriptPod> GetAllTrackedScriptPods();
         ITrackedScriptPod? TryGetTrackedScriptPod(ScriptTicket scriptTicket);
     }
 
@@ -81,7 +81,7 @@ namespace Octopus.Tentacle.Kubernetes
             log.Verbose("Preloading pod statuses");
 
             var newStatuses = new ConcurrentDictionary<ScriptTicket, TrackedScriptPod>();
-            var allPods = await podService.ListAllPods(cancellationToken);
+            var allPods = await podService.ListAllPodsAsync(cancellationToken);
             foreach (var pod in allPods.Items)
             {
                 var scriptTicket = pod.GetScriptTicket();
@@ -151,13 +151,21 @@ namespace Octopus.Tentacle.Kubernetes
             }
         }
 
-        IList<ITrackedScriptPod> IKubernetesPodStatusProvider.GetAllTrackedScriptPod() =>
+        IList<ITrackedScriptPod> IKubernetesPodStatusProvider.GetAllTrackedScriptPods() =>
             podStatusLookup.Values.Cast<ITrackedScriptPod>().ToList();
 
         ITrackedScriptPod? IKubernetesPodStatusProvider.TryGetTrackedScriptPod(ScriptTicket scriptTicket) =>
             podStatusLookup.TryGetValue(scriptTicket, out var status) ? status : null;
     }
 
+    public interface ITrackedScriptPod
+    {
+        TrackedScriptPodState State { get; }
+        int? ExitCode { get; }
+        ScriptTicket ScriptTicket { get; }
+        DateTimeOffset? FinishedAt { get; }
+    }
+    
     public class TrackedScriptPod : ITrackedScriptPod
     {
         public ScriptTicket ScriptTicket { get; }
@@ -204,14 +212,6 @@ namespace Octopus.Tentacle.Kubernetes
 
         public override string ToString()
             => $"ScriptTicket: {ScriptTicket}, State: {State}, ExitCode: {ExitCode}";
-    }
-
-    public interface ITrackedScriptPod
-    {
-        TrackedScriptPodState State { get; }
-        int? ExitCode { get; }
-        ScriptTicket ScriptTicket { get; }
-        DateTimeOffset? FinishedAt { get; }
     }
 
     public enum TrackedScriptPodState
