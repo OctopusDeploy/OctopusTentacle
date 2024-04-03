@@ -1,11 +1,11 @@
 ﻿using Newtonsoft.Json;
 
-namespace Octopus.Tentacle.Contracts.ScriptServiceV3Alpha
+namespace Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha
 {
-    public class KubernetesAgentScriptExecutionContext : IScriptExecutionContext
+    public class PodImageConfiguration
     {
         [JsonConstructor]
-        public KubernetesAgentScriptExecutionContext(string? image, string? feedUrl, string? feedUsername, string? feedPassword)
+        public PodImageConfiguration(string image, string? feedUrl, string? feedUsername, string? feedPassword)
         {
             Image = image;
             FeedUrl = feedUrl;
@@ -13,9 +13,10 @@ namespace Octopus.Tentacle.Contracts.ScriptServiceV3Alpha
             FeedPassword = feedPassword;
         }
 
-        public KubernetesAgentScriptExecutionContext()
+        public PodImageConfiguration()
         {
         }
+
 
         public string? Image { get; }
 

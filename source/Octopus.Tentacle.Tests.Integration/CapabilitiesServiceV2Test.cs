@@ -6,8 +6,11 @@ using FluentAssertions;
 using Halibut;
 using NUnit.Framework;
 using Octopus.Tentacle.CommonTestUtils.Builders;
+using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Capabilities;
 using Octopus.Tentacle.Contracts.ClientServices;
+using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha;
+using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
 using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
@@ -27,21 +30,42 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var capabilities = (await clientAndTentacle.TentacleClient.CapabilitiesServiceV2.GetCapabilitiesAsync(new(CancellationToken))).SupportedCapabilities;
 
-            capabilities.Should().Contain("IScriptService");
-            capabilities.Should().Contain("IFileTransferService");
+            capabilities.Should().Contain(nameof(IScriptService));
+            capabilities.Should().Contain(nameof(IFileTransferService));
 
             //all versions have ScriptServiceV1 & IFileTransferService
             var expectedCapabilitiesCount = 2;
-            if (version.HasScriptServiceV3Alpha())
-            {
-                capabilities.Should().Contain("IScriptServiceV3Alpha");
-                expectedCapabilitiesCount++;
-            }
             if (version.HasScriptServiceV2())
             {
-                capabilities.Should().Contain("IScriptServiceV2");
+                capabilities.Should().Contain(nameof(IScriptServiceV2));
                 expectedCapabilitiesCount++;
             }
+
+            capabilities.Count.Should().Be(expectedCapabilitiesCount);
+        }
+
+        [Test]
+        [TentacleConfigurations]
+        public async Task CapabilitiesServiceDoesNotReturnKubernetesScriptServiceForNonKubernetesTentacle(TentacleConfigurationTestCase tentacleConfigurationTestCase)
+        {
+            var version = tentacleConfigurationTestCase.Version;
+
+            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateLegacyBuilder().Build(CancellationToken);
+
+            var capabilities = (await clientAndTentacle.TentacleClient.CapabilitiesServiceV2.GetCapabilitiesAsync(new(CancellationToken))).SupportedCapabilities;
+
+            capabilities.Should().Contain(nameof(IScriptService));
+            capabilities.Should().Contain(nameof(IFileTransferService));
+
+            //all versions have ScriptServiceV1 & IFileTransferService
+            var expectedCapabilitiesCount = 2;
+            if (version.HasScriptServiceV2())
+            {
+                capabilities.Should().Contain(nameof(IScriptServiceV2));
+                expectedCapabilitiesCount++;
+            }
+
+            capabilities.Should().NotContain(nameof(IKubernetesScriptServiceV1Alpha));
 
             capabilities.Count.Should().Be(expectedCapabilitiesCount);
         }

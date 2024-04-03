@@ -16,6 +16,7 @@ namespace Octopus.Tentacle.Kubernetes
 
             // this needs to be per-dependency, otherwise it re-uses the RunningKubernetesPod
             builder.RegisterType<RunningKubernetesPod>().InstancePerDependency();
+            builder.RegisterType<KubernetesPodScriptExecutor>().AsSelf();
 
             builder.RegisterType<KubernetesPodMonitorTask>().As<IKubernetesPodMonitorTask>().As<IBackgroundTask>().SingleInstance();
             builder.RegisterType<KubernetesPodMonitor>().As<IKubernetesPodMonitor>().As<IKubernetesPodStatusProvider>().SingleInstance();

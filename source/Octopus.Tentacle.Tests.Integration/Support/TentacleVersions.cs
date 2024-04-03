@@ -41,7 +41,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         {
             if (!PlatformDetection.IsRunningOnMac && RuntimeInformation.ProcessArchitecture != Architecture.Arm64) return Array.Empty<Version>();
 
-            if (PlatformDetection.IsRunningOnWindows) return Array.Empty<Version>(); 
+            if (PlatformDetection.IsRunningOnWindows) return Array.Empty<Version>();
 
             // These versions are not available on MacOS or ARM
             return new []
@@ -74,11 +74,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
     public static class VersionExtensionMethods
     {
-        public static bool HasScriptServiceV3Alpha(this Version? version)
-        {
-            return version == TentacleVersions.Current || version > TentacleVersions.v8_0_81_AsyncHalibutAndLastWithoutScriptServiceV3Alpha;
-        }
-
         public static bool HasScriptServiceV2(this Version? version)
         {
             return version == TentacleVersions.Current || version >= TentacleVersions.v7_1_189_SyncHalibutAndScriptServiceV2;

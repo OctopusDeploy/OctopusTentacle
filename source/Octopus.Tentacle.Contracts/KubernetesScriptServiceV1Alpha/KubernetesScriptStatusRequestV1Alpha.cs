@@ -1,10 +1,10 @@
 using System;
 
-namespace Octopus.Tentacle.Contracts.ScriptServiceV3Alpha
+namespace Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha
 {
-    public class CancelScriptCommandV3Alpha
+    public class KubernetesScriptStatusRequestV1Alpha
     {
-        public CancelScriptCommandV3Alpha(ScriptTicket scriptTicket, long lastLogSequence)
+        public KubernetesScriptStatusRequestV1Alpha(ScriptTicket scriptTicket, long lastLogSequence)
         {
             ScriptTicket = scriptTicket;
             LastLogSequence = lastLogSequence;
