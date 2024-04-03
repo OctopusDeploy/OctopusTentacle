@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Diagnostics;
@@ -126,7 +127,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
                 trackedPod.ScriptTicket,
                 processState,
                 trackedPod.ExitCode ?? 0,
-                outputLogs,
+                outputLogs.ToList(),
                 nextLogSequence
             );
         }
