@@ -23,17 +23,20 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Kubernetes
         {
             var downloadUrl = BuildDownloadUrl();
 
-            var downloadFilePath = Path.Combine(directoryPath, "kind");
+            var executable = "kind";
             if (PlatformDetection.IsRunningOnWindows)
             {
-                downloadFilePath += ".exe";
+                executable += ".exe";
             }
+
+            var downloadFilePath = Path.Combine(directoryPath, executable);
 
             logger.Information("Downloading {DownloadUrl} to {DownloadFilePath}", downloadUrl, downloadFilePath);
             await OctopusPackageDownloader.DownloadPackage(downloadUrl, downloadFilePath, logger, cancellationToken);
 
             //if this is not running on windows, chmod kind to be executable
-            if(!PlatformDetection.IsRunningOnWindows){
+            if (!PlatformDetection.IsRunningOnWindows)
+            {
                 Action<string> log = s => logger.Information(s);
                 var exitCode = SilentProcessRunner.ExecuteCommand(
                     "chmod",
@@ -50,7 +53,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Kubernetes
                 }
             }
 
-            return downloadFilePath;
+            return executable;
         }
 
         static string BuildDownloadUrl()
