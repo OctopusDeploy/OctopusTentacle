@@ -143,7 +143,7 @@ namespace Octopus.Tentacle.Kubernetes
         }
 
         IList<ITrackedScriptPod> IKubernetesPodStatusProvider.GetAllTrackedScriptPods() =>
-            podStatusLookup.Values.ToList();
+            podStatusLookup.Values.Cast<ITrackedScriptPod>().ToList();
 
         ITrackedScriptPod? IKubernetesPodStatusProvider.TryGetTrackedScriptPod(ScriptTicket scriptTicket) =>
             podStatusLookup.TryGetValue(scriptTicket, out var status) ? status : null;
