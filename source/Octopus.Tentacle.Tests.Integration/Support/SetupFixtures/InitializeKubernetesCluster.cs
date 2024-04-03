@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Tentacle.Tests.Integration.Support.Kubernetes;
@@ -23,6 +24,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support.SetupFixtures
             var kindDownloader = new KindDownloader(logger);
             kindExe = await kindDownloader.DownloadLatest(tempDir.DirectoryPath, cts.Token);
 
+            var sw = new Stopwatch();
+            sw.Restart();
             var exitCode = SilentProcessRunner.ExecuteCommand(
                 kindExe,
                 //we give the cluster a unique name
@@ -33,25 +36,34 @@ namespace Octopus.Tentacle.Tests.Integration.Support.SetupFixtures
                 logger.Error,
                 cts.Token);
 
+            sw.Stop();
+
             if (exitCode != 0)
             {
                 throw new InvalidOperationException("Failed to create Kind Kubernetes cluster");
             }
+
+            logger.Information("Created Kind Kubernetes cluster {ClusterName} in {ElapsedTime}", clusterName, sw.Elapsed);
         }
 
         public async Task OneTimeTearDown(ILogger logger)
         {
             await Task.CompletedTask;
 
-            SilentProcessRunner.ExecuteCommand(
+            var exitCode = SilentProcessRunner.ExecuteCommand(
                 kindExe,
                 //delete the cluster for this test run
                 $"delete cluster --name={clusterName}",
                 tempDir.DirectoryPath,
-                s => logger.Debug(s),
-                s => logger.Information(s),
-                s => logger.Error(s),
+                logger.Debug,
+                logger.Information,
+                logger.Error,
                 cts.Token);
+
+            if (exitCode != 0)
+            {
+                logger.Error("Failed to delete Kind kubernetes cluster {ClusterName}", clusterName);
+            }
 
             cts.Cancel();
             cts.Dispose();
