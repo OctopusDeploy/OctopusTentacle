@@ -183,17 +183,17 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
         async Task<int> CheckIfPodHasCompleted(CancellationTokenSource podCompletionCancellationTokenSource)
         {
             var resultStatusCode = ScriptExitCodes.UnknownScriptExitCode;
-            PodStatus? status = null;
+            ITrackedScriptPod? status = null;
             while (!scriptCancellationToken.IsCancellationRequested)
             {
-                status = podStatusProvider.TryGetPodStatus(scriptTicket);
-                if (status is not null && status.State == PodState.Succeeded)
+                status = podStatusProvider.TryGetTrackedScriptPod(scriptTicket);
+                if (status is not null && status.State == TrackedScriptPodState.Succeeded)
                 {
                     resultStatusCode = 0;
                     break;
                 }
 
-                if (status is not null && status.State == PodState.Failed)
+                if (status is not null && status.State == TrackedScriptPodState.Failed)
                 {
                     resultStatusCode = status.ExitCode!.Value;
                     break;

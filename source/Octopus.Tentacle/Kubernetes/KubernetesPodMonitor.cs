@@ -20,8 +20,8 @@ namespace Octopus.Tentacle.Kubernetes
 
     public interface IKubernetesPodStatusProvider
     {
-        IList<PodStatus> GetAllPodStatuses();
-        PodStatus? TryGetPodStatus(ScriptTicket scriptTicket);
+        IList<ITrackedScriptPod> GetAllTrackedScriptPods();
+        ITrackedScriptPod? TryGetTrackedScriptPod(ScriptTicket scriptTicket);
     }
 
     public class KubernetesPodMonitor : IKubernetesPodMonitor, IKubernetesPodStatusProvider
@@ -29,7 +29,7 @@ namespace Octopus.Tentacle.Kubernetes
         readonly IKubernetesPodService podService;
         readonly ISystemLog log;
 
-        ConcurrentDictionary<ScriptTicket, PodStatus> podStatusLookup = new();
+        ConcurrentDictionary<ScriptTicket, TrackedScriptPod> podStatusLookup = new();
 
         public KubernetesPodMonitor(IKubernetesPodService podService, ISystemLog log)
         {
@@ -73,14 +73,14 @@ namespace Octopus.Tentacle.Kubernetes
         {
             log.Verbose("Preloading pod statuses");
 
-            var newStatuses = new ConcurrentDictionary<ScriptTicket, PodStatus>();
+            var newStatuses = new ConcurrentDictionary<ScriptTicket, TrackedScriptPod>();
             var allPods = await podService.ListAllPodsAsync(cancellationToken);
             foreach (var pod in allPods.Items)
             {
                 var scriptTicket = pod.GetScriptTicket();
                 if (!podStatusLookup.TryGetValue(scriptTicket, out var status))
                 {
-                    status = new PodStatus(scriptTicket);
+                    status = new TrackedScriptPod(scriptTicket);
                 }
                 status.Update(pod);
 
@@ -114,7 +114,7 @@ namespace Octopus.Tentacle.Kubernetes
                 {
                     case WatchEventType.Added or WatchEventType.Modified:
                     {
-                        var status = podStatusLookup.GetOrAdd(scriptTicket, st => new PodStatus(st));
+                        var status = podStatusLookup.GetOrAdd(scriptTicket, st => new TrackedScriptPod(st));
                         status.Update(pod);
                         log.Verbose($"Updated pod {pod.Name()} status. {status}");
 
@@ -142,27 +142,35 @@ namespace Octopus.Tentacle.Kubernetes
             }
         }
 
-        IList<PodStatus> IKubernetesPodStatusProvider.GetAllPodStatuses() =>
-            podStatusLookup.Values.ToList();
+        IList<ITrackedScriptPod> IKubernetesPodStatusProvider.GetAllTrackedScriptPods() =>
+            podStatusLookup.Values.Cast<ITrackedScriptPod>().ToList();
 
-        PodStatus? IKubernetesPodStatusProvider.TryGetPodStatus(ScriptTicket scriptTicket) =>
+        ITrackedScriptPod? IKubernetesPodStatusProvider.TryGetTrackedScriptPod(ScriptTicket scriptTicket) =>
             podStatusLookup.TryGetValue(scriptTicket, out var status) ? status : null;
     }
 
-    public class PodStatus
+    public interface ITrackedScriptPod
+    {
+        TrackedScriptPodState State { get; }
+        int? ExitCode { get; }
+        ScriptTicket ScriptTicket { get; }
+        DateTimeOffset? FinishedAt { get; }
+    }
+    
+    public class TrackedScriptPod : ITrackedScriptPod
     {
         public ScriptTicket ScriptTicket { get; }
 
-        public PodState State { get; private set; }
+        public TrackedScriptPodState State { get; private set; }
 
         public int? ExitCode { get; private set; }
 
         public DateTimeOffset? FinishedAt { get; private set; }
 
-        public PodStatus(ScriptTicket ticket)
+        public TrackedScriptPod(ScriptTicket ticket)
         {
             ScriptTicket = ticket;
-            State = PodState.Running;
+            State = TrackedScriptPodState.Running;
         }
 
         public void Update(V1Pod pod)
@@ -179,12 +187,12 @@ namespace Octopus.Tentacle.Kubernetes
             {
                 case "Succeeded":
                     FinishedAt = GetFinishedAt();
-                    State = PodState.Succeeded;
+                    State = TrackedScriptPodState.Succeeded;
                     ExitCode = 0;
                     break;
                 case "Failed":
                     FinishedAt = GetFinishedAt();
-                    State = PodState.Failed;
+                    State = TrackedScriptPodState.Failed;
 
                     //find the status for the container
                     //if we can't determine the exit code from the pod container, just return 1
@@ -197,7 +205,7 @@ namespace Octopus.Tentacle.Kubernetes
             => $"ScriptTicket: {ScriptTicket}, State: {State}, ExitCode: {ExitCode}";
     }
 
-    public enum PodState
+    public enum TrackedScriptPodState
     {
         Running,
         Succeeded,
