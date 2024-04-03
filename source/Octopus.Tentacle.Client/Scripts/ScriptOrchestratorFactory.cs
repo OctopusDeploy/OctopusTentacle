@@ -5,6 +5,7 @@ using Halibut.ServiceModel;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Client.Capabilities;
 using Octopus.Tentacle.Client.Execution;
+using Octopus.Tentacle.Client.Kubernetes;
 using Octopus.Tentacle.Client.Observability;
 using Octopus.Tentacle.Contracts.Capabilities;
 using Octopus.Tentacle.Contracts.ClientServices;

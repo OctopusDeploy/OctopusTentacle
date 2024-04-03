@@ -15,15 +15,5 @@ namespace Octopus.Tentacle.Client.Capabilities
 
             return capabilities.SupportedCapabilities.Contains(nameof(IScriptServiceV2));
         }
-
-        public static bool HasAnyKubernetesScriptService(this CapabilitiesResponseV2 capabilities)
-        {
-            if (capabilities?.SupportedCapabilities?.Any() != true)
-            {
-                return false;
-            }
-
-            return capabilities.SupportedCapabilities.Any(c => c.Contains("KubernetesScriptService"));
-        }
     }
 }
