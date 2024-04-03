@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using k8s;
 using k8s.Autorest;
 using Octopus.Tentacle.Contracts;
-using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Kubernetes
 {
@@ -50,40 +49,10 @@ namespace Octopus.Tentacle.Kubernetes
             
             using (var reader = new StreamReader(logStream))
             {
-                return await ValueTuple(lastLogSequence, async () => await reader.ReadLineAsync());
+                return await PodLogReader.ReadPodLogs(lastLogSequence, reader);
             }
             
 
-        }
-
-        static async Task<(IReadOnlyCollection<ProcessOutput>, long)> ValueTuple(long lastLogSequence, Func<Task<string?>> readLine)
-        {
-            var results = new List<ProcessOutput>();
-            var nextSequenceNumber = lastLogSequence;
-
-            while (true)
-            {
-                var line = await readLine();
-
-                //No more to read
-                if (line.IsNullOrEmpty())
-                {
-                    return (results, nextSequenceNumber);
-                }
-
-                //TODO: print parse errors
-                //TODO: detect missing line
-                var parseResult = PodLogParser.ParseLine(line!);
-                var podLogLine = parseResult.LogLine;
-                if (podLogLine != null && podLogLine.LineNumber > lastLogSequence)
-                {
-                    results.Add(new ProcessOutput(podLogLine.Source, podLogLine.Message, podLogLine.Occurred));
-                    nextSequenceNumber = podLogLine.LineNumber;
-                }
-
-                //TODO: try not to read any more if we see a panic?
-                    
-            }
         }
 
         public IKubernetesInMemoryLogWriter CreateWriter(ScriptTicket scriptTicket)

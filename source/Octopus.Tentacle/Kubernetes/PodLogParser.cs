@@ -47,7 +47,7 @@ namespace Octopus.Tentacle.Kubernetes
 
             if (!DateTimeOffset.TryParse(logParts[1], out var occurred))
             {
-                return PodLogParseResult.Fail($"Failed to parse '{logParts[1]}' as a DateTimeOffset.");
+                return PodLogParseResult.Fail($"Invalid log line detected. Failed to parse '{logParts[1]}' as a DateTimeOffset.");
             }
 
             if (!Enum.TryParse(logParts[2], true, out ProcessOutputSource source))
@@ -58,6 +58,7 @@ namespace Octopus.Tentacle.Kubernetes
             //add the new line
             var message = logParts[3];
 
+            
             if (message.StartsWith("EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE"))
                 source = ProcessOutputSource.Debug;
             
