@@ -3,6 +3,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
+using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha;
+using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Services.Capabilities;
 
@@ -17,9 +20,7 @@ namespace Octopus.Tentacle.Tests.Capabilities
                 .GetCapabilitiesAsync(CancellationToken.None))
                 .SupportedCapabilities;
 
-            capabilities.Should().Contain("IScriptService");
-            capabilities.Should().Contain("IFileTransferService");
-            capabilities.Should().Contain("IScriptServiceV2");
+            capabilities.Should().BeEquivalentTo(nameof(IScriptService), nameof(IFileTransferService), nameof(IScriptServiceV2));
             capabilities.Count.Should().Be(3);
 
             capabilities.Should().NotContainMatch("IKubernetesScriptService*");
@@ -34,8 +35,7 @@ namespace Octopus.Tentacle.Tests.Capabilities
                     .GetCapabilitiesAsync(CancellationToken.None))
                 .SupportedCapabilities;
 
-            capabilities.Should().Contain("IFileTransferService");
-            capabilities.Should().Contain("IKubernetesScriptServiceV1Alpha");
+            capabilities.Should().BeEquivalentTo(nameof(IFileTransferService), nameof(IKubernetesScriptServiceV1Alpha));
             capabilities.Count.Should().Be(2);
 
             capabilities.Should().NotContainMatch("IScriptService*");
