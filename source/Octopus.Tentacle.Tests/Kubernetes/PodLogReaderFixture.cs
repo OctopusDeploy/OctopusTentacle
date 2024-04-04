@@ -105,7 +105,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         
         static StreamReader SetupReader(params string[] lines)
         {
-            return new StreamReader(new MemoryStream(Encoding.Default.GetBytes(string.Join('\n', lines))));
+            return new StreamReader(new MemoryStream(Encoding.Default.GetBytes(string.Join("\n", lines))));
         }
     }
 }
