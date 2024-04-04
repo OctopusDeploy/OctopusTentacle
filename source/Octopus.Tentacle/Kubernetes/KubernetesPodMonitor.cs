@@ -74,7 +74,7 @@ namespace Octopus.Tentacle.Kubernetes
             log.Verbose("Preloading pod statuses");
 
             var newStatuses = new ConcurrentDictionary<ScriptTicket, TrackedScriptPod>();
-            var allPods = await podService.ListAllPodsAsync(cancellationToken);
+            var allPods = await podService.ListAllPods(cancellationToken);
             foreach (var pod in allPods.Items)
             {
                 var scriptTicket = pod.GetScriptTicket();

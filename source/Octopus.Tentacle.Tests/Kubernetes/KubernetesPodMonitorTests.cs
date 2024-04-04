@@ -81,7 +81,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                 }
             };
 
-            podService.ListAllPodsAsync(Arg.Any<CancellationToken>())
+            podService.ListAllPods(Arg.Any<CancellationToken>())
                 .Returns(new V1PodList
                 {
                     Items = new List<V1Pod>
@@ -137,7 +137,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                 }
             };
 
-            podService.ListAllPodsAsync(Arg.Any<CancellationToken>())
+            podService.ListAllPods(Arg.Any<CancellationToken>())
                 .Returns(new V1PodList
                 {
                     Items = new List<V1Pod>
@@ -199,7 +199,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                 }
             };
 
-            podService.ListAllPodsAsync(Arg.Any<CancellationToken>())
+            podService.ListAllPods(Arg.Any<CancellationToken>())
                 .Returns(new V1PodList
                 {
                     Items = new List<V1Pod>

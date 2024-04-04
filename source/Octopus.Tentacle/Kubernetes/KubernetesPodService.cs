@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using k8s;
@@ -11,10 +12,11 @@ namespace Octopus.Tentacle.Kubernetes
     public interface IKubernetesPodService
     {
         Task<V1Pod?> TryGetPod(ScriptTicket scriptTicket, CancellationToken cancellationToken);
-        Task<V1PodList> ListAllPodsAsync(CancellationToken cancellationToken);
+        Task<V1PodList> ListAllPods(CancellationToken cancellationToken);
         Task WatchAllPods(string initialResourceVersion, Func<WatchEventType, V1Pod, CancellationToken, Task> onChange, Action<Exception> onError, CancellationToken cancellationToken);
         Task Create(V1Pod pod, CancellationToken cancellationToken);
         Task Delete(ScriptTicket scriptTicket, CancellationToken cancellationToken);
+        Task TryDelete(ScriptTicket commandScriptTicket, CancellationToken cancellationToken);
     }
 
     public class KubernetesPodService : KubernetesService, IKubernetesPodService
@@ -27,7 +29,7 @@ namespace Octopus.Tentacle.Kubernetes
         public async Task<V1Pod?> TryGetPod(ScriptTicket scriptTicket, CancellationToken cancellationToken) =>
             await TryGetAsync(() => Client.ReadNamespacedPodAsync(scriptTicket.ToKubernetesScriptPobName(), KubernetesConfig.Namespace, cancellationToken: cancellationToken));
 
-        public async Task<V1PodList> ListAllPodsAsync(CancellationToken cancellationToken)
+        public async Task<V1PodList> ListAllPods(CancellationToken cancellationToken)
         {
             return await Client.ListNamespacedPodAsync(KubernetesConfig.Namespace,
                 labelSelector: OctopusLabels.ScriptTicketId,
@@ -64,7 +66,7 @@ namespace Octopus.Tentacle.Kubernetes
             }
             catch (Exception ex)
             {
-                //Unfortunately we get an exception when the timeout hits (Server closes the connection) 
+                //Unfortunately we get an exception when the timeout hits (Server closes the connection)
                 //https://github.com/kubernetes-client/csharp/issues/828
                 if (ex is EndOfStreamException || ex.InnerException is EndOfStreamException)
                 {
@@ -76,7 +78,7 @@ namespace Octopus.Tentacle.Kubernetes
                 }
             }
         }
-        
+
         public async Task Create(V1Pod pod, CancellationToken cancellationToken)
         {
             AddStandardMetadata(pod);
@@ -85,5 +87,8 @@ namespace Octopus.Tentacle.Kubernetes
 
         public async Task Delete(ScriptTicket scriptTicket, CancellationToken cancellationToken)
             => await Client.DeleteNamespacedPodAsync(scriptTicket.ToKubernetesScriptPobName(), KubernetesConfig.Namespace, cancellationToken: cancellationToken);
+
+        public async Task TryDelete(ScriptTicket scriptTicket, CancellationToken cancellationToken)
+            => await TryExecuteAsync(async () => await Delete(scriptTicket, cancellationToken));
     }
 }
