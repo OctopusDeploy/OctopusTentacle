@@ -11,16 +11,19 @@ namespace Octopus.Tentacle.Kubernetes
 {
     public interface IKubernetesPodLogService
     {
-        Task<(IReadOnlyCollection<ProcessOutput>, long)> GetLogs(ScriptTicket scriptTicket, long lastLogSequence, CancellationToken cancellationToken);
+        Task<(IReadOnlyCollection<ProcessOutput> Outputs, long NextSequenceNumber)> GetLogs(ScriptTicket scriptTicket, long lastLogSequence, CancellationToken cancellationToken);
     }
 
     class KubernetesPodLogService : KubernetesService, IKubernetesPodLogService
     {
-        public KubernetesPodLogService(IKubernetesClientConfigProvider configProvider) : base(configProvider)
+        readonly IKubernetesPodMonitor podMonitor;
+
+        public KubernetesPodLogService(IKubernetesClientConfigProvider configProvider, IKubernetesPodMonitor podMonitor) : base(configProvider)
         {
+            this.podMonitor = podMonitor;
         }
 
-        public async Task<(IReadOnlyCollection<ProcessOutput>, long)> GetLogs(ScriptTicket scriptTicket, long lastLogSequence, CancellationToken cancellationToken)
+        public async Task<(IReadOnlyCollection<ProcessOutput> Outputs, long NextSequenceNumber)> GetLogs(ScriptTicket scriptTicket, long lastLogSequence, CancellationToken cancellationToken)
         {
             var podName = scriptTicket.ToKubernetesScriptPobName();
             DateTimeOffset? sinceTime = null;
@@ -42,10 +45,20 @@ namespace Octopus.Tentacle.Kubernetes
 
                 throw;
             }
-            
-            using (var reader = new StreamReader(logStream))
+
+            var podLogs = await ReadPodLogs();
+
+            if (podLogs.ExitCode != null)
+                podMonitor.MarkAsCompleted(scriptTicket, podLogs.ExitCode.Value);
+
+            return (podLogs.Outputs, podLogs.NextSequenceNumber);
+
+            async Task<(IReadOnlyCollection<ProcessOutput> Outputs, long NextSequenceNumber, int? ExitCode)> ReadPodLogs()
             {
-                return await PodLogReader.ReadPodLogs(lastLogSequence, reader);
+                using (var reader = new StreamReader(logStream))
+                {
+                    return await PodLogReader.ReadPodLogs(lastLogSequence, reader);
+                }
             }
         }
     }

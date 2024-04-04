@@ -9,12 +9,12 @@ namespace Octopus.Tentacle.Kubernetes
 {
     static class PodLogReader
     {
-        public static async Task<(IReadOnlyCollection<ProcessOutput> Lines, long NextSequenceNumber)> ReadPodLogs(long lastLogSequence, StreamReader reader)
+        public static async Task<(IReadOnlyCollection<ProcessOutput> Lines, long NextSequenceNumber, int? exitCode)> ReadPodLogs(long lastLogSequence, StreamReader reader)
         {
+            int? exitCode = null;
             var results = new List<ProcessOutput>();
             var nextSequenceNumber = lastLogSequence;
             bool haveSeenPodLogEntryMatchingLogSequence = false;
-            
             while (true)
             {
                 var line = await reader.ReadLineAsync();
@@ -22,7 +22,7 @@ namespace Octopus.Tentacle.Kubernetes
                 //No more to read
                 if (line.IsNullOrEmpty())
                 {
-                    return (results, nextSequenceNumber);
+                    return (results, nextSequenceNumber, exitCode);
                 }
 
                 //TODO: print parse errors
@@ -38,6 +38,9 @@ namespace Octopus.Tentacle.Kubernetes
                     if (!haveSeenPodLogEntryMatchingLogSequence)
                         throw new MissingPodLogException();
 
+                    if (parseResult.ExitCode != null)
+                        exitCode = parseResult.ExitCode.Value;
+                    
                     results.Add(new ProcessOutput(podLogLine.Source, podLogLine.Message, podLogLine.Occurred));
                     nextSequenceNumber = podLogLine.LineNumber;
                 }

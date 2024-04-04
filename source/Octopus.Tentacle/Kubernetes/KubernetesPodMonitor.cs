@@ -16,6 +16,7 @@ namespace Octopus.Tentacle.Kubernetes
     public interface IKubernetesPodMonitor
     {
         Task StartAsync(CancellationToken token);
+        void MarkAsCompleted(ScriptTicket scriptTicket, int podLogsExitCode);
     }
 
     public interface IKubernetesPodStatusProvider
@@ -50,6 +51,15 @@ namespace Octopus.Tentacle.Kubernetes
                 });
 
             await policy.ExecuteAsync(async ct => await UpdateLoop(ct), cancellationToken);
+        }
+
+        public void MarkAsCompleted(ScriptTicket scriptTicket, int exitCode)
+        {
+            if (podStatusLookup.TryGetValue(scriptTicket, out var status))
+            {
+                log.Verbose($"Marking {scriptTicket.TaskId} as completed {DateTime.UtcNow}");
+                status.MarkAsCompleted(exitCode);
+            }
         }
 
         async Task UpdateLoop(CancellationToken cancellationToken)
@@ -175,7 +185,7 @@ namespace Octopus.Tentacle.Kubernetes
 
         public void Update(V1Pod pod)
         {
-            var terminatedState = pod.Status?.ContainerStatuses.FirstOrDefault(c => c.Name == ScriptTicket.ToKubernetesScriptPobName())?.State.Terminated;
+            var terminatedState = pod.Status?.ContainerStatuses?.FirstOrDefault(c => c.Name == ScriptTicket.ToKubernetesScriptPobName())?.State.Terminated;
 
             DateTimeOffset? GetFinishedAt()
             {
@@ -199,6 +209,14 @@ namespace Octopus.Tentacle.Kubernetes
                     ExitCode = terminatedState?.ExitCode ?? 1;
                     break;
             }
+        }
+
+        public void MarkAsCompleted(int exitCode)
+        {
+            //TODO: add locking and check exit code doesn't change once set
+            FinishedAt = DateTimeOffset.UtcNow;
+            State = exitCode == 0 ? TrackedScriptPodState.Succeeded : TrackedScriptPodState.Failed;
+            ExitCode = exitCode;
         }
 
         public override string ToString()

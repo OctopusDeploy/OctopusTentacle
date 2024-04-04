@@ -11,21 +11,29 @@ namespace Octopus.Tentacle.Kubernetes
         public PodLogLine? LogLine { get; }
         public string? Error { get; }
 
-        PodLogParseResult(bool succeeded, PodLogLine? logLine, string? error)
+        public int? ExitCode { get; }
+        
+        PodLogParseResult(bool succeeded, PodLogLine? logLine, string? error, int? exitCode)
         {
             Succeeded = succeeded;
             LogLine = logLine;
             Error = error;
+            ExitCode = exitCode;
         }
 
         public static PodLogParseResult Success(PodLogLine logLine)
         {
-            return new PodLogParseResult(true, logLine, null);
+            return new PodLogParseResult(true, logLine, null, null);
         }
         
         public static PodLogParseResult Fail(string error)
         {
-            return new PodLogParseResult(false, null, error);
+            return new PodLogParseResult(false, null, error, null);
+        }
+        
+        public static PodLogParseResult EndOfStream(PodLogLine logLine, int exitCode)
+        {
+            return new PodLogParseResult(true, logLine, null, exitCode);
         }
     }
 
@@ -58,9 +66,13 @@ namespace Octopus.Tentacle.Kubernetes
             //add the new line
             var message = logParts[3];
 
-            //TODO: confirm if this line is useful
-            // if (message.StartsWith("EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE"))
-            //     source = ProcessOutputSource.Debug;
+            if (message.StartsWith("EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE"))
+            {
+                //TODO: catch parse error
+                var exitCode = int.Parse(message.Split(new[] { "<<>>" }, StringSplitOptions.None)[1]);
+
+                return PodLogParseResult.EndOfStream(new PodLogLine(lineNumber, ProcessOutputSource.Debug, message, occurred), exitCode);
+            }
             
             return PodLogParseResult.Success(new PodLogLine(lineNumber, source, message, occurred));
         }
