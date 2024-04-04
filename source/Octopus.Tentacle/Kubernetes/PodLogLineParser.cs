@@ -59,8 +59,8 @@ namespace Octopus.Tentacle.Kubernetes
             var message = logParts[3];
 
             //TODO: confirm if this line is useful
-            if (message.StartsWith("EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE"))
-                source = ProcessOutputSource.Debug;
+            // if (message.StartsWith("EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE"))
+            //     source = ProcessOutputSource.Debug;
             
             return PodLogParseResult.Success(new PodLogLine(lineNumber, source, message, occurred));
         }

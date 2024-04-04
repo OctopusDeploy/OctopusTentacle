@@ -64,7 +64,8 @@ func main() {
 	Write("stdout", "Kubernetes Script Pod completed")
 	Write("stdout", "##octopus[stdout-default]")
 
-	Write("stdout", fmt.Sprintf("EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE<<>>%d", exitCode))
+	//TODO: Add this back to speed things up
+	//Write("stdout", fmt.Sprintf("EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE<<>>%d", exitCode))
 
 	os.Exit(exitCode)
 }
