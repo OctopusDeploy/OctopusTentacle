@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -22,24 +23,36 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
             this.workspace = workspace;
         }
 
-        public async Task StreamPodLogsToScriptLog(IScriptLogWriter writer, CancellationToken cancellationToken, bool isFinalRead = false)
+        public async Task<bool> StreamPodLogsToScriptLog(IScriptLogWriter writer, CancellationToken cancellationToken, bool isFinalRead, int result, bool seenEnd)
         {
             try
             {
+                Stopwatch stdoutWatch = Stopwatch.StartNew();
                 //open the file streams for reading
-                using var stdOutStream = await SafelyOpenLogStreamReader("stdout.log", cancellationToken);
-                using var stdErrStream = await SafelyOpenLogStreamReader("stderr.log", cancellationToken);
+                using var stdOutStream = await SafelyOpenLogStreamReader("stdout.log", cancellationToken, writer);
+                writer.WriteOutput(ProcessOutputSource.Debug, $"Opening streams for stdout logs took: {stdoutWatch.Elapsed} (FinalRead: {isFinalRead})");
+
+                using var stdErrStream = await SafelyOpenLogStreamReader("stderr.log", cancellationToken, writer);
 
                 //if either of these is null, just return
                 if (stdOutStream is null || stdErrStream is null)
-                    return;
+                {
+                    writer.WriteOutput(ProcessOutputSource.Debug, DateTimeOffset.UtcNow + ", " + "Cancelling stream reader open due to job completion");
+                    return false;
+                }
 
+                int finalReadTries = 0;
                 // This loop is exited when either the cancellation token is cancelled (which is when the pod is finished or the script is cancelled)
                 // or if this is the final read, at the end (so we read once and jump out)
                 while (true)
                 {
                     if (cancellationToken.IsCancellationRequested)
+                    {
+                        writer.WriteOutput(ProcessOutputSource.Debug, DateTimeOffset.UtcNow + ", " + "Cancelling stream writing due to job completion");
                         break;
+                    }
+
+                    Stopwatch watch = Stopwatch.StartNew();
 
                     //Read both the stdout and stderr log files
                     var stdOutReadTask = ReadLogFileTail(writer, stdOutStream, ProcessOutputSource.StdOut, lastStdOutOffset);
@@ -60,28 +73,46 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                     //write all the read log lines to the output script log
                     foreach (var logLine in orderedLogLines)
                     {
-                        writer.WriteOutput(logLine.Source, logLine.Message, logLine.Occurred);
-                    }
+                        if (logLine.Message.StartsWith("End of script 075CD4F0-8C76-491D-BA76-0879D35E9CFE"))
+                        {
+                            seenEnd = true;
+                        }
 
+                        var logLineMessage = logLine.Message.StartsWith("##") ? logLine.Message : $"{logLine.Occurred} ({DateTimeOffset.UtcNow}), {logLine.Message}";
+                        writer.WriteOutput(logLine.Source, logLineMessage, logLine.Occurred);
+                    }
+                    
                     //wait for 250ms before reading the logs again (except on the final read)
                     if (!isFinalRead)
                     {
-                        await Task.Delay(TimeSpan.FromMilliseconds(250), cancellationToken);
+                        await Task.Delay(TimeSpan.FromMilliseconds(500), cancellationToken);
                     }
                     else
                     {
-                        //if this is the last read we need to jump out (and not spin forever)
-                        break;
+                        if (result == 0 && finalReadTries < 10 && !seenEnd)
+                        {
+                            finalReadTries++;
+                            writer.WriteOutput(ProcessOutputSource.StdOut, $"{DateTimeOffset.UtcNow}, Didn't see final log line yet, waiting a bit longer...");
+                            await Task.Delay(TimeSpan.FromMilliseconds(500), cancellationToken);
+                        }
+                        else
+                        {
+                            //if this is the last read we need to jump out (and not spin forever)
+                            break;
+                        }
                     }
                 }
             }
             catch (TaskCanceledException)
             {
                 //ignore all task cancelled exceptions as they may be thrown by the pod finishing (and thus signally)
+                writer.WriteOutput(ProcessOutputSource.Debug, DateTimeOffset.UtcNow + ", " + "TaskCanceledException due to job completion");
             }
+
+            return seenEnd;
         }
 
-        async Task<StreamReader?> SafelyOpenLogStreamReader(string filename, CancellationToken cancellationToken)
+        async Task<StreamReader?> SafelyOpenLogStreamReader(string filename, CancellationToken cancellationToken, IScriptLogWriter writer)
         {
             while (true)
             {
@@ -96,8 +127,8 @@ namespace Octopus.Tentacle.Kubernetes.Scripts
                 }
                 catch (FileNotFoundException)
                 {
-                    //wait for 50ms before reading the logs again
-                    await Task.Delay(TimeSpan.FromMilliseconds(50), cancellationToken);
+                    //wait for 500ms before reading the logs again
+                    await Task.Delay(TimeSpan.FromMilliseconds(500), cancellationToken);
                 }
             }
         }
