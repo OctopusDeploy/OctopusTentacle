@@ -73,5 +73,17 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             logLine.Message.Should().Be("Error!");
             logLine.Occurred.Should().BeCloseTo(new DateTimeOffset(2024, 4, 3, 6, 3, 10, 501, TimeSpan.Zero), TimeSpan.FromMilliseconds(1));
         }
+        
+        [Test]
+        public void MessageHasPipeInIt()
+        {
+            var logLine = PodLogLineParser.ParseLine("123|2024-04-03T06:03:10.501025551Z|stdout|This is the me|ss|age").LogLine;
+            logLine.Should().NotBeNull();
+
+            logLine.LineNumber.Should().Be(123);
+            logLine.Source.Should().Be(ProcessOutputSource.StdOut);
+            logLine.Message.Should().Be("This is the me|ss|age");
+            logLine.Occurred.Should().BeCloseTo(new DateTimeOffset(2024, 4, 3, 6, 3, 10, 501, TimeSpan.Zero), TimeSpan.FromMilliseconds(1));
+        }
     }
 }
