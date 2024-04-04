@@ -24,6 +24,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
         readonly IKubernetesPodLogService logService;
         readonly ISystemLog log;
 
+        //TODO: check what will happen when Tentacle restarts
         readonly ConcurrentDictionary<ScriptTicket, Lazy<SemaphoreSlim>> startScriptMutexes = new();
 
         public KubernetesScriptServiceV1Alpha(
