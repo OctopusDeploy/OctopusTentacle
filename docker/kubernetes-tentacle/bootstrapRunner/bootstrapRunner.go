@@ -6,10 +6,14 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"sync"
 	"time"
 )
 
-var line = 1
+type SafeCounter struct {
+	Mutex sync.Mutex
+	Value int
+}
 
 // The bootstrapRunner applet is designed to execute a script in a specific folder
 // and format the script's output from stdout and stderr into the following format:
@@ -20,6 +24,9 @@ var line = 1
 //
 // Note: all arguments given after the <script> argument are passed directly to the script as arguments.
 func main() {
+
+	lineCounter := SafeCounter{Value: 1, Mutex: sync.Mutex{}}
+
 	workspacePath := os.Args[1]
 	args := os.Args[2:]
 	cmd := exec.Command("bash", args[0:]...)
@@ -33,12 +40,12 @@ func main() {
 	doneStd := make(chan bool)
 	doneErr := make(chan bool)
 
-	go reader(stdOutScanner, "stdout", &doneStd)
-	go reader(stdErrScanner, "stderr", &doneErr)
+	go reader(stdOutScanner, "stdout", &doneStd, &lineCounter)
+	go reader(stdErrScanner, "stderr", &doneErr, &lineCounter)
 
-	Write("stdout", "##octopus[stdout-verbose]")
-	Write("stdout", "Kubernetes Script Pod started")
-	Write("stdout", "##octopus[stdout-default]")
+	Write("stdout", "##octopus[stdout-verbose]", &lineCounter)
+	Write("stdout", "Kubernetes Script Pod started", &lineCounter)
+	Write("stdout", "##octopus[stdout-default]", &lineCounter)
 
 	err := cmd.Start()
 
@@ -60,9 +67,9 @@ func main() {
 
 	exitCode := cmd.ProcessState.ExitCode()
 
-	Write("stdout", "##octopus[stdout-verbose]")
-	Write("stdout", "Kubernetes Script Pod completed")
-	Write("stdout", "##octopus[stdout-default]")
+	Write("stdout", "##octopus[stdout-verbose]", &lineCounter)
+	Write("stdout", "Kubernetes Script Pod completed", &lineCounter)
+	Write("stdout", "##octopus[stdout-default]", &lineCounter)
 
 	//TODO: Add this back to speed things up
 	//Write("stdout", fmt.Sprintf("EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE<<>>%d", exitCode))
@@ -70,14 +77,20 @@ func main() {
 	os.Exit(exitCode)
 }
 
-func reader(scanner *bufio.Scanner, stream string, done *chan bool) {
+func reader(scanner *bufio.Scanner, stream string, done *chan bool, counter *SafeCounter) {
 	for scanner.Scan() {
-		Write(stream, scanner.Text())
+		Write(stream, scanner.Text(), counter)
 	}
 	*done <- true
 }
 
-func Write(stream string, text string) {
-	fmt.Printf("%d|%s|%s|%s\n", line, time.Now().UTC().Format(time.RFC3339Nano), stream, text)
-	line++
+func Write(stream string, text string, counter *SafeCounter) {
+	//Use a mutex to prevent race conditions updating the line number
+	//https://go.dev/tour/concurrency/9
+	counter.Mutex.Lock()
+
+	fmt.Printf("%d|%s|%s|%s\n", counter.Value, time.Now().UTC().Format(time.RFC3339Nano), stream, text)
+	counter.Value++
+
+	counter.Mutex.Unlock()
 }
