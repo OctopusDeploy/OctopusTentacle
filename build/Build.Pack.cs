@@ -30,6 +30,9 @@ partial class Build
     [Parameter("Specifies the platforms to build the docker images in. Multiple platforms must be comma-separated. Defaults to 'linux/arm64,linux/amd64'.",
         Name = "DockerPlatform")]
     string DockerPlatform = "linux/arm64,linux/amd64";
+    
+    [PathExecutable]
+    readonly Tool Multipass;
 
     [PublicAPI]
     Target PackOsxTarballs => _ => _
@@ -152,6 +155,20 @@ partial class Build
         .Executes(() =>
         {
             BuildAndPushOrLoadKubernetesTentacleContainerImage(push: false, load: true);
+        });
+
+    [PublicAPI]
+    Target BuildAndPushForMicrok8sKubernetesTentacleContainerImage => _ => _
+        .Description("Builds and loads into microk8s the kubernetes tentacle multi-arch container image")
+        .OnlyWhenStatic(() => IsLocalBuild)
+        .DependsOn(PackDebianPackage)
+        .Executes(() =>
+        {
+            var host = GetMicrok8sIpAddress();
+            const int port = 32000;
+            var hostPort = $"{host}:{port}";
+            
+            BuildAndPushOrLoadKubernetesTentacleContainerImage(push: true, load: false, host: hostPort);
         });
 
     [PublicAPI]
@@ -585,6 +602,13 @@ partial class Build
         FileSystemTasks.EnsureExistingDirectory(dockerDir);
 
         FileSystemTasks.CopyFile(packageFilePath, dockerDir / $"tentacle_{FullSemVer}_linux-{dockerArch}.deb");
+    }
+    
+    string GetMicrok8sIpAddress()
+    {
+        var microk8sInfoOutput = Multipass.Invoke("info microk8s-vm --format json");
+        var microk8sIp = microk8sInfoOutput.StdToJson()["info"]?["microk8s-vm"]?["ipv4"]?[0]?.ToString() ?? "localhost";
+        return microk8sIp;
     }
 
     static IReadOnlyDictionary<string, (string deb, string docker)> DebDockerMap { get; } = new Dictionary<string, (string deb, string docker)>
