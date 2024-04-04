@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using k8s;
 using k8s.Autorest;
 using Octopus.Tentacle.Contracts;
 
@@ -14,8 +12,6 @@ namespace Octopus.Tentacle.Kubernetes
     public interface IKubernetesPodLogService
     {
         Task<(IReadOnlyCollection<ProcessOutput>, long)> GetLogs(ScriptTicket scriptTicket, long lastLogSequence, CancellationToken cancellationToken);
-
-        IKubernetesInMemoryLogWriter CreateWriter(ScriptTicket scriptTicket);
     }
 
     class KubernetesPodLogService : KubernetesService, IKubernetesPodLogService
@@ -51,20 +47,6 @@ namespace Octopus.Tentacle.Kubernetes
             {
                 return await PodLogReader.ReadPodLogs(lastLogSequence, reader);
             }
-            
-
         }
-
-        public IKubernetesInMemoryLogWriter CreateWriter(ScriptTicket scriptTicket)
-        {
-            throw new System.NotImplementedException();
-        }
-    }
-
-    public interface IKubernetesInMemoryLogWriter
-    {
-        void WriteVerbose(ScriptTicket scriptTicket, string message);
-        void WriteError(ScriptTicket scriptTicket, string message);
-        void WriteInfo(ScriptTicket scriptTicket, string message);
     }
 }
