@@ -4,6 +4,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Octopus.Tentacle.CommonTestUtils;
 using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
@@ -25,10 +26,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
 
             var url = DownloadUrlForVersion(version.ToString());
             logger.Information($"Downloading {url} to {downloadFilePath}");
-            await OctopusPackageDownloader.DownloadPackage(url, downloadFilePath, logger);
-            
+            await OctopusPackageDownloader.DownloadPackage(url, downloadFilePath, logger, cancellationToken);
+
             var extractionDirectory = Path.Combine(downloadPath, "extracted");
-            
+
             ZipFile.ExtractToDirectory(downloadFilePath, extractionDirectory);
 
             var buildDir = new DirectoryInfo(Path.Combine(extractionDirectory, "build"));

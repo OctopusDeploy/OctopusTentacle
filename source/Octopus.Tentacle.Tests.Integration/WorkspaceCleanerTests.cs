@@ -3,8 +3,8 @@ using System.IO;
 using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
-using Octopus.Tentacle.CommonTestUtils.Builders;
-using Octopus.Tentacle.Contracts.ClientServices;
+using Octopus.Tentacle.CommonTestUtils;
+using Octopus.Tentacle.CommonTestUtils.Diagnostics;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util;
@@ -39,7 +39,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             // Start task
             var runningScriptTask = clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, new InMemoryLog());
-            await Wait.For(() => Directory.Exists(startScriptWorkspaceDirectory), 
+            await Wait.For(() => Directory.Exists(startScriptWorkspaceDirectory),
                 TimeSpan.FromSeconds(60),
                 () => throw new Exception("Workspace directory did not get created"),
                 CancellationToken);
@@ -47,7 +47,7 @@ namespace Octopus.Tentacle.Tests.Integration
             // Ensure Workspace Cleaning Has Run
             var existingWorkspaceDirectory = GivenExistingWorkspaceExists(existingHomeDirectory);
             File.WriteAllText(ScriptWorkspace.GetLogFilePath(existingWorkspaceDirectory), "Existing log file");
-            await Wait.For(() => !Directory.Exists(existingWorkspaceDirectory), 
+            await Wait.For(() => !Directory.Exists(existingWorkspaceDirectory),
                 TimeSpan.FromSeconds(60),
                 () => throw new Exception("Workspace directory did not get deleted"),
                 CancellationToken);
@@ -84,8 +84,8 @@ namespace Octopus.Tentacle.Tests.Integration
                 .ThrowAsync<NotImplementedException>();
 
             var workspaceDirectory = GetWorkspaceDirectoryPath(clientAndTentacle.RunningTentacle.HomeDirectory, startScriptCommand.ScriptTicket.TaskId);
-            
-            await Wait.For(() => !Directory.Exists(workspaceDirectory), 
+
+            await Wait.For(() => !Directory.Exists(workspaceDirectory),
                 TimeSpan.FromSeconds(20),
                 () =>
                 {
@@ -96,7 +96,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     catch (Exception)
                     {
                         // Deleting a worksapce is best effort and can silently fail if it is in use / locked by something.
-                        // If the cleaner failed to delete the directory and we cannot delete it in the test we can assume that it 
+                        // If the cleaner failed to delete the directory and we cannot delete it in the test we can assume that it
                         // is a valid failure and the test was successful.
 
                         return;
@@ -128,7 +128,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 })
                 .Build(CancellationToken);
 
-            await Wait.For(() => !Directory.Exists(existingWorkspaceDirectoryWithLogFile), 
+            await Wait.For(() => !Directory.Exists(existingWorkspaceDirectoryWithLogFile),
                 TimeSpan.FromSeconds(60),
                 () => throw new Exception("Workspace directory did not get deleted"),
                 CancellationToken);

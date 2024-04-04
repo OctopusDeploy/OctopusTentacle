@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Halibut;
 using NUnit.Framework;
+using Octopus.Tentacle.CommonTestUtils.Diagnostics;
 using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Tests.Integration.Support;
-using Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
 using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
@@ -80,7 +80,7 @@ namespace Octopus.Tentacle.Tests.Integration
             // Start the script which will wait for a file to exist
             var duration = Stopwatch.StartNew();
             var executeScriptTask = clientAndTentacle.TentacleClient.UploadFile(remotePath, dataStream, CancellationToken, inMemoryLog);
-            
+
             var expectedException = new ExceptionContractAssertionBuilder(FailureScenario.ConnectionFaulted, tentacleConfigurationTestCase.TentacleType, clientAndTentacle).Build();
 
             await AssertionExtensions.Should(async () => await executeScriptTask).ThrowExceptionContractAsync(expectedException);

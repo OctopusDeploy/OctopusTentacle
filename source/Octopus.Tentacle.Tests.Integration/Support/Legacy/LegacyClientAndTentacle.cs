@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Octopus.Tentacle.CommonTestUtils;
 using Octopus.TestPortForwarder;
 using Serilog;
 
@@ -18,7 +19,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
             PortForwarder portForwarder,
             RunningTentacle runningTentacle,
             LegacyTentacleClient tentacleClient,
-            TemporaryDirectory temporaryDirectory, 
+            TemporaryDirectory temporaryDirectory,
             ILogger logger)
         {
             this.temporaryDirectory = temporaryDirectory;
@@ -38,7 +39,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
             var runningTentacleTask = RunningTentacle.DisposeAsync();
             var serverTask = Server.DisposeAsync();
             await Task.WhenAll(runningTentacleTask.AsTask(), serverTask.AsTask(), portForwarderTask);
-            
+
             logger.Information("temporaryDirectory.Dispose");
             temporaryDirectory.Dispose();
             logger.Information("Finished DisposeAsync");

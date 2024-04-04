@@ -9,6 +9,7 @@ using Halibut.ServiceModel;
 using Octopus.Tentacle.Client;
 using Octopus.Tentacle.Client.Retries;
 using Octopus.Tentacle.Client.Scripts;
+using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Contracts.Legacy;
 using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers;
@@ -143,7 +144,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             this.configureClientOptions = configureClientOptions;
             return this;
         }
-        
+
         public ClientAndTentacleBuilder InstallAsAService()
         {
             installAsAService = true;
@@ -184,7 +185,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 .WithServerCertificate(Certificates.Server)
                 .WithHalibutTimeoutsAndLimits(halibutTimeoutsAndLimits ?? HalibutTimeoutsAndLimits.RecommendedValues())
                 .WithLegacyContractSupport();
-            
+
             if (queueFactory != null)
             {
                 serverHalibutRuntimeBuilder.WithPendingRequestQueueFactory(queueFactory);
@@ -222,7 +223,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 tentacleBuilderAction?.Invoke(pollingTentacleBuilder);
 
                 if (installAsAService)
-                { 
+                {
                     pollingTentacleBuilder.InstallAsAService();
                 }
 
@@ -241,9 +242,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 }
 
                 tentacleBuilderAction?.Invoke(listeningTentacleBuilder);
-                
+
                 if (installAsAService)
-                { 
+                {
                     listeningTentacleBuilder.InstallAsAService();
                 }
 

@@ -5,11 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using FluentAssertions;
-using NUnit.Framework;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Diagnostics;
 
-namespace Octopus.Tentacle.Tests.Integration.Support
+namespace Octopus.Tentacle.CommonTestUtils.Diagnostics
 {
     public class InMemoryLog : SystemLog
     {
@@ -39,24 +38,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public void AssertContains(string partialString)
         {
             events.Should().Contain(e => CultureInfo.CurrentCulture.CompareInfo.IndexOf(e.MessageText, partialString, CompareOptions.IgnoreCase) >= 0);
-        }
-
-        public void AssertEventuallyContains(string partialString, CancellationToken token)
-        {
-            while (!token.IsCancellationRequested)
-            {
-                try
-                {
-                    AssertContains(partialString);
-                    return;
-                }
-                catch (AssertionException)
-                {
-                    Thread.Sleep(100);
-                }
-            }
-
-            throw new TimeoutException();
         }
 
         public override void Flush()

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Halibut;
 using Octopus.Tentacle.Client;
 using Octopus.Tentacle.Client.Retries;
+using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Tests.Integration.Support.Legacy;
 using Octopus.TestPortForwarder;
 using Serilog;
@@ -35,7 +36,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             PortForwarder? portForwarder,
             RunningTentacle runningTentacle,
             TentacleClient tentacleClient,
-            TemporaryDirectory temporaryDirectory, 
+            TemporaryDirectory temporaryDirectory,
             RpcRetrySettings rpcRetrySettings,
             ILogger logger)
         {

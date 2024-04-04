@@ -5,6 +5,7 @@ using Halibut;
 using Halibut.Diagnostics;
 using Halibut.Diagnostics.LogCreators;
 using Halibut.Logging;
+using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Contracts.Legacy;
 using Octopus.Tentacle.Tests.Integration.Support.Logging;
 using Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers;
@@ -36,7 +37,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
             this.tentacleRuntime = tentacleRuntime;
             return this;
         }
-        
+
         public LegacyClientAndTentacleBuilder WithHalibutLoggingLevel(LogLevel halibutLogLevel)
         {
             this.halibutLogLevel = halibutLogLevel;
@@ -52,7 +53,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
                 .WithLegacyContractSupport()
                 .WithHalibutTimeoutsAndLimits(HalibutTimeoutsAndLimits.RecommendedValues())
                 .WithLogFactory(BuildClientLogger());
-            
+
             var serverHalibutRuntime = serverHalibutRuntimeBuilder.Build();
 
             serverHalibutRuntime.Trust(Certificates.TentaclePublicThumbprint);
@@ -70,7 +71,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
             var tentacleExe = tentacleVersion == null ?
                 TentacleExeFinder.FindTentacleExe(this.tentacleRuntime) :
                 await TentacleFetcher.GetTentacleVersion(temporaryDirectory.DirectoryPath, tentacleVersion, tentacleRuntime, logger, cancellationToken);
-            
+
             logger.Information($"Tentacle.exe location: {tentacleExe}");
 
             if (tentacleType == TentacleType.Polling)
@@ -90,7 +91,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
                     .Build(logger, cancellationToken);
 
                 portForwarder = new PortForwarderBuilder(runningTentacle.ServiceUri, new SerilogLoggerBuilder().Build()).Build();
-                
+
                 tentacleEndPoint = new ServiceEndPoint(portForwarder.PublicEndpoint, runningTentacle.Thumbprint, serverHalibutRuntime.TimeoutsAndLimits);
             }
 

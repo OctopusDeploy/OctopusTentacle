@@ -3,12 +3,10 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Halibut;
 using NUnit.Framework;
-using Octopus.Tentacle.CommonTestUtils.Builders;
+using Octopus.Tentacle.CommonTestUtils.Diagnostics;
 using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Tests.Integration.Support;
-using Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
 using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
@@ -81,10 +79,10 @@ namespace Octopus.Tentacle.Tests.Integration
             var duration = Stopwatch.StartNew();
 
             var executeScriptTask = clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, inMemoryLog);
-            
+
             var expectedException = new ExceptionContractAssertionBuilder(FailureScenario.ConnectionFaulted, tentacleConfigurationTestCase.TentacleType, clientAndTentacle).Build();
             await AssertionExtensions.Should(async () => await executeScriptTask).ThrowExceptionContractAsync(expectedException);
-            
+
             duration.Stop();
 
             capabilitiesMethodUsages.For(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)).Started.Should().BeGreaterOrEqualTo(2);
@@ -250,7 +248,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .Build();
 
             var executeScriptTask = clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, inMemoryLog);
-            
+
             var expectedException = new ExceptionContractAssertionBuilder(FailureScenario.ConnectionFaulted, tentacleConfigurationTestCase.TentacleType, clientAndTentacle).Build();
 
             await AssertionExtensions.Should(async () => await executeScriptTask).ThrowExceptionContractAsync(expectedException);
@@ -320,7 +318,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var duration = Stopwatch.StartNew();
             var executeScriptTask = clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, inMemoryLog);
-            
+
             var expectedException = new ExceptionContractAssertionBuilder(FailureScenario.ConnectionFaulted, tentacleConfigurationTestCase.TentacleType, clientAndTentacle).Build();
 
             await AssertionExtensions.Should(async () => await executeScriptTask).ThrowExceptionContractAsync(expectedException);
@@ -375,7 +373,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .Build();
 
             var executeScriptTask = clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, inMemoryLog);
-            
+
             var expectedException = new ExceptionContractAssertionBuilder(FailureScenario.ConnectionFaulted, tentacleConfigurationTestCase.TentacleType, clientAndTentacle).Build();
 
             await AssertionExtensions.Should(async () => await executeScriptTask).ThrowExceptionContractAsync(expectedException);
@@ -452,8 +450,8 @@ namespace Octopus.Tentacle.Tests.Integration
                 CancellationTokenSource.CreateLinkedTokenSource(CancellationToken, testCancellationTokenSource.Token).Token,
                 null,
                 inMemoryLog);
-            
-            await Wait.For(() => recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Completed > 0, 
+
+            await Wait.For(() => recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Completed > 0,
                 TimeSpan.FromSeconds(60),
                 () => throw new Exception("Script execution did not complete"),
                 CancellationToken);
@@ -524,7 +522,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             Func<Task> action = async () => await executeScriptTask;
             await Wait.For(
-                () => recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Completed > 0, 
+                () => recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Completed > 0,
                 TimeSpan.FromSeconds(60),
                 () => throw new Exception("Script Execution did not complete"),
                 CancellationToken);

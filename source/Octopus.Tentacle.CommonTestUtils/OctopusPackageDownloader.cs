@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using Octopus.Tentacle.Util;
 using Serilog;
 
-namespace Octopus.Tentacle.Tests.Integration
+namespace Octopus.Tentacle.CommonTestUtils
 {
     /// <summary>
     /// Copied as is from the octopus server repo.
@@ -57,7 +57,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
                         var sw = new Stopwatch();
                         sw.Start();
-                        using (Stream contentStream = await response.Content.ReadAsStreamAsync(cancellationToken),
+                        using (Stream contentStream = await response.Content.ReadAsStreamAsync(),
                                fileStream = new FileStream(
                                    filePath,
                                    FileMode.Create,

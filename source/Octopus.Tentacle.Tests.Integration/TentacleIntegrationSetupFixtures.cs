@@ -22,8 +22,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             new TurnOnTraceLoggingForLogFileForLatestTentacle(),
             new BumpThreadPoolForAllTests(),
-            new WarmTentacleCache(),
-            new InitializeKubernetesCluster()
+            new WarmTentacleCache()
         };
 
         public static string OneTimeSetupLogOutput = "Nothing to show";

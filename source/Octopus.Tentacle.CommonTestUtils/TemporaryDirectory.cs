@@ -1,9 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Reflection;
+using Octopus.Tentacle.CommonTestUtils.Diagnostics;
 using Octopus.Tentacle.Util;
 
-namespace Octopus.Tentacle.Tests.Integration.Support
+namespace Octopus.Tentacle.CommonTestUtils
 {
     public class TemporaryDirectory : IDisposable
     {

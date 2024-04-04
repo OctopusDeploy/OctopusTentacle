@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Tentacle.Client.Retries;
+using Octopus.Tentacle.CommonTestUtils;
 using Polly;
 using Serilog;
 
@@ -98,7 +99,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             using var disposeCancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
             var cancellationToken = disposeCancellationTokenSource.Token;
             logger.Information("Starting DisposeAsync");
-            
+
             logger.Information("Starting Stop");
             var stopped = await Stop(cancellationToken);
             if (!stopped)
