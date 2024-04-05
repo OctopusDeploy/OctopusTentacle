@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using k8s;
 using k8s.Models;
+using Newtonsoft.Json;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Time;
@@ -126,7 +127,8 @@ namespace Octopus.Tentacle.Kubernetes
                     {
                         var status = podStatusLookup.GetOrAdd(scriptTicket, st => new TrackedScriptPod(st));
                         status.Update(pod);
-                        log.Verbose($"Updated pod {pod.Name()} status. {status}");
+                        
+                        log.Verbose($"Updated pod {pod.Name()} status. {status}, JSON: \n{JsonConvert.SerializeObject(pod, Formatting.None)}");
 
                         break;
                     }
@@ -185,6 +187,7 @@ namespace Octopus.Tentacle.Kubernetes
 
         public void Update(V1Pod pod)
         {
+            
             switch (pod.Status?.Phase)
             {
                 case PodPhases.Succeeded:
