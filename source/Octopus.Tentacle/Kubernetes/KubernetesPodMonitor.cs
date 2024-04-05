@@ -185,29 +185,28 @@ namespace Octopus.Tentacle.Kubernetes
 
         public void Update(V1Pod pod)
         {
-            var terminatedState = pod.Status?.ContainerStatuses?.FirstOrDefault(c => c.Name == ScriptTicket.ToKubernetesScriptPobName())?.State.Terminated;
-
-            DateTimeOffset? GetFinishedAt()
-            {
-                var finishedAtDateTime = terminatedState?.FinishedAt;
-                return finishedAtDateTime is not null ? new DateTimeOffset(finishedAtDateTime.Value, TimeSpan.Zero) : null;
-            }
-
             switch (pod.Status?.Phase)
             {
                 case "Succeeded":
-                    FinishedAt = GetFinishedAt();
+                    var terminatedState = pod.Status.ContainerStatuses.Single(c => c.Name == ScriptTicket.ToKubernetesScriptPobName()).State.Terminated;
+                    FinishedAt = GetFinishedAt(terminatedState);
                     State = TrackedScriptPodState.Succeeded;
-                    ExitCode = 0;
+                    ExitCode = terminatedState.ExitCode;
                     break;
                 case "Failed":
-                    FinishedAt = GetFinishedAt();
+                    var terminatedState2 = pod.Status.ContainerStatuses.Single(c => c.Name == ScriptTicket.ToKubernetesScriptPobName()).State.Terminated;
+                    FinishedAt = GetFinishedAt(terminatedState2);
                     State = TrackedScriptPodState.Failed;
 
                     //find the status for the container
-                    //if we can't determine the exit code from the pod container, just return 1
-                    ExitCode = terminatedState?.ExitCode ?? 1;
+                    ExitCode = terminatedState2.ExitCode;
                     break;
+            }
+
+            DateTimeOffset? GetFinishedAt(V1ContainerStateTerminated terminated)
+            {
+                var finishedAtDateTime = terminated.FinishedAt!;
+                return new DateTimeOffset(finishedAtDateTime.Value, TimeSpan.Zero);
             }
         }
 
@@ -225,6 +224,14 @@ namespace Octopus.Tentacle.Kubernetes
 
     public enum TrackedScriptPodState
     {
+        //Pod lifecycle has these phases:
+        //https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase
+        //Pending
+        //Running
+        //Succeeded
+        //Failed
+        //Unknown
+        
         Running,
         Succeeded,
         Failed
