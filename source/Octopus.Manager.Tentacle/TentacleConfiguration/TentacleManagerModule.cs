@@ -22,6 +22,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration
             builder.RegisterType<InstanceSelectionModel>().AsSelf().SingleInstance().WithParameter("applicationName", ApplicationName.Tentacle);
             builder.RegisterType<CommandLineRunner>().As<ICommandLineRunner>();
             builder.RegisterType<TelemetryService>().As<ITelemetryService>();
+            builder.RegisterType<InstanceConfigurationLoader>().As<IInstanceConfigurationLoader>();
 
             RegisterTentacleManagerInstanceIdentifierService(builder);
 

@@ -11,14 +11,12 @@ using Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard;
 using Octopus.Manager.Tentacle.Util;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
-using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
 {
     public class TentacleManagerModel : ShellViewModel
     {
-        string configurationFilePath;
         string homeDirectory;
         string logsDirectory;
         ServiceWatcher serviceWatcher;
@@ -28,17 +26,15 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
         string trust;
         bool pollsServers;
 
-        readonly IOctopusFileSystem fileSystem;
-        readonly IApplicationInstanceSelector selector;
+        readonly IInstanceConfigurationLoader instanceConfigLoader;
         readonly Func<DeleteWizardModel> deleteWizardModelFactory;
         readonly Func<ProxyWizardModel> proxyWizardModelFactory;
         readonly Func<PollingProxyWizardModel> pollingProxyWizardModelFactory;
         readonly Func<SetupTentacleWizardModel> setupTentacleWizardModel;
 
         public TentacleManagerModel(
-            IOctopusFileSystem fileSystem,
-            IApplicationInstanceSelector selector,
             ICommandLineRunner commandLineRunner,
+            IInstanceConfigurationLoader instanceConfigLoader,
             InstanceSelectionModel instanceSelectionModel,
             Func<DeleteWizardModel> deleteWizardModelFactory,
             Func<ProxyWizardModel> proxyWizardModelFactory,
@@ -46,8 +42,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
             Func<SetupTentacleWizardModel> setupTentacleWizardModel)
             : base(instanceSelectionModel)
         {
-            this.fileSystem = fileSystem;
-            this.selector = selector;
+            this.instanceConfigLoader = instanceConfigLoader;
             this.deleteWizardModelFactory = deleteWizardModelFactory;
             this.proxyWizardModelFactory = proxyWizardModelFactory;
             this.pollingProxyWizardModelFactory = pollingProxyWizardModelFactory;
@@ -56,17 +51,6 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
         }
 
         public string InstanceName { get; set; }
-
-        public string ConfigurationFilePath
-        {
-            get => configurationFilePath;
-            set
-            {
-                if (value == configurationFilePath) return;
-                configurationFilePath = value;
-                OnPropertyChanged();
-            }
-        }
 
         public string HomeDirectory
         {
@@ -154,33 +138,17 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
         public void Load(ApplicationInstanceRecord applicationInstance)
         {
             InstanceName = applicationInstance.InstanceName;
-            ConfigurationFilePath = applicationInstance.ConfigurationFilePath;
-            Reload(applicationInstance);
-        }
-
-        void Reload(ApplicationInstanceRecord applicationInstance)
-        {
-            var keyStore = LoadConfiguration();
-
-            var home = new HomeConfiguration(ApplicationName.Tentacle, selector);
-
-            HomeDirectory = home.HomeDirectory;
-
-            LogsDirectory = new LoggingConfiguration(home).LogsDirectory;
+            
+            var instanceConfig = instanceConfigLoader.LoadConfiguration(applicationInstance);
+            HomeDirectory = instanceConfig.HomeConfiguration.HomeDirectory;
+            LogsDirectory = instanceConfig.LoggingConfiguration.LogsDirectory;
 
             serviceWatcher?.Dispose();
 
             var commandLinePath = CommandLine.PathToTentacleExe();
             ServiceWatcher = new ServiceWatcher(ApplicationName.Tentacle, applicationInstance.InstanceName, commandLinePath);
 
-            var tencon = new Octopus.Tentacle.Configuration.TentacleConfiguration(
-                selector,
-                home,
-                new ProxyConfiguration(keyStore),
-                new PollingProxyConfiguration(keyStore),
-                new SystemLog()
-            );
-
+            var tencon = instanceConfig.TentacleConfiguration;
             pollsServers = false;
             Thumbprint = tencon.TentacleCertificate.Thumbprint;
             var describeTrust = new List<string>();
@@ -215,13 +183,13 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
             }
             Trust = string.Join(" ", describeTrust);
 
-            ProxyConfiguration = new ProxyConfiguration(keyStore);
+            ProxyConfiguration = new ProxyConfiguration(instanceConfig.KeyStore);
             PollingProxyConfiguration = null;
             ProxyStatus = BuildProxyStatus(ProxyConfiguration) + " for web requests";
             CommunicationMode = pollsServers ? "Polling" : "Listening";
             if (pollsServers)
             {
-                PollingProxyConfiguration = new PollingProxyConfiguration(keyStore);
+                PollingProxyConfiguration = new PollingProxyConfiguration(instanceConfig.KeyStore);
                 ProxyStatus += BuildProxyStatus(PollingProxyConfiguration, polling: true) + " to poll the Octopus Server";
             }
             ProxyStatus += ".";
@@ -236,11 +204,6 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
                 : config.UsingCustomProxy()
                     ? $"{start} is using a custom proxy server"
                     : $"{start} is using the default proxy server" + (string.IsNullOrWhiteSpace(config.CustomProxyUsername) ? "" : " with custom credentials");
-        }
-
-        IWritableKeyValueStore LoadConfiguration()
-        {
-            return new XmlFileKeyValueStore(fileSystem, ConfigurationFilePath);
         }
 
         public DeleteWizardModel StartDeleteWizard()
