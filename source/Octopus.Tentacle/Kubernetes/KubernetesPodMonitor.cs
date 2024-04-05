@@ -187,13 +187,13 @@ namespace Octopus.Tentacle.Kubernetes
         {
             switch (pod.Status?.Phase)
             {
-                case "Succeeded":
+                case PodPhases.Succeeded:
                     var terminatedState = pod.Status.ContainerStatuses.Single(c => c.Name == ScriptTicket.ToKubernetesScriptPobName()).State.Terminated;
                     FinishedAt = GetFinishedAt(terminatedState);
                     State = TrackedScriptPodState.Succeeded;
                     ExitCode = terminatedState.ExitCode;
                     break;
-                case "Failed":
+                case PodPhases.Failed:
                     var terminatedState2 = pod.Status.ContainerStatuses.Single(c => c.Name == ScriptTicket.ToKubernetesScriptPobName()).State.Terminated;
                     FinishedAt = GetFinishedAt(terminatedState2);
                     State = TrackedScriptPodState.Failed;
@@ -222,16 +222,19 @@ namespace Octopus.Tentacle.Kubernetes
             => $"ScriptTicket: {ScriptTicket}, State: {State}, ExitCode: {ExitCode}";
     }
 
+    //Pod lifecycle has these phases:
+    //https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase
+    static class PodPhases
+    {
+        public const string Pending = "Pending";
+        public const string Running = "Running";
+        public const string Succeeded = "Succeeded";
+        public const string Failed = "Failed";
+        public const string Unknown = "Unknown";
+    }
+
     public enum TrackedScriptPodState
     {
-        //Pod lifecycle has these phases:
-        //https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase
-        //Pending
-        //Running
-        //Succeeded
-        //Failed
-        //Unknown
-        
         Running,
         Succeeded,
         Failed
