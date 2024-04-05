@@ -25,28 +25,35 @@ namespace Octopus.Tentacle.Kubernetes
                     return (results, nextSequenceNumber, exitCode);
                 }
 
-                //TODO: print parse errors
                 var parseResult = PodLogLineParser.ParseLine(line!);
-                var podLogLine = parseResult.LogLine;
-                
-                //Pod log line numbers are 1-based, log sequence is 0-based
-                if (podLogLine != null && podLogLine.LineNumber > lastLogSequence)
+
+                if (parseResult is ValidPodLogLineParseResult validParseResult)
                 {
-                    if (podLogLine.LineNumber == lastLogSequence + 1)
-                        haveSeenPodLogEntryMatchingLogSequence = true;
+                    var podLogLine = validParseResult.LogLine;
 
-                    if (!haveSeenPodLogEntryMatchingLogSequence)
-                        throw new MissingPodLogException();
+                    //Pod log line numbers are 1-based, log sequence is 0-based
+                    if (podLogLine.LineNumber > lastLogSequence)
+                    {
+                        if (podLogLine.LineNumber == lastLogSequence + 1)
+                            haveSeenPodLogEntryMatchingLogSequence = true;
 
-                    if (parseResult.ExitCode != null)
-                        exitCode = parseResult.ExitCode.Value;
-                    
-                    results.Add(new ProcessOutput(podLogLine.Source, podLogLine.Message, podLogLine.Occurred));
-                    nextSequenceNumber = podLogLine.LineNumber;
+                        if (!haveSeenPodLogEntryMatchingLogSequence)
+                            throw new MissingPodLogException();
+
+                        if (validParseResult is EndOfStreamPodLogLineParseResult endOfStreamParseResult)
+                            exitCode = endOfStreamParseResult.ExitCode;
+
+                        results.Add(new ProcessOutput(podLogLine.Source, podLogLine.Message, podLogLine.Occurred));
+                        nextSequenceNumber = podLogLine.LineNumber;
+                    }
+                    else
+                    {
+                        //TODO: print parse errors
+                    }
+
+
+                    //TODO: try not to read any more if we see a panic?
                 }
-
-                //TODO: try not to read any more if we see a panic?
-                    
             }
         }
     }

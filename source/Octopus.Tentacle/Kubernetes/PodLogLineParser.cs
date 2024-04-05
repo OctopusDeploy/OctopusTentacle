@@ -1,66 +1,84 @@
 using System;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Startup;
+using YamlDotNet.Core.Tokens;
 
 namespace Octopus.Tentacle.Kubernetes
 {
     public record PodLogLine(int LineNumber, ProcessOutputSource Source, string Message, DateTimeOffset Occurred);
 
-    public class PodLogParseResult
+    public abstract class PodLogLineParseResult
     {
-        public bool Succeeded { get; }
-        public PodLogLine? LogLine { get; }
-        public string? Error { get; }
-
-        public int? ExitCode { get; }
-        
-        PodLogParseResult(bool succeeded, PodLogLine? logLine, string? error, int? exitCode)
+        public enum LogLineType
         {
-            Succeeded = succeeded;
+            Valid,
+            Invalid,
+            EndOfStream
+        }
+
+        public abstract LogLineType Type { get; }
+    }
+
+    public class ValidPodLogLineParseResult : PodLogLineParseResult
+    {
+        public override LogLineType Type => LogLineType.Valid;
+
+        public PodLogLine LogLine { get; }
+
+        public ValidPodLogLineParseResult(PodLogLine logLine)
+        {
             LogLine = logLine;
-            Error = error;
-            ExitCode = exitCode;
         }
+    }
 
-        public static PodLogParseResult Success(PodLogLine logLine)
+    public class InvalidPodLogLineParseResult : PodLogLineParseResult
+    {
+        public override LogLineType Type => LogLineType.Invalid;
+
+        public string Error { get; }
+
+        public InvalidPodLogLineParseResult(string error)
         {
-            return new PodLogParseResult(true, logLine, null, null);
+            Error = error;
         }
-        
-        public static PodLogParseResult Fail(string error)
+    }
+    
+    public class EndOfStreamPodLogLineParseResult : ValidPodLogLineParseResult
+    {
+        public override LogLineType Type => LogLineType.EndOfStream;
+
+        public int ExitCode { get; }
+
+        public EndOfStreamPodLogLineParseResult( PodLogLine logLine, int exitCode) : base(logLine)
         {
-            return new PodLogParseResult(false, null, error, null);
-        }
-        
-        public static PodLogParseResult EndOfStream(PodLogLine logLine, int exitCode)
-        {
-            return new PodLogParseResult(true, logLine, null, exitCode);
+            ExitCode = exitCode;
         }
     }
 
     static class PodLogLineParser
     {
-        public static PodLogParseResult ParseLine(string line)
+        public static PodLogLineParseResult ParseLine(string line)
         {
             var logParts = line.Split(new[] { '|' }, 4);
 
             if (logParts.Length != 4)
             {
-                return PodLogParseResult.Fail($"Invalid log line detected. '{line}' is not correctly pipe-delimited.");
+                return new InvalidPodLogLineParseResult($"Invalid log line detected. '{line}' is not correctly pipe-delimited.");
             }
 
             if (!int.TryParse(logParts[0], out int lineNumber))
             {
-                return PodLogParseResult.Fail($"Invalid log line detected. '{logParts[0]}' is not a valid line number.");
+                return new InvalidPodLogLineParseResult($"Invalid log line detected. '{logParts[0]}' is not a valid line number.");
             }
 
             if (!DateTimeOffset.TryParse(logParts[1], out var occurred))
             {
-                return PodLogParseResult.Fail($"Invalid log line detected. Failed to parse '{logParts[1]}' as a DateTimeOffset.");
+                return new InvalidPodLogLineParseResult($"Invalid log line detected. Failed to parse '{logParts[1]}' as a DateTimeOffset.");
             }
 
             if (!Enum.TryParse(logParts[2], true, out ProcessOutputSource source))
             {
-                return PodLogParseResult.Fail($"Invalid log line detected. '{logParts[2]}' is not a valid source.");
+                return new InvalidPodLogLineParseResult($"Invalid log line detected. '{logParts[2]}' is not a valid source.");
             }
             
             //add the new line
@@ -68,13 +86,18 @@ namespace Octopus.Tentacle.Kubernetes
 
             if (message.StartsWith("EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE"))
             {
-                //TODO: catch parse error
-                var exitCode = int.Parse(message.Split(new[] { "<<>>" }, StringSplitOptions.None)[1]);
-
-                return PodLogParseResult.EndOfStream(new PodLogLine(lineNumber, ProcessOutputSource.Debug, message, occurred), exitCode);
+                try
+                {
+                    var exitCode = int.Parse(message.Split(new[] { "<<>>" }, StringSplitOptions.None)[1]);
+                    return new EndOfStreamPodLogLineParseResult(new PodLogLine(lineNumber, ProcessOutputSource.Debug, message, occurred), exitCode);
+                }
+                catch (Exception)
+                {
+                    return new InvalidPodLogLineParseResult($"Invalid log line detected. '{message}' is not a valid end of stream message.");
+                }
             }
             
-            return PodLogParseResult.Success(new PodLogLine(lineNumber, source, message, occurred));
+            return new ValidPodLogLineParseResult(new PodLogLine(lineNumber, source, message, occurred));
         }
     }
 }
