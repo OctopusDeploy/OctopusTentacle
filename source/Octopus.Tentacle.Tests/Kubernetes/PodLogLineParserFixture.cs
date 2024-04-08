@@ -89,7 +89,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         [Test]
         public void ValidEndOfStreamWithPositiveExitCode()
         {
-            var result = PodLogLineParser.ParseLine("123|2024-04-03T06:03:10.501025551Z|stdout|EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE<<>>4")
+            var result = PodLogLineParser.ParseLine("123|2024-04-03T06:03:10.501025551Z|debug|EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE<<>>4")
                 .Should().BeOfType<EndOfStreamPodLogLineParseResult>().Subject;
 
             result.ExitCode.Should().Be(4);
@@ -103,7 +103,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         [Test]
         public void ValidEndOfStreamWithNegativeExitCode()
         {
-            var result = PodLogLineParser.ParseLine("123|2024-04-03T06:03:10.501025551Z|stdout|EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE<<>>-64")
+            var result = PodLogLineParser.ParseLine("123|2024-04-03T06:03:10.501025551Z|debug|EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE<<>>-64")
                 .Should().BeOfType<EndOfStreamPodLogLineParseResult>().Subject;
 
             result.ExitCode.Should().Be(-64);

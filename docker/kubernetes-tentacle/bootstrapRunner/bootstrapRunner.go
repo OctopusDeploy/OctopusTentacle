@@ -71,7 +71,7 @@ func main() {
 	Write("stdout", "Kubernetes Script Pod completed", &lineCounter)
 	Write("stdout", "##octopus[stdout-default]", &lineCounter)
 
-	Write("stdout", fmt.Sprintf("EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE<<>>%d", exitCode), &lineCounter)
+	Write("debug", fmt.Sprintf("EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE<<>>%d", exitCode), &lineCounter)
 
 	os.Exit(exitCode)
 }

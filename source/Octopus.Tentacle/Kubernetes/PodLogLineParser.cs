@@ -57,6 +57,10 @@ namespace Octopus.Tentacle.Kubernetes
 
     static class PodLogLineParser
     {
+        //The EOS message looks something like EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE<<>>0
+        const string EndOfStreamMarkerPrefix = "EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE";
+        const string EndOfStreamMarkerExitCodeDelimiter = "<<>>";
+
         public static PodLogLineParseResult ParseLine(string line)
         {
             var logParts = line.Split(new[] { '|' }, 4);
@@ -84,12 +88,12 @@ namespace Octopus.Tentacle.Kubernetes
             //add the new line
             var message = logParts[3];
 
-            if (message.StartsWith("EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE"))
+            if (message.StartsWith(EndOfStreamMarkerPrefix))
             {
                 try
                 {
-                    var exitCode = int.Parse(message.Split(new[] { "<<>>" }, StringSplitOptions.None)[1]);
-                    return new EndOfStreamPodLogLineParseResult(new PodLogLine(lineNumber, ProcessOutputSource.Debug, message, occurred), exitCode);
+                    var exitCode = int.Parse(message.Split(new[] { EndOfStreamMarkerExitCodeDelimiter }, StringSplitOptions.None)[1]);
+                    return new EndOfStreamPodLogLineParseResult(new PodLogLine(lineNumber, source, message, occurred), exitCode);
                 }
                 catch (Exception)
                 {
