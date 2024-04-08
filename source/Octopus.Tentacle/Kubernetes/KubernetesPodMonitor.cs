@@ -16,6 +16,7 @@ namespace Octopus.Tentacle.Kubernetes
     public interface IKubernetesPodMonitor
     {
         Task StartAsync(CancellationToken token);
+        void MarkAsCompleted(ScriptTicket scriptTicket, int podLogsExitCode);
     }
 
     public interface IKubernetesPodStatusProvider
@@ -50,6 +51,15 @@ namespace Octopus.Tentacle.Kubernetes
                 });
 
             await policy.ExecuteAsync(async ct => await UpdateLoop(ct), cancellationToken);
+        }
+
+        public void MarkAsCompleted(ScriptTicket scriptTicket, int exitCode)
+        {
+            if (podStatusLookup.TryGetValue(scriptTicket, out var status))
+            {
+                log.Verbose($"Marking {scriptTicket.TaskId} as completed");
+                status.MarkAsCompleted(exitCode, DateTimeOffset.UtcNow);
+            }
         }
 
         async Task UpdateLoop(CancellationToken cancellationToken)
@@ -159,6 +169,9 @@ namespace Octopus.Tentacle.Kubernetes
     
     public class TrackedScriptPod : ITrackedScriptPod
     {
+        //The tracked Pod can be updated by K8s status updates or from the EOS marker
+        readonly object lockObject = new object();
+        
         public ScriptTicket ScriptTicket { get; }
 
         public TrackedScriptPodState State { get; private set; }
@@ -175,34 +188,60 @@ namespace Octopus.Tentacle.Kubernetes
 
         public void Update(V1Pod pod)
         {
-            var terminatedState = pod.Status?.ContainerStatuses.FirstOrDefault(c => c.Name == ScriptTicket.ToKubernetesScriptPobName())?.State.Terminated;
-
-            DateTimeOffset? GetFinishedAt()
+            lock (lockObject)
             {
-                var finishedAtDateTime = terminatedState?.FinishedAt;
-                return finishedAtDateTime is not null ? new DateTimeOffset(finishedAtDateTime.Value, TimeSpan.Zero) : null;
+                switch (pod.Status?.Phase)
+                {
+                    case PodPhases.Succeeded:
+                        var succeededState = GetTerminatedState();
+                        FinishedAt = GetFinishedAt(succeededState);
+                        State = TrackedScriptPodState.Succeeded;
+                        ExitCode = succeededState.ExitCode;
+                        break;
+                    case PodPhases.Failed:
+                        var failedState = GetTerminatedState();
+                        FinishedAt = GetFinishedAt(failedState);
+                        State = TrackedScriptPodState.Failed;
+                        ExitCode = failedState.ExitCode;
+                        break;
+                }
             }
 
-            switch (pod.Status?.Phase)
+            DateTimeOffset? GetFinishedAt(V1ContainerStateTerminated terminated)
             {
-                case "Succeeded":
-                    FinishedAt = GetFinishedAt();
-                    State = TrackedScriptPodState.Succeeded;
-                    ExitCode = 0;
-                    break;
-                case "Failed":
-                    FinishedAt = GetFinishedAt();
-                    State = TrackedScriptPodState.Failed;
+                var finishedAtDateTime = terminated.FinishedAt!;
+                return new DateTimeOffset(finishedAtDateTime.Value, TimeSpan.Zero);
+            }
 
-                    //find the status for the container
-                    //if we can't determine the exit code from the pod container, just return 1
-                    ExitCode = terminatedState?.ExitCode ?? 1;
-                    break;
+            V1ContainerStateTerminated GetTerminatedState()
+            {
+                return pod.Status.ContainerStatuses.Single(c => c.Name == ScriptTicket.ToKubernetesScriptPobName()).State.Terminated;
+            }
+        }
+
+        public void MarkAsCompleted(int exitCode, DateTimeOffset finishedAt)
+        {
+            lock (lockObject)
+            {
+                FinishedAt = finishedAt;
+                State = exitCode == 0 ? TrackedScriptPodState.Succeeded : TrackedScriptPodState.Failed;
+                ExitCode = exitCode;
             }
         }
 
         public override string ToString()
             => $"ScriptTicket: {ScriptTicket}, State: {State}, ExitCode: {ExitCode}";
+    }
+
+    //Pod lifecycle has these phases:
+    //https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase
+    static class PodPhases
+    {
+        public const string Pending = "Pending";
+        public const string Running = "Running";
+        public const string Succeeded = "Succeeded";
+        public const string Failed = "Failed";
+        public const string Unknown = "Unknown";
     }
 
     public enum TrackedScriptPodState
