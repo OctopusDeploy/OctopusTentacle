@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 using Octopus.Tentacle.CommonTestUtils;
-using Octopus.Tentacle.Kubernetes.Tests.Integration.Setup.Tools;
+using Octopus.Tentacle.Kubernetes.Tests.Integration.Setup.Tooling;
 using Octopus.Tentacle.Util;
 using Xunit.Abstractions;
 
