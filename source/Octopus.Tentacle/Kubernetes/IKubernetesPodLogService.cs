@@ -48,6 +48,7 @@ namespace Octopus.Tentacle.Kubernetes
 
             var podLogs = await ReadPodLogs();
 
+            //We can use our EOS marker to detect completion quicker than the Pod status
             if (podLogs.ExitCode != null)
                 podMonitor.MarkAsCompleted(scriptTicket, podLogs.ExitCode.Value);
 

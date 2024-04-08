@@ -57,8 +57,8 @@ namespace Octopus.Tentacle.Kubernetes
         {
             if (podStatusLookup.TryGetValue(scriptTicket, out var status))
             {
-                log.Verbose($"Marking {scriptTicket.TaskId} as completed {DateTime.UtcNow}");
-                status.MarkAsCompleted(exitCode);
+                log.Verbose($"Marking {scriptTicket.TaskId} as completed");
+                status.MarkAsCompleted(exitCode, DateTimeOffset.UtcNow);
             }
         }
 
@@ -169,6 +169,9 @@ namespace Octopus.Tentacle.Kubernetes
     
     public class TrackedScriptPod : ITrackedScriptPod
     {
+        //The tracked Pod can be updated by K8s status updates or from the EOS marker
+        readonly object lockObject = new object();
+        
         public ScriptTicket ScriptTicket { get; }
 
         public TrackedScriptPodState State { get; private set; }
@@ -185,22 +188,23 @@ namespace Octopus.Tentacle.Kubernetes
 
         public void Update(V1Pod pod)
         {
-            switch (pod.Status?.Phase)
+            lock (lockObject)
             {
-                case PodPhases.Succeeded:
-                    var terminatedState = pod.Status.ContainerStatuses.Single(c => c.Name == ScriptTicket.ToKubernetesScriptPobName()).State.Terminated;
-                    FinishedAt = GetFinishedAt(terminatedState);
-                    State = TrackedScriptPodState.Succeeded;
-                    ExitCode = terminatedState.ExitCode;
-                    break;
-                case PodPhases.Failed:
-                    var terminatedState2 = pod.Status.ContainerStatuses.Single(c => c.Name == ScriptTicket.ToKubernetesScriptPobName()).State.Terminated;
-                    FinishedAt = GetFinishedAt(terminatedState2);
-                    State = TrackedScriptPodState.Failed;
-
-                    //find the status for the container
-                    ExitCode = terminatedState2.ExitCode;
-                    break;
+                switch (pod.Status?.Phase)
+                {
+                    case PodPhases.Succeeded:
+                        var succeededState = GetTerminatedState();
+                        FinishedAt = GetFinishedAt(succeededState);
+                        State = TrackedScriptPodState.Succeeded;
+                        ExitCode = succeededState.ExitCode;
+                        break;
+                    case PodPhases.Failed:
+                        var failedState = GetTerminatedState();
+                        FinishedAt = GetFinishedAt(failedState);
+                        State = TrackedScriptPodState.Failed;
+                        ExitCode = failedState.ExitCode;
+                        break;
+                }
             }
 
             DateTimeOffset? GetFinishedAt(V1ContainerStateTerminated terminated)
@@ -208,14 +212,21 @@ namespace Octopus.Tentacle.Kubernetes
                 var finishedAtDateTime = terminated.FinishedAt!;
                 return new DateTimeOffset(finishedAtDateTime.Value, TimeSpan.Zero);
             }
+
+            V1ContainerStateTerminated GetTerminatedState()
+            {
+                return pod.Status.ContainerStatuses.Single(c => c.Name == ScriptTicket.ToKubernetesScriptPobName()).State.Terminated;
+            }
         }
 
-        public void MarkAsCompleted(int exitCode)
+        public void MarkAsCompleted(int exitCode, DateTimeOffset finishedAt)
         {
-            //TODO: add locking and check exit code doesn't change once set
-            FinishedAt = DateTimeOffset.UtcNow;
-            State = exitCode == 0 ? TrackedScriptPodState.Succeeded : TrackedScriptPodState.Failed;
-            ExitCode = exitCode;
+            lock (lockObject)
+            {
+                FinishedAt = finishedAt;
+                State = exitCode == 0 ? TrackedScriptPodState.Succeeded : TrackedScriptPodState.Failed;
+                ExitCode = exitCode;
+            }
         }
 
         public override string ToString()
