@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Util;
 
@@ -9,7 +10,7 @@ namespace Octopus.Tentacle.Kubernetes
 {
     static class PodLogReader
     {
-        public static async Task<(IReadOnlyCollection<ProcessOutput> Lines, long NextSequenceNumber, int? exitCode)> ReadPodLogs(long lastLogSequence, StreamReader reader)
+        public static async Task<(IReadOnlyCollection<ProcessOutput> Lines, long NextSequenceNumber, int? exitCode)> ReadPodLogs(long lastLogSequence, StreamReader reader, ISystemLog log)
         {
             int? exitCode = null;
             var results = new List<ProcessOutput>();
@@ -19,6 +20,7 @@ namespace Octopus.Tentacle.Kubernetes
             {
                 var line = await reader.ReadLineAsync();
 
+                log.Verbose($"Parsing line: '{line}'");
                 //No more to read
                 if (line.IsNullOrEmpty())
                 {

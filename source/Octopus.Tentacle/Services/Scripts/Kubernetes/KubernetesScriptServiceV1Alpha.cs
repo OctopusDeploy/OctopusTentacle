@@ -23,7 +23,8 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
         readonly IKubernetesScriptPodCreator podCreator;
         readonly IKubernetesPodLogService logService;
         readonly ISystemLog log;
-
+        readonly ScriptPodResources scriptPodResources;
+        
         //TODO: check what will happen when Tentacle restarts
         readonly ConcurrentDictionary<ScriptTicket, Lazy<SemaphoreSlim>> startScriptMutexes = new();
 
@@ -33,7 +34,8 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             IKubernetesPodStatusProvider podStatusProvider,
             IKubernetesScriptPodCreator podCreator,
             IKubernetesPodLogService logService,
-            ISystemLog log)
+            ISystemLog log, 
+            ScriptPodResources scriptPodResources)
         {
             this.podService = podService;
             this.workspaceFactory = workspaceFactory;
@@ -41,6 +43,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             this.podCreator = podCreator;
             this.logService = logService;
             this.log = log;
+            this.scriptPodResources = scriptPodResources;
         }
 
         public async Task<KubernetesScriptStatusResponseV1Alpha> StartScriptAsync(StartKubernetesScriptCommandV1Alpha command, CancellationToken cancellationToken)
@@ -54,6 +57,8 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
                     return await GetResponse(trackedPod, 0, cancellationToken);
                 }
 
+                scriptPodResources.Create(command.ScriptTicket);
+                
                 //TODO: consider adding an idempotent version of PrepareWorkspace
                 var workspace = await workspaceFactory.PrepareWorkspace(command.ScriptTicket,
                     command.ScriptBody,

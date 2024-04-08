@@ -38,16 +38,17 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             result.Error.Should().Contain("source");
         }
         
-        [Test]
-        public void SimpleMessage()
+        [TestCase("2024-04-08T15:02:40+10:00")]
+        [TestCase("2024-04-08T05:02:40+00:00")]
+        public void SimpleMessage(string timeString)
         {
-            var logLine = PodLogLineParser.ParseLine("123|2024-04-03T06:03:10.501025551Z|stdout|This is the message")
+            var logLine = PodLogLineParser.ParseLine($"{timeString} |123|stdout|This is the message")
                 .Should().BeOfType<ValidPodLogLineParseResult>().Subject.LogLine;
 
             logLine.LineNumber.Should().Be(123);
             logLine.Source.Should().Be(ProcessOutputSource.StdOut);
             logLine.Message.Should().Be("This is the message");
-            logLine.Occurred.Should().BeCloseTo(new DateTimeOffset(2024, 4, 3, 6, 3, 10, 501, TimeSpan.Zero), TimeSpan.FromMilliseconds(1));
+            logLine.Occurred.Should().Be(new DateTimeOffset(2024, 4, 8, 5, 2, 40, TimeSpan.Zero));
         }
         
         [Test]

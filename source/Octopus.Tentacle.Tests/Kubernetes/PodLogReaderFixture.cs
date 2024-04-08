@@ -8,6 +8,7 @@ using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Kubernetes;
+using Octopus.Tentacle.Tests.Support;
 
 namespace Octopus.Tentacle.Tests.Kubernetes
 {
@@ -22,7 +23,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             string[] podLines = Array.Empty<string>();
             
             var reader = SetupReader(podLines);
-            var result = await PodLogReader.ReadPodLogs(lastLogSequence, reader);
+            var result = await PodLogReader.ReadPodLogs(lastLogSequence, reader,new InMemoryLog());
             result.NextSequenceNumber.Should().Be(lastLogSequence);
             result.Lines.Should().BeEmpty();
         }
@@ -35,7 +36,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             };
 
             var reader = SetupReader(podLines);
-            var result = await PodLogReader.ReadPodLogs(0, reader);
+            var result = await PodLogReader.ReadPodLogs(0, reader,new InMemoryLog());
             result.NextSequenceNumber.Should().Be(1);
             result.Lines.Should().BeEquivalentTo(new[]
             {
@@ -53,7 +54,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             };
 
             var reader = SetupReader(podLines);
-            var result = await PodLogReader.ReadPodLogs(4, reader);
+            var result = await PodLogReader.ReadPodLogs(4, reader, new InMemoryLog());
             result.NextSequenceNumber.Should().Be(7);
             result.Lines.Should().BeEquivalentTo(new[]
             {
@@ -74,12 +75,12 @@ namespace Octopus.Tentacle.Tests.Kubernetes
 
             var allTaskLogs = new List<ProcessOutput>();
             var reader = SetupReader(podLines.Take(1).ToArray());
-            var result = await PodLogReader.ReadPodLogs(4, reader);
+            var result = await PodLogReader.ReadPodLogs(4, reader,new InMemoryLog());
             result.NextSequenceNumber.Should().Be(5);
             allTaskLogs.AddRange(result.Lines);
             
             reader = SetupReader(podLines.ToArray());
-            result = await PodLogReader.ReadPodLogs(5, reader);
+            result = await PodLogReader.ReadPodLogs(5, reader, new InMemoryLog());
             result.NextSequenceNumber.Should().Be(7);
             allTaskLogs.AddRange(result.Lines);
             
@@ -99,7 +100,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             };
         
             var reader = SetupReader(podLines);
-            Func<Task> action = async () => await PodLogReader.ReadPodLogs(50, reader);
+            Func<Task> action = async () => await PodLogReader.ReadPodLogs(50, reader,new InMemoryLog());
             await action.Should().ThrowAsync<MissingPodLogException>();
         }
         
