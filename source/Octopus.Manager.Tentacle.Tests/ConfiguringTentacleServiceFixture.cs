@@ -7,6 +7,7 @@ using Octopus.Manager.Tentacle.Controls;
 using Octopus.Manager.Tentacle.DeleteWizard;
 using Octopus.Manager.Tentacle.Proxy;
 using Octopus.Manager.Tentacle.Shell;
+using Octopus.Manager.Tentacle.TentacleConfiguration;
 using Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard;
 using Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager;
 using Octopus.Manager.Tentacle.Tests.Utils;
@@ -95,9 +96,8 @@ namespace Octopus.Manager.Tentacle.Tests.ModelFixtures
             instanceSelectionModel.New(tentacleInstanceName);
 
             var model = new TentacleManagerModel(
-                Substitute.For<IOctopusFileSystem>(),
-                Substitute.For<IApplicationInstanceSelector>(),
                 Substitute.For<ICommandLineRunner>(),
+                Substitute.For<IInstanceConfigurationLoader>(),
                 instanceSelectionModel,
                 Substitute.For<Func<DeleteWizardModel>>(),
                 Substitute.For<Func<ProxyWizardModel>>(),
