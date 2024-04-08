@@ -2,11 +2,10 @@
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Kubernetes.Tests.Integration.Setup.Tooling;
 using Octopus.Tentacle.Util;
-using Xunit.Abstractions;
 
 namespace Octopus.Tentacle.Kubernetes.Tests.Integration.Setup;
 
-public class KubernetesAgentHelmFixture : IAsyncLifetime
+public class KubernetesAgentInstaller
 {
     readonly TemporaryDirectory tempDir;
     readonly ILogger logger;
@@ -14,23 +13,23 @@ public class KubernetesAgentHelmFixture : IAsyncLifetime
     string? kubeConfigPath;
     bool isAgentInstalled;
 
-    public KubernetesAgentHelmFixture(IMessageSink diagnosticMessageSink)
+    public KubernetesAgentInstaller()
     {
         tempDir = new TemporaryDirectory();
 
         logger = new LoggerConfiguration()
-            .WriteTo.TestOutput(diagnosticMessageSink)
+            .WriteTo.NUnitOutput()
             .WriteTo.Console()
             .WriteTo.File("w:\\temp\\agent-install.log")
             .CreateLogger()
-            .ForContext<KubernetesClusterFixture>();
+            .ForContext<KubernetesClusterInstaller>();
 
         AgentName = Guid.NewGuid().ToString("N");
     }
 
     public string AgentName { get; }
 
-    public async Task InitializeAsync()
+    public async Task DownloadHelm()
     {
         //download helm
         var helmDownloader = new HelmDownloader(logger);
@@ -93,10 +92,8 @@ public class KubernetesAgentHelmFixture : IAsyncLifetime
     string NamespaceFlag => $"--namespace \"octopus-agent-{AgentName}\"";
     string KubeConfigFlag => $"--kubeconfig \"{kubeConfigPath}\"";
 
-    public async Task DisposeAsync()
+    public void Dispose()
     {
-        await Task.CompletedTask;
-
         if (isAgentInstalled)
         {
             var uninstallArgs = string.Join(" ",

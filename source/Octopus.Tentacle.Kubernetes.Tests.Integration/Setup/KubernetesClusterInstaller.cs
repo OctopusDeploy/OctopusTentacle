@@ -2,11 +2,10 @@
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Kubernetes.Tests.Integration.Setup.Tooling;
 using Octopus.Tentacle.Util;
-using Xunit.Abstractions;
 
 namespace Octopus.Tentacle.Kubernetes.Tests.Integration.Setup;
 
-public class KubernetesClusterFixture : IAsyncLifetime
+public class KubernetesClusterInstaller
 {
     readonly string clusterName;
     readonly string kubeConfigName;
@@ -17,22 +16,22 @@ public class KubernetesClusterFixture : IAsyncLifetime
 
     public string KubeConfigPath => Path.Combine(tempDir.DirectoryPath, kubeConfigName);
 
-    public KubernetesClusterFixture(IMessageSink diagnosticMessageSink)
+    public KubernetesClusterInstaller()
     {
         tempDir = new TemporaryDirectory();
 
         logger = new LoggerConfiguration()
-            .WriteTo.TestOutput(diagnosticMessageSink)
+            .WriteTo.NUnitOutput()
             .WriteTo.Console()
             .WriteTo.File("w:\\temp\\cluster-install.log")
             .CreateLogger()
-            .ForContext<KubernetesClusterFixture>();
+            .ForContext<KubernetesClusterInstaller>();
 
         clusterName = $"tentacleint-{DateTime.Now:yyyyMMddhhmmss}";
         kubeConfigName = $"{clusterName}.config";
     }
 
-    public async Task InitializeAsync()
+    public async Task Install()
     {
         var kindDownloader = new KindDownloader(logger);
         kindExe = await kindDownloader.Download(tempDir.DirectoryPath, CancellationToken.None);
@@ -106,10 +105,8 @@ public class KubernetesClusterFixture : IAsyncLifetime
         );
     }
 
-    public async Task DisposeAsync()
+    public void Dispose()
     {
-        await Task.CompletedTask;
-
         var exitCode = SilentProcessRunner.ExecuteCommand(
             kindExe,
             //delete the cluster for this test run
@@ -127,10 +124,4 @@ public class KubernetesClusterFixture : IAsyncLifetime
 
         tempDir.Dispose();
     }
-}
-
-[CollectionDefinition(Name)]
-public class KubernetesClusterCollection : ICollectionFixture<KubernetesClusterFixture>
-{
-    public const string Name = nameof(KubernetesClusterCollection);
 }
