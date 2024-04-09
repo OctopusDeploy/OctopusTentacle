@@ -15,7 +15,7 @@ public abstract class KubernetesAgentIntegrationTest
     {
         await kubernetesAgentInstaller.DownloadHelm();
 
-        kubernetesAgentInstaller.InstallAgent(TestKubernetesCluster.KubeConfigPath);
+        await kubernetesAgentInstaller.InstallAgent(TestKubernetesCluster.KubeConfigPath);
     }
 
     [OneTimeTearDown]
