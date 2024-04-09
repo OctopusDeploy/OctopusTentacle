@@ -4,7 +4,13 @@ using Octopus.Tentacle.Contracts;
 
 namespace Octopus.Tentacle.Kubernetes
 {
-    public class TentacleScriptLogProvider
+    public interface ITentacleScriptLogProvider
+    {
+        InMemoryTentacleScriptLog GetOrCreate(ScriptTicket scriptTicket);
+        void Delete(ScriptTicket scriptTicket);
+    }
+
+    public class TentacleScriptLogProvider : ITentacleScriptLogProvider
     {
         readonly ConcurrentDictionary<ScriptTicket, InMemoryTentacleScriptLog> logs = new();
 

@@ -23,7 +23,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
         readonly IKubernetesScriptPodCreator podCreator;
         readonly IKubernetesPodLogService podLogService;
         readonly ISystemLog log;
-        readonly TentacleScriptLogProvider scriptLogProvider;
+        readonly ITentacleScriptLogProvider scriptLogProvider;
 
         //TODO: check what will happen when Tentacle restarts
         readonly ConcurrentDictionary<ScriptTicket, Lazy<SemaphoreSlim>> startScriptMutexes = new();
@@ -34,7 +34,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             IKubernetesPodStatusProvider podStatusProvider,
             IKubernetesScriptPodCreator podCreator,
             IKubernetesPodLogService podLogService,
-            ISystemLog log, TentacleScriptLogProvider scriptLogProvider)
+            ISystemLog log, ITentacleScriptLogProvider scriptLogProvider)
         {
             this.podService = podService;
             this.workspaceFactory = workspaceFactory;

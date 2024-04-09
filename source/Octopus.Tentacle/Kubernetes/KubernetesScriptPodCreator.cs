@@ -28,14 +28,14 @@ namespace Octopus.Tentacle.Kubernetes
         readonly IKubernetesPodContainerResolver containerResolver;
         readonly IApplicationInstanceSelector appInstanceSelector;
         readonly ISystemLog log;
-        readonly TentacleScriptLogProvider scriptLogProvider;
+        readonly ITentacleScriptLogProvider scriptLogProvider;
         
         public KubernetesScriptPodCreator(
             IKubernetesPodService podService,
             IKubernetesSecretService secretService,
             IKubernetesPodContainerResolver containerResolver,
             IApplicationInstanceSelector appInstanceSelector,
-            ISystemLog log, TentacleScriptLogProvider scriptLogProvider)
+            ISystemLog log, ITentacleScriptLogProvider scriptLogProvider)
         {
             this.podService = podService;
             this.secretService = secretService;

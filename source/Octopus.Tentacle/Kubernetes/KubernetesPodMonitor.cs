@@ -29,11 +29,11 @@ namespace Octopus.Tentacle.Kubernetes
     {
         readonly IKubernetesPodService podService;
         readonly ISystemLog log;
-        readonly TentacleScriptLogProvider scriptLogProvider;
+        readonly ITentacleScriptLogProvider scriptLogProvider;
         
         ConcurrentDictionary<ScriptTicket, TrackedScriptPod> podStatusLookup = new();
 
-        public KubernetesPodMonitor(IKubernetesPodService podService, ISystemLog log, TentacleScriptLogProvider scriptLogProvider)
+        public KubernetesPodMonitor(IKubernetesPodService podService, ISystemLog log, ITentacleScriptLogProvider scriptLogProvider)
         {
             this.podService = podService;
             this.log = log;

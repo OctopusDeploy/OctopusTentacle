@@ -36,6 +36,7 @@ namespace Octopus.Tentacle.Kubernetes
                         //Pod log line numbers are 1-based, log sequence is 0-based
                         if (podLogLine.LineNumber > lastLogSequence)
                         {
+                            //TODO: assert all lines are sequential
                             if (podLogLine.LineNumber == lastLogSequence + 1)
                                 haveSeenPodLogEntryMatchingLogSequence = true;
 

@@ -18,9 +18,9 @@ namespace Octopus.Tentacle.Kubernetes
     class KubernetesPodLogService : KubernetesService, IKubernetesPodLogService
     {
         readonly IKubernetesPodMonitor podMonitor;
-        readonly TentacleScriptLogProvider scriptLogProvider;
+        readonly ITentacleScriptLogProvider scriptLogProvider;
 
-        public KubernetesPodLogService(IKubernetesClientConfigProvider configProvider, IKubernetesPodMonitor podMonitor, TentacleScriptLogProvider scriptLogProvider) : base(configProvider)
+        public KubernetesPodLogService(IKubernetesClientConfigProvider configProvider, IKubernetesPodMonitor podMonitor, ITentacleScriptLogProvider scriptLogProvider) : base(configProvider)
         {
             this.podMonitor = podMonitor;
             this.scriptLogProvider = scriptLogProvider;
@@ -58,7 +58,7 @@ namespace Octopus.Tentacle.Kubernetes
                 podMonitor.MarkAsCompleted(scriptTicket, podLogs.ExitCode.Value);
 
             //We are making the assumption that the clock on the Tentacle Pod is in sync with API Server
-            var tentacleLogs = ReadTentacleLogs();
+            var tentacleLogs = tentacleScriptLog.PopLogs();
             var combinedLogs = podLogs.Outputs.Concat(tentacleLogs).OrderBy(o => o.Occurred).ToList();
             return (combinedLogs, podLogs.NextSequenceNumber);
 
@@ -68,11 +68,6 @@ namespace Octopus.Tentacle.Kubernetes
                 {
                     return await PodLogReader.ReadPodLogs(lastLogSequence, reader);
                 }
-            }
-            
-            IReadOnlyCollection<ProcessOutput> ReadTentacleLogs()
-            {
-                return tentacleScriptLog.PopLogs();
             }
         }
     }
