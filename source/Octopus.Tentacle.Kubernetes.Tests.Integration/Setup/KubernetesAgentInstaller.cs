@@ -40,14 +40,14 @@ public class KubernetesAgentInstaller
         helmPath = await helmDownloader.Download(tempDir.DirectoryPath, CancellationToken.None);
     }
 
-    public async Task InstallAgent(string kubeConfigPath)
+    public async Task InstallAgent(string kubeConfigPath, int listeningPort)
     {
         if (helmPath is null)
             throw new InvalidOperationException("Helm has not been downloaded");
 
         this.kubeConfigPath = kubeConfigPath;
 
-        var valuesFilePath = await WriteValuesFile();
+        var valuesFilePath = await WriteValuesFile(listeningPort);
         var arguments = BuildAgentInstallArguments(valuesFilePath);
 
         var sw = new Stopwatch();
@@ -71,7 +71,7 @@ public class KubernetesAgentInstaller
         isAgentInstalled = true;
     }
 
-    async Task<string> WriteValuesFile()
+    async Task<string> WriteValuesFile(int listeningPort)
     {
         var asm = Assembly.GetExecutingAssembly();
         var valuesFileName = asm.GetManifestResourceNames().First(n => n.Contains("agent-values.yaml", StringComparison.OrdinalIgnoreCase));
@@ -79,7 +79,7 @@ public class KubernetesAgentInstaller
 
         var valuesFile = await reader.ReadToEndAsync();
 
-        var serverCommsAddress = $"https://localhost:{123456}";
+        var serverCommsAddress = $"https://localhost:{listeningPort}";
         var subscriptionId = PollingSubscriptionId.Generate();
 
         var configMapData = $@"
