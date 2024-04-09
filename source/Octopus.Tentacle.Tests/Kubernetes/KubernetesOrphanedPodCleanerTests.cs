@@ -34,7 +34,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             podService = Substitute.For<IKubernetesPodService>();
             log = new InMemoryLog();
             clock = new FixedClock(startTime);
-            monitor = new KubernetesPodMonitor(podService, log);
+            monitor = new KubernetesPodMonitor(podService, log, new TentacleScriptLogProvider());
 
             scriptTicket = new ScriptTicket(Guid.NewGuid().ToString());
 

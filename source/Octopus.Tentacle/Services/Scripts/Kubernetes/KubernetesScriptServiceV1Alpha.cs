@@ -21,8 +21,9 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
         readonly IScriptWorkspaceFactory workspaceFactory;
         readonly IKubernetesPodStatusProvider podStatusProvider;
         readonly IKubernetesScriptPodCreator podCreator;
-        readonly IKubernetesPodLogService logService;
+        readonly IKubernetesPodLogService podLogService;
         readonly ISystemLog log;
+        readonly TentacleScriptLogProvider scriptLogProvider;
 
         //TODO: check what will happen when Tentacle restarts
         readonly ConcurrentDictionary<ScriptTicket, Lazy<SemaphoreSlim>> startScriptMutexes = new();
@@ -32,15 +33,16 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             IScriptWorkspaceFactory workspaceFactory,
             IKubernetesPodStatusProvider podStatusProvider,
             IKubernetesScriptPodCreator podCreator,
-            IKubernetesPodLogService logService,
-            ISystemLog log)
+            IKubernetesPodLogService podLogService,
+            ISystemLog log, TentacleScriptLogProvider scriptLogProvider)
         {
             this.podService = podService;
             this.workspaceFactory = workspaceFactory;
             this.podStatusProvider = podStatusProvider;
             this.podCreator = podCreator;
-            this.logService = logService;
+            this.podLogService = podLogService;
             this.log = log;
+            this.scriptLogProvider = scriptLogProvider;
         }
 
         public async Task<KubernetesScriptStatusResponseV1Alpha> StartScriptAsync(StartKubernetesScriptCommandV1Alpha command, CancellationToken cancellationToken)
@@ -68,7 +70,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
                 //create the pod
                 await podCreator.CreatePod(command, workspace, cancellationToken);
 
-                var (logs, _) = await logService.GetLogs(command.ScriptTicket, 0, cancellationToken);
+                var (logs, _) = await podLogService.GetLogs(command.ScriptTicket, 0, cancellationToken);
 
                 //return a status that say's we are pending
                 return new KubernetesScriptStatusResponseV1Alpha(command.ScriptTicket, ProcessState.Pending, 0, logs.ToList(), 0);
@@ -108,6 +110,8 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             var workspace = workspaceFactory.GetWorkspace(command.ScriptTicket);
             await workspace.Delete(cancellationToken);
 
+            scriptLogProvider.Delete(command.ScriptTicket);
+
             //we do a try delete as the cancel might have already deleted it
             if (!KubernetesConfig.DisableAutomaticPodCleanup)
                 await podService.TryDelete(command.ScriptTicket, cancellationToken);
@@ -123,7 +127,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
                 _ => throw new ArgumentOutOfRangeException()
             };
 
-            var (outputLogs, nextLogSequence) = await logService.GetLogs(trackedPod.ScriptTicket, lastLogSequence, cancellationToken);
+            var (outputLogs, nextLogSequence) = await podLogService.GetLogs(trackedPod.ScriptTicket, lastLogSequence, cancellationToken);
 
             return new KubernetesScriptStatusResponseV1Alpha(
                 trackedPod.ScriptTicket,

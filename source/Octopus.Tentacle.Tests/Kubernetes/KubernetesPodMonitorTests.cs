@@ -22,15 +22,13 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         ISystemLog log;
         KubernetesPodMonitor monitor;
         ScriptTicket scriptTicket;
-        IClock clock;
 
         [SetUp]
         public void SetUp()
         {
             podService = Substitute.For<IKubernetesPodService>();
             log = new InMemoryLog();
-            clock = new FixedClock(DateTimeOffset.MinValue);
-            monitor = new KubernetesPodMonitor(podService, log);
+            monitor = new KubernetesPodMonitor(podService, log, new TentacleScriptLogProvider());
 
             scriptTicket = new ScriptTicket(Guid.NewGuid().ToString());
         }

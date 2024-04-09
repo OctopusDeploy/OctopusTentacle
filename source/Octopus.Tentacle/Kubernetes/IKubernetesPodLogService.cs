@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,14 +18,17 @@ namespace Octopus.Tentacle.Kubernetes
     class KubernetesPodLogService : KubernetesService, IKubernetesPodLogService
     {
         readonly IKubernetesPodMonitor podMonitor;
+        readonly TentacleScriptLogProvider scriptLogProvider;
 
-        public KubernetesPodLogService(IKubernetesClientConfigProvider configProvider, IKubernetesPodMonitor podMonitor) : base(configProvider)
+        public KubernetesPodLogService(IKubernetesClientConfigProvider configProvider, IKubernetesPodMonitor podMonitor, TentacleScriptLogProvider scriptLogProvider) : base(configProvider)
         {
             this.podMonitor = podMonitor;
+            this.scriptLogProvider = scriptLogProvider;
         }
 
         public async Task<(IReadOnlyCollection<ProcessOutput> Outputs, long NextSequenceNumber)> GetLogs(ScriptTicket scriptTicket, long lastLogSequence, CancellationToken cancellationToken)
         {
+            var tentacleScriptLog = scriptLogProvider.GetOrCreate(scriptTicket);
             var podName = scriptTicket.ToKubernetesScriptPobName();
             DateTimeOffset? sinceTime = null;
 
@@ -33,6 +37,7 @@ namespace Octopus.Tentacle.Kubernetes
             try
             {
                 //TODO: Only grab recent
+                //TODO: Add retries
                 logStream = await Client.GetNamespacedPodLogsAsync(podName, KubernetesConfig.Namespace, podName, sinceTime, cancellationToken: cancellationToken);
             }
             catch (HttpOperationException ex)
@@ -52,7 +57,10 @@ namespace Octopus.Tentacle.Kubernetes
             if (podLogs.ExitCode != null)
                 podMonitor.MarkAsCompleted(scriptTicket, podLogs.ExitCode.Value);
 
-            return (podLogs.Outputs, podLogs.NextSequenceNumber);
+            //We are making the assumption that the clock on the Tentacle Pod is in sync with API Server
+            var tentacleLogs = ReadTentacleLogs();
+            var combinedLogs = podLogs.Outputs.Concat(tentacleLogs).OrderBy(o => o.Occurred).ToList();
+            return (combinedLogs, podLogs.NextSequenceNumber);
 
             async Task<(IReadOnlyCollection<ProcessOutput> Outputs, long NextSequenceNumber, int? ExitCode)> ReadPodLogs()
             {
@@ -60,6 +68,11 @@ namespace Octopus.Tentacle.Kubernetes
                 {
                     return await PodLogReader.ReadPodLogs(lastLogSequence, reader);
                 }
+            }
+            
+            IReadOnlyCollection<ProcessOutput> ReadTentacleLogs()
+            {
+                return tentacleScriptLog.PopLogs();
             }
         }
     }
