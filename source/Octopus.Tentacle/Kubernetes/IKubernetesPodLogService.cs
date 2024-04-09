@@ -31,6 +31,9 @@ namespace Octopus.Tentacle.Kubernetes
         {
         }
 
+// disposable
+        //public ISinceTimeStore GetTimeProvider(ScriptTicket scriptTicket);
+        
         public DateTimeOffset? GetSinceTime(ScriptTicket scriptTicket)
         {
             return sinceTimes[scriptTicket];
