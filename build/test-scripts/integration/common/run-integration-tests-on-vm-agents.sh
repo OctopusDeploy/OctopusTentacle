@@ -21,7 +21,7 @@ set +e
 if [ -n "$TENTACLE_IT_WITH_SUDO" ]; then
   TEST_CASE_FILTER="TestCategory!=TentacleBackwardsCompatibility"
   if [ "$TENTACLE_IT_WITH_SUDO" = "NO_SYSTEMD" ]; then
-    TEST_CASE_FILTER="$TEST_CASE_FILTER&TestCategory!=RequiresSystemd"
+    TEST_CASE_FILTER="$TEST_CASE_FILTER&TestCategory!=RequiresSystemdOnLinux"
   fi
   sudo -E env PATH=$PATH dotnet vstest $itdll "/testcasefilter:$TEST_CASE_FILTER" /logger:logger://teamcity /TestAdapterPath:/opt/TeamCity/BuildAgent/plugins/dotnet/tools/vstest15 /logger:console;verbosity=detailed
 else
