@@ -151,8 +151,6 @@ namespace Octopus.Tentacle.Kubernetes
 
             var scriptName = Path.GetFileName(workspace.BootstrapScriptFilePath);
 
-            //Deserialize the volume configuration from the environment configuration
-            var volumes = KubernetesJson.Deserialize<List<V1Volume>>(KubernetesConfig.PodVolumeJson);
             var pod = new V1Pod
             {
                 Metadata = new V1ObjectMeta
@@ -217,7 +215,17 @@ namespace Octopus.Tentacle.Kubernetes
                         : new List<V1LocalObjectReference>(),
                     ServiceAccountName = KubernetesConfig.PodServiceAccountName,
                     RestartPolicy = "Never",
-                    Volumes = volumes,
+                    Volumes = new List<V1Volume>
+                    {
+                        new()
+                        {
+                            Name = "tentacle-home",
+                            PersistentVolumeClaim = new V1PersistentVolumeClaimVolumeSource
+                            {
+                                ClaimName = KubernetesConfig.PodVolumeClaimName
+                            }
+                        }
+                    },
                     //currently we only support running on linux nodes
                     NodeSelector = new Dictionary<string, string>
                     {
