@@ -14,7 +14,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         readonly int pollingPort;
 
         public PollingTentacleBuilder(int pollingPort, string serverThumbprint, Version? tentacleVersion) : base(tentacleVersion)
-        
         {
             this.pollingPort = pollingPort;
 

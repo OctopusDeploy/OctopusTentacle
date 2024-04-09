@@ -1,8 +1,10 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
 using System.Text;
+using Octopus.Client.Model;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Kubernetes.Tests.Integration.Setup.Tooling;
+using Octopus.Tentacle.Security.Certificates;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Kubernetes.Tests.Integration.Setup;
@@ -77,15 +79,21 @@ public class KubernetesAgentInstaller
 
         var valuesFile = await reader.ReadToEndAsync();
 
-        var configMapData = @"
+        var serverCommsAddress = $"https://localhost:{123456}";
+        var subscriptionId = PollingSubscriptionId.Generate();
+
+        var configMapData = $@"
         Octopus.Home: /octopus
         Tentacle.Deployment.ApplicationDirectory: /octopus/Applications
+        Tentacle.Communication.TrustedOctopusServers: >-
+          [{{""Thumbprint"":""{TestCertificates.ServerPublicThumbprint}"",""CommunicationStyle"":{(int)CommunicationStyle.TentacleActive},""Address"":""{serverCommsAddress}"",""Squid"":null,""SubscriptionId"":""{subscriptionId}""}}]
         Tentacle.Services.IsRegistered: 'true'
         Tentacle.Services.NoListen: 'true'";
 
         valuesFile = valuesFile.Replace("#{TargetName}", AgentName)
-            .Replace("#{ServerCommsAddress}", $"https://localhost:{123456}")
+            .Replace("#{ServerCommsAddress}", serverCommsAddress)
             .Replace("#{ServerUrl}", "https://octopus.internal/")
+            .Replace("#{EncodedCertificate}", CertificateEncoder.ToBase64String(TestCertificates.Tentacle))
             .Replace("#{ConfigMapData}", configMapData);
 
         var valuesFilePath = Path.Combine(tempDir.DirectoryPath, "agent-values.yaml");
@@ -102,8 +110,6 @@ public class KubernetesAgentInstaller
             "--atomic",
             $"-f \"{valuesFilePath}\"",
             "--create-namespace",
-            "--debug",
-            "-v 10",
             NamespaceFlag,
             KubeConfigFlag,
             AgentName,

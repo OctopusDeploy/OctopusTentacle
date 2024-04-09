@@ -10,5 +10,6 @@ tentacle:
   
 testing:
   tentacle:
+    encodedCertificate: "#{EncodedCertificate}"
     configMap:
       data: #{ConfigMapData}

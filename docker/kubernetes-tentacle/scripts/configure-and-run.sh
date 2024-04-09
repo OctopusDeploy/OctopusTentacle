@@ -118,8 +118,14 @@ function configureTentacle() {
         tentacle configure --instance "$instanceName" --port $internalListeningPort --noListen "False"
     fi
 
-    echo "Creating certificate ..."
-    tentacle new-certificate --instance "$instanceName" --if-blank
+    existingCert="/etc/octopus-certs/certificate.pfx"
+    if [[ -f "$existingCert" ]]; then
+        echo "Importing existing certificate ..."
+        tentacle import-certificate --from-file "$existingCert" --instance "$instanceName"
+    else
+        echo "Creating certificate ..."
+        tentacle new-certificate --instance "$instanceName" --if-blank
+    fi
 }
 
 function setupVariablesForRegistrationCheck() {

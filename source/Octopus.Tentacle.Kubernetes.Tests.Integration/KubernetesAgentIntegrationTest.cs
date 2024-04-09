@@ -6,10 +6,6 @@ public abstract class KubernetesAgentIntegrationTest
 {
     readonly KubernetesAgentInstaller kubernetesAgentInstaller = new();
 
-    public KubernetesAgentIntegrationTest()
-    {
-    }
-
     [OneTimeSetUp]
     public async Task OneTimeSetUp()
     {

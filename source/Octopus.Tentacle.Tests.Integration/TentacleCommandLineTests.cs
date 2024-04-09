@@ -359,7 +359,7 @@ The details are logged above. These commands probably need to take Lazy<T> depen
                 "show-thumbprint", $"--instance={clientAndTentacle.RunningTentacle.InstanceName}");
 
             exitCode.Should().Be(0, $"we expected the command to succeed.\r\nStdErr: '{stderr}'\r\nStdOut: '{stdout}'");
-            stdout.Should().Be(Support.Certificates.TentaclePublicThumbprint, "the thumbprint should be written directly to stdout");
+            stdout.Should().Be(TestCertificates.TentaclePublicThumbprint, "the thumbprint should be written directly to stdout");
             stderr.Should().BeNullOrEmpty();
         }
 
@@ -377,7 +377,7 @@ The details are logged above. These commands probably need to take Lazy<T> depen
                 "show-thumbprint", $"--instance={clientAndTentacle.RunningTentacle.InstanceName}", "--format=json");
 
             exitCode.Should().Be(0, $"we expected the command to succeed.\r\nStdErr: '{stderr}'\r\nStdOut: '{stdout}'");
-            stdout.Should().Be(JsonConvert.SerializeObject(new { Thumbprint = Support.Certificates.TentaclePublicThumbprint }), "the thumbprint should be written directly to stdout as JSON");
+            stdout.Should().Be(JsonConvert.SerializeObject(new { Thumbprint = TestCertificates.TentaclePublicThumbprint }), "the thumbprint should be written directly to stdout as JSON");
             stderr.Should().BeNullOrEmpty();
         }
 

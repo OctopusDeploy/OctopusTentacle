@@ -182,7 +182,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             var logger = new SerilogLoggerBuilder().Build().ForContext<ClientAndTentacleBuilder>();
             // Server
             var serverHalibutRuntimeBuilder = new HalibutRuntimeBuilder()
-                .WithServerCertificate(Certificates.Server)
+                .WithServerCertificate(TestCertificates.Server)
                 .WithHalibutTimeoutsAndLimits(halibutTimeoutsAndLimits ?? HalibutTimeoutsAndLimits.RecommendedValues())
                 .WithLegacyContractSupport();
 
@@ -193,10 +193,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
             var serverHalibutRuntime = serverHalibutRuntimeBuilder.Build();
 
-            serverHalibutRuntime.Trust(Certificates.TentaclePublicThumbprint);
+            serverHalibutRuntime.Trust(TestCertificates.TentaclePublicThumbprint);
             var serverListeningPort = serverHalibutRuntime.Listen();
 
-            var server = new Server(serverHalibutRuntime, serverListeningPort, Certificates.ServerPublicThumbprint, logger);
+            var server = new Server(serverHalibutRuntime, serverListeningPort, TestCertificates.ServerPublicThumbprint, logger);
 
             // Port Forwarder
             PortForwarder? portForwarder;
@@ -212,7 +212,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             {
                 portForwarder = BuildPortForwarder(serverListeningPort, null);
 
-                var pollingTentacleBuilder = new PollingTentacleBuilder(portForwarder?.ListeningPort ?? serverListeningPort, Certificates.ServerPublicThumbprint, tentacleVersion)
+                var pollingTentacleBuilder = new PollingTentacleBuilder(portForwarder?.ListeningPort ?? serverListeningPort, TestCertificates.ServerPublicThumbprint, tentacleVersion)
                     .WithTentacleExe(tentacleExe);
 
                 if (useDefaultMachineConfigurationHomeDirectory)
@@ -233,7 +233,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             }
             else
             {
-                var listeningTentacleBuilder = new ListeningTentacleBuilder(Certificates.ServerPublicThumbprint, tentacleVersion)
+                var listeningTentacleBuilder = new ListeningTentacleBuilder(TestCertificates.ServerPublicThumbprint, tentacleVersion)
                     .WithTentacleExe(tentacleExe);
 
                 if (useDefaultMachineConfigurationHomeDirectory)
