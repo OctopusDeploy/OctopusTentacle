@@ -90,6 +90,24 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                 new ProcessOutput(ProcessOutputSource.StdOut, "##octopus[stdout-default]", DateTimeOffset.Parse("2024-04-03T06:03:10.517867355Z")),
             });
         }
+
+        [Test]
+        public async Task ParseError_AppearsAsError()
+        {
+            string[] podLines =
+            {
+                "abcdefg",
+            };
+
+            var reader = SetupReader(podLines);
+            var result = await PodLogReader.ReadPodLogs(0, reader);
+            
+            result.NextSequenceNumber.Should().Be(0, "The sequence number doesn't move on parse errors");
+            var outputLine = result.Lines.Should().ContainSingle().Subject;
+            outputLine.Source.Should().Be(ProcessOutputSource.StdErr);
+            outputLine.Text.Should().Be("Invalid log line detected. 'abcdefg' is not correctly pipe-delimited.");
+            outputLine.Occurred.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromMinutes(1));
+        }
         
         [Test]
         public async Task MissingLine_Throws()

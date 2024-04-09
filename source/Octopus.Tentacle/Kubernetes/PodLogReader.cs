@@ -27,33 +27,42 @@ namespace Octopus.Tentacle.Kubernetes
 
                 var parseResult = PodLogLineParser.ParseLine(line!);
 
-                if (parseResult is ValidPodLogLineParseResult validParseResult)
+                switch (parseResult)
                 {
-                    var podLogLine = validParseResult.LogLine;
-
-                    //Pod log line numbers are 1-based, log sequence is 0-based
-                    if (podLogLine.LineNumber > lastLogSequence)
+                    case ValidPodLogLineParseResult validParseResult:
                     {
-                        if (podLogLine.LineNumber == lastLogSequence + 1)
-                            haveSeenPodLogEntryMatchingLogSequence = true;
+                        var podLogLine = validParseResult.LogLine;
 
-                        if (!haveSeenPodLogEntryMatchingLogSequence)
-                            throw new MissingPodLogException();
+                        //Pod log line numbers are 1-based, log sequence is 0-based
+                        if (podLogLine.LineNumber > lastLogSequence)
+                        {
+                            //TODO: assert all lines are sequential
+                            if (podLogLine.LineNumber == lastLogSequence + 1)
+                                haveSeenPodLogEntryMatchingLogSequence = true;
 
-                        if (validParseResult is EndOfStreamPodLogLineParseResult endOfStreamParseResult)
-                            exitCode = endOfStreamParseResult.ExitCode;
+                            if (!haveSeenPodLogEntryMatchingLogSequence)
+                                throw new MissingPodLogException();
 
-                        results.Add(new ProcessOutput(podLogLine.Source, podLogLine.Message, podLogLine.Occurred));
-                        nextSequenceNumber = podLogLine.LineNumber;
+                            if (validParseResult is EndOfStreamPodLogLineParseResult endOfStreamParseResult)
+                                exitCode = endOfStreamParseResult.ExitCode;
+
+                            results.Add(new ProcessOutput(podLogLine.Source, podLogLine.Message, podLogLine.Occurred));
+                            nextSequenceNumber = podLogLine.LineNumber;
+                        }
+
+                        break;
                     }
-                    else
-                    {
-                        //TODO: print parse errors
-                    }
-
-
-                    //TODO: try not to read any more if we see a panic?
+                    case InvalidPodLogLineParseResult invalidParseResult:
+                        //Unfortunately we don't have a good way to get the timestamp right to get this line to appear in the right order 
+                        results.Add(new ProcessOutput(ProcessOutputSource.StdErr, invalidParseResult.Error, DateTimeOffset.UtcNow));
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(parseResult), parseResult.GetType(), "Unexpected parse result type");
                 }
+
+
+                //TODO: try not to read any more if we see a panic?
+
             }
         }
     }
