@@ -29,4 +29,15 @@
       <None Remove="xunit.runner.json" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Remove="Setup\agent-values.yaml" />
+      <EmbeddedResource Include="Setup\agent-values.yaml">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </EmbeddedResource>
+      <None Remove="Setup\kind-config.yaml" />
+      <EmbeddedResource Include="Setup\kind-config.yaml">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </EmbeddedResource>
+    </ItemGroup>
+
 </Project>

@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Reflection;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Kubernetes.Tests.Integration.Setup.Tooling;
 using Octopus.Tentacle.Util;
@@ -36,12 +37,14 @@ public class KubernetesClusterInstaller
         var kindDownloader = new KindDownloader(logger);
         kindExe = await kindDownloader.Download(tempDir.DirectoryPath, CancellationToken.None);
 
+        var configFilePath = await WriteKindConfigFile();
+
         var sw = new Stopwatch();
         sw.Restart();
         var exitCode = SilentProcessRunner.ExecuteCommand(
             kindExe,
             //we give the cluster a unique name
-            $"create cluster --name={clusterName} --kubeconfig=\"{kubeConfigName}\"",
+            $"create cluster --name={clusterName} --config=\"{configFilePath}\" --kubeconfig=\"{kubeConfigName}\"",
             tempDir.DirectoryPath,
             logger.Debug,
             logger.Information,
@@ -53,11 +56,27 @@ public class KubernetesClusterInstaller
         if (exitCode != 0)
         {
             logger.Error("Failed to create Kind Kubernetes cluster {ClusterName}", clusterName);
+            throw new InvalidOperationException($"Failed to create Kind Kubernetes cluster {clusterName}");
         }
 
         logger.Information("Created Kind Kubernetes cluster {ClusterName} in {ElapsedTime}", clusterName, sw.Elapsed);
 
         await InstallNfiCsiDriver();
+    }
+
+    async Task<string> WriteKindConfigFile()
+    {
+        var asm = Assembly.GetExecutingAssembly();
+        var valuesFileName = asm.GetManifestResourceNames().First(n => n.Contains("kind-config.yaml", StringComparison.OrdinalIgnoreCase));
+        await using var resourceStream = asm.GetManifestResourceStream(valuesFileName)!;
+
+        var filePath = Path.Combine(tempDir.DirectoryPath, "kind-config.yaml");
+        await using var file = File.Create(filePath);
+
+        resourceStream.Seek(0, SeekOrigin.Begin);
+        await resourceStream.CopyToAsync(file);
+
+        return filePath;
     }
 
     async Task InstallNfiCsiDriver()
@@ -66,17 +85,17 @@ public class KubernetesClusterInstaller
         var helmPath = await helmDownloader.Download(tempDir.DirectoryPath, CancellationToken.None);
 
         //we need to perform a repo update in helm first
-        var exitCode = SilentProcessRunner.ExecuteCommand(
-            helmPath,
-            "repo update",
-            tempDir.DirectoryPath,
-            logger.Debug,
-            logger.Information,
-            logger.Error,
-            CancellationToken.None);
+        // var exitCode = SilentProcessRunner.ExecuteCommand(
+        //     helmPath,
+        //     "repo update",
+        //     tempDir.DirectoryPath,
+        //     logger.Debug,
+        //     logger.Information,
+        //     logger.Error,
+        //     CancellationToken.None);
 
         var installArgs = BuildNfsCsiDriverInstallArguments();
-        exitCode = SilentProcessRunner.ExecuteCommand(
+        var exitCode = SilentProcessRunner.ExecuteCommand(
             helmPath,
             installArgs,
             tempDir.DirectoryPath,

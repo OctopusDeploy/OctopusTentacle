@@ -1,4 +1,6 @@
 ﻿using System.Diagnostics;
+using System.Reflection;
+using System.Text;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Kubernetes.Tests.Integration.Setup.Tooling;
 using Octopus.Tentacle.Util;
@@ -36,14 +38,15 @@ public class KubernetesAgentInstaller
         helmPath = await helmDownloader.Download(tempDir.DirectoryPath, CancellationToken.None);
     }
 
-    public void InstallAgent(string kubeConfigPath)
+    public async Task InstallAgent(string kubeConfigPath)
     {
         if (helmPath is null)
             throw new InvalidOperationException("Helm has not been downloaded");
 
         this.kubeConfigPath = kubeConfigPath;
 
-        var arguments = BuildAgentInstallArguments();
+        var valuesFilePath = await WriteValuesFile();
+        var arguments = BuildAgentInstallArguments(valuesFilePath);
 
         var sw = new Stopwatch();
         sw.Restart();
@@ -66,22 +69,41 @@ public class KubernetesAgentInstaller
         isAgentInstalled = true;
     }
 
-    string BuildAgentInstallArguments()
+    async Task<string> WriteValuesFile()
+    {
+        var asm = Assembly.GetExecutingAssembly();
+        var valuesFileName = asm.GetManifestResourceNames().First(n => n.Contains("agent-values.yaml", StringComparison.OrdinalIgnoreCase));
+        using var reader = new StreamReader(asm.GetManifestResourceStream(valuesFileName)!);
+
+        var valuesFile = await reader.ReadToEndAsync();
+
+        var configMapData = @"
+        Octopus.Home: /octopus
+        Tentacle.Deployment.ApplicationDirectory: /octopus/Applications
+        Tentacle.Services.IsRegistered: 'true'
+        Tentacle.Services.NoListen: 'true'";
+
+        valuesFile = valuesFile.Replace("#{TargetName}", AgentName)
+            .Replace("#{ServerCommsAddress}", $"https://localhost:{123456}")
+            .Replace("#{ServerUrl}", "https://octopus.internal/")
+            .Replace("#{ConfigMapData}", configMapData);
+
+        var valuesFilePath = Path.Combine(tempDir.DirectoryPath, "agent-values.yaml");
+        await File.WriteAllTextAsync(valuesFilePath, valuesFile, Encoding.UTF8);
+
+        return valuesFilePath;
+    }
+
+    string BuildAgentInstallArguments(string valuesFilePath)
     {
         return string.Join(" ",
             "upgrade",
             "--install",
             "--atomic",
-            "--set tentacle.ACCEPT_EULA=\"Y\"",
-            $"--set tentacle.targetName=\"{AgentName}\"",
-            //these addresses do not matter
-            "--set tentacle.serverUrl=\"https://octopus.internal/\"",
-            "--set tentacle.serverCommsAddress=\"https://polling.octopus.internal/\"",
-            "--set tentacle.space=\"Default\"",
-            "--set tentacle.targetEnvironments=\"{development}\"",
-            "--set tentacle.targetRoles=\"{testing-cluster}\"",
-            "--set tentacle.bearerToken=\"this-is-a-fake-bearer-token\"",
+            $"-f \"{valuesFilePath}\"",
             "--create-namespace",
+            "--debug",
+            "-v 10",
             NamespaceFlag,
             KubeConfigFlag,
             AgentName,
