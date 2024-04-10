@@ -6,12 +6,14 @@ using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Kubernetes.Tests.Integration.Setup;
+using Octopus.TestPortForwarder;
 
 namespace Octopus.Tentacle.Kubernetes.Tests.Integration;
 
 public abstract class KubernetesAgentIntegrationTest
 {
     readonly KubernetesAgentInstaller kubernetesAgentInstaller = new();
+    PortForwarder portForwarder;
     protected ILogger Logger { get; }
 
     protected HalibutRuntime ServerHalibutRuntime { get; private set; } = null!;
@@ -23,6 +25,7 @@ public abstract class KubernetesAgentIntegrationTest
         Logger = new LoggerConfiguration()
             .WriteTo.NUnitOutput()
             .WriteTo.Console()
+            .MinimumLevel.Verbose()
             .CreateLogger()
             .ForContext<KubernetesAgentIntegrationTest>();
     }
@@ -34,8 +37,12 @@ public abstract class KubernetesAgentIntegrationTest
 
         //create a new server halibut runtime
         var listeningPort = BuildServerHalibutRuntimeAndListen();
+
+        portForwarder = PortForwarderBuilder
+            .ForwardingToLocalPort(listeningPort, Logger)
+            .Build();
         
-        await kubernetesAgentInstaller.InstallAgent(TestKubernetesCluster.KubeConfigPath, listeningPort);
+        await kubernetesAgentInstaller.InstallAgent(TestKubernetesCluster.KubeConfigPath, portForwarder.ListeningPort);
 
         BuildTentacleClient();
     }
@@ -73,6 +80,7 @@ public abstract class KubernetesAgentIntegrationTest
     public async Task OneTimeTearDown()
     {
         await ServerHalibutRuntime.DisposeAsync();
+        portForwarder.Dispose();
         kubernetesAgentInstaller?.Dispose();
     }
 }

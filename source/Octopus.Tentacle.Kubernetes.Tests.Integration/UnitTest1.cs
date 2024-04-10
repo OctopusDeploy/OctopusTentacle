@@ -18,6 +18,8 @@ public class UnitTest1 : KubernetesAgentIntegrationTest
         var command = new ExecuteKubernetesScriptCommandBuilder($"{nameof(UnitTest1)}.{nameof(Test1)}")
             .SetScriptBody("echo \"Hello World\"")
             .Build();
+        
+        
         //act
         var result = await TentacleClient.ExecuteScript(command, StatusReceived, ScriptCompleted, new InMemoryLog(), CancellationToken.None);
         
