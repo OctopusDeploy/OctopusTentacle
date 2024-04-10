@@ -10,6 +10,7 @@ using Octopus.Client.Model;
 using Octopus.Client.Model.Endpoints;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Variables;
 
 namespace Octopus.Tentacle.Communications
 {
@@ -75,6 +76,7 @@ namespace Octopus.Tentacle.Communications
                 log.Info("Agent will trust Octopus Servers with the thumbprint: " + thumbprint);
                 halibut.Trust(thumbprint);
             }
+
             if (trust.Count == 0)
             {
                 log.Info("The agent is not configured to trust any Octopus Servers.");
@@ -100,7 +102,19 @@ namespace Octopus.Tentacle.Communications
 
                 var halibutTimeoutsAndLimits = new HalibutTimeoutsAndLimits();
                 var serviceEndPoint = new ServiceEndPoint(pollingEndPoint.Address, pollingEndPoint.Thumbprint, halibutProxy, halibutTimeoutsAndLimits);
-                halibut.Poll(new Uri(pollingEndPoint.SubscriptionId), serviceEndPoint, CancellationToken.None);
+
+                //Open multiple polling connections if the env var is set to a non-zero/negative number
+                var connectionCount = int.TryParse(Environment.GetEnvironmentVariable(EnvironmentVariables.TentaclePollingConnectionCount), out var count)
+                    ? count
+                    : 1;
+
+                // negative numbers and 0 are coerced to 1
+                connectionCount = Math.Max(connectionCount, 1);
+
+                for (var i = 0; i < connectionCount; i++)
+                {
+                    halibut.Poll(new Uri(pollingEndPoint.SubscriptionId), serviceEndPoint, CancellationToken.None);
+                }
             }
         }
 
@@ -114,7 +128,7 @@ namespace Octopus.Tentacle.Communications
             return configuration.TrustedOctopusServers.Where(octopusServerConfiguration =>
                 octopusServerConfiguration.CommunicationStyle == CommunicationStyle.TentacleActive ||
                 (octopusServerConfiguration is { CommunicationStyle: CommunicationStyle.KubernetesTentacle } &&
-                octopusServerConfiguration.KubernetesTentacleCommunicationMode == TentacleCommunicationModeResource.Polling));
+                    octopusServerConfiguration.KubernetesTentacleCommunicationMode == TentacleCommunicationModeResource.Polling));
         }
 
         IPEndPoint GetEndPointToListenOn()
