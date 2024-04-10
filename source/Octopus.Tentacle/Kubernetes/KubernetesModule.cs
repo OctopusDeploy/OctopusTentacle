@@ -15,7 +15,7 @@ namespace Octopus.Tentacle.Kubernetes
 
             builder.RegisterType<KubernetesScriptPodCreator>().As<IKubernetesScriptPodCreator>().SingleInstance();
             builder.RegisterType<KubernetesPodLogService>().As<IKubernetesPodLogService>().SingleInstance();
-            builder.RegisterType<ScriptPodResources>().SingleInstance();
+            builder.RegisterType<ScriptPodSinceTimeStore>().As<IScriptPodSinceTimeStore>().SingleInstance();
             builder.RegisterType<TentacleScriptLogProvider>().As<ITentacleScriptLogProvider>().SingleInstance();
 
             builder.RegisterType<KubernetesPodMonitorTask>().As<IKubernetesPodMonitorTask>().As<IBackgroundTask>().SingleInstance();

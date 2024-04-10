@@ -24,7 +24,8 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
         readonly IKubernetesPodLogService podLogService;
         readonly ISystemLog log;
         readonly ITentacleScriptLogProvider scriptLogProvider;
-
+        readonly IScriptPodSinceTimeStore scriptPodSinceTimeStore;
+        
         //TODO: check what will happen when Tentacle restarts
         readonly ConcurrentDictionary<ScriptTicket, Lazy<SemaphoreSlim>> startScriptMutexes = new();
 
@@ -34,7 +35,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             IKubernetesPodStatusProvider podStatusProvider,
             IKubernetesScriptPodCreator podCreator,
             IKubernetesPodLogService podLogService,
-            ISystemLog log, ITentacleScriptLogProvider scriptLogProvider)
+            ISystemLog log, ITentacleScriptLogProvider scriptLogProvider, IScriptPodSinceTimeStore scriptPodSinceTimeStore)
         {
             this.podService = podService;
             this.workspaceFactory = workspaceFactory;
@@ -43,6 +44,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             this.podLogService = podLogService;
             this.log = log;
             this.scriptLogProvider = scriptLogProvider;
+            this.scriptPodSinceTimeStore = scriptPodSinceTimeStore;
         }
 
         public async Task<KubernetesScriptStatusResponseV1Alpha> StartScriptAsync(StartKubernetesScriptCommandV1Alpha command, CancellationToken cancellationToken)
@@ -111,7 +113,8 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             await workspace.Delete(cancellationToken);
 
             scriptLogProvider.Delete(command.ScriptTicket);
-
+            scriptPodSinceTimeStore.Delete(command.ScriptTicket);
+            
             //we do a try delete as the cancel might have already deleted it
             if (!KubernetesConfig.DisableAutomaticPodCleanup)
                 await podService.TryDelete(command.ScriptTicket, cancellationToken);

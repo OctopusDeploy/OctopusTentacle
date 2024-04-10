@@ -21,16 +21,20 @@ namespace Octopus.Tentacle.Kubernetes
         readonly ISystemLog log;
         readonly IClock clock;
         readonly ITentacleScriptLogProvider scriptLogProvider;
+        readonly IScriptPodSinceTimeStore scriptPodSinceTimeStore;
+        
         readonly TimeSpan initialDelay = TimeSpan.FromMinutes(1);
         internal readonly TimeSpan CompletedPodConsideredOrphanedAfterTimeSpan = KubernetesConfig.PodsConsideredOrphanedAfterTimeSpan;
 
-        public KubernetesOrphanedPodCleaner(IKubernetesPodStatusProvider podStatusProvider, IKubernetesPodService podService, ISystemLog log, IClock clock, ITentacleScriptLogProvider scriptLogProvider)
+        public KubernetesOrphanedPodCleaner(IKubernetesPodStatusProvider podStatusProvider, IKubernetesPodService podService, ISystemLog log, IClock clock,
+            ITentacleScriptLogProvider scriptLogProvider, IScriptPodSinceTimeStore scriptPodSinceTimeStore)
         {
             this.podStatusProvider = podStatusProvider;
             this.podService = podService;
             this.log = log;
             this.clock = clock;
             this.scriptLogProvider = scriptLogProvider;
+            this.scriptPodSinceTimeStore = scriptPodSinceTimeStore;
         }
 
         async Task IKubernetesOrphanedPodCleaner.StartAsync(CancellationToken cancellationToken)
@@ -85,6 +89,7 @@ namespace Octopus.Tentacle.Kubernetes
             foreach (var pod in orphanedPods)
             {
                 scriptLogProvider.Delete(pod.ScriptTicket);
+                scriptPodSinceTimeStore.Delete(pod.ScriptTicket);
 
                 if (KubernetesConfig.DisableAutomaticPodCleanup)
                 {
