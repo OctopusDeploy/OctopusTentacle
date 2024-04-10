@@ -6,13 +6,11 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using k8s;
 using k8s.Models;
 using Newtonsoft.Json;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha;
-using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Variables;
 
@@ -30,19 +28,21 @@ namespace Octopus.Tentacle.Kubernetes
         readonly IKubernetesPodContainerResolver containerResolver;
         readonly IApplicationInstanceSelector appInstanceSelector;
         readonly ISystemLog log;
-
+        readonly ITentacleScriptLogProvider scriptLogProvider;
+        
         public KubernetesScriptPodCreator(
             IKubernetesPodService podService,
             IKubernetesSecretService secretService,
             IKubernetesPodContainerResolver containerResolver,
             IApplicationInstanceSelector appInstanceSelector,
-            ISystemLog log)
+            ISystemLog log, ITentacleScriptLogProvider scriptLogProvider)
         {
             this.podService = podService;
             this.secretService = secretService;
             this.containerResolver = containerResolver;
             this.appInstanceSelector = appInstanceSelector;
             this.log = log;
+            this.scriptLogProvider = scriptLogProvider;
         }
 
         public async Task CreatePod(StartKubernetesScriptCommandV1Alpha command, IScriptWorkspace workspace, CancellationToken cancellationToken)
@@ -143,16 +143,15 @@ namespace Octopus.Tentacle.Kubernetes
         async Task CreatePod(StartKubernetesScriptCommandV1Alpha command, IScriptWorkspace workspace, string? imagePullSecretName, CancellationToken cancellationToken)
         {
             var podName = command.ScriptTicket.ToKubernetesScriptPobName();
+            var tentacleScriptLog = scriptLogProvider.GetOrCreate(command.ScriptTicket);
 
-            log.Verbose($"Creating Kubernetes Pod '{podName}'.");
-
+            LogVerboseToBothLogs($"Creating Kubernetes Pod '{podName}'.");
+                
             //write the bootstrap runner script to the workspace
             workspace.CopyFile(KubernetesConfig.BootstrapRunnerExecutablePath, "bootstrapRunner");
 
             var scriptName = Path.GetFileName(workspace.BootstrapScriptFilePath);
 
-            //Deserialize the volume configuration from the environment configuration
-            var volumes = KubernetesJson.Deserialize<List<V1Volume>>(KubernetesConfig.PodVolumeJson);
             var pod = new V1Pod
             {
                 Metadata = new V1ObjectMeta
@@ -217,7 +216,17 @@ namespace Octopus.Tentacle.Kubernetes
                         : new List<V1LocalObjectReference>(),
                     ServiceAccountName = KubernetesConfig.PodServiceAccountName,
                     RestartPolicy = "Never",
-                    Volumes = volumes,
+                    Volumes = new List<V1Volume>
+                    {
+                        new()
+                        {
+                            Name = "tentacle-home",
+                            PersistentVolumeClaim = new V1PersistentVolumeClaimVolumeSource
+                            {
+                                ClaimName = KubernetesConfig.PodVolumeClaimName
+                            }
+                        }
+                    },
                     //currently we only support running on linux nodes
                     NodeSelector = new Dictionary<string, string>
                     {
@@ -228,7 +237,13 @@ namespace Octopus.Tentacle.Kubernetes
 
             await podService.Create(pod, cancellationToken);
 
-            log.Verbose($"Executing script in Kubernetes Pod '{podName}'.");
+            LogVerboseToBothLogs($"Executing script in Kubernetes Pod '{podName}'.");
+
+            void LogVerboseToBothLogs(string message)
+            {
+                log.Verbose(message);
+                tentacleScriptLog.Verbose(message);
+            }
         }
     }
 }

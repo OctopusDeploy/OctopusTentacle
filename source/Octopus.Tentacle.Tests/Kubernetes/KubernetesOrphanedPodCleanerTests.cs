@@ -26,6 +26,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         TimeSpan overCutoff;
         TimeSpan underCutoff;
         DateTimeOffset startTime;
+        ITentacleScriptLogProvider scriptLogProvider;
 
         [SetUp]
         public void Setup()
@@ -34,14 +35,22 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             podService = Substitute.For<IKubernetesPodService>();
             log = new InMemoryLog();
             clock = new FixedClock(startTime);
-            monitor = new KubernetesPodMonitor(podService, log);
+            scriptLogProvider = Substitute.For<ITentacleScriptLogProvider>();
+            monitor = new KubernetesPodMonitor(podService, log, scriptLogProvider);
 
             scriptTicket = new ScriptTicket(Guid.NewGuid().ToString());
 
-            cleaner = new KubernetesOrphanedPodCleaner(monitor, podService, log, clock);
+            cleaner = new KubernetesOrphanedPodCleaner(monitor, podService, log, clock, scriptLogProvider);
 
             overCutoff = cleaner.CompletedPodConsideredOrphanedAfterTimeSpan + 1.Minutes();
             underCutoff = cleaner.CompletedPodConsideredOrphanedAfterTimeSpan - 1.Minutes();
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            Environment.SetEnvironmentVariable("OCTOPUS__K8STENTACLE__DISABLEAUTOPODCLEANUP", null);
+            Environment.SetEnvironmentVariable("OCTOPUS__K8STENTACLE__PODSCONSIDEREDORPHANEDAFTERMINUTES", null);
         }
 
         [Test]
@@ -60,6 +69,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
 
             //Assert
             await podService.Received().Delete(scriptTicket, Arg.Any<CancellationToken>());
+            scriptLogProvider.Received().Delete(scriptTicket);
         }
 
         [TestCase("Succeeded", true)]
@@ -84,10 +94,12 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             if (shouldBeDeleted)
             {
                 await podService.Received().Delete(scriptTicket, Arg.Any<CancellationToken>());
+                scriptLogProvider.Received().Delete(scriptTicket);
             }
             else
             {
                 await podService.DidNotReceive().Delete(scriptTicket, Arg.Any<CancellationToken>());
+                scriptLogProvider.DidNotReceive().Delete(scriptTicket);
             }
         }
 
@@ -107,6 +119,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
 
             //Assert
             await podService.DidNotReceive().Delete(scriptTicket, Arg.Any<CancellationToken>());
+            scriptLogProvider.DidNotReceive().Delete(scriptTicket);
         }
 
         [Test]
@@ -126,9 +139,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
 
             //Assert
             await podService.DidNotReceive().Delete(scriptTicket, Arg.Any<CancellationToken>());
-
-            //Cleanup
-            Environment.SetEnvironmentVariable("OCTOPUS__K8STENTACLE__DISABLEAUTOPODCLEANUP", null);
+            scriptLogProvider.Received().Delete(scriptTicket);
         }
 
         [TestCase(1, false)]
@@ -139,7 +150,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             Environment.SetEnvironmentVariable("OCTOPUS__K8STENTACLE__PODSCONSIDEREDORPHANEDAFTERMINUTES", "2");
 
             // We need to reinitialise the sut after changing the env var value
-            cleaner = new KubernetesOrphanedPodCleaner(monitor, podService, log, clock);
+            cleaner = new KubernetesOrphanedPodCleaner(monitor, podService, log, clock, scriptLogProvider);
             const WatchEventType type = WatchEventType.Added;
             var pod = CreatePod(TrackedScriptPodState.Succeeded, startTime);
 
@@ -154,14 +165,13 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             if (shouldDelete)
             {
                 await podService.Received().Delete(scriptTicket, Arg.Any<CancellationToken>());
+                scriptLogProvider.Received().Delete(scriptTicket);
             }
             else
             {
                 await podService.DidNotReceive().Delete(scriptTicket, Arg.Any<CancellationToken>());
+                scriptLogProvider.DidNotReceive().Delete(scriptTicket);
             }
-
-            //Cleanup
-            Environment.SetEnvironmentVariable("OCTOPUS__K8STENTACLE__PODSCONSIDEREDORPHANEDAFTERMINUTES", null);
         }
 
         V1Pod CreatePod(TrackedScriptPodState? phase, DateTimeOffset? finishedAt = null, int exitCode = 0) => CreatePod(phase?.ToString(), finishedAt, exitCode);

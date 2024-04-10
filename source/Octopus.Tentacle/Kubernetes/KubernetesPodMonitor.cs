@@ -29,13 +29,15 @@ namespace Octopus.Tentacle.Kubernetes
     {
         readonly IKubernetesPodService podService;
         readonly ISystemLog log;
-
+        readonly ITentacleScriptLogProvider scriptLogProvider;
+        
         ConcurrentDictionary<ScriptTicket, TrackedScriptPod> podStatusLookup = new();
 
-        public KubernetesPodMonitor(IKubernetesPodService podService, ISystemLog log)
+        public KubernetesPodMonitor(IKubernetesPodService podService, ISystemLog log, ITentacleScriptLogProvider scriptLogProvider)
         {
             this.podService = podService;
             this.log = log;
+            this.scriptLogProvider = scriptLogProvider;
         }
 
         async Task IKubernetesPodMonitor.StartAsync(CancellationToken cancellationToken)
@@ -57,7 +59,9 @@ namespace Octopus.Tentacle.Kubernetes
         {
             if (podStatusLookup.TryGetValue(scriptTicket, out var status))
             {
-                log.Verbose($"Marking {scriptTicket.TaskId} as completed");
+                var text = $"Marking '{scriptTicket.TaskId}' as completed with exit code: '{exitCode}'";
+                scriptLogProvider.GetOrCreate(scriptTicket).Verbose(text);
+                log.Verbose(text);
                 status.MarkAsCompleted(exitCode, DateTimeOffset.UtcNow);
             }
         }
@@ -94,7 +98,7 @@ namespace Octopus.Tentacle.Kubernetes
                 }
                 status.Update(pod);
 
-                log.Verbose($"Preloaded pod {pod.Name()}. {status}");
+                log.Verbose($"Preloaded pod {pod.Name()} ({status})");
                 newStatuses[scriptTicket] = status;
             }
 
