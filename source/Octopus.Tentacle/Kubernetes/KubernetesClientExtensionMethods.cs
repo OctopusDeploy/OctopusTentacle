@@ -20,7 +20,7 @@ namespace Octopus.Tentacle.Kubernetes
                 var sinceTimeStr = sinceTime.Value.ToString("O");
                 url += $"&sinceTime={Uri.EscapeDataString(sinceTimeStr)}";
             }
-            
+
             url = string.Concat(client.BaseUri, url);
 
             var httpRequest = new HttpRequestMessage(HttpMethod.Get, url);
