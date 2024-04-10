@@ -105,34 +105,40 @@ namespace Octopus.Tentacle.Communications
                 var halibutTimeoutsAndLimits = new HalibutTimeoutsAndLimits();
                 var serviceEndPoint = new ServiceEndPoint(pollingEndPoint.Address, pollingEndPoint.Thumbprint, halibutProxy, halibutTimeoutsAndLimits);
 
-                //Open multiple polling connections if the env var is set to a non-zero/negative number
-                var connectionCount = 1u;
-                if (uint.TryParse(Environment.GetEnvironmentVariable(EnvironmentVariables.TentaclePollingConnectionCount), out var count))
-                {
-                    log.InfoFormat("Requested polling connection count: {0}", count);
-                    connectionCount = count;
-                }
-
-                //Coerce the requested value as it might be outside our max & min
-                switch (connectionCount)
-                {
-                    case > MaximumPollingConnectionCount:
-                        log.InfoFormat("Maximum polling connection count: {0}", MaximumPollingConnectionCount);
-                        connectionCount = 8;
-                        break;
-                    case 0:
-                        log.InfoFormat("Minimum polling connection count: {0}", 1);
-                        connectionCount = 1;
-                        break;
-                }
-
-                log.InfoFormat("Opening {0} polling connections", connectionCount);
+                var connectionCount = GetPollingConnectionCount();
 
                 for (var i = 0; i < connectionCount; i++)
                 {
                     halibut.Poll(new Uri(pollingEndPoint.SubscriptionId), serviceEndPoint, CancellationToken.None);
                 }
             }
+        }
+        
+        uint GetPollingConnectionCount()
+        {
+            //Open multiple polling connections if the env var is set to a non-zero/negative number
+            var connectionCount = 1u;
+            if (uint.TryParse(Environment.GetEnvironmentVariable(EnvironmentVariables.TentaclePollingConnectionCount), out var count))
+            {
+                log.InfoFormat("Requested polling connection count: {0}", count);
+                connectionCount = count;
+            }
+
+            //Coerce the requested value as it might be outside our max & min
+            switch (connectionCount)
+            {
+                case > MaximumPollingConnectionCount:
+                    log.InfoFormat("Maximum polling connection count: {0}", MaximumPollingConnectionCount);
+                    connectionCount = 8;
+                    break;
+                case 0:
+                    log.InfoFormat("Minimum polling connection count: {0}", 1);
+                    connectionCount = 1;
+                    break;
+            }
+
+            log.InfoFormat("Opening {0} polling connections", connectionCount);
+            return connectionCount;
         }
 
         List<string> GetTrustedOctopusThumbprints()
