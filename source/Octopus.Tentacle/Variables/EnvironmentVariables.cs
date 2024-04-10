@@ -23,5 +23,6 @@ namespace Octopus.Tentacle.Variables
         public const string TentacleTcpKeepAliveEnabled = "TentacleTcpKeepAliveEnabled";
         public const string TentacleUseRecommendedTimeoutsAndLimits = "TentacleUseRecommendedTimeoutsAndLimits";
         public const string TentacleMachineConfigurationHomeDirectory = "TentacleMachineConfigurationHomeDirectory";
+        public const string TentaclePollingConnectionCount = "TentaclePollingConnectionCount";
     }
 }

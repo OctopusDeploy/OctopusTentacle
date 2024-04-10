@@ -10,6 +10,7 @@ using Octopus.Client.Model;
 using Octopus.Client.Model.Endpoints;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Variables;
 
 namespace Octopus.Tentacle.Communications
 {
@@ -75,11 +76,14 @@ namespace Octopus.Tentacle.Communications
                 log.Info("Agent will trust Octopus Servers with the thumbprint: " + thumbprint);
                 halibut.Trust(thumbprint);
             }
+
             if (trust.Count == 0)
             {
                 log.Info("The agent is not configured to trust any Octopus Servers.");
             }
         }
+
+        const int MaximumPollingConnectionCount = 8;
 
         void AddPollingEndpoints()
         {
@@ -100,8 +104,41 @@ namespace Octopus.Tentacle.Communications
 
                 var halibutTimeoutsAndLimits = new HalibutTimeoutsAndLimits();
                 var serviceEndPoint = new ServiceEndPoint(pollingEndPoint.Address, pollingEndPoint.Thumbprint, halibutProxy, halibutTimeoutsAndLimits);
-                halibut.Poll(new Uri(pollingEndPoint.SubscriptionId), serviceEndPoint, CancellationToken.None);
+
+                var connectionCount = GetPollingConnectionCount();
+
+                for (var i = 0; i < connectionCount; i++)
+                {
+                    halibut.Poll(new Uri(pollingEndPoint.SubscriptionId), serviceEndPoint, CancellationToken.None);
+                }
             }
+        }
+        
+        uint GetPollingConnectionCount()
+        {
+            //Open multiple polling connections if the env var is set to a non-zero/negative number
+            var connectionCount = 1u;
+            if (uint.TryParse(Environment.GetEnvironmentVariable(EnvironmentVariables.TentaclePollingConnectionCount), out var count))
+            {
+                log.InfoFormat("Requested polling connection count: {0}", count);
+                connectionCount = count;
+            }
+
+            //Coerce the requested value as it might be outside our max & min
+            switch (connectionCount)
+            {
+                case > MaximumPollingConnectionCount:
+                    log.InfoFormat("The requested polling connection count exceeds the maximum of {0}, limiting to {0}", MaximumPollingConnectionCount);
+                    connectionCount = 8;
+                    break;
+                case 0:
+                    log.InfoFormat("The requested polling connection count must be greater than 0, setting to 1");
+                    connectionCount = 1;
+                    break;
+            }
+
+            log.InfoFormat("Starting {0} polling connections", connectionCount);
+            return connectionCount;
         }
 
         List<string> GetTrustedOctopusThumbprints()
@@ -114,7 +151,7 @@ namespace Octopus.Tentacle.Communications
             return configuration.TrustedOctopusServers.Where(octopusServerConfiguration =>
                 octopusServerConfiguration.CommunicationStyle == CommunicationStyle.TentacleActive ||
                 (octopusServerConfiguration is { CommunicationStyle: CommunicationStyle.KubernetesTentacle } &&
-                octopusServerConfiguration.KubernetesTentacleCommunicationMode == TentacleCommunicationModeResource.Polling));
+                    octopusServerConfiguration.KubernetesTentacleCommunicationMode == TentacleCommunicationModeResource.Polling));
         }
 
         IPEndPoint GetEndPointToListenOn()
