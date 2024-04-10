@@ -10,7 +10,7 @@ namespace Octopus.Tentacle.Kubernetes
 {
     public static class KubernetesClientExtensionMethods
     {
-        public static async Task<Stream> GetNamespacedPodLogsAsync(this k8s.Kubernetes client, ISystemLog log, string podName, string namespaceParameter, string container, DateTimeOffset? sinceTime, CancellationToken cancellationToken = default)
+        public static async Task<Stream> GetNamespacedPodLogsAsync(this k8s.Kubernetes client, string podName, string namespaceParameter, string container, DateTimeOffset? sinceTime, CancellationToken cancellationToken = default)
         {
             //Include Server timestamps so we can use it to specify "sinceTime" on the next call
             var url = $"api/v1/namespaces/{namespaceParameter}/pods/{podName}/log?container={container}&timestamps=true";
@@ -19,12 +19,10 @@ namespace Octopus.Tentacle.Kubernetes
             {
                 var sinceTimeStr = sinceTime.Value.ToString("O");
                 url += $"&sinceTime={Uri.EscapeDataString(sinceTimeStr)}";
-                log.Verbose("K8s Query SinceTime: " + sinceTimeStr);
             }
             
             url = string.Concat(client.BaseUri, url);
 
-            log.Verbose("K8s URL: " + url);
             var httpRequest = new HttpRequestMessage(HttpMethod.Get, url);
 
             if (client.Credentials is not null)

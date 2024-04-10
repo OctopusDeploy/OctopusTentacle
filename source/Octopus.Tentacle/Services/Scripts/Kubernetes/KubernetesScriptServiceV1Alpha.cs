@@ -56,8 +56,6 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
                     return await GetResponse(trackedPod, 0, cancellationToken);
                 }
 
-                scriptPodResources.Create(command.ScriptTicket);
-                
                 //TODO: consider adding an idempotent version of PrepareWorkspace
                 var workspace = await workspaceFactory.PrepareWorkspace(command.ScriptTicket,
                     command.ScriptBody,
