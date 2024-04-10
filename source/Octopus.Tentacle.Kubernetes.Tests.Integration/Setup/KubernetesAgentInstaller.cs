@@ -32,6 +32,8 @@ public class KubernetesAgentInstaller
     }
 
     public string AgentName { get; }
+    
+    public Uri SubscriptionId { get; } = PollingSubscriptionId.Generate();
 
     public async Task DownloadHelm()
     {
@@ -80,18 +82,18 @@ public class KubernetesAgentInstaller
         var valuesFile = await reader.ReadToEndAsync();
 
         var serverCommsAddress = $"https://localhost:{listeningPort}";
-        var subscriptionId = PollingSubscriptionId.Generate();
 
         var configMapData = $@"
         Octopus.Home: /octopus
         Tentacle.Deployment.ApplicationDirectory: /octopus/Applications
         Tentacle.Communication.TrustedOctopusServers: >-
-          [{{""Thumbprint"":""{TestCertificates.ServerPublicThumbprint}"",""CommunicationStyle"":{(int)CommunicationStyle.TentacleActive},""Address"":""{serverCommsAddress}"",""Squid"":null,""SubscriptionId"":""{subscriptionId}""}}]
+          [{{""Thumbprint"":""{TestCertificates.ServerPublicThumbprint}"",""CommunicationStyle"":{(int)CommunicationStyle.TentacleActive},""Address"":""{serverCommsAddress}"",""Squid"":null,""SubscriptionId"":""{SubscriptionId}""}}]
         Tentacle.Services.IsRegistered: 'true'
         Tentacle.Services.NoListen: 'true'";
 
         valuesFile = valuesFile.Replace("#{TargetName}", AgentName)
             .Replace("#{ServerCommsAddress}", serverCommsAddress)
+            //this address is not needed because we don't need it to register itself
             .Replace("#{ServerUrl}", "https://octopus.internal/")
             .Replace("#{EncodedCertificate}", CertificateEncoder.ToBase64String(TestCertificates.Tentacle))
             .Replace("#{ConfigMapData}", configMapData);
