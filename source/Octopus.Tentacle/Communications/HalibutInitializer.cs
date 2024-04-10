@@ -128,16 +128,16 @@ namespace Octopus.Tentacle.Communications
             switch (connectionCount)
             {
                 case > MaximumPollingConnectionCount:
-                    log.InfoFormat("Maximum polling connection count: {0}", MaximumPollingConnectionCount);
+                    log.InfoFormat("The requested polling connection count exceeds the maximum of {0}, limiting to {0}", MaximumPollingConnectionCount);
                     connectionCount = 8;
                     break;
                 case 0:
-                    log.InfoFormat("Minimum polling connection count: {0}", 1);
+                    log.InfoFormat("The requested polling connection count must be greater than 0, setting to 1");
                     connectionCount = 1;
                     break;
             }
 
-            log.InfoFormat("Opening {0} polling connections", connectionCount);
+            log.InfoFormat("Starting {0} polling connections", connectionCount);
             return connectionCount;
         }
 
