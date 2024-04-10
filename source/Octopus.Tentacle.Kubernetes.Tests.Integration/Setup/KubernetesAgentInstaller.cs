@@ -115,7 +115,6 @@ public class KubernetesAgentInstaller
             "--atomic",
             $"-f \"{valuesFilePath}\"",
             "--create-namespace",
-            "--debug",
             NamespaceFlag,
             KubeConfigFlag,
             AgentName,
