@@ -46,6 +46,8 @@ public abstract class KubernetesAgentIntegrationTest
         
         var retrySettings = new RpcRetrySettings(true, TimeSpan.FromMinutes(2));
         var clientOptions = new TentacleClientOptions(retrySettings);
+        
+        TentacleClient.CacheServiceWasNotFoundResponseMessages(ServerHalibutRuntime);
 
         TentacleClient = new TentacleClient(
             endpoint,

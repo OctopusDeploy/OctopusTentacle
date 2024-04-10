@@ -19,7 +19,7 @@ namespace Octopus.Tentacle.CommonTestUtils
             var directory = Path.Combine(Path.GetDirectoryName(new Uri(typeof(TestCertificates).Assembly.Location).LocalPath), "Certificates");
 
             TentaclePfxPath = Path.Combine(directory, "Tentacle.pfx");
-            Tentacle = new X509Certificate2(TentaclePfxPath);
+            Tentacle = new X509Certificate2(TentaclePfxPath, (string?)null, X509KeyStorageFlags.Exportable);
             TentaclePublicThumbprint = Tentacle.Thumbprint;
 
             Server = new X509Certificate2(Path.Combine(directory, "Server.pfx"));

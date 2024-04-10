@@ -81,7 +81,7 @@ public class KubernetesAgentInstaller
 
         var valuesFile = await reader.ReadToEndAsync();
 
-        var serverCommsAddress = $"https://localhost:{listeningPort}";
+        var serverCommsAddress = $"https://host.docker.internal:{listeningPort}";
 
         var configMapData = $@"
         Octopus.Home: /octopus
@@ -91,12 +91,15 @@ public class KubernetesAgentInstaller
         Tentacle.Services.IsRegistered: 'true'
         Tentacle.Services.NoListen: 'true'";
 
-        valuesFile = valuesFile.Replace("#{TargetName}", AgentName)
+        valuesFile = valuesFile
+            .Replace("#{TargetName}", AgentName)
             .Replace("#{ServerCommsAddress}", serverCommsAddress)
             //this address is not needed because we don't need it to register itself
             .Replace("#{ServerUrl}", "https://octopus.internal/")
             .Replace("#{EncodedCertificate}", CertificateEncoder.ToBase64String(TestCertificates.Tentacle))
-            .Replace("#{ConfigMapData}", configMapData);
+            .Replace("#{ConfigMapData}", configMapData)
+            .Replace("#{ImageRepository}","docker.packages.octopushq.com/octopusdeploy/kubernetes-tentacle")
+            .Replace("#{ImageTag}", "8.1.1320-pull-870");
 
         var valuesFilePath = Path.Combine(tempDir.DirectoryPath, "agent-values.yaml");
         await File.WriteAllTextAsync(valuesFilePath, valuesFile, Encoding.UTF8);
@@ -112,10 +115,13 @@ public class KubernetesAgentInstaller
             "--atomic",
             $"-f \"{valuesFilePath}\"",
             "--create-namespace",
+            "--debug",
             NamespaceFlag,
             KubeConfigFlag,
             AgentName,
-            "oci://registry-1.docker.io/octopusdeploy/kubernetes-agent"
+            "--version \"0.7.1-ap-inject-test-data-20240410030830\"",
+            "oci://docker.packages.octopushq.com/kubernetes-agent"
+            //"oci://registry-1.docker.io/octopusdeploy/kubernetes-agent"
         );
     }
 

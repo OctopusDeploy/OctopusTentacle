@@ -38,6 +38,7 @@ public class KubernetesClusterInstaller
         kindExe = await kindDownloader.Download(tempDir.DirectoryPath, CancellationToken.None);
 
         var configFilePath = await WriteKindConfigFile();
+        
 
         var sw = new Stopwatch();
         sw.Restart();
@@ -58,6 +59,8 @@ public class KubernetesClusterInstaller
             logger.Error("Failed to create Kind Kubernetes cluster {ClusterName}", clusterName);
             throw new InvalidOperationException($"Failed to create Kind Kubernetes cluster {clusterName}");
         }
+        
+        logger.Information("Test cluster kubeconfig path: {Path}", KubeConfigPath);
 
         logger.Information("Created Kind Kubernetes cluster {ClusterName} in {ElapsedTime}", clusterName, sw.Elapsed);
 
@@ -135,7 +138,7 @@ public class KubernetesClusterInstaller
             logger.Information,
             logger.Error,
             CancellationToken.None);
-
+        
         if (exitCode != 0)
         {
             logger.Error("Failed to delete Kind kubernetes cluster {ClusterName}", clusterName);
