@@ -83,7 +83,7 @@ namespace Octopus.Tentacle.Communications
             }
         }
 
-        const int MaximumPollingConnectionCount = 8;
+
 
         void AddPollingEndpoints()
         {
@@ -113,7 +113,9 @@ namespace Octopus.Tentacle.Communications
                 }
             }
         }
-        
+                
+        const int MaximumPollingConnectionCount = 8;
+                
         uint GetPollingConnectionCount()
         {
             //Open multiple polling connections if the env var is set to a non-zero/negative number
@@ -129,7 +131,7 @@ namespace Octopus.Tentacle.Communications
             {
                 case > MaximumPollingConnectionCount:
                     log.InfoFormat("The requested polling connection count exceeds the maximum of {0}, limiting to {0}", MaximumPollingConnectionCount);
-                    connectionCount = 8;
+                    connectionCount = MaximumPollingConnectionCount;
                     break;
                 case 0:
                     log.InfoFormat("The requested polling connection count must be greater than 0, setting to 1");
