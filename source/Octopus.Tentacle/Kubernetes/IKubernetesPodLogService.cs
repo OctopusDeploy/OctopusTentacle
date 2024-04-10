@@ -74,7 +74,7 @@ namespace Octopus.Tentacle.Kubernetes
             {
                 using (var reader = new StreamReader(stream))
                 {
-                    return await PodLogReader.ReadPodLogs(lastLogSequence, reader);
+                    return await PodLogReader.ReadPodLogs(lastLogSequence, reader, tentacleScriptLog);
                 }
             }
         }
