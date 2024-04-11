@@ -23,7 +23,6 @@ public class KubernetesClusterInstaller
 
         logger = new LoggerConfiguration()
             .WriteTo.NUnitOutput()
-            .WriteTo.Console()
             .WriteTo.File("w:\\temp\\cluster-install.log")
             .CreateLogger()
             .ForContext<KubernetesClusterInstaller>();

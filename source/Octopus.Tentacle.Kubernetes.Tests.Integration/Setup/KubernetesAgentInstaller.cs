@@ -23,7 +23,6 @@ public class KubernetesAgentInstaller
 
         logger = new LoggerConfiguration()
             .WriteTo.NUnitOutput()
-            .WriteTo.Console()
             .WriteTo.File("w:\\temp\\agent-install.log")
             .CreateLogger()
             .ForContext<KubernetesClusterInstaller>();
@@ -118,7 +117,7 @@ public class KubernetesAgentInstaller
             NamespaceFlag,
             KubeConfigFlag,
             AgentName,
-            "--version \"0.7.1-ap-inject-test-data-20240410030830\"",
+            "--version \"0.7.1-ap-inject-test-data-20240410064112\"",
             "oci://docker.packages.octopushq.com/kubernetes-agent"
             //"oci://registry-1.docker.io/octopusdeploy/kubernetes-agent"
         );

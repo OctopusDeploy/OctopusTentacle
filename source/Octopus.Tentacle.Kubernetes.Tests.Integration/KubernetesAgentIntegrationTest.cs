@@ -1,5 +1,6 @@
 ﻿using Halibut;
 using Halibut.Diagnostics;
+using Halibut.Logging;
 using Octopus.Tentacle.Client;
 using Octopus.Tentacle.Client.Retries;
 using Octopus.Tentacle.Client.Scripts;
@@ -14,7 +15,7 @@ public abstract class KubernetesAgentIntegrationTest
 {
     readonly KubernetesAgentInstaller kubernetesAgentInstaller = new();
     PortForwarder portForwarder;
-    protected ILogger Logger { get; }
+    protected ILogger Logger { get; private set; }
 
     protected HalibutRuntime ServerHalibutRuntime { get; private set; } = null!;
 
@@ -24,7 +25,6 @@ public abstract class KubernetesAgentIntegrationTest
     {
         Logger = new LoggerConfiguration()
             .WriteTo.NUnitOutput()
-            .WriteTo.Console()
             .MinimumLevel.Verbose()
             .CreateLogger()
             .ForContext<KubernetesAgentIntegrationTest>();
@@ -45,6 +45,17 @@ public abstract class KubernetesAgentIntegrationTest
         await kubernetesAgentInstaller.InstallAgent(TestKubernetesCluster.KubeConfigPath, portForwarder.ListeningPort);
 
         BuildTentacleClient();
+    }
+
+    [SetUp]
+    public void SetUp()
+    {
+        Logger.Information("Current test hash: {TestHash}",LoggingUtils.CurrentTestHash());
+        
+        Logger = new LoggerConfiguration()
+            .WriteTo.Logger(Logger)
+            .WriteTo.File(Path.Combine("trace-logs", $"{LoggingUtils.CurrentTestHash()}.log"))
+            .CreateLogger();
     }
 
     void BuildTentacleClient()
