@@ -5,7 +5,7 @@ using YamlDotNet.Core.Tokens;
 
 namespace Octopus.Tentacle.Kubernetes
 {
-    public record PodLogLine(int LineNumber, ProcessOutputSource Source, string Message, DateTimeOffset Occurred);
+    public record PodLogLine(long LineNumber, ProcessOutputSource Source, string Message, DateTimeOffset Occurred);
 
     public abstract class PodLogLineParseResult
     {

@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions.Extensions;
@@ -14,6 +16,23 @@ using Octopus.Time;
 
 namespace Octopus.Tentacle.Tests.Kubernetes
 {
+    public class Foo
+    {
+        [Test]
+        public async Task fdfs()
+        {
+            var client = new k8s.Kubernetes(new LocalMachineKubernetesClientConfigProvider().Get());
+
+            var pods = await client.ListPodForAllNamespacesAsync();
+            var v1Pod = pods.Items.First();
+            var stream = await client.ReadNamespacedPodLogAsync(v1Pod.Name(), v1Pod.Namespace(), timestamps: true);
+
+            using var foo = new StreamReader(stream);
+
+            var logs = await foo.ReadToEndAsync();
+        }
+    }
+
     [TestFixture]
     public class KubernetesOrphanedPodCleanerTests
     {
