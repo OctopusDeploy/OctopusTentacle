@@ -10,7 +10,7 @@ namespace Octopus.Tentacle.Kubernetes
 {
     static class PodLogReader
     {
-        public static async Task<(IReadOnlyCollection<ProcessOutput> Lines, long NextSequenceNumber, int? exitCode)> ReadPodLogs(long lastLogSequence, StreamReader reader, InMemoryTentacleScriptLog tentacleScriptLog)
+        public static async Task<(IReadOnlyCollection<ProcessOutput> Lines, long NextSequenceNumber, int? exitCode)> ReadPodLogs(long lastLogSequence, StreamReader reader)
         {
             int? exitCode = null;
             var results = new List<ProcessOutput>();
@@ -29,7 +29,6 @@ namespace Octopus.Tentacle.Kubernetes
                     return (results, nextSequenceNumber, exitCode);
                 }
 
-                tentacleScriptLog.Verbose("Parsing line: " + line);
                 var parseResult = PodLogLineParser.ParseLine(line!);
 
                 switch (parseResult)
