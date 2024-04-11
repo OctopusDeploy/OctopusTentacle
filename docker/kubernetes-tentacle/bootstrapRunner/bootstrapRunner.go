@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/exec"
 	"sync"
-	"time"
 )
 
 type SafeCounter struct {
@@ -88,7 +87,7 @@ func Write(stream string, text string, counter *SafeCounter) {
 	//https://go.dev/tour/concurrency/9
 	counter.Mutex.Lock()
 
-	fmt.Printf("%d|%s|%s|%s\n", counter.Value, time.Now().UTC().Format(time.RFC3339Nano), stream, text)
+	fmt.Printf("|%d|%s|%s\n", counter.Value, stream, text)
 	counter.Value++
 
 	counter.Mutex.Unlock()

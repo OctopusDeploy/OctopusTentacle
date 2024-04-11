@@ -5,7 +5,7 @@ using YamlDotNet.Core.Tokens;
 
 namespace Octopus.Tentacle.Kubernetes
 {
-    public record PodLogLine(int LineNumber, ProcessOutputSource Source, string Message, DateTimeOffset Occurred);
+    public record PodLogLine(long LineNumber, ProcessOutputSource Source, string Message, DateTimeOffset Occurred);
 
     public abstract class PodLogLineParseResult
     {
@@ -70,14 +70,14 @@ namespace Octopus.Tentacle.Kubernetes
                 return new InvalidPodLogLineParseResult($"Invalid log line detected. '{line}' is not correctly pipe-delimited.");
             }
 
-            if (!int.TryParse(logParts[0], out int lineNumber))
-            {
-                return new InvalidPodLogLineParseResult($"Invalid log line detected. '{logParts[0]}' is not a valid line number.");
-            }
-
-            if (!DateTimeOffset.TryParse(logParts[1], out var occurred))
+            if (!DateTimeOffset.TryParse(logParts[0], out var occurred))
             {
                 return new InvalidPodLogLineParseResult($"Invalid log line detected. Failed to parse '{logParts[1]}' as a DateTimeOffset.");
+            }
+
+            if (!int.TryParse(logParts[1], out int lineNumber))
+            {
+                return new InvalidPodLogLineParseResult($"Invalid log line detected. '{logParts[0]}' is not a valid line number.");
             }
 
             if (!Enum.TryParse(logParts[2], true, out ProcessOutputSource source))

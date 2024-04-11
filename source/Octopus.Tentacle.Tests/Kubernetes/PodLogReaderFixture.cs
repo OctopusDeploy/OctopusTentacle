@@ -31,7 +31,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         public async Task FirstLine_SequenceNumberIncreasesByOne()
         {
             string[] podLines = {
-                "1|2024-04-03T06:03:10.517865655Z|stdout|Kubernetes Script Pod completed",
+                "2024-04-03T06:03:10.517865655Z |1|stdout|Kubernetes Script Pod completed",
             };
 
             var reader = SetupReader(podLines);
@@ -47,9 +47,9 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         public async Task ThreeSubsequentLines_SequenceNumberIncreasesByThree()
         {
             string[] podLines = {
-                "5|2024-04-03T06:03:10.517857755Z|stdout|##octopus[stdout-verbose]",
-                "6|2024-04-03T06:03:10.517865655Z|stderr|Kubernetes Script Pod completed",
-                "7|2024-04-03T06:03:10.517867355Z|stdout|##octopus[stdout-default]"
+                "2024-04-03T06:03:10.517857755Z |5|stdout|##octopus[stdout-verbose]",
+                "2024-04-03T06:03:10.517865655Z |6|stderr|Kubernetes Script Pod completed",
+                "2024-04-03T06:03:10.517867355Z |7|stdout|##octopus[stdout-default]"
             };
 
             var reader = SetupReader(podLines);
@@ -67,9 +67,9 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         public async Task StreamContainsPreviousLines_Deduplicates()
         {
             string[] podLines = {
-                "5|2024-04-03T06:03:10.517857755Z|stdout|##octopus[stdout-verbose]",
-                "6|2024-04-03T06:03:10.517865655Z|stderr|Kubernetes Script Pod completed",
-                "7|2024-04-03T06:03:10.517867355Z|stdout|##octopus[stdout-default]"
+                "2024-04-03T06:03:10.517857755Z |5|stdout|##octopus[stdout-verbose]",
+                "2024-04-03T06:03:10.517865655Z |6|stderr|Kubernetes Script Pod completed",
+                "2024-04-03T06:03:10.517867355Z |7|stdout|##octopus[stdout-default]"
             };
 
             var allTaskLogs = new List<ProcessOutput>();
@@ -113,7 +113,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         public async Task MissingLine_Throws()
         {
             string[] podLines = {
-                "100|2024-04-03T06:03:10.517865655Z|stdout|Kubernetes Script Pod completed",
+                "2024-04-03T06:03:10.517865655Z |100|stdout|Kubernetes Script Pod completed",
             };
         
             var reader = SetupReader(podLines);

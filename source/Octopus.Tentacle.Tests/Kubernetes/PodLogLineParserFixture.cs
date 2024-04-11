@@ -16,22 +16,22 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             var result = PodLogLineParser.ParseLine(line).Should().BeOfType<InvalidPodLogLineParseResult>().Subject;
             result.Error.Should().Contain("delimited");
         }
-        
-        [TestCase("a|b|c|d", Reason = "Not a line number")]
-        public void FirstPartIsNotALineNumber(string line)
-        {
-            var result = PodLogLineParser.ParseLine(line).Should().BeOfType<InvalidPodLogLineParseResult>().Subject;
-            result.Error.Should().Contain("line number");
-        }
-        
-        [TestCase("1|b|c|d", Reason = "Not a date")]
-        public void SecondPartIsNotALineDate(string line)
+
+        [TestCase("1 |b|c|d", Reason = "Not a date")]
+        public void FirstPartIsNotALineDate(string line)
         {
             var result = PodLogLineParser.ParseLine(line).Should().BeOfType<InvalidPodLogLineParseResult>().Subject;
             result.Error.Should().Contain("DateTimeOffset");
         }
-        
-        [TestCase("1|2024-04-03T06:03:10.501025551Z|c|d", Reason = "Not a valid source")]
+
+        [TestCase("2024-04-03T06:03:10.501025551Z |b|c|d", Reason = "Not a line number")]
+        public void SecondPartIsNotALineNumber(string line)
+        {
+            var result = PodLogLineParser.ParseLine(line).Should().BeOfType<InvalidPodLogLineParseResult>().Subject;
+            result.Error.Should().Contain("line number");
+        }
+
+        [TestCase("2024-04-03T06:03:10.501025551Z |1|c|d", Reason = "Not a valid source")]
         public void ThirdPartIsNotAValidSource(string line)
         {
             var result = PodLogLineParser.ParseLine(line).Should().BeOfType<InvalidPodLogLineParseResult>().Subject;
@@ -41,7 +41,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         [Test]
         public void SimpleMessage()
         {
-            var logLine = PodLogLineParser.ParseLine("123|2024-04-03T06:03:10.501025551Z|stdout|This is the message")
+            var logLine = PodLogLineParser.ParseLine($"2024-04-03T06:03:10.501025551Z |123|stdout|This is the message")
                 .Should().BeOfType<ValidPodLogLineParseResult>().Subject.LogLine;
 
             logLine.LineNumber.Should().Be(123);
@@ -53,7 +53,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         [Test]
         public void ServiceMessage()
         {
-            var logLine = PodLogLineParser.ParseLine("123|2024-04-03T06:03:10.501025551Z|stdout|##octopus[stdout-verbose]")
+            var logLine = PodLogLineParser.ParseLine("2024-04-03T06:03:10.501025551Z |123|stdout|##octopus[stdout-verbose]")
                 .Should().BeOfType<ValidPodLogLineParseResult>().Subject.LogLine;
 
             logLine.LineNumber.Should().Be(123);
@@ -65,7 +65,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         [Test]
         public void ErrorMessage()
         {
-            var logLine = PodLogLineParser.ParseLine("123|2024-04-03T06:03:10.501025551Z|stderr|Error!")
+            var logLine = PodLogLineParser.ParseLine("2024-04-03T06:03:10.501025551Z |123|stderr|Error!")
                 .Should().BeOfType<ValidPodLogLineParseResult>().Subject.LogLine;
 
             logLine.LineNumber.Should().Be(123);
@@ -77,7 +77,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         [Test]
         public void MessageHasPipeInIt()
         {
-            var logLine = PodLogLineParser.ParseLine("123|2024-04-03T06:03:10.501025551Z|stdout|This is the me|ss|age")
+            var logLine = PodLogLineParser.ParseLine("2024-04-03T06:03:10.501025551Z |123|stdout|This is the me|ss|age")
                 .Should().BeOfType<ValidPodLogLineParseResult>().Subject.LogLine;
 
             logLine.LineNumber.Should().Be(123);
@@ -89,7 +89,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         [Test]
         public void ValidEndOfStreamWithPositiveExitCode()
         {
-            var result = PodLogLineParser.ParseLine("123|2024-04-03T06:03:10.501025551Z|debug|EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE<<>>4")
+            var result = PodLogLineParser.ParseLine("2024-04-03T06:03:10.501025551Z |123|debug|EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE<<>>4")
                 .Should().BeOfType<EndOfStreamPodLogLineParseResult>().Subject;
 
             result.ExitCode.Should().Be(4);
@@ -103,7 +103,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         [Test]
         public void ValidEndOfStreamWithNegativeExitCode()
         {
-            var result = PodLogLineParser.ParseLine("123|2024-04-03T06:03:10.501025551Z|debug|EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE<<>>-64")
+            var result = PodLogLineParser.ParseLine("2024-04-03T06:03:10.501025551Z |123|debug|EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE<<>>-64")
                 .Should().BeOfType<EndOfStreamPodLogLineParseResult>().Subject;
 
             result.ExitCode.Should().Be(-64);
@@ -117,7 +117,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         [Test]
         public void InvalidEndOfStream()
         {
-            var result = PodLogLineParser.ParseLine("123|2024-04-03T06:03:10.501025551Z|stdout|EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE<<>>")
+            var result = PodLogLineParser.ParseLine("2024-04-03T06:03:10.501025551Z |123|stdout|EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE<<>>")
                 .Should().BeOfType<InvalidPodLogLineParseResult>().Subject;
 
             result.Error.Should().Contain("end of stream");
