@@ -95,7 +95,7 @@ public class KubernetesAgentInstaller
             .Replace("#{EncodedCertificate}", CertificateEncoder.ToBase64String(TestCertificates.Tentacle))
             .Replace("#{ConfigMapData}", configMapData)
             .Replace("#{ImageRepository}","docker.packages.octopushq.com/octopusdeploy/kubernetes-tentacle")
-            .Replace("#{ImageTag}", "8.1.1320-pull-870");
+            .Replace("#{ImageTag}", "8.1.1346-pull-870");
 
         var valuesFilePath = Path.Combine(tempDir.DirectoryPath, "agent-values.yaml");
         await File.WriteAllTextAsync(valuesFilePath, valuesFile, Encoding.UTF8);
@@ -114,7 +114,7 @@ public class KubernetesAgentInstaller
             NamespaceFlag,
             KubeConfigFlag,
             AgentName,
-            "--version \"0.7.1-ap-inject-test-data-20240410064112\"",
+            "--version \"0.7.1-ap-inject-test-data-20240412040646\"",
             "oci://docker.packages.octopushq.com/kubernetes-agent"
             //"oci://registry-1.docker.io/octopusdeploy/kubernetes-agent"
         );
@@ -144,7 +144,7 @@ public class KubernetesAgentInstaller
 
             if (exitCode != 0)
             {
-                logger.Error("Failed to install Kubernetes Agent {AgentName} via Helm", AgentName);
+                logger.Error("Failed to uninstall Kubernetes Agent {AgentName} via Helm", AgentName);
             }
         }
 

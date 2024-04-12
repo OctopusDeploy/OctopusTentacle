@@ -20,8 +20,6 @@ public class UnitTest1 : KubernetesAgentIntegrationTest
             .SetScriptBody("echo \"Hello World\"")
             .Build();
 
-        await Task.Delay(TimeSpan.FromMinutes(5));
-        
         //act
         var result = await TentacleClient.ExecuteScript(command, StatusReceived, ScriptCompleted, new InMemoryLog(), CancellationToken.None);
         
