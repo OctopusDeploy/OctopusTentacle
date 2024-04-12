@@ -106,9 +106,9 @@
             "type": "string",
             "enum": [
               "BuildAll",
-              "BuildAndPushForMicrok8sKubernetesTentacleContainerImage",
               "BuildAndLoadLocalDebugKubernetesTentacleContainerImage",
               "BuildAndLoadLocallyKubernetesTentacleContainerImage",
+              "BuildAndPushForMicrok8sKubernetesTentacleContainerImage",
               "BuildAndPushKubernetesTentacleContainerImage",
               "BuildLinux",
               "BuildOsx",
@@ -155,9 +155,9 @@
             "type": "string",
             "enum": [
               "BuildAll",
-              "BuildAndPushForMicrok8sKubernetesTentacleContainerImage",
               "BuildAndLoadLocalDebugKubernetesTentacleContainerImage",
               "BuildAndLoadLocallyKubernetesTentacleContainerImage",
+              "BuildAndPushForMicrok8sKubernetesTentacleContainerImage",
               "BuildAndPushKubernetesTentacleContainerImage",
               "BuildLinux",
               "BuildOsx",
