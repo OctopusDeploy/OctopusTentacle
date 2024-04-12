@@ -12,6 +12,7 @@ using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha;
 using Octopus.Tentacle.Scripts;
+using Octopus.Tentacle.Util;
 using Octopus.Tentacle.Variables;
 
 namespace Octopus.Tentacle.Kubernetes
@@ -173,7 +174,11 @@ namespace Octopus.Tentacle.Kubernetes
                 },
                 Spec = new V1PodSpec
                 {
-                    Containers = await CreateRequiredContainers(command, workspace, podName, scriptName),
+                    // Containers = await CreateRequiredContainers(command, workspace, podName, scriptName),
+                    Containers = new List<V1Container>
+                    {
+                        await CreateScriptContainer(command, workspace, podName, scriptName)
+                    }.AddIfNotNull(CreateWatchdogContainer()),
                     //only include the image pull secret name if it's actually been defined
                     ImagePullSecrets = imagePullSecretName is not null
                         ? new List<V1LocalObjectReference>
@@ -211,16 +216,6 @@ namespace Octopus.Tentacle.Kubernetes
         {
             log.Verbose(message);
             tentacleScriptLog.Verbose(message);
-        }
-
-        async Task<List<V1Container>> CreateRequiredContainers(StartKubernetesScriptCommandV1Alpha command, IScriptWorkspace workspace, string podName, string scriptName)
-        {
-            var list = new List<V1Container?>
-            {
-                await CreateScriptContainer(command, workspace, podName, scriptName),
-                CreateWatchdogContainer()
-            };
-            return list.Where(c => c != null).ToList()!;
         }
 
         async Task<V1Container> CreateScriptContainer(StartKubernetesScriptCommandV1Alpha command, IScriptWorkspace workspace, string podName, string scriptName)
