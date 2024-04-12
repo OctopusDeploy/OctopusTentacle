@@ -4,6 +4,7 @@ using System.Text;
 using Octopus.Client.Model;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Kubernetes.Tests.Integration.Setup.Tooling;
+using Octopus.Tentacle.Kubernetes.Tests.Integration.Support.Logging;
 using Octopus.Tentacle.Security.Certificates;
 using Octopus.Tentacle.Util;
 
@@ -21,11 +22,7 @@ public class KubernetesAgentInstaller
     {
         tempDir = new TemporaryDirectory();
 
-        logger = new LoggerConfiguration()
-            .WriteTo.NUnitOutput()
-            .WriteTo.File("w:\\temp\\agent-install.log")
-            .CreateLogger()
-            .ForContext<KubernetesClusterInstaller>();
+        logger = new SerilogLoggerBuilder().Build();
 
         AgentName = Guid.NewGuid().ToString("N");
     }

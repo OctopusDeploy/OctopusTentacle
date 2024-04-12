@@ -12,13 +12,15 @@ public class UnitTest1 : KubernetesAgentIntegrationTest
     [Test]
     public async Task Test1()
     {
+        Logger.Information("Hi there");
         // Arrange
         var logs = new List<ProcessOutput>();
         var scriptCompleted = false;
         var command = new ExecuteKubernetesScriptCommandBuilder($"{nameof(UnitTest1)}.{nameof(Test1)}")
             .SetScriptBody("echo \"Hello World\"")
             .Build();
-        
+
+        await Task.Delay(TimeSpan.FromMinutes(5));
         
         //act
         var result = await TentacleClient.ExecuteScript(command, StatusReceived, ScriptCompleted, new InMemoryLog(), CancellationToken.None);

@@ -2,11 +2,11 @@
 using System;
 using System.Reflection;
 
-[assembly: AssemblyVersion("0.0.0.0")]
-[assembly: AssemblyFileVersion("0.0.0.0")]
-[assembly: AssemblyInformationalVersion("0.0.0-local")]
-[assembly: AssemblyGitBranch("UNKNOWNBRANCH")]
-[assembly: AssemblyNuGetVersion("0.0.0-local")]
+[assembly: AssemblyVersion("8.1.1269")]
+[assembly: AssemblyFileVersion("8.1.1269")]
+[assembly: AssemblyInformationalVersion("8.1.1269-ap-testing-k8s-agent+Branch.ap-testing-k8s-agent.Sha.1c27b2a7829667ffbf9739d2baa846633bea15df")]
+[assembly: AssemblyGitBranch("")]
+[assembly: AssemblyNuGetVersion("8.1.1269-ap-testing-k8s-agent-20240412120751")]
 
 #if DEFINE_VERSION_ATTRIBUTES
     [AttributeUsage(AttributeTargets.Assembly)]

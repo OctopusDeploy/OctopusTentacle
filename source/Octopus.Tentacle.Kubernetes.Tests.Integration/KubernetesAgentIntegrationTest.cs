@@ -1,5 +1,6 @@
 ﻿using Halibut;
 using Halibut.Diagnostics;
+using Halibut.Diagnostics.LogCreators;
 using Halibut.Logging;
 using Octopus.Tentacle.Client;
 using Octopus.Tentacle.Client.Retries;
@@ -7,6 +8,7 @@ using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Kubernetes.Tests.Integration.Setup;
+using Octopus.Tentacle.Kubernetes.Tests.Integration.Support.Logging;
 using Octopus.TestPortForwarder;
 
 namespace Octopus.Tentacle.Kubernetes.Tests.Integration;
@@ -23,11 +25,7 @@ public abstract class KubernetesAgentIntegrationTest
 
     protected KubernetesAgentIntegrationTest() 
     {
-        Logger = new LoggerConfiguration()
-            .WriteTo.NUnitOutput()
-            .MinimumLevel.Verbose()
-            .CreateLogger()
-            .ForContext<KubernetesAgentIntegrationTest>();
+        Logger = new SerilogLoggerBuilder().Build();
     }
 
     [OneTimeSetUp]
@@ -37,12 +35,8 @@ public abstract class KubernetesAgentIntegrationTest
 
         //create a new server halibut runtime
         var listeningPort = BuildServerHalibutRuntimeAndListen();
-
-        portForwarder = PortForwarderBuilder
-            .ForwardingToLocalPort(listeningPort, Logger)
-            .Build();
         
-        await kubernetesAgentInstaller.InstallAgent(TestKubernetesCluster.KubeConfigPath, portForwarder.ListeningPort);
+        await kubernetesAgentInstaller.InstallAgent(TestKubernetesCluster.KubeConfigPath, listeningPort);
 
         BuildTentacleClient();
     }
@@ -51,11 +45,8 @@ public abstract class KubernetesAgentIntegrationTest
     public void SetUp()
     {
         Logger.Information("Current test hash: {TestHash}",LoggingUtils.CurrentTestHash());
-        
-        Logger = new LoggerConfiguration()
-            .WriteTo.Logger(Logger)
-            .WriteTo.File(Path.Combine("trace-logs", $"{LoggingUtils.CurrentTestHash()}.log"))
-            .CreateLogger();
+
+        Logger = new SerilogLoggerBuilder().Build();
     }
 
     void BuildTentacleClient()
@@ -79,7 +70,8 @@ public abstract class KubernetesAgentIntegrationTest
     {
         var serverHalibutRuntimeBuilder = new HalibutRuntimeBuilder()
             .WithServerCertificate(TestCertificates.Server)
-            .WithHalibutTimeoutsAndLimits(HalibutTimeoutsAndLimits.RecommendedValues());
+            .WithHalibutTimeoutsAndLimits(HalibutTimeoutsAndLimits.RecommendedValues())
+            .WithLogFactory(new TestContextLogCreator("Server", LogLevel.Trace).ToCachingLogFactory());
 
         ServerHalibutRuntime = serverHalibutRuntimeBuilder.Build();
 

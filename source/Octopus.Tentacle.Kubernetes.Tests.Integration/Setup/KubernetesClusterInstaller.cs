@@ -2,6 +2,7 @@
 using System.Reflection;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Kubernetes.Tests.Integration.Setup.Tooling;
+using Octopus.Tentacle.Kubernetes.Tests.Integration.Support.Logging;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Kubernetes.Tests.Integration.Setup;
@@ -20,12 +21,8 @@ public class KubernetesClusterInstaller
     public KubernetesClusterInstaller()
     {
         tempDir = new TemporaryDirectory();
-
-        logger = new LoggerConfiguration()
-            .WriteTo.NUnitOutput()
-            .WriteTo.File("w:\\temp\\cluster-install.log")
-            .CreateLogger()
-            .ForContext<KubernetesClusterInstaller>();
+        
+        logger = new SerilogLoggerBuilder().Build();
 
         clusterName = $"tentacleint-{DateTime.Now:yyyyMMddhhmmss}";
         kubeConfigName = $"{clusterName}.config";
