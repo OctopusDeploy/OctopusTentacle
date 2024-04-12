@@ -8,7 +8,9 @@ using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Kubernetes.Tests.Integration.Setup;
+using Octopus.Tentacle.Kubernetes.Tests.Integration.Setup.Tooling;
 using Octopus.Tentacle.Kubernetes.Tests.Integration.Support.Logging;
+using Octopus.Tentacle.Util;
 using Octopus.TestPortForwarder;
 
 namespace Octopus.Tentacle.Kubernetes.Tests.Integration;
@@ -16,6 +18,8 @@ namespace Octopus.Tentacle.Kubernetes.Tests.Integration;
 public abstract class KubernetesAgentIntegrationTest
 {
     readonly KubernetesAgentInstaller kubernetesAgentInstaller = new();
+    TemporaryDirectory tempDir = null!;
+    string kubeCtlExe = null!;
     protected ILogger Logger { get; private set; }
 
     protected HalibutRuntime ServerHalibutRuntime { get; private set; } = null!;
@@ -32,19 +36,49 @@ public abstract class KubernetesAgentIntegrationTest
     {
         await kubernetesAgentInstaller.DownloadHelm();
 
+        tempDir = new TemporaryDirectory();
+        var kubectlDownloader = new KubeCtlDownloader(Logger);
+        kubeCtlExe = await kubectlDownloader.Download(tempDir.DirectoryPath, CancellationToken.None);
+        
         //create a new server halibut runtime
         var listeningPort = BuildServerHalibutRuntimeAndListen();
         
         await kubernetesAgentInstaller.InstallAgent(TestKubernetesCluster.KubeConfigPath, listeningPort);
 
+        //kubectl get config map thumbprint value of the generated cert
+        var thumbPrint = GetAgentThumbprint();
+        
+        //trust the generated cert thumbprint
+        ServerHalibutRuntime.Trust(thumbPrint);
+
         BuildTentacleClient();
+    }
+
+    string GetAgentThumbprint()
+    {
+        string? thumbprint = null;
+        var exitCode = SilentProcessRunner.ExecuteCommand(
+            kubeCtlExe,
+            //we give the cluster a unique name
+            $"get cm tentacle-config --namespace octopus-agent-{kubernetesAgentInstaller.Namespace} --kubeconfig=\"{TestKubernetesCluster.KubeConfigPath}\" -o \"jsonpath={{.data['Tentacle\\.CertificateThumbprint']}}\"",
+            tempDir.DirectoryPath,
+            Logger.Debug,
+            x => thumbprint = x,
+            Logger.Error,
+            CancellationToken.None);
+        
+        if (exitCode != 0 || thumbprint is null)
+        {
+            Logger.Error("Failed to load thumbprint");
+            throw new InvalidOperationException($"Failed to load thumbprint");
+        }
+
+        return thumbprint;
     }
 
     [SetUp]
     public void SetUp()
     {
-        Logger.Information("Current test hash: {TestHash}",LoggingUtils.CurrentTestHash());
-
         Logger = new SerilogLoggerBuilder().Build();
     }
 
@@ -74,7 +108,6 @@ public abstract class KubernetesAgentIntegrationTest
 
         ServerHalibutRuntime = serverHalibutRuntimeBuilder.Build();
 
-        ServerHalibutRuntime.Trust(TestCertificates.TentaclePublicThumbprint);
         return ServerHalibutRuntime.Listen();
     }
 

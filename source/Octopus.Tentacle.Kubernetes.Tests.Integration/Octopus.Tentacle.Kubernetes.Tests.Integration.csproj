@@ -44,6 +44,14 @@
       <EmbeddedResource Include="Setup\kind-config.yaml">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </EmbeddedResource>
+      <None Remove="Setup\local-network-routing.yaml" />
+      <EmbeddedResource Include="Setup\docker-desktop-network-routing.yaml">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </EmbeddedResource>
+      <None Remove="Setup\teamcity-network-routing.yaml" />
+      <EmbeddedResource Include="Setup\linux-network-routing.yaml">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </EmbeddedResource>
     </ItemGroup>
 
 </Project>

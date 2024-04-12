@@ -28,6 +28,8 @@ public class KubernetesAgentInstaller
     }
 
     public string AgentName { get; }
+
+    public string Namespace => $"octopus-agent-{AgentName}";
     
     public Uri SubscriptionId { get; } = PollingSubscriptionId.Generate();
 
@@ -94,8 +96,7 @@ public class KubernetesAgentInstaller
             .Replace("#{ServerUrl}", "https://octopus.internal/")
             .Replace("#{EncodedCertificate}", CertificateEncoder.ToBase64String(TestCertificates.Tentacle))
             .Replace("#{ConfigMapData}", configMapData)
-            .Replace("#{ImageRepository}","docker.packages.octopushq.com/octopusdeploy/kubernetes-tentacle")
-            .Replace("#{ImageTag}", "8.1.1347-pull-870");
+            .Replace("#{ImageRepository}", "docker.packages.octopushq.com/octopusdeploy/kubernetes-tentacle");
 
         var valuesFilePath = Path.Combine(tempDir.DirectoryPath, "agent-values.yaml");
         await File.WriteAllTextAsync(valuesFilePath, valuesFile, Encoding.UTF8);
@@ -120,7 +121,7 @@ public class KubernetesAgentInstaller
         );
     }
 
-    string NamespaceFlag => $"--namespace \"octopus-agent-{AgentName}\"";
+    string NamespaceFlag => $"--namespace \"{Namespace}\"";
     string KubeConfigFlag => $"--kubeconfig \"{kubeConfigPath}\"";
 
     public void Dispose()

@@ -1,4 +1,5 @@
-﻿using Octopus.Tentacle.Kubernetes.Tests.Integration.Setup;
+﻿using Octopus.Tentacle.CommonTestUtils;
+using Octopus.Tentacle.Kubernetes.Tests.Integration.Setup;
 
 namespace Octopus.Tentacle.Kubernetes.Tests.Integration;
 

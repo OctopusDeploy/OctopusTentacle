@@ -4,6 +4,7 @@ using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Kubernetes.Tests.Integration.Setup.Tooling;
 using Octopus.Tentacle.Kubernetes.Tests.Integration.Support.Logging;
 using Octopus.Tentacle.Util;
+using PlatformDetection = Octopus.Tentacle.CommonTestUtils.PlatformDetection;
 
 namespace Octopus.Tentacle.Kubernetes.Tests.Integration.Setup;
 
@@ -14,6 +15,7 @@ public class KubernetesClusterInstaller
 
     readonly TemporaryDirectory tempDir;
     string kindExe = null!;
+    string kubeCtlExe = null!;
     readonly ILogger logger;
 
     public string KubeConfigPath => Path.Combine(tempDir.DirectoryPath, kubeConfigName);
@@ -33,8 +35,10 @@ public class KubernetesClusterInstaller
         var kindDownloader = new KindDownloader(logger);
         kindExe = await kindDownloader.Download(tempDir.DirectoryPath, CancellationToken.None);
 
-        var configFilePath = await WriteKindConfigFile();
-        
+        var kubectlDownloader = new KubeCtlDownloader(logger);
+        kubeCtlExe = await kubectlDownloader.Download(tempDir.DirectoryPath, CancellationToken.None);
+
+        var configFilePath = await WriteFileToTemporaryDirectory("kind-config.yaml");
 
         var sw = new Stopwatch();
         sw.Restart();
@@ -60,16 +64,41 @@ public class KubernetesClusterInstaller
 
         logger.Information("Created Kind Kubernetes cluster {ClusterName} in {ElapsedTime}", clusterName, sw.Elapsed);
 
+        await SetLocalhostRouting();
+
         await InstallNfiCsiDriver();
     }
 
-    async Task<string> WriteKindConfigFile()
+    async Task SetLocalhostRouting()
+    {
+        var filename = PlatformDetection.IsRunningOnNix ? "linux-network-routing.yaml" : "docker-desktop-network-routing.yaml";
+        
+        var manifestFilePath = await WriteFileToTemporaryDirectory(filename, "manifest.yaml");
+        
+        var exitCode = SilentProcessRunner.ExecuteCommand(
+            kubeCtlExe,
+            //we give the cluster a unique name
+            $"apply -f \"{manifestFilePath}\"--kubeconfig=\"{KubeConfigPath}\"",
+            tempDir.DirectoryPath,
+            logger.Debug,
+            logger.Information,
+            logger.Error,
+            CancellationToken.None);
+        
+        if (exitCode != 0)
+        {
+            logger.Error("Failed to apply localhost routing to cluster {ClusterName}", clusterName);
+            throw new InvalidOperationException($"Failed to apply localhost routing to cluster {clusterName}");
+        }
+    }
+
+    async Task<string> WriteFileToTemporaryDirectory(string resourceFileName, string? outputFilename = null)
     {
         var asm = Assembly.GetExecutingAssembly();
-        var valuesFileName = asm.GetManifestResourceNames().First(n => n.Contains("kind-config.yaml", StringComparison.OrdinalIgnoreCase));
+        var valuesFileName = asm.GetManifestResourceNames().First(n => n.Contains(resourceFileName, StringComparison.OrdinalIgnoreCase));
         await using var resourceStream = asm.GetManifestResourceStream(valuesFileName)!;
 
-        var filePath = Path.Combine(tempDir.DirectoryPath, "kind-config.yaml");
+        var filePath = Path.Combine(tempDir.DirectoryPath, outputFilename ?? resourceFileName);
         await using var file = File.Create(filePath);
 
         resourceStream.Seek(0, SeekOrigin.Begin);
