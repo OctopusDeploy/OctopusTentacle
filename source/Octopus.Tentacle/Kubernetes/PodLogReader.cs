@@ -37,6 +37,7 @@ namespace Octopus.Tentacle.Kubernetes
                     {
                         var podLogLine = validParseResult.LogLine;
 
+                        //The stream might contain lines from the last batch (so we need to ignore the older lines)
                         //Once we see a line number that's large enough,
                         //then we've read past the previous batch.
                         if (!haveReadPastPreviousBatchOfRows && podLogLine.LineNumber > lastLogSequence)
@@ -47,7 +48,7 @@ namespace Octopus.Tentacle.Kubernetes
                         {
                             //Lines must appear in order
                             if (podLogLine.LineNumber != expectedLineNumber)
-                                throw new UnexpectedPodLogLineNumberException();
+                                throw new UnexpectedPodLogLineNumberException(expectedLineNumber, podLogLine.LineNumber);
 
                             expectedLineNumber++;
                             
@@ -77,5 +78,9 @@ namespace Octopus.Tentacle.Kubernetes
 
     class UnexpectedPodLogLineNumberException : Exception
     {
+        public UnexpectedPodLogLineNumberException(long expectedLineNumber, long actualLineNumber)
+        : base($"Unexpected Script Pod log line number, expected: {expectedLineNumber}, actual: {actualLineNumber}")
+        {
+        }
     }
 }
