@@ -20,7 +20,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         public async Task NoLines_SameSequenceNumber(long lastLogSequence)
         {
             string[] podLines = Array.Empty<string>();
-            
+
             var reader = SetupReader(podLines);
             var result = await PodLogReader.ReadPodLogs(lastLogSequence, reader);
             result.NextSequenceNumber.Should().Be(lastLogSequence);
@@ -30,7 +30,8 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         [Test]
         public async Task FirstLine_SequenceNumberIncreasesByOne()
         {
-            string[] podLines = {
+            string[] podLines =
+            {
                 "2024-04-03T06:03:10.517865655Z |1|stdout|Kubernetes Script Pod completed",
             };
 
@@ -46,7 +47,8 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         [Test]
         public async Task ThreeSubsequentLines_SequenceNumberIncreasesByThree()
         {
-            string[] podLines = {
+            string[] podLines =
+            {
                 "2024-04-03T06:03:10.517857755Z |5|stdout|##octopus[stdout-verbose]",
                 "2024-04-03T06:03:10.517865655Z |6|stderr|Kubernetes Script Pod completed",
                 "2024-04-03T06:03:10.517867355Z |7|stdout|##octopus[stdout-default]"
@@ -62,11 +64,12 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                 new ProcessOutput(ProcessOutputSource.StdOut, "##octopus[stdout-default]", DateTimeOffset.Parse("2024-04-03T06:03:10.517867355Z")),
             });
         }
-        
+
         [Test]
         public async Task StreamContainsPreviousLines_Deduplicates()
         {
-            string[] podLines = {
+            string[] podLines =
+            {
                 "2024-04-03T06:03:10.517857755Z |5|stdout|##octopus[stdout-verbose]",
                 "2024-04-03T06:03:10.517865655Z |6|stderr|Kubernetes Script Pod completed",
                 "2024-04-03T06:03:10.517867355Z |7|stdout|##octopus[stdout-default]"
@@ -77,12 +80,12 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             var result = await PodLogReader.ReadPodLogs(4, reader);
             result.NextSequenceNumber.Should().Be(5);
             allTaskLogs.AddRange(result.Lines);
-            
+
             reader = SetupReader(podLines.ToArray());
             result = await PodLogReader.ReadPodLogs(5, reader);
             result.NextSequenceNumber.Should().Be(7);
             allTaskLogs.AddRange(result.Lines);
-            
+
             allTaskLogs.Should().BeEquivalentTo(new[]
             {
                 new ProcessOutput(ProcessOutputSource.StdOut, "##octopus[stdout-verbose]", DateTimeOffset.Parse("2024-04-03T06:03:10.517857755Z")),
@@ -101,26 +104,56 @@ namespace Octopus.Tentacle.Tests.Kubernetes
 
             var reader = SetupReader(podLines);
             var result = await PodLogReader.ReadPodLogs(0, reader);
-            
+
             result.NextSequenceNumber.Should().Be(0, "The sequence number doesn't move on parse errors");
             var outputLine = result.Lines.Should().ContainSingle().Subject;
             outputLine.Source.Should().Be(ProcessOutputSource.StdErr);
             outputLine.Text.Should().Be("Invalid log line detected. 'abcdefg' is not correctly pipe-delimited.");
             outputLine.Occurred.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromMinutes(1));
         }
-        
+
         [Test]
         public async Task MissingLine_Throws()
         {
-            string[] podLines = {
+            string[] podLines =
+            {
                 "2024-04-03T06:03:10.517865655Z |100|stdout|Kubernetes Script Pod completed",
             };
-        
+
             var reader = SetupReader(podLines);
             Func<Task> action = async () => await PodLogReader.ReadPodLogs(50, reader);
-            await action.Should().ThrowAsync<MissingPodLogException>();
+            await action.Should().ThrowAsync<UnexpectedPodLogLineNumberException>();
         }
-        
+
+        [Test]
+        public async Task LineOutOfOrderAtStart_Throws()
+        {
+            string[] podLines =
+            {
+                "2024-04-03T06:03:10.517865655Z |5|stdout|Kubernetes Script Pod completed",
+                "2024-04-03T06:03:10.517865655Z |4|stderr|Kubernetes Script Pod completed",
+            };
+
+            var reader = SetupReader(podLines);
+            Func<Task> action = async () => await PodLogReader.ReadPodLogs(4, reader);
+            await action.Should().ThrowAsync<UnexpectedPodLogLineNumberException>();
+        }
+
+        [Test]
+        public async Task LineOutOfOrderMidway_Throws()
+        {
+            string[] podLines =
+            {
+                "2024-04-03T06:03:10.517865655Z |3|stdout|Kubernetes Script Pod completed",
+                "2024-04-03T06:03:10.517865655Z |5|stdout|Kubernetes Script Pod completed",
+                "2024-04-03T06:03:10.517865655Z |4|stderr|Kubernetes Script Pod completed",
+            };
+
+            var reader = SetupReader(podLines);
+            Func<Task> action = async () => await PodLogReader.ReadPodLogs(2, reader);
+            await action.Should().ThrowAsync<UnexpectedPodLogLineNumberException>();
+        }
+
         static StreamReader SetupReader(params string[] lines)
         {
             return new StreamReader(new MemoryStream(Encoding.Default.GetBytes(string.Join("\n", lines))));
