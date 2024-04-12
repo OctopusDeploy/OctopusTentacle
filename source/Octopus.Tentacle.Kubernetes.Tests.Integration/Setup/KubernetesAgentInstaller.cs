@@ -95,7 +95,7 @@ public class KubernetesAgentInstaller
             .Replace("#{EncodedCertificate}", CertificateEncoder.ToBase64String(TestCertificates.Tentacle))
             .Replace("#{ConfigMapData}", configMapData)
             .Replace("#{ImageRepository}","docker.packages.octopushq.com/octopusdeploy/kubernetes-tentacle")
-            .Replace("#{ImageTag}", "8.1.1346-pull-870");
+            .Replace("#{ImageTag}", "8.1.1347-pull-870");
 
         var valuesFilePath = Path.Combine(tempDir.DirectoryPath, "agent-values.yaml");
         await File.WriteAllTextAsync(valuesFilePath, valuesFile, Encoding.UTF8);

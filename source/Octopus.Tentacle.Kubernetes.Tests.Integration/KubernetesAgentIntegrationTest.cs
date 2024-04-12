@@ -16,7 +16,6 @@ namespace Octopus.Tentacle.Kubernetes.Tests.Integration;
 public abstract class KubernetesAgentIntegrationTest
 {
     readonly KubernetesAgentInstaller kubernetesAgentInstaller = new();
-    PortForwarder portForwarder;
     protected ILogger Logger { get; private set; }
 
     protected HalibutRuntime ServerHalibutRuntime { get; private set; } = null!;
@@ -83,7 +82,6 @@ public abstract class KubernetesAgentIntegrationTest
     public async Task OneTimeTearDown()
     {
         await ServerHalibutRuntime.DisposeAsync();
-        portForwarder.Dispose();
         kubernetesAgentInstaller?.Dispose();
     }
 }

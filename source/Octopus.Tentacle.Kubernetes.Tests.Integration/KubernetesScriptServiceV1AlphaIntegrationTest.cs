@@ -1,22 +1,22 @@
 using FluentAssertions;
 using Octopus.Tentacle.Client.Scripts.Models;
 using Octopus.Tentacle.Client.Scripts.Models.Builders;
+using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.CommonTestUtils.Diagnostics;
 using Octopus.Tentacle.Contracts;
 
 namespace Octopus.Tentacle.Kubernetes.Tests.Integration;
 
 [TestFixture]
-public class UnitTest1 : KubernetesAgentIntegrationTest
+public class KubernetesScriptServiceV1AlphaIntegrationTest : KubernetesAgentIntegrationTest
 {
     [Test]
-    public async Task Test1()
+    public async Task SimpleHelloWorld()
     {
-        Logger.Information("Hi there");
         // Arrange
         var logs = new List<ProcessOutput>();
         var scriptCompleted = false;
-        var command = new ExecuteKubernetesScriptCommandBuilder($"{nameof(UnitTest1)}.{nameof(Test1)}")
+        var command = new ExecuteKubernetesScriptCommandBuilder(LoggingUtils.CurrentTestHash())
             .SetScriptBody("echo \"Hello World\"")
             .Build();
 
