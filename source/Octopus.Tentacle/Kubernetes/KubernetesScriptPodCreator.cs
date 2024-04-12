@@ -245,7 +245,7 @@ namespace Octopus.Tentacle.Kubernetes
                     new(KubernetesConfig.NamespaceVariableName, KubernetesConfig.Namespace),
                     new(KubernetesConfig.HelmReleaseNameVariableName, KubernetesConfig.HelmReleaseName),
                     new(KubernetesConfig.HelmChartVersionVariableName, KubernetesConfig.HelmChartVersion),
-                    new(EnvironmentVariables.TentacleHome, $"/octopus"),
+                    new(EnvironmentVariables.TentacleHome, "/octopus"),
                     new(EnvironmentVariables.TentacleInstanceName, appInstanceSelector.Current.InstanceName),
                     new(EnvironmentVariables.TentacleVersion, Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleVersion)),
                     new(EnvironmentVariables.TentacleCertificateSignatureAlgorithm, Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleCertificateSignatureAlgorithm)),
@@ -264,12 +264,14 @@ namespace Octopus.Tentacle.Kubernetes
                 }
             };
         }
-          V1Container? CreateWatchdogContainer()
+
+        V1Container? CreateWatchdogContainer()
         {
             if (KubernetesConfig.NfsWatchdogImage is null)
             {
                 return null;
             }
+
             return new V1Container
             {
                 Name = "nfs-watchdog",
@@ -280,7 +282,7 @@ namespace Octopus.Tentacle.Kubernetes
                 },
                 Env = new List<V1EnvVar>
                 {
-                    new(EnvironmentVariables.NfsWatchdogDirectory, $"/octopus")
+                    new(EnvironmentVariables.NfsWatchdogDirectory, "/octopus")
                 },
                 Resources = new V1ResourceRequirements
                 {
