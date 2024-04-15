@@ -12,10 +12,10 @@ namespace Octopus.Tentacle.Kubernetes.Tests.Integration.Support.Logging
     public class SerilogLoggerBuilder
     {
         static readonly ILogger Logger;
-        //static readonly ConcurrentDictionary<string, TraceLogFileLogger> TraceLoggers = new();
+        static readonly ConcurrentDictionary<string, TraceLogFileLogger> TraceLoggers = new();
         static readonly ConcurrentBag<string> HasLoggedTestHash = new();
 
-        //TraceLogFileLogger? traceFileLogger;
+        TraceLogFileLogger? traceFileLogger;
 
         static SerilogLoggerBuilder()
         {
@@ -41,11 +41,11 @@ namespace Octopus.Tentacle.Kubernetes.Tests.Integration.Support.Logging
                 .CreateLogger();
         }
 
-        // public SerilogLoggerBuilder SetTraceLogFileLogger(TraceLogFileLogger logger)
-        // {
-        //     this.traceFileLogger = logger;
-        //     return this;
-        // }
+        public SerilogLoggerBuilder SetTraceLogFileLogger(TraceLogFileLogger logger)
+        {
+            this.traceFileLogger = logger;
+            return this;
+        }
 
         public ILogger Build()
         {
@@ -119,34 +119,34 @@ namespace Octopus.Tentacle.Kubernetes.Tests.Integration.Support.Logging
             }
         }
 
-        // public class TraceLogsForFailedTestsSink : ILogEventSink
-        // {
-        //     readonly MessageTemplateTextFormatter formatter;
-        //
-        //     public TraceLogsForFailedTestsSink(MessageTemplateTextFormatter formatter) => this.formatter = formatter;
-        //
-        //     public void Emit(LogEvent logEvent)
-        //     {
-        //         if (logEvent == null)
-        //             throw new ArgumentNullException(nameof(logEvent));
-        //
-        //         var testName = TestContext.CurrentContext.Test.FullName;
-        //
-        //         if (!TraceLoggers.TryGetValue(testName, out var traceLogger))
-        //             throw new Exception($"Could not find trace logger for test '{testName}'");
-        //
-        //         var output = new StringWriter();
-        //         if (logEvent.Properties.TryGetValue("SourceContext", out var sourceContext))
-        //         {
-        //             var context = sourceContext.ToString().Substring(sourceContext.ToString().LastIndexOf('.') + 1).Replace("\"", "");
-        //             logEvent.AddOrUpdateProperty(new LogEventProperty("ShortContext", new ScalarValue(context)));
-        //         }
-        //
-        //         formatter.Format(logEvent, output);
-        //
-        //         var logLine = output.ToString().Trim();
-        //         traceLogger.WriteLine(logLine);
-        //     }
-        // }
+        public class TraceLogsForFailedTestsSink : ILogEventSink
+        {
+            readonly MessageTemplateTextFormatter formatter;
+        
+            public TraceLogsForFailedTestsSink(MessageTemplateTextFormatter formatter) => this.formatter = formatter;
+        
+            public void Emit(LogEvent logEvent)
+            {
+                if (logEvent == null)
+                    throw new ArgumentNullException(nameof(logEvent));
+        
+                var testName = TestContext.CurrentContext.Test.FullName;
+        
+                if (!TraceLoggers.TryGetValue(testName, out var traceLogger))
+                    throw new Exception($"Could not find trace logger for test '{testName}'");
+        
+                var output = new StringWriter();
+                if (logEvent.Properties.TryGetValue("SourceContext", out var sourceContext))
+                {
+                    var context = sourceContext.ToString().Substring(sourceContext.ToString().LastIndexOf('.') + 1).Replace("\"", "");
+                    logEvent.AddOrUpdateProperty(new LogEventProperty("ShortContext", new ScalarValue(context)));
+                }
+        
+                formatter.Format(logEvent, output);
+        
+                var logLine = output.ToString().Trim();
+                traceLogger.WriteLine(logLine);
+            }
+        }
     }
 }

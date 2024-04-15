@@ -14,16 +14,20 @@ public class KubernetesClusterInstaller
     readonly string kubeConfigName;
 
     readonly TemporaryDirectory tempDir;
-    string kindExe = null!;
-    string kubeCtlExe = null!;
+    readonly string kindExePath;
+    readonly string helmExePath;
+    readonly string kubeCtlPath;
     readonly ILogger logger;
 
     public string KubeConfigPath => Path.Combine(tempDir.DirectoryPath, kubeConfigName);
 
-    public KubernetesClusterInstaller()
+    public KubernetesClusterInstaller(TemporaryDirectory tempDirectory, string kindExePath, string helmExePath, string kubeCtlPath)
     {
-        tempDir = new TemporaryDirectory();
-        
+        tempDir = tempDirectory;
+        this.kindExePath = kindExePath;
+        this.helmExePath = helmExePath;
+        this.kubeCtlPath = kubeCtlPath;
+
         logger = new SerilogLoggerBuilder().Build();
 
         clusterName = $"tentacleint-{DateTime.Now:yyyyMMddhhmmss}";
@@ -32,18 +36,12 @@ public class KubernetesClusterInstaller
 
     public async Task Install()
     {
-        var kindDownloader = new KindDownloader(logger);
-        kindExe = await kindDownloader.Download(tempDir.DirectoryPath, CancellationToken.None);
-
-        var kubectlDownloader = new KubeCtlDownloader(logger);
-        kubeCtlExe = await kubectlDownloader.Download(tempDir.DirectoryPath, CancellationToken.None);
-
         var configFilePath = await WriteFileToTemporaryDirectory("kind-config.yaml");
 
         var sw = new Stopwatch();
         sw.Restart();
         var exitCode = SilentProcessRunner.ExecuteCommand(
-            kindExe,
+            kindExePath,
             //we give the cluster a unique name
             $"create cluster --name={clusterName} --config=\"{configFilePath}\" --kubeconfig=\"{kubeConfigName}\"",
             tempDir.DirectoryPath,
@@ -60,13 +58,13 @@ public class KubernetesClusterInstaller
             throw new InvalidOperationException($"Failed to create Kind Kubernetes cluster {clusterName}");
         }
         
-        logger.Information("Test cluster kubeconfig path: {Path}", KubeConfigPath);
+        logger.Information("Test cluster kubeconfig path: {Path:l}", KubeConfigPath);
 
         logger.Information("Created Kind Kubernetes cluster {ClusterName} in {ElapsedTime}", clusterName, sw.Elapsed);
 
         await SetLocalhostRouting();
 
-        await InstallNfiCsiDriver();
+        await InstallNfsCsiDriver();
     }
 
     async Task SetLocalhostRouting()
@@ -76,9 +74,9 @@ public class KubernetesClusterInstaller
         var manifestFilePath = await WriteFileToTemporaryDirectory(filename, "manifest.yaml");
         
         var exitCode = SilentProcessRunner.ExecuteCommand(
-            kubeCtlExe,
+            kubeCtlPath,
             //we give the cluster a unique name
-            $"apply -f \"{manifestFilePath}\"--kubeconfig=\"{KubeConfigPath}\"",
+            $"apply -f \"{manifestFilePath}\" --kubeconfig=\"{KubeConfigPath}\"",
             tempDir.DirectoryPath,
             logger.Debug,
             logger.Information,
@@ -107,11 +105,8 @@ public class KubernetesClusterInstaller
         return filePath;
     }
 
-    async Task InstallNfiCsiDriver()
+    async Task InstallNfsCsiDriver()
     {
-        var helmDownloader = new HelmDownloader(logger);
-        var helmPath = await helmDownloader.Download(tempDir.DirectoryPath, CancellationToken.None);
-
         //we need to perform a repo update in helm first
         // var exitCode = SilentProcessRunner.ExecuteCommand(
         //     helmPath,
@@ -124,7 +119,7 @@ public class KubernetesClusterInstaller
 
         var installArgs = BuildNfsCsiDriverInstallArguments();
         var exitCode = SilentProcessRunner.ExecuteCommand(
-            helmPath,
+            helmExePath,
             installArgs,
             tempDir.DirectoryPath,
             logger.Debug,
@@ -155,7 +150,7 @@ public class KubernetesClusterInstaller
     public void Dispose()
     {
         var exitCode = SilentProcessRunner.ExecuteCommand(
-            kindExe,
+            kindExePath,
             //delete the cluster for this test run
             $"delete cluster --name={clusterName}",
             tempDir.DirectoryPath,
@@ -168,7 +163,5 @@ public class KubernetesClusterInstaller
         {
             logger.Error("Failed to delete Kind kubernetes cluster {ClusterName}", clusterName);
         }
-
-        tempDir.Dispose();
     }
 }

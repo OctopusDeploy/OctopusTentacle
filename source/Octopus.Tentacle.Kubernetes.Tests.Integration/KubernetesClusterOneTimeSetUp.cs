@@ -1,24 +1,29 @@
-﻿using Octopus.Tentacle.CommonTestUtils;
-using Octopus.Tentacle.Kubernetes.Tests.Integration.Setup;
+﻿using Octopus.Tentacle.Kubernetes.Tests.Integration.Setup;
 
 namespace Octopus.Tentacle.Kubernetes.Tests.Integration;
 
 [SetUpFixture]
 public class KubernetesClusterOneTimeSetUp
 {
-    readonly KubernetesClusterInstaller installer = new();
+    KubernetesClusterInstaller installer;
 
     [OneTimeSetUp]
     public async Task OneTimeSetUp()
     {
+        var toolDownloader = new RequiredToolDownloader(KubernetesTestsGlobalContext.Instance.TemporaryDirectory, KubernetesTestsGlobalContext.Instance.Logger);
+        var (kindExePath, helmExePath, kubeCtlPath) = await toolDownloader.DownloadRequiredTools(CancellationToken.None);
+        
+        installer = new KubernetesClusterInstaller(KubernetesTestsGlobalContext.Instance.TemporaryDirectory, kindExePath, helmExePath, kubeCtlPath);
         await installer.Install();
 
-        TestKubernetesCluster.KubeConfigPath = installer.KubeConfigPath;
+        KubernetesTestsGlobalContext.Instance.SetToolExePaths(helmExePath, kubeCtlPath);
+        KubernetesTestsGlobalContext.Instance.KubeConfigPath = installer.KubeConfigPath;
     }
 
     [OneTimeTearDown]
     public void OneTimeTearDown()
     {
-        installer?.Dispose();
+        installer.Dispose();
+        KubernetesTestsGlobalContext.Instance.Dispose();
     }
 }

@@ -11,42 +11,40 @@ using Octopus.Tentacle.Kubernetes.Tests.Integration.Setup;
 using Octopus.Tentacle.Kubernetes.Tests.Integration.Setup.Tooling;
 using Octopus.Tentacle.Kubernetes.Tests.Integration.Support.Logging;
 using Octopus.Tentacle.Util;
-using Octopus.TestPortForwarder;
 
 namespace Octopus.Tentacle.Kubernetes.Tests.Integration;
 
 public abstract class KubernetesAgentIntegrationTest
 {
-    readonly KubernetesAgentInstaller kubernetesAgentInstaller = new();
-    TemporaryDirectory tempDir = null!;
-    string kubeCtlExe = null!;
+    KubernetesAgentInstaller kubernetesAgentInstaller;
+    TraceLogFileLogger? traceLogFileLogger;
+    CancellationTokenSource cancellationTokenSource;
     protected ILogger Logger { get; private set; }
 
     protected HalibutRuntime ServerHalibutRuntime { get; private set; } = null!;
 
     protected TentacleClient TentacleClient { get; private set; } = null!;
 
-    protected KubernetesAgentIntegrationTest() 
-    {
-        Logger = new SerilogLoggerBuilder().Build();
-    }
+    protected CancellationToken CancellationToken { get; private set; }
 
     [OneTimeSetUp]
     public async Task OneTimeSetUp()
     {
-        await kubernetesAgentInstaller.DownloadHelm();
-
-        tempDir = new TemporaryDirectory();
-        var kubectlDownloader = new KubeCtlDownloader(Logger);
-        kubeCtlExe = await kubectlDownloader.Download(tempDir.DirectoryPath, CancellationToken.None);
+        kubernetesAgentInstaller = new KubernetesAgentInstaller(
+            KubernetesTestsGlobalContext.Instance.TemporaryDirectory,
+            KubernetesTestsGlobalContext.Instance.HelmExePath,
+            KubernetesTestsGlobalContext.Instance.KubeConfigPath,
+            KubernetesTestsGlobalContext.Instance.Logger);
         
         //create a new server halibut runtime
         var listeningPort = BuildServerHalibutRuntimeAndListen();
         
-        await kubernetesAgentInstaller.InstallAgent(TestKubernetesCluster.KubeConfigPath, listeningPort);
+        await kubernetesAgentInstaller.InstallAgent(listeningPort);
 
         //kubectl get config map thumbprint value of the generated cert
-        var thumbPrint = GetAgentThumbprint();
+        var thumbPrint = GetAgentThumbprint(KubernetesTestsGlobalContext.Instance.Logger);
+        
+        KubernetesTestsGlobalContext.Instance.Logger.Information("Agent certificate thumbprint: {Thumbprint:l}", thumbPrint);
         
         //trust the generated cert thumbprint
         ServerHalibutRuntime.Trust(thumbPrint);
@@ -54,22 +52,22 @@ public abstract class KubernetesAgentIntegrationTest
         BuildTentacleClient();
     }
 
-    string GetAgentThumbprint()
+    string GetAgentThumbprint(ILogger logger)
     {
         string? thumbprint = null;
         var exitCode = SilentProcessRunner.ExecuteCommand(
-            kubeCtlExe,
-            //we give the cluster a unique name
-            $"get cm tentacle-config --namespace octopus-agent-{kubernetesAgentInstaller.Namespace} --kubeconfig=\"{TestKubernetesCluster.KubeConfigPath}\" -o \"jsonpath={{.data['Tentacle\\.CertificateThumbprint']}}\"",
-            tempDir.DirectoryPath,
-            Logger.Debug,
+            KubernetesTestsGlobalContext.Instance.KubeCtlExePath,
+            //get the generated thumbprint from the config map
+            $"get cm tentacle-config --namespace {kubernetesAgentInstaller.Namespace} --kubeconfig=\"{KubernetesTestsGlobalContext.Instance.KubeConfigPath}\" -o \"jsonpath={{.data['Tentacle\\.CertificateThumbprint']}}\"",
+            KubernetesTestsGlobalContext.Instance.TemporaryDirectory.DirectoryPath,
+            logger.Debug,
             x => thumbprint = x,
-            Logger.Error,
+            logger.Error,
             CancellationToken.None);
         
         if (exitCode != 0 || thumbprint is null)
         {
-            Logger.Error("Failed to load thumbprint");
+            logger.Error("Failed to load thumbprint");
             throw new InvalidOperationException($"Failed to load thumbprint");
         }
 
@@ -79,7 +77,23 @@ public abstract class KubernetesAgentIntegrationTest
     [SetUp]
     public void SetUp()
     {
-        Logger = new SerilogLoggerBuilder().Build();
+        traceLogFileLogger = new TraceLogFileLogger(SerilogLoggerBuilder.CurrentTestHash());
+        Logger = new SerilogLoggerBuilder()
+            .SetTraceLogFileLogger(traceLogFileLogger)
+            .Build()
+            .ForContext(GetType());
+        
+        cancellationTokenSource = new CancellationTokenSource();
+        CancellationToken = cancellationTokenSource.Token;
+    }
+
+    [TearDown]
+    public async Task TearDown()
+    {
+        if (traceLogFileLogger is not null)
+        {
+           await traceLogFileLogger.DisposeAsync();
+        }
     }
 
     void BuildTentacleClient()

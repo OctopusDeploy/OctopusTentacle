@@ -3,8 +3,6 @@ using System.Reflection;
 using System.Text;
 using Octopus.Client.Model;
 using Octopus.Tentacle.CommonTestUtils;
-using Octopus.Tentacle.Kubernetes.Tests.Integration.Setup.Tooling;
-using Octopus.Tentacle.Kubernetes.Tests.Integration.Support.Logging;
 using Octopus.Tentacle.Security.Certificates;
 using Octopus.Tentacle.Util;
 
@@ -12,17 +10,19 @@ namespace Octopus.Tentacle.Kubernetes.Tests.Integration.Setup;
 
 public class KubernetesAgentInstaller
 {
-    readonly TemporaryDirectory tempDir;
+    readonly string helmExePath;
+    readonly TemporaryDirectory temporaryDirectory;
     readonly ILogger logger;
-    string? helmPath;
-    string? kubeConfigPath;
+    readonly string kubeConfigPath;
+    
     bool isAgentInstalled;
 
-    public KubernetesAgentInstaller()
+    public KubernetesAgentInstaller(TemporaryDirectory temporaryDirectory, string helmExePath, string kubeConfigPath, ILogger logger)
     {
-        tempDir = new TemporaryDirectory();
-
-        logger = new SerilogLoggerBuilder().Build();
+        this.temporaryDirectory = temporaryDirectory;
+        this.helmExePath = helmExePath;
+        this.kubeConfigPath = kubeConfigPath;
+        this.logger = logger;
 
         AgentName = Guid.NewGuid().ToString("N");
     }
@@ -33,19 +33,8 @@ public class KubernetesAgentInstaller
     
     public Uri SubscriptionId { get; } = PollingSubscriptionId.Generate();
 
-    public async Task DownloadHelm()
+    public async Task InstallAgent(int listeningPort)
     {
-        //download helm
-        var helmDownloader = new HelmDownloader(logger);
-        helmPath = await helmDownloader.Download(tempDir.DirectoryPath, CancellationToken.None);
-    }
-
-    public async Task InstallAgent(string kubeConfigPath, int listeningPort)
-    {
-        if (helmPath is null)
-            throw new InvalidOperationException("Helm has not been downloaded");
-
-        this.kubeConfigPath = kubeConfigPath;
 
         var valuesFilePath = await WriteValuesFile(listeningPort);
         var arguments = BuildAgentInstallArguments(valuesFilePath);
@@ -53,9 +42,9 @@ public class KubernetesAgentInstaller
         var sw = new Stopwatch();
         sw.Restart();
         var exitCode = SilentProcessRunner.ExecuteCommand(
-            helmPath,
+            helmExePath,
             arguments,
-            tempDir.DirectoryPath,
+            temporaryDirectory.DirectoryPath,
             logger.Debug,
             logger.Information,
             logger.Error,
@@ -95,10 +84,9 @@ public class KubernetesAgentInstaller
             //this address is not needed because we don't need it to register itself
             .Replace("#{ServerUrl}", "https://octopus.internal/")
             .Replace("#{EncodedCertificate}", CertificateEncoder.ToBase64String(TestCertificates.Tentacle))
-            .Replace("#{ConfigMapData}", configMapData)
-            .Replace("#{ImageRepository}", "docker.packages.octopushq.com/octopusdeploy/kubernetes-tentacle");
+            .Replace("#{ConfigMapData}", configMapData);
 
-        var valuesFilePath = Path.Combine(tempDir.DirectoryPath, "agent-values.yaml");
+        var valuesFilePath = Path.Combine(temporaryDirectory.DirectoryPath, "agent-values.yaml");
         await File.WriteAllTextAsync(valuesFilePath, valuesFile, Encoding.UTF8);
 
         return valuesFilePath;
@@ -135,9 +123,9 @@ public class KubernetesAgentInstaller
                 AgentName);
 
             var exitCode = SilentProcessRunner.ExecuteCommand(
-                helmPath!,
+                helmExePath,
                 uninstallArgs,
-                tempDir.DirectoryPath,
+                temporaryDirectory.DirectoryPath,
                 logger.Debug,
                 logger.Information,
                 logger.Error,
@@ -148,7 +136,5 @@ public class KubernetesAgentInstaller
                 logger.Error("Failed to uninstall Kubernetes Agent {AgentName} via Helm", AgentName);
             }
         }
-
-        tempDir.Dispose();
     }
 }

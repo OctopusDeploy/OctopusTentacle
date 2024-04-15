@@ -1,7 +1,3 @@
-image:
-  repository: "#{ImageRepository}"
-  tag: "#{ImageTag}"
-
 tentacle:
   ACCEPT_EULA: "Y"
   targetName: "#{TargetName}"
@@ -14,6 +10,5 @@ tentacle:
   
 testing:
   tentacle:
-    encodedCertificate: "#{EncodedCertificate}"
     configMap:
       data: #{ConfigMapData}
