@@ -2,8 +2,10 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using k8s.Autorest;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha;
@@ -49,6 +51,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
 
         public async Task<KubernetesScriptStatusResponseV1Alpha> StartScriptAsync(StartKubernetesScriptCommandV1Alpha command, CancellationToken cancellationToken)
         {
+            //Just make this idempotent
             var mutex = startScriptMutexes.GetOrAdd(command.ScriptTicket, _ => new Lazy<SemaphoreSlim>(() => new SemaphoreSlim(1, 1))).Value;
             using (await mutex.LockAsync(cancellationToken))
             {
@@ -70,8 +73,14 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
                     cancellationToken);
 
                 //create the pod
-                await podCreator.CreatePod(command, workspace, cancellationToken);
-
+                try
+                {
+                    await podCreator.CreatePod(command, workspace, cancellationToken);
+                }
+                catch (HttpOperationException ex) when (ex.Response.StatusCode == HttpStatusCode.Conflict)
+                {
+                }
+                
                 var (logs, _) = await podLogService.GetLogs(command.ScriptTicket, 0, cancellationToken);
 
                 //return a status that say's we are pending

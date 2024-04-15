@@ -39,6 +39,10 @@ namespace Octopus.Tentacle.Scripts
         public void CopyFile(string sourceFilePath, string destFileName) => FileSystem.CopyFile(sourceFilePath, ResolvePath(destFileName));
 
         public Stream OpenFileStreamForReading(string filename) => FileSystem.OpenFile(ResolvePath(filename), FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        public bool FileExists(string filename)
+        {
+            return FileSystem.FileExists(ResolvePath(filename));
+        }
 
         public static string GetLogFilePath(string workingDirectory) => Path.Combine(workingDirectory, LogFileName);
 

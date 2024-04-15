@@ -23,5 +23,6 @@ namespace Octopus.Tentacle.Scripts
         void WriteFile(string filename, string contents);
         void CopyFile(string sourceFilePath, string destFileName);
         Stream OpenFileStreamForReading(string filename);
+        bool FileExists(string filename);
     }
 }
