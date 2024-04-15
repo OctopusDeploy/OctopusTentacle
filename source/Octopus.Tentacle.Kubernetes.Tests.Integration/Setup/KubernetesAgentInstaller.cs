@@ -98,7 +98,6 @@ public class KubernetesAgentInstaller
             .Replace("#{ServerCommsAddress}", serverCommsAddress)
             //this address is not needed because we don't need it to register itself
             .Replace("#{ServerUrl}", "https://octopus.internal/")
-            .Replace("#{EncodedCertificate}", CertificateEncoder.ToBase64String(TestCertificates.Tentacle))
             .Replace("#{ConfigMapData}", configMapData);
 
         var valuesFilePath = Path.Combine(temporaryDirectory.DirectoryPath, "agent-values.yaml");
