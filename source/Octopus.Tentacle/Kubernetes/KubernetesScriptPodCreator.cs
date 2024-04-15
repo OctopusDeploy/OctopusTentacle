@@ -29,13 +29,14 @@ namespace Octopus.Tentacle.Kubernetes
         readonly IApplicationInstanceSelector appInstanceSelector;
         readonly ISystemLog log;
         readonly ITentacleScriptLogProvider scriptLogProvider;
-        
+
         public KubernetesScriptPodCreator(
             IKubernetesPodService podService,
             IKubernetesSecretService secretService,
             IKubernetesPodContainerResolver containerResolver,
             IApplicationInstanceSelector appInstanceSelector,
-            ISystemLog log, ITentacleScriptLogProvider scriptLogProvider)
+            ISystemLog log,
+            ITentacleScriptLogProvider scriptLogProvider)
         {
             this.podService = podService;
             this.secretService = secretService;
@@ -47,11 +48,14 @@ namespace Octopus.Tentacle.Kubernetes
 
         public async Task CreatePod(StartKubernetesScriptCommandV1Alpha command, IScriptWorkspace workspace, CancellationToken cancellationToken)
         {
+            var tentacleScriptLog = scriptLogProvider.GetOrCreate(command.ScriptTicket);
+
             using (ScriptIsolationMutex.Acquire(workspace.IsolationLevel,
                        workspace.ScriptMutexAcquireTimeout,
                        workspace.ScriptMutexName ?? nameof(KubernetesScriptPodCreator),
                        message =>
                        {
+                           LogVerboseToBothLogs(message, tentacleScriptLog);
                        },
                        command.TaskId,
                        cancellationToken,
@@ -61,7 +65,7 @@ namespace Octopus.Tentacle.Kubernetes
                 var imagePullSecretName = await CreateImagePullSecret(command, cancellationToken);
 
                 //create the k8s pod
-                await CreatePod(command, workspace, imagePullSecretName, cancellationToken);
+                await CreatePod(command, workspace, imagePullSecretName, tentacleScriptLog, cancellationToken);
             }
         }
 
@@ -140,17 +144,20 @@ namespace Octopus.Tentacle.Kubernetes
             return $"octopus-feed-cred-{sanitizedHash}".ToLowerInvariant();
         }
 
-        async Task CreatePod(StartKubernetesScriptCommandV1Alpha command, IScriptWorkspace workspace, string? imagePullSecretName, CancellationToken cancellationToken)
+        async Task CreatePod(StartKubernetesScriptCommandV1Alpha command, IScriptWorkspace workspace, string? imagePullSecretName, InMemoryTentacleScriptLog tentacleScriptLog, CancellationToken cancellationToken)
         {
             var podName = command.ScriptTicket.ToKubernetesScriptPobName();
-            var tentacleScriptLog = scriptLogProvider.GetOrCreate(command.ScriptTicket);
 
-            LogVerboseToBothLogs($"Creating Kubernetes Pod '{podName}'.");
-                
+            LogVerboseToBothLogs($"Creating Kubernetes Pod '{podName}'.", tentacleScriptLog);
+
             //write the bootstrap runner script to the workspace
             workspace.CopyFile(KubernetesConfig.BootstrapRunnerExecutablePath, "bootstrapRunner");
 
             var scriptName = Path.GetFileName(workspace.BootstrapScriptFilePath);
+
+            var serviceAccountName = !string.IsNullOrWhiteSpace(command.ScriptPodServiceAccountName)
+                ? command.ScriptPodServiceAccountName
+                : KubernetesConfig.PodServiceAccountName;
 
             var pod = new V1Pod
             {
@@ -214,7 +221,7 @@ namespace Octopus.Tentacle.Kubernetes
                             new(imagePullSecretName)
                         }
                         : new List<V1LocalObjectReference>(),
-                    ServiceAccountName = KubernetesConfig.PodServiceAccountName,
+                    ServiceAccountName = serviceAccountName,
                     RestartPolicy = "Never",
                     Volumes = new List<V1Volume>
                     {
@@ -237,13 +244,13 @@ namespace Octopus.Tentacle.Kubernetes
 
             await podService.Create(pod, cancellationToken);
 
-            LogVerboseToBothLogs($"Executing script in Kubernetes Pod '{podName}'.");
+            LogVerboseToBothLogs($"Executing script in Kubernetes Pod '{podName}'.", tentacleScriptLog);
+        }
 
-            void LogVerboseToBothLogs(string message)
-            {
-                log.Verbose(message);
-                tentacleScriptLog.Verbose(message);
-            }
+        void LogVerboseToBothLogs(string message, InMemoryTentacleScriptLog tentacleScriptLog)
+        {
+            log.Verbose(message);
+            tentacleScriptLog.Verbose(message);
         }
     }
 }
