@@ -120,9 +120,7 @@ public class KubernetesAgentInstaller
             NamespaceFlag,
             KubeConfigFlag,
             AgentName,
-            "--version \"0.7.1-ap-inject-test-data-20240412040646\"",
-            "oci://docker.packages.octopushq.com/kubernetes-agent"
-            //"oci://registry-1.docker.io/octopusdeploy/kubernetes-agent"
+            "oci://registry-1.docker.io/octopusdeploy/kubernetes-agent"
         };
 
         return string.Join(" ", args.WhereNotNull());
