@@ -120,11 +120,11 @@ public class KubernetesAgentInstaller
         return string.Join(" ", args.WhereNotNull());
     }
 
-    string? GetImageAndRepository()
+    static string? GetImageAndRepository()
     {
         if (TeamCityDetection.IsRunningInTeamCity())
         {
-            var tag = Environment.GetEnvironmentVariable("OCTOVERSION_FullSemVer");
+            var tag = Environment.GetEnvironmentVariable("KubernetesAgentTests_ImageTag");
             return $"--set image.repository=\"docker.packages.octopushq.com/octopusdeploy/kubernetes-tentacle\" --set image.tag=\"{tag}\"";
         }
 
