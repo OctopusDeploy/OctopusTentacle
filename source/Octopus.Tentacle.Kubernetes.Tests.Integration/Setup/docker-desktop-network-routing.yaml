@@ -2,6 +2,7 @@
 kind: Service
 metadata:
   name: dockerhost
+  namespace: default
 spec:
   type: ExternalName
   externalName: host.docker.internal
