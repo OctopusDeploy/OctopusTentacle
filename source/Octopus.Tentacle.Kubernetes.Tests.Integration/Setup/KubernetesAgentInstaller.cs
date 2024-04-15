@@ -68,7 +68,7 @@ public class KubernetesAgentInstaller
 
         var valuesFile = await reader.ReadToEndAsync();
 
-        var serverCommsAddress = $"https://host.docker.internal:{listeningPort}";
+        var serverCommsAddress = $"https://dockerhost.default.svc.cluster.local:{listeningPort}";
 
         var configMapData = $@"
         Octopus.Home: /octopus
