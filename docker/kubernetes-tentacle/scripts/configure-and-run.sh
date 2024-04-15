@@ -233,18 +233,7 @@ function registerTentacle() {
 setupVariablesForRegistrationCheck
 getStatusOfRegistration
 
-if [ "$ForceLoadTestingCertificate" == "true" ] && [ "$IS_REGISTERED" == "true" ]; then 
-    echo "Tentacle is already configured with test data."
-
-    existingCert="/etc/octopus-certs/certificate.pfx"
-    if [[ -f "$existingCert" ]]; then
-        echo "Importing test certificate..."
-        tentacle import-certificate --from-file "$existingCert" --instance "$instanceName"
-    else
-        echo "Test certificate not found"
-        exit 1;
-    fi
-elif [ "$IS_REGISTERED" == "true" ]; then
+if [ "$IS_REGISTERED" == "true" ]; then
     echo "Tentacle is already configured and registered with server."
 else
     echo "==============================================="
