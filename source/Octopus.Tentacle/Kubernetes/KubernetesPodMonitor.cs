@@ -9,7 +9,6 @@ using k8s;
 using k8s.Models;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
-using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Time;
 using Polly;
 
@@ -42,6 +41,7 @@ namespace Octopus.Tentacle.Kubernetes
         
         //Prevent giving false results when we are still loading for the first time 
         readonly ManualResetEventSlim initialLoadLock = new();
+        readonly object theLock = new();
         
         public KubernetesPodMonitor(IKubernetesPodService podService, ISystemLog log, ITentacleScriptLogProvider scriptLogProvider)
         {
@@ -83,7 +83,8 @@ namespace Octopus.Tentacle.Kubernetes
 
             var trackedScriptPod = new TrackedScriptPod(scriptTicket);
             trackedScriptPod.Update(createdPod);
-            pendingPodStatusLookup.GetOrAdd(scriptTicket, _ => trackedScriptPod);
+            lock(theLock)
+                pendingPodStatusLookup.GetOrAdd(scriptTicket, _ => trackedScriptPod);
         }
 
         async Task UpdateLoop(CancellationToken cancellationToken)
@@ -105,82 +106,93 @@ namespace Octopus.Tentacle.Kubernetes
 
         internal async Task<string> InitialLoadAsync(CancellationToken cancellationToken)
         {
-            initialLoadLock.Reset();
-            log.Verbose("Loading pod statuses");
+           log.Verbose("Loading pod statuses");
 
-            Stopwatch stopwatch = Stopwatch.StartNew();
-            
-            var newStatuses = new ConcurrentDictionary<ScriptTicket, TrackedScriptPod>();
-            var allPods = await podService.ListAllPods(cancellationToken);
-            foreach (var pod in allPods.Items)
-            {
-                var scriptTicket = pod.GetScriptTicket();
-                if (!podStatusLookup.TryGetValue(scriptTicket, out var status))
-                {
-                    status = new TrackedScriptPod(scriptTicket);
-                }
-                status.Update(pod);
+           Stopwatch stopwatch = Stopwatch.StartNew();
 
-                log.Verbose($"Loaded pod {pod.Name()} ({status})");
-                newStatuses[scriptTicket] = status;
-            }
+           var newStatuses = new ConcurrentDictionary<ScriptTicket, TrackedScriptPod>();
+           var allPods = await podService.ListAllPods(cancellationToken);
+           foreach (var pod in allPods.Items)
+           {
+               var scriptTicket = pod.GetScriptTicket();
+               if (!newStatuses.TryGetValue(scriptTicket, out var status))
+               {
+                   status = new TrackedScriptPod(scriptTicket);
+               }
 
-            // Updating a reference is an atomic operation
-            // and we only add data to this dictionary
-            // in this class so this is thread safe.
-            podStatusLookup = newStatuses;
-            
-            log.Verbose($"Loaded {allPods.Items.Count} pod statuses in {stopwatch.Elapsed}. ResourceVersion: {allPods.ResourceVersion()}");
+               status.Update(pod);
 
-            //This is to guard against giving wrong results on Tentacle startup
-            initialLoadLock.Set();
-            
-            //this is the resource version for the list. We use this to start the watch at this particular point
-            return allPods.ResourceVersion();
+               log.Verbose($"Loaded pod {pod.Name()} ({status})");
+               newStatuses[scriptTicket] = status;
+           }
+
+           lock (theLock)
+           {
+               // Updating a reference is an atomic operation
+               // and we only add data to this dictionary
+               // in this class so this is thread safe.
+               podStatusLookup = newStatuses;
+
+               foreach (var scriptTicket in podStatusLookup.Keys)
+               {
+                   pendingPodStatusLookup.TryRemove(scriptTicket, out _);
+               }
+           }
+
+           log.Verbose($"Loaded {allPods.Items.Count} pod statuses in {stopwatch.Elapsed}. ResourceVersion: {allPods.ResourceVersion()}");
+
+           //This is to guard against giving wrong results on Tentacle startup
+           initialLoadLock.Set();
+
+           //this is the resource version for the list. We use this to start the watch at this particular point
+           return allPods.ResourceVersion();
         }
 
         // This is internal so it's accessible to unit tests
         internal async Task OnNewEvent(WatchEventType type, V1Pod pod, CancellationToken cancellationToken)
         {
             await Task.CompletedTask;
-
-            try
+            lock (theLock)
             {
-                log.Verbose($"Received {type} event for pod {pod.Name()}");
-
-                var scriptTicket = pod.GetScriptTicket();
-                
-                switch (type)
+                try
                 {
-                    case WatchEventType.Added or WatchEventType.Modified:
+                    log.Verbose($"Received {type} event for pod {pod.Name()}");
+
+                    var scriptTicket = pod.GetScriptTicket();
+
+                    switch (type)
                     {
-                        var status = podStatusLookup.GetOrAdd(scriptTicket, st => new TrackedScriptPod(st));
-                        status.Update(pod);
-                        log.Verbose($"Updated pod {pod.Name()} status. {status}");
+                        case WatchEventType.Added or WatchEventType.Modified:
+                        {
+                            var status = podStatusLookup.GetOrAdd(scriptTicket, st => new TrackedScriptPod(st));
+                            status.Update(pod);
+                            log.Verbose($"Updated pod {pod.Name()} status. {status}");
 
-                        break;
+                            break;
+                        }
+                        case WatchEventType.Deleted:
+                            pendingPodStatusLookup.TryRemove(scriptTicket, out _);
+
+                            //if the pod is deleted, remove it
+                            if (podStatusLookup.TryRemove(scriptTicket, out _))
+                            {
+                                log.Verbose($"Removed {type} pod {pod.Name()} status");
+                            }
+                            else
+                            {
+                                log.Warn($"Unable to remove {type} pod {pod.Name()} status");
+                            }
+
+                            break;
+                        default:
+                            log.Warn($"Received watch event type {type} for pod {pod.Name()}. Ignoring as we don't need it");
+                            break;
                     }
-                    case WatchEventType.Deleted:
-                        pendingPodStatusLookup.TryRemove(scriptTicket, out _);
-
-                        //if the pod is deleted, remove it
-                        if (podStatusLookup.TryRemove(scriptTicket, out _))
-                        {
-                            log.Verbose($"Removed {type} pod {pod.Name()} status");
-                        }
-                        else
-                        {
-                            log.Warn($"Unable to remove {type} pod {pod.Name()} status");
-                        }
-                        break;
-                    default:
-                        log.Warn($"Received watch event type {type} for pod {pod.Name()}. Ignoring as we don't need it");
-                        break;
                 }
-            }
-            catch (Exception e)
-            {
-                log.Error(e, $"Failed to process event {type} for pod {pod.Name()}.");
+                catch (Exception e)
+                {
+                    log.Error(e, $"Failed to process event {type} for pod {pod.Name()}.");
+                }
             }
         }
 
@@ -188,24 +200,30 @@ namespace Octopus.Tentacle.Kubernetes
         {
             WaitForInitialLoadToFinish();
 
-            //Ensuring pendingPodStatusLookup doesn't contain duplicates involves
-            return podStatusLookup
-                .Concat(pendingPodStatusLookup)
-                .ToLookup(p => p.Key)
-                .Select(g => (ITrackedScriptPod)g.First().Value) //Deduplicate
-                .ToList();
+            lock (theLock)
+            {
+                //Ensuring pendingPodStatusLookup doesn't contain duplicates involves
+                return podStatusLookup
+                    .Concat(pendingPodStatusLookup)
+                    .ToLookup(p => p.Key)
+                    .Select(g => (ITrackedScriptPod)g.First().Value) //Deduplicate
+                    .ToList();
+            }
         }
 
         public ITrackedScriptPod? TryGetTrackedScriptPod(ScriptTicket scriptTicket)
         {
             WaitForInitialLoadToFinish();
 
-            var found = podStatusLookup.TryGetValue(scriptTicket, out var status);
-            if (found)
-                return status;
+            lock (theLock)
+            {
+                var found = podStatusLookup.TryGetValue(scriptTicket, out var status);
+                if (found)
+                    return status;
 
-            found = pendingPodStatusLookup.TryGetValue(scriptTicket, out status);
-            return found ? status : null;
+                found = pendingPodStatusLookup.TryGetValue(scriptTicket, out status);
+                return found ? status : null;
+            }
         }
 
         void WaitForInitialLoadToFinish()
