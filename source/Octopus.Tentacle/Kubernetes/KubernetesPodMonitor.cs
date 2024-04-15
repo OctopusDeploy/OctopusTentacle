@@ -17,6 +17,7 @@ namespace Octopus.Tentacle.Kubernetes
     {
         Task StartAsync(CancellationToken token);
         void MarkAsCompleted(ScriptTicket scriptTicket, int podLogsExitCode);
+        void AddPendingPod(ScriptTicket commandScriptTicket, V1Pod createdPod);
     }
 
     public interface IKubernetesPodStatusProvider
@@ -30,9 +31,16 @@ namespace Octopus.Tentacle.Kubernetes
         readonly IKubernetesPodService podService;
         readonly ISystemLog log;
         readonly ITentacleScriptLogProvider scriptLogProvider;
-        
-        ConcurrentDictionary<ScriptTicket, TrackedScriptPod> podStatusLookup = new();
 
+        //This is for the Pods retrieved from Kubernetes API
+        ConcurrentDictionary<ScriptTicket, TrackedScriptPod> podStatusLookup = new();
+        
+        //This is for the new Pods we've just created that might not appear on the Kubernetes API yet
+        readonly ConcurrentDictionary<ScriptTicket, TrackedScriptPod> pendingPodStatusLookup = new();
+        
+        //Prevent giving false results when we are still loading for the first time 
+        readonly ManualResetEventSlim initialLoadLock = new();
+        
         public KubernetesPodMonitor(IKubernetesPodService podService, ISystemLog log, ITentacleScriptLogProvider scriptLogProvider)
         {
             this.podService = podService;
@@ -57,13 +65,23 @@ namespace Octopus.Tentacle.Kubernetes
 
         public void MarkAsCompleted(ScriptTicket scriptTicket, int exitCode)
         {
-            if (podStatusLookup.TryGetValue(scriptTicket, out var status))
-            {
-                var text = $"Marking '{scriptTicket.TaskId}' as completed with exit code: '{exitCode}'";
-                scriptLogProvider.GetOrCreate(scriptTicket).Verbose(text);
-                log.Verbose(text);
-                status.MarkAsCompleted(exitCode, DateTimeOffset.UtcNow);
-            }
+            var status = TryGetTrackedScriptPod(scriptTicket);
+            if (status == null) 
+                return;
+            
+            var text = $"Marking '{scriptTicket.TaskId}' as completed with exit code: '{exitCode}'";
+            scriptLogProvider.GetOrCreate(scriptTicket).Verbose(text);
+            log.Verbose(text);
+            status.MarkAsCompleted(exitCode, DateTimeOffset.UtcNow);
+        }
+
+        public void AddPendingPod(ScriptTicket scriptTicket, V1Pod createdPod)
+        {
+            WaitForInitialLoadToFinish();
+
+            var trackedScriptPod = new TrackedScriptPod(scriptTicket);
+            trackedScriptPod.Update(createdPod);
+            pendingPodStatusLookup.GetOrAdd(scriptTicket, _ => trackedScriptPod);
         }
 
         async Task UpdateLoop(CancellationToken cancellationToken)
@@ -85,7 +103,7 @@ namespace Octopus.Tentacle.Kubernetes
 
         internal async Task<string> InitialLoadAsync(CancellationToken cancellationToken)
         {
-            log.Verbose("Preloading pod statuses");
+            log.Verbose("Loading pod statuses");
 
             var newStatuses = new ConcurrentDictionary<ScriptTicket, TrackedScriptPod>();
             var allPods = await podService.ListAllPods(cancellationToken);
@@ -98,7 +116,7 @@ namespace Octopus.Tentacle.Kubernetes
                 }
                 status.Update(pod);
 
-                log.Verbose($"Preloaded pod {pod.Name()} ({status})");
+                log.Verbose($"Loaded pod {pod.Name()} ({status})");
                 newStatuses[scriptTicket] = status;
             }
 
@@ -106,9 +124,12 @@ namespace Octopus.Tentacle.Kubernetes
             // and we only add data to this dictionary
             // in this class so this is thread safe.
             podStatusLookup = newStatuses;
+            
+            log.Verbose($"Loaded {allPods.Items.Count} pod statuses. ResourceVersion: {allPods.ResourceVersion()}");
 
-            log.Verbose($"Preloaded {allPods.Items.Count} pod statuses. ResourceVersion: {allPods.ResourceVersion()}");
-
+            //This is to guard against giving wrong results on Tentacle startup
+            initialLoadLock.Set();
+            
             //this is the resource version for the list. We use this to start the watch at this particular point
             return allPods.ResourceVersion();
         }
@@ -123,7 +144,7 @@ namespace Octopus.Tentacle.Kubernetes
                 log.Verbose($"Received {type} event for pod {pod.Name()}");
 
                 var scriptTicket = pod.GetScriptTicket();
-
+                
                 switch (type)
                 {
                     case WatchEventType.Added or WatchEventType.Modified:
@@ -135,6 +156,8 @@ namespace Octopus.Tentacle.Kubernetes
                         break;
                     }
                     case WatchEventType.Deleted:
+                        pendingPodStatusLookup.TryRemove(scriptTicket, out _);
+
                         //if the pod is deleted, remove it
                         if (podStatusLookup.TryRemove(scriptTicket, out _))
                         {
@@ -156,11 +179,36 @@ namespace Octopus.Tentacle.Kubernetes
             }
         }
 
-        IList<ITrackedScriptPod> IKubernetesPodStatusProvider.GetAllTrackedScriptPods() =>
-            podStatusLookup.Values.Cast<ITrackedScriptPod>().ToList();
+        IList<ITrackedScriptPod> IKubernetesPodStatusProvider.GetAllTrackedScriptPods()
+        {
+            WaitForInitialLoadToFinish();
 
-        ITrackedScriptPod? IKubernetesPodStatusProvider.TryGetTrackedScriptPod(ScriptTicket scriptTicket) =>
-            podStatusLookup.TryGetValue(scriptTicket, out var status) ? status : null;
+            return podStatusLookup
+                .Concat(pendingPodStatusLookup)
+                .ToLookup(p => p.Key)
+                .Select(g => (ITrackedScriptPod)g.First().Value) //Deduplicate
+                .ToList();
+        }
+
+        public ITrackedScriptPod? TryGetTrackedScriptPod(ScriptTicket scriptTicket)
+        {
+            WaitForInitialLoadToFinish();
+
+            var found = podStatusLookup.TryGetValue(scriptTicket, out var status);
+            if (found)
+                return status;
+
+            found = pendingPodStatusLookup.TryGetValue(scriptTicket, out status);
+            return found ? status : null;
+        }
+
+        void WaitForInitialLoadToFinish()
+        {
+            if (!initialLoadLock.Wait(TimeSpan.FromSeconds(60)))
+            {
+                throw new Exception("Timed out waiting for Pod status to be loaded");
+            }
+        }
     }
 
     public interface ITrackedScriptPod
@@ -169,6 +217,7 @@ namespace Octopus.Tentacle.Kubernetes
         int? ExitCode { get; }
         ScriptTicket ScriptTicket { get; }
         DateTimeOffset? FinishedAt { get; }
+        void MarkAsCompleted(int exitCode, DateTimeOffset finishedAt);
     }
     
     public class TrackedScriptPod : ITrackedScriptPod

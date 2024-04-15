@@ -24,6 +24,7 @@ namespace Octopus.Tentacle.Kubernetes
     public class KubernetesScriptPodCreator : IKubernetesScriptPodCreator
     {
         readonly IKubernetesPodService podService;
+        readonly IKubernetesPodMonitor podMonitor;
         readonly IKubernetesSecretService secretService;
         readonly IKubernetesPodContainerResolver containerResolver;
         readonly IApplicationInstanceSelector appInstanceSelector;
@@ -32,12 +33,14 @@ namespace Octopus.Tentacle.Kubernetes
         
         public KubernetesScriptPodCreator(
             IKubernetesPodService podService,
+            IKubernetesPodMonitor podMonitor,
             IKubernetesSecretService secretService,
             IKubernetesPodContainerResolver containerResolver,
             IApplicationInstanceSelector appInstanceSelector,
             ISystemLog log, ITentacleScriptLogProvider scriptLogProvider)
         {
             this.podService = podService;
+            this.podMonitor = podMonitor;
             this.secretService = secretService;
             this.containerResolver = containerResolver;
             this.appInstanceSelector = appInstanceSelector;
@@ -235,7 +238,8 @@ namespace Octopus.Tentacle.Kubernetes
                 }
             };
 
-            await podService.Create(pod, cancellationToken);
+            var createdPod = await podService.Create(pod, cancellationToken);
+            podMonitor.AddPendingPod(command.ScriptTicket, createdPod);
 
             LogVerboseToBothLogs($"Executing script in Kubernetes Pod '{podName}'.");
 

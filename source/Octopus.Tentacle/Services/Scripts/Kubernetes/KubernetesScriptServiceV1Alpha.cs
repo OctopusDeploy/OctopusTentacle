@@ -86,8 +86,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             var trackedPod = podStatusProvider.TryGetTrackedScriptPod(request.ScriptTicket);
             return trackedPod != null
                 ? await GetResponse(trackedPod, request.LastLogSequence, cancellationToken)
-                //if we are getting the status of an unknown pod, return that it's still pending
-                : new KubernetesScriptStatusResponseV1Alpha(request.ScriptTicket, ProcessState.Pending, 0, new List<ProcessOutput>(), request.LastLogSequence);
+                : throw new Exception("Can't find Script Pod for: " + request.ScriptTicket);
         }
 
         public async Task<KubernetesScriptStatusResponseV1Alpha> CancelScriptAsync(CancelKubernetesScriptCommandV1Alpha command, CancellationToken cancellationToken)
