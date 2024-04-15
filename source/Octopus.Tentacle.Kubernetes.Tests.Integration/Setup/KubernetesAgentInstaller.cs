@@ -101,11 +101,13 @@ public class KubernetesAgentInstaller
 
     string BuildAgentInstallArguments(string valuesFilePath)
     {
-        return string.Join(" ",
+        var args = new[]
+        {
             "upgrade",
             "--install",
             "--atomic",
             $"-f \"{valuesFilePath}\"",
+            GetImageAndRepository(),
             "--create-namespace",
             NamespaceFlag,
             KubeConfigFlag,
@@ -113,7 +115,20 @@ public class KubernetesAgentInstaller
             "--version \"0.7.1-ap-inject-test-data-20240412040646\"",
             "oci://docker.packages.octopushq.com/kubernetes-agent"
             //"oci://registry-1.docker.io/octopusdeploy/kubernetes-agent"
-        );
+        };
+        
+        return string.Join(" ", args.WhereNotNull());
+    }
+
+    string? GetImageAndRepository()
+    {
+        if (TeamCityDetection.IsRunningInTeamCity())
+        {
+            var tag = Environment.GetEnvironmentVariable("OCTOVERSION_FullSemVer");
+            return $"--set image.repository=\"docker.packages.octopushq.com/octopusdeploy/kubernetes-tentacle\" --set image.tag=\"{tag}\"";
+        }
+
+        return null;
     }
 
     string GetAgentThumbprint()
