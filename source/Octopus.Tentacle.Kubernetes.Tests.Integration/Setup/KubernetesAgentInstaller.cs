@@ -42,20 +42,33 @@ public class KubernetesAgentInstaller
 
         var sw = new Stopwatch();
         sw.Restart();
+        var sb = new StringBuilder();
         var exitCode = SilentProcessRunner.ExecuteCommand(
             helmExePath,
             arguments,
             temporaryDirectory.DirectoryPath,
-            logger.Debug,
-            logger.Information,
-            logger.Error,
+            s =>
+            {
+                logger.Debug(s);
+                sb.AppendLine($"[DEBUG] {s}");
+            },
+            s =>
+            {
+                logger.Information(s);
+                sb.AppendLine($"[INFO] {s}");
+            },
+            s =>
+            {
+                logger.Error(s);
+                sb.AppendLine($"[ERROR] {s}");
+            },
             CancellationToken.None);
 
         sw.Stop();
 
         if (exitCode != 0)
         {
-            throw new InvalidOperationException("Failed to install Kubernetes Agent via Helm");
+            throw new InvalidOperationException($"Failed to install Kubernetes Agent via Helm. Logs: {sb}");
         }
 
         isAgentInstalled = true;

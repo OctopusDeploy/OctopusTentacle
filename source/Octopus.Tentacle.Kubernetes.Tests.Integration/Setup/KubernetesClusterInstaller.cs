@@ -78,14 +78,13 @@ public class KubernetesClusterInstaller
         var exitCode = SilentProcessRunner.ExecuteCommand(
             kubeCtlPath,
             //we give the cluster a unique name
-            $"apply -f \"{manifestFilePath}\" --kubeconfig=\"{KubeConfigPath}\"",
+            $"apply -n default -f \"{manifestFilePath}\" --kubeconfig=\"{KubeConfigPath}\"",
             tempDir.DirectoryPath,
             s =>
             {
                 logger.Debug(s);
                 sb.AppendLine($"[DEBUG] {s}");
             },
-            
             s =>
             {
                 logger.Information(s);
