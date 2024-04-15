@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
+using System.Text;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Kubernetes.Tests.Integration.Setup.Tooling;
 using Octopus.Tentacle.Kubernetes.Tests.Integration.Support.Logging;
@@ -72,21 +73,36 @@ public class KubernetesClusterInstaller
         var filename = PlatformDetection.IsRunningOnNix ? "linux-network-routing.yaml" : "docker-desktop-network-routing.yaml";
         
         var manifestFilePath = await WriteFileToTemporaryDirectory(filename, "manifest.yaml");
+
+        var sb = new StringBuilder();
         
         var exitCode = SilentProcessRunner.ExecuteCommand(
             kubeCtlPath,
             //we give the cluster a unique name
             $"apply -f \"{manifestFilePath}\" --kubeconfig=\"{KubeConfigPath}\"",
             tempDir.DirectoryPath,
-            logger.Debug,
-            logger.Information,
-            logger.Error,
+            s =>
+            {
+                logger.Debug(s);
+                sb.AppendLine($"[DEBUG] {s}");
+            },
+            
+            s =>
+            {
+                logger.Information(s);
+                sb.AppendLine($"[INFO] {s}");
+            },
+            s =>
+            {
+                logger.Error(s);
+                sb.AppendLine($"[ERROR] {s}");
+            },
             CancellationToken.None);
         
         if (exitCode != 0)
         {
             logger.Error("Failed to apply localhost routing to cluster {ClusterName}", clusterName);
-            throw new InvalidOperationException($"Failed to apply localhost routing to cluster {clusterName}");
+            throw new InvalidOperationException($"Failed to apply localhost routing to cluster {clusterName}. Logs: {sb}");
         }
     }
 

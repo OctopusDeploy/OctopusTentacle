@@ -40,7 +40,6 @@ public abstract class KubernetesAgentIntegrationTest
         
         var thumbprint = await kubernetesAgentInstaller.InstallAgent(listeningPort);
         
-        
         //trust the generated cert thumbprint
         ServerHalibutRuntime.Trust(thumbprint);
 
