@@ -147,20 +147,29 @@ public class KubernetesAgentInstaller
     string GetAgentThumbprint()
     {
         string? thumbprint = null;
+        var sb = new StringBuilder();
         var exitCode = SilentProcessRunner.ExecuteCommand(
             kubeCtlExePath,
             //get the generated thumbprint from the config map
             $"get cm tentacle-config --namespace {Namespace} --kubeconfig=\"{kubeConfigPath}\" -o \"jsonpath={{.data['Tentacle\\.CertificateThumbprint']}}\"",
             temporaryDirectory.DirectoryPath,
-            logger.Debug,
+            s =>
+            {
+                logger.Debug(s);
+                sb.AppendLine($"[DEBUG] {s}");
+            },
             x => thumbprint = x,
-            logger.Error,
+            s =>
+            {
+                logger.Error(s);
+                sb.AppendLine($"[ERROR] {s}");
+            },
             CancellationToken.None);
         
         if (exitCode != 0 || thumbprint is null)
         {
             logger.Error("Failed to load thumbprint");
-            throw new InvalidOperationException($"Failed to load thumbprint");
+            throw new InvalidOperationException($"Failed to load thumbprint. Logs: {sb}");
         }
 
         return thumbprint;
