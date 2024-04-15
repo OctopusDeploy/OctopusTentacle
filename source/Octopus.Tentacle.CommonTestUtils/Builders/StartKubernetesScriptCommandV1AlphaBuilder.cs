@@ -19,6 +19,7 @@ namespace Octopus.Tentacle.CommonTestUtils.Builders
         string taskId = Guid.NewGuid().ToString();
         ScriptTicket scriptTicket = new UniqueScriptTicketBuilder().Build();
         PodImageConfiguration? podImageConfiguration = null;
+        string? scriptPodServiceAccountName;
 
         public StartKubernetesScriptCommandV1AlphaBuilder WithScriptBody(string scriptBody)
         {
@@ -84,6 +85,12 @@ namespace Octopus.Tentacle.CommonTestUtils.Builders
             return this;
         }
 
+        public StartKubernetesScriptCommandV1AlphaBuilder WithScriptPodServiceAccountName(string serviceAccountName)
+        {
+            scriptPodServiceAccountName = serviceAccountName;
+            return this;
+        }
+
         public StartKubernetesScriptCommandV1Alpha Build()
             => new(
                 scriptTicket,
@@ -94,6 +101,7 @@ namespace Octopus.Tentacle.CommonTestUtils.Builders
                 scriptIsolationMutexTimeout,
                 scriptIsolationMutexName,
                 podImageConfiguration,
+                scriptPodServiceAccountName,
                 additionalScripts,
                 files.ToArray());
     }

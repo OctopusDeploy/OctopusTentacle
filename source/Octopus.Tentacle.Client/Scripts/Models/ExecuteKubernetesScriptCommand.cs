@@ -8,6 +8,8 @@ namespace Octopus.Tentacle.Client.Scripts.Models
     {
         public KubernetesImageConfiguration? ImageConfiguration { get; }
 
+        public string? ScriptPodServiceAccountName { get;}
+
         public ExecuteKubernetesScriptCommand(
             ScriptTicket scriptTicket,
             string taskId,
@@ -16,10 +18,12 @@ namespace Octopus.Tentacle.Client.Scripts.Models
             ScriptIsolationConfiguration isolationConfiguration,
             Dictionary<ScriptType, string>? additionalScripts,
             ScriptFile[] additionalFiles,
-            KubernetesImageConfiguration? imageConfiguration)
+            KubernetesImageConfiguration? imageConfiguration, 
+            string? scriptPodServiceAccountName)
             : base(scriptTicket, taskId, scriptBody, arguments, isolationConfiguration, additionalScripts, additionalFiles)
         {
             ImageConfiguration = imageConfiguration;
+            ScriptPodServiceAccountName = scriptPodServiceAccountName;
         }
     }
 }
