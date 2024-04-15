@@ -48,6 +48,7 @@ public class KubernetesAgentInstaller
         var sprLogger = new LoggerConfiguration()
             .WriteTo.Logger(logger)
             .WriteTo.StringBuilder(sb)
+            .MinimumLevel.Debug()
             .CreateLogger();
 
         var exitCode = SilentProcessRunner.ExecuteCommand(
@@ -143,6 +144,7 @@ public class KubernetesAgentInstaller
         var sprLogger = new LoggerConfiguration()
             .WriteTo.Logger(logger)
             .WriteTo.StringBuilder(sb)
+            .MinimumLevel.Debug()
             .CreateLogger();
 
         var exitCode = SilentProcessRunner.ExecuteCommand(
@@ -151,14 +153,18 @@ public class KubernetesAgentInstaller
             $"get cm tentacle-config --namespace {Namespace} --kubeconfig=\"{kubeConfigPath}\" -o \"jsonpath={{.data['Tentacle\\.CertificateThumbprint']}}\"",
             temporaryDirectory.DirectoryPath,
             sprLogger.Debug,
-            x => thumbprint = x,
+            x =>
+            {
+                sprLogger.Information(x);
+                thumbprint = x;
+            },
             sprLogger.Error,
             CancellationToken.None);
 
         if (exitCode != 0 || thumbprint is null)
         {
-            logger.Error("Failed to load thumbprint");
-            throw new InvalidOperationException($"Failed to load thumbprint. Logs: {sb}");
+            logger.Error("Failed to load thumbprint. Exit code {ExitCode}", exitCode);
+            throw new InvalidOperationException($"Failed to load thumbprint. ExitCode: {exitCode}, Logs: {sb}");
         }
 
         return thumbprint;
