@@ -3,6 +3,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Util;
 using Serilog;
 

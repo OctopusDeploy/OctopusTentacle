@@ -4,6 +4,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Octopus.Tentacle.CommonTestUtils;
 using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers

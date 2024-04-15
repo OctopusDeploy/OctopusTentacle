@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers;
 using Octopus.Tentacle.Util;
 using Serilog;
+using PlatformDetection = Octopus.Tentacle.Util.PlatformDetection;
 
 namespace Octopus.Tentacle.Tests.Integration.Support.SetupFixtures
 {
