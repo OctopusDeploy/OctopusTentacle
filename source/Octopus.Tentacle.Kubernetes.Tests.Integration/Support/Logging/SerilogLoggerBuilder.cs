@@ -43,7 +43,7 @@ namespace Octopus.Tentacle.Kubernetes.Tests.Integration.Support.Logging
 
         public SerilogLoggerBuilder SetTraceLogFileLogger(TraceLogFileLogger logger)
         {
-            this.traceFileLogger = logger;
+            traceFileLogger = logger;
             return this;
         }
 
@@ -60,10 +60,10 @@ namespace Octopus.Tentacle.Kubernetes.Tests.Integration.Support.Logging
                 logger.Information($"Test: {TestContext.CurrentContext.Test.Name} has hash {testHash}");
             }
 
-            // if (traceFileLogger != null)
-                            // {
-                            //     TraceLoggers.AddOrUpdate(testName, traceFileLogger, (_, _) => throw new Exception("This should never be updated. If it is, it means that a test is being run multiple times in a single test run"));
-                            // }
+            if (traceFileLogger != null)
+            {
+                TraceLoggers.AddOrUpdate(testName, traceFileLogger, (_, _) => throw new Exception("This should never be updated. If it is, it means that a test is being run multiple times in a single test run"));
+            }
 
             return logger;
         }
@@ -122,28 +122,28 @@ namespace Octopus.Tentacle.Kubernetes.Tests.Integration.Support.Logging
         public class TraceLogsForFailedTestsSink : ILogEventSink
         {
             readonly MessageTemplateTextFormatter formatter;
-        
+
             public TraceLogsForFailedTestsSink(MessageTemplateTextFormatter formatter) => this.formatter = formatter;
-        
+
             public void Emit(LogEvent logEvent)
             {
                 if (logEvent == null)
                     throw new ArgumentNullException(nameof(logEvent));
-        
+
                 var testName = TestContext.CurrentContext.Test.FullName;
-        
+
                 if (!TraceLoggers.TryGetValue(testName, out var traceLogger))
                     throw new Exception($"Could not find trace logger for test '{testName}'");
-        
+
                 var output = new StringWriter();
                 if (logEvent.Properties.TryGetValue("SourceContext", out var sourceContext))
                 {
                     var context = sourceContext.ToString().Substring(sourceContext.ToString().LastIndexOf('.') + 1).Replace("\"", "");
                     logEvent.AddOrUpdateProperty(new LogEventProperty("ShortContext", new ScalarValue(context)));
                 }
-        
+
                 formatter.Format(logEvent, output);
-        
+
                 var logLine = output.ToString().Trim();
                 traceLogger.WriteLine(logLine);
             }

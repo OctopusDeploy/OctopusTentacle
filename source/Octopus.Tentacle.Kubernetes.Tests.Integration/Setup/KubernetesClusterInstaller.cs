@@ -22,14 +22,13 @@ public class KubernetesClusterInstaller
 
     public string KubeConfigPath => Path.Combine(tempDir.DirectoryPath, kubeConfigName);
 
-    public KubernetesClusterInstaller(TemporaryDirectory tempDirectory, string kindExePath, string helmExePath, string kubeCtlPath)
+    public KubernetesClusterInstaller(TemporaryDirectory tempDirectory, string kindExePath, string helmExePath, string kubeCtlPath, ILogger logger)
     {
         tempDir = tempDirectory;
         this.kindExePath = kindExePath;
         this.helmExePath = helmExePath;
         this.kubeCtlPath = kubeCtlPath;
-
-        logger = new SerilogLoggerBuilder().Build();
+        this.logger = logger;
 
         clusterName = $"tentacleint-{DateTime.Now:yyyyMMddhhmmss}";
         kubeConfigName = $"{clusterName}.config";
