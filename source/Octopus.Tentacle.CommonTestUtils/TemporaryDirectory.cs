@@ -28,7 +28,7 @@ namespace Octopus.Tentacle.CommonTestUtils
             var path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify);
             fileSystem.EnsureDirectoryExists(path);
 
-            path = Path.Combine(path, Assembly.GetEntryAssembly()?.GetName()?.Name ?? "Octopus");
+            path = Path.Combine(path, Assembly.GetEntryAssembly()?.GetName().Name ?? "Octopus");
             return Path.Combine(path, "Temp");
         }
 
