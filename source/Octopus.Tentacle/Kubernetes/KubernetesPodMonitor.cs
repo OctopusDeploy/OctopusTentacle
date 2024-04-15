@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,6 +9,7 @@ using k8s;
 using k8s.Models;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Time;
 using Polly;
 
@@ -103,8 +105,11 @@ namespace Octopus.Tentacle.Kubernetes
 
         internal async Task<string> InitialLoadAsync(CancellationToken cancellationToken)
         {
+            initialLoadLock.Reset();
             log.Verbose("Loading pod statuses");
 
+            Stopwatch stopwatch = Stopwatch.StartNew();
+            
             var newStatuses = new ConcurrentDictionary<ScriptTicket, TrackedScriptPod>();
             var allPods = await podService.ListAllPods(cancellationToken);
             foreach (var pod in allPods.Items)
@@ -125,7 +130,7 @@ namespace Octopus.Tentacle.Kubernetes
             // in this class so this is thread safe.
             podStatusLookup = newStatuses;
             
-            log.Verbose($"Loaded {allPods.Items.Count} pod statuses. ResourceVersion: {allPods.ResourceVersion()}");
+            log.Verbose($"Loaded {allPods.Items.Count} pod statuses in {stopwatch.Elapsed}. ResourceVersion: {allPods.ResourceVersion()}");
 
             //This is to guard against giving wrong results on Tentacle startup
             initialLoadLock.Set();
@@ -183,6 +188,7 @@ namespace Octopus.Tentacle.Kubernetes
         {
             WaitForInitialLoadToFinish();
 
+            //Ensuring pendingPodStatusLookup doesn't contain duplicates involves
             return podStatusLookup
                 .Concat(pendingPodStatusLookup)
                 .ToLookup(p => p.Key)

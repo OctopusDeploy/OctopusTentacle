@@ -86,7 +86,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             var trackedPod = podStatusProvider.TryGetTrackedScriptPod(request.ScriptTicket);
             return trackedPod != null
                 ? await GetResponse(trackedPod, request.LastLogSequence, cancellationToken)
-                : throw new Exception("Can't find Script Pod for: " + request.ScriptTicket);
+                : throw new MissingScriptPodException(request.ScriptTicket);
         }
 
         public async Task<KubernetesScriptStatusResponseV1Alpha> CancelScriptAsync(CancelKubernetesScriptCommandV1Alpha command, CancellationToken cancellationToken)
@@ -145,4 +145,13 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             return podStatusProvider.TryGetTrackedScriptPod(ticket) is not null;
         }
     }
+    
+    class MissingScriptPodException : Exception
+    {
+        public MissingScriptPodException(ScriptTicket scriptTicket)
+            : base($"The Script Pod for script ticket '{scriptTicket}' could not be found, please retry the action")
+        {
+        }
+    }
+
 }

@@ -32,10 +32,11 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         IScriptPodSinceTimeStore scriptPodSinceTimeStore;
 
         [SetUp]
-        public void Setup()
+        public async Task Setup()
         {
             startTime = DateTimeOffset.MinValue.ToUniversalTime() + 1.Days();
             podService = Substitute.For<IKubernetesPodService>();
+            
             log = new InMemoryLog();
             clock = new FixedClock(startTime);
             scriptLogProvider = Substitute.For<ITentacleScriptLogProvider>();
@@ -46,6 +47,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
 
             cleaner = new KubernetesOrphanedPodCleaner(monitor, podService, log, clock, scriptLogProvider, scriptPodSinceTimeStore);
 
+            await monitor.InitialLoadAsync(CancellationToken.None);
             overCutoff = cleaner.CompletedPodConsideredOrphanedAfterTimeSpan + 1.Minutes();
             underCutoff = cleaner.CompletedPodConsideredOrphanedAfterTimeSpan - 1.Minutes();
         }
