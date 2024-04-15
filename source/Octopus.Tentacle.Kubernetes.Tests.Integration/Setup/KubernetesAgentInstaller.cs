@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Text;
 using Octopus.Client.Model;
 using Octopus.Tentacle.CommonTestUtils;
+using Octopus.Tentacle.CommonTestUtils.Logging;
 using Octopus.Tentacle.Security.Certificates;
 using Octopus.Tentacle.Util;
 
@@ -15,7 +16,7 @@ public class KubernetesAgentInstaller
     readonly TemporaryDirectory temporaryDirectory;
     readonly ILogger logger;
     readonly string kubeConfigPath;
-    
+
     bool isAgentInstalled;
 
     public KubernetesAgentInstaller(TemporaryDirectory temporaryDirectory, string helmExePath, string kubeCtlExePath, string kubeConfigPath, ILogger logger)
@@ -32,7 +33,7 @@ public class KubernetesAgentInstaller
     public string AgentName { get; }
 
     string Namespace => $"octopus-agent-{AgentName}";
-    
+
     public Uri SubscriptionId { get; } = PollingSubscriptionId.Generate();
 
     public async Task<string> InstallAgent(int listeningPort)
@@ -42,26 +43,20 @@ public class KubernetesAgentInstaller
 
         var sw = new Stopwatch();
         sw.Restart();
+
         var sb = new StringBuilder();
+        var sprLogger = new LoggerConfiguration()
+            .WriteTo.Logger(logger)
+            .WriteTo.StringBuilder(sb)
+            .CreateLogger();
+
         var exitCode = SilentProcessRunner.ExecuteCommand(
             helmExePath,
             arguments,
             temporaryDirectory.DirectoryPath,
-            s =>
-            {
-                logger.Debug(s);
-                sb.AppendLine($"[DEBUG] {s}");
-            },
-            s =>
-            {
-                logger.Information(s);
-                sb.AppendLine($"[INFO] {s}");
-            },
-            s =>
-            {
-                logger.Error(s);
-                sb.AppendLine($"[ERROR] {s}");
-            },
+            sprLogger.Debug,
+            sprLogger.Information,
+            sprLogger.Error,
             CancellationToken.None);
 
         sw.Stop();
@@ -74,7 +69,7 @@ public class KubernetesAgentInstaller
         isAgentInstalled = true;
 
         var thumbprint = GetAgentThumbprint();
-        
+
         logger.Information("Agent certificate thumbprint: {Thumbprint:l}", thumbprint);
 
         return thumbprint;
@@ -129,7 +124,7 @@ public class KubernetesAgentInstaller
             "oci://docker.packages.octopushq.com/kubernetes-agent"
             //"oci://registry-1.docker.io/octopusdeploy/kubernetes-agent"
         };
-        
+
         return string.Join(" ", args.WhereNotNull());
     }
 
@@ -148,24 +143,21 @@ public class KubernetesAgentInstaller
     {
         string? thumbprint = null;
         var sb = new StringBuilder();
+        var sprLogger = new LoggerConfiguration()
+            .WriteTo.Logger(logger)
+            .WriteTo.StringBuilder(sb)
+            .CreateLogger();
+
         var exitCode = SilentProcessRunner.ExecuteCommand(
             kubeCtlExePath,
             //get the generated thumbprint from the config map
             $"get cm tentacle-config --namespace {Namespace} --kubeconfig=\"{kubeConfigPath}\" -o \"jsonpath={{.data['Tentacle\\.CertificateThumbprint']}}\"",
             temporaryDirectory.DirectoryPath,
-            s =>
-            {
-                logger.Debug(s);
-                sb.AppendLine($"[DEBUG] {s}");
-            },
+            sprLogger.Debug,
             x => thumbprint = x,
-            s =>
-            {
-                logger.Error(s);
-                sb.AppendLine($"[ERROR] {s}");
-            },
+            sprLogger.Error,
             CancellationToken.None);
-        
+
         if (exitCode != 0 || thumbprint is null)
         {
             logger.Error("Failed to load thumbprint");

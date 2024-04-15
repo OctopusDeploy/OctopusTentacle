@@ -2,6 +2,7 @@
 using System.Reflection;
 using System.Text;
 using Octopus.Tentacle.CommonTestUtils;
+using Octopus.Tentacle.CommonTestUtils.Logging;
 using Octopus.Tentacle.Kubernetes.Tests.Integration.Setup.Tooling;
 using Octopus.Tentacle.Kubernetes.Tests.Integration.Support.Logging;
 using Octopus.Tentacle.Util;
@@ -57,7 +58,7 @@ public class KubernetesClusterInstaller
             logger.Error("Failed to create Kind Kubernetes cluster {ClusterName}", clusterName);
             throw new InvalidOperationException($"Failed to create Kind Kubernetes cluster {clusterName}");
         }
-        
+
         logger.Information("Test cluster kubeconfig path: {Path:l}", KubeConfigPath);
 
         logger.Information("Created Kind Kubernetes cluster {ClusterName} in {ElapsedTime}", clusterName, sw.Elapsed);
@@ -70,33 +71,25 @@ public class KubernetesClusterInstaller
     async Task SetLocalhostRouting()
     {
         var filename = PlatformDetection.IsRunningOnNix ? "linux-network-routing.yaml" : "docker-desktop-network-routing.yaml";
-        
+
         var manifestFilePath = await WriteFileToTemporaryDirectory(filename, "manifest.yaml");
 
         var sb = new StringBuilder();
-        
+        var sprLogger = new LoggerConfiguration()
+            .WriteTo.Logger(logger)
+            .WriteTo.StringBuilder(sb)
+            .CreateLogger();
+
         var exitCode = SilentProcessRunner.ExecuteCommand(
             kubeCtlPath,
             //we give the cluster a unique name
             $"apply -n default -f \"{manifestFilePath}\" --kubeconfig=\"{KubeConfigPath}\"",
             tempDir.DirectoryPath,
-            s =>
-            {
-                logger.Debug(s);
-                sb.AppendLine($"[DEBUG] {s}");
-            },
-            s =>
-            {
-                logger.Information(s);
-                sb.AppendLine($"[INFO] {s}");
-            },
-            s =>
-            {
-                logger.Error(s);
-                sb.AppendLine($"[ERROR] {s}");
-            },
+            sprLogger.Debug,
+            sprLogger.Information,
+            sprLogger.Error,
             CancellationToken.None);
-        
+
         if (exitCode != 0)
         {
             logger.Error("Failed to apply localhost routing to cluster {ClusterName}", clusterName);
@@ -132,18 +125,25 @@ public class KubernetesClusterInstaller
         //     CancellationToken.None);
 
         var installArgs = BuildNfsCsiDriverInstallArguments();
+        
+        var sb = new StringBuilder();
+        var sprLogger = new LoggerConfiguration()
+            .WriteTo.Logger(logger)
+            .WriteTo.StringBuilder(sb)
+            .CreateLogger();
+        
         var exitCode = SilentProcessRunner.ExecuteCommand(
             helmExePath,
             installArgs,
             tempDir.DirectoryPath,
-            logger.Debug,
-            logger.Information,
-            logger.Error,
+            sprLogger.Debug,
+            sprLogger.Information,
+            sprLogger.Error,
             CancellationToken.None);
 
         if (exitCode != 0)
         {
-            throw new InvalidOperationException($"Failed to install NFS CSI driver into cluster {clusterName}");
+            throw new InvalidOperationException($"Failed to install NFS CSI driver into cluster {clusterName}. Logs: {sb}");
         }
     }
 
@@ -172,7 +172,7 @@ public class KubernetesClusterInstaller
             logger.Information,
             logger.Error,
             CancellationToken.None);
-        
+
         if (exitCode != 0)
         {
             logger.Error("Failed to delete Kind kubernetes cluster {ClusterName}", clusterName);
