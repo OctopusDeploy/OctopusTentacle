@@ -33,45 +33,20 @@ public abstract class KubernetesAgentIntegrationTest
         kubernetesAgentInstaller = new KubernetesAgentInstaller(
             KubernetesTestsGlobalContext.Instance.TemporaryDirectory,
             KubernetesTestsGlobalContext.Instance.HelmExePath,
+            KubernetesTestsGlobalContext.Instance.KubeCtlExePath,
             KubernetesTestsGlobalContext.Instance.KubeConfigPath,
             KubernetesTestsGlobalContext.Instance.Logger);
         
         //create a new server halibut runtime
         var listeningPort = BuildServerHalibutRuntimeAndListen();
         
-        await kubernetesAgentInstaller.InstallAgent(listeningPort);
-
-        //kubectl get config map thumbprint value of the generated cert
-        var thumbPrint = GetAgentThumbprint(KubernetesTestsGlobalContext.Instance.Logger);
+        var thumbprint = await kubernetesAgentInstaller.InstallAgent(listeningPort);
         
-        KubernetesTestsGlobalContext.Instance.Logger.Information("Agent certificate thumbprint: {Thumbprint:l}", thumbPrint);
         
         //trust the generated cert thumbprint
-        ServerHalibutRuntime.Trust(thumbPrint);
+        ServerHalibutRuntime.Trust(thumbprint);
 
         BuildTentacleClient();
-    }
-
-    string GetAgentThumbprint(ILogger logger)
-    {
-        string? thumbprint = null;
-        var exitCode = SilentProcessRunner.ExecuteCommand(
-            KubernetesTestsGlobalContext.Instance.KubeCtlExePath,
-            //get the generated thumbprint from the config map
-            $"get cm tentacle-config --namespace {kubernetesAgentInstaller.Namespace} --kubeconfig=\"{KubernetesTestsGlobalContext.Instance.KubeConfigPath}\" -o \"jsonpath={{.data['Tentacle\\.CertificateThumbprint']}}\"",
-            KubernetesTestsGlobalContext.Instance.TemporaryDirectory.DirectoryPath,
-            logger.Debug,
-            x => thumbprint = x,
-            logger.Error,
-            CancellationToken.None);
-        
-        if (exitCode != 0 || thumbprint is null)
-        {
-            logger.Error("Failed to load thumbprint");
-            throw new InvalidOperationException($"Failed to load thumbprint");
-        }
-
-        return thumbprint;
     }
 
     [SetUp]

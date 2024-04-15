@@ -11,16 +11,18 @@ namespace Octopus.Tentacle.Kubernetes.Tests.Integration.Setup;
 public class KubernetesAgentInstaller
 {
     readonly string helmExePath;
+    readonly string kubeCtlExePath;
     readonly TemporaryDirectory temporaryDirectory;
     readonly ILogger logger;
     readonly string kubeConfigPath;
     
     bool isAgentInstalled;
 
-    public KubernetesAgentInstaller(TemporaryDirectory temporaryDirectory, string helmExePath, string kubeConfigPath, ILogger logger)
+    public KubernetesAgentInstaller(TemporaryDirectory temporaryDirectory, string helmExePath, string kubeCtlExePath, string kubeConfigPath, ILogger logger)
     {
         this.temporaryDirectory = temporaryDirectory;
         this.helmExePath = helmExePath;
+        this.kubeCtlExePath = kubeCtlExePath;
         this.kubeConfigPath = kubeConfigPath;
         this.logger = logger;
 
@@ -29,13 +31,12 @@ public class KubernetesAgentInstaller
 
     public string AgentName { get; }
 
-    public string Namespace => $"octopus-agent-{AgentName}";
+    string Namespace => $"octopus-agent-{AgentName}";
     
     public Uri SubscriptionId { get; } = PollingSubscriptionId.Generate();
 
-    public async Task InstallAgent(int listeningPort)
+    public async Task<string> InstallAgent(int listeningPort)
     {
-
         var valuesFilePath = await WriteValuesFile(listeningPort);
         var arguments = BuildAgentInstallArguments(valuesFilePath);
 
@@ -58,6 +59,12 @@ public class KubernetesAgentInstaller
         }
 
         isAgentInstalled = true;
+
+        var thumbprint = GetAgentThumbprint();
+        
+        logger.Information("Agent certificate thumbprint: {Thumbprint:l}", thumbprint);
+
+        return thumbprint;
     }
 
     async Task<string> WriteValuesFile(int listeningPort)
@@ -107,6 +114,28 @@ public class KubernetesAgentInstaller
             "oci://docker.packages.octopushq.com/kubernetes-agent"
             //"oci://registry-1.docker.io/octopusdeploy/kubernetes-agent"
         );
+    }
+
+    string GetAgentThumbprint()
+    {
+        string? thumbprint = null;
+        var exitCode = SilentProcessRunner.ExecuteCommand(
+            kubeCtlExePath,
+            //get the generated thumbprint from the config map
+            $"get cm tentacle-config --namespace {Namespace} --kubeconfig=\"{kubeConfigPath}\" -o \"jsonpath={{.data['Tentacle\\.CertificateThumbprint']}}\"",
+            temporaryDirectory.DirectoryPath,
+            logger.Debug,
+            x => thumbprint = x,
+            logger.Error,
+            CancellationToken.None);
+        
+        if (exitCode != 0 || thumbprint is null)
+        {
+            logger.Error("Failed to load thumbprint");
+            throw new InvalidOperationException($"Failed to load thumbprint");
+        }
+
+        return thumbprint;
     }
 
     string NamespaceFlag => $"--namespace \"{Namespace}\"";
