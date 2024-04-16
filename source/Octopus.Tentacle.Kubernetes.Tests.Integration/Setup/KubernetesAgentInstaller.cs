@@ -4,6 +4,7 @@ using System.Text;
 using Octopus.Client.Model;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.CommonTestUtils.Logging;
+using Octopus.Tentacle.Kubernetes.Tests.Integration.Support;
 using Octopus.Tentacle.Security.Certificates;
 using Octopus.Tentacle.Util;
 
@@ -78,9 +79,7 @@ public class KubernetesAgentInstaller
 
     async Task<string> WriteValuesFile(int listeningPort)
     {
-        var asm = Assembly.GetExecutingAssembly();
-        var valuesFileName = asm.GetManifestResourceNames().First(n => n.Contains("agent-values.yaml", StringComparison.OrdinalIgnoreCase));
-        using var reader = new StreamReader(asm.GetManifestResourceStream(valuesFileName)!);
+        using var reader = new StreamReader(Assembly.GetExecutingAssembly().GetManifestResourceStreamFromPartialName("agent-values.yaml"));
 
         var valuesFile = await reader.ReadToEndAsync();
 

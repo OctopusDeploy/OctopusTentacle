@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Text;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.CommonTestUtils.Logging;
+using Octopus.Tentacle.Kubernetes.Tests.Integration.Support;
 using Octopus.Tentacle.Util;
 using PlatformDetection = Octopus.Tentacle.CommonTestUtils.PlatformDetection;
 
@@ -97,9 +98,7 @@ public class KubernetesClusterInstaller
 
     async Task<string> WriteFileToTemporaryDirectory(string resourceFileName, string? outputFilename = null)
     {
-        var asm = Assembly.GetExecutingAssembly();
-        var valuesFileName = asm.GetManifestResourceNames().First(n => n.Contains(resourceFileName, StringComparison.OrdinalIgnoreCase));
-        await using var resourceStream = asm.GetManifestResourceStream(valuesFileName)!;
+        await using var resourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStreamFromPartialName(resourceFileName);
 
         var filePath = Path.Combine(tempDir.DirectoryPath, outputFilename ?? resourceFileName);
         await using var file = File.Create(filePath);
