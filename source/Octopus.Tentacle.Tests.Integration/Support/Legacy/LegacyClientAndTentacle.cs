@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Octopus.Tentacle.CommonTestUtils;
 using Octopus.TestPortForwarder;
 using Serilog;
 

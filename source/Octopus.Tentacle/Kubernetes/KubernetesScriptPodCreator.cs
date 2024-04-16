@@ -149,7 +149,7 @@ namespace Octopus.Tentacle.Kubernetes
 
         async Task CreatePod(StartKubernetesScriptCommandV1Alpha command, IScriptWorkspace workspace, string? imagePullSecretName, InMemoryTentacleScriptLog tentacleScriptLog, CancellationToken cancellationToken)
         {
-            var podName = command.ScriptTicket.ToKubernetesScriptPobName();
+            var podName = command.ScriptTicket.ToKubernetesScriptPodName();
 
             LogVerboseToBothLogs($"Creating Kubernetes Pod '{podName}'.", tentacleScriptLog);
 

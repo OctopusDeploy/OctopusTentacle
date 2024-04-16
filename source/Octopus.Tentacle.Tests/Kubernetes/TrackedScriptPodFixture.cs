@@ -117,7 +117,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                 {
                     new()
                     {
-                        Name = scriptTicket.ToKubernetesScriptPobName(),
+                        Name = scriptTicket.ToKubernetesScriptPodName(),
                         State = containerState
                     }
                 }

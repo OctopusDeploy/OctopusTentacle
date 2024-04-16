@@ -3,7 +3,7 @@ using System.IO;
 using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
-using Octopus.Tentacle.CommonTestUtils.Builders;
+using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util;

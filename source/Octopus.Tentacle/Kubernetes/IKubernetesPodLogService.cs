@@ -32,7 +32,7 @@ namespace Octopus.Tentacle.Kubernetes
         public async Task<(IReadOnlyCollection<ProcessOutput> Outputs, long NextSequenceNumber)> GetLogs(ScriptTicket scriptTicket, long lastLogSequence, CancellationToken cancellationToken)
         {
             var tentacleScriptLog = scriptLogProvider.GetOrCreate(scriptTicket);
-            var podName = scriptTicket.ToKubernetesScriptPobName();
+            var podName = scriptTicket.ToKubernetesScriptPodName();
             var sinceTime = scriptPodSinceTimeStore.GetSinceTime(scriptTicket);
 
             Stream logStream;
