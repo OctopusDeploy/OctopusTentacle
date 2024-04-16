@@ -219,7 +219,7 @@ namespace Octopus.Tentacle.Kubernetes
 
             V1ContainerStateTerminated GetTerminatedState()
             {
-                return pod.Status.ContainerStatuses.Single(c => c.Name == ScriptTicket.ToKubernetesScriptPobName()).State.Terminated;
+                return pod.Status.ContainerStatuses.Single(c => c.Name == ScriptTicket.ToKubernetesScriptPodName()).State.Terminated;
             }
         }
 

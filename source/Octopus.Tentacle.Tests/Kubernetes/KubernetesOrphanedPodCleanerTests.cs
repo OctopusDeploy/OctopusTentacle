@@ -204,7 +204,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                     {
                         new()
                         {
-                            Name = scriptTicket.ToKubernetesScriptPobName(),
+                            Name = scriptTicket.ToKubernetesScriptPodName(),
                             State = new V1ContainerState(
                                 terminated: new V1ContainerStateTerminated(exitCode: exitCode, finishedAt: finishedAt?.DateTime))
                         }

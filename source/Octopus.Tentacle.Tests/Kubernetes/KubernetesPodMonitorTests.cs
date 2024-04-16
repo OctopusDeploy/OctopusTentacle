@@ -101,7 +101,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                 {
                     new()
                     {
-                        Name = scriptTicket.ToKubernetesScriptPobName(),
+                        Name = scriptTicket.ToKubernetesScriptPodName(),
                         State = new V1ContainerState(terminated: new V1ContainerStateTerminated(0, finishedAt: DateTime.UtcNow))
                     }
                 }
@@ -157,7 +157,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                 {
                     new()
                     {
-                        Name = scriptTicket.ToKubernetesScriptPobName(),
+                        Name = scriptTicket.ToKubernetesScriptPodName(),
                         State = new V1ContainerState
                         {
                             Terminated = new V1ContainerStateTerminated
