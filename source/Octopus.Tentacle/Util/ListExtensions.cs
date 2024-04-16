@@ -34,5 +34,12 @@ namespace Octopus.Tentacle.Util
             foreach (var item in itemsToAdd)
                 source.Add(item);
         }
+        public static List<T> AddIfNotNull<T>(this List<T> list, T? item)
+        {
+            if (item != null)
+                list.Add(item);
+
+            return list;
+        }
     }
 }
