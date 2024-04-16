@@ -130,11 +130,11 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
 
         async Task<KubernetesScriptStatusResponseV1Alpha> GetResponse(ITrackedScriptPod trackedPod, long lastLogSequence, CancellationToken cancellationToken)
         {
-            var processState = trackedPod.State switch
+            var processState = trackedPod.State.Phase switch
             {
-                TrackedScriptPodState.Running => ProcessState.Running,
-                TrackedScriptPodState.Succeeded => ProcessState.Complete,
-                TrackedScriptPodState.Failed => ProcessState.Complete,
+                TrackedScriptPodPhase.Running => ProcessState.Running,
+                TrackedScriptPodPhase.Succeeded => ProcessState.Complete,
+                TrackedScriptPodPhase.Failed => ProcessState.Complete,
                 _ => throw new ArgumentOutOfRangeException()
             };
 
@@ -143,7 +143,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             return new KubernetesScriptStatusResponseV1Alpha(
                 trackedPod.ScriptTicket,
                 processState,
-                trackedPod.ExitCode ?? 0,
+                trackedPod.State.ExitCode ?? 0,
                 outputLogs.ToList(),
                 nextLogSequence
             );
