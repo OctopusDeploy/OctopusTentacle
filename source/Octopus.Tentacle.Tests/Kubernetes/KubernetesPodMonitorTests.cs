@@ -69,8 +69,8 @@ namespace Octopus.Tentacle.Tests.Kubernetes
 
             status.Should().Match<TrackedScriptPod>(status =>
                 status.ScriptTicket == scriptTicket &&
-                status.State == TrackedScriptPodState.Running &&
-                status.ExitCode == null
+                status.State.Phase == TrackedScriptPodPhase.Running &&
+                status.State.ExitCode == null
             );
         }
 
@@ -125,8 +125,8 @@ namespace Octopus.Tentacle.Tests.Kubernetes
 
             status.Should().Match<TrackedScriptPod>(status =>
                 status.ScriptTicket == scriptTicket &&
-                status.State == TrackedScriptPodState.Succeeded &&
-                status.ExitCode == 0
+                status.State.Phase == TrackedScriptPodPhase.Succeeded &&
+                status.State.ExitCode == 0
             );
         }
 
@@ -188,8 +188,8 @@ namespace Octopus.Tentacle.Tests.Kubernetes
 
             status.Should().Match<TrackedScriptPod>(status =>
                 status.ScriptTicket == scriptTicket &&
-                status.State == TrackedScriptPodState.Failed &&
-                status.ExitCode == -99
+                status.State.Phase == TrackedScriptPodPhase.Failed &&
+                status.State.ExitCode == -99
             );
         }
 

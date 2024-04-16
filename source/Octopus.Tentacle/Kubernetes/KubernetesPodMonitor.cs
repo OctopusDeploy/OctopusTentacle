@@ -33,15 +33,11 @@ namespace Octopus.Tentacle.Kubernetes
         readonly ISystemLog log;
         readonly ITentacleScriptLogProvider scriptLogProvider;
 
-        //This is for the Pods retrieved from Kubernetes API
         ConcurrentDictionary<ScriptTicket, TrackedScriptPod> podStatusLookup = new();
-        
-        //This is for the new Pods we've just created that might not appear on the Kubernetes API yet
-        readonly ConcurrentDictionary<ScriptTicket, TrackedScriptPod> pendingPodStatusLookup = new();
         
         //Prevent giving false results when we are still loading for the first time 
         readonly ManualResetEventSlim initialLoadLock = new();
-        readonly object theLock = new();
+        readonly object writeLock = new();
         
         public KubernetesPodMonitor(IKubernetesPodService podService, ISystemLog log, ITentacleScriptLogProvider scriptLogProvider)
         {
@@ -81,10 +77,12 @@ namespace Octopus.Tentacle.Kubernetes
         {
             WaitForInitialLoadToFinish();
 
-            var trackedScriptPod = new TrackedScriptPod(scriptTicket);
+            var trackedScriptPod = new TrackedScriptPod(scriptTicket){ MightNotExistInClusterYet = true};
             trackedScriptPod.Update(createdPod);
-            lock(theLock)
-                pendingPodStatusLookup.GetOrAdd(scriptTicket, _ => trackedScriptPod);
+            lock (writeLock)
+            {
+                podStatusLookup.GetOrAdd(scriptTicket, _ => trackedScriptPod);
+            }
         }
 
         async Task UpdateLoop(CancellationToken cancellationToken)
@@ -126,16 +124,18 @@ namespace Octopus.Tentacle.Kubernetes
                newStatuses[scriptTicket] = status;
            }
 
-           lock (theLock)
+           //single collection, lock on writes
+           lock (writeLock)
            {
+               var previousLookup = podStatusLookup;
                // Updating a reference is an atomic operation
                // and we only add data to this dictionary
                // in this class so this is thread safe.
                podStatusLookup = newStatuses;
 
-               foreach (var scriptTicket in podStatusLookup.Keys)
+               foreach (var entry in previousLookup.Where(t => t.Value.MightNotExistInClusterYet))
                {
-                   pendingPodStatusLookup.TryRemove(scriptTicket, out _);
+                   podStatusLookup.GetOrAdd(entry.Key, _ => entry.Value);
                }
            }
 
@@ -152,7 +152,7 @@ namespace Octopus.Tentacle.Kubernetes
         internal async Task OnNewEvent(WatchEventType type, V1Pod pod, CancellationToken cancellationToken)
         {
             await Task.CompletedTask;
-            lock (theLock)
+            lock (writeLock)
             {
                 try
                 {
@@ -163,16 +163,15 @@ namespace Octopus.Tentacle.Kubernetes
                     switch (type)
                     {
                         case WatchEventType.Added or WatchEventType.Modified:
-                        {
-                            var status = podStatusLookup.GetOrAdd(scriptTicket, st => new TrackedScriptPod(st));
-                            status.Update(pod);
+                            var trackedScriptPod = new TrackedScriptPod(scriptTicket);
+                            trackedScriptPod.Update(pod);
+                            trackedScriptPod.MightNotExistInClusterYet = false;
+                            
+                            var status = podStatusLookup.AddOrUpdate(scriptTicket, _ => trackedScriptPod, (_, _) => trackedScriptPod);
                             log.Verbose($"Updated pod {pod.Name()} status. {status}");
 
                             break;
-                        }
                         case WatchEventType.Deleted:
-                            pendingPodStatusLookup.TryRemove(scriptTicket, out _);
-
                             //if the pod is deleted, remove it
                             if (podStatusLookup.TryRemove(scriptTicket, out _))
                             {
@@ -200,30 +199,14 @@ namespace Octopus.Tentacle.Kubernetes
         {
             WaitForInitialLoadToFinish();
 
-            lock (theLock)
-            {
-                //Ensuring pendingPodStatusLookup doesn't contain duplicates involves
-                return podStatusLookup
-                    .Concat(pendingPodStatusLookup)
-                    .ToLookup(p => p.Key)
-                    .Select(g => (ITrackedScriptPod)g.First().Value) //Deduplicate
-                    .ToList();
-            }
+            return podStatusLookup.Values.Cast<ITrackedScriptPod>().ToList();
         }
 
         public ITrackedScriptPod? TryGetTrackedScriptPod(ScriptTicket scriptTicket)
         {
             WaitForInitialLoadToFinish();
-
-            lock (theLock)
-            {
-                var found = podStatusLookup.TryGetValue(scriptTicket, out var status);
-                if (found)
-                    return status;
-
-                found = pendingPodStatusLookup.TryGetValue(scriptTicket, out status);
-                return found ? status : null;
-            }
+            var found = podStatusLookup.TryGetValue(scriptTicket, out var status);
+            return found ? status : null;
         }
 
         void WaitForInitialLoadToFinish()
@@ -238,53 +221,40 @@ namespace Octopus.Tentacle.Kubernetes
     public interface ITrackedScriptPod
     {
         TrackedScriptPodState State { get; }
-        int? ExitCode { get; }
         ScriptTicket ScriptTicket { get; }
-        DateTimeOffset? FinishedAt { get; }
         void MarkAsCompleted(int exitCode, DateTimeOffset finishedAt);
     }
     
     public class TrackedScriptPod : ITrackedScriptPod
     {
-        //The tracked Pod can be updated by K8s status updates or from the EOS marker
-        readonly object lockObject = new object();
-        
         public ScriptTicket ScriptTicket { get; }
 
         public TrackedScriptPodState State { get; private set; }
 
-        public int? ExitCode { get; private set; }
-
-        public DateTimeOffset? FinishedAt { get; private set; }
-
+        //We create a tracked Pod entry when creating the script Pod so we don't need to wait for the K8s watch event to come through
+        public bool MightNotExistInClusterYet { get; set; }
+        
         public TrackedScriptPod(ScriptTicket ticket)
         {
             ScriptTicket = ticket;
-            State = TrackedScriptPodState.Running;
+            State = TrackedScriptPodState.Running();
         }
 
         public void Update(V1Pod pod)
         {
-            lock (lockObject)
-            {
-                switch (pod.Status?.Phase)
+            switch (pod.Status?.Phase)
                 {
                     case PodPhases.Succeeded:
                         var succeededState = GetTerminatedState();
-                        FinishedAt = GetFinishedAt(succeededState);
-                        State = TrackedScriptPodState.Succeeded;
-                        ExitCode = succeededState.ExitCode;
+                        State = TrackedScriptPodState.Succeeded(succeededState.ExitCode, GetFinishedAt(succeededState));
                         break;
                     case PodPhases.Failed:
                         var failedState = GetTerminatedState();
-                        FinishedAt = GetFinishedAt(failedState);
-                        State = TrackedScriptPodState.Failed;
-                        ExitCode = failedState.ExitCode;
+                        State = TrackedScriptPodState.Failed(failedState.ExitCode, GetFinishedAt(failedState));
                         break;
                 }
-            }
 
-            DateTimeOffset? GetFinishedAt(V1ContainerStateTerminated terminated)
+            DateTimeOffset GetFinishedAt(V1ContainerStateTerminated terminated)
             {
                 var finishedAtDateTime = terminated.FinishedAt!;
                 return new DateTimeOffset(finishedAtDateTime.Value, TimeSpan.Zero);
@@ -298,16 +268,16 @@ namespace Octopus.Tentacle.Kubernetes
 
         public void MarkAsCompleted(int exitCode, DateTimeOffset finishedAt)
         {
-            lock (lockObject)
-            {
-                FinishedAt = finishedAt;
-                State = exitCode == 0 ? TrackedScriptPodState.Succeeded : TrackedScriptPodState.Failed;
-                ExitCode = exitCode;
-            }
+            State = exitCode == 0 
+                ? TrackedScriptPodState.Succeeded(exitCode, finishedAt) 
+                : TrackedScriptPodState.Failed(exitCode, finishedAt);
         }
 
         public override string ToString()
-            => $"ScriptTicket: {ScriptTicket}, State: {State}, ExitCode: {ExitCode}";
+        {
+            var state = State;
+            return $"ScriptTicket: {ScriptTicket}, State: {state.Phase}, ExitCode: {state.ExitCode}";
+        }
     }
 
     //Pod lifecycle has these phases:
@@ -321,7 +291,39 @@ namespace Octopus.Tentacle.Kubernetes
         public const string Unknown = "Unknown";
     }
 
-    public enum TrackedScriptPodState
+    public record TrackedScriptPodState
+    {
+        public static TrackedScriptPodState Running()
+        {
+            return new TrackedScriptPodState() { Phase = TrackedScriptPodPhase.Running };
+        }
+
+        public static TrackedScriptPodState Succeeded(int exitCode, DateTimeOffset finishedAt)
+        {
+            return new TrackedScriptPodState()
+            {
+                Phase = TrackedScriptPodPhase.Succeeded,
+                ExitCode = exitCode, 
+                FinishedAt = finishedAt
+            };
+        }
+
+        public static TrackedScriptPodState Failed(int exitCode, DateTimeOffset finishedAt)
+        {
+            return new TrackedScriptPodState()
+            {
+                Phase = TrackedScriptPodPhase.Failed,
+                ExitCode = exitCode, 
+                FinishedAt = finishedAt
+            };
+        }
+
+        public TrackedScriptPodPhase Phase { get; private init; }
+        public int? ExitCode { get; private init; }
+        public DateTimeOffset? FinishedAt { get; private init; }
+    }
+
+    public enum TrackedScriptPodPhase
     {
         Running,
         Succeeded,
