@@ -2,7 +2,7 @@ tentacle:
   ACCEPT_EULA: "Y"
   targetName: "#{TargetName}"
   serverCommsAddress: "#{ServerCommsAddress}"
-  serverUrl: "#{ServerUrl}"
+  serverUrl: "https://this.is.not.required.com/"
   bearerToken: "this-is-a-fake-bearer-token"
   space: "Default"
   targetEnvironments: ["development"]

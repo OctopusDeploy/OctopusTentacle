@@ -43,7 +43,7 @@ public abstract class KubernetesAgentIntegrationTest
         //trust the generated cert thumbprint
         ServerHalibutRuntime.Trust(thumbprint);
 
-        BuildTentacleClient();
+        BuildTentacleClient(thumbprint);
     }
 
     [SetUp]
@@ -66,11 +66,14 @@ public abstract class KubernetesAgentIntegrationTest
         {
            await traceLogFileLogger.DisposeAsync();
         }
+        
+        cancellationTokenSource.Cancel();
+        cancellationTokenSource.Dispose();
     }
 
-    void BuildTentacleClient()
+    void BuildTentacleClient(string thumbprint)
     {
-        var endpoint = new ServiceEndPoint(kubernetesAgentInstaller.SubscriptionId, TestCertificates.TentaclePublicThumbprint, ServerHalibutRuntime.TimeoutsAndLimits);
+        var endpoint = new ServiceEndPoint(kubernetesAgentInstaller.SubscriptionId, thumbprint, ServerHalibutRuntime.TimeoutsAndLimits);
         
         var retrySettings = new RpcRetrySettings(true, TimeSpan.FromMinutes(2));
         var clientOptions = new TentacleClientOptions(retrySettings);

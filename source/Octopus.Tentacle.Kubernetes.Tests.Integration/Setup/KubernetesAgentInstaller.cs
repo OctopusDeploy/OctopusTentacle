@@ -69,7 +69,7 @@ public class KubernetesAgentInstaller
 
         isAgentInstalled = true;
 
-        var thumbprint = GetAgentThumbprint();
+        var thumbprint = await GetAgentThumbprint();
 
         logger.Information("Agent certificate thumbprint: {Thumbprint:l}", thumbprint);
 
@@ -97,8 +97,6 @@ public class KubernetesAgentInstaller
         valuesFile = valuesFile
             .Replace("#{TargetName}", AgentName)
             .Replace("#{ServerCommsAddress}", serverCommsAddress)
-            //this address is not needed because we don't need it to register itself
-            .Replace("#{ServerUrl}", "https://octopus.internal/")
             .Replace("#{ConfigMapData}", configMapData);
 
         var valuesFilePath = Path.Combine(temporaryDirectory.DirectoryPath, "agent-values.yaml");
@@ -137,7 +135,7 @@ public class KubernetesAgentInstaller
         return null;
     }
 
-    string GetAgentThumbprint()
+    async Task<string> GetAgentThumbprint()
     {
         string? thumbprint = null;
         var sb = new StringBuilder();
@@ -147,27 +145,44 @@ public class KubernetesAgentInstaller
             .MinimumLevel.Debug()
             .CreateLogger();
 
-        var exitCode = SilentProcessRunner.ExecuteCommand(
-            kubeCtlExePath,
-            //get the generated thumbprint from the config map
-            $"get cm tentacle-config --namespace {Namespace} --kubeconfig=\"{kubeConfigPath}\" -o \"jsonpath={{.data['Tentacle\\.CertificateThumbprint']}}\"",
-            temporaryDirectory.DirectoryPath,
-            sprLogger.Debug,
-            x =>
-            {
-                sprLogger.Information(x);
-                thumbprint = x;
-            },
-            sprLogger.Error,
-            CancellationToken.None);
-
-        if (exitCode != 0 || thumbprint is null)
+        var attempt = 0;
+        do
         {
-            logger.Error("Failed to load thumbprint. Exit code {ExitCode}", exitCode);
-            throw new InvalidOperationException($"Failed to load thumbprint. ExitCode: {exitCode}, Logs: {sb}");
-        }
+            var exitCode = SilentProcessRunner.ExecuteCommand(
+                kubeCtlExePath,
+                //get the generated thumbprint from the config map
+                $"get cm tentacle-config --namespace {Namespace} --kubeconfig=\"{kubeConfigPath}\" -o \"jsonpath={{.data['Tentacle\\.CertificateThumbprint']}}\"",
+                temporaryDirectory.DirectoryPath,
+                sprLogger.Debug,
+                x =>
+                {
+                    sprLogger.Information(x);
+                    thumbprint = x;
+                },
+                sprLogger.Error,
+                CancellationToken.None);
+            
+            if (exitCode != 0)
+            {
+                logger.Error("Failed to load thumbprint. Exit code {ExitCode}", exitCode);
+                throw new InvalidOperationException($"Failed to load thumbprint. ExitCode: {exitCode}, Logs: {sb}");
+            }
 
-        return thumbprint;
+            if (thumbprint is not null)
+            {
+                return thumbprint;
+            }
+
+            if (attempt == 5)
+            {
+                break;
+            }
+
+            attempt++;
+            await Task.Delay(500);
+        } while (thumbprint is null);
+
+        throw new InvalidOperationException("Failed to load the generated thumbprint after 5 attempts");
     }
 
     string NamespaceFlag => $"--namespace \"{Namespace}\"";

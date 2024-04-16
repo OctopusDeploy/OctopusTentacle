@@ -21,10 +21,12 @@ public class RequiredToolDownloader
 
     public async Task<(string KindExePath, string HelmExePath, string KubeCtlPath)> DownloadRequiredTools(CancellationToken cancellationToken)
     {
-        var kindExePath = await kindDownloader.Download(temporaryDirectory.DirectoryPath, cancellationToken);
-        var helmExePath = await helmDownloader.Download(temporaryDirectory.DirectoryPath, cancellationToken);
-        var kubeCtlPath = await kubeCtlDownloader.Download(temporaryDirectory.DirectoryPath, cancellationToken);
+        var kindExePathTask = kindDownloader.Download(temporaryDirectory.DirectoryPath, cancellationToken);
+        var helmExePathTask = helmDownloader.Download(temporaryDirectory.DirectoryPath, cancellationToken);
+        var kubeCtlExePathTask = kubeCtlDownloader.Download(temporaryDirectory.DirectoryPath, cancellationToken);
 
-        return (kindExePath, helmExePath, kubeCtlPath);
+        await Task.WhenAll(kindExePathTask, helmExePathTask, kubeCtlExePathTask);
+        
+        return (kindExePathTask.Result, helmExePathTask.Result, kubeCtlExePathTask.Result);
     }
 }
