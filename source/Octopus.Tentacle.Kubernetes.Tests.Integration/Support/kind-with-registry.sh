@@ -5,10 +5,11 @@ set -o errexit
 # https://kind.sigs.k8s.io/docs/user/local-registry/
 
 kind_cluster_name="$1"
+kind_config_path="$2"
 
 # 1. Create registry container unless it already exists
 reg_name='kind-registry'
-reg_port='21321'
+reg_port='5555' # The 5tory of the 5ecret 5tar 5ystem
 if [ "$(docker inspect -f '{{.State.Running}}' "${reg_name}" 2>/dev/null || true)" != 'true' ]; then
   docker run \
     -d --restart=always -p "127.0.0.1:${reg_port}:5000" --network bridge --name "${reg_name}" \
@@ -20,14 +21,7 @@ fi
 # https://github.com/kubernetes-sigs/kind/issues/2875
 # https://github.com/containerd/containerd/blob/main/docs/cri/config.md#registry-configuration
 # See: https://github.com/containerd/containerd/blob/main/docs/hosts.md
-cat <<EOF | kind create cluster --name="$kind_cluster_name" --config=-
-kind: Cluster
-apiVersion: kind.x-k8s.io/v1alpha4
-containerdConfigPatches:
-- |-
-  [plugins."io.containerd.grpc.v1.cri".registry]
-    config_path = "/etc/containerd/certs.d"
-EOF
+kind create cluster --name="$kind_cluster_name" --kubeconfig="$kind_cluster_name.config" --config="$kind_config_path"
 
 # 3. Add the registry config to the nodes
 #
