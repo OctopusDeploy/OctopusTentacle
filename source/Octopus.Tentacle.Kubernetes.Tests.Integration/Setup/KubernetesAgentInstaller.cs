@@ -5,13 +5,15 @@ using Octopus.Client.Model;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.CommonTestUtils.Logging;
 using Octopus.Tentacle.Kubernetes.Tests.Integration.Support;
-using Octopus.Tentacle.Security.Certificates;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Kubernetes.Tests.Integration.Setup;
 
 public class KubernetesAgentInstaller
 {
+    //This is the DNS of the localhost Kubernetes Server we add to the cluster in the KubernetesClusterInstaller.SetLocalhostRouting()
+    const string LocalhostKubernetesServiceDns = "dockerhost.default.svc.cluster.local";
+    
     readonly string helmExePath;
     readonly string kubeCtlExePath;
     readonly TemporaryDirectory temporaryDirectory;
@@ -83,7 +85,7 @@ public class KubernetesAgentInstaller
 
         var valuesFile = await reader.ReadToEndAsync();
 
-        var serverCommsAddress = $"https://dockerhost.default.svc.cluster.local:{listeningPort}";
+        var serverCommsAddress = $"https://{LocalhostKubernetesServiceDns}:{listeningPort}";
 
         var configMapData = $@"
         Octopus.Home: /octopus
