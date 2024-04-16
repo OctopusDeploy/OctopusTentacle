@@ -293,6 +293,10 @@ namespace Octopus.Tentacle.Kubernetes
 
     public record TrackedScriptPodState
     {
+        TrackedScriptPodState()
+        {
+        }
+
         public static TrackedScriptPodState Running()
         {
             return new TrackedScriptPodState() { Phase = TrackedScriptPodPhase.Running };

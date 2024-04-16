@@ -24,24 +24,13 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         ScriptTicket scriptTicket;
 
         [SetUp]
-        public async Task SetUp()
+        public void SetUp()
         {
             podService = Substitute.For<IKubernetesPodService>();
             log = new InMemoryLog();
             monitor = new KubernetesPodMonitor(podService, log, new TentacleScriptLogProvider());
 
             scriptTicket = new ScriptTicket(Guid.NewGuid().ToString());
-            
-            podService.ListAllPods(Arg.Any<CancellationToken>())
-                .Returns(new V1PodList
-                {
-                    Items = new List<V1Pod>
-                    {
-                        Capacity = 0
-                    }
-                });
-
-            await monitor.InitialLoadAsync(CancellationToken.None);
         }
 
         [Test]
@@ -59,6 +48,13 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                     }
                 }
             };
+
+            podService.ListAllPods(Arg.Any<CancellationToken>())
+                .Returns(new V1PodList
+                {
+                    Items = new List<V1Pod>()
+                });
+            await monitor.InitialLoadAsync(CancellationToken.None);
 
             //Act
             await monitor.OnNewEvent(type, pod, CancellationToken.None);
