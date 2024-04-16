@@ -3,7 +3,7 @@ using System.Threading;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Diagnostics;
 
-namespace Octopus.Tentacle.Tests.Integration.Support
+namespace Octopus.Tentacle.CommonTestUtils.Diagnostics
 {
     public class TestConsoleLog : Log
     {

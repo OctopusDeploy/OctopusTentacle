@@ -1,9 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Reflection;
+using Octopus.Tentacle.CommonTestUtils.Diagnostics;
 using Octopus.Tentacle.Util;
 
-namespace Octopus.Tentacle.Tests.Integration.Support
+namespace Octopus.Tentacle.CommonTestUtils
 {
     public class TemporaryDirectory : IDisposable
     {
@@ -27,7 +28,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             var path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify);
             fileSystem.EnsureDirectoryExists(path);
 
-            path = Path.Combine(path, Assembly.GetEntryAssembly() != null ? Assembly.GetEntryAssembly()!.GetName().Name! : "Octopus");
+            path = Path.Combine(path, Assembly.GetEntryAssembly()?.GetName().Name ?? "Octopus");
             return Path.Combine(path, "Temp");
         }
 
