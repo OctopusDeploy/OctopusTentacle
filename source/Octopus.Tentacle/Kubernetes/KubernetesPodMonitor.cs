@@ -37,7 +37,7 @@ namespace Octopus.Tentacle.Kubernetes
         
         //Prevent giving false results when we are still loading for the first time 
         readonly ManualResetEventSlim initialLoadLock = new();
-        readonly object writeLock = new();
+        readonly object statusLookupWriteLock = new();
         
         public KubernetesPodMonitor(IKubernetesPodService podService, ISystemLog log, ITentacleScriptLogProvider scriptLogProvider)
         {
@@ -77,9 +77,9 @@ namespace Octopus.Tentacle.Kubernetes
         {
             WaitForInitialLoadToFinish();
 
-            var trackedScriptPod = new TrackedScriptPod(scriptTicket){ MightNotExistInClusterYet = true};
+            var trackedScriptPod = new TrackedScriptPod(scriptTicket) { MightNotExistInClusterYet = true };
             trackedScriptPod.Update(createdPod);
-            lock (writeLock)
+            lock (statusLookupWriteLock)
             {
                 podStatusLookup.GetOrAdd(scriptTicket, _ => trackedScriptPod);
             }
@@ -125,7 +125,7 @@ namespace Octopus.Tentacle.Kubernetes
            }
 
            //single collection, lock on writes
-           lock (writeLock)
+           lock (statusLookupWriteLock)
            {
                var previousLookup = podStatusLookup;
                // Updating a reference is an atomic operation
@@ -152,7 +152,7 @@ namespace Octopus.Tentacle.Kubernetes
         internal async Task OnNewEvent(WatchEventType type, V1Pod pod, CancellationToken cancellationToken)
         {
             await Task.CompletedTask;
-            lock (writeLock)
+            lock (statusLookupWriteLock)
             {
                 try
                 {
