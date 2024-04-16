@@ -52,7 +52,7 @@
 		<PackageReference Include="KubernetesClient" Version="10.1.19" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="Octopus.Client" Version="14.3.1277" />
+		<PackageReference Include="Octopus.Client" Version="14.3.1329-scme-add-tentacle-details-resource-props" />
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Autofac" Version="4.6.2" />
