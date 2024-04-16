@@ -113,11 +113,7 @@ namespace Octopus.Tentacle.Kubernetes
            foreach (var pod in allPods.Items)
            {
                var scriptTicket = pod.GetScriptTicket();
-               if (!newStatuses.TryGetValue(scriptTicket, out var status))
-               {
-                   status = new TrackedScriptPod(scriptTicket);
-               }
-
+               var status = new TrackedScriptPod(scriptTicket);
                status.Update(pod);
 
                log.Verbose($"Loaded pod {pod.Name()} ({status})");
@@ -127,16 +123,16 @@ namespace Octopus.Tentacle.Kubernetes
            //single collection, lock on writes
            lock (statusLookupWriteLock)
            {
-               var previousLookup = podStatusLookup;
+               //Merge in Pods that were just created
+               //We can be sure we haven't missed any Pods due to "statusLookupWriteLock"
+               foreach (var entry in podStatusLookup.Where(t => t.Value.MightNotExistInClusterYet)) 
+                   newStatuses.GetOrAdd(entry.Key, _ => entry.Value);
+
                // Updating a reference is an atomic operation
                // and we only add data to this dictionary
                // in this class so this is thread safe.
                podStatusLookup = newStatuses;
 
-               foreach (var entry in previousLookup.Where(t => t.Value.MightNotExistInClusterYet))
-               {
-                   podStatusLookup.GetOrAdd(entry.Key, _ => entry.Value);
-               }
            }
 
            log.Verbose($"Loaded {allPods.Items.Count} pod statuses in {stopwatch.Elapsed}. ResourceVersion: {allPods.ResourceVersion()}");
@@ -198,7 +194,7 @@ namespace Octopus.Tentacle.Kubernetes
         IList<ITrackedScriptPod> IKubernetesPodStatusProvider.GetAllTrackedScriptPods()
         {
             WaitForInitialLoadToFinish();
-
+            
             return podStatusLookup.Values.Cast<ITrackedScriptPod>().ToList();
         }
 
