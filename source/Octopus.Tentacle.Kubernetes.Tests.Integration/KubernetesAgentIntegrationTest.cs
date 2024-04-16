@@ -49,7 +49,7 @@ public abstract class KubernetesAgentIntegrationTest
     [SetUp]
     public void SetUp()
     {
-        traceLogFileLogger = new TraceLogFileLogger(SerilogLoggerBuilder.CurrentTestHash());
+        traceLogFileLogger = new TraceLogFileLogger(LoggingUtils.CurrentTestHash());
         Logger = new SerilogLoggerBuilder()
             .SetTraceLogFileLogger(traceLogFileLogger)
             .Build()

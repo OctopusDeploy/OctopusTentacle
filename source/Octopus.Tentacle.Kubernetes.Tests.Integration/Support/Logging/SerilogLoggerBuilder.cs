@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
+using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Util;
 using Serilog.Core;
 using Serilog.Events;
@@ -51,7 +52,7 @@ namespace Octopus.Tentacle.Kubernetes.Tests.Integration.Support.Logging
         {
             // In teamcity we need to know what test the log is for, since we can find hung builds and only have a single file containing all log messages.
             var testName = TestContext.CurrentContext.Test.FullName;
-            var testHash = CurrentTestHash();
+            var testHash = LoggingUtils.CurrentTestHash();
             var logger = Logger.ForContext("TestHash", testHash);
 
             if (!HasLoggedTestHash.Contains(testName))
@@ -66,18 +67,6 @@ namespace Octopus.Tentacle.Kubernetes.Tests.Integration.Support.Logging
             }
 
             return logger;
-        }
-
-        public static string CurrentTestHash()
-        {
-            using (SHA256 mySHA256 = SHA256.Create())
-            {
-                return Convert.ToBase64String(mySHA256.ComputeHash(Encoding.UTF8.GetBytes(TestContext.CurrentContext.Test.FullName)))
-                    .Replace("=", "")
-                    .Replace("+", "")
-                    .Replace("/", "")
-                    .Substring(0, 10); // 64 ^ 10 is a big number, most likely we wont have collisions.
-            }
         }
 
         public class NonProgressNUnitSink : ILogEventSink
