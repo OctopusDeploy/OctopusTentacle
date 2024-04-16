@@ -39,7 +39,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         IKubernetesPodService podService;
         InMemoryLog log;
         FixedClock clock;
-        KubernetesPodMonitor monitor;
+        IKubernetesPodStatusProvider monitor;
         ScriptTicket scriptTicket;
         KubernetesOrphanedPodCleaner cleaner;
         TimeSpan overCutoff;
@@ -53,12 +53,12 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         {
             startTime = DateTimeOffset.MinValue.ToUniversalTime() + 1.Days();
             podService = Substitute.For<IKubernetesPodService>();
+            
             log = new InMemoryLog();
             clock = new FixedClock(startTime);
             scriptLogProvider = Substitute.For<ITentacleScriptLogProvider>();
             scriptPodSinceTimeStore = Substitute.For<IScriptPodSinceTimeStore>();
-            monitor = new KubernetesPodMonitor(podService, log, scriptLogProvider);
-
+            monitor = Substitute.For<IKubernetesPodStatusProvider>();
             scriptTicket = new ScriptTicket(Guid.NewGuid().ToString());
 
             cleaner = new KubernetesOrphanedPodCleaner(monitor, podService, log, clock, scriptLogProvider, scriptPodSinceTimeStore);
@@ -78,11 +78,11 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         public async Task OrphanedPodCleanedUpIfOver10MinutesHavePassed()
         {
             //Arrange
-            const WatchEventType type = WatchEventType.Added;
-            var pod = CreatePod(TrackedScriptPodState.Succeeded, startTime);
-
-            await monitor.OnNewEvent(type, pod, CancellationToken.None);
-
+            var pods = new List<ITrackedScriptPod>
+            {
+                CreatePod(TrackedScriptPodState.Succeeded(0, startTime))
+            };
+            monitor.GetAllTrackedScriptPods().Returns(pods);
             clock.WindForward(overCutoff);
 
             //Act
@@ -94,19 +94,17 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             scriptPodSinceTimeStore.Received().Delete(scriptTicket);
         }
 
-        [TestCase("Succeeded", true)]
-        [TestCase("Failed", true)]
-        [TestCase("Running", false)]
-        [TestCase("Unknown", false)]
-        [TestCase("Pending", false)]
-        [TestCase(null, false)]
-        public async Task OrphanedPodOnlyCleanedUpWhenNotRunning(string? phase, bool shouldBeDeleted)
+        [TestCase(TrackedScriptPodPhase.Succeeded, true)]
+        [TestCase(TrackedScriptPodPhase.Failed, true)]
+        [TestCase(TrackedScriptPodPhase.Running, false)]
+        public async Task OrphanedPodOnlyCleanedUpWhenNotRunning(TrackedScriptPodPhase phase, bool shouldBeDeleted)
         {
             //Arrange
-            const WatchEventType type = WatchEventType.Added;
-            var pod = CreatePod(phase, startTime, phase == "Failed" ? -1 : 0);
-            await monitor.OnNewEvent(type, pod, CancellationToken.None);
-
+            var pods = new List<ITrackedScriptPod>()
+            {
+                CreatePod(CreateState(phase))
+            };
+            monitor.GetAllTrackedScriptPods().Returns(pods);
             clock.WindForward(overCutoff);
 
             //Act
@@ -125,17 +123,32 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                 scriptLogProvider.DidNotReceiveWithAnyArgs().Delete(scriptTicket);
                 scriptPodSinceTimeStore.DidNotReceiveWithAnyArgs().Delete(scriptTicket);
             }
+            
+            TrackedScriptPodState CreateState(TrackedScriptPodPhase phase)
+            {
+                switch (phase)
+                {
+                    case TrackedScriptPodPhase.Running:
+                        return TrackedScriptPodState.Running();
+                    case TrackedScriptPodPhase.Succeeded:
+                        return TrackedScriptPodState.Succeeded(0, startTime);
+                    case TrackedScriptPodPhase.Failed:
+                        return TrackedScriptPodState.Failed(-1, startTime);
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(phase), phase, null);
+                }
+            }
         }
 
         [Test]
         public async Task OrphanedPodNotCleanedUpIfOnly9MinutesHavePassed()
         {
             //Arrange
-            const WatchEventType type = WatchEventType.Added;
-            var pod = CreatePod(TrackedScriptPodState.Succeeded, startTime);
-
-            await monitor.OnNewEvent(type, pod, CancellationToken.None);
-
+            var pods = new List<ITrackedScriptPod>
+            {
+                CreatePod(TrackedScriptPodState.Succeeded(0, startTime))
+            };
+            monitor.GetAllTrackedScriptPods().Returns(pods);
             clock.WindForward(underCutoff);
 
             //Act
@@ -151,11 +164,11 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         {
             //Arrange
             Environment.SetEnvironmentVariable("OCTOPUS__K8STENTACLE__DISABLEAUTOPODCLEANUP", "true");
-            const WatchEventType type = WatchEventType.Added;
-            var pod = CreatePod(TrackedScriptPodState.Succeeded, startTime);
-
-            await monitor.OnNewEvent(type, pod, CancellationToken.None);
-
+            var pods = new List<ITrackedScriptPod>
+            {
+                CreatePod(TrackedScriptPodState.Succeeded(0, startTime))
+            };
+            monitor.GetAllTrackedScriptPods().Returns(pods);
             clock.WindForward(overCutoff);
 
             //Act
@@ -176,11 +189,11 @@ namespace Octopus.Tentacle.Tests.Kubernetes
 
             // We need to reinitialise the sut after changing the env var value
             cleaner = new KubernetesOrphanedPodCleaner(monitor, podService, log, clock, scriptLogProvider, scriptPodSinceTimeStore);
-            const WatchEventType type = WatchEventType.Added;
-            var pod = CreatePod(TrackedScriptPodState.Succeeded, startTime);
-
-            await monitor.OnNewEvent(type, pod, CancellationToken.None);
-
+            var pods = new List<ITrackedScriptPod>
+            {
+                CreatePod(TrackedScriptPodState.Succeeded(0, startTime))
+            };
+            monitor.GetAllTrackedScriptPods().Returns(pods);
             clock.WindForward(TimeSpan.FromMinutes(checkAfterMinutes));
 
             //Act
@@ -201,33 +214,13 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             }
         }
 
-        V1Pod CreatePod(TrackedScriptPodState? phase, DateTimeOffset? finishedAt = null, int exitCode = 0) => CreatePod(phase?.ToString(), finishedAt, exitCode);
-
-        V1Pod CreatePod(string? phase, DateTimeOffset? finishedAt = null, int exitCode = 0)
+        ITrackedScriptPod CreatePod(TrackedScriptPodState state)
         {
-            return new V1Pod
-            {
-                Metadata = new V1ObjectMeta
-                {
-                    Labels = new Dictionary<string, string>
-                    {
-                        [OctopusLabels.ScriptTicketId] = scriptTicket.TaskId
-                    }
-                },
-                Status = new V1PodStatus
-                {
-                    Phase = phase,
-                    ContainerStatuses = new List<V1ContainerStatus>
-                    {
-                        new()
-                        {
-                            Name = scriptTicket.ToKubernetesScriptPobName(),
-                            State = new V1ContainerState(
-                                terminated: new V1ContainerStateTerminated(exitCode: exitCode, finishedAt: finishedAt?.DateTime))
-                        }
-                    }
-                }
-            };
+            var trackedScriptPod = Substitute.For<ITrackedScriptPod>();
+            trackedScriptPod.ScriptTicket.Returns(scriptTicket);
+            trackedScriptPod.State.Returns(state);
+            
+            return trackedScriptPod;
         }
     }
 }

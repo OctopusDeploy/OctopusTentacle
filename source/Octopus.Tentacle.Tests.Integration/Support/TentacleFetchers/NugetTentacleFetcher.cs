@@ -5,8 +5,9 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Octopus.Tentacle.Util;
+using Octopus.Tentacle.CommonTestUtils;
 using Serilog;
+using PlatformDetection = Octopus.Tentacle.Util.PlatformDetection;
 
 namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
 {

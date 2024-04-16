@@ -37,8 +37,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         protected readonly Version? TentacleVersion;
         protected string? ServerThumbprint;
         protected string? TentacleExePath;
-        protected string CertificatePfxPath = Certificates.TentaclePfxPath;
-        protected string TentacleThumbprint = Certificates.TentaclePublicThumbprint;
+        protected string CertificatePfxPath = TestCertificates.TentaclePfxPath;
+        protected string TentacleThumbprint = TestCertificates.TentaclePublicThumbprint;
         bool installAsService = false;
         bool useDefaultMachineConfigurationHomeDirectory = false;
 

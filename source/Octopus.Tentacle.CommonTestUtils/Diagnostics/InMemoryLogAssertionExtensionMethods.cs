@@ -1,9 +1,10 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Text.RegularExpressions;
 using FluentAssertions;
 
-namespace Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods
+namespace Octopus.Tentacle.CommonTestUtils.Diagnostics
 {
-    internal static class InMemoryLogAssertionExtensionMethods
+    public static class InMemoryLogAssertionExtensionMethods
     {
         static readonly Regex retryingMessageRegex = new("An error occurred communicating with Tentacle. This action will be retried after \\d* seconds. Retry attempt \\d*. Retries will be performed for up to \\d* seconds.\\s*$", RegexOptions.Compiled | RegexOptions.Multiline);
         static readonly Regex timeoutAfterRetriesMessageRegex = new("Could not communicate with Tentacle after \\d* seconds. No more retries will be attempted.\\s*$", RegexOptions.Compiled | RegexOptions.Multiline);

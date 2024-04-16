@@ -5,6 +5,7 @@ using Halibut;
 using Halibut.Diagnostics;
 using Halibut.Diagnostics.LogCreators;
 using Halibut.Logging;
+using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Contracts.Legacy;
 using Octopus.Tentacle.Tests.Integration.Support.Logging;
 using Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers;
@@ -48,17 +49,17 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
             var logger = new SerilogLoggerBuilder().Build().ForContext<LegacyTentacleClientBuilder>();
             // Server
             var serverHalibutRuntimeBuilder = new HalibutRuntimeBuilder()
-                .WithServerCertificate(Certificates.Server)
+                .WithServerCertificate(TestCertificates.Server)
                 .WithLegacyContractSupport()
                 .WithHalibutTimeoutsAndLimits(HalibutTimeoutsAndLimits.RecommendedValues())
                 .WithLogFactory(BuildClientLogger());
             
             var serverHalibutRuntime = serverHalibutRuntimeBuilder.Build();
 
-            serverHalibutRuntime.Trust(Certificates.TentaclePublicThumbprint);
+            serverHalibutRuntime.Trust(TestCertificates.TentaclePublicThumbprint);
             var serverListeningPort = serverHalibutRuntime.Listen();
 
-            var server = new Server(serverHalibutRuntime, serverListeningPort, Certificates.ServerPublicThumbprint, logger);
+            var server = new Server(serverHalibutRuntime, serverListeningPort, TestCertificates.ServerPublicThumbprint, logger);
 
             // Port Forwarder
             PortForwarder portForwarder;
@@ -77,7 +78,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
             {
                 portForwarder = PortForwarderBuilder.ForwardingToLocalPort(serverListeningPort, new SerilogLoggerBuilder().Build()).Build();
 
-                runningTentacle = await new PollingTentacleBuilder(portForwarder.ListeningPort, Certificates.ServerPublicThumbprint, tentacleVersion)
+                runningTentacle = await new PollingTentacleBuilder(portForwarder.ListeningPort, TestCertificates.ServerPublicThumbprint, tentacleVersion)
                     .WithTentacleExe(tentacleExe)
                     .Build(logger, cancellationToken);
 
@@ -85,7 +86,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
             }
             else
             {
-                runningTentacle = await new ListeningTentacleBuilder(Certificates.ServerPublicThumbprint, tentacleVersion)
+                runningTentacle = await new ListeningTentacleBuilder(TestCertificates.ServerPublicThumbprint, tentacleVersion)
                     .WithTentacleExe(tentacleExe)
                     .Build(logger, cancellationToken);
 

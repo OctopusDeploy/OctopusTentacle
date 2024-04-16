@@ -21,9 +21,9 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             trackedPod = new TrackedScriptPod(scriptTicket);
         }
 
-        [TestCase(PodPhases.Succeeded, 0, TrackedScriptPodState.Succeeded)]
-        [TestCase(PodPhases.Failed, 123, TrackedScriptPodState.Failed)]
-        public void UpdateWithCompletedPod(string podPhase, int exitCode, TrackedScriptPodState expectedState)
+        [TestCase(PodPhases.Succeeded, 0, TrackedScriptPodPhase.Succeeded)]
+        [TestCase(PodPhases.Failed, 123, TrackedScriptPodPhase.Failed)]
+        public void UpdateWithCompletedPod(string podPhase, int exitCode, TrackedScriptPodPhase expectedPhase)
         {
             var finishedAt = new DateTime(2024, 1, 1, 1, 1, 1, DateTimeKind.Utc);
 
@@ -31,14 +31,14 @@ namespace Octopus.Tentacle.Tests.Kubernetes
 
             trackedPod.Update(CreateV1Pod(podPhase, TerminatedContainerState(finishedAt, exitCode)));
 
-            trackedPod.State.Should().Be(expectedState);
-            trackedPod.ExitCode.Should().Be(exitCode);
-            trackedPod.FinishedAt.Should().Be(finishedAt);
+            trackedPod.State.Phase.Should().Be(expectedPhase);
+            trackedPod.State.ExitCode.Should().Be(exitCode);
+            trackedPod.State.FinishedAt.Should().Be(finishedAt);
         }
 
-        [TestCase(0, TrackedScriptPodState.Succeeded)]
-        [TestCase(123, TrackedScriptPodState.Failed)]
-        public void MarkAsCompleted(int exitCode, TrackedScriptPodState expectedState)
+        [TestCase(0, TrackedScriptPodPhase.Succeeded)]
+        [TestCase(123, TrackedScriptPodPhase.Failed)]
+        public void MarkAsCompleted(int exitCode, TrackedScriptPodPhase expectedPhase)
         {
             var finishedAt = new DateTime(2024, 1, 1, 1, 1, 1, DateTimeKind.Utc);
 
@@ -46,9 +46,9 @@ namespace Octopus.Tentacle.Tests.Kubernetes
 
             trackedPod.MarkAsCompleted(exitCode, finishedAt);
 
-            trackedPod.State.Should().Be(expectedState);
-            trackedPod.ExitCode.Should().Be(exitCode);
-            trackedPod.FinishedAt.Should().Be(finishedAt);
+            trackedPod.State.Phase.Should().Be(expectedPhase);
+            trackedPod.State.ExitCode.Should().Be(exitCode);
+            trackedPod.State.FinishedAt.Should().Be(finishedAt);
         }
 
         //When Tentacle restarts we will re-read all Pod statuses from the K8s API, so there's no point trying to prevent the tracked Pod
@@ -63,27 +63,27 @@ namespace Octopus.Tentacle.Tests.Kubernetes
 
             trackedPod.MarkAsCompleted(markAsCompletedExitCode, markAsCompletedFinishedAt);
 
-            trackedPod.State.Should().Be(TrackedScriptPodState.Succeeded);
-            trackedPod.ExitCode.Should().Be(markAsCompletedExitCode);
-            trackedPod.FinishedAt.Should().Be(markAsCompletedFinishedAt);
+            trackedPod.State.Phase.Should().Be(TrackedScriptPodPhase.Succeeded);
+            trackedPod.State.ExitCode.Should().Be(markAsCompletedExitCode);
+            trackedPod.State.FinishedAt.Should().Be(markAsCompletedFinishedAt);
 
             var podStatusExitCode = 1;
             var podStatusFinishedAt = new DateTime(2024, 1, 1, 1, 1, 5, DateTimeKind.Utc);
 
             trackedPod.Update(CreateV1Pod(PodPhases.Failed, TerminatedContainerState(podStatusFinishedAt, podStatusExitCode)));
 
-            trackedPod.State.Should().Be(TrackedScriptPodState.Failed);
-            trackedPod.ExitCode.Should().Be(podStatusExitCode);
-            trackedPod.FinishedAt.Should().Be(podStatusFinishedAt);
+            trackedPod.State.Phase.Should().Be(TrackedScriptPodPhase.Failed);
+            trackedPod.State.ExitCode.Should().Be(podStatusExitCode);
+            trackedPod.State.FinishedAt.Should().Be(podStatusFinishedAt);
         }
         
         void GetPodInRunningState()
         {
             trackedPod.Update(CreateV1Pod(PodPhases.Running, RunningContainerState()));
 
-            trackedPod.State.Should().Be(TrackedScriptPodState.Running);
-            trackedPod.ExitCode.Should().BeNull();
-            trackedPod.FinishedAt.Should().BeNull();
+            trackedPod.State.Phase.Should().Be(TrackedScriptPodPhase.Running);
+            trackedPod.State.ExitCode.Should().BeNull();
+            trackedPod.State.FinishedAt.Should().BeNull();
         }
 
         static V1ContainerState RunningContainerState()
@@ -117,7 +117,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                 {
                     new()
                     {
-                        Name = scriptTicket.ToKubernetesScriptPobName(),
+                        Name = scriptTicket.ToKubernetesScriptPodName(),
                         State = containerState
                     }
                 }

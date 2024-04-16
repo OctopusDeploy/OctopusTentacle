@@ -1,0 +1,14 @@
+tentacle:
+  ACCEPT_EULA: "Y"
+  targetName: "#{TargetName}"
+  serverCommsAddress: "#{ServerCommsAddress}"
+  serverUrl: "https://this.is.not.required.com/"
+  bearerToken: "this-is-a-fake-bearer-token"
+  space: "Default"
+  targetEnvironments: ["development"]
+  targetRoles: ["testing-cluster"]
+  
+testing:
+  tentacle:
+    configMap:
+      data: #{ConfigMapData}

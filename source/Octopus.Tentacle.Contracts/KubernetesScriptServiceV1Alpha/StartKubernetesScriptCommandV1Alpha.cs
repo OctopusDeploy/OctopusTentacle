@@ -14,7 +14,8 @@ namespace Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha
             ScriptIsolationLevel isolation,
             TimeSpan scriptIsolationMutexTimeout,
             string isolationMutexName,
-            PodImageConfiguration? podImageConfiguration,
+            PodImageConfiguration? podImageConfiguration, 
+            string? scriptPodServiceAccountName,
             Dictionary<ScriptType, string>? additionalScripts,
             ScriptFile[]? additionalFiles)
         {
@@ -26,6 +27,7 @@ namespace Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha
             ScriptIsolationMutexTimeout = scriptIsolationMutexTimeout;
             IsolationMutexName = isolationMutexName;
             PodImageConfiguration = podImageConfiguration;
+            ScriptPodServiceAccountName = scriptPodServiceAccountName;
 
             if (additionalFiles != null)
                 Files.AddRange(additionalFiles);
@@ -51,5 +53,7 @@ namespace Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha
         public Dictionary<ScriptType, string> Scripts { get; } = new();
         public List<ScriptFile> Files { get; } = new();
         public string[] Arguments { get; }
+
+        public string? ScriptPodServiceAccountName { get; }
     }
 }

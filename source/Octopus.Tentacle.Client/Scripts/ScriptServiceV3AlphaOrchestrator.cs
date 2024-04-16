@@ -67,6 +67,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 kubernetesScriptCommand.IsolationConfiguration.MutexTimeout,
                 kubernetesScriptCommand.IsolationConfiguration.MutexName,
                 podImageConfiguration,
+                kubernetesScriptCommand.ScriptPodServiceAccountName,
                 kubernetesScriptCommand.Scripts,
                 kubernetesScriptCommand.Files.ToArray());
         }

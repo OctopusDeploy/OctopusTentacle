@@ -2,9 +2,9 @@ using System;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
 
-namespace Octopus.Tentacle.Tests.Integration.Support
+namespace Octopus.Tentacle.CommonTestUtils
 {
-    internal class Certificates
+    public class TestCertificates
     {
         public static X509Certificate2 Tentacle;
         public static string TentaclePublicThumbprint;
@@ -13,10 +13,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         public static string TentaclePfxPath;
 
-        static Certificates()
+        static TestCertificates()
         {
             //jump through hoops to find certs because the nunit test runner is messing with directories
-            var directory = Path.Combine(Path.GetDirectoryName(new Uri(typeof(Certificates).Assembly.Location).LocalPath), "Certificates");
+            var directory = Path.Combine(Path.GetDirectoryName(new Uri(typeof(TestCertificates).Assembly.Location).LocalPath), "Certificates");
 
             TentaclePfxPath = Path.Combine(directory, "Tentacle.pfx");
             Tentacle = new X509Certificate2(TentaclePfxPath);
