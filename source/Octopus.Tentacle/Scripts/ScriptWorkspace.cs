@@ -36,13 +36,9 @@ namespace Octopus.Tentacle.Scripts
         public string LogFilePath => GetLogFilePath(WorkingDirectory);
         public void WriteFile(string filename, string contents) => FileSystem.OverwriteFile(ResolvePath(filename), contents);
 
-        public void CopyFile(string sourceFilePath, string destFileName) => FileSystem.CopyFile(sourceFilePath, ResolvePath(destFileName));
+        public void CopyFile(string sourceFilePath, string destFileName, bool overwrite) => FileSystem.CopyFile(sourceFilePath, ResolvePath(destFileName), overwrite);
 
         public Stream OpenFileStreamForReading(string filename) => FileSystem.OpenFile(ResolvePath(filename), FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-        public bool FileExists(string filename)
-        {
-            return FileSystem.FileExists(ResolvePath(filename));
-        }
 
         public static string GetLogFilePath(string workingDirectory) => Path.Combine(workingDirectory, LogFileName);
 
