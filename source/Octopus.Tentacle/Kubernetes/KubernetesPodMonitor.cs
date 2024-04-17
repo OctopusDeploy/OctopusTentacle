@@ -238,18 +238,34 @@ namespace Octopus.Tentacle.Kubernetes
 
         public void Update(V1Pod pod)
         {
+            var conditions = pod.Status.Conditions.Select(c => c.Message).ToArray();
+
             switch (pod.Status?.Phase)
                 {
+                    case PodPhases.Pending:
+                        //var pod.Status.Conditions.SingleOrDefault(c => c.Type == "PodScheduled");
+                        State = TrackedScriptPodState.Pending(conditions);
+                        // conditions:
+                        // - type: PodScheduled
+                        // status: 'False'
+                        // lastProbeTime: null
+                        // lastTransitionTime: '2024-04-17T03:43:42Z'
+                        // reason: Unschedulable
+                        // message: >-
+                        //     0/1 nodes are available: 1 node(s) were unschedulable. preemption: 0/1
+                        // nodes are available: 1 Preemption is not helpful for scheduling.
+                        //     qosClass: Burstable
+                        break;
                     case PodPhases.Running:
-                        State = TrackedScriptPodState.Running();
+                        State = TrackedScriptPodState.Running(conditions);
                         break;
                     case PodPhases.Succeeded:
                         var succeededState = GetTerminatedState();
-                        State = TrackedScriptPodState.Succeeded(succeededState.ExitCode, GetFinishedAt(succeededState));
+                        State = TrackedScriptPodState.Succeeded(succeededState.ExitCode, GetFinishedAt(succeededState), conditions);
                         break;
                     case PodPhases.Failed:
                         var failedState = GetTerminatedState();
-                        State = TrackedScriptPodState.Failed(failedState.ExitCode, GetFinishedAt(failedState));
+                        State = TrackedScriptPodState.Failed(failedState.ExitCode, GetFinishedAt(failedState), conditions);
                         break;
                 }
 
@@ -296,39 +312,50 @@ namespace Octopus.Tentacle.Kubernetes
         {
         }
 
-        public static TrackedScriptPodState Pending()
+        public static TrackedScriptPodState Pending(params string[] conditionMessages)
         {
-            return new TrackedScriptPodState() { Phase = TrackedScriptPodPhase.Pending };
+            return new TrackedScriptPodState()
+            {
+                Phase = TrackedScriptPodPhase.Pending,
+                ConditionMessages = conditionMessages
+            };
         }
         
-        public static TrackedScriptPodState Running()
+        public static TrackedScriptPodState Running(params string[] conditionMessages)
         {
-            return new TrackedScriptPodState() { Phase = TrackedScriptPodPhase.Running };
+            return new TrackedScriptPodState()
+            {
+                Phase = TrackedScriptPodPhase.Running,
+                ConditionMessages = conditionMessages
+            };
         }
 
-        public static TrackedScriptPodState Succeeded(int exitCode, DateTimeOffset finishedAt)
+        public static TrackedScriptPodState Succeeded(int exitCode, DateTimeOffset finishedAt, params string[] conditionMessages)
         {
             return new TrackedScriptPodState()
             {
                 Phase = TrackedScriptPodPhase.Succeeded,
                 ExitCode = exitCode, 
-                FinishedAt = finishedAt
+                FinishedAt = finishedAt,
+                ConditionMessages = conditionMessages
             };
         }
 
-        public static TrackedScriptPodState Failed(int exitCode, DateTimeOffset finishedAt)
+        public static TrackedScriptPodState Failed(int exitCode, DateTimeOffset finishedAt, params string[] conditionMessages)
         {
             return new TrackedScriptPodState()
             {
                 Phase = TrackedScriptPodPhase.Failed,
                 ExitCode = exitCode, 
-                FinishedAt = finishedAt
+                FinishedAt = finishedAt,
+                ConditionMessages = conditionMessages
             };
         }
 
         public TrackedScriptPodPhase Phase { get; private init; }
         public int? ExitCode { get; private init; }
         public DateTimeOffset? FinishedAt { get; private init; }
+        public IReadOnlyCollection<string> ConditionMessages { get; private init; } = new string[] { };
     }
 
     public enum TrackedScriptPodPhase

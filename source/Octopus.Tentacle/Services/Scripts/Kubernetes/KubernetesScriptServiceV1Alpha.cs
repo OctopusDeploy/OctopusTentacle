@@ -134,7 +134,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             var podStatusOutputs = new []
             {
                 //Help users notice if Pods are in the Pending state for too long
-                new ProcessOutput(ProcessOutputSource.Debug, $"The Kubernetes Pod '{trackedPod.ScriptTicket.ToKubernetesScriptPodName()}' is in the '{state.Phase}' phase")
+                new ProcessOutput(ProcessOutputSource.Debug, $"The Kubernetes Pod '{trackedPod.ScriptTicket.ToKubernetesScriptPodName()}' is in the '{state.Phase}' phase with these messages: {string.Join("\n", state.ConditionMessages)}")
             };
 
             var (podLogs, nextLogSequence) = await podLogService.GetLogs(trackedPod.ScriptTicket, lastLogSequence, cancellationToken);
