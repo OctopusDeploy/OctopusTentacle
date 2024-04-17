@@ -131,12 +131,14 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
                 _ => throw new ArgumentOutOfRangeException()
             };
 
+            var podStatusOutputs = new []
+            {
+                //Help users notice if Pods are in the Pending state for too long
+                new ProcessOutput(ProcessOutputSource.Debug, $"The Kubernetes Pod '{trackedPod.ScriptTicket.ToKubernetesScriptPodName()}' is in the '{state.Phase}' phase")
+            };
+
             var (podLogs, nextLogSequence) = await podLogService.GetLogs(trackedPod.ScriptTicket, lastLogSequence, cancellationToken);
-            var outputLogs = podLogs.ToList();
-            
-            //Help users notice if Pods are in the Pending state for too long
-            if (state.Phase == TrackedScriptPodPhase.Pending) 
-                outputLogs.Add(new ProcessOutput(ProcessOutputSource.StdOut, $"The Script Pod {trackedPod.ScriptTicket.ToKubernetesScriptPodName()} is in the {state.Phase} phase"));
+            var outputLogs = podStatusOutputs.Concat(podLogs).ToList();
 
             return new KubernetesScriptStatusResponseV1Alpha(
                 trackedPod.ScriptTicket,
