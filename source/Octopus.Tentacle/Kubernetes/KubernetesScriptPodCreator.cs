@@ -155,8 +155,7 @@ namespace Octopus.Tentacle.Kubernetes
             LogVerboseToBothLogs($"Creating Kubernetes Pod '{podName}'.", tentacleScriptLog);
 
             //write the bootstrap runner script to the workspace
-            if (!workspace.FileExists("bootstrapRunner"))
-                workspace.CopyFile(KubernetesConfig.BootstrapRunnerExecutablePath, "bootstrapRunner");
+            workspace.CopyFile(KubernetesConfig.BootstrapRunnerExecutablePath, "bootstrapRunner");
 
             var scriptName = Path.GetFileName(workspace.BootstrapScriptFilePath);
 

@@ -126,7 +126,7 @@ namespace Octopus.Tentacle.Util
 
         public void CopyFile(string source, string destination)
         {
-            File.Copy(source, destination);
+            File.Copy(source, destination, true);
         }
 
         public Stream OpenFile(string path, FileAccess access, FileShare share)
