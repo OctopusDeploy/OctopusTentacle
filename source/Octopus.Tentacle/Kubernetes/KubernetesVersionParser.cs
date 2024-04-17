@@ -15,8 +15,7 @@ namespace Octopus.Tentacle.Kubernetes
         
         static int SanitizeAndParseVersionNumber(string version)
         {
-            var sanitized = Regex.Replace(version, "[^0-9]", "");
-            return int.Parse(sanitized);
+            return int.Parse(Regex.Replace(version, "[^0-9]", ""));
         }
 
     }
