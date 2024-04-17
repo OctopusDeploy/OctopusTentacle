@@ -86,8 +86,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             var trackedPod = podStatusProvider.TryGetTrackedScriptPod(request.ScriptTicket);
             return trackedPod != null
                 ? await GetResponse(trackedPod, request.LastLogSequence, cancellationToken)
-                //if we are getting the status of an unknown pod, return that it's still pending
-                : new KubernetesScriptStatusResponseV1Alpha(request.ScriptTicket, ProcessState.Pending, 0, new List<ProcessOutput>(), request.LastLogSequence);
+                : throw new MissingScriptPodException(request.ScriptTicket);
         }
 
         public async Task<KubernetesScriptStatusResponseV1Alpha> CancelScriptAsync(CancelKubernetesScriptCommandV1Alpha command, CancellationToken cancellationToken)
@@ -122,11 +121,12 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
 
         async Task<KubernetesScriptStatusResponseV1Alpha> GetResponse(ITrackedScriptPod trackedPod, long lastLogSequence, CancellationToken cancellationToken)
         {
-            var processState = trackedPod.State switch
+            var state = trackedPod.State;
+            var processState = state.Phase switch
             {
-                TrackedScriptPodState.Running => ProcessState.Running,
-                TrackedScriptPodState.Succeeded => ProcessState.Complete,
-                TrackedScriptPodState.Failed => ProcessState.Complete,
+                TrackedScriptPodPhase.Running => ProcessState.Running,
+                TrackedScriptPodPhase.Succeeded => ProcessState.Complete,
+                TrackedScriptPodPhase.Failed => ProcessState.Complete,
                 _ => throw new ArgumentOutOfRangeException()
             };
 
@@ -135,7 +135,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             return new KubernetesScriptStatusResponseV1Alpha(
                 trackedPod.ScriptTicket,
                 processState,
-                trackedPod.ExitCode ?? 0,
+                state.ExitCode ?? 0,
                 outputLogs.ToList(),
                 nextLogSequence
             );
@@ -146,4 +146,13 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             return podStatusProvider.TryGetTrackedScriptPod(ticket) is not null;
         }
     }
+    
+    class MissingScriptPodException : Exception
+    {
+        public MissingScriptPodException(ScriptTicket scriptTicket)
+            : base($"The Script Pod for script ticket '{scriptTicket}' could not be found, please retry the action")
+        {
+        }
+    }
+
 }

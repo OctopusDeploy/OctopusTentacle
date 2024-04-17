@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,6 +18,7 @@ namespace Octopus.Tentacle.Kubernetes
     {
         Task StartAsync(CancellationToken token);
         void MarkAsCompleted(ScriptTicket scriptTicket, int podLogsExitCode);
+        void AddPendingPod(ScriptTicket commandScriptTicket, V1Pod createdPod);
     }
 
     public interface IKubernetesPodStatusProvider
@@ -30,9 +32,13 @@ namespace Octopus.Tentacle.Kubernetes
         readonly IKubernetesPodService podService;
         readonly ISystemLog log;
         readonly ITentacleScriptLogProvider scriptLogProvider;
-        
-        ConcurrentDictionary<ScriptTicket, TrackedScriptPod> podStatusLookup = new();
 
+        ConcurrentDictionary<ScriptTicket, TrackedScriptPod> podStatusLookup = new();
+        
+        //Prevent giving false results when we are still loading for the first time 
+        readonly ManualResetEventSlim initialLoadLock = new();
+        readonly object statusLookupWriteLock = new();
+        
         public KubernetesPodMonitor(IKubernetesPodService podService, ISystemLog log, ITentacleScriptLogProvider scriptLogProvider)
         {
             this.podService = podService;
@@ -57,12 +63,25 @@ namespace Octopus.Tentacle.Kubernetes
 
         public void MarkAsCompleted(ScriptTicket scriptTicket, int exitCode)
         {
-            if (podStatusLookup.TryGetValue(scriptTicket, out var status))
+            var status = TryGetTrackedScriptPod(scriptTicket);
+            if (status == null) 
+                return;
+            
+            var text = $"Marking '{scriptTicket.TaskId}' as completed with exit code: '{exitCode}'";
+            scriptLogProvider.GetOrCreate(scriptTicket).Verbose(text);
+            log.Verbose(text);
+            status.MarkAsCompleted(exitCode, DateTimeOffset.UtcNow);
+        }
+
+        public void AddPendingPod(ScriptTicket scriptTicket, V1Pod createdPod)
+        {
+            WaitForInitialLoadToFinish();
+
+            var trackedScriptPod = new TrackedScriptPod(scriptTicket) { MightNotExistInClusterYet = true };
+            trackedScriptPod.Update(createdPod);
+            lock (statusLookupWriteLock)
             {
-                var text = $"Marking '{scriptTicket.TaskId}' as completed with exit code: '{exitCode}'";
-                scriptLogProvider.GetOrCreate(scriptTicket).Verbose(text);
-                log.Verbose(text);
-                status.MarkAsCompleted(exitCode, DateTimeOffset.UtcNow);
+                podStatusLookup.GetOrAdd(scriptTicket, _ => trackedScriptPod);
             }
         }
 
@@ -85,133 +104,153 @@ namespace Octopus.Tentacle.Kubernetes
 
         internal async Task<string> InitialLoadAsync(CancellationToken cancellationToken)
         {
-            log.Verbose("Preloading pod statuses");
+           log.Verbose("Loading pod statuses");
 
-            var newStatuses = new ConcurrentDictionary<ScriptTicket, TrackedScriptPod>();
-            var allPods = await podService.ListAllPods(cancellationToken);
-            foreach (var pod in allPods.Items)
-            {
-                var scriptTicket = pod.GetScriptTicket();
-                if (!podStatusLookup.TryGetValue(scriptTicket, out var status))
-                {
-                    status = new TrackedScriptPod(scriptTicket);
-                }
-                status.Update(pod);
+           Stopwatch stopwatch = Stopwatch.StartNew();
 
-                log.Verbose($"Preloaded pod {pod.Name()} ({status})");
-                newStatuses[scriptTicket] = status;
-            }
+           var newStatuses = new ConcurrentDictionary<ScriptTicket, TrackedScriptPod>();
+           var allPods = await podService.ListAllPods(cancellationToken);
+           foreach (var pod in allPods.Items)
+           {
+               var scriptTicket = pod.GetScriptTicket();
+               var status = new TrackedScriptPod(scriptTicket);
+               status.Update(pod);
 
-            // Updating a reference is an atomic operation
-            // and we only add data to this dictionary
-            // in this class so this is thread safe.
-            podStatusLookup = newStatuses;
+               log.Verbose($"Loaded pod {pod.Name()} ({status})");
+               newStatuses[scriptTicket] = status;
+           }
 
-            log.Verbose($"Preloaded {allPods.Items.Count} pod statuses. ResourceVersion: {allPods.ResourceVersion()}");
+           //single collection, lock on writes
+           lock (statusLookupWriteLock)
+           {
+               //Merge in Pods that were just created
+               //We can be sure we haven't missed any Pods due to "statusLookupWriteLock"
+               foreach (var entry in podStatusLookup.Where(t => t.Value.MightNotExistInClusterYet)) 
+                   newStatuses.GetOrAdd(entry.Key, _ => entry.Value);
 
-            //this is the resource version for the list. We use this to start the watch at this particular point
-            return allPods.ResourceVersion();
+               // Updating a reference is an atomic operation
+               // and we only add data to this dictionary
+               // in this class so this is thread safe.
+               podStatusLookup = newStatuses;
+
+           }
+
+           log.Verbose($"Loaded {allPods.Items.Count} pod statuses in {stopwatch.Elapsed}. ResourceVersion: {allPods.ResourceVersion()}");
+
+           //This is to guard against giving wrong results on Tentacle startup
+           initialLoadLock.Set();
+
+           //this is the resource version for the list. We use this to start the watch at this particular point
+           return allPods.ResourceVersion();
         }
 
         // This is internal so it's accessible to unit tests
         internal async Task OnNewEvent(WatchEventType type, V1Pod pod, CancellationToken cancellationToken)
         {
             await Task.CompletedTask;
-
-            try
+            lock (statusLookupWriteLock)
             {
-                log.Verbose($"Received {type} event for pod {pod.Name()}");
-
-                var scriptTicket = pod.GetScriptTicket();
-
-                switch (type)
+                try
                 {
-                    case WatchEventType.Added or WatchEventType.Modified:
-                    {
-                        var status = podStatusLookup.GetOrAdd(scriptTicket, st => new TrackedScriptPod(st));
-                        status.Update(pod);
-                        log.Verbose($"Updated pod {pod.Name()} status. {status}");
+                    log.Verbose($"Received {type} event for pod {pod.Name()}");
 
-                        break;
+                    var scriptTicket = pod.GetScriptTicket();
+
+                    switch (type)
+                    {
+                        case WatchEventType.Added or WatchEventType.Modified:
+                            var trackedScriptPod = new TrackedScriptPod(scriptTicket);
+                            trackedScriptPod.Update(pod);
+                            trackedScriptPod.MightNotExistInClusterYet = false;
+                            
+                            var status = podStatusLookup.AddOrUpdate(scriptTicket, _ => trackedScriptPod, (_, _) => trackedScriptPod);
+                            log.Verbose($"Updated pod {pod.Name()} status. {status}");
+
+                            break;
+                        case WatchEventType.Deleted:
+                            //if the pod is deleted, remove it
+                            if (podStatusLookup.TryRemove(scriptTicket, out _))
+                            {
+                                log.Verbose($"Removed {type} pod {pod.Name()} status");
+                            }
+                            else
+                            {
+                                log.Warn($"Unable to remove {type} pod {pod.Name()} status");
+                            }
+
+                            break;
+                        default:
+                            log.Warn($"Received watch event type {type} for pod {pod.Name()}. Ignoring as we don't need it");
+                            break;
                     }
-                    case WatchEventType.Deleted:
-                        //if the pod is deleted, remove it
-                        if (podStatusLookup.TryRemove(scriptTicket, out _))
-                        {
-                            log.Verbose($"Removed {type} pod {pod.Name()} status");
-                        }
-                        else
-                        {
-                            log.Warn($"Unable to remove {type} pod {pod.Name()} status");
-                        }
-                        break;
-                    default:
-                        log.Warn($"Received watch event type {type} for pod {pod.Name()}. Ignoring as we don't need it");
-                        break;
                 }
-            }
-            catch (Exception e)
-            {
-                log.Error(e, $"Failed to process event {type} for pod {pod.Name()}.");
+                catch (Exception e)
+                {
+                    log.Error(e, $"Failed to process event {type} for pod {pod.Name()}.");
+                }
             }
         }
 
-        IList<ITrackedScriptPod> IKubernetesPodStatusProvider.GetAllTrackedScriptPods() =>
-            podStatusLookup.Values.Cast<ITrackedScriptPod>().ToList();
+        IList<ITrackedScriptPod> IKubernetesPodStatusProvider.GetAllTrackedScriptPods()
+        {
+            WaitForInitialLoadToFinish();
+            
+            return podStatusLookup.Values.Cast<ITrackedScriptPod>().ToList();
+        }
 
-        ITrackedScriptPod? IKubernetesPodStatusProvider.TryGetTrackedScriptPod(ScriptTicket scriptTicket) =>
-            podStatusLookup.TryGetValue(scriptTicket, out var status) ? status : null;
+        public ITrackedScriptPod? TryGetTrackedScriptPod(ScriptTicket scriptTicket)
+        {
+            WaitForInitialLoadToFinish();
+            var found = podStatusLookup.TryGetValue(scriptTicket, out var status);
+            return found ? status : null;
+        }
+
+        void WaitForInitialLoadToFinish()
+        {
+            if (!initialLoadLock.Wait(TimeSpan.FromSeconds(60)))
+            {
+                throw new Exception("Timed out waiting for Pod status to be loaded");
+            }
+        }
     }
 
     public interface ITrackedScriptPod
     {
         TrackedScriptPodState State { get; }
-        int? ExitCode { get; }
         ScriptTicket ScriptTicket { get; }
-        DateTimeOffset? FinishedAt { get; }
+        void MarkAsCompleted(int exitCode, DateTimeOffset finishedAt);
     }
     
     public class TrackedScriptPod : ITrackedScriptPod
     {
-        //The tracked Pod can be updated by K8s status updates or from the EOS marker
-        readonly object lockObject = new object();
-        
         public ScriptTicket ScriptTicket { get; }
 
         public TrackedScriptPodState State { get; private set; }
 
-        public int? ExitCode { get; private set; }
-
-        public DateTimeOffset? FinishedAt { get; private set; }
-
+        //We create a tracked Pod entry when creating the script Pod so we don't need to wait for the K8s watch event to come through
+        public bool MightNotExistInClusterYet { get; set; }
+        
         public TrackedScriptPod(ScriptTicket ticket)
         {
             ScriptTicket = ticket;
-            State = TrackedScriptPodState.Running;
+            State = TrackedScriptPodState.Running();
         }
 
         public void Update(V1Pod pod)
         {
-            lock (lockObject)
-            {
-                switch (pod.Status?.Phase)
+            switch (pod.Status?.Phase)
                 {
                     case PodPhases.Succeeded:
                         var succeededState = GetTerminatedState();
-                        FinishedAt = GetFinishedAt(succeededState);
-                        State = TrackedScriptPodState.Succeeded;
-                        ExitCode = succeededState.ExitCode;
+                        State = TrackedScriptPodState.Succeeded(succeededState.ExitCode, GetFinishedAt(succeededState));
                         break;
                     case PodPhases.Failed:
                         var failedState = GetTerminatedState();
-                        FinishedAt = GetFinishedAt(failedState);
-                        State = TrackedScriptPodState.Failed;
-                        ExitCode = failedState.ExitCode;
+                        State = TrackedScriptPodState.Failed(failedState.ExitCode, GetFinishedAt(failedState));
                         break;
                 }
-            }
 
-            DateTimeOffset? GetFinishedAt(V1ContainerStateTerminated terminated)
+            DateTimeOffset GetFinishedAt(V1ContainerStateTerminated terminated)
             {
                 var finishedAtDateTime = terminated.FinishedAt!;
                 return new DateTimeOffset(finishedAtDateTime.Value, TimeSpan.Zero);
@@ -225,16 +264,16 @@ namespace Octopus.Tentacle.Kubernetes
 
         public void MarkAsCompleted(int exitCode, DateTimeOffset finishedAt)
         {
-            lock (lockObject)
-            {
-                FinishedAt = finishedAt;
-                State = exitCode == 0 ? TrackedScriptPodState.Succeeded : TrackedScriptPodState.Failed;
-                ExitCode = exitCode;
-            }
+            State = exitCode == 0 
+                ? TrackedScriptPodState.Succeeded(exitCode, finishedAt) 
+                : TrackedScriptPodState.Failed(exitCode, finishedAt);
         }
 
         public override string ToString()
-            => $"ScriptTicket: {ScriptTicket}, State: {State}, ExitCode: {ExitCode}";
+        {
+            var state = State;
+            return $"ScriptTicket: {ScriptTicket}, State: {state.Phase}, ExitCode: {state.ExitCode}";
+        }
     }
 
     //Pod lifecycle has these phases:
@@ -248,7 +287,43 @@ namespace Octopus.Tentacle.Kubernetes
         public const string Unknown = "Unknown";
     }
 
-    public enum TrackedScriptPodState
+    public record TrackedScriptPodState
+    {
+        TrackedScriptPodState()
+        {
+        }
+
+        public static TrackedScriptPodState Running()
+        {
+            return new TrackedScriptPodState() { Phase = TrackedScriptPodPhase.Running };
+        }
+
+        public static TrackedScriptPodState Succeeded(int exitCode, DateTimeOffset finishedAt)
+        {
+            return new TrackedScriptPodState()
+            {
+                Phase = TrackedScriptPodPhase.Succeeded,
+                ExitCode = exitCode, 
+                FinishedAt = finishedAt
+            };
+        }
+
+        public static TrackedScriptPodState Failed(int exitCode, DateTimeOffset finishedAt)
+        {
+            return new TrackedScriptPodState()
+            {
+                Phase = TrackedScriptPodPhase.Failed,
+                ExitCode = exitCode, 
+                FinishedAt = finishedAt
+            };
+        }
+
+        public TrackedScriptPodPhase Phase { get; private init; }
+        public int? ExitCode { get; private init; }
+        public DateTimeOffset? FinishedAt { get; private init; }
+    }
+
+    public enum TrackedScriptPodPhase
     {
         Running,
         Succeeded,

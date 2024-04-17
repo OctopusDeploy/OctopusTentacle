@@ -1,9 +1,11 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using k8s;
+using k8s.Autorest;
 using k8s.Models;
 using Octopus.Tentacle.Contracts;
 
@@ -14,7 +16,7 @@ namespace Octopus.Tentacle.Kubernetes
         Task<V1Pod?> TryGetPod(ScriptTicket scriptTicket, CancellationToken cancellationToken);
         Task<V1PodList> ListAllPods(CancellationToken cancellationToken);
         Task WatchAllPods(string initialResourceVersion, Func<WatchEventType, V1Pod, CancellationToken, Task> onChange, Action<Exception> onError, CancellationToken cancellationToken);
-        Task Create(V1Pod pod, CancellationToken cancellationToken);
+        Task<V1Pod> Create(V1Pod pod, CancellationToken cancellationToken);
         Task Delete(ScriptTicket scriptTicket, CancellationToken cancellationToken);
         Task TryDelete(ScriptTicket commandScriptTicket, CancellationToken cancellationToken);
     }
@@ -79,10 +81,10 @@ namespace Octopus.Tentacle.Kubernetes
             }
         }
 
-        public async Task Create(V1Pod pod, CancellationToken cancellationToken)
+        public async Task<V1Pod> Create(V1Pod pod, CancellationToken cancellationToken)
         {
             AddStandardMetadata(pod);
-            await Client.CreateNamespacedPodAsync(pod, KubernetesConfig.Namespace, cancellationToken: cancellationToken);
+            return await Client.CreateNamespacedPodAsync(pod, KubernetesConfig.Namespace, cancellationToken: cancellationToken);
         }
 
         public async Task Delete(ScriptTicket scriptTicket, CancellationToken cancellationToken)
