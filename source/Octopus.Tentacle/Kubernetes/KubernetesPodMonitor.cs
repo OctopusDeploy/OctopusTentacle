@@ -238,7 +238,7 @@ namespace Octopus.Tentacle.Kubernetes
 
         public void Update(V1Pod pod)
         {
-            var conditions = pod.Status.Conditions.Select(c => c.Message).ToArray();
+            var conditions = pod.Status.Conditions?.Select(c => c.Message).ToArray() ?? new string[]{};
 
             switch (pod.Status?.Phase)
                 {
