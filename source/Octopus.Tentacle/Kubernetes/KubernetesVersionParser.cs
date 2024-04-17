@@ -6,6 +6,8 @@ namespace Octopus.Tentacle.Kubernetes
 {
     public static class KubernetesVersionParser
     {
+        static Regex clusterVersionRegex = new Regex("[^0-9]");
+        
         public static ClusterVersion ParseClusterVersion(VersionInfo versionInfo)
         {
             return new ClusterVersion(SanitizeAndParseVersionNumber(versionInfo.Major), SanitizeAndParseVersionNumber(versionInfo.Minor));
@@ -13,11 +15,7 @@ namespace Octopus.Tentacle.Kubernetes
         
         static int SanitizeAndParseVersionNumber(string version)
         {
-            if (int.TryParse(version, out var result))
-                return result;
-            
             var sanitized = Regex.Replace(version, "[^0-9]", "");
-
             return int.Parse(sanitized);
         }
 
