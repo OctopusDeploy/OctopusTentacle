@@ -98,7 +98,7 @@ namespace Octopus.Tentacle.Kubernetes
                 }
                 catch (Exception)
                 {
-                    return new InvalidPodLogLineParseResult($"Invalid log line detected. '{messagePart}' is not a valid end of stream message.");
+                    return new InvalidPodLogLineParseResult($"Pod log end of stream marker is invalid: '{line}'");
                 }
             }
             
