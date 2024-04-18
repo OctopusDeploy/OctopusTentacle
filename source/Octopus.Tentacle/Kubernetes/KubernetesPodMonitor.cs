@@ -233,13 +233,19 @@ namespace Octopus.Tentacle.Kubernetes
         public TrackedScriptPod(ScriptTicket ticket)
         {
             ScriptTicket = ticket;
-            State = TrackedScriptPodState.Running();
+            State = TrackedScriptPodState.Pending();
         }
 
         public void Update(V1Pod pod)
         {
             switch (pod.Status?.Phase)
                 {
+                    case PodPhases.Pending:
+                        State = TrackedScriptPodState.Pending();
+                        break;
+                    case PodPhases.Running:
+                        State = TrackedScriptPodState.Running();
+                        break;
                     case PodPhases.Succeeded:
                         var succeededState = GetTerminatedState();
                         State = TrackedScriptPodState.Succeeded(succeededState.ExitCode, GetFinishedAt(succeededState));
@@ -293,9 +299,20 @@ namespace Octopus.Tentacle.Kubernetes
         {
         }
 
+        public static TrackedScriptPodState Pending()
+        {
+            return new TrackedScriptPodState()
+            {
+                Phase = TrackedScriptPodPhase.Pending
+            };
+        }
+        
         public static TrackedScriptPodState Running()
         {
-            return new TrackedScriptPodState() { Phase = TrackedScriptPodPhase.Running };
+            return new TrackedScriptPodState()
+            {
+                Phase = TrackedScriptPodPhase.Running
+            };
         }
 
         public static TrackedScriptPodState Succeeded(int exitCode, DateTimeOffset finishedAt)
@@ -325,6 +342,7 @@ namespace Octopus.Tentacle.Kubernetes
 
     public enum TrackedScriptPodPhase
     {
+        Pending,
         Running,
         Succeeded,
         Failed
