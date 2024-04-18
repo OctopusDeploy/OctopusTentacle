@@ -99,8 +99,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             var response = await GetResponse(trackedPod, command.LastLogSequence, cancellationToken);
 
             //delete the pod
-            if (trackedPod.State.Phase != TrackedScriptPodPhase.Failed || !KubernetesConfig.KeepFailedScriptPods)
-                await podService.Delete(command.ScriptTicket, cancellationToken);
+            await podService.Delete(command.ScriptTicket, cancellationToken);
 
             return response;
         }

@@ -17,7 +17,6 @@ namespace Octopus.Tentacle.Kubernetes
 
         public static TimeSpan PodsConsideredOrphanedAfterTimeSpan => TimeSpan.FromMinutes(int.TryParse(Environment.GetEnvironmentVariable($"{EnvVarPrefix}__PODSCONSIDEREDORPHANEDAFTERMINUTES"), out var podsConsideredOrphanedAfterTimeSpan) ? podsConsideredOrphanedAfterTimeSpan : 10);
         public static bool DisableAutomaticPodCleanup => bool.TryParse(Environment.GetEnvironmentVariable($"{EnvVarPrefix}__DISABLEAUTOPODCLEANUP"), out var disableAutoCleanup) && disableAutoCleanup;
-        public static bool KeepFailedScriptPods => bool.TryParse(Environment.GetEnvironmentVariable($"{EnvVarPrefix}__KEEPFAILEDSCRIPTPODS"), out var keepFailedScriptPods) && keepFailedScriptPods;
 
         public static string HelmReleaseNameVariableName => $"{EnvVarPrefix}__HELMRELEASENAME";
         public static string HelmReleaseName => GetRequiredEnvVar(HelmReleaseNameVariableName, "Unable to determine Helm release name.");
