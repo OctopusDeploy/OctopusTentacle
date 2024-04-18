@@ -238,8 +238,6 @@ namespace Octopus.Tentacle.Kubernetes
 
         public void Update(V1Pod pod)
         {
-            var conditions = pod.Status.Conditions?.Select(c => c.Message).ToArray() ?? new string[]{};
-
             switch (pod.Status?.Phase)
                 {
                     case PodPhases.Pending:
@@ -305,7 +303,7 @@ namespace Octopus.Tentacle.Kubernetes
         {
             return new TrackedScriptPodState()
             {
-                Phase = TrackedScriptPodPhase.Pending,
+                Phase = TrackedScriptPodPhase.Pending
             };
         }
         
@@ -313,7 +311,7 @@ namespace Octopus.Tentacle.Kubernetes
         {
             return new TrackedScriptPodState()
             {
-                Phase = TrackedScriptPodPhase.Running,
+                Phase = TrackedScriptPodPhase.Running
             };
         }
 
@@ -323,7 +321,7 @@ namespace Octopus.Tentacle.Kubernetes
             {
                 Phase = TrackedScriptPodPhase.Succeeded,
                 ExitCode = exitCode, 
-                FinishedAt = finishedAt,
+                FinishedAt = finishedAt
             };
         }
 
@@ -333,7 +331,7 @@ namespace Octopus.Tentacle.Kubernetes
             {
                 Phase = TrackedScriptPodPhase.Failed,
                 ExitCode = exitCode, 
-                FinishedAt = finishedAt,
+                FinishedAt = finishedAt
             };
         }
 
