@@ -6,7 +6,11 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using k8s.Autorest;
+using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Time;
+using Polly;
+using Polly.Retry;
 
 namespace Octopus.Tentacle.Kubernetes
 {
@@ -20,13 +24,25 @@ namespace Octopus.Tentacle.Kubernetes
         readonly IKubernetesPodMonitor podMonitor;
         readonly ITentacleScriptLogProvider scriptLogProvider;
         readonly IScriptPodSinceTimeStore scriptPodSinceTimeStore;
+        readonly ISystemLog log;
+        AsyncRetryPolicy retryPolicy;
 
-        public KubernetesPodLogService(IKubernetesClientConfigProvider configProvider, IKubernetesPodMonitor podMonitor, ITentacleScriptLogProvider scriptLogProvider, IScriptPodSinceTimeStore scriptPodSinceTimeStore) 
+        const int MaxDurationSeconds = 30;
+
+        public KubernetesPodLogService(IKubernetesClientConfigProvider configProvider, IKubernetesPodMonitor podMonitor, ITentacleScriptLogProvider scriptLogProvider, IScriptPodSinceTimeStore scriptPodSinceTimeStore, ISystemLog log) 
             : base(configProvider)
         {
             this.podMonitor = podMonitor;
             this.scriptLogProvider = scriptLogProvider;
             this.scriptPodSinceTimeStore = scriptPodSinceTimeStore;
+            this.log = log;
+            
+            retryPolicy = Policy.Handle<Exception>().WaitAndRetryAsync(5,
+                retry => TimeSpan.FromSeconds(ExponentialBackoff.GetDuration(retry, MaxDurationSeconds)),
+                (ex, duration) =>
+                {
+                    log.Error(ex, "An unexpected error occured while querying Pod logs, waiting for: " + duration);
+                });
         }
 
         public async Task<(IReadOnlyCollection<ProcessOutput> Outputs, long NextSequenceNumber)> GetLogs(ScriptTicket scriptTicket, long lastLogSequence, CancellationToken cancellationToken)
@@ -82,22 +98,27 @@ namespace Octopus.Tentacle.Kubernetes
             }
         }
 
+
         async Task<Stream?> GetLogStream(string podName, DateTimeOffset? sinceTime, CancellationToken cancellationToken)
         {
-            try
-            {
-                //TODO: Add retries
-                return await Client.GetNamespacedPodLogsAsync(podName, KubernetesConfig.Namespace, podName, sinceTime, cancellationToken: cancellationToken);
-            }
-            catch (HttpOperationException ex)
-            {
-                //Pod logs aren't ready yet
-                if (ex.Response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.BadRequest)
-                {
-                    return null;
-                }
+            return await retryPolicy.ExecuteAsync(async ct => await GetLogs(), cancellationToken);
 
-                throw;
+            async Task<Stream?> GetLogs()
+            {
+                try
+                {
+                    return await Client.GetNamespacedPodLogsAsync(podName, KubernetesConfig.Namespace, podName, sinceTime, cancellationToken: cancellationToken);
+                }
+                catch (HttpOperationException ex)
+                {
+                    //Pod logs aren't ready yet
+                    if (ex.Response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.BadRequest)
+                    {
+                        return null;
+                    }
+
+                    throw;
+                }
             }
         }
     }
