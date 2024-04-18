@@ -125,19 +125,28 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             var state = trackedPod.State;
             var processState = state.Phase switch
             {
+                TrackedScriptPodPhase.Pending => ProcessState.Pending,
                 TrackedScriptPodPhase.Running => ProcessState.Running,
                 TrackedScriptPodPhase.Succeeded => ProcessState.Complete,
                 TrackedScriptPodPhase.Failed => ProcessState.Complete,
                 _ => throw new ArgumentOutOfRangeException()
             };
 
-            var (outputLogs, nextLogSequence) = await podLogService.GetLogs(trackedPod.ScriptTicket, lastLogSequence, cancellationToken);
+            var (podLogs, nextLogSequence) = await podLogService.GetLogs(trackedPod.ScriptTicket, lastLogSequence, cancellationToken);
+
+            var podStatusOutputs = new []
+            {
+                //Help users notice if Pods are in the Pending state for too long
+                new ProcessOutput(ProcessOutputSource.Debug, $"The Kubernetes Pod '{trackedPod.ScriptTicket.ToKubernetesScriptPodName()}' is in the '{state.Phase}' phase")
+            };
+            //Print the status first, since that's what we are basing our decisions on (printing it at the end might be confusing)
+            var outputLogs = podStatusOutputs.Concat(podLogs).ToList();
 
             return new KubernetesScriptStatusResponseV1Alpha(
                 trackedPod.ScriptTicket,
                 processState,
                 state.ExitCode ?? 0,
-                outputLogs.ToList(),
+                outputLogs,
                 nextLogSequence
             );
         }

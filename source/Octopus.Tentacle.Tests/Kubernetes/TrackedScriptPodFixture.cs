@@ -21,6 +21,14 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             trackedPod = new TrackedScriptPod(scriptTicket);
         }
 
+        [Test]
+        public void CanTransitionFromPendingToRunning()
+        {
+            trackedPod.State.Phase.Should().Be(TrackedScriptPodPhase.Pending);
+            
+            GetPodInRunningState();
+        }
+
         [TestCase(PodPhases.Succeeded, 0, TrackedScriptPodPhase.Succeeded)]
         [TestCase(PodPhases.Failed, 123, TrackedScriptPodPhase.Failed)]
         public void UpdateWithCompletedPod(string podPhase, int exitCode, TrackedScriptPodPhase expectedPhase)

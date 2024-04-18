@@ -65,7 +65,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
 
             status.Should().Match<TrackedScriptPod>(status =>
                 status.ScriptTicket == scriptTicket &&
-                status.State.Phase == TrackedScriptPodPhase.Running &&
+                status.State.Phase == TrackedScriptPodPhase.Pending &&
                 status.State.ExitCode == null
             );
         }
