@@ -35,28 +35,25 @@ namespace Octopus.Tentacle.Kubernetes
             var podName = scriptTicket.ToKubernetesScriptPodName();
             var sinceTime = scriptPodSinceTimeStore.GetSinceTime(scriptTicket);
 
-            (IReadOnlyCollection<ProcessOutput> Outputs, long NextSequenceNumber, int? ExitCode) podLogs;
+            Stream logStream;
 
             try
             {
-                using (var logStream = await GetLogStream(podName, sinceTime, cancellationToken))
-                {
-                    if (logStream == null)
-                        return (new List<ProcessOutput>(), lastLogSequence);
-
-                    podLogs = await ReadPodLogs(logStream);
-                }
+                //TODO: Add retries
+                logStream = await Client.GetNamespacedPodLogsAsync(podName, KubernetesConfig.Namespace, podName, sinceTime, cancellationToken: cancellationToken);
             }
-            catch (UnexpectedPodLogLineNumberException ex)
+            catch (HttpOperationException ex)
             {
-                using (var entireStream = await GetLogStream(podName, null, cancellationToken))
+                //Pod logs aren't ready yet
+                if (ex.Response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.BadRequest)
                 {
-                    var reader = new StreamReader(entireStream!);
-                    var allLogs = await reader.ReadToEndAsync();
-
-                    throw new Exception("Pod log number weird, whole logs: " + allLogs, ex);
+                    return (new List<ProcessOutput>(), lastLogSequence);
                 }
+
+                throw;
             }
+
+            var podLogs = await ReadPodLogs(logStream);
 
             if (podLogs.Outputs.Any())
             {
@@ -79,25 +76,6 @@ namespace Octopus.Tentacle.Kubernetes
                 {
                     return await PodLogReader.ReadPodLogs(lastLogSequence, reader);
                 }
-            }
-        }
-
-        async Task<Stream?> GetLogStream(string podName, DateTimeOffset? sinceTime, CancellationToken cancellationToken)
-        {
-            try
-            {
-                //TODO: Add retries
-                return await Client.GetNamespacedPodLogsAsync(podName, KubernetesConfig.Namespace, podName, sinceTime, cancellationToken: cancellationToken);
-            }
-            catch (HttpOperationException ex)
-            {
-                //Pod logs aren't ready yet
-                if (ex.Response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.BadRequest)
-                {
-                    return null;
-                }
-
-                throw;
             }
         }
     }
