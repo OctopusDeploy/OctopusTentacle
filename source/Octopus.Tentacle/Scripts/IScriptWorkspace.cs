@@ -21,7 +21,7 @@ namespace Octopus.Tentacle.Scripts
         IScriptLog CreateLog();
         string LogFilePath { get; }
         void WriteFile(string filename, string contents);
-        void CopyFile(string sourceFilePath, string destFileName);
+        void CopyFile(string sourceFilePath, string destFileName, bool overwrite);
         Stream OpenFileStreamForReading(string filename);
     }
 }
