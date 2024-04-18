@@ -1,12 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions.Extensions;
-using k8s;
-using k8s.Models;
 using NSubstitute;
 using NUnit.Framework;
 using Octopus.Tentacle.Contracts;
