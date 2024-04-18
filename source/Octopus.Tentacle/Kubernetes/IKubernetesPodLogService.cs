@@ -35,24 +35,10 @@ namespace Octopus.Tentacle.Kubernetes
             var podName = scriptTicket.ToKubernetesScriptPodName();
             var sinceTime = scriptPodSinceTimeStore.GetSinceTime(scriptTicket);
 
-            Stream logStream;
-
-            try
-            {
-                //TODO: Add retries
-                logStream = await Client.GetNamespacedPodLogsAsync(podName, KubernetesConfig.Namespace, podName, sinceTime, cancellationToken: cancellationToken);
-            }
-            catch (HttpOperationException ex)
-            {
-                //Pod logs aren't ready yet
-                if (ex.Response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.BadRequest)
-                {
-                    return (new List<ProcessOutput>(), lastLogSequence);
-                }
-
-                throw;
-            }
-
+            var logStream = await GetLogStream(podName, sinceTime, cancellationToken);
+            if (logStream == null)
+                return (new List<ProcessOutput>(), lastLogSequence);
+            
             var podLogs = await ReadPodLogs(logStream);
 
             if (podLogs.Outputs.Any())
@@ -76,6 +62,25 @@ namespace Octopus.Tentacle.Kubernetes
                 {
                     return await PodLogReader.ReadPodLogs(lastLogSequence, reader);
                 }
+            }
+        }
+
+        async Task<Stream?> GetLogStream(string podName, DateTimeOffset? sinceTime, CancellationToken cancellationToken)
+        {
+            try
+            {
+                //TODO: Add retries
+                return await Client.GetNamespacedPodLogsAsync(podName, KubernetesConfig.Namespace, podName, sinceTime, cancellationToken: cancellationToken);
+            }
+            catch (HttpOperationException ex)
+            {
+                //Pod logs aren't ready yet
+                if (ex.Response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.BadRequest)
+                {
+                    return null;
+                }
+
+                throw;
             }
         }
     }

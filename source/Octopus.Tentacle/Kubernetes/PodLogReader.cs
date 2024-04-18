@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Util;
 
@@ -68,10 +67,6 @@ namespace Octopus.Tentacle.Kubernetes
                     default:
                         throw new ArgumentOutOfRangeException(nameof(parseResult), parseResult.GetType(), "Unexpected parse result type");
                 }
-
-
-                //TODO: try not to read any more if we see a panic?
-
             }
         }
     }
