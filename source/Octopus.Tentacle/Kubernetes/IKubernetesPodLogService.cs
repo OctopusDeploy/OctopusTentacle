@@ -35,11 +35,28 @@ namespace Octopus.Tentacle.Kubernetes
             var podName = scriptTicket.ToKubernetesScriptPodName();
             var sinceTime = scriptPodSinceTimeStore.GetSinceTime(scriptTicket);
 
-            var logStream = await GetLogStream(podName, sinceTime, cancellationToken);
-            if (logStream == null)
-                return (new List<ProcessOutput>(), lastLogSequence);
-            
-            var podLogs = await ReadPodLogs(logStream);
+            (IReadOnlyCollection<ProcessOutput> Outputs, long NextSequenceNumber, int? ExitCode) podLogs;
+
+            try
+            {
+                using (var logStream = await GetLogStream(podName, sinceTime, cancellationToken))
+                {
+                    if (logStream == null)
+                        return (new List<ProcessOutput>(), lastLogSequence);
+
+                    podLogs = await ReadPodLogs(logStream);
+                }
+            }
+            catch (UnexpectedPodLogLineNumberException ex)
+            {
+                using (var entireStream = await GetLogStream(podName, null, cancellationToken))
+                {
+                    var reader = new StreamReader(entireStream!);
+                    var allLogs = await reader.ReadToEndAsync();
+
+                    throw new Exception("Pod log number weird, whole logs: " + allLogs, ex);
+                }
+            }
 
             if (podLogs.Outputs.Any())
             {
