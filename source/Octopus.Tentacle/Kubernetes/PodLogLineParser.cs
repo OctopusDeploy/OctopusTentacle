@@ -64,44 +64,45 @@ namespace Octopus.Tentacle.Kubernetes
         public static PodLogLineParseResult ParseLine(string line)
         {
             var logParts = line.Split(new[] { '|' }, 4);
-
             if (logParts.Length != 4)
             {
-                return new InvalidPodLogLineParseResult($"Invalid log line detected. '{line}' is not correctly pipe-delimited.");
+                return new InvalidPodLogLineParseResult($"Pod log line is not correctly pipe-delimited: '{line}'");
             }
 
-            if (!DateTimeOffset.TryParse(logParts[0], out var occurred))
+            var datePart = logParts[0];
+            var lineNumberPart = logParts[1];
+            var outputSourcePart = logParts[2];
+            var messagePart = logParts[3];
+
+            if (!DateTimeOffset.TryParse(datePart, out var occurred))
             {
-                return new InvalidPodLogLineParseResult($"Invalid log line detected. Failed to parse '{logParts[1]}' as a DateTimeOffset.");
+                return new InvalidPodLogLineParseResult($"Pod log timestamp '{datePart}' is invalid: '{line}'");
             }
 
-            if (!int.TryParse(logParts[1], out int lineNumber))
+            if (!int.TryParse(lineNumberPart, out int lineNumber))
             {
-                return new InvalidPodLogLineParseResult($"Invalid log line detected. '{logParts[0]}' is not a valid line number.");
+                return new InvalidPodLogLineParseResult($"Pod log line number '{lineNumberPart}' is invalid: '{line}'");
             }
 
-            if (!Enum.TryParse(logParts[2], true, out ProcessOutputSource source))
+            if (!Enum.TryParse(outputSourcePart, true, out ProcessOutputSource source))
             {
-                return new InvalidPodLogLineParseResult($"Invalid log line detected. '{logParts[2]}' is not a valid source.");
+                return new InvalidPodLogLineParseResult($"Pod log level '{outputSourcePart}' is invalid: '{line}'");
             }
             
-            //add the new line
-            var message = logParts[3];
-
-            if (message.StartsWith(EndOfStreamMarkerPrefix))
+            if (messagePart.StartsWith(EndOfStreamMarkerPrefix))
             {
                 try
                 {
-                    var exitCode = int.Parse(message.Split(new[] { EndOfStreamMarkerExitCodeDelimiter }, StringSplitOptions.None)[1]);
-                    return new EndOfStreamPodLogLineParseResult(new PodLogLine(lineNumber, source, message, occurred), exitCode);
+                    var exitCode = int.Parse(messagePart.Split(new[] { EndOfStreamMarkerExitCodeDelimiter }, StringSplitOptions.None)[1]);
+                    return new EndOfStreamPodLogLineParseResult(new PodLogLine(lineNumber, source, messagePart, occurred), exitCode);
                 }
                 catch (Exception)
                 {
-                    return new InvalidPodLogLineParseResult($"Invalid log line detected. '{message}' is not a valid end of stream message.");
+                    return new InvalidPodLogLineParseResult($"Invalid log line detected. '{messagePart}' is not a valid end of stream message.");
                 }
             }
             
-            return new ValidPodLogLineParseResult(new PodLogLine(lineNumber, source, message, occurred));
+            return new ValidPodLogLineParseResult(new PodLogLine(lineNumber, source, messagePart, occurred));
         }
     }
 }

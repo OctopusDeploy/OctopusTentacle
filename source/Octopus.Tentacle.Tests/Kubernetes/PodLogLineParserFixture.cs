@@ -21,7 +21,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         public void FirstPartIsNotALineDate(string line)
         {
             var result = PodLogLineParser.ParseLine(line).Should().BeOfType<InvalidPodLogLineParseResult>().Subject;
-            result.Error.Should().Contain("DateTimeOffset");
+            result.Error.Should().Contain("log timestamp");
         }
 
         [TestCase("2024-04-03T06:03:10.501025551Z |b|c|d", Reason = "Not a line number")]
@@ -35,7 +35,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         public void ThirdPartIsNotAValidSource(string line)
         {
             var result = PodLogLineParser.ParseLine(line).Should().BeOfType<InvalidPodLogLineParseResult>().Subject;
-            result.Error.Should().Contain("source");
+            result.Error.Should().Contain("log level");
         }
         
         [Test]
