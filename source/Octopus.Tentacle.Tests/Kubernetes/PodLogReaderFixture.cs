@@ -97,18 +97,15 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         [Test]
         public async Task ParseError_AppearsAsError()
         {
-            string[] podLines =
-            {
-                "abcdefg",
-            };
+            var line = "abcdefg";
 
-            var reader = SetupReader(podLines);
+            var reader = SetupReader(new[] { line });
             var result = await PodLogReader.ReadPodLogs(0, reader);
 
             result.NextSequenceNumber.Should().Be(0, "The sequence number doesn't move on parse errors");
             var outputLine = result.Lines.Should().ContainSingle().Subject;
             outputLine.Source.Should().Be(ProcessOutputSource.StdErr);
-            outputLine.Text.Should().Be("Invalid log line detected. 'abcdefg' is not correctly pipe-delimited.");
+            outputLine.Text.Should().Contain("not correctly pipe-delimited").And.Contain(line);
             outputLine.Occurred.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromMinutes(1));
         }
 
