@@ -14,28 +14,28 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         public void NotCorrectlyPipeDelimited(string line)
         {
             var result = PodLogLineParser.ParseLine(line).Should().BeOfType<InvalidPodLogLineParseResult>().Subject;
-            result.Error.Should().Contain("delimited");
+            result.Error.Should().Contain("delimited").And.Contain(line);
         }
 
         [TestCase("1 |b|c|d", Reason = "Not a date")]
         public void FirstPartIsNotALineDate(string line)
         {
             var result = PodLogLineParser.ParseLine(line).Should().BeOfType<InvalidPodLogLineParseResult>().Subject;
-            result.Error.Should().Contain("DateTimeOffset");
+            result.Error.Should().Contain("log timestamp").And.Contain(line);
         }
 
         [TestCase("2024-04-03T06:03:10.501025551Z |b|c|d", Reason = "Not a line number")]
         public void SecondPartIsNotALineNumber(string line)
         {
             var result = PodLogLineParser.ParseLine(line).Should().BeOfType<InvalidPodLogLineParseResult>().Subject;
-            result.Error.Should().Contain("line number");
+            result.Error.Should().Contain("line number").And.Contain(line);
         }
 
         [TestCase("2024-04-03T06:03:10.501025551Z |1|c|d", Reason = "Not a valid source")]
         public void ThirdPartIsNotAValidSource(string line)
         {
             var result = PodLogLineParser.ParseLine(line).Should().BeOfType<InvalidPodLogLineParseResult>().Subject;
-            result.Error.Should().Contain("source");
+            result.Error.Should().Contain("log level").And.Contain(line);
         }
         
         [Test]
@@ -117,10 +117,11 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         [Test]
         public void InvalidEndOfStream()
         {
-            var result = PodLogLineParser.ParseLine("2024-04-03T06:03:10.501025551Z |123|stdout|EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE<<>>")
+            var line = "2024-04-03T06:03:10.501025551Z |123|stdout|EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE<<>>";
+            var result = PodLogLineParser.ParseLine(line)
                 .Should().BeOfType<InvalidPodLogLineParseResult>().Subject;
 
-            result.Error.Should().Contain("end of stream");
+            result.Error.Should().Contain("end of stream").And.Contain(line);
         }
     }
 }
