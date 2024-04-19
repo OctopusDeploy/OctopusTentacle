@@ -70,7 +70,7 @@ namespace Octopus.Tentacle.Kubernetes
                     var reader = new StreamReader(entireStream!);
                     var allLogs = await reader.ReadToEndAsync();
 
-                    throw new Exception("Pod log number weird, whole logs: " + allLogs, ex);
+                    throw new Exception($"Pod log number weird (sinceTime: {sinceTime}), whole logs: {allLogs}", ex);
                 }
             }
 
@@ -101,9 +101,9 @@ namespace Octopus.Tentacle.Kubernetes
 
         async Task<Stream?> GetLogStream(string podName, DateTimeOffset? sinceTime, CancellationToken cancellationToken)
         {
-            return await retryPolicy.ExecuteAsync(async ct => await GetLogs(), cancellationToken);
+            return await retryPolicy.ExecuteAsync(async ct => await QueryLogs(), cancellationToken);
 
-            async Task<Stream?> GetLogs()
+            async Task<Stream?> QueryLogs()
             {
                 try
                 {
