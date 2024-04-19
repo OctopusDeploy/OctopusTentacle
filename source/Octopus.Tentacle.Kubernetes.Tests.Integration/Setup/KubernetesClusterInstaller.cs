@@ -21,6 +21,7 @@ public class KubernetesClusterInstaller
     readonly ILogger logger;
 
     public string KubeConfigPath => Path.Combine(tempDir.DirectoryPath, kubeConfigName);
+    public string ClusterName => clusterName;
 
     public KubernetesClusterInstaller(TemporaryDirectory tempDirectory, string kindExePath, string helmExePath, string kubeCtlPath, ILogger logger)
     {

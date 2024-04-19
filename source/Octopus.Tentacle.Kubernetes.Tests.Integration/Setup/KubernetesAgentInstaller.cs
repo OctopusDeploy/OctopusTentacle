@@ -13,7 +13,7 @@ public class KubernetesAgentInstaller
 {
     //This is the DNS of the localhost Kubernetes Server we add to the cluster in the KubernetesClusterInstaller.SetLocalhostRouting()
     const string LocalhostKubernetesServiceDns = "dockerhost.default.svc.cluster.local";
-    
+
     readonly string helmExePath;
     readonly string kubeCtlExePath;
     readonly TemporaryDirectory temporaryDirectory;
@@ -39,10 +39,10 @@ public class KubernetesAgentInstaller
 
     public Uri SubscriptionId { get; } = PollingSubscriptionId.Generate();
 
-    public async Task<string> InstallAgent(int listeningPort)
+    public async Task<string> InstallAgent(int listeningPort, string? tentacleImageAndTag)
     {
         var valuesFilePath = await WriteValuesFile(listeningPort);
-        var arguments = BuildAgentInstallArguments(valuesFilePath);
+        var arguments = BuildAgentInstallArguments(valuesFilePath, tentacleImageAndTag);
 
         var sw = new Stopwatch();
         sw.Restart();
@@ -106,7 +106,7 @@ public class KubernetesAgentInstaller
         return valuesFilePath;
     }
 
-    string BuildAgentInstallArguments(string valuesFilePath)
+    string BuildAgentInstallArguments(string valuesFilePath, string? tentacleImageAndTag)
     {
         var args = new[]
         {
@@ -114,7 +114,7 @@ public class KubernetesAgentInstaller
             "--install",
             "--atomic",
             $"-f \"{valuesFilePath}\"",
-            GetImageAndRepository(),
+            GetImageAndRepository(tentacleImageAndTag),
             "--create-namespace",
             NamespaceFlag,
             KubeConfigFlag,
@@ -125,15 +125,16 @@ public class KubernetesAgentInstaller
         return string.Join(" ", args.WhereNotNull());
     }
 
-    static string? GetImageAndRepository()
+    static string? GetImageAndRepository(string? tentacleImageAndTag)
     {
-        if (TeamCityDetection.IsRunningInTeamCity())
-        {
-            var tag = Environment.GetEnvironmentVariable("KubernetesAgentTests_ImageTag");
-            return $"--set image.repository=\"docker.packages.octopushq.com/octopusdeploy/kubernetes-tentacle\" --set image.tag=\"{tag}\"";
-        }
+        if (tentacleImageAndTag is null)
+            return null;
 
-        return null;
+        var parts = tentacleImageAndTag.Split(":");
+        var repo = parts[0];
+        var tag = parts[1];
+
+        return $"--set image.repository=\"{repo}\" --set image.tag=\"{tag}\"";
     }
 
     async Task<string> GetAgentThumbprint()
@@ -162,7 +163,7 @@ public class KubernetesAgentInstaller
                 },
                 sprLogger.Error,
                 CancellationToken.None);
-            
+
             if (exitCode != 0)
             {
                 logger.Error("Failed to load thumbprint. Exit code {ExitCode}", exitCode);
