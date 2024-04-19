@@ -41,7 +41,7 @@ namespace Octopus.Tentacle.Kubernetes
                 retry => TimeSpan.FromSeconds(ExponentialBackoff.GetDuration(retry, MaxDurationSeconds)),
                 (ex, duration) =>
                 {
-                    log.Error(ex, "An unexpected error occured while querying Pod logs, waiting for: " + duration);
+                    log.Verbose(ex, "An unexpected error occured while querying Pod logs, waiting for: " + duration);
                 });
         }
 
