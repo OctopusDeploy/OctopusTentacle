@@ -41,7 +41,7 @@ namespace Octopus.Tentacle.Kubernetes
                 retry => TimeSpan.FromSeconds(ExponentialBackoff.GetDuration(retry, MaxDurationSeconds)),
                 (ex, duration) =>
                 {
-                    log.Error(ex, "An unexpected error occured while querying Pod logs, waiting for: " + duration);
+                    log.Verbose(ex, "An unexpected error occured while querying Pod logs, waiting for: " + duration);
                 });
         }
 
@@ -118,6 +118,30 @@ namespace Octopus.Tentacle.Kubernetes
                     if (ex.Response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.BadRequest)
                     {
                         return new ValueTuple<Stream, string>();
+                    }
+
+                    throw;
+                }
+            }
+        }
+
+
+        async Task<Stream?> GetLogStream(string podName, DateTimeOffset? sinceTime, CancellationToken cancellationToken)
+        {
+            return await retryPolicy.ExecuteAsync(async ct => await QueryLogs(), cancellationToken);
+
+            async Task<Stream?> QueryLogs()
+            {
+                try
+                {
+                    return await Client.GetNamespacedPodLogsAsync(podName, KubernetesConfig.Namespace, podName, sinceTime, cancellationToken: cancellationToken);
+                }
+                catch (HttpOperationException ex)
+                {
+                    //Pod logs aren't ready yet
+                    if (ex.Response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.BadRequest)
+                    {
+                        return null;
                     }
 
                     throw;
