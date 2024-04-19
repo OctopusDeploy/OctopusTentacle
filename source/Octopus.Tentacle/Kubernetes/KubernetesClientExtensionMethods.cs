@@ -4,13 +4,12 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using k8s.Autorest;
-using Octopus.Diagnostics;
 
 namespace Octopus.Tentacle.Kubernetes
 {
     public static class KubernetesClientExtensionMethods
     {
-        public static async Task<Stream> GetNamespacedPodLogsAsync(this k8s.Kubernetes client, string podName, string namespaceParameter, string container, DateTimeOffset? sinceTime, CancellationToken cancellationToken = default)
+        public static async Task<(Stream, string)> GetNamespacedPodLogsAsync(this k8s.Kubernetes client, string podName, string namespaceParameter, string container, DateTimeOffset? sinceTime, CancellationToken cancellationToken = default)
         {
             //Include Server timestamps so we can use it to specify "sinceTime" on the next call
             var url = $"api/v1/namespaces/{namespaceParameter}/pods/{podName}/log?container={container}&timestamps=true";
@@ -33,7 +32,7 @@ namespace Octopus.Tentacle.Kubernetes
             var httpResponse = await client.HttpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
 
             if (httpResponse.IsSuccessStatusCode)
-                return await httpResponse.Content.ReadAsStreamAsync();
+                return (await httpResponse.Content.ReadAsStreamAsync(), url);
 
             // an exception occurred, throw
             var responseContent = httpResponse.Content != null

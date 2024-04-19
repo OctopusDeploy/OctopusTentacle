@@ -9,7 +9,7 @@ namespace Octopus.Tentacle.Kubernetes
 {
     static class PodLogReader
     {
-        public static async Task<(IReadOnlyCollection<ProcessOutput> Lines, long NextSequenceNumber, int? exitCode)> ReadPodLogs(long lastLogSequence, StreamReader reader)
+        public static async Task<(IReadOnlyCollection<ProcessOutput> Lines, long NextSequenceNumber, int? exitCode)> ReadPodLogs(long lastLogSequence, StreamReader reader, string? url = null)
         {
             int? exitCode = null;
             var results = new List<ProcessOutput>();
@@ -17,16 +17,19 @@ namespace Octopus.Tentacle.Kubernetes
             long expectedLineNumber = lastLogSequence+1;
             
             bool haveReadPastPreviousBatchOfRows = false;
-            
+
+            List<string> allLines = new List<string>();
             while (true)
             {
                 var line = await reader.ReadLineAsync();
-
+                
                 //No more to read
                 if (line.IsNullOrEmpty())
                 {
                     return (results, nextSequenceNumber, exitCode);
                 }
+
+                allLines.Add(line!);
 
                 var parseResult = PodLogLineParser.ParseLine(line!);
 
@@ -47,7 +50,7 @@ namespace Octopus.Tentacle.Kubernetes
                         {
                             //Lines must appear in order
                             if (podLogLine.LineNumber != expectedLineNumber)
-                                throw new UnexpectedPodLogLineNumberException(expectedLineNumber, podLogLine.LineNumber);
+                                throw new UnexpectedPodLogLineNumberException(expectedLineNumber, podLogLine.LineNumber, allLines, url);
 
                             expectedLineNumber++;
                             
@@ -73,8 +76,8 @@ namespace Octopus.Tentacle.Kubernetes
 
     class UnexpectedPodLogLineNumberException : Exception
     {
-        public UnexpectedPodLogLineNumberException(long expectedLineNumber, long actualLineNumber)
-        : base($"Unexpected Script Pod log line number, expected: {expectedLineNumber}, actual: {actualLineNumber}")
+        public UnexpectedPodLogLineNumberException(long expectedLineNumber, long actualLineNumber, List<string> allLines, string? url)
+        : base($"Unexpected Script Pod log line number, expected: {expectedLineNumber}, actual: {actualLineNumber}. Url: '{url}'. All lines: {string.Join("\n", allLines)}")
         {
         }
     }
