@@ -15,6 +15,7 @@ public class KubernetesTestsGlobalContext : IDisposable
 
     public string HelmExePath { get; private set; } = null!;
     public string KubeCtlExePath { get; private set; }= null!;
+    public string? TentacleImageAndTag { get; set; }
 
     KubernetesTestsGlobalContext()
     {
