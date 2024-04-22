@@ -6,6 +6,10 @@ using System.Threading.Tasks;
 using k8s;
 using k8s.Autorest;
 using k8s.Models;
+using Octopus.Diagnostics;
+using Octopus.Tentacle.Time;
+using Polly;
+using Polly.Retry;
 
 namespace Octopus.Tentacle.Kubernetes
 {
@@ -18,28 +22,41 @@ namespace Octopus.Tentacle.Kubernetes
 
     public class KubernetesSecretService : KubernetesService, IKubernetesSecretService
     {
-        public KubernetesSecretService(IKubernetesClientConfigProvider configProvider)
+        readonly AsyncRetryPolicy retryPolicy;
+        const int MaxDurationSeconds = 30;
+
+        public KubernetesSecretService(IKubernetesClientConfigProvider configProvider, ISystemLog log)
             : base(configProvider)
         {
+            retryPolicy = Policy.Handle<Exception>().WaitAndRetryAsync(5,
+                retry => TimeSpan.FromSeconds(ExponentialBackoff.GetDuration(retry, MaxDurationSeconds)),
+                (ex, duration) =>
+                {
+                    log.Verbose(ex, "An unexpected error occured while querying Pod logs, waiting for: " + duration);
+                });
         }
 
         public async Task<V1Secret?> TryGetSecretAsync(string name, CancellationToken cancellationToken)
         {
-            try
+            return await retryPolicy.ExecuteAsync(async () =>
             {
-                return await Client.ReadNamespacedSecretAsync(name, KubernetesConfig.Namespace, cancellationToken: cancellationToken);
-            }
-            catch (HttpOperationException opException)
-                when (opException.Response.StatusCode == HttpStatusCode.NotFound)
-            {
-                return null;
-            }
+                try
+                {
+                    return await Client.ReadNamespacedSecretAsync(name, KubernetesConfig.Namespace, cancellationToken: cancellationToken);
+                }
+                catch (HttpOperationException opException)
+                    when (opException.Response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    return null;
+                }
+            });
         }
 
         public async Task CreateSecretAsync(V1Secret secret, CancellationToken cancellationToken)
         {
             AddStandardMetadata(secret);
-            await Client.CreateNamespacedSecretAsync(secret, KubernetesConfig.Namespace, cancellationToken: cancellationToken);
+            await retryPolicy.ExecuteAsync(async () => 
+                await Client.CreateNamespacedSecretAsync(secret, KubernetesConfig.Namespace, cancellationToken: cancellationToken));
         }
 
         public async Task UpdateSecretDataAsync(string secretName, IDictionary<string, byte[]> secretData, CancellationToken cancellationToken)
@@ -51,7 +68,8 @@ namespace Octopus.Tentacle.Kubernetes
 
             var patchYaml = KubernetesJson.Serialize(patchSecret);
 
-            await Client.PatchNamespacedSecretAsync(new V1Patch(patchYaml, V1Patch.PatchType.MergePatch), secretName, KubernetesConfig.Namespace, cancellationToken: cancellationToken);
+            await retryPolicy.ExecuteAsync(async () => 
+                await Client.PatchNamespacedSecretAsync(new V1Patch(patchYaml, V1Patch.PatchType.MergePatch), secretName, KubernetesConfig.Namespace, cancellationToken: cancellationToken));
         }
     }
 }
