@@ -1,4 +1,5 @@
 ﻿using Octopus.Tentacle.Kubernetes.Tests.Integration.Setup;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Kubernetes.Tests.Integration;
 
@@ -12,9 +13,26 @@ public class KubernetesClusterOneTimeSetUp
     {
         var toolDownloader = new RequiredToolDownloader(KubernetesTestsGlobalContext.Instance.TemporaryDirectory, KubernetesTestsGlobalContext.Instance.Logger);
         var (kindExePath, helmExePath, kubeCtlPath) = await toolDownloader.DownloadRequiredTools(CancellationToken.None);
-        
+
         installer = new KubernetesClusterInstaller(KubernetesTestsGlobalContext.Instance.TemporaryDirectory, kindExePath, helmExePath, kubeCtlPath, KubernetesTestsGlobalContext.Instance.Logger);
         await installer.Install();
+
+        //if we are not running in TeamCity, then we need to find the latest local tag and use that if it exists 
+        if (!TeamCityDetection.IsRunningInTeamCity())
+        {
+            var imageLoader = new DockerImageLoader(KubernetesTestsGlobalContext.Instance.TemporaryDirectory, KubernetesTestsGlobalContext.Instance.Logger, kindExePath);
+            KubernetesTestsGlobalContext.Instance.TentacleImageAndTag = imageLoader.LoadMostRecentImageIntoKind(installer.ClusterName);
+        }
+        else
+        {
+            var tag = Environment.GetEnvironmentVariable("KubernetesAgentTests_ImageTag");
+            KubernetesTestsGlobalContext.Instance.TentacleImageAndTag = $"docker.packages.octopushq.com/octopusdeploy/kubernetes-tentacle:{tag}";
+        }
+
+        if (KubernetesTestsGlobalContext.Instance.TentacleImageAndTag is not null)
+        {
+            KubernetesTestsGlobalContext.Instance.Logger.Information("Using tentacle image: {ImageAndTag}", KubernetesTestsGlobalContext.Instance.TentacleImageAndTag);
+        }
 
         KubernetesTestsGlobalContext.Instance.SetToolExePaths(helmExePath, kubeCtlPath);
         KubernetesTestsGlobalContext.Instance.KubeConfigPath = installer.KubeConfigPath;

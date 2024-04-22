@@ -40,6 +40,9 @@ namespace Octopus.Tentacle.Configuration
 
                 OctopusLogsDirectoryRenderer.History.Add(logDirectory);
                 OctopusLogsDirectoryRenderer.LogsDirectory = logDirectory;
+                
+                // Reload the configuration so NLog picks up the change immediately 
+                NLog.LogManager.Configuration = NLog.LogManager.Configuration.Reload();
 
                 //log to the new log file that we were logging somewhere else
                 logFileOnlyLogger.Info(new string('=', 80));
