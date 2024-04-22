@@ -257,7 +257,7 @@ namespace Octopus.Tentacle.Kubernetes
                     //set resource requests to be quite low for now as the scripts tend to run fairly quickly
                     Requests = new Dictionary<string, ResourceQuantity>
                     {
-                        ["cpu"] = new("25m"),
+                        ["cpu"] = new("15m"),
                         ["memory"] = new("100Mi")
                     }
                 }
@@ -288,7 +288,7 @@ namespace Octopus.Tentacle.Kubernetes
                     //The watchdog should be very lightweight
                     Requests = new Dictionary<string, ResourceQuantity>
                     {
-                        ["cpu"] = new("25m"),
+                        ["cpu"] = new("10m"),
                         ["memory"] = new("100Mi")
                     }
                 }

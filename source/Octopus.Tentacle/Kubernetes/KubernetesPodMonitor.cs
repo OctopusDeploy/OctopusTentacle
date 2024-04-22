@@ -254,12 +254,12 @@ namespace Octopus.Tentacle.Kubernetes
                     case PodPhases.Succeeded:
                     case PodPhases.Failed:
                         var scriptContainerState = GetScriptContainerState();
-                        if (scriptContainerState?.Running is not null)
+                        if (scriptContainerState.Running is not null)
                         {
                             State = TrackedScriptPodState.Running();
                             break;
                         }
-                        if (scriptContainerState?.Terminated is not null)
+                        if (scriptContainerState.Terminated is not null)
                         {
                             var terminated = scriptContainerState.Terminated;
                             State = terminated.ExitCode == 0 
@@ -275,7 +275,7 @@ namespace Octopus.Tentacle.Kubernetes
                 return new DateTimeOffset(finishedAtDateTime.Value, TimeSpan.Zero);
             }
 
-            V1ContainerState? GetScriptContainerState()
+            V1ContainerState GetScriptContainerState()
             {
                 return pod.Status.ContainerStatuses.Single(c => c.Name == ScriptTicket.ToKubernetesScriptPodName()).State;
             }
