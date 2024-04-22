@@ -38,7 +38,7 @@ public abstract class KubernetesAgentIntegrationTest
         //create a new server halibut runtime
         var listeningPort = BuildServerHalibutRuntimeAndListen();
         
-        var thumbprint = await kubernetesAgentInstaller.InstallAgent(listeningPort);
+        var thumbprint = await kubernetesAgentInstaller.InstallAgent(listeningPort, KubernetesTestsGlobalContext.Instance.TentacleImageAndTag);
         
         //trust the generated cert thumbprint
         ServerHalibutRuntime.Trust(thumbprint);
