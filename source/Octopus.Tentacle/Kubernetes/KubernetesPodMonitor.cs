@@ -240,19 +240,32 @@ namespace Octopus.Tentacle.Kubernetes
         {
             switch (pod.Status?.Phase)
                 {
+                    // The pod isn't yet scheduled
                     case PodPhases.Pending:
                         State = TrackedScriptPodState.Pending();
                         break;
+                    
+                    // Kubernetes doesn't know what the pod's status is
+                    case PodPhases.Unknown:
+                        break;
+                    
+                    // The pod has been scheduled, and now we want to see what the script container is doing
                     case PodPhases.Running:
-                        State = TrackedScriptPodState.Running();
-                        break;
                     case PodPhases.Succeeded:
-                        var succeededState = GetTerminatedState();
-                        State = TrackedScriptPodState.Succeeded(succeededState.ExitCode, GetFinishedAt(succeededState));
-                        break;
                     case PodPhases.Failed:
-                        var failedState = GetTerminatedState();
-                        State = TrackedScriptPodState.Failed(failedState.ExitCode, GetFinishedAt(failedState));
+                        var scriptContainerState = GetScriptContainerState();
+                        if (scriptContainerState?.Running is not null)
+                        {
+                            State = TrackedScriptPodState.Running();
+                            break;
+                        }
+                        if (scriptContainerState?.Terminated is not null)
+                        {
+                            var terminated = scriptContainerState.Terminated;
+                            State = terminated.ExitCode == 0 
+                                ? TrackedScriptPodState.Succeeded(terminated.ExitCode, GetFinishedAt(terminated)) 
+                                : TrackedScriptPodState.Failed(terminated.ExitCode, GetFinishedAt(terminated));
+                        }
                         break;
                 }
 
@@ -262,9 +275,9 @@ namespace Octopus.Tentacle.Kubernetes
                 return new DateTimeOffset(finishedAtDateTime.Value, TimeSpan.Zero);
             }
 
-            V1ContainerStateTerminated GetTerminatedState()
+            V1ContainerState? GetScriptContainerState()
             {
-                return pod.Status.ContainerStatuses.Single(c => c.Name == ScriptTicket.ToKubernetesScriptPodName()).State.Terminated;
+                return pod.Status.ContainerStatuses.Single(c => c.Name == ScriptTicket.ToKubernetesScriptPodName()).State;
             }
         }
 
