@@ -68,7 +68,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             await cleaner.CheckForOrphanedPods(CancellationToken.None);
 
             //Assert
-            await podService.Received().Delete(scriptTicket, Arg.Any<CancellationToken>());
+            await podService.Received().DeleteIfExists(scriptTicket, Arg.Any<CancellationToken>());
             scriptLogProvider.Received().Delete(scriptTicket);
             scriptPodSinceTimeStore.Received().Delete(scriptTicket);
         }
@@ -92,13 +92,13 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             //Assert
             if (shouldBeDeleted)
             {
-                await podService.Received().Delete(scriptTicket, Arg.Any<CancellationToken>());
+                await podService.Received().DeleteIfExists(scriptTicket, Arg.Any<CancellationToken>());
                 scriptLogProvider.Received().Delete(scriptTicket);
                 scriptPodSinceTimeStore.Received().Delete(scriptTicket);
             }
             else
             {
-                await podService.DidNotReceiveWithAnyArgs().Delete(scriptTicket, Arg.Any<CancellationToken>());
+                await podService.DidNotReceiveWithAnyArgs().DeleteIfExists(scriptTicket, Arg.Any<CancellationToken>());
                 scriptLogProvider.DidNotReceiveWithAnyArgs().Delete(scriptTicket);
                 scriptPodSinceTimeStore.DidNotReceiveWithAnyArgs().Delete(scriptTicket);
             }
@@ -134,7 +134,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             await cleaner.CheckForOrphanedPods(CancellationToken.None);
 
             //Assert
-            await podService.DidNotReceiveWithAnyArgs().Delete(scriptTicket, Arg.Any<CancellationToken>());
+            await podService.DidNotReceiveWithAnyArgs().DeleteIfExists(scriptTicket, Arg.Any<CancellationToken>());
             scriptLogProvider.DidNotReceiveWithAnyArgs().Delete(scriptTicket);
         }
 
@@ -154,7 +154,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             await cleaner.CheckForOrphanedPods(CancellationToken.None);
 
             //Assert
-            await podService.DidNotReceive().Delete(scriptTicket, Arg.Any<CancellationToken>());
+            await podService.DidNotReceive().DeleteIfExists(scriptTicket, Arg.Any<CancellationToken>());
             scriptLogProvider.Received().Delete(scriptTicket);
             scriptPodSinceTimeStore.Received().Delete(scriptTicket);
         }
@@ -181,13 +181,13 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             //Assert
             if (shouldDelete)
             {
-                await podService.Received().Delete(scriptTicket, Arg.Any<CancellationToken>());
+                await podService.Received().DeleteIfExists(scriptTicket, Arg.Any<CancellationToken>());
                 scriptLogProvider.Received().Delete(scriptTicket);
                 scriptPodSinceTimeStore.Received().Delete(scriptTicket);
             }
             else
             {
-                await podService.DidNotReceiveWithAnyArgs().Delete(scriptTicket, Arg.Any<CancellationToken>());
+                await podService.DidNotReceiveWithAnyArgs().DeleteIfExists(scriptTicket, Arg.Any<CancellationToken>());
                 scriptLogProvider.DidNotReceiveWithAnyArgs().Delete(scriptTicket);
                 scriptPodSinceTimeStore.DidNotReceiveWithAnyArgs().Delete(scriptTicket);
             }

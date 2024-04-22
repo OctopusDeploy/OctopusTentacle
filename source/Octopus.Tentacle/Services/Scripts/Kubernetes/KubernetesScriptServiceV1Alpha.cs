@@ -58,7 +58,16 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
                     return await GetResponse(trackedPod, 0, cancellationToken);
                 }
 
-                //TODO: consider adding an idempotent version of PrepareWorkspace
+                //Note:
+                //We shouldn't really need to worry about starting the same script twice,
+                //since we wait for the Pods to be reloaded from the K8s API on Tentacle restart.
+                //We might try to start the same script twice if
+                // - a Pod gets created
+                // - Tentacle restarts before returning
+                // - Server retries StartScriptAsync()
+                // - The Kubernetes API doesn't say that the Pod exists when we query it.
+                
+                //Note: PrepareWorkspace overwrites "command.Files", so it's not strictly idempotent
                 var workspace = await workspaceFactory.PrepareWorkspace(command.ScriptTicket,
                     command.ScriptBody,
                     command.Scripts,
@@ -98,8 +107,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
 
             var response = await GetResponse(trackedPod, command.LastLogSequence, cancellationToken);
 
-            //delete the pod
-            await podService.Delete(command.ScriptTicket, cancellationToken);
+            await podService.DeleteIfExists(command.ScriptTicket, cancellationToken);
 
             return response;
         }
@@ -114,9 +122,8 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             scriptLogProvider.Delete(command.ScriptTicket);
             scriptPodSinceTimeStore.Delete(command.ScriptTicket);
             
-            //we do a try delete as the cancel might have already deleted it
             if (!KubernetesConfig.DisableAutomaticPodCleanup)
-                await podService.TryDelete(command.ScriptTicket, cancellationToken);
+                await podService.DeleteIfExists(command.ScriptTicket, cancellationToken);
         }
 
         async Task<KubernetesScriptStatusResponseV1Alpha> GetResponse(ITrackedScriptPod trackedPod, long lastLogSequence, CancellationToken cancellationToken)
