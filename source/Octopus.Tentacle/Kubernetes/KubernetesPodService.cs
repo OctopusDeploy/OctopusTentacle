@@ -17,8 +17,7 @@ namespace Octopus.Tentacle.Kubernetes
         Task<V1PodList> ListAllPods(CancellationToken cancellationToken);
         Task WatchAllPods(string initialResourceVersion, Func<WatchEventType, V1Pod, CancellationToken, Task> onChange, Action<Exception> onError, CancellationToken cancellationToken);
         Task<V1Pod> Create(V1Pod pod, CancellationToken cancellationToken);
-        Task Delete(ScriptTicket scriptTicket, CancellationToken cancellationToken);
-        Task TryDelete(ScriptTicket commandScriptTicket, CancellationToken cancellationToken);
+        Task DeleteIfExists(ScriptTicket scriptTicket, CancellationToken cancellationToken);
     }
 
     public class KubernetesPodService : KubernetesService, IKubernetesPodService
@@ -87,10 +86,7 @@ namespace Octopus.Tentacle.Kubernetes
             return await Client.CreateNamespacedPodAsync(pod, KubernetesConfig.Namespace, cancellationToken: cancellationToken);
         }
 
-        public async Task Delete(ScriptTicket scriptTicket, CancellationToken cancellationToken)
-            => await Client.DeleteNamespacedPodAsync(scriptTicket.ToKubernetesScriptPodName(), KubernetesConfig.Namespace, cancellationToken: cancellationToken);
-
-        public async Task TryDelete(ScriptTicket scriptTicket, CancellationToken cancellationToken)
-            => await TryExecuteAsync(async () => await Delete(scriptTicket, cancellationToken));
+        public async Task DeleteIfExists(ScriptTicket scriptTicket, CancellationToken cancellationToken)
+            => await TryExecuteAsync(async () => await Client.DeleteNamespacedPodAsync(scriptTicket.ToKubernetesScriptPodName(), KubernetesConfig.Namespace, cancellationToken: cancellationToken));
     }
 }

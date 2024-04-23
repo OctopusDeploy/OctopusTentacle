@@ -103,7 +103,7 @@ namespace Octopus.Tentacle.Kubernetes
                 try
                 {
                     log.Verbose($"OrphanedPodCleaner: Deleting orphaned pod: {pod.ScriptTicket}");
-                    await podService.Delete(pod.ScriptTicket, cancellationToken);
+                    await podService.DeleteIfExists(pod.ScriptTicket, cancellationToken);
                 }
                 catch
                 {

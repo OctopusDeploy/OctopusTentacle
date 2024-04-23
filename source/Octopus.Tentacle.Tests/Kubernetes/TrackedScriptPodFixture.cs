@@ -22,7 +22,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         }
 
         [Test]
-        public void NullStatus_NoChange_Pending()
+        public void NullStatus_Pending()
         {
             //Just changing the tracked Pod to a different state
             GetPodInRunningState();
@@ -32,7 +32,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         }
 
         [Test]
-        public void NullContainerStatus_NoChange_Pending()
+        public void NullContainerStatus_Pending()
         {
             //Just changing the tracked Pod to a different state
             GetPodInRunningState();
