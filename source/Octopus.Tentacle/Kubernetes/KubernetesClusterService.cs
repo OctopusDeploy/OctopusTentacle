@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using k8s;
 using Nito.AsyncEx;
+using Octopus.Diagnostics;
 
 namespace Octopus.Tentacle.Kubernetes
 {
@@ -13,15 +14,15 @@ namespace Octopus.Tentacle.Kubernetes
     public class KubernetesClusterService : KubernetesService, IKubernetesClusterService
     {
         readonly AsyncLazy<ClusterVersion> lazyVersion;
-        public KubernetesClusterService(IKubernetesClientConfigProvider configProvider)
-            : base(configProvider)
+        public KubernetesClusterService(IKubernetesClientConfigProvider configProvider, ISystemLog log)
+            : base(configProvider, log)
         {
             //As the cluster version isn't going to change without restarting, we just cache the version in an AsyncLazy
             lazyVersion = new AsyncLazy<ClusterVersion>(async () =>
             {
                 var versionInfo = await Client.Version.GetCodeAsync();
                 return KubernetesVersionParser.ParseClusterVersion(versionInfo);
-            });
+            }, AsyncLazyFlags.RetryOnFailure);
         }
 
         public async Task<ClusterVersion> GetClusterVersion()
