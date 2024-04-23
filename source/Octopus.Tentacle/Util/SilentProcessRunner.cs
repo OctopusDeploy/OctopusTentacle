@@ -12,6 +12,39 @@ using Octopus.Tentacle.Startup;
 
 namespace Octopus.Tentacle.Util
 {
+    public interface ISilentProcessRunner
+    {
+        public int ExecuteCommand(
+            string executable,
+            string arguments,
+            string workingDirectory,
+            Action<string> info,
+            Action<string> error,
+            CancellationToken cancel = default);
+
+        public int ExecuteCommand(
+            string executable,
+            string arguments,
+            string workingDirectory,
+            Action<string> debug,
+            Action<string> info,
+            Action<string> error,
+            CancellationToken cancel = default);
+    }
+
+    public class SilentProcessRunnerWrapper : ISilentProcessRunner
+    {
+        public int ExecuteCommand(string executable, string arguments, string workingDirectory, Action<string> info, Action<string> error, CancellationToken cancel = default)
+        {
+            return SilentProcessRunner.ExecuteCommand(executable, arguments, workingDirectory, info, error, cancel);
+        }
+
+        public int ExecuteCommand(string executable, string arguments, string workingDirectory, Action<string> debug, Action<string> info, Action<string> error, CancellationToken cancel = default)
+        {
+            return SilentProcessRunner.ExecuteCommand(executable, arguments, workingDirectory, debug, info, error, cancel);
+        }
+    }
+
     public static class SilentProcessRunner
     {
         public static CmdResult ExecuteCommand(this CommandLineInvocation invocation)
