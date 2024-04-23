@@ -7,9 +7,6 @@ using k8s;
 using k8s.Autorest;
 using k8s.Models;
 using Octopus.Diagnostics;
-using Octopus.Tentacle.Time;
-using Polly;
-using Polly.Retry;
 
 namespace Octopus.Tentacle.Kubernetes
 {
@@ -22,23 +19,14 @@ namespace Octopus.Tentacle.Kubernetes
 
     public class KubernetesSecretService : KubernetesService, IKubernetesSecretService
     {
-        readonly AsyncRetryPolicy retryPolicy;
-        const int MaxDurationSeconds = 30;
-
         public KubernetesSecretService(IKubernetesClientConfigProvider configProvider, ISystemLog log)
-            : base(configProvider)
+            : base(configProvider, log)
         {
-            retryPolicy = Policy.Handle<Exception>().WaitAndRetryAsync(5,
-                retry => TimeSpan.FromSeconds(ExponentialBackoff.GetDuration(retry, MaxDurationSeconds)),
-                (ex, duration) =>
-                {
-                    log.Verbose(ex, "An unexpected error occured while querying Pod logs, waiting for: " + duration);
-                });
         }
 
         public async Task<V1Secret?> TryGetSecretAsync(string name, CancellationToken cancellationToken)
         {
-            return await retryPolicy.ExecuteAsync(async () =>
+            return await RetryPolicy.ExecuteAsync(async () =>
             {
                 try
                 {
@@ -55,8 +43,9 @@ namespace Octopus.Tentacle.Kubernetes
         public async Task CreateSecretAsync(V1Secret secret, CancellationToken cancellationToken)
         {
             AddStandardMetadata(secret);
-            await retryPolicy.ExecuteAsync(async () => 
-                await Client.CreateNamespacedSecretAsync(secret, KubernetesConfig.Namespace, cancellationToken: cancellationToken));
+          
+            //We only want to retry read/modify operations for now (since they are idempotent)
+            await Client.CreateNamespacedSecretAsync(secret, KubernetesConfig.Namespace, cancellationToken: cancellationToken);
         }
 
         public async Task UpdateSecretDataAsync(string secretName, IDictionary<string, byte[]> secretData, CancellationToken cancellationToken)
@@ -68,7 +57,7 @@ namespace Octopus.Tentacle.Kubernetes
 
             var patchYaml = KubernetesJson.Serialize(patchSecret);
 
-            await retryPolicy.ExecuteAsync(async () => 
+            await RetryPolicy.ExecuteAsync(async () =>
                 await Client.PatchNamespacedSecretAsync(new V1Patch(patchYaml, V1Patch.PatchType.MergePatch), secretName, KubernetesConfig.Namespace, cancellationToken: cancellationToken));
         }
     }
