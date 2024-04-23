@@ -51,30 +51,11 @@ namespace Octopus.Tentacle.Kubernetes
             var podName = scriptTicket.ToKubernetesScriptPodName();
             var sinceTime = scriptPodSinceTimeStore.GetSinceTime(scriptTicket);
 
-            (IReadOnlyCollection<ProcessOutput> Outputs, long NextSequenceNumber, int? ExitCode) podLogs;
-
-            try
-            {
-                var valueTuple = await GetLogStream(podName, sinceTime, cancellationToken);
-                using (var logStream = valueTuple.Item1)
-                {
-                    if (logStream == null)
-                        return (new List<ProcessOutput>(), lastLogSequence);
-
-                    podLogs = await ReadPodLogs(logStream, valueTuple.Item2);
-                }
-            }
-            catch (UnexpectedPodLogLineNumberException ex)
-            {
-                var valueTuple = await GetLogStream(podName, null, cancellationToken);
-                using (var entireStream = valueTuple.Item1)
-                {
-                    var reader = new StreamReader(entireStream);
-                    var allLogs = await reader.ReadToEndAsync();
-
-                    throw new Exception($"Pod log number weird (sinceTime: {sinceTime}), whole logs: {allLogs}", ex);
-                }
-            }
+            var logStream = await GetLogStream(podName, sinceTime, cancellationToken: cancellationToken);
+            if (logStream == null)
+                return (new List<ProcessOutput>(), lastLogSequence);
+            
+            var podLogs = await ReadPodLogs(logStream);
 
             if (podLogs.Outputs.Any())
             {
@@ -91,33 +72,32 @@ namespace Octopus.Tentacle.Kubernetes
             var combinedLogs = podLogs.Outputs.Concat(tentacleLogs).OrderBy(o => o.Occurred).ToList();
             return (combinedLogs, podLogs.NextSequenceNumber);
 
-            async Task<(IReadOnlyCollection<ProcessOutput> Outputs, long NextSequenceNumber, int? ExitCode)> ReadPodLogs(Stream stream, string url)
+            async Task<(IReadOnlyCollection<ProcessOutput> Outputs, long NextSequenceNumber, int? ExitCode)> ReadPodLogs(Stream stream)
             {
                 using (var reader = new StreamReader(stream))
                 {
-                    return await PodLogReader.ReadPodLogs(lastLogSequence, reader, url);
+                    return await PodLogReader.ReadPodLogs(lastLogSequence, reader);
                 }
             }
         }
 
 
-        async Task<(Stream, string)> GetLogStream(string podName, DateTimeOffset? sinceTime, CancellationToken cancellationToken)
+        async Task<Stream?> GetLogStream(string podName, DateTimeOffset? sinceTime, CancellationToken cancellationToken)
         {
             return await retryPolicy.ExecuteAsync(async ct => await QueryLogs(), cancellationToken);
 
-            async Task<(Stream, string)> QueryLogs()
+            async Task<Stream?> QueryLogs()
             {
                 try
                 {
-                    var namespacedPodLogsAsync = await Client.GetNamespacedPodLogsAsync(podName, KubernetesConfig.Namespace, podName, sinceTime, cancellationToken: cancellationToken);
-                    return namespacedPodLogsAsync;
+                    return await Client.GetNamespacedPodLogsAsync(podName, KubernetesConfig.Namespace, podName, sinceTime, cancellationToken: cancellationToken);
                 }
                 catch (HttpOperationException ex)
                 {
                     //Pod logs aren't ready yet
                     if (ex.Response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.BadRequest)
                     {
-                        return new ValueTuple<Stream, string>();
+                        return null;
                     }
 
                     throw;
