@@ -22,23 +22,26 @@ namespace Octopus.Tentacle.Kubernetes
 
     public class KubernetesSecretService : KubernetesService, IKubernetesSecretService
     {
-        readonly AsyncRetryPolicy getSecretRetryPolicy;
+        readonly ISystemLog log;
+
         const int MaxDurationSeconds = 30;
 
         public KubernetesSecretService(IKubernetesClientConfigProvider configProvider, ISystemLog log)
             : base(configProvider)
         {
-            getSecretRetryPolicy = Policy.Handle<Exception>().WaitAndRetryAsync(5,
+            this.log = log;
+        }
+
+        static AsyncRetryPolicy CreateRetryPolicy(ISystemLog log, string action)
+        {
+            return Policy.Handle<Exception>().WaitAndRetryAsync(5,
                 retry => TimeSpan.FromSeconds(ExponentialBackoff.GetDuration(retry, MaxDurationSeconds)),
-                (ex, duration) =>
-                {
-                    log.Verbose(ex, "An unexpected error occured while querying Kubernetes secret, waiting for: " + duration);
-                });
+                (ex, duration) => log.Verbose(ex, $"An unexpected error occured while {action}, waiting for: " + duration));
         }
 
         public async Task<V1Secret?> TryGetSecretAsync(string name, CancellationToken cancellationToken)
         {
-            return await getSecretRetryPolicy.ExecuteAsync(async () =>
+            return await CreateRetryPolicy(log, $"reading Kubernetes Secret '{name}'").ExecuteAsync(async () =>
             {
                 try
                 {
@@ -55,6 +58,8 @@ namespace Octopus.Tentacle.Kubernetes
         public async Task CreateSecretAsync(V1Secret secret, CancellationToken cancellationToken)
         {
             AddStandardMetadata(secret);
+          
+            //We only want to retry read/modify operations for now (since they are idempotent)
             await Client.CreateNamespacedSecretAsync(secret, KubernetesConfig.Namespace, cancellationToken: cancellationToken);
         }
 
@@ -67,7 +72,8 @@ namespace Octopus.Tentacle.Kubernetes
 
             var patchYaml = KubernetesJson.Serialize(patchSecret);
 
-            await Client.PatchNamespacedSecretAsync(new V1Patch(patchYaml, V1Patch.PatchType.MergePatch), secretName, KubernetesConfig.Namespace, cancellationToken: cancellationToken);
+            await CreateRetryPolicy(log, $"updating Kubernetes Secret '{secretName}'").ExecuteAsync(async () =>
+                await Client.PatchNamespacedSecretAsync(new V1Patch(patchYaml, V1Patch.PatchType.MergePatch), secretName, KubernetesConfig.Namespace, cancellationToken: cancellationToken));
         }
     }
 }
