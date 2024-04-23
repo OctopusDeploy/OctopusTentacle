@@ -7,13 +7,13 @@ using System.Threading.Tasks;
 using k8s;
 using k8s.Autorest;
 using k8s.Models;
+using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
 
 namespace Octopus.Tentacle.Kubernetes
 {
     public interface IKubernetesPodService
     {
-        Task<V1Pod?> TryGetPod(ScriptTicket scriptTicket, CancellationToken cancellationToken);
         Task<V1PodList> ListAllPods(CancellationToken cancellationToken);
         Task WatchAllPods(string initialResourceVersion, Func<WatchEventType, V1Pod, CancellationToken, Task> onChange, Action<Exception> onError, CancellationToken cancellationToken);
         Task<V1Pod> Create(V1Pod pod, CancellationToken cancellationToken);
@@ -22,13 +22,10 @@ namespace Octopus.Tentacle.Kubernetes
 
     public class KubernetesPodService : KubernetesService, IKubernetesPodService
     {
-        public KubernetesPodService(IKubernetesClientConfigProvider configProvider)
-            : base(configProvider)
+        public KubernetesPodService(IKubernetesClientConfigProvider configProvider, ISystemLog log)
+            : base(configProvider, log)
         {
         }
-
-        public async Task<V1Pod?> TryGetPod(ScriptTicket scriptTicket, CancellationToken cancellationToken) =>
-            await TryGetAsync(() => Client.ReadNamespacedPodAsync(scriptTicket.ToKubernetesScriptPodName(), KubernetesConfig.Namespace, cancellationToken: cancellationToken));
 
         public async Task<V1PodList> ListAllPods(CancellationToken cancellationToken)
         {
