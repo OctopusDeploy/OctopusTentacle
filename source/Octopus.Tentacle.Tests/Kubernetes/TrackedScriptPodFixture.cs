@@ -22,6 +22,36 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         }
 
         [Test]
+        public void NullStatus_Pending()
+        {
+            //Just changing the tracked Pod to a different state
+            GetPodInRunningState();
+            
+            trackedPod.Update(new V1Pod(){ Metadata = new V1ObjectMeta(), Status = null});
+            trackedPod.State.Phase.Should().Be(TrackedScriptPodPhase.Pending);
+        }
+
+        [Test]
+        public void NullContainerStatus_Pending()
+        {
+            //Just changing the tracked Pod to a different state
+            GetPodInRunningState();
+            
+            trackedPod.Update(new V1Pod(){ Metadata = new V1ObjectMeta(), Status = new V1PodStatus(){ Phase = "Foo", ContainerStatuses = null}});
+            trackedPod.State.Phase.Should().Be(TrackedScriptPodPhase.Pending);
+        }
+        
+        [Test]
+        public void ScriptContainerNotFound_Pending()
+        {
+            //Just changing the tracked Pod to a different state
+            GetPodInRunningState();
+
+            trackedPod.Update(CreateV1Pod(new V1ContainerStatus() { Name = "SomethingElse", State = new V1ContainerState() { Running = new V1ContainerStateRunning() } }));
+            trackedPod.State.Phase.Should().Be(TrackedScriptPodPhase.Pending);
+        }
+
+        [Test]
         public void CanTransitionFromPendingToRunning()
         {
             trackedPod.State.Phase.Should().Be(TrackedScriptPodPhase.Pending);
@@ -37,7 +67,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
 
             GetPodInRunningState();
 
-            trackedPod.Update(CreateV1Pod(podPhase, TerminatedContainerState(finishedAt, exitCode)));
+            trackedPod.Update(CreateV1Pod(TerminatedContainerState(finishedAt, exitCode)));
 
             trackedPod.State.Phase.Should().Be(expectedPhase);
             trackedPod.State.ExitCode.Should().Be(exitCode);
@@ -78,7 +108,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             var podStatusExitCode = 1;
             var podStatusFinishedAt = new DateTime(2024, 1, 1, 1, 1, 5, DateTimeKind.Utc);
 
-            trackedPod.Update(CreateV1Pod(PodPhases.Failed, TerminatedContainerState(podStatusFinishedAt, podStatusExitCode)));
+            trackedPod.Update(CreateV1Pod(TerminatedContainerState(podStatusFinishedAt, podStatusExitCode)));
 
             trackedPod.State.Phase.Should().Be(TrackedScriptPodPhase.Failed);
             trackedPod.State.ExitCode.Should().Be(podStatusExitCode);
@@ -87,7 +117,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         
         void GetPodInRunningState()
         {
-            trackedPod.Update(CreateV1Pod(PodPhases.Running, RunningContainerState()));
+            trackedPod.Update(CreateV1Pod(RunningContainerState()));
 
             trackedPod.State.Phase.Should().Be(TrackedScriptPodPhase.Running);
             trackedPod.State.ExitCode.Should().BeNull();
@@ -116,18 +146,24 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             };
         }
 
-        V1Pod CreateV1Pod(string phase, V1ContainerState containerState)
+        V1Pod CreateV1Pod(V1ContainerState containerState)
+        {
+            var containerStatus = new V1ContainerStatus()
+            {
+                Name = scriptTicket.ToKubernetesScriptPodName(),
+                State = containerState
+            };
+            return CreateV1Pod(containerStatus);
+        }
+
+        static V1Pod CreateV1Pod(V1ContainerStatus containerStatus)
         {
             var podStatus = new V1PodStatus()
             {
-                Phase = phase,
+                Phase = "PhaseShouldBeIgnored",
                 ContainerStatuses = new List<V1ContainerStatus>()
                 {
-                    new()
-                    {
-                        Name = scriptTicket.ToKubernetesScriptPodName(),
-                        State = containerState
-                    }
+                    containerStatus
                 }
             };
 
