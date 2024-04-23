@@ -269,7 +269,7 @@ namespace Octopus.Tentacle.Kubernetes
 
             V1ContainerState? GetScriptContainerState()
             {
-                return pod.Status?.ContainerStatuses.SingleOrDefault(c => c.Name == ScriptTicket.ToKubernetesScriptPodName())?.State;
+                return pod.Status?.ContainerStatuses?.SingleOrDefault(c => c.Name == ScriptTicket.ToKubernetesScriptPodName())?.State;
             }
         }
 
