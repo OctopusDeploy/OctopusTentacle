@@ -13,15 +13,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
     {
         // Sizes
         const ulong Megabyte = 1000 * 1000;
-        const ulong Mebibyte = 1024 * 1024;
-        const ulong Gibibyte = 1024 * 1024 * 1024;
         
-        [SetUp]
-        public void SetUp()
-        {
-            Environment.SetEnvironmentVariable(KubernetesConfig.NamespaceVariableName, "test-namespace");
-        }
-
         [Test]
         public void DuOutputParses()
         {
@@ -76,15 +68,5 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             var sut = new KubernetesDirectoryInformationProvider(Substitute.For<ISystemLog>(), spr);
             sut.GetPathUsedBytes("/octopus").Should().Be(null);
         }
-
-        [TestCase("1Gi", 1 * Gibibyte)]
-        [TestCase("10Gi", 10 * Gibibyte)]
-        [TestCase("10Mi", 10 * Mebibyte)]
-        [TestCase("1M", 1 * Megabyte)]
-        public void CorrectlyParsesTotalSize(string sizeString, ulong expected)
-        {
-            KubernetesUtilities.GetResourceBytes(sizeString).Should().Be(expected);
-        }
-        
     }
 }

@@ -16,12 +16,6 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         const ulong Mebibyte = 1024 * 1024;
         const ulong Gibibyte = 1024 * 1024 * 1024;
 
-        [SetUp]
-        public void SetUp()
-        {
-            Environment.SetEnvironmentVariable(KubernetesConfig.NamespaceVariableName, "test-namespace");
-        }
-
         [TestCase(100 * Mebibyte, 300 * Mebibyte, true)]
         [TestCase(100 * Mebibyte, 800 * Mebibyte, false)]
         [TestCase(800 * Megabyte, 1 * Gibibyte, true)]
