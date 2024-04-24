@@ -257,7 +257,7 @@ namespace Octopus.Tentacle.Util
             EnsureDiskHasEnoughFreeSpace(directoryPath, FiveHundredMegabytes);
         }
 
-        public void EnsureDiskHasEnoughFreeSpace(string directoryPath, long requiredSpaceInBytes)
+        public virtual void EnsureDiskHasEnoughFreeSpace(string directoryPath, long requiredSpaceInBytes)
         {
             if (IsUncPath(directoryPath))
                 return;

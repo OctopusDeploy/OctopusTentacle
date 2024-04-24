@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using k8s.Models;
 using Newtonsoft.Json;
 using Octopus.Diagnostics;
+using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha;
 using Octopus.Tentacle.Scripts;
@@ -31,6 +32,7 @@ namespace Octopus.Tentacle.Kubernetes
         readonly IApplicationInstanceSelector appInstanceSelector;
         readonly ISystemLog log;
         readonly ITentacleScriptLogProvider scriptLogProvider;
+        readonly IHomeConfiguration homeConfiguration;
 
         public KubernetesScriptPodCreator(
             IKubernetesPodService podService,
@@ -39,7 +41,8 @@ namespace Octopus.Tentacle.Kubernetes
             IKubernetesPodContainerResolver containerResolver,
             IApplicationInstanceSelector appInstanceSelector,
             ISystemLog log,
-            ITentacleScriptLogProvider scriptLogProvider)
+            ITentacleScriptLogProvider scriptLogProvider, 
+            IHomeConfiguration homeConfiguration)
         {
             this.podService = podService;
             this.podMonitor = podMonitor;
@@ -48,6 +51,7 @@ namespace Octopus.Tentacle.Kubernetes
             this.appInstanceSelector = appInstanceSelector;
             this.log = log;
             this.scriptLogProvider = scriptLogProvider;
+            this.homeConfiguration = homeConfiguration;
         }
 
         public async Task CreatePod(StartKubernetesScriptCommandV1Alpha command, IScriptWorkspace workspace, CancellationToken cancellationToken)
@@ -150,6 +154,8 @@ namespace Octopus.Tentacle.Kubernetes
 
         async Task CreatePod(StartKubernetesScriptCommandV1Alpha command, IScriptWorkspace workspace, string? imagePullSecretName, InMemoryTentacleScriptLog tentacleScriptLog, CancellationToken cancellationToken)
         {
+            var homeDir = homeConfiguration.HomeDirectory ?? throw new InvalidOperationException("Home directory is not set.");
+            
             var podName = command.ScriptTicket.ToKubernetesScriptPodName();
 
             LogVerboseToBothLogs($"Creating Kubernetes Pod '{podName}'.", tentacleScriptLog);
@@ -180,8 +186,8 @@ namespace Octopus.Tentacle.Kubernetes
                     // Containers = await CreateRequiredContainers(command, workspace, podName, scriptName),
                     Containers = new List<V1Container>
                     {
-                        await CreateScriptContainer(command, workspace, podName, scriptName)
-                    }.AddIfNotNull(CreateWatchdogContainer()),
+                        await CreateScriptContainer(command, workspace, podName, scriptName, homeDir)
+                    }.AddIfNotNull(CreateWatchdogContainer(homeDir)),
                     //only include the image pull secret name if it's actually been defined
                     ImagePullSecrets = imagePullSecretName is not null
                         ? new List<V1LocalObjectReference>
@@ -222,29 +228,29 @@ namespace Octopus.Tentacle.Kubernetes
             tentacleScriptLog.Verbose(message);
         }
 
-        async Task<V1Container> CreateScriptContainer(StartKubernetesScriptCommandV1Alpha command, IScriptWorkspace workspace, string podName, string scriptName)
+        async Task<V1Container> CreateScriptContainer(StartKubernetesScriptCommandV1Alpha command, IScriptWorkspace workspace, string podName, string scriptName, string homeDir)
         {
             return new V1Container
             {
                 Name = podName,
                 Image = command.PodImageConfiguration?.Image ?? await containerResolver.GetContainerImageForCluster(),
-                Command = new List<string> { $"/octopus/Work/{command.ScriptTicket.TaskId}/bootstrapRunner" },
+                Command = new List<string> { $"{homeDir}/Work/{command.ScriptTicket.TaskId}/bootstrapRunner" },
                 Args = new List<string>
                     {
-                        $"/octopus/Work/{command.ScriptTicket.TaskId}",
-                        $"/octopus/Work/{command.ScriptTicket.TaskId}/{scriptName}"
+                        $"{homeDir}/Work/{command.ScriptTicket.TaskId}",
+                        $"{homeDir}/Work/{command.ScriptTicket.TaskId}/{scriptName}"
                     }.Concat(workspace.ScriptArguments ?? Array.Empty<string>())
                     .ToList(),
                 VolumeMounts = new List<V1VolumeMount>
                 {
-                    new("/octopus", "tentacle-home"),
+                    new(homeDir, "tentacle-home"),
                 },
                 Env = new List<V1EnvVar>
                 {
                     new(KubernetesConfig.NamespaceVariableName, KubernetesConfig.Namespace),
                     new(KubernetesConfig.HelmReleaseNameVariableName, KubernetesConfig.HelmReleaseName),
                     new(KubernetesConfig.HelmChartVersionVariableName, KubernetesConfig.HelmChartVersion),
-                    new(EnvironmentVariables.TentacleHome, "/octopus"),
+                    new(EnvironmentVariables.TentacleHome, homeDir),
                     new(EnvironmentVariables.TentacleInstanceName, appInstanceSelector.Current.InstanceName),
                     new(EnvironmentVariables.TentacleVersion, Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleVersion)),
                     new(EnvironmentVariables.TentacleCertificateSignatureAlgorithm, Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleCertificateSignatureAlgorithm)),
@@ -264,7 +270,7 @@ namespace Octopus.Tentacle.Kubernetes
             };
         }
 
-        V1Container? CreateWatchdogContainer()
+        V1Container? CreateWatchdogContainer(string homeDir)
         {
             if (KubernetesConfig.NfsWatchdogImage is null)
             {
@@ -277,11 +283,11 @@ namespace Octopus.Tentacle.Kubernetes
                 Image = KubernetesConfig.NfsWatchdogImage,
                 VolumeMounts = new List<V1VolumeMount>
                 {
-                    new("/octopus", "tentacle-home"),
+                    new(homeDir, "tentacle-home"),
                 },
                 Env = new List<V1EnvVar>
                 {
-                    new(EnvironmentVariables.NfsWatchdogDirectory, "/octopus")
+                    new(EnvironmentVariables.NfsWatchdogDirectory, homeDir)
                 },
                 Resources = new V1ResourceRequirements
                 {
