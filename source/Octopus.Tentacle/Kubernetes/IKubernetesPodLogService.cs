@@ -60,7 +60,10 @@ namespace Octopus.Tentacle.Kubernetes
                 }
                 catch (UnexpectedPodLogLineNumberException ex)
                 {
-                    Log.Warn(ex, "Unexpected Pod log line numbers found, retrying with loading ");
+                    var message = $"Unexpected Pod log line numbers found with sinceTime='{sinceTime}', loading all logs";
+                    tentacleScriptLog.Verbose(message);
+                    Log.Warn(ex, message);
+                    
                     //If we somehow come across weird/missing line numbers, try load the whole Pod logs to see if that helps
                     return await GetPodLogsWithSinceTime(null);
                 }
