@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using k8s;
 using k8s.Autorest;
 using k8s.Models;
+using Octopus.Diagnostics;
 
 namespace Octopus.Tentacle.Kubernetes
 {
@@ -18,27 +19,32 @@ namespace Octopus.Tentacle.Kubernetes
 
     public class KubernetesSecretService : KubernetesService, IKubernetesSecretService
     {
-        public KubernetesSecretService(IKubernetesClientConfigProvider configProvider)
-            : base(configProvider)
+        public KubernetesSecretService(IKubernetesClientConfigProvider configProvider, ISystemLog log)
+            : base(configProvider, log)
         {
         }
 
         public async Task<V1Secret?> TryGetSecretAsync(string name, CancellationToken cancellationToken)
         {
-            try
+            return await RetryPolicy.ExecuteAsync(async () =>
             {
-                return await Client.ReadNamespacedSecretAsync(name, KubernetesConfig.Namespace, cancellationToken: cancellationToken);
-            }
-            catch (HttpOperationException opException)
-                when (opException.Response.StatusCode == HttpStatusCode.NotFound)
-            {
-                return null;
-            }
+                try
+                {
+                    return await Client.ReadNamespacedSecretAsync(name, KubernetesConfig.Namespace, cancellationToken: cancellationToken);
+                }
+                catch (HttpOperationException opException)
+                    when (opException.Response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    return null;
+                }
+            });
         }
 
         public async Task CreateSecretAsync(V1Secret secret, CancellationToken cancellationToken)
         {
             AddStandardMetadata(secret);
+          
+            //We only want to retry read/modify operations for now (since they are idempotent)
             await Client.CreateNamespacedSecretAsync(secret, KubernetesConfig.Namespace, cancellationToken: cancellationToken);
         }
 
@@ -51,7 +57,8 @@ namespace Octopus.Tentacle.Kubernetes
 
             var patchYaml = KubernetesJson.Serialize(patchSecret);
 
-            await Client.PatchNamespacedSecretAsync(new V1Patch(patchYaml, V1Patch.PatchType.MergePatch), secretName, KubernetesConfig.Namespace, cancellationToken: cancellationToken);
+            await RetryPolicy.ExecuteAsync(async () =>
+                await Client.PatchNamespacedSecretAsync(new V1Patch(patchYaml, V1Patch.PatchType.MergePatch), secretName, KubernetesConfig.Namespace, cancellationToken: cancellationToken));
         }
     }
 }

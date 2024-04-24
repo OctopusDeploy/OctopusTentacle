@@ -5,19 +5,31 @@ using System.Threading.Tasks;
 using k8s;
 using k8s.Autorest;
 using k8s.Models;
+using Octopus.Diagnostics;
+using Octopus.Tentacle.Time;
+using Polly;
+using Polly.Retry;
 using k8sClient = k8s.Kubernetes;
 
 namespace Octopus.Tentacle.Kubernetes
 {
     public abstract class KubernetesService
     {
+        const int MaxDurationSeconds = 30;
+        
+        protected ISystemLog Log { get; }
+        protected AsyncRetryPolicy RetryPolicy { get; }
         protected k8sClient Client { get; }
 
-        protected KubernetesService(IKubernetesClientConfigProvider configProvider)
+        protected KubernetesService(IKubernetesClientConfigProvider configProvider, ISystemLog log)
         {
+            Log = log;
             Client = new k8sClient(configProvider.Get());
+            RetryPolicy = Policy.Handle<Exception>().WaitAndRetryAsync(5,
+                retry => TimeSpan.FromSeconds(ExponentialBackoff.GetDuration(retry, MaxDurationSeconds)),
+                (ex, duration) => log.Verbose(ex, $"An unexpected error occured while interacting the Kubernetes API, waiting for: " + duration));
         }
-
+        
         /// <summary>
         /// Adds standard metadata to this <see cref="IKubernetesObject{TMetadata}"/>
         /// </summary>

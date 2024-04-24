@@ -8,9 +8,6 @@ using System.Threading.Tasks;
 using k8s.Autorest;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
-using Octopus.Tentacle.Time;
-using Polly;
-using Polly.Retry;
 
 namespace Octopus.Tentacle.Kubernetes
 {
@@ -24,39 +21,21 @@ namespace Octopus.Tentacle.Kubernetes
         readonly IKubernetesPodMonitor podMonitor;
         readonly ITentacleScriptLogProvider scriptLogProvider;
         readonly IScriptPodSinceTimeStore scriptPodSinceTimeStore;
-        readonly ISystemLog log;
-        AsyncRetryPolicy retryPolicy;
-
-        const int MaxDurationSeconds = 30;
 
         public KubernetesPodLogService(IKubernetesClientConfigProvider configProvider, IKubernetesPodMonitor podMonitor, ITentacleScriptLogProvider scriptLogProvider, IScriptPodSinceTimeStore scriptPodSinceTimeStore, ISystemLog log) 
-            : base(configProvider)
+            : base(configProvider, log)
         {
             this.podMonitor = podMonitor;
             this.scriptLogProvider = scriptLogProvider;
             this.scriptPodSinceTimeStore = scriptPodSinceTimeStore;
-            this.log = log;
-            
-            retryPolicy = Policy.Handle<Exception>().WaitAndRetryAsync(5,
-                retry => TimeSpan.FromSeconds(ExponentialBackoff.GetDuration(retry, MaxDurationSeconds)),
-                (ex, duration) =>
-                {
-                    log.Verbose(ex, "An unexpected error occured while querying Pod logs, waiting for: " + duration);
-                });
         }
 
         public async Task<(IReadOnlyCollection<ProcessOutput> Outputs, long NextSequenceNumber)> GetLogs(ScriptTicket scriptTicket, long lastLogSequence, CancellationToken cancellationToken)
         {
             var tentacleScriptLog = scriptLogProvider.GetOrCreate(scriptTicket);
             var podName = scriptTicket.ToKubernetesScriptPodName();
-            var sinceTime = scriptPodSinceTimeStore.GetSinceTime(scriptTicket);
 
-            var logStream = await GetLogStream(podName, sinceTime, cancellationToken: cancellationToken);
-            if (logStream == null)
-                return (new List<ProcessOutput>(), lastLogSequence);
-            
-            var podLogs = await ReadPodLogs(logStream);
-
+            var podLogs = await GetPodLogs();
             if (podLogs.Outputs.Any())
             {
                 var nextSinceTime = podLogs.Outputs.Max(o => o.Occurred);
@@ -72,7 +51,31 @@ namespace Octopus.Tentacle.Kubernetes
             var combinedLogs = podLogs.Outputs.Concat(tentacleLogs).OrderBy(o => o.Occurred).ToList();
             return (combinedLogs, podLogs.NextSequenceNumber);
 
-            async Task<(IReadOnlyCollection<ProcessOutput> Outputs, long NextSequenceNumber, int? ExitCode)> ReadPodLogs(Stream stream)
+            async Task<(IReadOnlyCollection<ProcessOutput> Outputs, long NextSequenceNumber, int? ExitCode)> GetPodLogs()
+            {
+                var sinceTime = scriptPodSinceTimeStore.GetSinceTime(scriptTicket);
+                try
+                {
+                    return await GetPodLogsWithSinceTime(sinceTime);
+                }
+                catch (UnexpectedPodLogLineNumberException ex)
+                {
+                    var message = $"Unexpected Pod log line numbers found with sinceTime='{sinceTime}', loading all logs";
+                    tentacleScriptLog.Verbose(message);
+                    Log.Warn(ex, message);
+                    
+                    //If we somehow come across weird/missing line numbers, try load the whole Pod logs to see if that helps
+                    return await GetPodLogsWithSinceTime(null);
+                }
+            }
+
+            async Task<(IReadOnlyCollection<ProcessOutput> Outputs, long NextSequenceNumber, int? ExitCode)> GetPodLogsWithSinceTime(DateTimeOffset? sinceTime)
+            {
+                var logStream = await GetLogStream(podName, sinceTime, cancellationToken: cancellationToken);
+                return logStream != null ? await ReadPodLogsFromStream(logStream) : (new List<ProcessOutput>(), lastLogSequence, null);
+            }
+
+            async Task<(IReadOnlyCollection<ProcessOutput> Outputs, long NextSequenceNumber, int? ExitCode)> ReadPodLogsFromStream(Stream stream)
             {
                 using (var reader = new StreamReader(stream))
                 {
@@ -84,7 +87,7 @@ namespace Octopus.Tentacle.Kubernetes
 
         async Task<Stream?> GetLogStream(string podName, DateTimeOffset? sinceTime, CancellationToken cancellationToken)
         {
-            return await retryPolicy.ExecuteAsync(async ct => await QueryLogs(), cancellationToken);
+            return await RetryPolicy.ExecuteAsync(async ct => await QueryLogs(), cancellationToken);
 
             async Task<Stream?> QueryLogs()
             {
