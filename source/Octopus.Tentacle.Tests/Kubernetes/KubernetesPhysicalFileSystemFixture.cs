@@ -4,6 +4,7 @@ using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
 using Octopus.Diagnostics;
+using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Kubernetes;
 
 namespace Octopus.Tentacle.Tests.Kubernetes
@@ -32,7 +33,10 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             directoryInformationProvider.GetPathTotalBytes().Returns(totalDiskSpace);
             directoryInformationProvider.GetPathUsedBytes("/octopus").Returns(diskSpaceUsed);
             
-            var fileSystem = new KubernetesPhysicalFileSystem(directoryInformationProvider, Substitute.For<ISystemLog>());
+            var homeConfiguration = Substitute.For<IHomeConfiguration>();
+            homeConfiguration.HomeDirectory.Returns("/octopus");
+            
+            var fileSystem = new KubernetesPhysicalFileSystem(directoryInformationProvider, Substitute.For<ISystemLog>(), homeConfiguration);
             
             if (throwException)
             {
