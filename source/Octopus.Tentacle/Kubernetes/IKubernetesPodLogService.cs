@@ -34,14 +34,8 @@ namespace Octopus.Tentacle.Kubernetes
         {
             var tentacleScriptLog = scriptLogProvider.GetOrCreate(scriptTicket);
             var podName = scriptTicket.ToKubernetesScriptPodName();
-            var sinceTime = scriptPodSinceTimeStore.GetSinceTime(scriptTicket);
 
-            var logStream = await GetLogStream(podName, sinceTime, cancellationToken: cancellationToken);
-            if (logStream == null)
-                return (new List<ProcessOutput>(), lastLogSequence);
-            
-            var podLogs = await ReadPodLogs(logStream);
-
+            var podLogs = await GetPodLogs();
             if (podLogs.Outputs.Any())
             {
                 var nextSinceTime = podLogs.Outputs.Max(o => o.Occurred);
@@ -57,7 +51,31 @@ namespace Octopus.Tentacle.Kubernetes
             var combinedLogs = podLogs.Outputs.Concat(tentacleLogs).OrderBy(o => o.Occurred).ToList();
             return (combinedLogs, podLogs.NextSequenceNumber);
 
-            async Task<(IReadOnlyCollection<ProcessOutput> Outputs, long NextSequenceNumber, int? ExitCode)> ReadPodLogs(Stream stream)
+            async Task<(IReadOnlyCollection<ProcessOutput> Outputs, long NextSequenceNumber, int? ExitCode)> GetPodLogs()
+            {
+                var sinceTime = scriptPodSinceTimeStore.GetSinceTime(scriptTicket);
+                try
+                {
+                    return await GetPodLogsWithSinceTime(sinceTime);
+                }
+                catch (UnexpectedPodLogLineNumberException ex)
+                {
+                    var message = $"Unexpected Pod log line numbers found with sinceTime='{sinceTime}', loading all logs";
+                    tentacleScriptLog.Verbose(message);
+                    Log.Warn(ex, message);
+                    
+                    //If we somehow come across weird/missing line numbers, try load the whole Pod logs to see if that helps
+                    return await GetPodLogsWithSinceTime(null);
+                }
+            }
+
+            async Task<(IReadOnlyCollection<ProcessOutput> Outputs, long NextSequenceNumber, int? ExitCode)> GetPodLogsWithSinceTime(DateTimeOffset? sinceTime)
+            {
+                var logStream = await GetLogStream(podName, sinceTime, cancellationToken: cancellationToken);
+                return logStream != null ? await ReadPodLogsFromStream(logStream) : (new List<ProcessOutput>(), lastLogSequence, null);
+            }
+
+            async Task<(IReadOnlyCollection<ProcessOutput> Outputs, long NextSequenceNumber, int? ExitCode)> ReadPodLogsFromStream(Stream stream)
             {
                 using (var reader = new StreamReader(stream))
                 {
