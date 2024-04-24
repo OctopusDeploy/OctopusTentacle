@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using Octopus.Diagnostics;
-using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Kubernetes
@@ -9,24 +8,24 @@ namespace Octopus.Tentacle.Kubernetes
     public class KubernetesPhysicalFileSystem : OctopusPhysicalFileSystem
     {
         readonly IKubernetesDirectoryInformationProvider directoryInformationProvider;
-        readonly IHomeConfiguration homeConfiguration;
         ISystemLog Log { get; }
-
+        
+        // Set like this for now because we don't have a way to get the home directory from the provider without requiring ourselves
+        // DI can be painful when circular dependencies happen with constructed classes :sad-panda:
+        // When we can get an Injectable KubernetesConfiguration, we can remove this, alternatively, we can pull apart the configuration stores into different implementations
+        const string HomeDir = "/octopus";
 
         public KubernetesPhysicalFileSystem(IKubernetesDirectoryInformationProvider directoryInformationProvider,
-            ISystemLog log,
-            IHomeConfiguration homeConfiguration) : base(log)
+            ISystemLog log) : base(log)
         {
             this.directoryInformationProvider = directoryInformationProvider;
             Log = log;
-            this.homeConfiguration = homeConfiguration;
         }
 
         public override void EnsureDiskHasEnoughFreeSpace(string directoryPath, long requiredSpaceInBytes)
         {
-            var homeDir = homeConfiguration.HomeDirectory ?? throw new InvalidOperationException("Home directory is not set");
-            var freeBytes = GetPathFreeBytes(homeDir);
-            Log.Verbose($"Directory to be checked is {homeDir}, script directory is {directoryPath}, required space is {requiredSpaceInBytes} bytes");
+            var freeBytes = GetPathFreeBytes(HomeDir);
+            Log.Verbose($"Directory to be checked is {HomeDir}, script directory is {directoryPath}, required space is {requiredSpaceInBytes} bytes");
 
             // If we can't get the free bytes, we just skip the check
             if (freeBytes is null) return;

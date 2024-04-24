@@ -30,7 +30,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             var homeConfiguration = Substitute.For<IHomeConfiguration>();
             homeConfiguration.HomeDirectory.Returns("/octopus");
             
-            var fileSystem = new KubernetesPhysicalFileSystem(directoryInformationProvider, Substitute.For<ISystemLog>(), homeConfiguration);
+            var fileSystem = new KubernetesPhysicalFileSystem(directoryInformationProvider, Substitute.For<ISystemLog>());
             
             if (throwException)
             {
