@@ -52,8 +52,8 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             spr.When(x => x.ExecuteCommand("du", "-s -B 1 /octopus", "/", Arg.Any<Action<string>>(), Arg.Any<Action<string>>()))
                 .Do(x =>
                 {
-                    x.ArgAt<Action<string>>(3).Invoke($"{usedSize}\t/octopus");
                     x.ArgAt<Action<string>>(3).Invoke($"500\t/octopus");
+                    x.ArgAt<Action<string>>(3).Invoke($"{usedSize}\t/octopus");
                 });
             spr.ReturnsForAll(1);
             var sut = new KubernetesDirectoryInformationProvider(Substitute.For<ISystemLog>(), spr);
