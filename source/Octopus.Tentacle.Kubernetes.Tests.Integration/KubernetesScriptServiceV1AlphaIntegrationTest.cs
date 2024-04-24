@@ -16,8 +16,15 @@ public class KubernetesScriptServiceV1AlphaIntegrationTest : KubernetesAgentInte
         // Arrange
         var logs = new List<ProcessOutput>();
         var scriptCompleted = false;
+        string scriptBody = @"echo ""Hello World""
+for i in $(seq 1 50);
+do
+    echo $i
+    sleep 0.1
+done
+";
         var command = new ExecuteKubernetesScriptCommandBuilder(LoggingUtils.CurrentTestHash())
-            .SetScriptBody("echo \"Hello World\"")
+            .SetScriptBody(scriptBody)
             .Build();
 
         //act

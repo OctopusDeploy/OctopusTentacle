@@ -17,13 +17,14 @@ namespace Octopus.Tentacle.Kubernetes
     {
         const int MaxDurationSeconds = 30;
         
+        protected ISystemLog Log { get; }
         protected AsyncRetryPolicy RetryPolicy { get; }
         protected k8sClient Client { get; }
 
         protected KubernetesService(IKubernetesClientConfigProvider configProvider, ISystemLog log)
         {
+            Log = log;
             Client = new k8sClient(configProvider.Get());
-
             RetryPolicy = Policy.Handle<Exception>().WaitAndRetryAsync(5,
                 retry => TimeSpan.FromSeconds(ExponentialBackoff.GetDuration(retry, MaxDurationSeconds)),
                 (ex, duration) => log.Verbose(ex, $"An unexpected error occured while interacting the Kubernetes API, waiting for: " + duration));
