@@ -95,15 +95,14 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             var trackedPod = podStatusProvider.TryGetTrackedScriptPod(request.ScriptTicket);
             return trackedPod != null
                 ? await GetResponse(trackedPod, request.LastLogSequence, cancellationToken)
-                : throw new MissingScriptPodException(request.ScriptTicket);
+                : GetResponseForMissingScriptPod(request.ScriptTicket, request.LastLogSequence);
         }
 
         public async Task<KubernetesScriptStatusResponseV1Alpha> CancelScriptAsync(CancelKubernetesScriptCommandV1Alpha command, CancellationToken cancellationToken)
         {
             var trackedPod = podStatusProvider.TryGetTrackedScriptPod(command.ScriptTicket);
-            //if we are cancelling a pod that doesn't exist, just return complete with an unknown script exit code
             if (trackedPod == null)
-                return new KubernetesScriptStatusResponseV1Alpha(command.ScriptTicket, ProcessState.Complete, ScriptExitCodes.UnknownScriptExitCode, new List<ProcessOutput>(), command.LastLogSequence);
+                return GetResponseForMissingScriptPod(command.ScriptTicket, command.LastLogSequence);
 
             var response = await GetResponse(trackedPod, command.LastLogSequence, cancellationToken);
 
@@ -157,18 +156,27 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             );
         }
 
+        static KubernetesScriptStatusResponseV1Alpha GetResponseForMissingScriptPod(ScriptTicket scriptTicket, long lastLogSequence)
+        {
+            return new KubernetesScriptStatusResponseV1Alpha(scriptTicket, 
+                ProcessState.Complete,
+                ScriptExitCodes.KubernetesScriptPodNotFound,
+                new List<ProcessOutput>()
+                {
+                    new(ProcessOutputSource.StdErr, $"The Script Pod '{scriptTicket.ToKubernetesScriptPodName()}' could not be found. This is most likely due to the Script Pod being deleted."),
+                    new(ProcessOutputSource.StdErr, $"Possible causes are:"),
+                    new(ProcessOutputSource.StdErr, $"- The Script Pod was evicted/terminated by Kubernetes"),
+                    new(ProcessOutputSource.StdErr, $"If you are using the default in-cluster NFS storage, then also check if:"),
+                    new(ProcessOutputSource.StdErr, $"- The NFS Pod was evicted due to exceeding its storage quota"),
+                    new(ProcessOutputSource.StdErr, $"- The NFS Pod was restarted or moved as part of routine operation"),
+
+                }, 
+                lastLogSequence);
+        }
+
         public bool IsRunningScript(ScriptTicket ticket)
         {
             return podStatusProvider.TryGetTrackedScriptPod(ticket) is not null;
         }
     }
-    
-    class MissingScriptPodException : Exception
-    {
-        public MissingScriptPodException(ScriptTicket scriptTicket)
-            : base($"The Script Pod for script ticket '{scriptTicket}' could not be found, please retry the action")
-        {
-        }
-    }
-
 }
