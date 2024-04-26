@@ -1,5 +1,6 @@
 ﻿using System;
 using Autofac;
+using Octopus.Tentacle.Kubernetes;
 
 namespace Octopus.Tentacle.Util
 {
@@ -8,7 +9,14 @@ namespace Octopus.Tentacle.Util
         protected override void Load(ContainerBuilder builder)
         {
             base.Load(builder);
-            builder.RegisterType<OctopusPhysicalFileSystem>().As<IOctopusFileSystem>();
+            if (PlatformDetection.Kubernetes.IsRunningAsKubernetesAgent)
+            {
+                builder.RegisterType<KubernetesPhysicalFileSystem>().As<IOctopusFileSystem>();
+            }
+            else
+            {
+                builder.RegisterType<OctopusPhysicalFileSystem>().As<IOctopusFileSystem>();                
+            }
         }
     }
 }

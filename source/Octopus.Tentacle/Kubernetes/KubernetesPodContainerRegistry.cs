@@ -36,7 +36,7 @@ namespace Octopus.Tentacle.Kubernetes
 
             var tag = tagVersion?.ToString(2) ?? "latest";
 
-            return $"docker.packages.octopushq.com/octopusdeploy/kubernetes-agent-tools-base:{tag}";
+            return $"octopusdeploy/kubernetes-agent-tools-base:{tag}";
         }
     }
 }

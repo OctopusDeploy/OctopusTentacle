@@ -9,6 +9,8 @@ namespace Octopus.Tentacle.Util
         protected override void Load(ContainerBuilder builder)
         {
             base.Load(builder);
+            
+            builder.RegisterType<SilentProcessRunnerWrapper>().As<ISilentProcessRunner>().SingleInstance();
 
             if (PlatformDetection.IsRunningOnWindows)
                 builder.RegisterType<PowerShell>().As<IShell>();
