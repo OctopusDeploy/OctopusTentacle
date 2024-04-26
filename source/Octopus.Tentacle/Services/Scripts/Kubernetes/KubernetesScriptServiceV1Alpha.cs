@@ -166,7 +166,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
                     new(ProcessOutputSource.StdErr, $"The Script Pod '{scriptTicket.ToKubernetesScriptPodName()}' could not be found. This is most likely due to the Script Pod being deleted."),
                     new(ProcessOutputSource.StdErr, $"Possible causes are:"),
                     new(ProcessOutputSource.StdErr, $"- The Script Pod was evicted/terminated by Kubernetes"),
-                    new(ProcessOutputSource.StdErr, $"If you are using the default in-cluster NFS storage, then also check if:"),
+                    new(ProcessOutputSource.StdErr, $"If you are using the default NFS storage, then also check if:"),
                     new(ProcessOutputSource.StdErr, $"- The NFS Pod was evicted due to exceeding its storage quota"),
                     new(ProcessOutputSource.StdErr, $"- The NFS Pod was restarted or moved as part of routine operation"),
 
