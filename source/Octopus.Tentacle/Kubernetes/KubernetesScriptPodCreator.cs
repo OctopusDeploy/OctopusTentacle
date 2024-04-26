@@ -208,11 +208,15 @@ namespace Octopus.Tentacle.Kubernetes
                             }
                         }
                     },
-                    //currently we only support running on linux nodes
-                    NodeSelector = new Dictionary<string, string>
+                    //currently we only support running on linux/arm64 nodes
+                    Affinity = new V1Affinity(new V1NodeAffinity(requiredDuringSchedulingIgnoredDuringExecution: new V1NodeSelector(new List<V1NodeSelectorTerm>
                     {
-                        ["kubernetes.io/os"] = "linux"
-                    }
+                        new(matchExpressions: new List<V1NodeSelectorRequirement>
+                        {
+                            new("kubernetes.io/os", "In", new List<string>{"linux"}),
+                            new("kubernetes.io/arch", "In", new List<string>{"arm64","amd64"})
+                        })
+                    })))
                 }
             };
 
