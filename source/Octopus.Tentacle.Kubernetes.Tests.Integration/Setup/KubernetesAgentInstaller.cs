@@ -108,6 +108,7 @@ public class KubernetesAgentInstaller
 
     string BuildAgentInstallArguments(string valuesFilePath, string? tentacleImageAndTag)
     {
+        var (chartVersion, chartRepo) = GetChartVersionAndRepository();
         var args = new[]
         {
             "upgrade",
@@ -115,14 +116,24 @@ public class KubernetesAgentInstaller
             "--atomic",
             $"-f \"{valuesFilePath}\"",
             GetImageAndRepository(tentacleImageAndTag),
+            $"--version \"{chartVersion}\"",
             "--create-namespace",
             NamespaceFlag,
             KubeConfigFlag,
             AgentName,
-            "oci://registry-1.docker.io/octopusdeploy/kubernetes-agent"
+            chartRepo
         };
 
         return string.Join(" ", args.WhereNotNull());
+    }
+
+    static (string ChartVersion, string ChartRepo) GetChartVersionAndRepository()
+    {
+        var customHelmChartVersion = Environment.GetEnvironmentVariable("KubernetesIntegrationTests_HelmChartVersion");
+        
+        return !string.IsNullOrWhiteSpace(customHelmChartVersion) 
+            ? (customHelmChartVersion, "oci://docker.packages.octopushq.com/kubernetes-agent") 
+            : ("1.*.*", "oci://registry-1.docker.io/octopusdeploy/kubernetes-agent");
     }
 
     static string? GetImageAndRepository(string? tentacleImageAndTag)
@@ -134,7 +145,7 @@ public class KubernetesAgentInstaller
         var repo = parts[0];
         var tag = parts[1];
 
-        return $"--set image.repository=\"{repo}\" --set image.tag=\"{tag}\"";
+        return $"--set agent.image.repository=\"{repo}\" --set agent.image.tag=\"{tag}\"";
     }
 
     async Task<string> GetAgentThumbprint()
