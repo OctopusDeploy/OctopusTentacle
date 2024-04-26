@@ -208,7 +208,7 @@ namespace Octopus.Tentacle.Kubernetes
                             }
                         }
                     },
-                    //currently we only support running on linux/arm64 nodes
+                    //currently we only support running on linux/arm64 and linux/amd64 nodes
                     Affinity = new V1Affinity(new V1NodeAffinity(requiredDuringSchedulingIgnoredDuringExecution: new V1NodeSelector(new List<V1NodeSelectorTerm>
                     {
                         new(matchExpressions: new List<V1NodeSelectorRequirement>
