@@ -1,5 +1,5 @@
-tentacle:
-  ACCEPT_EULA: "Y"
+agent:
+  acceptEula: "Y"
   targetName: "#{TargetName}"
   serverCommsAddress: "#{ServerCommsAddress}"
   serverUrl: "https://this.is.not.required.com/"
