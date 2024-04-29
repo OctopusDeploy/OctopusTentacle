@@ -5,6 +5,7 @@ using k8s.Models;
 using NUnit.Framework;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Kubernetes;
+using Octopus.Time;
 
 namespace Octopus.Tentacle.Tests.Kubernetes
 {
@@ -13,12 +14,14 @@ namespace Octopus.Tentacle.Tests.Kubernetes
     {
         TrackedScriptPod trackedPod;
         ScriptTicket scriptTicket;
+        FixedClock clock;
 
         [SetUp]
         public void SetUp()
         {
             scriptTicket = new ScriptTicket("ScriptTicketId");
-            trackedPod = new TrackedScriptPod(scriptTicket);
+            clock = new FixedClock(new DateTimeOffset(2023,5,17,13,4,5, TimeSpan.Zero));
+            trackedPod = new TrackedScriptPod(scriptTicket, clock);
         }
 
         [Test]
@@ -74,6 +77,19 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             trackedPod.State.FinishedAt.Should().Be(finishedAt);
         }
 
+        [TestCase(PodPhases.Succeeded, 0, TrackedScriptPodPhase.Succeeded)]
+        [TestCase(PodPhases.Failed, 123, TrackedScriptPodPhase.Failed)]
+        public void UpdateWithCompletedPodButNoFinishedAt(string podPhase, int exitCode, TrackedScriptPodPhase expectedPhase)
+        {
+            GetPodInRunningState();
+
+            trackedPod.Update(CreateV1Pod(TerminatedContainerState(null, exitCode)));
+
+            trackedPod.State.Phase.Should().Be(expectedPhase);
+            trackedPod.State.ExitCode.Should().Be(exitCode);
+            trackedPod.State.FinishedAt.Should().Be(clock.GetUtcTime());
+        }
+        
         [TestCase(0, TrackedScriptPodPhase.Succeeded)]
         [TestCase(123, TrackedScriptPodPhase.Failed)]
         public void MarkAsCompleted(int exitCode, TrackedScriptPodPhase expectedPhase)
@@ -133,7 +149,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             };
         }
 
-        static V1ContainerState TerminatedContainerState(DateTime finishedAt, int exitCode)
+        static V1ContainerState TerminatedContainerState(DateTime? finishedAt, int exitCode)
         {
             return new V1ContainerState()
             {
