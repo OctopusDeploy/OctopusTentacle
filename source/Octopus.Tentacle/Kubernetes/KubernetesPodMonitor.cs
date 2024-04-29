@@ -263,8 +263,8 @@ namespace Octopus.Tentacle.Kubernetes
 
             DateTimeOffset GetFinishedAt(V1ContainerStateTerminated terminated)
             {
-                var finishedAtDateTime = terminated.FinishedAt!;
-                return new DateTimeOffset(finishedAtDateTime.Value, TimeSpan.Zero);
+                var finishedAtDateTime = terminated.FinishedAt ?? DateTime.UtcNow;
+                return new DateTimeOffset(finishedAtDateTime, TimeSpan.Zero);
             }
 
             V1ContainerState? GetScriptContainerState()
