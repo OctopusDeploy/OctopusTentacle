@@ -10,6 +10,7 @@ using k8s.Models;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Time;
+using Octopus.Time;
 using Polly;
 
 namespace Octopus.Tentacle.Kubernetes
@@ -32,18 +33,20 @@ namespace Octopus.Tentacle.Kubernetes
         readonly IKubernetesPodService podService;
         readonly ISystemLog log;
         readonly ITentacleScriptLogProvider scriptLogProvider;
-
+        readonly IClock clock;
+        
         ConcurrentDictionary<ScriptTicket, TrackedScriptPod> podStatusLookup = new();
         
         //Prevent giving false results when we are still loading for the first time 
         readonly ManualResetEventSlim initialLoadLock = new();
         readonly object statusLookupWriteLock = new();
         
-        public KubernetesPodMonitor(IKubernetesPodService podService, ISystemLog log, ITentacleScriptLogProvider scriptLogProvider)
+        public KubernetesPodMonitor(IKubernetesPodService podService, ISystemLog log, ITentacleScriptLogProvider scriptLogProvider, IClock clock)
         {
             this.podService = podService;
             this.log = log;
             this.scriptLogProvider = scriptLogProvider;
+            this.clock = clock;
         }
 
         async Task IKubernetesPodMonitor.StartAsync(CancellationToken cancellationToken)
@@ -70,14 +73,14 @@ namespace Octopus.Tentacle.Kubernetes
             var text = $"Marking '{scriptTicket.TaskId}' as completed with exit code: '{exitCode}'";
             scriptLogProvider.GetOrCreate(scriptTicket).Verbose(text);
             log.Verbose(text);
-            status.MarkAsCompleted(exitCode, DateTimeOffset.UtcNow);
+            status.MarkAsCompleted(exitCode, clock.GetUtcTime());
         }
 
         public void AddPendingPod(ScriptTicket scriptTicket, V1Pod createdPod)
         {
             WaitForInitialLoadToFinish();
 
-            var trackedScriptPod = new TrackedScriptPod(scriptTicket) { MightNotExistInClusterYet = true };
+            var trackedScriptPod = new TrackedScriptPod(scriptTicket, clock) { MightNotExistInClusterYet = true };
             trackedScriptPod.Update(createdPod);
             lock (statusLookupWriteLock)
             {
@@ -113,7 +116,7 @@ namespace Octopus.Tentacle.Kubernetes
            foreach (var pod in allPods.Items)
            {
                var scriptTicket = pod.GetScriptTicket();
-               var status = new TrackedScriptPod(scriptTicket);
+               var status = new TrackedScriptPod(scriptTicket, clock);
                status.Update(pod);
 
                log.Verbose($"Loaded pod {pod.Name()} ({status})");
@@ -159,7 +162,7 @@ namespace Octopus.Tentacle.Kubernetes
                     switch (type)
                     {
                         case WatchEventType.Added or WatchEventType.Modified:
-                            var trackedScriptPod = new TrackedScriptPod(scriptTicket);
+                            var trackedScriptPod = new TrackedScriptPod(scriptTicket, clock);
                             trackedScriptPod.Update(pod);
                             trackedScriptPod.MightNotExistInClusterYet = false;
                             
@@ -223,6 +226,7 @@ namespace Octopus.Tentacle.Kubernetes
     
     public class TrackedScriptPod : ITrackedScriptPod
     {
+        readonly IClock clock;
         public ScriptTicket ScriptTicket { get; }
 
         public TrackedScriptPodState State { get; private set; }
@@ -230,8 +234,9 @@ namespace Octopus.Tentacle.Kubernetes
         //We create a tracked Pod entry when creating the script Pod so we don't need to wait for the K8s watch event to come through
         public bool MightNotExistInClusterYet { get; set; }
         
-        public TrackedScriptPod(ScriptTicket ticket)
+        public TrackedScriptPod(ScriptTicket ticket, IClock clock)
         {
+            this.clock = clock;
             ScriptTicket = ticket;
             State = TrackedScriptPodState.Pending();
         }
@@ -264,8 +269,9 @@ namespace Octopus.Tentacle.Kubernetes
             DateTimeOffset GetFinishedAt(V1ContainerStateTerminated terminated)
             {
                 //If we don't have a finished time, then just assume it's now. The time is only used to detect orphaned Pods
-                var finishedAtDateTime = terminated.FinishedAt ?? DateTime.UtcNow;
-                return new DateTimeOffset(finishedAtDateTime, TimeSpan.Zero);
+                return terminated.FinishedAt != null
+                    ? new DateTimeOffset(terminated.FinishedAt.Value, TimeSpan.Zero)
+                    : clock.GetUtcTime();
             }
 
             V1ContainerState? GetScriptContainerState()
