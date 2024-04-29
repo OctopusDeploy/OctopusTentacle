@@ -263,6 +263,7 @@ namespace Octopus.Tentacle.Kubernetes
 
             DateTimeOffset GetFinishedAt(V1ContainerStateTerminated terminated)
             {
+                //If we don't have a finished time, then just assume it's now. The time is only used to detect orphaned Pods
                 var finishedAtDateTime = terminated.FinishedAt ?? DateTime.UtcNow;
                 return new DateTimeOffset(finishedAtDateTime, TimeSpan.Zero);
             }
