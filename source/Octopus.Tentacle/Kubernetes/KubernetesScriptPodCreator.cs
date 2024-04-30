@@ -11,7 +11,7 @@ using Newtonsoft.Json;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
-using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha;
+using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Util;
 using Octopus.Tentacle.Variables;
@@ -20,7 +20,7 @@ namespace Octopus.Tentacle.Kubernetes
 {
     public interface IKubernetesScriptPodCreator
     {
-        Task CreatePod(StartKubernetesScriptCommandV1Alpha command, IScriptWorkspace workspace, CancellationToken cancellationToken);
+        Task CreatePod(StartKubernetesScriptCommandV1 command, IScriptWorkspace workspace, CancellationToken cancellationToken);
     }
 
     public class KubernetesScriptPodCreator : IKubernetesScriptPodCreator
@@ -54,7 +54,7 @@ namespace Octopus.Tentacle.Kubernetes
             this.homeConfiguration = homeConfiguration;
         }
 
-        public async Task CreatePod(StartKubernetesScriptCommandV1Alpha command, IScriptWorkspace workspace, CancellationToken cancellationToken)
+        public async Task CreatePod(StartKubernetesScriptCommandV1 command, IScriptWorkspace workspace, CancellationToken cancellationToken)
         {
             var tentacleScriptLog = scriptLogProvider.GetOrCreate(command.ScriptTicket);
 
@@ -77,7 +77,7 @@ namespace Octopus.Tentacle.Kubernetes
             }
         }
 
-        async Task<string?> CreateImagePullSecret(StartKubernetesScriptCommandV1Alpha command, CancellationToken cancellationToken)
+        async Task<string?> CreateImagePullSecret(StartKubernetesScriptCommandV1 command, CancellationToken cancellationToken)
         {
             //if we have no feed url or no username, then we can't create image secrets
             if (command.PodImageConfiguration?.FeedUrl is null || command.PodImageConfiguration?.FeedUsername is null)
@@ -152,7 +152,7 @@ namespace Octopus.Tentacle.Kubernetes
             return $"octopus-feed-cred-{sanitizedHash}".ToLowerInvariant();
         }
 
-        async Task CreatePod(StartKubernetesScriptCommandV1Alpha command, IScriptWorkspace workspace, string? imagePullSecretName, InMemoryTentacleScriptLog tentacleScriptLog, CancellationToken cancellationToken)
+        async Task CreatePod(StartKubernetesScriptCommandV1 command, IScriptWorkspace workspace, string? imagePullSecretName, InMemoryTentacleScriptLog tentacleScriptLog, CancellationToken cancellationToken)
         {
             var homeDir = homeConfiguration.HomeDirectory ?? throw new InvalidOperationException("Home directory is not set.");
             
@@ -232,7 +232,7 @@ namespace Octopus.Tentacle.Kubernetes
             tentacleScriptLog.Verbose(message);
         }
 
-        async Task<V1Container> CreateScriptContainer(StartKubernetesScriptCommandV1Alpha command, IScriptWorkspace workspace, string podName, string scriptName, string homeDir)
+        async Task<V1Container> CreateScriptContainer(StartKubernetesScriptCommandV1 command, IScriptWorkspace workspace, string podName, string scriptName, string homeDir)
         {
             return new V1Container
             {

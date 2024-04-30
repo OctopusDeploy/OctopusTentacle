@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha
+namespace Octopus.Tentacle.Contracts.KubernetesScriptServiceV1
 {
-    public class StartKubernetesScriptCommandV1Alpha
+    public class StartKubernetesScriptCommandV1
     {
-        public StartKubernetesScriptCommandV1Alpha(
+        public StartKubernetesScriptCommandV1(
             ScriptTicket scriptTicket,
             string taskId,
             string scriptBody,
@@ -14,7 +14,7 @@ namespace Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha
             ScriptIsolationLevel isolation,
             TimeSpan scriptIsolationMutexTimeout,
             string isolationMutexName,
-            PodImageConfiguration? podImageConfiguration, 
+            PodImageConfigurationV1? podImageConfiguration, 
             string? scriptPodServiceAccountName,
             Dictionary<ScriptType, string>? additionalScripts,
             ScriptFile[]? additionalFiles)
@@ -47,8 +47,8 @@ namespace Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha
 
         public ScriptIsolationLevel Isolation { get; }
         public TimeSpan ScriptIsolationMutexTimeout { get; }
-        public string IsolationMutexName { get; }
-        public PodImageConfiguration? PodImageConfiguration { get; }
+        public string? IsolationMutexName { get; }
+        public PodImageConfigurationV1? PodImageConfiguration { get; }
 
         public Dictionary<ScriptType, string> Scripts { get; } = new();
         public List<ScriptFile> Files { get; } = new();

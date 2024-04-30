@@ -2,7 +2,7 @@
 
 namespace Octopus.Tentacle.Services
 {
-    [AttributeUsage(AttributeTargets.Class)]
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
     public class KubernetesServiceAttribute : Attribute, IServiceAttribute
     {
         public KubernetesServiceAttribute(Type contractType)
