@@ -38,6 +38,10 @@ WORKDIR /
 # We know this won't reduce the image size at all. It's just to make the filesystem a little tidier.
 RUN rm -rf /tmp/*
 
+# This is to run on Openshift with a random user
+RUN chgrp -R 0 /opt /usr /etc && \
+    chmod -R g=u /opt /usr /etc
+
 ENV BOOTSTRAPRUNNEREXECUTABLEPATH=/bootstrapRunner
 ENV OCTOPUS_RUNNING_IN_CONTAINER=Y
 ENV ACCEPT_EULA=N
