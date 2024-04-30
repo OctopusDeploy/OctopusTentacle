@@ -39,8 +39,8 @@ WORKDIR /
 RUN rm -rf /tmp/*
 
 # This is to run on Openshift with a random user
-RUN chgrp -R 0 /opt /usr /etc && \
-    chmod -R g=u /opt /usr /etc
+RUN chgrp -R 0 /opt /usr && \
+    chmod -R g=u /opt /usr
 
 ENV BOOTSTRAPRUNNEREXECUTABLEPATH=/bootstrapRunner
 ENV OCTOPUS_RUNNING_IN_CONTAINER=Y
