@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Octopus.Diagnostics;
@@ -11,10 +12,34 @@ namespace Octopus.Tentacle.Kubernetes
         public ulong? GetPathTotalBytes();
     }
 
+    public class KubernetesDirectoryInformationCache
+    {
+        ulong? UsedBytes { get; set; }
+        DateTime LastUpdated { get; set; }
+        
+        public void SetCache(ulong? usedBytes)
+        {
+            UsedBytes = usedBytes;
+            LastUpdated = DateTime.Now;
+        }
+        
+        public bool TryGetCache(out ulong? usedBytes)
+        {
+            if (DateTime.Now - LastUpdated > TimeSpan.FromMinutes(1))
+            {
+                usedBytes = UsedBytes;
+                return false;
+            }
+            usedBytes = null;
+            return true;
+        }
+    }
+
     public class KubernetesDirectoryInformationProvider : IKubernetesDirectoryInformationProvider
     {
         readonly ISystemLog log;
         readonly ISilentProcessRunner silentProcessRunner;
+        readonly KubernetesDirectoryInformationCache directoryInformationCache = new();
 
         public KubernetesDirectoryInformationProvider(ISystemLog log, ISilentProcessRunner silentProcessRunner)
         {
@@ -24,7 +49,7 @@ namespace Octopus.Tentacle.Kubernetes
 
         public ulong? GetPathUsedBytes(string directoryPath)
         {
-            return GetDriveBytesUsingDu(directoryPath);
+            return directoryInformationCache.TryGetCache(out var totalBytes) ? totalBytes : GetDriveBytesUsingDu(directoryPath);
         }
 
         public ulong? GetPathTotalBytes()
@@ -48,9 +73,9 @@ namespace Octopus.Tentacle.Kubernetes
 
             var lineWithDirectory = stdOut.LastOrDefault(outputLine => outputLine.Contains(directoryPath));
 
-            if (ulong.TryParse(lineWithDirectory?.Split('\t')[0], out var bytes))
-                return bytes;
-            return null;
+            if (!ulong.TryParse(lineWithDirectory?.Split('\t')[0], out var bytes)) return null;
+            directoryInformationCache.SetCache(bytes);
+            return bytes;
         }
     }
 }
