@@ -151,16 +151,17 @@ public class KubernetesAgentInstaller
     async Task<string> GetAgentThumbprint()
     {
         string? thumbprint = null;
-        var sb = new StringBuilder();
-        var sprLogger = new LoggerConfiguration()
-            .WriteTo.Logger(logger)
-            .WriteTo.StringBuilder(sb)
-            .MinimumLevel.Debug()
-            .CreateLogger();
 
         var attempt = 0;
         do
         {
+            var sb = new StringBuilder();
+            var sprLogger = new LoggerConfiguration()
+                .WriteTo.Logger(logger)
+                .WriteTo.StringBuilder(sb)
+                .MinimumLevel.Debug()
+                .CreateLogger();
+            
             var exitCode = SilentProcessRunner.ExecuteCommand(
                 kubeCtlExePath,
                 //get the generated thumbprint from the config map
