@@ -4,9 +4,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Tentacle.CommonTestUtils;
-using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.CommonTestUtils.Diagnostics;
-using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util;
@@ -48,7 +46,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             // Ensure Workspace Cleaning Has Run
             var existingWorkspaceDirectory = GivenExistingWorkspaceExists(existingHomeDirectory);
-            await File.WriteAllTextAsync(ScriptWorkspace.GetBootstrapScriptFilePath(existingWorkspaceDirectory), "Existing log file");
+            await File.WriteAllTextAsync(GetBootstrapScriptFilePath(existingWorkspaceDirectory), "Existing log file");
             await Wait.For(() => !Directory.Exists(existingWorkspaceDirectory), 
                 TimeSpan.FromSeconds(60),
                 () => throw new Exception("Workspace directory did not get deleted"),
@@ -120,7 +118,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var existingWorkspaceDirectoryWithoutLogFile = GivenExistingWorkspaceExists(existingHomeDirectory);
             var existingWorkspaceDirectoryWithLogFile = GivenExistingWorkspaceExists(existingHomeDirectory);
-            await File.WriteAllTextAsync(ScriptWorkspace.GetBootstrapScriptFilePath(existingWorkspaceDirectoryWithLogFile), "Existing log file");
+            await File.WriteAllTextAsync(GetBootstrapScriptFilePath(existingWorkspaceDirectoryWithLogFile), "Existing log file");
 
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacle(b =>
@@ -147,7 +145,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var existingHomeDirectory = new TemporaryDirectory();
 
             var existingWorkspaceDirectory = GivenExistingWorkspaceExists(existingHomeDirectory);
-            await File.WriteAllTextAsync(ScriptWorkspace.GetBootstrapScriptFilePath(existingWorkspaceDirectory), "Existing log file");
+            await File.WriteAllTextAsync(GetBootstrapScriptFilePath(existingWorkspaceDirectory), "Existing log file");
 
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacle(b =>
@@ -176,6 +174,13 @@ namespace Octopus.Tentacle.Tests.Integration
             var existingWorkspaceDirectory = GetWorkspaceDirectoryPath(existingHomeDirectory.DirectoryPath, Guid.NewGuid().ToString());
             Directory.CreateDirectory(existingWorkspaceDirectory);
             return existingWorkspaceDirectory;
+        }
+
+        static string GetBootstrapScriptFilePath(string workingDirectory)
+        {
+            return PlatformDetection.IsRunningOnWindows
+                ? ScriptWorkspace.GetBootstrapScriptFilePath(workingDirectory)
+                : BashScriptWorkspace.GetBashBootstrapScriptFilePath(workingDirectory);
         }
     }
 }
