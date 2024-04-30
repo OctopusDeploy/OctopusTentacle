@@ -203,7 +203,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
                 command.Arguments,
                 command.Isolation,
                 command.ScriptIsolationMutexTimeout,
-                command.IsolationMutexName,
+                command.IsolationMutexName ?? "RunningScript", //In practice, this is never null due to the ExecuteScriptCommand.IsolationConfiguration.MutexName is not nullable
                 command.PodImageConfiguration?.ToV1(),
                 command.ScriptPodServiceAccountName,
                 command.Scripts,

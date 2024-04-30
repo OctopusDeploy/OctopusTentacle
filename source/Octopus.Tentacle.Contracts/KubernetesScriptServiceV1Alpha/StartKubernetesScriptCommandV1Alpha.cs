@@ -47,7 +47,7 @@ namespace Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha
 
         public ScriptIsolationLevel Isolation { get; }
         public TimeSpan ScriptIsolationMutexTimeout { get; }
-        public string IsolationMutexName { get; }
+        public string? IsolationMutexName { get; }
         public PodImageConfiguration? PodImageConfiguration { get; }
 
         public Dictionary<ScriptType, string> Scripts { get; } = new();
