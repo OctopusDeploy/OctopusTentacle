@@ -30,17 +30,16 @@ namespace Octopus.Tentacle.Scripts
             fileSystem.EnsureDiskHasEnoughFreeSpace(workingDirectory);
         }
 
-        protected virtual string BootstrapScriptName => "Bootstrap.ps1";
+        const string BootstrapScriptFileName = "Bootstrap.ps1";
+        protected virtual string BootstrapScriptName => BootstrapScriptFileName;
 
         const string LogFileName = "Output.log";
-        public string LogFilePath => GetLogFilePath(WorkingDirectory);
+        public string LogFilePath => Path.Combine(WorkingDirectory, LogFileName);
         public void WriteFile(string filename, string contents) => FileSystem.OverwriteFile(ResolvePath(filename), contents);
 
         public void CopyFile(string sourceFilePath, string destFileName, bool overwrite) => FileSystem.CopyFile(sourceFilePath, ResolvePath(destFileName), overwrite);
 
-        public Stream OpenFileStreamForReading(string filename) => FileSystem.OpenFile(ResolvePath(filename), FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-
-        public static string GetLogFilePath(string workingDirectory) => Path.Combine(workingDirectory, LogFileName);
+        public static string GetBootstrapScriptFilePath(string workingDirectory) => Path.Combine(workingDirectory, BootstrapScriptFileName);
 
         public ScriptTicket ScriptTicket { get; }
 
