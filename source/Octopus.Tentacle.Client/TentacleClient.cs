@@ -91,6 +91,7 @@ namespace Octopus.Tentacle.Client
                 scriptServiceV1 = tentacleServicesDecoratorFactory.Decorate(scriptServiceV1);
                 scriptServiceV2 = tentacleServicesDecoratorFactory.Decorate(scriptServiceV2);
                 kubernetesScriptServiceV1Alpha = tentacleServicesDecoratorFactory.Decorate(kubernetesScriptServiceV1Alpha);
+                kubernetesScriptServiceV1 = tentacleServicesDecoratorFactory.Decorate(kubernetesScriptServiceV1);
                 clientFileTransferServiceV1 = tentacleServicesDecoratorFactory.Decorate(clientFileTransferServiceV1);
                 capabilitiesServiceV2 = tentacleServicesDecoratorFactory.Decorate(capabilitiesServiceV2);
             }
