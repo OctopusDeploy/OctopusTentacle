@@ -53,17 +53,17 @@ namespace Octopus.Tentacle.Maintenance
                         continue;
                     }
 
-                    var workspaceLogFilePath = workspace.LogFilePath;
+                    var bootstrapScriptFilePath = workspace.BootstrapScriptFilePath;
 
-                    var outputLogFileLastWriteTimeUtc = File.GetLastWriteTimeUtc(workspaceLogFilePath);
-                    if (outputLogFileLastWriteTimeUtc >= deleteWorkspacesOlderThanDateTimeUtc)
+                    var bootstrapScriptLastWriteTimeUtc = File.GetLastWriteTimeUtc(bootstrapScriptFilePath);
+                    if (bootstrapScriptLastWriteTimeUtc >= deleteWorkspacesOlderThanDateTimeUtc)
                     {
                         continue;
-                    }
+                    }   
 
                     // If workspaceLogFilePath does not exist, then outputLogFileLastWriteTimeUtc will be in the year 1601 (and therefore we attempt to delete it)
                     // This will happen if we check the workspace while it is being deleted. So only delete if we are not currently deleting the workspace (i.e. the log file still exists)
-                    if (!File.Exists(workspaceLogFilePath))
+                    if (!File.Exists(bootstrapScriptFilePath))
                     {
                         continue;
                     }

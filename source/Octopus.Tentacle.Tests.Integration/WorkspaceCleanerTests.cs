@@ -178,9 +178,9 @@ namespace Octopus.Tentacle.Tests.Integration
 
         static string GetBootstrapScriptFilePath(string workingDirectory)
         {
-            return PlatformDetection.IsRunningOnWindows
-                ? ScriptWorkspace.GetBootstrapScriptFilePath(workingDirectory)
-                : BashScriptWorkspace.GetBashBootstrapScriptFilePath(workingDirectory);
+            return !PlatformDetection.IsRunningOnWindows
+                ? BashScriptWorkspace.GetBashBootstrapScriptFilePath(workingDirectory)
+                : ScriptWorkspace.GetBootstrapScriptFilePath(workingDirectory);
         }
     }
 }
