@@ -39,8 +39,8 @@ WORKDIR /
 RUN rm -rf /tmp/*
 
 # This is to run on Openshift with a random user
-RUN chgrp -R 0 /opt /usr /.dotnet && \
-    chmod -R g=u /opt /usr /.dotnet
+RUN chgrp -R 0 /opt /usr && \
+    chmod -R g=u /opt /usr
 
 RUN chgrp 0 /etc && \
     chmod g=u /etc
