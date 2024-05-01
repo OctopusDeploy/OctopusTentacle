@@ -87,7 +87,10 @@ namespace Octopus.Tentacle.Maintenance
 
         static bool? IsWorkspaceFileOlderThanCheckTime(string filePath, DateTime checkTime)
         {
-            if (!File.Exists(filePath)) return null;
+            if (!File.Exists(filePath))
+            {
+                return null;
+            }
             
             //find the last time the file was written and see if that is more than 
             var lastWriteTimeUtc = File.GetLastWriteTimeUtc(filePath);
