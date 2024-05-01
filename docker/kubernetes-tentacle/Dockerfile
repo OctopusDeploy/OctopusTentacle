@@ -27,20 +27,22 @@ WORKDIR /tmp
 
 # Install Tentacle
 COPY _artifacts/docker/tentacle_${BUILD_NUMBER}_${TARGETOS}-${TARGETARCH}${TARGETVARIANT}.deb /tmp/tentacle.deb
-RUN apt-get update
-RUN apt install ./tentacle.deb -y
-RUN apt-get clean
-RUN apt install curl -y
-RUN rm -rf /var/lib/apt/lists/*
+RUN apt-get update  \
+    && apt install ./tentacle.deb curl -y  \
+    && apt-get clean  \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /
 
 # We know this won't reduce the image size at all. It's just to make the filesystem a little tidier.
 RUN rm -rf /tmp/*
 
+# Make the /.dotnet directory for certificate store purposes
+RUN mkdir /.dotnet
+
 # This is to run on Openshift with a random user
-RUN chgrp -R 0 /opt /usr && \
-    chmod -R g=u /opt /usr
+RUN chgrp -R 0 /opt /usr /.dotnet && \
+    chmod -R g=u /opt /usr /.dotnet
 
 RUN chgrp 0 /etc && \
     chmod g=u /etc
