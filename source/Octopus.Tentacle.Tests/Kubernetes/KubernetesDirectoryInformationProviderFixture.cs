@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
 using FluentAssertions;
 using NSubstitute;
 using NSubstitute.Extensions;
 using NUnit.Framework;
 using Octopus.Diagnostics;
+using Octopus.Tentacle.CommonTestUtils.Diagnostics;
 using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Util;
 
@@ -60,6 +62,33 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             sut.GetPathUsedBytes("/octopus").Should().Be(usedSize);
         }
         
+        [Test]
+        public void IfDuFailsWeLogCorrectly()
+        {
+            const ulong usedSize = 500 * Megabyte;
+            var systemLog = new InMemoryLog();
+            var spr = Substitute.For<ISilentProcessRunner>();
+
+            spr.When(x => x.ExecuteCommand("du", "-s -B 1 /octopus", "/", Arg.Any<Action<string>>(), Arg.Any<Action<string>>()))
+                .Do(x =>
+                {
+                    // stdout
+                    x.ArgAt<Action<string>>(3).Invoke("500\t/octopus");
+                    x.ArgAt<Action<string>>(3).Invoke($"{usedSize}\t/octopus");
+                    
+                    // stderr
+                    x.ArgAt<Action<string>>(4).Invoke("no permission for foo");
+                    x.ArgAt<Action<string>>(4).Invoke("also no permission for bar");
+                });
+            spr.ReturnsForAll(1);
+            var sut = new KubernetesDirectoryInformationProvider(systemLog, spr);
+            sut.GetPathUsedBytes("/octopus").Should().Be(usedSize);
+            
+            systemLog.GetLogsForCategory(LogCategory.Warning).Should().Contain("Could not reliably get disk space using du. Getting best approximation...");
+            systemLog.GetLogsForCategory(LogCategory.Info).Should().Contain($"Du stdout returned 500\t/octopus, {usedSize}\t/octopus");
+            systemLog.GetLogsForCategory(LogCategory.Info).Should().Contain("Du stderr returned no permission for foo, also no permission for bar");
+        }
+
         [Test]
         public void IfDuFailsCompletelyReturnNull()
         {
