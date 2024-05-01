@@ -52,18 +52,18 @@ namespace Octopus.Tentacle.Maintenance
                     {
                         continue;
                     }
+                    
+                    //First look to see if there is a log file and if we can delete the workspace based on that
+                    var shouldDeleteWorkspace = IsWorkspaceFileOlderThanCheckTime(workspace.LogFilePath, deleteWorkspacesOlderThanDateTimeUtc);
 
-                    var bootstrapScriptFilePath = workspace.BootstrapScriptFilePath;
-
-                    var bootstrapScriptLastWriteTimeUtc = File.GetLastWriteTimeUtc(bootstrapScriptFilePath);
-                    if (bootstrapScriptLastWriteTimeUtc >= deleteWorkspacesOlderThanDateTimeUtc)
+                    if (!shouldDeleteWorkspace)
                     {
-                        continue;
-                    }   
-
-                    // If workspaceLogFilePath does not exist, then outputLogFileLastWriteTimeUtc will be in the year 1601 (and therefore we attempt to delete it)
-                    // This will happen if we check the workspace while it is being deleted. So only delete if we are not currently deleting the workspace (i.e. the log file still exists)
-                    if (!File.Exists(bootstrapScriptFilePath))
+                        //if not, fallback on checking the bootstrap script
+                        //we do this because the Kubernetes Agent does not write log files
+                        shouldDeleteWorkspace= IsWorkspaceFileOlderThanCheckTime(workspace.BootstrapScriptFilePath, deleteWorkspacesOlderThanDateTimeUtc);
+                    }
+                    
+                    if(!shouldDeleteWorkspace)
                     {
                         continue;
                     }
@@ -85,6 +85,20 @@ namespace Octopus.Tentacle.Maintenance
             {
                 log.Verbose("No workspaces found that need to be deleted.");
             }
+        }
+
+        static bool IsWorkspaceFileOlderThanCheckTime(string filePath, DateTime checkTime)
+        {
+            //find the last time the file was written and see if that is more than 
+            var lastWriteTimeUtc = File.GetLastWriteTimeUtc(filePath);
+            if (lastWriteTimeUtc >= checkTime)
+            {
+                return false;
+            }
+
+            // If filePath does not exist, then lastWriteTimeUtc will be in the year 1601 (and therefore we attempt to delete it)
+            // This will happen if we check the workspace while it is being deleted. So only delete if we are not currently deleting the workspace (i.e. the log file still exists)
+            return File.Exists(filePath);
         }
     }
 }

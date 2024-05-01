@@ -34,11 +34,12 @@ namespace Octopus.Tentacle.Scripts
         protected virtual string BootstrapScriptName => BootstrapScriptFileName;
 
         const string LogFileName = "Output.log";
-        public string LogFilePath => Path.Combine(WorkingDirectory, LogFileName);
+        public string LogFilePath => GetLogFilePath(WorkingDirectory);
         public void WriteFile(string filename, string contents) => FileSystem.OverwriteFile(ResolvePath(filename), contents);
 
         public void CopyFile(string sourceFilePath, string destFileName, bool overwrite) => FileSystem.CopyFile(sourceFilePath, ResolvePath(destFileName), overwrite);
 
+        public static string GetLogFilePath(string workingDirectory) => Path.Combine(workingDirectory, LogFileName);
         public static string GetBootstrapScriptFilePath(string workingDirectory) => Path.Combine(workingDirectory, BootstrapScriptFileName);
 
         public ScriptTicket ScriptTicket { get; }
