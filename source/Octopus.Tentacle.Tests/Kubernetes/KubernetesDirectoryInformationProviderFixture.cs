@@ -81,7 +81,9 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         {
             var spr = Substitute.For<ISilentProcessRunner>();
             spr.ReturnsForAll(1);
-            var memoryCache = new MemoryCache(new MemoryCacheOptions());
+            var baseTime = DateTimeOffset.UtcNow;
+            var clock = new TestClock(baseTime);
+            var memoryCache = new MemoryCache(new MemoryCacheOptions(){ Clock = clock});
             var sut = new KubernetesDirectoryInformationProvider(Substitute.For<ISystemLog>(), spr, memoryCache);
             sut.GetPathUsedBytes("/octopus").Should().Be(null);
             
@@ -92,7 +94,8 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                     x.ArgAt<Action<string>>(3).Invoke($"123\t/octopus");
                     x.ArgAt<Action<string>>(3).Invoke($"{usedSize}\t/octopus");
                 });
-            
+            clock.UtcNow = baseTime + TimeSpan.FromSeconds(29);
+
             sut.GetPathUsedBytes("/octopus").Should().Be(null);
         }
         
