@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Octopus.Client.Extensions;
 using Microsoft.Extensions.Caching.Memory;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Util;
@@ -59,8 +60,8 @@ namespace Octopus.Tentacle.Kubernetes
             if (exitCode != 0)
             {
                 log.Warn("Could not reliably get disk space using du. Getting best approximation...");
-                log.Info($"Du stdout returned {stdOut}");
-                log.Info($"Du stderr returned {stdErr}");
+                log.Info($"Du stdout returned {stdOut.CommaSeparate()}");
+                log.Info($"Du stderr returned {stdErr.CommaSeparate()}");
             }
 
             var lineWithDirectory = stdOut.LastOrDefault(outputLine => outputLine.Contains(directoryPath));

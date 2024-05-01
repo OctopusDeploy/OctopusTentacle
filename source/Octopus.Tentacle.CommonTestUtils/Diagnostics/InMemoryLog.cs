@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -34,6 +35,11 @@ namespace Octopus.Tentacle.CommonTestUtils.Diagnostics
         public string GetLog()
         {
             return events.Aggregate(new StringBuilder(), (sb, e) => sb.AppendLine($"{e.Category} {e.MessageText} {e.Error}"), sb => sb.ToString());
+        }
+
+        public IReadOnlyList<string?> GetLogsForCategory(LogCategory category)
+        {
+            return events.Where(e => e.Category == category).Select(e => e.MessageText.ToString()).ToArray();
         }
 
         public void AssertContains(string partialString)
