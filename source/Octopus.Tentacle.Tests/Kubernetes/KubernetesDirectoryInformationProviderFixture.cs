@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using FluentAssertions;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Internal;
 using NSubstitute;
 using NSubstitute.Extensions;
 using NUnit.Framework;
@@ -88,7 +89,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             spr.When(x => x.ExecuteCommand("du", "-s -B 1 /octopus", "/", Arg.Any<Action<string>>(), Arg.Any<Action<string>>()))
                 .Do(x =>
                 {
-                    x.ArgAt<Action<string>>(3).Invoke($"500\t/octopus");
+                    x.ArgAt<Action<string>>(3).Invoke($"123\t/octopus");
                     x.ArgAt<Action<string>>(3).Invoke($"{usedSize}\t/octopus");
                 });
             
@@ -96,11 +97,13 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         }
         
         [Test]
-        public void DuCacheExpiresAfter15Seconds()
+        public void DuCacheExpiresAfter30Seconds()
         {
             var spr = Substitute.For<ISilentProcessRunner>();
             spr.ReturnsForAll(1);
-            var memoryCache = new MemoryCache(new MemoryCacheOptions());
+            var baseTime = DateTimeOffset.UtcNow;
+            var clock = new TestClock(baseTime);
+            var memoryCache = new MemoryCache(new MemoryCacheOptions(){ Clock = clock});
             var sut = new KubernetesDirectoryInformationProvider(Substitute.For<ISystemLog>(), spr, memoryCache);
             sut.GetPathUsedBytes("/octopus").Should().Be(null);
             
@@ -108,14 +111,24 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             spr.When(x => x.ExecuteCommand("du", "-s -B 1 /octopus", "/", Arg.Any<Action<string>>(), Arg.Any<Action<string>>()))
                 .Do(x =>
                 {
-                    x.ArgAt<Action<string>>(3).Invoke($"500\t/octopus");
+                    x.ArgAt<Action<string>>(3).Invoke($"123\t/octopus");
                     x.ArgAt<Action<string>>(3).Invoke($"{usedSize}\t/octopus");
                 });
-            
-            Thread.Sleep(TimeSpan.FromSeconds(30));
+
+            clock.UtcNow = baseTime + TimeSpan.FromSeconds(30);
             
             sut.GetPathUsedBytes("/octopus").Should().Be(usedSize);
         }
 
+    }
+
+    public class TestClock : ISystemClock
+    {
+        public TestClock(DateTimeOffset utcNow)
+        {
+            UtcNow = utcNow;
+        }
+
+        public DateTimeOffset UtcNow { get; set; }
     }
 }

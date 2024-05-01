@@ -12,11 +12,22 @@ namespace Octopus.Tentacle.Kubernetes
         public ulong? GetPathUsedBytes(string directoryPath);
         public ulong? GetPathTotalBytes();
     }
+    
     public class KubernetesDirectoryInformationProvider : IKubernetesDirectoryInformationProvider
     {
         readonly ISystemLog log;
         readonly ISilentProcessRunner silentProcessRunner;
         readonly IMemoryCache directoryInformationCache;
+        
+        //30s gives us fairly up to date information, but doesn't impact performance too much.
+        //For 50 concurrent Cloud deployments:
+        //No cache: 30min ea.
+        //Cache w/15s expiry: 15min ea.
+        //Cache w/30s expiry: 11min ea.
+        //Cache w/60s expiry: 9min ea.
+        //No calls to `du` at all: 8min ea.
+        static readonly TimeSpan CacheExpiry = TimeSpan.FromSeconds(30);
+
         public KubernetesDirectoryInformationProvider(ISystemLog log, ISilentProcessRunner silentProcessRunner, IMemoryCache directoryInformationCache)
         {
             this.log = log;
@@ -28,7 +39,7 @@ namespace Octopus.Tentacle.Kubernetes
         {
             return directoryInformationCache.GetOrCreate(directoryPath, e =>
             {
-                e.SetAbsoluteExpiration(TimeSpan.FromSeconds(30));
+                e.SetAbsoluteExpiration(CacheExpiry);
                 return GetDriveBytesUsingDu(directoryPath);
             });
         }
