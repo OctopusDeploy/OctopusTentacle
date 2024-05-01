@@ -37,13 +37,18 @@ WORKDIR /
 # We know this won't reduce the image size at all. It's just to make the filesystem a little tidier.
 RUN rm -rf /tmp/*
 
-# Make the /.dotnet directory for certificate store purposes
+# Make the /.dotnet directory so that we can ensure ownership for the
+# certificate store 
 RUN mkdir /.dotnet
 
-# This is to run on Openshift with a random user
+# By default, OpenShift uses random UIDs 
+# This introduces support for it as per
+# https://docs.openshift.com/container-platform/4.15/openshift_images/create-images.html#use-uid_create-images
 RUN chgrp -R 0 /opt /usr /.dotnet && \
     chmod -R g=u /opt /usr /.dotnet
 
+# The same as above, but we shouldn't recursively own /etc, as it would add
+# ownership to system files like /etc/passwd
 RUN chgrp 0 /etc && \
     chmod g=u /etc
 
