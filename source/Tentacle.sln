@@ -339,7 +339,6 @@ Global
 		{683AFF0C-05F4-40E4-AEB7-5FD6037C95A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{683AFF0C-05F4-40E4-AEB7-5FD6037C95A6}.Release|Any CPU.Build.0 = Release|Any CPU
 		{683AFF0C-05F4-40E4-AEB7-5FD6037C95A6}.Release-net48-win|Any CPU.ActiveCfg = Debug|Any CPU
-		{683AFF0C-05F4-40E4-AEB7-5FD6037C95A6}.Release-net48-win|Any CPU.Build.0 = Debug|Any CPU
 		{683AFF0C-05F4-40E4-AEB7-5FD6037C95A6}.Release-net6.0-linux-arm|Any CPU.ActiveCfg = Debug|Any CPU
 		{683AFF0C-05F4-40E4-AEB7-5FD6037C95A6}.Release-net6.0-linux-arm|Any CPU.Build.0 = Debug|Any CPU
 		{683AFF0C-05F4-40E4-AEB7-5FD6037C95A6}.Release-net6.0-linux-arm64|Any CPU.ActiveCfg = Debug|Any CPU
