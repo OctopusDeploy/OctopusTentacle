@@ -1,9 +1,8 @@
 using System;
-using System.Collections.Generic;
 using Octopus.Tentacle.Client;
 using Octopus.Tentacle.Contracts.ClientServices;
 
-namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
+namespace Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators
 {
     public class CombiningTentacleServiceDecoratorFactory : ITentacleServiceDecoratorFactory
     {

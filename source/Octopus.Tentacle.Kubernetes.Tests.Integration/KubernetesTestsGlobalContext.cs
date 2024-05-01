@@ -1,5 +1,5 @@
 ﻿using Octopus.Tentacle.CommonTestUtils;
-using Octopus.Tentacle.Kubernetes.Tests.Integration.Support.Logging;
+using Octopus.Tentacle.Tests.Integration.Common.Logging;
 
 namespace Octopus.Tentacle.Kubernetes.Tests.Integration;
 

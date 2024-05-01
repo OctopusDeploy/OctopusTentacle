@@ -8,8 +8,9 @@ using NUnit.Framework;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
+using Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators;
+using Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators.Proxies;
 using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
-using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {

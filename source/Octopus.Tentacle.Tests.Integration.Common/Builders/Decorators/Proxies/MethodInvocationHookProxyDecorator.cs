@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Reflection;
-using System.Threading.Tasks;
 
-namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies
+namespace Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators.Proxies
 {
     public delegate Task PreMethodInvocationHook<in TService, in TRequest>(TService service, TRequest request);
     public delegate Task PostMethodInvocationHook<in TService, in TResponse>(TService service, TResponse response);

@@ -1,10 +1,9 @@
 using System;
-using System.Collections.Generic;
 using Octopus.Tentacle.Client;
 using Octopus.Tentacle.Contracts.ClientServices;
-using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies;
+using Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators.Proxies;
 
-namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
+namespace Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators
 {
     public delegate T Decorator<T>(T service);
 

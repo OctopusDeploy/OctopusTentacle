@@ -1,9 +1,10 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using Halibut;
 using Halibut.Diagnostics;
 using Halibut.Logging;
 
-namespace Octopus.Tentacle.Kubernetes.Tests.Integration.Support.Logging;
+namespace Octopus.Tentacle.Tests.Integration.Common.Logging;
 
 public class TestContextLogFactory : ILogFactory
 {

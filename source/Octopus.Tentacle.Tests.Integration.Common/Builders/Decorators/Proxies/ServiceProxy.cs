@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
-using System.Threading.Tasks;
 
-namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies
+namespace Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators.Proxies
 {
     public abstract class ServiceProxy : DispatchProxyAsync
     {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies
+namespace Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators.Proxies
 {
     public static class RecordMethodUsagesExtensionMethods
     {

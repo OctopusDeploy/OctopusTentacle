@@ -1,8 +1,9 @@
-﻿using Halibut.Diagnostics.LogCreators;
+﻿using System;
 using Halibut.Diagnostics;
+using Halibut.Diagnostics.LogCreators;
 using Halibut.Logging;
 
-namespace Octopus.Tentacle.Kubernetes.Tests.Integration.Support.Logging;
+namespace Octopus.Tentacle.Tests.Integration.Common.Logging;
 
 public class TestContextLogCreator : ICreateNewILog
 {

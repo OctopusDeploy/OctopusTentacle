@@ -30,6 +30,7 @@
     <ItemGroup>
       <ProjectReference Include="..\Octopus.Tentacle.Client\Octopus.Tentacle.Client.csproj" />
       <ProjectReference Include="..\Octopus.Tentacle.CommonTestUtils\Octopus.Tentacle.CommonTestUtils.csproj" />
+      <ProjectReference Include="..\Octopus.Tentacle.Tests.Integration.Common\Octopus.Tentacle.Tests.Integration.Common.csproj" />
       <ProjectReference Include="..\Octopus.Tentacle\Octopus.Tentacle.csproj" />
     </ItemGroup>
 

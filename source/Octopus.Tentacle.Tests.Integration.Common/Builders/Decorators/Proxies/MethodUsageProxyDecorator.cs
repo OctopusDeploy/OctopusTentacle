@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Reflection;
-using System.Threading.Tasks;
 
-namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies
+namespace Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators.Proxies
 {
     public class MethodUsageProxyDecorator : ServiceProxy
     {

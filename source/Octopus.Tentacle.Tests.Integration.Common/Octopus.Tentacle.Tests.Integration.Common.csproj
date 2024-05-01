@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Folder Include="Builders\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Octopus.Tentacle.Client\Octopus.Tentacle.Client.csproj" />
+      <ProjectReference Include="..\Octopus.Tentacle.CommonTestUtils\Octopus.Tentacle.CommonTestUtils.csproj" />
+    </ItemGroup>
+
+</Project>
