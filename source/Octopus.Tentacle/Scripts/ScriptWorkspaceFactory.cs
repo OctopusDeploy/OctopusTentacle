@@ -143,8 +143,20 @@ namespace Octopus.Tentacle.Scripts
 
         static bool IsUncompletedWorkspaceDirectory(string workspaceDirectory)
         {
+            //first we look for an output log. If there is one, the workspace is uncompleted 
             var outputLogFilePath = ScriptWorkspace.GetLogFilePath(workspaceDirectory);
-            return File.Exists(outputLogFilePath);
+            if (File.Exists(outputLogFilePath))
+            {
+                return true;
+            }
+            
+            // if we don't have a script log, then we look for the presence of a bootstrap script
+            // the Kubernetes Agent does not write to the script log file, so this is a valid fallback
+            var bootstrapScriptFilePath = !PlatformDetection.IsRunningOnWindows
+                ? BashScriptWorkspace.GetBashBootstrapScriptFilePath(workspaceDirectory)
+                : ScriptWorkspace.GetBootstrapScriptFilePath(workspaceDirectory);
+            
+            return File.Exists(bootstrapScriptFilePath);
         }
 
         IScriptWorkspace CreateWorkspaceFromWorkspaceDirectory(string workspaceDirectory)
