@@ -1,14 +1,11 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Diagnostics;
-using Octopus.Tentacle.Communications;
 using Octopus.Tentacle.Scripts;
-using Octopus.Tentacle.Services.Scripts;
 using Octopus.Time;
 
 namespace Octopus.Tentacle.Maintenance
@@ -52,18 +49,8 @@ namespace Octopus.Tentacle.Maintenance
                     {
                         continue;
                     }
-                    
-                    //First look to see if there is a log file and if we can delete the workspace based on that
-                    var shouldDeleteWorkspace = IsWorkspaceFileOlderThanCheckTime(workspace.LogFilePath, deleteWorkspacesOlderThanDateTimeUtc);
 
-                    if (!shouldDeleteWorkspace)
-                    {
-                        //if not, fallback on checking the bootstrap script
-                        //we do this because the Kubernetes Agent does not write log files
-                        shouldDeleteWorkspace= IsWorkspaceFileOlderThanCheckTime(workspace.BootstrapScriptFilePath, deleteWorkspacesOlderThanDateTimeUtc);
-                    }
-                    
-                    if(!shouldDeleteWorkspace)
+                    if(!DoWorkspaceFilesLookOldEnoughToDelete(workspace, deleteWorkspacesOlderThanDateTimeUtc))
                     {
                         continue;
                     }
@@ -87,8 +74,21 @@ namespace Octopus.Tentacle.Maintenance
             }
         }
 
-        static bool IsWorkspaceFileOlderThanCheckTime(string filePath, DateTime checkTime)
+        static bool DoWorkspaceFilesLookOldEnoughToDelete(IScriptWorkspace workspace, DateTime deleteWorkspacesOlderThanDateTimeUtc)
         {
+            
+            return
+                //First look to see if there is a log file and if we can delete the workspace based on that
+                IsWorkspaceFileOlderThanCheckTime(workspace.LogFilePath, deleteWorkspacesOlderThanDateTimeUtc)
+                // Fall back to just the boostrap script file, in k8s agent a log file is never created.
+                ?? IsWorkspaceFileOlderThanCheckTime(workspace.BootstrapScriptFilePath, deleteWorkspacesOlderThanDateTimeUtc)
+                ?? false;
+        }
+
+        static bool? IsWorkspaceFileOlderThanCheckTime(string filePath, DateTime checkTime)
+        {
+            if (!File.Exists(filePath)) return null;
+            
             //find the last time the file was written and see if that is more than 
             var lastWriteTimeUtc = File.GetLastWriteTimeUtc(filePath);
             if (lastWriteTimeUtc >= checkTime)
@@ -96,9 +96,7 @@ namespace Octopus.Tentacle.Maintenance
                 return false;
             }
 
-            // If filePath does not exist, then lastWriteTimeUtc will be in the year 1601 (and therefore we attempt to delete it)
-            // This will happen if we check the workspace while it is being deleted. So only delete if we are not currently deleting the workspace (i.e. the log file still exists)
-            return File.Exists(filePath);
+            return true;
         }
     }
 }
