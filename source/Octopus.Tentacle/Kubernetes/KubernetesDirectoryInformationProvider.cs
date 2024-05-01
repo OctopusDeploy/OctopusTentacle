@@ -28,7 +28,7 @@ namespace Octopus.Tentacle.Kubernetes
         {
             return directoryInformationCache.GetOrCreate(directoryPath, e =>
             {
-                e.SetAbsoluteExpiration(TimeSpan.FromSeconds(15));
+                e.SetAbsoluteExpiration(TimeSpan.FromSeconds(30));
                 return GetDriveBytesUsingDu(directoryPath);
             });
         }

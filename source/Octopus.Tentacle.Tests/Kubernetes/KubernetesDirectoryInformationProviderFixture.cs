@@ -112,7 +112,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                     x.ArgAt<Action<string>>(3).Invoke($"{usedSize}\t/octopus");
                 });
             
-            Thread.Sleep(TimeSpan.FromSeconds(15));
+            Thread.Sleep(TimeSpan.FromSeconds(30));
             
             sut.GetPathUsedBytes("/octopus").Should().Be(usedSize);
         }
