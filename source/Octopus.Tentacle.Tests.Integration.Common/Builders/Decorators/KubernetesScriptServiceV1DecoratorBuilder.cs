@@ -1,10 +1,9 @@
 using System;
-using System.Threading.Tasks;
 using Halibut.ServiceModel;
 using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
 
-namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
+namespace Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators
 {
     public class KubernetesScriptServiceV1DecoratorBuilder
     {
