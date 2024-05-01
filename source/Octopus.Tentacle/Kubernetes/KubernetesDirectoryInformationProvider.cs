@@ -12,24 +12,25 @@ namespace Octopus.Tentacle.Kubernetes
         public ulong? GetPathUsedBytes(string directoryPath);
         public ulong? GetPathTotalBytes();
     }
-    
     public class KubernetesDirectoryInformationProvider : IKubernetesDirectoryInformationProvider
     {
         readonly ISystemLog log;
         readonly ISilentProcessRunner silentProcessRunner;
         readonly IMemoryCache directoryInformationCache;
-        readonly MemoryCacheEntryOptions cacheEntryOptions;
         public KubernetesDirectoryInformationProvider(ISystemLog log, ISilentProcessRunner silentProcessRunner, IMemoryCache directoryInformationCache)
         {
             this.log = log;
             this.silentProcessRunner = silentProcessRunner;
             this.directoryInformationCache = directoryInformationCache;
-            cacheEntryOptions = new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(15));
         }
 
         public ulong? GetPathUsedBytes(string directoryPath)
         {
-            return directoryInformationCache.TryGetValue<ulong>(directoryPath, out var totalBytes) ? totalBytes : GetDriveBytesUsingDu(directoryPath);
+            return directoryInformationCache.GetOrCreate(directoryPath, e =>
+            {
+                e.SetAbsoluteExpiration(TimeSpan.FromSeconds(15));
+                return GetDriveBytesUsingDu(directoryPath);
+            });
         }
 
         public ulong? GetPathTotalBytes()
@@ -53,9 +54,9 @@ namespace Octopus.Tentacle.Kubernetes
 
             var lineWithDirectory = stdOut.LastOrDefault(outputLine => outputLine.Contains(directoryPath));
 
-            if (!ulong.TryParse(lineWithDirectory?.Split('\t')[0], out var bytes)) return null;
-            directoryInformationCache.Set(directoryPath, bytes, cacheEntryOptions);
-            return bytes;
+            if (ulong.TryParse(lineWithDirectory?.Split('\t')[0], out var bytes))
+                return bytes;
+            return null;
         }
     }
 }

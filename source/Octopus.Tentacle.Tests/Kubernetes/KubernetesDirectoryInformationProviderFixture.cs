@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using FluentAssertions;
 using Microsoft.Extensions.Caching.Memory;
 using NSubstitute;
@@ -73,5 +74,48 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             var sut = new KubernetesDirectoryInformationProvider(Substitute.For<ISystemLog>(), spr, memoryCache);
             sut.GetPathUsedBytes("/octopus").Should().Be(null);
         }
+        
+        [Test]
+        public void ReturnedValueShouldBeCached()
+        {
+            var spr = Substitute.For<ISilentProcessRunner>();
+            spr.ReturnsForAll(1);
+            var memoryCache = new MemoryCache(new MemoryCacheOptions());
+            var sut = new KubernetesDirectoryInformationProvider(Substitute.For<ISystemLog>(), spr, memoryCache);
+            sut.GetPathUsedBytes("/octopus").Should().Be(null);
+            
+            const ulong usedSize = 500 * Megabyte;
+            spr.When(x => x.ExecuteCommand("du", "-s -B 1 /octopus", "/", Arg.Any<Action<string>>(), Arg.Any<Action<string>>()))
+                .Do(x =>
+                {
+                    x.ArgAt<Action<string>>(3).Invoke($"500\t/octopus");
+                    x.ArgAt<Action<string>>(3).Invoke($"{usedSize}\t/octopus");
+                });
+            
+            sut.GetPathUsedBytes("/octopus").Should().Be(null);
+        }
+        
+        [Test]
+        public void DuCacheExpiresAfter15Seconds()
+        {
+            var spr = Substitute.For<ISilentProcessRunner>();
+            spr.ReturnsForAll(1);
+            var memoryCache = new MemoryCache(new MemoryCacheOptions());
+            var sut = new KubernetesDirectoryInformationProvider(Substitute.For<ISystemLog>(), spr, memoryCache);
+            sut.GetPathUsedBytes("/octopus").Should().Be(null);
+            
+            const ulong usedSize = 500 * Megabyte;
+            spr.When(x => x.ExecuteCommand("du", "-s -B 1 /octopus", "/", Arg.Any<Action<string>>(), Arg.Any<Action<string>>()))
+                .Do(x =>
+                {
+                    x.ArgAt<Action<string>>(3).Invoke($"500\t/octopus");
+                    x.ArgAt<Action<string>>(3).Invoke($"{usedSize}\t/octopus");
+                });
+            
+            Thread.Sleep(TimeSpan.FromSeconds(15));
+            
+            sut.GetPathUsedBytes("/octopus").Should().Be(usedSize);
+        }
+
     }
 }
