@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Caching.Memory;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Util;
 
@@ -11,45 +12,24 @@ namespace Octopus.Tentacle.Kubernetes
         public ulong? GetPathUsedBytes(string directoryPath);
         public ulong? GetPathTotalBytes();
     }
-
-    public class KubernetesDirectoryInformationCache
-    {
-        ulong? UsedBytes { get; set; }
-        DateTime LastUpdated { get; set; }
-        
-        public void SetCache(ulong? usedBytes)
-        {
-            UsedBytes = usedBytes;
-            LastUpdated = DateTime.Now;
-        }
-        
-        public bool TryGetCache(out ulong? usedBytes)
-        {
-            if (DateTime.Now - LastUpdated > TimeSpan.FromMinutes(1))
-            {
-                usedBytes = UsedBytes;
-                return false;
-            }
-            usedBytes = null;
-            return true;
-        }
-    }
-
+    
     public class KubernetesDirectoryInformationProvider : IKubernetesDirectoryInformationProvider
     {
         readonly ISystemLog log;
         readonly ISilentProcessRunner silentProcessRunner;
-        readonly KubernetesDirectoryInformationCache directoryInformationCache = new();
-
-        public KubernetesDirectoryInformationProvider(ISystemLog log, ISilentProcessRunner silentProcessRunner)
+        readonly IMemoryCache directoryInformationCache;
+        readonly MemoryCacheEntryOptions cacheEntryOptions;
+        public KubernetesDirectoryInformationProvider(ISystemLog log, ISilentProcessRunner silentProcessRunner, IMemoryCache directoryInformationCache)
         {
             this.log = log;
             this.silentProcessRunner = silentProcessRunner;
+            this.directoryInformationCache = directoryInformationCache;
+            cacheEntryOptions = new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(15));
         }
 
         public ulong? GetPathUsedBytes(string directoryPath)
         {
-            return directoryInformationCache.TryGetCache(out var totalBytes) ? totalBytes : GetDriveBytesUsingDu(directoryPath);
+            return directoryInformationCache.TryGetValue<ulong>(directoryPath, out var totalBytes) ? totalBytes : GetDriveBytesUsingDu(directoryPath);
         }
 
         public ulong? GetPathTotalBytes()
@@ -74,7 +54,7 @@ namespace Octopus.Tentacle.Kubernetes
             var lineWithDirectory = stdOut.LastOrDefault(outputLine => outputLine.Contains(directoryPath));
 
             if (!ulong.TryParse(lineWithDirectory?.Split('\t')[0], out var bytes)) return null;
-            directoryInformationCache.SetCache(bytes);
+            directoryInformationCache.Set(directoryPath, bytes, cacheEntryOptions);
             return bytes;
         }
     }

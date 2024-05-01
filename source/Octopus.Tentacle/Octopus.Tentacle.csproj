@@ -72,6 +72,7 @@
 		<PackageReference Include="TaskScheduler" Version="2.7.2" />
 		<PackageReference Include="Nito.AsyncEx" Version="5.0.0" />
 		<PackageReference Include="NLog" Version="5.0.4" />
+		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.0" />
 	</ItemGroup>
 	<ItemGroup>
 		<Compile Include="..\Solution Items\SolutionInfo.cs">

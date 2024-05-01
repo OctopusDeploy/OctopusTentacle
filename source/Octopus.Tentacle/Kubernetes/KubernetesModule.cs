@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using Microsoft.Extensions.Caching.Memory;
 using Octopus.Tentacle.Background;
 
 namespace Octopus.Tentacle.Kubernetes
@@ -24,6 +25,7 @@ namespace Octopus.Tentacle.Kubernetes
             builder.RegisterType<KubernetesOrphanedPodCleanerTask>().As<IKubernetesOrphanedPodCleanerTask>().As<IBackgroundTask>().SingleInstance();
             builder.RegisterType<KubernetesOrphanedPodCleaner>().As<IKubernetesOrphanedPodCleaner>().SingleInstance();
             builder.RegisterType<KubernetesDirectoryInformationProvider>().As<IKubernetesDirectoryInformationProvider>().SingleInstance();
+            builder.RegisterType<MemoryCache>().As<IMemoryCache>().SingleInstance();
 #if DEBUG
             builder.RegisterType<LocalMachineKubernetesClientConfigProvider>().As<IKubernetesClientConfigProvider>().SingleInstance();
 #else

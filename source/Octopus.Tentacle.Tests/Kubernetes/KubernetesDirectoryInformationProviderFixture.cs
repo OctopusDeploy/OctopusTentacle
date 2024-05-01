@@ -1,5 +1,6 @@
 using System;
 using FluentAssertions;
+using Microsoft.Extensions.Caching.Memory;
 using NSubstitute;
 using NSubstitute.Extensions;
 using NUnit.Framework;
@@ -24,7 +25,8 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                 {
                     x.ArgAt<Action<string>>(3).Invoke($"{usedSize}\t/octopus");
                 });
-            var sut = new KubernetesDirectoryInformationProvider(Substitute.For<ISystemLog>(), spr);
+            var memoryCache = new MemoryCache(new MemoryCacheOptions());
+            var sut = new KubernetesDirectoryInformationProvider(Substitute.For<ISystemLog>(), spr, memoryCache);
             sut.GetPathUsedBytes("/octopus").Should().Be(usedSize);
         }
         
@@ -40,7 +42,8 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                     x.ArgAt<Action<string>>(3).Invoke($"{usedSize}\t/octopus");
                     x.ArgAt<Action<string>>(3).Invoke($"{usedSize+1000}\tTotal");
                 });
-            var sut = new KubernetesDirectoryInformationProvider(Substitute.For<ISystemLog>(), spr);
+            var memoryCache = new MemoryCache(new MemoryCacheOptions());
+            var sut = new KubernetesDirectoryInformationProvider(Substitute.For<ISystemLog>(), spr, memoryCache);
             sut.GetPathUsedBytes("/octopus").Should().Be(usedSize);
         }
 
@@ -56,7 +59,8 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                     x.ArgAt<Action<string>>(3).Invoke($"{usedSize}\t/octopus");
                 });
             spr.ReturnsForAll(1);
-            var sut = new KubernetesDirectoryInformationProvider(Substitute.For<ISystemLog>(), spr);
+            var memoryCache = new MemoryCache(new MemoryCacheOptions());
+            var sut = new KubernetesDirectoryInformationProvider(Substitute.For<ISystemLog>(), spr, memoryCache);
             sut.GetPathUsedBytes("/octopus").Should().Be(usedSize);
         }
         
@@ -65,7 +69,8 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         {
             var spr = Substitute.For<ISilentProcessRunner>();
             spr.ReturnsForAll(1);
-            var sut = new KubernetesDirectoryInformationProvider(Substitute.For<ISystemLog>(), spr);
+            var memoryCache = new MemoryCache(new MemoryCacheOptions());
+            var sut = new KubernetesDirectoryInformationProvider(Substitute.For<ISystemLog>(), spr, memoryCache);
             sut.GetPathUsedBytes("/octopus").Should().Be(null);
         }
     }
