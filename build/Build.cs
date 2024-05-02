@@ -319,13 +319,14 @@ partial class Build : NukeBuild
             .SetProject(SourceDirectory / "Tentacle.sln")
             .SetConfiguration(configuration)
             .SetFramework(framework)
+            .SetSelfContained(true)
             .SetRuntime(runtimeId)
             .EnableNoRestore()
             .SetVersion(FullSemVer)
             .SetProcessArgumentConfigurator(args =>
             {
                 // There is a race condition in dotnet publish where building the entire solution
-                // can cause locking issues. The solution is to not run builds in parallel
+                // can cause locking issues depending on multiple CPUs. The solution is to not run builds in parallel
                 // https://github.com/dotnet/sdk/issues/9585
                 return args.Add("-maxcpucount:1");
             }));
