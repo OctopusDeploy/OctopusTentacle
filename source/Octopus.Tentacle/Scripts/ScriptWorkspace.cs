@@ -27,7 +27,6 @@ namespace Octopus.Tentacle.Scripts
             WorkingDirectory = workingDirectory;
             FileSystem = fileSystem;
             SensitiveValueMasker = sensitiveValueMasker;
-            fileSystem.EnsureDiskHasEnoughFreeSpace(workingDirectory);
         }
 
         const string BootstrapScriptFileName = "Bootstrap.ps1";
@@ -106,6 +105,11 @@ namespace Octopus.Tentacle.Scripts
         public IScriptLog CreateLog()
         {
             return new ScriptLog(ResolvePath(LogFileName), FileSystem, SensitiveValueMasker);
+        }
+
+        public void CheckReadiness()
+        {
+            FileSystem.EnsureDiskHasEnoughFreeSpace(WorkingDirectory);
         }
     }
 }
