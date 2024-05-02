@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using FluentAssertions;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Internal;
 using NSubstitute;
 using NSubstitute.Extensions;
 using NUnit.Framework;
@@ -26,7 +29,8 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                 {
                     x.ArgAt<Action<string>>(3).Invoke($"{usedSize}\t/octopus");
                 });
-            var sut = new KubernetesDirectoryInformationProvider(Substitute.For<ISystemLog>(), spr);
+            var memoryCache = new MemoryCache(new MemoryCacheOptions());
+            var sut = new KubernetesDirectoryInformationProvider(Substitute.For<ISystemLog>(), spr, memoryCache);
             sut.GetPathUsedBytes("/octopus").Should().Be(usedSize);
         }
         
@@ -42,7 +46,8 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                     x.ArgAt<Action<string>>(3).Invoke($"{usedSize}\t/octopus");
                     x.ArgAt<Action<string>>(3).Invoke($"{usedSize+1000}\tTotal");
                 });
-            var sut = new KubernetesDirectoryInformationProvider(Substitute.For<ISystemLog>(), spr);
+            var memoryCache = new MemoryCache(new MemoryCacheOptions());
+            var sut = new KubernetesDirectoryInformationProvider(Substitute.For<ISystemLog>(), spr, memoryCache);
             sut.GetPathUsedBytes("/octopus").Should().Be(usedSize);
         }
 
@@ -58,7 +63,8 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                     x.ArgAt<Action<string>>(3).Invoke($"{usedSize}\t/octopus");
                 });
             spr.ReturnsForAll(1);
-            var sut = new KubernetesDirectoryInformationProvider(Substitute.For<ISystemLog>(), spr);
+            var memoryCache = new MemoryCache(new MemoryCacheOptions());
+            var sut = new KubernetesDirectoryInformationProvider(Substitute.For<ISystemLog>(), spr, memoryCache);
             sut.GetPathUsedBytes("/octopus").Should().Be(usedSize);
         }
         
@@ -81,7 +87,8 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                     x.ArgAt<Action<string>>(4).Invoke("also no permission for bar");
                 });
             spr.ReturnsForAll(1);
-            var sut = new KubernetesDirectoryInformationProvider(systemLog, spr);
+            var memoryCache = new MemoryCache(new MemoryCacheOptions());
+            var sut = new KubernetesDirectoryInformationProvider(systemLog, spr, memoryCache);
             sut.GetPathUsedBytes("/octopus").Should().Be(usedSize);
             
             systemLog.GetLogsForCategory(LogCategory.Warning).Should().Contain("Could not reliably get disk space using du. Getting best approximation...");
@@ -94,8 +101,67 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         {
             var spr = Substitute.For<ISilentProcessRunner>();
             spr.ReturnsForAll(1);
-            var sut = new KubernetesDirectoryInformationProvider(Substitute.For<ISystemLog>(), spr);
+            var memoryCache = new MemoryCache(new MemoryCacheOptions());
+            var sut = new KubernetesDirectoryInformationProvider(Substitute.For<ISystemLog>(), spr, memoryCache);
             sut.GetPathUsedBytes("/octopus").Should().Be(null);
         }
+        
+        [Test]
+        public void ReturnedValueShouldBeCached()
+        {
+            var spr = Substitute.For<ISilentProcessRunner>();
+            spr.ReturnsForAll(1);
+            var baseTime = DateTimeOffset.UtcNow;
+            var clock = new TestClock(baseTime);
+            var memoryCache = new MemoryCache(new MemoryCacheOptions(){ Clock = clock});
+            var sut = new KubernetesDirectoryInformationProvider(Substitute.For<ISystemLog>(), spr, memoryCache);
+            sut.GetPathUsedBytes("/octopus").Should().Be(null);
+            
+            const ulong usedSize = 500 * Megabyte;
+            spr.When(x => x.ExecuteCommand("du", "-s -B 1 /octopus", "/", Arg.Any<Action<string>>(), Arg.Any<Action<string>>()))
+                .Do(x =>
+                {
+                    x.ArgAt<Action<string>>(3).Invoke($"123\t/octopus");
+                    x.ArgAt<Action<string>>(3).Invoke($"{usedSize}\t/octopus");
+                });
+            clock.UtcNow = baseTime + TimeSpan.FromSeconds(29);
+
+            sut.GetPathUsedBytes("/octopus").Should().Be(null);
+        }
+        
+        [Test]
+        public void DuCacheExpiresAfter30Seconds()
+        {
+            var spr = Substitute.For<ISilentProcessRunner>();
+            spr.ReturnsForAll(1);
+            var baseTime = DateTimeOffset.UtcNow;
+            var clock = new TestClock(baseTime);
+            var memoryCache = new MemoryCache(new MemoryCacheOptions(){ Clock = clock});
+            var sut = new KubernetesDirectoryInformationProvider(Substitute.For<ISystemLog>(), spr, memoryCache);
+            sut.GetPathUsedBytes("/octopus").Should().Be(null);
+            
+            const ulong usedSize = 500 * Megabyte;
+            spr.When(x => x.ExecuteCommand("du", "-s -B 1 /octopus", "/", Arg.Any<Action<string>>(), Arg.Any<Action<string>>()))
+                .Do(x =>
+                {
+                    x.ArgAt<Action<string>>(3).Invoke($"123\t/octopus");
+                    x.ArgAt<Action<string>>(3).Invoke($"{usedSize}\t/octopus");
+                });
+
+            clock.UtcNow = baseTime + TimeSpan.FromSeconds(30);
+            
+            sut.GetPathUsedBytes("/octopus").Should().Be(usedSize);
+        }
+
+    }
+
+    public class TestClock : ISystemClock
+    {
+        public TestClock(DateTimeOffset utcNow)
+        {
+            UtcNow = utcNow;
+        }
+
+        public DateTimeOffset UtcNow { get; set; }
     }
 }
