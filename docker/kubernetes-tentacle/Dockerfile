@@ -27,16 +27,30 @@ WORKDIR /tmp
 
 # Install Tentacle
 COPY _artifacts/docker/tentacle_${BUILD_NUMBER}_${TARGETOS}-${TARGETARCH}${TARGETVARIANT}.deb /tmp/tentacle.deb
-RUN apt-get update
-RUN apt install ./tentacle.deb -y
-RUN apt-get clean
-RUN apt install curl -y
-RUN rm -rf /var/lib/apt/lists/*
+RUN apt-get update  \
+    && apt install ./tentacle.deb curl -y  \
+    && apt-get clean  \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /
 
 # We know this won't reduce the image size at all. It's just to make the filesystem a little tidier.
 RUN rm -rf /tmp/*
+
+# Make the /.dotnet directory so that we can ensure ownership for the
+# certificate store 
+RUN mkdir /.dotnet
+
+# By default, OpenShift uses random UIDs 
+# This introduces support for it as per
+# https://docs.openshift.com/container-platform/4.15/openshift_images/create-images.html#use-uid_create-images
+RUN chgrp -R 0 /opt /usr /.dotnet && \
+    chmod -R g=u /opt /usr /.dotnet
+
+# The same as above, but we shouldn't recursively own /etc, as it would add
+# ownership to system files like /etc/passwd
+RUN chgrp 0 /etc && \
+    chmod g=u /etc
 
 ENV BOOTSTRAPRUNNEREXECUTABLEPATH=/bootstrapRunner
 ENV OCTOPUS_RUNNING_IN_CONTAINER=Y
