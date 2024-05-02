@@ -90,7 +90,7 @@ namespace Octopus.Tentacle.Tests.Commands
                   "--tenant=Tenant1",
                   "--tenantTag=CustomerType/VIP");
 
-            Assert.That(operation.EnvironmentNames.Single(), Is.EqualTo("Development"));
+            Assert.That(operation.Environments.Single(), Is.EqualTo("Development"));
             Assert.That(operation.MachineName, Is.EqualTo("MyMachine"));
             Assert.That(operation.TentacleHostname, Is.EqualTo("mymachine.test"));
             Assert.That(operation.TentaclePort, Is.EqualTo(90210));
@@ -177,7 +177,7 @@ namespace Octopus.Tentacle.Tests.Commands
 
             Start(args);
 
-            Assert.That(operation.EnvironmentNames.Single(), Is.EqualTo("Development"));
+            Assert.That(operation.Environments.Single(), Is.EqualTo("Development"));
             Assert.That(operation.MachineName, Is.EqualTo("MyMachine"));
             Assert.That(operation.TentacleHostname, Is.Empty);
             Assert.That(operation.TentaclePort, Is.EqualTo(0));
