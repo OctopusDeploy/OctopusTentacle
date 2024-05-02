@@ -324,15 +324,10 @@ partial class Build : NukeBuild
             .SetVersion(FullSemVer)
             .SetProcessArgumentConfigurator(args =>
             {
-                // There is a race condition in MSBuild where building the entire solution
-                // can cause locking issues. The solution is to not run windows builds in parallel
+                // There is a race condition in dotnet publish where building the entire solution
+                // can cause locking issues. The solution is to not run builds in parallel
                 // https://github.com/dotnet/sdk/issues/9585
-                if (runtimeId.StartsWith("win"))
-                {
-                    args.Add("-maxcpucount:1");
-                }
-
-                return args;
+                return args.Add("-maxcpucount:1");
             }));
     }
 
