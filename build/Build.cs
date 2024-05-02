@@ -87,8 +87,7 @@ partial class Build : NukeBuild
     [Parameter(Name = "signing_certificate_path")] public static string SigningCertificatePath = RootDirectory / "certificates" / "OctopusDevelopment.pfx";
     [Secret] [Parameter(Name = "signing_certificate_password")] public static string SigningCertificatePassword = "Password01!";
 
-    [Parameter(Name = "RuntimeId")]
-    public string? SpecificRuntimeId;
+    [Parameter(Name = "RuntimeId")] public string? SpecificRuntimeId;
 
     readonly AbsolutePath SourceDirectory = RootDirectory / "source";
     readonly AbsolutePath ArtifactsDirectory = RootDirectory / "_artifacts";
@@ -154,7 +153,7 @@ partial class Build : NukeBuild
                 using var productWxsFile = UpdateMsiProductVersion();
 
                 var runtimeIds = RuntimeIds.Where(x => x.StartsWith("win"));
-                
+
                 foreach (var runtimeId in runtimeIds)
                 {
                     switch (runtimeId)
@@ -322,7 +321,19 @@ partial class Build : NukeBuild
             .SetFramework(framework)
             .SetRuntime(runtimeId)
             .EnableNoRestore()
-            .SetVersion(FullSemVer));
+            .SetVersion(FullSemVer)
+            .SetProcessArgumentConfigurator(args =>
+            {
+                // There is a race condition in MSBuild where building the entire solution
+                // can cause locking issues. The solution is to not run windows builds in parallel
+                // https://github.com/dotnet/sdk/issues/9585
+                if (runtimeId.StartsWith("win"))
+                {
+                    args.Add("-maxcpucount:1");
+                }
+
+                return args;
+            }));
     }
 
 // We need to use tar directly, because .NET utilities aren't able to preserve the file permissions
