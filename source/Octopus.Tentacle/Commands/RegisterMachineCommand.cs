@@ -22,7 +22,7 @@ namespace Octopus.Tentacle.Commands
 
     public class RegisterMachineCommand<TRegisterMachineOperation> : RegisterMachineCommandBase<TRegisterMachineOperation> where TRegisterMachineOperation : IRegisterMachineOperation
     {
-        readonly List<string> environmentNames = new List<string>();
+        readonly List<string> environments = new List<string>();
         readonly List<string> roles = new List<string>();
         readonly List<string> tenants = new List<string>();
         readonly List<string> tenantTgs = new List<string>();
@@ -39,7 +39,7 @@ namespace Octopus.Tentacle.Commands
                                       ILogFileOnlyLogger logFileOnlyLogger)
             : base(lazyRegisterMachineOperation, configuration, log, selector, octopusServerChecker, proxyConfig, octopusClientInitializer, spaceRepositoryFactory, logFileOnlyLogger)
         {
-            Options.Add("env|environment=", "The environment name to add the machine to - e.g., 'Production'; specify this argument multiple times to add multiple environments", s => environmentNames.Add(s));
+            Options.Add("env|environment=", "The environment name, slug or Id to add the machine to - e.g., 'Production'; specify this argument multiple times to add multiple environments", s => environments.Add(s));
             Options.Add("r|role=", "The machine role that the machine will assume - e.g., 'web-server'; specify this argument multiple times to add multiple roles", s => roles.Add(s));
             Options.Add("tenant=", "A tenant who the machine will be connected to; specify this argument multiple times to add multiple tenants", s => tenants.Add(s));
             Options.Add("tenanttag=", "A tenant tag which the machine will be tagged with - e.g., 'CustomerType/VIP'; specify this argument multiple times to add multiple tenant tags", s => tenantTgs.Add(s));
@@ -54,8 +54,8 @@ namespace Octopus.Tentacle.Commands
 
         protected override void CheckArgs()
         {
-            if (environmentNames.Count == 0 || string.IsNullOrWhiteSpace(environmentNames.First()))
-                throw new ControlledFailureException("Please specify an environment name, e.g., --environment=Development");
+            if (environments.Count == 0 || string.IsNullOrWhiteSpace(environments.First()))
+                throw new ControlledFailureException("Please specify an environment name, slug or Id, e.g., --environment=Development");
 
             if (roles.Count == 0 || string.IsNullOrWhiteSpace(roles.First()))
                 throw new ControlledFailureException("Please specify a role name, e.g., --role=web-server");
@@ -65,7 +65,7 @@ namespace Octopus.Tentacle.Commands
         {
             registerOperation.Tenants = tenants.ToArray();
             registerOperation.TenantTags = tenantTgs.ToArray();
-            registerOperation.EnvironmentNames = environmentNames.ToArray();
+            registerOperation.Environments = environments.ToArray();
             registerOperation.Roles = roles.ToArray();
             registerOperation.TenantedDeploymentParticipation = tenantedDeploymentMode;
         }

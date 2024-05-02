@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Octopus.Client.Extensions;
+using Microsoft.Extensions.Caching.Memory;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Util;
 
@@ -11,21 +13,36 @@ namespace Octopus.Tentacle.Kubernetes
         public ulong? GetPathUsedBytes(string directoryPath);
         public ulong? GetPathTotalBytes();
     }
-
+    
     public class KubernetesDirectoryInformationProvider : IKubernetesDirectoryInformationProvider
     {
         readonly ISystemLog log;
         readonly ISilentProcessRunner silentProcessRunner;
+        readonly IMemoryCache directoryInformationCache;
+        
+        //30s gives us fairly up to date information, but doesn't impact performance too much.
+        //For 50 concurrent Cloud deployments:
+        //No cache: 30min ea.
+        //Cache w/15s expiry: 15min ea.
+        //Cache w/30s expiry: 11min ea.
+        //Cache w/60s expiry: 9min ea.
+        //No calls to `du` at all: 8min ea.
+        static readonly TimeSpan CacheExpiry = TimeSpan.FromSeconds(30);
 
-        public KubernetesDirectoryInformationProvider(ISystemLog log, ISilentProcessRunner silentProcessRunner)
+        public KubernetesDirectoryInformationProvider(ISystemLog log, ISilentProcessRunner silentProcessRunner, IMemoryCache directoryInformationCache)
         {
             this.log = log;
             this.silentProcessRunner = silentProcessRunner;
+            this.directoryInformationCache = directoryInformationCache;
         }
 
         public ulong? GetPathUsedBytes(string directoryPath)
         {
-            return GetDriveBytesUsingDu(directoryPath);
+            return directoryInformationCache.GetOrCreate(directoryPath, e =>
+            {
+                e.SetAbsoluteExpiration(CacheExpiry);
+                return GetDriveBytesUsingDu(directoryPath);
+            });
         }
 
         public ulong? GetPathTotalBytes()

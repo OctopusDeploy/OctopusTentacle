@@ -52,7 +52,7 @@
 		<PackageReference Include="KubernetesClient" Version="13.0.26" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="Octopus.Client" Version="14.3.1348" />
+		<PackageReference Include="Octopus.Client" Version="14.3.1389" />
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Autofac" Version="4.6.2" />
@@ -72,6 +72,7 @@
 		<PackageReference Include="TaskScheduler" Version="2.7.2" />
 		<PackageReference Include="Nito.AsyncEx" Version="5.0.0" />
 		<PackageReference Include="NLog" Version="5.0.4" />
+		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.0" />
 	</ItemGroup>
 	<ItemGroup>
 		<Compile Include="..\Solution Items\SolutionInfo.cs">

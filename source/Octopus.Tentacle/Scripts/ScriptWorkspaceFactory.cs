@@ -37,7 +37,9 @@ namespace Octopus.Tentacle.Scripts
         {
             var workingDirectory = FindWorkingDirectory(ticket);
 
-            return CreateWorkspace(ticket, workingDirectory);
+            var workspace = CreateWorkspace(ticket, workingDirectory);
+            workspace.CheckReadiness();
+            return workspace;
         }
 
         public async Task<IScriptWorkspace> PrepareWorkspace(
