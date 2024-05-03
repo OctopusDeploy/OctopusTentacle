@@ -192,7 +192,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             => CompleteScriptAsync(new CompleteKubernetesScriptCommandV1(command.ScriptTicket), cancellationToken);
     }
 
-    public static class CommandExtensions
+    public static class CommandConversionExtensions
     {
         public static StartKubernetesScriptCommandV1 ToV1(this StartKubernetesScriptCommandV1Alpha command)
         {
