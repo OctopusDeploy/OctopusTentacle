@@ -17,7 +17,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
 {
     [KubernetesService(typeof(IKubernetesScriptServiceV1Alpha))]
     [KubernetesService(typeof(IKubernetesScriptServiceV1))]
-    public class KubernetesScriptServiceV1Alpha : IAsyncKubernetesScriptServiceV1Alpha, IAsyncKubernetesScriptServiceV1, IRunningScriptReporter
+    public class KubernetesScriptServiceV1 : IAsyncKubernetesScriptServiceV1Alpha, IAsyncKubernetesScriptServiceV1, IRunningScriptReporter
     {
         readonly IKubernetesPodService podService;
         readonly IScriptWorkspaceFactory workspaceFactory;
@@ -30,7 +30,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
         //TODO: check what will happen when Tentacle restarts
         readonly ConcurrentDictionary<ScriptTicket, Lazy<SemaphoreSlim>> startScriptMutexes = new();
 
-        public KubernetesScriptServiceV1Alpha(
+        public KubernetesScriptServiceV1(
             IKubernetesPodService podService,
             IScriptWorkspaceFactory workspaceFactory,
             IKubernetesPodStatusProvider podStatusProvider,
