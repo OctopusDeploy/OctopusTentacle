@@ -194,7 +194,7 @@ partial class Build : NukeBuild
                 var filesToSign = windowsOnlyBuiltFileSpec
                     .SelectMany(x => x.GlobFiles("**/Octo*.exe", "**/Octo*.dll", "**/Tentacle.exe", "**/Tentacle.dll", "**/Halibut.dll", "**/Nuget.*.dll", "**/Nevermore.dll", "**/*.ps1"))
                     //We don't need to sign the Test dll's as they are only used internally
-                    .Where(x => x.Contains("Tests") || x.Contains("CommonTestUtils"))
+                    .Where(x => !x.Contains("Tests") && !x.Contains("CommonTestUtils"))
                     .Where(file => !Signing.HasAuthenticodeSignature(file))
                     .ToArray();
 
