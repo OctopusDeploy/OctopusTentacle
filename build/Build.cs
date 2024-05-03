@@ -321,7 +321,7 @@ partial class Build : NukeBuild
             .SetProject(SourceDirectory / "Tentacle.sln")
             .SetConfiguration(configuration)
             .SetFramework(framework)
-            .SetSelfContained(true)
+            //.SetSelfContained(true)
             .SetRuntime(runtimeId)
             .EnableNoRestore()
             .SetVersion(FullSemVer)
