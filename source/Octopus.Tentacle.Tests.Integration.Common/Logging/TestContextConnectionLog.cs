@@ -1,10 +1,11 @@
-﻿using Halibut.Diagnostics;
+﻿using System;
+using Halibut.Diagnostics;
 using Halibut.Diagnostics.LogWriters;
 using Halibut.Logging;
 using Serilog.Events;
 using LogEvent = Halibut.Diagnostics.LogEvent;
 
-namespace Octopus.Tentacle.Kubernetes.Tests.Integration.Support.Logging;
+namespace Octopus.Tentacle.Tests.Integration.Common.Logging;
 
 public class TestContextConnectionLog : ILog, ILogWriter
 {

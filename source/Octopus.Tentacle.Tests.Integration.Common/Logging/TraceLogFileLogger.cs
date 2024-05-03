@@ -1,7 +1,8 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using System.Threading.Channels;
 
-namespace Octopus.Tentacle.Kubernetes.Tests.Integration.Support.Logging;
+namespace Octopus.Tentacle.Tests.Integration.Common.Logging;
 
 public class TraceLogFileLogger : IAsyncDisposable
 {

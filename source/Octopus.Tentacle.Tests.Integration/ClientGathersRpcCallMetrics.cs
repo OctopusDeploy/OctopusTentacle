@@ -10,6 +10,7 @@ using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Capabilities;
 using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
+using Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
 using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;

@@ -87,8 +87,7 @@ partial class Build : NukeBuild
     [Parameter(Name = "signing_certificate_path")] public static string SigningCertificatePath = RootDirectory / "certificates" / "OctopusDevelopment.pfx";
     [Secret] [Parameter(Name = "signing_certificate_password")] public static string SigningCertificatePassword = "Password01!";
 
-    [Parameter(Name = "RuntimeId")]
-    public string? SpecificRuntimeId;
+    [Parameter(Name = "RuntimeId")] public string? SpecificRuntimeId;
 
     readonly AbsolutePath SourceDirectory = RootDirectory / "source";
     readonly AbsolutePath ArtifactsDirectory = RootDirectory / "_artifacts";
@@ -154,7 +153,7 @@ partial class Build : NukeBuild
                 using var productWxsFile = UpdateMsiProductVersion();
 
                 var runtimeIds = RuntimeIds.Where(x => x.StartsWith("win"));
-                
+
                 foreach (var runtimeId in runtimeIds)
                 {
                     switch (runtimeId)
@@ -193,7 +192,13 @@ partial class Build : NukeBuild
                 var windowsOnlyBuiltFileSpec = BuildDirectory.GlobDirectories("**/win*/**");
 
                 var filesToSign = windowsOnlyBuiltFileSpec
-                    .SelectMany(x => x.GlobFiles("**/Octo*.exe", "**/Octo*.dll", "**/Tentacle.exe", "**/Tentacle.dll", "**/Halibut.dll", "**/Nuget.*.dll", "**/Nevermore.dll", "**/*.ps1"))
+                    .SelectMany(x => x.GlobFiles("**/Octo*.exe", "**/Octo*.dll", "**/Tentacle.exe", "**/Tentacle.dll", "**/Halibut.dll", "**/Nuget.*.dll", "**/*.ps1"))
+                    //We don't need to sign the Test project dlls's as they are only used internally
+                    .Where(x =>
+                    {
+                        var path = x.ToString();
+                        return !path.Contains("Tests") && !path.Contains("CommonTestUtils");
+                    })
                     .Where(file => !Signing.HasAuthenticodeSignature(file))
                     .ToArray();
 
@@ -320,9 +325,17 @@ partial class Build : NukeBuild
             .SetProject(SourceDirectory / "Tentacle.sln")
             .SetConfiguration(configuration)
             .SetFramework(framework)
+            //.SetSelfContained(true)
             .SetRuntime(runtimeId)
             .EnableNoRestore()
-            .SetVersion(FullSemVer));
+            .SetVersion(FullSemVer)
+            .SetProcessArgumentConfigurator(args =>
+            {
+                // There is a race condition in dotnet publish where building the entire solution
+                // can cause locking issues depending on multiple CPUs. The solution is to not run builds in parallel
+                // https://github.com/dotnet/sdk/issues/9585
+                return args.Add("-maxcpucount:1");
+            }));
     }
 
 // We need to use tar directly, because .NET utilities aren't able to preserve the file permissions

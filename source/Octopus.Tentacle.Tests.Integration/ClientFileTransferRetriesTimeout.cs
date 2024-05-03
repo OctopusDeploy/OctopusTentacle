@@ -8,6 +8,7 @@ using Halibut;
 using NUnit.Framework;
 using Octopus.Tentacle.CommonTestUtils.Diagnostics;
 using Octopus.Tentacle.Contracts.ClientServices;
+using Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods;
 using Octopus.Tentacle.Tests.Integration.Util;

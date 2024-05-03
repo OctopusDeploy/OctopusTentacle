@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Security.Cryptography;
-using System.Text;
+using NUnit.Framework;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Util;
+using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 using Serilog.Formatting.Display;
 
-namespace Octopus.Tentacle.Kubernetes.Tests.Integration.Support.Logging
+namespace Octopus.Tentacle.Tests.Integration.Common.Logging
 {
     public class SerilogLoggerBuilder
     {

@@ -1,9 +1,6 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
-namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
+namespace Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators
 {
     public class UniversalScriptServiceDecoratorBuilder
     {

@@ -7,6 +7,7 @@ using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ClientServices;
+using Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Reflection;
-using System.Threading.Tasks;
+using Octopus.Tentacle.Tests.Integration.Common.Logging;
 using Serilog;
 
-namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies
+namespace Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators.Proxies
 {
     public class MethodLoggingProxyDecorator : ServiceProxy
     {

@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Linq;
 using System.Reflection;
-using System.Threading;
 
-namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators.Proxies
+namespace Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators.Proxies
 {
     public class MethodUsages : IRecordedMethodUsages
     {

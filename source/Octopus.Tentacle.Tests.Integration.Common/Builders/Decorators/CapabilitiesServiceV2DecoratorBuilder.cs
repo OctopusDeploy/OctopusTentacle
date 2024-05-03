@@ -1,10 +1,9 @@
 using System;
-using System.Threading.Tasks;
 using Halibut.ServiceModel;
 using Octopus.Tentacle.Contracts.Capabilities;
 using Octopus.Tentacle.Contracts.ClientServices;
 
-namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
+namespace Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators
 {
     public class CapabilitiesServiceV2DecoratorBuilder
     {
