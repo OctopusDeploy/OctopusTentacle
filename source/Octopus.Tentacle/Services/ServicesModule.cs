@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Autofac;
@@ -32,11 +33,10 @@ namespace Octopus.Tentacle.Services
             }
         }
 
-        static void RegisterHalibutServices<T>(ContainerBuilder builder, Type[] allTypes) where T: Attribute, IServiceAttribute
+        static void RegisterHalibutServices<T>(ContainerBuilder builder, IEnumerable<Type> allTypes) where T: Attribute, IServiceAttribute
         {
             var knownServices = allTypes
-                .Select(t => (ServiceImplementationType: t, ServiceAttribute: t.GetCustomAttribute<T>()))
-                .Where(x => x.ServiceAttribute != null)
+                .SelectMany(t => t.GetCustomAttributes<T>().Select(attr => (ServiceImplementationType: t, ServiceAttribute: attr)))
                 .Select(x => new KnownService(x.ServiceImplementationType, x.ServiceAttribute!.ContractType))
                 .ToArray();
 

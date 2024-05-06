@@ -26,6 +26,7 @@ namespace Octopus.Tentacle.Client.Scripts
         readonly IAsyncClientScriptService clientScriptServiceV1;
         readonly IAsyncClientScriptServiceV2 clientScriptServiceV2;
         readonly IAsyncClientKubernetesScriptServiceV1Alpha clientKubernetesScriptServiceV1Alpha;
+        readonly IAsyncClientKubernetesScriptServiceV1 clientKubernetesScriptServiceV1;
         readonly IAsyncClientCapabilitiesServiceV2 clientCapabilitiesServiceV2;
         readonly TentacleClientOptions clientOptions;
 
@@ -33,6 +34,7 @@ namespace Octopus.Tentacle.Client.Scripts
             IAsyncClientScriptService clientScriptServiceV1,
             IAsyncClientScriptServiceV2 clientScriptServiceV2,
             IAsyncClientKubernetesScriptServiceV1Alpha clientKubernetesScriptServiceV1Alpha,
+            IAsyncClientKubernetesScriptServiceV1 clientKubernetesScriptServiceV1,
             IAsyncClientCapabilitiesServiceV2 clientCapabilitiesServiceV2,
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
             RpcCallExecutor rpcCallExecutor,
@@ -46,6 +48,7 @@ namespace Octopus.Tentacle.Client.Scripts
             this.clientScriptServiceV1 = clientScriptServiceV1;
             this.clientScriptServiceV2 = clientScriptServiceV2;
             this.clientKubernetesScriptServiceV1Alpha = clientKubernetesScriptServiceV1Alpha;
+            this.clientKubernetesScriptServiceV1 = clientKubernetesScriptServiceV1;
             this.clientCapabilitiesServiceV2 = clientCapabilitiesServiceV2;
             this.scriptObserverBackOffStrategy = scriptObserverBackOffStrategy;
             this.rpcCallExecutor = rpcCallExecutor;
@@ -80,8 +83,8 @@ namespace Octopus.Tentacle.Client.Scripts
                     onScriptCompleted,
                     clientOptions,
                     logger);
-
             }
+
             if (scriptServiceToUse == ScriptServiceVersion.ScriptServiceVersion2)
             {
                 return new ScriptServiceV2Orchestrator(
@@ -95,6 +98,7 @@ namespace Octopus.Tentacle.Client.Scripts
                     clientOptions,
                     logger);
             }
+
             if (scriptServiceToUse == ScriptServiceVersion.KubernetesScriptServiceVersion1Alpha)
             {
                 return new KubernetesScriptServiceV1AlphaOrchestrator(
@@ -107,7 +111,20 @@ namespace Octopus.Tentacle.Client.Scripts
                     onCancellationAbandonCompleteScriptAfter,
                     clientOptions,
                     logger);
-
+            }
+            
+            if (scriptServiceToUse == ScriptServiceVersion.KubernetesScriptServiceVersion1)
+            {
+                return new KubernetesScriptServiceV1Orchestrator(
+                    clientKubernetesScriptServiceV1,
+                    scriptObserverBackOffStrategy,
+                    rpcCallExecutor,
+                    clientOperationMetricsBuilder,
+                    onScriptStatusResponseReceived,
+                    onScriptCompleted,
+                    onCancellationAbandonCompleteScriptAfter,
+                    clientOptions,
+                    logger);
             }
 
             throw new InvalidOperationException($"Unknown ScriptServiceVersion {scriptServiceToUse}");
@@ -138,7 +155,7 @@ namespace Octopus.Tentacle.Client.Scripts
             // It's implied (and tested) that GetCapabilities will only return Kubernetes or non-Kubernetes script services, never a mix
             if (tentacleCapabilities.HasAnyKubernetesScriptService())
             {
-                return DetermineKubernetesScriptServiceVersionToUse();
+                return DetermineKubernetesScriptServiceVersionToUse(tentacleCapabilities);
             }
 
             return DetermineShellScriptServiceVersionToUse(tentacleCapabilities);
@@ -160,9 +177,19 @@ namespace Octopus.Tentacle.Client.Scripts
             return ScriptServiceVersion.ScriptServiceVersion1;
         }
 
-        ScriptServiceVersion DetermineKubernetesScriptServiceVersionToUse()
+        ScriptServiceVersion DetermineKubernetesScriptServiceVersionToUse(CapabilitiesResponseV2 tentacleCapabilities)
         {
-            logger.Verbose("Using KubernetesScriptServiceV1Alpha");
+            if (tentacleCapabilities.HasKubernetesScriptServiceV1())
+            {
+                logger.Verbose($"Using KubernetesScriptServiceV1");
+                logger.Verbose(clientOptions.RpcRetrySettings.RetriesEnabled
+                    ? $"RPC call retries are enabled. Retry timeout {rpcCallExecutor.RetryTimeout.TotalSeconds} seconds"
+                    : "RPC call retries are disabled.");
+                
+                return ScriptServiceVersion.KubernetesScriptServiceVersion1;
+            }
+
+            logger.Verbose($"Using KubernetesScriptServiceV1Alpha");
             logger.Verbose(clientOptions.RpcRetrySettings.RetriesEnabled
                 ? $"RPC call retries are enabled. Retry timeout {rpcCallExecutor.RetryTimeout.TotalSeconds} seconds"
                 : "RPC call retries are disabled.");

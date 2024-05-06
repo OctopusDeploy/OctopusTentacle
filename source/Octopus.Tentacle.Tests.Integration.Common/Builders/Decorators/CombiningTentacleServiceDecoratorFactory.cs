@@ -60,5 +60,14 @@ namespace Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators
             }
             return service;
         }
+
+        public IAsyncClientKubernetesScriptServiceV1 Decorate(IAsyncClientKubernetesScriptServiceV1 service)
+        {
+            foreach (var decoratorFactory in decoratorsInReverse)
+            {
+                service = decoratorFactory.Decorate(service);
+            }
+            return service;
+        }
     }
 }

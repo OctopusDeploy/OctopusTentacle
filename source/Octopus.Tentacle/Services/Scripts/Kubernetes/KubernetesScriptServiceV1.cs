@@ -4,50 +4,51 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
 using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha;
 using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Maintenance;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Util;
+using PodImageConfigurationV1Alpha = Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha.PodImageConfiguration;
 
 namespace Octopus.Tentacle.Services.Scripts.Kubernetes
 {
     [KubernetesService(typeof(IKubernetesScriptServiceV1Alpha))]
-    public class KubernetesScriptServiceV1Alpha : IAsyncKubernetesScriptServiceV1Alpha, IRunningScriptReporter
+    [KubernetesService(typeof(IKubernetesScriptServiceV1))]
+    public class KubernetesScriptServiceV1 : IAsyncKubernetesScriptServiceV1Alpha, IAsyncKubernetesScriptServiceV1, IRunningScriptReporter
     {
         readonly IKubernetesPodService podService;
         readonly IScriptWorkspaceFactory workspaceFactory;
         readonly IKubernetesPodStatusProvider podStatusProvider;
         readonly IKubernetesScriptPodCreator podCreator;
         readonly IKubernetesPodLogService podLogService;
-        readonly ISystemLog log;
         readonly ITentacleScriptLogProvider scriptLogProvider;
         readonly IScriptPodSinceTimeStore scriptPodSinceTimeStore;
-        
+
         //TODO: check what will happen when Tentacle restarts
         readonly ConcurrentDictionary<ScriptTicket, Lazy<SemaphoreSlim>> startScriptMutexes = new();
 
-        public KubernetesScriptServiceV1Alpha(
+        public KubernetesScriptServiceV1(
             IKubernetesPodService podService,
             IScriptWorkspaceFactory workspaceFactory,
             IKubernetesPodStatusProvider podStatusProvider,
             IKubernetesScriptPodCreator podCreator,
             IKubernetesPodLogService podLogService,
-            ISystemLog log, ITentacleScriptLogProvider scriptLogProvider, IScriptPodSinceTimeStore scriptPodSinceTimeStore)
+            ITentacleScriptLogProvider scriptLogProvider,
+            IScriptPodSinceTimeStore scriptPodSinceTimeStore)
         {
             this.podService = podService;
             this.workspaceFactory = workspaceFactory;
             this.podStatusProvider = podStatusProvider;
             this.podCreator = podCreator;
             this.podLogService = podLogService;
-            this.log = log;
             this.scriptLogProvider = scriptLogProvider;
             this.scriptPodSinceTimeStore = scriptPodSinceTimeStore;
         }
 
-        public async Task<KubernetesScriptStatusResponseV1Alpha> StartScriptAsync(StartKubernetesScriptCommandV1Alpha command, CancellationToken cancellationToken)
+        public async Task<KubernetesScriptStatusResponseV1> StartScriptAsync(StartKubernetesScriptCommandV1 command, CancellationToken cancellationToken)
         {
             var mutex = startScriptMutexes.GetOrAdd(command.ScriptTicket, _ => new Lazy<SemaphoreSlim>(() => new SemaphoreSlim(1, 1))).Value;
             using (await mutex.LockAsync(cancellationToken))
@@ -66,7 +67,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
                 // - Tentacle restarts before returning
                 // - Server retries StartScriptAsync()
                 // - The Kubernetes API doesn't say that the Pod exists when we query it.
-                
+
                 //Note: PrepareWorkspace overwrites "command.Files", so it's not strictly idempotent
                 var workspace = await workspaceFactory.PrepareWorkspace(command.ScriptTicket,
                     command.ScriptBody,
@@ -84,11 +85,11 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
                 var (logs, _) = await podLogService.GetLogs(command.ScriptTicket, 0, cancellationToken);
 
                 //return a status that say's we are pending
-                return new KubernetesScriptStatusResponseV1Alpha(command.ScriptTicket, ProcessState.Pending, 0, logs.ToList(), 0);
+                return new KubernetesScriptStatusResponseV1(command.ScriptTicket, ProcessState.Pending, 0, logs.ToList(), 0);
             }
         }
 
-        public async Task<KubernetesScriptStatusResponseV1Alpha> GetStatusAsync(KubernetesScriptStatusRequestV1Alpha request, CancellationToken cancellationToken)
+        public async Task<KubernetesScriptStatusResponseV1> GetStatusAsync(KubernetesScriptStatusRequestV1 request, CancellationToken cancellationToken)
         {
             await Task.CompletedTask;
 
@@ -98,7 +99,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
                 : GetResponseForMissingScriptPod(request.ScriptTicket, request.LastLogSequence);
         }
 
-        public async Task<KubernetesScriptStatusResponseV1Alpha> CancelScriptAsync(CancelKubernetesScriptCommandV1Alpha command, CancellationToken cancellationToken)
+        public async Task<KubernetesScriptStatusResponseV1> CancelScriptAsync(CancelKubernetesScriptCommandV1 command, CancellationToken cancellationToken)
         {
             var trackedPod = podStatusProvider.TryGetTrackedScriptPod(command.ScriptTicket);
             if (trackedPod == null)
@@ -111,7 +112,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             return response;
         }
 
-        public async Task CompleteScriptAsync(CompleteKubernetesScriptCommandV1Alpha command, CancellationToken cancellationToken)
+        public async Task CompleteScriptAsync(CompleteKubernetesScriptCommandV1 command, CancellationToken cancellationToken)
         {
             startScriptMutexes.TryRemove(command.ScriptTicket, out _);
 
@@ -120,12 +121,12 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
 
             scriptLogProvider.Delete(command.ScriptTicket);
             scriptPodSinceTimeStore.Delete(command.ScriptTicket);
-            
+
             if (!KubernetesConfig.DisableAutomaticPodCleanup)
                 await podService.DeleteIfExists(command.ScriptTicket, cancellationToken);
         }
 
-        async Task<KubernetesScriptStatusResponseV1Alpha> GetResponse(ITrackedScriptPod trackedPod, long lastLogSequence, CancellationToken cancellationToken)
+        async Task<KubernetesScriptStatusResponseV1> GetResponse(ITrackedScriptPod trackedPod, long lastLogSequence, CancellationToken cancellationToken)
         {
             var state = trackedPod.State;
             var processState = state.Phase switch
@@ -139,7 +140,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
 
             var (podLogs, nextLogSequence) = await podLogService.GetLogs(trackedPod.ScriptTicket, lastLogSequence, cancellationToken);
 
-            var podStatusOutputs = new []
+            var podStatusOutputs = new[]
             {
                 //Help users notice if Pods are in the Pending state for too long
                 new ProcessOutput(ProcessOutputSource.Debug, $"The Kubernetes Pod '{trackedPod.ScriptTicket.ToKubernetesScriptPodName()}' is in the '{state.Phase}' phase")
@@ -147,7 +148,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             //Print the status first, since that's what we are basing our decisions on (printing it at the end might be confusing)
             var outputLogs = podStatusOutputs.Concat(podLogs).ToList();
 
-            return new KubernetesScriptStatusResponseV1Alpha(
+            return new KubernetesScriptStatusResponseV1(
                 trackedPod.ScriptTicket,
                 processState,
                 state.ExitCode ?? 0,
@@ -156,9 +157,9 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             );
         }
 
-        static KubernetesScriptStatusResponseV1Alpha GetResponseForMissingScriptPod(ScriptTicket scriptTicket, long lastLogSequence)
+        static KubernetesScriptStatusResponseV1 GetResponseForMissingScriptPod(ScriptTicket scriptTicket, long lastLogSequence)
         {
-            return new KubernetesScriptStatusResponseV1Alpha(scriptTicket, 
+            return new KubernetesScriptStatusResponseV1(scriptTicket,
                 ProcessState.Complete,
                 ScriptExitCodes.KubernetesScriptPodNotFound,
                 new List<ProcessOutput>()
@@ -169,8 +170,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
                     new(ProcessOutputSource.StdErr, $"If you are using the default NFS storage, then also check if:"),
                     new(ProcessOutputSource.StdErr, $"- The NFS Pod was evicted due to exceeding its storage quota"),
                     new(ProcessOutputSource.StdErr, $"- The NFS Pod was restarted or moved as part of routine operation"),
-
-                }, 
+                },
                 lastLogSequence);
         }
 
@@ -178,5 +178,46 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
         {
             return podStatusProvider.TryGetTrackedScriptPod(ticket) is not null;
         }
+
+        public async Task<KubernetesScriptStatusResponseV1Alpha> StartScriptAsync(StartKubernetesScriptCommandV1Alpha command, CancellationToken cancellationToken)
+            => (await StartScriptAsync(command.ToV1(), cancellationToken)).ToV1Alpha();
+
+        public async Task<KubernetesScriptStatusResponseV1Alpha> GetStatusAsync(KubernetesScriptStatusRequestV1Alpha request, CancellationToken cancellationToken)
+            => (await GetStatusAsync(new KubernetesScriptStatusRequestV1(request.ScriptTicket, request.LastLogSequence), cancellationToken)).ToV1Alpha();
+
+        public async Task<KubernetesScriptStatusResponseV1Alpha> CancelScriptAsync(CancelKubernetesScriptCommandV1Alpha command, CancellationToken cancellationToken)
+            => (await CancelScriptAsync(new CancelKubernetesScriptCommandV1(command.ScriptTicket, command.LastLogSequence), cancellationToken)).ToV1Alpha();
+
+        public Task CompleteScriptAsync(CompleteKubernetesScriptCommandV1Alpha command, CancellationToken cancellationToken)
+            => CompleteScriptAsync(new CompleteKubernetesScriptCommandV1(command.ScriptTicket), cancellationToken);
+    }
+
+    public static class CommandConversionExtensions
+    {
+        public static StartKubernetesScriptCommandV1 ToV1(this StartKubernetesScriptCommandV1Alpha command)
+        {
+            return new StartKubernetesScriptCommandV1(
+                command.ScriptTicket,
+                command.TaskId,
+                command.ScriptBody,
+                command.Arguments,
+                command.Isolation,
+                command.ScriptIsolationMutexTimeout,
+                command.IsolationMutexName ?? "RunningScript", //In practice, this is never null due to the ExecuteScriptCommand.IsolationConfiguration.MutexName is not nullable
+                command.PodImageConfiguration?.ToV1(),
+                command.ScriptPodServiceAccountName,
+                command.Scripts,
+                command.Files.ToArray()
+            );
+        }
+
+        static PodImageConfigurationV1 ToV1(this PodImageConfigurationV1Alpha podImageConfiguration)
+        {
+            return podImageConfiguration.Image is not null
+                ? new PodImageConfigurationV1(podImageConfiguration.Image, podImageConfiguration.FeedUrl, podImageConfiguration.FeedUsername, podImageConfiguration.FeedPassword)
+                : new PodImageConfigurationV1();
+        }
+
+        public static KubernetesScriptStatusResponseV1Alpha ToV1Alpha(this KubernetesScriptStatusResponseV1 response) => new(response.ScriptTicket, response.State, response.ExitCode, response.Logs, response.NextLogSequence);
     }
 }

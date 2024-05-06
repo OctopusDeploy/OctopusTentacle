@@ -5,7 +5,7 @@ namespace Octopus.Tentacle.Kubernetes.Tests.Integration;
 
 public class KubernetesTestsGlobalContext : IDisposable
 {
-    public static KubernetesTestsGlobalContext Instance { get; } = new KubernetesTestsGlobalContext();
+    public static KubernetesTestsGlobalContext Instance { get; } = new();
     
     public TemporaryDirectory TemporaryDirectory { get; }
     

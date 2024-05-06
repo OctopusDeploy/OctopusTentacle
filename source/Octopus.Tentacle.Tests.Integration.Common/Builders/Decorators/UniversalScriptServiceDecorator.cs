@@ -35,42 +35,48 @@ namespace Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators
             {
                 tentacleServiceDecoratorBuilder.DecorateScriptServiceWith(DecorateBeforeStartScript(beforeStartScriptDecorator));
                 tentacleServiceDecoratorBuilder.DecorateScriptServiceV2With(DecorateBeforeStartScriptV2(beforeStartScriptDecorator));
-                tentacleServiceDecoratorBuilder.DecorateKubernetesScriptServiceV1AlphaWith(DecorateBeforeStartScriptV3Alpha(beforeStartScriptDecorator));
+                tentacleServiceDecoratorBuilder.DecorateKubernetesScriptServiceV1AlphaWith(DecorateBeforeKubernetesStartScriptV1Alpha(beforeStartScriptDecorator));
+                tentacleServiceDecoratorBuilder.DecorateKubernetesScriptServiceV1With(DecorateBeforeKubernetesStartScriptV1(beforeStartScriptDecorator));
             }
 
             foreach (var afterStartScriptDecorator in afterStartScriptDecorators)
             {
                 tentacleServiceDecoratorBuilder.DecorateScriptServiceWith(DecorateAfterStartScript(afterStartScriptDecorator));
                 tentacleServiceDecoratorBuilder.DecorateScriptServiceV2With(DecorateAfterStartScriptV2(afterStartScriptDecorator));
-                tentacleServiceDecoratorBuilder.DecorateKubernetesScriptServiceV1AlphaWith(DecorateAfterStartScriptV3Alpha(afterStartScriptDecorator));
+                tentacleServiceDecoratorBuilder.DecorateKubernetesScriptServiceV1AlphaWith(DecorateAfterKubernetesScriptServiceV1Alpha(afterStartScriptDecorator));
+                tentacleServiceDecoratorBuilder.DecorateKubernetesScriptServiceV1With(DecorateAfterKubernetesScriptServiceV1(afterStartScriptDecorator));
             }
 
             foreach (var beforeCancelScriptDecorator in beforeCancelScriptDecorators)
             {
                 tentacleServiceDecoratorBuilder.DecorateScriptServiceWith(DecorateBeforeCancelScript(beforeCancelScriptDecorator));
                 tentacleServiceDecoratorBuilder.DecorateScriptServiceV2With(DecorateBeforeCancelScriptV2(beforeCancelScriptDecorator));
-                tentacleServiceDecoratorBuilder.DecorateKubernetesScriptServiceV1AlphaWith(DecorateBeforeCancelScriptV3Alpha(beforeCancelScriptDecorator));
+                tentacleServiceDecoratorBuilder.DecorateKubernetesScriptServiceV1AlphaWith(DecorateBeforeCancelScriptV1Alpha(beforeCancelScriptDecorator));
+                tentacleServiceDecoratorBuilder.DecorateKubernetesScriptServiceV1With(DecorateBeforeCancelScriptV1(beforeCancelScriptDecorator));
             }
 
             foreach (var beforeGetStatusDecorator in beforeGetStatusDecorators)
             {
                 tentacleServiceDecoratorBuilder.DecorateScriptServiceWith(DecorateBeforeGetStatus(beforeGetStatusDecorator));
                 tentacleServiceDecoratorBuilder.DecorateScriptServiceV2With(DecorateBeforeGetStatusV2(beforeGetStatusDecorator));
-                tentacleServiceDecoratorBuilder.DecorateKubernetesScriptServiceV1AlphaWith(DecorateBeforeGetStatusV3Alpha(beforeGetStatusDecorator));
+                tentacleServiceDecoratorBuilder.DecorateKubernetesScriptServiceV1AlphaWith(DecorateBeforeGetStatusV1Alpha(beforeGetStatusDecorator));
+                tentacleServiceDecoratorBuilder.DecorateKubernetesScriptServiceV1With(DecorateBeforeGetStatusV1(beforeGetStatusDecorator));
             }
 
             foreach (var afterGetStatusDecorator in afterGetStatusDecorators)
             {
                 tentacleServiceDecoratorBuilder.DecorateScriptServiceWith(DecorateAfterGetStatus(afterGetStatusDecorator));
                 tentacleServiceDecoratorBuilder.DecorateScriptServiceV2With(DecorateAfterGetStatusV2(afterGetStatusDecorator));
-                tentacleServiceDecoratorBuilder.DecorateKubernetesScriptServiceV1AlphaWith(DecorateAfterGetStatusV3Alpha(afterGetStatusDecorator));
+                tentacleServiceDecoratorBuilder.DecorateKubernetesScriptServiceV1AlphaWith(DecorateAfterGetStatusV1Alpha(afterGetStatusDecorator));
+                tentacleServiceDecoratorBuilder.DecorateKubernetesScriptServiceV1With(DecorateAfterGetStatusV1(afterGetStatusDecorator));
             }
 
             foreach (var beforeCompleteScriptDecorator in beforeCompleteScriptDecorators)
             {
                 tentacleServiceDecoratorBuilder.DecorateScriptServiceWith(DecorateBeforeCompleteScript(beforeCompleteScriptDecorator));
                 tentacleServiceDecoratorBuilder.DecorateScriptServiceV2With(DecorateBeforeCompleteScriptV2(beforeCompleteScriptDecorator));
-                tentacleServiceDecoratorBuilder.DecorateKubernetesScriptServiceV1AlphaWith(DecorateBeforeCompleteScriptV3Alpha(beforeCompleteScriptDecorator));
+                tentacleServiceDecoratorBuilder.DecorateKubernetesScriptServiceV1AlphaWith(DecorateBeforeCompleteScriptV1Alpha(beforeCompleteScriptDecorator));
+                tentacleServiceDecoratorBuilder.DecorateKubernetesScriptServiceV1With(DecorateBeforeCompleteScriptV1(beforeCompleteScriptDecorator));
             }
         }
 
@@ -88,12 +94,20 @@ namespace Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators
             return builder.Build();
         }
 
-        Decorator<IAsyncClientKubernetesScriptServiceV1Alpha> DecorateBeforeStartScriptV3Alpha(Func<Task> task)
+        Decorator<IAsyncClientKubernetesScriptServiceV1Alpha> DecorateBeforeKubernetesStartScriptV1Alpha(Func<Task> task)
         {
             var builder = new KubernetesScriptServiceV1AlphaDecoratorBuilder();
             builder.BeforeStartScript(task);
             return builder.Build();
         }
+        
+        Decorator<IAsyncClientKubernetesScriptServiceV1> DecorateBeforeKubernetesStartScriptV1(Func<Task> task)
+        {
+            var builder = new KubernetesScriptServiceV1DecoratorBuilder();
+            builder.BeforeStartScript(task);
+            return builder.Build();
+        }
+
 
         Decorator<IAsyncClientScriptService> DecorateAfterStartScript(Func<Task> task)
         {
@@ -109,9 +123,16 @@ namespace Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators
             return builder.Build();
         }
 
-        Decorator<IAsyncClientKubernetesScriptServiceV1Alpha> DecorateAfterStartScriptV3Alpha(Func<Task> task)
+        Decorator<IAsyncClientKubernetesScriptServiceV1Alpha> DecorateAfterKubernetesScriptServiceV1Alpha(Func<Task> task)
         {
             var builder = new KubernetesScriptServiceV1AlphaDecoratorBuilder();
+            builder.AfterStartScript(task);
+            return builder.Build();
+        }
+        
+        Decorator<IAsyncClientKubernetesScriptServiceV1> DecorateAfterKubernetesScriptServiceV1(Func<Task> task)
+        {
+            var builder = new KubernetesScriptServiceV1DecoratorBuilder();
             builder.AfterStartScript(task);
             return builder.Build();
         }
@@ -130,9 +151,16 @@ namespace Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators
             return builder.Build();
         }
 
-        Decorator<IAsyncClientKubernetesScriptServiceV1Alpha> DecorateBeforeCancelScriptV3Alpha(Func<Task> task)
+        Decorator<IAsyncClientKubernetesScriptServiceV1Alpha> DecorateBeforeCancelScriptV1Alpha(Func<Task> task)
         {
             var builder = new KubernetesScriptServiceV1AlphaDecoratorBuilder();
+            builder.BeforeCancelScript(task);
+            return builder.Build();
+        }
+        
+        Decorator<IAsyncClientKubernetesScriptServiceV1> DecorateBeforeCancelScriptV1(Func<Task> task)
+        {
+            var builder = new KubernetesScriptServiceV1DecoratorBuilder();
             builder.BeforeCancelScript(task);
             return builder.Build();
         }
@@ -151,13 +179,20 @@ namespace Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators
             return builder.Build();
         }
 
-        Decorator<IAsyncClientKubernetesScriptServiceV1Alpha> DecorateBeforeGetStatusV3Alpha(Func<Task> task)
+        Decorator<IAsyncClientKubernetesScriptServiceV1Alpha> DecorateBeforeGetStatusV1Alpha(Func<Task> task)
         {
             var builder = new KubernetesScriptServiceV1AlphaDecoratorBuilder();
             builder.BeforeGetStatus(task);
             return builder.Build();
         }
 
+        Decorator<IAsyncClientKubernetesScriptServiceV1> DecorateBeforeGetStatusV1(Func<Task> task)
+        {
+            var builder = new KubernetesScriptServiceV1DecoratorBuilder();
+            builder.BeforeGetStatus(task);
+            return builder.Build();
+        }
+        
         Decorator<IAsyncClientScriptService> DecorateAfterGetStatus(Func<Task> task)
         {
             var builder = new ScriptServiceDecoratorBuilder();
@@ -172,9 +207,16 @@ namespace Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators
             return builder.Build();
         }
 
-        Decorator<IAsyncClientKubernetesScriptServiceV1Alpha> DecorateAfterGetStatusV3Alpha(Func<Task> task)
+        Decorator<IAsyncClientKubernetesScriptServiceV1Alpha> DecorateAfterGetStatusV1Alpha(Func<Task> task)
         {
             var builder = new KubernetesScriptServiceV1AlphaDecoratorBuilder();
+            builder.AfterGetStatus(task);
+            return builder.Build();
+        }
+        
+        Decorator<IAsyncClientKubernetesScriptServiceV1> DecorateAfterGetStatusV1(Func<Task> task)
+        {
+            var builder = new KubernetesScriptServiceV1DecoratorBuilder();
             builder.AfterGetStatus(task);
             return builder.Build();
         }
@@ -193,9 +235,16 @@ namespace Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators
             return builder.Build();
         }
 
-        Decorator<IAsyncClientKubernetesScriptServiceV1Alpha> DecorateBeforeCompleteScriptV3Alpha(Func<Task> task)
+        Decorator<IAsyncClientKubernetesScriptServiceV1Alpha> DecorateBeforeCompleteScriptV1Alpha(Func<Task> task)
         {
             var builder = new KubernetesScriptServiceV1AlphaDecoratorBuilder();
+            builder.BeforeCompleteScript(task);
+            return builder.Build();
+        }
+        
+        Decorator<IAsyncClientKubernetesScriptServiceV1> DecorateBeforeCompleteScriptV1(Func<Task> task)
+        {
+            var builder = new KubernetesScriptServiceV1DecoratorBuilder();
             builder.BeforeCompleteScript(task);
             return builder.Build();
         }

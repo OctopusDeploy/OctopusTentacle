@@ -11,6 +11,7 @@ using Octopus.Tentacle.Client.Scripts.Models;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Capabilities;
 using Octopus.Tentacle.Contracts.ClientServices;
+using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
 using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha;
 using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
@@ -28,6 +29,7 @@ namespace Octopus.Tentacle.Client
         readonly IAsyncClientScriptService scriptServiceV1;
         readonly IAsyncClientScriptServiceV2 scriptServiceV2;
         readonly IAsyncClientKubernetesScriptServiceV1Alpha kubernetesScriptServiceV1Alpha;
+        readonly IAsyncClientKubernetesScriptServiceV1 kubernetesScriptServiceV1;
         readonly IAsyncClientFileTransferService clientFileTransferServiceV1;
         readonly IAsyncClientCapabilitiesServiceV2 capabilitiesServiceV2;
         readonly TentacleClientOptions clientOptions;
@@ -80,6 +82,7 @@ namespace Octopus.Tentacle.Client
             scriptServiceV1 = halibutRuntime.CreateAsyncClient<IScriptService, IAsyncClientScriptService>(serviceEndPoint);
             scriptServiceV2 = halibutRuntime.CreateAsyncClient<IScriptServiceV2, IAsyncClientScriptServiceV2>(serviceEndPoint);
             kubernetesScriptServiceV1Alpha = halibutRuntime.CreateAsyncClient<IKubernetesScriptServiceV1Alpha, IAsyncClientKubernetesScriptServiceV1Alpha>(serviceEndPoint);
+            kubernetesScriptServiceV1 = halibutRuntime.CreateAsyncClient<IKubernetesScriptServiceV1, IAsyncClientKubernetesScriptServiceV1>(serviceEndPoint);
             clientFileTransferServiceV1 = halibutRuntime.CreateAsyncClient<IFileTransferService, IAsyncClientFileTransferService>(serviceEndPoint);
             capabilitiesServiceV2 = halibutRuntime.CreateAsyncClient<ICapabilitiesServiceV2, IAsyncClientCapabilitiesServiceV2>(serviceEndPoint).WithBackwardsCompatability();
 
@@ -88,6 +91,7 @@ namespace Octopus.Tentacle.Client
                 scriptServiceV1 = tentacleServicesDecoratorFactory.Decorate(scriptServiceV1);
                 scriptServiceV2 = tentacleServicesDecoratorFactory.Decorate(scriptServiceV2);
                 kubernetesScriptServiceV1Alpha = tentacleServicesDecoratorFactory.Decorate(kubernetesScriptServiceV1Alpha);
+                kubernetesScriptServiceV1 = tentacleServicesDecoratorFactory.Decorate(kubernetesScriptServiceV1);
                 clientFileTransferServiceV1 = tentacleServicesDecoratorFactory.Decorate(clientFileTransferServiceV1);
                 capabilitiesServiceV2 = tentacleServicesDecoratorFactory.Decorate(capabilitiesServiceV2);
             }
@@ -181,6 +185,7 @@ namespace Octopus.Tentacle.Client
                     scriptServiceV1,
                     scriptServiceV2,
                     kubernetesScriptServiceV1Alpha,
+                    kubernetesScriptServiceV1,
                     capabilitiesServiceV2,
                     scriptObserverBackOffStrategy,
                     rpcCallExecutor,
