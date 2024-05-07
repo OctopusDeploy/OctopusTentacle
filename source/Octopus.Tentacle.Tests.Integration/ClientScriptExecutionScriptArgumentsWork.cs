@@ -23,7 +23,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
                 .SetScriptBody(new ScriptBuilder().PrintArguments())
-                .SetArguments(new[] { "First", "Second", "AndSpacesAreNotHandledWellInTentacle" })
+                .WithArguments(new[] { "First", "Second", "AndSpacesAreNotHandledWellInTentacle" })
                 .Build();
 
             var tentacleServicesDecorator = new TentacleServiceDecoratorBuilder().Build();

@@ -65,7 +65,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Print("Lets do it")
                     .PrintNTimesWithDelay("another one", 10, TimeSpan.FromSeconds(1))
                     .Print("All done"))
-                .SetDurationStartScriptCanWaitForScriptToFinish(TimeSpan.FromMinutes(1))
+                .WithDurationStartScriptCanWaitForScriptToFinish(TimeSpan.FromMinutes(1))
                 .Build();
 
             var (finalResponse, logs) = await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken);

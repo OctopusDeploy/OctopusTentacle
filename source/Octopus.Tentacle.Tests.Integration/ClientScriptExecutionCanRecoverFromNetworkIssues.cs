@@ -44,7 +44,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .WaitForFileToExist(waitForFile)
                     .Print("hello"))
                 // Configure the start script command to wait a long time, so we have plenty of time to kill the connection.
-                .SetDurationStartScriptCanWaitForScriptToFinish(TimeSpan.FromHours(1))
+                .WithDurationStartScriptCanWaitForScriptToFinish(TimeSpan.FromHours(1))
                 .Build();
 
             var inMemoryLog = new InMemoryLog();

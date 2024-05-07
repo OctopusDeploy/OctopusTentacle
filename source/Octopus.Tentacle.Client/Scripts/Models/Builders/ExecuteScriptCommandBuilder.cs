@@ -27,7 +27,7 @@ namespace Octopus.Tentacle.Client.Scripts.Models.Builders
                 ScriptIsolationConfiguration.NoTimeout);
         }
 
-        public ExecuteScriptCommandBuilder SetScriptBody(string scriptBody)
+        public ExecuteScriptCommandBuilder WithScriptBody(string scriptBody)
         {
             ScriptBody = new StringBuilder(scriptBody);
             return this;
@@ -39,22 +39,28 @@ namespace Octopus.Tentacle.Client.Scripts.Models.Builders
             return this;
         }
 
-        public ExecuteScriptCommandBuilder AddAdditionalScriptType(ScriptType scriptType, string scriptBody)
+        public ExecuteScriptCommandBuilder WithAdditionalScriptType(ScriptType scriptType, string scriptBody)
         {
             AdditionalScripts.Add(scriptType, scriptBody);
             return this;
         }
 
-        public ExecuteScriptCommandBuilder SetIsolationLevel(ScriptIsolationLevel isolation)
+        public ExecuteScriptCommandBuilder WithIsolationLevel(ScriptIsolationLevel isolation)
         {
             IsolationConfiguration = IsolationConfiguration with { IsolationLevel= isolation };
             return this;
         }
 
-        public ExecuteScriptCommandBuilder SetNoIsolationLevel() => SetIsolationLevel(ScriptIsolationLevel.NoIsolation);
-        public ExecuteScriptCommandBuilder SetFullIsolationLevel() => SetIsolationLevel(ScriptIsolationLevel.FullIsolation);
+        public ExecuteScriptCommandBuilder WithScriptFile(ScriptFile scriptFile)
+        {
+            Files.Add(scriptFile);
+            return this;
+        }
 
-        public ExecuteScriptCommandBuilder SetFiles(IEnumerable<ScriptFile>? files)
+        public ExecuteScriptCommandBuilder WithNoIsolationLevel() => WithIsolationLevel(ScriptIsolationLevel.NoIsolation);
+        public ExecuteScriptCommandBuilder WithFullIsolationLevel() => WithIsolationLevel(ScriptIsolationLevel.FullIsolation);
+
+        public ExecuteScriptCommandBuilder WithFiles(IEnumerable<ScriptFile>? files)
         {
             Files.Clear();
             if (files is not null)
@@ -65,7 +71,7 @@ namespace Octopus.Tentacle.Client.Scripts.Models.Builders
             return this;
         }
 
-        public ExecuteScriptCommandBuilder SetArguments(IEnumerable<string>? arguments)
+        public ExecuteScriptCommandBuilder WithArguments(IEnumerable<string>? arguments)
         {
             Arguments.Clear();
             if (arguments is not null)
@@ -76,27 +82,20 @@ namespace Octopus.Tentacle.Client.Scripts.Models.Builders
             return this;
         }
 
-        public ExecuteScriptCommandBuilder SetIsolationMutexTimeout(TimeSpan scriptIsolationMutexTimeout)
+        public ExecuteScriptCommandBuilder WithIsolationMutexTimeout(TimeSpan scriptIsolationMutexTimeout)
         {
             IsolationConfiguration = IsolationConfiguration with { MutexTimeout= scriptIsolationMutexTimeout };
             return this;
         }
 
-        public ExecuteScriptCommandBuilder SetNoIsolationMutexTimeout() => SetIsolationMutexTimeout(ScriptIsolationConfiguration.NoTimeout);
+        public ExecuteScriptCommandBuilder WithNoIsolationMutexTimeout() => WithIsolationMutexTimeout(ScriptIsolationConfiguration.NoTimeout);
 
-        public ExecuteScriptCommandBuilder SetIsolationMutexName(string name)
+        public ExecuteScriptCommandBuilder WithIsolationMutexName(string name)
         {
             IsolationConfiguration = IsolationConfiguration with { MutexName= name };
             return this;
         }
 
         public abstract ExecuteScriptCommand Build();
-
-
-        public ExecuteScriptCommandBuilder AddFile(ScriptFile scriptFile)
-        {
-            Files.Add(scriptFile);
-            return this;
-        }
     }
 }

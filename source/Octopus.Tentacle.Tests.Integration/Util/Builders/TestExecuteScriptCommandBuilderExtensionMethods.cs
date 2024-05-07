@@ -10,7 +10,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders
         {
             var scriptBody = new StringBuilder(PlatformDetection.IsRunningOnWindows ? windowsScript : bashScript);
 
-            builder.SetScriptBody(scriptBody.ToString());
+            builder.WithScriptBody(scriptBody.ToString());
 
             return builder;
         }
@@ -19,7 +19,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders
         {
             var scriptBody = new StringBuilder(scriptBuilder.BuildForCurrentOs());
 
-            builder.SetScriptBody(scriptBody.ToString());
+            builder.WithScriptBody(scriptBody.ToString());
 
             return builder;
         }

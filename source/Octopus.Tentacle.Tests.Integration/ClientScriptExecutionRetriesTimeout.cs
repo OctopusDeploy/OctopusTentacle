@@ -314,7 +314,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Sleep(TimeSpan.FromHours(1))
                     .Print("End Script"))
                 // Don't wait in start script as we want to tst get status
-                .SetDurationStartScriptCanWaitForScriptToFinish(null)
+                .WithDurationStartScriptCanWaitForScriptToFinish(null)
                 .Build();
 
             var duration = Stopwatch.StartNew();
@@ -370,7 +370,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .SetScriptBody(b => b
                     .Sleep(TimeSpan.FromHours(1)))
                 // Don't wait in start script as we want to test get status
-                .SetDurationStartScriptCanWaitForScriptToFinish(null)
+                .WithDurationStartScriptCanWaitForScriptToFinish(null)
                 .Build();
 
             var executeScriptTask = clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, inMemoryLog);
@@ -439,7 +439,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Sleep(TimeSpan.FromHours(1))
                     .Print("End Script"))
                 // Don't wait in start script as we want to tst get status
-                .SetDurationStartScriptCanWaitForScriptToFinish(null)
+                .WithDurationStartScriptCanWaitForScriptToFinish(null)
                 .Build();
 
             // Start the script which will wait for a file to exist
@@ -509,7 +509,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .SetScriptBody(b => b
                     .Sleep(TimeSpan.FromHours(1)))
                 // Don't wait in start script as we want to test get status
-                .SetDurationStartScriptCanWaitForScriptToFinish(null)
+                .WithDurationStartScriptCanWaitForScriptToFinish(null)
                 .Build();
 
             // Start the script which will wait for a file to exist

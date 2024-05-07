@@ -22,7 +22,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
                 .SetScriptBody(new ScriptBuilder().PrintFileContents("foo.txt"))
-                .AddFile(new ScriptFile("foo.txt", DataStream.FromString("The File Contents")))
+                .WithScriptFile(new ScriptFile("foo.txt", DataStream.FromString("The File Contents")))
                 .Build();
 
             var (finalResponse, logs) = await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken);
