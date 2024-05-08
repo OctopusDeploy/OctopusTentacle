@@ -36,11 +36,11 @@ namespace Octopus.Tentacle.Commands
         protected override void Start()
         {
             base.Start();
-            if (!fromRegistry && string.IsNullOrWhiteSpace(importFile))
+            if (!fromRegistry && string.IsNullOrWhiteSpace(importFile) && string.IsNullOrWhiteSpace(importBase64))
                 throw new ControlledFailureException("Please specify the certificate to import.");
 
-            if (fromRegistry && !string.IsNullOrWhiteSpace(importFile))
-                throw new ControlledFailureException("Please specify only one of either from-registry or from-file.");
+            if (fromRegistry && (!string.IsNullOrWhiteSpace(importFile) || !string.IsNullOrWhiteSpace(importBase64)))
+                throw new ControlledFailureException("Please specify only one of either from-registry or from-file or from-base64");
 
             X509Certificate2? x509Certificate = null;
             if (fromRegistry)
@@ -82,7 +82,7 @@ namespace Octopus.Tentacle.Commands
             }
             else if (!string.IsNullOrWhiteSpace(importBase64))
             {
-                log.Info($"Importing the certificate via base64 parameter...");
+                log.Info("Importing the certificate via base64...");
                 x509Certificate = CertificateEncoder.FromBase64String(importBase64, log);
             }
 
