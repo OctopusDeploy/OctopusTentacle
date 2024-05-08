@@ -150,7 +150,7 @@ public class KubernetesAgentInstaller
 
     async Task<string> GetAgentThumbprint()
     {
-        var maxAttempts = 10;
+        var maxAttempts = 30;
 
         string? thumbprint = null;
         var attempt = 0;
@@ -194,7 +194,7 @@ public class KubernetesAgentInstaller
             }
 
             attempt++;
-            await Task.Delay(TimeSpan.FromSeconds(1));
+            await Task.Delay(TimeSpan.FromSeconds(2));
         } while (thumbprint is null);
 
         throw new InvalidOperationException($"Failed to load the generated thumbprint after {maxAttempts} attempts");
