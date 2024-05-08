@@ -6,10 +6,10 @@ using FluentAssertions;
 using Halibut;
 using NSubstitute;
 using NUnit.Framework;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.Client.Execution;
 using Octopus.Tentacle.Client.Observability;
 using Octopus.Tentacle.CommonTestUtils;
+using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
 
@@ -302,7 +302,7 @@ namespace Octopus.Tentacle.Client.Tests
                 new RpcCall(RpcService, RpcCallName),
                 action,
                 null,
-                Substitute.For<ILog>(),
+                Substitute.For<ISomethingLog>(),
                 clientOperationMetricsBuilder,
                 cancellationToken);
         }
@@ -319,7 +319,7 @@ namespace Octopus.Tentacle.Client.Tests
             return await sut.ExecuteWithNoRetries(
                 new RpcCall(RpcService, RpcCallName),
                 action,
-                Substitute.For<ILog>(),
+                Substitute.For<ISomethingLog>(),
                 clientOperationMetricsBuilder,
                 cancellationToken);
         }
@@ -340,7 +340,7 @@ namespace Octopus.Tentacle.Client.Tests
                     await action(ct);
                     return true;
                 },
-                Substitute.For<ILog>(),
+                Substitute.For<ISomethingLog>(),
                 clientOperationMetricsBuilder,
                 cancellationToken);
         }

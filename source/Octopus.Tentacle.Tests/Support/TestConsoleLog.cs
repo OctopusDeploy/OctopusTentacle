@@ -5,7 +5,7 @@ using Octopus.Tentacle.Diagnostics;
 
 namespace Octopus.Tentacle.Tests.Support
 {
-    public class TestConsoleLog : Log
+    public class TestConsoleLog : Log, ILog
     {
         public override bool IsEnabled(LogCategory category)
             => true;

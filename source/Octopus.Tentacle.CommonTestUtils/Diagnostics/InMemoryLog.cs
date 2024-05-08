@@ -8,28 +8,23 @@ using System.Threading;
 using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Diagnostics;
+using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Diagnostics;
 
 namespace Octopus.Tentacle.CommonTestUtils.Diagnostics
 {
     public class InMemoryLog : SystemLog
     {
-        readonly ILog log;
+        readonly ISomethingLog log;
         readonly BlockingCollection<LogEvent> events = new BlockingCollection<LogEvent>(1000);
 
         public InMemoryLog() : this(null)
         {
         }
 
-        public InMemoryLog(ILog? log)
+        public InMemoryLog(ISomethingLog? log)
         {
             this.log = log ?? new TestConsoleLog();
-        }
-
-        protected override void WriteEvent(LogEvent logEvent)
-        {
-            events.Add(logEvent);
-            log.Write(logEvent.Category, logEvent.Error!, logEvent.MessageText);
         }
 
         public string GetLog()

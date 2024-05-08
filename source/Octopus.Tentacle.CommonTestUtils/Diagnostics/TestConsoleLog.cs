@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using Octopus.Diagnostics;
+using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Diagnostics;
 
 namespace Octopus.Tentacle.CommonTestUtils.Diagnostics

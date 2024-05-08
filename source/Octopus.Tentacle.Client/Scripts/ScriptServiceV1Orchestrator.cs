@@ -9,7 +9,6 @@ using Octopus.Tentacle.Client.Scripts.Models;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.Observability;
-using ILog = Octopus.Diagnostics.ILog;
 
 namespace Octopus.Tentacle.Client.Scripts
 {
@@ -18,7 +17,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
         readonly RpcCallExecutor rpcCallExecutor;
         readonly ClientOperationMetricsBuilder clientOperationMetricsBuilder;
-        readonly ILog logger;
+        readonly ISomethingLog logger;
 
         readonly IAsyncClientScriptService clientScriptServiceV1;
 
@@ -30,7 +29,7 @@ namespace Octopus.Tentacle.Client.Scripts
             OnScriptStatusResponseReceived onScriptStatusResponseReceived,
             OnScriptCompleted onScriptCompleted,
             TentacleClientOptions clientOptions,
-            ILog logger)
+            ISomethingLog logger)
             : base(scriptObserverBackOffStrategy,
                 onScriptStatusResponseReceived,
                 onScriptCompleted,

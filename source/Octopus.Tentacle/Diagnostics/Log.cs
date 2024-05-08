@@ -2,12 +2,13 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Octopus.Diagnostics;
+using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Diagnostics.Formatters;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Diagnostics
 {
-    public abstract class Log : ILog, IDisposable
+    public abstract class Log : ISomethingLog, IDisposable
     {
         public static ConcurrentBag<ILogAppender> Appenders { get; } = new();
         static IEnumerable<ILogAppender> GetThreadSafeAppenderCollection() => Appenders.ToArray();

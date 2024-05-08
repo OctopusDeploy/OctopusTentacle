@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Octopus.Diagnostics;
+using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Observability;
 
 namespace Octopus.Tentacle.CommonTestUtils
@@ -17,22 +17,22 @@ namespace Octopus.Tentacle.CommonTestUtils
         public IReadOnlyList<ClientOperationMetrics> DownloadFileMetrics => downloadFileMetrics;
         public IReadOnlyList<ClientOperationMetrics> ExecuteScriptMetrics => executeScriptMetrics;
 
-        public void RpcCallCompleted(RpcCallMetrics rpcCallMetrics, ILog logger)
+        public void RpcCallCompleted(RpcCallMetrics rpcCallMetrics, ISomethingLog logger)
         {
             this.rpcCallMetrics.Add(rpcCallMetrics);
         }
 
-        public void UploadFileCompleted(ClientOperationMetrics clientOperationMetrics, ILog logger)
+        public void UploadFileCompleted(ClientOperationMetrics clientOperationMetrics, ISomethingLog logger)
         {
             uploadFileMetrics.Add(clientOperationMetrics);
         }
 
-        public void DownloadFileCompleted(ClientOperationMetrics clientOperationMetrics, ILog logger)
+        public void DownloadFileCompleted(ClientOperationMetrics clientOperationMetrics, ISomethingLog logger)
         {
             downloadFileMetrics.Add(clientOperationMetrics);
         }
 
-        public void ExecuteScriptCompleted(ClientOperationMetrics clientOperationMetrics, ILog logger)
+        public void ExecuteScriptCompleted(ClientOperationMetrics clientOperationMetrics, ISomethingLog logger)
         {
             executeScriptMetrics.Add(clientOperationMetrics);
         }

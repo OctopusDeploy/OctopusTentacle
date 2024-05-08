@@ -1,22 +1,20 @@
-﻿using Octopus.Diagnostics;
-
-namespace Octopus.Tentacle.Contracts.Observability
+﻿namespace Octopus.Tentacle.Contracts.Observability
 {
     public class NoTentacleClientObserver : ITentacleClientObserver
     {
-        public void RpcCallCompleted(RpcCallMetrics rpcCallMetrics, ILog logger)
+        public void RpcCallCompleted(RpcCallMetrics rpcCallMetrics, ISomethingLog logger)
         {
         }
 
-        public void UploadFileCompleted(ClientOperationMetrics clientOperationMetrics, ILog logger)
+        public void UploadFileCompleted(ClientOperationMetrics clientOperationMetrics, ISomethingLog logger)
         {
         }
 
-        public void DownloadFileCompleted(ClientOperationMetrics clientOperationMetrics, ILog logger)
+        public void DownloadFileCompleted(ClientOperationMetrics clientOperationMetrics, ISomethingLog logger)
         {
         }
 
-        public void ExecuteScriptCompleted(ClientOperationMetrics clientOperationMetrics, ILog logger)
+        public void ExecuteScriptCompleted(ClientOperationMetrics clientOperationMetrics, ISomethingLog logger)
         {
         }
     }
