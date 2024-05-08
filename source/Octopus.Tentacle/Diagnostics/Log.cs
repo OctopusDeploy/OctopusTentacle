@@ -8,7 +8,7 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Diagnostics
 {
-    public abstract class Log : ISomethingLog, IDisposable
+    public abstract class Log : ILog, ISomethingLog, IDisposable
     {
         public static ConcurrentBag<ILogAppender> Appenders { get; } = new();
         static IEnumerable<ILogAppender> GetThreadSafeAppenderCollection() => Appenders.ToArray();
