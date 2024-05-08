@@ -76,6 +76,9 @@ function validateVariables() {
         if [[ -n "$ServerPort" ]]; then
             echo " - server port $ServerPort"
         fi
+        if [[ -n "$ServerSubscriptionId" ]]; then
+            echo " - server subscription id $ServerSubscriptionId"
+        fi
     else
         echo " - communication mode 'Kubernetes' (Listening)"
         echo " - registered port $ListeningPort"
@@ -103,6 +106,9 @@ function validateVariables() {
     if [[ -n "$DefaultNamespace" ]]; then
         echo " - default namespace '$DefaultNamespace'"
     fi
+    if [[ -n "$TentacleCertificate" ]]; then
+        echo " - tentacle certificate custom"
+    fi
 }
 
 function configureTentacle() {
@@ -118,8 +124,13 @@ function configureTentacle() {
         tentacle configure --instance "$instanceName" --port $internalListeningPort --noListen "False"
     fi
 
-    echo "Creating certificate ..."
-    tentacle new-certificate --instance "$instanceName" --if-blank
+    if [[-n "$TentacleCertificate" ]]; then
+          echo "Importing custom certificate ..."
+          tentacle import-certificate --instance "$instanceName" --from-base64="$TentacleCertificate"
+        else 
+          echo "Creating certificate ..."
+          tentacle new-certificate --instance "$instanceName" --if-blank
+    fi
 }
 
 function setupVariablesForRegistrationCheck() {
@@ -195,6 +206,10 @@ function registerTentacle() {
 
         if [[ -n "$ServerPort" ]]; then
             ARGS+=('--server-comms-port' $ServerPort)
+        fi
+        
+        if [[ -n "$ServerSubscriptionId" ]]; then
+            ARGS+=('--server-subscription-id' $ServerSubscriptionId)
         fi
     else
         ARGS+=(

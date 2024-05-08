@@ -265,5 +265,33 @@ namespace Octopus.Tentacle.Tests.Commands
 
             operation.Received().ExecuteAsync(repository);
         }
+        
+        [Test]
+        public void ShouldRegisterPollingTentacleWithCustomServerSubscriptionId()
+        {
+            var subscriptionId = "poll://xz6h25sh28shx52/";
+
+            Start("--env=Development",
+                "--server=http://localhost",
+                "--name=MyMachine",
+                "--apiKey=ABC123",
+                "--force",
+                "--role=app-server",
+                "--comms-style=TentacleActive",
+                "--server-comms-port=10943",
+                $"--server-subscription-id={subscriptionId}"
+                );
+
+            Assert.That(operation.CommunicationStyle, Is.EqualTo(CommunicationStyle.TentacleActive));
+            Assert.That(operation.SubscriptionId.ToString(), Is.EqualTo(subscriptionId));
+
+            configuration.Received().AddOrUpdateTrustedOctopusServer(
+                Arg.Is<OctopusServerConfiguration>(x => x.Address.ToString() == "https://localhost:10943/" &&
+                    x.SubscriptionId == subscriptionId &&
+                    x.CommunicationStyle == CommunicationStyle.TentacleActive &&
+                    x.Thumbprint == serverThumbprint));
+
+            operation.Received().ExecuteAsync(repository);
+        }
     }
 }

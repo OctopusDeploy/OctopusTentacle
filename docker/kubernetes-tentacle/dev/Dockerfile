@@ -50,6 +50,7 @@ ENV ServerUsername=""
 ENV ServerCommsAddress=""
 ENV ServerPort=""
 ENV ServerUrl=""
+ENV ServerSubscriptionId=""
 ENV Space="Default"
 ENV TargetEnvironment=""
 ENV TargetName=""
@@ -64,6 +65,7 @@ ENV OCTOPUS__K8STENTACLE__PODVOLUMEJSON=""
 ENV OCTOPUS__K8STENTACLE__DISABLEAUTOPODCLEANUP="False"
 ENV TentacleHome=""
 ENV TentacleApplications=""
+ENV TentacleCertificate=""
 
 ENTRYPOINT [ "/dev-scripts/bootstrap.sh" ] 
 
