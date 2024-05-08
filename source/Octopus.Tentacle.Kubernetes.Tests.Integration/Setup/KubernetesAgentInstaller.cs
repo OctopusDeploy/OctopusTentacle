@@ -150,8 +150,9 @@ public class KubernetesAgentInstaller
 
     async Task<string> GetAgentThumbprint()
     {
-        string? thumbprint = null;
+        var maxAttempts = 30;
 
+        string? thumbprint = null;
         var attempt = 0;
         do
         {
@@ -187,16 +188,16 @@ public class KubernetesAgentInstaller
                 return thumbprint;
             }
 
-            if (attempt == 5)
+            if (attempt == maxAttempts)
             {
                 break;
             }
 
             attempt++;
-            await Task.Delay(500);
+            await Task.Delay(TimeSpan.FromSeconds(2));
         } while (thumbprint is null);
 
-        throw new InvalidOperationException("Failed to load the generated thumbprint after 5 attempts");
+        throw new InvalidOperationException($"Failed to load the generated thumbprint after {maxAttempts} attempts");
     }
 
     string NamespaceFlag => $"--namespace \"{Namespace}\"";
