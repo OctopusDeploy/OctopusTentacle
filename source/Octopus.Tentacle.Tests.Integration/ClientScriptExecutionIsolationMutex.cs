@@ -36,14 +36,14 @@ namespace Octopus.Tentacle.Tests.Integration
                 .SetScriptBody(new ScriptBuilder()
                     .CreateFile(firstScriptStartFile)
                     .WaitForFileToExist(firstScriptWaitFile))
-                .SetIsolationLevel(ScriptIsolationLevel.FullIsolation)
-                .SetIsolationMutexName("mymutex")
+                .WithIsolationLevel(ScriptIsolationLevel.FullIsolation)
+                .WithIsolationMutexName("mymutex")
                 .Build();
 
             var secondStartScriptCommand = new TestExecuteShellScriptCommandBuilder()
                 .SetScriptBody(new ScriptBuilder().CreateFile(secondScriptStart))
-                .SetIsolationLevel(levelOfSecondScript)
-                .SetIsolationMutexName("mymutex")
+                .WithIsolationLevel(levelOfSecondScript)
+                .WithIsolationMutexName("mymutex")
                 .Build();
 
             var tentacleClient = clientTentacle.TentacleClient;
@@ -96,14 +96,14 @@ namespace Octopus.Tentacle.Tests.Integration
                 .SetScriptBody(new ScriptBuilder()
                     .CreateFile(firstScriptStartFile)
                     .WaitForFileToExist(firstScriptWaitFile))
-                .SetIsolationLevel(scriptsInParallelTestCase.LevelOfFirstScript)
-                .SetIsolationMutexName(scriptsInParallelTestCase.MutexForFirstScript)
+                .WithIsolationLevel(scriptsInParallelTestCase.LevelOfFirstScript)
+                .WithIsolationMutexName(scriptsInParallelTestCase.MutexForFirstScript)
                 .Build();
 
             var secondStartScriptCommand = new TestExecuteShellScriptCommandBuilder()
                 .SetScriptBody(new ScriptBuilder().CreateFile(secondScriptStart))
-                .SetIsolationLevel(scriptsInParallelTestCase.LevelOfSecondScript)
-                .SetIsolationMutexName(scriptsInParallelTestCase.MutexForSecondScript)
+                .WithIsolationLevel(scriptsInParallelTestCase.LevelOfSecondScript)
+                .WithIsolationMutexName(scriptsInParallelTestCase.MutexForSecondScript)
                 .Build();
 
             var tentacleClient = clientTentacle.TentacleClient;

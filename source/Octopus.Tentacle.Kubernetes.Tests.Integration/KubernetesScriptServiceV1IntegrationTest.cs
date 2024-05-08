@@ -34,7 +34,7 @@ do
 done
 ";
         var command = new ExecuteKubernetesScriptCommandBuilder(LoggingUtils.CurrentTestHash())
-            .SetScriptBody(scriptBody)
+            .WithScriptBody(scriptBody)
             .Build();
 
         //act

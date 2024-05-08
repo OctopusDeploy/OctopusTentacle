@@ -50,8 +50,8 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Print("hello")
                     .WaitForFileToExist(waitForFile)
                     .Print("AllDone"))
-                .SetIsolationLevel(ScriptIsolationLevel.FullIsolation)
-                .SetIsolationMutexName("bob")
+                .WithIsolationLevel(ScriptIsolationLevel.FullIsolation)
+                .WithIsolationMutexName("bob")
                 .Build();
 
             var logs = new List<ProcessOutput>();
