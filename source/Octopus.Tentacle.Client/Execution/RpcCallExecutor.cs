@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.Client.Observability;
 using Octopus.Tentacle.Client.Retries;
 using Octopus.Tentacle.Contracts.Observability;

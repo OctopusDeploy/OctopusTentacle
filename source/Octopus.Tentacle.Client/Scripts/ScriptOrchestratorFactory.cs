@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Halibut.Diagnostics;
 using Halibut.ServiceModel;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.Client.Capabilities;
 using Octopus.Tentacle.Client.Execution;
 using Octopus.Tentacle.Client.Kubernetes;
 using Octopus.Tentacle.Client.Observability;
+using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Capabilities;
 using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.Observability;
@@ -21,7 +22,7 @@ namespace Octopus.Tentacle.Client.Scripts
         readonly OnScriptStatusResponseReceived onScriptStatusResponseReceived;
         readonly OnScriptCompleted onScriptCompleted;
         readonly TimeSpan onCancellationAbandonCompleteScriptAfter;
-        readonly ILog logger;
+        readonly ITentacleContractLogger logger;
 
         readonly IAsyncClientScriptService clientScriptServiceV1;
         readonly IAsyncClientScriptServiceV2 clientScriptServiceV2;
