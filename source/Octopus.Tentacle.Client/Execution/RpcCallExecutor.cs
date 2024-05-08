@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.Client.Observability;
 using Octopus.Tentacle.Client.Retries;
+using Octopus.Tentacle.Contracts.Logging;
 using Octopus.Tentacle.Contracts.Observability;
 
 namespace Octopus.Tentacle.Client.Execution
@@ -27,7 +27,7 @@ namespace Octopus.Tentacle.Client.Execution
             bool retriesEnabled,
             RpcCall rpcCall,
             Func<CancellationToken, Task<T>> action,
-            ILog logger,
+            IOperationLog logger,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
         {
@@ -39,7 +39,7 @@ namespace Octopus.Tentacle.Client.Execution
             RpcCall rpcCall,
             Func<CancellationToken, Task<T>> action,
             Action<Exception>? onErrorAction,
-            ILog logger,
+            IOperationLog logger,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
         {
@@ -52,7 +52,7 @@ namespace Octopus.Tentacle.Client.Execution
             RpcCall rpcCall,
             Func<CancellationToken, Task<T>> action,
             Action<Exception>? onErrorAction,
-            ILog logger,
+            IOperationLog logger,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
         {
@@ -121,7 +121,7 @@ namespace Octopus.Tentacle.Client.Execution
         public async Task<T> ExecuteWithNoRetries<T>(
             RpcCall rpcCall,
             Func<CancellationToken, Task<T>> action,
-            ILog logger,
+            IOperationLog logger,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
         {
@@ -152,7 +152,7 @@ namespace Octopus.Tentacle.Client.Execution
         public async Task ExecuteWithNoRetries(
             RpcCall rpcCall,
             Func<CancellationToken, Task> action,
-            ILog logger,
+            IOperationLog logger,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
         {
