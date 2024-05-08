@@ -17,22 +17,22 @@ namespace Octopus.Tentacle.CommonTestUtils
         public IReadOnlyList<ClientOperationMetrics> DownloadFileMetrics => downloadFileMetrics;
         public IReadOnlyList<ClientOperationMetrics> ExecuteScriptMetrics => executeScriptMetrics;
 
-        public void RpcCallCompleted(RpcCallMetrics rpcCallMetrics, IOperationLog logger)
+        public void RpcCallCompleted(RpcCallMetrics rpcCallMetrics, ITaskLog logger)
         {
             this.rpcCallMetrics.Add(rpcCallMetrics);
         }
 
-        public void UploadFileCompleted(ClientOperationMetrics clientOperationMetrics, IOperationLog logger)
+        public void UploadFileCompleted(ClientOperationMetrics clientOperationMetrics, ITaskLog logger)
         {
             uploadFileMetrics.Add(clientOperationMetrics);
         }
 
-        public void DownloadFileCompleted(ClientOperationMetrics clientOperationMetrics, IOperationLog logger)
+        public void DownloadFileCompleted(ClientOperationMetrics clientOperationMetrics, ITaskLog logger)
         {
             downloadFileMetrics.Add(clientOperationMetrics);
         }
 
-        public void ExecuteScriptCompleted(ClientOperationMetrics clientOperationMetrics, IOperationLog logger)
+        public void ExecuteScriptCompleted(ClientOperationMetrics clientOperationMetrics, ITaskLog logger)
         {
             executeScriptMetrics.Add(clientOperationMetrics);
         }
