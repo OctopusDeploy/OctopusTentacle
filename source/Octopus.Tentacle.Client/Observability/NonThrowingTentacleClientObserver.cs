@@ -13,7 +13,7 @@ namespace Octopus.Tentacle.Client.Observability
             this.inner = inner;
         }
 
-        public void RpcCallCompleted(RpcCallMetrics rpcCallMetrics, ITaskLog logger)
+        public void RpcCallCompleted(RpcCallMetrics rpcCallMetrics, ITentacleTaskLog logger)
         {
             try
             {
@@ -25,7 +25,7 @@ namespace Octopus.Tentacle.Client.Observability
             }
         }
 
-        public void UploadFileCompleted(ClientOperationMetrics clientOperationMetrics, ITaskLog logger)
+        public void UploadFileCompleted(ClientOperationMetrics clientOperationMetrics, ITentacleTaskLog logger)
         {
             try
             {
@@ -37,7 +37,7 @@ namespace Octopus.Tentacle.Client.Observability
             }
         }
 
-        public void DownloadFileCompleted(ClientOperationMetrics clientOperationMetrics, ITaskLog logger)
+        public void DownloadFileCompleted(ClientOperationMetrics clientOperationMetrics, ITentacleTaskLog logger)
         {
             try
             {
@@ -49,7 +49,7 @@ namespace Octopus.Tentacle.Client.Observability
             }
         }
 
-        public void ExecuteScriptCompleted(ClientOperationMetrics clientOperationMetrics, ITaskLog logger)
+        public void ExecuteScriptCompleted(ClientOperationMetrics clientOperationMetrics, ITentacleTaskLog logger)
         {
             try
             {

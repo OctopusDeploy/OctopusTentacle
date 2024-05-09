@@ -5,9 +5,9 @@ namespace Octopus.Tentacle.Contracts.Observability
 {
     public interface ITentacleClientObserver
     {
-        void RpcCallCompleted(RpcCallMetrics rpcCallMetrics, ITaskLog logger);
-        void UploadFileCompleted(ClientOperationMetrics clientOperationMetrics, ITaskLog logger);
-        void DownloadFileCompleted(ClientOperationMetrics clientOperationMetrics, ITaskLog logger);
-        void ExecuteScriptCompleted(ClientOperationMetrics clientOperationMetrics, ITaskLog logger);
+        void RpcCallCompleted(RpcCallMetrics rpcCallMetrics, ITentacleTaskLog logger);
+        void UploadFileCompleted(ClientOperationMetrics clientOperationMetrics, ITentacleTaskLog logger);
+        void DownloadFileCompleted(ClientOperationMetrics clientOperationMetrics, ITentacleTaskLog logger);
+        void ExecuteScriptCompleted(ClientOperationMetrics clientOperationMetrics, ITentacleTaskLog logger);
     }
 }

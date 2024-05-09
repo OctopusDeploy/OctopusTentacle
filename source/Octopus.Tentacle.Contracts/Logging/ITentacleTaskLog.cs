@@ -2,7 +2,7 @@
 
 namespace Octopus.Tentacle.Contracts.Logging
 {
-    public interface ITaskLog
+    public interface ITentacleTaskLog
     {
         void Info(string message);
         void Verbose(string message);

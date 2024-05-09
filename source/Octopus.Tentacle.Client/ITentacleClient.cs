@@ -12,8 +12,8 @@ namespace Octopus.Tentacle.Client
 {
     public interface ITentacleClient : IDisposable
     {
-        Task<UploadResult> UploadFile(string fileName, string path, DataStream package, ITaskLog logger, CancellationToken cancellationToken);
-        Task<DataStream?> DownloadFile(string remotePath, ITaskLog logger, CancellationToken cancellationToken);
+        Task<UploadResult> UploadFile(string fileName, string path, DataStream package, ITentacleTaskLog logger, CancellationToken cancellationToken);
+        Task<DataStream?> DownloadFile(string remotePath, ITentacleTaskLog logger, CancellationToken cancellationToken);
 
         /// <summary>
         /// Execute a script on Tentacle
@@ -29,7 +29,7 @@ namespace Octopus.Tentacle.Client
             ExecuteScriptCommand executeScriptCommand,
             OnScriptStatusResponseReceived onScriptStatusResponseReceived,
             OnScriptCompleted onScriptCompleted,
-            ITaskLog logger,
+            ITentacleTaskLog logger,
             CancellationToken scriptExecutionCancellationToken);
     }
 }
