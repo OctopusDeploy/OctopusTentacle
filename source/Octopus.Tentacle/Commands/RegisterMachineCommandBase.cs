@@ -43,6 +43,7 @@ namespace Octopus.Tentacle.Commands
         string spaceName = null!;
         string serverWebSocketAddress = null!;
         int? tentacleCommsPort = null;
+        string? serverSubscriptionId = null!;
 
         public RegisterMachineCommandBase(Lazy<TRegistrationOperationType> lazyRegisterMachineOperation,
             Lazy<IWritableTentacleConfiguration> configuration,
@@ -75,6 +76,7 @@ namespace Octopus.Tentacle.Commands
             Options.Add("server-comms-port=", "When using active communication, the comms port on the Octopus Server; the default is " + DefaultServerCommsPort + ". If specified, this will take precedence over any port number in server-comms-address.", s => serverCommsPort = int.Parse(s));
             Options.Add("server-comms-address=", "When using active communication, the comms address on the Octopus Server; the address of the Octopus Server will be used if omitted.", s => serverCommsAddress = s);
             Options.Add("server-web-socket=", "When using active communication over websockets, the address of the Octopus Server, eg 'wss://example.com/OctopusComms'. Refer to http://g.octopushq.com/WebSocketComms", s => serverWebSocketAddress = s);
+            Options.Add("server-subscription-id=", "When using active communication, the subscription id is what Octopus Server uses to identify this Tentacle this must be a valid URI e.g. poll://foobar/. If not specified, a new subscription id will be generated.", s => serverSubscriptionId = s);
             Options.Add("tentacle-comms-port=", "When using passive communication, the comms port that the Octopus Server is instructed to call back on to reach this machine; defaults to the configured listening port", s => tentacleCommsPort = int.Parse(s));
         }
 
@@ -149,11 +151,7 @@ namespace Octopus.Tentacle.Commands
             }
             else if (communicationStyle == CommunicationStyle.TentacleActive)
             {
-                Uri subscriptionId;
-                if (existingServer?.SubscriptionId != null)
-                    subscriptionId = new Uri(existingServer.SubscriptionId);
-                else
-                    subscriptionId = PollingSubscriptionId.Generate();
+                var subscriptionId = GetServerSubscriptionId(existingServer);
                 registerMachineOperation.SubscriptionId = subscriptionId;
                 server.SubscriptionId = subscriptionId.ToString();
             }
@@ -238,6 +236,28 @@ namespace Octopus.Tentacle.Commands
             }
 
             return address;
+        }
+
+        Uri GetServerSubscriptionId(OctopusServerConfiguration? existingServer)
+        {
+            // If we have an existing server configuration reuse that subscription ID
+            if (existingServer?.SubscriptionId != null)
+                return new Uri(existingServer.SubscriptionId);
+            
+            // If a subscription ID is included in the options use that
+            if (!string.IsNullOrWhiteSpace(serverSubscriptionId))
+            {
+                var parsedUri = new Uri(serverSubscriptionId);
+                if (parsedUri.Scheme != "poll")
+                {
+                    throw new ControlledFailureException("The ServerSubscriptionId must start with poll://");
+                }  
+                
+                return parsedUri;
+            }
+            
+            // Otherwise generate a new subscription ID
+            return PollingSubscriptionId.Generate();
         }
 
         #region Helpers
