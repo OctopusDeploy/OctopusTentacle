@@ -21,7 +21,7 @@ namespace Octopus.Tentacle.Client.Scripts
         readonly RpcCallExecutor rpcCallExecutor;
         readonly ClientOperationMetricsBuilder clientOperationMetricsBuilder;
         readonly TimeSpan onCancellationAbandonCompleteScriptAfter;
-        readonly ITentacleTaskLog logger;
+        readonly ITentacleClientTaskLog logger;
 
         public KubernetesScriptServiceV1Orchestrator(
             IAsyncClientKubernetesScriptServiceV1 clientKubernetesScriptServiceV1,
@@ -32,7 +32,7 @@ namespace Octopus.Tentacle.Client.Scripts
             OnScriptCompleted onScriptCompleted,
             TimeSpan onCancellationAbandonCompleteScriptAfter,
             TentacleClientOptions clientOptions,
-            ITentacleTaskLog logger)
+            ITentacleClientTaskLog logger)
             : base(scriptObserverBackOffStrategy,
                 onScriptStatusResponseReceived,
                 onScriptCompleted,

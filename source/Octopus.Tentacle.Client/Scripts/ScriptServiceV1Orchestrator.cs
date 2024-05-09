@@ -18,7 +18,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
         readonly RpcCallExecutor rpcCallExecutor;
         readonly ClientOperationMetricsBuilder clientOperationMetricsBuilder;
-        readonly ITentacleTaskLog logger;
+        readonly ITentacleClientTaskLog logger;
 
         readonly IAsyncClientScriptService clientScriptServiceV1;
 
@@ -30,7 +30,7 @@ namespace Octopus.Tentacle.Client.Scripts
             OnScriptStatusResponseReceived onScriptStatusResponseReceived,
             OnScriptCompleted onScriptCompleted,
             TentacleClientOptions clientOptions,
-            ITentacleTaskLog logger)
+            ITentacleClientTaskLog logger)
             : base(scriptObserverBackOffStrategy,
                 onScriptStatusResponseReceived,
                 onScriptCompleted,

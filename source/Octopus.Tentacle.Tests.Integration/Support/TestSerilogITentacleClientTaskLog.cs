@@ -41,7 +41,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
     public static class ILoggerExtensionMethods
     {
-        public static ITentacleTaskLog ToITentacleTaskLog(this ILogger logger)
+        public static ITentacleClientTaskLog ToITentacleTaskLog(this ILogger logger)
         {
             return new TestSerilogITentacleClientTaskLog(logger);
         }

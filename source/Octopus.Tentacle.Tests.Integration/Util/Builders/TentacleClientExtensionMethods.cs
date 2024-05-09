@@ -21,7 +21,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders
             ExecuteScriptCommand executeScriptCommand,
             CancellationToken token,
             OnScriptStatusResponseReceived? onScriptStatusResponseReceivedAction = null,
-            ITentacleTaskLog? log = null)
+            ITentacleClientTaskLog? log = null)
         {
             var logs = new List<ProcessOutput>();
             var finalResponse = await tentacleClient.ExecuteScript(executeScriptCommand,
@@ -45,7 +45,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders
             string remotePath,
             DataStream upload,
             CancellationToken token,
-            ITentacleTaskLog? log = null)
+            ITentacleClientTaskLog? log = null)
         {
             var result = await tentacleClient.UploadFile(Path.GetFileName(remotePath),
                 remotePath,
@@ -60,7 +60,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders
             this TentacleClient tentacleClient,
             string remotePath,
             CancellationToken token,
-            ITentacleTaskLog? log = null)
+            ITentacleClientTaskLog? log = null)
         {
             var result = await tentacleClient.DownloadFile(remotePath,
                 new SerilogLoggerBuilder().Build().ForContext<TentacleClient>().ToITentacleTaskLog().Chain(log),

@@ -101,7 +101,7 @@ namespace Octopus.Tentacle.Client
 
         public TimeSpan OnCancellationAbandonCompleteScriptAfter { get; set; } = TimeSpan.FromMinutes(1);
 
-        public async Task<UploadResult> UploadFile(string fileName, string path, DataStream package, ITentacleTaskLog logger, CancellationToken cancellationToken)
+        public async Task<UploadResult> UploadFile(string fileName, string path, DataStream package, ITentacleClientTaskLog logger, CancellationToken cancellationToken)
         {
             var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
 
@@ -136,7 +136,7 @@ namespace Octopus.Tentacle.Client
             }
         }
 
-        public async Task<DataStream?> DownloadFile(string remotePath, ITentacleTaskLog logger, CancellationToken cancellationToken)
+        public async Task<DataStream?> DownloadFile(string remotePath, ITentacleClientTaskLog logger, CancellationToken cancellationToken)
         {
             var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
 
@@ -174,7 +174,7 @@ namespace Octopus.Tentacle.Client
         public async Task<ScriptExecutionResult> ExecuteScript(ExecuteScriptCommand executeScriptCommand,
             OnScriptStatusResponseReceived onScriptStatusResponseReceived,
             OnScriptCompleted onScriptCompleted,
-            ITentacleTaskLog logger,
+            ITentacleClientTaskLog logger,
             CancellationToken scriptExecutionCancellationToken)
         {
             var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();

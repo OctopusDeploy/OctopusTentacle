@@ -13,7 +13,7 @@ using Octopus.Tentacle.Diagnostics;
 
 namespace Octopus.Tentacle.CommonTestUtils.Diagnostics
 {
-    public class InMemoryLog : SystemLog, ITentacleTaskLog
+    public class InMemoryLog : SystemLog, ITentacleClientTaskLog
     {
         readonly ILog log;
         readonly BlockingCollection<LogEvent> events = new BlockingCollection<LogEvent>(1000);

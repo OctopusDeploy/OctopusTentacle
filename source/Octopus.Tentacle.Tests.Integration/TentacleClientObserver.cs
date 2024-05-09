@@ -124,7 +124,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 this.errorOnExecuteScriptCompleted = errorOnExecuteScriptCompleted;
             }
 
-            public void RpcCallCompleted(RpcCallMetrics metrics, ITentacleTaskLog logger)
+            public void RpcCallCompleted(RpcCallMetrics metrics, ITentacleClientTaskLog logger)
             {
                 if (errorOnRpcCallCompleted)
                 {
@@ -132,7 +132,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 }
             }
 
-            public void UploadFileCompleted(ClientOperationMetrics clientOperationMetrics, ITentacleTaskLog logger)
+            public void UploadFileCompleted(ClientOperationMetrics clientOperationMetrics, ITentacleClientTaskLog logger)
             {
                 if (errorOnUploadFileCompleted)
                 {
@@ -140,7 +140,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 }
             }
 
-            public void DownloadFileCompleted(ClientOperationMetrics clientOperationMetrics, ITentacleTaskLog logger)
+            public void DownloadFileCompleted(ClientOperationMetrics clientOperationMetrics, ITentacleClientTaskLog logger)
             {
                 if (errorOnDownloadFileCompleted)
                 {
@@ -148,7 +148,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 }
             }
 
-            public void ExecuteScriptCompleted(ClientOperationMetrics clientOperationMetrics, ITentacleTaskLog logger)
+            public void ExecuteScriptCompleted(ClientOperationMetrics clientOperationMetrics, ITentacleClientTaskLog logger)
             {
                 if (errorOnExecuteScriptCompleted)
                 {

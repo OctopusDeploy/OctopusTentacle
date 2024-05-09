@@ -5,7 +5,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods
 {
     public static class LogExtensionMethods
     {
-        public static ITentacleTaskLog Chain(this ITentacleTaskLog log, ITentacleTaskLog? otherLog)
+        public static ITentacleClientTaskLog Chain(this ITentacleClientTaskLog log, ITentacleClientTaskLog? otherLog)
         {
             if (otherLog == null)
             {
@@ -15,12 +15,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods
             return new LogChain(log, otherLog);
         }
 
-        class LogChain : ITentacleTaskLog
+        class LogChain : ITentacleClientTaskLog
         {
-            private readonly ITentacleTaskLog log1;
-            private readonly ITentacleTaskLog log2;
+            private readonly ITentacleClientTaskLog log1;
+            private readonly ITentacleClientTaskLog log2;
 
-            public LogChain(ITentacleTaskLog log1, ITentacleTaskLog log2)
+            public LogChain(ITentacleClientTaskLog log1, ITentacleClientTaskLog log2)
             {
                 this.log1 = log1;
                 this.log2 = log2;

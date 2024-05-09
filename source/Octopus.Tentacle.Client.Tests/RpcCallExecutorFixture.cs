@@ -302,7 +302,7 @@ namespace Octopus.Tentacle.Client.Tests
                 new RpcCall(RpcService, RpcCallName),
                 action,
                 null,
-                Substitute.For<ITentacleTaskLog>(),
+                Substitute.For<ITentacleClientTaskLog>(),
                 clientOperationMetricsBuilder,
                 cancellationToken);
         }
@@ -319,7 +319,7 @@ namespace Octopus.Tentacle.Client.Tests
             return await sut.ExecuteWithNoRetries(
                 new RpcCall(RpcService, RpcCallName),
                 action,
-                Substitute.For<ITentacleTaskLog>(),
+                Substitute.For<ITentacleClientTaskLog>(),
                 clientOperationMetricsBuilder,
                 cancellationToken);
         }
@@ -340,7 +340,7 @@ namespace Octopus.Tentacle.Client.Tests
                     await action(ct);
                     return true;
                 },
-                Substitute.For<ITentacleTaskLog>(),
+                Substitute.For<ITentacleClientTaskLog>(),
                 clientOperationMetricsBuilder,
                 cancellationToken);
         }
