@@ -77,7 +77,7 @@ function validateVariables() {
             echo " - server port $ServerPort"
         fi
         if [[ -n "$ServerSubscriptionId" ]]; then
-            echo " - server subscription id $ServerSubscriptionId"
+            echo " - server subscription id '$ServerSubscriptionId'"
         fi
     else
         echo " - communication mode 'Kubernetes' (Listening)"
