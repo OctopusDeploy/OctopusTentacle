@@ -107,7 +107,7 @@ function validateVariables() {
         echo " - default namespace '$DefaultNamespace'"
     fi
     if [[ -n "$TentacleCertificate" ]]; then
-        echo " - tentacle certificate custom"
+        echo " - tentacle certificate 'imported'"
     fi
 }
 
