@@ -65,7 +65,7 @@ ENV OCTOPUS__K8STENTACLE__PODVOLUMEJSON=""
 ENV OCTOPUS__K8STENTACLE__DISABLEAUTOPODCLEANUP="False"
 ENV TentacleHome=""
 ENV TentacleApplications=""
-ENV TentacleCertificate=""
+ENV TentacleCertificateBase64=""
 
 ENTRYPOINT [ "/dev-scripts/bootstrap.sh" ] 
 

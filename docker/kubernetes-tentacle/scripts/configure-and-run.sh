@@ -106,8 +106,8 @@ function validateVariables() {
     if [[ -n "$DefaultNamespace" ]]; then
         echo " - default namespace '$DefaultNamespace'"
     fi
-    if [[ -n "$TentacleCertificate" ]]; then
-        echo " - tentacle certificate 'imported'"
+    if [[ -n "$TentacleCertificateBase64" ]]; then
+        echo " - tentacle certificate '${TentacleCertificateBase64:0:3}...${TentacleCertificateBase64: -3}'"
     fi
 }
 
@@ -124,9 +124,9 @@ function configureTentacle() {
         tentacle configure --instance "$instanceName" --port $internalListeningPort --noListen "False"
     fi
 
-    if [[ -n "$TentacleCertificate" ]]; then
+    if [[ -n "$TentacleCertificateBase64" ]]; then
           echo "Importing custom certificate ..."
-          tentacle import-certificate --instance "$instanceName" --from-base64="$TentacleCertificate"
+          tentacle import-certificate --instance "$instanceName" --from-base64="$TentacleCertificateBase64"
         else 
           echo "Creating certificate ..."
           tentacle new-certificate --instance "$instanceName" --if-blank
