@@ -151,13 +151,7 @@ namespace Octopus.Tentacle.Commands
             }
             else if (communicationStyle == CommunicationStyle.TentacleActive)
             {
-                Uri subscriptionId;
-                if (existingServer?.SubscriptionId != null)
-                    subscriptionId = new Uri(existingServer.SubscriptionId);
-                else if (!string.IsNullOrWhiteSpace(serverSubscriptionId))
-                    subscriptionId = new Uri(serverSubscriptionId);
-                else
-                    subscriptionId = PollingSubscriptionId.Generate();
+                var subscriptionId = GetServerSubscriptionId(existingServer);
                 registerMachineOperation.SubscriptionId = subscriptionId;
                 server.SubscriptionId = subscriptionId.ToString();
             }
@@ -242,6 +236,28 @@ namespace Octopus.Tentacle.Commands
             }
 
             return address;
+        }
+
+        Uri GetServerSubscriptionId(OctopusServerConfiguration? existingServer)
+        {
+            // If we have an existing server configuration reuse that subscription ID
+            if (existingServer?.SubscriptionId != null)
+                return new Uri(existingServer.SubscriptionId);
+            
+            // If a subscription ID is included in the options use that
+            if (!string.IsNullOrWhiteSpace(serverSubscriptionId))
+            {
+                var parsedUri = new Uri(serverSubscriptionId);
+                if (parsedUri.Scheme != "poll")
+                {
+                    throw new ControlledFailureException("The ServerSubscriptionId must start with poll://");
+                }  
+                
+                return parsedUri;
+            }
+            
+            // Otherwise generate a new subscription ID
+            return PollingSubscriptionId.Generate();
         }
 
         #region Helpers

@@ -293,5 +293,22 @@ namespace Octopus.Tentacle.Tests.Commands
 
             operation.Received().ExecuteAsync(repository);
         }
+        
+        [Test]
+        public void ShouldThrowExceptionWhenCustomServerSubscriptionIdDoesNotHaveCorrectScheme()
+        {
+            var ex = Assert.Throws<ControlledFailureException>(() => 
+            Start("--env=Development",
+                "--server=http://localhost",
+                "--name=MyMachine",
+                "--apiKey=ABC123",
+                "--force",
+                "--role=app-server",
+                "--comms-style=TentacleActive",
+                "--server-comms-port=10943",
+                "--server-subscription-id=https://xz6h25sh28shx52/"
+            ));
+            ex.Message.Should().Be("The ServerSubscriptionId must start with poll://");
+        }
     }
 }
