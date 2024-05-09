@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using Microsoft.Win32;
@@ -38,8 +39,9 @@ namespace Octopus.Tentacle.Commands
             base.Start();
             if (!fromRegistry && string.IsNullOrWhiteSpace(importFile) && string.IsNullOrWhiteSpace(importBase64))
                 throw new ControlledFailureException("Please specify the certificate to import.");
-
-            if (fromRegistry && (!string.IsNullOrWhiteSpace(importFile) || !string.IsNullOrWhiteSpace(importBase64)))
+            
+            var certOptions = new[] {fromRegistry, !string.IsNullOrWhiteSpace(importFile), !string.IsNullOrWhiteSpace(importBase64)};
+            if (certOptions.Count(x => x) > 1)
                 throw new ControlledFailureException("Please specify only one of either from-registry or from-file or from-base64");
 
             X509Certificate2? x509Certificate = null;
