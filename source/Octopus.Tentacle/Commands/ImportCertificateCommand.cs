@@ -37,11 +37,12 @@ namespace Octopus.Tentacle.Commands
         protected override void Start()
         {
             base.Start();
-            if (!fromRegistry && string.IsNullOrWhiteSpace(importFile) && string.IsNullOrWhiteSpace(importBase64))
+            
+            var specifiedCertOptionsCount = new[] {fromRegistry, !string.IsNullOrWhiteSpace(importFile), !string.IsNullOrWhiteSpace(importBase64)}.Count(x => x);
+            if (specifiedCertOptionsCount == 0)
                 throw new ControlledFailureException("Please specify the certificate to import.");
             
-            var certOptions = new[] {fromRegistry, !string.IsNullOrWhiteSpace(importFile), !string.IsNullOrWhiteSpace(importBase64)};
-            if (certOptions.Count(x => x) > 1)
+            if (specifiedCertOptionsCount > 1)
                 throw new ControlledFailureException("Please specify only one of either from-registry or from-file or from-base64");
 
             X509Certificate2? x509Certificate = null;
