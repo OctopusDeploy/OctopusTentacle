@@ -154,7 +154,6 @@ namespace Octopus.Tentacle.Commands
                 Uri subscriptionId;
                 if (existingServer?.SubscriptionId != null)
                     subscriptionId = new Uri(existingServer.SubscriptionId);
-                //TODO: Should this overwrite the existing server subscription ID?
                 else if (!string.IsNullOrWhiteSpace(serverSubscriptionId))
                     subscriptionId = new Uri(serverSubscriptionId);
                 else
