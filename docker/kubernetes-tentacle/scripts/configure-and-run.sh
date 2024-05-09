@@ -124,7 +124,7 @@ function configureTentacle() {
         tentacle configure --instance "$instanceName" --port $internalListeningPort --noListen "False"
     fi
 
-    if [[-n "$TentacleCertificate" ]]; then
+    if [[ -n "$TentacleCertificate" ]]; then
           echo "Importing custom certificate ..."
           tentacle import-certificate --instance "$instanceName" --from-base64="$TentacleCertificate"
         else 
