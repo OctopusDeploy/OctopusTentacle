@@ -8,11 +8,12 @@ using System.Threading;
 using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Diagnostics;
+using Octopus.Tentacle.Contracts.Logging;
 using Octopus.Tentacle.Diagnostics;
 
 namespace Octopus.Tentacle.CommonTestUtils.Diagnostics
 {
-    public class InMemoryLog : SystemLog
+    public class InMemoryLog : SystemLog, ITentacleTaskLog
     {
         readonly ILog log;
         readonly BlockingCollection<LogEvent> events = new BlockingCollection<LogEvent>(1000);

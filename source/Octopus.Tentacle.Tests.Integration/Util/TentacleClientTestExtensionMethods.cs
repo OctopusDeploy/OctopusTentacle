@@ -19,7 +19,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
             await tentacleClient.ExecuteScript(executeScriptCommand,
                 onScriptStatusResponseReceived => logs.AddRange(onScriptStatusResponseReceived.Logs),
                 cts => Task.CompletedTask,
-                new SerilogLoggerBuilder().Build().ForContext<TentacleClient>().ToILog(),
+                new SerilogLoggerBuilder().Build().ForContext<TentacleClient>().ToITentacleTaskLog(),
                 token);
         }
     }
