@@ -1,12 +1,11 @@
 using System;
-using Octopus.Diagnostics;
-using Octopus.Tentacle.Diagnostics;
+using Octopus.Tentacle.Contracts.Logging;
 
 namespace Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods
 {
     public static class LogExtensionMethods
     {
-        public static Log Chain(this Log log, Log? otherLog)
+        public static ITentacleClientTaskLog Chain(this ITentacleClientTaskLog log, ITentacleClientTaskLog? otherLog)
         {
             if (otherLog == null)
             {
@@ -16,24 +15,47 @@ namespace Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods
             return new LogChain(log, otherLog);
         }
 
-        class LogChain : Log
+        class LogChain : ITentacleClientTaskLog
         {
-            private readonly Log log1;
-            private readonly Log log2;
+            private readonly ITentacleClientTaskLog log1;
+            private readonly ITentacleClientTaskLog log2;
 
-            public LogChain(Log log1, Log log2)
+            public LogChain(ITentacleClientTaskLog log1, ITentacleClientTaskLog log2)
             {
                 this.log1 = log1;
                 this.log2 = log2;
             }
 
-            public override string CorrelationId => log1.CorrelationId;
-
-            public override void Write(LogCategory category, Exception? error, string messageText)
+            public void Info(string message)
             {
-                log1.Write(category, error, messageText);
-                log2.Write(category, error, messageText);
+                log1.Info(message);
+                log2.Info(message);
             }
+
+            public void Verbose(string message)
+            {
+                log1.Verbose(message);
+                log2.Verbose(message);
+            }
+
+            public void Verbose(Exception exception)
+            {
+                log1.Verbose(exception);
+                log2.Verbose(exception);
+            }
+
+            public void Warn(string message)
+            {
+                log1.Warn(message);
+                log2.Warn(message);
+            }
+
+            public void Warn(Exception exception, string message)
+            {
+                log1.Warn(exception, message);
+                log2.Warn(exception, message);
+            }
+
         }
     }
 }

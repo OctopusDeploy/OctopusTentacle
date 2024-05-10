@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Halibut;
 using NUnit.Framework;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Contracts.ClientServices;
+using Octopus.Tentacle.Contracts.Logging;
 using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators;
 using Octopus.Tentacle.Tests.Integration.Support;
@@ -124,7 +124,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 this.errorOnExecuteScriptCompleted = errorOnExecuteScriptCompleted;
             }
 
-            public void RpcCallCompleted(RpcCallMetrics metrics, ILog logger)
+            public void RpcCallCompleted(RpcCallMetrics metrics, ITentacleClientTaskLog logger)
             {
                 if (errorOnRpcCallCompleted)
                 {
@@ -132,7 +132,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 }
             }
 
-            public void UploadFileCompleted(ClientOperationMetrics clientOperationMetrics, ILog logger)
+            public void UploadFileCompleted(ClientOperationMetrics clientOperationMetrics, ITentacleClientTaskLog logger)
             {
                 if (errorOnUploadFileCompleted)
                 {
@@ -140,7 +140,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 }
             }
 
-            public void DownloadFileCompleted(ClientOperationMetrics clientOperationMetrics, ILog logger)
+            public void DownloadFileCompleted(ClientOperationMetrics clientOperationMetrics, ITentacleClientTaskLog logger)
             {
                 if (errorOnDownloadFileCompleted)
                 {
@@ -148,7 +148,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 }
             }
 
-            public void ExecuteScriptCompleted(ClientOperationMetrics clientOperationMetrics, ILog logger)
+            public void ExecuteScriptCompleted(ClientOperationMetrics clientOperationMetrics, ITentacleClientTaskLog logger)
             {
                 if (errorOnExecuteScriptCompleted)
                 {

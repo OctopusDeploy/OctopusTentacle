@@ -8,7 +8,7 @@ using Octopus.Tentacle.Client;
 using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.Client.Scripts.Models;
 using Octopus.Tentacle.Contracts;
-using Octopus.Tentacle.Diagnostics;
+using Octopus.Tentacle.Contracts.Logging;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods;
 
@@ -21,7 +21,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders
             ExecuteScriptCommand executeScriptCommand,
             CancellationToken token,
             OnScriptStatusResponseReceived? onScriptStatusResponseReceivedAction = null,
-            Log? log = null)
+            ITentacleClientTaskLog? log = null)
         {
             var logs = new List<ProcessOutput>();
             var finalResponse = await tentacleClient.ExecuteScript(executeScriptCommand,
@@ -35,7 +35,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders
                     logs.AddRange(onScriptStatusResponseReceived.Logs);
                 },
                 cts => Task.CompletedTask,
-                new SerilogLoggerBuilder().Build().ForContext<TentacleClient>().ToILog().Chain(log),
+                new SerilogLoggerBuilder().Build().ForContext<TentacleClient>().ToITentacleTaskLog().Chain(log),
                 token).ConfigureAwait(false);
             return (finalResponse, logs);
         }
@@ -45,12 +45,12 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders
             string remotePath,
             DataStream upload,
             CancellationToken token,
-            Log? log = null)
+            ITentacleClientTaskLog? log = null)
         {
             var result = await tentacleClient.UploadFile(Path.GetFileName(remotePath),
                 remotePath,
                 upload,
-                new SerilogLoggerBuilder().Build().ForContext<TentacleClient>().ToILog().Chain(log),
+                new SerilogLoggerBuilder().Build().ForContext<TentacleClient>().ToITentacleTaskLog().Chain(log),
                 token).ConfigureAwait(false);
 
             return result;
@@ -60,10 +60,10 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders
             this TentacleClient tentacleClient,
             string remotePath,
             CancellationToken token,
-            Log? log = null)
+            ITentacleClientTaskLog? log = null)
         {
             var result = await tentacleClient.DownloadFile(remotePath,
-                new SerilogLoggerBuilder().Build().ForContext<TentacleClient>().ToILog().Chain(log),
+                new SerilogLoggerBuilder().Build().ForContext<TentacleClient>().ToITentacleTaskLog().Chain(log),
                 token).ConfigureAwait(false);
 
             return result;

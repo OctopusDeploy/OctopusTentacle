@@ -1,13 +1,13 @@
 ﻿using System;
-using Octopus.Diagnostics;
+using Octopus.Tentacle.Contracts.Logging;
 
 namespace Octopus.Tentacle.Contracts.Observability
 {
     public interface ITentacleClientObserver
     {
-        void RpcCallCompleted(RpcCallMetrics rpcCallMetrics, ILog logger);
-        void UploadFileCompleted(ClientOperationMetrics clientOperationMetrics, ILog logger);
-        void DownloadFileCompleted(ClientOperationMetrics clientOperationMetrics, ILog logger);
-        void ExecuteScriptCompleted(ClientOperationMetrics clientOperationMetrics, ILog logger);
+        void RpcCallCompleted(RpcCallMetrics rpcCallMetrics, ITentacleClientTaskLog logger);
+        void UploadFileCompleted(ClientOperationMetrics clientOperationMetrics, ITentacleClientTaskLog logger);
+        void DownloadFileCompleted(ClientOperationMetrics clientOperationMetrics, ITentacleClientTaskLog logger);
+        void ExecuteScriptCompleted(ClientOperationMetrics clientOperationMetrics, ITentacleClientTaskLog logger);
     }
 }

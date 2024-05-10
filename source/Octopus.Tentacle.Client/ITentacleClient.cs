@@ -2,17 +2,18 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
-using Octopus.Diagnostics;
+using Halibut.Diagnostics;
 using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.Client.Scripts.Models;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Contracts.Logging;
 
 namespace Octopus.Tentacle.Client
 {
     public interface ITentacleClient : IDisposable
     {
-        Task<UploadResult> UploadFile(string fileName, string path, DataStream package, ILog logger, CancellationToken cancellationToken);
-        Task<DataStream?> DownloadFile(string remotePath, ILog logger, CancellationToken cancellationToken);
+        Task<UploadResult> UploadFile(string fileName, string path, DataStream package, ITentacleClientTaskLog logger, CancellationToken cancellationToken);
+        Task<DataStream?> DownloadFile(string remotePath, ITentacleClientTaskLog logger, CancellationToken cancellationToken);
 
         /// <summary>
         /// Execute a script on Tentacle
@@ -28,7 +29,7 @@ namespace Octopus.Tentacle.Client
             ExecuteScriptCommand executeScriptCommand,
             OnScriptStatusResponseReceived onScriptStatusResponseReceived,
             OnScriptCompleted onScriptCompleted,
-            ILog logger,
+            ITentacleClientTaskLog logger,
             CancellationToken scriptExecutionCancellationToken);
     }
 }

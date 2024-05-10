@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Octopus.Diagnostics;
+using Octopus.Tentacle.Contracts.Logging;
 using Octopus.Tentacle.Diagnostics.Formatters;
 using Octopus.Tentacle.Util;
 

@@ -1,16 +1,17 @@
 using System;
 using Octopus.Diagnostics;
+using Octopus.Tentacle.CommonTestUtils.Diagnostics;
+using Octopus.Tentacle.Contracts.Logging;
 using Octopus.Tentacle.Diagnostics;
 using Serilog;
-using Log = Octopus.Tentacle.Diagnostics.Log;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
-    public class TestSerilogILoggerILog : Log
+    public class TestSerilogITentacleClientTaskLog : InMemoryLog
     {
         private ILogger logger;
         
-        public TestSerilogILoggerILog(ILogger logger)
+        public TestSerilogITentacleClientTaskLog(ILogger logger)
         {
             this.logger = logger;
         }
@@ -40,9 +41,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
     public static class ILoggerExtensionMethods
     {
-        public static Log ToILog(this ILogger logger)
+        public static ITentacleClientTaskLog ToITentacleTaskLog(this ILogger logger)
         {
-            return new TestSerilogILoggerILog(logger);
+            return new TestSerilogITentacleClientTaskLog(logger);
         }
     }
 }

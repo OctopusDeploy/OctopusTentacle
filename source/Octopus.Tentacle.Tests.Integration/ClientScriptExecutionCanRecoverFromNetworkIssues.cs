@@ -240,7 +240,7 @@ namespace Octopus.Tentacle.Tests.Integration
                         logs.AddRange(onScriptStatusResponseReceived.Logs);
                     },
                     _ => Task.CompletedTask,
-                    new SerilogLoggerBuilder().Build().ForContext<TentacleClient>().ToILog().Chain(inMemoryLog),
+                    new SerilogLoggerBuilder().Build().ForContext<TentacleClient>().ToITentacleTaskLog().Chain(inMemoryLog),
                     cts.Token);
             }
             catch (Exception ex)
