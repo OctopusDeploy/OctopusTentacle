@@ -346,6 +346,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithRetryDuration(TimeSpan.FromHours(1))
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder().RecordMethodUsages(tentacleConfigurationTestCase, out var scriptServiceRecordedUsages).Build())
                 .WithHalibutTimeoutsAndLimits(halibutTimeoutsAndLimits)
+                .WithPortForwarder(out var portForwarder)
                 .Build(CancellationToken);
 
             // Arrange
@@ -356,6 +357,8 @@ namespace Octopus.Tentacle.Tests.Integration
 
             Logger.Information("Stop Tentacle so no more requests are picked up");
             await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
+            portForwarder.Value.KillNewConnectionsImmediatlyMode = true;
+            portForwarder.Value.CloseExistingConnections();
 
             var delay = clientAndTentacle.Server.ServerHalibutRuntime.TimeoutsAndLimits.SafeTcpClientPooledConnectionTimeout + TimeSpan.FromSeconds(2);
             Logger.Information($"Waiting for {delay} for any active Pooled Connections for the Tentacle to expire");
@@ -377,6 +380,72 @@ namespace Octopus.Tentacle.Tests.Integration
                     if (scriptServiceRecordedUsages.ForStartScriptAsync().Started >= 2)
                     {
                         cancelExecutionCancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(2));
+                        Logger.Information("Cancelling cancellation token source after 2 seconds.");
+                        return;
+                    }
+
+                    await Task.Delay(TimeSpan.FromSeconds(0.5), CancellationToken);
+                }
+            }, CancellationToken);
+
+            var expectedException = new ExceptionContractAssertionBuilder(FailureScenario.ScriptExecutionCancelled, tentacleConfigurationTestCase.TentacleType, clientAndTentacle).Build();
+            await AssertionExtensions.Should(async () => await executeScriptTask).ThrowExceptionContractAsync(expectedException);
+            await cancellationTask;
+
+            // Assert
+            scriptServiceRecordedUsages.ForStartScriptAsync().Completed.Should().BeGreaterOrEqualTo(2);
+            scriptServiceRecordedUsages.ForGetStatusAsync().Started.Should().Be(0);
+            scriptServiceRecordedUsages.ForCancelScriptAsync().Started.Should().BeGreaterOrEqualTo(0, "Script Execution does not need to be cancelled on Tentacle as it has not started");
+            scriptServiceRecordedUsages.ForCompleteScriptAsync().Started.Should().Be(0);
+        }
+
+        [Test]
+        [TentacleConfigurations(testPolling: false)]
+        public async Task DuringStartScript_ForListeningTentacle_ThatIsRetryingTheRpc_AndConnectingWithPooledConnection_ScriptExecutionCanBeCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase)
+        {
+            var halibutTimeoutsAndLimits = HalibutTimeoutsAndLimits.RecommendedValues();
+            halibutTimeoutsAndLimits.RetryCountLimit = 1;
+            halibutTimeoutsAndLimits.ConnectionErrorRetryTimeout = TimeSpan.FromSeconds(4);
+            halibutTimeoutsAndLimits.RetryListeningSleepInterval = TimeSpan.Zero;
+            halibutTimeoutsAndLimits.TcpClientConnectTimeout = TimeSpan.FromSeconds(4);
+
+            var cancelExecutionCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
+
+            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+                .WithRetryDuration(TimeSpan.FromHours(1))
+                .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder().RecordMethodUsages(tentacleConfigurationTestCase, out var scriptServiceRecordedUsages).Build())
+                .WithHalibutTimeoutsAndLimits(halibutTimeoutsAndLimits)
+                .WithPortForwarder(out var portForwarder)
+                .Build(CancellationToken);
+
+            // Arrange
+            Logger.Information("Execute a script so that GetCapabilities will be cached");
+            await clientAndTentacle.TentacleClient.ExecuteScript(
+                new TestExecuteShellScriptCommandBuilder().SetScriptBody(b => b.Print("The script")).Build(),
+                cancelExecutionCancellationTokenSource.Token);
+
+            Logger.Information("Stop Tentacle so no more requests are picked up");
+            await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
+            portForwarder.Value.KillNewConnectionsImmediatlyMode = true;
+            portForwarder.Value.CloseExistingConnections();
+
+            scriptServiceRecordedUsages.Reset();
+
+            // ACT
+            var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(b => b.Print("The script").Sleep(TimeSpan.FromHours(1)))
+                .Build();
+
+            Logger.Information("Start Executing the Script");
+            var executeScriptTask = clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, cancelExecutionCancellationTokenSource.Token);
+            var cancellationTask = Task.Run(async () =>
+            {
+                while (true)
+                {
+                    if (scriptServiceRecordedUsages.ForStartScriptAsync().Started >= 2)
+                    {
+                        cancelExecutionCancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(2));
+                        Logger.Information("Cancelling cancellation token source after 2 seconds.");
                         return;
                     }
 

@@ -28,7 +28,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <PackageReference Include="Halibut" Version="7.0.603" />
+    <PackageReference Include="Halibut" Version="7.0.641-sast-including-prepare-exchange-as-connection-failure-20240515094223" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Solution Items\SolutionInfo.cs">
