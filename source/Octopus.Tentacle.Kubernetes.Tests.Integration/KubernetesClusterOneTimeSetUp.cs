@@ -18,12 +18,12 @@ public class KubernetesClusterOneTimeSetUp
         await installer.Install();
 
         //if we are not running in TeamCity, then we need to find the latest local tag and use that if it exists 
-        if (!TeamCityDetection.IsRunningInTeamCity())
+        if (!TeamCityDetection.IsRunningInTeamCity() && bool.TryParse(Environment.GetEnvironmentVariable("KubernetesAgentTests_UseLocalImage"), out var useLocal) && useLocal)
         {
             var imageLoader = new DockerImageLoader(KubernetesTestsGlobalContext.Instance.TemporaryDirectory, KubernetesTestsGlobalContext.Instance.Logger, kindExePath);
             KubernetesTestsGlobalContext.Instance.TentacleImageAndTag = imageLoader.LoadMostRecentImageIntoKind(installer.ClusterName);
         }
-        else
+        else if(TeamCityDetection.IsRunningInTeamCity())
         {
             var tag = Environment.GetEnvironmentVariable("KubernetesAgentTests_ImageTag");
             KubernetesTestsGlobalContext.Instance.TentacleImageAndTag = $"docker.packages.octopushq.com/octopusdeploy/kubernetes-tentacle:{tag}";

@@ -8,6 +8,7 @@ using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Kubernetes.Tests.Integration.Setup;
+using Octopus.Tentacle.Kubernetes.Tests.Integration.Setup.Tooling;
 using Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators;
 using Octopus.Tentacle.Tests.Integration.Common.Logging;
 
@@ -27,6 +28,7 @@ public abstract class KubernetesAgentIntegrationTest
     protected CancellationToken CancellationToken { get; private set; }
 
     protected TentacleServiceDecoratorBuilder? TentacleServiceDecoratorBuilder { get; set; }
+    protected KubeCtlTool KubeCtl { get; private set; }
 
     [OneTimeSetUp]
     public async Task OneTimeSetUp()
@@ -36,6 +38,13 @@ public abstract class KubernetesAgentIntegrationTest
             KubernetesTestsGlobalContext.Instance.HelmExePath,
             KubernetesTestsGlobalContext.Instance.KubeCtlExePath,
             KubernetesTestsGlobalContext.Instance.KubeConfigPath,
+            KubernetesTestsGlobalContext.Instance.Logger);
+
+        KubeCtl = new KubeCtlTool(
+            KubernetesTestsGlobalContext.Instance.TemporaryDirectory,
+            KubernetesTestsGlobalContext.Instance.KubeCtlExePath,
+            KubernetesTestsGlobalContext.Instance.KubeConfigPath,
+            kubernetesAgentInstaller.Namespace,
             KubernetesTestsGlobalContext.Instance.Logger);
 
         //create a new server halibut runtime
@@ -48,6 +57,7 @@ public abstract class KubernetesAgentIntegrationTest
 
         BuildTentacleClient(thumbprint);
     }
+
 
     [SetUp]
     public void SetUp()
