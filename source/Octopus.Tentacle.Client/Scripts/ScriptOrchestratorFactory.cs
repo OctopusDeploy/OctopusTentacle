@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Halibut.ServiceModel;
@@ -150,6 +152,9 @@ namespace Octopus.Tentacle.Client.Scripts
                 cancellationToken);
 
             logger.Verbose($"Discovered Tentacle capabilities: {string.Join(",", tentacleCapabilities.SupportedCapabilities)}");
+            
+            var fileVersionInfo = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location);
+            logger.Verbose($"Tentacle Version: {fileVersionInfo.ProductVersion}");
 
             // Check if we support any kubernetes script service.
             // It's implied (and tested) that GetCapabilities will only return Kubernetes or non-Kubernetes script services, never a mix
