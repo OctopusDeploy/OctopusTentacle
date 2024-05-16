@@ -183,7 +183,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             // Server
             var serverHalibutRuntimeBuilder = new HalibutRuntimeBuilder()
                 .WithServerCertificate(TestCertificates.Server)
-                .WithHalibutTimeoutsAndLimits(halibutTimeoutsAndLimits ?? HalibutTimeoutsAndLimits.RecommendedValues())
+                .WithHalibutTimeoutsAndLimits(halibutTimeoutsAndLimits ?? new HalibutTimeoutsAndLimitsForTestBuilder().Build())
                 .WithLegacyContractSupport();
             
             if (queueFactory != null)
