@@ -17,25 +17,32 @@ public class KubernetesClusterOneTimeSetUp
         installer = new KubernetesClusterInstaller(KubernetesTestsGlobalContext.Instance.TemporaryDirectory, kindExePath, helmExePath, kubeCtlPath, KubernetesTestsGlobalContext.Instance.Logger);
         await installer.Install();
 
-        //if we are not running in TeamCity, then we need to find the latest local tag and use that if it exists 
-        if (!TeamCityDetection.IsRunningInTeamCity() && bool.TryParse(Environment.GetEnvironmentVariable("KubernetesAgentTests_UseLocalImage"), out var useLocal) && useLocal)
-        {
-            var imageLoader = new DockerImageLoader(KubernetesTestsGlobalContext.Instance.TemporaryDirectory, KubernetesTestsGlobalContext.Instance.Logger, kindExePath);
-            KubernetesTestsGlobalContext.Instance.TentacleImageAndTag = imageLoader.LoadMostRecentImageIntoKind(installer.ClusterName);
-        }
-        else if(TeamCityDetection.IsRunningInTeamCity())
-        {
-            var tag = Environment.GetEnvironmentVariable("KubernetesAgentTests_ImageTag");
-            KubernetesTestsGlobalContext.Instance.TentacleImageAndTag = $"docker.packages.octopushq.com/octopusdeploy/kubernetes-tentacle:{tag}";
-        }
-
-        if (KubernetesTestsGlobalContext.Instance.TentacleImageAndTag is not null)
-        {
-            KubernetesTestsGlobalContext.Instance.Logger.Information("Using tentacle image: {ImageAndTag}", KubernetesTestsGlobalContext.Instance.TentacleImageAndTag);
-        }
-
+        KubernetesTestsGlobalContext.Instance.TentacleImageAndTag = GetTentacleImageAndTag(kindExePath);
         KubernetesTestsGlobalContext.Instance.SetToolExePaths(helmExePath, kubeCtlPath);
         KubernetesTestsGlobalContext.Instance.KubeConfigPath = installer.KubeConfigPath;
+    }
+
+    string? GetTentacleImageAndTag(string kindExePath)
+    {
+        //By default, we don't override the values in the helm chart. This is useful if you are just writing new tests and not changing Tentacle code.
+        string? imageAndTag = null;
+        if (TeamCityDetection.IsRunningInTeamCity())
+        {
+            //In TeamCity, use the tag of the currently building code
+            var tag = Environment.GetEnvironmentVariable("KubernetesAgentTests_ImageTag");
+            imageAndTag = $"docker.packages.octopushq.com/octopusdeploy/kubernetes-tentacle:{tag}";
+        }
+        else if(bool.TryParse(Environment.GetEnvironmentVariable("KubernetesAgentTests_UseLatestLocalImage"), out var useLocal) && useLocal)
+        {
+            //if we should use the latest locally build image, load the tag from docker and load it into kind
+            var imageLoader = new DockerImageLoader(KubernetesTestsGlobalContext.Instance.TemporaryDirectory, KubernetesTestsGlobalContext.Instance.Logger, kindExePath);
+            imageAndTag = imageLoader.LoadMostRecentImageIntoKind(installer.ClusterName);
+        }
+        
+        if(imageAndTag is not null)
+            KubernetesTestsGlobalContext.Instance.Logger.Information("Using tentacle image: {ImageAndTag}", imageAndTag);
+
+        return imageAndTag;
     }
 
     [OneTimeTearDown]
