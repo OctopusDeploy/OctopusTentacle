@@ -29,6 +29,7 @@
   </Choose>
   <ItemGroup>
     <PackageReference Include="Halibut" Version="7.0.655" />
+    <PackageReference Include="Halibut" Version="7.0.662-pull-610" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Solution Items\SolutionInfo.cs">

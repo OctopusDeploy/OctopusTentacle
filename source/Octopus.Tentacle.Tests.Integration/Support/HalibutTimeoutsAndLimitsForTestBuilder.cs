@@ -8,6 +8,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public HalibutTimeoutsAndLimits Build()
         {
             var halibutTimeoutAndLimits = HalibutTimeoutsAndLimits.RecommendedValues();
+            // Lets dogfood this in our tests.
+            halibutTimeoutAndLimits.TcpNoDelay = true;
             return halibutTimeoutAndLimits;
         }
     }
