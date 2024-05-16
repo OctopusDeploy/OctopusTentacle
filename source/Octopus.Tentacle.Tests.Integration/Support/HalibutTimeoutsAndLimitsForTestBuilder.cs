@@ -8,7 +8,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public HalibutTimeoutsAndLimits Build()
         {
             var halibutTimeoutAndLimits = HalibutTimeoutsAndLimits.RecommendedValues();
-            halibutTimeoutAndLimits.TcpKeepAliveEnabled = true;
             return halibutTimeoutAndLimits;
         }
     }
