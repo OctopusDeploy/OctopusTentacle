@@ -365,7 +365,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 }
 
                 // Listening Tentacle
-                if (lastLogFileContents.Contains("Listener started"))
+                if (lastLogFileContents.Contains("Listener started") && lastLogFileContents.Contains("Agent listening on"))
                 {
                     var listeningPort = Convert.ToInt32(ListeningPortRegex.Match(lastLogFileContents).Groups[1].Value);
                     return (true, listeningPort, lastLogFileContents);
