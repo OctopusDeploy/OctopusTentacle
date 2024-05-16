@@ -38,8 +38,8 @@ namespace Octopus.Tentacle.Communications
                 
                 if (!bool.TryParse(Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleUseTcpNoDelay), out var useTcpNoDelay))
                 {
-                    // Default to disabled
-                    useTcpNoDelay = false;
+                    // Enabled so we can try this out easily, do not merge
+                    useTcpNoDelay = true;
                 }
 
                 var halibutTimeoutsAndLimits = useRecommendedTimeoutsAndLimits 
