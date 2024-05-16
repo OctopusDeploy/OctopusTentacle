@@ -251,7 +251,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                         else
                         {
                             logger.Warning("The Tentacle failed to start correctly.");
-                            logger.Warning(tentacleState.LogContent); }
+                            logger.Warning(tentacleState.LogContent);
+                        }
                     }
                     else
                     {
@@ -351,9 +352,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         static async Task<(bool Started, int? ListeningPort, string LogContent)> WaitForTentacleToStart(TemporaryDirectory tempDirectory, CancellationToken localCancellationToken)
         {
             var lastLogFileContents = string.Empty;
-            int? listeningPort = null;
 
-            while (listeningPort == null && !localCancellationToken.IsCancellationRequested)
+            while (!localCancellationToken.IsCancellationRequested)
             {
                 var logFilePath = Path.Combine(tempDirectory.DirectoryPath, "Logs", "OctopusTentacle.txt");
 
@@ -364,20 +364,23 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                     lastLogFileContents = logContent;
                 }
 
+                // Listening Tentacle
                 if (lastLogFileContents.Contains("Listener started"))
                 {
-                    listeningPort = Convert.ToInt32(ListeningPortRegex.Match(lastLogFileContents).Groups[1].Value);
+                    var listeningPort = Convert.ToInt32(ListeningPortRegex.Match(lastLogFileContents).Groups[1].Value);
+                    return (true, listeningPort, lastLogFileContents);
                 }
 
-                if (lastLogFileContents.Contains("Agent will not listen") || lastLogFileContents.Contains("Agent listening on"))
+                // Polling Tentacle
+                if (lastLogFileContents.Contains("Agent will not listen"))
                 {
-                    return (true, listeningPort, lastLogFileContents);
+                    return (true, null, lastLogFileContents);
                 }
 
                 await Task.Delay(TimeSpan.FromSeconds(1), CancellationToken.None);
             }
 
-            return (false, listeningPort, lastLogFileContents);
+            return (false, null, lastLogFileContents);
         }
 
         protected async Task AddCertificateToTentacle(string tentacleExe, string instanceName, string tentaclePfxPath, TemporaryDirectory tmp, ILogger logger, CancellationToken cancellationToken)
