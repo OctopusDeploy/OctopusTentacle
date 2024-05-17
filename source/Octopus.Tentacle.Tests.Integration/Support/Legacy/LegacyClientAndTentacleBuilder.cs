@@ -51,7 +51,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
             var serverHalibutRuntimeBuilder = new HalibutRuntimeBuilder()
                 .WithServerCertificate(TestCertificates.Server)
                 .WithLegacyContractSupport()
-                .WithHalibutTimeoutsAndLimits(HalibutTimeoutsAndLimits.RecommendedValues())
+                .WithHalibutTimeoutsAndLimits(new HalibutTimeoutsAndLimitsForTestBuilder().Build())
                 .WithLogFactory(BuildClientLogger());
             
             var serverHalibutRuntime = serverHalibutRuntimeBuilder.Build();
