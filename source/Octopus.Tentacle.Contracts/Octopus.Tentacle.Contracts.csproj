@@ -28,8 +28,6 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <PackageReference Include="Halibut" Version="7.0.655" />
-    <PackageReference Include="Halibut" Version="7.0.662-pull-610" />
     <PackageReference Include="Halibut" Version="7.0.682" />
   </ItemGroup>
   <ItemGroup>
