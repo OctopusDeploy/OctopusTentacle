@@ -33,6 +33,7 @@ namespace Octopus.Tentacle.Kubernetes
         readonly ISystemLog log;
         readonly ITentacleScriptLogProvider scriptLogProvider;
         readonly IHomeConfiguration homeConfiguration;
+        readonly KubernetesPhysicalFileSystem kubernetesPhysicalFileSystem;
 
         public KubernetesScriptPodCreator(
             IKubernetesPodService podService,
@@ -42,7 +43,8 @@ namespace Octopus.Tentacle.Kubernetes
             IApplicationInstanceSelector appInstanceSelector,
             ISystemLog log,
             ITentacleScriptLogProvider scriptLogProvider, 
-            IHomeConfiguration homeConfiguration)
+            IHomeConfiguration homeConfiguration,
+            KubernetesPhysicalFileSystem kubernetesPhysicalFileSystem)
         {
             this.podService = podService;
             this.podMonitor = podMonitor;
@@ -52,6 +54,7 @@ namespace Octopus.Tentacle.Kubernetes
             this.log = log;
             this.scriptLogProvider = scriptLogProvider;
             this.homeConfiguration = homeConfiguration;
+            this.kubernetesPhysicalFileSystem = kubernetesPhysicalFileSystem;
         }
 
         public async Task CreatePod(StartKubernetesScriptCommandV1 command, IScriptWorkspace workspace, CancellationToken cancellationToken)
@@ -234,6 +237,7 @@ namespace Octopus.Tentacle.Kubernetes
 
         async Task<V1Container> CreateScriptContainer(StartKubernetesScriptCommandV1 command, IScriptWorkspace workspace, string podName, string scriptName, string homeDir)
         {
+            var spaceInformation = kubernetesPhysicalFileSystem.GetCachedSpaceInformation();
             return new V1Container
             {
                 Name = podName,
@@ -254,6 +258,8 @@ namespace Octopus.Tentacle.Kubernetes
                     new(KubernetesConfig.NamespaceVariableName, KubernetesConfig.Namespace),
                     new(KubernetesConfig.HelmReleaseNameVariableName, KubernetesConfig.HelmReleaseName),
                     new(KubernetesConfig.HelmChartVersionVariableName, KubernetesConfig.HelmChartVersion),
+                    new(KubernetesConfig.PersistentVolumeFreeBytesVariableName, spaceInformation?.freeSpaceBytes.ToString()),
+                    new(KubernetesConfig.PersistentVolumeSizeBytesVariableName, spaceInformation?.totalSpaceBytes.ToString()),
                     new(EnvironmentVariables.TentacleHome, homeDir),
                     new(EnvironmentVariables.TentacleInstanceName, appInstanceSelector.Current.InstanceName),
                     new(EnvironmentVariables.TentacleVersion, Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleVersion)),

@@ -9,6 +9,8 @@ namespace Octopus.Tentacle.Kubernetes
     {
         readonly IKubernetesDirectoryInformationProvider directoryInformationProvider;
         ISystemLog Log { get; }
+
+        (ulong freeSpaceBytes, ulong totalSpaceBytes)? spaceInformationCache;
         
         // Set like this for now because we don't have a way to get the home directory from the provider without requiring ourselves
         // DI can be painful when circular dependencies happen with constructed classes :sad-panda:
@@ -24,11 +26,13 @@ namespace Octopus.Tentacle.Kubernetes
 
         public override void EnsureDiskHasEnoughFreeSpace(string directoryPath, long requiredSpaceInBytes)
         {
-            var freeBytes = GetPathFreeBytes(HomeDir);
+            var spaceInformation = GetSpaceInformation(useCache: false);
             Log.Verbose($"Directory to be checked is {HomeDir}, script directory is {directoryPath}, required space is {requiredSpaceInBytes} bytes");
 
             // If we can't get the free bytes, we just skip the check
-            if (freeBytes is null) return;
+            if (spaceInformation is null) return;
+
+            var freeBytes = spaceInformation.Value.freeSpaceBytes;
 
             var required = requiredSpaceInBytes < 0 ? 0 : (ulong)requiredSpaceInBytes;
             // Make sure there is 10% (and a bit extra) more than we need
@@ -39,14 +43,24 @@ namespace Octopus.Tentacle.Kubernetes
                 throw new IOException($"Not enough free space on disk. Required: {required} bytes, available: {freeBytes} bytes");
             }
         }
-        
-        ulong? GetPathFreeBytes(string directoryPath)           
+
+        public (ulong freeSpaceBytes, ulong totalSpaceBytes)? GetCachedSpaceInformation()
         {
-            var bytesUsed = directoryInformationProvider.GetPathUsedBytes(directoryPath);
+            return GetSpaceInformation(useCache: true);
+        }
+
+        (ulong freeSpaceBytes, ulong totalSpaceBytes)? GetSpaceInformation(bool useCache)
+        {
+            if (useCache && spaceInformationCache is not null)
+            {
+                return spaceInformationCache;
+            }
+
+            var bytesUsed = directoryInformationProvider.GetPathUsedBytes(HomeDir);
             var bytesTotal = directoryInformationProvider.GetPathTotalBytes();
             if (bytesUsed.HasValue && bytesTotal.HasValue)
-                return bytesTotal - bytesUsed;
-            return null;
+                return spaceInformationCache = (bytesTotal.Value - bytesUsed.Value, bytesTotal.Value);
+            return spaceInformationCache = null;
         }
     }
 }
