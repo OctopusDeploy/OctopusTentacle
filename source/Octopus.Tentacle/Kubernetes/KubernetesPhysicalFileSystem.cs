@@ -10,7 +10,7 @@ namespace Octopus.Tentacle.Kubernetes
         readonly IKubernetesDirectoryInformationProvider directoryInformationProvider;
         ISystemLog Log { get; }
 
-        (ulong freeSpaceBytes, ulong totalSpaceBytes)? spaceInformationCache;
+        (ulong freeSpaceBytes, ulong totalSpaceBytes)? storageInformationCache;
         
         // Set like this for now because we don't have a way to get the home directory from the provider without requiring ourselves
         // DI can be painful when circular dependencies happen with constructed classes :sad-panda:
@@ -26,7 +26,7 @@ namespace Octopus.Tentacle.Kubernetes
 
         public override void EnsureDiskHasEnoughFreeSpace(string directoryPath, long requiredSpaceInBytes)
         {
-            var spaceInformation = GetSpaceInformation(useCache: false);
+            var spaceInformation = GetStorageInformation(useCache: false);
             Log.Verbose($"Directory to be checked is {HomeDir}, script directory is {directoryPath}, required space is {requiredSpaceInBytes} bytes");
 
             // If we can't get the free bytes, we just skip the check
@@ -44,23 +44,29 @@ namespace Octopus.Tentacle.Kubernetes
             }
         }
 
-        public (ulong freeSpaceBytes, ulong totalSpaceBytes)? GetCachedSpaceInformation()
+        public (ulong freeSpaceBytes, ulong totalSpaceBytes)? GetCachedStorageInformation()
         {
-            return GetSpaceInformation(useCache: true);
+            return GetStorageInformation(useCache: true);
         }
 
-        (ulong freeSpaceBytes, ulong totalSpaceBytes)? GetSpaceInformation(bool useCache)
+        (ulong freeSpaceBytes, ulong totalSpaceBytes)? GetStorageInformation(bool useCache)
         {
-            if (useCache && spaceInformationCache is not null)
+            if (useCache && storageInformationCache is not null)
             {
-                return spaceInformationCache;
+                return storageInformationCache;
             }
 
             var bytesUsed = directoryInformationProvider.GetPathUsedBytes(HomeDir);
             var bytesTotal = directoryInformationProvider.GetPathTotalBytes();
             if (bytesUsed.HasValue && bytesTotal.HasValue)
-                return spaceInformationCache = (bytesTotal.Value - bytesUsed.Value, bytesTotal.Value);
-            return spaceInformationCache = null;
+            {
+                storageInformationCache = (bytesTotal.Value - bytesUsed.Value, bytesTotal.Value);
+            }
+            else
+            {
+                storageInformationCache = null;
+            }
+            return storageInformationCache;
         }
     }
 }
