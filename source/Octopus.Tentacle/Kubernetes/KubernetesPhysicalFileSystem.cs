@@ -26,7 +26,7 @@ namespace Octopus.Tentacle.Kubernetes
 
         public override void EnsureDiskHasEnoughFreeSpace(string directoryPath, long requiredSpaceInBytes)
         {
-            var spaceInformation = GetStorageInformation(useCache: false);
+            var spaceInformation = GetStorageInformation();
             Log.Verbose($"Directory to be checked is {HomeDir}, script directory is {directoryPath}, required space is {requiredSpaceInBytes} bytes");
 
             // If we can't get the free bytes, we just skip the check
@@ -44,18 +44,8 @@ namespace Octopus.Tentacle.Kubernetes
             }
         }
 
-        public (ulong freeSpaceBytes, ulong totalSpaceBytes)? GetCachedStorageInformation()
+        public (ulong freeSpaceBytes, ulong totalSpaceBytes)? GetStorageInformation()
         {
-            return GetStorageInformation(useCache: true);
-        }
-
-        (ulong freeSpaceBytes, ulong totalSpaceBytes)? GetStorageInformation(bool useCache)
-        {
-            if (useCache && storageInformationCache is not null)
-            {
-                return storageInformationCache;
-            }
-
             var bytesUsed = directoryInformationProvider.GetPathUsedBytes(HomeDir);
             var bytesTotal = directoryInformationProvider.GetPathTotalBytes();
             if (bytesUsed.HasValue && bytesTotal.HasValue)
