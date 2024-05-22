@@ -33,12 +33,15 @@ namespace Octopus.Tentacle.Scripts
             this.sensitiveValueMasker = sensitiveValueMasker;
         }
 
-        public IScriptWorkspace GetWorkspace(ScriptTicket ticket)
+        public IScriptWorkspace GetWorkspace(ScriptTicket ticket, bool readinessCheck = true)
         {
             var workingDirectory = FindWorkingDirectory(ticket);
 
             var workspace = CreateWorkspace(ticket, workingDirectory);
-            workspace.CheckReadiness();
+            if (readinessCheck)
+            {
+                workspace.CheckReadiness();
+            }
             return workspace;
         }
 

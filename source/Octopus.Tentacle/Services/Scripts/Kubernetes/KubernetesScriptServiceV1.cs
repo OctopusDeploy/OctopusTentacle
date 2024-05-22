@@ -116,7 +116,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
         {
             startScriptMutexes.TryRemove(command.ScriptTicket, out _);
 
-            var workspace = workspaceFactory.GetWorkspace(command.ScriptTicket);
+            var workspace = workspaceFactory.GetWorkspace(command.ScriptTicket, readinessCheck: false);
             await workspace.Delete(cancellationToken);
 
             scriptLogProvider.Delete(command.ScriptTicket);
