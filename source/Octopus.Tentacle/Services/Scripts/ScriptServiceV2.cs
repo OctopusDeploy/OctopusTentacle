@@ -121,7 +121,7 @@ namespace Octopus.Tentacle.Services.Scripts
                 runningScript.Dispose();
             }
 
-            var workspace = workspaceFactory.GetWorkspace(command.Ticket);
+            var workspace = workspaceFactory.GetWorkspace(command.Ticket, skipFreeSpaceCheck: true);
             await workspace.Delete(cancellationToken);
         }
 

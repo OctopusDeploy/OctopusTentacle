@@ -107,9 +107,12 @@ namespace Octopus.Tentacle.Scripts
             return new ScriptLog(ResolvePath(LogFileName), FileSystem, SensitiveValueMasker);
         }
 
-        public void CheckReadiness()
+        public void CheckReadiness(bool skipFreeSpaceCheck = false)
         {
-            FileSystem.EnsureDiskHasEnoughFreeSpace(WorkingDirectory);
+            if (!skipFreeSpaceCheck)
+            {
+                FileSystem.EnsureDiskHasEnoughFreeSpace(WorkingDirectory);
+            }
         }
     }
 }

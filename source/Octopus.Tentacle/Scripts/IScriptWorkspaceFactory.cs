@@ -8,7 +8,7 @@ namespace Octopus.Tentacle.Scripts
 {
     public interface IScriptWorkspaceFactory
     {
-        IScriptWorkspace GetWorkspace(ScriptTicket ticket, bool readinessCheck = true);
+        IScriptWorkspace GetWorkspace(ScriptTicket ticket, bool skipFreeSpaceCheck = false);
 
         Task<IScriptWorkspace> PrepareWorkspace(
             ScriptTicket ticket,
