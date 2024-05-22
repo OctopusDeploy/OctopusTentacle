@@ -29,8 +29,8 @@ namespace Octopus.Tentacle.Kubernetes
         public static string PersistentVolumeSizeVariableName => $"{EnvVarPrefix}__PERSISTENTVOLUMESIZE";
         public static string PersistentVolumeSize => GetRequiredEnvVar(PersistentVolumeSizeVariableName, "Unable to determine Persistent Volume Size");
 
-        public static string PersistentVolumeSizeBytesVariableName => $"{EnvVarPrefix}__PERSISTENVOLUMETOTALBYTES";
-        public static string PersistentVolumeFreeBytesVariableName => $"{EnvVarPrefix}__PERSISTENVOLUMEFREEBYTES";
+        public static string PersistentVolumeSizeBytesVariableName => $"{EnvVarPrefix}__PERSISTENTVOLUMETOTALBYTES";
+        public static string PersistentVolumeFreeBytesVariableName => $"{EnvVarPrefix}__PERSISTENTVOLUMEFREEBYTES";
 
         static string GetRequiredEnvVar(string variable, string errorMessage)
             => Environment.GetEnvironmentVariable(variable)
