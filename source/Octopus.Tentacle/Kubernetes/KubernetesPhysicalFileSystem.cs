@@ -10,8 +10,6 @@ namespace Octopus.Tentacle.Kubernetes
         readonly IKubernetesDirectoryInformationProvider directoryInformationProvider;
         ISystemLog Log { get; }
 
-        (ulong freeSpaceBytes, ulong totalSpaceBytes)? storageInformationCache;
-        
         // Set like this for now because we don't have a way to get the home directory from the provider without requiring ourselves
         // DI can be painful when circular dependencies happen with constructed classes :sad-panda:
         // When we can get an Injectable KubernetesConfiguration, we can remove this, alternatively, we can pull apart the configuration stores into different implementations
@@ -50,13 +48,10 @@ namespace Octopus.Tentacle.Kubernetes
             var bytesTotal = directoryInformationProvider.GetPathTotalBytes();
             if (bytesUsed.HasValue && bytesTotal.HasValue)
             {
-                storageInformationCache = (bytesTotal.Value - bytesUsed.Value, bytesTotal.Value);
+                return (bytesTotal.Value - bytesUsed.Value, bytesTotal.Value);
             }
-            else
-            {
-                storageInformationCache = null;
-            }
-            return storageInformationCache;
+
+            return null;
         }
     }
 }
