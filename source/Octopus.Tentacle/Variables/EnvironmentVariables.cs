@@ -25,5 +25,7 @@ namespace Octopus.Tentacle.Variables
         public const string TentacleMachineConfigurationHomeDirectory = "TentacleMachineConfigurationHomeDirectory";
         public const string TentaclePollingConnectionCount = "TentaclePollingConnectionCount";
         public const string NfsWatchdogDirectory = "watchdog_directory";
+        public static string TentacleUseTcpNoDelay = "TentacleUseTcpNoDelay";
+        public static string TentacleUseAsyncListener = "TentacleUseAsyncListener";
     }
 }
