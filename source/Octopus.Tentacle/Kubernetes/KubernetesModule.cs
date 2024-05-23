@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Octopus.Tentacle.Background;
+using Octopus.Tentacle.Diagnostics;
 
 namespace Octopus.Tentacle.Kubernetes
 {
@@ -28,6 +29,7 @@ namespace Octopus.Tentacle.Kubernetes
             builder.RegisterType<KubernetesDirectoryInformationProvider>().As<IKubernetesDirectoryInformationProvider>().SingleInstance();
             builder.RegisterType<MemoryCache>().As<IMemoryCache>().SingleInstance();
             builder.RegisterType<MemoryCacheOptions>().As<IOptions<MemoryCacheOptions>>().SingleInstance();
+            builder.RegisterType<KubernetesAgentMetrics>().As<KubernetesAgentMetrics>().SingleInstance();
 #if DEBUG
             builder.RegisterType<LocalMachineKubernetesClientConfigProvider>().As<IKubernetesClientConfigProvider>().SingleInstance();
 #else
