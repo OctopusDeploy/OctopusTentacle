@@ -94,6 +94,6 @@ namespace Octopus.Tentacle
             builder.RegisterCommand<ShowConfigurationCommand>("show-configuration", "Outputs the Tentacle configuration");
 
             return builder.Build();
-A        }
+        }
     }
 }
