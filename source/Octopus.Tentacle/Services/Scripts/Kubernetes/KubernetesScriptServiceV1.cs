@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -8,9 +7,9 @@ using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
 using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha;
 using Octopus.Tentacle.Kubernetes;
+using Octopus.Tentacle.Kubernetes.Synchronisation;
 using Octopus.Tentacle.Maintenance;
 using Octopus.Tentacle.Scripts;
-using Octopus.Tentacle.Util;
 using PodImageConfigurationV1Alpha = Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha.PodImageConfiguration;
 
 namespace Octopus.Tentacle.Services.Scripts.Kubernetes
@@ -26,9 +25,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
         readonly IKubernetesPodLogService podLogService;
         readonly ITentacleScriptLogProvider scriptLogProvider;
         readonly IScriptPodSinceTimeStore scriptPodSinceTimeStore;
-
-        //TODO: check what will happen when Tentacle restarts
-        readonly ConcurrentDictionary<ScriptTicket, Lazy<SemaphoreSlim>> startScriptMutexes = new();
+        readonly IKeyedLock<ScriptTicket> keyedLock;
 
         public KubernetesScriptServiceV1(
             IKubernetesPodService podService,
@@ -37,7 +34,8 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             IKubernetesScriptPodCreator podCreator,
             IKubernetesPodLogService podLogService,
             ITentacleScriptLogProvider scriptLogProvider,
-            IScriptPodSinceTimeStore scriptPodSinceTimeStore)
+            IScriptPodSinceTimeStore scriptPodSinceTimeStore,
+            IKeyedLock<ScriptTicket> keyedLock)
         {
             this.podService = podService;
             this.workspaceFactory = workspaceFactory;
@@ -46,12 +44,12 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             this.podLogService = podLogService;
             this.scriptLogProvider = scriptLogProvider;
             this.scriptPodSinceTimeStore = scriptPodSinceTimeStore;
+            this.keyedLock = keyedLock;
         }
 
         public async Task<KubernetesScriptStatusResponseV1> StartScriptAsync(StartKubernetesScriptCommandV1 command, CancellationToken cancellationToken)
         {
-            var mutex = startScriptMutexes.GetOrAdd(command.ScriptTicket, _ => new Lazy<SemaphoreSlim>(() => new SemaphoreSlim(1, 1))).Value;
-            using (await mutex.LockAsync(cancellationToken))
+            using (await keyedLock.LockAsync(command.ScriptTicket, cancellationToken))
             {
                 var trackedPod = podStatusProvider.TryGetTrackedScriptPod(command.ScriptTicket);
                 if (trackedPod != null)
@@ -79,12 +77,8 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
                     command.Files,
                     cancellationToken);
 
-                //create the pod
-                await podCreator.CreatePod(command, workspace, cancellationToken);
+                var logs = await CreatePodAndWaitForLogs(command, workspace, cancellationToken);
 
-                var (logs, _) = await podLogService.GetLogs(command.ScriptTicket, 0, cancellationToken);
-
-                //return a status that say's we are pending
                 return new KubernetesScriptStatusResponseV1(command.ScriptTicket, ProcessState.Pending, 0, logs.ToList(), 0);
             }
         }
@@ -114,8 +108,6 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
 
         public async Task CompleteScriptAsync(CompleteKubernetesScriptCommandV1 command, CancellationToken cancellationToken)
         {
-            startScriptMutexes.TryRemove(command.ScriptTicket, out _);
-
             var workspace = workspaceFactory.GetWorkspace(command.ScriptTicket);
             await workspace.Delete(cancellationToken);
 
@@ -155,6 +147,14 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
                 outputLogs,
                 nextLogSequence
             );
+        }
+        
+        async Task<IReadOnlyCollection<ProcessOutput>> CreatePodAndWaitForLogs(StartKubernetesScriptCommandV1 command, IScriptWorkspace workspace, CancellationToken cancellationToken)
+        {
+            await podCreator.CreatePod(command, workspace, cancellationToken);
+
+            var (logs, _) = await podLogService.GetLogs(command.ScriptTicket, 0, cancellationToken);
+            return logs;
         }
 
         static KubernetesScriptStatusResponseV1 GetResponseForMissingScriptPod(ScriptTicket scriptTicket, long lastLogSequence)
