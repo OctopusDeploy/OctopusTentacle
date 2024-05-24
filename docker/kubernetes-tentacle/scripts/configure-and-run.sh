@@ -252,28 +252,28 @@ function registerTentacle() {
 }
 
 function addAdditionalServerInstancesIfRequired() {
-    if [[ -z "$ServerCommsAddresses" ]]; then
-      return;
-    fi
+  if [[ -z "$ServerCommsAddresses" ]]; then
+    return
+  fi
 
-    IFS=',' read -ra SERVER_ADDRESSES <<<"$ServerCommsAddresses"
-    len=${#SERVER_ADDRESSES[@]}
+  IFS=',' read -ra SERVER_ADDRESSES <<<"$ServerCommsAddresses"
+  len=${#SERVER_ADDRESSES[@]}
 
-    if [[ -z "$ServerCommsAddress" && len -eq 1 ]]; then
-      return;
-    fi
+  if [[ -z "$ServerCommsAddress" && len -eq 1 ]]; then
+    return
+  fi
 
-    echo "Registering additional HA Servers..."
+  echo "Registering additional HA Servers..."
 
-    if [[ -z "$ServerCommsAddress" ]]; then
-      for i in "${SERVER_ADDRESSES[@]:1}"; do
-        registerAdditionalServer "$i"
-      done
-    else
-      for i in "${SERVER_ADDRESSES[@]}"; do
-        registerAdditionalServer "$i"
-      done
-    fi
+  if [[ -z "$ServerCommsAddress" ]]; then
+    for i in "${SERVER_ADDRESSES[@]:1}"; do
+      registerAdditionalServer "$i"
+    done
+  else
+    for i in "${SERVER_ADDRESSES[@]}"; do
+      registerAdditionalServer "$i"
+    done
+  fi
 }
 
 function registerAdditionalServer() {
@@ -285,19 +285,19 @@ function registerAdditionalServer() {
   ARGS+=('poll-server')
 
   ARGS+=('--instance' "$instanceName"
-         '--server' "$ServerUrl")
+    '--server' "$ServerUrl")
 
   if [[ -n "$ServerApiKey" ]]; then
-      echo "Registering Tentacle with API key"
-      ARGS+=('--apiKey' $ServerApiKey)
+    echo "Registering Tentacle with API key"
+    ARGS+=('--apiKey' $ServerApiKey)
   elif [[ -n "$BearerToken" ]]; then
-      echo "Registering Tentacle with Bearer Token"
-      ARGS+=('--bearerToken' "$BearerToken")
+    echo "Registering Tentacle with Bearer Token"
+    ARGS+=('--bearerToken' "$BearerToken")
   else
-      echo "Registering Tentacle with username/password"
-      ARGS+=(
-          '--username' "$ServerUsername"
-          '--password' "$ServerPassword")
+    echo "Registering Tentacle with username/password"
+    ARGS+=(
+      '--username' "$ServerUsername"
+      '--password' "$ServerPassword")
   fi
 
   ARGS+=('--server-comms-address' "$serverCommsAddress")
@@ -320,7 +320,7 @@ else
 
   configureTentacle
   registerTentacle
-    addAdditionalServerInstancesIfRequired
+  addAdditionalServerInstancesIfRequired
 
   echo "Configuration successful"
 fi
