@@ -67,11 +67,14 @@ function validateVariables() {
   echo " - server endpoint '$ServerUrl'"
   echo " - api key '##########'"
 
-  if [[ -n "$ServerCommsAddress" || -n "$ServerPort" ]]; then
+  if [[ -n "$ServerCommsAddress" || -n "$ServerCommsAddresses" || -n "$ServerPort" ]]; then
     echo " - communication mode 'Kubernetes' (Polling)"
 
     if [[ -n "$ServerCommsAddress" ]]; then
       echo " - server comms address $ServerCommsAddress"
+    fi
+    if [[ -n "$ServerCommsAddresses" ]]; then
+      echo " - HA server comms addresses $ServerCommsAddresses"
     fi
     if [[ -n "$ServerPort" ]]; then
       echo " - server port $ServerPort"
@@ -118,7 +121,7 @@ function configureTentacle() {
   tentacle configure --instance "$instanceName" --app "$applicationsDirectory"
 
   echo "Configuring communication type ..."
-  if [[ -n "$ServerCommsAddress" || -n "$ServerPort" ]]; then
+  if [[ -n "$ServerCommsAddress" || -n "$ServerCommsAddresses" || -n "$ServerPort" ]]; then
     tentacle configure --instance "$instanceName" --noListen "True"
   else
     tentacle configure --instance "$instanceName" --port $internalListeningPort --noListen "False"
@@ -197,11 +200,15 @@ function registerTentacle() {
     '--space' "$Space"
     '--policy' "$MachinePolicy")
 
-  if [[ -n "$ServerCommsAddress" || -n "$ServerPort" ]]; then
+  if [[ -n "$ServerCommsAddress" || -n "$ServerCommsAddresses" || -n "$ServerPort" ]]; then
     ARGS+=('--comms-style' 'TentacleActive')
 
+    # If ServerCommsAddress (singular) is not set, use the first value in ServerCommsAddresses (plural)
     if [[ -n "$ServerCommsAddress" ]]; then
-      ARGS+=('--server-comms-address' $ServerCommsAddress)
+      ARGS+=('--server-comms-address' "$ServerCommsAddress")
+    elif [[ -n "$ServerCommsAddresses" ]]; then
+      IFS=',' read -ra SERVER_ADDRESSES <<<"$ServerCommsAddresses"
+      ARGS+=('--server-comms-address' "${SERVER_ADDRESSES[0]}")
     fi
 
     if [[ -n "$ServerPort" ]]; then
@@ -245,6 +252,69 @@ function registerTentacle() {
   tentacle "${ARGS[@]}"
 }
 
+function addAdditionalServerInstancesIfRequired() {
+  if [[ -z "$ServerCommsAddresses" ]]; then
+    return
+  fi
+
+  IFS=',' read -ra SERVER_ADDRESSES <<<"$ServerCommsAddresses"
+  len=${#SERVER_ADDRESSES[@]}
+
+  # If ServerCommsAddress (singular) is not set and ServerCommsAddresses (plural)
+  # has only one element return as nothing to do.
+  if [[ -z "$ServerCommsAddress" && len -eq 1 ]]; then
+    return
+  # If ServerCommsAddresses (plural) is empty, return as nothing to do.
+  elif [[ len -eq 0 ]]; then
+    return
+  fi
+
+  echo "Registering additional HA Servers..."
+
+  # If ServerCommsAddress (singular) is not set, skip the first value in
+  # ServerCommsAddresses (plural) as the first value was used for the main
+  # registration.
+  if [[ -z "$ServerCommsAddress" ]]; then
+    # The ":1" skips the first element of the array
+    for i in "${SERVER_ADDRESSES[@]:1}"; do
+      registerAdditionalServer "$i"
+    done
+  else
+    for i in "${SERVER_ADDRESSES[@]}"; do
+      registerAdditionalServer "$i"
+    done
+  fi
+}
+
+function registerAdditionalServer() {
+  serverCommsAddress=$1
+
+  echo "Registering server '${serverCommsAddress}'"
+
+  local ARGS=()
+  ARGS+=('poll-server')
+
+  ARGS+=('--instance' "$instanceName"
+    '--server' "$ServerUrl")
+
+  if [[ -n "$ServerApiKey" ]]; then
+    echo "Registering Tentacle with API key"
+    ARGS+=('--apiKey' $ServerApiKey)
+  elif [[ -n "$BearerToken" ]]; then
+    echo "Registering Tentacle with Bearer Token"
+    ARGS+=('--bearerToken' "$BearerToken")
+  else
+    echo "Registering Tentacle with username/password"
+    ARGS+=(
+      '--username' "$ServerUsername"
+      '--password' "$ServerPassword")
+  fi
+
+  ARGS+=('--server-comms-address' "$serverCommsAddress")
+
+  tentacle "${ARGS[@]}"
+}
+
 setupVariablesForRegistrationCheck
 getStatusOfRegistration
 
@@ -260,6 +330,7 @@ else
 
   configureTentacle
   registerTentacle
+  addAdditionalServerInstancesIfRequired
 
   echo "Configuration successful"
 fi
