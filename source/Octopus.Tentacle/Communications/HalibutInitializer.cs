@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using System.Threading.Tasks;
 using Halibut;
 using Halibut.Diagnostics;
 using Octopus.Client.Model;
@@ -35,8 +36,10 @@ namespace Octopus.Tentacle.Communications
 
             TrustOctopusServers();
 
-            AddPollingEndpoints();
+            var endpoints = AddPollingEndpoints();
 
+            KeepPingingServersForNoReason(endpoints);
+            
             if (configuration.NoListen)
             {
                 log.Info("Agent will not listen on any TCP ports");
@@ -48,6 +51,23 @@ namespace Octopus.Tentacle.Communications
             halibut.Listen(endpoint);
 
             log.Info("Agent listening on: " + endpoint);
+        }
+
+        void KeepPingingServersForNoReason(IEnumerable<ServiceEndPoint> endpoints)
+        {
+            Task.Run(async () =>
+            {
+                var i = 0;
+                var c = halibut.CreateAsyncClient<IMyEchoService, IAsyncClientMyEchoService>(endpoints.First());
+                while (true)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(3));
+
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                    var response = await c.SayHelloAsync("Hello " + i++);
+                    Console.WriteLine("MEssage Back From Server:" + response);
+                }
+            });
         }
 
         private void FixCommunicationStyle()
@@ -85,7 +105,7 @@ namespace Octopus.Tentacle.Communications
 
 
 
-        void AddPollingEndpoints()
+        IEnumerable<ServiceEndPoint> AddPollingEndpoints()
         {
             foreach (var pollingEndPoint in GetOctopusServersToPoll())
             {
@@ -110,6 +130,8 @@ namespace Octopus.Tentacle.Communications
                 for (var i = 0; i < connectionCount; i++)
                 {
                     halibut.Poll(new Uri(pollingEndPoint.SubscriptionId), serviceEndPoint, CancellationToken.None);
+                    yield return serviceEndPoint;
+                    //yield return new ServiceEndPoint(new Uri(pollingEndPoint.SubscriptionId), pollingEndPoint.Thumbprint, halibutTimeoutsAndLimits);
                 }
             }
         }
@@ -173,5 +195,25 @@ namespace Octopus.Tentacle.Communications
         public void Stop()
         {
         }
+    }
+    
+    
+    
+    
+    
+    
+    public interface IMyEchoService
+    {
+        string SayHello(string name);
+    }
+
+    public interface IAsyncClientMyEchoService
+    {
+        Task<string> SayHelloAsync(string name);
+    }
+
+    public interface IAsyncMyEchoService
+    {
+        Task<string> SayHelloAsync(string name, CancellationToken cancellationToken);
     }
 }
