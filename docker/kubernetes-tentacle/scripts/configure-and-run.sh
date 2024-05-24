@@ -203,6 +203,7 @@ function registerTentacle() {
   if [[ -n "$ServerCommsAddress" || -n "$ServerCommsAddresses" || -n "$ServerPort" ]]; then
     ARGS+=('--comms-style' 'TentacleActive')
 
+    # If ServerCommsAddress (singular) is not set, use the first value in ServerCommsAddresses (plural)
     if [[ -n "$ServerCommsAddress" ]]; then
       ARGS+=('--server-comms-address' "$ServerCommsAddress")
     elif [[ -n "$ServerCommsAddresses" ]]; then
@@ -259,13 +260,22 @@ function addAdditionalServerInstancesIfRequired() {
   IFS=',' read -ra SERVER_ADDRESSES <<<"$ServerCommsAddresses"
   len=${#SERVER_ADDRESSES[@]}
 
+  # If ServerCommsAddress (singular) is not set and ServerCommsAddresses (plural)
+  # has only one element return as nothing to do.
   if [[ -z "$ServerCommsAddress" && len -eq 1 ]]; then
+    return
+  # If ServerCommsAddresses (plural) is empty, return as nothing to do.
+  elif [[ len -eq 0 ]]; then
     return
   fi
 
   echo "Registering additional HA Servers..."
 
+  # If ServerCommsAddress (singular) is not set, skip the first value in
+  # ServerCommsAddresses (plural) as the first value was used for the main
+  # registration.
   if [[ -z "$ServerCommsAddress" ]]; then
+    # The ":1" skips the first element of the array
     for i in "${SERVER_ADDRESSES[@]:1}"; do
       registerAdditionalServer "$i"
     done
