@@ -43,7 +43,16 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         bool useDefaultMachineConfigurationHomeDirectory = false;
 
         static readonly Regex ListeningPortRegex = new (@"listen:\/\/.+:(\d+)\/");
-        readonly Dictionary<string, string> runTentacleEnvironmentVariables = new();
+        readonly Dictionary<string, string> runTentacleEnvironmentVariables = BuildDefaultTentacleEnvironmentVariables();
+
+        public static Dictionary<string, string> BuildDefaultTentacleEnvironmentVariables()
+        {
+            var env = new Dictionary<string, string>();
+            // Dog food our new setting.
+            env[EnvironmentVariables.TentacleUseTcpNoDelay] = "true";
+            env[EnvironmentVariables.TentacleUseAsyncListener] = "true";
+            return env;
+        }
 
         TemporaryDirectory? homeDirectory;
 
