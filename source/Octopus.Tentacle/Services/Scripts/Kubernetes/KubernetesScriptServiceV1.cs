@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
 using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha;
-using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Maintenance;
 using Octopus.Tentacle.Scripts;
@@ -27,7 +26,6 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
         readonly IKubernetesPodLogService podLogService;
         readonly ITentacleScriptLogProvider scriptLogProvider;
         readonly IScriptPodSinceTimeStore scriptPodSinceTimeStore;
-        readonly KubernetesAgentMetrics metrics;
 
         //TODO: check what will happen when Tentacle restarts
         readonly ConcurrentDictionary<ScriptTicket, Lazy<SemaphoreSlim>> startScriptMutexes = new();
@@ -39,8 +37,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             IKubernetesScriptPodCreator podCreator,
             IKubernetesPodLogService podLogService,
             ITentacleScriptLogProvider scriptLogProvider,
-            IScriptPodSinceTimeStore scriptPodSinceTimeStore,
-            KubernetesAgentMetrics metrics)
+            IScriptPodSinceTimeStore scriptPodSinceTimeStore)
         {
             this.podService = podService;
             this.workspaceFactory = workspaceFactory;
@@ -49,12 +46,10 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             this.podLogService = podLogService;
             this.scriptLogProvider = scriptLogProvider;
             this.scriptPodSinceTimeStore = scriptPodSinceTimeStore;
-            this.metrics = metrics;
         }
 
         public async Task<KubernetesScriptStatusResponseV1> StartScriptAsync(StartKubernetesScriptCommandV1 command, CancellationToken cancellationToken)
         {
-            metrics.IncrementMetric(KubernetesMetric.NFS_SCRIPT_KILL_POD_COUNT);
             var mutex = startScriptMutexes.GetOrAdd(command.ScriptTicket, _ => new Lazy<SemaphoreSlim>(() => new SemaphoreSlim(1, 1))).Value;
             using (await mutex.LockAsync(cancellationToken))
             {
