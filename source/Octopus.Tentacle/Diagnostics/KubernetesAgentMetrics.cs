@@ -19,7 +19,7 @@ namespace Octopus.Tentacle.Diagnostics
     public class KubernetesAgentMetrics
     {
         readonly IKubernetesConfigMapService configMapService;
-        const string Name = "tentacle-metrics";
+        const string Name = "kubernetes-agent-metrics";
 
         readonly Lazy<V1ConfigMap> configMap;
         IDictionary<string, string> ConfigMapData => configMap.Value.Data ??= new Dictionary<string, string>();

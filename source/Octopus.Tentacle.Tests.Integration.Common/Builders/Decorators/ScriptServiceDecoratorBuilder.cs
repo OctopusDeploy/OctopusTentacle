@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Halibut.ServiceModel;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ClientServices;
