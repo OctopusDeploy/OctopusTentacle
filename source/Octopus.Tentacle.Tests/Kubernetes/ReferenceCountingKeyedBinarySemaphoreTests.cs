@@ -94,7 +94,24 @@ namespace Octopus.Tentacle.Tests.Kubernetes
 
         void RecordCallback(ReferenceCountingBinarySemaphoreSlim referenceCountingBinarySemaphoreSlim)
         {
-            if (!referenceCountIntercepts.TryAdd(referenceCountingBinarySemaphoreSlim.ReferenceCount, 1)) referenceCountIntercepts[referenceCountingBinarySemaphoreSlim.ReferenceCount] += 1;
+            if (!TryAdd(referenceCountIntercepts, referenceCountingBinarySemaphoreSlim.ReferenceCount, 1)) referenceCountIntercepts[referenceCountingBinarySemaphoreSlim.ReferenceCount] += 1;
+        }
+
+        // The extension method Dictionary<TKey,TValue>.TryAdd(TKey, TValue) is not available in .NET Framework
+        static bool TryAdd<TKey, TValue>(IDictionary<TKey, TValue> dictionary, TKey key, TValue value)
+        {
+            if (dictionary == null)
+            {
+                throw new ArgumentNullException(nameof(dictionary));
+            }
+            
+            if (!dictionary.ContainsKey(key))
+            {
+                dictionary.Add(key, value);
+                return true;
+            }
+
+            return false;
         }
 
         class TestableReferenceCountingKeyedBinarySemaphore<TKey> : ReferenceCountingKeyedBinarySemaphore<TKey> where TKey : IEquatable<TKey>
