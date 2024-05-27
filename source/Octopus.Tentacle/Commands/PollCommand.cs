@@ -28,6 +28,7 @@ namespace Octopus.Tentacle.Commands
         int? serverCommsPort = null;
         string serverWebSocketAddress = null!;
         string serverCommsAddress = null!;
+        bool reuseThumbprint = false;
 
         public PollCommand(Lazy<IWritableTentacleConfiguration> configuration,
                            ISystemLog log,
@@ -45,11 +46,12 @@ namespace Octopus.Tentacle.Commands
             this.log = log;
             this.selector = selector;
 
-            api = AddOptionSet(new ApiEndpointOptions(Options));
+            api = AddOptionSet(new ApiEndpointOptions(Options, allowBypass: true));
 
             Options.Add("server-comms-address=", "The comms address on the Octopus Server; the address of the Octopus Server will be used if omitted.", s => serverCommsAddress = s);
             Options.Add("server-comms-port=", "The comms port on the Octopus Server; the default is " + DefaultServerCommsPort + ". If specified, this will take precedence over any port number in server-comms-address.", s => serverCommsPort = int.Parse(s));
             Options.Add("server-web-socket=", "When using active communication over websockets, the address of the Octopus Server, eg 'wss://example.com/OctopusComms'. Refer to http://g.octopushq.com/WebSocketComms", s => serverWebSocketAddress = s);
+            Options.Add("reuse-server-thumbprint", "Reuse the Server Thumbprint from the first trusted server instance currently configured", _ => reuseThumbprint = true);
         }
 
         protected override void Start()
@@ -65,6 +67,29 @@ namespace Octopus.Tentacle.Commands
 
             var serverAddress = GetAddress();
 
+            var serverConfiguration = reuseThumbprint ?
+                CreateServerConfigurationFromFirstTrustedServer(serverAddress) :
+                await CreateServerConfigurationViaServerAPI(serverAddress);
+
+            configuration.Value.AddOrUpdateTrustedOctopusServer(serverConfiguration);
+            VoteForRestart();
+
+            log.Info("Polling endpoint configured");
+        }
+
+        OctopusServerConfiguration CreateServerConfigurationFromFirstTrustedServer(Uri serverAddress)
+        {
+            var firstTrustedServer = configuration.Value.TrustedOctopusServers.First();
+            return new OctopusServerConfiguration(firstTrustedServer.Thumbprint)
+            {
+                Address = serverAddress,
+                CommunicationStyle = firstTrustedServer.CommunicationStyle,
+                SubscriptionId = firstTrustedServer.SubscriptionId
+            };
+        }
+
+        async Task<OctopusServerConfiguration> CreateServerConfigurationViaServerAPI(Uri serverAddress)
+        {
             //if we are on a polling tentacle with a polling proxy set up, use the api through that proxy
             var proxyOverride = proxyConfig.ParseToWebProxy(configuration.Value.PollingProxyConfiguration);
 
@@ -72,26 +97,20 @@ namespace Octopus.Tentacle.Commands
 
             log.Info($"Configuring Tentacle to poll the server at {api.ServerUri}");
 
-            using (var client = await octopusClientInitializer.CreateClient(api, proxyOverride))
+            using var client = await octopusClientInitializer.CreateClient(api, proxyOverride);
+
+            var repository = new OctopusAsyncRepository(client);
+
+            var serverThumbprint = await GetServerThumbprint(repository, serverAddress, sslThumbprint);
+
+            var alreadyConfiguredServerInCluster = GetAlreadyConfiguredServerInCluster(serverThumbprint);
+
+            return new OctopusServerConfiguration(serverThumbprint)
             {
-                var repository = new OctopusAsyncRepository(client);
-
-                var serverThumbprint = await GetServerThumbprint(repository, serverAddress, sslThumbprint);
-
-                var alreadyConfiguredServerInCluster = GetAlreadyConfiguredServerInCluster(serverThumbprint);
-
-                var octopusServerConfiguration = new OctopusServerConfiguration(serverThumbprint)
-                {
-                    Address = serverAddress,
-                    CommunicationStyle = CommunicationStyle.TentacleActive,
-                    SubscriptionId = alreadyConfiguredServerInCluster.SubscriptionId
-                };
-
-                configuration.Value.AddOrUpdateTrustedOctopusServer(octopusServerConfiguration);
-                VoteForRestart();
-
-                log.Info("Polling endpoint configured");
-            }
+                Address = serverAddress,
+                CommunicationStyle = CommunicationStyle.TentacleActive,
+                SubscriptionId = alreadyConfiguredServerInCluster.SubscriptionId
+            };
         }
 
         OctopusServerConfiguration GetAlreadyConfiguredServerInCluster(string serverThumbprint)
@@ -141,6 +160,8 @@ namespace Octopus.Tentacle.Commands
 
                 if (string.IsNullOrEmpty(serverCommsAddress))
                 {
+                    if (reuseThumbprint) throw new InvalidOperationException("You must specify either a WebSocketAddress or a ServerCommsAddress");
+
                     serverCommsAddressUri = api.ServerUri;
                     serverCommsPort ??= DefaultServerCommsPort;
                 }
