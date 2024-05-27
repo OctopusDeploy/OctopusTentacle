@@ -92,6 +92,8 @@ namespace Octopus.Tentacle
             builder.RegisterCommand<ListInstancesCommand>("list-instances", "Lists all installed Tentacle instances");
             builder.RegisterCommand<VersionCommand>("version", "Show the Tentacle version information");
             builder.RegisterCommand<ShowConfigurationCommand>("show-configuration", "Outputs the Tentacle configuration");
+            
+            builder.RegisterModule(new CommandModule());
 
             return builder.Build();
         }

@@ -67,6 +67,7 @@ namespace Octopus.Tentacle.Configuration
                 .As<IApplicationInstanceManager>()
                 .SingleInstance();
 
+#pragma warning disable CS8714 // The type cannot be used as type parameter in the generic type or method. Nullability of type argument doesn't match 'notnull' constraint.
             builder.Register(c =>
                 {
                     var selector = c.Resolve<IApplicationInstanceSelector>();
@@ -82,6 +83,7 @@ namespace Octopus.Tentacle.Configuration
                 })
                 .As<IWritableKeyValueStore>()
                 .SingleInstance();
+#pragma warning restore CS8714 // The type cannot be used as type parameter in the generic type or method. Nullability of type argument doesn't match 'notnull' constraint.
 
             builder.RegisterType<HomeConfiguration>()
                 .As<IHomeConfiguration>()
