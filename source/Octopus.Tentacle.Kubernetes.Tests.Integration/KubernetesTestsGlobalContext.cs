@@ -6,15 +6,15 @@ namespace Octopus.Tentacle.Kubernetes.Tests.Integration;
 public class KubernetesTestsGlobalContext : IDisposable
 {
     public static KubernetesTestsGlobalContext Instance { get; } = new();
-    
+
     public TemporaryDirectory TemporaryDirectory { get; }
-    
+
     public ILogger Logger { get; }
 
     public string KubeConfigPath { get; set; } = "<unset>";
 
     public string HelmExePath { get; private set; } = null!;
-    public string KubeCtlExePath { get; private set; }= null!;
+    public string KubeCtlExePath { get; private set; } = null!;
     public string? TentacleImageAndTag { get; set; }
 
     KubernetesTestsGlobalContext()
