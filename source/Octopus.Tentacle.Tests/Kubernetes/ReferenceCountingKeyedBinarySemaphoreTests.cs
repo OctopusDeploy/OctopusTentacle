@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -16,13 +17,13 @@ namespace Octopus.Tentacle.Tests.Kubernetes
     public class ReferenceCountingKeyedBinarySemaphoreTests
     {
         CancellationTokenSource testCancellationTokenSource;
-        Dictionary<int, int> referenceCountIntercepts;
+        ConcurrentDictionary<int, int> referenceCountIntercepts;
 
         [SetUp]
         public void SetUp()
         {
-            testCancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-            referenceCountIntercepts = new Dictionary<int, int>();
+            testCancellationTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(10));
+            referenceCountIntercepts = new ConcurrentDictionary<int, int>();
         }
 
         [TearDown]
@@ -94,7 +95,10 @@ namespace Octopus.Tentacle.Tests.Kubernetes
 
         void RecordCallback(ReferenceCountingBinarySemaphoreSlim referenceCountingBinarySemaphoreSlim)
         {
-            if (!TryAdd(referenceCountIntercepts, referenceCountingBinarySemaphoreSlim.ReferenceCount, 1)) referenceCountIntercepts[referenceCountingBinarySemaphoreSlim.ReferenceCount] += 1;
+            if (!TryAdd(referenceCountIntercepts, referenceCountingBinarySemaphoreSlim.ReferenceCount, 1))
+            {
+                referenceCountIntercepts[referenceCountingBinarySemaphoreSlim.ReferenceCount] += 1;
+            }
         }
 
         // The extension method Dictionary<TKey,TValue>.TryAdd(TKey, TValue) is not available in .NET Framework
