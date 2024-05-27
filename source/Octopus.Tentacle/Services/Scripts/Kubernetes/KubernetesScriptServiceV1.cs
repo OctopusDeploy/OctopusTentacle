@@ -25,7 +25,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
         readonly IKubernetesPodLogService podLogService;
         readonly ITentacleScriptLogProvider scriptLogProvider;
         readonly IScriptPodSinceTimeStore scriptPodSinceTimeStore;
-        readonly IKeyedLock<ScriptTicket> keyedLock;
+        readonly IKeyedSemaphore<ScriptTicket> keyedSemaphore;
 
         public KubernetesScriptServiceV1(
             IKubernetesPodService podService,
@@ -35,7 +35,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             IKubernetesPodLogService podLogService,
             ITentacleScriptLogProvider scriptLogProvider,
             IScriptPodSinceTimeStore scriptPodSinceTimeStore,
-            IKeyedLock<ScriptTicket> keyedLock)
+            IKeyedSemaphore<ScriptTicket> keyedSemaphore)
         {
             this.podService = podService;
             this.workspaceFactory = workspaceFactory;
@@ -44,12 +44,12 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             this.podLogService = podLogService;
             this.scriptLogProvider = scriptLogProvider;
             this.scriptPodSinceTimeStore = scriptPodSinceTimeStore;
-            this.keyedLock = keyedLock;
+            this.keyedSemaphore = keyedSemaphore;
         }
 
         public async Task<KubernetesScriptStatusResponseV1> StartScriptAsync(StartKubernetesScriptCommandV1 command, CancellationToken cancellationToken)
         {
-            using (await keyedLock.LockAsync(command.ScriptTicket, cancellationToken))
+            using (await keyedSemaphore.WaitAsync(command.ScriptTicket, cancellationToken))
             {
                 var trackedPod = podStatusProvider.TryGetTrackedScriptPod(command.ScriptTicket);
                 if (trackedPod != null)

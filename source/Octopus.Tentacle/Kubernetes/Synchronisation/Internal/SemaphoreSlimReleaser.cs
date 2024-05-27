@@ -3,7 +3,7 @@ using System.Threading;
 
 namespace Octopus.Tentacle.Kubernetes.Synchronisation.Internal
 {
-    class SemaphoreSlimReleaser<T> : ISemaphoreSlimReleaser<T> where T : SemaphoreSlim
+    class SemaphoreSlimReleaser<T> : IDisposable where T : SemaphoreSlim
     {
         readonly Action onDispose;
 
