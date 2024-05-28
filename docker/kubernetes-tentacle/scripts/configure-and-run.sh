@@ -253,18 +253,19 @@ function registerTentacle() {
 }
 
 function addAdditionalServerInstancesIfRequired() {
-  if [[ -n "$ServerCommsAddress" ]]; then
-    tentacle clear-trusted-servers --keep="{$ServerCommsAddress}"
-  else
-    tentacle clear-trusted-servers --keep="{${SERVER_ADDRESSES[0]}}"
-  fi
-
   if [[ -z "$ServerCommsAddresses" ]]; then
+    clearTrustedServersExcept "$ServerCommsAddress"
     return
   fi
 
   IFS=',' read -ra SERVER_ADDRESSES <<<"$ServerCommsAddresses"
   len=${#SERVER_ADDRESSES[@]}
+
+  if [[ -n "$ServerCommsAddress" ]]; then
+    clearTrustedServersExcept "$ServerCommsAddress"
+  else
+    clearTrustedServersExcept "${SERVER_ADDRESSES[0]}"
+  fi
 
   # If ServerCommsAddress (singular) is not set and ServerCommsAddresses (plural)
   # has only one element return as nothing to do.
@@ -290,6 +291,11 @@ function addAdditionalServerInstancesIfRequired() {
       registerAdditionalServer "$i"
     done
   fi
+}
+
+function clearTrustedServersExcept()
+{
+  tentacle clear-trusted-servers --instance "$instanceName" --keep "$1"
 }
 
 function registerAdditionalServer() {
