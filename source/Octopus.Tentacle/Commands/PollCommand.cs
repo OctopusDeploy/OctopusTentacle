@@ -46,7 +46,7 @@ namespace Octopus.Tentacle.Commands
             this.log = log;
             this.selector = selector;
 
-            api = AddOptionSet(new ApiEndpointOptions(Options, allowBypass: true));
+            api = AddOptionSet(new ApiEndpointOptions(Options, bypassValidate: true));
 
             Options.Add("server-comms-address=", "The comms address on the Octopus Server; the address of the Octopus Server will be used if omitted.", s => serverCommsAddress = s);
             Options.Add("server-comms-port=", "The comms port on the Octopus Server; the default is " + DefaultServerCommsPort + ". If specified, this will take precedence over any port number in server-comms-address.", s => serverCommsPort = int.Parse(s));
