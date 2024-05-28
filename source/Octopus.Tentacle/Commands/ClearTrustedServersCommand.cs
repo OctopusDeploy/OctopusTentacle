@@ -30,7 +30,7 @@ namespace Octopus.Tentacle.Commands
             // to https: here: RegisterMachineCommandBase<TRegistrationOperationType>.GetActiveTentacleAddress
             // Adjusting the address here to match.
             var adjustedExcludedServerCommsAddresses =
-                excludedServerCommsAddresses.Select(a => a.Replace("http://", "https://")).ToHashSet();
+                excludedServerCommsAddresses.Select(a => new Uri(a.Replace("http://", "https://")).ToString()).ToHashSet();
             var serversToKeep = configuration.Value.TrustedOctopusServers
                 .Where(s => adjustedExcludedServerCommsAddresses.Contains(s.Address.ToString())).ToList();
 
