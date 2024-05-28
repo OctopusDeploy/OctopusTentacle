@@ -8,6 +8,7 @@ using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Kubernetes.Tests.Integration.Setup;
+using Octopus.Tentacle.Kubernetes.Tests.Integration.Tooling;
 using Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators;
 using Octopus.Tentacle.Tests.Integration.Common.Logging;
 
@@ -25,8 +26,10 @@ public abstract class KubernetesAgentIntegrationTest
     protected TentacleClient TentacleClient { get; private set; } = null!;
 
     protected CancellationToken CancellationToken { get; private set; }
+    
+    protected KubeCtlTool KubeCtl { get; private set; }
 
-    protected TentacleServiceDecoratorBuilder? TentacleServiceDecoratorBuilder { get; set; }
+    string agentThumbprint;
 
     [OneTimeSetUp]
     public async Task OneTimeSetUp()
@@ -37,16 +40,21 @@ public abstract class KubernetesAgentIntegrationTest
             KubernetesTestsGlobalContext.Instance.KubeCtlExePath,
             KubernetesTestsGlobalContext.Instance.KubeConfigPath,
             KubernetesTestsGlobalContext.Instance.Logger);
+        
+        KubeCtl = new KubeCtlTool(
+            KubernetesTestsGlobalContext.Instance.TemporaryDirectory,
+            KubernetesTestsGlobalContext.Instance.KubeCtlExePath,
+            KubernetesTestsGlobalContext.Instance.KubeConfigPath,
+            kubernetesAgentInstaller.Namespace,
+            KubernetesTestsGlobalContext.Instance.Logger);
 
         //create a new server halibut runtime
         var listeningPort = BuildServerHalibutRuntimeAndListen();
 
-        var thumbprint = await kubernetesAgentInstaller.InstallAgent(listeningPort, KubernetesTestsGlobalContext.Instance.TentacleImageAndTag);
+        agentThumbprint = await kubernetesAgentInstaller.InstallAgent(listeningPort, KubernetesTestsGlobalContext.Instance.TentacleImageAndTag);
 
         //trust the generated cert thumbprint
-        ServerHalibutRuntime.Trust(thumbprint);
-
-        BuildTentacleClient(thumbprint);
+        ServerHalibutRuntime.Trust(agentThumbprint);
     }
 
     [SetUp]
@@ -60,6 +68,9 @@ public abstract class KubernetesAgentIntegrationTest
 
         cancellationTokenSource = new CancellationTokenSource();
         CancellationToken = cancellationTokenSource.Token;
+
+        //each test should get its own tentacle client, so it gets its own builders
+        BuildTentacleClient();
     }
 
     [TearDown]
@@ -74,14 +85,19 @@ public abstract class KubernetesAgentIntegrationTest
         cancellationTokenSource.Dispose();
     }
 
-    void BuildTentacleClient(string thumbprint)
+    protected virtual TentacleServiceDecoratorBuilder ConfigureTentacleServiceDecoratorBuilder(TentacleServiceDecoratorBuilder builder) => builder;
+
+    void BuildTentacleClient()
     {
-        var endpoint = new ServiceEndPoint(kubernetesAgentInstaller.SubscriptionId, thumbprint, ServerHalibutRuntime.TimeoutsAndLimits);
+        var endpoint = new ServiceEndPoint(kubernetesAgentInstaller.SubscriptionId, agentThumbprint, ServerHalibutRuntime.TimeoutsAndLimits);
 
         var retrySettings = new RpcRetrySettings(true, TimeSpan.FromMinutes(2));
         var clientOptions = new TentacleClientOptions(retrySettings);
 
         TentacleClient.CacheServiceWasNotFoundResponseMessages(ServerHalibutRuntime);
+
+        var builder = new TentacleServiceDecoratorBuilder();
+        ConfigureTentacleServiceDecoratorBuilder(builder);
 
         TentacleClient = new TentacleClient(
             endpoint,
@@ -89,7 +105,7 @@ public abstract class KubernetesAgentIntegrationTest
             new PollingTentacleScriptObserverBackoffStrategy(),
             new NoTentacleClientObserver(),
             clientOptions,
-            TentacleServiceDecoratorBuilder?.Build());
+            builder.Build());
     }
 
     int BuildServerHalibutRuntimeAndListen()

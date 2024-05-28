@@ -26,10 +26,22 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders
         public ScriptBuilder PrintNTimesWithDelay(string printString, int count, TimeSpan delay)
         {
             // TODO make this a for loop in bash and powershell
-            for (int i = 0; i < count; i++)
+            for (var i = 0; i < count; i++)
             {
                 Sleep(delay);
                 Print(printString);
+            }
+
+            return this;
+        }
+
+        public ScriptBuilder PrintNTimesWithDelay(Func<int, string> outputBuilder, int count, TimeSpan delay)
+        {
+            // TODO make this a for loop in bash and powershell
+            for (var i = 0; i < count; i++)
+            {
+                Sleep(delay);
+                Print(outputBuilder(i));
             }
 
             return this;
