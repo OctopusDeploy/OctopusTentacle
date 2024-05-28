@@ -7,7 +7,6 @@ namespace Octopus.Tentacle.Commands.OptionSets
 {
     public class ApiEndpointOptions : ICommandOptions
     {
-        readonly bool bypassValidate;
         const string ServerAddressNotSpecifiedMessage = "Please specify an Octopus Server, e.g., --server=http://your-octopus-server";
 
         public string Server { get; private set; } = null!;
@@ -20,9 +19,8 @@ namespace Octopus.Tentacle.Commands.OptionSets
 
         public bool Optional { private get; set; }
 
-        public ApiEndpointOptions(OptionSet options, bool bypassValidate = false)
+        public ApiEndpointOptions(OptionSet options)
         {
-            this.bypassValidate = bypassValidate;
             options.Add("server=", "The Octopus Server - e.g., 'http://octopus'", s => Server = s);
             options.Add("apiKey=", "Your API key; you can get this from the Octopus web portal", s => ApiKey = s, sensitive: true);
             options.Add("bearerToken=", "A Bearer Token which has access to your Octopus instance", t => BearerToken = t, sensitive: true);
@@ -39,9 +37,6 @@ namespace Octopus.Tentacle.Commands.OptionSets
 
         public void Validate()
         {
-            if (bypassValidate)
-                return;
-
             var isServerSet = !string.IsNullOrEmpty(Server);
             var isBearerTokenSet = !string.IsNullOrEmpty(BearerToken);
             var isApiKeySet = !string.IsNullOrEmpty(ApiKey);

@@ -28,7 +28,7 @@ namespace Octopus.Tentacle.Commands
         int? serverCommsPort = null;
         string serverWebSocketAddress = null!;
         string serverCommsAddress = null!;
-        bool reuseThumbprint = false;
+        bool reuseThumbprint;
 
         public PollCommand(Lazy<IWritableTentacleConfiguration> configuration,
                            ISystemLog log,
@@ -46,7 +46,9 @@ namespace Octopus.Tentacle.Commands
             this.log = log;
             this.selector = selector;
 
-            api = AddOptionSet(new ApiEndpointOptions(Options, bypassValidate: true));
+            // purposefully not adding this with AddOptionSet because
+            // we only want to validate it if reuseThumbprint is false.
+            api = new ApiEndpointOptions(Options);
 
             Options.Add("server-comms-address=", "The comms address on the Octopus Server; the address of the Octopus Server will be used if omitted.", s => serverCommsAddress = s);
             Options.Add("server-comms-port=", "The comms port on the Octopus Server; the default is " + DefaultServerCommsPort + ". If specified, this will take precedence over any port number in server-comms-address.", s => serverCommsPort = int.Parse(s));
@@ -62,6 +64,11 @@ namespace Octopus.Tentacle.Commands
 
         async Task StartAsync()
         {
+            if (!reuseThumbprint)
+            {
+                api.Validate();
+            }
+
             if (!string.IsNullOrEmpty(serverWebSocketAddress) && !string.IsNullOrEmpty(serverCommsAddress))
                 throw new ControlledFailureException("Please specify a --server-web-socket, or a --server-comms-address - not both.");
 
