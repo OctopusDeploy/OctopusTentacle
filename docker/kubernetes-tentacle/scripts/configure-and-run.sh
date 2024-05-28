@@ -254,11 +254,18 @@ function registerTentacle() {
 
 function addAdditionalServerInstancesIfRequired() {
   if [[ -z "$ServerCommsAddresses" ]]; then
+    clearTrustedServersExcept "$ServerCommsAddress"
     return
   fi
 
   IFS=',' read -ra SERVER_ADDRESSES <<<"$ServerCommsAddresses"
   len=${#SERVER_ADDRESSES[@]}
+
+  if [[ -n "$ServerCommsAddress" ]]; then
+    clearTrustedServersExcept "$ServerCommsAddress"
+  else
+    clearTrustedServersExcept "${SERVER_ADDRESSES[0]}"
+  fi
 
   # If ServerCommsAddress (singular) is not set and ServerCommsAddresses (plural)
   # has only one element return as nothing to do.
@@ -286,13 +293,18 @@ function addAdditionalServerInstancesIfRequired() {
   fi
 }
 
+function clearTrustedServersExcept()
+{
+  tentacle clear-trusted-servers --instance "$instanceName" --keep "$1"
+}
+
 function registerAdditionalServer() {
   serverCommsAddress=$1
 
   echo "Registering server '${serverCommsAddress}'"
 
   local ARGS=()
-  ARGS+=('poll-server')
+  ARGS+=('poll-server' '--reuse-server-thumbprint')
 
   ARGS+=('--instance' "$instanceName"
     '--server' "$ServerUrl")
@@ -320,6 +332,7 @@ getStatusOfRegistration
 
 if [ "$IS_REGISTERED" == "true" ]; then
   echo "Tentacle is already configured and registered with server."
+  addAdditionalServerInstancesIfRequired
 else
   echo "==============================================="
   echo "Configuring Octopus Deploy Kubernetes Tentacle"
