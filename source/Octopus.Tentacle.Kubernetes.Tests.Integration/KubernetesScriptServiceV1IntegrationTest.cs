@@ -32,7 +32,7 @@ public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrati
     }
 
     [Test]
-    public async Task SimpleHelloWorld()
+    public async Task RunSimpleScript()
     {
         // Arrange
         var logs = new List<ProcessOutput>();
@@ -71,6 +71,105 @@ public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrati
             return Task.CompletedTask;
         }
     }
+    
+    [Test]
+    public async Task SimpleScriptExitsWithErrorCode_ScriptFails()
+    {
+        // Arrange
+        var logs = new List<ProcessOutput>();
+        var scriptCompleted = false;
+
+        var command = new ExecuteKubernetesScriptCommandBuilder(LoggingUtils.CurrentTestHash())
+            .WithScriptBody(script => script
+                .Print("Hello World")
+                .ExitsWith(1))
+            .Build();
+
+        //act
+        var result = await TentacleClient.ExecuteScript(command, StatusReceived, ScriptCompleted, new InMemoryLog(), CancellationToken.None);
+
+        //Assert
+        logs.Should().Contain(po => po.Source == ProcessOutputSource.StdOut && po.Text == "Hello World");
+        scriptCompleted.Should().BeTrue();
+        result.ExitCode.Should().Be(1);
+        result.State.Should().Be(ProcessState.Complete);
+
+        recordedMethodUsages.For(nameof(IAsyncClientKubernetesScriptServiceV1.StartScriptAsync)).Started.Should().Be(1);
+        recordedMethodUsages.For(nameof(IAsyncClientKubernetesScriptServiceV1.GetStatusAsync)).Started.Should().BeGreaterThan(2).And.BeLessThan(30);
+        recordedMethodUsages.For(nameof(IAsyncClientKubernetesScriptServiceV1.CompleteScriptAsync)).Started.Should().Be(1);
+        recordedMethodUsages.For(nameof(IAsyncClientKubernetesScriptServiceV1.CancelScriptAsync)).Started.Should().Be(0);
+
+        return;
+
+        void StatusReceived(ScriptExecutionStatus status)
+        {
+            logs.AddRange(status.Logs);
+        }
+
+        Task ScriptCompleted(CancellationToken ct)
+        {
+            scriptCompleted = true;
+            return Task.CompletedTask;
+        }
+    }
+    
+    [Test]
+    public async Task ScriptPodIsTerminatedDuringScriptExecution_ScriptFails()
+    {
+        // Arrange
+        var logs = new List<ProcessOutput>();
+        var scriptCompleted = false;
+        var semaphoreSlim = new SemaphoreSlim(0, 1);
+
+        var command = new ExecuteKubernetesScriptCommandBuilder(LoggingUtils.CurrentTestHash())
+            .WithScriptBody(script => script
+                .Print("Hello World")
+                .Sleep(TimeSpan.FromSeconds(1))
+                .Print("waitingtobestopped")
+                .Sleep(TimeSpan.FromSeconds(100)))
+            .Build();
+
+        //act
+        var scriptTask = Task.Run(async () => await TentacleClient.ExecuteScript(command, StatusReceived, ScriptCompleted, new InMemoryLog(), CancellationToken.None));
+
+        //wait for the script to be started, then waiting
+        await semaphoreSlim.WaitAsync(CancellationToken);
+
+        Logger.Information("Deleting script pod");
+        await KubeCtl.ExecuteNamespacedCommand($"delete pods -l octopus.com/scriptTicketId={command.ScriptTicket.TaskId}");
+
+        var result = await scriptTask;
+
+        //Assert
+        logs.Should().Contain(po => po.Source == ProcessOutputSource.StdOut && po.Text == "Hello World");
+        logs.Should().Contain(po => po.Source == ProcessOutputSource.StdOut && po.Text == "waitingtobestopped");
+
+        scriptCompleted.Should().BeTrue();
+        result.ExitCode.Should().Be(-81);
+        result.State.Should().Be(ProcessState.Complete);
+
+        // The pod should not exist
+        var commandResult = await KubeCtl.ExecuteNamespacedCommand($"get pods -l octopus.com/scriptTicketId={command.ScriptTicket.TaskId} -o \"Name\"");
+        commandResult.StdOut.Should().BeEmpty();
+
+        return;
+
+        void StatusReceived(ScriptExecutionStatus status)
+        {
+            if (status.Logs.Any(l => l.Text == "waitingtobestopped"))
+            {
+                semaphoreSlim.Release();
+            }
+
+            logs.AddRange(status.Logs);
+        }
+
+        Task ScriptCompleted(CancellationToken ct)
+        {
+            scriptCompleted = true;
+            return Task.CompletedTask;
+        }
+    }
 
     [Test]
     public async Task TentaclePodIsTerminatedDuringScriptExecution_ShouldRestartAndPickUpPodStatus()
@@ -99,7 +198,7 @@ public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrati
         await semaphoreSlim.WaitAsync(CancellationToken);
 
         Logger.Information("Deleting tentacle pod");
-        var killTask = await KubeCtl.ExecuteNamespacedCommand("delete pods -l app.kubernetes.io/name=octopus-agent");
+        await KubeCtl.ExecuteNamespacedCommand("delete pods -l app.kubernetes.io/name=octopus-agent");
 
         var result = await scriptTask;
 

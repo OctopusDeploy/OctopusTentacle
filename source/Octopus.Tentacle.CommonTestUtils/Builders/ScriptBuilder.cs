@@ -116,5 +116,12 @@ cat {file}
         {
             return bashScript.ToString();
         }
+
+        public ScriptBuilder ExitsWith(int exitCode)
+        {
+            bashScript.AppendLine($"exit {exitCode}");
+            windowsScript.AppendLine($"Exit {exitCode}");
+            return this;
+        }
     }
 }
