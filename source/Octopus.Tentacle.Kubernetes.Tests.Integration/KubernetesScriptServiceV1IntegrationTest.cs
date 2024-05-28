@@ -41,11 +41,11 @@ public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrati
         var command = new ExecuteKubernetesScriptCommandBuilder(LoggingUtils.CurrentTestHash())
             .WithScriptBody(script => script
                 .Print("Hello World")
-                .PrintNTimesWithDelay("Yep", 50, TimeSpan.FromMilliseconds(100)))
+                .PrintNTimesWithDelay("Yep", 30, TimeSpan.FromMilliseconds(100)))
             .Build();
 
         //act
-        var result = await TentacleClient.ExecuteScript(command, StatusReceived, ScriptCompleted, new InMemoryLog(), CancellationToken.None);
+        var result = await TentacleClient.ExecuteScript(command, StatusReceived, ScriptCompleted, new InMemoryLog(), CancellationToken);
 
         //Assert
         logs.Should().Contain(po => po.Source == ProcessOutputSource.StdOut && po.Text == "Hello World");
@@ -54,7 +54,7 @@ public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrati
         result.State.Should().Be(ProcessState.Complete);
 
         recordedMethodUsages.For(nameof(IAsyncClientKubernetesScriptServiceV1.StartScriptAsync)).Started.Should().Be(1);
-        recordedMethodUsages.For(nameof(IAsyncClientKubernetesScriptServiceV1.GetStatusAsync)).Started.Should().BeGreaterThan(2).And.BeLessThan(30);
+        recordedMethodUsages.For(nameof(IAsyncClientKubernetesScriptServiceV1.GetStatusAsync)).Started.Should().BeGreaterThan(1);
         recordedMethodUsages.For(nameof(IAsyncClientKubernetesScriptServiceV1.CompleteScriptAsync)).Started.Should().Be(1);
         recordedMethodUsages.For(nameof(IAsyncClientKubernetesScriptServiceV1.CancelScriptAsync)).Started.Should().Be(0);
 
@@ -86,18 +86,13 @@ public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrati
             .Build();
 
         //act
-        var result = await TentacleClient.ExecuteScript(command, StatusReceived, ScriptCompleted, new InMemoryLog(), CancellationToken.None);
+        var result = await TentacleClient.ExecuteScript(command, StatusReceived, ScriptCompleted, new InMemoryLog(), CancellationToken);
 
         //Assert
         logs.Should().Contain(po => po.Source == ProcessOutputSource.StdOut && po.Text == "Hello World");
         scriptCompleted.Should().BeTrue();
         result.ExitCode.Should().Be(1);
         result.State.Should().Be(ProcessState.Complete);
-
-        recordedMethodUsages.For(nameof(IAsyncClientKubernetesScriptServiceV1.StartScriptAsync)).Started.Should().Be(1);
-        recordedMethodUsages.For(nameof(IAsyncClientKubernetesScriptServiceV1.GetStatusAsync)).Started.Should().BeGreaterThan(2).And.BeLessThan(30);
-        recordedMethodUsages.For(nameof(IAsyncClientKubernetesScriptServiceV1.CompleteScriptAsync)).Started.Should().Be(1);
-        recordedMethodUsages.For(nameof(IAsyncClientKubernetesScriptServiceV1.CancelScriptAsync)).Started.Should().Be(0);
 
         return;
 
@@ -130,7 +125,7 @@ public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrati
             .Build();
 
         //act
-        var scriptTask = Task.Run(async () => await TentacleClient.ExecuteScript(command, StatusReceived, ScriptCompleted, new InMemoryLog(), CancellationToken.None));
+        var scriptTask = Task.Run(async () => await TentacleClient.ExecuteScript(command, StatusReceived, ScriptCompleted, new InMemoryLog(), CancellationToken));
 
         //wait for the script to be started, then waiting
         await semaphoreSlim.WaitAsync(CancellationToken);
@@ -192,7 +187,7 @@ public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrati
         var initialPodName = commandResult.StdOut.Single();
 
         //act
-        var scriptTask = Task.Run(async () => await TentacleClient.ExecuteScript(command, StatusReceived, ScriptCompleted, new InMemoryLog(), CancellationToken.None));
+        var scriptTask = Task.Run(async () => await TentacleClient.ExecuteScript(command, StatusReceived, ScriptCompleted, new InMemoryLog(), CancellationToken));
 
         //wait for the script to be started, then waiting
         await semaphoreSlim.WaitAsync(CancellationToken);

@@ -67,6 +67,7 @@ public abstract class KubernetesAgentIntegrationTest
             .ForContext(GetType());
 
         cancellationTokenSource = new CancellationTokenSource();
+        cancellationTokenSource.CancelAfter(TimeSpan.FromMinutes(5));
         CancellationToken = cancellationTokenSource.Token;
 
         //each test should get its own tentacle client, so it gets its own builders
