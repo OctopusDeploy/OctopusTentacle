@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Octopus.Tentacle.Background;
+using Octopus.Tentacle.Communications;
 
 namespace Octopus.Tentacle.Kubernetes
 {
@@ -9,6 +10,8 @@ namespace Octopus.Tentacle.Kubernetes
     {
         protected override void Load(ContainerBuilder builder)
         {
+            builder.RegisterType<HalibutEndpointDiscovery>().SingleInstance();
+            builder.RegisterType<KubernetesLiveObjectStatusService>().SingleInstance();
             builder.RegisterType<KubernetesPodService>().As<IKubernetesPodService>().SingleInstance();
             builder.RegisterType<KubernetesClusterService>().As<IKubernetesClusterService>().SingleInstance();
             builder.RegisterType<KubernetesPodContainerResolver>().As<IKubernetesPodContainerResolver>().SingleInstance();
@@ -20,6 +23,7 @@ namespace Octopus.Tentacle.Kubernetes
             builder.RegisterType<ScriptPodSinceTimeStore>().As<IScriptPodSinceTimeStore>().SingleInstance();
             builder.RegisterType<TentacleScriptLogProvider>().As<ITentacleScriptLogProvider>().SingleInstance();
 
+            builder.RegisterType<KubernetesLiveObjectStatusTask>().As<IBackgroundTask>().SingleInstance();
             builder.RegisterType<KubernetesPodMonitorTask>().As<IKubernetesPodMonitorTask>().As<IBackgroundTask>().SingleInstance();
             builder.RegisterType<KubernetesPodMonitor>().As<IKubernetesPodMonitor>().As<IKubernetesPodStatusProvider>().SingleInstance();
 
