@@ -35,7 +35,7 @@ public class KubernetesAgentInstaller
 
     public string AgentName { get; }
 
-    string Namespace => $"octopus-agent-{AgentName}";
+    public string Namespace => $"octopus-agent-{AgentName}";
 
     public Uri SubscriptionId { get; } = PollingSubscriptionId.Generate();
 

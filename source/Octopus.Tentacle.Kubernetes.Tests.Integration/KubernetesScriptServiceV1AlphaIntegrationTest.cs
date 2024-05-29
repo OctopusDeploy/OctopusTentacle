@@ -13,11 +13,11 @@ namespace Octopus.Tentacle.Kubernetes.Tests.Integration;
 [TestFixture]
 public class KubernetesScriptServiceV1AlphaIntegrationTest : KubernetesAgentIntegrationTest
 {
-    public KubernetesScriptServiceV1AlphaIntegrationTest()
+    protected override TentacleServiceDecoratorBuilder ConfigureTentacleServiceDecoratorBuilder(TentacleServiceDecoratorBuilder builder)
     {
-        TentacleServiceDecoratorBuilder = new TentacleServiceDecoratorBuilder()
+        return builder
             .DecorateCapabilitiesServiceV2With(d => d
-                .DecorateGetCapabilitiesWith((inner, options) => Task.FromResult(new CapabilitiesResponseV2(new List<string> { nameof(IFileTransferService), nameof(IKubernetesScriptServiceV1Alpha) }))));
+            .DecorateGetCapabilitiesWith((inner, options) => Task.FromResult(new CapabilitiesResponseV2(new List<string> { nameof(IFileTransferService), nameof(IKubernetesScriptServiceV1Alpha) }))));
     }
 
     [Test]
