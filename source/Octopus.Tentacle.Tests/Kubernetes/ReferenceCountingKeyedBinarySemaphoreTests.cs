@@ -1,128 +1,66 @@
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Nito.AsyncEx;
 using NUnit.Framework;
-using Octopus.Tentacle.Contracts;
-using Octopus.Tentacle.Kubernetes.Synchronisation;
 using Octopus.Tentacle.Kubernetes.Synchronisation.Internal;
 
 namespace Octopus.Tentacle.Tests.Kubernetes
 {
     [TestFixture]
+    [Timeout(20000)] //Timeout test after 20 seconds
     public class ReferenceCountingKeyedBinarySemaphoreTests
     {
-        CancellationTokenSource testCancellationTokenSource;
-        ConcurrentDictionary<int, int> referenceCountIntercepts;
-
-        [SetUp]
-        public void SetUp()
-        {
-            testCancellationTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(10));
-            referenceCountIntercepts = new ConcurrentDictionary<int, int>();
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-            testCancellationTokenSource.Dispose();
-        }
-
-        [TestCase(1)]
-        [TestCase(2)]
-        [TestCase(20)]
-        public async Task MultipleThreadsLockWithSameKey_OnDisposeCalledOnceForEachThread(int numThreads)
+        [Test]
+        public async Task WaitingOnTheSameKey_BlocksSuccessiveAttempts()
         {
             // Arrange
-            var keyedLock = new TestableReferenceCountingKeyedBinarySemaphore<ScriptTicket>(RecordingReleaserFactory);
+            var referenceCountingSemaphore = new ReferenceCountingKeyedBinarySemaphore<string>();
+            var sharedKey = "SomeSharedKey";
+            var periodToWaitForLock = TimeSpan.FromSeconds(2); // How long should the task wait to attempt to acquire the lock.
+            
+            // Block on the shared key
+            await referenceCountingSemaphore.WaitAsync(sharedKey, CancellationToken.None);
+            
+            // An attempt to acquire the lock should block (and ultimately fail when we timeout the attempt)
+            try
+            {
+                await referenceCountingSemaphore.WaitAsync(sharedKey, new CancellationTokenSource(periodToWaitForLock).Token);
+                Assert.Fail("This acquisition should not have taken place");
+            }
+            catch (Exception ex)
+            {
+                ex.Should().BeOfType<OperationCanceledException>();
+            }
+        }
+        
+        [Test]
+        public async Task WaitingOnTheDifferentKey_AllowsImmediateAcquisition()
+        {
+            // Arrange
+            var referenceCountingSemaphore = new ReferenceCountingKeyedBinarySemaphore<string>();
 
             // Act
-            var tasks = Enumerable.Range(1, numThreads).Select(_ => Task.Run(async () => await SimulateWork(keyedLock, "foo", testCancellationTokenSource.Token)));
-            await tasks.WhenAll();
+            await referenceCountingSemaphore.WaitAsync("firstKey", CancellationToken.None);
+            var disposable = await referenceCountingSemaphore.WaitAsync("secondKey", CancellationToken.None);
 
-            // Assert
-            var expected = Enumerable.Range(0, numThreads).ToDictionary(x => x, _ => 1);
-            referenceCountIntercepts.Should().BeEquivalentTo(expected);
+            disposable.Should().NotBeNull();
         }
+        
 
         [Test]
-        public async Task ThreadsLockWithDifferentKeys_OnDisposeCalledWithCorrectReferenceCount()
+        public async Task WaitingOnTheSameKey_AllowsReAcquisitionAfterDisposal()
         {
             // Arrange
-            var keyedLock = new TestableReferenceCountingKeyedBinarySemaphore<ScriptTicket>(RecordingReleaserFactory);
-
-            // Act
-            var tasks = new[]
-            {
-                Task.Run(async () => await SimulateWork(keyedLock, "banana", testCancellationTokenSource.Token)),
-                Task.Run(async () => await SimulateWork(keyedLock, "pineapple", testCancellationTokenSource.Token)),
-                Task.Run(async () => await SimulateWork(keyedLock, "banana", testCancellationTokenSource.Token))
-            };
-            await tasks.WhenAll();
-
-            // Assert
-            var expected = new Dictionary<int, int>
-            {
-                { 0, 2 }, // banana, pineapple
-                { 1, 1 } // banana
-            };
-            referenceCountIntercepts.Should().BeEquivalentTo(expected);
-        }
-
-        async Task SimulateWork(IKeyedSemaphore<ScriptTicket> keyedSemaphore, string taskId, CancellationToken cancellationToken)
-        {
-            using (await keyedSemaphore.WaitAsync(new ScriptTicket(taskId), testCancellationTokenSource.Token))
-            {
-                var rand = new Random();
-                await Task.Delay(rand.Next(50, 100), cancellationToken);
-            }
-        }
-
-        SemaphoreSlimReleaser<ReferenceCountingBinarySemaphoreSlim> RecordingReleaserFactory(ReferenceCountingBinarySemaphoreSlim referenceCountingBinarySemaphore, Action onDispose)
-        {
-            return new SemaphoreSlimReleaser<ReferenceCountingBinarySemaphoreSlim>(referenceCountingBinarySemaphore, InterceptedOnDispose);
-
-            void InterceptedOnDispose()
-            {
-                onDispose();
-                RecordCallback(referenceCountingBinarySemaphore);
-            }
-        }
-
-        void RecordCallback(ReferenceCountingBinarySemaphoreSlim referenceCountingBinarySemaphoreSlim)
-        {
-            if (!TryAdd(referenceCountIntercepts, referenceCountingBinarySemaphoreSlim.ReferenceCount, 1))
-            {
-                referenceCountIntercepts[referenceCountingBinarySemaphoreSlim.ReferenceCount] += 1;
-            }
-        }
-
-        // The extension method Dictionary<TKey,TValue>.TryAdd(TKey, TValue) is not available in .NET Framework
-        static bool TryAdd<TKey, TValue>(IDictionary<TKey, TValue> dictionary, TKey key, TValue value)
-        {
-            if (dictionary == null)
-            {
-                throw new ArgumentNullException(nameof(dictionary));
-            }
+            var referenceCountingSemaphore = new ReferenceCountingKeyedBinarySemaphore<string>();
+            var sharedKey = "SomeSharedKey";
             
-            if (!dictionary.ContainsKey(key))
-            {
-                dictionary.Add(key, value);
-                return true;
-            }
-
-            return false;
-        }
-
-        class TestableReferenceCountingKeyedBinarySemaphore<TKey> : ReferenceCountingKeyedBinarySemaphore<TKey> where TKey : IEquatable<TKey>
-        {
-            public TestableReferenceCountingKeyedBinarySemaphore(CreateSemaphoreSlimReleaser releaserFactory) : base(releaserFactory)
-            {
-            }
+            // Act
+            var disposableLock1 = await referenceCountingSemaphore.WaitAsync(sharedKey, CancellationToken.None);
+            disposableLock1.Dispose();
+            
+            // Assert
+            await referenceCountingSemaphore.WaitAsync(sharedKey, CancellationToken.None);
         }
     }
 }

@@ -5,23 +5,11 @@ using System.Threading.Tasks;
 
 namespace Octopus.Tentacle.Kubernetes.Synchronisation.Internal
 {
-    delegate SemaphoreSlimReleaser<ReferenceCountingBinarySemaphoreSlim> CreateSemaphoreSlimReleaser(ReferenceCountingBinarySemaphoreSlim referenceCountingBinarySemaphore, Action onDispose);
-
+ 
     class ReferenceCountingKeyedBinarySemaphore<TKey> : IKeyedSemaphore<TKey> where TKey : IEquatable<TKey>
     {
         readonly Dictionary<TKey, SemaphoreSlimReleaser<ReferenceCountingBinarySemaphoreSlim>> keyedLocks = new();
-        readonly CreateSemaphoreSlimReleaser releaserFactory;
 
-        public ReferenceCountingKeyedBinarySemaphore()
-        {
-            releaserFactory = (s, a) => new SemaphoreSlimReleaser<ReferenceCountingBinarySemaphoreSlim>(s, a);
-        }
-
-        // This is a seam used for testing purposes
-        protected ReferenceCountingKeyedBinarySemaphore(CreateSemaphoreSlimReleaser releaserFactory)
-        {
-            this.releaserFactory = releaserFactory;
-        }
 
         public async Task<IDisposable> WaitAsync(TKey key, CancellationToken cancellationToken)
         {
@@ -31,7 +19,7 @@ namespace Octopus.Tentacle.Kubernetes.Synchronisation.Internal
                 if (!keyedLocks.TryGetValue(key, out keyedLock))
                 {
                     var referenceCountingSemaphore = new ReferenceCountingBinarySemaphoreSlim();
-                    keyedLock = releaserFactory(referenceCountingSemaphore, () => TryRemoveLock(key, referenceCountingSemaphore));
+                    keyedLock = new SemaphoreSlimReleaser<ReferenceCountingBinarySemaphoreSlim>(referenceCountingSemaphore, () => TryRemoveLock(key, referenceCountingSemaphore));
                     keyedLocks[key] = keyedLock;
                 }
                 else
