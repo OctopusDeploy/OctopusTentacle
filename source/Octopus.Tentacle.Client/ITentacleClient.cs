@@ -31,7 +31,5 @@ namespace Octopus.Tentacle.Client
             OnScriptCompleted onScriptCompleted,
             ITentacleClientTaskLog logger,
             CancellationToken scriptExecutionCancellationToken);
-
-        Task UpdateResources(string[] resources, ITentacleClientTaskLog logger, CancellationToken cancellationToken);
     }
 }

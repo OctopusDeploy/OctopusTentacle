@@ -13,7 +13,6 @@ using Octopus.Tentacle.Contracts.Capabilities;
 using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
 using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha;
-using Octopus.Tentacle.Contracts.LiveObjectStatusServiceV1;
 using Octopus.Tentacle.Contracts.Logging;
 using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
@@ -29,7 +28,6 @@ namespace Octopus.Tentacle.Client
 
         readonly IAsyncClientScriptService scriptServiceV1;
         readonly IAsyncClientScriptServiceV2 scriptServiceV2;
-        readonly IAsyncClientLiveObjectStatusServiceV1 liveObjectStatusServiceV1;
         readonly IAsyncClientKubernetesScriptServiceV1Alpha kubernetesScriptServiceV1Alpha;
         readonly IAsyncClientKubernetesScriptServiceV1 kubernetesScriptServiceV1;
         readonly IAsyncClientFileTransferService clientFileTransferServiceV1;
@@ -87,8 +85,7 @@ namespace Octopus.Tentacle.Client
             kubernetesScriptServiceV1 = halibutRuntime.CreateAsyncClient<IKubernetesScriptServiceV1, IAsyncClientKubernetesScriptServiceV1>(serviceEndPoint);
             clientFileTransferServiceV1 = halibutRuntime.CreateAsyncClient<IFileTransferService, IAsyncClientFileTransferService>(serviceEndPoint);
             capabilitiesServiceV2 = halibutRuntime.CreateAsyncClient<ICapabilitiesServiceV2, IAsyncClientCapabilitiesServiceV2>(serviceEndPoint).WithBackwardsCompatability();
-            liveObjectStatusServiceV1 = halibutRuntime.CreateAsyncClient<ILiveObjectStatusServiceV1, IAsyncClientLiveObjectStatusServiceV1>(serviceEndPoint);
-            
+
             if (tentacleServicesDecoratorFactory != null)
             {
                 scriptServiceV1 = tentacleServicesDecoratorFactory.Decorate(scriptServiceV1);
@@ -97,48 +94,12 @@ namespace Octopus.Tentacle.Client
                 kubernetesScriptServiceV1 = tentacleServicesDecoratorFactory.Decorate(kubernetesScriptServiceV1);
                 clientFileTransferServiceV1 = tentacleServicesDecoratorFactory.Decorate(clientFileTransferServiceV1);
                 capabilitiesServiceV2 = tentacleServicesDecoratorFactory.Decorate(capabilitiesServiceV2);
-                //liveObjectStatusServiceV1 = tentacleServicesDecoratorFactory.Decorate(liveObjectStatusServiceV1)
             }
 
             rpcCallExecutor = RpcCallExecutorFactory.Create(this.clientOptions.RpcRetrySettings.RetryDuration, this.tentacleClientObserver);
         }
 
         public TimeSpan OnCancellationAbandonCompleteScriptAfter { get; set; } = TimeSpan.FromMinutes(1);
-
-        public async Task UpdateResources(string[] resources, ITentacleClientTaskLog logger, CancellationToken cancellationToken)
-        {
-            var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
-
-            async Task<bool> UpdateResources(CancellationToken ct)
-            {
-                logger.Info($"Beginning update resources to Tentacle");
-                await liveObjectStatusServiceV1.UpdateResources(resources, new HalibutProxyRequestOptions(ct));
-                logger.Info("Upload complete");
-
-                return true;
-            }
-
-            try
-            {
-                await rpcCallExecutor.Execute(
-                    retriesEnabled: clientOptions.RpcRetrySettings.RetriesEnabled,
-                    RpcCall.Create<ILiveObjectStatusServiceV1>(nameof(ILiveObjectStatusServiceV1.UpdateResources)),
-                    UpdateResources,
-                    logger,
-                    operationMetricsBuilder,
-                    cancellationToken).ConfigureAwait(false);
-            }
-            catch (Exception e)
-            {
-                operationMetricsBuilder.Failure(e, cancellationToken);
-                throw;
-            }
-            finally
-            {
-                var operationMetrics = operationMetricsBuilder.Build();
-                tentacleClientObserver.UploadFileCompleted(operationMetrics, logger);
-            }
-        }
 
         public async Task<UploadResult> UploadFile(string fileName, string path, DataStream package, ITentacleClientTaskLog logger, CancellationToken cancellationToken)
         {
