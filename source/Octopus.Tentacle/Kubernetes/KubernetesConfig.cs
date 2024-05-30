@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Kubernetes
 {
     public static class KubernetesConfig
     {
+        const string ServerCommsAddressVariableName = "ServerCommsAddress";
         const string EnvVarPrefix = "OCTOPUS__K8STENTACLE";
 
         public static string NamespaceVariableName => $"{EnvVarPrefix}__NAMESPACE";
@@ -31,6 +35,24 @@ namespace Octopus.Tentacle.Kubernetes
 
         public static string PersistentVolumeSizeBytesVariableName => $"{EnvVarPrefix}__PERSISTENTVOLUMETOTALBYTES";
         public static string PersistentVolumeFreeBytesVariableName => $"{EnvVarPrefix}__PERSISTENTVOLUMEFREEBYTES";
+
+        public const string ServerCommsAddressesVariableName = "ServerCommsAddresses";
+
+        public static string[] ServerCommsAddresses {
+            get {
+                var addresses = new List<string>();
+                if (Environment.GetEnvironmentVariable(ServerCommsAddressVariableName) is { Length: > 0 } addressString)
+                {
+                    addresses.Add(addressString);
+                }
+                if (Environment.GetEnvironmentVariable(ServerCommsAddressesVariableName) is {} addressesString)
+                {
+                    addresses.AddRange(addressesString.Split(',').Where(a => !a.IsNullOrEmpty()));
+                }
+                return addresses.ToArray();
+            }
+
+        }
 
         static string GetRequiredEnvVar(string variable, string errorMessage)
             => Environment.GetEnvironmentVariable(variable)
