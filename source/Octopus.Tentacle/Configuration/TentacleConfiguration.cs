@@ -211,9 +211,9 @@ namespace Octopus.Tentacle.Configuration
             return settings.Set(LastReceivedHandshakeSettingName, setting);
         }
 
-        public bool SetTrustedOctopusServers(IEnumerable<OctopusServerConfiguration>? servers)
+        public bool SetTrustedOctopusServers(IEnumerable<OctopusServerConfiguration>? newServers)
         {
-            return settings.Set(TrustedServersSettingName, servers ?? new OctopusServerConfiguration[0]);
+            return settings.Set(TrustedServersSettingName, newServers ?? Array.Empty<OctopusServerConfiguration>());
         }
 
         bool SetTentacleCertificate(X509Certificate2 certificate)

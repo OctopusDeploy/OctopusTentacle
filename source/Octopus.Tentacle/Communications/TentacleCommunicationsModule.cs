@@ -35,12 +35,28 @@ namespace Octopus.Tentacle.Communications
                 {
                     useRecommendedTimeoutsAndLimits = true;
                 }
+                
+                if (!bool.TryParse(Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleUseTcpNoDelay), out var useTcpNoDelay))
+                {
+                    // Default to disabled
+                    useTcpNoDelay = false;
+                }
+                
+                if (!bool.TryParse(Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleUseAsyncListener), out var useAsyncListener))
+                {
+                    // Default to disabled
+                    useAsyncListener = false;
+                }
+                
+                
 
                 var halibutTimeoutsAndLimits = useRecommendedTimeoutsAndLimits 
                     ? HalibutTimeoutsAndLimits.RecommendedValues() 
                     : new HalibutTimeoutsAndLimits();
 
                 halibutTimeoutsAndLimits.TcpKeepAliveEnabled = tcpKeepAliveEnabled;
+                halibutTimeoutsAndLimits.TcpNoDelay = useTcpNoDelay;
+                halibutTimeoutsAndLimits.UseAsyncListener = useAsyncListener;
 
                 var halibutRuntime = new HalibutRuntimeBuilder()
                     .WithServiceFactory(services)
