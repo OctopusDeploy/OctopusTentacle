@@ -327,6 +327,11 @@ function registerAdditionalServer() {
   tentacle "${ARGS[@]}"
 }
 
+function markAsInitialised() {
+    # There is a startupProbe which checks for this file
+    touch /scripts/initialised
+}
+
 setupVariablesForRegistrationCheck
 getStatusOfRegistration
 
@@ -347,6 +352,8 @@ else
 
   echo "Configuration successful"
 fi
+
+markAsInitialised
 
 echo "==============================================="
 echo "Starting Octopus Deploy Kubernetes Tentacle"
