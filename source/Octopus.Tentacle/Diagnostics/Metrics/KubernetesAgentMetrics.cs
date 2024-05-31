@@ -11,13 +11,14 @@ namespace Octopus.Tentacle.Diagnostics.Metrics
         readonly IPersistenceProvider persistenceProvider;
         readonly MapFromConfigMapToEventList mapper;
         readonly ISystemLog log;
-        public const string EntryName = "metrics";
+        public string EntryName {get;}
 
-        public KubernetesAgentMetrics(IPersistenceProvider persistenceProvider, MapFromConfigMapToEventList mapper, ISystemLog log)
+        public KubernetesAgentMetrics(IPersistenceProvider persistenceProvider, string entryName, MapFromConfigMapToEventList mapper, ISystemLog log)
         {
             this.persistenceProvider = persistenceProvider;
             this.mapper = mapper;
             this.log = log;
+            EntryName = entryName;
         }
 
         public void TrackEvent(EventRecord eventRecord)

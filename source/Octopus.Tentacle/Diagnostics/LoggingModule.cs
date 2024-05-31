@@ -21,15 +21,6 @@ namespace Octopus.Tentacle.Diagnostics
 
             builder.RegisterType<SystemLog>().As<ISystemLog>().SingleInstance();
             builder.Register(c => new LogFileOnlyLogger()).As<ILogFileOnlyLogger>().InstancePerLifetimeScope();
-            builder.RegisterType<PersistenceProvider>()
-                .Named<IPersistenceProvider>("KubernetesAgentMetricsConfigMap")
-                .WithParameter("configMapName", "kubernetes-agent-metrics");
-            builder.RegisterType<KubernetesAgentMetrics>().AsSelf().SingleInstance()
-                .WithParameter(
-                    new ResolvedParameter(
-                        (pi, _) => pi.Name == "persistenceProvider",
-                        (_, ctx) => ctx.ResolveNamed<IPersistenceProvider>("KubernetesAgentMetricsConfigMap")));
-            builder.RegisterType<MapFromConfigMapToEventList>().AsSelf();
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using Autofac.Core;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Octopus.Tentacle.Background;
@@ -30,7 +31,16 @@ namespace Octopus.Tentacle.Kubernetes
             builder.RegisterType<KubernetesDirectoryInformationProvider>().As<IKubernetesDirectoryInformationProvider>().SingleInstance();
             builder.RegisterType<MemoryCache>().As<IMemoryCache>().SingleInstance();
             builder.RegisterType<MemoryCacheOptions>().As<IOptions<MemoryCacheOptions>>().SingleInstance();
-            builder.RegisterType<KubernetesAgentMetrics>().As<KubernetesAgentMetrics>().SingleInstance();
+            builder.RegisterType<PersistenceProvider>()
+                .Named<IPersistenceProvider>("KubernetesAgentMetricsConfigMap")
+                .WithParameter("configMapName", "kubernetes-agent-metrics");
+            builder.RegisterType<KubernetesAgentMetrics>().AsSelf().SingleInstance()
+                .WithParameter(
+                    new ResolvedParameter(
+                        (pi, _) => pi.Name == "persistenceProvider",
+                        (_, ctx) => ctx.ResolveNamed<IPersistenceProvider>("KubernetesAgentMetricsConfigMap")))
+                .WithParameter("entryName", "agent-metrics");
+            builder.RegisterType<MapFromConfigMapToEventList>().AsSelf();
 #if DEBUG
             builder.RegisterType<LocalMachineKubernetesClientConfigProvider>().As<IKubernetesClientConfigProvider>().SingleInstance();
 #else
