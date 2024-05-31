@@ -4,7 +4,9 @@ using Autofac.Core;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Octopus.Tentacle.Background;
-using Octopus.Tentacle.Diagnostics.Metrics;
+using Octopus.Tentacle.Kubernetes.Synchronisation;
+using Octopus.Tentacle.Kubernetes.Synchronisation.Internal;
+using Octopus.Tentacle.Kubernetes.Diagnostics;
 
 namespace Octopus.Tentacle.Kubernetes
 {
@@ -31,6 +33,8 @@ namespace Octopus.Tentacle.Kubernetes
             builder.RegisterType<KubernetesDirectoryInformationProvider>().As<IKubernetesDirectoryInformationProvider>().SingleInstance();
             builder.RegisterType<MemoryCache>().As<IMemoryCache>().SingleInstance();
             builder.RegisterType<MemoryCacheOptions>().As<IOptions<MemoryCacheOptions>>().SingleInstance();
+            
+            builder.RegisterGeneric(typeof(ReferenceCountingKeyedBinarySemaphore<>)).As(typeof(IKeyedSemaphore<>)).SingleInstance();
             builder.RegisterType<PersistenceProvider>()
                 .Named<IPersistenceProvider>("KubernetesAgentMetricsConfigMap")
                 .WithParameter("configMapName", "kubernetes-agent-metrics");
