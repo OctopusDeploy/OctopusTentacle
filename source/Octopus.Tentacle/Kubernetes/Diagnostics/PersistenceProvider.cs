@@ -17,13 +17,11 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
         readonly string configMapName;
         readonly IKubernetesConfigMapService configMapService;
         readonly Lazy<V1ConfigMap> metricsConfigMap;
-        readonly ISystemLog log;
         IDictionary<string, string> ConfigMapData => metricsConfigMap.Value.Data ??= new Dictionary<string, string>();
 
-        public PersistenceProvider(string configMapName, IKubernetesConfigMapService configMapService, ISystemLog log)
+        public PersistenceProvider(string configMapName, IKubernetesConfigMapService configMapService)
         {
             this.configMapService = configMapService;
-            this.log = log;
             this.configMapName = configMapName;
             metricsConfigMap = new Lazy<V1ConfigMap>(() => configMapService.TryGet(this.configMapName, CancellationToken.None).GetAwaiter().GetResult()
                 ?? throw new InvalidOperationException($"Unable to retrieve Tentacle Configuration from config map for namespace {KubernetesConfig.Namespace}"));

@@ -1,4 +1,5 @@
 using FluentAssertions;
+using k8s;
 using Newtonsoft.Json;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Diagnostics;
@@ -9,14 +10,30 @@ namespace Octopus.Tentacle.Kubernetes.Tests.Integration;
 public class KubernetesAgentMetricsIntegrationTest : KubernetesAgentIntegrationTest
 {
     readonly ISystemLog systemLog = new SystemLog();
+
+    public class KubernetesFileWrappedProvider : IKubernetesClientConfigProvider
+    {
+        string filename;
+
+        public KubernetesFileWrappedProvider(string filename)
+        {
+            this.filename = filename;
+        }
+
+        public KubernetesClientConfiguration Get()
+        {
+            return KubernetesClientConfiguration.BuildConfigFromConfigFile(filename);
+        }
+    }
+    
     
     [Test]
     public void FetchingTimestampFromEmptyConfigMapEntryShouldBeMinValue()
     {
         //Arrange
-        var kubernetesConfigClient = new InClusterKubernetesClientConfigProvider();
+        var kubernetesConfigClient = new KubernetesFileWrappedProvider(KubernetesTestsGlobalContext.Instance.KubeConfigPath);
         var configMapService = new KubernetesConfigMapService(kubernetesConfigClient, systemLog);
-        var persistenceProvider = new PersistenceProvider("kubernetes-agent-metrics", configMapService, systemLog);
+        var persistenceProvider = new PersistenceProvider("kubernetes-agent-metrics", configMapService);
         var metrics = new KubernetesAgentMetrics(persistenceProvider, "alternate-agent-metrics",new MapFromConfigMapToEventList(), systemLog);
 
         //Act
@@ -30,9 +47,9 @@ public class KubernetesAgentMetricsIntegrationTest : KubernetesAgentIntegrationT
     public void FetchingLatestEventTimestampFromNonexistentConfigMapThrowsException()
     {
         //Arrange
-        var kubernetesConfigClient = new InClusterKubernetesClientConfigProvider();
+        var kubernetesConfigClient = new KubernetesFileWrappedProvider(KubernetesTestsGlobalContext.Instance.KubeConfigPath);
         var configMapService = new KubernetesConfigMapService(kubernetesConfigClient, systemLog);
-        var persistenceProvider = new PersistenceProvider("nonexistent-config-map", configMapService, systemLog);
+        var persistenceProvider = new PersistenceProvider("nonexistent-config-map", configMapService);
         var metrics = new KubernetesAgentMetrics(persistenceProvider, "agent-metrics",new MapFromConfigMapToEventList(), systemLog);
 
         //Act
@@ -48,7 +65,7 @@ public class KubernetesAgentMetricsIntegrationTest : KubernetesAgentIntegrationT
         //Arrange
         var kubernetesConfigClient = new InClusterKubernetesClientConfigProvider();
         var configMapService = new KubernetesConfigMapService(kubernetesConfigClient, systemLog);
-        var persistenceProvider = new PersistenceProvider("nonexistent-config-map", configMapService, systemLog);
+        var persistenceProvider = new PersistenceProvider("nonexistent-config-map", configMapService);
         var metrics = new KubernetesAgentMetrics(persistenceProvider, "agent-metrics",new MapFromConfigMapToEventList(), systemLog);
 
         //Act
@@ -63,9 +80,9 @@ public class KubernetesAgentMetricsIntegrationTest : KubernetesAgentIntegrationT
     {
         //Arrange
         var entryKey = "alternate-agent-metrics";
-        var kubernetesConfigClient = new InClusterKubernetesClientConfigProvider();
+        var kubernetesConfigClient = new KubernetesFileWrappedProvider(KubernetesTestsGlobalContext.Instance.KubeConfigPath);
         var configMapService = new KubernetesConfigMapService(kubernetesConfigClient, systemLog);
-        var persistenceProvider = new PersistenceProvider("kubernetes-agent-metrics", configMapService, systemLog);
+        var persistenceProvider = new PersistenceProvider("kubernetes-agent-metrics", configMapService);
         var metrics = new KubernetesAgentMetrics(persistenceProvider, entryKey,new MapFromConfigMapToEventList(), systemLog);
 
         var @event = new EventRecord("reason", "source", DateTimeOffset.Now);
