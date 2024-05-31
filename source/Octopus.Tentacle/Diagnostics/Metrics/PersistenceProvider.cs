@@ -15,17 +15,18 @@ namespace Octopus.Tentacle.Diagnostics.Metrics
 
     public class PersistenceProvider : IPersistenceProvider
     {
-        const string Name = "kubernetes-agent-metrics";
+        readonly string configMapName;
         readonly IKubernetesConfigMapService configMapService;
         readonly Lazy<V1ConfigMap> metricsConfigMap;
         readonly ISystemLog log;
         IDictionary<string, string> ConfigMapData => metricsConfigMap.Value.Data ??= new Dictionary<string, string>();
 
-        public PersistenceProvider(IKubernetesConfigMapService configMapService, ISystemLog log)
+        public PersistenceProvider(string configMapName, IKubernetesConfigMapService configMapService, ISystemLog log)
         {
             this.configMapService = configMapService;
             this.log = log;
-            metricsConfigMap = new Lazy<V1ConfigMap>(() => configMapService.TryGet(Name, CancellationToken.None).GetAwaiter().GetResult()
+            this.configMapName = configMapName;
+            metricsConfigMap = new Lazy<V1ConfigMap>(() => configMapService.TryGet(this.configMapName, CancellationToken.None).GetAwaiter().GetResult()
                 ?? throw new InvalidOperationException($"Unable to retrieve Tentacle Configuration from config map for namespace {KubernetesConfig.Namespace}"));
         }
 
@@ -37,7 +38,7 @@ namespace Octopus.Tentacle.Diagnostics.Metrics
         public void PersistValue(string key, string value)
         {
             ConfigMapData[key] = value;
-            configMapService.Patch(Name, ConfigMapData, CancellationToken.None).GetAwaiter().GetResult();
+            configMapService.Patch(configMapName, ConfigMapData, CancellationToken.None).GetAwaiter().GetResult();
         }
     }
 }

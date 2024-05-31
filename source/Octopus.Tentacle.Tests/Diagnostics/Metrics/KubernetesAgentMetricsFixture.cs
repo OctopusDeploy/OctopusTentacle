@@ -20,13 +20,13 @@ namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
         public void CanAddMetricToAnEmptyPersistenceMap()
         {
             MockPersistenceProvider persistenceProvider = new();
-            var sut = new KubernetesAgentMetricsTake2(persistenceProvider, new MapFromConfigMapToEventList(), systemLog);
+            var sut = new KubernetesAgentMetrics(persistenceProvider, new MapFromConfigMapToEventList(), systemLog);
             
             var @event = new EventRecord("Killed", "NFS Pod", DateTimeOffset.Now);
             sut.TrackEvent(@event);
 
-            persistenceProvider.Content.Keys.Should().ContainSingle(entry => entry.Equals(KubernetesAgentMetricsTake2.EntryName));
-            var items = JsonConvert.DeserializeObject<List<EventRecord>>(persistenceProvider.Content[KubernetesAgentMetricsTake2.EntryName]);
+            persistenceProvider.Content.Keys.Should().ContainSingle(entry => entry.Equals(KubernetesAgentMetrics.EntryName));
+            var items = JsonConvert.DeserializeObject<List<EventRecord>>(persistenceProvider.Content[KubernetesAgentMetrics.EntryName]);
             items.Count.Should().Be(1);
             items.First().Should().BeEquivalentTo(@event);
         }
@@ -35,7 +35,7 @@ namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
         public void CanWriteMultipleEntriesToThePersistenceMap()
         {
             MockPersistenceProvider persistenceProvider = new();
-            var sut = new KubernetesAgentMetricsTake2(persistenceProvider, new MapFromConfigMapToEventList(), systemLog);
+            var sut = new KubernetesAgentMetrics(persistenceProvider, new MapFromConfigMapToEventList(), systemLog);
 
             var events = new List<EventRecord>()
             {
@@ -45,8 +45,8 @@ namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
             
             events.ForEach(e => sut.TrackEvent(e));
 
-            persistenceProvider.Content.Keys.Should().ContainSingle(entry => entry.Equals(KubernetesAgentMetricsTake2.EntryName));
-            var items = JsonConvert.DeserializeObject<List<EventRecord>>(persistenceProvider.Content[KubernetesAgentMetricsTake2.EntryName]);
+            persistenceProvider.Content.Keys.Should().ContainSingle(entry => entry.Equals(KubernetesAgentMetrics.EntryName));
+            var items = JsonConvert.DeserializeObject<List<EventRecord>>(persistenceProvider.Content[KubernetesAgentMetrics.EntryName]);
             items.Count.Should().Be(2);
             items.Should().BeEquivalentTo(events);
         }
@@ -56,7 +56,7 @@ namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
         {
             IPersistenceProvider persistenceProvider = Substitute.For<IPersistenceProvider>();
             persistenceProvider.GetValue(Arg.Any<string>()).Throws(new Exception("Something broke"));
-            var sut = new KubernetesAgentMetricsTake2(persistenceProvider, new MapFromConfigMapToEventList(), systemLog);
+            var sut = new KubernetesAgentMetrics(persistenceProvider, new MapFromConfigMapToEventList(), systemLog);
             
             var @event = new EventRecord("Killed", "NFS Pod", DateTimeOffset.Now);
             Action act = () => sut.TrackEvent(@event);
@@ -68,7 +68,7 @@ namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
         public void GetLatestTimestampReturnsDateTimeOffsetMinimumIfNoEventsExist()
         {
             MockPersistenceProvider persistenceProvider = new();
-            var sut = new KubernetesAgentMetricsTake2(persistenceProvider, new MapFromConfigMapToEventList(), systemLog);
+            var sut = new KubernetesAgentMetrics(persistenceProvider, new MapFromConfigMapToEventList(), systemLog);
 
             sut.GetLatestEventTimestamp().Should().Be(DateTimeOffset.MinValue);
         }
@@ -77,7 +77,7 @@ namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
         public void GetLatestTimestampReturnsTheChronologicallyLatestTimeNotNewestInList()
         {
             MockPersistenceProvider persistenceProvider = new();
-            var sut = new KubernetesAgentMetricsTake2(persistenceProvider, new MapFromConfigMapToEventList(), systemLog);
+            var sut = new KubernetesAgentMetrics(persistenceProvider, new MapFromConfigMapToEventList(), systemLog);
             
             var events = new List<EventRecord>()
             {
@@ -99,7 +99,7 @@ namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
             IPersistenceProvider persistenceProvider = Substitute.For<IPersistenceProvider>();
             persistenceProvider.GetValue(Arg.Any<string>()).Throws(new Exception("Something broke"));
             
-            var sut = new KubernetesAgentMetricsTake2(persistenceProvider, new MapFromConfigMapToEventList(), systemLog);
+            var sut = new KubernetesAgentMetrics(persistenceProvider, new MapFromConfigMapToEventList(), systemLog);
             
             Action act = () => sut.GetLatestEventTimestamp();
 
