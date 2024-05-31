@@ -14,6 +14,7 @@ namespace Octopus.Tentacle.Kubernetes
     public class KubernetesEventMonitor : IKubernetesEventMonitor
     {
         readonly ISystemLog log;
+        //Needs the KubernetesMetric interface
 
         public KubernetesEventMonitor(ISystemLog log)
         {
