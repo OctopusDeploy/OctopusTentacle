@@ -3,6 +3,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Octopus.Tentacle.Background;
 using Octopus.Tentacle.Diagnostics;
+using Octopus.Tentacle.Diagnostics.Metrics;
 
 namespace Octopus.Tentacle.Kubernetes
 {

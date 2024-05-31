@@ -2,41 +2,38 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using k8s.Models;
+using Newtonsoft.Json;
 using Octopus.Tentacle.Kubernetes;
 
-namespace Octopus.Tentacle.Diagnostics
+namespace Octopus.Tentacle.Diagnostics.Metrics
 {
-    public enum KubernetesMetric
-    {
-        NFS_SCRIPT_KILL_POD_COUNT,
-        SOMETHING_ELSE
-    }
-
     public class KubernetesAgentMetrics
     {
+        readonly MapFromConfigMapToEventList mapper;
         readonly IKubernetesConfigMapService configMapService;
         const string Name = "kubernetes-agent-metrics";
+        const string EntryName = "metrics";
 
         readonly Lazy<V1ConfigMap> metricsConfigMap;
         IDictionary<string, string> ConfigMapData => metricsConfigMap.Value.Data ??= new Dictionary<string, string>();
 
-        public KubernetesAgentMetrics(IKubernetesConfigMapService configMapService)
+        public KubernetesAgentMetrics(IKubernetesConfigMapService configMapService, MapFromConfigMapToEventList mapper)
         {
             this.configMapService = configMapService;
+            this.mapper = mapper;
             metricsConfigMap = new Lazy<V1ConfigMap>(() => configMapService.TryGet(Name, CancellationToken.None).GetAwaiter().GetResult()
                 ?? throw new InvalidOperationException($"Unable to retrieve Tentacle Configuration from config map for namespace {KubernetesConfig.Namespace}"));
         }
 
-        public void IncrementMetric(KubernetesMetric metric)
+        public void TrackEvent(EventRecord eventRecord)
         {
-            var metricName = Enum.GetName(typeof(KubernetesMetric), metric)!;
             try
             {
                 lock (ConfigMapData)
                 {
-                    var initialValue = GetValueFromMap(metricName);
-                    ConfigMapData[metricName] = (initialValue + 1).ToString();
-                    Persist();
+                    var existingEvents = GetEventRecords();
+                    existingEvents.Add(eventRecord);
+                    Persist(existingEvents);
                 }
             }
             catch (Exception)
@@ -46,20 +43,34 @@ namespace Octopus.Tentacle.Diagnostics
             }
         }
 
-        void Persist()
+        List<EventRecord> GetEventRecords()
         {
+            var eventContent = GetDataFromMap();
+            var configMapEvents = JsonConvert.DeserializeObject<List<EventRecord>>(eventContent);
+
+            if (configMapEvents is null)
+            {
+                return new List<EventRecord>();
+            }
+            
+            return mapper.FromConfigMap(configMapEvents);
+        }
+
+        void Persist(List<EventRecord> eventRecords)
+        {
+            var configMapData = mapper.ToConfigMap(eventRecords);
+            ConfigMapData[EntryName] = JsonConvert.SerializeObject(configMapData);
             configMapService.Patch(Name, ConfigMapData, CancellationToken.None).GetAwaiter().GetResult();
         }
 
-        int GetValueFromMap(string metricName)
+        string GetDataFromMap()
         {
-            int initialValue = 0;
-            if (ConfigMapData.TryGetValue(metricName, out var value))
+            if (ConfigMapData.TryGetValue(EntryName, out var value))
             {
-                int.TryParse(value, out initialValue);
+                return value;
             }
 
-            return initialValue;
+            return "";
         }
     }
 }
