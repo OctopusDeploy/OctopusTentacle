@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using Autofac;
 using Octopus.Diagnostics;
+using Octopus.Tentacle.Diagnostics.Metrics;
 using Octopus.Tentacle.Startup;
 
 namespace Octopus.Tentacle.Diagnostics
@@ -19,6 +20,8 @@ namespace Octopus.Tentacle.Diagnostics
 
             builder.RegisterType<SystemLog>().As<ISystemLog>().SingleInstance();
             builder.Register(c => new LogFileOnlyLogger()).As<ILogFileOnlyLogger>().InstancePerLifetimeScope();
+            builder.RegisterType<KubernetesAgentMetrics>().AsSelf().SingleInstance();
+            builder.RegisterType<MapFromConfigMapToEventList>().AsSelf();
         }
     }
 }

@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using k8s.Models;
 using Newtonsoft.Json;
+using Octopus.Diagnostics;
 using Octopus.Tentacle.Kubernetes;
 
 namespace Octopus.Tentacle.Diagnostics.Metrics
@@ -11,16 +13,18 @@ namespace Octopus.Tentacle.Diagnostics.Metrics
     {
         readonly MapFromConfigMapToEventList mapper;
         readonly IKubernetesConfigMapService configMapService;
+        readonly ISystemLog log;
         const string Name = "kubernetes-agent-metrics";
         const string EntryName = "metrics";
 
         readonly Lazy<V1ConfigMap> metricsConfigMap;
         IDictionary<string, string> ConfigMapData => metricsConfigMap.Value.Data ??= new Dictionary<string, string>();
 
-        public KubernetesAgentMetrics(IKubernetesConfigMapService configMapService, MapFromConfigMapToEventList mapper)
+        public KubernetesAgentMetrics(IKubernetesConfigMapService configMapService, MapFromConfigMapToEventList mapper, ISystemLog log)
         {
             this.configMapService = configMapService;
             this.mapper = mapper;
+            this.log = log;
             metricsConfigMap = new Lazy<V1ConfigMap>(() => configMapService.TryGet(Name, CancellationToken.None).GetAwaiter().GetResult()
                 ?? throw new InvalidOperationException($"Unable to retrieve Tentacle Configuration from config map for namespace {KubernetesConfig.Namespace}"));
         }
@@ -31,21 +35,39 @@ namespace Octopus.Tentacle.Diagnostics.Metrics
             {
                 lock (ConfigMapData)
                 {
-                    var existingEvents = GetEventRecords();
+                    var existingEvents = LoadFromMap();
                     existingEvents.Add(eventRecord);
                     Persist(existingEvents);
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                //no idea how to actually log this exception, nor to where
-                //will land here if the metrics-config-map does not exist.
+                log.Error($"Failed to persist a kubernetes event metric, {e.Message}");
             }
         }
 
-        List<EventRecord> GetEventRecords()
+        public DateTimeOffset? GetLatestEventTimestamp()
         {
-            var eventContent = GetDataFromMap();
+            try
+            {
+                lock (ConfigMapData)
+                {
+                    var existingEvents = LoadFromMap();
+                    return existingEvents
+                        .OrderByDescending(re => re.Timestamp)
+                        .Select(re => re.Timestamp)
+                        .FirstOrDefault();
+                }
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        List<EventRecord> LoadFromMap()
+        {
+            var eventContent = GetDataFromMap(EntryName);
             var configMapEvents = JsonConvert.DeserializeObject<List<EventRecord>>(eventContent);
 
             if (configMapEvents is null)
@@ -63,9 +85,9 @@ namespace Octopus.Tentacle.Diagnostics.Metrics
             configMapService.Patch(Name, ConfigMapData, CancellationToken.None).GetAwaiter().GetResult();
         }
 
-        string GetDataFromMap()
+        string GetDataFromMap(string entryName)
         {
-            if (ConfigMapData.TryGetValue(EntryName, out var value))
+            if (ConfigMapData.TryGetValue(entryName, out var value))
             {
                 return value;
             }
