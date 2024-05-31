@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using k8s.Models;
@@ -17,12 +18,13 @@ namespace Octopus.Tentacle.Kubernetes
     {
         readonly ISystemLog log;
         readonly KubernetesAgentMetrics agentMetrics;
-        //Needs the KubernetesMetric interface
+        readonly KubernetesEventService eventService;
 
-        public KubernetesEventMonitor(ISystemLog log, KubernetesAgentMetrics agentMetrics)
+        public KubernetesEventMonitor(ISystemLog log, KubernetesAgentMetrics agentMetrics, KubernetesEventService eventService)
         {
             this.log = log;
             this.agentMetrics = agentMetrics;
+            this.eventService = eventService;
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
@@ -40,8 +42,31 @@ namespace Octopus.Tentacle.Kubernetes
 
         async Task CacheNewEvents(CancellationToken cancellationToken)
         {
-            V1EventSource eventSource; 
+            var allEvents = await eventService.FetchAllEventsAsync(cancellationToken);
+            if (allEvents is null)
+            {
+                log.Error("Unable to extract events from the cluster");
+                return;
+            }
             
+            DateTimeOffset lastEventTime = default;
+            try
+            {
+                lastEventTime = agentMetrics.GetLatestEventTimestamp();
+            }
+            catch (Exception e)
+            {
+                log.Error($"Failed to determine latest handled event. {e.Message}");
+            }
+
+            var unSeenEvents = allEvents.Items
+                .Where(e => e.EventTime.HasValue && e.EventTime.Value.ToUniversalTime() > lastEventTime);
+            
+            foreach (var unSeenEvent in unSeenEvents)
+            {
+                agentMetrics.TrackEvent(new EventRecord(unSeenEvent.Action, unSeenEvent.Source.Component, unSeenEvent.EventTime!.Value.ToUniversalTime()));
+            }
+
             await Task.CompletedTask;
         }
     }

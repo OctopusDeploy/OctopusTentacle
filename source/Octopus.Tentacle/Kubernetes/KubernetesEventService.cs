@@ -15,13 +15,13 @@ namespace Octopus.Tentacle.Kubernetes
         {
         }
 
-        public async Task<IEnumerable<V1EventSource>> FetchEvents(CancellationToken cancellationToken)
+        public async Task<Corev1EventList?> FetchAllEventsAsync(CancellationToken cancellationToken)
         {
             return await RetryPolicy.ExecuteAsync(async () =>
-            {
+            { 
                 try
                 {
-                    return await Client.CoreV1.ListNamespacedEvent()
+                    return await Client.CoreV1.ListEventForAllNamespacesAsync(cancellationToken: cancellationToken);
                 }
                 catch (HttpOperationException opException)
                     when (opException.Response.StatusCode == HttpStatusCode.NotFound)
