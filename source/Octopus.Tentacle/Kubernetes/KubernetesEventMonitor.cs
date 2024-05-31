@@ -27,7 +27,7 @@ namespace Octopus.Tentacle.Kubernetes
                     retry => TimeSpan.FromMinutes(10),
             (ex, duration) =>
             {
-                log.Error(ex, "OrphanedPodCleaner: An unexpected error occured while running clean up loop, re-running in: " + duration);
+                log.Error(ex, "KubernetesEventMonitor: An unexpected error occured while running event caching loop, re-running in: " + duration);
             });
 
             await policy.ExecuteAsync(async ct => await PublishNewEvents(ct), cancellationToken);
