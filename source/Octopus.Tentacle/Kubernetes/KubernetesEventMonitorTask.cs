@@ -8,24 +8,15 @@ namespace Octopus.Tentacle.Kubernetes
 {
     public class KubernetesEventMonitorTask : BackgroundTask
     {
-        
-        public KubernetesEventMonitorTask(ISystemLog log, TimeSpan terminationGracePeriod) : base(log, terminationGracePeriod)
+        readonly KubernetesEventMonitor eventMonitor;
+        public KubernetesEventMonitorTask(ISystemLog log, TimeSpan terminationGracePeriod, KubernetesEventMonitor eventMonitor) : base(log, terminationGracePeriod)
         {
+            this.eventMonitor = eventMonitor;
         }
         
-        protected override Task RunTask(CancellationToken cancellationToken)
+        protected override async Task RunTask(CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
-        }
-
-        public void Start()
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public void Stop()
-        {
-            throw new System.NotImplementedException();
+            await eventMonitor.StartAsync(cancellationToken);
         }
     }
 }

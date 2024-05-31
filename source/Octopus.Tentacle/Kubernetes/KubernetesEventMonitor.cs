@@ -1,7 +1,9 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using k8s.Models;
 using Octopus.Diagnostics;
+using Octopus.Tentacle.Kubernetes.Diagnostics;
 using Polly;
 
 namespace Octopus.Tentacle.Kubernetes
@@ -14,11 +16,13 @@ namespace Octopus.Tentacle.Kubernetes
     public class KubernetesEventMonitor : IKubernetesEventMonitor
     {
         readonly ISystemLog log;
+        readonly KubernetesAgentMetrics agentMetrics;
         //Needs the KubernetesMetric interface
 
-        public KubernetesEventMonitor(ISystemLog log)
+        public KubernetesEventMonitor(ISystemLog log, KubernetesAgentMetrics agentMetrics)
         {
             this.log = log;
+            this.agentMetrics = agentMetrics;
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
@@ -31,11 +35,13 @@ namespace Octopus.Tentacle.Kubernetes
                 log.Error(ex, "KubernetesEventMonitor: An unexpected error occured while running event caching loop, re-running in: " + duration);
             });
 
-            await policy.ExecuteAsync(async ct => await PublishNewEvents(ct), cancellationToken);
+            await policy.ExecuteAsync(async ct => await CacheNewEvents(ct), cancellationToken);
         }
 
-        async Task PublishNewEvents(CancellationToken cancellationToken)
+        async Task CacheNewEvents(CancellationToken cancellationToken)
         {
+            V1EventSource eventSource; 
+            
             await Task.CompletedTask;
         }
     }
