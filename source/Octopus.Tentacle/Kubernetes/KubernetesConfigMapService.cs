@@ -29,7 +29,7 @@ namespace Octopus.Tentacle.Kubernetes
             {
                 try
                 {
-                    return await Client.CoreV1.ReadNamespacedConfigMapAsync(name, KubernetesConfig.Namespace, cancellationToken: cancellationToken);
+                    return await Client.CoreV1.ReadNamespacedConfigMapAsync(name, configProvider.Get().Namespace, cancellationToken: cancellationToken);
                 }
                 catch (HttpOperationException opException)
                     when (opException.Response.StatusCode == HttpStatusCode.NotFound)
