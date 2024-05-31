@@ -1,6 +1,7 @@
+using System;
 using System.Collections.Generic;
 
-namespace Octopus.Tentacle.Diagnostics.Metrics
+namespace Octopus.Tentacle.Kubernetes.Diagnostics
 {
     public class MapFromConfigMapToEventList
     {

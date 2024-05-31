@@ -4,11 +4,10 @@ using System.Linq;
 using FluentAssertions;
 using Newtonsoft.Json;
 using NSubstitute;
-using NSubstitute.Core.Arguments;
 using NSubstitute.ExceptionExtensions;
 using NUnit.Framework;
 using Octopus.Diagnostics;
-using Octopus.Tentacle.Diagnostics.Metrics;
+using Octopus.Tentacle.Kubernetes.Diagnostics;
 
 namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
 {

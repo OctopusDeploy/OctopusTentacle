@@ -1,6 +1,6 @@
 using System;
 
-namespace Octopus.Tentacle.Diagnostics.Metrics
+namespace Octopus.Tentacle.Kubernetes.Diagnostics
 {
     public record EventRecord(string Reason, string Source, DateTimeOffset Timestamp)
     {

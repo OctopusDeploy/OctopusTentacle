@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.Threading;
 using k8s.Models;
 using Octopus.Diagnostics;
-using Octopus.Tentacle.Kubernetes;
 
-namespace Octopus.Tentacle.Diagnostics.Metrics
+namespace Octopus.Tentacle.Kubernetes.Diagnostics
 {
     public interface IPersistenceProvider
     {

@@ -2,7 +2,7 @@ using FluentAssertions;
 using Newtonsoft.Json;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Diagnostics;
-using Octopus.Tentacle.Diagnostics.Metrics;
+using Octopus.Tentacle.Kubernetes.Diagnostics;
 
 namespace Octopus.Tentacle.Kubernetes.Tests.Integration;
 

@@ -6,7 +6,6 @@ using System.Linq;
 using Autofac;
 using Autofac.Core;
 using Octopus.Diagnostics;
-using Octopus.Tentacle.Diagnostics.Metrics;
 using Octopus.Tentacle.Startup;
 
 namespace Octopus.Tentacle.Diagnostics

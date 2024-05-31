@@ -4,7 +4,7 @@ using System.Linq;
 using Newtonsoft.Json;
 using Octopus.Diagnostics;
 
-namespace Octopus.Tentacle.Diagnostics.Metrics
+namespace Octopus.Tentacle.Kubernetes.Diagnostics
 {
     public class KubernetesAgentMetrics
     {
