@@ -45,7 +45,7 @@ namespace Octopus.Tentacle.Commands
             Options.Add("tenanttag=", "A tenant tag which the machine will be tagged with - e.g., 'CustomerType/VIP'; specify this argument multiple times to add multiple tenant tags", s => tenantTgs.Add(s));
             Options.Add("tenanted-deployment-participation=", $"How the machine should participate in tenanted deployments. Allowed values are {Enum.GetNames(typeof(TenantedDeploymentMode)).ReadableJoin()}.", s =>
             {
-                if (Enum.TryParse<TenantedDeploymentMode>(s, out var result))
+                if (Enum.TryParse<TenantedDeploymentMode>(s, ignoreCase: true, out var result))
                     tenantedDeploymentMode = result;
                 else
                     throw new ControlledFailureException($"The value '{s}' is not valid. Valid values are {Enum.GetNames(typeof(TenantedDeploymentMode)).ReadableJoin()}.");
