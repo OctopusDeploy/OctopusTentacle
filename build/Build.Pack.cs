@@ -564,10 +564,10 @@ partial class Build
                 settings = settings.SetBuilder(DockerBuildxBuilder);
 
             var dockerfile = !includeDebugger
-                ? "./docker/kubernetes-tentacle/Dockerfile"
-                : "./docker/kubernetes-tentacle/dev/Dockerfile";
+                ? "./docker/kubernetes-agent-tentacle/Dockerfile"
+                : "./docker/kubernetes-agent-tentacle/dev/Dockerfile";
 
-            var tag = $"{hostPrefix}octopusdeploy/kubernetes-tentacle:{FullSemVer}";
+            var tag = $"{hostPrefix}octopusdeploy/kubernetes-agent-tentacle:{FullSemVer}";
             if (includeDebugger)
                 tag += "-debug";
 

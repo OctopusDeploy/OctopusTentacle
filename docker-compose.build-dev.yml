@@ -9,4 +9,4 @@ services:
             args:
                 IMAGE_TAG: ${IMAGE_TAG:?err}
                 DEBUGGER_ARCH: ${DEBUGGER_ARCH:?err}
-        image: docker.packages.octopushq.com/octopusdeploy/kubernetes-tentacle:${BUILD_NUMBER?err}-linux-${BUILD_ARCH:?err}-debug
+        image: docker.packages.octopushq.com/octopusdeploy/kubernetes-agent-tentacle:${BUILD_NUMBER?err}-linux-${BUILD_ARCH:?err}-debug

@@ -19,7 +19,7 @@ ARG TARGETVARIANT
 
 EXPOSE 10933
 
-COPY docker/kubernetes-tentacle/scripts/* /scripts/
+COPY docker/kubernetes-agent-tentacle/scripts/* /scripts/
 COPY --from=bootstrapRunnerBuilder bootstrapRunner/bin/bootstrapRunner /bootstrapRunner
 RUN chmod +x /scripts/*.sh
 
@@ -86,11 +86,11 @@ ENTRYPOINT ["/scripts/configure-and-run.sh"]
 
 LABEL \
     org.label-schema.schema-version="1.0" \
-    org.label-schema.name="Octopus Deploy Kubernetes Tentacle" \
+    org.label-schema.name="Octopus Deploy Kubernetes Agent Tentacle" \
     org.label-schema.vendor="Octopus Deploy" \
     org.label-schema.url="https://octopus.com" \
     org.label-schema.vcs-url="https://github.com/OctopusDeploy/OctopusTentacle" \
     org.label-schema.license="Apache"  \
-    org.label-schema.description="Octopus Kubernetes Tentacle instance with auto-registration to Octopus Server" \
+    org.label-schema.description="Octopus Kubernetes Agent Tentacle instance with auto-registration to Octopus Server" \
     org.label-schema.version=${BUILD_NUMBER} \
     org.label-schema.build-date=${BUILD_DATE}

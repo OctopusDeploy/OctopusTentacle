@@ -10,7 +10,7 @@ services:
                 BUILD_NUMBER: ${BUILD_NUMBER:?err}
         image: docker.packages.octopushq.com/octopusdeploy/tentacle:${BUILD_NUMBER?err}-linux
 
-    octopusdeploy-kubernetes-tentacle-linux:
+    octopusdeploy-kubernetes-agent-tentacle-linux:
         platform: "linux/${BUILD_ARCH:?err}"
         build:
             context: .
@@ -21,7 +21,7 @@ services:
                 TARGETARCH: ${BUILD_ARCH:?err}
                 TARGETOS: linux
                 TARGETVARIANT: ${BUILD_VARIANT}
-        image: docker.packages.octopushq.com/octopusdeploy/kubernetes-tentacle:${BUILD_NUMBER?err}-linux-${BUILD_ARCH:?err}
+        image: docker.packages.octopushq.com/octopusdeploy/kubernetes-agent-tentacle:${BUILD_NUMBER?err}-linux-${BUILD_ARCH:?err}
 
     octopusdeploy-tentacle-windows-2019:
         build:
