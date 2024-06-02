@@ -64,10 +64,21 @@ namespace Octopus.Tentacle.Kubernetes
             
             foreach (var unSeenEvent in unSeenEvents)
             {
+                var eventRecrd = MapToEventRecord(unSeenEvent);
                 agentMetrics.TrackEvent(new EventRecord(unSeenEvent.Action, unSeenEvent.Source.Component, unSeenEvent.EventTime!.Value.ToUniversalTime()));
             }
 
             await Task.CompletedTask;
+        }
+
+        EventRecord? MapToEventRecord(Corev1Event kubernetesEvent)
+        {
+            if (kubernetesEvent.Action.Equals("Killing", StringComparison.OrdinalIgnoreCase))
+            {
+                return new EventRecord(kubernetesEvent.Action, kubernetesEvent.Source.Component, kubernetesEvent.EventTime!.Value.ToUniversalTime());
+            }
+
+            return null;
         }
     }
 }
