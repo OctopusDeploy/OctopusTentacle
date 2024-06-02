@@ -14,7 +14,7 @@ services:
         platform: "linux/${BUILD_ARCH:?err}"
         build:
             context: .
-            dockerfile: ./docker/kubernetes-tentacle/Dockerfile
+            dockerfile: ./docker/kubernetes-agent-tentacle/Dockerfile
             args:
                 BUILD_DATE: ${BUILD_DATE:?err}
                 BUILD_NUMBER: ${BUILD_NUMBER:?err}

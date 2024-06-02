@@ -3,7 +3,7 @@ FROM golang:1.22 as bootstrapRunnerBuilder
 ARG TARGETARCH
 ARG TARGETOS
 
-COPY docker/kubernetes-tentacle/bootstrapRunner/* /bootstrapRunner/
+COPY docker/kubernetes-agent-tentacle/bootstrapRunner/* /bootstrapRunner/
 WORKDIR /bootstrapRunner
 
 # Note: the given ldflags remove debug symbols
@@ -23,11 +23,11 @@ EXPOSE 10933
 # debugging port
 EXPOSE 7777
 
-COPY docker/kubernetes-tentacle/scripts/* /scripts/
+COPY docker/kubernetes-agent-tentacle/scripts/* /scripts/
 COPY --from=bootstrapRunnerBuilder bootstrapRunner/bin/bootstrapRunner /bootstrapRunner
 RUN chmod +x /scripts/*.sh
 
-COPY docker/kubernetes-tentacle/dev/scripts/* /dev-scripts/
+COPY docker/kubernetes-agent-tentacle/dev/scripts/* /dev-scripts/
 RUN chmod +x /dev-scripts/*.sh
 
 WORKDIR /tmp

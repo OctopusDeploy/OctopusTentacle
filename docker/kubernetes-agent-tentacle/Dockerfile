@@ -3,7 +3,7 @@ FROM golang:1.22 as bootstrapRunnerBuilder
 ARG TARGETARCH
 ARG TARGETOS
 
-COPY docker/kubernetes-tentacle/bootstrapRunner/* /bootstrapRunner/
+COPY docker/kubernetes-agent-tentacle/bootstrapRunner/* /bootstrapRunner/
 WORKDIR /bootstrapRunner
 
 # Note: the given ldflags remove debug symbols
