@@ -50,7 +50,7 @@ public class KubernetesAgentMetricsIntegrationTest : KubernetesAgentIntegrationT
     {
         //Arrange
         var kubernetesConfigClient = new KubernetesFileWrappedProvider(KubernetesTestsGlobalContext.Instance.KubeConfigPath);
-        var configMapService = new Support.TestSupportConfigMapService(kubernetesConfigClient, systemLog);
+        var configMapService = new Support.TestSupportConfigMapService(kubernetesConfigClient, systemLog, kubernetesAgentInstaller.Namespace);
         var persistenceProvider = new PersistenceProvider("nonexistent-config-map", configMapService);
         var metrics = new KubernetesAgentMetrics(persistenceProvider, systemLog);
 
@@ -67,7 +67,7 @@ public class KubernetesAgentMetricsIntegrationTest : KubernetesAgentIntegrationT
     {
         //Arrange
         var kubernetesConfigClient = new InClusterKubernetesClientConfigProvider();
-        var configMapService = new Support.TestSupportConfigMapService(kubernetesConfigClient, systemLog);
+        var configMapService = new Support.TestSupportConfigMapService(kubernetesConfigClient, systemLog, kubernetesAgentInstaller.Namespace);
         var persistenceProvider = new PersistenceProvider("nonexistent-config-map", configMapService);
         var metrics = new KubernetesAgentMetrics(persistenceProvider, systemLog);
 
@@ -84,7 +84,7 @@ public class KubernetesAgentMetricsIntegrationTest : KubernetesAgentIntegrationT
     {
         //Arrange
         var kubernetesConfigClient = new KubernetesFileWrappedProvider(KubernetesTestsGlobalContext.Instance.KubeConfigPath);
-        var configMapService = new Support.TestSupportConfigMapService(kubernetesConfigClient, systemLog);
+        var configMapService = new Support.TestSupportConfigMapService(kubernetesConfigClient, systemLog, kubernetesAgentInstaller.Namespace);
         var persistenceProvider = new PersistenceProvider("kubernetes-agent-metrics", configMapService);
         var metrics = new KubernetesAgentMetrics(persistenceProvider, systemLog);
 
