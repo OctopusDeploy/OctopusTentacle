@@ -38,7 +38,7 @@ public class DockerImageLoader
 
         var exitCode = SilentProcessRunner.ExecuteCommand(
             "docker",
-            "images octopusdeploy/kubernetes-tentacle --format \"{{.Tag}}\"",
+            "images octopusdeploy/kubernetes-agent-tentacle --format \"{{.Tag}}\"",
             temporaryDirectory.DirectoryPath,
             sprLogger.Debug,
             line =>
@@ -61,7 +61,7 @@ public class DockerImageLoader
 
     string LoadImageIntoKind(string mostRecentTag, string clusterName)
     {
-        var image = $"octopusdeploy/kubernetes-tentacle:{mostRecentTag}";
+        var image = $"octopusdeploy/kubernetes-agent-tentacle:{mostRecentTag}";
 
         var sb = new StringBuilder();
         var sprLogger = new LoggerConfiguration()

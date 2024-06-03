@@ -3,7 +3,7 @@ FROM golang:1.22 as bootstrapRunnerBuilder
 ARG TARGETARCH
 ARG TARGETOS
 
-COPY docker/kubernetes-tentacle/bootstrapRunner/* /bootstrapRunner/
+COPY docker/kubernetes-agent-tentacle/bootstrapRunner/* /bootstrapRunner/
 WORKDIR /bootstrapRunner
 
 # Note: the given ldflags remove debug symbols
@@ -16,41 +16,39 @@ ARG BUILD_DATE
 ARG TARGETARCH
 ARG TARGETOS
 ARG TARGETVARIANT
+ARG DEBUGGER_ARCH=linux-x64
 
 EXPOSE 10933
 
-COPY docker/kubernetes-tentacle/scripts/* /scripts/
+# debugging port
+EXPOSE 7777
+
+COPY docker/kubernetes-agent-tentacle/scripts/* /scripts/
 COPY --from=bootstrapRunnerBuilder bootstrapRunner/bin/bootstrapRunner /bootstrapRunner
 RUN chmod +x /scripts/*.sh
+
+COPY docker/kubernetes-agent-tentacle/dev/scripts/* /dev-scripts/
+RUN chmod +x /dev-scripts/*.sh
 
 WORKDIR /tmp
 
 # Install Tentacle
 COPY _artifacts/docker/tentacle_${BUILD_NUMBER}_${TARGETOS}-${TARGETARCH}${TARGETVARIANT}.deb /tmp/tentacle.deb
-RUN apt-get update  \
-    && apt install ./tentacle.deb curl -y  \
-    && apt-get clean  \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update
+RUN apt install ./tentacle.deb -y
+RUN apt-get clean
+RUN apt install curl p7zip-full -y
+RUN rm -rf /var/lib/apt/lists/*
 
 WORKDIR /
 
+RUN \
+    curl -L "https://download.jetbrains.com/rider/ssh-remote-debugging/${DEBUGGER_ARCH}/jetbrains_debugger_agent_20230319.24.0" \
+    -o /usr/local/bin/debugger && \
+    chmod +x /usr/local/bin/debugger 
+
 # We know this won't reduce the image size at all. It's just to make the filesystem a little tidier.
 RUN rm -rf /tmp/*
-
-# Make the /.dotnet directory so that we can ensure ownership for the
-# certificate store 
-RUN mkdir /.dotnet
-
-# By default, OpenShift uses random UIDs 
-# This introduces support for it as per
-# https://docs.openshift.com/container-platform/4.15/openshift_images/create-images.html#use-uid_create-images
-RUN chgrp -R 0 /opt /usr /.dotnet && \
-    chmod -R g=u /opt /usr /.dotnet
-
-# The same as above, but we shouldn't recursively own /etc, as it would add
-# ownership to system files like /etc/passwd
-RUN chgrp 0 /etc && \
-    chmod g=u /etc
 
 ENV BOOTSTRAPRUNNEREXECUTABLEPATH=/bootstrapRunner
 ENV OCTOPUS_RUNNING_IN_CONTAINER=Y
@@ -82,7 +80,7 @@ ENV TentacleHome=""
 ENV TentacleApplications=""
 ENV TentacleCertificateBase64=""
 
-ENTRYPOINT ["/scripts/configure-and-run.sh"]
+ENTRYPOINT [ "/dev-scripts/bootstrap.sh" ] 
 
 LABEL \
     org.label-schema.schema-version="1.0" \
@@ -94,3 +92,22 @@ LABEL \
     org.label-schema.description="Octopus Kubernetes Tentacle instance with auto-registration to Octopus Server" \
     org.label-schema.version=${BUILD_NUMBER} \
     org.label-schema.build-date=${BUILD_DATE}
+
+# This installs the required tools, but there are versioning issues and it isn't working as expected
+
+#ARG DEBUGGER_TOOLS_ARCH=linux64
+#ARG DEBUGGER_TOOLS_VERSION=2023.3.2
+
+# RUN mkdir ~/.local && \
+#     mkdir ~/.local/share && \
+#     mkdir ~/.local/share/JetBrains && \
+#     mkdir ~/.local/share/JetBrains/RiderRemoteDebugger && \
+#     mkdir ~/.local/share/JetBrains/RiderRemoteDebugger/${DEBUGGER_TOOLS_VERSION}
+
+# RUN \
+#     curl -L "https://data.services.jetbrains.com/products/download?code=RRD&platform=${DEBUGGER_TOOLS_ARCH}" \
+#     -o  ~/.local/share/JetBrains/RiderRemoteDebugger/${DEBUGGER_TOOLS_VERSION}/debug_tools.zip
+
+# RUN \
+#     cd ~/.local/share/JetBrains/RiderRemoteDebugger/${DEBUGGER_TOOLS_VERSION} \
+#     7z x debug_tools.zip
