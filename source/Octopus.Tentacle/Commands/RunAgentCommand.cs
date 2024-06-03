@@ -4,7 +4,20 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Security.Principal;
+using Autofac;
+using Autofac.Extensions.DependencyInjection;
+#if !NETFRAMEWORK
+using Microsoft.AspNetCore.Server.Kestrel.Https;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Octopus.Tentacle.Communications.gRPC;
+#endif
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Background;
 using Octopus.Tentacle.Communications;
@@ -41,6 +54,11 @@ namespace Octopus.Tentacle.Commands
 
         public override bool CanRunAsService => true;
 
+        readonly ILifetimeScope container;
+
+#if !NETFRAMEWORK
+        private IHost host;
+#endif
         public RunAgentCommand(
             Lazy<IHalibutInitializer> halibut,
             Lazy<IWritableTentacleConfiguration> configuration,
@@ -53,7 +71,7 @@ namespace Octopus.Tentacle.Commands
             IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker,
             AppVersion appVersion,
             ILogFileOnlyLogger logFileOnlyLogger,
-            IEnumerable<Lazy<IBackgroundTask>> backgroundTasks) : base(selector, log, logFileOnlyLogger)
+            IEnumerable<Lazy<IBackgroundTask>> backgroundTasks, ILifetimeScope container) : base(selector, log, logFileOnlyLogger)
         {
             this.halibut = halibut;
             this.configuration = configuration;
@@ -66,6 +84,11 @@ namespace Octopus.Tentacle.Commands
             this.windowsLocalAdminRightsChecker = windowsLocalAdminRightsChecker;
             this.appVersion = appVersion;
             this.backgroundTasks = backgroundTasks;
+            this.container = container;
+
+#if !NETFRAMEWORK
+            host = CreateHostBuilder().Build();
+#endif
 
             Options.Add("wait=", "Delay (ms) before starting", arg => wait = int.Parse(arg));
             Options.Add("console", "Don't attempt to run as a service, even if the user is non-interactive", v =>
@@ -74,6 +97,74 @@ namespace Octopus.Tentacle.Commands
                 // This option is added to show help
             });
         }
+#if !NETFRAMEWORK
+        private IHostBuilder CreateHostBuilder() =>
+            Host.CreateDefaultBuilder()
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    webBuilder.UseKestrel(options =>
+                    {
+                        // options.ConfigureHttpsDefaults(httpsOptions =>
+                        // {
+                        //     httpsOptions.ClientCertificateMode = ClientCertificateMode.RequireCertificate;
+                        //     httpsOptions.ClientCertificateValidation = (certificate, _, __) =>
+                        //     {
+                        //         using var cert = new X509Certificate2(certificate.Export(X509ContentType.Cert));
+                        //         return configuration.Value.TrustedOctopusServers.Any(serverConfiguration => serverConfiguration.Thumbprint == cert.Thumbprint);
+                        //     };
+                        // });
+                        options.Limits.MaxRequestBodySize = null;
+
+                        options.ListenAnyIP(5001, listenOptions =>
+                        {
+                            listenOptions.Protocols = HttpProtocols.Http1;
+                            // listenOptions.UseHttps(configuration.Value.TentacleCertificate!);
+                        });
+                        options.ListenAnyIP(5002, listenOptions =>
+                        {
+                            listenOptions.Protocols = HttpProtocols.Http2;
+                            // listenOptions.UseHttps(configuration.Value.TentacleCertificate!);
+                        });
+                    });
+                    webBuilder.UseStartup<Startup>();
+                }).UseServiceProviderFactory(new AutofacChildLifetimeScopeServiceProviderFactory(container));
+
+        class Startup
+        {
+            // This method gets called by the runtime. Use this method to add services to the container.
+            // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
+            public void ConfigureServices(IServiceCollection services)
+            {
+                services.AddGrpcReflection();
+                services.AddGrpc(options =>
+                {
+                    options.MaxReceiveMessageSize = null;
+                    options.MaxSendMessageSize = null;
+                });
+            }
+
+            // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+            public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+            {
+                // if (env.IsDevelopment())
+                // {
+                app.UseDeveloperExceptionPage();
+                // }
+
+                app.UseRouting();
+                app.UseEndpoints(endpoints =>
+                {
+                    endpoints.MapGrpcReflectionService();
+                    endpoints.MapGrpcService<GreeterService>();
+                    endpoints.MapGet("/", async context =>
+                    {
+                        await context.Response.WriteAsync(
+                            "Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909");
+                    });
+                });
+            }
+        }
+#endif
 
         protected override void Start()
         {
@@ -128,6 +219,9 @@ namespace Octopus.Tentacle.Commands
 
             halibut.Value.Start();
             halibutHasStarted = true;
+#if !NETFRAMEWORK
+            host.Start();
+#endif
 
             foreach (var backgroundTaskLazy in backgroundTasks)
             {
@@ -155,6 +249,12 @@ namespace Octopus.Tentacle.Commands
             {
                 halibut.Value.Stop();
             }
+
+#if !NETFRAMEWORK
+            Console.WriteLine("Stopping host");
+            host.StopAsync().GetAwaiter().GetResult();
+            host.Dispose();
+#endif
 
             foreach (var backgroundTaskLazy in backgroundTasks.Where(bt => bt.IsValueCreated))
             {

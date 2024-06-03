@@ -1,11 +1,14 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using System.Threading.Tasks;
 using Halibut;
 using Halibut.Diagnostics;
+using NuGet.Packaging;
 using Octopus.Client.Model;
 using Octopus.Client.Model.Endpoints;
 using Octopus.Diagnostics;
@@ -20,6 +23,7 @@ namespace Octopus.Tentacle.Communications
         readonly HalibutRuntime halibut;
         readonly IProxyConfigParser proxyConfigParser;
         readonly ISystemLog log;
+        public static readonly IList<ServiceEndPoint> ServiceEndPoints = new List<ServiceEndPoint>();
 
         public HalibutInitializer(IWritableTentacleConfiguration configuration, HalibutRuntime halibut, IProxyConfigParser proxyConfigParser, ISystemLog log)
         {
@@ -35,8 +39,10 @@ namespace Octopus.Tentacle.Communications
 
             TrustOctopusServers();
 
-            AddPollingEndpoints();
+           ServiceEndPoints.AddRange(AddPollingEndpoints());
 
+            // KeepPingingServersForNoReason(endpoints);
+            
             if (configuration.NoListen)
             {
                 log.Info("Agent will not listen on any TCP ports");
@@ -85,7 +91,7 @@ namespace Octopus.Tentacle.Communications
 
 
 
-        void AddPollingEndpoints()
+        IEnumerable<ServiceEndPoint> AddPollingEndpoints()
         {
             foreach (var pollingEndPoint in GetOctopusServersToPoll())
             {
@@ -110,6 +116,8 @@ namespace Octopus.Tentacle.Communications
                 for (var i = 0; i < connectionCount; i++)
                 {
                     halibut.Poll(new Uri(pollingEndPoint.SubscriptionId), serviceEndPoint, CancellationToken.None);
+                    yield return serviceEndPoint;
+                    //yield return new ServiceEndPoint(new Uri(pollingEndPoint.SubscriptionId), pollingEndPoint.Thumbprint, halibutTimeoutsAndLimits);
                 }
             }
         }

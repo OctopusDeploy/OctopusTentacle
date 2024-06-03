@@ -605,11 +605,11 @@ namespace Octopus.Tentacle.Startup
 
         protected virtual void RegisterAdditionalModules(IContainer builtContainer)
         {
-            var builder = new ContainerBuilder();
-            builder.RegisterModule(new CommandModule());
-#pragma warning disable 618
-            builder.Update(builtContainer);
-#pragma warning restore 618
+            // var builder = new ContainerBuilder();
+//             builder.RegisterModule(new CommandModule());
+// #pragma warning disable 618
+//             builder.Update(builtContainer);
+// #pragma warning restore 618
         }
 
         static string ParseCommandName(string[] args)

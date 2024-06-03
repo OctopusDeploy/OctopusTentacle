@@ -18,6 +18,8 @@ ARG TARGETOS
 ARG TARGETVARIANT
 
 EXPOSE 10933
+EXPOSE 5001
+EXPOSE 5002
 
 COPY docker/kubernetes-tentacle/scripts/* /scripts/
 COPY --from=bootstrapRunnerBuilder bootstrapRunner/bin/bootstrapRunner /bootstrapRunner

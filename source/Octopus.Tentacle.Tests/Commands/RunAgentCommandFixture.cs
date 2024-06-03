@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using Autofac;
 using NSubstitute;
 using NUnit.Framework;
 using Octopus.Diagnostics;
@@ -60,7 +61,8 @@ namespace Octopus.Tentacle.Tests.Commands
                 Substitute.For<IWindowsLocalAdminRightsChecker>(),
                 new AppVersion(GetType().Assembly),
                 Substitute.For<ILogFileOnlyLogger>(),
-                backgroundTasks.Select(bt => new Lazy<IBackgroundTask>(() => bt)).ToList());
+                backgroundTasks.Select(bt => new Lazy<IBackgroundTask>(() => bt)).ToList(),
+                new ContainerBuilder().Build());
 
             selector.Current.Returns(new ApplicationInstanceConfiguration("MyTentacle", null, null, null));
         }

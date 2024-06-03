@@ -50,12 +50,21 @@
 	</ItemGroup>
 	<ItemGroup Condition="'$(TargetFramework)' == 'net6.0' Or '$(TargetFramework)' == 'net6.0-windows'">
 		<PackageReference Include="KubernetesClient" Version="13.0.26" />
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+		<PackageReference Include="Google.Protobuf" Version="3.27.0" />
+		<PackageReference Include="Grpc.AspNetCore" Version="2.62.0"/>
+		<PackageReference Include="Grpc.AspNetCore.Server.Reflection" Version="2.62.0" />
+		<PackageReference Include="Grpc.Tools" Version="2.64.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Octopus.Client" Version="14.3.1389" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="Autofac" Version="4.6.2" />
+		<PackageReference Include="Autofac" Version="6.2.0" />
+		<PackageReference Include="Autofac.Extensions.DependencyInjection" Version="7.1.0" />
 		<PackageReference Include="NuGet.Common" Version="3.6.0-octopus-58692" />
 		<PackageReference Include="NuGet.Frameworks" Version="3.6.0-octopus-58692" />
 		<PackageReference Include="NuGet.Packaging" Version="3.6.0-octopus-58692" />
@@ -126,5 +135,14 @@
 	  <EmbeddedResource Include="Startup\PathsToDeleteOnStartup.core.txt" />
 	  <EmbeddedResource Include="Startup\PathsToDeleteOnStartup.netfx.txt" />
 	  <None Remove="Kubernetes\bootstrapRunner.sh" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Reference Include="Microsoft.Extensions.Hosting.Abstractions" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Reference Include="Microsoft.Extensions.Hosting" />
+	</ItemGroup>
+	<ItemGroup>
+		<Protobuf Include="Protos\greet.proto" GrpcServices="Server"/>
 	</ItemGroup>
 </Project>
