@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
+using Nito.Disposables.Internals;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Util;
 
@@ -26,15 +27,16 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
             {
                 lock (persistenceProvider)
                 {
-                    var sourceEventsForReason = LoadFromPersistence(reason) ?? new Dictionary<string, EventJsonEntry>();
+                    var sourceEventsForReason = LoadFromPersistence(reason) ?? new Dictionary<string, List<DateTimeOffset>>();
 
-                    if (!sourceEventsForReason.TryGetValue(reason, out var eventToExtend))
+                    if (!sourceEventsForReason.TryGetValue(source, out var occurenceTimestamps))
                     {
-                        eventToExtend = new EventJsonEntry(source, new List<DateTimeOffset>());
+                        occurenceTimestamps = new List<DateTimeOffset>();
+                        sourceEventsForReason[source] = occurenceTimestamps;
                     }
                     
-                    eventToExtend.Occurrences.Add(occurrence);
-                    Persist(reason, eventToExtend);
+                    occurenceTimestamps.Add(occurrence);
+                    Persist(reason, sourceEventsForReason);
                 }
             }
             catch (Exception e)
@@ -50,23 +52,23 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
                 var allEvents = persistenceProvider.ReadValues();
 
                 return allEvents.Values.Select(
-                        JsonConvert.DeserializeObject<EventJsonEntry>)
-                    .WhereNotNull()
-                    .SelectMany(eje => eje.Occurrences)
-                    .OrderByDescending(timestamp => timestamp)
+                        JsonConvert.DeserializeObject<Dictionary<string, List<DateTimeOffset>>>)
+                    .SelectMany(dict => dict!.Values)
+                    .SelectMany(ts => ts)
+                    .OrderByDescending(ts => ts)
                     .FirstOrDefault();
             }
         }
 
-        Dictionary<string, EventJsonEntry>? LoadFromPersistence(string key)
+        Dictionary<string, List<DateTimeOffset>>? LoadFromPersistence(string key)
         {
             var eventContent = persistenceProvider.GetValue(key);
-            var configMapEvents = JsonConvert.DeserializeObject<Dictionary<string, EventJsonEntry>>(eventContent);
+            var configMapEvents = JsonConvert.DeserializeObject<Dictionary<string, List<DateTimeOffset>>>(eventContent);
 
             return configMapEvents;
         }
 
-        void Persist(string key, EventJsonEntry jsonEntry)
+        void Persist(string key, Dictionary<string, List<DateTimeOffset>> jsonEntry)
         {
             var jsonEncoded = JsonConvert.SerializeObject(jsonEntry);
             persistenceProvider.PersistValue(key, jsonEncoded);
