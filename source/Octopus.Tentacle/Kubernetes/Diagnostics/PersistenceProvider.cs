@@ -14,11 +14,16 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
 
     public class PersistenceProvider : IPersistenceProvider
     {
+        public delegate PersistenceProvider Factory(string configMapName);
+        
         readonly string configMapName;
         readonly IKubernetesConfigMapService configMapService;
         readonly Lazy<V1ConfigMap> metricsConfigMap;
         IDictionary<string, string> ConfigMapData => metricsConfigMap.Value.Data ??= new Dictionary<string, string>();
 
+        
+        
+        
         public PersistenceProvider(string configMapName, IKubernetesConfigMapService configMapService)
         {
             this.configMapService = configMapService;

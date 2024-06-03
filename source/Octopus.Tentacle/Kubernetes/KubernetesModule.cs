@@ -35,16 +35,13 @@ namespace Octopus.Tentacle.Kubernetes
             builder.RegisterType<MemoryCacheOptions>().As<IOptions<MemoryCacheOptions>>().SingleInstance();
             
             builder.RegisterGeneric(typeof(ReferenceCountingKeyedBinarySemaphore<>)).As(typeof(IKeyedSemaphore<>)).SingleInstance();
-            builder.RegisterType<PersistenceProvider>()
-                .Named<IPersistenceProvider>("KubernetesAgentMetricsConfigMap")
-                .WithParameter("configMapName", "kubernetes-agent-metrics");
-            builder.RegisterType<KubernetesAgentMetrics>().AsSelf().SingleInstance()
-                .WithParameter(
-                    new ResolvedParameter(
-                        (pi, _) => pi.Name == "persistenceProvider",
-                        (_, ctx) => ctx.ResolveNamed<IPersistenceProvider>("KubernetesAgentMetricsConfigMap")))
-                .WithParameter("entryName", "agent-metrics");
-            builder.RegisterType<MapFromConfigMapToEventList>().AsSelf();
+
+            var kuberneteseAgentMetricsPersistence = "kubernetese-agent-metrics-persistence";
+            builder.Register<PersistenceProvider>(ctx => ctx.Resolve<PersistenceProvider.Factory>().Invoke(ConfigMapNames.AgentMetrics))
+                .Named<IPersistenceProvider>(kuberneteseAgentMetricsPersistence);
+            builder.Register<KubernetesAgentMetrics>(ctx => 
+                ctx.Resolve<KubernetesAgentMetrics.Factory>()
+                    .Invoke(ctx.ResolveNamed<IPersistenceProvider>(kuberneteseAgentMetricsPersistence)));
 #if DEBUG
             builder.RegisterType<LocalMachineKubernetesClientConfigProvider>().As<IKubernetesClientConfigProvider>().SingleInstance();
 #else

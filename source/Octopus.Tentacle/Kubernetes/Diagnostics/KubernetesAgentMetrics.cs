@@ -8,17 +8,15 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
 {
     public class KubernetesAgentMetrics
     {
+        public delegate KubernetesAgentMetrics Factory(IPersistenceProvider persistenceProvider);
+        
         readonly IPersistenceProvider persistenceProvider;
-        readonly MapFromConfigMapToEventList mapper;
         readonly ISystemLog log;
-        public string EntryName {get;}
 
-        public KubernetesAgentMetrics(IPersistenceProvider persistenceProvider, string entryName, MapFromConfigMapToEventList mapper, ISystemLog log)
+        public KubernetesAgentMetrics(IPersistenceProvider persistenceProvider, ISystemLog log)
         {
             this.persistenceProvider = persistenceProvider;
-            this.mapper = mapper;
             this.log = log;
-            EntryName = entryName;
         }
 
         public void TrackEvent(EventRecord eventRecord)
