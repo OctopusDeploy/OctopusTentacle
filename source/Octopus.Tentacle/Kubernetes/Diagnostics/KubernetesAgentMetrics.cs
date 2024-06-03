@@ -38,7 +38,7 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
         }
 
 
-        public DateTimeOffset GetLatestEventTimestamp()
+        public DateTimeOffset GetLatestEventTimestamp() 
         {
             lock (persistenceProvider)
             {

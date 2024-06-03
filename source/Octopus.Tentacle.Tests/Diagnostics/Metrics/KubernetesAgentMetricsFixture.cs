@@ -82,20 +82,21 @@ namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
             MockPersistenceProvider persistenceProvider = new();
             var sut = new KubernetesAgentMetrics(persistenceProvider, systemLog);
 
-            sut.TrackEvent("Killed", "NFS Pod", DateTimeOffset.Now);
-            sut.TrackEvent("Killed", "NFS Pod", DateTimeOffset.Now.AddMinutes(1));
-            sut.TrackEvent("Killed", "NFS Pod", DateTimeOffset.Now.AddMinutes(-1));
+            var epoch = DateTimeOffset.Now;
+            sut.TrackEvent("Killed", "NFS Pod", epoch);
+            sut.TrackEvent("Killed", "NFS Pod", epoch.AddMinutes(1));
+            sut.TrackEvent("Killed", "NFS Pod", epoch.AddMinutes(-1));
 
             var timeDate = sut.GetLatestEventTimestamp();
 
-            timeDate.Should().BeExactly(DateTimeOffset.Now.AddMinutes(1));
+            timeDate.Should().BeExactly(epoch.AddMinutes(1));
         }
 
         [Test]
         public void GetLatestTimeStampPropagatesExceptionsIfUnderlyingPersistenceFails()
         {
             IPersistenceProvider persistenceProvider = Substitute.For<IPersistenceProvider>();
-            persistenceProvider.GetValue(Arg.Any<string>()).Throws(new Exception("Something broke"));
+            persistenceProvider.ReadValues().Throws(new Exception("Something broke"));
             
             var sut = new KubernetesAgentMetrics(persistenceProvider, systemLog);
             
