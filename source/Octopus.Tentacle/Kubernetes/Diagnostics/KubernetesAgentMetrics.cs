@@ -25,9 +25,13 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
             {
                 lock (persistenceProvider)
                 {
-                    var existingEvents = LoadFromMap();
-                    existingEvents.Add(eventRecord);
-                    Persist(existingEvents);
+                    var existingEvent = LoadFromMap(eventRecord.Reason);
+                    if (existingEvent is null)
+                    {
+                        existingEvent = new EventJsonEntry(eventRecord.Source, new List<DateTimeOffset>());
+                    }
+                    existingEvent.Occurrences.Add(eventRecord.Timestamp);
+                    Persist(eventRecord.Reason, existingEvent);
                 }
             }
             catch (Exception e)
@@ -48,24 +52,21 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
             }
         }
 
-        List<EventRecord> LoadFromMap()
+        EventJsonEntry? LoadFromMap(string key)
         {
-            var eventContent = persistenceProvider.GetValue(EntryName);
-            var configMapEvents = JsonConvert.DeserializeObject<List<EventRecord>>(eventContent);
+            var eventContent = persistenceProvider.GetValue(key);
+            var configMapEvents = JsonConvert.DeserializeObject<EventJsonEntry>(eventContent);
 
-            if (configMapEvents is null)
-            {
-                return new List<EventRecord>();
-            }
+            return configMapEvents;
 
-            return mapper.FromConfigMap(configMapEvents);
         }
 
-        void Persist(List<EventRecord> eventRecords)
+        void Persist(string key, EventJsonEntry jsonEntry)
         {
-            var configMapData = mapper.ToConfigMap(eventRecords);
-            var jsonEncoded = JsonConvert.SerializeObject(configMapData);
-            persistenceProvider.PersistValue(EntryName, jsonEncoded);
+            var jsonEncoded = JsonConvert.SerializeObject(jsonEntry);
+            persistenceProvider.PersistValue(key, jsonEncoded);
         }
     }
+
+    public record EventJsonEntry(string Source, List<DateTimeOffset> Occurrences);
 }
