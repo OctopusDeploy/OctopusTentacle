@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Threading;
 using k8s.Models;
 using Octopus.Diagnostics;
@@ -10,6 +11,8 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
     {
         string GetValue(string key);
         void PersistValue(string key, string value);
+
+        ImmutableDictionary<string, string> ReadValues();
     }
 
     public class PersistenceProvider : IPersistenceProvider
@@ -41,6 +44,11 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
         {
             ConfigMapData[key] = value;
             configMapService.Patch(configMapName, ConfigMapData, CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        public ImmutableDictionary<string, string> ReadValues()
+        {
+            return ConfigMapData.ToImmutableDictionary();
         }
     }
 }

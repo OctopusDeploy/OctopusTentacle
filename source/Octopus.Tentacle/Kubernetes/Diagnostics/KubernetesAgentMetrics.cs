@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using Octopus.Diagnostics;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Kubernetes.Diagnostics
 {
@@ -19,19 +20,15 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
             this.log = log;
         }
 
-        public void TrackEvent(EventRecord eventRecord)
+        public void TrackEvent(string reason, string source, DateTimeOffset occurrence)
         {
             try
             {
                 lock (persistenceProvider)
                 {
-                    var existingEvent = LoadFromMap(eventRecord.Reason);
-                    if (existingEvent is null)
-                    {
-                        existingEvent = new EventJsonEntry(eventRecord.Source, new List<DateTimeOffset>());
-                    }
-                    existingEvent.Occurrences.Add(eventRecord.Timestamp);
-                    Persist(eventRecord.Reason, existingEvent);
+                    var existingEvent = LoadFromPersistence(reason) ?? new EventJsonEntry(source, new List<DateTimeOffset>());
+                    existingEvent.Occurrences.Add(occurrence);
+                    Persist(reason, existingEvent);
                 }
             }
             catch (Exception e)
@@ -40,25 +37,28 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
             }
         }
 
+
         public DateTimeOffset GetLatestEventTimestamp()
         {
             lock (persistenceProvider)
             {
-                var existingEvents = LoadFromMap();
-                return existingEvents
-                    .Select(re => re.Timestamp)
-                    .OrderByDescending(ts => ts)
+                var allEvents = persistenceProvider.ReadValues();
+
+                return allEvents.Values.Select(
+                        JsonConvert.DeserializeObject<EventJsonEntry>)
+                    .WhereNotNull()
+                    .SelectMany(eje => eje.Occurrences)
+                    .OrderByDescending(timestamp => timestamp)
                     .FirstOrDefault();
             }
         }
 
-        EventJsonEntry? LoadFromMap(string key)
+        EventJsonEntry? LoadFromPersistence(string key)
         {
             var eventContent = persistenceProvider.GetValue(key);
             var configMapEvents = JsonConvert.DeserializeObject<EventJsonEntry>(eventContent);
 
             return configMapEvents;
-
         }
 
         void Persist(string key, EventJsonEntry jsonEntry)
@@ -68,5 +68,5 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
         }
     }
 
-    public record EventJsonEntry(string Source, List<DateTimeOffset> Occurrences);
+    internal record EventJsonEntry(string Source, List<DateTimeOffset> Occurrences);
 }
