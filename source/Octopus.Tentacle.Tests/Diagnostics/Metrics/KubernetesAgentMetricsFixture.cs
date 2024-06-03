@@ -14,7 +14,7 @@ namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
     public class KubernetesAgentMetricsFixture
     {
         readonly ISystemLog systemLog = Substitute.For<ISystemLog>();
-        
+
         [Test]
         public void CanAddMetricToAnEmptyPersistenceMap()
         {
@@ -28,32 +28,6 @@ namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
             var item = JsonConvert.DeserializeObject<EventJsonEntry>(persistenceProvider.Content["Killed"]);
             item.Should().BeEquivalentTo(new EventJsonEntry("NFS Pod", new List<DateTimeOffset>() { eventTimestamp }));
         }
-
-        // [Test]
-        // public void CanWriteMultipleEntriesToThePersistenceMap()
-        // {
-        //     MockPersistenceProvider persistenceProvider = new();
-        //     var sut = new KubernetesAgentMetrics(persistenceProvider,  systemLog);
-        //
-        //     var events = new List<EventRecord>()
-        //     {
-        //         new EventRecord("Killed", "NFS Pod", DateTimeOffset.Now),
-        //         new EventRecord("Killed", "NFS Pod", DateTimeOffset.Now.AddMinutes(1))
-        //     };
-        //     
-        //     events.ForEach(e => sut.TrackEvent(e));
-        //
-        //     persistenceProvider.Content.Keys.Should().ContainSingle(entry => entry.Equals(events[0].Reason));
-        //     var items = JsonConvert.DeserializeObject<List<EventRecord>>(persistenceProvider.Content[events[0].Reason]);
-        //     items.Count.Should().Be(1);
-        //     items.Should().BeEquivalentTo(new[]
-        //     {
-        //         new {
-        //             Source = "NFS Pod",
-        //             Occurrences = new List<DateTimeOffset>() { events }
-        //         },
-        //     }
-        // }
 
         [Test]
         public void TrackEventDoesNotPropagateExceptions()
