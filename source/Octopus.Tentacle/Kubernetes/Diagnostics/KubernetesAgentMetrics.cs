@@ -26,9 +26,15 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
             {
                 lock (persistenceProvider)
                 {
-                    var existingEvent = LoadFromPersistence(reason) ?? new EventJsonEntry(source, new List<DateTimeOffset>());
-                    existingEvent.Occurrences.Add(occurrence);
-                    Persist(reason, existingEvent);
+                    var sourceEventsForReason = LoadFromPersistence(reason) ?? new Dictionary<string, EventJsonEntry>();
+
+                    if (!sourceEventsForReason.TryGetValue(reason, out var eventToExtend))
+                    {
+                        eventToExtend = new EventJsonEntry(source, new List<DateTimeOffset>());
+                    }
+                    
+                    eventToExtend.Occurrences.Add(occurrence);
+                    Persist(reason, eventToExtend);
                 }
             }
             catch (Exception e)
@@ -36,7 +42,6 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
                 log.Error($"Failed to persist a kubernetes event metric, {e.Message}");
             }
         }
-
 
         public DateTimeOffset GetLatestEventTimestamp() 
         {
@@ -53,10 +58,10 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
             }
         }
 
-        EventJsonEntry? LoadFromPersistence(string key)
+        Dictionary<string, EventJsonEntry>? LoadFromPersistence(string key)
         {
             var eventContent = persistenceProvider.GetValue(key);
-            var configMapEvents = JsonConvert.DeserializeObject<EventJsonEntry>(eventContent);
+            var configMapEvents = JsonConvert.DeserializeObject<Dictionary<string, EventJsonEntry>>(eventContent);
 
             return configMapEvents;
         }
