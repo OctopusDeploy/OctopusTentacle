@@ -45,45 +45,25 @@ namespace Octopus.Tentacle.Kubernetes
         async Task CacheNewEvents(CancellationToken cancellationToken)
         {
             var allEvents = await eventService.FetchAllEventsAsync(cancellationToken);
-            var unseenEvents = GetUnseenEvents(allEvents);
+
+            var loggableEvents = allEvents?.Items
+                .Where(e => e.EventTime.HasValue && e.Count.HasValue);
             
-            foreach (var unSeenEvent in unseenEvents)
+            foreach (var kEvent in loggableEvents!)
             {
-                var eventRecord = MapToEventRecord(unSeenEvent);
+                var eventRecord = MapToEventRecord(kEvent);
                 if (eventRecord is not null)
                 {
-                    agentMetrics.TrackEvent(eventRecord.Reason, eventRecord.Source, eventRecord.OccurredAt);    
+                    agentMetrics.TrackEvent(eventRecord.Reason, eventRecord.Source, eventRecord.FirstOccurrence, eventRecord.Count);    
                 }
             }
         }
-
-        IEnumerable<Corev1Event> GetUnseenEvents(Corev1EventList? input)
-        {
-            if (input is null)
-            {
-                log.Error("Unable to extract events from the cluster");
-                return Array.Empty<Corev1Event>();
-            }
-            
-            DateTimeOffset lastEventTime = default;
-            try
-            {
-                lastEventTime = agentMetrics.GetLatestEventTimestamp();
-            }
-            catch (Exception e)
-            {
-                log.Error($"Failed to determine latest handled event. {e.Message}");
-            }
-            
-            return input.Items
-                .Where(e => e.EventTime.HasValue && e.EventTime.Value.ToUniversalTime() > lastEventTime);
-        }
-
+        
         EventRecord? MapToEventRecord(Corev1Event kubernetesEvent)
         {
             string? source;
 
-            //TODO(tmm): Don't ove the hard-coded constants here - there needs to be a less brittle solution.
+            //TODO(tmm): Don't love the hard-coded constants here - there needs to be a less brittle solution.
             if (kubernetesEvent.Name().StartsWith(KubernetesScriptPodNameExtensions.OctopusScriptPodNamePrefix))
             {
                 source = KubernetesScriptPodNameExtensions.OctopusScriptPodNamePrefix;
@@ -101,9 +81,9 @@ namespace Octopus.Tentacle.Kubernetes
                 return null;
             }
             
-            return new EventRecord(kubernetesEvent.Reason, source, kubernetesEvent.EventTime!.Value.ToUniversalTime());
+            return new EventRecord(kubernetesEvent.Reason, source, kubernetesEvent.EventTime!.Value.ToUniversalTime(), kubernetesEvent.Count!.Value);
         }
     }
 
-    record EventRecord(string Reason, string Source, DateTimeOffset OccurredAt);
+    record EventRecord(string Reason, string Source, DateTimeOffset FirstOccurrence, int Count);
 }

@@ -8,9 +8,7 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
 {
     public interface IKubernetesAgentMetrics
     {
-        void TrackEvent(string reason, string source, DateTimeOffset occuredAt);
-
-        DateTimeOffset GetLatestEventTimestamp();
+        void TrackEvent(string reason, string source, DateTimeOffset firstOccurrence, int count);
     }
     
     public class KubernetesAgentMetrics : IKubernetesAgentMetrics
@@ -26,21 +24,16 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
             this.log = log;
         }
 
-        public void TrackEvent(string reason, string source, DateTimeOffset occuredAt)
+        public void TrackEvent(string reason, string source, DateTimeOffset firstOccurrence, int countSince)
         {
             try
             {
                 lock (persistenceProvider)
                 {
-                    var sourceEventsForReason = LoadFromPersistence(reason) ?? new Dictionary<string, List<DateTimeOffset>>();
+                    var sourceEventsForReason = LoadFromPersistence(reason) ?? new SourceEventCounts();
 
-                    if (!sourceEventsForReason.TryGetValue(source, out var occurenceTimestamps))
-                    {
-                        occurenceTimestamps = new List<DateTimeOffset>();
-                        sourceEventsForReason[source] = occurenceTimestamps;
-                    }
-                    
-                    occurenceTimestamps.Add(occuredAt);
+                    sourceEventsForReason.SetEventCount(source, firstOccurrence, countSince);
+
                     Persist(reason, sourceEventsForReason);
                 }
             }
@@ -50,33 +43,52 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
             }
         }
 
-        public DateTimeOffset GetLatestEventTimestamp()
-        {
-            lock (persistenceProvider)
-            {
-                var allEvents = persistenceProvider.ReadValues();
-
-                return allEvents.Values.Select(
-                        JsonConvert.DeserializeObject<Dictionary<string, List<DateTimeOffset>>>)
-                    .SelectMany(dict => dict!.Values)
-                    .SelectMany(ts => ts)
-                    .OrderByDescending(ts => ts)
-                    .FirstOrDefault();
-            }
-        }
-
-        Dictionary<string, List<DateTimeOffset>>? LoadFromPersistence(string key)
+        SourceEventCounts? LoadFromPersistence(string key)
         {
             var eventContent = persistenceProvider.GetValue(key);
-            var configMapEvents = JsonConvert.DeserializeObject<Dictionary<string, List<DateTimeOffset>>>(eventContent);
+            var configMapEvents = JsonConvert.DeserializeObject<SourceEventCounts>(eventContent);
 
             return configMapEvents;
         }
 
-        void Persist(string key, Dictionary<string, List<DateTimeOffset>> jsonEntry)
+        void Persist(string key, Dictionary<string, List<CountSinceEpoch>> jsonEntry)
         {
             var jsonEncoded = JsonConvert.SerializeObject(jsonEntry);
             persistenceProvider.PersistValue(key, jsonEncoded);
+        }
+    }
+
+    public class CountSinceEpoch
+    {
+        public DateTimeOffset Epoch { get; }
+        public int Count { get; set; }
+
+        public CountSinceEpoch(DateTimeOffset epoch, int count)
+        {
+            Epoch = epoch;
+            Count = count;
+        }
+    }
+
+    public class SourceEventCounts : Dictionary<string, List<CountSinceEpoch>>
+    {
+        public void SetEventCount(string source, DateTimeOffset firstOccurrence, int count)
+        {
+            if (!TryGetValue(source, out var eventCount))
+            {
+                eventCount = new List<CountSinceEpoch>();
+                Add(source, eventCount);
+            }
+            
+            var existingEntry = eventCount.FirstOrDefault(e => e.Epoch == firstOccurrence);
+            if (existingEntry is null)
+            {
+                eventCount.Add(new CountSinceEpoch(firstOccurrence, count));
+            }
+            else
+            {
+                existingEntry.Count = count;
+            }
         }
     }
 }
