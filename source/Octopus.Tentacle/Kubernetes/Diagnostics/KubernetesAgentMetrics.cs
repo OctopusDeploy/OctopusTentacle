@@ -8,7 +8,7 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
 {
     public interface IKubernetesAgentMetrics
     {
-        void TrackEvent(string reason, string source, DateTimeOffset occurrence);
+        void TrackEvent(string reason, string source, DateTimeOffset occuredAt);
 
         DateTimeOffset GetLatestEventTimestamp();
     }
@@ -26,7 +26,7 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
             this.log = log;
         }
 
-        public void TrackEvent(string reason, string source, DateTimeOffset occurrence)
+        public void TrackEvent(string reason, string source, DateTimeOffset occuredAt)
         {
             try
             {
@@ -40,7 +40,7 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
                         sourceEventsForReason[source] = occurenceTimestamps;
                     }
                     
-                    occurenceTimestamps.Add(occurrence);
+                    occurenceTimestamps.Add(occuredAt);
                     Persist(reason, sourceEventsForReason);
                 }
             }

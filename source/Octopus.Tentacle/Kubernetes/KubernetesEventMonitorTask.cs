@@ -8,8 +8,8 @@ namespace Octopus.Tentacle.Kubernetes
 {
     public class KubernetesEventMonitorTask : BackgroundTask
     {
-        readonly KubernetesEventMonitor eventMonitor;
-        public KubernetesEventMonitorTask(ISystemLog log, TimeSpan terminationGracePeriod, KubernetesEventMonitor eventMonitor) : base(log, terminationGracePeriod)
+        readonly IKubernetesEventMonitor eventMonitor;
+        public KubernetesEventMonitorTask(ISystemLog log, TimeSpan terminationGracePeriod, IKubernetesEventMonitor eventMonitor) : base(log, terminationGracePeriod)
         {
             this.eventMonitor = eventMonitor;
         }

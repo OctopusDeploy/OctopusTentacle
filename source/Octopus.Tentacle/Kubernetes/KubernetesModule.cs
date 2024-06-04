@@ -27,7 +27,11 @@ namespace Octopus.Tentacle.Kubernetes
 
             builder.RegisterType<KubernetesPodMonitorTask>().As<IKubernetesPodMonitorTask>().As<IBackgroundTask>().SingleInstance();
             builder.RegisterType<KubernetesPodMonitor>().As<IKubernetesPodMonitor>().As<IKubernetesPodStatusProvider>().SingleInstance();
-
+            
+            builder.RegisterType<KubernetesEventService>().As<IKubernetesEventService>().SingleInstance();
+            builder.RegisterType<KubernetesEventMonitorTask>().As<IKubernetesPodMonitor>().As<IKubernetesPodStatusProvider>().SingleInstance();
+            builder.RegisterType<KubernetesEventMonitor>().As<IKubernetesEventMonitor>().SingleInstance();
+            
             builder.RegisterType<KubernetesOrphanedPodCleanerTask>().As<IKubernetesOrphanedPodCleanerTask>().As<IBackgroundTask>().SingleInstance();
             builder.RegisterType<KubernetesOrphanedPodCleaner>().As<IKubernetesOrphanedPodCleaner>().SingleInstance();
             builder.RegisterType<KubernetesDirectoryInformationProvider>().As<IKubernetesDirectoryInformationProvider>().SingleInstance();
