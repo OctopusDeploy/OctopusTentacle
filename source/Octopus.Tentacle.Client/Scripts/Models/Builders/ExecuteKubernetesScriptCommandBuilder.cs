@@ -7,6 +7,7 @@ namespace Octopus.Tentacle.Client.Scripts.Models.Builders
     {
         KubernetesImageConfiguration? configuration;
         string? scriptPodServiceAccountName;
+        bool isRawScriptWithNoDependencies;
 
         public ExecuteKubernetesScriptCommandBuilder(string taskId)
             : base(taskId, ScriptIsolationLevel.NoIsolation) //Kubernetes Agents don't need isolation since the scripts won't clash with each other (it won't clash more than Workers anyway)
@@ -25,6 +26,12 @@ namespace Octopus.Tentacle.Client.Scripts.Models.Builders
             return this;
         }
 
+        public ExecuteKubernetesScriptCommandBuilder AsRawScriptWithNoDependencies()
+        {
+            isRawScriptWithNoDependencies = true;
+            return this;
+        }
+
         public override ExecuteScriptCommand Build()
             => new ExecuteKubernetesScriptCommand(
                 ScriptTicket,
@@ -35,7 +42,8 @@ namespace Octopus.Tentacle.Client.Scripts.Models.Builders
                 AdditionalScripts,
                 Files.ToArray(),
                 configuration,
-                scriptPodServiceAccountName
+                scriptPodServiceAccountName,
+                isRawScriptWithNoDependencies
             );
     }
 }

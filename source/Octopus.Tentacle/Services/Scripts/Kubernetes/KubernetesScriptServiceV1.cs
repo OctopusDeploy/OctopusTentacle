@@ -207,7 +207,8 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
                 command.PodImageConfiguration?.ToV1(),
                 command.ScriptPodServiceAccountName,
                 command.Scripts,
-                command.Files.ToArray()
+                command.Files.ToArray(),
+                isRawScriptWithNoDependencies: false
             );
         }
 
