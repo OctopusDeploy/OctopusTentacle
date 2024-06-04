@@ -19,17 +19,22 @@ namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
         [Test]
         public void CanAddMetricToAnEmptyPersistenceMap()
         {
+            //Arrange
             MockPersistenceProvider persistenceProvider = new();
             var sut = new KubernetesAgentMetrics(persistenceProvider, systemLog);
 
+            //Act
             var eventTimestamp = DateTimeOffset.Now;
             sut.TrackEvent("Killed", "NFS Pod", eventTimestamp);
 
-            persistenceProvider.Content.Keys.Should().ContainSingle(entry => entry.Equals("Killed"));
-            var item = JsonConvert.DeserializeObject<Dictionary<string, List<DateTimeOffset>>>(persistenceProvider.Content["Killed"]);
-            item.Should().BeEquivalentTo(new Dictionary<string, List<DateTimeOffset>>
+            //Assert
+            var typedResult = persistenceProvider.ReadValues().ToDictionary(
+                pair => pair.Key,
+                pair => JsonConvert.DeserializeObject<Dictionary<string, List<DateTimeOffset>>>(pair.Value));
+
+            typedResult.Should().BeEquivalentTo(new Dictionary<string, Dictionary<string, List<DateTimeOffset>>>
             {
-                { "NFS Pod", new List<DateTimeOffset> { eventTimestamp } }
+                { "Killed", new Dictionary<string, List<DateTimeOffset>> { { "NFS Pod", new List<DateTimeOffset> { eventTimestamp } } } }
             });
         }
 
@@ -48,7 +53,7 @@ namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
             sut.TrackEvent("Restarted", "Script Pod", eventTimestamp);
             
             //Assert
-            var typedResult = persistenceProvider.Content.ToDictionary(
+            var typedResult = persistenceProvider.ReadValues().ToDictionary(
                 pair => pair.Key,
                 pair => JsonConvert.DeserializeObject<Dictionary<string, List<DateTimeOffset>>>(pair.Value));
 
@@ -93,9 +98,9 @@ namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
 
             var epoch = DateTimeOffset.Now;
             sut.TrackEvent("Created", "NFS Pod", epoch);
-            sut.TrackEvent("Created", "Script Pod", epoch);
             sut.TrackEvent("Killed", "NFS Pod", epoch.AddMinutes(1));
-            sut.TrackEvent("Killed", "NFS Pod", epoch.AddMinutes(-1));
+            sut.TrackEvent("Created", "Script Pod", epoch);
+            sut.TrackEvent("Killed", "Script Pod", epoch.AddMinutes(-1));
 
             var timeDate = sut.GetLatestEventTimestamp();
 

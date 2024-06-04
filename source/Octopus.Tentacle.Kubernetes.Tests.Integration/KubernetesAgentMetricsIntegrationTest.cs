@@ -45,7 +45,6 @@ public class KubernetesAgentMetricsIntegrationTest : KubernetesAgentIntegrationT
     }
 
     [Test]
-    [Ignore("Requires rework of configmap service before it can be used here")]
     public void FetchingLatestEventTimestampFromNonexistentConfigMapThrowsException()
     {
         //Arrange
@@ -62,7 +61,6 @@ public class KubernetesAgentMetricsIntegrationTest : KubernetesAgentIntegrationT
     }
 
     [Test]
-    [Ignore("Requires rework of configmap service before it can be used here")]
     public void WritingEventToNonExistentConfigMapShouldFailSilently()
     {
         //Arrange
@@ -79,7 +77,6 @@ public class KubernetesAgentMetricsIntegrationTest : KubernetesAgentIntegrationT
     }
 
     [Test]
-    [Ignore("Requires rework of configmap service before it can be used here")]
     public void WritingEventToExistingConfigMapShouldPersistJsonEntry()
     {
         //Arrange
@@ -93,9 +90,14 @@ public class KubernetesAgentMetricsIntegrationTest : KubernetesAgentIntegrationT
         metrics.TrackEvent("reason", "source", eventTimestamp);
         
         //Assert
-        var jsonBody = persistenceProvider.GetValue("reason");
-        var persistedData = JsonConvert.DeserializeObject<EventJsonEntry>(jsonBody);
-        persistedData.Should().BeEquivalentTo(
-            new EventJsonEntry("source", new List<DateTimeOffset>() { eventTimestamp }));
+        //Assert
+        var typedResult = persistenceProvider.ReadValues().ToDictionary(
+            pair => pair.Key,
+            pair => JsonConvert.DeserializeObject<Dictionary<string, List<DateTimeOffset>>>(pair.Value));
+
+        typedResult.Should().BeEquivalentTo(new Dictionary<string, Dictionary<string, List<DateTimeOffset>>>
+        {
+            { "reason", new Dictionary<string, List<DateTimeOffset>> { { "source", new List<DateTimeOffset> { eventTimestamp } } } }
+        });
     }
 }
