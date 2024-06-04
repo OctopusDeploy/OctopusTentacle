@@ -32,9 +32,9 @@ namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
                 pair => pair.Key,
                 pair => JsonConvert.DeserializeObject<SourceEventCounts>(pair.Value));
 
-            typedResult.Should().BeEquivalentTo(new Dictionary<string, Dictionary<string, List<CountSinceEpoch>>>
+            typedResult.Should().BeEquivalentTo(new Dictionary<string, SourceEventCounts>
             {
-                { "Killed", new Dictionary<string, List<CountSinceEpoch>> { { "NFS Pod", new List<CountSinceEpoch> { new CountSinceEpoch(eventTimestamp, 5) } } } }
+                { "Killed", new SourceEventCounts { { "NFS Pod", new List<CountSinceEpoch> { new CountSinceEpoch(eventTimestamp, 5) } } } }
             });
         }
 
@@ -51,21 +51,23 @@ namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
             sut.TrackEvent("Created", "NFS Pod", eventTimestamp, 1);
             sut.TrackEvent("Created", "Script Pod", eventTimestamp, 1);
             sut.TrackEvent("Restarted", "Script Pod", eventTimestamp, 1);
-            
+
             //Assert
             var typedResult = persistenceProvider.ReadValues().ToDictionary(
                 pair => pair.Key,
                 pair => JsonConvert.DeserializeObject<SourceEventCounts>(pair.Value));
 
-            typedResult.Should().BeEquivalentTo(new Dictionary<string, Dictionary<string, List<CountSinceEpoch>>>
+            typedResult.Should().BeEquivalentTo(new Dictionary<string, SourceEventCounts>
             {
-                { "Killed", new Dictionary<string, List<CountSinceEpoch>> {{ "NFS Pod", new List<CountSinceEpoch> { new(eventTimestamp, 1) } }}},
-                { "Created", new Dictionary<string, List<CountSinceEpoch>>
+                { "Killed", new SourceEventCounts { { "NFS Pod", new List<CountSinceEpoch> { new(eventTimestamp, 1) } } } },
                 {
-                    { "NFS Pod", new List<CountSinceEpoch> { new(eventTimestamp, 1) } },
-                    { "Script Pod", new List<CountSinceEpoch> { new(eventTimestamp, 1) } }
-                }},
-                { "Restarted", new Dictionary<string, List<CountSinceEpoch>> {{ "Script Pod", new List<CountSinceEpoch> { new(eventTimestamp, 1) } }}},
+                    "Created", new SourceEventCounts
+                    {
+                        { "NFS Pod", new List<CountSinceEpoch> { new(eventTimestamp, 1) } },
+                        { "Script Pod", new List<CountSinceEpoch> { new(eventTimestamp, 1) } }
+                    }
+                },
+                { "Restarted", new SourceEventCounts { { "Script Pod", new List<CountSinceEpoch> { new(eventTimestamp, 1) } } } },
             });
         }
 
@@ -79,6 +81,54 @@ namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
             Action act = () => sut.TrackEvent("Killed", "NFS Pod", DateTimeOffset.Now, 1);
 
             act.Should().NotThrow();
+        }
+
+        [Test]
+        public void CanAddTwoCountEntriesForSameReasonAndSource()
+        {
+            //Arrange
+            MockPersistenceProvider persistenceProvider = new();
+            var sut = new KubernetesAgentMetrics(persistenceProvider, systemLog);
+
+            //Act
+            var eventTimestamp = DateTimeOffset.Now;
+            sut.TrackEvent("Killed", "NFS Pod", eventTimestamp, 5);
+            sut.TrackEvent("Killed", "NFS Pod", eventTimestamp.AddMinutes(1), 6);
+            sut.TrackEvent("Created", "NFS Pod", eventTimestamp, 1);
+
+            //Assert
+            var typedResult = persistenceProvider.ReadValues().ToDictionary(
+                pair => pair.Key,
+                pair => JsonConvert.DeserializeObject<SourceEventCounts>(pair.Value));
+
+            typedResult.Should().BeEquivalentTo(new Dictionary<string, SourceEventCounts>
+            {
+                {
+                    "Killed", new SourceEventCounts
+                    {
+                        {
+                            "NFS Pod",
+                            new List<CountSinceEpoch>
+                            {
+                                new(eventTimestamp, 5),
+                                new(eventTimestamp.AddMinutes(1), 6)
+                            }
+                        }
+                    }
+                },
+                {
+                    "Created", new SourceEventCounts
+                    {
+                        {
+                            "NFS Pod",
+                            new List<CountSinceEpoch>
+                            {
+                                new(eventTimestamp, 1),
+                            }
+                        }
+                    }
+                }
+            });
         }
     }
 
