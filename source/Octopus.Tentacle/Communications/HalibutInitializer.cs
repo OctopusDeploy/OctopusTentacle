@@ -36,9 +36,7 @@ namespace Octopus.Tentacle.Communications
 
             TrustOctopusServers();
 
-            var endpoints = AddPollingEndpoints();
-
-            KeepPingingServersForNoReason(endpoints);
+            var endpoints = AddPollingEndpoints().ToList();
             
             if (configuration.NoListen)
             {
@@ -51,23 +49,6 @@ namespace Octopus.Tentacle.Communications
             halibut.Listen(endpoint);
 
             log.Info("Agent listening on: " + endpoint);
-        }
-
-        void KeepPingingServersForNoReason(IEnumerable<ServiceEndPoint> endpoints)
-        {
-            Task.Run(async () =>
-            {
-                var i = 0;
-                var c = halibut.CreateAsyncClient<IMyEchoService, IAsyncClientMyEchoService>(endpoints.First());
-                while (true)
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(3));
-
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                    var response = await c.SayHelloAsync("Hello " + i++);
-                    Console.WriteLine("MEssage Back From Server:" + response);
-                }
-            });
         }
 
         private void FixCommunicationStyle()
