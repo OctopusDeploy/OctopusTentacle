@@ -74,6 +74,4 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
             persistenceProvider.PersistValue(key, jsonEncoded);
         }
     }
-
-    internal record EventJsonEntry(string Source, List<DateTimeOffset> Occurrences);
 }

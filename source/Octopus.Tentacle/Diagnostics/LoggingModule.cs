@@ -4,7 +4,6 @@
 using System;
 using System.Linq;
 using Autofac;
-using Autofac.Core;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Startup;
 

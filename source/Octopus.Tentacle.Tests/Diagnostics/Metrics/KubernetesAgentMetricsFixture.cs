@@ -93,6 +93,7 @@ namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
 
             var epoch = DateTimeOffset.Now;
             sut.TrackEvent("Created", "NFS Pod", epoch);
+            sut.TrackEvent("Created", "Script Pod", epoch);
             sut.TrackEvent("Killed", "NFS Pod", epoch.AddMinutes(1));
             sut.TrackEvent("Killed", "NFS Pod", epoch.AddMinutes(-1));
 
@@ -117,7 +118,7 @@ namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
 
     public class MockPersistenceProvider : IPersistenceProvider
     {
-        public Dictionary<string, string> Content = new();
+        Dictionary<string, string> Content = new();
 
         public string GetValue(string key)
         {

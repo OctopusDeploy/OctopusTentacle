@@ -24,9 +24,6 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
         readonly Lazy<V1ConfigMap> metricsConfigMap;
         IDictionary<string, string> ConfigMapData => metricsConfigMap.Value.Data ??= new Dictionary<string, string>();
 
-        
-        
-        
         public PersistenceProvider(string configMapName, IKubernetesConfigMapService configMapService)
         {
             this.configMapService = configMapService;
