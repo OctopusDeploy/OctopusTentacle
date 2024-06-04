@@ -83,6 +83,7 @@ namespace Octopus.Tentacle.Kubernetes
         {
             string? source;
 
+            //TODO(tmm): Don't ove the hard-coded constants here - there needs to be a less brittle solution.
             if (kubernetesEvent.Name().StartsWith(KubernetesScriptPodNameExtensions.OctopusScriptPodNamePrefix))
             {
                 source = KubernetesScriptPodNameExtensions.OctopusScriptPodNamePrefix;
@@ -90,6 +91,10 @@ namespace Octopus.Tentacle.Kubernetes
             else if(kubernetesEvent.Name().StartsWith("octopus-agent-nfs"))
             {
                 source = "octopus-agent-nfs";
+            }
+            else if (kubernetesEvent.Name().StartsWith("octopus-agent-tentacle"))
+            {
+                source = "octopus-agent-tentacle";
             }
             else
             {
