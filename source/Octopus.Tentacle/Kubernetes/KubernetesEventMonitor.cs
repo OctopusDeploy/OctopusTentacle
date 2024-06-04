@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using k8s.Models;
 using Octopus.Diagnostics;
+using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Kubernetes.Diagnostics;
 using Polly;
 
@@ -17,10 +19,10 @@ namespace Octopus.Tentacle.Kubernetes
     public class KubernetesEventMonitor : IKubernetesEventMonitor
     {
         readonly ISystemLog log;
-        readonly KubernetesAgentMetrics agentMetrics;
-        readonly KubernetesEventService eventService;
+        readonly IKubernetesAgentMetrics agentMetrics;
+        readonly IKubernetesEventService eventService;
 
-        public KubernetesEventMonitor(ISystemLog log, KubernetesAgentMetrics agentMetrics, KubernetesEventService eventService)
+        public KubernetesEventMonitor(ISystemLog log, IKubernetesAgentMetrics agentMetrics, IKubernetesEventService eventService)
         {
             this.log = log;
             this.agentMetrics = agentMetrics;
@@ -43,10 +45,24 @@ namespace Octopus.Tentacle.Kubernetes
         async Task CacheNewEvents(CancellationToken cancellationToken)
         {
             var allEvents = await eventService.FetchAllEventsAsync(cancellationToken);
-            if (allEvents is null)
+            var unseenEvents = GetUnseenEvents(allEvents);
+            
+            foreach (var unSeenEvent in unseenEvents)
+            {
+                var eventRecord = MapToEventRecord(unSeenEvent);
+                if (eventRecord is not null)
+                {
+                    agentMetrics.TrackEvent(eventRecord.Reason, eventRecord.Source, eventRecord.OccurredAt);    
+                }
+            }
+        }
+
+        IEnumerable<Corev1Event> GetUnseenEvents(Corev1EventList? input)
+        {
+            if (input is null)
             {
                 log.Error("Unable to extract events from the cluster");
-                return;
+                return Array.Empty<Corev1Event>();
             }
             
             DateTimeOffset lastEventTime = default;
@@ -58,27 +74,31 @@ namespace Octopus.Tentacle.Kubernetes
             {
                 log.Error($"Failed to determine latest handled event. {e.Message}");
             }
-
-            var unSeenEvents = allEvents.Items
-                .Where(e => e.EventTime.HasValue && e.EventTime.Value.ToUniversalTime() > lastEventTime);
             
-            foreach (var unSeenEvent in unSeenEvents)
-            {
-                var eventRecrd = MapToEventRecord(unSeenEvent);
-                agentMetrics.TrackEvent(new EventRecord(unSeenEvent.Action, unSeenEvent.Source.Component, unSeenEvent.EventTime!.Value.ToUniversalTime()));
-            }
-
-            await Task.CompletedTask;
+            return input.Items
+                .Where(e => e.EventTime.HasValue && e.EventTime.Value.ToUniversalTime() > lastEventTime);
         }
 
         EventRecord? MapToEventRecord(Corev1Event kubernetesEvent)
         {
-            if (kubernetesEvent.Action.Equals("Killing", StringComparison.OrdinalIgnoreCase))
-            {
-                return new EventRecord(kubernetesEvent.Action, kubernetesEvent.Source.Component, kubernetesEvent.EventTime!.Value.ToUniversalTime());
-            }
+            string? source;
 
-            return null;
+            if (kubernetesEvent.Name().StartsWith(KubernetesScriptPodNameExtensions.OctopusScriptPodNamePrefix))
+            {
+                source = KubernetesScriptPodNameExtensions.OctopusScriptPodNamePrefix;
+            }
+            else if(kubernetesEvent.Name().StartsWith("octopus-agent-nfs"))
+            {
+                source = "octopus-agent-nfs";
+            }
+            else
+            {
+                return null;
+            }
+            
+            return new EventRecord(kubernetesEvent.Reason, source, kubernetesEvent.EventTime!.Value.ToUniversalTime());
         }
     }
+
+    record EventRecord(string Reason, string Source, DateTimeOffset OccurredAt);
 }

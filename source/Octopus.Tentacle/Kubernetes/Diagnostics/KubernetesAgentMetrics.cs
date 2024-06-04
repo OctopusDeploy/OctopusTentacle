@@ -2,13 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
-using Nito.Disposables.Internals;
 using Octopus.Diagnostics;
-using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Kubernetes.Diagnostics
 {
-    public class KubernetesAgentMetrics
+    public interface IKubernetesAgentMetrics
+    {
+        void TrackEvent(string reason, string source, DateTimeOffset occurrence);
+
+        DateTimeOffset GetLatestEventTimestamp();
+    }
+    
+    public class KubernetesAgentMetrics : IKubernetesAgentMetrics
     {
         public delegate KubernetesAgentMetrics Factory(IPersistenceProvider persistenceProvider);
         
@@ -45,7 +50,7 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
             }
         }
 
-        public DateTimeOffset GetLatestEventTimestamp() 
+        public DateTimeOffset GetLatestEventTimestamp()
         {
             lock (persistenceProvider)
             {

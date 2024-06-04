@@ -9,7 +9,12 @@ using Octopus.Diagnostics;
 
 namespace Octopus.Tentacle.Kubernetes
 {
-    public class KubernetesEventService : KubernetesService
+    public interface IKubernetesEventService
+    {
+        Task<Corev1EventList?> FetchAllEventsAsync(CancellationToken cancellationToken);
+    }
+    
+    public class KubernetesEventService : KubernetesService, IKubernetesEventService
     {
         public KubernetesEventService(IKubernetesClientConfigProvider configProvider, ISystemLog log) : base(configProvider, log)
         {
