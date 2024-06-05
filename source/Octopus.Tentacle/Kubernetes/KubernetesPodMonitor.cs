@@ -26,7 +26,6 @@ namespace Octopus.Tentacle.Kubernetes
     {
         IList<ITrackedScriptPod> GetAllTrackedScriptPods();
         ITrackedScriptPod? TryGetTrackedScriptPod(ScriptTicket scriptTicket);
-        Task WaitForScriptPodToStart(ScriptTicket scriptTicket, CancellationToken cancellationToken);
     }
 
     public class KubernetesPodMonitor : IKubernetesPodMonitor, IKubernetesPodStatusProvider
@@ -36,8 +35,6 @@ namespace Octopus.Tentacle.Kubernetes
         readonly ITentacleScriptLogProvider scriptLogProvider;
         readonly IClock clock;
 
-        event EventHandler<V1Pod>? PodUpdatedEvent;
-        
         ConcurrentDictionary<ScriptTicket, TrackedScriptPod> podStatusLookup = new();
         
         //Prevent giving false results when we are still loading for the first time 
@@ -189,8 +186,6 @@ namespace Octopus.Tentacle.Kubernetes
                             log.Warn($"Received watch event type {type} for pod {pod.Name()}. Ignoring as we don't need it");
                             break;
                     }
-
-                    PodUpdatedEvent?.Invoke(this, pod);
                 }
                 catch (Exception e)
                 {
@@ -211,36 +206,6 @@ namespace Octopus.Tentacle.Kubernetes
             WaitForInitialLoadToFinish();
             var found = podStatusLookup.TryGetValue(scriptTicket, out var status);
             return found ? status : null;
-        }
-
-        public async Task WaitForScriptPodToStart(ScriptTicket scriptTicket, CancellationToken cancellationToken)
-        {
-            using var semaphore = new SemaphoreSlim(0);
-            var onPodUpdated = (EventHandler<V1Pod>)OnPodUpdated;
-            PodUpdatedEvent += onPodUpdated;
-            try
-            {
-                if (TryGetTrackedScriptPod(scriptTicket) is null or {State: {Phase: TrackedScriptPodPhase.Pending}})
-                {
-                    await semaphore.WaitAsync(cancellationToken);
-                }
-            }
-            finally
-            {
-                PodUpdatedEvent -= onPodUpdated;
-            }
-
-            void OnPodUpdated(object? _, V1Pod pod)
-            {
-                if (pod.GetScriptTicket() != scriptTicket) return;
-
-                var trackedPod = TryGetTrackedScriptPod(scriptTicket);
-                if (trackedPod is {State: {Phase: not TrackedScriptPodPhase.Pending}} &&
-                    pod.Status.ContainerStatuses.All(s => s.State.Waiting is null))
-                {
-                    semaphore.Release();
-                }
-            }
         }
 
         void WaitForInitialLoadToFinish()

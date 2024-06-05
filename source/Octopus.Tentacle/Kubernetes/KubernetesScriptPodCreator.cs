@@ -27,7 +27,6 @@ namespace Octopus.Tentacle.Kubernetes
     {
         readonly IKubernetesPodService podService;
         readonly IKubernetesPodMonitor podMonitor;
-        readonly IKubernetesPodStatusProvider podStatusProvider;
         readonly IKubernetesSecretService secretService;
         readonly IKubernetesPodContainerResolver containerResolver;
         readonly IApplicationInstanceSelector appInstanceSelector;
@@ -39,7 +38,6 @@ namespace Octopus.Tentacle.Kubernetes
         public KubernetesScriptPodCreator(
             IKubernetesPodService podService,
             IKubernetesPodMonitor podMonitor,
-            IKubernetesPodStatusProvider podStatusProvider,
             IKubernetesSecretService secretService,
             IKubernetesPodContainerResolver containerResolver,
             IApplicationInstanceSelector appInstanceSelector,
@@ -50,7 +48,6 @@ namespace Octopus.Tentacle.Kubernetes
         {
             this.podService = podService;
             this.podMonitor = podMonitor;
-            this.podStatusProvider = podStatusProvider;
             this.secretService = secretService;
             this.containerResolver = containerResolver;
             this.appInstanceSelector = appInstanceSelector;
@@ -166,15 +163,10 @@ namespace Octopus.Tentacle.Kubernetes
 
             LogVerboseToBothLogs($"Creating Kubernetes Pod '{podName}'.", tentacleScriptLog);
 
-            if (!command.IsRawScriptWithNoDependencies)
-            {
-                //write the bootstrap runner script to the workspace
-                workspace.CopyFile(KubernetesConfig.BootstrapRunnerExecutablePath, "bootstrapRunner", true);
-            }
+            workspace.CopyFile(KubernetesConfig.BootstrapRunnerExecutablePath, "bootstrapRunner", true);
 
             var scriptName = Path.GetFileName(workspace.BootstrapScriptFilePath);
-            var taskWorkDirectory = $"{homeDir}/Work/{workspace.ScriptTicket.TaskId}";
-            var bootstrapRunnerExecutablePath = $"{homeDir}/Work/{workspace.ScriptTicket.TaskId}/bootstrapRunner";
+            var workspacePath = Path.Combine("Work", workspace.ScriptTicket.TaskId);
 
             var serviceAccountName = !string.IsNullOrWhiteSpace(command.ScriptPodServiceAccountName)
                 ? command.ScriptPodServiceAccountName
@@ -194,10 +186,10 @@ namespace Octopus.Tentacle.Kubernetes
                 },
                 Spec = new V1PodSpec
                 {
-                    // Containers = await CreateRequiredContainers(command, workspace, podName, scriptName),
+                    InitContainers = await CreateInitContainers(command, podName, homeDir, workspacePath),
                     Containers = new List<V1Container>
                     {
-                        await CreateScriptContainer(command, podName, bootstrapRunnerExecutablePath, taskWorkDirectory, scriptName, workspace.ScriptArguments, homeDir)
+                        await CreateScriptContainer(command, podName, scriptName, homeDir, workspacePath, workspace.ScriptArguments)
                     }.AddIfNotNull(CreateWatchdogContainer(command, homeDir)),
                     //only include the image pull secret name if it's actually been defined
                     ImagePullSecrets = imagePullSecretName is not null
@@ -223,37 +215,61 @@ namespace Octopus.Tentacle.Kubernetes
 
             var createdPod = await podService.Create(pod, cancellationToken);
             podMonitor.AddPendingPod(command.ScriptTicket, createdPod);
-            if (command.IsRawScriptWithNoDependencies)
-            {
-                log.Verbose("Waiting for script pod to start");
-                await podStatusProvider.WaitForScriptPodToStart(command.ScriptTicket, cancellationToken);
-                // log.Verbose("Waiting a bit more time...");
-                // await Task.Delay(TimeSpan.FromMilliseconds(200), cancellationToken);
-                log.Verbose("Copying files");
-                await podService.CopyFileToPodAsync(createdPod, workspace.BootstrapScriptFilePath, workspace.BootstrapScriptFilePath, cancellationToken);
-                await podService.CopyFileToPodAsync(createdPod, KubernetesConfig.BootstrapRunnerExecutablePath, bootstrapRunnerExecutablePath, cancellationToken);
-            }
             LogVerboseToBothLogs($"Executing script in Kubernetes Pod '{podName}'.", tentacleScriptLog);
+        }
+
+        async Task<IList<V1Container>> CreateInitContainers(StartKubernetesScriptCommandV1 command, string podName, string homeDir, string workspacePath)
+        {
+            if (!command.IsRawScriptWithNoDependencies)
+            {
+                return new List<V1Container>();
+            }
+
+            var container = new V1Container
+            {
+                Name = $"{podName}-init",
+                Image = command.PodImageConfiguration?.Image ?? await containerResolver.GetContainerImageForCluster(),
+                Command = new List<string> { "sh", "-c", GetInitExecutionScript("/nfs-mount", homeDir, workspacePath) },
+                VolumeMounts = new List<V1VolumeMount>{new("/nfs-mount", "init-nfs-volume"), new(homeDir, "tentacle-home")},
+                Resources = new V1ResourceRequirements
+                {
+                    //set resource requests to be quite low for now as the scripts tend to run fairly quickly
+                    Requests = new Dictionary<string, ResourceQuantity>
+                    {
+                        ["cpu"] = new("25m"),
+                        ["memory"] = new("100Mi")
+                    }
+                }
+            };
+
+            return new List<V1Container> { container };
         }
 
         static IList<V1Volume> CreateVolumes(StartKubernetesScriptCommandV1 command)
         {
+            var homeVolume = new V1Volume("tentacle-home");
+            var volumes = new List<V1Volume> { homeVolume };
             if (command.IsRawScriptWithNoDependencies)
             {
-                return new List<V1Volume>();
-            }
-
-            return new List<V1Volume>
-            {
-                new()
+                homeVolume.EmptyDir = new V1EmptyDirVolumeSource();
+                var initVolume = new V1Volume("init-nfs-volume")
                 {
-                    Name = "tentacle-home",
                     PersistentVolumeClaim = new V1PersistentVolumeClaimVolumeSource
                     {
                         ClaimName = KubernetesConfig.PodVolumeClaimName
                     }
-                }
-            };
+                };
+                volumes.Add(initVolume);
+            }
+            else
+            {
+                homeVolume.PersistentVolumeClaim = new V1PersistentVolumeClaimVolumeSource
+                {
+                    ClaimName = KubernetesConfig.PodVolumeClaimName
+                };
+            }
+
+            return volumes;
         }
 
         void LogVerboseToBothLogs(string message, InMemoryTentacleScriptLog tentacleScriptLog)
@@ -262,15 +278,21 @@ namespace Octopus.Tentacle.Kubernetes
             tentacleScriptLog.Verbose(message);
         }
 
-        async Task<V1Container> CreateScriptContainer(StartKubernetesScriptCommandV1 command, string podName, string bootstrapperExecutablePath, string taskWorkDirectory, string scriptName, string[]? scriptArguments, string homeDir)
+        async Task<V1Container> CreateScriptContainer(StartKubernetesScriptCommandV1 command, string podName, string scriptName, string homeDir, string workspacePath, string[]? scriptArguments)
         {
             var spaceInformation = kubernetesPhysicalFileSystem.GetStorageInformation();
             return new V1Container
             {
                 Name = podName,
                 Image = command.PodImageConfiguration?.Image ?? await containerResolver.GetContainerImageForCluster(),
-                Command = new List<string> { "sh", "-c", GetExecutionScript(bootstrapperExecutablePath, taskWorkDirectory, scriptName, scriptArguments) },
-                VolumeMounts = CreateVolumeMounts(command, homeDir),
+                Command = new List<string> { $"{homeDir}/Work/{command.ScriptTicket.TaskId}/bootstrapRunner" },
+                Args = new List<string>
+                    {
+                        Path.Combine(homeDir, workspacePath),
+                        Path.Combine(homeDir, workspacePath, scriptName)
+                    }.Concat(scriptArguments ?? Array.Empty<string>())
+                    .ToList(),
+                VolumeMounts = new List<V1VolumeMount>{new(homeDir, "tentacle-home")},
                 Env = new List<V1EnvVar>
                 {
                     new(KubernetesConfig.NamespaceVariableName, KubernetesConfig.Namespace),
@@ -299,34 +321,13 @@ namespace Octopus.Tentacle.Kubernetes
             };
         }
 
-        IList<V1VolumeMount> CreateVolumeMounts(StartKubernetesScriptCommandV1 command, string homeDir)
+        string GetInitExecutionScript(string nfsVolumeDirectory, string homeDir, string workspacePath)
         {
-            if (command.IsRawScriptWithNoDependencies)
-            {
-                return new List<V1VolumeMount>();
-            }
-
-            return new List<V1VolumeMount>
-            {
-                new(homeDir, "tentacle-home"),
-            };
-        }
-
-        string GetExecutionScript(string bootstrapperExecutablePath, string taskWorkDirectory, string scriptName, string[]? scriptArguments)
-        {
-            scriptArguments ??= Array.Empty<string>();
-            return @$"
-                     ready=false;
-                     while ! ""$ready""; do
-                         if [ -e {bootstrapperExecutablePath} ]; then
-                             ready=true;
-                         else
-                             sleep 0.1;
-                         fi
-                     done
-
-                     {bootstrapperExecutablePath} {taskWorkDirectory} {taskWorkDirectory}/{scriptName} {string.Join(" ", scriptArguments)}
-                     ";
+            var nfsWorkspacePath = Path.Combine(nfsVolumeDirectory, workspacePath);
+            var homeWorkspacePath = Path.Combine(homeDir, workspacePath);
+            return $@"
+                    mkdir -p ""{homeWorkspacePath}"" && cp -r ""{nfsWorkspacePath}""/* ""{homeWorkspacePath}"";
+                    ";
         }
 
         V1Container? CreateWatchdogContainer(StartKubernetesScriptCommandV1 command, string homeDir)
