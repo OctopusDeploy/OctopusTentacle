@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using Octopus.Diagnostics;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Kubernetes.Diagnostics
 {
@@ -22,12 +23,16 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
 
         public void TrackEvent(string reason, string source, DateTimeOffset occurrence)
         {
-            var latestEvent = GetLatestEventTimestamp();
-            if (occurrence <= latestEvent)
+            DateTimeOffset latestEvent;
+            try
+            {
+                latestEvent = GetLatestEventTimestamp();
+            }
+            catch
             {
                 return;
             }
-
+            
             try
             {
                 lock (persistenceProvider)
@@ -42,10 +47,13 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
 
                     occurenceTimestamps.Add(occurrence);
 
-                    // The config map should _probably be written up as an update/commit process which makes the
+                    // The config map should _probably_ be written up as an update/commit process which makes the
                     // persistence atomic
                     Persist(reason, sourceEventsForReason);
-                    persistenceProvider.PersistValue(lastEventTimestampKey, occurrence.ToUniversalTime().ToString());
+                    if (latestEvent < occurrence)
+                    {
+                        persistenceProvider.PersistValue(lastEventTimestampKey, occurrence.ToString("O"));
+                    }
                 }
             }
             catch (Exception e)
@@ -56,32 +64,29 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
 
         public DateTimeOffset GetLatestEventTimestamp()
         {
-            try
+            lock (persistenceProvider)
             {
-                lock (persistenceProvider)
+                var timeStampString = persistenceProvider.GetValue(lastEventTimestampKey);
+                if (!timeStampString.IsNullOrEmpty())
                 {
-                    var timeStampString = persistenceProvider.GetValue(lastEventTimestampKey);
-                    return DateTimeOffset.Parse(timeStampString);
+                    return DateTimeOffset.Parse(timeStampString!);    
                 }
-            }
-            catch
-            {
                 return DateTimeOffset.MinValue;
             }
         }
 
-            Dictionary<string, List<DateTimeOffset>>? LoadFromPersistence(string key)
-            {
-                var eventContent = persistenceProvider.GetValue(key);
-                var configMapEvents = JsonConvert.DeserializeObject<Dictionary<string, List<DateTimeOffset>>>(eventContent);
+        Dictionary<string, List<DateTimeOffset>>? LoadFromPersistence(string key)
+        {
+            var eventContent = persistenceProvider.GetValue(key) ?? "";
+            var configMapEvents = JsonConvert.DeserializeObject<Dictionary<string, List<DateTimeOffset>>>(eventContent);
 
-                return configMapEvents;
-            }
+            return configMapEvents;
+        }
 
-            void Persist(string key, Dictionary<string, List<DateTimeOffset>> jsonEntry)
-            {
-                var jsonEncoded = JsonConvert.SerializeObject(jsonEntry);
-                persistenceProvider.PersistValue(key, jsonEncoded);
-            }
+        void Persist(string key, Dictionary<string, List<DateTimeOffset>> jsonEntry)
+        {
+            var jsonEncoded = JsonConvert.SerializeObject(jsonEntry);
+            persistenceProvider.PersistValue(key, jsonEncoded);
         }
     }
+}

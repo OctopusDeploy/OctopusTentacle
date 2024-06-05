@@ -9,7 +9,7 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
 {
     public interface IPersistenceProvider
     {
-        string GetValue(string key);
+        string? GetValue(string key);
         void PersistValue(string key, string value);
 
         ImmutableDictionary<string, string> ReadValues();
@@ -32,9 +32,9 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
                 ?? throw new InvalidOperationException($"Unable to retrieve Tentacle Configuration from config map for namespace {KubernetesConfig.Namespace}"));
         }
 
-        public string GetValue(string key)
+        public string? GetValue(string key)
         {
-            return ConfigMapData.TryGetValue(key, out var value) ? value : "";
+            return ConfigMapData.TryGetValue(key, out var value) ? value : null;
         }
 
         public void PersistValue(string key, string value)
