@@ -11,7 +11,6 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
     {
         string? GetValue(string key);
         void PersistValue(string key, string value);
-
         ImmutableDictionary<string, string> ReadValues();
     }
 

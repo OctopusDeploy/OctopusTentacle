@@ -95,7 +95,7 @@ namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
         }
 
         [Test]
-        public void GetLatestTimestampReturnsTheChronologicallyLatestTimeNotNewestInList()
+        public void GetLatestTimestampReturnsTheChronologicallyLatestTimeNotMostRecentlyAdded()
         {
             MockPersistenceProvider persistenceProvider = new();
             var sut = new KubernetesAgentMetrics(persistenceProvider, systemLog);

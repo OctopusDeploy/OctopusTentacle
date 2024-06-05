@@ -52,45 +52,33 @@ namespace Octopus.Tentacle.Kubernetes
             
             foreach (var kEvent in unseenEvents!)
             {
-                var eventRecord = MapToEventRecord(kEvent);
-                if (eventRecord is not null)
+                if (IsRelevantForMetrics(kEvent))
                 {
-                    agentMetrics.TrackEvent(eventRecord.Reason, eventRecord.Source, eventRecord.FirstOccurrence);    
+                    agentMetrics.TrackEvent(kEvent.Reason, kEvent.Name(), kEvent.EventTime!.Value.ToUniversalTime());
                 }
             }
         }
-        
-        EventRecord? MapToEventRecord(Corev1Event kubernetesEvent)
-        {
-            //only want to monitor 2 types of event
-            string? source;
 
-            //TODO(tmm): Don't love the hard-coded constants here - there needs to be a less brittle solution.
-            if (kubernetesEvent.Name().StartsWith(KubernetesScriptPodNameExtensions.OctopusScriptPodNamePrefix))
-            {
-                source = KubernetesScriptPodNameExtensions.OctopusScriptPodNamePrefix;
-            }
-            else if(kubernetesEvent.Name().StartsWith("octopus-agent-nfs"))
-            {
-                source = "octopus-agent-nfs";
-            }
-            else if (kubernetesEvent.Name().StartsWith("octopus-agent-tentacle"))
-            {
-                source = "octopus-agent-tentacle";
-            }
-            else
-            {
-                return null;
-            }
-            
-            return new EventRecord(kubernetesEvent.Reason, source, kubernetesEvent.EventTime!.Value.ToUniversalTime());
+        bool IsRelevantForMetrics(Corev1Event kubernetesEvent)
+        {
+            return IsNfsPodRestart(kubernetesEvent) || IsPodRestartDueToStaleNfs(kubernetesEvent);
         }
+
+        bool IsPodRestartDueToStaleNfs(Corev1Event kubernetesEvent)
+        {
+            return kubernetesEvent.Reason == "NfsWatchdogTimeout";
+        }
+
+        bool IsNfsPodRestart(Corev1Event kubernetesEvent)
+        {
+            var restartReason = new []{"Started", "Killing"};
+            return restartReason.Contains(kubernetesEvent.Reason) && kubernetesEvent.Name().StartsWith("octopus-agent-nfs");
+        }
+
 
         protected virtual string GetNamespace()
         {
             return KubernetesConfig.Namespace;
         }
     }
-
-    record EventRecord(string Reason, string Source, DateTimeOffset FirstOccurrence);
 }
