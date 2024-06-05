@@ -44,23 +44,25 @@ namespace Octopus.Tentacle.Kubernetes
 
         async Task CacheNewEvents(CancellationToken cancellationToken)
         {
-            var allEvents = await eventService.FetchAllEventsAsync(cancellationToken);
+            var allEvents = await eventService.FetchAllEventsAsync(GetNamespace(), cancellationToken);
 
-            var loggableEvents = allEvents?.Items
-                .Where(e => e.EventTime.HasValue && e.Count.HasValue);
+            var lastCachedEvent = agentMetrics.GetLatestEventTimestamp();
+
+            var unseenEvents = allEvents?.Items.Where(e => e.EventTime.HasValue && e.EventTime.Value.ToUniversalTime() > lastCachedEvent);
             
-            foreach (var kEvent in loggableEvents!)
+            foreach (var kEvent in unseenEvents!)
             {
                 var eventRecord = MapToEventRecord(kEvent);
                 if (eventRecord is not null)
                 {
-                    agentMetrics.TrackEvent(eventRecord.Reason, eventRecord.Source, eventRecord.FirstOccurrence, eventRecord.Count);    
+                    agentMetrics.TrackEvent(eventRecord.Reason, eventRecord.Source, eventRecord.FirstOccurrence);    
                 }
             }
         }
         
         EventRecord? MapToEventRecord(Corev1Event kubernetesEvent)
         {
+            //only want to monitor 2 types of event
             string? source;
 
             //TODO(tmm): Don't love the hard-coded constants here - there needs to be a less brittle solution.
@@ -81,9 +83,14 @@ namespace Octopus.Tentacle.Kubernetes
                 return null;
             }
             
-            return new EventRecord(kubernetesEvent.Reason, source, kubernetesEvent.EventTime!.Value.ToUniversalTime(), kubernetesEvent.Count!.Value);
+            return new EventRecord(kubernetesEvent.Reason, source, kubernetesEvent.EventTime!.Value.ToUniversalTime());
+        }
+
+        protected virtual string GetNamespace()
+        {
+            return KubernetesConfig.Namespace;
         }
     }
 
-    record EventRecord(string Reason, string Source, DateTimeOffset FirstOccurrence, int Count);
+    record EventRecord(string Reason, string Source, DateTimeOffset FirstOccurrence);
 }

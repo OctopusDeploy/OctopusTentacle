@@ -11,7 +11,7 @@ namespace Octopus.Tentacle.Kubernetes
 {
     public interface IKubernetesEventService
     {
-        Task<Corev1EventList?> FetchAllEventsAsync(CancellationToken cancellationToken);
+        Task<Corev1EventList?> FetchAllEventsAsync(string kubernetesNamespace, CancellationToken cancellationToken);
     }
     
     public class KubernetesEventService : KubernetesService, IKubernetesEventService
@@ -20,13 +20,13 @@ namespace Octopus.Tentacle.Kubernetes
         {
         }
 
-        public async Task<Corev1EventList?> FetchAllEventsAsync(CancellationToken cancellationToken)
+        public async Task<Corev1EventList?> FetchAllEventsAsync(string kubernetesNamespace, CancellationToken cancellationToken)
         {
             return await RetryPolicy.ExecuteAsync(async () =>
             { 
                 try
                 {
-                    return await Client.CoreV1.ListEventForAllNamespacesAsync(cancellationToken: cancellationToken);
+                    return await Client.CoreV1.ListNamespacedEventAsync(kubernetesNamespace, cancellationToken: cancellationToken);
                 }
                 catch (HttpOperationException opException)
                     when (opException.Response.StatusCode == HttpStatusCode.NotFound)
@@ -34,6 +34,11 @@ namespace Octopus.Tentacle.Kubernetes
                     return null;
                 }
             });
+        }
+
+        public async void WatchEventsInNamespace()
+        {
+            Client.CoreV1.Event
         }
     }
 }

@@ -6,6 +6,12 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Kubernetes.Diagnostics
 {
+    public interface IKubernetesAgentMetrics
+    {
+        void TrackEvent(string reason, string source, DateTimeOffset occurrence);
+        DateTimeOffset GetLatestEventTimestamp();
+    }
+    
     public class KubernetesAgentMetrics
     {
         readonly string lastEventTimestampKey = "latestTimestamp";
