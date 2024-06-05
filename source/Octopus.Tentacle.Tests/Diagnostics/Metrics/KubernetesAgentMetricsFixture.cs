@@ -12,8 +12,6 @@ using Octopus.Tentacle.Kubernetes.Diagnostics;
 
 namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
 {
-    
-    
     public class KubernetesAgentMetricsFixture
     {
         readonly ISystemLog systemLog = Substitute.For<ISystemLog>();
