@@ -90,7 +90,9 @@ public class KubernetesAgentMetricsIntegrationTest : KubernetesAgentIntegrationT
         metrics.TrackEvent("reason", "source", eventTimestamp);
         
         //Assert
-        var typedResult = persistenceProvider.ReadValues().ToDictionary(
+        var persistedDictionary = persistenceProvider.ReadValues();
+        var dataFields = persistedDictionary.Where(pair => pair.Key != "latestTimestamp");
+        var typedResult = dataFields.ToDictionary(
             pair => pair.Key,
             pair => JsonConvert.DeserializeObject<Dictionary<string, List<DateTimeOffset>>>(pair.Value));
 
