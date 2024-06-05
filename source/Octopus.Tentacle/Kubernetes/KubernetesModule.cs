@@ -36,12 +36,12 @@ namespace Octopus.Tentacle.Kubernetes
             
             builder.RegisterGeneric(typeof(ReferenceCountingKeyedBinarySemaphore<>)).As(typeof(IKeyedSemaphore<>)).SingleInstance();
 
-            var kuberneteseAgentMetricsPersistence = "kubernetese-agent-metrics-persistence";
+            const string kubernetesAgentMetricsPersistence = "kubernetes-agent-metrics-persistence";
             builder.Register<PersistenceProvider>(ctx => ctx.Resolve<PersistenceProvider.Factory>().Invoke(ConfigMapNames.AgentMetrics))
-                .Named<IPersistenceProvider>(kuberneteseAgentMetricsPersistence);
+                .Named<IPersistenceProvider>(kubernetesAgentMetricsPersistence);
             builder.Register<KubernetesAgentMetrics>(ctx => 
                 ctx.Resolve<KubernetesAgentMetrics.Factory>()
-                    .Invoke(ctx.ResolveNamed<IPersistenceProvider>(kuberneteseAgentMetricsPersistence)));
+                    .Invoke(ctx.ResolveNamed<IPersistenceProvider>(kubernetesAgentMetricsPersistence)));
 #if DEBUG
             builder.RegisterType<LocalMachineKubernetesClientConfigProvider>().As<IKubernetesClientConfigProvider>().SingleInstance();
 #else
