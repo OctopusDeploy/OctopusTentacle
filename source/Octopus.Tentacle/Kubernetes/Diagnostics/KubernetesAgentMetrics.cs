@@ -30,6 +30,7 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
             }
             catch
             {
+                log.Error("Failed to extract last event timestamp from the persistence provider.");
                 return;
             }
             

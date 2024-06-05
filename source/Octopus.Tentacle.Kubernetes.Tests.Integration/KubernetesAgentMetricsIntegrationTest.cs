@@ -28,7 +28,6 @@ public class KubernetesAgentMetricsIntegrationTest : KubernetesAgentIntegrationT
     }
     
     [Test]
-    //[Ignore("Requires rework of configmap service before it can be used here")]
     public void FetchingTimestampFromEmptyConfigMapEntryShouldBeMinValue()
     {
         //Arrange

@@ -15,7 +15,6 @@ namespace Octopus.Tentacle.Kubernetes
 {
     public abstract class KubernetesService
     {
-        protected readonly IKubernetesClientConfigProvider configProvider;
         const int MaxDurationSeconds = 30;
         
         protected ISystemLog Log { get; }
@@ -24,7 +23,6 @@ namespace Octopus.Tentacle.Kubernetes
 
         protected KubernetesService(IKubernetesClientConfigProvider configProvider, ISystemLog log)
         {
-            this.configProvider = configProvider;
             Log = log;
             Client = new k8sClient(configProvider.Get());
             RetryPolicy = Policy.Handle<Exception>().WaitAndRetryAsync(5,
