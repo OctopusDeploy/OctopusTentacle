@@ -220,7 +220,7 @@ namespace Octopus.Tentacle.Kubernetes
 
         async Task<IList<V1Container>> CreateInitContainers(StartKubernetesScriptCommandV1 command, string podName, string homeDir, string workspacePath)
         {
-            if (!command.ReadonlyWorkspaceOnly)
+            if (!command.IsRawScript)
             {
                 return new List<V1Container>();
             }
@@ -249,7 +249,7 @@ namespace Octopus.Tentacle.Kubernetes
         {
             var homeVolume = new V1Volume("tentacle-home");
             var volumes = new List<V1Volume> { homeVolume };
-            if (command.ReadonlyWorkspaceOnly)
+            if (command.IsRawScript)
             {
                 homeVolume.EmptyDir = new V1EmptyDirVolumeSource();
                 var initVolume = new V1Volume("init-nfs-volume")
@@ -332,7 +332,7 @@ namespace Octopus.Tentacle.Kubernetes
 
         V1Container? CreateWatchdogContainer(StartKubernetesScriptCommandV1 command, string homeDir)
         {
-            if (command.ReadonlyWorkspaceOnly || KubernetesConfig.NfsWatchdogImage is null)
+            if (command.IsRawScript || KubernetesConfig.NfsWatchdogImage is null)
             {
                 return null;
             }

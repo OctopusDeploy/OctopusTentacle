@@ -7,7 +7,7 @@ namespace Octopus.Tentacle.Client.Scripts.Models.Builders
     {
         KubernetesImageConfiguration? configuration;
         string? scriptPodServiceAccountName;
-        bool readonlyWorkspaceOnly;
+        bool isRawScript;
 
         public ExecuteKubernetesScriptCommandBuilder(string taskId)
             : base(taskId, ScriptIsolationLevel.NoIsolation) //Kubernetes Agents don't need isolation since the scripts won't clash with each other (it won't clash more than Workers anyway)
@@ -26,9 +26,9 @@ namespace Octopus.Tentacle.Client.Scripts.Models.Builders
             return this;
         }
 
-        public ExecuteKubernetesScriptCommandBuilder AsReadonlyWorkspaceOnly()
+        public ExecuteKubernetesScriptCommandBuilder IsRawScript()
         {
-            readonlyWorkspaceOnly = true;
+            isRawScript = true;
             return this;
         }
 
@@ -43,7 +43,7 @@ namespace Octopus.Tentacle.Client.Scripts.Models.Builders
                 Files.ToArray(),
                 configuration,
                 scriptPodServiceAccountName,
-                readonlyWorkspaceOnly
+                isRawScript
             );
     }
 }

@@ -10,7 +10,7 @@ namespace Octopus.Tentacle.Client.Scripts.Models
 
         public string? ScriptPodServiceAccountName { get;}
 
-        public bool ReadonlyWorkspaceOnly { get; }
+        public bool IsRawScript { get; }
 
         public ExecuteKubernetesScriptCommand(
             ScriptTicket scriptTicket,
@@ -22,12 +22,12 @@ namespace Octopus.Tentacle.Client.Scripts.Models
             ScriptFile[] additionalFiles,
             KubernetesImageConfiguration? imageConfiguration, 
             string? scriptPodServiceAccountName,
-            bool readonlyWorkspaceOnly)
+            bool isRawScript)
             : base(scriptTicket, taskId, scriptBody, arguments, isolationConfiguration, additionalScripts, additionalFiles)
         {
             ImageConfiguration = imageConfiguration;
             ScriptPodServiceAccountName = scriptPodServiceAccountName;
-            ReadonlyWorkspaceOnly = readonlyWorkspaceOnly;
+            IsRawScript = isRawScript;
         }
     }
 }

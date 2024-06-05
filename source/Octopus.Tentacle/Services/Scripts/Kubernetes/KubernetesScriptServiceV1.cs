@@ -208,7 +208,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
                 command.ScriptPodServiceAccountName,
                 command.Scripts,
                 command.Files.ToArray(),
-                readonlyWorkspaceOnly: false
+                isRawScript: false
             );
         }
 
