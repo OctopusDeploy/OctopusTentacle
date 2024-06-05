@@ -12,6 +12,8 @@ using Octopus.Tentacle.Kubernetes.Diagnostics;
 
 namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
 {
+    
+    
     public class KubernetesAgentMetricsFixture
     {
         readonly ISystemLog systemLog = Substitute.For<ISystemLog>();
@@ -28,7 +30,9 @@ namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
             sut.TrackEvent("Killed", "NFS Pod", eventTimestamp);
 
             //Assert
-            var typedResult = persistenceProvider.ReadValues().ToDictionary(
+            var persistedDictionary = persistenceProvider.ReadValues();
+            var dataFields = persistedDictionary.Where(pair => pair.Key != "latestTimestamp");
+            var typedResult = dataFields.ToDictionary(
                 pair => pair.Key,
                 pair => JsonConvert.DeserializeObject<Dictionary<string, List<DateTimeOffset>>>(pair.Value));
 
@@ -53,7 +57,9 @@ namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
             sut.TrackEvent("Restarted", "Script Pod", eventTimestamp);
             
             //Assert
-            var typedResult = persistenceProvider.ReadValues().ToDictionary(
+            var persistedDictionary = persistenceProvider.ReadValues();
+            var dataFields = persistedDictionary.Where(pair => pair.Key != "latestTimestamp");
+            var typedResult = dataFields.ToDictionary(
                 pair => pair.Key,
                 pair => JsonConvert.DeserializeObject<Dictionary<string, List<DateTimeOffset>>>(pair.Value));
 
@@ -111,7 +117,7 @@ namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
         public void GetLatestTimeStampPropagatesExceptionsIfUnderlyingPersistenceFails()
         {
             IPersistenceProvider persistenceProvider = Substitute.For<IPersistenceProvider>();
-            persistenceProvider.ReadValues().Throws(new Exception("Something broke"));
+            persistenceProvider.GetValue(Arg.Any<string>()).Throws(new Exception("Something broke"));
 
             var sut = new KubernetesAgentMetrics(persistenceProvider, systemLog);
 
