@@ -2,9 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
-using Nito.Disposables.Internals;
 using Octopus.Diagnostics;
-using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Kubernetes.Diagnostics
 {
