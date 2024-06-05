@@ -70,7 +70,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 kubernetesScriptCommand.ScriptPodServiceAccountName,
                 kubernetesScriptCommand.Scripts,
                 kubernetesScriptCommand.Files.ToArray(),
-                kubernetesScriptCommand.IsRawScriptWithNoDependencies);
+                kubernetesScriptCommand.ReadonlyWorkspaceOnly);
         }
 
         protected override ScriptExecutionStatus MapToStatus(KubernetesScriptStatusResponseV1 response)

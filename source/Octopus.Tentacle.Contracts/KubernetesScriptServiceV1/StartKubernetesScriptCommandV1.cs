@@ -18,7 +18,7 @@ namespace Octopus.Tentacle.Contracts.KubernetesScriptServiceV1
             string? scriptPodServiceAccountName,
             Dictionary<ScriptType, string>? additionalScripts,
             ScriptFile[]? additionalFiles,
-            bool isRawScriptWithNoDependencies)
+            bool readonlyWorkspaceOnly)
         {
             Arguments = arguments;
             TaskId = taskId;
@@ -29,7 +29,7 @@ namespace Octopus.Tentacle.Contracts.KubernetesScriptServiceV1
             IsolationMutexName = isolationMutexName;
             PodImageConfiguration = podImageConfiguration;
             ScriptPodServiceAccountName = scriptPodServiceAccountName;
-            IsRawScriptWithNoDependencies = isRawScriptWithNoDependencies;
+            ReadonlyWorkspaceOnly = readonlyWorkspaceOnly;
 
             if (additionalFiles != null)
                 Files.AddRange(additionalFiles);
@@ -43,7 +43,7 @@ namespace Octopus.Tentacle.Contracts.KubernetesScriptServiceV1
             }
         }
 
-        public bool IsRawScriptWithNoDependencies { get; }
+        public bool ReadonlyWorkspaceOnly { get; }
         public string ScriptBody { get; }
         public string TaskId { get; }
         public ScriptTicket ScriptTicket { get; }
