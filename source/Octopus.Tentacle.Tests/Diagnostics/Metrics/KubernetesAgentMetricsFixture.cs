@@ -25,16 +25,16 @@ namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
 
             //Act
             var eventTimestamp = DateTimeOffset.Now;
-            sut.TrackEvent("Killed", "NFS Pod", eventTimestamp, 5);
+            sut.TrackEvent("Killed", "NFS Pod", eventTimestamp);
 
             //Assert
             var typedResult = persistenceProvider.ReadValues().ToDictionary(
                 pair => pair.Key,
-                pair => JsonConvert.DeserializeObject<SourceEventCounts>(pair.Value));
+                pair => JsonConvert.DeserializeObject<Dictionary<string, List<DateTimeOffset>>>(pair.Value));
 
-            typedResult.Should().BeEquivalentTo(new Dictionary<string, SourceEventCounts>
+            typedResult.Should().BeEquivalentTo(new Dictionary<string, Dictionary<string, List<DateTimeOffset>>>
             {
-                { "Killed", new SourceEventCounts { { "NFS Pod", new List<CountSinceEpoch> { new CountSinceEpoch(eventTimestamp, 5) } } } }
+                { "Killed", new Dictionary<string, List<DateTimeOffset>> { { "NFS Pod", new List<DateTimeOffset> { eventTimestamp } } } }
             });
         }
 
@@ -47,27 +47,25 @@ namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
 
             //Act
             var eventTimestamp = DateTimeOffset.Now;
-            sut.TrackEvent("Killed", "NFS Pod", eventTimestamp, 1);
-            sut.TrackEvent("Created", "NFS Pod", eventTimestamp, 1);
-            sut.TrackEvent("Created", "Script Pod", eventTimestamp, 1);
-            sut.TrackEvent("Restarted", "Script Pod", eventTimestamp, 1);
-
+            sut.TrackEvent("Killed", "NFS Pod", eventTimestamp);
+            sut.TrackEvent("Created", "NFS Pod", eventTimestamp);
+            sut.TrackEvent("Created", "Script Pod", eventTimestamp);
+            sut.TrackEvent("Restarted", "Script Pod", eventTimestamp);
+            
             //Assert
             var typedResult = persistenceProvider.ReadValues().ToDictionary(
                 pair => pair.Key,
-                pair => JsonConvert.DeserializeObject<SourceEventCounts>(pair.Value));
+                pair => JsonConvert.DeserializeObject<Dictionary<string, List<DateTimeOffset>>>(pair.Value));
 
-            typedResult.Should().BeEquivalentTo(new Dictionary<string, SourceEventCounts>
+            typedResult.Should().BeEquivalentTo(new Dictionary<string, Dictionary<string, List<DateTimeOffset>>>
             {
-                { "Killed", new SourceEventCounts { { "NFS Pod", new List<CountSinceEpoch> { new(eventTimestamp, 1) } } } },
+                { "Killed", new Dictionary<string, List<DateTimeOffset>> {{ "NFS Pod", new List<DateTimeOffset> { eventTimestamp } }}},
+                { "Created", new Dictionary<string, List<DateTimeOffset>>
                 {
-                    "Created", new SourceEventCounts
-                    {
-                        { "NFS Pod", new List<CountSinceEpoch> { new(eventTimestamp, 1) } },
-                        { "Script Pod", new List<CountSinceEpoch> { new(eventTimestamp, 1) } }
-                    }
-                },
-                { "Restarted", new SourceEventCounts { { "Script Pod", new List<CountSinceEpoch> { new(eventTimestamp, 1) } } } },
+                    { "NFS Pod", new List<DateTimeOffset> { eventTimestamp } },
+                    { "Script Pod", new List<DateTimeOffset> { eventTimestamp } }
+                }},
+                { "Restarted", new Dictionary<string, List<DateTimeOffset>> {{ "Script Pod", new List<DateTimeOffset> { eventTimestamp } }}},
             });
         }
 
@@ -78,57 +76,48 @@ namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
             persistenceProvider.GetValue(Arg.Any<string>()).Throws(new Exception("Something broke"));
             var sut = new KubernetesAgentMetrics(persistenceProvider, systemLog);
 
-            Action act = () => sut.TrackEvent("Killed", "NFS Pod", DateTimeOffset.Now, 1);
+            Action act = () => sut.TrackEvent("Killed", "NFS Pod", DateTimeOffset.Now);
 
             act.Should().NotThrow();
         }
 
         [Test]
-        public void CanAddTwoCountEntriesForSameReasonAndSource()
+        public void GetLatestTimestampReturnsDateTimeOffsetMinimumIfNoEventsExist()
         {
-            //Arrange
             MockPersistenceProvider persistenceProvider = new();
             var sut = new KubernetesAgentMetrics(persistenceProvider, systemLog);
 
-            //Act
-            var eventTimestamp = DateTimeOffset.Now;
-            sut.TrackEvent("Killed", "NFS Pod", eventTimestamp, 5);
-            sut.TrackEvent("Killed", "NFS Pod", eventTimestamp.AddMinutes(1), 6);
-            sut.TrackEvent("Created", "NFS Pod", eventTimestamp, 1);
+            sut.GetLatestEventTimestamp().Should().Be(DateTimeOffset.MinValue);
+        }
 
-            //Assert
-            var typedResult = persistenceProvider.ReadValues().ToDictionary(
-                pair => pair.Key,
-                pair => JsonConvert.DeserializeObject<SourceEventCounts>(pair.Value));
+        [Test]
+        public void GetLatestTimestampReturnsTheChronologicallyLatestTimeNotNewestInList()
+        {
+            MockPersistenceProvider persistenceProvider = new();
+            var sut = new KubernetesAgentMetrics(persistenceProvider, systemLog);
 
-            typedResult.Should().BeEquivalentTo(new Dictionary<string, SourceEventCounts>
-            {
-                {
-                    "Killed", new SourceEventCounts
-                    {
-                        {
-                            "NFS Pod",
-                            new List<CountSinceEpoch>
-                            {
-                                new(eventTimestamp, 5),
-                                new(eventTimestamp.AddMinutes(1), 6)
-                            }
-                        }
-                    }
-                },
-                {
-                    "Created", new SourceEventCounts
-                    {
-                        {
-                            "NFS Pod",
-                            new List<CountSinceEpoch>
-                            {
-                                new(eventTimestamp, 1),
-                            }
-                        }
-                    }
-                }
-            });
+            var epoch = DateTimeOffset.Now;
+            sut.TrackEvent("Created", "NFS Pod", epoch);
+            sut.TrackEvent("Killed", "NFS Pod", epoch.AddMinutes(1));
+            sut.TrackEvent("Created", "Script Pod", epoch);
+            sut.TrackEvent("Killed", "Script Pod", epoch.AddMinutes(-1));
+
+            var timeDate = sut.GetLatestEventTimestamp();
+
+            timeDate.Should().BeExactly(epoch.AddMinutes(1));
+        }
+
+        [Test]
+        public void GetLatestTimeStampPropagatesExceptionsIfUnderlyingPersistenceFails()
+        {
+            IPersistenceProvider persistenceProvider = Substitute.For<IPersistenceProvider>();
+            persistenceProvider.ReadValues().Throws(new Exception("Something broke"));
+
+            var sut = new KubernetesAgentMetrics(persistenceProvider, systemLog);
+
+            Action act = () => sut.GetLatestEventTimestamp();
+
+            act.Should().Throw<Exception>().WithMessage("Something broke");
         }
     }
 
