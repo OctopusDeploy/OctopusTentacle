@@ -23,17 +23,6 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
 
         public void TrackEvent(string reason, string source, DateTimeOffset occurrence)
         {
-            DateTimeOffset latestEvent;
-            try
-            {
-                latestEvent = GetLatestEventTimestamp();
-            }
-            catch
-            {
-                log.Error("Failed to extract last event timestamp from the persistence provider.");
-                return;
-            }
-            
             try
             {
                 lock (persistenceProvider)
@@ -47,14 +36,8 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
                     }
 
                     occurenceTimestamps.Add(occurrence);
-
-                    // The config map should _probably_ be written up as an update/commit process which makes the
-                    // persistence atomic
                     Persist(reason, sourceEventsForReason);
-                    if (latestEvent < occurrence)
-                    {
-                        persistenceProvider.PersistValue(lastEventTimestampKey, occurrence.ToString("O"));
-                    }
+                    UpdateLatestTimestamp(occurrence);
                 }
             }
             catch (Exception e)
@@ -67,12 +50,36 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
         {
             lock (persistenceProvider)
             {
-                var timeStampString = persistenceProvider.GetValue(lastEventTimestampKey);
-                if (!timeStampString.IsNullOrEmpty())
+                return GetLatestEventTimeStampInternal();
+            }
+        }
+
+        DateTimeOffset GetLatestEventTimeStampInternal()
+        {
+            //NOTE: this must be called from within a lock on the PersistenceProvider.
+            var timeStampString = persistenceProvider.GetValue(lastEventTimestampKey);
+            if (!timeStampString.IsNullOrEmpty())
+            {
+                return DateTimeOffset.Parse(timeStampString!);    
+            }
+            return DateTimeOffset.MinValue;
+        }
+
+        void UpdateLatestTimestamp(DateTimeOffset newEventTime)
+        {
+            try
+            {
+                var latestEvent = GetLatestEventTimestamp();
+                // The config map should _probably_ be written up as an update/commit process which makes the
+                // persistence atomic
+                if (latestEvent < newEventTime)
                 {
-                    return DateTimeOffset.Parse(timeStampString!);    
+                    persistenceProvider.PersistValue(lastEventTimestampKey, newEventTime.ToString("O"));
                 }
-                return DateTimeOffset.MinValue;
+            }
+            catch
+            {
+                log.Error("Failed to extract last event timestamp from the persistence provider.");
             }
         }
 
