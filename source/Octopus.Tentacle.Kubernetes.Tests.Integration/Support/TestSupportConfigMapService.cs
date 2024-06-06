@@ -8,8 +8,8 @@ using Octopus.Diagnostics;
 namespace Octopus.Tentacle.Kubernetes.Tests.Integration.Support
 {
 
-    // This is a copy of the production configMapService, however allows the namespace
-    // to be injected directly.
+    // This is a copy of the production ConfigMapService, but allows the namespace to be explicitly
+    // defined.
     public class TestSupportConfigMapService : KubernetesService, IKubernetesConfigMapService
     {
         readonly string targetNamespace;

@@ -28,7 +28,6 @@ public class KubernetesAgentMetricsIntegrationTest : KubernetesAgentIntegrationT
     }
     
     [Test]
-    //[Ignore("Requires rework of configmap service before it can be used here")]
     public void FetchingTimestampFromEmptyConfigMapEntryShouldBeMinValue()
     {
         //Arrange
@@ -90,7 +89,9 @@ public class KubernetesAgentMetricsIntegrationTest : KubernetesAgentIntegrationT
         metrics.TrackEvent("reason", "source", eventTimestamp);
         
         //Assert
-        var typedResult = persistenceProvider.ReadValues().ToDictionary(
+        var persistedDictionary = persistenceProvider.ReadValues();
+        var dataFields = persistedDictionary.Where(pair => pair.Key != "latestTimestamp");
+        var typedResult = dataFields.ToDictionary(
             pair => pair.Key,
             pair => JsonConvert.DeserializeObject<Dictionary<string, List<DateTimeOffset>>>(pair.Value));
 

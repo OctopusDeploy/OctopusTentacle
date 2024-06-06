@@ -27,11 +27,7 @@ namespace Octopus.Tentacle.Kubernetes
 
             builder.RegisterType<KubernetesPodMonitorTask>().As<IKubernetesPodMonitorTask>().As<IBackgroundTask>().SingleInstance();
             builder.RegisterType<KubernetesPodMonitor>().As<IKubernetesPodMonitor>().As<IKubernetesPodStatusProvider>().SingleInstance();
-            
-            builder.RegisterType<KubernetesEventService>().As<IKubernetesEventService>().SingleInstance();
-            builder.RegisterType<KubernetesEventMonitorTask>().As<IKubernetesPodMonitor>().As<IKubernetesPodStatusProvider>().SingleInstance();
-            builder.RegisterType<KubernetesEventMonitor>().As<IKubernetesEventMonitor>().SingleInstance();
-            
+
             builder.RegisterType<KubernetesOrphanedPodCleanerTask>().As<IKubernetesOrphanedPodCleanerTask>().As<IBackgroundTask>().SingleInstance();
             builder.RegisterType<KubernetesOrphanedPodCleaner>().As<IKubernetesOrphanedPodCleaner>().SingleInstance();
             builder.RegisterType<KubernetesDirectoryInformationProvider>().As<IKubernetesDirectoryInformationProvider>().SingleInstance();
@@ -40,12 +36,12 @@ namespace Octopus.Tentacle.Kubernetes
             
             builder.RegisterGeneric(typeof(ReferenceCountingKeyedBinarySemaphore<>)).As(typeof(IKeyedSemaphore<>)).SingleInstance();
 
-            var kubernetesAgentMetricsPersistenceProviderName = "kubernetese-agent-metrics-persistence";
+            const string kubernetesAgentMetricsPersistence = "kubernetes-agent-metrics-persistence";
             builder.Register<PersistenceProvider>(ctx => ctx.Resolve<PersistenceProvider.Factory>().Invoke(ConfigMapNames.AgentMetrics))
-                .Named<IPersistenceProvider>(kubernetesAgentMetricsPersistenceProviderName);
+                .Named<IPersistenceProvider>(kubernetesAgentMetricsPersistence);
             builder.Register<KubernetesAgentMetrics>(ctx => 
                 ctx.Resolve<KubernetesAgentMetrics.Factory>()
-                    .Invoke(ctx.ResolveNamed<IPersistenceProvider>(kubernetesAgentMetricsPersistenceProviderName)));
+                    .Invoke(ctx.ResolveNamed<IPersistenceProvider>(kubernetesAgentMetricsPersistence)));
 #if DEBUG
             builder.RegisterType<LocalMachineKubernetesClientConfigProvider>().As<IKubernetesClientConfigProvider>().SingleInstance();
 #else
