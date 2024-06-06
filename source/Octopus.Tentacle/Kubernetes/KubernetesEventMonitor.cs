@@ -36,7 +36,7 @@ namespace Octopus.Tentacle.Kubernetes
             var unseenEvents = allEvents.Items.Where(e =>
             {
                 var eventTimestamp = GetLatestTimestampInEvent(e);
-                return eventTimestamp.HasValue && eventTimestamp.Value.ToUniversalTime() >= lastCachedEventTimeStamp;
+                return eventTimestamp.HasValue && eventTimestamp.Value.ToUniversalTime() > lastCachedEventTimeStamp;
             });
             
             foreach (var kEvent in unseenEvents)
@@ -74,7 +74,7 @@ namespace Octopus.Tentacle.Kubernetes
                     kEvent.LastTimestamp,
                     kEvent.FirstTimestamp
                 }.Where(dt => dt.HasValue)
-                .OrderBy(dt => dt!.Value)
+                .OrderByDescending(dt => dt!.Value)
                 .FirstOrDefault();
         }
 
