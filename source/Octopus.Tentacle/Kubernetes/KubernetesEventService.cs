@@ -35,10 +35,5 @@ namespace Octopus.Tentacle.Kubernetes
                 }
             });
         }
-
-        public async void WatchEventsInNamespace()
-        {
-            Client.CoreV1.Event
-        }
     }
 }

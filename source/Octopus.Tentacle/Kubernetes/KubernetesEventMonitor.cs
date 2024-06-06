@@ -13,7 +13,7 @@ namespace Octopus.Tentacle.Kubernetes
 {
     public interface IKubernetesEventMonitor
     {
-        Task StartAsync(CancellationToken cancellationToken);
+        Task CacheNewEvents(CancellationToken cancellationToken);
     }
 
     public class KubernetesEventMonitor : IKubernetesEventMonitor
@@ -29,32 +29,24 @@ namespace Octopus.Tentacle.Kubernetes
             this.eventService = eventService;
         }
 
-        public async Task StartAsync(CancellationToken cancellationToken)
+        public async Task CacheNewEvents(CancellationToken cancellationToken)
         {
-            //We don't want the monitoring to ever stop
-            var policy = Policy.Handle<Exception>().WaitAndRetryForeverAsync(
-                    retry => TimeSpan.FromMinutes(10),
-            (ex, duration) =>
+            var allEvents = await eventService.FetchAllEventsAsync(GetNamespace(), cancellationToken) ?? new Corev1EventList();
+
+            var lastCachedEventTimeStamp = agentMetrics.GetLatestEventTimestamp();
+
+            var unseenEvents = allEvents.Items.Where(e =>
             {
-                log.Error(ex, "KubernetesEventMonitor: An unexpected error occured while running event caching loop, re-running in: " + duration);
+                var eventTimestamp = GetLatestTimestampInEvent(e);
+                return eventTimestamp.HasValue && eventTimestamp.Value.ToUniversalTime() >= lastCachedEventTimeStamp;
             });
-
-            await policy.ExecuteAsync(async ct => await CacheNewEvents(ct), cancellationToken);
-        }
-
-        async Task CacheNewEvents(CancellationToken cancellationToken)
-        {
-            var allEvents = await eventService.FetchAllEventsAsync(GetNamespace(), cancellationToken);
-
-            var lastCachedEvent = agentMetrics.GetLatestEventTimestamp();
-
-            var unseenEvents = allEvents?.Items.Where(e => e.EventTime.HasValue && e.EventTime.Value.ToUniversalTime() > lastCachedEvent);
             
-            foreach (var kEvent in unseenEvents!)
+            foreach (var kEvent in unseenEvents)
             {
                 if (IsRelevantForMetrics(kEvent))
                 {
-                    agentMetrics.TrackEvent(kEvent.Reason, kEvent.Name(), kEvent.EventTime!.Value.ToUniversalTime());
+                    var eventTimestamp = GetLatestTimestampInEvent(kEvent)!.Value.ToUniversalTime();
+                    agentMetrics.TrackEvent(kEvent.Reason, kEvent.Name(), eventTimestamp);
                 }
             }
         }
@@ -71,10 +63,22 @@ namespace Octopus.Tentacle.Kubernetes
 
         bool IsNfsPodRestart(Corev1Event kubernetesEvent)
         {
-            var restartReason = new []{"Started", "Killing"};
-            return restartReason.Contains(kubernetesEvent.Reason) && kubernetesEvent.Name().StartsWith("octopus-agent-nfs");
+            var podLifecycleEventsOfInterest = new []{"Started", "Killing"};
+            //TODO(tmm): having this magic event-name stored as a constant somewhere would be great.
+            return podLifecycleEventsOfInterest.Contains(kubernetesEvent.Reason) && kubernetesEvent.Name().StartsWith("octopus-agent-nfs");
         }
 
+        DateTime? GetLatestTimestampInEvent(Corev1Event kEvent)
+        {
+            return new List<DateTime?>
+                {
+                    kEvent.EventTime,
+                    kEvent.LastTimestamp,
+                    kEvent.FirstTimestamp
+                }.Where(dt => dt.HasValue)
+                .OrderBy(dt => dt!.Value)
+                .FirstOrDefault();
+        }
 
         protected virtual string GetNamespace()
         {
