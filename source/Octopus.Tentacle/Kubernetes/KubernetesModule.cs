@@ -1,9 +1,12 @@
-﻿using Autofac;
+﻿using System;
+using Autofac;
+using Autofac.Core;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Octopus.Tentacle.Background;
 using Octopus.Tentacle.Kubernetes.Synchronisation;
 using Octopus.Tentacle.Kubernetes.Synchronisation.Internal;
+using Octopus.Tentacle.Kubernetes.Diagnostics;
 
 namespace Octopus.Tentacle.Kubernetes
 {
@@ -32,6 +35,13 @@ namespace Octopus.Tentacle.Kubernetes
             builder.RegisterType<MemoryCacheOptions>().As<IOptions<MemoryCacheOptions>>().SingleInstance();
             
             builder.RegisterGeneric(typeof(ReferenceCountingKeyedBinarySemaphore<>)).As(typeof(IKeyedSemaphore<>)).SingleInstance();
+
+            const string kubernetesAgentMetricsPersistence = "kubernetes-agent-metrics-persistence";
+            builder.Register<PersistenceProvider>(ctx => ctx.Resolve<PersistenceProvider.Factory>().Invoke(ConfigMapNames.AgentMetrics))
+                .Named<IPersistenceProvider>(kubernetesAgentMetricsPersistence);
+            builder.Register<KubernetesAgentMetrics>(ctx => 
+                ctx.Resolve<KubernetesAgentMetrics.Factory>()
+                    .Invoke(ctx.ResolveNamed<IPersistenceProvider>(kubernetesAgentMetricsPersistence)));
 #if DEBUG
             builder.RegisterType<LocalMachineKubernetesClientConfigProvider>().As<IKubernetesClientConfigProvider>().SingleInstance();
 #else

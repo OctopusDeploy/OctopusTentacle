@@ -13,7 +13,7 @@ namespace Octopus.Tentacle.Configuration.Instances
 
         readonly IKubernetesConfigMapService configMapService;
         readonly IKubernetesMachineKeyEncryptor encryptor;
-        const string Name = "tentacle-config";
+        const string Name = ConfigMapNames.TentacleConfig;
 
         readonly Lazy<V1ConfigMap> configMap;
         IDictionary<string, string> ConfigMapData => configMap.Value.Data ??= new Dictionary<string, string>();

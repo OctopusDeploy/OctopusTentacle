@@ -16,7 +16,7 @@ namespace Octopus.Tentacle.Kubernetes.Tests.Integration;
 
 public abstract class KubernetesAgentIntegrationTest
 {
-    KubernetesAgentInstaller kubernetesAgentInstaller;
+    protected KubernetesAgentInstaller kubernetesAgentInstaller;
     TraceLogFileLogger? traceLogFileLogger;
     CancellationTokenSource cancellationTokenSource;
     protected ILogger Logger { get; private set; }
