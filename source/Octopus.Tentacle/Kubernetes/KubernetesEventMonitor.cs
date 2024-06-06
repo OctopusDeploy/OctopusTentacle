@@ -18,20 +18,18 @@ namespace Octopus.Tentacle.Kubernetes
 
     public class KubernetesEventMonitor : IKubernetesEventMonitor
     {
-        readonly ISystemLog log;
         readonly IKubernetesAgentMetrics agentMetrics;
         readonly IKubernetesEventService eventService;
 
-        public KubernetesEventMonitor(ISystemLog log, IKubernetesAgentMetrics agentMetrics, IKubernetesEventService eventService)
+        public KubernetesEventMonitor(IKubernetesAgentMetrics agentMetrics, IKubernetesEventService eventService)
         {
-            this.log = log;
             this.agentMetrics = agentMetrics;
             this.eventService = eventService;
         }
 
         public async Task CacheNewEvents(CancellationToken cancellationToken)
         {
-            var allEvents = await eventService.FetchAllEventsAsync(GetNamespace(), cancellationToken) ?? new Corev1EventList();
+            var allEvents = await eventService.FetchAllEventsAsync(GetNamespace(), cancellationToken) ?? new Corev1EventList(new List<Corev1Event>());
 
             var lastCachedEventTimeStamp = agentMetrics.GetLatestEventTimestamp();
 
@@ -82,7 +80,8 @@ namespace Octopus.Tentacle.Kubernetes
 
         protected virtual string GetNamespace()
         {
-            return KubernetesConfig.Namespace;
+            return "blah";
+            //return KubernetesConfig.Namespace;
         }
     }
 }
