@@ -77,8 +77,7 @@ namespace Octopus.Tentacle.Kubernetes
 
         protected virtual string GetNamespace()
         {
-            return "blah";
-            //return KubernetesConfig.Namespace;
+            return KubernetesConfig.Namespace;
         }
     }
 }
