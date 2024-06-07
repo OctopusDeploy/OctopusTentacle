@@ -31,10 +31,8 @@ namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
 
             //Assert
             var persistedDictionary = await persistenceProvider.ReadValues(CancellationToken.None);
-            var dataFields = persistedDictionary.Where(pair => pair.Key != "latestTimestamp");
-            var typedResult = dataFields.ToDictionary(
-                pair => pair.Key,
-                pair => JsonConvert.DeserializeObject<Dictionary<string, List<DateTimeOffset>>>(pair.Value));
+            var metricsData = persistedDictionary["metrics"];
+            var typedResult = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, List<DateTimeOffset>>>>(metricsData);
 
             typedResult.Should().BeEquivalentTo(new Dictionary<string, Dictionary<string, List<DateTimeOffset>>>
             {
@@ -58,10 +56,8 @@ namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
             
             //Assert
             var persistedDictionary = await persistenceProvider.ReadValues(CancellationToken.None);
-            var dataFields = persistedDictionary.Where(pair => pair.Key != "latestTimestamp");
-            var typedResult = dataFields.ToDictionary(
-                pair => pair.Key,
-                pair => JsonConvert.DeserializeObject<Dictionary<string, List<DateTimeOffset>>>(pair.Value));
+            var metricsData = persistedDictionary["metrics"];
+            var typedResult = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, List<DateTimeOffset>>>>(metricsData);
 
             typedResult.Should().BeEquivalentTo(new Dictionary<string, Dictionary<string, List<DateTimeOffset>>>
             {
