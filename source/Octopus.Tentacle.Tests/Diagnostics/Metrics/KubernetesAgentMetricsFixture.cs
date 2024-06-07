@@ -136,7 +136,7 @@ namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
         public async Task<string?> GetValue(string key, CancellationToken cancellationToken)
         {
             await Task.CompletedTask;
-            return content.GetValueOrDefault(key, "");
+            return content.TryGetValue(key, out var value) ? value : null;
         }
 
         public async Task PersistValue(string key, string value, CancellationToken cancellationToken)
