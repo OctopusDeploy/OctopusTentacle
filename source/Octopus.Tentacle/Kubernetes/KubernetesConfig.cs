@@ -39,7 +39,18 @@ namespace Octopus.Tentacle.Kubernetes
         public const string ServerCommsAddressesVariableName = "ServerCommsAddresses";
         
         public static string MetricsEnableVariableName => $"{EnvVarPrefix}__ENABLEMETRICSCAPTURE";
-        public static string MetricsIsEnabled => GetRequiredEnvVar(MetricsEnableVariableName, "Unable to determine Kubernetes namespace.");
+        public static bool MetricsIsEnabled
+        {
+             get
+             {
+                 var envContent = Environment.GetEnvironmentVariable(MetricsEnableVariableName);
+                if(bool.TryParse(envContent, out var result))
+                {
+                    return result;
+                }
+                return true;
+            }
+        }
 
         public static string[] ServerCommsAddresses {
             get {

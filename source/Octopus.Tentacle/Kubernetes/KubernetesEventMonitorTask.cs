@@ -19,6 +19,12 @@ namespace Octopus.Tentacle.Kubernetes
         
         protected override async Task RunTask(CancellationToken cancellationToken)
         {
+            if (!KubernetesConfig.MetricsIsEnabled)
+            {
+                log.Info("Event monitoring for agent metrics is not enabled.");
+                return;
+            }
+            
             //We don't want the monitoring to ever stop
             var policy = Policy.Handle<Exception>().WaitAndRetryForeverAsync(
                 retry => TimeSpan.FromMinutes(10),
