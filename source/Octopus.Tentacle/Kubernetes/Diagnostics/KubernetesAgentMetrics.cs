@@ -69,7 +69,7 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
         {
             try
             {
-                var latestEvent = await GetLatestEventTimestamp(cancellationToken);
+                var latestEvent = await GetLatestEventTimeStampInternal(cancellationToken);
                 // The config map should _probably_ be written up as an update/commit process which makes the
                 // persistence atomic
                 if (latestEvent < newEventTime)
@@ -86,9 +86,12 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
         async Task PerformUpdateOnMetricsForReason(string reason, Action<Dictionary<string, List<DateTimeOffset>>> updateAction, CancellationToken cancellationToken)
         {
             var metrics = await LoadFromPersistence(cancellationToken) ?? new MetricsDictionary();
-            var reasons = metrics.TryGetValue(reason, out var reasonDictionary) ? reasonDictionary : new Dictionary<string, List<DateTimeOffset>>();
+            if (!metrics.TryGetValue(reason, out var reasonDictionary))
+            {
+                metrics[reason] = reasonDictionary = new Dictionary<string, List<DateTimeOffset>>();
+            }
 
-            updateAction(reasons);
+            updateAction(reasonDictionary);
 
             await Persist(metrics, cancellationToken);
         }

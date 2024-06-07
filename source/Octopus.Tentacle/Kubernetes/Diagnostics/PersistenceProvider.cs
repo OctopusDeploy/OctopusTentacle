@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,23 +28,30 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
 
         public async Task<string?> GetValue(string key, CancellationToken cancellationToken)
         {
-            var configMap = await configMapService.TryGet(configMapName, cancellationToken);
-            return configMap?.Data.TryGetValue(key, out var value) == true ? value : null;
+            var configMapData = await LoadConfigMapData(cancellationToken);
+            return configMapData.TryGetValue(key, out var value) ? value : null;
         }
 
         public async Task PersistValue(string key, string value, CancellationToken cancellationToken)
         {
-            var configMap = await configMapService.TryGet(configMapName, cancellationToken);
-            if (configMap is null) throw new InvalidOperationException($"Unable to retrieve Tentacle Configuration from config map for namespace {KubernetesConfig.Namespace}");
+            var configMapData = await LoadConfigMapData(cancellationToken);
+            if (configMapData is null) throw new InvalidOperationException($"Unable to retrieve Tentacle Configuration from config map for namespace {KubernetesConfig.Namespace}");
 
-            configMap.Data[key] = value;
-            await configMapService.Patch(configMapName, configMap.Data, cancellationToken);
+            configMapData[key] = value;
+            await configMapService.Patch(configMapName, configMapData, cancellationToken);
         }
 
         public async Task<ImmutableDictionary<string, string>> ReadValues(CancellationToken cancellationToken)
         {
+            var configMapData = await LoadConfigMapData(cancellationToken);
+            return configMapData.ToImmutableDictionary();
+        }
+
+        async Task<IDictionary<string, string>> LoadConfigMapData(CancellationToken cancellationToken)
+        {
             var configMap = await configMapService.TryGet(configMapName, cancellationToken);
-            return configMap?.Data.ToImmutableDictionary() ?? ImmutableDictionary<string, string>.Empty;
+            if (configMap is null) throw new InvalidOperationException($"ConfigMap {configMapName} not found");
+            return configMap.Data ?? new Dictionary<string, string>();
         }
     }
 }

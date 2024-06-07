@@ -34,7 +34,7 @@ public class KubernetesAgentMetricsIntegrationTest : KubernetesAgentIntegrationT
         var kubernetesConfigClient = new KubernetesFileWrappedProvider(KubernetesTestsGlobalContext.Instance.KubeConfigPath);
         var configMapService = new Support.TestSupportConfigMapService(kubernetesConfigClient, systemLog, kubernetesAgentInstaller.Namespace);
         var persistenceProvider = new PersistenceProvider("kubernetes-agent-metrics", configMapService);
-        var metrics = new KubernetesAgentMetrics(persistenceProvider, "metrics", systemLog);
+        var metrics = new KubernetesAgentMetrics(persistenceProvider, ConfigMapNames.AgentMetricsConfigMapKey, systemLog);
 
         //Act
         var result = await metrics.GetLatestEventTimestamp(CancellationToken.None);
@@ -63,10 +63,10 @@ public class KubernetesAgentMetricsIntegrationTest : KubernetesAgentIntegrationT
     public async Task WritingEventToNonExistentConfigMapShouldFailSilently()
     {
         //Arrange
-        var kubernetesConfigClient = new InClusterKubernetesClientConfigProvider();
+        var kubernetesConfigClient = new KubernetesFileWrappedProvider(KubernetesTestsGlobalContext.Instance.KubeConfigPath);
         var configMapService = new Support.TestSupportConfigMapService(kubernetesConfigClient, systemLog, kubernetesAgentInstaller.Namespace);
         var persistenceProvider = new PersistenceProvider("nonexistent-config-map", configMapService);
-        var metrics = new KubernetesAgentMetrics(persistenceProvider, "metrics", systemLog);
+        var metrics = new KubernetesAgentMetrics(persistenceProvider, ConfigMapNames.AgentMetricsConfigMapKey, systemLog);
 
         //Act
         var func = async () => await metrics.TrackEvent("reason", "source", DateTimeOffset.Now, CancellationToken.None);
@@ -82,7 +82,7 @@ public class KubernetesAgentMetricsIntegrationTest : KubernetesAgentIntegrationT
         var kubernetesConfigClient = new KubernetesFileWrappedProvider(KubernetesTestsGlobalContext.Instance.KubeConfigPath);
         var configMapService = new Support.TestSupportConfigMapService(kubernetesConfigClient, systemLog, kubernetesAgentInstaller.Namespace);
         var persistenceProvider = new PersistenceProvider("kubernetes-agent-metrics", configMapService);
-        var metrics = new KubernetesAgentMetrics(persistenceProvider, "metrics", systemLog);
+        var metrics = new KubernetesAgentMetrics(persistenceProvider, ConfigMapNames.AgentMetricsConfigMapKey, systemLog);
 
         //Act
         var eventTimestamp = DateTimeOffset.Now;
@@ -90,10 +90,8 @@ public class KubernetesAgentMetricsIntegrationTest : KubernetesAgentIntegrationT
         
         //Assert
         var persistedDictionary = await persistenceProvider.ReadValues(CancellationToken.None);
-        var dataFields = persistedDictionary.Where(pair => pair.Key != "latestTimestamp");
-        var typedResult = dataFields.ToDictionary(
-            pair => pair.Key,
-            pair => JsonConvert.DeserializeObject<Dictionary<string, List<DateTimeOffset>>>(pair.Value));
+        var metricsData = persistedDictionary[ConfigMapNames.AgentMetricsConfigMapKey];
+        var typedResult = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, List<DateTimeOffset>>>>(metricsData);
 
         typedResult.Should().BeEquivalentTo(new Dictionary<string, Dictionary<string, List<DateTimeOffset>>>
         {
