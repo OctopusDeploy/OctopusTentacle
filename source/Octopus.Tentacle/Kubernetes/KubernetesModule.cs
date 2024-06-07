@@ -44,7 +44,10 @@ namespace Octopus.Tentacle.Kubernetes
                     .Invoke(ctx.ResolveNamed<IPersistenceProvider>(kubernetesAgentMetricsPersistence)));
             
             builder.RegisterType<KubernetesEventMonitorTask>().As<IBackgroundTask>().SingleInstance();
-            builder.RegisterType<KubernetesEventMonitor>().As<IKubernetesEventMonitor>().SingleInstance();
+
+            builder.Register<KubernetesEventMonitor>(ctx => ctx.Resolve<KubernetesEventMonitor.InNamespace>().Invoke(KubernetesConfig.Namespace))
+                .As<IKubernetesEventMonitor>();
+                
 #if DEBUG
             builder.RegisterType<LocalMachineKubernetesClientConfigProvider>().As<IKubernetesClientConfigProvider>().SingleInstance();
 #else
