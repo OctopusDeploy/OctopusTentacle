@@ -48,10 +48,10 @@ namespace Octopus.Tentacle.Kubernetes
 
         bool IsRelevantForMetrics(Corev1Event kubernetesEvent)
         {
-            return IsNfsPodRestart(kubernetesEvent) || IsPodRestartDueToStaleNfs(kubernetesEvent);
+            return IsNfsPodRestart(kubernetesEvent) || IsTentacleAgentPodRestart(kubernetesEvent) || IsStaleNfsEvent(kubernetesEvent);
         }
 
-        bool IsPodRestartDueToStaleNfs(Corev1Event kubernetesEvent)
+        bool IsStaleNfsEvent(Corev1Event kubernetesEvent)
         {
             return kubernetesEvent.Reason == "NfsWatchdogTimeout";
         }
@@ -61,6 +61,13 @@ namespace Octopus.Tentacle.Kubernetes
             var podLifecycleEventsOfInterest = new []{"Started", "Killing"};
             //TODO(tmm): having this magic event-name stored as a constant somewhere would be great.
             return podLifecycleEventsOfInterest.Contains(kubernetesEvent.Reason) && kubernetesEvent.Name().StartsWith("octopus-agent-nfs");
+        }
+
+        bool IsTentacleAgentPodRestart(Corev1Event kubernetesEvent)
+        {
+            var podLifecycleEventsOfInterest = new []{"Started", "Killing"};
+            //TODO(tmm): having this magic event-name stored as a constant somewhere would be great.
+            return podLifecycleEventsOfInterest.Contains(kubernetesEvent.Reason) && kubernetesEvent.Name().StartsWith("octopus-agent-tentacle");
         }
 
         DateTime? GetLatestTimestampInEvent(Corev1Event kEvent)
