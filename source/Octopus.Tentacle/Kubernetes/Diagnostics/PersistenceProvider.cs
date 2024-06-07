@@ -1,17 +1,15 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading;
-using k8s.Models;
-using Octopus.Diagnostics;
+using System.Threading.Tasks;
 
 namespace Octopus.Tentacle.Kubernetes.Diagnostics
 {
     public interface IPersistenceProvider
     {
-        string? GetValue(string key);
-        void PersistValue(string key, string value);
-        ImmutableDictionary<string, string> ReadValues();
+        Task<string?> GetValue(string key, CancellationToken cancellationToken);
+        Task PersistValue(string key, string value, CancellationToken cancellationToken);
+        Task<ImmutableDictionary<string, string>> ReadValues(CancellationToken cancellationToken);
     }
 
     public class PersistenceProvider : IPersistenceProvider
@@ -20,31 +18,33 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
         
         readonly string configMapName;
         readonly IKubernetesConfigMapService configMapService;
-        readonly Lazy<V1ConfigMap> metricsConfigMap;
-        IDictionary<string, string> ConfigMapData => metricsConfigMap.Value.Data ??= new Dictionary<string, string>();
 
         public PersistenceProvider(string configMapName, IKubernetesConfigMapService configMapService)
         {
             this.configMapService = configMapService;
             this.configMapName = configMapName;
-            metricsConfigMap = new Lazy<V1ConfigMap>(() => configMapService.TryGet(this.configMapName, CancellationToken.None).GetAwaiter().GetResult()
-                ?? throw new InvalidOperationException($"Unable to retrieve Tentacle Configuration from config map for namespace {KubernetesConfig.Namespace}"));
         }
 
-        public string? GetValue(string key)
+        public async Task<string?> GetValue(string key, CancellationToken cancellationToken)
         {
-            return ConfigMapData.TryGetValue(key, out var value) ? value : null;
+            var configMap = await configMapService.TryGet(configMapName, cancellationToken);
+            return configMap?.Data.TryGetValue(key, out var value) == true ? value : null;
         }
 
-        public void PersistValue(string key, string value)
+        public async Task PersistValue(string key, string value, CancellationToken cancellationToken)
         {
-            ConfigMapData[key] = value;
-            configMapService.Patch(configMapName, ConfigMapData, CancellationToken.None).GetAwaiter().GetResult();
+            var configMap = await configMapService.TryGet(configMapName, cancellationToken);
+            if (configMap is null) throw new InvalidOperationException($"Unable to retrieve Tentacle Configuration from config map for namespace {KubernetesConfig.Namespace}");
+
+            configMap.Data[key] = value;
+            await configMapService.Patch(configMapName, configMap.Data, cancellationToken);
         }
 
-        public ImmutableDictionary<string, string> ReadValues()
+        public async Task<ImmutableDictionary<string, string>> ReadValues(CancellationToken cancellationToken)
         {
-            return ConfigMapData.ToImmutableDictionary();
+            var configMap = await configMapService.TryGet(configMapName, cancellationToken);
+
+            return configMap?.Data.ToImmutableDictionary() ?? ImmutableDictionary<string, string>.Empty;
         }
     }
 }

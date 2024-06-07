@@ -28,7 +28,7 @@ public class KubernetesAgentMetricsIntegrationTest : KubernetesAgentIntegrationT
     }
     
     [Test]
-    public void FetchingTimestampFromEmptyConfigMapEntryShouldBeMinValue()
+    public async Task FetchingTimestampFromEmptyConfigMapEntryShouldBeMinValue()
     {
         //Arrange
         var kubernetesConfigClient = new KubernetesFileWrappedProvider(KubernetesTestsGlobalContext.Instance.KubeConfigPath);
@@ -37,14 +37,14 @@ public class KubernetesAgentMetricsIntegrationTest : KubernetesAgentIntegrationT
         var metrics = new KubernetesAgentMetrics(persistenceProvider, systemLog);
 
         //Act
-        var result = metrics.GetLatestEventTimestamp();
+        var result = await metrics.GetLatestEventTimestamp(CancellationToken.None);
         
         //Assert
         result.Should().Be(DateTimeOffset.MinValue);
     }
 
     [Test]
-    public void FetchingLatestEventTimestampFromNonexistentConfigMapThrowsException()
+    public async Task FetchingLatestEventTimestampFromNonexistentConfigMapThrowsException()
     {
         //Arrange
         var kubernetesConfigClient = new KubernetesFileWrappedProvider(KubernetesTestsGlobalContext.Instance.KubeConfigPath);
@@ -53,14 +53,14 @@ public class KubernetesAgentMetricsIntegrationTest : KubernetesAgentIntegrationT
         var metrics = new KubernetesAgentMetrics(persistenceProvider, systemLog);
 
         //Act
-        Action act = () => metrics.GetLatestEventTimestamp();
+        Func<Task> func = async () => await metrics.GetLatestEventTimestamp(CancellationToken.None);
         
         //Assert
-        act.Should().Throw<Exception>();
+        await func.Should().ThrowAsync<Exception>();
     }
 
     [Test]
-    public void WritingEventToNonExistentConfigMapShouldFailSilently()
+    public async Task WritingEventToNonExistentConfigMapShouldFailSilently()
     {
         //Arrange
         var kubernetesConfigClient = new InClusterKubernetesClientConfigProvider();
@@ -69,14 +69,14 @@ public class KubernetesAgentMetricsIntegrationTest : KubernetesAgentIntegrationT
         var metrics = new KubernetesAgentMetrics(persistenceProvider, systemLog);
 
         //Act
-        Action act = () => metrics.TrackEvent("reason", "source", DateTimeOffset.Now);
+        var func = async () => await metrics.TrackEvent("reason", "source", DateTimeOffset.Now, CancellationToken.None);
 
         //Assert
-        act.Should().NotThrow();
+        await func.Should().NotThrowAsync();
     }
 
     [Test]
-    public void WritingEventToExistingConfigMapShouldPersistJsonEntry()
+    public async Task WritingEventToExistingConfigMapShouldPersistJsonEntry()
     {
         //Arrange
         var kubernetesConfigClient = new KubernetesFileWrappedProvider(KubernetesTestsGlobalContext.Instance.KubeConfigPath);
@@ -86,10 +86,10 @@ public class KubernetesAgentMetricsIntegrationTest : KubernetesAgentIntegrationT
 
         //Act
         var eventTimestamp = DateTimeOffset.Now;
-        metrics.TrackEvent("reason", "source", eventTimestamp);
+        await metrics.TrackEvent("reason", "source", eventTimestamp, CancellationToken.None);
         
         //Assert
-        var persistedDictionary = persistenceProvider.ReadValues();
+        var persistedDictionary = await persistenceProvider.ReadValues(CancellationToken.None);
         var dataFields = persistedDictionary.Where(pair => pair.Key != "latestTimestamp");
         var typedResult = dataFields.ToDictionary(
             pair => pair.Key,
