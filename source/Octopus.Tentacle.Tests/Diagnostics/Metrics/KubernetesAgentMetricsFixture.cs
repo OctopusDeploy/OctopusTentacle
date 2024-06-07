@@ -23,7 +23,7 @@ namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
         {
             //Arrange
             MockPersistenceProvider persistenceProvider = new();
-            var sut = new KubernetesAgentMetrics(persistenceProvider, systemLog);
+            var sut = new KubernetesAgentMetrics(persistenceProvider, "metrics", systemLog);
 
             //Act
             var eventTimestamp = DateTimeOffset.Now;
@@ -47,7 +47,7 @@ namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
         {
             //Arrange
             MockPersistenceProvider persistenceProvider = new();
-            var sut = new KubernetesAgentMetrics(persistenceProvider, systemLog);
+            var sut = new KubernetesAgentMetrics(persistenceProvider, "metrics", systemLog);
 
             //Act
             var eventTimestamp = DateTimeOffset.Now;
@@ -80,7 +80,7 @@ namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
         {
             IPersistenceProvider persistenceProvider = Substitute.For<IPersistenceProvider>();
             persistenceProvider.GetValue(Arg.Any<string>(), Arg.Any<CancellationToken>()).Throws(new Exception("Something broke"));
-            var sut = new KubernetesAgentMetrics(persistenceProvider, systemLog);
+            var sut = new KubernetesAgentMetrics(persistenceProvider, "metrics", systemLog);
 
             Func<Task> func = async () => await sut.TrackEvent("Killed", "NFS Pod", DateTimeOffset.Now, CancellationToken.None);
 
@@ -91,7 +91,7 @@ namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
         public async Task GetLatestTimestampReturnsDateTimeOffsetMinimumIfNoEventsExist()
         {
             MockPersistenceProvider persistenceProvider = new();
-            var sut = new KubernetesAgentMetrics(persistenceProvider, systemLog);
+            var sut = new KubernetesAgentMetrics(persistenceProvider, "metrics", systemLog);
 
             var result = await sut.GetLatestEventTimestamp(CancellationToken.None);
 
@@ -102,7 +102,7 @@ namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
         public async Task GetLatestTimestampReturnsTheChronologicallyLatestTimeNotNewestInList()
         {
             MockPersistenceProvider persistenceProvider = new();
-            var sut = new KubernetesAgentMetrics(persistenceProvider, systemLog);
+            var sut = new KubernetesAgentMetrics(persistenceProvider, "metrics", systemLog);
 
             var epoch = DateTimeOffset.Now;
             await sut.TrackEvent("Created", "NFS Pod", epoch, CancellationToken.None);
@@ -121,7 +121,7 @@ namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
             IPersistenceProvider persistenceProvider = Substitute.For<IPersistenceProvider>();
             persistenceProvider.GetValue(Arg.Any<string>(), Arg.Any<CancellationToken>()).Throws(new Exception("Something broke"));
 
-            var sut = new KubernetesAgentMetrics(persistenceProvider, systemLog);
+            var sut = new KubernetesAgentMetrics(persistenceProvider, "metrics", systemLog);
 
             Func<Task> func = async () => await sut.GetLatestEventTimestamp(CancellationToken.None);
 

@@ -43,7 +43,6 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
         public async Task<ImmutableDictionary<string, string>> ReadValues(CancellationToken cancellationToken)
         {
             var configMap = await configMapService.TryGet(configMapName, cancellationToken);
-
             return configMap?.Data.ToImmutableDictionary() ?? ImmutableDictionary<string, string>.Empty;
         }
     }

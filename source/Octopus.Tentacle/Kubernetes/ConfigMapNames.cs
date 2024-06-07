@@ -4,5 +4,6 @@ namespace Octopus.Tentacle.Kubernetes
     {
         public const string AgentMetrics = "kubernetes-agent-metrics";
         public const string TentacleConfig = "tentacle-config";
+        public const string AgentMetricsConfigMapKey = "metrics";
     }
 }
