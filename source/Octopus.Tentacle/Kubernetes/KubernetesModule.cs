@@ -42,7 +42,7 @@ namespace Octopus.Tentacle.Kubernetes
             builder.RegisterType<KubernetesAgentMetrics>();
             builder.Register<KubernetesAgentMetrics>(ctx => 
                 ctx.Resolve<KubernetesAgentMetrics.Factory>()
-                    .Invoke(ctx.ResolveNamed<IPersistenceProvider>(kubernetesAgentMetricsPersistence)))
+                    .Invoke(ctx.ResolveNamed<IPersistenceProvider>(kubernetesAgentMetricsPersistence), ConfigMapNames.AgentMetricsConfigMapKey)
                 .As<IKubernetesAgentMetrics>();
             
             builder.RegisterType<KubernetesEventMonitor>();
