@@ -9,9 +9,11 @@ namespace Octopus.Tentacle.Kubernetes
 {
     public class KubernetesEventMonitorTask : BackgroundTask
     {
+        public delegate KubernetesEventMonitorTask Factory(IKubernetesEventMonitor eventMonitor);
+        
         readonly IKubernetesEventMonitor eventMonitor;
         readonly ISystemLog log;
-        public KubernetesEventMonitorTask(ISystemLog log, TimeSpan terminationGracePeriod, IKubernetesEventMonitor eventMonitor) : base(log, terminationGracePeriod)
+        public KubernetesEventMonitorTask(ISystemLog log, IKubernetesEventMonitor eventMonitor) : base(log, TimeSpan.FromSeconds(30))
         {
             this.log = log;
             this.eventMonitor = eventMonitor;

@@ -15,7 +15,7 @@ namespace Octopus.Tentacle.Kubernetes
 
     public class KubernetesEventMonitor : IKubernetesEventMonitor
     {
-        public delegate KubernetesEventMonitor InNamespace(string kubernetesNamespace);
+        public delegate KubernetesEventMonitor Factory(string kubernetesNamespace);
         
         readonly IKubernetesAgentMetrics agentMetrics;
         readonly IKubernetesEventService eventService;
