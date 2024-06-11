@@ -16,11 +16,12 @@ namespace Octopus.Tentacle.Kubernetes
     {
         public EventRecord? MapToRecordableEvent(Corev1Event kEvent)
         {
-            const string expectedReason = "NfsWatchdogTimeout"; 
+            const string expectedReason = "NfsWatchdogTimeout";
+            var source = EventHelpers.MetricSourceMapper(kEvent);
             if (kEvent.Reason.Equals(expectedReason))
             {
                 var eventTimestamp = EventHelpers.GetLatestTimestampInEvent(kEvent)!.Value.ToUniversalTime();
-                return new EventRecord(expectedReason, "nfs", eventTimestamp);
+                return new EventRecord(expectedReason, source, eventTimestamp);
             }
             return null;
         }
@@ -31,10 +32,11 @@ namespace Octopus.Tentacle.Kubernetes
         public EventRecord? MapToRecordableEvent(Corev1Event kEvent)
         {
             const string expectedReason = "Killing"; 
-            if (kEvent.Reason.Equals(expectedReason) && kEvent.Name().StartsWith("octopus-agent-tentacle"))
+            var source = EventHelpers.MetricSourceMapper(kEvent);
+            if (kEvent.Reason.Equals(expectedReason) && source.Equals("tentacle"))
             {
                 var eventTimestamp = EventHelpers.GetLatestTimestampInEvent(kEvent)!.Value.ToUniversalTime();
-                return new EventRecord(expectedReason, "tentacle", eventTimestamp);
+                return new EventRecord(expectedReason, source, eventTimestamp);
             }
             return null;
         }
@@ -44,11 +46,12 @@ namespace Octopus.Tentacle.Kubernetes
     {
         public EventRecord? MapToRecordableEvent(Corev1Event kEvent)
         {
-            var podLifecycleEventsOfInterest = new []{"Started", "Killing"};
-            if (podLifecycleEventsOfInterest.Contains(kEvent.Reason) && kEvent.Name().StartsWith("octopus-agent-nfs"))
+            const string expectedReason = "Killing";
+            var source = EventHelpers.MetricSourceMapper(kEvent);
+            if (kEvent.Reason.Equals(expectedReason) && source.Equals("nfs"))
             {
                 var eventTimestamp = EventHelpers.GetLatestTimestampInEvent(kEvent)!.Value.ToUniversalTime();
-                return new EventRecord(kEvent.Reason, "tentacle", eventTimestamp);
+                return new EventRecord(kEvent.Reason, source, eventTimestamp);
             }
             return null;
         }
