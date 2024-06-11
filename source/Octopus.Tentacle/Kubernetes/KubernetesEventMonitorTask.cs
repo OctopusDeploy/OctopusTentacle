@@ -9,7 +9,6 @@ namespace Octopus.Tentacle.Kubernetes
 {
     public class KubernetesEventMonitorTask : BackgroundTask
     {
-        public delegate KubernetesEventMonitorTask Factory(IKubernetesEventMonitor eventMonitor);
         
         readonly IKubernetesEventMonitor eventMonitor;
         readonly ISystemLog log;

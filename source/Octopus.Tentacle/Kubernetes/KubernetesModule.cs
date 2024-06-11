@@ -48,11 +48,8 @@ namespace Octopus.Tentacle.Kubernetes
             
             builder.RegisterType<KubernetesEventMonitor>();
             builder.Register<KubernetesEventMonitor>(ctx => ctx.Resolve<KubernetesEventMonitor.Factory>().Invoke(KubernetesConfig.Namespace))
-                .Named<IKubernetesEventMonitor>("blah");
-            builder.RegisterType<KubernetesEventMonitorTask>();
-            builder.Register<KubernetesEventMonitorTask>(ctx => ctx.Resolve<KubernetesEventMonitorTask.Factory>()
-                .Invoke(ctx.ResolveNamed<IKubernetesEventMonitor>("blah")))
-                .As<IBackgroundTask>();
+                .As<IKubernetesEventMonitor>();
+            builder.RegisterType<KubernetesEventMonitorTask>().As<IBackgroundTask>();
             
             builder.RegisterType<KubernetesEventService>().As<IKubernetesEventService>();
             

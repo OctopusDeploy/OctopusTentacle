@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using k8s.Models;
+using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Kubernetes.Diagnostics;
 
 namespace Octopus.Tentacle.Kubernetes
@@ -20,12 +21,14 @@ namespace Octopus.Tentacle.Kubernetes
         readonly IKubernetesAgentMetrics agentMetrics;
         readonly IKubernetesEventService eventService;
         readonly string kubernetesNamespace;
+        readonly EventMapper[] eventMappers;
 
-        public KubernetesEventMonitor(IKubernetesAgentMetrics agentMetrics, IKubernetesEventService eventService, string kubernetesNamespace)
+        public KubernetesEventMonitor(IKubernetesAgentMetrics agentMetrics, IKubernetesEventService eventService, string kubernetesNamespace, EventMapper[] eventMappers)
         {
             this.agentMetrics = agentMetrics;
             this.eventService = eventService;
             this.kubernetesNamespace = kubernetesNamespace;
+            this.eventMappers = eventMappers;
         }
 
         public async Task CacheNewEvents(CancellationToken cancellationToken)
@@ -36,54 +39,32 @@ namespace Octopus.Tentacle.Kubernetes
 
             var unseenEvents = allEvents.Items.Where(e =>
             {
-                var eventTimestamp = GetLatestTimestampInEvent(e);
+                var eventTimestamp = EventHelpers.GetLatestTimestampInEvent(e);
                 return eventTimestamp.HasValue && eventTimestamp.Value.ToUniversalTime() > lastCachedEventTimeStamp;
             });
             
             foreach (var kEvent in unseenEvents)
             {
-                if (IsRelevantForMetrics(kEvent))
+                var result = MapToRecordableMetric(kEvent);
+                if (result is not null)
                 {
-                    var eventTimestamp = GetLatestTimestampInEvent(kEvent)!.Value.ToUniversalTime();
-                    agentMetrics.TrackEvent(kEvent.Reason, kEvent.Name(), eventTimestamp);
+                    agentMetrics.TrackEvent(result.Reason, result.Source, result.OccurredAt);
                 }
             }
         }
 
-        bool IsRelevantForMetrics(Corev1Event kubernetesEvent)
+        EventRecord? MapToRecordableMetric(Corev1Event kubernetesEvent)
         {
-            return IsNfsPodRestart(kubernetesEvent) || IsTentacleAgentPodRestart(kubernetesEvent) || IsStaleNfsEvent(kubernetesEvent);
-        }
-
-        bool IsStaleNfsEvent(Corev1Event kubernetesEvent)
-        {
-            return kubernetesEvent.Reason == "NfsWatchdogTimeout";
-        }
-
-        bool IsNfsPodRestart(Corev1Event kubernetesEvent)
-        {
-            var podLifecycleEventsOfInterest = new []{"Started", "Killing"};
-            //TODO(tmm): having this magic event-name stored as a constant somewhere would be great.
-            return podLifecycleEventsOfInterest.Contains(kubernetesEvent.Reason) && kubernetesEvent.Name().StartsWith("octopus-agent-nfs");
-        }
-
-        bool IsTentacleAgentPodRestart(Corev1Event kubernetesEvent)
-        {
-            var podLifecycleEventsOfInterest = new []{"Started", "Killing"};
-            //TODO(tmm): having this magic event-name stored as a constant somewhere would be great.
-            return podLifecycleEventsOfInterest.Contains(kubernetesEvent.Reason) && kubernetesEvent.Name().StartsWith("octopus-agent-tentacle");
-        }
-
-        DateTime? GetLatestTimestampInEvent(Corev1Event kEvent)
-        {
-            return new List<DateTime?>
+            foreach (var eventMapper in eventMappers)
+            {
+                var result = eventMapper.MapToRecordableEvent(kubernetesEvent);
+                if (result is not null)
                 {
-                    kEvent.EventTime,
-                    kEvent.LastTimestamp,
-                    kEvent.FirstTimestamp
-                }.Where(dt => dt.HasValue)
-                .OrderByDescending(dt => dt!.Value)
-                .FirstOrDefault();
+                    return result;
+                }
+            }
+
+            return null;
         }
     }
 }
