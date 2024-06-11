@@ -41,7 +41,7 @@ namespace Octopus.Tentacle.Kubernetes
                 .Named<IPersistenceProvider>(kubernetesAgentMetricsPersistence);
             builder.Register<KubernetesAgentMetrics>(ctx => 
                 ctx.Resolve<KubernetesAgentMetrics.Factory>()
-                    .Invoke(ctx.ResolveNamed<IPersistenceProvider>(kubernetesAgentMetricsPersistence)));
+                    .Invoke(ctx.ResolveNamed<IPersistenceProvider>(kubernetesAgentMetricsPersistence), ConfigMapNames.AgentMetricsConfigMapKey));
 #if DEBUG
             builder.RegisterType<LocalMachineKubernetesClientConfigProvider>().As<IKubernetesClientConfigProvider>().SingleInstance();
 #else

@@ -1,44 +1,46 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Kubernetes.Diagnostics
 {
+    using MetricsDictionary = Dictionary<string, Dictionary<string, List<DateTimeOffset>>>;
     public class KubernetesAgentMetrics
     {
-        readonly string lastEventTimestampKey = "latestTimestamp";
+        const string LastEventTimestampKey = "latestTimestamp";
 
-        public delegate KubernetesAgentMetrics Factory(IPersistenceProvider persistenceProvider);
+        public delegate KubernetesAgentMetrics Factory(IPersistenceProvider persistenceProvider, string configMapKey);
 
+        readonly SemaphoreSlim semaphore = new(1);
         readonly IPersistenceProvider persistenceProvider;
+        readonly string configMapKey;
         readonly ISystemLog log;
 
-        public KubernetesAgentMetrics(IPersistenceProvider persistenceProvider, ISystemLog log)
+        public KubernetesAgentMetrics(IPersistenceProvider persistenceProvider, string configMapKey, ISystemLog log)
         {
             this.persistenceProvider = persistenceProvider;
+            this.configMapKey = configMapKey;
             this.log = log;
         }
 
-        public void TrackEvent(string reason, string source, DateTimeOffset occurrence)
+        public async Task TrackEvent(string reason, string source, DateTimeOffset occurrence, CancellationToken cancellationToken)
         {
             try
             {
-                lock (persistenceProvider)
+                using var _ = await semaphore.LockAsync(cancellationToken);
+                await PerformUpdateOnMetricsForReason(reason, reasonDictionary =>
                 {
-                    var sourceEventsForReason = LoadFromPersistence(reason) ?? new Dictionary<string, List<DateTimeOffset>>();
-
-                    if (!sourceEventsForReason.TryGetValue(source, out var occurenceTimestamps))
+                    if (!reasonDictionary.TryGetValue(source, out var occurenceTimestamps))
                     {
-                        occurenceTimestamps = new List<DateTimeOffset>();
-                        sourceEventsForReason[source] = occurenceTimestamps;
+                        reasonDictionary[source] = occurenceTimestamps = new List<DateTimeOffset>();
                     }
-
                     occurenceTimestamps.Add(occurrence);
-                    Persist(reason, sourceEventsForReason);
-                    UpdateLatestTimestamp(occurrence);
-                }
+                }, cancellationToken);
+                await UpdateLatestTimestamp(occurrence, cancellationToken);
             }
             catch (Exception e)
             {
@@ -46,18 +48,16 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
             }
         }
 
-        public DateTimeOffset GetLatestEventTimestamp()
+        public async Task<DateTimeOffset> GetLatestEventTimestamp(CancellationToken cancellationToken)
         {
-            lock (persistenceProvider)
-            {
-                return GetLatestEventTimeStampInternal();
-            }
+            using var _ = await semaphore.LockAsync(cancellationToken);
+            return await GetLatestEventTimeStampInternal(cancellationToken);
         }
 
-        DateTimeOffset GetLatestEventTimeStampInternal()
+        async Task<DateTimeOffset> GetLatestEventTimeStampInternal(CancellationToken cancellationToken)
         {
             //NOTE: this must be called from within a lock on the PersistenceProvider.
-            var timeStampString = persistenceProvider.GetValue(lastEventTimestampKey);
+            var timeStampString = await persistenceProvider.GetValue(LastEventTimestampKey, cancellationToken);
             if (!timeStampString.IsNullOrEmpty())
             {
                 return DateTimeOffset.Parse(timeStampString!);    
@@ -65,16 +65,16 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
             return DateTimeOffset.MinValue;
         }
 
-        void UpdateLatestTimestamp(DateTimeOffset newEventTime)
+        async Task UpdateLatestTimestamp(DateTimeOffset newEventTime, CancellationToken cancellationToken)
         {
             try
             {
-                var latestEvent = GetLatestEventTimestamp();
+                var latestEvent = await GetLatestEventTimeStampInternal(cancellationToken);
                 // The config map should _probably_ be written up as an update/commit process which makes the
                 // persistence atomic
                 if (latestEvent < newEventTime)
                 {
-                    persistenceProvider.PersistValue(lastEventTimestampKey, newEventTime.ToString("O"));
+                    await persistenceProvider.PersistValue(LastEventTimestampKey, newEventTime.ToString("O"), cancellationToken);
                 }
             }
             catch
@@ -83,18 +83,30 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
             }
         }
 
-        Dictionary<string, List<DateTimeOffset>>? LoadFromPersistence(string key)
+        async Task PerformUpdateOnMetricsForReason(string reason, Action<Dictionary<string, List<DateTimeOffset>>> updateAction, CancellationToken cancellationToken)
         {
-            var eventContent = persistenceProvider.GetValue(key) ?? "";
-            var configMapEvents = JsonConvert.DeserializeObject<Dictionary<string, List<DateTimeOffset>>>(eventContent);
+            var metrics = await LoadFromPersistence(cancellationToken) ?? new MetricsDictionary();
+            if (!metrics.TryGetValue(reason, out var reasonDictionary))
+            {
+                metrics[reason] = reasonDictionary = new Dictionary<string, List<DateTimeOffset>>();
+            }
 
+            updateAction(reasonDictionary);
+
+            await Persist(metrics, cancellationToken);
+        }
+
+        async Task<MetricsDictionary?> LoadFromPersistence(CancellationToken cancellationToken)
+        {
+            var eventContent = await persistenceProvider.GetValue(configMapKey, cancellationToken) ?? "";
+            var configMapEvents = JsonConvert.DeserializeObject<MetricsDictionary>(eventContent);
             return configMapEvents;
         }
 
-        void Persist(string key, Dictionary<string, List<DateTimeOffset>> jsonEntry)
+        async Task Persist(MetricsDictionary jsonEntry, CancellationToken cancellationToken)
         {
             var jsonEncoded = JsonConvert.SerializeObject(jsonEntry);
-            persistenceProvider.PersistValue(key, jsonEncoded);
+            await persistenceProvider.PersistValue(configMapKey, jsonEncoded, cancellationToken);
         }
     }
 }
