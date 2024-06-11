@@ -59,7 +59,7 @@ namespace Octopus.Tentacle.Kubernetes
                     trackedEventCount++;
                 }
             }
-            log.Info($"Added {trackedEventCount} to agent metrics.");
+            log.Info($"Added {trackedEventCount} entries to agent metrics.");
         }
 
         EventRecord? MapToRecordableMetric(Corev1Event kubernetesEvent)

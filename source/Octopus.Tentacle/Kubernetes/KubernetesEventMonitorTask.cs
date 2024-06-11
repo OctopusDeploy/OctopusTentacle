@@ -13,6 +13,7 @@ namespace Octopus.Tentacle.Kubernetes
         
         readonly IKubernetesEventMonitor eventMonitor;
         readonly ISystemLog log;
+        readonly TimeSpan taskInterval = TimeSpan.FromMinutes(5);
         public KubernetesEventMonitorTask(ISystemLog log, IKubernetesEventMonitor eventMonitor) : base(log, TimeSpan.FromSeconds(30))
         {
             this.log = log;
@@ -43,7 +44,7 @@ namespace Octopus.Tentacle.Kubernetes
             while (!cancellationToken.IsCancellationRequested)
             {
                 await eventMonitor.CacheNewEvents(cancellationToken);
-                await Task.Delay(TimeSpan.FromMinutes(1), cancellationToken);
+                await Task.Delay(taskInterval, cancellationToken);
             }            
         }
     }
