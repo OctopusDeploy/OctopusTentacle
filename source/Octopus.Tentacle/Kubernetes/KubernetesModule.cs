@@ -50,7 +50,7 @@ namespace Octopus.Tentacle.Kubernetes
                 .Invoke(ctx.ResolveNamed<IKubernetesEventMonitor>("blah")))
                 .As<IBackgroundTask>();
 
-            builder.RegisterType<KubernetesEventService>().As<IKubernetesClusterService>();
+            builder.RegisterType<KubernetesEventService>().As<IKubernetesEventService>();
             
                 
 #if DEBUG
