@@ -28,7 +28,7 @@ namespace Octopus.Tentacle.Kubernetes
             
             //We don't want the monitoring to ever stop
             var policy = Policy.Handle<Exception>().WaitAndRetryForeverAsync(
-                retry => TimeSpan.FromMinutes(10),
+                retry => TimeSpan.FromMinutes(1),
                 (ex, duration) =>
                 {
                     log.Error(ex, "KubernetesEventMonitor: An unexpected error occured while running event caching loop, re-running in: " + duration);
