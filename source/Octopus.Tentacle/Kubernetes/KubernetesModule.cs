@@ -40,6 +40,7 @@ namespace Octopus.Tentacle.Kubernetes
             builder.RegisterType<PersistenceProvider>();
             builder.Register<PersistenceProvider>(ctx => ctx.Resolve<PersistenceProvider.Factory>().Invoke(ConfigMapNames.AgentMetrics))
                 .Named<IPersistenceProvider>(kubernetesAgentMetricsPersistence);
+            builder.RegisterType<KubernetesAgentMetrics>();
             builder.Register<KubernetesAgentMetrics>(ctx => 
                 ctx.Resolve<KubernetesAgentMetrics.Factory>()
                     .Invoke(ctx.ResolveNamed<IPersistenceProvider>(kubernetesAgentMetricsPersistence)))
