@@ -9,6 +9,7 @@ namespace Octopus.Tentacle.Kubernetes
 {
     public class KubernetesEventMonitorTask : BackgroundTask
     {
+        public delegate KubernetesEventMonitorTask Factory(IKubernetesEventMonitor eventMonitor);
         
         readonly IKubernetesEventMonitor eventMonitor;
         readonly ISystemLog log;
@@ -34,7 +35,16 @@ namespace Octopus.Tentacle.Kubernetes
                     log.Error(ex, "KubernetesEventMonitor: An unexpected error occured while running event caching loop, re-running in: " + duration);
                 });
 
-            await policy.ExecuteAsync(async ct => await eventMonitor.CacheNewEvents(ct), cancellationToken);
+            await policy.ExecuteAsync(async ct => await RunTaskAtCadence(ct), cancellationToken);
+        }
+        
+        async Task RunTaskAtCadence(CancellationToken cancellationToken)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                await eventMonitor.CacheNewEvents(cancellationToken);
+                await Task.Delay(TimeSpan.FromMinutes(1), cancellationToken);
+            }            
         }
     }
 }
