@@ -13,6 +13,7 @@ public class KubernetesAgentInstaller
 {
     //This is the DNS of the localhost Kubernetes Server we add to the cluster in the KubernetesClusterInstaller.SetLocalhostRouting()
     const string LocalhostKubernetesServiceDns = "dockerhost.default.svc.cluster.local";
+    const string ArtifactoryAgentOciRepository = "oci://docker.packages.octopushq.com/kubernetes-agent";
 
     readonly string helmExePath;
     readonly string kubeCtlExePath;
@@ -108,7 +109,7 @@ public class KubernetesAgentInstaller
 
     string BuildAgentInstallArguments(string valuesFilePath, string? tentacleImageAndTag)
     {
-        var (chartVersion, chartRepo) = GetChartVersionAndRepository();
+        var chartVersion = GetChartVersion();
         var args = new[]
         {
             "upgrade",
@@ -121,19 +122,17 @@ public class KubernetesAgentInstaller
             NamespaceFlag,
             KubeConfigFlag,
             AgentName,
-            chartRepo
+            ArtifactoryAgentOciRepository
         };
 
         return string.Join(" ", args.WhereNotNull());
     }
 
-    static (string ChartVersion, string ChartRepo) GetChartVersionAndRepository()
+    static string GetChartVersion()
     {
         var customHelmChartVersion = Environment.GetEnvironmentVariable("KubernetesIntegrationTests_HelmChartVersion");
         
-        return !string.IsNullOrWhiteSpace(customHelmChartVersion) 
-            ? (customHelmChartVersion, "oci://docker.packages.octopushq.com/kubernetes-agent") 
-            : ("1.*.*", "oci://registry-1.docker.io/octopusdeploy/kubernetes-agent");
+        return !string.IsNullOrWhiteSpace(customHelmChartVersion) ? customHelmChartVersion : "1.*.*";
     }
 
     static string? GetImageAndRepository(string? tentacleImageAndTag)
