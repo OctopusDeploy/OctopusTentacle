@@ -31,7 +31,7 @@ namespace Octopus.Tentacle.Kubernetes
         public EventRecord? MapToRecordableEvent(Corev1Event kEvent)
         {
             const string expectedReason = "Killing"; 
-            if (!kEvent.Reason.Equals(expectedReason) && !kEvent.Name().StartsWith("octopus-agent-tentacle"))
+            if (kEvent.Reason.Equals(expectedReason) && kEvent.Name().StartsWith("octopus-agent-tentacle"))
             {
                 var eventTimestamp = EventHelpers.GetLatestTimestampInEvent(kEvent)!.Value.ToUniversalTime();
                 return new EventRecord(expectedReason, "tentacle", eventTimestamp);
