@@ -21,9 +21,9 @@ namespace Octopus.Tentacle.Kubernetes
         readonly IKubernetesAgentMetrics agentMetrics;
         readonly IKubernetesEventService eventService;
         readonly string kubernetesNamespace;
-        readonly EventMapper[] eventMappers;
+        readonly IEventMapper[] eventMappers;
 
-        public KubernetesEventMonitor(IKubernetesAgentMetrics agentMetrics, IKubernetesEventService eventService, string kubernetesNamespace, EventMapper[] eventMappers)
+        public KubernetesEventMonitor(IKubernetesAgentMetrics agentMetrics, IKubernetesEventService eventService, string kubernetesNamespace, IEventMapper[] eventMappers)
         {
             this.agentMetrics = agentMetrics;
             this.eventService = eventService;

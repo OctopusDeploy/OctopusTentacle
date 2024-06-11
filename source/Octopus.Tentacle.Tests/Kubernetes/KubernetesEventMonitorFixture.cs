@@ -54,7 +54,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             var agentMetrics = Substitute.For<IKubernetesAgentMetrics>();
             agentMetrics.GetLatestEventTimestamp().ReturnsForAnyArgs(testEpoch);
             var eventService = Substitute.For<IKubernetesEventService>();
-            var sut = new KubernetesEventMonitor(agentMetrics, eventService, "arbitraryNamespace");
+            var sut = new KubernetesEventMonitor(agentMetrics, eventService, "arbitraryNamespace", new IEventMapper[]{new NfsPodRestarted(), new AgentKilledEventMapper(), new NfsStaleEventMapper()});
 
             await sut.CacheNewEvents(tokenSource.Token);
 
@@ -91,7 +91,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                         LastTimestamp = testEpoch.DateTime.AddMinutes(1)
                     }
                 }));
-            var sut = new KubernetesEventMonitor(agentMetrics, eventService, "arbitraryNamespace");
+            var sut = new KubernetesEventMonitor(agentMetrics, eventService, "arbitraryNamespace", new IEventMapper[]{new NfsPodRestarted(), new AgentKilledEventMapper(), new NfsStaleEventMapper()});
 
             //Act
             await sut.CacheNewEvents(tokenSource.Token);
@@ -126,7 +126,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                     }
                 }));
 
-            var sut = new KubernetesEventMonitor(agentMetrics, eventService, "arbitraryNamespace");
+            var sut = new KubernetesEventMonitor(agentMetrics, eventService, "arbitraryNamespace", new IEventMapper[]{new NfsPodRestarted(), new AgentKilledEventMapper(), new NfsStaleEventMapper()});
 
             //Act
             await sut.CacheNewEvents(tokenSource.Token);
@@ -160,7 +160,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                     }
                 }));
             
-            var sut = new KubernetesEventMonitor(agentMetrics, eventService, "arbitraryNamespace");
+            var sut = new KubernetesEventMonitor(agentMetrics, eventService, "arbitraryNamespace", new IEventMapper[]{new NfsPodRestarted(), new AgentKilledEventMapper(), new NfsStaleEventMapper()});
             //Act
             await sut.CacheNewEvents(tokenSource.Token);
             
@@ -191,7 +191,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                     }
                 }));
             
-            var sut = new KubernetesEventMonitor(agentMetrics, eventService, "arbitraryNamespace");
+            var sut = new KubernetesEventMonitor(agentMetrics, eventService, "arbitraryNamespace", new IEventMapper[]{new NfsPodRestarted(), new AgentKilledEventMapper(), new NfsStaleEventMapper()});
             //Act
             await sut.CacheNewEvents(tokenSource.Token);
             

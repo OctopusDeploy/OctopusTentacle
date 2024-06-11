@@ -1,12 +1,11 @@
 ﻿using System;
 using Autofac;
-using Autofac.Core;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Octopus.Tentacle.Background;
+using Octopus.Tentacle.Kubernetes.Diagnostics;
 using Octopus.Tentacle.Kubernetes.Synchronisation;
 using Octopus.Tentacle.Kubernetes.Synchronisation.Internal;
-using Octopus.Tentacle.Kubernetes.Diagnostics;
 
 namespace Octopus.Tentacle.Kubernetes
 {
@@ -52,6 +51,10 @@ namespace Octopus.Tentacle.Kubernetes
             builder.RegisterType<KubernetesEventMonitorTask>().As<IBackgroundTask>();
             
             builder.RegisterType<KubernetesEventService>().As<IKubernetesEventService>();
+
+            builder.RegisterType<NfsStaleEventMapper>().As<IEventMapper>();
+            builder.RegisterType<AgentKilledEventMapper>().As<IEventMapper>();
+            builder.RegisterType<NfsPodRestarted>().As<IEventMapper>();
             
                 
 #if DEBUG
