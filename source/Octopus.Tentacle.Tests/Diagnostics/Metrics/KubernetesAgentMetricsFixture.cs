@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using FluentAssertions;
 using Newtonsoft.Json;
 using NSubstitute;
@@ -17,22 +19,20 @@ namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
         readonly ISystemLog systemLog = Substitute.For<ISystemLog>();
 
         [Test]
-        public void CanAddMetricToAnEmptyPersistenceMap()
+        public async Task CanAddMetricToAnEmptyPersistenceMap()
         {
             //Arrange
             MockPersistenceProvider persistenceProvider = new();
-            var sut = new KubernetesAgentMetrics(persistenceProvider, systemLog);
+            var sut = new KubernetesAgentMetrics(persistenceProvider, "metrics", systemLog);
 
             //Act
             var eventTimestamp = DateTimeOffset.Now;
-            sut.TrackEvent("Killed", "NFS Pod", eventTimestamp);
+            await sut.TrackEvent("Killed", "NFS Pod", eventTimestamp, CancellationToken.None);
 
             //Assert
-            var persistedDictionary = persistenceProvider.ReadValues();
-            var dataFields = persistedDictionary.Where(pair => pair.Key != "latestTimestamp");
-            var typedResult = dataFields.ToDictionary(
-                pair => pair.Key,
-                pair => JsonConvert.DeserializeObject<Dictionary<string, List<DateTimeOffset>>>(pair.Value));
+            var persistedDictionary = await persistenceProvider.ReadValues(CancellationToken.None);
+            var metricsData = persistedDictionary["metrics"];
+            var typedResult = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, List<DateTimeOffset>>>>(metricsData);
 
             typedResult.Should().BeEquivalentTo(new Dictionary<string, Dictionary<string, List<DateTimeOffset>>>
             {
@@ -41,25 +41,23 @@ namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
         }
 
         [Test]
-        public void TrackingMultipleActionsAndSourcesResultsInAFullEventList()
+        public async Task TrackingMultipleActionsAndSourcesResultsInAFullEventList()
         {
             //Arrange
             MockPersistenceProvider persistenceProvider = new();
-            var sut = new KubernetesAgentMetrics(persistenceProvider, systemLog);
+            var sut = new KubernetesAgentMetrics(persistenceProvider, "metrics", systemLog);
 
             //Act
             var eventTimestamp = DateTimeOffset.Now;
-            sut.TrackEvent("Killed", "NFS Pod", eventTimestamp);
-            sut.TrackEvent("Created", "NFS Pod", eventTimestamp);
-            sut.TrackEvent("Created", "Script Pod", eventTimestamp);
-            sut.TrackEvent("Restarted", "Script Pod", eventTimestamp);
+            await sut.TrackEvent("Killed", "NFS Pod", eventTimestamp, CancellationToken.None);
+            await sut.TrackEvent("Created", "NFS Pod", eventTimestamp, CancellationToken.None);
+            await sut.TrackEvent("Created", "Script Pod", eventTimestamp, CancellationToken.None);
+            await  sut.TrackEvent("Restarted", "Script Pod", eventTimestamp, CancellationToken.None);
             
             //Assert
-            var persistedDictionary = persistenceProvider.ReadValues();
-            var dataFields = persistedDictionary.Where(pair => pair.Key != "latestTimestamp");
-            var typedResult = dataFields.ToDictionary(
-                pair => pair.Key,
-                pair => JsonConvert.DeserializeObject<Dictionary<string, List<DateTimeOffset>>>(pair.Value));
+            var persistedDictionary = await persistenceProvider.ReadValues(CancellationToken.None);
+            var metricsData = persistedDictionary["metrics"];
+            var typedResult = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, List<DateTimeOffset>>>>(metricsData);
 
             typedResult.Should().BeEquivalentTo(new Dictionary<string, Dictionary<string, List<DateTimeOffset>>>
             {
@@ -74,74 +72,79 @@ namespace Octopus.Tentacle.Tests.Diagnostics.Metrics
         }
 
         [Test]
-        public void TrackEventDoesNotPropagateExceptions()
+        public async Task TrackEventDoesNotPropagateExceptions()
         {
             IPersistenceProvider persistenceProvider = Substitute.For<IPersistenceProvider>();
-            persistenceProvider.GetValue(Arg.Any<string>()).Throws(new Exception("Something broke"));
-            var sut = new KubernetesAgentMetrics(persistenceProvider, systemLog);
+            persistenceProvider.GetValue(Arg.Any<string>(), Arg.Any<CancellationToken>()).Throws(new Exception("Something broke"));
+            var sut = new KubernetesAgentMetrics(persistenceProvider, "metrics", systemLog);
 
-            Action act = () => sut.TrackEvent("Killed", "NFS Pod", DateTimeOffset.Now);
+            Func<Task> func = async () => await sut.TrackEvent("Killed", "NFS Pod", DateTimeOffset.Now, CancellationToken.None);
 
-            act.Should().NotThrow();
+            await func.Should().NotThrowAsync();
         }
 
         [Test]
-        public void GetLatestTimestampReturnsDateTimeOffsetMinimumIfNoEventsExist()
+        public async Task GetLatestTimestampReturnsDateTimeOffsetMinimumIfNoEventsExist()
         {
             MockPersistenceProvider persistenceProvider = new();
-            var sut = new KubernetesAgentMetrics(persistenceProvider, systemLog);
+            var sut = new KubernetesAgentMetrics(persistenceProvider, "metrics", systemLog);
 
-            sut.GetLatestEventTimestamp().Should().Be(DateTimeOffset.MinValue);
+            var result = await sut.GetLatestEventTimestamp(CancellationToken.None);
+
+            result.Should().Be(DateTimeOffset.MinValue);
         }
 
         [Test]
-        public void GetLatestTimestampReturnsTheChronologicallyLatestTimeNotNewestInList()
+        public async Task GetLatestTimestampReturnsTheChronologicallyLatestTimeNotNewestInList()
         {
             MockPersistenceProvider persistenceProvider = new();
-            var sut = new KubernetesAgentMetrics(persistenceProvider, systemLog);
+            var sut = new KubernetesAgentMetrics(persistenceProvider, "metrics", systemLog);
 
             var epoch = DateTimeOffset.Now;
-            sut.TrackEvent("Created", "NFS Pod", epoch);
-            sut.TrackEvent("Killed", "NFS Pod", epoch.AddMinutes(1));
-            sut.TrackEvent("Created", "Script Pod", epoch);
-            sut.TrackEvent("Killed", "Script Pod", epoch.AddMinutes(-1));
+            await sut.TrackEvent("Created", "NFS Pod", epoch, CancellationToken.None);
+            await sut.TrackEvent("Killed", "NFS Pod", epoch.AddMinutes(1), CancellationToken.None);
+            await sut.TrackEvent("Created", "Script Pod", epoch, CancellationToken.None);
+            await sut.TrackEvent("Killed", "Script Pod", epoch.AddMinutes(-1), CancellationToken.None);
 
-            var timeDate = sut.GetLatestEventTimestamp();
+            var timeDate = await sut.GetLatestEventTimestamp(CancellationToken.None);
 
             timeDate.Should().BeExactly(epoch.AddMinutes(1));
         }
 
         [Test]
-        public void GetLatestTimeStampPropagatesExceptionsIfUnderlyingPersistenceFails()
+        public async Task GetLatestTimeStampPropagatesExceptionsIfUnderlyingPersistenceFails()
         {
             IPersistenceProvider persistenceProvider = Substitute.For<IPersistenceProvider>();
-            persistenceProvider.GetValue(Arg.Any<string>()).Throws(new Exception("Something broke"));
+            persistenceProvider.GetValue(Arg.Any<string>(), Arg.Any<CancellationToken>()).Throws(new Exception("Something broke"));
 
-            var sut = new KubernetesAgentMetrics(persistenceProvider, systemLog);
+            var sut = new KubernetesAgentMetrics(persistenceProvider, "metrics", systemLog);
 
-            Action act = () => sut.GetLatestEventTimestamp();
+            Func<Task> func = async () => await sut.GetLatestEventTimestamp(CancellationToken.None);
 
-            act.Should().Throw<Exception>().WithMessage("Something broke");
+            await func.Should().ThrowAsync<Exception>().WithMessage("Something broke");
         }
     }
 
     public class MockPersistenceProvider : IPersistenceProvider
     {
-        Dictionary<string, string> Content = new();
+        readonly Dictionary<string, string> content = new();
 
-        public string GetValue(string key)
+        public async Task<string?> GetValue(string key, CancellationToken cancellationToken)
         {
-            return Content.TryGetValue(key, out var value) ? value : "";
+            await Task.CompletedTask;
+            return content.TryGetValue(key, out var value) ? value : null;
         }
 
-        public void PersistValue(string key, string value)
+        public async Task PersistValue(string key, string value, CancellationToken cancellationToken)
         {
-            Content[key] = value;
+            await Task.CompletedTask;
+            content[key] = value;
         }
 
-        public ImmutableDictionary<string, string> ReadValues()
+        public async Task<ImmutableDictionary<string, string>> ReadValues(CancellationToken cancellationToken)
         {
-            return Content.ToImmutableDictionary();
+            await Task.CompletedTask;
+            return content.ToImmutableDictionary();
         }
     }
 }
