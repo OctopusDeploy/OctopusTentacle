@@ -37,6 +37,7 @@ namespace Octopus.Tentacle.Kubernetes
             builder.RegisterGeneric(typeof(ReferenceCountingKeyedBinarySemaphore<>)).As(typeof(IKeyedSemaphore<>)).SingleInstance();
 
             const string kubernetesAgentMetricsPersistence = "kubernetes-agent-metrics-persistence";
+            builder.RegisterType<PersistenceProvider>();
             builder.Register<PersistenceProvider>(ctx => ctx.Resolve<PersistenceProvider.Factory>().Invoke(ConfigMapNames.AgentMetrics))
                 .Named<IPersistenceProvider>(kubernetesAgentMetricsPersistence);
             builder.Register<KubernetesAgentMetrics>(ctx => 
@@ -44,13 +45,13 @@ namespace Octopus.Tentacle.Kubernetes
                     .Invoke(ctx.ResolveNamed<IPersistenceProvider>(kubernetesAgentMetricsPersistence)))
                 .As<IKubernetesAgentMetrics>();
             
-            builder.Register<KubernetesEventMonitor>(ctx => ctx.Resolve<KubernetesEventMonitor.Factory>().Invoke(KubernetesConfig.Namespace))
-                .Named<IKubernetesEventMonitor>("blah");
-            builder.Register<KubernetesEventMonitorTask>(ctx => ctx.Resolve<KubernetesEventMonitorTask.Factory>()
-                .Invoke(ctx.ResolveNamed<IKubernetesEventMonitor>("blah")))
-                .As<IBackgroundTask>();
-
-            builder.RegisterType<KubernetesEventService>().As<IKubernetesEventService>();
+            // builder.Register<KubernetesEventMonitor>(ctx => ctx.Resolve<KubernetesEventMonitor.Factory>().Invoke(KubernetesConfig.Namespace))
+            //     .Named<IKubernetesEventMonitor>("blah");
+            // builder.Register<KubernetesEventMonitorTask>(ctx => ctx.Resolve<KubernetesEventMonitorTask.Factory>()
+            //     .Invoke(ctx.ResolveNamed<IKubernetesEventMonitor>("blah")))
+            //     .As<IBackgroundTask>();
+            //
+            // builder.RegisterType<KubernetesEventService>().As<IKubernetesEventService>();
             
                 
 #if DEBUG
