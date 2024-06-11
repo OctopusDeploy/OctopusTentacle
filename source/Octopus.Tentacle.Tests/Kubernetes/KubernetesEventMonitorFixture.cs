@@ -64,7 +64,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         }
 
         [Test]
-        public async Task NfsPodStartAndKillingEventsAreTrackedInMetrics()
+        public async Task NfsPodKillingEventsAreTrackedInMetrics()
         {
             //Arrange
             var agentMetrics = new StubbedAgentMetrics(testEpoch);
@@ -74,20 +74,10 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                 {
                     new()
                     {
-                        Reason = "Started",
-                        Metadata = new V1ObjectMeta()
-                        {
-                            Name = "octopus-agent-nfs",
-                        },
-                        FirstTimestamp = testEpoch.DateTime.AddSeconds(1),
-                        LastTimestamp = testEpoch.DateTime.AddSeconds(1)
-                    },
-                    new()
-                    {
                         Reason = "Killing",
                         Metadata = new V1ObjectMeta()
                         {
-                            Name = "octopus-agent-nfs",
+                            Name = "octopus-agent-nfs-123412-1234123",
                         },
                         FirstTimestamp = testEpoch.DateTime.AddMinutes(1),
                         LastTimestamp = testEpoch.DateTime.AddMinutes(1)
@@ -101,8 +91,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             //Assert
             agentMetrics.Events.Should().BeEquivalentTo(new Dictionary<string, Dictionary<string, List<DateTimeOffset>>>
             {
-                { "Started", new Dictionary<string, List<DateTimeOffset>> { { "octopus-agent-nfs", new List<DateTimeOffset>() { testEpoch.AddSeconds(1) } } } },
-                { "Killing", new Dictionary<string, List<DateTimeOffset>> { { "octopus-agent-nfs", new List<DateTimeOffset>() { testEpoch.AddMinutes(1) } } } },
+                { "Killing", new Dictionary<string, List<DateTimeOffset>> { { "nfs", new List<DateTimeOffset>() { testEpoch.AddMinutes(1) } } } },
             });
         }
 
@@ -136,7 +125,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             //Assert
             agentMetrics.Events.Should().BeEquivalentTo(new Dictionary<string, Dictionary<string, List<DateTimeOffset>>>
             {
-                { "NfsWatchdogTimeout", new Dictionary<string, List<DateTimeOffset>> { { podName, new List<DateTimeOffset>() { testEpoch.AddSeconds(1) } } } },
+                { "NfsWatchdogTimeout", new Dictionary<string, List<DateTimeOffset>> { { "script", new List<DateTimeOffset>() { testEpoch.AddSeconds(1) } } } },
             });
         }
 
@@ -202,7 +191,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             // the event should factored into the metrics, and should report this latest time value.
             agentMetrics.Events.Should().BeEquivalentTo(new Dictionary<string, Dictionary<string, List<DateTimeOffset>>>
             {
-                { "NfsWatchdogTimeout", new Dictionary<string, List<DateTimeOffset>> { { podName, new List<DateTimeOffset>() { testEpoch.AddMinutes(1) } } } },
+                { "NfsWatchdogTimeout", new Dictionary<string, List<DateTimeOffset>> { { "script", new List<DateTimeOffset>() { testEpoch.AddMinutes(1) } } } },
             });
         }
     }
