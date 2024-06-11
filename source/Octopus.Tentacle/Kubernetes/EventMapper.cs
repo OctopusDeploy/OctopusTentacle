@@ -27,7 +27,7 @@ namespace Octopus.Tentacle.Kubernetes
         }
     }
     
-    public class AgentKilledEventMapper : IEventMapper
+    public class TentacleKilledEventMapper : IEventMapper
     {
         public EventRecord? MapToRecordableEvent(Corev1Event kEvent)
         {

@@ -13,7 +13,7 @@ namespace Octopus.Tentacle.Kubernetes
         
         readonly IKubernetesEventMonitor eventMonitor;
         readonly ISystemLog log;
-        readonly TimeSpan taskInterval = TimeSpan.FromMinutes(5);
+        readonly TimeSpan taskInterval = TimeSpan.FromMinutes(10);
         public KubernetesEventMonitorTask(ISystemLog log, IKubernetesEventMonitor eventMonitor) : base(log, TimeSpan.FromSeconds(30))
         {
             this.log = log;
@@ -30,7 +30,7 @@ namespace Octopus.Tentacle.Kubernetes
             
             //We don't want the monitoring to ever stop
             var policy = Policy.Handle<Exception>().WaitAndRetryForeverAsync(
-                retry => TimeSpan.FromMinutes(5),
+                retry => taskInterval,
                 (ex, duration) =>
                 {
                     log.Warn($"KubernetesEventMonitor: {ex.Message}");

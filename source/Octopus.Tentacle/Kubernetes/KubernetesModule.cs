@@ -53,7 +53,7 @@ namespace Octopus.Tentacle.Kubernetes
             builder.RegisterType<KubernetesEventService>().As<IKubernetesEventService>();
 
             builder.RegisterType<NfsStaleEventMapper>().As<IEventMapper>();
-            builder.RegisterType<AgentKilledEventMapper>().As<IEventMapper>();
+            builder.RegisterType<TentacleKilledEventMapper>().As<IEventMapper>();
             builder.RegisterType<NfsPodRestarted>().As<IEventMapper>();
             
                 
