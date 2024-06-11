@@ -14,7 +14,7 @@
     - Product/Version      : Change this every major build
     - Product/UpgradeCode  : Never change this
   -->
-  <Product Id="*" Name="Octopus Deploy Tentacle" Language="1033" Version="8.1.1518" Manufacturer="Octopus Deploy Pty. Ltd." UpgradeCode="1B32E04F-49C2-4907-8879-A556986F7F16">
+  <Product Id="*" Name="Octopus Deploy Tentacle" Language="1033" Version="8.1.1810" Manufacturer="Octopus Deploy Pty. Ltd." UpgradeCode="1B32E04F-49C2-4907-8879-A556986F7F16">
     <Package InstallerVersion="200" Compressed="yes" Description="Octopus Deploy Tentacle" Platform="$(var.Platform)" InstallScope="perMachine" />
     <Media Id="1" Cabinet="Files.cab" EmbedCab="yes" />
     <Property Id="MSIFASTINSTALL" Value="3" />

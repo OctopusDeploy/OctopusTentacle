@@ -11,8 +11,8 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
     using MetricsDictionary = Dictionary<string, Dictionary<string, List<DateTimeOffset>>>;
     public interface IKubernetesAgentMetrics
     {
-        void TrackEvent(string reason, string source, DateTimeOffset occurrence);
-        DateTimeOffset GetLatestEventTimestamp();
+        Task TrackEvent(string reason, string source, DateTimeOffset occurrence, CancellationToken cancellationToken);
+        Task<DateTimeOffset> GetLatestEventTimestamp(CancellationToken cancellationToken);
     }
     
     public class KubernetesAgentMetrics : IKubernetesAgentMetrics

@@ -23,7 +23,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             this.latestTimeStamp = latestTimeStamp;
         }
 
-        public void TrackEvent(string reason, string source, DateTimeOffset occurrence)
+        public async Task TrackEvent(string reason, string source, DateTimeOffset occurrence, CancellationToken cancellationToken)
         {
             if (!Events.ContainsKey(reason))
             {
@@ -36,10 +36,12 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             }
 
             Events[reason][source].Add(occurrence);
+            await Task.CompletedTask;
         }
 
-        public DateTimeOffset GetLatestEventTimestamp()
+        public async Task<DateTimeOffset> GetLatestEventTimestamp(CancellationToken cancellationToken)
         {
+            await Task.CompletedTask;
             return latestTimeStamp;
         }
     }
@@ -54,13 +56,13 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         public async Task NoEntriesAreSentToMetricsWhenEventListIsEmpty()
         {
             var agentMetrics = Substitute.For<IKubernetesAgentMetrics>();
-            agentMetrics.GetLatestEventTimestamp().ReturnsForAnyArgs(testEpoch);
+            agentMetrics.GetLatestEventTimestamp(Arg.Any<CancellationToken>()).ReturnsForAnyArgs(testEpoch);
             var eventService = Substitute.For<IKubernetesEventService>();
             var sut = new KubernetesEventMonitor(agentMetrics, eventService, "arbitraryNamespace", new IEventMapper[]{new NfsPodRestarted(), new AgentKilledEventMapper(), new NfsStaleEventMapper()}, log);
 
             await sut.CacheNewEvents(tokenSource.Token);
 
-            agentMetrics.DidNotReceiveWithAnyArgs().TrackEvent(default!, default!, default);
+            await agentMetrics.DidNotReceiveWithAnyArgs().TrackEvent(default!, default!, default, default!);
         }
 
         [Test]

@@ -40,7 +40,7 @@ namespace Octopus.Tentacle.Kubernetes
             log.Info($"Parsing kubernetes event list for namespace {kubernetesNamespace}.");
             var allEvents = await eventService.FetchAllEventsAsync(kubernetesNamespace, cancellationToken) ?? new Corev1EventList(new List<Corev1Event>());
 
-            var lastCachedEventTimeStamp = agentMetrics.GetLatestEventTimestamp();
+            var lastCachedEventTimeStamp = await agentMetrics.GetLatestEventTimestamp(cancellationToken);
 
             var unseenEvents = allEvents.Items.Where(e =>
             {
@@ -55,7 +55,7 @@ namespace Octopus.Tentacle.Kubernetes
                 var result = MapToRecordableMetric(kEvent);
                 if (result is not null)
                 {
-                    agentMetrics.TrackEvent(result.Reason, result.Source, result.OccurredAt);
+                    await agentMetrics.TrackEvent(result.Reason, result.Source, result.OccurredAt, cancellationToken);
                     trackedEventCount++;
                 }
             }
