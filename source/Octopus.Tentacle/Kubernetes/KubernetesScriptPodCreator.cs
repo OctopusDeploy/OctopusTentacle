@@ -12,6 +12,7 @@ using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
+using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Util;
 using Octopus.Tentacle.Variables;
@@ -187,10 +188,7 @@ namespace Octopus.Tentacle.Kubernetes
                 Spec = new V1PodSpec
                 {
                     InitContainers = await CreateInitContainers(command, podName, homeDir, workspacePath),
-                    Containers = new List<V1Container>
-                    {
-                        await CreateScriptContainer(command, podName, scriptName, homeDir, workspacePath, workspace.ScriptArguments)
-                    }.AddIfNotNull(CreateWatchdogContainer(command, homeDir)),
+                    Containers = await CreateScriptContainers(command, podName, scriptName, homeDir, workspacePath, workspace.ScriptArguments),
                     //only include the image pull secret name if it's actually been defined
                     ImagePullSecrets = imagePullSecretName is not null
                         ? new List<V1LocalObjectReference>
@@ -218,58 +216,33 @@ namespace Octopus.Tentacle.Kubernetes
             LogVerboseToBothLogs($"Executing script in Kubernetes Pod '{podName}'.", tentacleScriptLog);
         }
 
-        async Task<IList<V1Container>> CreateInitContainers(StartKubernetesScriptCommandV1 command, string podName, string homeDir, string workspacePath)
+        protected virtual async Task<IList<V1Container>> CreateScriptContainers(StartKubernetesScriptCommandV1 command, string podName, string scriptName, string homeDir, string workspacePath, string[]? scriptArguments)
         {
-            if (!command.IsRawScript)
+            return new List<V1Container>
             {
-                return new List<V1Container>();
-            }
-
-            var container = new V1Container
-            {
-                Name = $"{podName}-init",
-                Image = command.PodImageConfiguration?.Image ?? await containerResolver.GetContainerImageForCluster(),
-                Command = new List<string> { "sh", "-c", GetInitExecutionScript("/nfs-mount", homeDir, workspacePath) },
-                VolumeMounts = new List<V1VolumeMount>{new("/nfs-mount", "init-nfs-volume"), new(homeDir, "tentacle-home")},
-                Resources = new V1ResourceRequirements
-                {
-                    //set resource requests to be quite low for now as the scripts tend to run fairly quickly
-                    Requests = new Dictionary<string, ResourceQuantity>
-                    {
-                        ["cpu"] = new("25m"),
-                        ["memory"] = new("100Mi")
-                    }
-                }
-            };
-
-            return new List<V1Container> { container };
+                await CreateScriptContainer(command, podName, scriptName, homeDir, workspacePath, scriptArguments)
+            }.AddIfNotNull(CreateWatchdogContainer(homeDir));
         }
 
-        static IList<V1Volume> CreateVolumes(StartKubernetesScriptCommandV1 command)
+        protected virtual async Task<IList<V1Container>> CreateInitContainers(StartKubernetesScriptCommandV1 command, string podName, string homeDir, string workspacePath)
         {
-            var homeVolume = new V1Volume("tentacle-home");
-            var volumes = new List<V1Volume> { homeVolume };
-            if (command.IsRawScript)
+            await Task.CompletedTask;
+            return new List<V1Container>();
+        }
+
+        protected virtual IList<V1Volume> CreateVolumes(StartKubernetesScriptCommandV1 command)
+        {
+            return new List<V1Volume>
             {
-                homeVolume.EmptyDir = new V1EmptyDirVolumeSource();
-                var initVolume = new V1Volume("init-nfs-volume")
+                new()
                 {
+                    Name = "tentacle-home",
                     PersistentVolumeClaim = new V1PersistentVolumeClaimVolumeSource
                     {
                         ClaimName = KubernetesConfig.PodVolumeClaimName
                     }
-                };
-                volumes.Add(initVolume);
-            }
-            else
-            {
-                homeVolume.PersistentVolumeClaim = new V1PersistentVolumeClaimVolumeSource
-                {
-                    ClaimName = KubernetesConfig.PodVolumeClaimName
-                };
-            }
-
-            return volumes;
+                }
+            };
         }
 
         void LogVerboseToBothLogs(string message, InMemoryTentacleScriptLog tentacleScriptLog)
@@ -278,7 +251,7 @@ namespace Octopus.Tentacle.Kubernetes
             tentacleScriptLog.Verbose(message);
         }
 
-        async Task<V1Container> CreateScriptContainer(StartKubernetesScriptCommandV1 command, string podName, string scriptName, string homeDir, string workspacePath, string[]? scriptArguments)
+        protected async Task<V1Container> CreateScriptContainer(StartKubernetesScriptCommandV1 command, string podName, string scriptName, string homeDir, string workspacePath, string[]? scriptArguments)
         {
             var spaceInformation = kubernetesPhysicalFileSystem.GetStorageInformation();
             return new V1Container
@@ -321,18 +294,9 @@ namespace Octopus.Tentacle.Kubernetes
             };
         }
 
-        string GetInitExecutionScript(string nfsVolumeDirectory, string homeDir, string workspacePath)
+        static V1Container? CreateWatchdogContainer(string homeDir)
         {
-            var nfsWorkspacePath = Path.Combine(nfsVolumeDirectory, workspacePath);
-            var homeWorkspacePath = Path.Combine(homeDir, workspacePath);
-            return $@"
-                    mkdir -p ""{homeWorkspacePath}"" && cp -r ""{nfsWorkspacePath}""/* ""{homeWorkspacePath}"";
-                    ";
-        }
-
-        V1Container? CreateWatchdogContainer(StartKubernetesScriptCommandV1 command, string homeDir)
-        {
-            if (command.IsRawScript || KubernetesConfig.NfsWatchdogImage is null)
+            if (KubernetesConfig.NfsWatchdogImage is null)
             {
                 return null;
             }
