@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Octopus.Tentacle.Client.Scripts.Models;
@@ -32,17 +31,25 @@ public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrati
     }
 
     [Test]
-    public async Task RunSimpleScript()
+    [TestCase(ScriptType.Normal)]
+    [TestCase(ScriptType.Raw)]
+    public async Task RunSimpleScript(ScriptType scriptType)
     {
         // Arrange
         var logs = new List<ProcessOutput>();
         var scriptCompleted = false;
 
-        var command = new ExecuteKubernetesScriptCommandBuilder(LoggingUtils.CurrentTestHash())
+        var builder = new ExecuteKubernetesScriptCommandBuilder(LoggingUtils.CurrentTestHash())
             .WithScriptBody(script => script
                 .Print("Hello World")
-                .PrintNTimesWithDelay("Yep", 30, TimeSpan.FromMilliseconds(100)))
-            .Build();
+                .PrintNTimesWithDelay("Yep", 30, TimeSpan.FromMilliseconds(100)));
+
+        if (scriptType == ScriptType.Raw)
+        {
+            builder.IsRawScript();
+        }
+
+        var command = builder.Build();
 
         //act
         var result = await TentacleClient.ExecuteScript(command, StatusReceived, ScriptCompleted, new InMemoryLog(), CancellationToken);
@@ -73,17 +80,25 @@ public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrati
     }
     
     [Test]
-    public async Task SimpleScriptExitsWithErrorCode_ScriptFails()
+    [TestCase(ScriptType.Normal)]
+    [TestCase(ScriptType.Raw)]
+    public async Task SimpleScriptExitsWithErrorCode_ScriptFails(ScriptType scriptType)
     {
         // Arrange
         var logs = new List<ProcessOutput>();
         var scriptCompleted = false;
 
-        var command = new ExecuteKubernetesScriptCommandBuilder(LoggingUtils.CurrentTestHash())
+        var builder = new ExecuteKubernetesScriptCommandBuilder(LoggingUtils.CurrentTestHash())
             .WithScriptBody(script => script
                 .Print("Hello World")
-                .ExitsWith(1))
-            .Build();
+                .ExitsWith(1));
+
+        if (scriptType == ScriptType.Raw)
+        {
+            builder.IsRawScript();
+        }
+
+        var command = builder.Build();
 
         //act
         var result = await TentacleClient.ExecuteScript(command, StatusReceived, ScriptCompleted, new InMemoryLog(), CancellationToken);
@@ -109,20 +124,28 @@ public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrati
     }
     
     [Test]
-    public async Task ScriptPodIsTerminatedDuringScriptExecution_ScriptFails()
+    [TestCase(ScriptType.Normal)]
+    [TestCase(ScriptType.Raw)]
+    public async Task ScriptPodIsTerminatedDuringScriptExecution_ScriptFails(ScriptType scriptType)
     {
         // Arrange
         var logs = new List<ProcessOutput>();
         var scriptCompleted = false;
         var semaphoreSlim = new SemaphoreSlim(0, 1);
 
-        var command = new ExecuteKubernetesScriptCommandBuilder(LoggingUtils.CurrentTestHash())
+        var builder = new ExecuteKubernetesScriptCommandBuilder(LoggingUtils.CurrentTestHash())
             .WithScriptBody(script => script
                 .Print("Hello World")
                 .Sleep(TimeSpan.FromSeconds(1))
                 .Print("waitingtobestopped")
-                .Sleep(TimeSpan.FromSeconds(100)))
-            .Build();
+                .Sleep(TimeSpan.FromSeconds(100)));
+
+        if (scriptType == ScriptType.Raw)
+        {
+            builder.IsRawScript();
+        }
+
+        var command = builder.Build();
 
         //act
         var scriptTask = Task.Run(async () => await TentacleClient.ExecuteScript(command, StatusReceived, ScriptCompleted, new InMemoryLog(), CancellationToken));
@@ -167,7 +190,9 @@ public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrati
     }
 
     [Test]
-    public async Task TentaclePodIsTerminatedDuringScriptExecution_ShouldRestartAndPickUpPodStatus()
+    [TestCase(ScriptType.Normal)]
+    [TestCase(ScriptType.Raw)]
+    public async Task TentaclePodIsTerminatedDuringScriptExecution_ShouldRestartAndPickUpPodStatus(ScriptType scriptType)
     {
         // Arrange
         var logs = new List<ProcessOutput>();
@@ -175,13 +200,19 @@ public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrati
         const int count = 100;
         var semaphoreSlim = new SemaphoreSlim(0, 1);
 
-        var command = new ExecuteKubernetesScriptCommandBuilder(LoggingUtils.CurrentTestHash())
+        var builder = new ExecuteKubernetesScriptCommandBuilder(LoggingUtils.CurrentTestHash())
             .WithScriptBody(script => script
                 .Print("Hello World")
                 .Sleep(TimeSpan.FromSeconds(1))
                 .Print("waitingtobestopped")
-                .PrintNTimesWithDelay(i => $"Count: {i}", count, TimeSpan.FromSeconds(1)))
-            .Build();
+                .PrintNTimesWithDelay(i => $"Count: {i}", count, TimeSpan.FromSeconds(1)));
+
+        if (scriptType == ScriptType.Raw)
+        {
+            builder.IsRawScript();
+        }
+
+        var command = builder.Build();
 
         var commandResult = await KubeCtl.ExecuteNamespacedCommand("get pods -l app.kubernetes.io/name=octopus-agent -o \"Name\"");
         var initialPodName = commandResult.StdOut.Single();
@@ -241,20 +272,27 @@ public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrati
     }
 
     [Test]
-    public async Task WhenALongRunningScriptIsCancelled_TheScriptShouldStop()
+    [TestCase(ScriptType.Normal)]
+    [TestCase(ScriptType.Raw)]
+    public async Task WhenALongRunningScriptIsCancelled_TheScriptShouldStop(ScriptType scriptType)
     {
         // Arrange
         var logs = new List<ProcessOutput>();
         var scriptCompleted = false;
 
-        var command = new ExecuteKubernetesScriptCommandBuilder(LoggingUtils.CurrentTestHash())
+        var builder = new ExecuteKubernetesScriptCommandBuilder(LoggingUtils.CurrentTestHash())
             .WithScriptBody(script => script
                 .Print("hello")
                 .Sleep(TimeSpan.FromSeconds(1))
                 .Print("waitingtobestopped")
                 .Sleep(TimeSpan.FromSeconds(100))
-                .Print("i did not stop"))
-            .Build();
+                .Print("i did not stop"));
+        if (scriptType == ScriptType.Raw)
+        {
+            builder.IsRawScript();
+        }
+
+        var command = builder.Build();
 
         var scriptCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
         Exception? actualException = null;
@@ -299,5 +337,133 @@ public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrati
             scriptCompleted = true;
             return Task.CompletedTask;
         }
+    }
+
+    [Test]
+    public async Task NfsPodIsTerminatedDuringNormalScriptExecution_ScriptFails()
+    {
+        // Arrange
+        var logs = new List<ProcessOutput>();
+        var scriptCompleted = false;
+        var semaphoreSlim = new SemaphoreSlim(0, 1);
+
+        var command = new ExecuteKubernetesScriptCommandBuilder(LoggingUtils.CurrentTestHash())
+            .WithScriptBody(script => script
+                .Print("Hello World")
+                .Sleep(TimeSpan.FromSeconds(1))
+                .Print("waitingtobestopped")
+                .Sleep(TimeSpan.FromSeconds(100)))
+            .Build();
+
+        //act
+        var scriptTask = Task.Run(async () => await TentacleClient.ExecuteScript(command, StatusReceived, ScriptCompleted, new InMemoryLog(), CancellationToken));
+
+        //wait for the script to be started, then waiting
+        await semaphoreSlim.WaitAsync(CancellationToken);
+
+        Logger.Information("Deleting NFS pod");
+        await KubeCtl.ExecuteNamespacedCommand("delete pods -l app.kubernetes.io/name=octopus-agent-nfs");
+
+        var result = await scriptTask;
+
+        //Assert
+        logs.Should().Contain(po => po.Source == ProcessOutputSource.StdOut && po.Text == "Hello World");
+        logs.Should().Contain(po => po.Source == ProcessOutputSource.StdOut && po.Text == "waitingtobestopped");
+
+        scriptCompleted.Should().BeTrue();
+        result.ExitCode.Should().NotBe(0); // The error exit code seems to change and I can't work out why, so just testing that it's not success
+        result.State.Should().Be(ProcessState.Complete);
+
+        return;
+
+        void StatusReceived(ScriptExecutionStatus status)
+        {
+            if (status.Logs.Any(l => l.Text == "waitingtobestopped"))
+            {
+                semaphoreSlim.Release();
+            }
+
+            logs.AddRange(status.Logs);
+        }
+
+        Task ScriptCompleted(CancellationToken ct)
+        {
+            scriptCompleted = true;
+            return Task.CompletedTask;
+        }
+    }
+
+    [Test]
+    public async Task NfsPodIsTerminatedDuringRawScriptExecution_ShouldRestartAndPickUpPodStatus()
+    {
+        // Arrange
+        var logs = new List<ProcessOutput>();
+        var scriptCompleted = false;
+        const int count = 100;
+        var semaphoreSlim = new SemaphoreSlim(0, 1);
+
+        var command = new ExecuteKubernetesScriptCommandBuilder(LoggingUtils.CurrentTestHash())
+            .WithScriptBody(script => script
+                .Print("Hello World")
+                .Sleep(TimeSpan.FromSeconds(1))
+                .Print("waitingtobestopped")
+                .PrintNTimesWithDelay(i => $"Count: {i}", count, TimeSpan.FromSeconds(1)))
+            .IsRawScript()
+            .Build();
+
+        //act
+        var scriptTask = Task.Run(async () => await TentacleClient.ExecuteScript(command, StatusReceived, ScriptCompleted, new InMemoryLog(), CancellationToken));
+
+        //wait for the script to be started, then waiting
+        await semaphoreSlim.WaitAsync(CancellationToken);
+
+        Logger.Information("Deleting NFS pod");
+        var deleteResult = await KubeCtl.ExecuteNamespacedCommand("delete pods -l app.kubernetes.io/name=octopus-agent-nfs");
+        deleteResult.ExitCode.Should().Be(0);
+
+        var result = await scriptTask;
+
+        //Assert
+        logs.Should().Contain(po => po.Source == ProcessOutputSource.StdOut && po.Text == "Hello World");
+        logs.Should().Contain(po => po.Source == ProcessOutputSource.StdOut && po.Text == "waitingtobestopped");
+
+        //verify that we are getting all the logs and that the tentacle has been killed
+        using (var scope = new AssertionScope())
+        {
+            scope.FormattingOptions.MaxLines = 200;
+            for (var i = 1; i < count; i++)
+            {
+                var testString = $"Count: {i}";
+                logs.Should().Contain(po => po.Source == ProcessOutputSource.StdOut && po.Text == testString, because: $"the logs should contain all script output. Missing '{testString}'");
+            }
+        }
+
+        scriptCompleted.Should().BeTrue();
+        result.ExitCode.Should().Be(0);
+        result.State.Should().Be(ProcessState.Complete);
+
+        return;
+
+        void StatusReceived(ScriptExecutionStatus status)
+        {
+            if (status.Logs.Any(l => l.Text == "waitingtobestopped"))
+            {
+                semaphoreSlim.Release();
+            }
+
+            logs.AddRange(status.Logs);
+        }
+
+        Task ScriptCompleted(CancellationToken ct)
+        {
+            scriptCompleted = true;
+            return Task.CompletedTask;
+        }
+    }
+
+    public enum ScriptType
+    {
+        Raw,
+        Normal
     }
 }
