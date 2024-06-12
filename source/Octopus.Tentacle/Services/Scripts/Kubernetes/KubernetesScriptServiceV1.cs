@@ -5,18 +5,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
-using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha;
 using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Kubernetes.Synchronisation;
 using Octopus.Tentacle.Maintenance;
 using Octopus.Tentacle.Scripts;
-using PodImageConfigurationV1Alpha = Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha.PodImageConfiguration;
 
 namespace Octopus.Tentacle.Services.Scripts.Kubernetes
 {
-    [KubernetesService(typeof(IKubernetesScriptServiceV1Alpha))]
     [KubernetesService(typeof(IKubernetesScriptServiceV1))]
-    public class KubernetesScriptServiceV1 : IAsyncKubernetesScriptServiceV1Alpha, IAsyncKubernetesScriptServiceV1, IRunningScriptReporter
+    public class KubernetesScriptServiceV1 : IAsyncKubernetesScriptServiceV1, IRunningScriptReporter
     {
         readonly IKubernetesPodService podService;
         readonly IScriptWorkspaceFactory workspaceFactory;
@@ -178,46 +175,5 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
         {
             return podStatusProvider.TryGetTrackedScriptPod(ticket) is not null;
         }
-
-        public async Task<KubernetesScriptStatusResponseV1Alpha> StartScriptAsync(StartKubernetesScriptCommandV1Alpha command, CancellationToken cancellationToken)
-            => (await StartScriptAsync(command.ToV1(), cancellationToken)).ToV1Alpha();
-
-        public async Task<KubernetesScriptStatusResponseV1Alpha> GetStatusAsync(KubernetesScriptStatusRequestV1Alpha request, CancellationToken cancellationToken)
-            => (await GetStatusAsync(new KubernetesScriptStatusRequestV1(request.ScriptTicket, request.LastLogSequence), cancellationToken)).ToV1Alpha();
-
-        public async Task<KubernetesScriptStatusResponseV1Alpha> CancelScriptAsync(CancelKubernetesScriptCommandV1Alpha command, CancellationToken cancellationToken)
-            => (await CancelScriptAsync(new CancelKubernetesScriptCommandV1(command.ScriptTicket, command.LastLogSequence), cancellationToken)).ToV1Alpha();
-
-        public Task CompleteScriptAsync(CompleteKubernetesScriptCommandV1Alpha command, CancellationToken cancellationToken)
-            => CompleteScriptAsync(new CompleteKubernetesScriptCommandV1(command.ScriptTicket), cancellationToken);
-    }
-
-    public static class CommandConversionExtensions
-    {
-        public static StartKubernetesScriptCommandV1 ToV1(this StartKubernetesScriptCommandV1Alpha command)
-        {
-            return new StartKubernetesScriptCommandV1(
-                command.ScriptTicket,
-                command.TaskId,
-                command.ScriptBody,
-                command.Arguments,
-                command.Isolation,
-                command.ScriptIsolationMutexTimeout,
-                command.IsolationMutexName ?? "RunningScript", //In practice, this is never null due to the ExecuteScriptCommand.IsolationConfiguration.MutexName is not nullable
-                command.PodImageConfiguration?.ToV1(),
-                command.ScriptPodServiceAccountName,
-                command.Scripts,
-                command.Files.ToArray()
-            );
-        }
-
-        static PodImageConfigurationV1 ToV1(this PodImageConfigurationV1Alpha podImageConfiguration)
-        {
-            return podImageConfiguration.Image is not null
-                ? new PodImageConfigurationV1(podImageConfiguration.Image, podImageConfiguration.FeedUrl, podImageConfiguration.FeedUsername, podImageConfiguration.FeedPassword)
-                : new PodImageConfigurationV1();
-        }
-
-        public static KubernetesScriptStatusResponseV1Alpha ToV1Alpha(this KubernetesScriptStatusResponseV1 response) => new(response.ScriptTicket, response.State, response.ExitCode, response.Logs, response.NextLogSequence);
     }
 }
