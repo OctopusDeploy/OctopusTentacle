@@ -37,6 +37,20 @@ namespace Octopus.Tentacle.Kubernetes
         public static string PersistentVolumeFreeBytesVariableName => $"{EnvVarPrefix}__PERSISTENTVOLUMEFREEBYTES";
 
         public const string ServerCommsAddressesVariableName = "ServerCommsAddresses";
+        
+        public static string MetricsEnableVariableName => $"{EnvVarPrefix}__ENABLEMETRICSCAPTURE";
+        public static bool MetricsIsEnabled
+        {
+             get
+             {
+                 var envContent = Environment.GetEnvironmentVariable(MetricsEnableVariableName);
+                if(bool.TryParse(envContent, out var result))
+                {
+                    return result;
+                }
+                return true;
+            }
+        }
 
         public static string[] ServerCommsAddresses {
             get {

@@ -9,7 +9,13 @@ using Octopus.Tentacle.Util;
 namespace Octopus.Tentacle.Kubernetes.Diagnostics
 {
     using MetricsDictionary = Dictionary<string, Dictionary<string, List<DateTimeOffset>>>;
-    public class KubernetesAgentMetrics
+    public interface IKubernetesAgentMetrics
+    {
+        Task TrackEvent(string reason, string source, DateTimeOffset occurrence, CancellationToken cancellationToken);
+        Task<DateTimeOffset> GetLatestEventTimestamp(CancellationToken cancellationToken);
+    }
+    
+    public class KubernetesAgentMetrics : IKubernetesAgentMetrics
     {
         const string LastEventTimestampKey = "latestTimestamp";
 
