@@ -36,7 +36,7 @@ namespace Octopus.Tentacle.Tests.Capabilities
                 .SupportedCapabilities;
 
             capabilities.Should().BeEquivalentTo(nameof(IFileTransferService), nameof(IKubernetesScriptServiceV1));
-            capabilities.Count.Should().Be(3);
+            capabilities.Count.Should().Be(2);
 
             capabilities.Should().NotContainMatch("IScriptService*");
 
