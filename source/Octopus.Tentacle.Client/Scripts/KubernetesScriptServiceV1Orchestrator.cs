@@ -69,7 +69,8 @@ namespace Octopus.Tentacle.Client.Scripts
                 podImageConfiguration,
                 kubernetesScriptCommand.ScriptPodServiceAccountName,
                 kubernetesScriptCommand.Scripts,
-                kubernetesScriptCommand.Files.ToArray());
+                kubernetesScriptCommand.Files.ToArray(),
+                kubernetesScriptCommand.IsRawScript);
         }
 
         protected override ScriptExecutionStatus MapToStatus(KubernetesScriptStatusResponseV1 response)

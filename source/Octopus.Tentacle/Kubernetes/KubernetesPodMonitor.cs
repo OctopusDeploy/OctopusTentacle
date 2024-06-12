@@ -34,7 +34,7 @@ namespace Octopus.Tentacle.Kubernetes
         readonly ISystemLog log;
         readonly ITentacleScriptLogProvider scriptLogProvider;
         readonly IClock clock;
-        
+
         ConcurrentDictionary<ScriptTicket, TrackedScriptPod> podStatusLookup = new();
         
         //Prevent giving false results when we are still loading for the first time 

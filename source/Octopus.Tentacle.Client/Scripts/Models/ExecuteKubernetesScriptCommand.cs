@@ -10,6 +10,8 @@ namespace Octopus.Tentacle.Client.Scripts.Models
 
         public string? ScriptPodServiceAccountName { get;}
 
+        public bool IsRawScript { get; }
+
         public ExecuteKubernetesScriptCommand(
             ScriptTicket scriptTicket,
             string taskId,
@@ -19,11 +21,13 @@ namespace Octopus.Tentacle.Client.Scripts.Models
             Dictionary<ScriptType, string>? additionalScripts,
             ScriptFile[] additionalFiles,
             KubernetesImageConfiguration? imageConfiguration, 
-            string? scriptPodServiceAccountName)
+            string? scriptPodServiceAccountName,
+            bool isRawScript)
             : base(scriptTicket, taskId, scriptBody, arguments, isolationConfiguration, additionalScripts, additionalFiles)
         {
             ImageConfiguration = imageConfiguration;
             ScriptPodServiceAccountName = scriptPodServiceAccountName;
+            IsRawScript = isRawScript;
         }
     }
 }
