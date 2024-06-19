@@ -16,7 +16,7 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Configuration
 {
-    internal class TentacleConfiguration : ITentacleConfiguration
+    internal class TentacleConfiguration : ITentacleConfiguration, IDisposable
     {
         internal const string IsRegisteredSettingName = "Tentacle.Services.IsRegistered";
         internal const string ServicesPortSettingName = "Tentacle.Services.PortNumber";
@@ -29,6 +29,7 @@ namespace Octopus.Tentacle.Configuration
         internal const string LastReceivedHandshakeSettingName = "Tentacle.Communication.LastReceivedHandshake";
 
         readonly IKeyValueStore settings;
+        readonly ChangeDetectingKeyValueStore changeDetectingSettings;
         readonly IHomeConfiguration home;
         readonly IProxyConfiguration proxyConfiguration;
         readonly IPollingProxyConfiguration pollingProxyConfiguration;
@@ -46,6 +47,9 @@ namespace Octopus.Tentacle.Configuration
             ISystemLog log)
         {
             settings = instanceSelector.Current.Configuration ?? throw new Exception("Unable to get KeyValueStore from instanceSelector");
+            changeDetectingSettings = instanceSelector.Current.ChangeDetectingConfiguration!;
+            changeDetectingSettings.Changed += () => Changed?.Invoke();
+
             this.home = home;
             this.proxyConfiguration = proxyConfiguration;
             this.pollingProxyConfiguration = pollingProxyConfiguration;
@@ -55,7 +59,7 @@ namespace Octopus.Tentacle.Configuration
         [Obsolete("This configuration entry is obsolete as of 3.0. It is only used as a Subscription ID where one does not exist.")]
         public string? TentacleSquid => settings.Get("Octopus.Communications.Squid", (string?)null);
 
-        public IEnumerable<OctopusServerConfiguration> TrustedOctopusServers => settings.Get<IEnumerable<OctopusServerConfiguration>>(TrustedServersSettingName) ?? new OctopusServerConfiguration[0];
+        public IEnumerable<OctopusServerConfiguration> TrustedOctopusServers => changeDetectingSettings.Get<IEnumerable<OctopusServerConfiguration>>(TrustedServersSettingName) ?? Array.Empty<OctopusServerConfiguration>();
 
         public IEnumerable<string> TrustedOctopusThumbprints
         {
@@ -157,6 +161,13 @@ namespace Octopus.Tentacle.Configuration
                 if (setting is null || string.IsNullOrWhiteSpace(setting)) return null;
                 return JsonConvert.DeserializeObject<OctopusServerConfiguration>(setting);
             }
+        }
+
+        public ConfigurationChangedEventHandler? Changed { get; set; }
+
+        public void Dispose()
+        {
+            changeDetectingSettings?.Dispose();
         }
     }
 

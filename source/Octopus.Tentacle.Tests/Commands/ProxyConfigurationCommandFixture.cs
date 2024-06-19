@@ -27,7 +27,7 @@ namespace Octopus.Tentacle.Tests.Commands
             configFile = $"{homeDirectory}\\File.config";
             
             applicationInstanceSelector = Substitute.For<IApplicationInstanceSelector>();
-            applicationInstanceSelector.Current.Returns(info => new ApplicationInstanceConfiguration(null, null!, null!, null!));
+            applicationInstanceSelector.Current.Returns(info => new ApplicationInstanceConfiguration(null, null!, null!, null!, null));
 
             octopusFileSystem.AppendToFile(configFile,
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +

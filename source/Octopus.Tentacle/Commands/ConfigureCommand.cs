@@ -92,7 +92,6 @@ namespace Octopus.Tentacle.Commands
             {
                 log.Info("Removing all trusted Octopus Servers...");
                 tentacleConfiguration.Value.ResetTrustedOctopusServers();
-                VoteForRestart();
             }
 
             if (octopusToRemove.Count > 0)
@@ -101,7 +100,6 @@ namespace Octopus.Tentacle.Commands
                 foreach (var toRemove in octopusToRemove)
                 {
                     tentacleConfiguration.Value.RemoveTrustedOctopusServersWithThumbprint(toRemove);
-                    VoteForRestart();
                 }
             }
 
@@ -113,7 +111,6 @@ namespace Octopus.Tentacle.Commands
                 {
                     var config = new OctopusServerConfiguration(toAdd) { CommunicationStyle = CommunicationStyle.TentaclePassive };
                     tentacleConfiguration.Value.AddOrUpdateTrustedOctopusServer(config);
-                    VoteForRestart();
                 }
             }
 

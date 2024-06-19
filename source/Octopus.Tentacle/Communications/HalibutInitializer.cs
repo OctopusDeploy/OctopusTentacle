@@ -40,14 +40,15 @@ namespace Octopus.Tentacle.Communications
             if (configuration.NoListen)
             {
                 log.Info("Agent will not listen on any TCP ports");
-                return;
+            }
+            else
+            {
+                var endpoint = GetEndPointToListenOn();
+                halibut.Listen(endpoint);
+                log.Info("Agent listening on: " + endpoint);   
             }
 
-            var endpoint = GetEndPointToListenOn();
-
-            halibut.Listen(endpoint);
-
-            log.Info("Agent listening on: " + endpoint);
+            configuration.Changed += TentacleConfigurationChanged;
         }
 
         private void FixCommunicationStyle()
@@ -82,9 +83,7 @@ namespace Octopus.Tentacle.Communications
                 log.Info("The agent is not configured to trust any Octopus Servers.");
             }
         }
-
-
-
+        
         void AddPollingEndpoints()
         {
             foreach (var pollingEndPoint in GetOctopusServersToPoll())
@@ -168,6 +167,21 @@ namespace Octopus.Tentacle.Communications
             }
 
             return new IPEndPoint(address, configuration.ServicesPortNumber);
+        }
+
+        void TentacleConfigurationChanged()
+        {
+            var thumbprints = GetTrustedOctopusThumbprints();
+
+            foreach (var thumbprint in thumbprints)
+            {
+                if (!halibut.IsTrusted(thumbprint))
+                {
+                    log.Info($"Agent will trust Octopus Servers with the thumbprint: {thumbprint}");
+                }
+            }
+
+            halibut.TrustOnly(thumbprints);
         }
 
         public void Stop()

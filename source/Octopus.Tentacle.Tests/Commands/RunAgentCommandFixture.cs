@@ -62,7 +62,7 @@ namespace Octopus.Tentacle.Tests.Commands
                 Substitute.For<ILogFileOnlyLogger>(),
                 backgroundTasks.Select(bt => new Lazy<IBackgroundTask>(() => bt)).ToList());
 
-            selector.Current.Returns(new ApplicationInstanceConfiguration("MyTentacle", null, null, null));
+            selector.Current.Returns(new ApplicationInstanceConfiguration("MyTentacle", null, null, null, null));
         }
 
         [Test]
