@@ -75,11 +75,8 @@ namespace Octopus.Tentacle.Client.Scripts
             {
                 return new ScriptServiceV2Orchestrator(
                     clientsHolder.ScriptServiceV2,
-                    scriptObserverBackOffStrategy,
                     rpcCallExecutor,
                     clientOperationMetricsBuilder,
-                    onScriptStatusResponseReceived,
-                    onScriptCompleted,
                     onCancellationAbandonCompleteScriptAfter,
                     clientOptions,
                     logger);
@@ -89,11 +86,8 @@ namespace Octopus.Tentacle.Client.Scripts
             {
                 return new KubernetesScriptServiceV1AlphaOrchestrator(
                     clientsHolder.KubernetesScriptServiceV1Alpha,
-                    scriptObserverBackOffStrategy,
                     rpcCallExecutor,
                     clientOperationMetricsBuilder,
-                    onScriptStatusResponseReceived,
-                    onScriptCompleted,
                     onCancellationAbandonCompleteScriptAfter,
                     clientOptions,
                     logger);
@@ -103,11 +97,8 @@ namespace Octopus.Tentacle.Client.Scripts
             {
                 return new KubernetesScriptServiceV1Orchestrator(
                     clientsHolder.KubernetesScriptServiceV1,
-                    scriptObserverBackOffStrategy,
                     rpcCallExecutor,
                     clientOperationMetricsBuilder,
-                    onScriptStatusResponseReceived,
-                    onScriptCompleted,
                     onCancellationAbandonCompleteScriptAfter,
                     clientOptions,
                     logger);

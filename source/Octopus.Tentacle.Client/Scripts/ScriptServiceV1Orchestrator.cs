@@ -13,7 +13,7 @@ using Octopus.Tentacle.Contracts.Observability;
 
 namespace Octopus.Tentacle.Client.Scripts
 {
-    class ScriptServiceV1Orchestrator : IStructuredScriptOrchestrator<StartScriptCommand, ScriptStatusResponse>
+    class ScriptServiceV1Orchestrator : IStructuredScriptOrchestrator<ScriptStatusResponse>
     {
 
         readonly RpcCallExecutor rpcCallExecutor;
@@ -34,7 +34,7 @@ namespace Octopus.Tentacle.Client.Scripts
             this.logger = logger;
         }
 
-        protected override StartScriptCommand Map(ExecuteScriptCommand command)
+        private StartScriptCommand Map(ExecuteScriptCommand command)
         {
             if (command is not ExecuteShellScriptCommand shellScriptCommand)
                 throw new InvalidOperationException($"{nameof(ScriptServiceV2Orchestrator)} only supports commands of type {nameof(ExecuteShellScriptCommand)}.");
@@ -56,8 +56,9 @@ namespace Octopus.Tentacle.Client.Scripts
 
         public ProcessState GetState(ScriptStatusResponse response) => response.State;
 
-        public async Task<ScriptStatusResponse> StartScript(StartScriptCommand command, CancellationToken scriptExecutionCancellationToken)
+        public async Task<ScriptStatusResponse> StartScript(ExecuteScriptCommand executeScriptCommand, CancellationToken scriptExecutionCancellationToken)
         {
+            var command = Map(executeScriptCommand);
             var scriptTicket = await rpcCallExecutor.ExecuteWithNoRetries(
                 RpcCall.Create<IScriptService>(nameof(IScriptService.StartScript)),
                 async ct =>

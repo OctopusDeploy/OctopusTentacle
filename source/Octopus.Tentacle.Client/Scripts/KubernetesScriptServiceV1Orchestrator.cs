@@ -15,37 +15,32 @@ using Octopus.Tentacle.Contracts.Observability;
 
 namespace Octopus.Tentacle.Client.Scripts
 {
-    class KubernetesScriptServiceV1Orchestrator : ObservingScriptOrchestrator<StartKubernetesScriptCommandV1, KubernetesScriptStatusResponseV1>
+    class KubernetesScriptServiceV1Orchestrator : IStructuredScriptOrchestrator<KubernetesScriptStatusResponseV1>
     {
         readonly IAsyncClientKubernetesScriptServiceV1 clientKubernetesScriptServiceV1;
         readonly RpcCallExecutor rpcCallExecutor;
         readonly ClientOperationMetricsBuilder clientOperationMetricsBuilder;
         readonly TimeSpan onCancellationAbandonCompleteScriptAfter;
         readonly ITentacleClientTaskLog logger;
+        readonly TentacleClientOptions clientOptions;
 
         public KubernetesScriptServiceV1Orchestrator(
             IAsyncClientKubernetesScriptServiceV1 clientKubernetesScriptServiceV1,
-            IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
             RpcCallExecutor rpcCallExecutor,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
-            OnScriptStatusResponseReceived onScriptStatusResponseReceived,
-            OnScriptCompleted onScriptCompleted,
             TimeSpan onCancellationAbandonCompleteScriptAfter,
             TentacleClientOptions clientOptions,
             ITentacleClientTaskLog logger)
-            : base(scriptObserverBackOffStrategy,
-                onScriptStatusResponseReceived,
-                onScriptCompleted,
-                clientOptions)
         {
             this.clientKubernetesScriptServiceV1 = clientKubernetesScriptServiceV1;
             this.rpcCallExecutor = rpcCallExecutor;
             this.clientOperationMetricsBuilder = clientOperationMetricsBuilder;
             this.onCancellationAbandonCompleteScriptAfter = onCancellationAbandonCompleteScriptAfter;
+            this.clientOptions = clientOptions;
             this.logger = logger;
         }
 
-        protected override StartKubernetesScriptCommandV1 Map(ExecuteScriptCommand command)
+        StartKubernetesScriptCommandV1 Map(ExecuteScriptCommand command)
         {
             if (command is not ExecuteKubernetesScriptCommand kubernetesScriptCommand)
                 throw new InvalidOperationException($"Invalid execute script command received. Expected {nameof(ExecuteKubernetesScriptCommand)}, but received {command.GetType().Name}.");
@@ -73,16 +68,17 @@ namespace Octopus.Tentacle.Client.Scripts
                 kubernetesScriptCommand.IsRawScript);
         }
 
-        protected override ScriptExecutionStatus MapToStatus(KubernetesScriptStatusResponseV1 response)
+        public ScriptExecutionStatus MapToStatus(KubernetesScriptStatusResponseV1 response)
             => new(response.Logs);
 
-        protected override ScriptExecutionResult MapToResult(KubernetesScriptStatusResponseV1 response)
+        public ScriptExecutionResult MapToResult(KubernetesScriptStatusResponseV1 response)
             => new(response.State, response.ExitCode);
 
-        protected override ProcessState GetState(KubernetesScriptStatusResponseV1 response) => response.State;
+        public ProcessState GetState(KubernetesScriptStatusResponseV1 response) => response.State;
 
-        protected override async Task<KubernetesScriptStatusResponseV1> StartScript(StartKubernetesScriptCommandV1 command, CancellationToken scriptExecutionCancellationToken)
+        public async Task<KubernetesScriptStatusResponseV1> StartScript(ExecuteScriptCommand executeScriptCommand, CancellationToken scriptExecutionCancellationToken)
         {
+            var command = Map(executeScriptCommand);
             KubernetesScriptStatusResponseV1 scriptStatusResponse;
             var startScriptCallsConnectedCount = 0;
             try
@@ -105,7 +101,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 }
 
                 scriptStatusResponse = await rpcCallExecutor.Execute(
-                    retriesEnabled: ClientOptions.RpcRetrySettings.RetriesEnabled,
+                    retriesEnabled: clientOptions.RpcRetrySettings.RetriesEnabled,
                     RpcCall.Create<IKubernetesScriptServiceV1>(nameof(IKubernetesScriptServiceV1.StartScript)),
                     StartScriptAction,
                     OnErrorAction,
@@ -136,7 +132,8 @@ namespace Octopus.Tentacle.Client.Scripts
 
                     try
                     {
-                        await ObserveUntilCompleteThenFinish(scriptStatusResponse, scriptExecutionCancellationToken).ConfigureAwait(false);
+                        new ShortCutTakenHere();
+                        //await ObserveUntilCompleteThenFinish(scriptStatusResponse, scriptExecutionCancellationToken).ConfigureAwait(false);
                     }
                     catch (Exception observerUntilCompleteException)
                     {
@@ -156,7 +153,7 @@ namespace Octopus.Tentacle.Client.Scripts
             return scriptStatusResponse;
         }
 
-        protected override async Task<KubernetesScriptStatusResponseV1> GetStatus(KubernetesScriptStatusResponseV1 lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<KubernetesScriptStatusResponseV1> GetStatus(KubernetesScriptStatusResponseV1 lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             try
             {
@@ -169,7 +166,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 }
 
                 return await rpcCallExecutor.Execute(
-                    retriesEnabled: ClientOptions.RpcRetrySettings.RetriesEnabled,
+                    retriesEnabled: clientOptions.RpcRetrySettings.RetriesEnabled,
                     RpcCall.Create<IKubernetesScriptServiceV1>(nameof(IKubernetesScriptServiceV1.GetStatus)),
                     GetStatusAction,
                     logger,
@@ -183,7 +180,7 @@ namespace Octopus.Tentacle.Client.Scripts
             }
         }
 
-        protected override async Task<KubernetesScriptStatusResponseV1> Cancel(KubernetesScriptStatusResponseV1 lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<KubernetesScriptStatusResponseV1> Cancel(KubernetesScriptStatusResponseV1 lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             async Task<KubernetesScriptStatusResponseV1> CancelScriptAction(CancellationToken ct)
             {
@@ -198,7 +195,7 @@ namespace Octopus.Tentacle.Client.Scripts
             // We could potentially reduce the time to failure by not retrying the cancel RPC Call if the previous RPC call was already triggering RPC Retries.
 
             return await rpcCallExecutor.Execute(
-                retriesEnabled: ClientOptions.RpcRetrySettings.RetriesEnabled,
+                retriesEnabled: clientOptions.RpcRetrySettings.RetriesEnabled,
                 RpcCall.Create<IKubernetesScriptServiceV1>(nameof(IKubernetesScriptServiceV1.CancelScript)),
                 CancelScriptAction,
                 logger,
@@ -207,7 +204,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 CancellationToken.None).ConfigureAwait(false);
         }
 
-        protected override async Task<KubernetesScriptStatusResponseV1> Finish(KubernetesScriptStatusResponseV1 lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<KubernetesScriptStatusResponseV1> Finish(KubernetesScriptStatusResponseV1 lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             try
             {

@@ -15,7 +15,7 @@ using Octopus.Tentacle.Contracts.ScriptServiceV2;
 
 namespace Octopus.Tentacle.Client.Scripts
 {
-    class ScriptServiceV2Orchestrator : IStructuredScriptOrchestrator<StartScriptCommandV2, ScriptStatusResponseV2>
+    class ScriptServiceV2Orchestrator : IStructuredScriptOrchestrator<ScriptStatusResponseV2>
     {
         readonly IAsyncClientScriptServiceV2 clientScriptServiceV2;
         readonly RpcCallExecutor rpcCallExecutor;
@@ -40,7 +40,7 @@ namespace Octopus.Tentacle.Client.Scripts
             this.logger = logger;
         }
 
-        public StartScriptCommandV2 Map(ExecuteScriptCommand command)
+        StartScriptCommandV2 Map(ExecuteScriptCommand command)
         {
             if (command is not ExecuteShellScriptCommand shellScriptCommand)
                 throw new InvalidOperationException($"{nameof(ScriptServiceV2Orchestrator)} only supports commands of type {nameof(ExecuteShellScriptCommand)}.");
@@ -66,8 +66,9 @@ namespace Octopus.Tentacle.Client.Scripts
 
         public ProcessState GetState(ScriptStatusResponseV2 response) => response.State;
 
-        public async Task<ScriptStatusResponseV2> StartScript(StartScriptCommandV2 command, CancellationToken scriptExecutionCancellationToken)
+        public async Task<ScriptStatusResponseV2> StartScript(ExecuteScriptCommand executeScriptCommand, CancellationToken scriptExecutionCancellationToken)
         {
+            var command = Map(executeScriptCommand);
             ScriptStatusResponseV2 scriptStatusResponse;
             var startScriptCallsConnectedCount = 0;
             try
@@ -121,7 +122,8 @@ namespace Octopus.Tentacle.Client.Scripts
 
                     try
                     {
-                        await ObserveUntilCompleteThenFinish(scriptStatusResponse, scriptExecutionCancellationToken).ConfigureAwait(false);
+                        new ShortCutTakenHere();
+                        //await ObserveUntilCompleteThenFinish(scriptStatusResponse, scriptExecutionCancellationToken).ConfigureAwait(false);
                     }
                     catch (Exception observerUntilCompleteException)
                     {

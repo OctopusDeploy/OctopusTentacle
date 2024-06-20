@@ -6,19 +6,19 @@ using Octopus.Tentacle.Contracts;
 
 namespace Octopus.Tentacle.Client.Scripts
 {
-    public sealed class ObservingScriptOrchestrator<TStartCommand, TScriptStatusResponse> : IScriptOrchestrator
+    public sealed class ObservingScriptOrchestrator<TScriptStatusResponse> : IScriptOrchestrator
     {
         readonly IScriptObserverBackoffStrategy scriptObserverBackOffStrategy;
         readonly OnScriptStatusResponseReceived onScriptStatusResponseReceived;
         readonly OnScriptCompleted onScriptCompleted;
 
-        IStructuredScriptOrchestrator<TStartCommand, TScriptStatusResponse> structuredScriptOrchestrator;
+        IStructuredScriptOrchestrator<TScriptStatusResponse> structuredScriptOrchestrator;
 
         public ObservingScriptOrchestrator(
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
             OnScriptStatusResponseReceived onScriptStatusResponseReceived,
             OnScriptCompleted onScriptCompleted,
-            IStructuredScriptOrchestrator<TStartCommand, TScriptStatusResponse> structuredScriptOrchestrator)
+            IStructuredScriptOrchestrator<TScriptStatusResponse> structuredScriptOrchestrator)
         {
             this.structuredScriptOrchestrator = structuredScriptOrchestrator;
             this.scriptObserverBackOffStrategy = scriptObserverBackOffStrategy;
@@ -28,9 +28,8 @@ namespace Octopus.Tentacle.Client.Scripts
 
         public async Task<ScriptExecutionResult> ExecuteScript(ExecuteScriptCommand command, CancellationToken scriptExecutionCancellationToken)
         {
-            var mappedStartCommand = structuredScriptOrchestrator.Map(command);
 
-            var scriptStatusResponse = await structuredScriptOrchestrator.StartScript(mappedStartCommand, scriptExecutionCancellationToken).ConfigureAwait(false);
+            var scriptStatusResponse = await structuredScriptOrchestrator.StartScript(command, scriptExecutionCancellationToken).ConfigureAwait(false);
 
             scriptStatusResponse = await ObserveUntilCompleteThenFinish(scriptStatusResponse, scriptExecutionCancellationToken).ConfigureAwait(false);
 
@@ -119,8 +118,9 @@ namespace Octopus.Tentacle.Client.Scripts
 
 
 
-        protected void OnScriptStatusResponseReceived(TScriptStatusResponse scriptStatusResponse)
+        void OnScriptStatusResponseReceived(TScriptStatusResponse scriptStatusResponse)
         {
+            new ShortCutTakenHere();
             onScriptStatusResponseReceived(structuredScriptOrchestrator.MapToStatus(scriptStatusResponse));
         }
     }

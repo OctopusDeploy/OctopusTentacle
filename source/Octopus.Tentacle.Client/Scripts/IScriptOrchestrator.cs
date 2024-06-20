@@ -11,12 +11,11 @@ namespace Octopus.Tentacle.Client.Scripts
         Task<ScriptExecutionResult> ExecuteScript(ExecuteScriptCommand command, CancellationToken scriptExecutionCancellationToken);
     }
     
-    public interface IStructuredScriptOrchestrator<TStartCommand, TScriptStatusResponse> {
-        TStartCommand Map(ExecuteScriptCommand command);
+    public interface IStructuredScriptOrchestrator<TScriptStatusResponse> {
         ScriptExecutionStatus MapToStatus(TScriptStatusResponse response);
         ScriptExecutionResult MapToResult(TScriptStatusResponse response);
         ProcessState GetState(TScriptStatusResponse response);
-        Task<TScriptStatusResponse> StartScript(TStartCommand command, CancellationToken scriptExecutionCancellationToken);
+        Task<TScriptStatusResponse> StartScript(ExecuteScriptCommand command, CancellationToken scriptExecutionCancellationToken);
         Task<TScriptStatusResponse> GetStatus(TScriptStatusResponse lastStatusResponse, CancellationToken scriptExecutionCancellationToken);
         Task<TScriptStatusResponse> Cancel(TScriptStatusResponse lastStatusResponse, CancellationToken scriptExecutionCancellationToken);
         Task<TScriptStatusResponse> Finish(TScriptStatusResponse lastStatusResponse, CancellationToken scriptExecutionCancellationToken);
