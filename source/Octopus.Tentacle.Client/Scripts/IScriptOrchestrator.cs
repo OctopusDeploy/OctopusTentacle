@@ -13,7 +13,7 @@ namespace Octopus.Tentacle.Client.Scripts
     }
     
     public interface IStructuredScriptOrchestrator {
-        Task<StartScriptResult> StartScript(ExecuteScriptCommand command, CancellationToken scriptExecutionCancellationToken);
+        Task<(ScriptStatus, ITicketForNextStatus)> StartScript(ExecuteScriptCommand command, CancellationToken scriptExecutionCancellationToken);
         /// <summary>
         /// Returns a status or null when scriptExecutionCancellationToken is null. 
         /// </summary>
@@ -23,20 +23,5 @@ namespace Octopus.Tentacle.Client.Scripts
         Task<(ScriptStatus, ITicketForNextStatus)> GetStatus(ITicketForNextStatus lastStatusResponse, CancellationToken scriptExecutionCancellationToken);
         Task<(ScriptStatus, ITicketForNextStatus)> Cancel(ITicketForNextStatus lastStatusResponse, CancellationToken scriptExecutionCancellationToken);
         Task<ScriptStatus?> Finish(ITicketForNextStatus lastStatusResponse, CancellationToken scriptExecutionCancellationToken);
-    }
-
-
-    public class StartScriptResult
-    {
-        public StartScriptResult(ScriptStatus status, ITicketForNextStatus ticketForNextStatus, bool scriptMayBeStarted)
-        {
-            Status = status;
-            TicketForNextStatus = ticketForNextStatus;
-            ScriptMayBeStarted = scriptMayBeStarted;
-        }
-
-        public ScriptStatus Status { get; }
-        public ITicketForNextStatus TicketForNextStatus { get; }
-        public bool ScriptMayBeStarted { get; }
     }
 }

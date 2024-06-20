@@ -75,7 +75,7 @@ namespace Octopus.Tentacle.Client.Scripts
         }
         public ProcessState GetState(ScriptStatusResponseV2 response) => response.State;
 
-        public async Task<StartScriptResult> StartScript(ExecuteScriptCommand executeScriptCommand, CancellationToken scriptExecutionCancellationToken)
+        public async Task<(ScriptStatus, ITicketForNextStatus)> StartScript(ExecuteScriptCommand executeScriptCommand, CancellationToken scriptExecutionCancellationToken)
         {
             var command = Map(executeScriptCommand);
             ScriptStatusResponseV2 scriptStatusResponse;
@@ -108,7 +108,7 @@ namespace Octopus.Tentacle.Client.Scripts
                     clientOperationMetricsBuilder,
                     scriptExecutionCancellationToken).ConfigureAwait(false);
 
-                return new StartScriptResult(MapToScriptStatus(scriptStatusResponse), MapToNextStatus(scriptStatusResponse), true);
+                return (MapToScriptStatus(scriptStatusResponse), MapToNextStatus(scriptStatusResponse));
             }
             catch (Exception ex) when (scriptExecutionCancellationToken.IsCancellationRequested)
             {
@@ -124,7 +124,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 {
                     var scriptStatus = new ScriptStatus(ProcessState.Pending, null, new List<ProcessOutput>());
                     var defaultTicketForNextStatus = new DefaultTicketForNextStatus(command.ScriptTicket, 0, ScriptServiceVersion.ScriptServiceVersion2);
-                    return new StartScriptResult(scriptStatus, defaultTicketForNextStatus, true);
+                    return (scriptStatus, defaultTicketForNextStatus);
                 }
 
                 // If the StartScript call was not in-flight or being retries then we know the script has not started executing on Tentacle
