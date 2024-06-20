@@ -153,30 +153,23 @@ namespace Octopus.Tentacle.Client.Scripts
             return scriptStatusResponse;
         }
 
-        public async Task<KubernetesScriptStatusResponseV1?> GetStatus(KubernetesScriptStatusResponseV1 lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<KubernetesScriptStatusResponseV1> GetStatus(KubernetesScriptStatusResponseV1 lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
-            try
+            async Task<KubernetesScriptStatusResponseV1> GetStatusAction(CancellationToken ct)
             {
-                async Task<KubernetesScriptStatusResponseV1> GetStatusAction(CancellationToken ct)
-                {
-                    var request = new KubernetesScriptStatusRequestV1(lastStatusResponse.ScriptTicket, lastStatusResponse.NextLogSequence);
-                    var result = await clientKubernetesScriptServiceV1.GetStatusAsync(request, new HalibutProxyRequestOptions(ct));
+                var request = new KubernetesScriptStatusRequestV1(lastStatusResponse.ScriptTicket, lastStatusResponse.NextLogSequence);
+                var result = await clientKubernetesScriptServiceV1.GetStatusAsync(request, new HalibutProxyRequestOptions(ct));
 
-                    return result;
-                }
+                return result;
+            }
 
-                return await rpcCallExecutor.Execute(
-                    retriesEnabled: clientOptions.RpcRetrySettings.RetriesEnabled,
-                    RpcCall.Create<IKubernetesScriptServiceV1>(nameof(IKubernetesScriptServiceV1.GetStatus)),
-                    GetStatusAction,
-                    logger,
-                    clientOperationMetricsBuilder,
-                    scriptExecutionCancellationToken).ConfigureAwait(false);
-            }
-            catch (Exception e) when (e is OperationCanceledException && scriptExecutionCancellationToken.IsCancellationRequested)
-            {
-                return null;
-            }
+            return await rpcCallExecutor.Execute(
+                retriesEnabled: clientOptions.RpcRetrySettings.RetriesEnabled,
+                RpcCall.Create<IKubernetesScriptServiceV1>(nameof(IKubernetesScriptServiceV1.GetStatus)),
+                GetStatusAction,
+                logger,
+                clientOperationMetricsBuilder,
+                scriptExecutionCancellationToken).ConfigureAwait(false);
         }
 
         public async Task<KubernetesScriptStatusResponseV1> Cancel(KubernetesScriptStatusResponseV1 lastStatusResponse, CancellationToken scriptExecutionCancellationToken)

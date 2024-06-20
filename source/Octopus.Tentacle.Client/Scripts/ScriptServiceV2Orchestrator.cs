@@ -143,30 +143,24 @@ namespace Octopus.Tentacle.Client.Scripts
             return scriptStatusResponse;
         }
 
-        public async Task<ScriptStatusResponseV2?> GetStatus(ScriptStatusResponseV2 lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<ScriptStatusResponseV2> GetStatus(ScriptStatusResponseV2 lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
-            try
+            
+            async Task<ScriptStatusResponseV2> GetStatusAction(CancellationToken ct)
             {
-                async Task<ScriptStatusResponseV2> GetStatusAction(CancellationToken ct)
-                {
-                    var request = new ScriptStatusRequestV2(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence);
-                    var result = await clientScriptServiceV2.GetStatusAsync(request, new HalibutProxyRequestOptions(ct));
+                var request = new ScriptStatusRequestV2(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence);
+                var result = await clientScriptServiceV2.GetStatusAsync(request, new HalibutProxyRequestOptions(ct));
 
-                    return result;
-                }
+                return result;
+            }
 
-                return await rpcCallExecutor.Execute(
-                    retriesEnabled: clientOptions.RpcRetrySettings.RetriesEnabled,
-                    RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.GetStatus)),
-                    GetStatusAction,
-                    logger,
-                    clientOperationMetricsBuilder,
-                    scriptExecutionCancellationToken).ConfigureAwait(false);
-            }
-            catch (Exception e) when (e is OperationCanceledException && scriptExecutionCancellationToken.IsCancellationRequested)
-            {
-                return null;
-            }
+            return await rpcCallExecutor.Execute(
+                retriesEnabled: clientOptions.RpcRetrySettings.RetriesEnabled,
+                RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.GetStatus)),
+                GetStatusAction,
+                logger,
+                clientOperationMetricsBuilder,
+                scriptExecutionCancellationToken).ConfigureAwait(false);
         }
 
         public async Task<ScriptStatusResponseV2> Cancel(ScriptStatusResponseV2 lastStatusResponse, CancellationToken scriptExecutionCancellationToken)

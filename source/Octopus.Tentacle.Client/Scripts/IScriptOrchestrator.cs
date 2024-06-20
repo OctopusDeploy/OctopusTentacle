@@ -22,7 +22,7 @@ namespace Octopus.Tentacle.Client.Scripts
         /// <param name="lastStatusResponse"></param>
         /// <param name="scriptExecutionCancellationToken"></param>
         /// <returns></returns>
-        Task<TScriptStatusResponse?> GetStatus(TScriptStatusResponse lastStatusResponse, CancellationToken scriptExecutionCancellationToken);
+        Task<TScriptStatusResponse> GetStatus(TScriptStatusResponse lastStatusResponse, CancellationToken scriptExecutionCancellationToken);
         Task<TScriptStatusResponse> Cancel(TScriptStatusResponse lastStatusResponse, CancellationToken scriptExecutionCancellationToken);
         Task<TScriptStatusResponse> Finish(TScriptStatusResponse lastStatusResponse, CancellationToken scriptExecutionCancellationToken);
     }

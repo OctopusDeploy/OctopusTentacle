@@ -74,7 +74,7 @@ namespace Octopus.Tentacle.Client.Scripts
             return new ScriptStatusResponse(scriptTicket, ProcessState.Pending, 0, new List<ProcessOutput>(), 0);
         }
 
-        public async Task<ScriptStatusResponse?> GetStatus(ScriptStatusResponse lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<ScriptStatusResponse> GetStatus(ScriptStatusResponse lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             var scriptStatusResponseV1 = await rpcCallExecutor.ExecuteWithNoRetries(
                 RpcCall.Create<IScriptService>(nameof(IScriptService.GetStatus)),
