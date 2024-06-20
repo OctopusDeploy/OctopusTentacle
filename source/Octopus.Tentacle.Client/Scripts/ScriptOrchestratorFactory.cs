@@ -57,10 +57,11 @@ namespace Octopus.Tentacle.Client.Scripts
                 throw new OperationCanceledException("Script execution was cancelled", ex);
             }
 
-            return CreateOrchestrator(scriptServiceToUse);
+            var structuredScriptOrchestrator = CreateOrchestrator(scriptServiceToUse);
+            return new ObservingScriptOrchestrator(scriptObserverBackOffStrategy, onScriptStatusResponseReceived, onScriptCompleted, structuredScriptOrchestrator, logger);
         }
 
-        public IStructuredScriptOrchestrator<object, object> CreateOrchestrator(ScriptServiceVersion scriptServiceToUse)
+        public IStructuredScriptOrchestrator CreateOrchestrator(ScriptServiceVersion scriptServiceToUse)
         {
             if (scriptServiceToUse == ScriptServiceVersion.ScriptServiceVersion1)
             {
