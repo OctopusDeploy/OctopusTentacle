@@ -15,37 +15,32 @@ using Octopus.Tentacle.Contracts.ScriptServiceV2;
 
 namespace Octopus.Tentacle.Client.Scripts
 {
-    class ScriptServiceV2Orchestrator : ObservingScriptOrchestrator<StartScriptCommandV2, ScriptStatusResponseV2>
+    class ScriptServiceV2Orchestrator : IStructuredScriptOrchestrator<StartScriptCommandV2, ScriptStatusResponseV2>
     {
         readonly IAsyncClientScriptServiceV2 clientScriptServiceV2;
         readonly RpcCallExecutor rpcCallExecutor;
         readonly ClientOperationMetricsBuilder clientOperationMetricsBuilder;
         readonly TimeSpan onCancellationAbandonCompleteScriptAfter;
         readonly ITentacleClientTaskLog logger;
+        readonly TentacleClientOptions clientOptions;
 
         public ScriptServiceV2Orchestrator(
             IAsyncClientScriptServiceV2 clientScriptServiceV2,
-            IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
             RpcCallExecutor rpcCallExecutor,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
-            OnScriptStatusResponseReceived onScriptStatusResponseReceived,
-            OnScriptCompleted onScriptCompleted,
             TimeSpan onCancellationAbandonCompleteScriptAfter,
             TentacleClientOptions clientOptions,
             ITentacleClientTaskLog logger)
-            : base(scriptObserverBackOffStrategy,
-                onScriptStatusResponseReceived,
-                onScriptCompleted,
-                clientOptions)
         {
             this.clientScriptServiceV2 = clientScriptServiceV2;
             this.rpcCallExecutor = rpcCallExecutor;
             this.clientOperationMetricsBuilder = clientOperationMetricsBuilder;
             this.onCancellationAbandonCompleteScriptAfter = onCancellationAbandonCompleteScriptAfter;
+            this.clientOptions = clientOptions;
             this.logger = logger;
         }
 
-        protected override StartScriptCommandV2 Map(ExecuteScriptCommand command)
+        public StartScriptCommandV2 Map(ExecuteScriptCommand command)
         {
             if (command is not ExecuteShellScriptCommand shellScriptCommand)
                 throw new InvalidOperationException($"{nameof(ScriptServiceV2Orchestrator)} only supports commands of type {nameof(ExecuteShellScriptCommand)}.");
@@ -63,15 +58,15 @@ namespace Octopus.Tentacle.Client.Scripts
                 shellScriptCommand.Files.ToArray());
         }
 
-        protected override ScriptExecutionStatus MapToStatus(ScriptStatusResponseV2 response)
+        public ScriptExecutionStatus MapToStatus(ScriptStatusResponseV2 response)
             => new(response.Logs);
 
-        protected override ScriptExecutionResult MapToResult(ScriptStatusResponseV2 response)
+        public ScriptExecutionResult MapToResult(ScriptStatusResponseV2 response)
             => new(response.State, response.ExitCode);
 
-        protected override ProcessState GetState(ScriptStatusResponseV2 response) => response.State;
+        public ProcessState GetState(ScriptStatusResponseV2 response) => response.State;
 
-        protected override async Task<ScriptStatusResponseV2> StartScript(StartScriptCommandV2 command, CancellationToken scriptExecutionCancellationToken)
+        public async Task<ScriptStatusResponseV2> StartScript(StartScriptCommandV2 command, CancellationToken scriptExecutionCancellationToken)
         {
             ScriptStatusResponseV2 scriptStatusResponse;
             var startScriptCallsConnectedCount = 0;
@@ -95,7 +90,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 }
 
                 scriptStatusResponse = await rpcCallExecutor.Execute(
-                    retriesEnabled: ClientOptions.RpcRetrySettings.RetriesEnabled,
+                    retriesEnabled: clientOptions.RpcRetrySettings.RetriesEnabled,
                     RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.StartScript)),
                     StartScriptAction,
                     OnErrorAction,
@@ -146,7 +141,7 @@ namespace Octopus.Tentacle.Client.Scripts
             return scriptStatusResponse;
         }
 
-        protected override async Task<ScriptStatusResponseV2> GetStatus(ScriptStatusResponseV2 lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<ScriptStatusResponseV2> GetStatus(ScriptStatusResponseV2 lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             try
             {
@@ -159,7 +154,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 }
 
                 return await rpcCallExecutor.Execute(
-                    retriesEnabled: ClientOptions.RpcRetrySettings.RetriesEnabled,
+                    retriesEnabled: clientOptions.RpcRetrySettings.RetriesEnabled,
                     RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.GetStatus)),
                     GetStatusAction,
                     logger,
@@ -173,7 +168,7 @@ namespace Octopus.Tentacle.Client.Scripts
             }
         }
 
-        protected override async Task<ScriptStatusResponseV2> Cancel(ScriptStatusResponseV2 lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<ScriptStatusResponseV2> Cancel(ScriptStatusResponseV2 lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             async Task<ScriptStatusResponseV2> CancelScriptAction(CancellationToken ct)
             {
@@ -188,7 +183,7 @@ namespace Octopus.Tentacle.Client.Scripts
             // We could potentially reduce the time to failure by not retrying the cancel RPC Call if the previous RPC call was already triggering RPC Retries.
 
             return await rpcCallExecutor.Execute(
-                retriesEnabled: ClientOptions.RpcRetrySettings.RetriesEnabled,
+                retriesEnabled: clientOptions.RpcRetrySettings.RetriesEnabled,
                 RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.CancelScript)),
                 CancelScriptAction,
                 logger,
@@ -197,7 +192,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 CancellationToken.None).ConfigureAwait(false);
         }
 
-        protected override async Task<ScriptStatusResponseV2> Finish(ScriptStatusResponseV2 lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<ScriptStatusResponseV2> Finish(ScriptStatusResponseV2 lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             try
             {

@@ -13,7 +13,7 @@ using Octopus.Tentacle.Contracts.Observability;
 
 namespace Octopus.Tentacle.Client.Scripts
 {
-    class ScriptServiceV1Orchestrator : ObservingScriptOrchestrator<StartScriptCommand, ScriptStatusResponse>
+    class ScriptServiceV1Orchestrator : IStructuredScriptOrchestrator<StartScriptCommand, ScriptStatusResponse>
     {
 
         readonly RpcCallExecutor rpcCallExecutor;
@@ -24,17 +24,9 @@ namespace Octopus.Tentacle.Client.Scripts
 
         public ScriptServiceV1Orchestrator(
             IAsyncClientScriptService clientScriptServiceV1,
-            IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
             RpcCallExecutor rpcCallExecutor,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
-            OnScriptStatusResponseReceived onScriptStatusResponseReceived,
-            OnScriptCompleted onScriptCompleted,
-            TentacleClientOptions clientOptions,
             ITentacleClientTaskLog logger)
-            : base(scriptObserverBackOffStrategy,
-                onScriptStatusResponseReceived,
-                onScriptCompleted,
-                clientOptions)
         {
             this.clientScriptServiceV1 = clientScriptServiceV1;
             this.rpcCallExecutor = rpcCallExecutor;
@@ -58,15 +50,13 @@ namespace Octopus.Tentacle.Client.Scripts
                 shellScriptCommand.Files.ToArray());
         }
 
-        protected override ScriptExecutionStatus MapToStatus(ScriptStatusResponse response)
-            => new(response.Logs);
+        public ScriptExecutionStatus MapToStatus(ScriptStatusResponse response) => new(response.Logs);
 
-        protected override ScriptExecutionResult MapToResult(ScriptStatusResponse response)
-            => new(response.State, response.ExitCode);
+        public ScriptExecutionResult MapToResult(ScriptStatusResponse response) => new(response.State, response.ExitCode);
 
-        protected override ProcessState GetState(ScriptStatusResponse response) => response.State;
+        public ProcessState GetState(ScriptStatusResponse response) => response.State;
 
-        protected override async Task<ScriptStatusResponse> StartScript(StartScriptCommand command, CancellationToken scriptExecutionCancellationToken)
+        public async Task<ScriptStatusResponse> StartScript(StartScriptCommand command, CancellationToken scriptExecutionCancellationToken)
         {
             var scriptTicket = await rpcCallExecutor.ExecuteWithNoRetries(
                 RpcCall.Create<IScriptService>(nameof(IScriptService.StartScript)),
@@ -83,7 +73,7 @@ namespace Octopus.Tentacle.Client.Scripts
             return new ScriptStatusResponse(scriptTicket, ProcessState.Pending, 0, new List<ProcessOutput>(), 0);
         }
 
-        protected override async Task<ScriptStatusResponse> GetStatus(ScriptStatusResponse lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<ScriptStatusResponse> GetStatus(ScriptStatusResponse lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             var scriptStatusResponseV1 = await rpcCallExecutor.ExecuteWithNoRetries(
                 RpcCall.Create<IScriptService>(nameof(IScriptService.GetStatus)),
@@ -101,7 +91,7 @@ namespace Octopus.Tentacle.Client.Scripts
             return scriptStatusResponseV1;
         }
 
-        protected override async Task<ScriptStatusResponse> Cancel(ScriptStatusResponse lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<ScriptStatusResponse> Cancel(ScriptStatusResponse lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             var response = await rpcCallExecutor.ExecuteWithNoRetries(
                 RpcCall.Create<IScriptService>(nameof(IScriptService.CancelScript)),
@@ -119,7 +109,7 @@ namespace Octopus.Tentacle.Client.Scripts
             return response;
         }
 
-        protected override async Task<ScriptStatusResponse> Finish(ScriptStatusResponse lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<ScriptStatusResponse> Finish(ScriptStatusResponse lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             var response = await rpcCallExecutor.ExecuteWithNoRetries(
                 RpcCall.Create<IScriptService>(nameof(IScriptService.CompleteScript)),
@@ -133,8 +123,6 @@ namespace Octopus.Tentacle.Client.Scripts
                 logger,
                 clientOperationMetricsBuilder,
                 CancellationToken.None).ConfigureAwait(false);
-
-            OnScriptStatusResponseReceived(response);
 
             return response;
         }
