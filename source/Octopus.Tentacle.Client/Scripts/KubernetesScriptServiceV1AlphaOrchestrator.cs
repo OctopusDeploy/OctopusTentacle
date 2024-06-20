@@ -260,8 +260,6 @@ namespace Octopus.Tentacle.Client.Scripts
                 logger.Warn("Failed to cleanup the script working directory on Tentacle");
                 logger.Verbose(ex);
             }
-
-            return null;
         }
     }
 }

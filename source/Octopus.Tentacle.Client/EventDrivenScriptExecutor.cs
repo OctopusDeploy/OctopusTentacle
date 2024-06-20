@@ -75,8 +75,6 @@ namespace Octopus.Tentacle.Client
 
             var orchestrator = scriptOrchestratorFactory.CreateOrchestrator(scriptServiceToUse);
             
-            orchestrator.s
-            
             // and return stuff.
             throw new System.NotImplementedException();
         }
