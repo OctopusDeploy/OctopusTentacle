@@ -79,14 +79,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 {
                     try
                     {
-                        var receivedGetStatus = await structuredScriptOrchestrator.GetStatus(lastStatusResponse, scriptExecutionCancellationToken).ConfigureAwait(false);
-                        if (scriptExecutionCancellationToken.IsCancellationRequested)
-                        {
-                            continue; // Enter cancellation mode.
-                        }
-
-                        if (receivedGetStatus == null) throw new Exception("Script execution error, next status should not have been null");
-                        lastStatusResponse = receivedGetStatus;
+                        lastStatusResponse = await structuredScriptOrchestrator.GetStatus(lastStatusResponse, scriptExecutionCancellationToken).ConfigureAwait(false);
                     }
                     catch (Exception)
                     {
