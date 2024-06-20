@@ -75,12 +75,7 @@ namespace Octopus.Tentacle.Client.Scripts
         }
         public ProcessState GetState(ScriptStatusResponseV2 response) => response.State;
 
-        public async Task<(ScriptStatus, ITicketForNextStatus)> StartScript(ExecuteScriptCommand command, CancellationToken scriptExecutionCancellationToken)
-        {
-            return Map(await _StartScript(command, scriptExecutionCancellationToken));
-        }
-
-        private async Task<ScriptStatusResponseV2> _StartScript(ExecuteScriptCommand executeScriptCommand, CancellationToken scriptExecutionCancellationToken)
+        public async Task<StartScriptResult> StartScript(ExecuteScriptCommand executeScriptCommand, CancellationToken scriptExecutionCancellationToken)
         {
             var command = Map(executeScriptCommand);
             ScriptStatusResponseV2 scriptStatusResponse;
@@ -112,6 +107,8 @@ namespace Octopus.Tentacle.Client.Scripts
                     logger,
                     clientOperationMetricsBuilder,
                     scriptExecutionCancellationToken).ConfigureAwait(false);
+
+                return new StartScriptResult(MapToScriptStatus(scriptStatusResponse), MapToNextStatus(scriptStatusResponse), true);
             }
             catch (Exception ex) when (scriptExecutionCancellationToken.IsCancellationRequested)
             {
@@ -125,36 +122,15 @@ namespace Octopus.Tentacle.Client.Scripts
 
                 if (!startScriptCallIsConnecting || startScriptCallIsBeingRetried)
                 {
-                    // We have to assume the script started executing and call CancelScript and CompleteScript
-                    // We don't have a response so we need to create one to continue the execution flow
-                    scriptStatusResponse = new ScriptStatusResponseV2(
-                        command.ScriptTicket,
-                        ProcessState.Pending,
-                        ScriptExitCodes.RunningExitCode,
-                        new List<ProcessOutput>(),
-                        0);
-
-                    try
-                    {
-                        new ShortCutTakenHere();
-                        //await ObserveUntilCompleteThenFinish(scriptStatusResponse, scriptExecutionCancellationToken).ConfigureAwait(false);
-                    }
-                    catch (Exception observerUntilCompleteException)
-                    {
-                        // Throw an error so the caller knows that execution of the script was cancelled
-                        throw new OperationCanceledException("Script execution was cancelled", observerUntilCompleteException);
-                    }
-
-                    // Throw an error so the caller knows that execution of the script was cancelled
-                    throw new OperationCanceledException("Script execution was cancelled");
+                    var scriptStatus = new ScriptStatus(ProcessState.Pending, null, new List<ProcessOutput>());
+                    var defaultTicketForNextStatus = new DefaultTicketForNextStatus(command.ScriptTicket, 0, ScriptServiceVersion.ScriptServiceVersion2);
+                    return new StartScriptResult(scriptStatus, defaultTicketForNextStatus, true);
                 }
 
                 // If the StartScript call was not in-flight or being retries then we know the script has not started executing on Tentacle
                 // So can exit without calling CancelScript or CompleteScript
                 throw new OperationCanceledException("Script execution was cancelled", ex);
             }
-
-            return scriptStatusResponse;
         }
 
         public async Task<(ScriptStatus, ITicketForNextStatus)> GetStatus(ITicketForNextStatus lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
