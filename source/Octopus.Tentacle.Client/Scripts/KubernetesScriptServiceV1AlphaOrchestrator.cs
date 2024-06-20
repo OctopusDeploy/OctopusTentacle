@@ -152,7 +152,7 @@ namespace Octopus.Tentacle.Client.Scripts
             return scriptStatusResponse;
         }
 
-        public async Task<KubernetesScriptStatusResponseV1Alpha> GetStatus(KubernetesScriptStatusResponseV1Alpha lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<KubernetesScriptStatusResponseV1Alpha?> GetStatus(KubernetesScriptStatusResponseV1Alpha lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             try
             {
@@ -174,8 +174,7 @@ namespace Octopus.Tentacle.Client.Scripts
             }
             catch (Exception e) when (e is OperationCanceledException && scriptExecutionCancellationToken.IsCancellationRequested)
             {
-                // Return the last known response without logs when cancellation occurs and let the script execution go into the CancelScript and CompleteScript flow
-                return new KubernetesScriptStatusResponseV1Alpha(lastStatusResponse.ScriptTicket, lastStatusResponse.State, lastStatusResponse.ExitCode, new List<ProcessOutput>(), lastStatusResponse.NextLogSequence);
+                return null;
             }
         }
 

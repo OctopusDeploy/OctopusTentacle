@@ -79,7 +79,14 @@ namespace Octopus.Tentacle.Client.Scripts
                 {
                     try
                     {
-                        lastStatusResponse = await structuredScriptOrchestrator.GetStatus(lastStatusResponse, scriptExecutionCancellationToken).ConfigureAwait(false);
+                        var receivedGetStatus = await structuredScriptOrchestrator.GetStatus(lastStatusResponse, scriptExecutionCancellationToken).ConfigureAwait(false);
+                        if (scriptExecutionCancellationToken.IsCancellationRequested)
+                        {
+                            continue; // Enter cancellation mode.
+                        }
+
+                        if (receivedGetStatus == null) throw new Exception("Script execution error, next status should not have been null");
+                        lastStatusResponse = receivedGetStatus;
                     }
                     catch (Exception)
                     {
@@ -116,12 +123,10 @@ namespace Octopus.Tentacle.Client.Scripts
             return lastStatusResponse;
         }
 
-
-
         void OnScriptStatusResponseReceived(TScriptStatusResponse scriptStatusResponse)
         {
-            new ShortCutTakenHere();
-            onScriptStatusResponseReceived(structuredScriptOrchestrator.MapToStatus(scriptStatusResponse));
+            ScriptExecutionStatus scriptExecutionStatus = structuredScriptOrchestrator.MapToStatus(scriptStatusResponse);
+            onScriptStatusResponseReceived(scriptExecutionStatus);
         }
     }
 }

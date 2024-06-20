@@ -16,7 +16,13 @@ namespace Octopus.Tentacle.Client.Scripts
         ScriptExecutionResult MapToResult(TScriptStatusResponse response);
         ProcessState GetState(TScriptStatusResponse response);
         Task<TScriptStatusResponse> StartScript(ExecuteScriptCommand command, CancellationToken scriptExecutionCancellationToken);
-        Task<TScriptStatusResponse> GetStatus(TScriptStatusResponse lastStatusResponse, CancellationToken scriptExecutionCancellationToken);
+        /// <summary>
+        /// Returns a status or null when scriptExecutionCancellationToken is null. 
+        /// </summary>
+        /// <param name="lastStatusResponse"></param>
+        /// <param name="scriptExecutionCancellationToken"></param>
+        /// <returns></returns>
+        Task<TScriptStatusResponse?> GetStatus(TScriptStatusResponse lastStatusResponse, CancellationToken scriptExecutionCancellationToken);
         Task<TScriptStatusResponse> Cancel(TScriptStatusResponse lastStatusResponse, CancellationToken scriptExecutionCancellationToken);
         Task<TScriptStatusResponse> Finish(TScriptStatusResponse lastStatusResponse, CancellationToken scriptExecutionCancellationToken);
     }
