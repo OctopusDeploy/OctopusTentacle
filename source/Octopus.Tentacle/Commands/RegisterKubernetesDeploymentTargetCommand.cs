@@ -9,14 +9,13 @@ using Octopus.Tentacle.Startup;
 
 namespace Octopus.Tentacle.Commands
 {
-    [Obsolete("This class is being deprecated in favour of RegisterKubernetesDeploymentTargetCommand")]
-    public class RegisterKubernetesClusterCommand : RegisterMachineCommand<IRegisterKubernetesClusterOperation>
+    public class RegisterKubernetesDeploymentTargetCommand : RegisterMachineCommand<IRegisterKubernetesClusterOperation>
     {
         readonly Lazy<IWritableTentacleConfiguration> configuration;
         readonly ISystemLog log;
         string? defaultNamespace;
 
-        public RegisterKubernetesClusterCommand(Lazy<IRegisterKubernetesClusterOperation> lazyRegisterMachineOperation, Lazy<IWritableTentacleConfiguration> configuration, ISystemLog log, IApplicationInstanceSelector selector, Lazy<IOctopusServerChecker> octopusServerChecker, IProxyConfigParser proxyConfig, IOctopusClientInitializer octopusClientInitializer, ISpaceRepositoryFactory spaceRepositoryFactory, ILogFileOnlyLogger logFileOnlyLogger) : base(lazyRegisterMachineOperation, configuration, log, selector, octopusServerChecker, proxyConfig, octopusClientInitializer, spaceRepositoryFactory, logFileOnlyLogger)
+        public RegisterKubernetesDeploymentTargetCommand(Lazy<IRegisterKubernetesClusterOperation> lazyRegisterMachineOperation, Lazy<IWritableTentacleConfiguration> configuration, ISystemLog log, IApplicationInstanceSelector selector, Lazy<IOctopusServerChecker> octopusServerChecker, IProxyConfigParser proxyConfig, IOctopusClientInitializer octopusClientInitializer, ISpaceRepositoryFactory spaceRepositoryFactory, ILogFileOnlyLogger logFileOnlyLogger) : base(lazyRegisterMachineOperation, configuration, log, selector, octopusServerChecker, proxyConfig, octopusClientInitializer, spaceRepositoryFactory, logFileOnlyLogger)
         {
             this.configuration = configuration;
             this.log = log;
@@ -26,8 +25,6 @@ namespace Octopus.Tentacle.Commands
 
         protected override void Start()
         {
-            log.Warn("This command is being deprecated. Please use the \"register-k8s-target\" command instead.");
-            
             if (configuration.Value.IsRegistered)
             {
                 log.Info("Tentacle is already registered, skipping registration.");
