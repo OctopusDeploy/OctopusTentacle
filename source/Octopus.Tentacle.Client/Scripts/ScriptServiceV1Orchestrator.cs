@@ -66,12 +66,7 @@ namespace Octopus.Tentacle.Client.Scripts
             return (MapToScriptStatus(r), MapToNextStatus(r));
         }
         
-        public async Task<(ScriptStatus, ITicketForNextStatus)> StartScript(ExecuteScriptCommand command, CancellationToken scriptExecutionCancellationToken)
-        {
-            return Map(await _StartScript(command, scriptExecutionCancellationToken));
-        }
-
-        private async Task<ScriptStatusResponse> _StartScript(ExecuteScriptCommand executeScriptCommand, CancellationToken scriptExecutionCancellationToken)
+        public async Task<(ScriptStatus, ITicketForNextStatus)> StartScript(ExecuteScriptCommand executeScriptCommand, CancellationToken scriptExecutionCancellationToken)
         {
             var command = Map(executeScriptCommand);
             var scriptTicket = await rpcCallExecutor.ExecuteWithNoRetries(
@@ -86,7 +81,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 clientOperationMetricsBuilder,
                 scriptExecutionCancellationToken).ConfigureAwait(false);
 
-            return new ScriptStatusResponse(scriptTicket, ProcessState.Pending, 0, new List<ProcessOutput>(), 0);
+            return Map(new ScriptStatusResponse(scriptTicket, ProcessState.Pending, 0, new List<ProcessOutput>(), 0));
         }
 
         public async Task<(ScriptStatus, ITicketForNextStatus)> GetStatus(ITicketForNextStatus lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
