@@ -44,7 +44,7 @@ namespace Octopus.Tentacle.Client
             this.clientOptions = clientOptions;
             this.onCancellationAbandonCompleteScriptAfter = onCancellationAbandonCompleteScriptAfter;
             clientsHolder = new ClientsHolder(halibutRuntime, serviceEndPoint, tentacleServicesDecoratorFactory);
-            rpcCallExecutor = RpcCallExecutorFactory.Create(this.clientOptions.RpcRetrySettings.RetryDuration, this.tentacleClientObserver)
+            rpcCallExecutor = RpcCallExecutorFactory.Create(this.clientOptions.RpcRetrySettings.RetryDuration, this.tentacleClientObserver);
         }
 
         public async Task<(ScriptStatus, ITicketForNextStatus)> StartScript(ExecuteScriptCommand executeScriptCommand,

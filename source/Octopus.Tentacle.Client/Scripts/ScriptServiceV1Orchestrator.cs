@@ -68,8 +68,7 @@ namespace Octopus.Tentacle.Client.Scripts
         
         public async Task<(ScriptStatus, ITicketForNextStatus)> StartScript(ExecuteScriptCommand command, CancellationToken scriptExecutionCancellationToken)
         {
-            var r = await _StartScript(command, scriptExecutionCancellationToken);
-            return Map(r);
+            return Map(await _StartScript(command, scriptExecutionCancellationToken));
         }
 
         private async Task<ScriptStatusResponse> _StartScript(ExecuteScriptCommand executeScriptCommand, CancellationToken scriptExecutionCancellationToken)
