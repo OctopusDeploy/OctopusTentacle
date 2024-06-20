@@ -4,15 +4,15 @@ namespace Octopus.Tentacle.Contracts
 {
     public class ScriptStatus
     {
-        ProcessState state;
-        int? exitCode;
-        List<ProcessOutput> logs;
+        public ProcessState State;
+        public int? ExitCode;
+        public List<ProcessOutput> Logs;
         
         public ScriptStatus(ProcessState state, int? exitCode, List<ProcessOutput> logs)
         {
-            this.state = state;
-            this.exitCode = exitCode;
-            this.logs = logs;
+            this.State = state;
+            this.ExitCode = exitCode;
+            this.Logs = logs;
         }
     }
 }
