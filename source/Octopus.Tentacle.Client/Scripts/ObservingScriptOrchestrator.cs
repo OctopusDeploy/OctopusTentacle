@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Halibut;
 using Octopus.Tentacle.Client.EventDriven;
 using Octopus.Tentacle.Client.Scripts.Models;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Contracts.Logging;
 
 namespace Octopus.Tentacle.Client.Scripts
 {
@@ -12,6 +14,7 @@ namespace Octopus.Tentacle.Client.Scripts
         readonly IScriptObserverBackoffStrategy scriptObserverBackOffStrategy;
         readonly OnScriptStatusResponseReceived onScriptStatusResponseReceived;
         readonly OnScriptCompleted onScriptCompleted;
+        readonly ITentacleClientTaskLog logger;
 
         IStructuredScriptOrchestrator structuredScriptOrchestrator;
 
@@ -19,9 +22,10 @@ namespace Octopus.Tentacle.Client.Scripts
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
             OnScriptStatusResponseReceived onScriptStatusResponseReceived,
             OnScriptCompleted onScriptCompleted,
-            IStructuredScriptOrchestrator structuredScriptOrchestrator)
+            IStructuredScriptOrchestrator structuredScriptOrchestrator, ITentacleClientTaskLog logger)
         {
             this.structuredScriptOrchestrator = structuredScriptOrchestrator;
+            this.logger = logger;
             this.scriptObserverBackOffStrategy = scriptObserverBackOffStrategy;
             this.onScriptStatusResponseReceived = onScriptStatusResponseReceived;
             this.onScriptCompleted = onScriptCompleted;
@@ -55,8 +59,9 @@ namespace Octopus.Tentacle.Client.Scripts
 
             await onScriptCompleted(scriptExecutionCancellationToken).ConfigureAwait(false);
 
-            (lastStatusResponse, lastTicketForNextStatus)  = await structuredScriptOrchestrator.Finish(lastTicketForNextStatus, scriptExecutionCancellationToken).ConfigureAwait(false);
             
+            lastStatusResponse = await structuredScriptOrchestrator.Finish(lastTicketForNextStatus, scriptExecutionCancellationToken).ConfigureAwait(false) ?? lastStatusResponse;
+
             OnScriptStatusResponseReceived(lastStatusResponse);
 
             return (lastStatusResponse, lastTicketForNextStatus);

@@ -22,6 +22,6 @@ namespace Octopus.Tentacle.Client.Scripts
         /// <returns></returns>
         Task<(ScriptStatus, ITicketForNextStatus)> GetStatus(ITicketForNextStatus lastStatusResponse, CancellationToken scriptExecutionCancellationToken);
         Task<(ScriptStatus, ITicketForNextStatus)> Cancel(ITicketForNextStatus lastStatusResponse, CancellationToken scriptExecutionCancellationToken);
-        Task<(ScriptStatus, ITicketForNextStatus)> Finish(ITicketForNextStatus lastStatusResponse, CancellationToken scriptExecutionCancellationToken);
+        Task<ScriptStatus?> Finish(ITicketForNextStatus lastStatusResponse, CancellationToken scriptExecutionCancellationToken);
     }
 }

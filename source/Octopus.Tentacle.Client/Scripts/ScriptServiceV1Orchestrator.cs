@@ -61,15 +61,15 @@ namespace Octopus.Tentacle.Client.Scripts
             return new DefaultTicketForNextStatus(scriptStatusResponse.Ticket, scriptStatusResponse.NextLogSequence, ScriptServiceVersion.ScriptServiceVersion1);
         }
 
+        (ScriptStatus, ITicketForNextStatus) Map(ScriptStatusResponse r)
+        {
+            return (MapToScriptStatus(r), MapToNextStatus(r));
+        }
+        
         public async Task<(ScriptStatus, ITicketForNextStatus)> StartScript(ExecuteScriptCommand command, CancellationToken scriptExecutionCancellationToken)
         {
             var r = await _StartScript(command, scriptExecutionCancellationToken);
             return Map(r);
-        }
-
-        (ScriptStatus, ITicketForNextStatus) Map(ScriptStatusResponse r)
-        {
-            return (MapToScriptStatus(r), MapToNextStatus(r));
         }
 
         private async Task<ScriptStatusResponse> _StartScript(ExecuteScriptCommand executeScriptCommand, CancellationToken scriptExecutionCancellationToken)
@@ -136,9 +136,9 @@ namespace Octopus.Tentacle.Client.Scripts
             return response;
         }
 
-        public async Task<(ScriptStatus, ITicketForNextStatus)> Finish(ITicketForNextStatus lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<ScriptStatus?> Finish(ITicketForNextStatus lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
-            return Map(await _Finish(lastStatusResponse, scriptExecutionCancellationToken));
+            return MapToScriptStatus(await _Finish(lastStatusResponse, scriptExecutionCancellationToken));
         }
 
         private async Task<ScriptStatusResponse> _Finish(ITicketForNextStatus lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
