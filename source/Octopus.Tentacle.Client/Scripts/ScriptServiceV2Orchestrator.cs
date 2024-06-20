@@ -161,7 +161,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
         public async Task<(ScriptStatus, ITicketForNextStatus)> Cancel(ITicketForNextStatus lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
-            return Map(await _GetStatus(lastStatusResponse, scriptExecutionCancellationToken)); 
+            return Map(await _Cancel(lastStatusResponse, scriptExecutionCancellationToken)); 
         }
 
         private async Task<ScriptStatusResponseV2> _Cancel(ITicketForNextStatus lastStatusResponse, CancellationToken scriptExecutionCancellationToken)

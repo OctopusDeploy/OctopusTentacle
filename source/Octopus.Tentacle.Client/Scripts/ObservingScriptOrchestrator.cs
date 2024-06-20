@@ -57,7 +57,6 @@ namespace Octopus.Tentacle.Client.Scripts
             var (lastStatusResponse, lastTicketForNextStatus) =  await ObserveUntilComplete(scriptStatus, ticketForNextStatus, scriptExecutionCancellationToken).ConfigureAwait(false);
 
             await onScriptCompleted(scriptExecutionCancellationToken).ConfigureAwait(false);
-
             
             lastStatusResponse = await structuredScriptOrchestrator.Finish(lastTicketForNextStatus, scriptExecutionCancellationToken).ConfigureAwait(false) ?? lastStatusResponse;
 
