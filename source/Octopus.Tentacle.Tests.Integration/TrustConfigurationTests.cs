@@ -28,7 +28,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             await using (var clientAndTentacle = await tentacleConfigurationTestCase
                              .CreateBuilder()
-                             .WithRetryDuration(TimeSpan.FromSeconds(10))
+                             .WithRetryDuration(TimeSpan.FromSeconds(20))
                              .Build(CancellationToken))
             {
                 using var newCertificate = new CertificateGenerator(new SystemLog()).GenerateNew($"cn={Guid.NewGuid()}");

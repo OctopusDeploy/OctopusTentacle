@@ -57,7 +57,11 @@ namespace Octopus.Tentacle.Configuration.Instances
                 }
                 catch (IOException)
                 {
-                    // Tentacle  writes configuration changes non atomically so may still be writing to the file when the change notification is raised
+                    // Tentacle writes configuration changes non atomically so may still be writing to the file when the change notification is raised
+                }
+                catch (FormatException)
+                {
+                    // If Tentacle is part way through writing the configuration and the OS allows reads to the configuration file then it may be invalid
                 }
             }
         }
