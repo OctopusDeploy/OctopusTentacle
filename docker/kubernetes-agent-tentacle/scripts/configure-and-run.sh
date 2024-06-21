@@ -6,6 +6,11 @@ if [[ "$ACCEPT_EULA" != "Y" ]]; then
   exit 1
 fi
 
+# In the scenario where a customer is using a custom certificate (which is mounted via a config map), we need to rehash the certificates
+# We just do this all the time because there is no downside
+echo "Rehashing SSL/TLS certificates"
+openssl rehash /etc/ssl/certs
+
 # Tentacle Docker images only support once instance per container. Running multiple instances can be achieved by running multiple containers.
 instanceName=Tentacle
 internalListeningPort=10933
