@@ -71,7 +71,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
         private ICommandContext MapToNextStatus(ScriptStatusResponseV2 scriptStatusResponse)
         {
-            return new DefaultCommandContext(scriptStatusResponse.Ticket, scriptStatusResponse.NextLogSequence, ScriptServiceVersion.ScriptServiceVersion1);
+            return new DefaultCommandContext(scriptStatusResponse.Ticket, scriptStatusResponse.NextLogSequence, ScriptServiceVersion.ScriptServiceVersion2);
         }
         public ProcessState GetState(ScriptStatusResponseV2 response) => response.State;
 
