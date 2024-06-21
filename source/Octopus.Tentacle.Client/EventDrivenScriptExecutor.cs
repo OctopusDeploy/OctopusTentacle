@@ -63,7 +63,54 @@ namespace Octopus.Tentacle.Client
                 return (new ScriptStatus(ProcessState.Complete, ScriptExitCodes.UnknownScriptExitCode, new List<ProcessOutput>()), new DefaultTicketForNextStatus(new ScriptTicket(Guid.NewGuid().ToString()), 0, ScriptServiceVersion.ScriptServiceVersion1));
             }
 
-            var scriptOrchestratorFactory = new ScriptOrchestratorFactory(clientsHolder, 
+            var scriptOrchestratorFactory = GetNewScriptOrchestratorFactory(operationMetricsBuilder);
+
+            var orchestrator = scriptOrchestratorFactory.CreateOrchestrator(scriptServiceToUse);
+            return await orchestrator.StartScript(executeScriptCommand, cancellationToken);
+        }
+
+        public async Task<(ScriptStatus, ITicketForNextStatus)> GetStatus(ITicketForNextStatus ticketForNextNextStatus, CancellationToken cancellationToken)
+        {
+            var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
+            
+            var scriptOrchestratorFactory = GetNewScriptOrchestratorFactory(operationMetricsBuilder);
+
+            var orchestrator = scriptOrchestratorFactory.CreateOrchestrator(ticketForNextNextStatus.WhichService);
+
+            return await orchestrator.GetStatus(ticketForNextNextStatus, cancellationToken);
+        }
+
+        public async Task<(ScriptStatus, ITicketForNextStatus)> CancelScript(ITicketForNextStatus ticketForNextNextStatus, CancellationToken cancellationToken)
+        {
+            var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
+            
+            var scriptOrchestratorFactory = GetNewScriptOrchestratorFactory(operationMetricsBuilder);
+
+            var orchestrator = scriptOrchestratorFactory.CreateOrchestrator(ticketForNextNextStatus.WhichService);
+
+            return await orchestrator.Cancel(ticketForNextNextStatus, cancellationToken);
+        }
+
+        public Task<(ScriptStatus, ITicketForNextStatus)> CancelScript(ScriptTicket scriptTicket, CancellationToken cancellationToken)
+        {
+            var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
+            throw new System.NotImplementedException();
+        }
+
+        public async Task CleanUpScript(ITicketForNextStatus ticketForNextNextStatus, CancellationToken cancellationToken)
+        {
+            var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
+            
+            var scriptOrchestratorFactory = GetNewScriptOrchestratorFactory(operationMetricsBuilder);
+
+            var orchestrator = scriptOrchestratorFactory.CreateOrchestrator(ticketForNextNextStatus.WhichService);
+
+            await orchestrator.Finish(ticketForNextNextStatus, cancellationToken);
+        }
+        
+        ScriptOrchestratorFactory GetNewScriptOrchestratorFactory(ClientOperationMetricsBuilder operationMetricsBuilder)
+        {
+            return new ScriptOrchestratorFactory(clientsHolder, 
                 new DefaultScriptObserverBackoffStrategy(), 
                 rpcCallExecutor, 
                 operationMetricsBuilder, 
@@ -72,35 +119,7 @@ namespace Octopus.Tentacle.Client
                 onCancellationAbandonCompleteScriptAfter,
                 clientOptions,
                 logger);
-
-            var orchestrator = scriptOrchestratorFactory.CreateOrchestrator(scriptServiceToUse);
-            
-            // and return stuff.
-            throw new System.NotImplementedException();
         }
 
-        public Task<(ScriptStatus, ITicketForNextStatus)> GetStatus(ITicketForNextStatus ticketForNextNextStatus, CancellationToken cancellationToken)
-        {
-
-            ScriptOrchestratorFactory scriptOrchestratorFactory = null!;
-            var orch = scriptOrchestratorFactory.CreateOrchestrator(ticketForNextNextStatus.WhichService);
-            
-            throw new System.NotImplementedException();
-        }
-
-        public Task<(ScriptStatus, ITicketForNextStatus)> CancelScript(ITicketForNextStatus ticketForNextNextStatus, CancellationToken cancellationToken)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public Task<(ScriptStatus, ITicketForNextStatus)> CancelScript(ScriptTicket scriptTicket, CancellationToken cancellationToken)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public Task CleanUpScript(ScriptTicket scriptTicket, CancellationToken cancellationToken)
-        {
-            throw new System.NotImplementedException();
-        }
     }
 }
