@@ -97,7 +97,7 @@ namespace Octopus.Tentacle.Client
             throw new System.NotImplementedException();
         }
 
-        public async Task<ScriptStatus> CleanUpScript(ICommandContext ticketForNextNextStatus, CancellationToken cancellationToken)
+        public async Task<ScriptStatus?> CleanUpScript(ICommandContext ticketForNextNextStatus, CancellationToken cancellationToken)
         {
             var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
             
@@ -105,7 +105,7 @@ namespace Octopus.Tentacle.Client
 
             var orchestrator = scriptOrchestratorFactory.CreateOrchestrator(ticketForNextNextStatus.WhichService);
 
-            await orchestrator.Finish(ticketForNextNextStatus, cancellationToken);
+            return await orchestrator.Finish(ticketForNextNextStatus, cancellationToken);
         }
         
         ScriptOrchestratorFactory GetNewScriptOrchestratorFactory(ClientOperationMetricsBuilder operationMetricsBuilder)
