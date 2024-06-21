@@ -16,7 +16,7 @@ using Octopus.Tentacle.Contracts.Observability;
 
 namespace Octopus.Tentacle.Client.Scripts
 {
-    class KubernetesScriptServiceV1AlphaOrchestrator : IStructuredScriptOrchestrator
+    class KubernetesScriptServiceV1AlphaExecutor : IStructuredScriptExecutor
     {
         readonly IAsyncClientKubernetesScriptServiceV1Alpha clientKubernetesScriptServiceV1Alpha;
         readonly RpcCallExecutor rpcCallExecutor;
@@ -25,7 +25,7 @@ namespace Octopus.Tentacle.Client.Scripts
         readonly ITentacleClientTaskLog logger;
         readonly TentacleClientOptions clientOptions;
 
-        public KubernetesScriptServiceV1AlphaOrchestrator(
+        public KubernetesScriptServiceV1AlphaExecutor(
             IAsyncClientKubernetesScriptServiceV1Alpha clientKubernetesScriptServiceV1Alpha,
             RpcCallExecutor rpcCallExecutor,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
@@ -82,17 +82,17 @@ namespace Octopus.Tentacle.Client.Scripts
             return new ScriptStatus(scriptStatusResponse.State, scriptStatusResponse.ExitCode, scriptStatusResponse.Logs);
         }
 
-        private ITicketForNextStatus MapToNextStatus(KubernetesScriptStatusResponseV1Alpha scriptStatusResponse)
+        private ICommandContext MapToNextStatus(KubernetesScriptStatusResponseV1Alpha scriptStatusResponse)
         {
-            return new DefaultTicketForNextStatus(scriptStatusResponse.ScriptTicket, scriptStatusResponse.NextLogSequence, ScriptServiceVersion.KubernetesScriptServiceVersion1Alpha);
+            return new DefaultCommandContext(scriptStatusResponse.ScriptTicket, scriptStatusResponse.NextLogSequence, ScriptServiceVersion.KubernetesScriptServiceVersion1Alpha);
         }
         
-        (ScriptStatus, ITicketForNextStatus) Map(KubernetesScriptStatusResponseV1Alpha r)
+        (ScriptStatus, ICommandContext) Map(KubernetesScriptStatusResponseV1Alpha r)
         {
             return (MapToScriptStatus(r), MapToNextStatus(r));
         }
 
-        public async Task<(ScriptStatus, ITicketForNextStatus)> StartScript(ExecuteScriptCommand executeScriptCommand, CancellationToken scriptExecutionCancellationToken)
+        public async Task<(ScriptStatus, ICommandContext)> StartScript(ExecuteScriptCommand executeScriptCommand, CancellationToken scriptExecutionCancellationToken)
         {
             var command = Map(executeScriptCommand);
             var startScriptCallsConnectedCount = 0;
@@ -139,7 +139,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 if (!startScriptCallIsConnecting || startScriptCallIsBeingRetried)
                 {
                     var scriptStatus = new ScriptStatus(ProcessState.Pending, null, new List<ProcessOutput>());
-                    var defaultTicketForNextStatus = new DefaultTicketForNextStatus(command.ScriptTicket, 0, ScriptServiceVersion.KubernetesScriptServiceVersion1Alpha);
+                    var defaultTicketForNextStatus = new DefaultCommandContext(command.ScriptTicket, 0, ScriptServiceVersion.KubernetesScriptServiceVersion1Alpha);
                     return (scriptStatus, defaultTicketForNextStatus);
                 }
 
@@ -149,12 +149,12 @@ namespace Octopus.Tentacle.Client.Scripts
             }
         }
 
-        public async Task<(ScriptStatus, ITicketForNextStatus)> GetStatus(ITicketForNextStatus lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<(ScriptStatus, ICommandContext)> GetStatus(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             return Map(await _GetStatus(lastStatusResponse, scriptExecutionCancellationToken));
         }
 
-        async Task<KubernetesScriptStatusResponseV1Alpha> _GetStatus(ITicketForNextStatus lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        async Task<KubernetesScriptStatusResponseV1Alpha> _GetStatus(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             async Task<KubernetesScriptStatusResponseV1Alpha> GetStatusAction(CancellationToken ct)
             {
@@ -173,12 +173,12 @@ namespace Octopus.Tentacle.Client.Scripts
                 scriptExecutionCancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<(ScriptStatus, ITicketForNextStatus)> Cancel(ITicketForNextStatus lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<(ScriptStatus, ICommandContext)> Cancel(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             return Map(await _Cancel(lastStatusResponse, scriptExecutionCancellationToken));
         }
         
-        async Task<KubernetesScriptStatusResponseV1Alpha> _Cancel(ITicketForNextStatus lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        async Task<KubernetesScriptStatusResponseV1Alpha> _Cancel(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             async Task<KubernetesScriptStatusResponseV1Alpha> CancelScriptAction(CancellationToken ct)
             {
@@ -203,13 +203,13 @@ namespace Octopus.Tentacle.Client.Scripts
         }
 
         
-        public async Task<ScriptStatus?> Finish(ITicketForNextStatus lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<ScriptStatus?> Finish(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             await _Finish(lastStatusResponse, scriptExecutionCancellationToken);
             return null;
         }
         
-        async Task _Finish(ITicketForNextStatus lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        async Task _Finish(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             try
             {

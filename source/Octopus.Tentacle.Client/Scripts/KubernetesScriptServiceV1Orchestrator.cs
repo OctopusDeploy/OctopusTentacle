@@ -16,7 +16,7 @@ using Octopus.Tentacle.Contracts.Observability;
 
 namespace Octopus.Tentacle.Client.Scripts
 {
-    class KubernetesScriptServiceV1Orchestrator : IStructuredScriptOrchestrator
+    class KubernetesScriptServiceV1Executor : IStructuredScriptExecutor
     {
         readonly IAsyncClientKubernetesScriptServiceV1 clientKubernetesScriptServiceV1;
         readonly RpcCallExecutor rpcCallExecutor;
@@ -25,7 +25,7 @@ namespace Octopus.Tentacle.Client.Scripts
         readonly ITentacleClientTaskLog logger;
         readonly TentacleClientOptions clientOptions;
 
-        public KubernetesScriptServiceV1Orchestrator(
+        public KubernetesScriptServiceV1Executor(
             IAsyncClientKubernetesScriptServiceV1 clientKubernetesScriptServiceV1,
             RpcCallExecutor rpcCallExecutor,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
@@ -68,7 +68,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 kubernetesScriptCommand.Files.ToArray(),
                 kubernetesScriptCommand.IsRawScript);
         }
-        (ScriptStatus, ITicketForNextStatus) Map(KubernetesScriptStatusResponseV1 r)
+        (ScriptStatus, ICommandContext) Map(KubernetesScriptStatusResponseV1 r)
         {
             return (MapToScriptStatus(r), MapToNextStatus(r));
         }
@@ -78,12 +78,12 @@ namespace Octopus.Tentacle.Client.Scripts
             return new ScriptStatus(scriptStatusResponse.State, scriptStatusResponse.ExitCode, scriptStatusResponse.Logs);
         }
 
-        private ITicketForNextStatus MapToNextStatus(KubernetesScriptStatusResponseV1 scriptStatusResponse)
+        private ICommandContext MapToNextStatus(KubernetesScriptStatusResponseV1 scriptStatusResponse)
         {
-            return new DefaultTicketForNextStatus(scriptStatusResponse.ScriptTicket, scriptStatusResponse.NextLogSequence, ScriptServiceVersion.KubernetesScriptServiceVersion1);
+            return new DefaultCommandContext(scriptStatusResponse.ScriptTicket, scriptStatusResponse.NextLogSequence, ScriptServiceVersion.KubernetesScriptServiceVersion1);
         }
 
-        public async Task<(ScriptStatus, ITicketForNextStatus)> StartScript(ExecuteScriptCommand executeScriptCommand, CancellationToken scriptExecutionCancellationToken)
+        public async Task<(ScriptStatus, ICommandContext)> StartScript(ExecuteScriptCommand executeScriptCommand, CancellationToken scriptExecutionCancellationToken)
         {
             var command = Map(executeScriptCommand);
             var startScriptCallsConnectedCount = 0;
@@ -130,7 +130,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 if (!startScriptCallIsConnecting || startScriptCallIsBeingRetried)
                 {
                     var scriptStatus = new ScriptStatus(ProcessState.Pending, null, new List<ProcessOutput>());
-                    var defaultTicketForNextStatus = new DefaultTicketForNextStatus(command.ScriptTicket, 0, ScriptServiceVersion.KubernetesScriptServiceVersion1);
+                    var defaultTicketForNextStatus = new DefaultCommandContext(command.ScriptTicket, 0, ScriptServiceVersion.KubernetesScriptServiceVersion1);
                     return (scriptStatus, defaultTicketForNextStatus);
                 }
 
@@ -140,12 +140,12 @@ namespace Octopus.Tentacle.Client.Scripts
             }
         }
 
-        public async Task<(ScriptStatus, ITicketForNextStatus)> GetStatus(ITicketForNextStatus lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<(ScriptStatus, ICommandContext)> GetStatus(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             return Map(await _GetStatus(lastStatusResponse, scriptExecutionCancellationToken));
         }
 
-        private async Task<KubernetesScriptStatusResponseV1> _GetStatus(ITicketForNextStatus lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        private async Task<KubernetesScriptStatusResponseV1> _GetStatus(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             async Task<KubernetesScriptStatusResponseV1> GetStatusAction(CancellationToken ct)
             {
@@ -164,12 +164,12 @@ namespace Octopus.Tentacle.Client.Scripts
                 scriptExecutionCancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<(ScriptStatus, ITicketForNextStatus)> Cancel(ITicketForNextStatus lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<(ScriptStatus, ICommandContext)> Cancel(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             return Map(await _GetStatus(lastStatusResponse, scriptExecutionCancellationToken)); 
         }
 
-        private async Task<KubernetesScriptStatusResponseV1> _Cancel(ITicketForNextStatus lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        private async Task<KubernetesScriptStatusResponseV1> _Cancel(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             async Task<KubernetesScriptStatusResponseV1> CancelScriptAction(CancellationToken ct)
             {
@@ -193,13 +193,13 @@ namespace Octopus.Tentacle.Client.Scripts
                 CancellationToken.None).ConfigureAwait(false);
         }
 
-        public async Task<ScriptStatus?> Finish(ITicketForNextStatus lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<ScriptStatus?> Finish(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             await _Finish(lastStatusResponse, scriptExecutionCancellationToken);
             return null;
         }
 
-        private async Task _Finish(ITicketForNextStatus lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        private async Task _Finish(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             try
             {

@@ -8,11 +8,11 @@ namespace Octopus.Tentacle.Client
 {
     public interface IEventDrivenScriptExecutor
     {
-        Task<(ScriptStatus, ITicketForNextStatus)> StartScript(ExecuteScriptCommand executeScriptCommand,
+        Task<(ScriptStatus, ICommandContext)> StartScript(ExecuteScriptCommand executeScriptCommand,
             HasStartScriptBeenCalledBefore hasStartScriptBeenCalledBefore,
             CancellationToken cancellationToken);
         
-        Task<(ScriptStatus, ITicketForNextStatus)> GetStatus(ITicketForNextStatus ticketForNextNextStatus, CancellationToken cancellationToken);
+        Task<(ScriptStatus, ICommandContext)> GetStatus(ICommandContext ticketForNextNextStatus, CancellationToken cancellationToken);
         
         /// <summary>
         /// Cancel script will still send back the rest of the logs, hence the ticketForNextNextStatus argument.
@@ -20,7 +20,7 @@ namespace Octopus.Tentacle.Client
         /// <param name="ticketForNextNextStatus"></param>
         /// <param name="hasStartScriptBeenCalledBefore"></param>
         /// <returns></returns>
-        Task<(ScriptStatus, ITicketForNextStatus)> CancelScript(ITicketForNextStatus ticketForNextNextStatus, CancellationToken cancellationToken);
+        Task<(ScriptStatus, ICommandContext)> CancelScript(ICommandContext ticketForNextNextStatus, CancellationToken cancellationToken);
         
         /// <summary>
         /// Use this cancel method if only the ScriptTicket is known, e.g. we called StartScript but never got a response.
@@ -28,9 +28,9 @@ namespace Octopus.Tentacle.Client
         /// <param name="scriptTicket"></param>
         /// <param name="hasStartScriptBeenCalledBefore"></param>
         /// <returns></returns>
-        Task<(ScriptStatus, ITicketForNextStatus)> CancelScript(ScriptTicket scriptTicket, CancellationToken cancellationToken);
+        Task<(ScriptStatus, ICommandContext)> CancelScript(ScriptTicket scriptTicket, CancellationToken cancellationToken);
         
-        Task CleanUpScript(ITicketForNextStatus ticketForNextNextStatus, CancellationToken cancellationToken);
+        Task<ScriptStatus> CleanUpScript(ICommandContext ticketForNextNextStatus, CancellationToken cancellationToken);
     }
 
     public enum HasStartScriptBeenCalledBefore

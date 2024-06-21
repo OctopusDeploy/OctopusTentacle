@@ -61,11 +61,11 @@ namespace Octopus.Tentacle.Client.Scripts
             return new ObservingScriptOrchestrator(scriptObserverBackOffStrategy, onScriptStatusResponseReceived, onScriptCompleted, structuredScriptOrchestrator, logger);
         }
 
-        public IStructuredScriptOrchestrator CreateOrchestrator(ScriptServiceVersion scriptServiceToUse)
+        public IStructuredScriptExecutor CreateOrchestrator(ScriptServiceVersion scriptServiceToUse)
         {
             if (scriptServiceToUse == ScriptServiceVersion.ScriptServiceVersion1)
             {
-                return new ScriptServiceV1Orchestrator(
+                return new ScriptServiceV1Executor(
                     clientsHolder.ScriptServiceV1,
                     rpcCallExecutor,
                     clientOperationMetricsBuilder,
@@ -74,7 +74,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
             if (scriptServiceToUse == ScriptServiceVersion.ScriptServiceVersion2)
             {
-                return new ScriptServiceV2Orchestrator(
+                return new ScriptServiceV2Executor(
                     clientsHolder.ScriptServiceV2,
                     rpcCallExecutor,
                     clientOperationMetricsBuilder,
@@ -85,7 +85,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
             if (scriptServiceToUse == ScriptServiceVersion.KubernetesScriptServiceVersion1Alpha)
             {
-                return new KubernetesScriptServiceV1AlphaOrchestrator(
+                return new KubernetesScriptServiceV1AlphaExecutor(
                     clientsHolder.KubernetesScriptServiceV1Alpha,
                     rpcCallExecutor,
                     clientOperationMetricsBuilder,
@@ -96,7 +96,7 @@ namespace Octopus.Tentacle.Client.Scripts
             
             if (scriptServiceToUse == ScriptServiceVersion.KubernetesScriptServiceVersion1)
             {
-                return new KubernetesScriptServiceV1Orchestrator(
+                return new KubernetesScriptServiceV1Executor(
                     clientsHolder.KubernetesScriptServiceV1,
                     rpcCallExecutor,
                     clientOperationMetricsBuilder,

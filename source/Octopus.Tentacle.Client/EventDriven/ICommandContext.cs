@@ -3,7 +3,7 @@ using Octopus.Tentacle.Contracts;
 
 namespace Octopus.Tentacle.Client.EventDriven
 {
-    public interface ITicketForNextStatus
+    public interface ICommandContext
     {
 
         ScriptTicket ScriptTicket { get; }
@@ -15,9 +15,9 @@ namespace Octopus.Tentacle.Client.EventDriven
         // wants to continue script execution.
     }
     
-    public class DefaultTicketForNextStatus : ITicketForNextStatus
+    public class DefaultCommandContext : ICommandContext
     {
-        public DefaultTicketForNextStatus(ScriptTicket scriptTicket,
+        public DefaultCommandContext(ScriptTicket scriptTicket,
             long nextLogSequence,
             ScriptServiceVersion whichService)
         {

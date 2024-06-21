@@ -16,15 +16,15 @@ namespace Octopus.Tentacle.Client.Scripts
         readonly OnScriptCompleted onScriptCompleted;
         readonly ITentacleClientTaskLog logger;
 
-        IStructuredScriptOrchestrator structuredScriptOrchestrator;
+        IStructuredScriptExecutor structuredScriptExecutor;
 
         public ObservingScriptOrchestrator(
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
             OnScriptStatusResponseReceived onScriptStatusResponseReceived,
             OnScriptCompleted onScriptCompleted,
-            IStructuredScriptOrchestrator structuredScriptOrchestrator, ITentacleClientTaskLog logger)
+            IStructuredScriptExecutor structuredScriptExecutor, ITentacleClientTaskLog logger)
         {
-            this.structuredScriptOrchestrator = structuredScriptOrchestrator;
+            this.structuredScriptExecutor = structuredScriptExecutor;
             this.logger = logger;
             this.scriptObserverBackOffStrategy = scriptObserverBackOffStrategy;
             this.onScriptStatusResponseReceived = onScriptStatusResponseReceived;
@@ -33,7 +33,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
         public async Task<ScriptExecutionResult> ExecuteScript(ExecuteScriptCommand command, CancellationToken scriptExecutionCancellationToken)
         {
-            var (scriptStatus, ticketForNextStatus) = await structuredScriptOrchestrator.StartScript(command, scriptExecutionCancellationToken).ConfigureAwait(false);
+            var (scriptStatus, ticketForNextStatus) = await structuredScriptExecutor.StartScript(command, scriptExecutionCancellationToken).ConfigureAwait(false);
 
             (scriptStatus, _) = await ObserveUntilCompleteThenFinish(scriptStatus, ticketForNextStatus, scriptExecutionCancellationToken).ConfigureAwait(false);
 
@@ -47,30 +47,30 @@ namespace Octopus.Tentacle.Client.Scripts
             return new ScriptExecutionResult(scriptStatus.State, scriptStatus.ExitCode!.Value);
         }
 
-        async Task<(ScriptStatus, ITicketForNextStatus)> ObserveUntilCompleteThenFinish(
+        async Task<(ScriptStatus, ICommandContext)> ObserveUntilCompleteThenFinish(
             ScriptStatus scriptStatus,
-            ITicketForNextStatus ticketForNextStatus,
+            ICommandContext commandContext,
             CancellationToken scriptExecutionCancellationToken)
         {
             OnScriptStatusResponseReceived(scriptStatus);
 
-            var (lastStatusResponse, lastTicketForNextStatus) =  await ObserveUntilComplete(scriptStatus, ticketForNextStatus, scriptExecutionCancellationToken).ConfigureAwait(false);
+            var (lastStatusResponse, lastTicketForNextStatus) =  await ObserveUntilComplete(scriptStatus, commandContext, scriptExecutionCancellationToken).ConfigureAwait(false);
 
             await onScriptCompleted(scriptExecutionCancellationToken).ConfigureAwait(false);
             
-            lastStatusResponse = await structuredScriptOrchestrator.Finish(lastTicketForNextStatus, scriptExecutionCancellationToken).ConfigureAwait(false) ?? lastStatusResponse;
+            lastStatusResponse = await structuredScriptExecutor.Finish(lastTicketForNextStatus, scriptExecutionCancellationToken).ConfigureAwait(false) ?? lastStatusResponse;
 
             OnScriptStatusResponseReceived(lastStatusResponse);
 
             return (lastStatusResponse, lastTicketForNextStatus);
         }
 
-        async Task<(ScriptStatus lastStatusResponse, ITicketForNextStatus lastTicketForNextStatus)> ObserveUntilComplete(
+        async Task<(ScriptStatus lastStatusResponse, ICommandContext lastTicketForNextStatus)> ObserveUntilComplete(
             ScriptStatus scriptStatus,
-            ITicketForNextStatus ticketForNextStatus,
+            ICommandContext commandContext,
             CancellationToken scriptExecutionCancellationToken)
         {
-            var lastTicketForNextStatus = ticketForNextStatus;
+            var lastTicketForNextStatus = commandContext;
             var lastStatusResponse = scriptStatus;
             var iteration = 0;
             var cancellationIteration = 0;
@@ -79,13 +79,13 @@ namespace Octopus.Tentacle.Client.Scripts
             {
                 if (scriptExecutionCancellationToken.IsCancellationRequested)
                 {
-                    (lastStatusResponse, lastTicketForNextStatus) = await structuredScriptOrchestrator.Cancel(lastTicketForNextStatus, scriptExecutionCancellationToken).ConfigureAwait(false);
+                    (lastStatusResponse, lastTicketForNextStatus) = await structuredScriptExecutor.Cancel(lastTicketForNextStatus, scriptExecutionCancellationToken).ConfigureAwait(false);
                 }
                 else
                 {
                     try
                     {
-                        (lastStatusResponse, lastTicketForNextStatus) = await structuredScriptOrchestrator.GetStatus(lastTicketForNextStatus, scriptExecutionCancellationToken).ConfigureAwait(false);
+                        (lastStatusResponse, lastTicketForNextStatus) = await structuredScriptExecutor.GetStatus(lastTicketForNextStatus, scriptExecutionCancellationToken).ConfigureAwait(false);
                     }
                     catch (Exception)
                     {

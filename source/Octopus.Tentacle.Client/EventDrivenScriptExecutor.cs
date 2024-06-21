@@ -47,7 +47,7 @@ namespace Octopus.Tentacle.Client
             rpcCallExecutor = RpcCallExecutorFactory.Create(this.clientOptions.RpcRetrySettings.RetryDuration, this.tentacleClientObserver);
         }
 
-        public async Task<(ScriptStatus, ITicketForNextStatus)> StartScript(ExecuteScriptCommand executeScriptCommand,
+        public async Task<(ScriptStatus, ICommandContext)> StartScript(ExecuteScriptCommand executeScriptCommand,
             HasStartScriptBeenCalledBefore hasStartScriptBeenCalledBefore,
             CancellationToken cancellationToken)
         {
@@ -60,7 +60,7 @@ namespace Octopus.Tentacle.Client
             // And start the script
             if (scriptServiceToUse == ScriptServiceVersion.ScriptServiceVersion1 && hasStartScriptBeenCalledBefore == HasStartScriptBeenCalledBefore.ItMayHaveBeen)
             {
-                return (new ScriptStatus(ProcessState.Complete, ScriptExitCodes.UnknownScriptExitCode, new List<ProcessOutput>()), new DefaultTicketForNextStatus(new ScriptTicket(Guid.NewGuid().ToString()), 0, ScriptServiceVersion.ScriptServiceVersion1));
+                return (new ScriptStatus(ProcessState.Complete, ScriptExitCodes.UnknownScriptExitCode, new List<ProcessOutput>()), new DefaultCommandContext(new ScriptTicket(Guid.NewGuid().ToString()), 0, ScriptServiceVersion.ScriptServiceVersion1));
             }
 
             var scriptOrchestratorFactory = GetNewScriptOrchestratorFactory(operationMetricsBuilder);
@@ -69,7 +69,7 @@ namespace Octopus.Tentacle.Client
             return await orchestrator.StartScript(executeScriptCommand, cancellationToken);
         }
 
-        public async Task<(ScriptStatus, ITicketForNextStatus)> GetStatus(ITicketForNextStatus ticketForNextNextStatus, CancellationToken cancellationToken)
+        public async Task<(ScriptStatus, ICommandContext)> GetStatus(ICommandContext ticketForNextNextStatus, CancellationToken cancellationToken)
         {
             var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
             
@@ -80,7 +80,7 @@ namespace Octopus.Tentacle.Client
             return await orchestrator.GetStatus(ticketForNextNextStatus, cancellationToken);
         }
 
-        public async Task<(ScriptStatus, ITicketForNextStatus)> CancelScript(ITicketForNextStatus ticketForNextNextStatus, CancellationToken cancellationToken)
+        public async Task<(ScriptStatus, ICommandContext)> CancelScript(ICommandContext ticketForNextNextStatus, CancellationToken cancellationToken)
         {
             var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
             
@@ -91,13 +91,13 @@ namespace Octopus.Tentacle.Client
             return await orchestrator.Cancel(ticketForNextNextStatus, cancellationToken);
         }
 
-        public Task<(ScriptStatus, ITicketForNextStatus)> CancelScript(ScriptTicket scriptTicket, CancellationToken cancellationToken)
+        public Task<(ScriptStatus, ICommandContext)> CancelScript(ScriptTicket scriptTicket, CancellationToken cancellationToken)
         {
             var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
             throw new System.NotImplementedException();
         }
 
-        public async Task CleanUpScript(ITicketForNextStatus ticketForNextNextStatus, CancellationToken cancellationToken)
+        public async Task<ScriptStatus> CleanUpScript(ICommandContext ticketForNextNextStatus, CancellationToken cancellationToken)
         {
             var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
             
