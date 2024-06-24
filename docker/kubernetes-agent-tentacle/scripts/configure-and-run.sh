@@ -42,6 +42,28 @@ function getPublicHostName() {
 }
 
 function validateVariables() {
+  validateCommonVariables
+
+  if [[ "$DeploymentTargetEnabled" != "true" && "$WorkerEnabled" != "true" ]]; then
+    echo "Please specify whether to install as a worker or a deployment target with the 'WorkerEnabled' or 'DeploymentTargetEnabled' environment variables" >&2
+    exit 1
+  fi
+
+  if [[ "$DeploymentTargetEnabled" == "true" && "$WorkerEnabled" == "true" ]]; then
+    echo "The installation cannot be as both a worker and a deployment target, please choose one" >&2
+    exit 1
+  fi
+
+  if [[ "$DeploymentTargetEnabled" == "true" ]]; then
+    validateDeploymentTargetVariables
+  fi
+
+  if [[ "$WorkerEnabled" == "true" ]]; then
+    validateWorkerVariables
+  fi
+}
+
+function validateCommonVariables() {
   if [[ -z "$ServerApiKey" && -z "$BearerToken" ]]; then
     if [[ -z "$ServerPassword" || -z "$ServerUsername" ]]; then
       echo "Please specify either an API key, a Bearer Token or a username/password with the 'ServerApiKey' or 'ServerUsername'/'ServerPassword' environment variables" >&2
@@ -54,18 +76,9 @@ function validateVariables() {
     exit 1
   fi
 
-  if [[ -z "$TargetEnvironment" ]]; then
-    echo "Please specify one or more environment names (comma delimited) with the 'TargetEnvironment' environment variable" >&2
-    exit 1
-  fi
-
-  if [[ -z "$TargetRole" ]]; then
-    echo "Please specify one or more role names (comma delimited) with the 'TargetRole' environment variable" >&2
-    exit 1
-  fi
-
   echo " - server endpoint '$ServerUrl'"
   echo " - api key '##########'"
+  echo " - host '$PublicHostNameConfiguration'"
 
   if [[ -n "$ServerCommsAddress" || -n "$ServerCommsAddresses" || -n "$ServerPort" ]]; then
     echo " - communication mode 'Kubernetes' (Polling)"
@@ -86,14 +99,34 @@ function validateVariables() {
     echo " - communication mode 'Kubernetes' (Listening)"
     echo " - registered port $ListeningPort"
   fi
+  
+  if [[ -n "$AgentName" ]]; then
+    echo " - name '$AgentName'"
+  fi
+
+  if [[ -n "$Space" ]]; then
+    echo " - space '$Space'"
+  fi
+
+  if [[ -n "$TentacleCertificateBase64" ]]; then
+    echo " - tentacle certificate '${TentacleCertificateBase64:0:3}...${TentacleCertificateBase64: -3}'"
+  fi
+}
+
+function validateDeploymentTargetVariables() {
+  if [[ -z "$TargetEnvironment" ]]; then
+    echo "Please specify one or more environment names (comma delimited) with the 'TargetEnvironment' environment variable" >&2
+    exit 1
+  fi
+
+  if [[ -z "$TargetRole" ]]; then
+    echo "Please specify one or more role names (comma delimited) with the 'TargetRole' environment variable" >&2
+    exit 1
+  fi
 
   echo " - environment '$TargetEnvironment'"
   echo " - role '$TargetRole'"
-  echo " - host '$PublicHostNameConfiguration'"
 
-  if [[ -n "$TargetName" ]]; then
-    echo " - name '$TargetName'"
-  fi
   if [[ -n "$TargetTenant" ]]; then
     echo " - tenant '$TargetTenant'"
   fi
@@ -103,15 +136,19 @@ function validateVariables() {
   if [[ -n "$TargetTenantedDeploymentParticipation" ]]; then
     echo " - tenanted deployment participation '$TargetTenantedDeploymentParticipation'"
   fi
-  if [[ -n "$Space" ]]; then
-    echo " - space '$Space'"
-  fi
+  
   if [[ -n "$DefaultNamespace" ]]; then
     echo " - default namespace '$DefaultNamespace'"
   fi
-  if [[ -n "$TentacleCertificateBase64" ]]; then
-    echo " - tentacle certificate '${TentacleCertificateBase64:0:3}...${TentacleCertificateBase64: -3}'"
+}
+
+function validateWorkerVariables() {
+  if [[ -z "$WorkerPools" ]]; then
+    echo "Please specify one or more worker pool names (comma delimited) with the 'WorkerPools' environment variable" >&2
+    exit 1
   fi
+
+  echo " - worker pools '$WorkerPools'"
 }
 
 function configureTentacle() {
