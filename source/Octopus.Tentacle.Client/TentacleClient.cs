@@ -11,23 +11,22 @@ using Octopus.Tentacle.Client.Scripts.Models;
 using Octopus.Tentacle.Client.ServiceHelpers;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Capabilities;
-using Octopus.Tentacle.Contracts.ClientServices;
-using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
-using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha;
 using Octopus.Tentacle.Contracts.Logging;
 using Octopus.Tentacle.Contracts.Observability;
-using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using ITentacleClientObserver = Octopus.Tentacle.Contracts.Observability.ITentacleClientObserver;
 
 namespace Octopus.Tentacle.Client
 {
     public class TentacleClient : ITentacleClient
     {
+        readonly ServiceEndPoint serviceEndPoint;
+        readonly IHalibutRuntime halibutRuntime;
         readonly IScriptObserverBackoffStrategy scriptObserverBackOffStrategy;
         readonly ITentacleClientObserver tentacleClientObserver;
         readonly RpcCallExecutor rpcCallExecutor;
         
         readonly TentacleClientOptions clientOptions;
+        readonly ITentacleServiceDecoratorFactory? tentacleServicesDecoratorFactory;
         readonly ClientsHolder clientsHolder;
 
         public static void CacheServiceWasNotFoundResponseMessages(IHalibutRuntime halibutRuntime)
@@ -63,10 +62,13 @@ namespace Octopus.Tentacle.Client
             TentacleClientOptions clientOptions,
             ITentacleServiceDecoratorFactory? tentacleServicesDecoratorFactory)
         {
+            this.serviceEndPoint = serviceEndPoint;
+            this.halibutRuntime = halibutRuntime;
             this.scriptObserverBackOffStrategy = scriptObserverBackOffStrategy;
             this.tentacleClientObserver = tentacleClientObserver.DecorateWithNonThrowingTentacleClientObserver();
 
             this.clientOptions = clientOptions;
+            this.tentacleServicesDecoratorFactory = tentacleServicesDecoratorFactory;
 
             if (halibutRuntime.OverrideErrorResponseMessageCaching == null)
             {
@@ -162,18 +164,20 @@ namespace Octopus.Tentacle.Client
 
             try
             {
-                var factory = new ScriptOrchestratorFactory(
-                    clientsHolder,
-                    scriptObserverBackOffStrategy,
-                    rpcCallExecutor,
-                    operationMetricsBuilder,
+                
+                var eventDrivenScriptExecutor = new AggregateScriptExecutor(logger, 
+                    tentacleClientObserver,
+                    clientOptions,
+                    halibutRuntime,
+                    serviceEndPoint,
+                    tentacleServicesDecoratorFactory,
+                    OnCancellationAbandonCompleteScriptAfter);
+                    
+                var orchestrator = new ObservingScriptOrchestrator(scriptObserverBackOffStrategy,
                     onScriptStatusResponseReceived,
                     onScriptCompleted,
-                    OnCancellationAbandonCompleteScriptAfter,
-                    clientOptions,
+                    eventDrivenScriptExecutor,
                     logger);
-
-                var orchestrator = await factory.CreateOrchestrator(scriptExecutionCancellationToken);
 
                 var result = await orchestrator.ExecuteScript(executeScriptCommand, scriptExecutionCancellationToken);
 
@@ -186,6 +190,7 @@ namespace Octopus.Tentacle.Client
             }
             finally
             {
+                // TODO handle this in the new pipeline.
                 var operationMetrics = operationMetricsBuilder.Build();
                 tentacleClientObserver.ExecuteScriptCompleted(operationMetrics, logger);
             }

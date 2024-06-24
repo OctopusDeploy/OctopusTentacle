@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Halibut;
 using Octopus.Tentacle.Client.EventDriven;
 using Octopus.Tentacle.Client.Scripts.Models;
 using Octopus.Tentacle.Contracts;
@@ -16,15 +15,15 @@ namespace Octopus.Tentacle.Client.Scripts
         readonly OnScriptCompleted onScriptCompleted;
         readonly ITentacleClientTaskLog logger;
 
-        IStructuredScriptExecutor structuredScriptExecutor;
+        IScriptExecutor scriptExecutor;
 
         public ObservingScriptOrchestrator(
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
             OnScriptStatusResponseReceived onScriptStatusResponseReceived,
             OnScriptCompleted onScriptCompleted,
-            IStructuredScriptExecutor structuredScriptExecutor, ITentacleClientTaskLog logger)
+            IScriptExecutor scriptExecutor, ITentacleClientTaskLog logger)
         {
-            this.structuredScriptExecutor = structuredScriptExecutor;
+            this.scriptExecutor = scriptExecutor;
             this.logger = logger;
             this.scriptObserverBackOffStrategy = scriptObserverBackOffStrategy;
             this.onScriptStatusResponseReceived = onScriptStatusResponseReceived;
@@ -33,7 +32,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
         public async Task<ScriptExecutionResult> ExecuteScript(ExecuteScriptCommand command, CancellationToken scriptExecutionCancellationToken)
         {
-            var (scriptStatus, ticketForNextStatus) = await structuredScriptExecutor.StartScript(command,
+            var (scriptStatus, ticketForNextStatus) = await scriptExecutor.StartScript(command,
                 StartScriptIsBeingReAttempted.FirstAttempt, // This is not re-entrant so this should be true.
                 scriptExecutionCancellationToken).ConfigureAwait(false);
 
@@ -60,7 +59,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
             await onScriptCompleted(scriptExecutionCancellationToken).ConfigureAwait(false);
             
-            lastStatusResponse = await structuredScriptExecutor.Finish(lastTicketForNextStatus, scriptExecutionCancellationToken).ConfigureAwait(false) ?? lastStatusResponse;
+            lastStatusResponse = await scriptExecutor.CleanUpScript(lastTicketForNextStatus, scriptExecutionCancellationToken).ConfigureAwait(false) ?? lastStatusResponse;
 
             OnScriptStatusResponseReceived(lastStatusResponse);
 
@@ -81,13 +80,13 @@ namespace Octopus.Tentacle.Client.Scripts
             {
                 if (scriptExecutionCancellationToken.IsCancellationRequested)
                 {
-                    (lastStatusResponse, lastTicketForNextStatus) = await structuredScriptExecutor.Cancel(lastTicketForNextStatus, scriptExecutionCancellationToken).ConfigureAwait(false);
+                    (lastStatusResponse, lastTicketForNextStatus) = await scriptExecutor.CancelScript(lastTicketForNextStatus, scriptExecutionCancellationToken).ConfigureAwait(false);
                 }
                 else
                 {
                     try
                     {
-                        (lastStatusResponse, lastTicketForNextStatus) = await structuredScriptExecutor.GetStatus(lastTicketForNextStatus, scriptExecutionCancellationToken).ConfigureAwait(false);
+                        (lastStatusResponse, lastTicketForNextStatus) = await scriptExecutor.GetStatus(lastTicketForNextStatus, scriptExecutionCancellationToken).ConfigureAwait(false);
                     }
                     catch (Exception)
                     {

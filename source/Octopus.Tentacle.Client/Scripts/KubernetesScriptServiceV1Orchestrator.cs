@@ -16,7 +16,7 @@ using Octopus.Tentacle.Contracts.Observability;
 
 namespace Octopus.Tentacle.Client.Scripts
 {
-    class KubernetesScriptServiceV1Executor : IStructuredScriptExecutor
+    class KubernetesScriptServiceV1Executor : IScriptExecutor
     {
         readonly IAsyncClientKubernetesScriptServiceV1 clientKubernetesScriptServiceV1;
         readonly RpcCallExecutor rpcCallExecutor;
@@ -166,12 +166,12 @@ namespace Octopus.Tentacle.Client.Scripts
                 scriptExecutionCancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<(ScriptStatus, ICommandContext)> Cancel(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<(ScriptStatus, ICommandContext)> CancelScript(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             return Map(await _GetStatus(lastStatusResponse, scriptExecutionCancellationToken)); 
         }
 
-        private async Task<KubernetesScriptStatusResponseV1> _Cancel(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        async Task<KubernetesScriptStatusResponseV1> _CancelScript(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             async Task<KubernetesScriptStatusResponseV1> CancelScriptAction(CancellationToken ct)
             {
@@ -195,13 +195,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 CancellationToken.None).ConfigureAwait(false);
         }
 
-        public async Task<ScriptStatus?> Finish(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
-        {
-            await _Finish(lastStatusResponse, scriptExecutionCancellationToken);
-            return null;
-        }
-
-        private async Task _Finish(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<ScriptStatus?> CleanUpScript(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             try
             {
@@ -227,6 +221,8 @@ namespace Octopus.Tentacle.Client.Scripts
                 logger.Warn("Failed to cleanup the script working directory on Tentacle");
                 logger.Verbose(ex);
             }
+
+            return null;
         }
     }
 }

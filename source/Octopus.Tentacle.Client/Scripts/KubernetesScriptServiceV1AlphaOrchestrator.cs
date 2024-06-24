@@ -16,7 +16,7 @@ using Octopus.Tentacle.Contracts.Observability;
 
 namespace Octopus.Tentacle.Client.Scripts
 {
-    class KubernetesScriptServiceV1AlphaExecutor : IStructuredScriptExecutor
+    class KubernetesScriptServiceV1AlphaExecutor : IScriptExecutor
     {
         readonly IAsyncClientKubernetesScriptServiceV1Alpha clientKubernetesScriptServiceV1Alpha;
         readonly RpcCallExecutor rpcCallExecutor;
@@ -175,7 +175,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 scriptExecutionCancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<(ScriptStatus, ICommandContext)> Cancel(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<(ScriptStatus, ICommandContext)> CancelScript(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             return Map(await _Cancel(lastStatusResponse, scriptExecutionCancellationToken));
         }
@@ -205,13 +205,7 @@ namespace Octopus.Tentacle.Client.Scripts
         }
 
         
-        public async Task<ScriptStatus?> Finish(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
-        {
-            await _Finish(lastStatusResponse, scriptExecutionCancellationToken);
-            return null;
-        }
-        
-        async Task _Finish(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<ScriptStatus?> CleanUpScript(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             try
             {
@@ -237,6 +231,8 @@ namespace Octopus.Tentacle.Client.Scripts
                 logger.Warn("Failed to cleanup the script working directory on Tentacle");
                 logger.Verbose(ex);
             }
+
+            return null;
         }
     }
 }

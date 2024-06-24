@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
@@ -15,7 +14,10 @@ using Octopus.Tentacle.Contracts.Observability;
 
 namespace Octopus.Tentacle.Client
 {
-    public class EventDrivenScriptExecutor : IEventDrivenScriptExecutor
+    /// <summary>
+    /// Executes scripts, on the best available script service. 
+    /// </summary>
+    public class AggregateScriptExecutor : IScriptExecutor
     {
         readonly ITentacleClientTaskLog logger;
         readonly ITentacleClientObserver tentacleClientObserver; 
@@ -24,23 +26,24 @@ namespace Octopus.Tentacle.Client
         readonly RpcCallExecutor rpcCallExecutor;
         readonly TimeSpan onCancellationAbandonCompleteScriptAfter;
 
-        public EventDrivenScriptExecutor(ITentacleClientTaskLog logger,
-            ITentacleClientObserver tentacleClientOptions,
+        public AggregateScriptExecutor(ITentacleClientTaskLog logger,
+            ITentacleClientObserver tentacleClientObserver,
             TentacleClientOptions clientOptions,
             IHalibutRuntime halibutRuntime,
-            ServiceEndPoint serviceEndPoint, TimeSpan onCancellationAbandonCompleteScriptAfter) : this(logger, tentacleClientOptions, clientOptions, halibutRuntime, serviceEndPoint, null, onCancellationAbandonCompleteScriptAfter)
+            ServiceEndPoint serviceEndPoint, TimeSpan onCancellationAbandonCompleteScriptAfter) : this(logger, tentacleClientObserver, clientOptions, halibutRuntime, serviceEndPoint, null, onCancellationAbandonCompleteScriptAfter)
         {
         }
         
-        internal EventDrivenScriptExecutor(ITentacleClientTaskLog logger,
-            ITentacleClientObserver tentacleClientOptions,
+        internal AggregateScriptExecutor(ITentacleClientTaskLog logger,
+            ITentacleClientObserver tentacleClientObserver,
             TentacleClientOptions clientOptions,
             IHalibutRuntime halibutRuntime,
             ServiceEndPoint serviceEndPoint,
-            ITentacleServiceDecoratorFactory? tentacleServicesDecoratorFactory, TimeSpan onCancellationAbandonCompleteScriptAfter)
+            ITentacleServiceDecoratorFactory? tentacleServicesDecoratorFactory, 
+            TimeSpan onCancellationAbandonCompleteScriptAfter)
         {
             this.logger = logger;
-            tentacleClientObserver = tentacleClientOptions;
+            this.tentacleClientObserver = tentacleClientObserver;
             this.clientOptions = clientOptions;
             this.onCancellationAbandonCompleteScriptAfter = onCancellationAbandonCompleteScriptAfter;
             clientsHolder = new ClientsHolder(halibutRuntime, serviceEndPoint, tentacleServicesDecoratorFactory);
@@ -54,13 +57,26 @@ namespace Octopus.Tentacle.Client
             var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
             
             // Pick what service to use.
-            var scriptServiceToUse = await new ScriptServicePicker(clientsHolder.CapabilitiesServiceV2, logger, rpcCallExecutor, clientOptions, operationMetricsBuilder)
-                .DetermineScriptServiceVersionToUse(cancellationToken);
+            var scriptServiceToUse = await DetermineScriptServiceVersionToUse(cancellationToken, operationMetricsBuilder);
+            
 
             var scriptOrchestratorFactory = GetNewScriptOrchestratorFactory(operationMetricsBuilder);
 
             var orchestrator = scriptOrchestratorFactory.CreateOrchestrator(scriptServiceToUse);
             return await orchestrator.StartScript(executeScriptCommand, startScriptIsBeingReAttempted, cancellationToken);
+        }
+
+        async Task<ScriptServiceVersion> DetermineScriptServiceVersionToUse(CancellationToken cancellationToken, ClientOperationMetricsBuilder operationMetricsBuilder)
+        {
+            try
+            {
+                return await new ScriptServicePicker(clientsHolder.CapabilitiesServiceV2, logger, rpcCallExecutor, clientOptions, operationMetricsBuilder)
+                    .DetermineScriptServiceVersionToUse(cancellationToken);
+            }
+            catch (Exception ex) when (cancellationToken.IsCancellationRequested)
+            {
+                throw new OperationCanceledException("Script execution was cancelled", ex);
+            }
         }
 
         public async Task<(ScriptStatus, ICommandContext)> GetStatus(ICommandContext ticketForNextNextStatus, CancellationToken cancellationToken)
@@ -82,7 +98,12 @@ namespace Octopus.Tentacle.Client
 
             var orchestrator = scriptOrchestratorFactory.CreateOrchestrator(ticketForNextNextStatus.WhichService);
 
-            return await orchestrator.Cancel(ticketForNextNextStatus, cancellationToken);
+            return await orchestrator.CancelScript(ticketForNextNextStatus, cancellationToken);
+        }
+
+        public Task<ScriptStatus?> Finish(ICommandContext commandContext, CancellationToken scriptExecutionCancellationToken)
+        {
+            throw new NotImplementedException();
         }
 
         public Task<(ScriptStatus, ICommandContext)> CancelScript(ScriptTicket scriptTicket, CancellationToken cancellationToken)
@@ -99,17 +120,14 @@ namespace Octopus.Tentacle.Client
 
             var orchestrator = scriptOrchestratorFactory.CreateOrchestrator(ticketForNextNextStatus.WhichService);
 
-            return await orchestrator.Finish(ticketForNextNextStatus, cancellationToken);
+            return await orchestrator.CleanUpScript(ticketForNextNextStatus, cancellationToken);
         }
         
         ScriptOrchestratorFactory GetNewScriptOrchestratorFactory(ClientOperationMetricsBuilder operationMetricsBuilder)
         {
             return new ScriptOrchestratorFactory(clientsHolder, 
-                new DefaultScriptObserverBackoffStrategy(), 
                 rpcCallExecutor, 
-                operationMetricsBuilder, 
-                status => { },
-                token => Task.CompletedTask,
+                operationMetricsBuilder,
                 onCancellationAbandonCompleteScriptAfter,
                 clientOptions,
                 logger);

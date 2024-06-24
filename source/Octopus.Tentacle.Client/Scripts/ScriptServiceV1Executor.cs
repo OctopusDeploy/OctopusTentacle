@@ -14,9 +14,8 @@ using Octopus.Tentacle.Contracts.Observability;
 
 namespace Octopus.Tentacle.Client.Scripts
 {
-    class ScriptServiceV1Executor : IStructuredScriptExecutor
+    class ScriptServiceV1Executor : IScriptExecutor
     {
-
         readonly RpcCallExecutor rpcCallExecutor;
         readonly ClientOperationMetricsBuilder clientOperationMetricsBuilder;
         readonly ITentacleClientTaskLog logger;
@@ -35,7 +34,7 @@ namespace Octopus.Tentacle.Client.Scripts
             this.logger = logger;
         }
 
-        private StartScriptCommand Map(ExecuteScriptCommand command)
+        StartScriptCommand Map(ExecuteScriptCommand command)
         {
             if (command is not ExecuteShellScriptCommand shellScriptCommand)
                 throw new InvalidOperationException($"{nameof(ScriptServiceV2Executor)} only supports commands of type {nameof(ExecuteShellScriptCommand)}.");
@@ -51,12 +50,12 @@ namespace Octopus.Tentacle.Client.Scripts
                 shellScriptCommand.Files.ToArray());
         }
 
-        private ScriptStatus MapToScriptStatus(ScriptStatusResponse scriptStatusResponse)
+        ScriptStatus MapToScriptStatus(ScriptStatusResponse scriptStatusResponse)
         {
             return new ScriptStatus(scriptStatusResponse.State, scriptStatusResponse.ExitCode, scriptStatusResponse.Logs);
         }
 
-        private ICommandContext MapToNextStatus(ScriptStatusResponse scriptStatusResponse)
+        ICommandContext MapToNextStatus(ScriptStatusResponse scriptStatusResponse)
         {
             return new DefaultCommandContext(scriptStatusResponse.Ticket, scriptStatusResponse.NextLogSequence, ScriptServiceVersion.ScriptServiceVersion1);
         }
@@ -65,21 +64,19 @@ namespace Octopus.Tentacle.Client.Scripts
         {
             return (MapToScriptStatus(r), MapToNextStatus(r));
         }
-        
+
         public async Task<(ScriptStatus, ICommandContext)> StartScript(ExecuteScriptCommand executeScriptCommand,
             StartScriptIsBeingReAttempted startScriptIsBeingReAttempted,
             CancellationToken scriptExecutionCancellationToken)
         {
             // Script Service v1 is not idempotent, do not allow it to be re-attempted as it may run a second time.
             if (startScriptIsBeingReAttempted == StartScriptIsBeingReAttempted.PossiblyBeingReAttempted)
-            {
-                return (new ScriptStatus(ProcessState.Complete, 
-                    ScriptExitCodes.UnknownScriptExitCode, 
-                    new List<ProcessOutput>()), 
+                return (new ScriptStatus(ProcessState.Complete,
+                        ScriptExitCodes.UnknownScriptExitCode,
+                        new List<ProcessOutput>()),
                     // TODO: We should try to encourage a DefaultCommandContext which will do nothing perhaps set the ScriptServiceVersion to
                     // one that always returns the above exit code.
                     new DefaultCommandContext(new ScriptTicket(Guid.NewGuid().ToString()), 0, ScriptServiceVersion.ScriptServiceVersion1));
-            }
             var command = Map(executeScriptCommand);
             var scriptTicket = await rpcCallExecutor.ExecuteWithNoRetries(
                 RpcCall.Create<IScriptService>(nameof(IScriptService.StartScript)),
@@ -101,7 +98,7 @@ namespace Octopus.Tentacle.Client.Scripts
             return Map(await _GetStatus(commandContext, scriptExecutionCancellationToken));
         }
 
-        private async Task<ScriptStatusResponse> _GetStatus(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        async Task<ScriptStatusResponse> _GetStatus(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             var scriptStatusResponseV1 = await rpcCallExecutor.ExecuteWithNoRetries(
                 RpcCall.Create<IScriptService>(nameof(IScriptService.GetStatus)),
@@ -119,12 +116,12 @@ namespace Octopus.Tentacle.Client.Scripts
             return scriptStatusResponseV1;
         }
 
-        public async Task<(ScriptStatus, ICommandContext)> Cancel(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<(ScriptStatus, ICommandContext)> CancelScript(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             return Map(await _Cancel(lastStatusResponse, scriptExecutionCancellationToken));
         }
-        
-        private async Task<ScriptStatusResponse> _Cancel(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+
+        async Task<ScriptStatusResponse> _Cancel(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             var response = await rpcCallExecutor.ExecuteWithNoRetries(
                 RpcCall.Create<IScriptService>(nameof(IScriptService.CancelScript)),
@@ -142,12 +139,12 @@ namespace Octopus.Tentacle.Client.Scripts
             return response;
         }
 
-        public async Task<ScriptStatus?> Finish(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<ScriptStatus?> CleanUpScript(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
-            return MapToScriptStatus(await _Finish(lastStatusResponse, scriptExecutionCancellationToken));
+            return MapToScriptStatus(await _CleanUpScript(lastStatusResponse, scriptExecutionCancellationToken));
         }
 
-        private async Task<ScriptStatusResponse> _Finish(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        async Task<ScriptStatusResponse> _CleanUpScript(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             var response = await rpcCallExecutor.ExecuteWithNoRetries(
                 RpcCall.Create<IScriptService>(nameof(IScriptService.CompleteScript)),
@@ -164,7 +161,5 @@ namespace Octopus.Tentacle.Client.Scripts
 
             return response;
         }
-
-
     }
 }
