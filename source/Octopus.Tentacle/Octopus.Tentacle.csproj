@@ -52,7 +52,7 @@
 		<PackageReference Include="KubernetesClient" Version="13.0.26" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="Octopus.Client" Version="14.3.1466-kevjt-kubernetes-agent-as-a-worker-20240624123907" />
+		<PackageReference Include="Octopus.Client" Version="14.3.1466-kevjt-kubernetes-agent-as-a-worker-20240624170845" />
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Autofac" Version="4.6.2" />
