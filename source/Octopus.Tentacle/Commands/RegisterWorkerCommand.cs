@@ -11,11 +11,18 @@ using Octopus.Tentacle.Startup;
 
 namespace Octopus.Tentacle.Commands
 {
-    public class RegisterWorkerCommand : RegisterMachineCommandBase<IRegisterWorkerOperation>
+    public class RegisterWorkerCommand : RegisterWorkerCommand<IRegisterWorkerOperation>
+    {
+        public RegisterWorkerCommand(Lazy<IRegisterWorkerOperation> lazyRegisterMachineOperation, Lazy<IWritableTentacleConfiguration> configuration, ISystemLog log, IApplicationInstanceSelector selector, Lazy<IOctopusServerChecker> octopusServerChecker, IProxyConfigParser proxyConfig, IOctopusClientInitializer octopusClientInitializer, ISpaceRepositoryFactory spaceRepositoryFactory, ILogFileOnlyLogger logFileOnlyLogger) : base(lazyRegisterMachineOperation, configuration, log, selector, octopusServerChecker, proxyConfig, octopusClientInitializer, spaceRepositoryFactory, logFileOnlyLogger)
+        {
+        }
+    }
+    
+    public class RegisterWorkerCommand<TRegisterWorkerOperation> : RegisterMachineCommandBase<TRegisterWorkerOperation> where TRegisterWorkerOperation : IRegisterWorkerOperation
     {
         readonly List<string> workerpools = new List<string>();
 
-        public RegisterWorkerCommand(Lazy<IRegisterWorkerOperation> lazyRegisterMachineOperation,
+        public RegisterWorkerCommand(Lazy<TRegisterWorkerOperation> lazyRegisterMachineOperation,
             Lazy<IWritableTentacleConfiguration> configuration,
             ISystemLog log,
             IApplicationInstanceSelector selector,
@@ -35,7 +42,7 @@ namespace Octopus.Tentacle.Commands
                 throw new ControlledFailureException("Please specify a worker pool name, slug or Id, e.g., --workerpool=Default");
         }
 
-        protected override void EnhanceOperation(IRegisterWorkerOperation registerOperation)
+        protected override void EnhanceOperation(TRegisterWorkerOperation registerOperation)
         {
             registerOperation.WorkerPools = workerpools.ToArray();
         }
