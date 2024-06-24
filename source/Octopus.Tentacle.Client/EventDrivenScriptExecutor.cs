@@ -48,7 +48,7 @@ namespace Octopus.Tentacle.Client
         }
 
         public async Task<(ScriptStatus, ICommandContext)> StartScript(ExecuteScriptCommand executeScriptCommand,
-            HasStartScriptBeenCalledBefore hasStartScriptBeenCalledBefore,
+            StartScriptIsBeingReAttempted startScriptIsBeingReAttempted,
             CancellationToken cancellationToken)
         {
             var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
@@ -56,17 +56,11 @@ namespace Octopus.Tentacle.Client
             // Pick what service to use.
             var scriptServiceToUse = await new ScriptServicePicker(clientsHolder.CapabilitiesServiceV2, logger, rpcCallExecutor, clientOptions, operationMetricsBuilder)
                 .DetermineScriptServiceVersionToUse(cancellationToken);
-            
-            // And start the script
-            if (scriptServiceToUse == ScriptServiceVersion.ScriptServiceVersion1 && hasStartScriptBeenCalledBefore == HasStartScriptBeenCalledBefore.ItMayHaveBeen)
-            {
-                return (new ScriptStatus(ProcessState.Complete, ScriptExitCodes.UnknownScriptExitCode, new List<ProcessOutput>()), new DefaultCommandContext(new ScriptTicket(Guid.NewGuid().ToString()), 0, ScriptServiceVersion.ScriptServiceVersion1));
-            }
 
             var scriptOrchestratorFactory = GetNewScriptOrchestratorFactory(operationMetricsBuilder);
 
             var orchestrator = scriptOrchestratorFactory.CreateOrchestrator(scriptServiceToUse);
-            return await orchestrator.StartScript(executeScriptCommand, cancellationToken);
+            return await orchestrator.StartScript(executeScriptCommand, startScriptIsBeingReAttempted, cancellationToken);
         }
 
         public async Task<(ScriptStatus, ICommandContext)> GetStatus(ICommandContext ticketForNextNextStatus, CancellationToken cancellationToken)

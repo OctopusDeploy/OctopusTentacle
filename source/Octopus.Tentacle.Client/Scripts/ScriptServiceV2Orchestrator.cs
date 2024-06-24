@@ -75,7 +75,9 @@ namespace Octopus.Tentacle.Client.Scripts
         }
         public ProcessState GetState(ScriptStatusResponseV2 response) => response.State;
 
-        public async Task<(ScriptStatus, ICommandContext)> StartScript(ExecuteScriptCommand executeScriptCommand, CancellationToken scriptExecutionCancellationToken)
+        public async Task<(ScriptStatus, ICommandContext)> StartScript(ExecuteScriptCommand executeScriptCommand,
+            StartScriptIsBeingReAttempted startScriptIsBeingReAttempted,
+            CancellationToken scriptExecutionCancellationToken)
         {
             var command = Map(executeScriptCommand);
             ScriptStatusResponseV2 scriptStatusResponse;
@@ -133,9 +135,9 @@ namespace Octopus.Tentacle.Client.Scripts
             }
         }
 
-        public async Task<(ScriptStatus, ICommandContext)> GetStatus(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<(ScriptStatus, ICommandContext)> GetStatus(ICommandContext commandContext, CancellationToken scriptExecutionCancellationToken)
         {
-            return Map(await _GetStatus(lastStatusResponse, scriptExecutionCancellationToken));
+            return Map(await _GetStatus(commandContext, scriptExecutionCancellationToken));
 
         }
         

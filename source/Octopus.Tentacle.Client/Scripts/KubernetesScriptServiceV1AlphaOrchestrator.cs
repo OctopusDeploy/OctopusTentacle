@@ -92,7 +92,9 @@ namespace Octopus.Tentacle.Client.Scripts
             return (MapToScriptStatus(r), MapToNextStatus(r));
         }
 
-        public async Task<(ScriptStatus, ICommandContext)> StartScript(ExecuteScriptCommand executeScriptCommand, CancellationToken scriptExecutionCancellationToken)
+        public async Task<(ScriptStatus, ICommandContext)> StartScript(ExecuteScriptCommand executeScriptCommand,
+            StartScriptIsBeingReAttempted startScriptIsBeingReAttempted,
+            CancellationToken scriptExecutionCancellationToken)
         {
             var command = Map(executeScriptCommand);
             var startScriptCallsConnectedCount = 0;
@@ -149,9 +151,9 @@ namespace Octopus.Tentacle.Client.Scripts
             }
         }
 
-        public async Task<(ScriptStatus, ICommandContext)> GetStatus(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<(ScriptStatus, ICommandContext)> GetStatus(ICommandContext commandContext, CancellationToken scriptExecutionCancellationToken)
         {
-            return Map(await _GetStatus(lastStatusResponse, scriptExecutionCancellationToken));
+            return Map(await _GetStatus(commandContext, scriptExecutionCancellationToken));
         }
 
         async Task<KubernetesScriptStatusResponseV1Alpha> _GetStatus(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)

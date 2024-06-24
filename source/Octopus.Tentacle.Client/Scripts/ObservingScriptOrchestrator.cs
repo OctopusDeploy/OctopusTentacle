@@ -33,7 +33,9 @@ namespace Octopus.Tentacle.Client.Scripts
 
         public async Task<ScriptExecutionResult> ExecuteScript(ExecuteScriptCommand command, CancellationToken scriptExecutionCancellationToken)
         {
-            var (scriptStatus, ticketForNextStatus) = await structuredScriptExecutor.StartScript(command, scriptExecutionCancellationToken).ConfigureAwait(false);
+            var (scriptStatus, ticketForNextStatus) = await structuredScriptExecutor.StartScript(command,
+                StartScriptIsBeingReAttempted.FirstAttempt, // This is not re-entrant so this should be true.
+                scriptExecutionCancellationToken).ConfigureAwait(false);
 
             (scriptStatus, _) = await ObserveUntilCompleteThenFinish(scriptStatus, ticketForNextStatus, scriptExecutionCancellationToken).ConfigureAwait(false);
 

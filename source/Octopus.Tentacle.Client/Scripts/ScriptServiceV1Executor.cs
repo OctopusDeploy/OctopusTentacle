@@ -66,8 +66,20 @@ namespace Octopus.Tentacle.Client.Scripts
             return (MapToScriptStatus(r), MapToNextStatus(r));
         }
         
-        public async Task<(ScriptStatus, ICommandContext)> StartScript(ExecuteScriptCommand executeScriptCommand, CancellationToken scriptExecutionCancellationToken)
+        public async Task<(ScriptStatus, ICommandContext)> StartScript(ExecuteScriptCommand executeScriptCommand,
+            StartScriptIsBeingReAttempted startScriptIsBeingReAttempted,
+            CancellationToken scriptExecutionCancellationToken)
         {
+            // Script Service v1 is not idempotent, do not allow it to be re-attempted as it may run a second time.
+            if (startScriptIsBeingReAttempted == StartScriptIsBeingReAttempted.PossiblyBeingReAttempted)
+            {
+                return (new ScriptStatus(ProcessState.Complete, 
+                    ScriptExitCodes.UnknownScriptExitCode, 
+                    new List<ProcessOutput>()), 
+                    // TODO: We should try to encourage a DefaultCommandContext which will do nothing perhaps set the ScriptServiceVersion to
+                    // one that always returns the above exit code.
+                    new DefaultCommandContext(new ScriptTicket(Guid.NewGuid().ToString()), 0, ScriptServiceVersion.ScriptServiceVersion1));
+            }
             var command = Map(executeScriptCommand);
             var scriptTicket = await rpcCallExecutor.ExecuteWithNoRetries(
                 RpcCall.Create<IScriptService>(nameof(IScriptService.StartScript)),
@@ -84,9 +96,9 @@ namespace Octopus.Tentacle.Client.Scripts
             return Map(new ScriptStatusResponse(scriptTicket, ProcessState.Pending, 0, new List<ProcessOutput>(), 0));
         }
 
-        public async Task<(ScriptStatus, ICommandContext)> GetStatus(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<(ScriptStatus, ICommandContext)> GetStatus(ICommandContext commandContext, CancellationToken scriptExecutionCancellationToken)
         {
-            return Map(await _GetStatus(lastStatusResponse, scriptExecutionCancellationToken));
+            return Map(await _GetStatus(commandContext, scriptExecutionCancellationToken));
         }
 
         private async Task<ScriptStatusResponse> _GetStatus(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)

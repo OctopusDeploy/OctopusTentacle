@@ -9,7 +9,7 @@ namespace Octopus.Tentacle.Client
     public interface IEventDrivenScriptExecutor
     {
         Task<(ScriptStatus, ICommandContext)> StartScript(ExecuteScriptCommand executeScriptCommand,
-            HasStartScriptBeenCalledBefore hasStartScriptBeenCalledBefore,
+            StartScriptIsBeingReAttempted startScriptIsBeingReAttempted,
             CancellationToken cancellationToken);
         
         Task<(ScriptStatus, ICommandContext)> GetStatus(ICommandContext ticketForNextNextStatus, CancellationToken cancellationToken);
@@ -31,11 +31,5 @@ namespace Octopus.Tentacle.Client
         Task<(ScriptStatus, ICommandContext)> CancelScript(ScriptTicket scriptTicket, CancellationToken cancellationToken);
         
         Task<ScriptStatus?> CleanUpScript(ICommandContext ticketForNextNextStatus, CancellationToken cancellationToken);
-    }
-
-    public enum HasStartScriptBeenCalledBefore
-    {
-        NoNever,
-        ItMayHaveBeen
     }
 }
