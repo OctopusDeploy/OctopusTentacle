@@ -9,13 +9,13 @@ using Octopus.Tentacle.Startup;
 
 namespace Octopus.Tentacle.Commands
 {
-    public class RegisterKubernetesDeploymentTargetCommand : RegisterMachineCommand<IRegisterKubernetesClusterOperation>
+    public class RegisterKubernetesDeploymentTargetCommand : RegisterMachineCommand<IRegisterKubernetesDeploymentTargetOperation>
     {
         readonly Lazy<IWritableTentacleConfiguration> configuration;
         readonly ISystemLog log;
         string? defaultNamespace;
 
-        public RegisterKubernetesDeploymentTargetCommand(Lazy<IRegisterKubernetesClusterOperation> lazyRegisterMachineOperation, Lazy<IWritableTentacleConfiguration> configuration, ISystemLog log, IApplicationInstanceSelector selector, Lazy<IOctopusServerChecker> octopusServerChecker, IProxyConfigParser proxyConfig, IOctopusClientInitializer octopusClientInitializer, ISpaceRepositoryFactory spaceRepositoryFactory, ILogFileOnlyLogger logFileOnlyLogger) : base(lazyRegisterMachineOperation, configuration, log, selector, octopusServerChecker, proxyConfig, octopusClientInitializer, spaceRepositoryFactory, logFileOnlyLogger)
+        public RegisterKubernetesDeploymentTargetCommand(Lazy<IRegisterKubernetesDeploymentTargetOperation> lazyRegisterMachineOperation, Lazy<IWritableTentacleConfiguration> configuration, ISystemLog log, IApplicationInstanceSelector selector, Lazy<IOctopusServerChecker> octopusServerChecker, IProxyConfigParser proxyConfig, IOctopusClientInitializer octopusClientInitializer, ISpaceRepositoryFactory spaceRepositoryFactory, ILogFileOnlyLogger logFileOnlyLogger) : base(lazyRegisterMachineOperation, configuration, log, selector, octopusServerChecker, proxyConfig, octopusClientInitializer, spaceRepositoryFactory, logFileOnlyLogger)
         {
             this.configuration = configuration;
             this.log = log;
@@ -36,7 +36,7 @@ namespace Octopus.Tentacle.Commands
             log.Info("Tentacle has been registered successfully.");
         }
 
-        protected override void EnhanceOperation(IRegisterKubernetesClusterOperation registerOperation)
+        protected override void EnhanceOperation(IRegisterKubernetesDeploymentTargetOperation registerOperation)
         {
             base.EnhanceOperation(registerOperation);
 

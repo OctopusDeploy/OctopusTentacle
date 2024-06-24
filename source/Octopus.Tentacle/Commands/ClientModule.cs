@@ -11,7 +11,7 @@ namespace Octopus.Tentacle.Commands
         {
             base.Load(builder);
             builder.RegisterType<OctopusClientFactory>().AsSelf().AsImplementedInterfaces();
-            builder.RegisterType<RegisterKubernetesClusterOperation>().AsSelf().AsImplementedInterfaces();
+            builder.RegisterType<RegisterKubernetesDeploymentTargetOperation>().AsSelf().AsImplementedInterfaces();
             builder.RegisterType<RegisterMachineOperation>().AsSelf().AsImplementedInterfaces();
             builder.RegisterType<RegisterWorkerOperation>().AsSelf().AsImplementedInterfaces();
             builder.RegisterType<SpaceRepositoryFactory>().As<ISpaceRepositoryFactory>();
