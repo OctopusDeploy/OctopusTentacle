@@ -334,7 +334,7 @@ function registerAdditionalServer() {
 
 function markAsInitialised() {
     # There is a startupProbe which checks for this file
-    mkdir /etc/octopus && touch /etc/octopus/initialized
+    mkdir -p /etc/octopus && touch /etc/octopus/initialized
 }
 
 setupVariablesForRegistrationCheck
