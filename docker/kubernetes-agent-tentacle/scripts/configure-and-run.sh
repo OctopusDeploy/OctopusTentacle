@@ -204,44 +204,10 @@ function registerTentacle() {
 
   if [[ "$DeploymentTargetEnabled" == "true" ]]; then
     ARGS+=('register-k8s-target')
-    if [[ -n "$TargetEnvironment" ]]; then
-      IFS=',' read -ra ENVIRONMENTS <<<"$TargetEnvironment"
-      for i in "${ENVIRONMENTS[@]}"; do
-        ARGS+=('--environment' "$i")
-      done
-    fi
-    if [[ -n "$TargetRole" ]]; then
-      IFS=',' read -ra ROLES <<<"$TargetRole"
-      for i in "${ROLES[@]}"; do
-        ARGS+=('--role' "$i")
-      done
-    fi
-    if [[ -n "$TargetTenant" ]]; then
-      IFS=',' read -ra TENANTS <<<"$TargetTenant"
-      for i in "${TENANTS[@]}"; do
-        ARGS+=('--tenant' "$i")
-      done
-    fi
-    if [[ -n "$TargetTenantTag" ]]; then
-      IFS=',' read -ra TENANTTAGS <<<"$TargetTenantTag"
-      for i in "${TENANTTAGS[@]}"; do
-        ARGS+=('--tenanttag' "$i")
-      done
-    fi
-    if [[ -n "$DefaultNamespace" ]]; then
-      ARGS+=('--default-namespace' "$DefaultNamespace")
-    fi
-    if [[ -n "$TargetTenantedDeploymentParticipation" ]]; then
-      ARGS+=('--tenanted-deployment-participation' "$TargetTenantedDeploymentParticipation")
-    fi
+    ARGS+=($(getTentacleAsDeploymentTargetRegistrationArgs))
   elif [[ "$WorkerEnabled" == "true" ]]; then
     ARGS+=('register-k8s-worker')
-    if [[ -n "$WorkerPools" ]]; then
-      IFS=',' read -ra WORKERPOOLS <<<"$WorkerPools"
-      for i in "${WORKERPOOLS[@]}"; do
-        ARGS+=('--workerpool' "$i")
-      done
-    fi
+    ARGS+=($(getTentacleAsWorkerRegistrationArgs))
   fi
 
   ARGS+=(
@@ -249,6 +215,10 @@ function registerTentacle() {
     '--server' "$ServerUrl"
     '--space' "$Space"
     '--policy' "$MachinePolicy")
+
+  if [[ -n "$AgentName" ]]; then
+    ARGS+=('--name' "$AgentName")
+  fi
 
   if [[ -n "$ServerCommsAddress" || -n "$ServerCommsAddresses" || -n "$ServerPort" ]]; then
     ARGS+=('--comms-style' 'TentacleActive')
@@ -291,11 +261,62 @@ function registerTentacle() {
       '--password' "$ServerPassword")
   fi
 
-  if [[ -n "$AgentName" ]]; then
-    ARGS+=('--name' "$AgentName")
+  tentacle "${ARGS[@]}"
+}
+
+function getTentacleAsDeploymentTargetRegistrationArgs() {
+  local ARGS=()
+
+  if [[ -n "$TargetEnvironment" ]]; then
+    IFS=',' read -ra ENVIRONMENTS <<<"$TargetEnvironment"
+    for i in "${ENVIRONMENTS[@]}"; do
+      ARGS+=('--environment' "$i")
+    done
   fi
 
-  tentacle "${ARGS[@]}"
+  if [[ -n "$TargetRole" ]]; then
+    IFS=',' read -ra ROLES <<<"$TargetRole"
+    for i in "${ROLES[@]}"; do
+      ARGS+=('--role' "$i")
+    done
+  fi
+
+  if [[ -n "$TargetTenant" ]]; then
+    IFS=',' read -ra TENANTS <<<"$TargetTenant"
+    for i in "${TENANTS[@]}"; do
+      ARGS+=('--tenant' "$i")
+    done
+  fi
+
+  if [[ -n "$TargetTenantTag" ]]; then
+    IFS=',' read -ra TENANTTAGS <<<"$TargetTenantTag"
+    for i in "${TENANTTAGS[@]}"; do
+      ARGS+=('--tenanttag' "$i")
+    done
+  fi
+
+  if [[ -n "$TargetTenantedDeploymentParticipation" ]]; then
+    ARGS+=('--tenanted-deployment-participation' "$TargetTenantedDeploymentParticipation")
+  fi
+
+  if [[ -n "$DefaultNamespace" ]]; then
+    ARGS+=('--default-namespace' "$DefaultNamespace")
+  fi
+
+  echo "${ARGS[@]}"
+}
+
+function getTentacleAsWorkerRegistrationArgs() {
+  local ARGS=()
+
+  if [[ -n "$WorkerPools" ]]; then
+    IFS=',' read -ra WORKERPOOLS <<<"$WorkerPools"
+    for i in "${WORKERPOOLS[@]}"; do
+      ARGS+=('--workerpool' "$i")
+    done
+  fi
+
+  echo "${ARGS[@]}"
 }
 
 function addAdditionalServerInstancesIfRequired() {
