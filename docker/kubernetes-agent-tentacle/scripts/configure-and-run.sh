@@ -120,7 +120,7 @@ function validateCommonVariables() {
 
 function validateDeploymentTargetVariables() {
   if [[ -z "$TargetEnvironment" ]]; then
-    echo "Please specify one or more environment names (comma delimited) with the 'TargetEnvironment' environment variable" >&2
+    echo "Please specify one or more environment names/ids/slugs (comma delimited) with the 'TargetEnvironment' environment variable" >&2
     exit 1
   fi
 
@@ -149,7 +149,7 @@ function validateDeploymentTargetVariables() {
 
 function validateWorkerVariables() {
   if [[ -z "$WorkerPools" ]]; then
-    echo "Please specify one or more worker pool names (comma delimited) with the 'WorkerPools' environment variable" >&2
+    echo "Please specify one or more worker pool names/ids/slugs (comma delimited) with the 'WorkerPools' environment variable" >&2
     exit 1
   fi
 
