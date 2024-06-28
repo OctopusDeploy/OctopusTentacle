@@ -88,7 +88,7 @@ namespace Octopus.Tentacle.Tests.Commands
                 "--force",
                 "--proxy=Proxy");
 
-            Assert.That(operation.WorkerPoolNames.Single(), Is.EqualTo("SomePool"));
+            Assert.That(operation.WorkerPools.Single(), Is.EqualTo("SomePool"));
             Assert.That(operation.MachineName, Is.EqualTo("MyMachine"));
             Assert.That(operation.TentacleHostname, Is.EqualTo("mymachine.test"));
             Assert.That(operation.TentaclePort, Is.EqualTo(90210));
@@ -170,7 +170,7 @@ namespace Octopus.Tentacle.Tests.Commands
 
             Start(args);
 
-            Assert.That(operation.WorkerPoolNames.Single(), Is.EqualTo("SomePool"));
+            Assert.That(operation.WorkerPools.Single(), Is.EqualTo("SomePool"));
             Assert.That(operation.MachineName, Is.EqualTo("MyMachine"));
             Assert.That(operation.TentacleHostname, Is.Empty);
             Assert.That(operation.TentaclePort, Is.EqualTo(0));

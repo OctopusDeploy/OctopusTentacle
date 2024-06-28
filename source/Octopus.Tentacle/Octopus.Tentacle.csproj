@@ -52,7 +52,7 @@
 		<PackageReference Include="KubernetesClient" Version="13.0.26" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="Octopus.Client" Version="14.3.1436" />
+		<PackageReference Include="Octopus.Client" Version="14.3.1508" />
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Autofac" Version="4.6.2" />
