@@ -173,6 +173,13 @@ namespace Octopus.Tentacle.Kubernetes
                 ? command.ScriptPodServiceAccountName
                 : KubernetesConfig.PodServiceAccountName;
 
+            // image pull secrets may have been defined in the helm chart (e.g. to avoid docker hub rate limiting)
+            var imagePullSecretNames = KubernetesConfig.PodImagePullSecretNames
+                .Concat(new[] { imagePullSecretName })
+                .WhereNotNull()
+                .Select(secretName => new V1LocalObjectReference(secretName))
+                .ToList();
+
             var pod = new V1Pod
             {
                 Metadata = new V1ObjectMeta
@@ -189,13 +196,7 @@ namespace Octopus.Tentacle.Kubernetes
                 {
                     InitContainers = await CreateInitContainers(command, podName, homeDir, workspacePath),
                     Containers = await CreateScriptContainers(command, podName, scriptName, homeDir, workspacePath, workspace.ScriptArguments),
-                    //only include the image pull secret name if it's actually been defined
-                    ImagePullSecrets = imagePullSecretName is not null
-                        ? new List<V1LocalObjectReference>
-                        {
-                            new(imagePullSecretName)
-                        }
-                        : new List<V1LocalObjectReference>(),
+                    ImagePullSecrets = imagePullSecretNames,
                     ServiceAccountName = serviceAccountName,
                     RestartPolicy = "Never",
                     Volumes = CreateVolumes(command),
