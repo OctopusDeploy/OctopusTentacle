@@ -62,11 +62,13 @@ partial class Build
 
                     var testScriptsBindMountPoint = RootDirectory / "linux-packages" / "test-scripts";
 
-                    DockerTasks.DockerPull(settings => settings.SetName(testConfiguration.DockerImage));
+                    var dockerImage = $"docker.packages.octopushq.com/{testConfiguration.DockerImage}";
+                    
+                    DockerTasks.DockerPull(settings => settings.SetName(dockerImage));
                     DockerTasks.DockerRun(settings => settings
                         .EnableRm()
                         .EnableTty()
-                        .SetImage(testConfiguration.DockerImage)
+                        .SetImage(dockerImage)
                         .SetEnv(
                             $"VERSION={FullSemVer}",
                             "INPUT_PATH=/input",
