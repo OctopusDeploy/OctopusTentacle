@@ -174,8 +174,9 @@ namespace Octopus.Tentacle.Kubernetes
                 : KubernetesConfig.PodServiceAccountName;
 
             // image pull secrets may have been defined in the helm chart (e.g. to avoid docker hub rate limiting)
-            var imagePullSecretNames = KubernetesConfig.PodImagePullSecretNames
-                .Concat(new[] { imagePullSecretName })
+            // we put any specified secret name first so it's resolved first
+            var imagePullSecretNames = new[] { imagePullSecretName }
+                .Concat(KubernetesConfig.PodImagePullSecretNames)
                 .WhereNotNull()
                 .Select(secretName => new V1LocalObjectReference(secretName))
                 .ToList();
