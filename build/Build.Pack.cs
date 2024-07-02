@@ -89,11 +89,9 @@ partial class Build
                 packagingScriptsDirectory.GlobFiles("*")
                     .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, debBuildDir / "scripts"));
 
-                const string dockerImage = $"docker.packages.octopushq.com/{dockerToolsContainerImage}";
-                
                 DockerTasks.DockerPull(settings => settings
                     .When(RuntimeInformation.OSArchitecture == Architecture.Arm64, _ => _.SetPlatform("linux/amd64"))
-                    .SetName(dockerImage));
+                    .SetName(dockerToolsContainerImage));
 
                 DockerTasks.DockerRun(settings => settings
                     .When(RuntimeInformation.OSArchitecture == Architecture.Arm64, _ => _.SetPlatform("linux/amd64"))
@@ -110,7 +108,7 @@ partial class Build
                         $"{BuildDirectory / "zip" / "net6.0" / runtimeId / "tentacle"}:/input",
                         $"{debBuildDir / "output"}:/output"
                     )
-                    .SetImage(dockerImage)
+                    .SetImage(dockerToolsContainerImage)
                     .SetCommand("bash")
                     .SetArgs("/scripts/package.sh", runtimeId));
             }
