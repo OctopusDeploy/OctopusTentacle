@@ -333,7 +333,7 @@ function registerAdditionalServer() {
 }
 
 function setPollingProxy() {
-  if [[ -n "$TentaclePollingProxyHost"]]; then
+  if [[ -n "$TentaclePollingProxyHost" ]]; then
     echo "Using polling proxy at $TentaclePollingProxyHost:$TentaclePollingProxyPort"
     tentacle polling-proxy --proxyEnable="true" --instance="$instanceName" --proxyHost="$TentaclePollingProxyHost" --proxyPort="$TentaclePollingProxyPort" --proxyUsername="$TentaclePollingProxyUsername" --proxyPassword="$TentaclePollingProxyPassword"
   else
