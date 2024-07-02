@@ -332,6 +332,15 @@ function registerAdditionalServer() {
   tentacle "${ARGS[@]}"
 }
 
+function setPollingProxy() {
+  if [[ -n "$TentaclePollingProxyHost"]]; then
+    tentacle polling-proxy --proxyEnable="true" --instance="$instanceName" --proxyHost="$TentaclePollingProxyHost" --proxyPort="$TentaclePollingProxyPort" --proxyUsername="$TentaclePollingProxyUsername" --proxyPassword="$TentaclePollingProxyPassword"
+  else
+    echo "Disabling polling proxy"
+    tentacle polling-proxy --proxyEnable="false" --instance="$instanceName"
+  fi
+}
+
 function markAsInitialised() {
     # There is a startupProbe which checks for this file
     mkdir -p /etc/octopus && touch /etc/octopus/initialized
@@ -343,6 +352,7 @@ getStatusOfRegistration
 if [ "$IS_REGISTERED" == "true" ]; then
   echo "Tentacle is already configured and registered with server."
   addAdditionalServerInstancesIfRequired
+  setPollingProxy
 else
   echo "==============================================="
   echo "Configuring Octopus Deploy Kubernetes Tentacle"
@@ -354,6 +364,7 @@ else
   configureTentacle
   registerTentacle
   addAdditionalServerInstancesIfRequired
+  setPollingProxy
 
   echo "Configuration successful"
 fi
