@@ -333,13 +333,24 @@ function registerAdditionalServer() {
 }
 
 function setPollingProxy() {
+  local ARGS=()
+  ARGS+=('polling-proxy'
+    '--instance' "$instanceName")
+
   if [[ -n "$TentaclePollingProxyHost" ]]; then
     echo "Using polling proxy at $TentaclePollingProxyHost:$TentaclePollingProxyPort"
-    tentacle polling-proxy --proxyEnable="true" --instance="$instanceName" --proxyHost="$TentaclePollingProxyHost" --proxyPort="$TentaclePollingProxyPort" --proxyUsername="$TentaclePollingProxyUsername" --proxyPassword="$TentaclePollingProxyPassword"
+    ARGS+=(
+      '--proxyEnable' 'true'
+      '--proxyHost' "$TentaclePollingProxyHost"
+      '--proxyPort' "$TentaclePollingProxyPort"
+      '--proxyUsername' "$TentaclePollingProxyUsername"
+      '--proxyPassword' "$TentaclePollingProxyPassword")
   else
     echo "Disabling polling proxy"
-    tentacle polling-proxy --proxyEnable="false" --instance="$instanceName"
+        ARGS+=('--proxyEnable' 'false')
   fi
+
+  tentacle "${ARGS[@]}"
 }
 
 function markAsInitialised() {
