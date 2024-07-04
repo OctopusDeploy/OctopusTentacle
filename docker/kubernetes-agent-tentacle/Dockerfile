@@ -83,6 +83,10 @@ ENV OCTOPUS__K8STENTACLE__DISABLEAUTOPODCLEANUP="False"
 ENV TentacleHome=""
 ENV TentacleApplications=""
 ENV TentacleCertificateBase64=""
+ENV TentaclePollingProxyHost=""
+ENV TentaclePollingProxyPort=""
+ENV TentaclePollingProxyUsername=""
+ENV TentaclePollingProxyPassword=""
 
 ENTRYPOINT ["/scripts/configure-and-run.sh"]
 
