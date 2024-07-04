@@ -9,7 +9,7 @@ using Octopus.Tentacle.Startup;
 
 namespace Octopus.Tentacle.Commands
 {
-    [Obsolete("This class is being deprecated in favour of RegisterKubernetesDeploymentTargetCommand")]
+    [Obsolete("This class is being deprecated in favour of RegisterKubernetesDeploymentTargetCommand. To be removed in 2025.1")]
     public class RegisterKubernetesClusterCommand : RegisterMachineCommand<IRegisterKubernetesClusterOperation>
     {
         readonly Lazy<IWritableTentacleConfiguration> configuration;
