@@ -9,7 +9,7 @@ using Octopus.Tentacle.Startup;
 
 namespace Octopus.Tentacle.Commands
 {
-    public class RegisterKubernetesWorkerCommand : RegisterWorkerCommand<IRegisterKubernetesWorkerOperation>
+    public class RegisterKubernetesWorkerCommand : RegisterWorkerCommandBase<IRegisterKubernetesWorkerOperation>
     {
         readonly Lazy<IWritableTentacleConfiguration> configuration;
         readonly ISystemLog log;
