@@ -12,6 +12,7 @@ namespace Octopus.Tentacle.Commands
             base.Load(builder);
             builder.RegisterType<OctopusClientFactory>().AsSelf().AsImplementedInterfaces();
 #pragma warning disable CS0618 // Type or member is obsolete
+            // This class is being deprecated in favour of RegisterKubernetesDeploymentTargetOperation. To be removed in 2025.1
             builder.RegisterType<RegisterKubernetesClusterOperation>().AsSelf().AsImplementedInterfaces();
 #pragma warning restore CS0618 // Type or member is obsolete
             builder.RegisterType<RegisterKubernetesWorkerOperation>().AsSelf().AsImplementedInterfaces();
