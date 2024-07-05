@@ -21,7 +21,8 @@ namespace Octopus.Tentacle.Client.Scripts
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
             OnScriptStatusResponseReceived onScriptStatusResponseReceived,
             OnScriptCompleted onScriptCompleted,
-            IScriptExecutor scriptExecutor, ITentacleClientTaskLog logger)
+            IScriptExecutor scriptExecutor, 
+            ITentacleClientTaskLog logger)
         {
             this.scriptExecutor = scriptExecutor;
             this.logger = logger;

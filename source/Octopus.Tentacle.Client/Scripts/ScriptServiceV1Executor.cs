@@ -71,12 +71,15 @@ namespace Octopus.Tentacle.Client.Scripts
         {
             // Script Service v1 is not idempotent, do not allow it to be re-attempted as it may run a second time.
             if (startScriptIsBeingReAttempted == StartScriptIsBeingReAttempted.PossiblyBeingReAttempted)
+            {
                 return (new ScriptStatus(ProcessState.Complete,
                         ScriptExitCodes.UnknownScriptExitCode,
                         new List<ProcessOutput>()),
                     // TODO: We should try to encourage a DefaultCommandContext which will do nothing perhaps set the ScriptServiceVersion to
                     // one that always returns the above exit code.
                     new DefaultCommandContext(new ScriptTicket(Guid.NewGuid().ToString()), 0, ScriptServiceVersion.ScriptServiceVersion1));
+            }
+
             var command = Map(executeScriptCommand);
             var scriptTicket = await rpcCallExecutor.ExecuteWithNoRetries(
                 RpcCall.Create<IScriptService>(nameof(IScriptService.StartScript)),

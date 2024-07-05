@@ -33,7 +33,7 @@ namespace Octopus.Tentacle.Client.Scripts
             this.logger = logger;
         }
 
-        public IScriptExecutor CreateOrchestrator(ScriptServiceVersion scriptServiceToUse)
+        public IScriptExecutor CreateScriptExecutor(ScriptServiceVersion scriptServiceToUse)
         {
             if (scriptServiceToUse == ScriptServiceVersion.ScriptServiceVersion1)
             {

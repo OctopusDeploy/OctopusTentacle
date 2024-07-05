@@ -30,6 +30,8 @@ namespace Octopus.Tentacle.Client.Scripts
         /// <param name="hasStartScriptBeenCalledBefore"></param>
         /// <returns></returns>
         // Task<(ScriptStatus, ICommandContext)> CancelScript(ScriptTicket scriptTicket, CancellationToken cancellationToken);
+        
+        
         Task<ScriptStatus?> CleanUpScript(ICommandContext commandContext, CancellationToken scriptExecutionCancellationToken);
     }
 }

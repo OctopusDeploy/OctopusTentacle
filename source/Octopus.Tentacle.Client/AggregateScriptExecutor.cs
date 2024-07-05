@@ -62,7 +62,7 @@ namespace Octopus.Tentacle.Client
 
             var scriptOrchestratorFactory = GetNewScriptOrchestratorFactory(operationMetricsBuilder);
 
-            var orchestrator = scriptOrchestratorFactory.CreateOrchestrator(scriptServiceToUse);
+            var orchestrator = scriptOrchestratorFactory.CreateScriptExecutor(scriptServiceToUse);
             return await orchestrator.StartScript(executeScriptCommand, startScriptIsBeingReAttempted, cancellationToken);
         }
 
@@ -85,7 +85,7 @@ namespace Octopus.Tentacle.Client
             
             var scriptOrchestratorFactory = GetNewScriptOrchestratorFactory(operationMetricsBuilder);
 
-            var orchestrator = scriptOrchestratorFactory.CreateOrchestrator(ticketForNextNextStatus.WhichService);
+            var orchestrator = scriptOrchestratorFactory.CreateScriptExecutor(ticketForNextNextStatus.WhichService);
 
             return await orchestrator.GetStatus(ticketForNextNextStatus, cancellationToken);
         }
@@ -96,7 +96,7 @@ namespace Octopus.Tentacle.Client
             
             var scriptOrchestratorFactory = GetNewScriptOrchestratorFactory(operationMetricsBuilder);
 
-            var orchestrator = scriptOrchestratorFactory.CreateOrchestrator(ticketForNextNextStatus.WhichService);
+            var orchestrator = scriptOrchestratorFactory.CreateScriptExecutor(ticketForNextNextStatus.WhichService);
 
             return await orchestrator.CancelScript(ticketForNextNextStatus, cancellationToken);
         }
@@ -118,7 +118,7 @@ namespace Octopus.Tentacle.Client
             
             var scriptOrchestratorFactory = GetNewScriptOrchestratorFactory(operationMetricsBuilder);
 
-            var orchestrator = scriptOrchestratorFactory.CreateOrchestrator(ticketForNextNextStatus.WhichService);
+            var orchestrator = scriptOrchestratorFactory.CreateScriptExecutor(ticketForNextNextStatus.WhichService);
 
             return await orchestrator.CleanUpScript(ticketForNextNextStatus, cancellationToken);
         }
