@@ -43,6 +43,9 @@ namespace Octopus.Tentacle.Kubernetes
             .Select(str => str.Trim())
             .WhereNotNullOrWhiteSpace()
             .ToArray() ?? Array.Empty<string>();
+
+        public static readonly string PodResourceJsonVariableName = $"{EnvVarPrefix}__PODRESOURCEJSON";
+        public static string? PodResourceJson => Environment.GetEnvironmentVariable(PodResourceJsonVariableName);
         
         public static string MetricsEnableVariableName => $"{EnvVarPrefix}__ENABLEMETRICSCAPTURE";
         public static bool MetricsIsEnabled
