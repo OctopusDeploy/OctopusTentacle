@@ -304,7 +304,7 @@ namespace Octopus.Tentacle.Kubernetes
                 catch (Exception e)
                 {
                     //if we can't parse the JSON, fall back to the defaults below and warn the user
-                    log.WarnFormat(e, $"Failed to deserialize env.{KubernetesConfig.PodResourceJsonVariableName} into valid pod resource requirements. Using default values. Value: {json}");
+                    log.WarnFormat(e, $"Failed to deserialize env.{KubernetesConfig.PodResourceJsonVariableName} into valid pod resource requirements.{Environment.NewLine}JSON value: {json}{Environment.NewLine}Using default values.");
                 }
             }
 
