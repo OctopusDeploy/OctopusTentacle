@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using k8s;
 using k8s.Models;
 using Newtonsoft.Json;
 using Octopus.Diagnostics;
@@ -43,7 +44,7 @@ namespace Octopus.Tentacle.Kubernetes
             IKubernetesPodContainerResolver containerResolver,
             IApplicationInstanceSelector appInstanceSelector,
             ISystemLog log,
-            ITentacleScriptLogProvider scriptLogProvider, 
+            ITentacleScriptLogProvider scriptLogProvider,
             IHomeConfiguration homeConfiguration,
             KubernetesPhysicalFileSystem kubernetesPhysicalFileSystem)
         {
@@ -159,7 +160,7 @@ namespace Octopus.Tentacle.Kubernetes
         async Task CreatePod(StartKubernetesScriptCommandV1 command, IScriptWorkspace workspace, string? imagePullSecretName, InMemoryTentacleScriptLog tentacleScriptLog, CancellationToken cancellationToken)
         {
             var homeDir = homeConfiguration.HomeDirectory ?? throw new InvalidOperationException("Home directory is not set.");
-            
+
             var podName = command.ScriptTicket.ToKubernetesScriptPodName();
 
             LogVerboseToBothLogs($"Creating Kubernetes Pod '{podName}'.", tentacleScriptLog);
@@ -196,7 +197,7 @@ namespace Octopus.Tentacle.Kubernetes
                 Spec = new V1PodSpec
                 {
                     InitContainers = await CreateInitContainers(command, podName, homeDir, workspacePath),
-                    Containers = await CreateScriptContainers(command, podName, scriptName, homeDir, workspacePath, workspace.ScriptArguments),
+                    Containers = await CreateScriptContainers(command, podName, scriptName, homeDir, workspacePath, workspace.ScriptArguments, tentacleScriptLog),
                     ImagePullSecrets = imagePullSecretNames,
                     ServiceAccountName = serviceAccountName,
                     RestartPolicy = "Never",
@@ -206,8 +207,8 @@ namespace Octopus.Tentacle.Kubernetes
                     {
                         new(matchExpressions: new List<V1NodeSelectorRequirement>
                         {
-                            new("kubernetes.io/os", "In", new List<string>{"linux"}),
-                            new("kubernetes.io/arch", "In", new List<string>{"arm64","amd64"})
+                            new("kubernetes.io/os", "In", new List<string> { "linux" }),
+                            new("kubernetes.io/arch", "In", new List<string> { "arm64", "amd64" })
                         })
                     })))
                 }
@@ -218,11 +219,11 @@ namespace Octopus.Tentacle.Kubernetes
             LogVerboseToBothLogs($"Executing script in Kubernetes Pod '{podName}'.", tentacleScriptLog);
         }
 
-        protected virtual async Task<IList<V1Container>> CreateScriptContainers(StartKubernetesScriptCommandV1 command, string podName, string scriptName, string homeDir, string workspacePath, string[]? scriptArguments)
+        protected virtual async Task<IList<V1Container>> CreateScriptContainers(StartKubernetesScriptCommandV1 command, string podName, string scriptName, string homeDir, string workspacePath, string[]? scriptArguments, InMemoryTentacleScriptLog tentacleScriptLog)
         {
             return new List<V1Container>
             {
-                await CreateScriptContainer(command, podName, scriptName, homeDir, workspacePath, scriptArguments)
+                await CreateScriptContainer(command, podName, scriptName, homeDir, workspacePath, scriptArguments, tentacleScriptLog)
             }.AddIfNotNull(CreateWatchdogContainer(homeDir));
         }
 
@@ -253,9 +254,12 @@ namespace Octopus.Tentacle.Kubernetes
             tentacleScriptLog.Verbose(message);
         }
 
-        protected async Task<V1Container> CreateScriptContainer(StartKubernetesScriptCommandV1 command, string podName, string scriptName, string homeDir, string workspacePath, string[]? scriptArguments)
+        protected async Task<V1Container> CreateScriptContainer(StartKubernetesScriptCommandV1 command, string podName, string scriptName, string homeDir, string workspacePath, string[]? scriptArguments, InMemoryTentacleScriptLog tentacleScriptLog)
         {
             var spaceInformation = kubernetesPhysicalFileSystem.GetStorageInformation();
+
+            var resourceRequirements = GetScriptPodResourceRequirements(tentacleScriptLog);
+            
             return new V1Container
             {
                 Name = podName,
@@ -267,7 +271,7 @@ namespace Octopus.Tentacle.Kubernetes
                         Path.Combine(homeDir, workspacePath, scriptName)
                     }.Concat(scriptArguments ?? Array.Empty<string>())
                     .ToList(),
-                VolumeMounts = new List<V1VolumeMount>{new(homeDir, "tentacle-home")},
+                VolumeMounts = new List<V1VolumeMount> { new(homeDir, "tentacle-home") },
                 Env = new List<V1EnvVar>
                 {
                     new(KubernetesConfig.NamespaceVariableName, KubernetesConfig.Namespace),
@@ -284,14 +288,36 @@ namespace Octopus.Tentacle.Kubernetes
 
                     //We intentionally exclude setting "TentacleJournal" since it doesn't make sense to keep a Deployment Journal for Kubernetes deployments
                 },
-                Resources = new V1ResourceRequirements
+                Resources = resourceRequirements
+            };
+        }
+
+        V1ResourceRequirements GetScriptPodResourceRequirements(InMemoryTentacleScriptLog tentacleScriptLog)
+        {
+            var json = KubernetesConfig.PodResourceJson;
+            if (!string.IsNullOrWhiteSpace(json))
+            {
+                try
                 {
-                    //set resource requests to be quite low for now as the scripts tend to run fairly quickly
-                    Requests = new Dictionary<string, ResourceQuantity>
-                    {
-                        ["cpu"] = new("25m"),
-                        ["memory"] = new("100Mi")
-                    }
+                    return KubernetesJson.Deserialize<V1ResourceRequirements>(json);
+                }
+                catch (Exception e)
+                {
+                    var message = $"Failed to deserialize env.{KubernetesConfig.PodResourceJsonVariableName} into valid pod resource requirements.{Environment.NewLine}JSON value: {json}{Environment.NewLine}Using default resource requests for script pod.";
+                    //if we can't parse the JSON, fall back to the defaults below and warn the user
+                    log.WarnFormat(e, message);
+                    //write a verbose message to the script log. 
+                    tentacleScriptLog.Verbose(message);
+                }
+            }
+
+            return new V1ResourceRequirements
+            {
+                //set resource requests to be quite low for now as the scripts tend to run fairly quickly
+                Requests = new Dictionary<string, ResourceQuantity>
+                {
+                    ["cpu"] = new("25m"),
+                    ["memory"] = new("100Mi")
                 }
             };
         }
