@@ -29,7 +29,7 @@ On a Windows Server 2016 server, or on Windows 10, run:
 docker run --publish 10931:10933 `
            --tty --interactive `
            --env ListeningPort="10931" `
-           --env ServerApiKey="API-WZ27UDXXAPCKUPZSH1WTG8YC80G" `
+           --env ServerApiKey="API-xxx" `
            --env TargetEnvironment="Test" `
            --env TargetRole="app-server" `
            --env ServerUrl="https://octopus.example.com" `
