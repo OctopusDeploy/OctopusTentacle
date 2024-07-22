@@ -15,7 +15,6 @@ namespace Octopus.Tentacle.Kubernetes
         {
             builder.RegisterType<KubernetesPodService>().As<IKubernetesPodService>().SingleInstance();
             builder.RegisterType<KubernetesClusterService>().As<IKubernetesClusterService>().SingleInstance();
-            builder.RegisterType<KubernetesPodContainerResolver>().As<IKubernetesPodContainerResolver>().SingleInstance();
             builder.RegisterType<KubernetesConfigMapService>().As<IKubernetesConfigMapService>().SingleInstance();
             builder.RegisterType<KubernetesSecretService>().As<IKubernetesSecretService>().SingleInstance();
 
@@ -56,7 +55,16 @@ namespace Octopus.Tentacle.Kubernetes
             builder.RegisterType<NfsStaleEventMapper>().As<IEventMapper>();
             builder.RegisterType<TentacleKilledEventMapper>().As<IEventMapper>();
             builder.RegisterType<NfsPodRestarted>().As<IEventMapper>();
-            
+
+
+            if (KubernetesConfig.IsWorker)
+            {
+                builder.RegisterType<KubernetesWorkerPodContainerResolver>().As<IKubernetesPodContainerResolver>().SingleInstance();
+            }
+            else
+            {
+                builder.RegisterType<KubernetesPodContainerResolver>().As<IKubernetesPodContainerResolver>().SingleInstance();
+            }
                 
 #if DEBUG
             builder.RegisterType<LocalMachineKubernetesClientConfigProvider>().As<IKubernetesClientConfigProvider>().SingleInstance();
