@@ -38,6 +38,10 @@ namespace Octopus.Tentacle.Kubernetes
 
         public const string ServerCommsAddressesVariableName = "ServerCommsAddresses";
 
+        public static string? ScriptPodContainerImage => Environment.GetEnvironmentVariable($"{EnvVarPrefix}__SCRIPTPODIMAGE");
+        public static string ScriptPodContainerImageTag => Environment.GetEnvironmentVariable($"{EnvVarPrefix}__SCRIPTPODIMAGETAG") ?? "latest";
+        public static string ScriptPodPullPolicy => Environment.GetEnvironmentVariable($"{EnvVarPrefix}__SCRIPTPODPULLPOLICY") ?? "IfNotPresent";
+
         public static IEnumerable<string> PodImagePullSecretNames => Environment.GetEnvironmentVariable($"{EnvVarPrefix}__PODIMAGEPULLSECRETNAMES")
             ?.Split(',')
             .Select(str => str.Trim())
