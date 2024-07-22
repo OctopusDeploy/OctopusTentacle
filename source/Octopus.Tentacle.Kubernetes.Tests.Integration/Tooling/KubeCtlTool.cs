@@ -1,9 +1,10 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.CommonTestUtils.Logging;
 using Octopus.Tentacle.Util;
 
-namespace Octopus.Tentacle.Kubernetes.Tests.Integration.Setup.Tooling;
+namespace Octopus.Tentacle.Kubernetes.Tests.Integration.Tooling;
 
 public class KubeCtlTool
 {

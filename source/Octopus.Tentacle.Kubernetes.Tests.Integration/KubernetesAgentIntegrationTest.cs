@@ -8,7 +8,7 @@ using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Kubernetes.Tests.Integration.Setup;
-using Octopus.Tentacle.Kubernetes.Tests.Integration.Setup.Tooling;
+using Octopus.Tentacle.Kubernetes.Tests.Integration.Tooling;
 using Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators;
 using Octopus.Tentacle.Tests.Integration.Common.Logging;
 
