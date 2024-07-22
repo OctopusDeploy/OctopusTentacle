@@ -40,7 +40,7 @@ public abstract class KubernetesAgentIntegrationTest
             KubernetesTestsGlobalContext.Instance.KubeCtlExePath,
             KubernetesTestsGlobalContext.Instance.KubeConfigPath,
             KubernetesTestsGlobalContext.Instance.Logger);
-
+        
         KubeCtl = new KubeCtlTool(
             KubernetesTestsGlobalContext.Instance.TemporaryDirectory,
             KubernetesTestsGlobalContext.Instance.KubeCtlExePath,
@@ -87,7 +87,7 @@ public abstract class KubernetesAgentIntegrationTest
     }
 
     protected virtual TentacleServiceDecoratorBuilder ConfigureTentacleServiceDecoratorBuilder(TentacleServiceDecoratorBuilder builder) => builder;
-    
+
     void BuildTentacleClient()
     {
         var endpoint = new ServiceEndPoint(kubernetesAgentInstaller.SubscriptionId, agentThumbprint, ServerHalibutRuntime.TimeoutsAndLimits);
