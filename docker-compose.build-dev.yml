@@ -1,12 +1,12 @@
 version: '3'
 services:
 
-    octopusdeploy-kubernetes-tentacle-linux:
+    octopusdeploy-kubernetes-agent-tentacle-linux:
         platform: "linux/${BUILD_ARCH:?err}"
         build:
             context: .
-            dockerfile: ./docker/kubernetes-tentacle/dev/Dockerfile
+            dockerfile: ./docker/kubernetes-agent-tentacle/dev/Dockerfile
             args:
                 IMAGE_TAG: ${IMAGE_TAG:?err}
                 DEBUGGER_ARCH: ${DEBUGGER_ARCH:?err}
-        image: docker.packages.octopushq.com/octopusdeploy/kubernetes-tentacle:${BUILD_NUMBER?err}-linux-${BUILD_ARCH:?err}-debug
+        image: docker.packages.octopushq.com/octopusdeploy/kubernetes-agent-tentacle:${BUILD_NUMBER?err}-linux-${BUILD_ARCH:?err}-debug

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -8,9 +7,9 @@ using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
 using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha;
 using Octopus.Tentacle.Kubernetes;
+using Octopus.Tentacle.Kubernetes.Synchronisation;
 using Octopus.Tentacle.Maintenance;
 using Octopus.Tentacle.Scripts;
-using Octopus.Tentacle.Util;
 using PodImageConfigurationV1Alpha = Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha.PodImageConfiguration;
 
 namespace Octopus.Tentacle.Services.Scripts.Kubernetes
@@ -22,36 +21,38 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
         readonly IKubernetesPodService podService;
         readonly IScriptWorkspaceFactory workspaceFactory;
         readonly IKubernetesPodStatusProvider podStatusProvider;
-        readonly IKubernetesScriptPodCreator podCreator;
+        readonly IKubernetesScriptPodCreator scriptPodCreator;
+        readonly IKubernetesRawScriptPodCreator rawScriptPodCreator;
         readonly IKubernetesPodLogService podLogService;
         readonly ITentacleScriptLogProvider scriptLogProvider;
         readonly IScriptPodSinceTimeStore scriptPodSinceTimeStore;
-
-        //TODO: check what will happen when Tentacle restarts
-        readonly ConcurrentDictionary<ScriptTicket, Lazy<SemaphoreSlim>> startScriptMutexes = new();
+        readonly IKeyedSemaphore<ScriptTicket> keyedSemaphore;
 
         public KubernetesScriptServiceV1(
             IKubernetesPodService podService,
             IScriptWorkspaceFactory workspaceFactory,
             IKubernetesPodStatusProvider podStatusProvider,
-            IKubernetesScriptPodCreator podCreator,
+            IKubernetesScriptPodCreator scriptPodCreator,
+            IKubernetesRawScriptPodCreator rawScriptPodCreator,
             IKubernetesPodLogService podLogService,
             ITentacleScriptLogProvider scriptLogProvider,
-            IScriptPodSinceTimeStore scriptPodSinceTimeStore)
+            IScriptPodSinceTimeStore scriptPodSinceTimeStore,
+            IKeyedSemaphore<ScriptTicket> keyedSemaphore)
         {
             this.podService = podService;
             this.workspaceFactory = workspaceFactory;
             this.podStatusProvider = podStatusProvider;
-            this.podCreator = podCreator;
+            this.scriptPodCreator = scriptPodCreator;
+            this.rawScriptPodCreator = rawScriptPodCreator;
             this.podLogService = podLogService;
             this.scriptLogProvider = scriptLogProvider;
             this.scriptPodSinceTimeStore = scriptPodSinceTimeStore;
+            this.keyedSemaphore = keyedSemaphore;
         }
 
         public async Task<KubernetesScriptStatusResponseV1> StartScriptAsync(StartKubernetesScriptCommandV1 command, CancellationToken cancellationToken)
         {
-            var mutex = startScriptMutexes.GetOrAdd(command.ScriptTicket, _ => new Lazy<SemaphoreSlim>(() => new SemaphoreSlim(1, 1))).Value;
-            using (await mutex.LockAsync(cancellationToken))
+            using (await keyedSemaphore.WaitAsync(command.ScriptTicket, cancellationToken))
             {
                 var trackedPod = podStatusProvider.TryGetTrackedScriptPod(command.ScriptTicket);
                 if (trackedPod != null)
@@ -79,12 +80,8 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
                     command.Files,
                     cancellationToken);
 
-                //create the pod
-                await podCreator.CreatePod(command, workspace, cancellationToken);
+                var logs = await CreatePodAndWaitForLogs(command, workspace, cancellationToken);
 
-                var (logs, _) = await podLogService.GetLogs(command.ScriptTicket, 0, cancellationToken);
-
-                //return a status that say's we are pending
                 return new KubernetesScriptStatusResponseV1(command.ScriptTicket, ProcessState.Pending, 0, logs.ToList(), 0);
             }
         }
@@ -114,8 +111,6 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
 
         public async Task CompleteScriptAsync(CompleteKubernetesScriptCommandV1 command, CancellationToken cancellationToken)
         {
-            startScriptMutexes.TryRemove(command.ScriptTicket, out _);
-
             var workspace = workspaceFactory.GetWorkspace(command.ScriptTicket);
             await workspace.Delete(cancellationToken);
 
@@ -155,6 +150,21 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
                 outputLogs,
                 nextLogSequence
             );
+        }
+        
+        async Task<IReadOnlyCollection<ProcessOutput>> CreatePodAndWaitForLogs(StartKubernetesScriptCommandV1 command, IScriptWorkspace workspace, CancellationToken cancellationToken)
+        {
+            if (command.IsRawScript)
+            {
+                await rawScriptPodCreator.CreatePod(command, workspace, cancellationToken);
+            }
+            else
+            {
+                await scriptPodCreator.CreatePod(command, workspace, cancellationToken);
+            }
+
+            var (logs, _) = await podLogService.GetLogs(command.ScriptTicket, 0, cancellationToken);
+            return logs;
         }
 
         static KubernetesScriptStatusResponseV1 GetResponseForMissingScriptPod(ScriptTicket scriptTicket, long lastLogSequence)
@@ -207,7 +217,8 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
                 command.PodImageConfiguration?.ToV1(),
                 command.ScriptPodServiceAccountName,
                 command.Scripts,
-                command.Files.ToArray()
+                command.Files.ToArray(),
+                isRawScript: false
             );
         }
 

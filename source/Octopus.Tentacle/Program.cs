@@ -74,7 +74,11 @@ namespace Octopus.Tentacle
             builder.RegisterCommand<UpdateTrustCommand>("update-trust", "Replaces the trusted Octopus Server thumbprint of any matching polling or listening registrations with a new thumbprint to trust");
             builder.RegisterCommand<RegisterMachineCommand>("register-with", "Registers this machine as a deployment target with an Octopus Server");
             builder.RegisterCommand<RegisterWorkerCommand>("register-worker", "Registers this machine as a worker with an Octopus Server");
-            builder.RegisterCommand<RegisterKubernetesClusterCommand>("register-k8s-cluster", "Registers this kubernetes cluster as a deployment target with an Octopus Server");
+#pragma warning disable CS0618 // Type or member is obsolete
+            builder.RegisterCommand<RegisterKubernetesClusterCommand>("register-k8s-cluster", "[Obsolete: Please use the \"register-k8s-target\" command instead] Registers this kubernetes cluster as a deployment target with an Octopus Server");
+#pragma warning restore CS0618 // Type or member is obsolete
+            builder.RegisterCommand<RegisterKubernetesDeploymentTargetCommand>("register-k8s-target", "Registers this kubernetes agent as a deployment target with an Octopus Server");
+            builder.RegisterCommand<RegisterKubernetesWorkerCommand>("register-k8s-worker", "Registers this kubernetes agent as a worker with an Octopus Server");
             builder.RegisterCommand<ExtractCommand>("extract", "Extracts a NuGet package");
             builder.RegisterCommand<DeregisterMachineCommand>("deregister-from", "Deregisters this deployment target from an Octopus Server");
             builder.RegisterCommand<DeregisterWorkerCommand>("deregister-worker", "Deregisters this worker from an Octopus Server");
@@ -89,6 +93,7 @@ namespace Octopus.Tentacle
             builder.RegisterCommand<ServerCommsCommand>("server-comms", "Configure how the Tentacle communicates with an Octopus Server");
             builder.RegisterCommand<ImportCertificateCommand>("import-certificate", "Replace the certificate that Tentacle uses to authenticate itself");
             builder.RegisterCommand<PollCommand>("poll-server", "Configures an Octopus Server that this Tentacle will poll");
+            builder.RegisterCommand<ClearTrustedServersCommand>("clear-trusted-servers", "Clears trusted servers in the Tentacle Configuration");
             builder.RegisterCommand<ListInstancesCommand>("list-instances", "Lists all installed Tentacle instances");
             builder.RegisterCommand<VersionCommand>("version", "Show the Tentacle version information");
             builder.RegisterCommand<ShowConfigurationCommand>("show-configuration", "Outputs the Tentacle configuration");

@@ -30,7 +30,7 @@ public class KubernetesClusterOneTimeSetUp
         {
             //In TeamCity, use the tag of the currently building code
             var tag = Environment.GetEnvironmentVariable("KubernetesAgentTests_ImageTag");
-            imageAndTag = $"docker.packages.octopushq.com/octopusdeploy/kubernetes-tentacle:{tag}";
+            imageAndTag = $"docker.packages.octopushq.com/octopusdeploy/kubernetes-agent-tentacle:{tag}";
         }
         else if(bool.TryParse(Environment.GetEnvironmentVariable("KubernetesAgentTests_UseLatestLocalImage"), out var useLocal) && useLocal)
         {

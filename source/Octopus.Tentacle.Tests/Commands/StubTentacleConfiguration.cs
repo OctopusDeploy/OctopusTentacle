@@ -106,6 +106,12 @@ namespace Octopus.Tentacle.Tests.Commands
             servers = new List<OctopusServerConfiguration>();
         }
 
+        public bool SetTrustedOctopusServers(IEnumerable<OctopusServerConfiguration>? newServers)
+        {
+            servers = newServers?.ToList() ?? new List<OctopusServerConfiguration>();
+            return true;
+        }
+
         public void RemoveTrustedOctopusServersWithThumbprint(string toRemove)
         {
             servers = servers.Where(s => s.Thumbprint != toRemove).ToList();

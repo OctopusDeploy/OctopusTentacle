@@ -130,6 +130,12 @@ namespace Octopus.Tentacle.Configuration
         void ResetTrustedOctopusServers();
 
         /// <summary>
+        /// Replace all trusted Octopus Servers with the ones provided.
+        /// </summary>
+        /// <returns><see langword="true"/> if successful, else <see langword="false"/></returns>
+        bool SetTrustedOctopusServers(IEnumerable<OctopusServerConfiguration>? newServers);
+
+        /// <summary>
         /// Remove the trusted server with the matching thumbprint, if any.
         /// </summary>
         /// <param name="toRemove">Thumbprint to remove.</param>

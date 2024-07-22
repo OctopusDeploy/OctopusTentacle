@@ -5,6 +5,7 @@ namespace Octopus.Tentacle.Kubernetes
 {
     public static class KubernetesScriptPodNameExtensions
     {
-        public static string ToKubernetesScriptPodName(this ScriptTicket scriptTicket) => $"octopus-script-{scriptTicket.TaskId}".ToLowerInvariant().Truncate(63);
+        public const string OctopusScriptPodNamePrefix = "octopus-script";
+        public static string ToKubernetesScriptPodName(this ScriptTicket scriptTicket) => $"{OctopusScriptPodNamePrefix}-{scriptTicket.TaskId}".ToLowerInvariant().Truncate(63);
     }
 }

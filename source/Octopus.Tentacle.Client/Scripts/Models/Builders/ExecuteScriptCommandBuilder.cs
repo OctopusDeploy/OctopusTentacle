@@ -13,7 +13,7 @@ namespace Octopus.Tentacle.Client.Scripts.Models.Builders
         protected Dictionary<ScriptType, string> AdditionalScripts { get; private set; } = new();
         protected StringBuilder ScriptBody { get; private set; } = new(string.Empty);
         protected string TaskId { get; }
-        protected ScriptTicket ScriptTicket { get; }
+        protected ScriptTicket ScriptTicket { get; private set; }
         protected ScriptIsolationConfiguration IsolationConfiguration { get; private set; }
 
         protected ExecuteScriptCommandBuilder(string taskId, ScriptIsolationLevel defaultIsolationLevel)
@@ -27,6 +27,12 @@ namespace Octopus.Tentacle.Client.Scripts.Models.Builders
                 ScriptIsolationConfiguration.NoTimeout);
         }
 
+        public ExecuteScriptCommandBuilder WithScriptTicket(ScriptTicket scriptTicket)
+        {
+            this.ScriptTicket = scriptTicket;
+            return this;
+        }
+        
         public ExecuteScriptCommandBuilder WithScriptBody(string scriptBody)
         {
             ScriptBody = new StringBuilder(scriptBody);

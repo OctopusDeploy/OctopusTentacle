@@ -346,6 +346,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithRetryDuration(TimeSpan.FromHours(1))
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder().RecordMethodUsages(tentacleConfigurationTestCase, out var scriptServiceRecordedUsages).Build())
                 .WithHalibutTimeoutsAndLimits(halibutTimeoutsAndLimits)
+                .WithPortForwarder(out var portForwarder)
                 .Build(CancellationToken);
 
             // Arrange
@@ -356,6 +357,8 @@ namespace Octopus.Tentacle.Tests.Integration
 
             Logger.Information("Stop Tentacle so no more requests are picked up");
             await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
+            portForwarder.Value.KillNewConnectionsImmediatlyMode = true;
+            portForwarder.Value.CloseExistingConnections();
 
             var delay = clientAndTentacle.Server.ServerHalibutRuntime.TimeoutsAndLimits.SafeTcpClientPooledConnectionTimeout + TimeSpan.FromSeconds(2);
             Logger.Information($"Waiting for {delay} for any active Pooled Connections for the Tentacle to expire");
@@ -377,6 +380,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     if (scriptServiceRecordedUsages.ForStartScriptAsync().Started >= 2)
                     {
                         cancelExecutionCancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(2));
+                        Logger.Information("Cancelling cancellation token source after 2 seconds.");
                         return;
                     }
 

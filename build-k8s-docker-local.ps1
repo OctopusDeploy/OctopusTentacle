@@ -23,12 +23,12 @@ if(!$?){
 
 
 #find the most recent tag
-$tags = & docker images octopusdeploy/kubernetes-tentacle --format "{{.Tag}}"
+$tags = & docker images octopusdeploy/kubernetes-agent-tentacle --format "{{.Tag}}"
 $splitTags = $tags.Split([System.Environment]::NewLine)
 $tag = $splitTags[0]
 
-$artifactoryImage = "octopusdeploy/kubernetes-tentacle"
-$localImage = "$LocalRegistryDomain/kubernetes-tentacle"
+$artifactoryImage = "octopusdeploy/kubernetes-agent-tentacle"
+$localImage = "$LocalRegistryDomain/kubernetes-agent-tentacle"
 
 $builtImage = "$($artifactoryImage):$tag"
 $builtLocalImage = "$($localImage):$tag"
