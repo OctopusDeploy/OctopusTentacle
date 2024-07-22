@@ -18,7 +18,8 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
         readonly IKubernetesPodService podService;
         readonly IScriptWorkspaceFactory workspaceFactory;
         readonly IKubernetesPodStatusProvider podStatusProvider;
-        readonly IKubernetesScriptPodCreator podCreator;
+        readonly IKubernetesScriptPodCreator scriptPodCreator;
+        readonly IKubernetesRawScriptPodCreator rawScriptPodCreator;
         readonly IKubernetesPodLogService podLogService;
         readonly ITentacleScriptLogProvider scriptLogProvider;
         readonly IScriptPodSinceTimeStore scriptPodSinceTimeStore;
@@ -28,7 +29,8 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             IKubernetesPodService podService,
             IScriptWorkspaceFactory workspaceFactory,
             IKubernetesPodStatusProvider podStatusProvider,
-            IKubernetesScriptPodCreator podCreator,
+            IKubernetesScriptPodCreator scriptPodCreator,
+            IKubernetesRawScriptPodCreator rawScriptPodCreator,
             IKubernetesPodLogService podLogService,
             ITentacleScriptLogProvider scriptLogProvider,
             IScriptPodSinceTimeStore scriptPodSinceTimeStore,
@@ -37,7 +39,8 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             this.podService = podService;
             this.workspaceFactory = workspaceFactory;
             this.podStatusProvider = podStatusProvider;
-            this.podCreator = podCreator;
+            this.scriptPodCreator = scriptPodCreator;
+            this.rawScriptPodCreator = rawScriptPodCreator;
             this.podLogService = podLogService;
             this.scriptLogProvider = scriptLogProvider;
             this.scriptPodSinceTimeStore = scriptPodSinceTimeStore;
@@ -148,7 +151,14 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
         
         async Task<IReadOnlyCollection<ProcessOutput>> CreatePodAndWaitForLogs(StartKubernetesScriptCommandV1 command, IScriptWorkspace workspace, CancellationToken cancellationToken)
         {
-            await podCreator.CreatePod(command, workspace, cancellationToken);
+            if (command.IsRawScript)
+            {
+                await rawScriptPodCreator.CreatePod(command, workspace, cancellationToken);
+            }
+            else
+            {
+                await scriptPodCreator.CreatePod(command, workspace, cancellationToken);
+            }
 
             var (logs, _) = await podLogService.GetLogs(command.ScriptTicket, 0, cancellationToken);
             return logs;

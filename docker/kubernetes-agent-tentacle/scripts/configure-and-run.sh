@@ -6,6 +6,11 @@ if [[ "$ACCEPT_EULA" != "Y" ]]; then
   exit 1
 fi
 
+# In the scenario where a customer is using a custom certificate (which is mounted via a config map), we need to rehash the certificates
+# We just do this all the time because there is no downside
+echo "Rehashing SSL/TLS certificates"
+openssl rehash /etc/ssl/certs
+
 # Tentacle Docker images only support once instance per container. Running multiple instances can be achieved by running multiple containers.
 instanceName=Tentacle
 internalListeningPort=10933
@@ -42,6 +47,28 @@ function getPublicHostName() {
 }
 
 function validateVariables() {
+  validateCommonVariables
+
+  if [[ "$DeploymentTargetEnabled" != "true" && "$WorkerEnabled" != "true" ]]; then
+    echo "Please specify whether to install as a worker or a deployment target with the 'WorkerEnabled' or 'DeploymentTargetEnabled' environment variables" >&2
+    exit 1
+  fi
+
+  if [[ "$DeploymentTargetEnabled" == "true" && "$WorkerEnabled" == "true" ]]; then
+    echo "The installation cannot be as both a worker and a deployment target, please choose one" >&2
+    exit 1
+  fi
+
+  if [[ "$DeploymentTargetEnabled" == "true" ]]; then
+    validateDeploymentTargetVariables
+  fi
+
+  if [[ "$WorkerEnabled" == "true" ]]; then
+    validateWorkerVariables
+  fi
+}
+
+function validateCommonVariables() {
   if [[ -z "$ServerApiKey" && -z "$BearerToken" ]]; then
     if [[ -z "$ServerPassword" || -z "$ServerUsername" ]]; then
       echo "Please specify either an API key, a Bearer Token or a username/password with the 'ServerApiKey' or 'ServerUsername'/'ServerPassword' environment variables" >&2
@@ -54,18 +81,9 @@ function validateVariables() {
     exit 1
   fi
 
-  if [[ -z "$TargetEnvironment" ]]; then
-    echo "Please specify one or more environment names (comma delimited) with the 'TargetEnvironment' environment variable" >&2
-    exit 1
-  fi
-
-  if [[ -z "$TargetRole" ]]; then
-    echo "Please specify one or more role names (comma delimited) with the 'TargetRole' environment variable" >&2
-    exit 1
-  fi
-
   echo " - server endpoint '$ServerUrl'"
   echo " - api key '##########'"
+  echo " - host '$PublicHostNameConfiguration'"
 
   if [[ -n "$ServerCommsAddress" || -n "$ServerCommsAddresses" || -n "$ServerPort" ]]; then
     echo " - communication mode 'Kubernetes' (Polling)"
@@ -86,14 +104,34 @@ function validateVariables() {
     echo " - communication mode 'Kubernetes' (Listening)"
     echo " - registered port $ListeningPort"
   fi
+  
+  if [[ -n "$AgentName" ]]; then
+    echo " - name '$AgentName'"
+  fi
+
+  if [[ -n "$Space" ]]; then
+    echo " - space '$Space'"
+  fi
+
+  if [[ -n "$TentacleCertificateBase64" ]]; then
+    echo " - tentacle certificate '${TentacleCertificateBase64:0:3}...${TentacleCertificateBase64: -3}'"
+  fi
+}
+
+function validateDeploymentTargetVariables() {
+  if [[ -z "$TargetEnvironment" ]]; then
+    echo "Please specify one or more environment names/ids/slugs (comma delimited) with the 'TargetEnvironment' environment variable" >&2
+    exit 1
+  fi
+
+  if [[ -z "$TargetRole" ]]; then
+    echo "Please specify one or more role names (comma delimited) with the 'TargetRole' environment variable" >&2
+    exit 1
+  fi
 
   echo " - environment '$TargetEnvironment'"
   echo " - role '$TargetRole'"
-  echo " - host '$PublicHostNameConfiguration'"
 
-  if [[ -n "$TargetName" ]]; then
-    echo " - name '$TargetName'"
-  fi
   if [[ -n "$TargetTenant" ]]; then
     echo " - tenant '$TargetTenant'"
   fi
@@ -103,15 +141,19 @@ function validateVariables() {
   if [[ -n "$TargetTenantedDeploymentParticipation" ]]; then
     echo " - tenanted deployment participation '$TargetTenantedDeploymentParticipation'"
   fi
-  if [[ -n "$Space" ]]; then
-    echo " - space '$Space'"
-  fi
+  
   if [[ -n "$DefaultNamespace" ]]; then
     echo " - default namespace '$DefaultNamespace'"
   fi
-  if [[ -n "$TentacleCertificateBase64" ]]; then
-    echo " - tentacle certificate '${TentacleCertificateBase64:0:3}...${TentacleCertificateBase64: -3}'"
+}
+
+function validateWorkerVariables() {
+  if [[ -z "$WorkerPools" ]]; then
+    echo "Please specify one or more worker pool names/ids/slugs (comma delimited) with the 'WorkerPools' environment variable" >&2
+    exit 1
   fi
+
+  echo " - worker pools '$WorkerPools'"
 }
 
 function configureTentacle() {
@@ -160,38 +202,12 @@ function registerTentacle() {
 
   local ARGS=()
 
-  ARGS+=('register-k8s-cluster')
-
-  if [[ -n "$TargetEnvironment" ]]; then
-    IFS=',' read -ra ENVIRONMENTS <<<"$TargetEnvironment"
-    for i in "${ENVIRONMENTS[@]}"; do
-      ARGS+=('--environment' "$i")
-    done
-  fi
-
-  if [[ -n "$TargetRole" ]]; then
-    IFS=',' read -ra ROLES <<<"$TargetRole"
-    for i in "${ROLES[@]}"; do
-      ARGS+=('--role' "$i")
-    done
-  fi
-
-  if [[ -n "$TargetTenant" ]]; then
-    IFS=',' read -ra TENANTS <<<"$TargetTenant"
-    for i in "${TENANTS[@]}"; do
-      ARGS+=('--tenant' "$i")
-    done
-  fi
-
-  if [[ -n "$TargetTenantTag" ]]; then
-    IFS=',' read -ra TENANTTAGS <<<"$TargetTenantTag"
-    for i in "${TENANTTAGS[@]}"; do
-      ARGS+=('--tenanttag' "$i")
-    done
-  fi
-
-  if [[ -n "$DefaultNamespace" ]]; then
-    ARGS+=('--default-namespace' "$DefaultNamespace")
+  if [[ "$DeploymentTargetEnabled" == "true" ]]; then
+    ARGS+=('register-k8s-target')
+    ARGS+=($(getTentacleAsDeploymentTargetRegistrationArgs))
+  elif [[ "$WorkerEnabled" == "true" ]]; then
+    ARGS+=('register-k8s-worker')
+    ARGS+=($(getTentacleAsWorkerRegistrationArgs))
   fi
 
   ARGS+=(
@@ -199,6 +215,10 @@ function registerTentacle() {
     '--server' "$ServerUrl"
     '--space' "$Space"
     '--policy' "$MachinePolicy")
+
+  if [[ -n "$AgentName" ]]; then
+    ARGS+=('--name' "$AgentName")
+  fi
 
   if [[ -n "$ServerCommsAddress" || -n "$ServerCommsAddresses" || -n "$ServerPort" ]]; then
     ARGS+=('--comms-style' 'TentacleActive')
@@ -241,15 +261,62 @@ function registerTentacle() {
       '--password' "$ServerPassword")
   fi
 
-  if [[ -n "$TargetName" ]]; then
-    ARGS+=('--name' "$TargetName")
+  tentacle "${ARGS[@]}"
+}
+
+function getTentacleAsDeploymentTargetRegistrationArgs() {
+  local ARGS=()
+
+  if [[ -n "$TargetEnvironment" ]]; then
+    IFS=',' read -ra ENVIRONMENTS <<<"$TargetEnvironment"
+    for i in "${ENVIRONMENTS[@]}"; do
+      ARGS+=('--environment' "$i")
+    done
+  fi
+
+  if [[ -n "$TargetRole" ]]; then
+    IFS=',' read -ra ROLES <<<"$TargetRole"
+    for i in "${ROLES[@]}"; do
+      ARGS+=('--role' "$i")
+    done
+  fi
+
+  if [[ -n "$TargetTenant" ]]; then
+    IFS=',' read -ra TENANTS <<<"$TargetTenant"
+    for i in "${TENANTS[@]}"; do
+      ARGS+=('--tenant' "$i")
+    done
+  fi
+
+  if [[ -n "$TargetTenantTag" ]]; then
+    IFS=',' read -ra TENANTTAGS <<<"$TargetTenantTag"
+    for i in "${TENANTTAGS[@]}"; do
+      ARGS+=('--tenanttag' "$i")
+    done
   fi
 
   if [[ -n "$TargetTenantedDeploymentParticipation" ]]; then
     ARGS+=('--tenanted-deployment-participation' "$TargetTenantedDeploymentParticipation")
   fi
 
-  tentacle "${ARGS[@]}"
+  if [[ -n "$DefaultNamespace" ]]; then
+    ARGS+=('--default-namespace' "$DefaultNamespace")
+  fi
+
+  echo "${ARGS[@]}"
+}
+
+function getTentacleAsWorkerRegistrationArgs() {
+  local ARGS=()
+
+  if [[ -n "$WorkerPools" ]]; then
+    IFS=',' read -ra WORKERPOOLS <<<"$WorkerPools"
+    for i in "${WORKERPOOLS[@]}"; do
+      ARGS+=('--workerpool' "$i")
+    done
+  fi
+
+  echo "${ARGS[@]}"
 }
 
 function addAdditionalServerInstancesIfRequired() {
@@ -327,9 +394,30 @@ function registerAdditionalServer() {
   tentacle "${ARGS[@]}"
 }
 
+function setPollingProxy() {
+  local ARGS=()
+  ARGS+=('polling-proxy'
+    '--instance' "$instanceName")
+
+  if [[ -n "$TentaclePollingProxyHost" ]]; then
+    echo "Using polling proxy at $TentaclePollingProxyHost:$TentaclePollingProxyPort"
+    ARGS+=(
+      '--proxyEnable' 'true'
+      '--proxyHost' "$TentaclePollingProxyHost"
+      '--proxyPort' "$TentaclePollingProxyPort"
+      '--proxyUsername' "$TentaclePollingProxyUsername"
+      '--proxyPassword' "$TentaclePollingProxyPassword")
+  else
+    echo "Disabling polling proxy"
+        ARGS+=('--proxyEnable' 'false')
+  fi
+
+  tentacle "${ARGS[@]}"
+}
+
 function markAsInitialised() {
     # There is a startupProbe which checks for this file
-    mkdir /etc/octopus && touch /etc/octopus/initialized
+    mkdir -p /etc/octopus && touch /etc/octopus/initialized
 }
 
 setupVariablesForRegistrationCheck
@@ -338,6 +426,7 @@ getStatusOfRegistration
 if [ "$IS_REGISTERED" == "true" ]; then
   echo "Tentacle is already configured and registered with server."
   addAdditionalServerInstancesIfRequired
+  setPollingProxy
 else
   echo "==============================================="
   echo "Configuring Octopus Deploy Kubernetes Tentacle"
@@ -349,6 +438,7 @@ else
   configureTentacle
   registerTentacle
   addAdditionalServerInstancesIfRequired
+  setPollingProxy
 
   echo "Configuration successful"
 fi

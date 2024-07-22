@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,12 +23,12 @@ using Octopus.Tentacle.Startup;
 namespace Octopus.Tentacle.Tests.Commands
 {
     [TestFixture]
-    public class RegisterWorkerCommandFixture : CommandFixture<RegisterWorkerCommand>
+    public class RegisterKubernetesWorkerCommandFixture : CommandFixture<RegisterKubernetesWorkerCommand>
     {
         IWritableTentacleConfiguration configuration;
         ISystemLog log;
         X509Certificate2 certificate;
-        IRegisterWorkerOperation operation;
+        IRegisterKubernetesWorkerOperation operation;
         IOctopusServerChecker serverChecker;
         IOctopusAsyncRepository repository;
         string serverThumbprint;
@@ -39,7 +38,7 @@ namespace Octopus.Tentacle.Tests.Commands
         {
             serverThumbprint = Guid.NewGuid().ToString();
             configuration = Substitute.For<IWritableTentacleConfiguration>();
-            operation = Substitute.For<IRegisterWorkerOperation>();
+            operation = Substitute.For<IRegisterKubernetesWorkerOperation>();
             serverChecker = Substitute.For<IOctopusServerChecker>();
             log = Substitute.For<ISystemLog>();
             var octopusClientInitializer = Substitute.For<IOctopusClientInitializer>();
@@ -62,7 +61,7 @@ namespace Octopus.Tentacle.Tests.Commands
             var applicationInstanceSelector = Substitute.For<IApplicationInstanceSelector>();
             applicationInstanceSelector.Current.Returns(info => new ApplicationInstanceConfiguration(null, null!, null!, null!));
 
-            Command = new RegisterWorkerCommand(new Lazy<IRegisterWorkerOperation>(() => operation),
+            Command = new RegisterKubernetesWorkerCommand(new Lazy<IRegisterKubernetesWorkerOperation>(() => operation),
                 new Lazy<IWritableTentacleConfiguration>(() => configuration),
                 log,
                 applicationInstanceSelector,
@@ -104,6 +103,7 @@ namespace Octopus.Tentacle.Tests.Commands
                     x.CommunicationStyle == CommunicationStyle.TentaclePassive &&
                     x.Thumbprint == serverThumbprint));
 
+            configuration.Received().SetIsRegistered();
             operation.Received().ExecuteAsync(repository);
         }
 
@@ -149,6 +149,24 @@ namespace Octopus.Tentacle.Tests.Commands
                 "https://polling.localhost/",
                 "--server-comms-address=https://polling.localhost/");
         }
+        
+        [Test]
+        public void ShouldDoNothingWhenWorkerIsAlreadyRegistered()
+        {
+            configuration.IsRegistered.Returns(true);
+            
+            Start("--workerpool=MyPool",
+                "--workerpool=MyOtherPool",
+                "--server=http://localhost",
+                "--name=MyMachine",
+                "--publicHostName=mymachine.test",
+                "--apiKey=ABC123",
+                "--force",
+                "--proxy=Proxy");
+            
+            operation.DidNotReceive().ExecuteAsync(Arg.Any<IOctopusSpaceAsyncRepository>());
+            configuration.DidNotReceive().AddOrUpdateTrustedOctopusServer(Arg.Any<OctopusServerConfiguration>());
+        }
 
         // no need for tests like ShouldReuseSubscriptionIdForPollingTentacleIfReRegistering
         // because it runs the same code for Workers and Deployment targets
@@ -158,6 +176,7 @@ namespace Octopus.Tentacle.Tests.Commands
             var args = new []
             {
                 "--workerpool=SomePool",
+                "--workerpool=SomeOtherPool",
                 "--server=http://localhost",
                 "--name=MyMachine",
                 "--publicHostName=mymachine.test",
@@ -170,7 +189,7 @@ namespace Octopus.Tentacle.Tests.Commands
 
             Start(args);
 
-            Assert.That(operation.WorkerPools.Single(), Is.EqualTo("SomePool"));
+            Assert.That(operation.WorkerPools, Is.EquivalentTo(new []{ "SomePool", "SomeOtherPool" }));
             Assert.That(operation.MachineName, Is.EqualTo("MyMachine"));
             Assert.That(operation.TentacleHostname, Is.Empty);
             Assert.That(operation.TentaclePort, Is.EqualTo(0));
@@ -185,7 +204,8 @@ namespace Octopus.Tentacle.Tests.Commands
                     x.SubscriptionId == operation.SubscriptionId.ToString() &&
                     x.CommunicationStyle == CommunicationStyle.TentacleActive &&
                     x.Thumbprint == serverThumbprint));
-
+            
+            configuration.Received().SetIsRegistered();
             operation.Received().ExecuteAsync(repository);
         }
 
