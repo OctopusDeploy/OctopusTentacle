@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Kubernetes
 {
     public interface IKubernetesPodContainerResolver
     {
-        Task<string> GetContainerImageForCluster();
+        Task<string> GetContainerImageForScriptPod();
     }
 
     public class KubernetesPodContainerResolver : IKubernetesPodContainerResolver
@@ -28,7 +29,19 @@ namespace Octopus.Tentacle.Kubernetes
             new(1, 30),
         };
 
-        public async Task<string> GetContainerImageForCluster()
+        public async Task<string> GetContainerImageForScriptPod()
+        {
+            var imageRepository = KubernetesConfig.ScriptPodContainerImage; 
+            if (imageRepository.IsNullOrEmpty())
+            {
+                return await GetKubernetesSpecificContainer();
+            }
+
+            var imageTag = KubernetesConfig.ScriptPodContainerImageTag; 
+            return $"{imageRepository}:{imageTag}";
+        }
+
+        async Task<string> GetKubernetesSpecificContainer()
         {
             var clusterVersion = await clusterService.GetClusterVersion();
 

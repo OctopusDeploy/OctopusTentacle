@@ -224,7 +224,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
 
         static PodImageConfigurationV1 ToV1(this PodImageConfigurationV1Alpha podImageConfiguration)
         {
-            return podImageConfiguration.Image is not null
+            return podImageConfiguration?.Image is not null
                 ? new PodImageConfigurationV1(podImageConfiguration.Image, podImageConfiguration.FeedUrl, podImageConfiguration.FeedUsername, podImageConfiguration.FeedPassword)
                 : new PodImageConfigurationV1();
         }

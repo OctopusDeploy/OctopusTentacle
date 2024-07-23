@@ -39,8 +39,8 @@ namespace Octopus.Tentacle.Kubernetes
         public static string PersistentVolumeFreeBytesVariableName => $"{EnvVarPrefix}__PERSISTENTVOLUMEFREEBYTES";
 
         public const string ServerCommsAddressesVariableName = "ServerCommsAddresses";
-        public static string ScriptPodContainerImage => Environment.GetEnvironmentVariable($"{EnvVarPrefix}__SCRIPTPODCONTAINERIMAGE") ?? "octopusDeploy/worker-tools";
-        public static string ScriptPodContainerImageTag => Environment.GetEnvironmentVariable($"{EnvVarPrefix}__SCRIPTPODCONTAINERIMAGETAG") ?? "latest";
+        public static string? ScriptPodContainerImage => Environment.GetEnvironmentVariable($"{EnvVarPrefix}__SCRIPTPODIMAGE");
+        public static string ScriptPodContainerImageTag => Environment.GetEnvironmentVariable($"{EnvVarPrefix}__SCRIPTPODIMAGETAG") ?? "latest";
 
         public static IEnumerable<string> PodImagePullSecretNames => Environment.GetEnvironmentVariable($"{EnvVarPrefix}__PODIMAGEPULLSECRETNAMES")
             ?.Split(',')
