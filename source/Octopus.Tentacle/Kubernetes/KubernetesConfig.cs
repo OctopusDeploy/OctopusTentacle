@@ -10,8 +10,6 @@ namespace Octopus.Tentacle.Kubernetes
         const string ServerCommsAddressVariableName = "ServerCommsAddress";
         const string EnvVarPrefix = "OCTOPUS__K8STENTACLE";
 
-        public static bool IsWorker =>  bool.TryParse(Environment.GetEnvironmentVariable($"{EnvVarPrefix}__ISWORKER"), out var isWorker) && isWorker;
-        
         public static string NamespaceVariableName => $"{EnvVarPrefix}__NAMESPACE";
         public static string Namespace => GetRequiredEnvVar(NamespaceVariableName, "Unable to determine Kubernetes namespace.");
         public static string PodServiceAccountName => GetRequiredEnvVar($"{EnvVarPrefix}__PODSERVICEACCOUNTNAME", "Unable to determine Kubernetes Pod service account name.");
@@ -39,9 +37,9 @@ namespace Octopus.Tentacle.Kubernetes
         public static string PersistentVolumeFreeBytesVariableName => $"{EnvVarPrefix}__PERSISTENTVOLUMEFREEBYTES";
 
         public const string ServerCommsAddressesVariableName = "ServerCommsAddresses";
+
         public static string? ScriptPodContainerImage => Environment.GetEnvironmentVariable($"{EnvVarPrefix}__SCRIPTPODIMAGE");
         public static string ScriptPodContainerImageTag => Environment.GetEnvironmentVariable($"{EnvVarPrefix}__SCRIPTPODIMAGETAG") ?? "latest";
-
         public static string ScriptPodPullPolicy => Environment.GetEnvironmentVariable($"{EnvVarPrefix}__SCRIPTPODPULLPOLICY") ?? "IfNotPresent";
 
         public static IEnumerable<string> PodImagePullSecretNames => Environment.GetEnvironmentVariable($"{EnvVarPrefix}__PODIMAGEPULLSECRETNAMES")

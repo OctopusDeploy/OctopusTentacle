@@ -38,7 +38,7 @@ namespace Octopus.Tentacle.Kubernetes
             var container = new V1Container
             {
                 Name = $"{podName}-init",
-                Image = command.PodImageConfiguration?.Image ?? await containerResolver.GetContainerImageForScriptPod(),
+                Image = command.PodImageConfiguration?.Image ?? await containerResolver.GetContainerImageForCluster(),
                 Command = new List<string> { "sh", "-c", GetInitExecutionScript("/nfs-mount", homeDir, workspacePath) },
                 VolumeMounts = new List<V1VolumeMount> { new("/nfs-mount", "init-nfs-volume"), new(homeDir, "tentacle-home") },
                 Resources = new V1ResourceRequirements

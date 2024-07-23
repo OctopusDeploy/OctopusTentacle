@@ -8,7 +8,7 @@ namespace Octopus.Tentacle.Kubernetes
 {
     public interface IKubernetesPodContainerResolver
     {
-        Task<string> GetContainerImageForScriptPod();
+        Task<string> GetContainerImageForCluster();
     }
 
     public class KubernetesPodContainerResolver : IKubernetesPodContainerResolver
@@ -29,7 +29,7 @@ namespace Octopus.Tentacle.Kubernetes
             new(1, 30),
         };
 
-        public async Task<string> GetContainerImageForScriptPod()
+        public async Task<string> GetContainerImageForCluster()
         {
             var imageRepository = KubernetesConfig.ScriptPodContainerImage; 
             if (imageRepository.IsNullOrEmpty())
