@@ -13,7 +13,6 @@ using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
-using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Util;
 using Octopus.Tentacle.Variables;
@@ -216,7 +215,9 @@ namespace Octopus.Tentacle.Kubernetes
 
             var createdPod = await podService.Create(pod, cancellationToken);
             podMonitor.AddPendingPod(command.ScriptTicket, createdPod);
-            LogVerboseToBothLogs($"Executing script in Kubernetes Pod '{podName}'.", tentacleScriptLog);
+            
+            var scriptContainer = createdPod.Spec.Containers.First(c => c.Name == podName);
+            LogVerboseToBothLogs($"Executing script in Kubernetes Pod '{podName}'. Image: '{scriptContainer.Image}'.", tentacleScriptLog);
         }
 
         protected virtual async Task<IList<V1Container>> CreateScriptContainers(StartKubernetesScriptCommandV1 command, string podName, string scriptName, string homeDir, string workspacePath, string[]? scriptArguments, InMemoryTentacleScriptLog tentacleScriptLog)
@@ -259,7 +260,7 @@ namespace Octopus.Tentacle.Kubernetes
             var spaceInformation = kubernetesPhysicalFileSystem.GetStorageInformation();
 
             var resourceRequirements = GetScriptPodResourceRequirements(tentacleScriptLog);
-            
+
             return new V1Container
             {
                 Name = podName,
