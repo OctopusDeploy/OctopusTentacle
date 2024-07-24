@@ -71,7 +71,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             //Arrange
             var agentMetrics = new StubbedAgentMetrics(testEpoch);
             var eventService = Substitute.For<IKubernetesEventService>();
-            eventService.FetchAllEventsAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).ReturnsForAnyArgs(
+            eventService.FetchAllEventsAsync(Arg.Any<CancellationToken>()).ReturnsForAnyArgs(
                 new Corev1EventList(new List<Corev1Event>
                 {
                     new()
@@ -104,7 +104,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             var podName = "octopus-script-123412341234.123412341234";
             var agentMetrics = new StubbedAgentMetrics(testEpoch);
             var eventService = Substitute.For<IKubernetesEventService>();
-            eventService.FetchAllEventsAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).ReturnsForAnyArgs(
+            eventService.FetchAllEventsAsync(Arg.Any<CancellationToken>()).ReturnsForAnyArgs(
                 new Corev1EventList(new List<Corev1Event>
                 {
                     new()
@@ -138,7 +138,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             var podName = "octopus-script-123412341234.123412341234";
             var agentMetrics = new StubbedAgentMetrics(testEpoch);
             var eventService = Substitute.For<IKubernetesEventService>();
-            eventService.FetchAllEventsAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).ReturnsForAnyArgs(
+            eventService.FetchAllEventsAsync(Arg.Any<CancellationToken>()).ReturnsForAnyArgs(
                 new Corev1EventList(new List<Corev1Event>
                 {
                     new()
@@ -168,7 +168,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             var podName = "octopus-script-123412341234.123412341234";
             var agentMetrics = new StubbedAgentMetrics(testEpoch);
             var eventService = Substitute.For<IKubernetesEventService>();
-            eventService.FetchAllEventsAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).ReturnsForAnyArgs(
+            eventService.FetchAllEventsAsync(Arg.Any<CancellationToken>()).ReturnsForAnyArgs(
                 new Corev1EventList(new List<Corev1Event>
                 {
                     new()

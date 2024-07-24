@@ -16,6 +16,7 @@ namespace Octopus.Tentacle.Kubernetes
 
     public class KubernetesOrphanedPodCleaner : IKubernetesOrphanedPodCleaner
     {
+        readonly IKubernetesConfiguration kubernetesConfiguration;
         readonly IKubernetesPodStatusProvider podStatusProvider;
         readonly IKubernetesPodService podService;
         readonly ISystemLog log;
@@ -24,11 +25,12 @@ namespace Octopus.Tentacle.Kubernetes
         readonly IScriptPodSinceTimeStore scriptPodSinceTimeStore;
         
         readonly TimeSpan initialDelay = TimeSpan.FromMinutes(1);
-        internal readonly TimeSpan CompletedPodConsideredOrphanedAfterTimeSpan = KubernetesConfig.PodsConsideredOrphanedAfterTimeSpan;
+        internal TimeSpan CompletedPodConsideredOrphanedAfterTimeSpan = kubernetesConfiguration.PodsConsideredOrphanedAfterTimeSpan;
 
-        public KubernetesOrphanedPodCleaner(IKubernetesPodStatusProvider podStatusProvider, IKubernetesPodService podService, ISystemLog log, IClock clock,
+        public KubernetesOrphanedPodCleaner(IKubernetesConfiguration kubernetesConfiguration, IKubernetesPodStatusProvider podStatusProvider, IKubernetesPodService podService, ISystemLog log, IClock clock,
             ITentacleScriptLogProvider scriptLogProvider, IScriptPodSinceTimeStore scriptPodSinceTimeStore)
         {
+            this.kubernetesConfiguration = kubernetesConfiguration;
             this.podStatusProvider = podStatusProvider;
             this.podService = podService;
             this.log = log;
@@ -94,7 +96,7 @@ namespace Octopus.Tentacle.Kubernetes
                 scriptLogProvider.Delete(pod.ScriptTicket);
                 scriptPodSinceTimeStore.Delete(pod.ScriptTicket);
 
-                if (KubernetesConfig.DisableAutomaticPodCleanup)
+                if (kubernetesConfiguration.DisableAutomaticPodCleanup)
                 {
                     log.Verbose($"OrphanedPodCleaner: Not deleting orphaned pod {pod.ScriptTicket} as automatic cleanup is disabled");
                     continue;

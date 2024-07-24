@@ -19,14 +19,14 @@ namespace Octopus.Tentacle.Kubernetes
 
     public class KubernetesPodService : KubernetesService, IKubernetesPodService
     {
-        public KubernetesPodService(IKubernetesClientConfigProvider configProvider, ISystemLog log)
-            : base(configProvider, log)
+        public KubernetesPodService(IKubernetesClientConfigProvider configProvider, IKubernetesConfiguration kubernetesConfiguration, ISystemLog log)
+            : base(configProvider, kubernetesConfiguration, log)
         {
         }
 
         public async Task<V1PodList> ListAllPods(CancellationToken cancellationToken)
         {
-            return await Client.ListNamespacedPodAsync(KubernetesConfig.Namespace,
+            return await Client.ListNamespacedPodAsync(Namespace,
                 labelSelector: OctopusLabels.ScriptTicketId,
                 cancellationToken: cancellationToken);
         }
@@ -34,11 +34,11 @@ namespace Octopus.Tentacle.Kubernetes
         public async Task WatchAllPods(string initialResourceVersion, Func<WatchEventType, V1Pod, CancellationToken, Task> onChange, Action<Exception> onError, CancellationToken cancellationToken)
         {
             using var response = Client.CoreV1.ListNamespacedPodWithHttpMessagesAsync(
-                KubernetesConfig.Namespace,
+                Namespace,
                 labelSelector: OctopusLabels.ScriptTicketId,
                 resourceVersion: initialResourceVersion,
                 watch: true,
-                timeoutSeconds: KubernetesConfig.PodMonitorTimeoutSeconds,
+                timeoutSeconds: KubernetesConfiguration.PodMonitorTimeoutSeconds,
                 cancellationToken: cancellationToken);
 
             var watchErrorCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -77,10 +77,10 @@ namespace Octopus.Tentacle.Kubernetes
         public async Task<V1Pod> Create(V1Pod pod, CancellationToken cancellationToken)
         {
             AddStandardMetadata(pod);
-            return await Client.CreateNamespacedPodAsync(pod, KubernetesConfig.Namespace, cancellationToken: cancellationToken);
+            return await Client.CreateNamespacedPodAsync(pod, Namespace, cancellationToken: cancellationToken);
         }
 
         public async Task DeleteIfExists(ScriptTicket scriptTicket, CancellationToken cancellationToken)
-            => await TryExecuteAsync(async () => await Client.DeleteNamespacedPodAsync(scriptTicket.ToKubernetesScriptPodName(), KubernetesConfig.Namespace, cancellationToken: cancellationToken));
+            => await TryExecuteAsync(async () => await Client.DeleteNamespacedPodAsync(scriptTicket.ToKubernetesScriptPodName(), Namespace, cancellationToken: cancellationToken));
     }
 }
