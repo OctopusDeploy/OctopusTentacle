@@ -6,7 +6,7 @@ agent:
   bearerToken: "this-is-a-fake-bearer-token"
   space: "Default"
   targetEnvironments: ["development"]
-  targetRoles: ["testing-cluster"]
+  targetRoles: ["Testing Cluster", "another-testing-cluster"]
   
   image:
     repository: docker.packages.octopushq.com/octopusdeploy/kubernetes-agent-tentacle
