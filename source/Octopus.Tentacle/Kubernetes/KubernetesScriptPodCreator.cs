@@ -261,16 +261,23 @@ namespace Octopus.Tentacle.Kubernetes
 
             var resourceRequirements = GetScriptPodResourceRequirements(tentacleScriptLog);
 
+            var commandString = string.Join(" ", new[] {                         
+                $"{homeDir}/Work/{command.ScriptTicket.TaskId}/bootstrapRunner",
+                Path.Combine(homeDir, workspacePath),
+                Path.Combine(homeDir, workspacePath, scriptName)
+            }.Concat(scriptArguments ?? Array.Empty<string>())
+            .Select(x => $"\"{x}\""));
+
             return new V1Container
             {
                 Name = podName,
                 Image = command.PodImageConfiguration?.Image ?? await containerResolver.GetContainerImageForCluster(),
-                Command = new List<string> { $"{homeDir}/Work/{command.ScriptTicket.TaskId}/bootstrapRunner" },
+                Command = new List<string> { "sh" },
                 Args = new List<string>
                     {
-                        Path.Combine(homeDir, workspacePath),
-                        Path.Combine(homeDir, workspacePath, scriptName)
-                    }.Concat(scriptArguments ?? Array.Empty<string>())
+                        "-c",
+                        commandString
+                    }
                     .ToList(),
                 VolumeMounts = new List<V1VolumeMount> { new(homeDir, "tentacle-home") },
                 Env = new List<V1EnvVar>
