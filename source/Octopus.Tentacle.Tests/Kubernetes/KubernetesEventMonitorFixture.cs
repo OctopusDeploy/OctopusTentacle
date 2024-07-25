@@ -56,9 +56,10 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         public async Task NoEntriesAreSentToMetricsWhenEventListIsEmpty()
         {
             var agentMetrics = Substitute.For<IKubernetesAgentMetrics>();
+            var config = Substitute.For<IKubernetesConfiguration>();
             agentMetrics.GetLatestEventTimestamp(Arg.Any<CancellationToken>()).ReturnsForAnyArgs(testEpoch);
             var eventService = Substitute.For<IKubernetesEventService>();
-            var sut = new KubernetesEventMonitor(agentMetrics, eventService, "arbitraryNamespace", new IEventMapper[]{new NfsPodRestarted(), new TentacleKilledEventMapper(), new NfsStaleEventMapper()}, log);
+            var sut = new KubernetesEventMonitor(config, agentMetrics, eventService,  new IEventMapper[]{new NfsPodRestarted(), new TentacleKilledEventMapper(), new NfsStaleEventMapper()}, log);
 
             await sut.CacheNewEvents(tokenSource.Token);
 
@@ -71,6 +72,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             //Arrange
             var agentMetrics = new StubbedAgentMetrics(testEpoch);
             var eventService = Substitute.For<IKubernetesEventService>();
+            var config = Substitute.For<IKubernetesConfiguration>();
             eventService.FetchAllEventsAsync(Arg.Any<CancellationToken>()).ReturnsForAnyArgs(
                 new Corev1EventList(new List<Corev1Event>
                 {
@@ -85,7 +87,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                         LastTimestamp = testEpoch.DateTime.AddMinutes(1)
                     }
                 }));
-            var sut = new KubernetesEventMonitor(agentMetrics, eventService, "arbitraryNamespace", new IEventMapper[]{new NfsPodRestarted(), new TentacleKilledEventMapper(), new NfsStaleEventMapper()}, log);
+            var sut = new KubernetesEventMonitor(config,agentMetrics, eventService,  new IEventMapper[]{new NfsPodRestarted(), new TentacleKilledEventMapper(), new NfsStaleEventMapper()}, log);
 
             //Act
             await sut.CacheNewEvents(tokenSource.Token);
@@ -104,6 +106,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             var podName = "octopus-script-123412341234.123412341234";
             var agentMetrics = new StubbedAgentMetrics(testEpoch);
             var eventService = Substitute.For<IKubernetesEventService>();
+            var config = Substitute.For<IKubernetesConfiguration>();
             eventService.FetchAllEventsAsync(Arg.Any<CancellationToken>()).ReturnsForAnyArgs(
                 new Corev1EventList(new List<Corev1Event>
                 {
@@ -119,7 +122,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                     }
                 }));
 
-            var sut = new KubernetesEventMonitor(agentMetrics, eventService, "arbitraryNamespace", new IEventMapper[]{new NfsPodRestarted(), new TentacleKilledEventMapper(), new NfsStaleEventMapper()}, log);
+            var sut = new KubernetesEventMonitor(config,agentMetrics, eventService, new IEventMapper[]{new NfsPodRestarted(), new TentacleKilledEventMapper(), new NfsStaleEventMapper()}, log);
 
             //Act
             await sut.CacheNewEvents(tokenSource.Token);
@@ -138,6 +141,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             var podName = "octopus-script-123412341234.123412341234";
             var agentMetrics = new StubbedAgentMetrics(testEpoch);
             var eventService = Substitute.For<IKubernetesEventService>();
+            var config = Substitute.For<IKubernetesConfiguration>();
             eventService.FetchAllEventsAsync(Arg.Any<CancellationToken>()).ReturnsForAnyArgs(
                 new Corev1EventList(new List<Corev1Event>
                 {
@@ -153,7 +157,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                     }
                 }));
             
-            var sut = new KubernetesEventMonitor(agentMetrics, eventService, "arbitraryNamespace", new IEventMapper[]{new NfsPodRestarted(), new TentacleKilledEventMapper(), new NfsStaleEventMapper()}, log);
+            var sut = new KubernetesEventMonitor(config,agentMetrics, eventService, new IEventMapper[]{new NfsPodRestarted(), new TentacleKilledEventMapper(), new NfsStaleEventMapper()}, log);
             //Act
             await sut.CacheNewEvents(tokenSource.Token);
             
@@ -168,6 +172,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             var podName = "octopus-script-123412341234.123412341234";
             var agentMetrics = new StubbedAgentMetrics(testEpoch);
             var eventService = Substitute.For<IKubernetesEventService>();
+            var config = Substitute.For<IKubernetesConfiguration>();
             eventService.FetchAllEventsAsync(Arg.Any<CancellationToken>()).ReturnsForAnyArgs(
                 new Corev1EventList(new List<Corev1Event>
                 {
@@ -184,7 +189,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                     }
                 }));
             
-            var sut = new KubernetesEventMonitor(agentMetrics, eventService, "arbitraryNamespace", new IEventMapper[]{new NfsPodRestarted(), new TentacleKilledEventMapper(), new NfsStaleEventMapper()}, log);
+            var sut = new KubernetesEventMonitor(config, agentMetrics, eventService,  new IEventMapper[]{new NfsPodRestarted(), new TentacleKilledEventMapper(), new NfsStaleEventMapper()}, log);
             //Act
             await sut.CacheNewEvents(tokenSource.Token);
             

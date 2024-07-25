@@ -26,6 +26,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         DateTimeOffset startTime;
         ITentacleScriptLogProvider scriptLogProvider;
         IScriptPodSinceTimeStore scriptPodSinceTimeStore;
+        IKubernetesConfiguration config;
 
         [SetUp]
         public void Setup()
@@ -40,17 +41,14 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             monitor = Substitute.For<IKubernetesPodStatusProvider>();
             scriptTicket = new ScriptTicket(Guid.NewGuid().ToString());
 
-            cleaner = new KubernetesOrphanedPodCleaner(monitor, podService, log, clock, scriptLogProvider, scriptPodSinceTimeStore);
+            config = Substitute.For<IKubernetesConfiguration>();
+            config.PodsConsideredOrphanedAfterTimeSpan.Returns(TimeSpan.FromMinutes(10));
+            config.DisableAutomaticPodCleanup.Returns(false);
 
-            overCutoff = cleaner.CompletedPodConsideredOrphanedAfterTimeSpan + 1.Minutes();
-            underCutoff = cleaner.CompletedPodConsideredOrphanedAfterTimeSpan - 1.Minutes();
-        }
+            cleaner = new KubernetesOrphanedPodCleaner(config, monitor, podService, log, clock, scriptLogProvider, scriptPodSinceTimeStore);
 
-        [TearDown]
-        public void TearDown()
-        {
-            Environment.SetEnvironmentVariable("OCTOPUS__K8STENTACLE__DISABLEAUTOPODCLEANUP", null);
-            Environment.SetEnvironmentVariable("OCTOPUS__K8STENTACLE__PODSCONSIDEREDORPHANEDAFTERMINUTES", null);
+            overCutoff = config.PodsConsideredOrphanedAfterTimeSpan + 1.Minutes();
+            underCutoff = config.PodsConsideredOrphanedAfterTimeSpan - 1.Minutes();
         }
 
         [Test]
@@ -142,7 +140,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         public async Task OrphanedPodNotCleanedUpIfPodCleanupIsDisabled()
         {
             //Arrange
-            Environment.SetEnvironmentVariable("OCTOPUS__K8STENTACLE__DISABLEAUTOPODCLEANUP", "true");
+            config.DisableAutomaticPodCleanup.Returns(true);
             var pods = new List<ITrackedScriptPod>
             {
                 CreatePod(TrackedScriptPodState.Succeeded(0, startTime))
@@ -157,40 +155,6 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             await podService.DidNotReceive().DeleteIfExists(scriptTicket, Arg.Any<CancellationToken>());
             scriptLogProvider.Received().Delete(scriptTicket);
             scriptPodSinceTimeStore.Received().Delete(scriptTicket);
-        }
-
-        [TestCase(1, false)]
-        [TestCase(3, true)]
-        public async Task EnvironmentVariableDictatesWhenPodsAreConsideredOrphaned(int checkAfterMinutes, bool shouldDelete)
-        {
-            //Arrange
-            Environment.SetEnvironmentVariable("OCTOPUS__K8STENTACLE__PODSCONSIDEREDORPHANEDAFTERMINUTES", "2");
-
-            // We need to reinitialise the sut after changing the env var value
-            cleaner = new KubernetesOrphanedPodCleaner(monitor, podService, log, clock, scriptLogProvider, scriptPodSinceTimeStore);
-            var pods = new List<ITrackedScriptPod>
-            {
-                CreatePod(TrackedScriptPodState.Succeeded(0, startTime))
-            };
-            monitor.GetAllTrackedScriptPods().Returns(pods);
-            clock.WindForward(TimeSpan.FromMinutes(checkAfterMinutes));
-
-            //Act
-            await cleaner.CheckForOrphanedPods(CancellationToken.None);
-
-            //Assert
-            if (shouldDelete)
-            {
-                await podService.Received().DeleteIfExists(scriptTicket, Arg.Any<CancellationToken>());
-                scriptLogProvider.Received().Delete(scriptTicket);
-                scriptPodSinceTimeStore.Received().Delete(scriptTicket);
-            }
-            else
-            {
-                await podService.DidNotReceiveWithAnyArgs().DeleteIfExists(scriptTicket, Arg.Any<CancellationToken>());
-                scriptLogProvider.DidNotReceiveWithAnyArgs().Delete(scriptTicket);
-                scriptPodSinceTimeStore.DidNotReceiveWithAnyArgs().Delete(scriptTicket);
-            }
         }
 
         ITrackedScriptPod CreatePod(TrackedScriptPodState state)
