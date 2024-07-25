@@ -40,7 +40,7 @@ namespace Octopus.Tentacle.Kubernetes
 
         public static string? ScriptPodContainerImage => Environment.GetEnvironmentVariable($"{EnvVarPrefix}__SCRIPTPODIMAGE");
         public static string ScriptPodContainerImageTag => Environment.GetEnvironmentVariable($"{EnvVarPrefix}__SCRIPTPODIMAGETAG") ?? "latest";
-        public static string ScriptPodPullPolicy => Environment.GetEnvironmentVariable($"{EnvVarPrefix}__SCRIPTPODPULLPOLICY") ?? "IfNotPresent";
+        public static string? ScriptPodPullPolicy => Environment.GetEnvironmentVariable($"{EnvVarPrefix}__SCRIPTPODPULLPOLICY");
 
         public static IEnumerable<string> PodImagePullSecretNames => Environment.GetEnvironmentVariable($"{EnvVarPrefix}__PODIMAGEPULLSECRETNAMES")
             ?.Split(',')
