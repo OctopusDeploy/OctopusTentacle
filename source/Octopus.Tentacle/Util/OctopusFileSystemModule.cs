@@ -9,7 +9,7 @@ namespace Octopus.Tentacle.Util
         protected override void Load(ContainerBuilder builder)
         {
             base.Load(builder);
-            if (PlatformDetection.Kubernetes.IsRunningAsKubernetesAgent)
+            if (KubernetesAgentDetection.IsRunningAsKubernetesAgent)
             {
                 builder.RegisterType<KubernetesPhysicalFileSystem>().AsSelf().As<IOctopusFileSystem>();
             }

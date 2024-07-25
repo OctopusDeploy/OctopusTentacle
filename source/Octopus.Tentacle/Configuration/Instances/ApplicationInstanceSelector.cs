@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Kubernetes;
+using Octopus.Tentacle.Kubernetes.Configuration;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Configuration.Instances
@@ -14,9 +15,10 @@ namespace Octopus.Tentacle.Configuration.Instances
         readonly IApplicationConfigurationContributor[] instanceStrategies;
         readonly IOctopusFileSystem fileSystem;
         readonly ISystemLog log;
+        readonly IKubernetesAgentDetection kubernetesAgentDetection;
         readonly object @lock = new object();
         ApplicationInstanceConfiguration? current;
-        Lazy<ConfigMapKeyValueStore> configMapStoreFactory;
+        readonly Lazy<ConfigMapKeyValueStore> configMapStoreFactory;
 
         public ApplicationInstanceSelector(
             ApplicationName applicationName,
@@ -25,13 +27,15 @@ namespace Octopus.Tentacle.Configuration.Instances
             IApplicationConfigurationContributor[] instanceStrategies,
             Lazy<ConfigMapKeyValueStore> configMapStoreFactory,
             IOctopusFileSystem fileSystem,
-            ISystemLog log)
+            ISystemLog log,
+            IKubernetesAgentDetection kubernetesAgentDetection)
         {
             this.applicationInstanceStore = applicationInstanceStore;
             this.startUpInstanceRequest = startUpInstanceRequest;
             this.instanceStrategies = instanceStrategies;
             this.fileSystem = fileSystem;
             this.log = log;
+            this.kubernetesAgentDetection = kubernetesAgentDetection;
             ApplicationName = applicationName;
             this.configMapStoreFactory = configMapStoreFactory;
         }
@@ -77,10 +81,9 @@ namespace Octopus.Tentacle.Configuration.Instances
 
         (IKeyValueStore, IWritableKeyValueStore) LoadConfigurationStore((string? instanceName, string? configurationpath) appInstance)
         {
-            if (appInstance is { instanceName: not null, configurationpath: null } &&
-                PlatformDetection.Kubernetes.IsRunningAsKubernetesAgent)
+            if (appInstance is { instanceName: not null, configurationpath: null } && kubernetesAgentDetection.IsRunningAsKubernetesAgent)
             {
-                log.Verbose($"Loading configuration from ConfigMap for namespace {KubernetesConfig.Namespace}");
+                log.Verbose($"Loading configuration from ConfigMap for namespace {kubernetesAgentDetection.Namespace}");
                 var configMapWritableStore = configMapStoreFactory.Value;
                 return (ContributeAdditionalConfiguration(configMapWritableStore), configMapWritableStore);
             }

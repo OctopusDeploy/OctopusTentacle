@@ -14,8 +14,8 @@ namespace Octopus.Tentacle.Kubernetes.Tests.Integration.Support
     {
         readonly string targetNamespace;
 
-        public TestSupportConfigMapService(IKubernetesClientConfigProvider configProvider, ISystemLog log, string targetNamespace)
-            : base(configProvider, log)
+        public TestSupportConfigMapService(IKubernetesClientConfigProvider configProvider, IKubernetesConfiguration kubernetesConfiguration, ISystemLog log, string targetNamespace)
+            : base(configProvider, kubernetesConfiguration, log)
         {
             this.targetNamespace = targetNamespace;
         }

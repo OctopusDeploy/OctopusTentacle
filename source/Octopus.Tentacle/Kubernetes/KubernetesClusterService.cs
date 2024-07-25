@@ -14,8 +14,8 @@ namespace Octopus.Tentacle.Kubernetes
     public class KubernetesClusterService : KubernetesService, IKubernetesClusterService
     {
         readonly AsyncLazy<ClusterVersion> lazyVersion;
-        public KubernetesClusterService(IKubernetesClientConfigProvider configProvider, ISystemLog log)
-            : base(configProvider, log)
+        public KubernetesClusterService(IKubernetesClientConfigProvider configProvider,IKubernetesConfiguration kubernetesConfiguration,  ISystemLog log)
+            : base(configProvider, kubernetesConfiguration, log)
         {
             //As the cluster version isn't going to change without restarting, we just cache the version in an AsyncLazy
             lazyVersion = new AsyncLazy<ClusterVersion>(async () =>

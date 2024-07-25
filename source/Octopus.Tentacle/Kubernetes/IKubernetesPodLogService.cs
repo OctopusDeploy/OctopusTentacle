@@ -22,8 +22,8 @@ namespace Octopus.Tentacle.Kubernetes
         readonly ITentacleScriptLogProvider scriptLogProvider;
         readonly IScriptPodSinceTimeStore scriptPodSinceTimeStore;
 
-        public KubernetesPodLogService(IKubernetesClientConfigProvider configProvider, IKubernetesPodMonitor podMonitor, ITentacleScriptLogProvider scriptLogProvider, IScriptPodSinceTimeStore scriptPodSinceTimeStore, ISystemLog log) 
-            : base(configProvider, log)
+        public KubernetesPodLogService(IKubernetesClientConfigProvider configProvider, IKubernetesConfiguration kubernetesConfiguration, IKubernetesPodMonitor podMonitor, ITentacleScriptLogProvider scriptLogProvider, IScriptPodSinceTimeStore scriptPodSinceTimeStore, ISystemLog log) 
+            : base(configProvider, kubernetesConfiguration, log)
         {
             this.podMonitor = podMonitor;
             this.scriptLogProvider = scriptLogProvider;
@@ -93,7 +93,7 @@ namespace Octopus.Tentacle.Kubernetes
             {
                 try
                 {
-                    return await Client.GetNamespacedPodLogsAsync(podName, KubernetesConfig.Namespace, podName, sinceTime, cancellationToken: cancellationToken);
+                    return await Client.GetNamespacedPodLogsAsync(podName, Namespace, podName, sinceTime, cancellationToken: cancellationToken);
                 }
                 catch (HttpOperationException ex)
                 {

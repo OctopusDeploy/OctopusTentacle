@@ -9,20 +9,21 @@ namespace Octopus.Tentacle.Kubernetes
 {
     public class KubernetesEventMonitorTask : BackgroundTask
     {
-        public delegate KubernetesEventMonitorTask Factory(IKubernetesEventMonitor eventMonitor);
-        
         readonly IKubernetesEventMonitor eventMonitor;
+        readonly IKubernetesConfiguration kubernetesConfiguration;
         readonly ISystemLog log;
         readonly TimeSpan taskInterval = TimeSpan.FromMinutes(10);
-        public KubernetesEventMonitorTask(ISystemLog log, IKubernetesEventMonitor eventMonitor) : base(log, TimeSpan.FromSeconds(30))
+        
+        public KubernetesEventMonitorTask(IKubernetesConfiguration kubernetesConfiguration, ISystemLog log, IKubernetesEventMonitor eventMonitor) : base(log, TimeSpan.FromSeconds(30))
         {
+            this.kubernetesConfiguration = kubernetesConfiguration;
             this.log = log;
             this.eventMonitor = eventMonitor;
         }
         
         protected override async Task RunTask(CancellationToken cancellationToken)
         {
-            if (!KubernetesConfig.MetricsIsEnabled)
+            if (!kubernetesConfiguration.IsMetricsEnabled)
             {
                 log.Info("Event monitoring for agent metrics is not enabled.");
                 return;

@@ -8,6 +8,7 @@ using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Crypto;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Kubernetes;
+using Octopus.Tentacle.Kubernetes.Configuration;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Configuration
@@ -189,10 +190,11 @@ namespace Octopus.Tentacle.Tests.Configuration
             return new ApplicationInstanceSelector(ApplicationName.Tentacle,
                 applicationInstanceStore,
                 instanceRequest ?? new StartUpDynamicInstanceRequest(),
-                additionalConfigurations ?? new IApplicationConfigurationContributor[0],
-                new Lazy<ConfigMapKeyValueStore>(() => new ConfigMapKeyValueStore(Substitute.For<IKubernetesConfigMapService>(), Substitute.For<IKubernetesMachineKeyEncryptor>())),
+                additionalConfigurations ?? Array.Empty<IApplicationConfigurationContributor>(),
+                new Lazy<ConfigMapKeyValueStore>(() => new ConfigMapKeyValueStore( Substitute.For<IKubernetesConfiguration>(),Substitute.For<IKubernetesConfigMapService>(), Substitute.For<IKubernetesMachineKeyEncryptor>())),
                 octopusFileSystem,
-                log);
+                log,
+                Substitute.For<IKubernetesAgentDetection>());
         }
     }
 }

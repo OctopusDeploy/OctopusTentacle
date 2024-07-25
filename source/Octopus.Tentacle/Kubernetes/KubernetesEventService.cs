@@ -11,22 +11,23 @@ namespace Octopus.Tentacle.Kubernetes
 {
     public interface IKubernetesEventService
     {
-        Task<Corev1EventList?> FetchAllEventsAsync(string kubernetesNamespace, CancellationToken cancellationToken);
+        Task<Corev1EventList?> FetchAllEventsAsync(CancellationToken cancellationToken);
     }
     
     public class KubernetesEventService : KubernetesService, IKubernetesEventService
     {
-        public KubernetesEventService(IKubernetesClientConfigProvider configProvider, ISystemLog log) : base(configProvider, log)
+        public KubernetesEventService(IKubernetesClientConfigProvider configProvider,IKubernetesConfiguration kubernetesConfiguration,  ISystemLog log) 
+            : base(configProvider, kubernetesConfiguration,log)
         {
         }
 
-        public async Task<Corev1EventList?> FetchAllEventsAsync(string kubernetesNamespace, CancellationToken cancellationToken)
+        public async Task<Corev1EventList?> FetchAllEventsAsync(CancellationToken cancellationToken)
         {
             return await RetryPolicy.ExecuteAsync(async () =>
             { 
                 try
                 {
-                    return await Client.CoreV1.ListNamespacedEventAsync(kubernetesNamespace, cancellationToken: cancellationToken);
+                    return await Client.CoreV1.ListNamespacedEventAsync(Namespace, cancellationToken: cancellationToken);
                 }
                 catch (HttpOperationException opException)
                     when (opException.Response.StatusCode == HttpStatusCode.NotFound)

@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Threading;
 using k8s.Models;
 using Newtonsoft.Json;
-using Octopus.Tentacle.Kubernetes;
+using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Crypto;
+using Octopus.Tentacle.Configuration.Instances;
 
-namespace Octopus.Tentacle.Configuration.Instances
+namespace Octopus.Tentacle.Kubernetes.Configuration
 {
     class ConfigMapKeyValueStore : IWritableKeyValueStore, IAggregatableKeyValueStore
     {
-
         readonly IKubernetesConfigMapService configMapService;
         readonly IKubernetesMachineKeyEncryptor encryptor;
         const string Name = ConfigMapNames.TentacleConfig;
@@ -18,12 +18,12 @@ namespace Octopus.Tentacle.Configuration.Instances
         readonly Lazy<V1ConfigMap> configMap;
         IDictionary<string, string> ConfigMapData => configMap.Value.Data ??= new Dictionary<string, string>();
 
-        public ConfigMapKeyValueStore(IKubernetesConfigMapService configMapService, IKubernetesMachineKeyEncryptor encryptor)
+        public ConfigMapKeyValueStore(IKubernetesConfiguration kubernetesConfiguration, IKubernetesConfigMapService configMapService, IKubernetesMachineKeyEncryptor encryptor)
         {
             this.configMapService = configMapService;
             this.encryptor = encryptor;
             configMap = new Lazy<V1ConfigMap>(() => configMapService.TryGet(Name, CancellationToken.None).GetAwaiter().GetResult()
-                ?? throw new InvalidOperationException($"Unable to retrieve Tentacle Configuration from config map for namespace {KubernetesConfig.Namespace}"));
+                ?? throw new InvalidOperationException($"Unable to retrieve Tentacle Configuration from config map for namespace {kubernetesConfiguration.Namespace}"));
         }
 
         public string? Get(string name, ProtectionLevel protectionLevel = ProtectionLevel.None)

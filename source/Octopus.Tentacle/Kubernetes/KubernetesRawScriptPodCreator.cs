@@ -19,6 +19,7 @@ namespace Octopus.Tentacle.Kubernetes
         readonly IKubernetesPodContainerResolver containerResolver;
 
         public KubernetesRawScriptPodCreator(
+            IKubernetesConfiguration kubernetesConfiguration,
             IKubernetesPodService podService,
             IKubernetesPodMonitor podMonitor,
             IKubernetesSecretService secretService,
@@ -28,7 +29,7 @@ namespace Octopus.Tentacle.Kubernetes
             ITentacleScriptLogProvider scriptLogProvider,
             IHomeConfiguration homeConfiguration,
             KubernetesPhysicalFileSystem kubernetesPhysicalFileSystem)
-            : base(podService, podMonitor, secretService, containerResolver, appInstanceSelector, log, scriptLogProvider, homeConfiguration, kubernetesPhysicalFileSystem)
+            : base(kubernetesConfiguration, podService, podMonitor, secretService, containerResolver, appInstanceSelector, log, scriptLogProvider, homeConfiguration, kubernetesPhysicalFileSystem)
         {
             this.containerResolver = containerResolver;
         }
@@ -76,7 +77,7 @@ namespace Octopus.Tentacle.Kubernetes
                     Name = "init-nfs-volume",
                     PersistentVolumeClaim = new V1PersistentVolumeClaimVolumeSource
                     {
-                        ClaimName = KubernetesConfig.PodVolumeClaimName
+                        ClaimName = KubernetesConfiguration.PodVolumeClaimName
                     }
                 }
             };
