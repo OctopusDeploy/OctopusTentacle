@@ -29,6 +29,8 @@ public abstract class KubernetesAgentIntegrationTest
     
     protected KubeCtlTool KubeCtl { get; private set; }
 
+    protected IDictionary<string, string>? CustomHelmValues = new Dictionary<string, string>();
+
     string agentThumbprint;
 
     [OneTimeSetUp]
@@ -51,7 +53,7 @@ public abstract class KubernetesAgentIntegrationTest
         //create a new server halibut runtime
         var listeningPort = BuildServerHalibutRuntimeAndListen();
 
-        agentThumbprint = await kubernetesAgentInstaller.InstallAgent(listeningPort, KubernetesTestsGlobalContext.Instance.TentacleImageAndTag);
+        agentThumbprint = await kubernetesAgentInstaller.InstallAgent(listeningPort, KubernetesTestsGlobalContext.Instance.TentacleImageAndTag, CustomHelmValues);
 
         //trust the generated cert thumbprint
         ServerHalibutRuntime.Trust(agentThumbprint);
