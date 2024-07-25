@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using Autofac;
 using Octopus.Tentacle.Communications;
+using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Packages;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Util;
@@ -27,7 +28,7 @@ namespace Octopus.Tentacle.Services
             RegisterHalibutServices<ServiceAttribute>(builder, allTypes);
 
             //only register kubernetes services when
-            if (PlatformDetection.Kubernetes.IsRunningAsKubernetesAgent)
+            if (KubernetesAgentDetection.IsRunningAsKubernetesAgent)
             {
                 RegisterHalibutServices<KubernetesServiceAttribute>(builder, allTypes);
             }

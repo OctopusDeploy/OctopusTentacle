@@ -11,7 +11,6 @@ namespace Octopus.Tentacle.Kubernetes
         IEnumerable<string?> ScriptPodImagePullSecretNames { get;  }
         string ScriptPodVolumeClaimName { get; }
         string? ScriptPodResourceJson { get;  }
-        string ScriptPodResourceJsonVariableName { get;  }
         string? NfsWatchdogImage { get;  }
         string HelmReleaseName { get; }
         string HelmChartVersion { get; }    

@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
+using NSubstitute;
 using NUnit.Framework;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
@@ -17,7 +18,10 @@ namespace Octopus.Tentacle.Tests.Capabilities
         [Test]
         public async Task CapabilitiesAreReturned()
         {
-            var capabilities = (await new CapabilitiesServiceV2()
+            var k8sDetection = Substitute.For<IKubernetesAgentDetection>();
+            k8sDetection.IsRunningAsKubernetesAgent.Returns(false);
+            
+            var capabilities = (await new CapabilitiesServiceV2(k8sDetection)
                 .GetCapabilitiesAsync(CancellationToken.None))
                 .SupportedCapabilities;
 
@@ -30,9 +34,10 @@ namespace Octopus.Tentacle.Tests.Capabilities
         [Test]
         public async Task OnlyKubernetesScriptServicesAreReturnedWhenRunningAsKubernetesAgent()
         {
-            Environment.SetEnvironmentVariable(KubernetesConfig.NamespaceVariableName, "ABC");
+            var k8sDetection = Substitute.For<IKubernetesAgentDetection>();
+            k8sDetection.IsRunningAsKubernetesAgent.Returns(true);
 
-            var capabilities = (await new CapabilitiesServiceV2()
+            var capabilities = (await new CapabilitiesServiceV2(k8sDetection)
                     .GetCapabilitiesAsync(CancellationToken.None))
                 .SupportedCapabilities;
 
@@ -40,8 +45,6 @@ namespace Octopus.Tentacle.Tests.Capabilities
             capabilities.Count.Should().Be(3);
 
             capabilities.Should().NotContainMatch("IScriptService*");
-
-            Environment.SetEnvironmentVariable(KubernetesConfig.NamespaceVariableName, null);
         }
     }
 }

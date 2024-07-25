@@ -11,6 +11,7 @@ namespace Octopus.Tentacle.Configuration.Instances
         readonly IOctopusFileSystem fileSystem;
         readonly ISystemLog log;
         readonly IApplicationInstanceStore instanceStore;
+        readonly IKubernetesAgentDetection kubernetesAgentDetection;
         readonly Lazy<IWritableHomeConfiguration> homeConfiguration;
         readonly ApplicationName applicationName;
         readonly StartUpInstanceRequest startUpInstanceRequest;
@@ -21,6 +22,7 @@ namespace Octopus.Tentacle.Configuration.Instances
             IOctopusFileSystem fileSystem,
             ISystemLog log,
             IApplicationInstanceStore instanceStore,
+            IKubernetesAgentDetection kubernetesAgentDetection,
             Lazy<IWritableHomeConfiguration> homeConfiguration)
         {
             this.applicationName = applicationName;
@@ -28,6 +30,7 @@ namespace Octopus.Tentacle.Configuration.Instances
             this.fileSystem = fileSystem;
             this.log = log;
             this.instanceStore = instanceStore;
+            this.kubernetesAgentDetection = kubernetesAgentDetection;
             this.homeConfiguration = homeConfiguration;
         }
 
@@ -68,10 +71,13 @@ namespace Octopus.Tentacle.Configuration.Instances
         void EnsureConfigurationFileExists(string configurationFile, string homeDirectory)
         {
             //Skip this step if we're running on Kubernetes
-            if (PlatformDetection.Kubernetes.IsRunningAsKubernetesAgent) return;
+            if (kubernetesAgentDetection.IsRunningAsKubernetesAgent)
+            {
+                return;
+            }
 
             // Ensure we can write configuration file
-            string configurationDirectory = Path.GetDirectoryName(configurationFile) ?? homeDirectory;
+            var configurationDirectory = Path.GetDirectoryName(configurationFile) ?? homeDirectory;
             fileSystem.EnsureDirectoryExists(configurationDirectory);
             if (!fileSystem.FileExists(configurationFile))
             {
@@ -87,9 +93,7 @@ namespace Octopus.Tentacle.Configuration.Instances
         (string ConfigurationFilePath, string HomeDirectory) ValidateConfigDirectory(string? configurationFile, string? homeDirectory)
         {
             // If home directory is not provided, we should try use the config file path if provided, otherwise fallback to cwd
-            homeDirectory ??= (string.IsNullOrEmpty(configurationFile) ?
-                "." :
-                Path.GetDirectoryName(fileSystem.GetFullPath(configurationFile!)) ?? ".");
+            homeDirectory ??= (string.IsNullOrEmpty(configurationFile) ? "." : Path.GetDirectoryName(fileSystem.GetFullPath(configurationFile!)) ?? ".");
 
             // Current "Indexed" installs require configuration file to be provided.
             // We can therefore assume that if its missing, it will end up being created in the cwd

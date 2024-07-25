@@ -279,12 +279,12 @@ namespace Octopus.Tentacle.Kubernetes
                 VolumeMounts = new List<V1VolumeMount> { new(homeDir, "tentacle-home") },
                 Env = new List<V1EnvVar>
                 {
-                    new(EnvironmentKubernetesConfiguration.NamespaceVariableName, KubernetesConfiguration.Namespace),
-                    new(EnvironmentKubernetesConfiguration.HelmReleaseNameVariableName, KubernetesConfiguration.HelmReleaseName),
-                    new(EnvironmentKubernetesConfiguration.HelmChartVersionVariableName, KubernetesConfiguration.HelmChartVersion),
-                    new(EnvironmentKubernetesConfiguration.ServerCommsAddressesVariableName, string.Join(",", KubernetesConfiguration.ServerCommsAddresses)),
-                    new(EnvironmentKubernetesConfiguration.PersistentVolumeFreeBytesVariableName, spaceInformation?.freeSpaceBytes.ToString()),
-                    new(EnvironmentKubernetesConfiguration.PersistentVolumeSizeBytesVariableName, spaceInformation?.totalSpaceBytes.ToString()),
+                    new(KubernetesEnvironmentVariableNames.Namespace, KubernetesConfiguration.Namespace),
+                    new(KubernetesEnvironmentVariableNames.HelmReleaseName, KubernetesConfiguration.HelmReleaseName),
+                    new(KubernetesEnvironmentVariableNames.HelmChartVersion, KubernetesConfiguration.HelmChartVersion),
+                    new(KubernetesEnvironmentVariableNames.ServerCommsAddresses, string.Join(",", KubernetesConfiguration.ServerCommsAddresses)),
+                    new(KubernetesEnvironmentVariableNames.PersistentVolumeFreeBytes, spaceInformation?.freeSpaceBytes.ToString()),
+                    new(KubernetesEnvironmentVariableNames.PersistentVolumeSizeBytes, spaceInformation?.totalSpaceBytes.ToString()),
                     new(EnvironmentVariables.TentacleHome, homeDir),
                     new(EnvironmentVariables.TentacleInstanceName, appInstanceSelector.Current.InstanceName),
                     new(EnvironmentVariables.TentacleVersion, Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleVersion)),
@@ -308,7 +308,7 @@ namespace Octopus.Tentacle.Kubernetes
                 }
                 catch (Exception e)
                 {
-                    var message = $"Failed to deserialize env.{KubernetesConfiguration.ScriptPodResourceJsonVariableName} into valid pod resource requirements.{Environment.NewLine}JSON value: {json}{Environment.NewLine}Using default resource requests for script pod.";
+                    var message = $"Failed to deserialize env.{KubernetesEnvironmentVariableNames.ScriptPodResourceJson} into valid pod resource requirements.{Environment.NewLine}JSON value: {json}{Environment.NewLine}Using default resource requests for script pod.";
                     //if we can't parse the JSON, fall back to the defaults below and warn the user
                     log.WarnFormat(e, message);
                     //write a verbose message to the script log. 

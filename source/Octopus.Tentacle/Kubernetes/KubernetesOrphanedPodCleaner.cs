@@ -25,7 +25,6 @@ namespace Octopus.Tentacle.Kubernetes
         readonly IScriptPodSinceTimeStore scriptPodSinceTimeStore;
         
         readonly TimeSpan initialDelay = TimeSpan.FromMinutes(1);
-        internal TimeSpan CompletedPodConsideredOrphanedAfterTimeSpan = kubernetesConfiguration.PodsConsideredOrphanedAfterTimeSpan;
 
         public KubernetesOrphanedPodCleaner(IKubernetesConfiguration kubernetesConfiguration, IKubernetesPodStatusProvider podStatusProvider, IKubernetesPodService podService, ISystemLog log, IClock clock,
             ITentacleScriptLogProvider scriptLogProvider, IScriptPodSinceTimeStore scriptPodSinceTimeStore)
@@ -65,16 +64,16 @@ namespace Octopus.Tentacle.Kubernetes
                 log.Verbose("OrphanedPodCleaner: Checking for orphaned pods");
                 await CheckForOrphanedPods(cancellationToken);
 
-                var nextCheckTime = clock.GetUtcTime() + CompletedPodConsideredOrphanedAfterTimeSpan;
+                var nextCheckTime = clock.GetUtcTime() + kubernetesConfiguration.PodsConsideredOrphanedAfterTimeSpan;
                 log.Verbose($"OrphanedPodCleaner: Next check will happen at {nextCheckTime:O}");
 
-                await Task.Delay(CompletedPodConsideredOrphanedAfterTimeSpan, cancellationToken);
+                await Task.Delay(kubernetesConfiguration.PodsConsideredOrphanedAfterTimeSpan, cancellationToken);
             }
         }
 
         internal async Task CheckForOrphanedPods(CancellationToken cancellationToken)
         {
-            var cutOffDateTime = clock.GetUtcTime() - CompletedPodConsideredOrphanedAfterTimeSpan;
+            var cutOffDateTime = clock.GetUtcTime() - kubernetesConfiguration.PodsConsideredOrphanedAfterTimeSpan;
             var allPods = podStatusProvider.GetAllTrackedScriptPods();
             var orphanedPods = allPods.Where(p =>
             {
