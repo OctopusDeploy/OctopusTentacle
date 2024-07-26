@@ -137,7 +137,7 @@ public class KubernetesAgentInstaller
 
     static string GetChartVersion()
     {
-        var customHelmChartVersion = Environment.GetEnvironmentVariable("KubernetesIntegrationTests_HelmChartVersion");
+        var customHelmChartVersion = Environment.GetEnvironmentVariable("KubernetesIntegrationTests_HelmChartVersion") ?? KubernetesTestsGlobalContext.Instance.HelmChartVersionOverride;
         
         return !string.IsNullOrWhiteSpace(customHelmChartVersion) ? customHelmChartVersion : "1.*.*";
     }
