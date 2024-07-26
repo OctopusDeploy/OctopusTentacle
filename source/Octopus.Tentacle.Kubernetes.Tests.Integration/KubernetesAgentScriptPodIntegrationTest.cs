@@ -32,14 +32,12 @@ public static class KubernetesAgentScriptPodIntegrationTest
             var command = builder.Build();
 
             //Act
-            var logger = new InMemoryLog();
-            await TentacleClient.ExecuteScript(command, StatusReceived, ScriptCompleted, logger, CancellationToken);
+            await TentacleClient.ExecuteScript(command, StatusReceived, ScriptCompleted, new InMemoryLog(), CancellationToken);
 
             return logs;
 
             void StatusReceived(ScriptExecutionStatus status)
             {
-                status.Logs.ForEach(l => System.Console.WriteLine($"{l.Source} - {l.Text}"));
                 logs.AddRange(status.Logs);
             }
 
