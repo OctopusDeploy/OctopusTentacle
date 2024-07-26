@@ -21,7 +21,6 @@ public static class KubernetesAgentScriptPodIntegrationTest
         {
             // Arrange
             var logs = new List<ProcessOutput>();
-            var scriptCompleted = false;
 
             var builder = new ExecuteKubernetesScriptCommandBuilder(LoggingUtils.CurrentTestHash())
                 .WithScriptBody(script => script
@@ -42,7 +41,6 @@ public static class KubernetesAgentScriptPodIntegrationTest
 
             Task ScriptCompleted(CancellationToken ct)
             {
-                scriptCompleted = true;
                 return Task.CompletedTask;
             }
         }
@@ -60,7 +58,7 @@ public static class KubernetesAgentScriptPodIntegrationTest
         public async Task ScriptPodSpawnedWithWorkerTools()
         {
             var logs = await ExecuteBasicScriptOperation();
-            logs.Should().Contain(po => po.Source == ProcessOutputSource.Debug && po.Text == "octopusdeploy/worker-tools");
+            logs.Should().Contain(po => po.Source == ProcessOutputSource.Debug && po.Text.Contains("Image: 'octopusdeploy/worker-tools:ubuntu.22.04'"));
         }
     }
 
@@ -76,7 +74,7 @@ public static class KubernetesAgentScriptPodIntegrationTest
         public async Task ScriptPodSpawnedWithWorkerTools()
         {
             var logs = await ExecuteBasicScriptOperation();
-            logs.Should().Contain(po => po.Source == ProcessOutputSource.Debug && po.Text == "octopusdeploy/kubernetes-agent-tools-base");
+            logs.Should().Contain(po => po.Source == ProcessOutputSource.Debug && po.Text.Contains("octopusdeploy/kubernetes-agent-tools-base"));
         }
     }
 
@@ -94,7 +92,7 @@ public static class KubernetesAgentScriptPodIntegrationTest
         public async Task ScriptPodSpawnedWithImageDefinedInHelm()
         {
             var logs = await ExecuteBasicScriptOperation();
-            logs.Should().Contain(po => po.Source == ProcessOutputSource.Debug && po.Text == ReplacementImageName);
+            logs.Should().Contain(po => po.Source == ProcessOutputSource.Debug && po.Text.Contains(ReplacementImageName));
         }
     }
 }
