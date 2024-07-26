@@ -31,7 +31,7 @@ public class KubernetesClusterInstaller
         this.kubeCtlPath = kubeCtlPath;
         this.logger = logger;
 
-        clusterName = $"tentaclient-{DateTime.Now:yyyyMMddhhmmss}";
+        clusterName = $"tentacleint-{DateTime.Now:yyyyMMddhhmmss}";
         kubeConfigName = $"{clusterName}.config";
     }
 
