@@ -15,6 +15,7 @@ public static class KubernetesAgentScriptPodIntegrationTest
         protected BaseScriptPodImageIntegrationTest()
         {
             KubernetesTestsGlobalContext.Instance.TentacleImageAndTag = "docker.packages.octopushq.com/octopusdeploy/kubernetes-agent-tentacle:8.1.1949-pull-980";
+            KubernetesTestsGlobalContext.Instance.HelmChartVersionOverride = "2.0.0-alpha.3-tmm-define-pod-image-20240725060901";
         }
 
         protected async Task<List<ProcessOutput>> ExecuteBasicScriptOperation()
