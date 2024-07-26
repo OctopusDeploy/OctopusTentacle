@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Microsoft.VisualStudio.TestPlatform.Utilities;
 using Octopus.Tentacle.Client.Scripts.Models;
 using Octopus.Tentacle.Client.Scripts.Models.Builders;
 using Octopus.Tentacle.CommonTestUtils;
@@ -31,12 +32,14 @@ public static class KubernetesAgentScriptPodIntegrationTest
             var command = builder.Build();
 
             //Act
-            await TentacleClient.ExecuteScript(command, StatusReceived, ScriptCompleted, new InMemoryLog(), CancellationToken);
+            var logger = new InMemoryLog();
+            await TentacleClient.ExecuteScript(command, StatusReceived, ScriptCompleted, logger, CancellationToken);
 
             return logs;
 
             void StatusReceived(ScriptExecutionStatus status)
             {
+                status.Logs.ForEach(l => System.Console.WriteLine($"{l.Source} - {l.Text}"));
                 logs.AddRange(status.Logs);
             }
 
@@ -87,13 +90,15 @@ public static class KubernetesAgentScriptPodIntegrationTest
         {
             CustomHelmValues.Add("agent.worker.enabled", "true");
             CustomHelmValues.Add("scriptPods.worker.image.repository", ReplacementImageName);
+            CustomHelmValues.Add("scriptPods.worker.image.tag", "null"); //this unsets the tag
+            
         }
 
         [Test]
         public async Task ScriptPodSpawnedWithImageDefinedInHelm()
         {
             var logs = await ExecuteBasicScriptOperation();
-            logs.Should().Contain(po => po.Source == ProcessOutputSource.Debug && po.Text.Contains(ReplacementImageName));
+            logs.Should().Contain(po => po.Source == ProcessOutputSource.Debug && po.Text.Contains($"{ReplacementImageName}:latest"));
         }
     }
 }
