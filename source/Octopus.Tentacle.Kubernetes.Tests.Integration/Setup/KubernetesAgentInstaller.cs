@@ -44,8 +44,7 @@ public class KubernetesAgentInstaller
     {
         var valuesFilePath = await WriteValuesFile(listeningPort);
         var arguments = BuildAgentInstallArguments(valuesFilePath, tentacleImageAndTag);
-        arguments += " ";
-        arguments += ToHelmCommandArgs(customValues);
+        arguments  = $"{arguments} {ToHelmCommandArgs(customValues)}";
 
         var sw = new Stopwatch();
         sw.Restart();
