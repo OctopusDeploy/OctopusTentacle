@@ -29,7 +29,7 @@ public abstract class KubernetesAgentIntegrationTest
     
     protected KubeCtlTool KubeCtl { get; private set; }
 
-    protected IDictionary<string, string>? CustomHelmValues = new Dictionary<string, string>();
+    protected readonly IDictionary<string, string> CustomHelmValues = new Dictionary<string, string>();
 
     string agentThumbprint;
 

@@ -1,5 +1,4 @@
 using FluentAssertions;
-using Octopus.Tentacle.Client;
 using Octopus.Tentacle.Client.Scripts.Models;
 using Octopus.Tentacle.Client.Scripts.Models.Builders;
 using Octopus.Tentacle.CommonTestUtils;
@@ -9,11 +8,16 @@ using Octopus.Tentacle.Kubernetes.Tests.Integration.Util;
 
 namespace Octopus.Tentacle.Kubernetes.Tests.Integration;
 
-public static class KubernetesAgentWorkerIntegrationTest
+public static class KubernetesAgentScriptPodIntegrationTest
 {
     public abstract class BaseScriptPodImageIntegrationTest : KubernetesAgentIntegrationTest
     {
-        public async Task<List<ProcessOutput>> ExecuteBasicScriptOperation()
+        protected BaseScriptPodImageIntegrationTest()
+        {
+            KubernetesTestsGlobalContext.Instance.TentacleImageAndTag = "docker.packages.octopushq.com/octopusdeploy/kubernetes-agent-tentacle:8.1.1949-pull-980";
+        }
+
+        protected async Task<List<ProcessOutput>> ExecuteBasicScriptOperation()
         {
             // Arrange
             var logs = new List<ProcessOutput>();
@@ -23,14 +27,14 @@ public static class KubernetesAgentWorkerIntegrationTest
                 .WithScriptBody(script => script
                     .Print("Hello World")
                     .PrintNTimesWithDelay("Yep", 30, TimeSpan.FromMilliseconds(100)));
-            
+
             var command = builder.Build();
 
             //Act
             await TentacleClient.ExecuteScript(command, StatusReceived, ScriptCompleted, new InMemoryLog(), CancellationToken);
 
             return logs;
-            
+
             void StatusReceived(ScriptExecutionStatus status)
             {
                 logs.AddRange(status.Logs);
@@ -43,7 +47,7 @@ public static class KubernetesAgentWorkerIntegrationTest
             }
         }
     }
-    
+
     public class ByDefaultUsesWorkerToolsImage : BaseScriptPodImageIntegrationTest
     {
         public ByDefaultUsesWorkerToolsImage()
@@ -67,7 +71,7 @@ public static class KubernetesAgentWorkerIntegrationTest
             CustomHelmValues.Add("agent.worker.enabled", "false");
             CustomHelmValues.Add("agent.deploymentTarget.enabled", "true");
         }
-        
+
         [Test]
         public async Task ScriptPodSpawnedWithWorkerTools()
         {
@@ -79,12 +83,13 @@ public static class KubernetesAgentWorkerIntegrationTest
     public class WorkerImageCanBeOverridenViaHelmValues : BaseScriptPodImageIntegrationTest
     {
         readonly string ReplacementImageName = "nginx";
+
         public WorkerImageCanBeOverridenViaHelmValues()
         {
             CustomHelmValues.Add("agent.worker.enabled", "true");
             CustomHelmValues.Add("scriptPods.worker.image.repository", ReplacementImageName);
         }
-        
+
         [Test]
         public async Task ScriptPodSpawnedWithImageDefinedInHelm()
         {
