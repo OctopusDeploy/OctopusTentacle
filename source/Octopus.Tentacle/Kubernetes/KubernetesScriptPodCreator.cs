@@ -266,6 +266,7 @@ namespace Octopus.Tentacle.Kubernetes
                 Name = podName,
                 Image = command.PodImageConfiguration?.Image ?? await containerResolver.GetContainerImageForCluster(),
                 Command = new List<string> { $"{homeDir}/Work/{command.ScriptTicket.TaskId}/bootstrapRunner" },
+                ImagePullPolicy = KubernetesConfig.ScriptPodPullPolicy,
                 Args = new List<string>
                     {
                         Path.Combine(homeDir, workspacePath),

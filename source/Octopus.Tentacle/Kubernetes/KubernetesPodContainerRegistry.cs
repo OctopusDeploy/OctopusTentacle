@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Kubernetes
 {
@@ -29,6 +30,18 @@ namespace Octopus.Tentacle.Kubernetes
         };
 
         public async Task<string> GetContainerImageForCluster()
+        {
+            var imageRepository = KubernetesConfig.ScriptPodContainerImage; 
+            if (imageRepository.IsNullOrEmpty())
+            {
+                return await GetKubernetesSpecificContainer();
+            }
+
+            var imageTag = KubernetesConfig.ScriptPodContainerImageTag; 
+            return $"{imageRepository}:{imageTag}";
+        }
+
+        async Task<string> GetKubernetesSpecificContainer()
         {
             var clusterVersion = await clusterService.GetClusterVersion();
 
