@@ -201,15 +201,8 @@ namespace Octopus.Tentacle.Kubernetes
                     ServiceAccountName = serviceAccountName,
                     RestartPolicy = "Never",
                     Volumes = CreateVolumes(command),
-                    //currently we only support running on linux/arm64 and linux/amd64 nodes
-                    Affinity = new V1Affinity(new V1NodeAffinity(requiredDuringSchedulingIgnoredDuringExecution: new V1NodeSelector(new List<V1NodeSelectorTerm>
-                    {
-                        new(matchExpressions: new List<V1NodeSelectorRequirement>
-                        {
-                            new("kubernetes.io/os", "In", new List<string> { "linux" }),
-                            new("kubernetes.io/arch", "In", new List<string> { "arm64", "amd64" })
-                        })
-                    })))
+                    Affinity = ParseScriptPodAffinity(tentacleScriptLog),
+                    Tolerations = ParseScriptPodTolerations(tentacleScriptLog)
                 }
             };
 
@@ -322,6 +315,61 @@ namespace Octopus.Tentacle.Kubernetes
                     ["memory"] = new("100Mi")
                 }
             };
+        }
+
+        V1Affinity ParseScriptPodAffinity(InMemoryTentacleScriptLog tentacleScriptLog)
+        {
+            var json = KubernetesConfig.PodAffinityJson;
+
+            if (!string.IsNullOrWhiteSpace(json))
+            {
+                try
+                {
+                    return KubernetesJson.Deserialize<V1Affinity>(json);
+                }
+                catch (Exception e)
+                {
+                    var message = $"Failed to deserialize env.{KubernetesConfig.PodAffinityJsonVariableName} into valid pod affinity.{Environment.NewLine}JSON value: {json}{Environment.NewLine}Using default affinity for script pod.";
+                    //if we can't parse the JSON, fall back to the defaults below and warn the user
+                    log.WarnFormat(e, message);
+                    //write a verbose message to the script log. 
+                    tentacleScriptLog.Verbose(message);
+                }
+            }
+
+            //we default to running on linux/arm64 and linux/amd64 nodes
+            return new V1Affinity(new V1NodeAffinity(requiredDuringSchedulingIgnoredDuringExecution: new V1NodeSelector(new List<V1NodeSelectorTerm>
+            {
+                new(matchExpressions: new List<V1NodeSelectorRequirement>
+                {
+                    new("kubernetes.io/os", "In", new List<string> { "linux" }),
+                    new("kubernetes.io/arch", "In", new List<string> { "arm64", "amd64" })
+                })
+            })));
+        }
+
+        List<V1Toleration> ParseScriptPodTolerations(InMemoryTentacleScriptLog tentacleScriptLog)
+        {
+            var json = KubernetesConfig.PodTolerationsJson;
+
+            if (!string.IsNullOrWhiteSpace(json))
+            {
+                try
+                {
+                    return KubernetesJson.Deserialize<List<V1Toleration>>(json);
+                }
+                catch (Exception e)
+                {
+                    var message = $"Failed to deserialize env.{KubernetesConfig.PodTolerationsJson} into valid pod tolerations.{Environment.NewLine}JSON value: {json}{Environment.NewLine}Using no tolerations for script pod.";
+                    //if we can't parse the JSON, fall back to the defaults below and warn the user
+                    log.WarnFormat(e, message);
+                    //write a verbose message to the script log. 
+                    tentacleScriptLog.Verbose(message);
+                }
+            }
+            
+            
+            return new List<V1Toleration>();
         }
 
         static V1Container? CreateWatchdogContainer(string homeDir)
