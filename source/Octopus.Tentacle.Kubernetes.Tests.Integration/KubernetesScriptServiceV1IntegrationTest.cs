@@ -14,10 +14,16 @@ using Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators.Proxies;
 
 namespace Octopus.Tentacle.Kubernetes.Tests.Integration;
 
-[TestFixture]
+[HelmVersion1TestFixture]
+[HelmVersion2AlphaTestFixture]
 public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrationTest
 {
     IRecordedMethodUsages recordedMethodUsages = null!;
+
+    public KubernetesScriptServiceV1IntegrationTest(string? helmChartVersion)
+        : base(helmChartVersion)
+    {
+    }
 
     protected override TentacleServiceDecoratorBuilder ConfigureTentacleServiceDecoratorBuilder(TentacleServiceDecoratorBuilder builder)
     {
@@ -78,7 +84,7 @@ public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrati
             return Task.CompletedTask;
         }
     }
-    
+
     [Test]
     [TestCase(ScriptType.Normal)]
     [TestCase(ScriptType.Raw)]
@@ -122,7 +128,7 @@ public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrati
             return Task.CompletedTask;
         }
     }
-    
+
     [Test]
     [TestCase(ScriptType.Normal)]
     [TestCase(ScriptType.Raw)]

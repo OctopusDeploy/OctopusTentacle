@@ -19,17 +19,19 @@ public class KubernetesAgentInstaller
     readonly string kubeCtlExePath;
     readonly TemporaryDirectory temporaryDirectory;
     readonly ILogger logger;
+    readonly string helmChartVersion;
     readonly string kubeConfigPath;
 
     bool isAgentInstalled;
 
-    public KubernetesAgentInstaller(TemporaryDirectory temporaryDirectory, string helmExePath, string kubeCtlExePath, string kubeConfigPath, ILogger logger)
+    public KubernetesAgentInstaller(TemporaryDirectory temporaryDirectory, string helmExePath, string kubeCtlExePath, string kubeConfigPath, ILogger logger, string? helmChartVersion)
     {
         this.temporaryDirectory = temporaryDirectory;
         this.helmExePath = helmExePath;
         this.kubeCtlExePath = kubeCtlExePath;
         this.kubeConfigPath = kubeConfigPath;
         this.logger = logger;
+        this.helmChartVersion = helmChartVersion ?? "1.*.*";
 
         AgentName = Guid.NewGuid().ToString("N");
     }
@@ -128,11 +130,13 @@ public class KubernetesAgentInstaller
         return string.Join(" ", args.WhereNotNull());
     }
 
-    static string GetChartVersion()
+    string GetChartVersion()
     {
         var customHelmChartVersion = Environment.GetEnvironmentVariable("KubernetesIntegrationTests_HelmChartVersion");
-        
-        return !string.IsNullOrWhiteSpace(customHelmChartVersion) ? customHelmChartVersion : "1.*.*";
+
+        return !string.IsNullOrWhiteSpace(customHelmChartVersion)
+            ? customHelmChartVersion
+            : helmChartVersion;
     }
 
     static string? GetImageAndRepository(string? tentacleImageAndTag)
@@ -161,7 +165,7 @@ public class KubernetesAgentInstaller
                 .WriteTo.StringBuilder(sb)
                 .MinimumLevel.Debug()
                 .CreateLogger();
-            
+
             var exitCode = SilentProcessRunner.ExecuteCommand(
                 kubeCtlExePath,
                 //get the generated thumbprint from the config map
