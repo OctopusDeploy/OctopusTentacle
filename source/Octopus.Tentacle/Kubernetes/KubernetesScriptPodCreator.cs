@@ -360,7 +360,7 @@ namespace Octopus.Tentacle.Kubernetes
                 }
                 catch (Exception e)
                 {
-                    var message = $"Failed to deserialize env.{KubernetesConfig.PodTolerationsJson} into valid pod tolerations.{Environment.NewLine}JSON value: {json}{Environment.NewLine}Using no tolerations for script pod.";
+                    var message = $"Failed to deserialize env.{KubernetesConfig.PodTolerationsJsonVariableName} into valid pod tolerations.{Environment.NewLine}JSON value: {json}{Environment.NewLine}Using no tolerations for script pod.";
                     //if we can't parse the JSON, fall back to the defaults below and warn the user
                     log.WarnFormat(e, message);
                     //write a verbose message to the script log. 
