@@ -57,6 +57,9 @@ namespace Octopus.Tentacle.Kubernetes
         public static readonly string PodTolerationsJsonVariableName = $"{EnvVarPrefix}__PODTOLERATIONSJSON";
         public static string? PodTolerationsJson => Environment.GetEnvironmentVariable(PodTolerationsJsonVariableName);
 
+        public static readonly string PodSecurityContextJsonVariableName = $"{EnvVarPrefix}__PODSECURITYCONTEXTJSON";
+        public static string? PodSecurityContextJson => Environment.GetEnvironmentVariable(PodSecurityContextJsonVariableName);
+        
         public static string MetricsEnableVariableName => $"{EnvVarPrefix}__ENABLEMETRICSCAPTURE";
 
         public static bool MetricsIsEnabled
