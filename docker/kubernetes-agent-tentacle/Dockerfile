@@ -49,8 +49,9 @@ RUN chgrp -R 0 /opt /usr /.dotnet && \
 
 # The same as above, but we shouldn't recursively own /etc, as it would add
 # ownership to system files like /etc/passwd
-RUN chgrp 0 /etc && \
-    chmod g=u /etc
+# We own /etc/ssl/certs so we can do a rehash
+RUN chgrp 0 /etc /etc/ssl/certs && \
+    chmod g=u /etc /etc/ssl/certs
 
 ENV BOOTSTRAPRUNNEREXECUTABLEPATH=/bootstrapRunner
 ENV OCTOPUS_RUNNING_IN_CONTAINER=Y
@@ -59,6 +60,7 @@ ENV CustomPublicHostName=""
 ENV ListeningPort=""
 ENV MachinePolicy="Default Machine Policy"
 ENV PublicHostNameConfiguration="ComputerName"
+ENV BearerToken=""
 ENV ServerApiKey=""
 ENV ServerPassword=""
 ENV ServerUsername=""
