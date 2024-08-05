@@ -8,7 +8,7 @@ function install_dotnet {
     chmod +x dotnet-install.sh || exit 1
 
     # Parse the arguments with flags --runtime and --sdk
-    while [ $# -gt 0 ]; do
+    while [ -n "$1" ]; do
         if [ "$1" == "--sdk" ]; then
           echo "Installing dotnet SDK $2"
           ./dotnet-install.sh --channel "$2" --verbose || exit 1
