@@ -5,4 +5,4 @@
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 source $SCRIPT_DIR/dotnet-install.sh
-install_dotnet 6.0
+install_dotnet --runtime 6.0 --sdk 8.0
