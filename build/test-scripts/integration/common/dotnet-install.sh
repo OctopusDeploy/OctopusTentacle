@@ -24,9 +24,6 @@ function install_dotnet {
         shift
     done
 
-    echo "Installing dotnet $1"
-    ./dotnet-install.sh  --channel "$1" --verbose || exit 1
-
     echo "Removing dotnet-install.sh script"
     rm -f dotnet-install.sh || exit 1
 }
