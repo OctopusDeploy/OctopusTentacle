@@ -28,6 +28,11 @@ $env:DOTNET_MULTILEVEL_LOOKUP = 0
 # EXECUTION
 ###########################################################################
 
+# Octopus Modification
+# Avoid issues where LASTEXITCODE does not appear to be set
+$LASTEXITCODE = 0
+# End Octopus Modification
+
 function ExecSafe([scriptblock] $cmd) {
     & $cmd
     if ($LASTEXITCODE) { exit $LASTEXITCODE }
