@@ -16,7 +16,9 @@ namespace Octopus.Tentacle.CommonTestUtils
         static TestCertificates()
         {
             //jump through hoops to find certs because the nunit test runner is messing with directories
+#pragma warning disable CS8604 // Possible null reference argument.
             var directory = Path.Combine(Path.GetDirectoryName(new Uri(typeof(TestCertificates).Assembly.Location).LocalPath), "Certificates");
+#pragma warning restore CS8604 // Possible null reference argument.
 
             TentaclePfxPath = Path.Combine(directory, "Tentacle.pfx");
             Tentacle = new X509Certificate2(TentaclePfxPath);
