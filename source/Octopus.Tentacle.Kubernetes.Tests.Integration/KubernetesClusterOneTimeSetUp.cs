@@ -6,7 +6,7 @@ namespace Octopus.Tentacle.Kubernetes.Tests.Integration;
 [SetUpFixture]
 public class KubernetesClusterOneTimeSetUp
 {
-    KubernetesClusterInstaller installer;
+    KubernetesClusterInstaller? installer;
 
     [OneTimeSetUp]
     public async Task OneTimeSetUp()
@@ -24,6 +24,10 @@ public class KubernetesClusterOneTimeSetUp
 
     string? GetTentacleImageAndTag(string kindExePath)
     {
+        if (installer == null)
+        {
+            throw new InvalidOperationException("Expected installer to be set");
+        }
         //By default, we don't override the values in the helm chart. This is useful if you are just writing new tests and not changing Tentacle code.
         string? imageAndTag = null;
         if (TeamCityDetection.IsRunningInTeamCity())
@@ -48,7 +52,7 @@ public class KubernetesClusterOneTimeSetUp
     [OneTimeTearDown]
     public void OneTimeTearDown()
     {
-        installer.Dispose();
+        installer?.Dispose();
         KubernetesTestsGlobalContext.Instance.Dispose();
     }
 }

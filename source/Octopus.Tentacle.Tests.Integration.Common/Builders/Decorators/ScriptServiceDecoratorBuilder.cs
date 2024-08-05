@@ -30,7 +30,7 @@ namespace Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators
         {
             return DecorateStartScriptWith(async (inner, startScriptCommand, options) =>
             {
-                ScriptTicket response = null;
+                ScriptTicket? response = null;
                 try
                 {
                     response = await inner.StartScriptAsync(startScriptCommand, options);
@@ -74,11 +74,11 @@ namespace Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators
             return AfterGetStatus(async (_, _, _) => await afterGetStatus());
         }
 
-        public ScriptServiceDecoratorBuilder AfterGetStatus(Func<IAsyncClientScriptService, ScriptStatusRequest, ScriptStatusResponse, Task> afterGetStatus)
+        public ScriptServiceDecoratorBuilder AfterGetStatus(Func<IAsyncClientScriptService, ScriptStatusRequest, ScriptStatusResponse?, Task> afterGetStatus)
         {
             return DecorateGetStatusWith(async (inner, scriptStatusRequest, options) =>
             {
-                ScriptStatusResponse response = null;
+                ScriptStatusResponse? response = null;
                 try
                 {
                     response = await inner.GetStatusAsync(scriptStatusRequest, options);

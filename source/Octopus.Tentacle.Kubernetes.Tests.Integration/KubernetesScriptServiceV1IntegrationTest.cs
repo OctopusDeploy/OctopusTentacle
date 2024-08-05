@@ -151,7 +151,7 @@ public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrati
         //wait for the script to be started, then waiting
         await semaphoreSlim.WaitAsync(CancellationToken);
 
-        Logger.Information("Deleting script pod");
+        Logger?.Information("Deleting script pod");
         await KubeCtl.ExecuteNamespacedCommand($"delete pods -l octopus.com/scriptTicketId={command.ScriptTicket.TaskId}");
 
         var result = await scriptTask;
@@ -221,7 +221,7 @@ public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrati
         //wait for the script to be started, then waiting
         await semaphoreSlim.WaitAsync(CancellationToken);
 
-        Logger.Information("Deleting tentacle pod");
+        Logger?.Information("Deleting tentacle pod");
         await KubeCtl.ExecuteNamespacedCommand("delete pods -l app.kubernetes.io/name=octopus-agent");
 
         var result = await scriptTask;
@@ -359,7 +359,7 @@ public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrati
         //wait for the script to be started, then waiting
         await semaphoreSlim.WaitAsync(CancellationToken);
 
-        Logger.Information("Deleting NFS pod");
+        Logger?.Information("Deleting NFS pod");
         await KubeCtl.ExecuteNamespacedCommand("delete pods -l app.kubernetes.io/name=octopus-agent-nfs");
 
         var result = await scriptTask;
@@ -415,7 +415,7 @@ public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrati
         //wait for the script to be started, then waiting
         await semaphoreSlim.WaitAsync(CancellationToken);
 
-        Logger.Information("Deleting NFS pod");
+        Logger?.Information("Deleting NFS pod");
         var deleteResult = await KubeCtl.ExecuteNamespacedCommand("delete pods -l app.kubernetes.io/name=octopus-agent-nfs");
         deleteResult.ExitCode.Should().Be(0);
 
