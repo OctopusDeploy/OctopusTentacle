@@ -106,18 +106,18 @@ public static class Signing
             {
                 try
                 {
-                    var arguments = "sign " +
-                        $"--azure-key-vault-url \"{Build.AzureKeyVaultUrl}\" " +
-                        $"--azure-key-vault-client-id \"{Build.AzureKeyVaultAppId}\" " +
-                        $"--azure-key-vault-tenant-id \"{Build.AzureKeyVaultTenantId}\" " +
-                        $"--azure-key-vault-client-secret \"{Build.AzureKeyVaultAppSecret}\" " +
-                        $"--azure-key-vault-certificate \"{Build.AzureKeyVaultCertificateName}\" " +
-                        "--file-digest sha256 " +
-                        $"--timestamp-rfc3161 \"{timestampUrl}\" ";
+                    var arguments = new Arguments()
+                        .Add("sign")
+                        .Add("--azure-key-vault-url {value}", Build.AzureKeyVaultUrl)
+                        .Add("--azure-key-vault-client-id {value}", Build.AzureKeyVaultAppId)
+                        .Add("--azure-key-vault-tenant-id {value}", Build.AzureKeyVaultTenantId)
+                        .Add("--azure-key-vault-client-secret {value}", Build.AzureKeyVaultAppSecret)
+                        .Add("--azure-key-vault-certificate {value}", Build.AzureKeyVaultCertificateName)
+                        .Add("--file-digest sha256")
+                        .Add("--timestamp-rfc3161 {value}", timestampUrl)
+                        .Add("{value}", files);
 
-                    arguments = files.Aggregate(arguments, (current, file) => current + $"\"{file}\" ");
-
-                    Build.AzureSignTool(arguments);
+                    Build.AzureSignTool(arguments.RenderForExecution());
         
                     Log.Information($"Finished signing {files.Length} files.");
                 }
