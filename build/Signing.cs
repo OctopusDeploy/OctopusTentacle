@@ -23,7 +23,7 @@ public static class Signing
         {
             foreach (var file in files)
             {
-                if (!FileSystemTasks.FileExists(file)) throw new Exception($"File {file} does not exist");
+                if (!file.Exists()) throw new Exception($"File {file} does not exist");
                 var fileInfo = new FileInfo(file);
 
                 if (fileInfo.IsReadOnly)
