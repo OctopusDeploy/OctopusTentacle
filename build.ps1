@@ -66,7 +66,7 @@ else {
 
     # Octopus Modification
     # Install the .NET 6.0 runtime as well
-    ExecSafe { & $DotNetInstallFile -InstallDir $DotNetDirectory -Runtime dotnet -Version 6.0.0 -NoPath }
+    ExecSafe { & $DotNetInstallFile -InstallDir $DotNetDirectory -Runtime dotnet -Channel 6.0 -NoPath }
     #End Octopus Modication
 
     $env:DOTNET_EXE = "$DotNetDirectory\dotnet.exe"
