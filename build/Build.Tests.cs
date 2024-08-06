@@ -28,7 +28,7 @@ partial class Build
 
     [PublicAPI]
     Target TestOsx => _ => _
-        .Executes(() => RunTests(TestFramework, TestRuntime, disableParallel: true));
+        .Executes(() => RunTests(TestFramework, TestRuntime));
 
     [PublicAPI]
     Target TestIntegration => _ => _
@@ -265,7 +265,7 @@ partial class Build
             .Any(r => rights.Any(right => r.FileSystemRights.HasFlag(right)));
     }
     
-    void RunTests(string testFramework, string testRuntime, bool disableParallel = false)
+    void RunTests(string testFramework, string testRuntime)
     {
         Log.Information("Running test for Framework: {TestFramework} and Runtime: {TestRuntime}", testFramework, testRuntime);
 
@@ -291,7 +291,8 @@ partial class Build
                 DotNetTasks.DotNetTest(settings => settings
                     .SetProjectFile(projectPath)
                     .SetFramework(testFramework)
-                    .SetDisableParallel(disableParallel)
+                    .SetBlameHangTimeout("5m")
+                    .SetBlameHangDumpType("none")
                     .SetLoggers("console;verbosity=normal", "teamcity"))
             );
         }
