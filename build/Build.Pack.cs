@@ -520,7 +520,16 @@ partial class Build
             const string description = "The deployment agent that is installed on each machine you plan to deploy to using Octopus.";
             const string author = "Octopus Deploy";
             const string title = "Octopus Tentacle cross platform bundle";
-            OctoCliTool($@"pack --id=Octopus.Tentacle.CrossPlatformBundle --version={FullSemVer} --basePath={workingDirectory} --outFolder={ArtifactsDirectory / "nuget"} --author=""{author}"" --title=""{title}"" --description=""{description}""");
+            var arguments = new Arguments()
+                .Add("pack")
+                .Add("--id={value}", "Octopus.Tentacle.CrossPlatformBundle")
+                .Add("--version={value}", FullSemVer)
+                .Add("--basePath={value}", workingDirectory)
+                .Add("--outFolder={value}", ArtifactsDirectory / "nuget")
+                .Add("--author={value}", author)
+                .Add("--title={value}", title)
+                .Add("--description={value}", description);
+            OctoCliTool(arguments.RenderForExecution());
         });
 
     [PublicAPI]
