@@ -526,9 +526,10 @@ partial class Build
                 .Add("--version={value}", FullSemVer)
                 .Add("--basePath={value}", workingDirectory)
                 .Add("--outFolder={value}", ArtifactsDirectory / "nuget")
-                .Add("--author={value}", author)
-                .Add("--title={value}", title)
-                .Add("--description={value}", description);
+                .Add("{value}", $"--author={author}")
+                .Add("{value}", $"--title={title}")
+                .Add("{value}", $"--description={description}");
+
             OctoCliTool(arguments.RenderForExecution());
         });
 
