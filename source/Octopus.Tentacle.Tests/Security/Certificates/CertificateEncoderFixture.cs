@@ -37,7 +37,7 @@ namespace Octopus.Tentacle.Tests.Security.Certificates
         
         
         [Test]
-        [NotMacTest] // RCP-TODO: Suspect issue on MacOS accessing the certificate store
+        [NotMacTest] // macOS cannot access the Keychain store without a password
         public void WhenGivenABase64StringOfACertificate_ACertificateCanBeCreated()
         {
             // Given

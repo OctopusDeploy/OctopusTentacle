@@ -291,8 +291,6 @@ partial class Build
                 DotNetTasks.DotNetTest(settings => settings
                     .SetProjectFile(projectPath)
                     .SetFramework(testFramework)
-                    .SetBlameHangTimeout("5m")
-                    .SetBlameHangDumpType("none")
                     .SetLoggers("console;verbosity=normal", "teamcity"))
             );
         }
