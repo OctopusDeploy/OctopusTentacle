@@ -37,6 +37,7 @@ namespace Octopus.Tentacle.Tests.Security.Certificates
         
         
         [Test]
+        [NotMacTest] // RCP-TODO: Suspect issue on MacOS accessing the certificate store
         public void WhenGivenABase64StringOfACertificate_ACertificateCanBeCreated()
         {
             // Given
