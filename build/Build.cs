@@ -65,11 +65,6 @@ partial class Build : NukeBuild
     [Parameter] string TestFilter = "";
 
     [NuGetPackage(
-        packageId: "azuresigntool",
-        packageExecutable: "azuresigntool.dll")]
-    public static Tool AzureSignTool = null!;
-
-    [NuGetPackage(
         packageId: "wix",
         packageExecutable: "heat.exe")]
     readonly Tool WiXHeatTool = null!;
