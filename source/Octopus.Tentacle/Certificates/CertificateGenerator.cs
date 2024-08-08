@@ -30,7 +30,7 @@ namespace Octopus.Tentacle.Certificates
 
     public class CertificateGenerator : ICertificateGenerator
     {
-        public const int RecommendedKeyBitLength = 2048;
+        public const int RecommendedKeyBitLength = 4096;
         readonly ISystemLog log;
 
         public CertificateGenerator(ISystemLog log)
@@ -83,7 +83,7 @@ namespace Octopus.Tentacle.Certificates
             certificateGenerator.SetPublicKey(subjectKeyPair.Public);
 
             var issuerKeyPair = subjectKeyPair;
-            const string signatureAlgorithm = "SHA256WithRSA";
+            const string signatureAlgorithm = "SHA512WithRSA";
             var signatureFactory = new Asn1SignatureFactory(signatureAlgorithm, issuerKeyPair.Private);
             var bouncyCert = certificateGenerator.Generate(signatureFactory);
 
