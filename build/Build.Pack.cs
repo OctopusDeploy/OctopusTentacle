@@ -14,6 +14,7 @@ using Nuke.Common.Tools.Chocolatey;
 using Nuke.Common.Tools.Docker;
 using Nuke.Common.Tools.DotNet;
 using Nuke.Common.Tools.MSBuild;
+using Nuke.Common.Tools.Octopus;
 using Nuke.Common.Utilities.Collections;
 using Serilog;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
@@ -520,17 +521,16 @@ partial class Build
             const string description = "The deployment agent that is installed on each machine you plan to deploy to using Octopus.";
             const string author = "Octopus Deploy";
             const string title = "Octopus Tentacle cross platform bundle";
-            var arguments = new Arguments()
-                .Add("pack")
-                .Add("--id={value}", "Octopus.Tentacle.CrossPlatformBundle")
-                .Add("--version={value}", FullSemVer)
-                .Add("--basePath={value}", workingDirectory)
-                .Add("--outFolder={value}", ArtifactsDirectory / "nuget")
-                .Add("{value}", $"--author={author}")
-                .Add("{value}", $"--title={title}")
-                .Add("{value}", $"--description={description}");
 
-            OctoCliTool(arguments.RenderForExecution());
+            OctopusTasks.OctopusPack(o => o
+                .SetId("Octopus.Tentacle.CrossPlatformBundle")
+                .SetVersion(FullSemVer)
+                .SetBasePath(workingDirectory)
+                .SetOutputFolder(ArtifactsDirectory / "nuget")
+                .SetAuthors(author)
+                .SetTitle(title)
+                .SetDescription(description)
+            );
         });
 
     [PublicAPI]

@@ -74,11 +74,6 @@ partial class Build : NukeBuild
         packageExecutable: "heat.exe")]
     readonly Tool WiXHeatTool = null!;
 
-    [NuGetPackage(
-        packageId: "OctopusTools",
-        packageExecutable: "octo.exe")]
-    readonly Tool OctoCliTool = null!;
-
     [Parameter] public static string AzureKeyVaultUrl = "";
     [Parameter] public static string AzureKeyVaultAppId = "";
     [Parameter] public static string AzureKeyVaultTenantId = "";
