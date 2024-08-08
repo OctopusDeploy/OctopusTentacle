@@ -110,6 +110,7 @@ public static class Signing
                     AzureSignToolTasks.AzureSignTool(a => a
                         .SetKeyVaultUrl(Build.AzureKeyVaultUrl)
                         .SetKeyVaultClientId(Build.AzureKeyVaultAppId)
+                        .SetKeyVaultTenantId(Build.AzureKeyVaultTenantId)
                         .SetKeyVaultClientSecret(Build.AzureKeyVaultAppSecret)
                         .SetKeyVaultCertificateName(Build.AzureKeyVaultCertificateName)
                         .SetFileDigest(AzureSignToolDigestAlgorithm.sha256)
