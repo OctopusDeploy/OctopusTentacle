@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Runtime.Versioning;
 using System.Windows;
 
 [assembly: AssemblyTitle("Octopus.Manager.Tentacle")]
@@ -10,3 +11,7 @@ using System.Windows;
                                               //(used if a resource is not found in the page, 
                                               // app, or any theme specific resource dictionaries)
 )]
+
+#if NET8_0_OR_GREATER
+[assembly: SupportedOSPlatform("windows")]
+#endif
