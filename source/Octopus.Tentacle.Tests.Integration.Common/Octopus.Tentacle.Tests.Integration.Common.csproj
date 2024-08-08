@@ -7,7 +7,7 @@
         <OutputPath>bin</OutputPath>
         <PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
         <IsPackable>false</IsPackable>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFrameworks>net6.0;net8.0</TargetFrameworks>
         <RuntimeIdentifiers>win-x86;win-x64;linux-x64;osx-x64;osx-arm64;linux-arm64;linux-arm;linux-musl-x64</RuntimeIdentifiers>
     </PropertyGroup>
 

@@ -5,7 +5,7 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>bin\</OutputPath>
-    <TargetFrameworks>net48;net6.0;net6.0-windows</TargetFrameworks>
+    <TargetFrameworks>net48;net6.0;net6.0-windows;net8.0</TargetFrameworks>
     <DisableImplicitPackageTargetFallback>true</DisableImplicitPackageTargetFallback>
     <Optimize Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">True</Optimize>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -20,6 +20,9 @@
       <PropertyGroup>
         <RuntimeIdentifiers>win</RuntimeIdentifiers><!-- This is AnyCPU -->
       </PropertyGroup>
+    </When>
+    <When Condition="'$(TargetFramework)' == 'net8.0'">
+      <!-- Library only for net8.0. Don't need a runtime identifier -->
     </When>
     <Otherwise>
       <PropertyGroup>
