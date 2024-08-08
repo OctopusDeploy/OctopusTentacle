@@ -6,6 +6,7 @@ using System.Security.Cryptography.X509Certificates;
 using Nuke.Common;
 using Nuke.Common.IO;
 using Nuke.Common.Tooling;
+using Nuke.Common.Tools.AzureSignTool;
 using Nuke.Common.Tools.SignTool;
 using Serilog;
 
@@ -106,19 +107,16 @@ public static class Signing
             {
                 try
                 {
-                    var arguments = new Arguments()
-                        .Add("sign")
-                        .Add("--azure-key-vault-url {value}", Build.AzureKeyVaultUrl)
-                        .Add("--azure-key-vault-client-id {value}", Build.AzureKeyVaultAppId)
-                        .Add("--azure-key-vault-tenant-id {value}", Build.AzureKeyVaultTenantId)
-                        .Add("--azure-key-vault-client-secret {value}", Build.AzureKeyVaultAppSecret)
-                        .Add("--azure-key-vault-certificate {value}", Build.AzureKeyVaultCertificateName)
-                        .Add("--file-digest sha256")
-                        .Add("--timestamp-rfc3161 {value}", timestampUrl)
-                        .Add("{value}", files);
+                    AzureSignToolTasks.AzureSignTool(a => a
+                        .SetKeyVaultUrl(Build.AzureKeyVaultUrl)
+                        .SetKeyVaultClientId(Build.AzureKeyVaultAppId)
+                        .SetKeyVaultClientSecret(Build.AzureKeyVaultAppSecret)
+                        .SetKeyVaultCertificateName(Build.AzureKeyVaultCertificateName)
+                        .SetFileDigest(AzureSignToolDigestAlgorithm.sha256)
+                        .SetTimestampRfc3161Url(timestampUrl)
+                        .SetFiles(files.Select(f => f.ToString()))
+                    );
 
-                    Build.AzureSignTool(arguments.RenderForExecution());
-        
                     Log.Information($"Finished signing {files.Length} files.");
                 }
                 catch (Exception e)
