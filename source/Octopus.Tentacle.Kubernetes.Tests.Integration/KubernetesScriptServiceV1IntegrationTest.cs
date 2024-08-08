@@ -21,9 +21,7 @@ public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrati
 
     protected override TentacleServiceDecoratorBuilder ConfigureTentacleServiceDecoratorBuilder(TentacleServiceDecoratorBuilder builder)
     {
-        builder.RecordMethodUsages<IAsyncClientKubernetesScriptServiceV1>(out var recordedUsages)
-            .DecorateCapabilitiesServiceV2With(d => d
-                .DecorateGetCapabilitiesWith((_, _) => Task.FromResult(new CapabilitiesResponseV2(new List<string> { nameof(IFileTransferService), nameof(IKubernetesScriptServiceV1) }))));
+        builder.RecordMethodUsages<IAsyncClientKubernetesScriptServiceV1>(out var recordedUsages);
 
         recordedMethodUsages = recordedUsages;
 

@@ -5,16 +5,13 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Halibut;
 using NUnit.Framework;
-using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Capabilities;
-using Octopus.Tentacle.Contracts.ClientServices;
-using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1Alpha;
+using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
-using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
 
 namespace Octopus.Tentacle.Tests.Integration
 {
@@ -66,7 +63,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 expectedCapabilitiesCount++;
             }
 
-            capabilities.Should().NotContain(nameof(IKubernetesScriptServiceV1Alpha));
+            capabilities.Should().NotContain(nameof(IKubernetesScriptServiceV1));
 
             capabilities.Count.Should().Be(expectedCapabilitiesCount);
         }
