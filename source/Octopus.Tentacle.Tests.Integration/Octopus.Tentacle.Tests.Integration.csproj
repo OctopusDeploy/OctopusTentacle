@@ -18,6 +18,10 @@
     <PropertyGroup Condition=" '$(TargetFramework)' == 'net48' ">
         <DefineConstants>$(DefineConstants);DOES_NOT_SUPPORT_CANCELLATION_ON_SOCKETS</DefineConstants>
     </PropertyGroup>
+    <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0'">
+        <!-- TODO: Investigate why this is needed -->
+        <ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
+    </PropertyGroup>
 
   <ItemGroup>
         <PackageReference Include="CliWrap" Version="3.6.6" />
