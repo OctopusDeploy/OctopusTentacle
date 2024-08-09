@@ -74,7 +74,11 @@ namespace Octopus.Tentacle.Security
 
         static byte[] GetEncryptionKey(string encryptionPassword)
         {
+#if NET8_0_OR_GREATER
+            using var passwordGenerator = new Rfc2898DeriveBytes(encryptionPassword, PasswordPaddingSalt, PasswordSaltIterations, HashAlgorithmName.SHA1);
+#else
             using var passwordGenerator = new Rfc2898DeriveBytes(encryptionPassword, PasswordPaddingSalt, PasswordSaltIterations);
+#endif
             return passwordGenerator.GetBytes(16);
         }
     }

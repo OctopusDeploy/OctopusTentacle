@@ -39,11 +39,11 @@ namespace Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators
             return AfterStartScript(async (_, _, _, _) => await afterStartScript());
         }
 
-        public KubernetesScriptServiceV1DecoratorBuilder AfterStartScript(Func<IAsyncClientKubernetesScriptServiceV1, StartKubernetesScriptCommandV1, HalibutProxyRequestOptions, KubernetesScriptStatusResponseV1, Task> afterStartScript)
+        public KubernetesScriptServiceV1DecoratorBuilder AfterStartScript(Func<IAsyncClientKubernetesScriptServiceV1, StartKubernetesScriptCommandV1, HalibutProxyRequestOptions, KubernetesScriptStatusResponseV1?, Task> afterStartScript)
         {
             return DecorateStartScriptWith(async (inner, StartKubernetesScriptCommandV1, options) =>
             {
-                KubernetesScriptStatusResponseV1 response = null;
+                KubernetesScriptStatusResponseV1? response = null;
                 try
                 {
                     response = await inner.StartScriptAsync(StartKubernetesScriptCommandV1, options);
@@ -87,11 +87,11 @@ namespace Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators
             return AfterGetStatus(async (_, _, _, _) => await afterGetStatus());
         }
 
-        public KubernetesScriptServiceV1DecoratorBuilder AfterGetStatus(Func<IAsyncClientKubernetesScriptServiceV1, KubernetesScriptStatusRequestV1, HalibutProxyRequestOptions, KubernetesScriptStatusResponseV1, Task> afterGetStatus)
+        public KubernetesScriptServiceV1DecoratorBuilder AfterGetStatus(Func<IAsyncClientKubernetesScriptServiceV1, KubernetesScriptStatusRequestV1, HalibutProxyRequestOptions, KubernetesScriptStatusResponseV1?, Task> afterGetStatus)
         {
             return DecorateGetStatusWith(async (inner, KubernetesScriptStatusRequestV1, options) =>
             {
-                KubernetesScriptStatusResponseV1 response = null;
+                KubernetesScriptStatusResponseV1? response = null;
                 try
                 {
                     response = await inner.GetStatusAsync(KubernetesScriptStatusRequestV1, options);

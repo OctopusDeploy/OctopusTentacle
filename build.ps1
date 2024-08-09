@@ -28,22 +28,30 @@ $env:DOTNET_MULTILEVEL_LOOKUP = 0
 # EXECUTION
 ###########################################################################
 
+# Octopus Modification
+# Avoid issues where LASTEXITCODE does not appear to be set
+$LASTEXITCODE = 0
+# End Octopus Modification
+
 function ExecSafe([scriptblock] $cmd) {
     & $cmd
     if ($LASTEXITCODE) { exit $LASTEXITCODE }
 }
 
 # If dotnet CLI is installed globally and it matches requested version, use for execution
-if ($null -ne (Get-Command "dotnet" -ErrorAction SilentlyContinue) -and `
+if ($null -eq $env:TEAMCITY_VERSION -and $null -ne (Get-Command "dotnet" -ErrorAction SilentlyContinue) -and `
      $(dotnet --version) -and $LASTEXITCODE -eq 0) {
     $env:DOTNET_EXE = (Get-Command "dotnet").Path
 }
 else {
     # Download install script
-    $DotNetInstallFile = "$TempDirectory\dotnet-install.ps1"
-    New-Item -ItemType Directory -Path $TempDirectory -Force | Out-Null
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    (New-Object System.Net.WebClient).DownloadFile($DotNetInstallUrl, $DotNetInstallFile)
+    #$DotNetInstallFile = "$TempDirectory\dotnet-install.ps1"
+    #New-Item -ItemType Directory -Path $TempDirectory -Force | Out-Null
+    #[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    #(New-Object System.Net.WebClient).DownloadFile($DotNetInstallUrl, $DotNetInstallFile)
+
+    # Octopus modification to use versino of the script configured to support TLS 1.2
+    $DotNetInstallFile = Join-Path $PSScriptRoot "dotnet-install.ps1"
 
     # If global.json exists, load expected version
     if (Test-Path $DotNetGlobalFile) {
@@ -60,6 +68,12 @@ else {
     } else {
         ExecSafe { & $DotNetInstallFile -InstallDir $DotNetDirectory -Version $DotNetVersion -NoPath }
     }
+
+    # Octopus Modification
+    # Install the .NET 6.0 runtime as well
+    ExecSafe { & $DotNetInstallFile -InstallDir $DotNetDirectory -Runtime dotnet -Channel 6.0 -NoPath }
+    #End Octopus Modication
+
     $env:DOTNET_EXE = "$DotNetDirectory\dotnet.exe"
 }
 

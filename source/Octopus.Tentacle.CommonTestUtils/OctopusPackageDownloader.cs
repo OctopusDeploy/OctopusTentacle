@@ -39,7 +39,7 @@ namespace Octopus.Tentacle.CommonTestUtils
         {
             var totalTime = Stopwatch.StartNew();
             var totalRead = 0L;
-            string expectedHash = null;
+            string? expectedHash = null;
             try
             {
                 using (var client = new HttpClient())
@@ -100,7 +100,7 @@ namespace Octopus.Tentacle.CommonTestUtils
             ValidateDownload(filePath, expectedHash);
         }
 
-        static string TryGetExpectedHashFromHeaders(HttpResponseMessage response, string expectedHash)
+        static string? TryGetExpectedHashFromHeaders(HttpResponseMessage response, string? expectedHash)
         {
             if (response.Headers.TryGetValues("x-amz-meta-sha256", out var expectedHashs))
             {
@@ -110,7 +110,7 @@ namespace Octopus.Tentacle.CommonTestUtils
             return expectedHash;
         }
 
-        static void ValidateDownload(string filePath, string expectedHash)
+        static void ValidateDownload(string filePath, string? expectedHash)
         {
             if (!expectedHash.IsNullOrEmpty())
             {
