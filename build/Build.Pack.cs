@@ -347,8 +347,8 @@ partial class Build
                     var platformString = framework switch
                     {
                         NetFramework => platform == MSBuildTargetPlatform.x64 ? "-x64" : "",
-                        NetCoreWindows or Net8Windows => $"-{NetCoreWindows}-win" + (platform == MSBuildTargetPlatform.x64 ? "-x64" : "-x86"),
-                        _ => $"-{NetCore}-win" + (platform == MSBuildTargetPlatform.x64 ? "-x64" : "-x86")
+                        NetCoreWindows or Net8Windows => $"-{framework}-win" + (platform == MSBuildTargetPlatform.x64 ? "-x64" : "-x86"),
+                        _ => $"-{framework}-win" + (platform == MSBuildTargetPlatform.x64 ? "-x64" : "-x86")
                     };
 
                     FileSystemTasks.MoveFile(
