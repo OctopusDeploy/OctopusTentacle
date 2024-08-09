@@ -371,6 +371,12 @@ partial class Build
             
             PackWindowsInstallers(MSBuildTargetPlatform.x64, wixNugetInstalledPackage.Directory, NetCoreWindows, "NetCoreWindows");
             PackWindowsInstallers(MSBuildTargetPlatform.x86, wixNugetInstalledPackage.Directory, NetCoreWindows, "NetCoreWindows");
+
+            PackWindowsInstallers(MSBuildTargetPlatform.x64, wixNugetInstalledPackage.Directory, Net8, "NetCore");
+            PackWindowsInstallers(MSBuildTargetPlatform.x86, wixNugetInstalledPackage.Directory, Net8, "NetCore");
+
+            PackWindowsInstallers(MSBuildTargetPlatform.x64, wixNugetInstalledPackage.Directory, Net8Windows, "NetCoreWindows");
+            PackWindowsInstallers(MSBuildTargetPlatform.x86, wixNugetInstalledPackage.Directory, Net8Windows, "NetCoreWindows");
         });
 
     [PublicAPI]
