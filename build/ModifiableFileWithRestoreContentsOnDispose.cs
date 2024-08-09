@@ -27,6 +27,11 @@ public class ModifiableFileWithRestoreContentsOnDispose : IDisposable
             return;
         }
         disposed = true;
+        RestoreContents();
+    }
+
+    public void RestoreContents()
+    {
         Log.Information($"Restoring file {FilePath}");
         File.WriteAllText(FilePath, OriginalFileText);
     }
