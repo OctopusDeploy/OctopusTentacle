@@ -11,6 +11,7 @@ public class ModifiableFileWithRestoreContentsOnDispose : IDisposable
     public readonly AbsolutePath FilePath;
     readonly string OriginalFileText;
     string FileText;
+    bool disposed = false;
         
     public ModifiableFileWithRestoreContentsOnDispose(AbsolutePath filePath)
     {
@@ -21,6 +22,11 @@ public class ModifiableFileWithRestoreContentsOnDispose : IDisposable
         
     public void Dispose()
     {
+        if (disposed)
+        {
+            return;
+        }
+        disposed = true;
         Log.Information($"Restoring file {FilePath}");
         File.WriteAllText(FilePath, OriginalFileText);
     }
