@@ -21,9 +21,6 @@
         <RuntimeIdentifiers>win</RuntimeIdentifiers><!-- This is AnyCPU -->
       </PropertyGroup>
     </When>
-    <When Condition="'$(TargetFramework)' == 'net8.0'">
-      <!-- Library only for net8.0. Don't need a runtime identifier -->
-    </When>
     <Otherwise>
       <PropertyGroup>
         <RuntimeIdentifiers>win-x86;win-x64;linux-x64;osx-x64;osx-arm64;linux-arm64;linux-arm;linux-musl-x64</RuntimeIdentifiers>
