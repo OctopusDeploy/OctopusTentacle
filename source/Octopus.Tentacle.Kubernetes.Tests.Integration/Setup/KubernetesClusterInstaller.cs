@@ -112,6 +112,7 @@ public class KubernetesClusterInstaller
 
     async Task InstallNfsCsiDriver()
     {
+        await Task.CompletedTask;
         //we need to perform a repo update in helm first
         // var exitCode = SilentProcessRunner.ExecuteCommand(
         //     helmPath,
