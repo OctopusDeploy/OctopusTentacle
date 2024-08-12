@@ -15,7 +15,7 @@ namespace Octopus.Tentacle.Kubernetes
         public static string PodServiceAccountName => GetRequiredEnvVar($"{EnvVarPrefix}__PODSERVICEACCOUNTNAME", "Unable to determine Kubernetes Pod service account name.");
         public static string PodVolumeClaimName => GetRequiredEnvVar($"{EnvVarPrefix}__PODVOLUMECLAIMNAME", "Unable to determine Kubernetes Pod persistent volume claim name.");
 
-        public static int PodMonitorTimeoutSeconds => int.TryParse(Environment.GetEnvironmentVariable($"{EnvVarPrefix}__PODMONITORTIMEOUT"), out var podMonitorTimeout) ? podMonitorTimeout : 10*60; //10min
+        public static int PodMonitorTimeoutSeconds => int.TryParse(Environment.GetEnvironmentVariable($"{EnvVarPrefix}__PODMONITORTIMEOUT"), out var podMonitorTimeout) ? podMonitorTimeout : 10 * 60; //10min
         public static string NfsWatchdogImageVariableName => $"{EnvVarPrefix}__NFSWATCHDOGIMAGE";
         public static string? NfsWatchdogImage => Environment.GetEnvironmentVariable(NfsWatchdogImageVariableName);
 
@@ -38,6 +38,10 @@ namespace Octopus.Tentacle.Kubernetes
 
         public const string ServerCommsAddressesVariableName = "ServerCommsAddresses";
 
+        public static string? ScriptPodContainerImage => Environment.GetEnvironmentVariable($"{EnvVarPrefix}__SCRIPTPODIMAGE");
+        public static string ScriptPodContainerImageTag => Environment.GetEnvironmentVariable($"{EnvVarPrefix}__SCRIPTPODIMAGETAG") ?? "latest";
+        public static string? ScriptPodPullPolicy => Environment.GetEnvironmentVariable($"{EnvVarPrefix}__SCRIPTPODPULLPOLICY");
+
         public static IEnumerable<string> PodImagePullSecretNames => Environment.GetEnvironmentVariable($"{EnvVarPrefix}__PODIMAGEPULLSECRETNAMES")
             ?.Split(',')
             .Select(str => str.Trim())
@@ -46,35 +50,49 @@ namespace Octopus.Tentacle.Kubernetes
 
         public static readonly string PodResourceJsonVariableName = $"{EnvVarPrefix}__PODRESOURCEJSON";
         public static string? PodResourceJson => Environment.GetEnvironmentVariable(PodResourceJsonVariableName);
+
+        public static readonly string PodAffinityJsonVariableName = $"{EnvVarPrefix}__PODAFFINITYJSON";
+        public static string? PodAffinityJson => Environment.GetEnvironmentVariable(PodAffinityJsonVariableName);
+
+        public static readonly string PodTolerationsJsonVariableName = $"{EnvVarPrefix}__PODTOLERATIONSJSON";
+        public static string? PodTolerationsJson => Environment.GetEnvironmentVariable(PodTolerationsJsonVariableName);
+
+        public static readonly string PodSecurityContextJsonVariableName = $"{EnvVarPrefix}__PODSECURITYCONTEXTJSON";
+        public static string? PodSecurityContextJson => Environment.GetEnvironmentVariable(PodSecurityContextJsonVariableName);
         
         public static string MetricsEnableVariableName => $"{EnvVarPrefix}__ENABLEMETRICSCAPTURE";
+
         public static bool MetricsIsEnabled
         {
-             get
-             {
-                 var envContent = Environment.GetEnvironmentVariable(MetricsEnableVariableName);
-                if(bool.TryParse(envContent, out var result))
+            get
+            {
+                var envContent = Environment.GetEnvironmentVariable(MetricsEnableVariableName);
+                if (bool.TryParse(envContent, out var result))
                 {
                     return result;
                 }
+
                 return true;
             }
         }
 
-        public static string[] ServerCommsAddresses {
-            get {
+        public static string[] ServerCommsAddresses
+        {
+            get
+            {
                 var addresses = new List<string>();
                 if (Environment.GetEnvironmentVariable(ServerCommsAddressVariableName) is { Length: > 0 } addressString)
                 {
                     addresses.Add(addressString);
                 }
-                if (Environment.GetEnvironmentVariable(ServerCommsAddressesVariableName) is {} addressesString)
+
+                if (Environment.GetEnvironmentVariable(ServerCommsAddressesVariableName) is { } addressesString)
                 {
                     addresses.AddRange(addressesString.Split(',').Where(a => !a.IsNullOrEmpty()));
                 }
+
                 return addresses.ToArray();
             }
-
         }
 
         static string GetRequiredEnvVar(string variable, string errorMessage)
