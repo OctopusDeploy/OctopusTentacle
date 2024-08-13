@@ -5,7 +5,7 @@ namespace Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators.Proxies
 {
     public class MethodUsageProxyDecorator : ServiceProxy
     {
-        MethodUsages usages;
+        MethodUsages? usages;
 
         void Configure(MethodUsages usages)
         {
@@ -38,18 +38,18 @@ namespace Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators.Proxies
         protected override async Task OnStartingInvocationAsync(MethodInfo targetMethod, object? request)
         {
             await Task.CompletedTask;
-            usages.RecordCallStart(targetMethod);
+            usages?.RecordCallStart(targetMethod);
         }
 
         protected override async Task OnCompletingInvocationAsync(MethodInfo targetMethod, object? response)
         {
             await Task.CompletedTask;
-            usages.RecordCallComplete(targetMethod);
+            usages?.RecordCallComplete(targetMethod);
         }
 
         protected override void OnInvocationException(MethodInfo targetMethod, Exception exception)
         {
-            usages.RecordCallException(targetMethod, exception);
+            usages?.RecordCallException(targetMethod, exception);
         }
     }
 }

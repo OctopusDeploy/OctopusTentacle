@@ -40,7 +40,7 @@ namespace Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators
         {
             return DecorateStartScriptWith(async (inner, startScriptCommandV2, options) =>
             {
-                ScriptStatusResponseV2 response = null;
+                ScriptStatusResponseV2? response = null;
                 try
                 {
                     response = await inner.StartScriptAsync(startScriptCommandV2, options);
@@ -88,7 +88,7 @@ namespace Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators
         {
             return DecorateGetStatusWith(async (inner, scriptStatusRequestV2, options) =>
             {
-                ScriptStatusResponseV2 response = null;
+                ScriptStatusResponseV2? response = null;
                 try
                 {
                     response = await inner.GetStatusAsync(scriptStatusRequestV2, options);

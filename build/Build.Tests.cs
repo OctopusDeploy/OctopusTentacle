@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.Versioning;
 using System.Security.AccessControl;
 using System.Security.Principal;
 using JetBrains.Annotations;
@@ -113,14 +114,15 @@ partial class Build
         });
 
     [PublicAPI]
+    [SupportedOSPlatform("windows")]
     //todo: move this out of the build script to a proper test project ("smoke tests"?)
     Target TestWindowsInstallers => _ => _
         .Executes(() =>
         {
             Logging.InTest(nameof(TestWindowsInstaller), () =>
             {
-                FileSystemTasks.EnsureExistingDirectory(TestDirectory);
-                FileSystemTasks.EnsureCleanDirectory(TestDirectory);
+                TestDirectory.CreateDirectory();
+                TestDirectory.CreateOrCleanDirectory();
 
                 var installers = (ArtifactsDirectory / "msi").GlobFiles("*x64.msi");
 
@@ -137,13 +139,14 @@ partial class Build
         });
 
     string GetTestName(AbsolutePath installerPath) => Path.GetFileName(installerPath).Replace(".msi", "");
-        
+
+    [SupportedOSPlatform("windows")]
     void TestWindowsInstaller(AbsolutePath installerPath)
     {
         Log.Information($"\n--------------------------------------\nTesting Installer {GetTestName(installerPath)}\n--------------------------------------");        
 
         var destination = TestDirectory / "install" / GetTestName(installerPath);
-        FileSystemTasks.EnsureExistingDirectory(destination);
+        destination.CreateDirectory();
 
         InstallMsi(installerPath, destination);
 
@@ -208,6 +211,7 @@ partial class Build
         Log.Information($"Tentacle successfully ran using '{tentacleProcess.StartInfo.Arguments}' argument");
     }
 
+    [SupportedOSPlatform("windows")]
     void ThenBuiltInUserShouldNotHaveWritePermissions(string destination)
     {
         var builtInUsersHaveWriteAccess = DoesSidHaveRightsToDirectory(destination, WellKnownSidType.BuiltinUsersSid, FileSystemRights.AppendData, FileSystemRights.CreateFiles);
@@ -246,7 +250,8 @@ partial class Build
         uninstallProcess.WaitForExit();
         FileSystemTasks.CopyFileToDirectory(uninstallLogName, ArtifactsDirectory, FileExistsPolicy.Overwrite);
     }
-    
+
+    [SupportedOSPlatform("windows")]
     bool DoesSidHaveRightsToDirectory(string directory, WellKnownSidType sid, params FileSystemRights[] rights)
     {
         var destinationInfo = new DirectoryInfo(directory);
@@ -264,7 +269,7 @@ partial class Build
     {
         Log.Information("Running test for Framework: {TestFramework} and Runtime: {TestRuntime}", testFramework, testRuntime);
 
-        FileSystemTasks.EnsureExistingDirectory(ArtifactsDirectory / "teamcity");
+        (ArtifactsDirectory / "teamcity").CreateDirectory();
             
         // We call dotnet test against the assemblies directly here because calling it against the .sln requires
         // the existence of the obj/* generated artifacts as well as the bin/* artifacts and we don't want to
@@ -299,7 +304,7 @@ partial class Build
     {
         Log.Information("Running test for Framework: {TestFramework} and Runtime: {TestRuntime}", testFramework, testRuntime);
 
-        FileSystemTasks.EnsureExistingDirectory(ArtifactsDirectory / "teamcity");
+        (ArtifactsDirectory / "teamcity").CreateDirectory();
 
         // We call dotnet test against the assemblies directly here because calling it against the .sln requires
         // the existence of the obj/* generated artifacts as well as the bin/* artifacts and we don't want to

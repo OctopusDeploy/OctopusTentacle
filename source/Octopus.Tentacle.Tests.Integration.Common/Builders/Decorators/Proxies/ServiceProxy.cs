@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
 
@@ -25,7 +26,7 @@ namespace Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators.Proxies
                 var request = args.FirstOrDefault();
                 await OnStartingInvocationAsync(method, request).ConfigureAwait(false);
 
-                var task = (Task)method.Invoke(TargetService, args);
+                var task = (Task?)method.Invoke(TargetService!, args);
 
                 await task!.ConfigureAwait(false);
             }
@@ -34,7 +35,9 @@ namespace Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators.Proxies
                 OnInvocationException(method, e.InnerException!);
 
                 //we need to unwrap the TargetInvocationException
+#pragma warning disable CS8604 // Possible null reference argument.
                 ExceptionDispatchInfo.Capture(e.InnerException).Throw();
+#pragma warning restore CS8604 // Possible null reference argument.
             }
             catch (Exception e)
             {
@@ -50,14 +53,16 @@ namespace Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators.Proxies
         public override async Task<T> InvokeAsyncT<T>(MethodInfo method, object[] args)
         {
             EnsureTargetServiceNotNull();
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
             T result = default;
+#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
             try
             {
                 //currently all of our service methods have either zero or one arg
                 var request = args.FirstOrDefault();
                 await OnStartingInvocationAsync(method, request).ConfigureAwait(false);
 
-                var task = (Task<T>)method.Invoke(TargetService, args);
+                var task = (Task<T>?)method.Invoke(TargetService!, args);
 
                 result = await task!.ConfigureAwait(false);
 
@@ -68,7 +73,9 @@ namespace Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators.Proxies
                 OnInvocationException(method, e.InnerException!);
 
                 //we need to unwrap the TargetInvocationException
+#pragma warning disable CS8604 // Possible null reference argument.
                 ExceptionDispatchInfo.Capture(e.InnerException).Throw();
+#pragma warning restore CS8604 // Possible null reference argument.
 
                 //this will never be hit because the line above will throw an exception
                 return default;
@@ -84,6 +91,7 @@ namespace Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators.Proxies
             }
         }
 
+        [MemberNotNull(nameof(TargetService))]
         void EnsureTargetServiceNotNull()
         {
             if (TargetService is null)

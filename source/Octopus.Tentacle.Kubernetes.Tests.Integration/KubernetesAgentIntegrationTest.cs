@@ -16,10 +16,13 @@ namespace Octopus.Tentacle.Kubernetes.Tests.Integration;
 
 public abstract class KubernetesAgentIntegrationTest
 {
-    protected KubernetesAgentInstaller kubernetesAgentInstaller;
+    KubernetesAgentInstaller? kubernetesAgentInstaller;
+    KubeCtlTool? kubeCtl;
     TraceLogFileLogger? traceLogFileLogger;
-    CancellationTokenSource cancellationTokenSource;
-    protected ILogger Logger { get; private set; }
+    CancellationTokenSource? cancellationTokenSource;
+    protected ILogger? Logger { get; private set; }
+    
+    protected KubernetesAgentInstaller KubernetesAgentInstaller => kubernetesAgentInstaller ?? throw new InvalidOperationException("Expected kubernetesAgentInstaller to be set");
 
     protected HalibutRuntime ServerHalibutRuntime { get; private set; } = null!;
 
@@ -27,11 +30,11 @@ public abstract class KubernetesAgentIntegrationTest
 
     protected CancellationToken CancellationToken { get; private set; }
     
-    protected KubeCtlTool KubeCtl { get; private set; }
+    protected KubeCtlTool KubeCtl => kubeCtl ?? throw new InvalidOperationException("Expected kubeCtl to be set");
 
     protected readonly IDictionary<string, string> CustomHelmValues = new Dictionary<string, string>();
 
-    string agentThumbprint;
+    string? agentThumbprint;
 
     [OneTimeSetUp]
     public async Task OneTimeSetUp()
@@ -43,7 +46,7 @@ public abstract class KubernetesAgentIntegrationTest
             KubernetesTestsGlobalContext.Instance.KubeConfigPath,
             KubernetesTestsGlobalContext.Instance.Logger);
         
-        KubeCtl = new KubeCtlTool(
+        kubeCtl = new KubeCtlTool(
             KubernetesTestsGlobalContext.Instance.TemporaryDirectory,
             KubernetesTestsGlobalContext.Instance.KubeCtlExePath,
             KubernetesTestsGlobalContext.Instance.KubeConfigPath,
@@ -84,15 +87,15 @@ public abstract class KubernetesAgentIntegrationTest
             await traceLogFileLogger.DisposeAsync();
         }
 
-        cancellationTokenSource.Cancel();
-        cancellationTokenSource.Dispose();
+        cancellationTokenSource?.Cancel();
+        cancellationTokenSource?.Dispose();
     }
 
     protected virtual TentacleServiceDecoratorBuilder ConfigureTentacleServiceDecoratorBuilder(TentacleServiceDecoratorBuilder builder) => builder;
 
     void BuildTentacleClient()
     {
-        var endpoint = new ServiceEndPoint(kubernetesAgentInstaller.SubscriptionId, agentThumbprint, ServerHalibutRuntime.TimeoutsAndLimits);
+        var endpoint = new ServiceEndPoint(KubernetesAgentInstaller.SubscriptionId, agentThumbprint, ServerHalibutRuntime.TimeoutsAndLimits);
 
         var retrySettings = new RpcRetrySettings(true, TimeSpan.FromMinutes(2));
         var clientOptions = new TentacleClientOptions(retrySettings);
