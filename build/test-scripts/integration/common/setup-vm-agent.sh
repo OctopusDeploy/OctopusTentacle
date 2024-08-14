@@ -8,7 +8,7 @@ source $SCRIPT_DIR/dotnet-install.sh
 
 if [ "${TARGET_FRAMEWORK:-net6.0}" == "net6.0" ]; then
     # We install the 8.0 sdk and also the 6.0 runtime as the tests require it
-    install_dotnet --runtime 6.0 --sdk 6.0
+    install_dotnet --runtime 6.0 --sdk 8.0
 elif [ "${TARGET_FRAMEWORK:-net6.0}" == "net8.0" ]; then
     # Only the 8.0 sdk is required
     install_dotnet --sdk 8.0
