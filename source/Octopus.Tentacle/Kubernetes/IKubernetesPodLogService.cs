@@ -21,13 +21,21 @@ namespace Octopus.Tentacle.Kubernetes
         readonly IKubernetesPodMonitor podMonitor;
         readonly ITentacleScriptLogProvider scriptLogProvider;
         readonly IScriptPodSinceTimeStore scriptPodSinceTimeStore;
+        readonly IKubernetesEventService eventService;
 
-        public KubernetesPodLogService(IKubernetesClientConfigProvider configProvider, IKubernetesPodMonitor podMonitor, ITentacleScriptLogProvider scriptLogProvider, IScriptPodSinceTimeStore scriptPodSinceTimeStore, ISystemLog log) 
+        public KubernetesPodLogService(
+            IKubernetesClientConfigProvider configProvider, 
+            IKubernetesPodMonitor podMonitor,
+            ITentacleScriptLogProvider scriptLogProvider,
+            IScriptPodSinceTimeStore scriptPodSinceTimeStore, 
+            IKubernetesEventService eventService,
+            ISystemLog log) 
             : base(configProvider, log)
         {
             this.podMonitor = podMonitor;
             this.scriptLogProvider = scriptLogProvider;
             this.scriptPodSinceTimeStore = scriptPodSinceTimeStore;
+            this.eventService = eventService;
         }
 
         public async Task<(IReadOnlyCollection<ProcessOutput> Outputs, long NextSequenceNumber)> GetLogs(ScriptTicket scriptTicket, long lastLogSequence, CancellationToken cancellationToken)
@@ -35,7 +43,11 @@ namespace Octopus.Tentacle.Kubernetes
             var tentacleScriptLog = scriptLogProvider.GetOrCreate(scriptTicket);
             var podName = scriptTicket.ToKubernetesScriptPodName();
 
-            var podLogs = await GetPodLogs();
+            var podLogsTask = GetPodLogs();
+            var podEventsTask = GetPodEvents(scriptTicket, podName,  cancellationToken);
+            await Task.WhenAll(podLogsTask, podEventsTask);
+            
+            var podLogs = await podLogsTask;
             if (podLogs.Outputs.Any())
             {
                 var nextSinceTime = podLogs.Outputs.Max(o => o.Occurred);
@@ -48,7 +60,14 @@ namespace Octopus.Tentacle.Kubernetes
 
             //We are making the assumption that the clock on the Tentacle Pod is in sync with API Server
             var tentacleLogs = tentacleScriptLog.PopLogs();
-            var combinedLogs = podLogs.Outputs.Concat(tentacleLogs).OrderBy(o => o.Occurred).ToList();
+            var podEventLogs = await podEventsTask;
+            
+            var combinedLogs = podLogs
+                .Outputs
+                .Concat(tentacleLogs)
+                .Concat(podEventLogs)
+                .OrderBy(o => o.Occurred).ToList();
+            
             return (combinedLogs, podLogs.NextSequenceNumber);
 
             async Task<(IReadOnlyCollection<ProcessOutput> Outputs, long NextSequenceNumber, int? ExitCode)> GetPodLogs()
@@ -77,13 +96,35 @@ namespace Octopus.Tentacle.Kubernetes
 
             async Task<(IReadOnlyCollection<ProcessOutput> Outputs, long NextSequenceNumber, int? ExitCode)> ReadPodLogsFromStream(Stream stream)
             {
-                using (var reader = new StreamReader(stream))
-                {
-                    return await PodLogReader.ReadPodLogs(lastLogSequence, reader);
-                }
+                using var reader = new StreamReader(stream);
+                return await PodLogReader.ReadPodLogs(lastLogSequence, reader);
             }
         }
 
+        async Task<IEnumerable<ProcessOutput>> GetPodEvents(ScriptTicket scriptTicket, string podName, CancellationToken cancellationToken)
+        {
+            var sinceTime = scriptPodSinceTimeStore.GetSinceTime(scriptTicket);
+
+            var allEvents = await eventService.FetchAllEventsAsync(KubernetesConfig.Namespace, podName, cancellationToken);
+            if (allEvents is null)
+            {
+                return Array.Empty<ProcessOutput>();
+            }
+
+            var relevantEvents = allEvents.Items
+                .Select(e=> (e, EventHelpers.GetEarliestTimestampInEvent(e)))
+                .Where(x => x.Item2.HasValue)
+                .Select(x => (x.e, new DateTimeOffset(x.Item2!.Value, TimeSpan.Zero)))
+                .OrderBy(x => x.Item2)
+                .SkipWhile(e => e.Item2 < sinceTime);
+
+            return relevantEvents.Select((x) =>
+                {
+                    var (ev, occurred) = x;
+                    return new ProcessOutput(ProcessOutputSource.Debug, $"{ev.Reason} - {ev.Message}", occurred);
+                })
+                .ToArray();
+        }
 
         async Task<Stream?> GetLogStream(string podName, DateTimeOffset? sinceTime, CancellationToken cancellationToken)
         {

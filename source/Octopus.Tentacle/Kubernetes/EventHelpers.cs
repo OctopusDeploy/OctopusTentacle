@@ -18,6 +18,19 @@ namespace Octopus.Tentacle.Kubernetes
                 .OrderByDescending(dt => dt!.Value)
                 .FirstOrDefault();
         }
+        
+        
+        public static DateTime? GetEarliestTimestampInEvent(Corev1Event kEvent)
+        {
+            return new List<DateTime?>
+                {
+                    kEvent.EventTime,
+                    kEvent.LastTimestamp,
+                    kEvent.FirstTimestamp
+                }.Where(dt => dt.HasValue)
+                .OrderByDescending(dt => dt!.Value)
+                .FirstOrDefault();
+        }
 
         public static string MetricSourceMapper(Corev1Event kEvent)
         {
