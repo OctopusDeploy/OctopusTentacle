@@ -112,7 +112,7 @@ namespace Octopus.Tentacle.Kubernetes
             }
 
             var relevantEvents = allEvents.Items
-                .Select(e=> (Event: e, Occurred: e.Series.LastObservedTime))
+                .Select(e=> (Event: e, Occurred: e.Series?.LastObservedTime ?? e.EventTime))
                 .Where(x => x.Occurred.HasValue)
                 .Select(x => (x.Event, Occurred: new DateTimeOffset(x.Occurred!.Value, TimeSpan.Zero)))
                 .OrderBy(x => x.Occurred)
@@ -121,7 +121,7 @@ namespace Octopus.Tentacle.Kubernetes
             var events = relevantEvents.Select((x) =>
                 {
                     var (ev, occurred) = x;
-                    return new ProcessOutput(ProcessOutputSource.Debug, $"[POD EVENT] {ev.Reason} | {ev.Message} (Count: {ev.Series.Count})", occurred);
+                    return new ProcessOutput(ProcessOutputSource.Debug, $"[POD EVENT] {ev.Reason} | {ev.Message} (Count: {ev.Series?.Count ?? 1})", occurred);
                 })
                 .ToArray();
 
