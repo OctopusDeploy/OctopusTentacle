@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Newtonsoft.Json;
 
 namespace Octopus.Tentacle.Contracts
@@ -18,6 +19,7 @@ namespace Octopus.Tentacle.Contracts
         Debug
     }
 
+    [DebuggerDisplay("{Occurred} | {Source} | {Text}")]
     public class ProcessOutput
     {
         public ProcessOutput(ProcessOutputSource source, string text) : this(source, text, DateTimeOffset.UtcNow)

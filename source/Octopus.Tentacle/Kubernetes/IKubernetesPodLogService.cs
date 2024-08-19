@@ -51,7 +51,7 @@ namespace Octopus.Tentacle.Kubernetes
             if (podLogs.Outputs.Any())
             {
                 var nextSinceTime = podLogs.Outputs.Max(o => o.Occurred);
-                scriptPodSinceTimeStore.UpdateSinceTime(scriptTicket, nextSinceTime);
+                scriptPodSinceTimeStore.UpdatePodLogsSinceTime(scriptTicket, nextSinceTime);
                 
                 //We can use our EOS marker to detect completion quicker than the Pod status
                 if (podLogs.ExitCode != null)
@@ -72,7 +72,7 @@ namespace Octopus.Tentacle.Kubernetes
 
             async Task<(IReadOnlyCollection<ProcessOutput> Outputs, long NextSequenceNumber, int? ExitCode)> GetPodLogs()
             {
-                var sinceTime = scriptPodSinceTimeStore.GetSinceTime(scriptTicket);
+                var sinceTime = scriptPodSinceTimeStore.GetPodLogsSinceTime(scriptTicket);
                 try
                 {
                     return await GetPodLogsWithSinceTime(sinceTime);
@@ -103,7 +103,7 @@ namespace Octopus.Tentacle.Kubernetes
 
         async Task<IEnumerable<ProcessOutput>> GetPodEvents(ScriptTicket scriptTicket, string podName, CancellationToken cancellationToken)
         {
-            var sinceTime = scriptPodSinceTimeStore.GetSinceTime(scriptTicket);
+            var sinceTime = scriptPodSinceTimeStore.GetPodEventsSinceTime(scriptTicket);
 
             var allEvents = await eventService.FetchAllEventsAsync(KubernetesConfig.Namespace, podName, cancellationToken);
             if (allEvents is null)
@@ -112,18 +112,26 @@ namespace Octopus.Tentacle.Kubernetes
             }
 
             var relevantEvents = allEvents.Items
-                .Select(e=> (e, EventHelpers.GetEarliestTimestampInEvent(e)))
-                .Where(x => x.Item2.HasValue)
-                .Select(x => (x.e, new DateTimeOffset(x.Item2!.Value, TimeSpan.Zero)))
-                .OrderBy(x => x.Item2)
-                .SkipWhile(e => e.Item2 < sinceTime);
+                .Select(e=> (Event: e, Occurred: EventHelpers.GetLatestTimestampInEvent(e)))
+                .Where(x => x.Occurred.HasValue)
+                .Select(x => (x.Event, Occurred: new DateTimeOffset(x.Occurred!.Value, TimeSpan.Zero)))
+                .OrderBy(x => x.Occurred)
+                .SkipWhile(e => e.Occurred <= sinceTime);
 
-            return relevantEvents.Select((x) =>
+            var events = relevantEvents.Select((x) =>
                 {
                     var (ev, occurred) = x;
-                    return new ProcessOutput(ProcessOutputSource.Debug, $"{ev.Reason} - {ev.Message}", occurred);
+                    return new ProcessOutput(ProcessOutputSource.Debug, $"{ev.Reason} | {ev.Message} (Count: {ev.Count})", occurred);
                 })
                 .ToArray();
+
+            if (events.Any())
+            {
+                //update the events since time, so we don't get duplicate events
+                scriptPodSinceTimeStore.UpdatePodEventsSinceTime(scriptTicket,events.Max(o => o.Occurred));
+            }
+
+            return events;
         }
 
         async Task<Stream?> GetLogStream(string podName, DateTimeOffset? sinceTime, CancellationToken cancellationToken)

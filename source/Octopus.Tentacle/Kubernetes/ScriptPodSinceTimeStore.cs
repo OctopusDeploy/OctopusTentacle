@@ -6,28 +6,30 @@ namespace Octopus.Tentacle.Kubernetes
 {
     public interface IScriptPodSinceTimeStore
     {
-        DateTimeOffset? GetSinceTime(ScriptTicket scriptTicket);
-        void UpdateSinceTime(ScriptTicket scriptTicket, DateTimeOffset nextSinceTime);
+        DateTimeOffset? GetPodLogsSinceTime(ScriptTicket scriptTicket);
+        void UpdatePodLogsSinceTime(ScriptTicket scriptTicket, DateTimeOffset nextSinceTime);
+        DateTimeOffset? GetPodEventsSinceTime(ScriptTicket scriptTicket);
+        void UpdatePodEventsSinceTime(ScriptTicket scriptTicket, DateTimeOffset nextSinceTime);
         void Delete(ScriptTicket scriptTicket);
     }
 
     public class ScriptPodSinceTimeStore : IScriptPodSinceTimeStore
     {
-        readonly ConcurrentDictionary<ScriptTicket, DateTimeOffset?> sinceTimes = new();
+        readonly ConcurrentDictionary<ScriptTicket, DateTimeOffset?> logsSinceTimes = new();
+        readonly ConcurrentDictionary<ScriptTicket, DateTimeOffset?> eventsSinceTimes = new();
         
-        public DateTimeOffset? GetSinceTime(ScriptTicket scriptTicket)
-        {
-            return sinceTimes.GetOrAdd(scriptTicket, _ => null);
-        }
+        public DateTimeOffset? GetPodLogsSinceTime(ScriptTicket scriptTicket) => logsSinceTimes.GetOrAdd(scriptTicket, _ => null);
 
-        public void UpdateSinceTime(ScriptTicket scriptTicket, DateTimeOffset nextSinceTime)
-        {
-            sinceTimes[scriptTicket] = nextSinceTime;
-        }
+        public void UpdatePodLogsSinceTime(ScriptTicket scriptTicket, DateTimeOffset nextSinceTime) => logsSinceTimes[scriptTicket] = nextSinceTime;
+
+        public DateTimeOffset? GetPodEventsSinceTime(ScriptTicket scriptTicket) => eventsSinceTimes.GetOrAdd(scriptTicket, _ => null);
+
+        public void UpdatePodEventsSinceTime(ScriptTicket scriptTicket, DateTimeOffset nextSinceTime)=> eventsSinceTimes[scriptTicket] = nextSinceTime;
 
         public void Delete(ScriptTicket scriptTicket)
         {
-            sinceTimes.TryRemove(scriptTicket, out _);
+            logsSinceTimes.TryRemove(scriptTicket, out _);
+            eventsSinceTimes.TryRemove(scriptTicket, out _);
         }
     }
 }
