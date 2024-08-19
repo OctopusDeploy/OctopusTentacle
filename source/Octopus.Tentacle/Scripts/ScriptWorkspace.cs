@@ -41,7 +41,8 @@ namespace Octopus.Tentacle.Scripts
 
         public string? TryReadFile(string filename)
         {
-            return FileSystem.FileExists(filename) ? FileSystem.ReadFile(ResolvePath(filename)) : null;
+            var resolvedPath = ResolvePath(filename);
+            return FileSystem.FileExists(resolvedPath) ? FileSystem.ReadFile(resolvedPath) : null;
         }
 
         public static string GetLogFilePath(string workingDirectory) => Path.Combine(workingDirectory, LogFileName);
