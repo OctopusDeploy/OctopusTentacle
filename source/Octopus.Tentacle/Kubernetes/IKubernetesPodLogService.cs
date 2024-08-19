@@ -112,7 +112,7 @@ namespace Octopus.Tentacle.Kubernetes
             }
 
             var relevantEvents = allEvents.Items
-                .Select(e=> (Event: e, Occurred: e.Series?.LastObservedTime ?? e.EventTime))
+                .Select(e=> (Event: e, Occurred: EventHelpers.GetLatestTimestampInEvent(e)))
                 .Where(x => x.Occurred.HasValue)
                 .Select(x => (x.Event, Occurred: new DateTimeOffset(x.Occurred!.Value, TimeSpan.Zero)))
                 .OrderBy(x => x.Occurred)
