@@ -22,6 +22,7 @@ namespace Octopus.Tentacle.Scripts
         string LogFilePath { get; }
         void WriteFile(string filename, string contents);
         void CopyFile(string sourceFilePath, string destFileName, bool overwrite);
+        string ReadFile(string filename);
         void CheckReadiness();
     }
 }
