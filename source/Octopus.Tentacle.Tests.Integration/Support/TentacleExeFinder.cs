@@ -25,14 +25,17 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
                 const string net48ArtifactDir = "tentaclereal-net48";
                 const string net60ArtifactDir = "tentaclereal-net6.0";
-                const string net80ArtifactDir = "tentaclereal-net8.0";
+                
+                // TODO: We can enable this once we have a successful .NET8 build, and
+                // are copying the artifact to the correct location in TeamCity
+                //const string net80ArtifactDir = "tentaclereal-net8.0";
                 
                 string artifactDir =
                     version switch
                     {
                         TentacleRuntime.Framework48 => net48ArtifactDir,
                         TentacleRuntime.DotNet6 => net60ArtifactDir,
-                        TentacleRuntime.DotNet8 => net80ArtifactDir,
+                        TentacleRuntime.DotNet8 => net60ArtifactDir,
                         _ => throw new ArgumentOutOfRangeException(nameof(version), version, null)
                     };
 
