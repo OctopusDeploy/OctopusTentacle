@@ -455,6 +455,8 @@ The details are logged above. These commands probably need to take Lazy<T> depen
                             }
                             return newLog;
                         });
+                
+                Logger.Information("logFileText-Contents-DEBUGGING: {0}", logFileText);
 
                 logFileText.Should().ContainEquivalentOf($"OperatingSystem: {RuntimeInformation.OSDescription}", "the OSVersion should be in our diagnostics");
                 logFileText.Should().ContainEquivalentOf("OperatingSystem:", "the OSVersion should be in our diagnostics");
