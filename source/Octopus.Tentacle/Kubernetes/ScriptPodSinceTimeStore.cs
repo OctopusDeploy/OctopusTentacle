@@ -53,7 +53,7 @@ namespace Octopus.Tentacle.Kubernetes
             lock (workspace)
             {
                 //otherwise try and load it from disk
-                var sinceTimeStr = workspace.ReadFile(filename);
+                var sinceTimeStr = workspace.TryReadFile(filename);
                 var sinceTime = DateTimeOffset.TryParse(sinceTimeStr, out var dto) ? dto : (DateTimeOffset?)null;
 
                 //if we have a value on disk, save it in memory

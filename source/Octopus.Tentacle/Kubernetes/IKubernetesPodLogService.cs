@@ -121,7 +121,7 @@ namespace Octopus.Tentacle.Kubernetes
             var events = relevantEvents.Select((x) =>
                 {
                     var (ev, occurred) = x;
-                    return new ProcessOutput(ProcessOutputSource.Debug, $"{ev.Reason} | {ev.Message} (Count: {ev.Count})", occurred);
+                    return new ProcessOutput(ProcessOutputSource.Debug, $"[POD EVENT] {ev.Reason} | {ev.Message} (Count: {ev.Count})", occurred);
                 })
                 .ToArray();
 

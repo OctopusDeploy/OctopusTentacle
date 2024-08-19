@@ -39,6 +39,11 @@ namespace Octopus.Tentacle.Scripts
         public void CopyFile(string sourceFilePath, string destFileName, bool overwrite) => FileSystem.CopyFile(sourceFilePath, ResolvePath(destFileName), overwrite);
         public string ReadFile(string filename) => FileSystem.ReadFile(ResolvePath(filename));
 
+        public string? TryReadFile(string filename)
+        {
+            return FileSystem.FileExists(filename) ? FileSystem.ReadFile(ResolvePath(filename)) : null;
+        }
+
         public static string GetLogFilePath(string workingDirectory) => Path.Combine(workingDirectory, LogFileName);
         public static string GetBootstrapScriptFilePath(string workingDirectory) => Path.Combine(workingDirectory, BootstrapScriptFileName);
 
