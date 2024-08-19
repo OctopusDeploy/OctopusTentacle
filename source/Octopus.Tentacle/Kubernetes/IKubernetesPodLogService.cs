@@ -18,8 +18,6 @@ namespace Octopus.Tentacle.Kubernetes
 
     class KubernetesPodLogService : KubernetesService, IKubernetesPodLogService
     {
-        static readonly TimeSpan OneTick = TimeSpan.FromTicks(1);
-        
         readonly IKubernetesPodMonitor podMonitor;
         readonly ITentacleScriptLogProvider scriptLogProvider;
         readonly IScriptPodSinceTimeStore scriptPodSinceTimeStore;
@@ -68,7 +66,14 @@ namespace Octopus.Tentacle.Kubernetes
                 .Outputs
                 .Concat(tentacleLogs)
                 .Concat(podEventLogs)
-                .OrderBy(o => o.Occurred).ToList();
+                .OrderBy(o => o.Occurred)
+                .SelectMany(o => o switch
+                {
+                    //if this is a wrapped output, expand it in place
+                    WrappedProcessOutput wrappedOutput => wrappedOutput.Expand(),
+                    _ => new[] { o }
+                })
+                .ToList();
 
             return (combinedLogs, podLogs.NextSequenceNumber);
 
@@ -120,24 +125,16 @@ namespace Octopus.Tentacle.Kubernetes
                 .OrderBy(x => x.Occurred)
                 .SkipWhile(e => e.Occurred <= sinceTime);
 
-            var events = relevantEvents.SelectMany((x) =>
+            var events = relevantEvents.Select((x) =>
                 {
                     var (ev, occurred) = x;
 
                     var formattedMessage = $"[POD EVENT] {ev.Reason} | {ev.Message} (Count: {ev.Series?.Count ?? 1})";
 
-                    if (ev.Type.Equals("Warning", StringComparison.OrdinalIgnoreCase))
-                    {
-                        return new[]
-                        {
-                            //we add the service messages one tick before and after so they are correctly formatted
-                            new ProcessOutput(ProcessOutputSource.StdOut, "##octopus[stdout-warning]", occurred.Subtract(OneTick)),
-                            new ProcessOutput(ProcessOutputSource.StdOut, formattedMessage, occurred),
-                            new ProcessOutput(ProcessOutputSource.StdOut, "##octopus[stdout-default]",occurred.Add(OneTick)),
-                        };
-                    }
-
-                    return new[] { new ProcessOutput(ProcessOutputSource.Debug, formattedMessage, occurred) };
+                    return ev.Type.Equals("Warning", StringComparison.OrdinalIgnoreCase) 
+                        ? new WrappedProcessOutput(ProcessOutputSource.StdOut, formattedMessage, occurred, "warning") 
+                        : new ProcessOutput(ProcessOutputSource.Debug, formattedMessage, occurred);
+                    
                 })
                 .ToArray();
 
@@ -170,6 +167,35 @@ namespace Octopus.Tentacle.Kubernetes
 
                     throw;
                 }
+            }
+        }
+
+        class WrappedProcessOutput : ProcessOutput
+        {
+            static readonly TimeSpan OneTick = TimeSpan.FromTicks(1);
+            public string Wrapper { get; }
+
+            public WrappedProcessOutput(ProcessOutputSource source, string text, string wrapper)
+                : base(source, text)
+            {
+                Wrapper = wrapper;
+            }
+
+            public WrappedProcessOutput(ProcessOutputSource source, string text, DateTimeOffset occurred, string wrapper)
+                : base(source, text, occurred)
+            {
+                Wrapper = wrapper;
+            }
+
+            public IEnumerable<ProcessOutput> Expand()
+            {
+                return new[]
+                {
+                    //we add the service messages one tick before and after so they are correctly formatted
+                    new ProcessOutput(ProcessOutputSource.StdOut, $"##octopus[stdout-{Wrapper}]", Occurred.Subtract(OneTick)),
+                    this,
+                    new ProcessOutput(ProcessOutputSource.StdOut, "##octopus[stdout-default]", Occurred.Add(OneTick)),
+                };
             }
         }
     }
