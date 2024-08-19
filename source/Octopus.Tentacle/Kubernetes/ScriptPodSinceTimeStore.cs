@@ -23,8 +23,8 @@ namespace Octopus.Tentacle.Kubernetes
 
         readonly ConcurrentDictionary<ScriptTicket, Lazy<IScriptWorkspace>> workspaces = new();
 
-        readonly ConcurrentDictionary<ScriptTicket, DateTimeOffset?> logsSinceTimes = new();
-        readonly ConcurrentDictionary<ScriptTicket, DateTimeOffset?> eventsSinceTimes = new();
+        readonly ConcurrentDictionary<ScriptTicket, DateTimeOffset> logsSinceTimes = new();
+        readonly ConcurrentDictionary<ScriptTicket, DateTimeOffset> eventsSinceTimes = new();
 
         public ScriptPodSinceTimeStore(IScriptWorkspaceFactory workspaceFactory)
         {
@@ -41,7 +41,7 @@ namespace Octopus.Tentacle.Kubernetes
 
         IScriptWorkspace GetWorkspace(ScriptTicket scriptTicket) => workspaces.GetOrAdd(scriptTicket, new Lazy<IScriptWorkspace>(() => workspaceFactory.GetWorkspace(scriptTicket))).Value;
 
-        DateTimeOffset? GetTimestampFromMemoryOrDisk(ScriptTicket scriptTicket, ConcurrentDictionary<ScriptTicket, DateTimeOffset?> memoryCache, string filename)
+        DateTimeOffset? GetTimestampFromMemoryOrDisk(ScriptTicket scriptTicket, ConcurrentDictionary<ScriptTicket, DateTimeOffset> memoryCache, string filename)
         {
             //if we have it in memory, all good
             if (memoryCache.TryGetValue(scriptTicket, out var log))
@@ -54,19 +54,19 @@ namespace Octopus.Tentacle.Kubernetes
             {
                 //otherwise try and load it from disk
                 var sinceTimeStr = workspace.TryReadFile(filename);
-                var sinceTime = DateTimeOffset.TryParse(sinceTimeStr, out var dto) ? dto : (DateTimeOffset?)null;
+                var sinceTime = sinceTimeStr is not null && DateTimeOffset.TryParse(sinceTimeStr, out var dto) ? dto : (DateTimeOffset?)null;
 
                 //if we have a value on disk, save it in memory
-                if (sinceTime is not null)
+                if (sinceTime.HasValue)
                 {
-                    //we only update the value if it hasn't already been updated _somewhere else_ (which it shouldn't be able to)
-                    memoryCache.TryUpdate(scriptTicket, sinceTime, null);
+                    memoryCache[scriptTicket] = sinceTime.Value;
                 }
 
                 return sinceTime;
             }
         }
-        void SaveTimestampInMemoryAndDisk(ScriptTicket scriptTicket, DateTimeOffset nextSinceTime, ConcurrentDictionary<ScriptTicket, DateTimeOffset?> memoryCache, string podLogsSinceTimeFilename)
+        
+        void SaveTimestampInMemoryAndDisk(ScriptTicket scriptTicket, DateTimeOffset nextSinceTime, ConcurrentDictionary<ScriptTicket, DateTimeOffset> memoryCache, string podLogsSinceTimeFilename)
         {
             memoryCache[scriptTicket] = nextSinceTime;
             

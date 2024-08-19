@@ -18,18 +18,20 @@ namespace Octopus.Tentacle.Kubernetes
 
     class KubernetesPodLogService : KubernetesService, IKubernetesPodLogService
     {
+        static readonly TimeSpan OneTick = TimeSpan.FromTicks(1);
+        
         readonly IKubernetesPodMonitor podMonitor;
         readonly ITentacleScriptLogProvider scriptLogProvider;
         readonly IScriptPodSinceTimeStore scriptPodSinceTimeStore;
         readonly IKubernetesEventService eventService;
 
         public KubernetesPodLogService(
-            IKubernetesClientConfigProvider configProvider, 
+            IKubernetesClientConfigProvider configProvider,
             IKubernetesPodMonitor podMonitor,
             ITentacleScriptLogProvider scriptLogProvider,
-            IScriptPodSinceTimeStore scriptPodSinceTimeStore, 
+            IScriptPodSinceTimeStore scriptPodSinceTimeStore,
             IKubernetesEventService eventService,
-            ISystemLog log) 
+            ISystemLog log)
             : base(configProvider, log)
         {
             this.podMonitor = podMonitor;
@@ -44,15 +46,15 @@ namespace Octopus.Tentacle.Kubernetes
             var podName = scriptTicket.ToKubernetesScriptPodName();
 
             var podLogsTask = GetPodLogs();
-            var podEventsTask = GetPodEvents(scriptTicket, podName,  cancellationToken);
+            var podEventsTask = GetPodEvents(scriptTicket, podName, cancellationToken);
             await Task.WhenAll(podLogsTask, podEventsTask);
-            
+
             var podLogs = await podLogsTask;
             if (podLogs.Outputs.Any())
             {
                 var nextSinceTime = podLogs.Outputs.Max(o => o.Occurred);
                 scriptPodSinceTimeStore.UpdatePodLogsSinceTime(scriptTicket, nextSinceTime);
-                
+
                 //We can use our EOS marker to detect completion quicker than the Pod status
                 if (podLogs.ExitCode != null)
                     podMonitor.MarkAsCompleted(scriptTicket, podLogs.ExitCode.Value);
@@ -61,13 +63,13 @@ namespace Octopus.Tentacle.Kubernetes
             //We are making the assumption that the clock on the Tentacle Pod is in sync with API Server
             var tentacleLogs = tentacleScriptLog.PopLogs();
             var podEventLogs = await podEventsTask;
-            
+
             var combinedLogs = podLogs
                 .Outputs
                 .Concat(tentacleLogs)
                 .Concat(podEventLogs)
                 .OrderBy(o => o.Occurred).ToList();
-            
+
             return (combinedLogs, podLogs.NextSequenceNumber);
 
             async Task<(IReadOnlyCollection<ProcessOutput> Outputs, long NextSequenceNumber, int? ExitCode)> GetPodLogs()
@@ -82,7 +84,7 @@ namespace Octopus.Tentacle.Kubernetes
                     var message = $"Unexpected Pod log line numbers found with sinceTime='{sinceTime}', loading all logs";
                     tentacleScriptLog.Verbose(message);
                     Log.Warn(ex, message);
-                    
+
                     //If we somehow come across weird/missing line numbers, try load the whole Pod logs to see if that helps
                     return await GetPodLogsWithSinceTime(null);
                 }
@@ -112,23 +114,37 @@ namespace Octopus.Tentacle.Kubernetes
             }
 
             var relevantEvents = allEvents.Items
-                .Select(e=> (Event: e, Occurred: EventHelpers.GetLatestTimestampInEvent(e)))
+                .Select(e => (Event: e, Occurred: EventHelpers.GetLatestTimestampInEvent(e)))
                 .Where(x => x.Occurred.HasValue)
                 .Select(x => (x.Event, Occurred: new DateTimeOffset(x.Occurred!.Value, TimeSpan.Zero)))
                 .OrderBy(x => x.Occurred)
                 .SkipWhile(e => e.Occurred <= sinceTime);
 
-            var events = relevantEvents.Select((x) =>
+            var events = relevantEvents.SelectMany((x) =>
                 {
                     var (ev, occurred) = x;
-                    return new ProcessOutput(ProcessOutputSource.Debug, $"[POD EVENT] {ev.Reason} | {ev.Message} (Count: {ev.Series?.Count ?? 1})", occurred);
+
+                    var formattedMessage = $"[POD EVENT] {ev.Reason} | {ev.Message} (Count: {ev.Series?.Count ?? 1})";
+
+                    if (ev.Type.Equals("Warning", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return new[]
+                        {
+                            //we add the service messages one tick before and after so they are correctly formatted
+                            new ProcessOutput(ProcessOutputSource.StdOut, "##octopus[stdout-warning]", occurred.Subtract(OneTick)),
+                            new ProcessOutput(ProcessOutputSource.StdOut, formattedMessage, occurred),
+                            new ProcessOutput(ProcessOutputSource.StdOut, "##octopus[stdout-default]",occurred.Add(OneTick)),
+                        };
+                    }
+
+                    return new[] { new ProcessOutput(ProcessOutputSource.Debug, formattedMessage, occurred) };
                 })
                 .ToArray();
 
             if (events.Any())
             {
                 //update the events since time, so we don't get duplicate events
-                scriptPodSinceTimeStore.UpdatePodEventsSinceTime(scriptTicket,events.Max(o => o.Occurred));
+                scriptPodSinceTimeStore.UpdatePodEventsSinceTime(scriptTicket, events.Max(o => o.Occurred));
             }
 
             return events;
