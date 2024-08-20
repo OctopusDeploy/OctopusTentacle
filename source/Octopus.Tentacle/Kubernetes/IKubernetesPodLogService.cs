@@ -110,6 +110,13 @@ namespace Octopus.Tentacle.Kubernetes
 
         async Task<IEnumerable<ProcessOutput>> GetPodEvents(ScriptTicket scriptTicket, string podName, CancellationToken cancellationToken)
         {
+            //if we don't want to write pod events to the task log, don't do anything
+            if (KubernetesConfig.DisablePodEventsInTaskLog)
+            {
+                return Array.Empty<ProcessOutput>();
+            }
+            
+            
             var sinceTime = scriptPodSinceTimeStore.GetPodEventsSinceTime(scriptTicket);
 
             var allEvents = await eventService.FetchAllEventsAsync(KubernetesConfig.Namespace, podName, cancellationToken);
