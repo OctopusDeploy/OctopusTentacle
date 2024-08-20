@@ -129,7 +129,7 @@ namespace Octopus.Tentacle.Kubernetes
                 {
                     var (ev, occurred) = x;
 
-                    var formattedMessage = $"[POD EVENT] {ev.Reason} | {ev.Message} (Count: {ev.Series?.Count ?? 1})";
+                    var formattedMessage = $"[POD EVENT] {ev.Reason} | {ev.Message} (Count: {ev.Count ?? 1})";
 
                     return ev.Type.Equals("Warning", StringComparison.OrdinalIgnoreCase) 
                         ? new WrappedProcessOutput(ProcessOutputSource.StdOut, formattedMessage, occurred, "warning") 
@@ -185,7 +185,7 @@ namespace Octopus.Tentacle.Kubernetes
             {
                 return new[]
                 {
-                    //we add the service messages one tick before and after so they are correctly formatted
+                    //we add the service messages one tick before and after so they are correctly ordered
                     new ProcessOutput(ProcessOutputSource.StdOut, $"##octopus[stdout-{wrapper}]", Occurred.Subtract(OneTick)),
                     new ProcessOutput(Source, Text, Occurred),
                     new ProcessOutput(ProcessOutputSource.StdOut, "##octopus[stdout-default]", Occurred.Add(OneTick)),
