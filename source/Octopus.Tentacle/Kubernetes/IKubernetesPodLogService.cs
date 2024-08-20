@@ -6,6 +6,7 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using k8s.Autorest;
+using k8s.Models;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
 
@@ -138,10 +139,18 @@ namespace Octopus.Tentacle.Kubernetes
 
                     var formattedMessage = $"[POD EVENT] {ev.Reason} | {ev.Message} (Count: {ev.Count ?? 1})";
 
-                    return ev.Type.Equals("Warning", StringComparison.OrdinalIgnoreCase) 
-                        ? new WrappedProcessOutput(ProcessOutputSource.StdOut, formattedMessage, occurred, "warning") 
-                        : new ProcessOutput(ProcessOutputSource.Debug, formattedMessage, occurred);
-                    
+                    if (ev.IsWarning())
+                        return new WrappedProcessOutput(ProcessOutputSource.StdOut, formattedMessage, occurred, "warning");
+
+                    //if we are pulling a container, show it as a "wait"
+                    if (ev.IsPullingReason())
+                        return new WrappedProcessOutput(ProcessOutputSource.StdOut, formattedMessage, occurred, "wait");
+
+                    //if this is a Pulled event, and we had a Pulling event, then show this as "wait" 
+                    if (ev.IsPulledReason() && allEvents.Items.Any(e => e.IsPullingReason()))
+                        return new WrappedProcessOutput(ProcessOutputSource.StdOut, formattedMessage, occurred, "wait");
+
+                    return new ProcessOutput(ProcessOutputSource.Debug, formattedMessage, occurred);
                 })
                 .ToArray();
 
@@ -199,5 +208,13 @@ namespace Octopus.Tentacle.Kubernetes
                 };
             }
         }
+    }
+
+    public static class EventExtensions
+    {
+        public static bool IsPullingReason(this Corev1Event @event) => @event.Reason.Equals("Pulling", StringComparison.OrdinalIgnoreCase);
+        public static bool IsPulledReason(this Corev1Event @event) => @event.Reason.Equals("Pulled", StringComparison.OrdinalIgnoreCase);
+        public static bool IsWarning(this Corev1Event @event) => @event.Type.Equals("Warning", StringComparison.OrdinalIgnoreCase);
+
     }
 }
