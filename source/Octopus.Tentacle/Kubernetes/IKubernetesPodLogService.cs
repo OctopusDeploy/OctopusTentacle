@@ -173,18 +173,12 @@ namespace Octopus.Tentacle.Kubernetes
         class WrappedProcessOutput : ProcessOutput
         {
             static readonly TimeSpan OneTick = TimeSpan.FromTicks(1);
-            public string Wrapper { get; }
-
-            public WrappedProcessOutput(ProcessOutputSource source, string text, string wrapper)
-                : base(source, text)
-            {
-                Wrapper = wrapper;
-            }
+            readonly string wrapper;
 
             public WrappedProcessOutput(ProcessOutputSource source, string text, DateTimeOffset occurred, string wrapper)
                 : base(source, text, occurred)
             {
-                Wrapper = wrapper;
+                this.wrapper = wrapper;
             }
 
             public IEnumerable<ProcessOutput> Expand()
@@ -192,8 +186,8 @@ namespace Octopus.Tentacle.Kubernetes
                 return new[]
                 {
                     //we add the service messages one tick before and after so they are correctly formatted
-                    new ProcessOutput(ProcessOutputSource.StdOut, $"##octopus[stdout-{Wrapper}]", Occurred.Subtract(OneTick)),
-                    this,
+                    new ProcessOutput(ProcessOutputSource.StdOut, $"##octopus[stdout-{wrapper}]", Occurred.Subtract(OneTick)),
+                    new ProcessOutput(Source, Text, Occurred),
                     new ProcessOutput(ProcessOutputSource.StdOut, "##octopus[stdout-default]", Occurred.Add(OneTick)),
                 };
             }
