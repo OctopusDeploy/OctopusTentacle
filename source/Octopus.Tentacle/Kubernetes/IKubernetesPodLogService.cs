@@ -146,8 +146,8 @@ namespace Octopus.Tentacle.Kubernetes
                     if (ev.IsPullingReason())
                         return new WrappedProcessOutput(ProcessOutputSource.StdOut, formattedMessage, occurred, "wait");
 
-                    //if this is a Pulled event, and we had a Pulling event, then show this as "wait" 
-                    if (ev.IsPulledReason() && allEvents.Items.Any(e => e.IsPullingReason()))
+                    //if this is a Pulled event, and we had a Pulling event with the same path (i.e. the same container), then show this as "wait"
+                    if (ev.IsPulledReason() && allEvents.Items.Any(e => e.IsPullingReason() && ev.InvolvedObject.FieldPath == e.InvolvedObject.FieldPath))
                         return new WrappedProcessOutput(ProcessOutputSource.StdOut, formattedMessage, occurred, "wait");
 
                     return new ProcessOutput(ProcessOutputSource.Debug, formattedMessage, occurred);
