@@ -44,9 +44,9 @@ namespace Octopus.Tentacle.Kubernetes
             var tentacleScriptLog = scriptLogProvider.GetOrCreate(scriptTicket);
             var podName = scriptTicket.ToKubernetesScriptPodName();
 
+            //we start both tasks now so we can overlap the API calls
             var podLogsTask = GetPodLogs();
             var podEventsTask = GetPodEvents(scriptTicket, podName, cancellationToken);
-            await Task.WhenAll(podLogsTask, podEventsTask);
 
             var podLogs = await podLogsTask;
             if (podLogs.Outputs.Any())
