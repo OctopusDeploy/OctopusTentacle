@@ -1,5 +1,6 @@
 using FluentAssertions;
 using FluentAssertions.Execution;
+using Octopus.Client.Model.Endpoints;
 using Octopus.Tentacle.Client.Scripts.Models;
 using Octopus.Tentacle.Client.Scripts.Models.Builders;
 using Octopus.Tentacle.CommonTestUtils;
@@ -53,6 +54,7 @@ public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrati
         var result = await TentacleClient.ExecuteScript(command, StatusReceived, ScriptCompleted, new InMemoryLog(), CancellationToken);
 
         //Assert
+        logs.Should().Contain(po => po.Text.StartsWith("[POD EVENT]")); // Verify that we are receiving some pod events
         logs.Should().Contain(po => po.Source == ProcessOutputSource.StdOut && po.Text == "Hello World");
         scriptCompleted.Should().BeTrue();
         result.ExitCode.Should().Be(0);
