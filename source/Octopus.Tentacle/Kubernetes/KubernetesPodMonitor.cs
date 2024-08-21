@@ -327,6 +327,14 @@ namespace Octopus.Tentacle.Kubernetes
             };
         }
 
+        public static TrackedScriptPodState Canceling()
+        {
+            return new TrackedScriptPodState()
+            {
+                Phase = TrackedScriptPodPhase.Canceling
+            };
+        }
+
         public static TrackedScriptPodState Succeeded(int exitCode, DateTimeOffset finishedAt)
         {
             return new TrackedScriptPodState()
@@ -356,6 +364,7 @@ namespace Octopus.Tentacle.Kubernetes
     {
         Pending,
         Running,
+        Canceling,
         Succeeded,
         Failed
     }
