@@ -9,7 +9,9 @@ WORKDIR /bootstrapRunner
 # Note: the given ldflags remove debug symbols
 RUN go build -ldflags "-s -w" -o "bin/bootstrapRunner"
 
-FROM mcr.microsoft.com/dotnet/runtime-deps:6.0
+# The default image is bullseye-slim (Debian 11)
+ARG RuntimeDepsTag="6.0-bullseye-slim"
+FROM mcr.microsoft.com/dotnet/runtime-deps:$RuntimeDepsTag
 
 ARG BUILD_NUMBER
 ARG BUILD_DATE
