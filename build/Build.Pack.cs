@@ -114,7 +114,7 @@ partial class Build
                         "SIGN_PASSPHRASE")
                     .SetVolume(
                         $"{debBuildDir / "scripts"}:/scripts",
-                        $"{BuildDirectory / "zip" / NetCore / runtimeId / "tentacle"}:/input",
+                        $"{BuildDirectory / "zip" / Net8 / runtimeId / "tentacle"}:/input",
                         $"{debBuildDir / "output"}:/output"
                     )
                     .SetImage(dockerToolsContainerImage)
