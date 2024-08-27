@@ -90,21 +90,17 @@ partial class Build
                 // TODO: Revisit this when/if the dist becomes available again and reinstate if possible.
                 // new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "debian:oldoldstable-slim", "deb"),
 
-                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "debian:oldstable-slim", "deb"),
-                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "debian:stable-slim", "deb"),
-                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "linuxmintd/mint19.3-amd64", "deb"),
-                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:latest", "deb"),
-                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:rolling", "deb"),
-                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:jammy", "deb"), // 22.04
-                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:focal", "deb"), // 20.04
-                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:bionic", "deb"), // 18.04
-                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:xenial", "deb"), // 16.04
-                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:trusty", "deb"), // 14.04
-                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "centos:7", "rpm"),
-                // new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "fedora:latest", "rpm"), // Fedora 36 doesn't support netcore, related https://github.com/dotnet/core/issues/7467 (there is no issue for Fedora 36)
-                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "fedora:35", "rpm"),
-                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "roboxes/rhel7", "rpm"),
-                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "roboxes/rhel8", "rpm"),
+                new TestConfigurationOnLinuxDistribution(Net8, "linux-x64", "debian:oldstable-slim", "deb"),
+                new TestConfigurationOnLinuxDistribution(Net8, "linux-x64", "debian:stable-slim", "deb"),
+                new TestConfigurationOnLinuxDistribution(Net8, "linux-x64", "linuxmintd/mint19.3-amd64", "deb"),
+                new TestConfigurationOnLinuxDistribution(Net8, "linux-x64", "ubuntu:latest", "deb"),
+                new TestConfigurationOnLinuxDistribution(Net8, "linux-x64", "ubuntu:rolling", "deb"),
+                new TestConfigurationOnLinuxDistribution(Net8, "linux-x64", "ubuntu:jammy", "deb"), // 22.04
+                new TestConfigurationOnLinuxDistribution(Net8, "linux-x64", "ubuntu:focal", "deb"), // 20.04
+                new TestConfigurationOnLinuxDistribution(Net8, "linux-x64", "ubuntu:bionic", "deb"), // 18.04
+                new TestConfigurationOnLinuxDistribution(Net8, "linux-x64", "ubuntu:xenial", "deb"), // 16.04
+                new TestConfigurationOnLinuxDistribution(Net8, "linux-x64", "fedora:39", "rpm"),
+                new TestConfigurationOnLinuxDistribution(Net8, "linux-x64", "roboxes/rhel8", "rpm"),
             };
             
             foreach (var testConfiguration in testOnLinuxDistributions)
