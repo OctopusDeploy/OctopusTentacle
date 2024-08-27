@@ -133,7 +133,7 @@ function Validate-Variables() {
       Write-Log " - communication mode 'Listening' (Passive)"
     }
     Write-Log " - registered port $ListeningPort"
-    if($null -ne $ProxyName) {
+    if ($null -ne $ProxyName) {
       Write-Log " - proxy '$ProxyName'"
     }
   }
