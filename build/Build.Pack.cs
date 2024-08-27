@@ -44,7 +44,6 @@ partial class Build
             foreach (var runtimeId in RuntimeIds.Where(x => x.StartsWith("osx-")))
             {
                 PackTarballs(NetCore, runtimeId);
-                PackTarballs(Net8, runtimeId);
             }
         });
 
@@ -62,7 +61,6 @@ partial class Build
             foreach (var runtimeId in RuntimeIds.Where(x => x.StartsWith("linux-")))
             {
                 PackTarballs(NetCore, runtimeId);
-                PackTarballs(Net8, runtimeId);
             }
         });
 
@@ -114,7 +112,7 @@ partial class Build
                         "SIGN_PASSPHRASE")
                     .SetVolume(
                         $"{debBuildDir / "scripts"}:/scripts",
-                        $"{BuildDirectory / "zip" / Net8 / runtimeId / "tentacle"}:/input",
+                        $"{BuildDirectory / "zip" / NetCore / runtimeId / "tentacle"}:/input",
                         $"{debBuildDir / "output"}:/output"
                     )
                     .SetImage(dockerToolsContainerImage)
@@ -228,12 +226,9 @@ partial class Build
                     case "win-x64":
                         PackWindowsZip(NetCoreWindows, runtimeId);
                         PackWindowsZip(NetCore, runtimeId);
-                        PackWindowsZip(Net8Windows, runtimeId);
-                        PackWindowsZip(Net8, runtimeId);
                         break;
                     default:
                         PackWindowsZip(NetCore, runtimeId);
-                        PackWindowsZip(Net8, runtimeId);
                         break;
                 }
             }
@@ -275,7 +270,7 @@ partial class Build
                     (BuildDirectory / "Octopus.Manager.Tentacle" / framework / "win").GlobFiles("*")
                         .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, installerDirectory, FileExistsPolicy.Overwrite));
                 }
-                else if (framework is NetCoreWindows or Net8Windows)
+                else if (framework is NetCoreWindows)
                 {
                     (BuildDirectory / "Tentacle" / framework / $"win-{platform}").GlobFiles("*")
                         .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, installerDirectory, FileExistsPolicy.Overwrite));
@@ -347,7 +342,7 @@ partial class Build
                     var platformString = framework switch
                     {
                         NetFramework => platform == MSBuildTargetPlatform.x64 ? "-x64" : "",
-                        NetCoreWindows or Net8Windows => $"-{framework}-win" + (platform == MSBuildTargetPlatform.x64 ? "-x64" : "-x86"),
+                        NetCoreWindows => $"-{framework}-win" + (platform == MSBuildTargetPlatform.x64 ? "-x64" : "-x86"),
                         _ => $"-{framework}-win" + (platform == MSBuildTargetPlatform.x64 ? "-x64" : "-x86")
                     };
 
@@ -371,12 +366,6 @@ partial class Build
             
             PackWindowsInstallers(MSBuildTargetPlatform.x64, wixNugetInstalledPackage.Directory, NetCoreWindows, "NetCoreWindows");
             PackWindowsInstallers(MSBuildTargetPlatform.x86, wixNugetInstalledPackage.Directory, NetCoreWindows, "NetCoreWindows");
-
-            PackWindowsInstallers(MSBuildTargetPlatform.x64, wixNugetInstalledPackage.Directory, Net8, "NetCore");
-            PackWindowsInstallers(MSBuildTargetPlatform.x86, wixNugetInstalledPackage.Directory, Net8, "NetCore");
-
-            PackWindowsInstallers(MSBuildTargetPlatform.x64, wixNugetInstalledPackage.Directory, Net8Windows, "NetCoreWindows");
-            PackWindowsInstallers(MSBuildTargetPlatform.x86, wixNugetInstalledPackage.Directory, Net8Windows, "NetCoreWindows");
         });
 
     [PublicAPI]
@@ -490,9 +479,6 @@ partial class Build
             FileSystemTasks.CopyFile(BuildDirectory / "Octopus.Tentacle.Upgrader" / NetCore / "win-x86" / "Octopus.Tentacle.Upgrader.exe", workingDirectory / "Octopus.Tentacle.Upgrader-net6.0-win-x86.exe");
             FileSystemTasks.CopyFile(BuildDirectory / "Octopus.Tentacle.Upgrader" / NetCore / "win-x64" / "Octopus.Tentacle.Upgrader.exe", workingDirectory / "Octopus.Tentacle.Upgrader-net6.0-win-x64.exe");
 
-            FileSystemTasks.CopyFile(BuildDirectory / "Octopus.Tentacle.Upgrader" / Net8 / "win-x86" / "Octopus.Tentacle.Upgrader.exe", workingDirectory / "Octopus.Tentacle.Upgrader-net8.0-win-x86.exe");
-            FileSystemTasks.CopyFile(BuildDirectory / "Octopus.Tentacle.Upgrader" / Net8 / "win-x64" / "Octopus.Tentacle.Upgrader.exe", workingDirectory / "Octopus.Tentacle.Upgrader-net8.0-win-x64.exe");
-
             var octopusTentacleUpgraderDirectory = BuildDirectory / "Octopus.Tentacle.Upgrader" / NetFramework / "win";
             octopusTentacleUpgraderDirectory.GlobFiles("*").ForEach(x => FileSystemTasks.CopyFileToDirectory(x, workingDirectory));
             FileSystemTasks.CopyFile(ArtifactsDirectory / "deb" / debAmd64PackageFilename, workingDirectory / debAmd64PackageFilename);
@@ -502,7 +488,7 @@ partial class Build
             FileSystemTasks.CopyFile(ArtifactsDirectory / "rpm" / rpmArm32PackageFilename, workingDirectory / rpmArm32PackageFilename);
             FileSystemTasks.CopyFile(ArtifactsDirectory / "rpm" / rpmx64PackageFilename, workingDirectory / rpmx64PackageFilename);
 
-            foreach (var framework in new[] { NetFramework, NetCore, Net8 })
+            foreach (var framework in new[] { NetFramework, NetCore })
             {
                 foreach (var runtimeId in RuntimeIds)
                 {
@@ -519,15 +505,11 @@ partial class Build
                 workingDirectory / $"tentacle-{NetCoreWindows}-win-x86.zip");
             FileSystemTasks.CopyFile(ArtifactsDirectory / "zip" / $"tentacle-{FullSemVer}-{NetCoreWindows}-win-x64.zip",
                 workingDirectory / $"tentacle-{NetCoreWindows}-win-x64.zip");
-            FileSystemTasks.CopyFile(ArtifactsDirectory / "zip" / $"tentacle-{FullSemVer}-{Net8Windows}-win-x86.zip",
-                workingDirectory / $"tentacle-{Net8Windows}-win-x86.zip");
-            FileSystemTasks.CopyFile(ArtifactsDirectory / "zip" / $"tentacle-{FullSemVer}-{Net8Windows}-win-x64.zip",
-                workingDirectory / $"tentacle-{Net8Windows}-win-x64.zip");
 
             Assert.True((workingDirectory / "Octopus.Tentacle.msi").FileExists(), "Missing Octopus.Tentacle.msi");
             Assert.True((workingDirectory / "Octopus.Tentacle-x64.msi").FileExists(), "Missing Octopus.Tentacle-x64.msi");
             Assert.True((workingDirectory / "Octopus.Tentacle.Upgrader.exe").FileExists(), "Missing Octopus.Tentacle.Upgrader.exe");
-            foreach (var framework in new[] {NetCore, Net8})
+            foreach (var framework in new[] {NetCore})
             {
                 Assert.True((workingDirectory / $"Octopus.Tentacle-{framework}-win-x86.msi").FileExists(), $"Missing Octopus.Tentacle-{framework}-win-x86.msi");
                 Assert.True((workingDirectory / $"Octopus.Tentacle-{framework}-win-x64.msi").FileExists(), $"Missing Octopus.Tentacle-{framework}-win-x64.msi");

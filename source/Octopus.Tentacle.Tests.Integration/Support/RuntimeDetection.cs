@@ -38,7 +38,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             throw new NotSupportedException($"'{frameworkDescription}' is not supported");
         }
 
-        public static bool IsDotNet => GetCurrentRuntime() == DotNet6 || GetCurrentRuntime() == DotNet8;
+        public static bool IsDotNet => GetCurrentRuntime() == DotNet8;
         public static bool IsFramework48 => GetCurrentRuntime() == Framework48;
     }
 }

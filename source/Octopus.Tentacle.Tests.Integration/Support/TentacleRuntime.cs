@@ -15,9 +15,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
     public enum TentacleRuntime
     {
-        [Description(RuntimeDetection.DotNet6)]
-        DotNet6,
-        
         [Description(RuntimeDetection.Framework48)]
         Framework48,
         

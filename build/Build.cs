@@ -87,10 +87,8 @@ partial class Build : NukeBuild
     readonly AbsolutePath TestDirectory = RootDirectory / "_test";
 
     const string NetFramework = "net48";
-    const string NetCore = "net6.0";
-    const string NetCoreWindows = "net6.0-windows";
-    const string Net8 = "net8.0";
-    const string Net8Windows = "net8.0-windows";
+    const string NetCore = "net8.0";
+    const string NetCoreWindows = "net8.0-windows";
 
     IEnumerable<string> RuntimeIds => SpecificRuntimeId != null
         ? new[] { SpecificRuntimeId }
@@ -158,12 +156,9 @@ partial class Build : NukeBuild
                         case "win-x64":
                             RunBuildFor(NetCore, runtimeId);
                             RunBuildFor(NetCoreWindows, runtimeId);
-                            RunBuildFor(Net8, runtimeId);
-                            RunBuildFor(Net8Windows, runtimeId);
                             break;
                         default:
                             RunBuildFor(NetCore, runtimeId);
-                            RunBuildFor(Net8, runtimeId);
                             break;
                     }
                 }
@@ -179,10 +174,6 @@ partial class Build : NukeBuild
                     (BuildDirectory / "Tentacle" / NetCore / "win-x64"),
                     (BuildDirectory / "Tentacle" / NetCoreWindows / "win-x86"),
                     (BuildDirectory / "Tentacle" / NetCoreWindows / "win-x64"),
-                    (BuildDirectory / "Tentacle" / Net8 / "win-x86"),
-                    (BuildDirectory / "Tentacle" / Net8 / "win-x64"),
-                    (BuildDirectory / "Tentacle" / Net8Windows / "win-x86"),
-                    (BuildDirectory / "Tentacle" / Net8Windows / "win-x64"),
                 };
                 directoriesToCopyHardenScriptInto.ForEach(dir => CopyFileToDirectory(hardenInstallationDirectoryScript, dir, FileExistsPolicy.Overwrite));
 
@@ -218,7 +209,6 @@ partial class Build : NukeBuild
                     .ForEach(runtimeId =>
                     {
                         RunBuildFor(NetCore, runtimeId);
-                        RunBuildFor(Net8, runtimeId);
                     });
 
                 versionInfoFile.Dispose();
@@ -238,7 +228,6 @@ partial class Build : NukeBuild
                     .ForEach(runtimeId =>
                     {
                         RunBuildFor(NetCore, runtimeId);
-                        RunBuildFor(Net8, runtimeId);
                     });
 
                 versionInfoFile.Dispose();

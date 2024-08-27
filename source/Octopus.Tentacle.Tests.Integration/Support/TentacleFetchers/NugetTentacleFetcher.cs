@@ -87,7 +87,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
 
                 var names = runtime switch
                 {
-                    TentacleRuntime.DotNet6 => dotnetArtifactNames,
                     TentacleRuntime.DotNet8 => dotnetArtifactNames,
                     TentacleRuntime.Framework48 => net48ArtifactNames,
                     _ => throw new ArgumentOutOfRangeException(nameof(runtime), runtime, null)
