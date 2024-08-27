@@ -214,9 +214,9 @@ function registerTentacle() {
         if [[ ! -z "$ListeningPort" && "$ListeningPort" != "$internalListeningPort" ]]; then
             ARGS+=('--tentacle-comms-port' $ListeningPort)
         fi
-		if [[ ! -z "$ProxyName" ]]; then
+        if [[ ! -z "$ProxyName" ]]; then
             ARGS+=('--proxy' "$ProxyName")
-		fi
+        fi
     fi
 
     if [[ ! -z "$ServerApiKey" ]]; then
