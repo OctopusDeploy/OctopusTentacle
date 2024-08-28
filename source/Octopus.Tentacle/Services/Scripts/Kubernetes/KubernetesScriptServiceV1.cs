@@ -98,11 +98,21 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             var trackedPod = podStatusProvider.TryGetTrackedScriptPod(command.ScriptTicket);
             if (trackedPod == null)
                 return GetResponseForMissingScriptPod(command.ScriptTicket, command.LastLogSequence);
-
+            
+            //Mark the tracked pod as completed
+            trackedPod.MarkAsCompleted(ScriptExitCodes.CanceledExitCode, DateTimeOffset.UtcNow);
+            
+            //we write a cancellation message here (we put the pod message as verbose)
+            var scriptLog = scriptLogProvider.GetOrCreate(command.ScriptTicket);
+            scriptLog.Verbose($"Kubernetes Pod {command.ScriptTicket.ToKubernetesScriptPodName()} has been terminated.");
+            scriptLog.Info("Script execution canceled.");
+            
+            //get the response for the tracked pod (which will now be marked as completed)
             var response = await GetResponse(trackedPod, command.LastLogSequence, cancellationToken);
-
-            await podService.DeleteIfExists(command.ScriptTicket, cancellationToken);
-
+            
+            //delete the pod with a 0-second grace period
+            await podService.DeleteIfExists(command.ScriptTicket, TimeSpan.Zero, cancellationToken);
+            
             return response;
         }
 
