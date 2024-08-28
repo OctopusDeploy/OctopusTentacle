@@ -21,6 +21,8 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
 
 partial class Build
 {
+    const string KubernetesTentacleContainerRuntimeDepsTag = "6.0-bookworm-slim";
+    
     //We don't sign linux packages when building locally
     readonly bool SignLinuxPackages = !IsLocalBuild;
 
@@ -146,7 +148,7 @@ partial class Build
         .Executes(() =>
         {
             //Debian 12
-            BuildAndPushOrLoadKubernetesTentacleContainerImage(push: true, load: false, "6.0-bookworm-slim", "docker.packages.octopushq.com");
+            BuildAndPushOrLoadKubernetesTentacleContainerImage(push: true, load: false, KubernetesTentacleContainerRuntimeDepsTag, "docker.packages.octopushq.com");
             //Debian 11
             BuildAndPushOrLoadKubernetesTentacleContainerImage(push: true, load: false,  "6.0-bullseye-slim","docker.packages.octopushq.com", tagSuffix: "bullseye-slim");
         });
@@ -158,7 +160,7 @@ partial class Build
         .DependsOn(PackDebianPackage)
         .Executes(() =>
         {
-            BuildAndPushOrLoadKubernetesTentacleContainerImage(push: false, load: true, "6.0-bookworm-slim");
+            BuildAndPushOrLoadKubernetesTentacleContainerImage(push: false, load: true, KubernetesTentacleContainerRuntimeDepsTag);
         });
 
     [PublicAPI]
@@ -172,7 +174,7 @@ partial class Build
             const int port = 32000;
             var hostPort = $"{host}:{port}";
             
-            BuildAndPushOrLoadKubernetesTentacleContainerImage(push: true, load: false, "6.0-bookworm-slim", host: hostPort);
+            BuildAndPushOrLoadKubernetesTentacleContainerImage(push: true, load: false, KubernetesTentacleContainerRuntimeDepsTag, host: hostPort);
         });
 
     [PublicAPI]
@@ -182,7 +184,7 @@ partial class Build
         .DependsOn(PackDebianPackage)
         .Executes(() =>
         {
-            BuildAndPushOrLoadKubernetesTentacleContainerImage(push: false, load: true, "6.0-bookworm-slim", includeDebugger: true);
+            BuildAndPushOrLoadKubernetesTentacleContainerImage(push: false, load: true, KubernetesTentacleContainerRuntimeDepsTag, includeDebugger: true);
         });
 
     [PublicAPI]
