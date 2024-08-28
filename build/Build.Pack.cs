@@ -150,7 +150,7 @@ partial class Build
             //Debian 12
             BuildAndPushOrLoadKubernetesTentacleContainerImage(push: true, load: false, KubernetesTentacleContainerRuntimeDepsTag, "docker.packages.octopushq.com");
             //Debian 11
-            BuildAndPushOrLoadKubernetesTentacleContainerImage(push: true, load: false,  "6.0-bullseye-slim","docker.packages.octopushq.com", tagSuffix: "bullseye-slim");
+            BuildAndPushOrLoadKubernetesTentacleContainerImage(push: true, load: false,  "6.0-bullseye-slim", "docker.packages.octopushq.com", tagSuffix: "bullseye-slim");
         });
 
     [PublicAPI]
