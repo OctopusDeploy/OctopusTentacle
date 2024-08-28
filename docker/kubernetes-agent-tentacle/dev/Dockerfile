@@ -1,5 +1,4 @@
-# The default image is bullseye-slim (Debian 11)
-ARG RuntimeDepsTag="6.0-bullseye-slim"
+ARG RuntimeDepsTag
 
 
 FROM golang:1.22 as bootstrapRunnerBuilder
