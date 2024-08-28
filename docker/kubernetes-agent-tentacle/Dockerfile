@@ -1,3 +1,7 @@
+# The default image is bullseye-slim (Debian 11)
+ARG RuntimeDepsTag="6.0-bullseye-slim"
+
+
 FROM golang:1.22 as bootstrapRunnerBuilder
 
 ARG TARGETARCH
@@ -9,8 +13,7 @@ WORKDIR /bootstrapRunner
 # Note: the given ldflags remove debug symbols
 RUN go build -ldflags "-s -w" -o "bin/bootstrapRunner"
 
-# The default image is bullseye-slim (Debian 11)
-ARG RuntimeDepsTag="6.0-bullseye-slim"
+
 FROM mcr.microsoft.com/dotnet/runtime-deps:$RuntimeDepsTag
 
 ARG BUILD_NUMBER

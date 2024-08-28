@@ -158,7 +158,7 @@ partial class Build
         .DependsOn(PackDebianPackage)
         .Executes(() =>
         {
-            BuildAndPushOrLoadKubernetesTentacleContainerImage(push: false, load: true, "6.0-bookworm-slim",);
+            BuildAndPushOrLoadKubernetesTentacleContainerImage(push: false, load: true, "6.0-bookworm-slim");
         });
 
     [PublicAPI]
@@ -582,9 +582,9 @@ partial class Build
 
             var tag = $"{hostPrefix}octopusdeploy/kubernetes-agent-tentacle:{FullSemVer}";
 
-            if (!string.IsNullOrEmpty(tagSuffix)) 
+            if (!string.IsNullOrEmpty(tagSuffix))
             {
-                tag += $"-{tagSuffix}"
+                tag += $"-{tagSuffix}";
             }
 
             if (includeDebugger)
