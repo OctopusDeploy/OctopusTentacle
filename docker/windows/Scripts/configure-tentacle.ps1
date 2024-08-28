@@ -25,6 +25,7 @@ $ServerPort=$env:ServerPort;
 $Space=$env:Space;
 $MachinePolicy=$env:MachinePolicy;
 $AsKubernetesTentacle=$env:AsKubernetesTentacle;
+$ProxyName=$env:ProxyName;
 
 $TentacleExe=$Exe
 
@@ -132,6 +133,9 @@ function Validate-Variables() {
       Write-Log " - communication mode 'Listening' (Passive)"
     }
     Write-Log " - registered port $ListeningPort"
+    if ($null -ne $ProxyName) {
+      Write-Log " - proxy '$ProxyName'"
+    }
   }
   if ($null -ne $TargetWorkerPool) {
     Write-Log " - worker pool '$TargetWorkerPool'"
@@ -253,6 +257,10 @@ function Register-Tentacle(){
     if (($null -ne $ListeningPort) -and ($ListeningPort -ne $InternalListeningPort)) {
       $arg += "--tentacle-comms-port"
       $arg += $ListeningPort
+    }
+    if ($null -ne $ProxyName) {
+      $arg += "--proxy"
+      $arg += $ProxyName
     }
   }
 

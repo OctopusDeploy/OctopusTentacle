@@ -49,6 +49,7 @@ ENV DISABLE_DIND=N
 ENV ListeningPort=""
 ENV MachinePolicy="Default Machine Policy"
 ENV PublicHostNameConfiguration="ComputerName"
+ENV ProxyName=""
 ENV ServerApiKey=""
 ENV ServerPassword=""
 ENV ServerCommsAddress=""
