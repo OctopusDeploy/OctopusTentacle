@@ -86,7 +86,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         public void CancellationToken_ShouldForceKillTheProcess()
         {
             // Terminate the process after a very short time so the test doesn't run forever
-            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1)))
+            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3)))
             {
                 // Starting a new instance of cmd.exe will run indefinitely waiting for user input
                 var arguments = "";
