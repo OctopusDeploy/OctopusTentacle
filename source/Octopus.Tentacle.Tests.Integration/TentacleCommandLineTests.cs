@@ -725,9 +725,14 @@ Or one of the common options:
                 environmentVariablesToRunTentacleWith.Add(EnvironmentVariables.TentacleMachineConfigurationHomeDirectory, tempDirectory.DirectoryPath);
             }
 
+            Logger.Information("Time BEFORE invoking find tentacle EXE {UtcNow}", DateTimeOffset.UtcNow);
             var tentacleExe = TentacleExeFinder.FindTentacleExe(tentacleConfigurationTestCase.TentacleRuntime);
+            Logger.Information("Time BEFORE invoking find tentacle EXE {UtcNow}", DateTimeOffset.UtcNow);
+
             var output = new StringBuilder();
             var errorOut = new StringBuilder();
+            
+            Logger.Information("Time BEFORE invoking tentacle {UtcNow}", DateTimeOffset.UtcNow);
             
             var result = await RetryHelper.RetryAsync<CommandResult, CommandExecutionException>(
                 () => Cli.Wrap(tentacleExe)
@@ -738,6 +743,8 @@ Or one of the common options:
                     .WithEnvironmentVariables(environmentVariablesToRunTentacleWith)
                     .ExecuteAsync(CancellationToken));
 
+            Logger.Information("Time AFTER invoking tentacle {UtcNow}", DateTimeOffset.UtcNow);
+            
             return (result.ExitCode, output.ToString(), errorOut.ToString());
         }
 
