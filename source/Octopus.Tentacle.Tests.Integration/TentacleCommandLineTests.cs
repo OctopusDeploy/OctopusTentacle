@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using CliWrap;
 using CliWrap.Exceptions;
@@ -767,19 +768,50 @@ The details are logged above. These commands probably need to take Lazy<T> depen
             var errorOut = new StringBuilder();
             
             Logger.Information("Time BEFORE invoking tentacle {UtcNow}", DateTimeOffset.UtcNow);
+
+            int exitCode = -1;
+            var directory = Path.GetDirectoryName(tentacleExe);
+            var fileName = Path.GetFileName(tentacleExe);
+            var args = string.Join(' ', arguments);
+
+            var result = await RetryHelper.RetryAsync<int, Exception>(
+                async () =>
+                {
+                    await Task.CompletedTask;
+
+                    exitCode = Execute(
+                            fileName,
+                            args,
+                            directory,
+                            out _,
+                            out var infoMessages,
+                            out var errorMessages,
+                            CancellationToken);
+                    output.Clear();
+                    output.Append(infoMessages);
+
+                    errorOut.Clear();
+                    errorOut.Append(errorMessages);
+
+                    return exitCode;
+                },
+                Logger
+                
+            );
             
-            var result = await RetryHelper.RetryAsync<CommandResult, CommandExecutionException>(
-                () => Cli.Wrap(tentacleExe)
-                    .WithArguments(arguments)
-                    .WithValidation(CommandResultValidation.None)
-                    .WithStandardOutputPipe(PipeTarget.ToStringBuilder(output))
-                    .WithStandardErrorPipe(PipeTarget.ToStringBuilder(errorOut))
-                    .WithEnvironmentVariables(environmentVariablesToRunTentacleWith)
-                    .ExecuteAsync(CancellationToken));
+            // var result = await RetryHelper.RetryAsync<CommandResult, CommandExecutionException>(
+            //     () => Cli.Wrap(tentacleExe)
+            //         .WithArguments(arguments)
+            //         .WithValidation(CommandResultValidation.None)
+            //         .WithStandardOutputPipe(PipeTarget.ToStringBuilder(output))
+            //         .WithStandardErrorPipe(PipeTarget.ToStringBuilder(errorOut))
+            //         .WithEnvironmentVariables(environmentVariablesToRunTentacleWith)
+            //         .ExecuteAsync(CancellationToken),
+            //     Logger);
 
             Logger.Information("Time AFTER invoking tentacle {UtcNow}", DateTimeOffset.UtcNow);
             
-            return (result.ExitCode, output.ToString(), errorOut.ToString());
+            return (exitCode, output.ToString(), errorOut.ToString());
         }
 
         static string JsonFormattedPath(string path)
@@ -790,5 +822,42 @@ The details are logged above. These commands probably need to take Lazy<T> depen
         public class NotLoggedYetException : Exception
         {
         }
+        
+        static int Execute(
+             string command,
+             string arguments,
+             string workingDirectory,
+             out StringBuilder debugMessages,
+             out StringBuilder infoMessages,
+             out StringBuilder errorMessages,
+             CancellationToken cancel)
+         {
+             var debug = new StringBuilder();
+             var info = new StringBuilder();
+             var error = new StringBuilder();
+             var exitCode = SilentProcessRunner.ExecuteCommand(
+                 command,
+                 arguments,
+                 workingDirectory,
+                 x =>
+                 {
+                     debug.Append(x);
+                 },
+                 x =>
+                 {
+                     info.Append(x);
+                 },
+                 x =>
+                 {
+                     error.Append(x);
+                 },
+                 cancel);
+
+             debugMessages = debug;
+             infoMessages = info;
+             errorMessages = error;
+
+             return exitCode;
+         }
     }
 }
