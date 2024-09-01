@@ -19,7 +19,7 @@
         <DefineConstants>$(DefineConstants);DOES_NOT_SUPPORT_CANCELLATION_ON_SOCKETS</DefineConstants>
     </PropertyGroup>
     <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0'">
-        <!-- TODO: Investigate why this is needed  -->
+        <!-- TODO: Investigate why this is needed -->
         <ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
     </PropertyGroup>
 
