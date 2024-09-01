@@ -32,8 +32,6 @@ namespace Octopus.Tentacle.Tests.Integration
     {
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-        // Run these tests in serial to avoid conflicts
-        [NonParallelizable]
         public async Task TentacleExeNoArguments(TentacleConfigurationTestCase tc)
         {
             var (exitCode, stdout, stderr) = await RunCommand(tc, null);
@@ -46,8 +44,6 @@ namespace Octopus.Tentacle.Tests.Integration
         
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-        // Run these tests in serial to avoid conflicts
-        [NonParallelizable]
         public async Task UnknownCommand(TentacleConfigurationTestCase tc)
         {
             var (exitCode, stdout, stderr) = await RunCommand(tc, null, "unknown-command");
@@ -59,8 +55,6 @@ namespace Octopus.Tentacle.Tests.Integration
         
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-        // Run these tests in serial to avoid conflicts
-        [NonParallelizable]
         public async Task UnknownArgument(TentacleConfigurationTestCase tc)
         {
             var (exitCode, stdout, stderr) = await RunCommand(tc, null, "version", "--unknown=argument");
@@ -72,8 +66,6 @@ namespace Octopus.Tentacle.Tests.Integration
         
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-        // Run these tests in serial to avoid conflicts
-        [NonParallelizable]
         public async Task InvalidArgument(TentacleConfigurationTestCase tc)
         {
             var (exitCode, stdout, stderr) = await RunCommand(tc, null, "version", "--format=unsupported");
@@ -85,8 +77,6 @@ namespace Octopus.Tentacle.Tests.Integration
         
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-        // Run these tests in serial to avoid conflicts
-        [NonParallelizable]
         public async Task NoConsoleLoggingSwitchStillSilentlySupportedForBackwardsCompat(TentacleConfigurationTestCase tc)
         {
             var (_, _, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "version", "--noconsolelogging");
@@ -96,8 +86,6 @@ namespace Octopus.Tentacle.Tests.Integration
         
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-        // Run these tests in serial to avoid conflicts
-        [NonParallelizable]
         public async Task NoLogoSwitchStillSilentlySupportedForBackwardsCompat(TentacleConfigurationTestCase tc)
         {
             var (_, _, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "version", "--nologo");
@@ -107,8 +95,6 @@ namespace Octopus.Tentacle.Tests.Integration
 
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-        // Run these tests in serial to avoid conflicts
-        [NonParallelizable]
         public async Task ConsoleSwitchStillSilentlySupportedForBackwardsCompat(TentacleConfigurationTestCase tc)
         {
             var (_, _, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "version", "--console");
@@ -118,8 +104,6 @@ namespace Octopus.Tentacle.Tests.Integration
         
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-        // Run these tests in serial to avoid conflicts
-        [NonParallelizable]
         public async Task ShouldSupportFuzzyCommandParsing(TentacleConfigurationTestCase tc)
         {
             await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "version");
@@ -129,8 +113,6 @@ namespace Octopus.Tentacle.Tests.Integration
 
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-        // Run these tests in serial to avoid conflicts
-        [NonParallelizable]
         public async Task VersionCommandTextFormat(TentacleConfigurationTestCase tc)
         {
             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "version");
@@ -143,8 +125,6 @@ namespace Octopus.Tentacle.Tests.Integration
 
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-        // Run these tests in serial to avoid conflicts
-        [NonParallelizable]
         public async Task VersionCommandJsonFormat(TentacleConfigurationTestCase tc)
         {
             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "version", "--format=json");
@@ -162,8 +142,6 @@ namespace Octopus.Tentacle.Tests.Integration
 
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-        // Run these tests in serial to avoid conflicts
-        [NonParallelizable]
         public async Task CanGetHelpForHelp(TentacleConfigurationTestCase tc)
         {
             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "help", "--help");
@@ -185,8 +163,6 @@ Or one of the common options:
 
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-        // Run these tests in serial to avoid conflicts
-        [NonParallelizable]
         public async Task HelpAsSwitchShouldShowCommandSpecificHelp(TentacleConfigurationTestCase tc)
         {
             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "version", "--help");
@@ -208,8 +184,6 @@ Or one of the common options:
 
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-        // Run these tests in serial to avoid conflicts
-        [NonParallelizable]
         public async Task GeneralHelpAsJsonCanBeParsedByAutomationScripts(TentacleConfigurationTestCase tc)
         {
             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "help", "--format=json");
@@ -243,8 +217,6 @@ Or one of the common options:
 
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-        // Run these tests in serial to avoid conflicts
-        [NonParallelizable]
         public async Task CommandSpecificHelpAsJsonCanBeParsedByAutomationScripts(TentacleConfigurationTestCase tc)
         {
             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "version", "--help", "--format=json");
@@ -273,8 +245,6 @@ Or one of the common options:
 
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-        // Run these tests in serial to avoid conflicts
-        [NonParallelizable]
         public async Task CommandSpecificHelpAsJsonLooksSensibleToHumans(TentacleConfigurationTestCase tc)
         {
             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "version", "--help", "--format=json");
@@ -302,8 +272,6 @@ Or one of the common options:
 
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-        // Run these tests in serial to avoid conflicts
-        [NonParallelizable]
         public async Task HelpForInstanceSpecificCommandsAlwaysWorks(TentacleConfigurationTestCase tc)
         {
             var (_, stdout, stderr) = await RunCommand(tc, null, "help", "--format=json");
@@ -529,8 +497,6 @@ The details are logged above. These commands probably need to take Lazy<T> depen
 
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-        // Run these tests in serial to avoid conflicts
-        [NonParallelizable]
         public async Task HelpAsFirstArgumentShouldShowCommandSpecificHelp(TentacleConfigurationTestCase tc)
         {
             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "help", "version");
@@ -761,7 +727,7 @@ Or one of the common options:
 
             Logger.Information("Time BEFORE invoking find tentacle EXE {UtcNow}", DateTimeOffset.UtcNow);
             var tentacleExe = TentacleExeFinder.FindTentacleExe(tentacleConfigurationTestCase.TentacleRuntime);
-            Logger.Information("Time AFTER invoking find tentacle EXE {UtcNow}", DateTimeOffset.UtcNow);
+            Logger.Information("Time BEFORE invoking find tentacle EXE {UtcNow}", DateTimeOffset.UtcNow);
 
             var output = new StringBuilder();
             var errorOut = new StringBuilder();
