@@ -3,7 +3,7 @@
     <AssemblyName>Octopus.Tentacle.Upgrader</AssemblyName>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <IsPublishable>true</IsPublishable>
+    <IsPublishable>false</IsPublishable>
     <OutputPath>bin</OutputPath>
     <OutputType>Exe</OutputType>
     <PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
@@ -32,7 +32,10 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <Optimize>True</Optimize>
   </PropertyGroup>
-    
+
+  <PropertyGroup Condition="('$(TargetFramework)'=='net48' OR '$(TargetFramework)'=='net8.0') AND ('$(RuntimeIdentifier)'=='win' OR '$(RuntimeIdentifier)'=='win-x86' OR '$(RuntimeIdentifier)'=='win-x64')">
+    <IsPublishable>true</IsPublishable>
+  </PropertyGroup>
   <PropertyGroup>
     <DefineConstants>DEFINE_VERSION_ATTRIBUTES</DefineConstants>
   </PropertyGroup>

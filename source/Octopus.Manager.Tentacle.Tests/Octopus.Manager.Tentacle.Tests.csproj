@@ -12,6 +12,7 @@
     <LangVersion>9</LangVersion>
     <Nullable>annotations</Nullable>
     <TargetFrameworks>net48;net6.0-windows;net8.0-windows</TargetFrameworks>
+    <!-- Following the recommended action from https://learn.microsoft.com/en-us/dotnet/core/compatibility/sdk/6.0/duplicate-files-in-output -->
     <ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
   </PropertyGroup>
 

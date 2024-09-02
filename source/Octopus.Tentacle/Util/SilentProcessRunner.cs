@@ -294,7 +294,7 @@ namespace Octopus.Tentacle.Util
 #endif
             }
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
             [SupportedOSPlatform("windows")]
 #endif
             static void TryKillWindowsProcessAndChildrenRecursively(int pid)
