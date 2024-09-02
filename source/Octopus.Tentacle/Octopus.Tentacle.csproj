@@ -56,6 +56,9 @@
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
 		<PackageReference Include="KubernetesClient.Classic" Version="13.0.26" />
 	</ItemGroup>
+	<ItemGroup Condition="'$(TargetFramework)' == 'net6.0' Or '$(TargetFramework)' == 'net6.0-windows' Or '$(TargetFramework)' == 'net8.0' Or '$(TargetFramework)' == 'net8.0-windows'">
+		<PackageReference Include="KubernetesClient" Version="14.0.9" />
+	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Octopus.Client" Version="14.3.1508" />
 	</ItemGroup>
@@ -144,17 +147,5 @@
 	  <EmbeddedResource Include="Startup\PathsToDeleteOnStartup.core.txt" />
 	  <EmbeddedResource Include="Startup\PathsToDeleteOnStartup.netfx.txt" />
 	  <None Remove="Kubernetes\bootstrapRunner.sh" />
-	</ItemGroup>
-	<ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
-	  <PackageReference Include="KubernetesClient" Version="14.0.9" />
-	</ItemGroup>
-	<ItemGroup Condition="'$(TargetFramework)' == 'net6.0-windows'">
-	  <PackageReference Include="KubernetesClient" Version="14.0.9" />
-	</ItemGroup>
-	<ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
-	  <PackageReference Include="KubernetesClient" Version="14.0.9" />
-	</ItemGroup>
-	<ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
-	  <PackageReference Include="KubernetesClient" Version="14.0.9" />
 	</ItemGroup>
 </Project>

@@ -74,6 +74,7 @@ namespace Octopus.Tentacle.Security
 
         static byte[] GetEncryptionKey(string encryptionPassword)
         {
+// NET8 requires explicit encryption algorithm specified as the other overload method has been marked as obsolete. The default encryption value is SHA1.
 #if NET8_0_OR_GREATER
             using var passwordGenerator = new Rfc2898DeriveBytes(encryptionPassword, PasswordPaddingSalt, PasswordSaltIterations, HashAlgorithmName.SHA1);
 #else
