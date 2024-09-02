@@ -170,7 +170,7 @@ namespace Octopus.Tentacle.Tests.Integration
             stopWatch.Stop();
 
             actualException.Should().NotBeNull().And.BeOfType<OperationCanceledException>().And.Match<Exception>(x => x.Message == "Script execution was cancelled");
-            stopWatch.Elapsed.Should().BeLessOrEqualTo(TimeSpan.FromSeconds(15));
+            stopWatch.Elapsed.Should().BeLessOrEqualTo(TimeSpan.FromSeconds(10));
 
             recordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().Be(1);
             recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Started.Should().BeGreaterThan(1);
