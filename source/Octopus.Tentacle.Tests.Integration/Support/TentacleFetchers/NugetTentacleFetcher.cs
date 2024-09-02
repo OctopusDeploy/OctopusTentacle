@@ -28,10 +28,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
 
         public async Task<string> GetTentacleVersion(string downloadPath, Version version, TentacleRuntime runtime, CancellationToken cancellationToken)
         {
-            return await DownloadAndExtractFromUrl(downloadPath, runtime, DownloadUrlForVersion(version.ToString()));
+            return await DownloadAndExtractFromUrl(downloadPath, version, runtime, DownloadUrlForVersion(version.ToString()));
         }
 
-        async Task<string> DownloadAndExtractFromUrl(string directoryPath, TentacleRuntime runtime, string url)
+        async Task<string> DownloadAndExtractFromUrl(string directoryPath, Version version, TentacleRuntime runtime, string url)
         {
             await Task.CompletedTask;
             var downloadFilePath = Path.Combine(directoryPath, Guid.NewGuid().ToString("N"));
@@ -44,7 +44,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
             ZipFile.ExtractToDirectory(downloadFilePath, extractionDirectory);
 
             // This is the path to the runtime-specific artifact
-            var tentacleArtifacts = TentacleArtifactNames(runtime)
+            var tentacleArtifacts = TentacleArtifactNames(version, runtime)
                 .Select(name => Path.Combine(extractionDirectory, name))
                 .ToArray();
             var tentacleArtifact = tentacleArtifacts.FirstOrDefault(File.Exists);
@@ -71,13 +71,18 @@ namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
             return Path.Combine(tentacleFolder, "tentacle", "Tentacle");
         }
 
-        public string[] TentacleArtifactNames(TentacleRuntime runtime)
+        public string[] TentacleArtifactNames(Version version, TentacleRuntime runtime)
         {
             if (PlatformDetection.IsRunningOnWindows)
             {
+                // Tentacle 8.2 is/was built on .NET8, previous versions were built on .NET6
+                string runtimeForVersion = version.Major >= 8 && version.Minor >= 2
+                    ? RuntimeDetection.DotNet8
+                    : RuntimeDetection.DotNet6;
+                
                 var net48ArtifactNames = new[] {"tentacle-net48-win.zip"};
                 var dotnetArtifactNames = Architectures()
-                    .Select(a => $"tentacle-{RuntimeDetection.GetCurrentRuntime()}-win-{a}.zip")
+                    .Select(a => $"tentacle-{runtimeForVersion}-win-{a}.zip")
                     .ToArray();
 
                 var names = runtime switch
