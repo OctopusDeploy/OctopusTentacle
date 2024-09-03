@@ -11,7 +11,8 @@
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <LangVersion>9</LangVersion>
     <Nullable>annotations</Nullable>
-    <TargetFrameworks>net48;net6.0-windows</TargetFrameworks>
+    <TargetFrameworks>net48;net6.0-windows;net8.0-windows</TargetFrameworks>
+    <!-- Following the recommended action from https://learn.microsoft.com/en-us/dotnet/core/compatibility/sdk/6.0/duplicate-files-in-output -->
     <ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
   </PropertyGroup>
 
@@ -22,6 +23,11 @@
       </PropertyGroup>
     </When>
     <When Condition="'$(TargetFramework)' == 'net6.0-windows'">
+      <PropertyGroup>
+        <RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
+      </PropertyGroup>
+    </When>
+    <When Condition="'$(TargetFramework)' == 'net8.0-windows'">
       <PropertyGroup>
         <RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
       </PropertyGroup>

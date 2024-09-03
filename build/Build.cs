@@ -87,8 +87,8 @@ partial class Build : NukeBuild
     readonly AbsolutePath TestDirectory = RootDirectory / "_test";
 
     const string NetFramework = "net48";
-    const string NetCore = "net6.0";
-    const string NetCoreWindows = "net6.0-windows";
+    const string NetCore = "net8.0";
+    const string NetCoreWindows = "net8.0-windows";
 
     IEnumerable<string> RuntimeIds => SpecificRuntimeId != null
         ? new[] { SpecificRuntimeId }
@@ -206,7 +206,10 @@ partial class Build : NukeBuild
                 using var productWxsFile = UpdateMsiProductVersion();
 
                 RuntimeIds.Where(x => x.StartsWith("linux-"))
-                    .ForEach(runtimeId => RunBuildFor(NetCore, runtimeId));
+                    .ForEach(runtimeId =>
+                    {
+                        RunBuildFor(NetCore, runtimeId);
+                    });
 
                 versionInfoFile.Dispose();
                 productWxsFile.Dispose();
@@ -222,7 +225,10 @@ partial class Build : NukeBuild
                 using var productWxsFile = UpdateMsiProductVersion();
 
                 RuntimeIds.Where(x => x.StartsWith("osx-"))
-                    .ForEach(runtimeId => RunBuildFor(NetCore, runtimeId));
+                    .ForEach(runtimeId =>
+                    {
+                        RunBuildFor(NetCore, runtimeId);
+                    });
 
                 versionInfoFile.Dispose();
                 productWxsFile.Dispose();
@@ -288,6 +294,7 @@ partial class Build : NukeBuild
     ModifiableFileWithRestoreContentsOnDispose UpdateMsiProductVersion()
     {
         var productWxsFilePath = RootDirectory / "installer" / "Octopus.Tentacle.Installer" / "Product.wxs";
+        var productWxsFile = new ModifiableFileWithRestoreContentsOnDispose(productWxsFilePath);
 
         var xmlDoc = new XmlDocument();
         xmlDoc.Load(productWxsFilePath);
@@ -305,7 +312,7 @@ partial class Build : NukeBuild
 
         xmlDoc.Save(productWxsFilePath);
 
-        return new ModifiableFileWithRestoreContentsOnDispose(productWxsFilePath);
+        return productWxsFile;
     }
 
     void RunBuildFor(string framework, string runtimeId)

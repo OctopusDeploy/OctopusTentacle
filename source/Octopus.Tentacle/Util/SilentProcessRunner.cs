@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Management;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Text;
 using System.Threading;
 using Octopus.Diagnostics;
@@ -293,6 +294,9 @@ namespace Octopus.Tentacle.Util
 #endif
             }
 
+#if NET8_0_OR_GREATER
+            [SupportedOSPlatform("windows")]
+#endif
             static void TryKillWindowsProcessAndChildrenRecursively(int pid)
             {
                 try

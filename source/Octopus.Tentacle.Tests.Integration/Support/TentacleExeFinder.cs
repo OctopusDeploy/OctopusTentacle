@@ -24,13 +24,13 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 // /opt/TeamCity/BuildAgent/work/639265b01610d682/build/outputs/tentaclereal/tentacle/Tentacle
 
                 const string net48ArtifactDir = "tentaclereal-net48";
-                const string net60ArtifactDir = "tentaclereal-net6.0";
+                const string net80ArtifactDir = "tentaclereal-net8.0";
                 
                 string artifactDir =
                     version switch
                     {
                         TentacleRuntime.Framework48 => net48ArtifactDir,
-                        TentacleRuntime.DotNet6 => net60ArtifactDir,
+                        TentacleRuntime.DotNet8 => net80ArtifactDir,
                         _ => throw new ArgumentOutOfRangeException(nameof(version), version, null)
                     };
 
@@ -42,7 +42,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 version switch
                 {
                     TentacleRuntime.Framework48 => "net48",
-                    TentacleRuntime.DotNet6 => "net6.0",
+                    TentacleRuntime.DotNet8 => "net8.0",
                     _ => throw new ArgumentOutOfRangeException(nameof(version), version, null)
                 };
 
