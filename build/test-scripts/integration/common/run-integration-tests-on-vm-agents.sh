@@ -13,7 +13,7 @@ $SCRIPT_DIR/setup-vm-agent.sh
 
 source $SCRIPT_DIR/set-dotnet-envvars.sh
 
-itdll=`pwd`/build/outputs/integrationtests/net6.0/linux-x64/Octopus.Tentacle.Tests.Integration.dll
+itdll=`pwd`/build/outputs/integrationtests/${TARGET_FRAMEWORK:-net8.0}/linux-x64/Octopus.Tentacle.Tests.Integration.dll
 
 
 # We don't care about the exit code of dotnet test and instead depend on tests passing.
