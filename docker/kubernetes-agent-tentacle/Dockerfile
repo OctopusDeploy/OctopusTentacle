@@ -1,3 +1,6 @@
+ARG RuntimeDepsTag
+
+
 FROM golang:1.22 as bootstrapRunnerBuilder
 
 ARG TARGETARCH
@@ -9,7 +12,8 @@ WORKDIR /bootstrapRunner
 # Note: the given ldflags remove debug symbols
 RUN go build -ldflags "-s -w" -o "bin/bootstrapRunner"
 
-FROM mcr.microsoft.com/dotnet/runtime-deps:6.0
+
+FROM mcr.microsoft.com/dotnet/runtime-deps:$RuntimeDepsTag
 
 ARG BUILD_NUMBER
 ARG BUILD_DATE

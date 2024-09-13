@@ -21,6 +21,8 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
 
 partial class Build
 {
+    const string KubernetesTentacleContainerRuntimeDepsTag = "8.0-bookworm-slim";
+    
     //We don't sign linux packages when building locally
     readonly bool SignLinuxPackages = !IsLocalBuild;
 
@@ -151,7 +153,10 @@ partial class Build
         .Description("Builds and pushes the kubernetes tentacle multi-arch container image")
         .Executes(() =>
         {
-            BuildAndPushOrLoadKubernetesTentacleContainerImage(push: true, load: false, "docker.packages.octopushq.com");
+            //Debian 12
+            BuildAndPushOrLoadKubernetesTentacleContainerImage(push: true, load: false, KubernetesTentacleContainerRuntimeDepsTag, "docker.packages.octopushq.com");
+            //Debian 11
+            BuildAndPushOrLoadKubernetesTentacleContainerImage(push: true, load: false,  "6.0-bullseye-slim", "docker.packages.octopushq.com", tagSuffix: "bullseye-slim");
         });
 
     [PublicAPI]
@@ -161,7 +166,7 @@ partial class Build
         .DependsOn(PackDebianPackage)
         .Executes(() =>
         {
-            BuildAndPushOrLoadKubernetesTentacleContainerImage(push: false, load: true);
+            BuildAndPushOrLoadKubernetesTentacleContainerImage(push: false, load: true, KubernetesTentacleContainerRuntimeDepsTag);
         });
 
     [PublicAPI]
@@ -175,7 +180,7 @@ partial class Build
             const int port = 32000;
             var hostPort = $"{host}:{port}";
             
-            BuildAndPushOrLoadKubernetesTentacleContainerImage(push: true, load: false, host: hostPort);
+            BuildAndPushOrLoadKubernetesTentacleContainerImage(push: true, load: false, KubernetesTentacleContainerRuntimeDepsTag, host: hostPort);
         });
 
     [PublicAPI]
@@ -185,7 +190,7 @@ partial class Build
         .DependsOn(PackDebianPackage)
         .Executes(() =>
         {
-            BuildAndPushOrLoadKubernetesTentacleContainerImage(push: false, load: true, includeDebugger: true);
+            BuildAndPushOrLoadKubernetesTentacleContainerImage(push: false, load: true, KubernetesTentacleContainerRuntimeDepsTag, includeDebugger: true);
         });
 
     [PublicAPI]
@@ -565,7 +570,7 @@ partial class Build
             $"tentacle-{FullSemVer}-{framework}-{runtimeId}.tar.gz");
     }
 
-    void BuildAndPushOrLoadKubernetesTentacleContainerImage(bool push, bool load, string? host = null, bool includeDebugger = false)
+    void BuildAndPushOrLoadKubernetesTentacleContainerImage(bool push, bool load, string runtimeDepsImageTag, string? host = null,  bool includeDebugger = false, string? tagSuffix = null)
     {
         var hostPrefix = host is not null ? $"{host}/" : string.Empty;
         DockerTasks.DockerBuildxBuild(settings =>
@@ -581,11 +586,17 @@ partial class Build
                 : "./docker/kubernetes-agent-tentacle/dev/Dockerfile";
 
             var tag = $"{hostPrefix}octopusdeploy/kubernetes-agent-tentacle:{FullSemVer}";
+
+            if (!string.IsNullOrEmpty(tagSuffix))
+            {
+                tag += $"-{tagSuffix}";
+            }
+
             if (includeDebugger)
                 tag += "-debug";
 
             settings = settings
-                .AddBuildArg($"BUILD_NUMBER={FullSemVer}", $"BUILD_DATE={DateTime.UtcNow:O}")
+                .AddBuildArg($"BUILD_NUMBER={FullSemVer}", $"BUILD_DATE={DateTime.UtcNow:O}", $"RuntimeDepsTag={runtimeDepsImageTag}")
                 .SetPlatform(DockerPlatform)
                 .SetTag(tag)
                 .SetFile(dockerfile)
