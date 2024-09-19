@@ -17,7 +17,7 @@ namespace Octopus.Tentacle.Maintenance
         public WorkspaceCleanerTask(
             WorkspaceCleanerConfiguration configuration,
             WorkspaceCleaner workspaceCleaner, 
-            ISystemLog log) : base(log, TimeSpan.FromSeconds(30))
+            ISystemLog log) : base(log, TimeSpan.FromMilliseconds(-1))
         {
             this.configuration = configuration;
             this.workspaceCleaner = workspaceCleaner;
