@@ -734,19 +734,29 @@ Or one of the common options:
             {
                 environmentVariablesToRunTentacleWith.Add(EnvironmentVariables.TentacleMachineConfigurationHomeDirectory, tempDirectory.DirectoryPath);
             }
-            
-            Logger.Information("Listing instances: going to call TentacleExeFinder.FindTentacleExe");
+
+            if (arguments is not null && arguments.Length == 2 && arguments[0] == "list-instances")
+            {
+                Logger.Information("Listing instances: going to call TentacleExeFinder.FindTentacleExe");
+            }
 
             var tentacleExe = TentacleExeFinder.FindTentacleExe(tentacleConfigurationTestCase.TentacleRuntime);
             var output = new StringBuilder();
             var errorOut = new StringBuilder();
-            
-            Logger.Information("Listing instances: going to call await RetryHelper.RetryAsync");
+
+            if (arguments is not null && arguments.Length == 2 && arguments[0] == "list-instances")
+            {
+                Logger.Information("Listing instances: going to call await RetryHelper.RetryAsync");
+            }
 
             var result = await RetryHelper.RetryAsync<CommandResult, CommandExecutionException>(
                 () =>
                 {
-                    Logger.Information($"Listing instances: going to call Cli.Wrap with exe: {tentacleExe} ...");
+                    if (arguments is not null && arguments.Length == 2 && arguments[0] == "list-instances")
+                    {
+                        Logger.Information($"Listing instances: going to call Cli.Wrap with exe: {tentacleExe} ...");
+                    }
+                    
                     try
                     {
                         return Cli.Wrap(tentacleExe)
@@ -759,7 +769,7 @@ Or one of the common options:
                     }
                     catch (Exception e)
                     {
-                        Logger.Information($"Listing instances threw an exception:{e.Message}: {e.StackTrace}");
+                        Logger.Information($"Cli.Wrap(tentacleExe threw an exception:{e.Message}: {e.StackTrace}");
                         throw;
                     }
                     
