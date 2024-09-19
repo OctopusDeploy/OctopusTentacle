@@ -281,40 +281,35 @@ Or one of the common options:
                 stdout,
                 new
                 {
-                    Commands = new[]
+                    Commands = new TentacleCommand[]
                     {
-                        new
+                        new()
                         {
                             Name = "",
                             Description = "",
-                            Aliases = new string[0]
+                            Aliases = Array.Empty<string>()
                         }
                     }
                 });
 
             help.Commands.Should().HaveCountGreaterThan(0);
 
-            var failed = help.Commands.Select(async c =>
-                    {
-                        var (exitCode2, stdout2, stderr2) = await RunCommand(tc, null,$"{c.Name}", "--help");
-                        return new
-                        {
-                            Command = c,
-                            ExitCode = exitCode2,
-                            StdOut = stdout2,
-                            StdErr = stderr2,
-                            HasExpectedExitCode = exitCode2 == 0,
-                            HasExpectedHelpMessage = stdout2.StartsWith($"Usage: Tentacle {c.Name} [<options>]")
-                        };
-                    })
-                .Where(r => !(r.Result.HasExpectedExitCode && r.Result.HasExpectedHelpMessage))
-                .ToArray();
+            List<Task<CommandReturnValue>> commandResults = new List<Task<CommandReturnValue>>();
 
-            if (failed.Any())
+            foreach (var command in help.Commands)
+            {
+                commandResults.Add(GetCommandReturnValue(tc, command));
+            }
+
+            Task.WaitAll(commandResults.ToArray());
+            
+            Task<CommandReturnValue>[] failedCommands = commandResults.Where(r => !(r.Result.HasExpectedExitCode && r.Result.HasExpectedHelpMessage)).ToArray();
+
+            if (failedCommands.Any())
             {
                 var failureDetails = string.Empty;
 
-                foreach (var failure in failed)
+                foreach (var failure in failedCommands)
                 {
                     failureDetails += $@"{failure.Result.Command.Name}
 StdErr:{failure.Result.StdErr}
@@ -326,6 +321,37 @@ $@"The following commands cannot show help without specifying the --instance arg
 {failureDetails}
 The details are logged above. These commands probably need to take Lazy<T> dependencies so they can be instantiated for showing help without requiring every dependency to be resolvable.");
             }
+        }
+
+        async Task<CommandReturnValue> GetCommandReturnValue(TentacleConfigurationTestCase tc, TentacleCommand c)
+        {
+            var (exitCode2, stdout2, stderr2) = await RunCommand(tc, null,$"{c.Name}", "--help");
+            return new CommandReturnValue
+            {
+                Command = c,
+                ExitCode = exitCode2,
+                StdOut = stdout2,
+                StdErr = stderr2,
+                HasExpectedExitCode = exitCode2 == 0,
+                HasExpectedHelpMessage = stdout2.StartsWith($"Usage: Tentacle {c.Name} [<options>]")
+            };
+        }
+
+        class TentacleCommand
+        {
+            public string Name { get; set; }
+            public string Description  { get; set; }
+            public string[] Aliases  { get; set; }
+        }
+        
+        class CommandReturnValue
+        {
+            public TentacleCommand Command { get; set; }
+            public int ExitCode { get; set; }
+            public string StdOut { get; set; }
+            public string StdErr { get; set; }
+            public bool HasExpectedExitCode { get; set; }
+            public bool HasExpectedHelpMessage { get; set; }
         }
         
         [Test]
