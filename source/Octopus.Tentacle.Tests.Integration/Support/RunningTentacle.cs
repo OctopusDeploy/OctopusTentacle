@@ -109,6 +109,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
             logger.Information("Starting deleteInstanceFunction");
             await deleteInstanceFunction(cancellationToken);
+            logger.Information("Just finished disposing Halibut??? with deleteInstanceFunction");
 
             logger.Information("Starting temporaryDirectory.Dispose");
             temporaryDirectory.Dispose();

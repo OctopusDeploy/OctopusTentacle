@@ -409,7 +409,12 @@ The details are logged above. These commands probably need to take Lazy<T> depen
                 var configPath = Path.Combine(clientAndTentacle.RunningTentacle.HomeDirectory, clientAndTentacle.RunningTentacle.InstanceName + ".cfg");
                 stdout.Should().Contain($"Instance '{clientAndTentacle.RunningTentacle.InstanceName}' uses configuration '{configPath}'.", "the current instance should be listed");
                 stderr.Should().BeNullOrEmpty();
+                Logger.Information("Done with  clientAndTentacle. Going to dispose soon");
+
             }
+            
+            Logger.Information("Finished Disposing clientAndTentacle");
+
         }
 
         [Test]
