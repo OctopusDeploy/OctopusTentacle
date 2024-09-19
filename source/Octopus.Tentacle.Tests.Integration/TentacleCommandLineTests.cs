@@ -387,17 +387,29 @@ The details are logged above. These commands probably need to take Lazy<T> depen
         [NonParallelizable]
         public async Task ListInstancesCommandText(TentacleConfigurationTestCase tc)
         {
-            await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
-            await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
-            var (exitCode, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
-                tc, 
-                clientAndTentacle.RunningTentacle.RunTentacleEnvironmentVariables, 
-                "list-instances", "--format=text");
-            
-            exitCode.Should().Be(0, $"we expected the command to succeed.\r\nStdErr: '{stderr}'\r\nStdOut: '{stdout}'");
-            var configPath = Path.Combine(clientAndTentacle.RunningTentacle.HomeDirectory, clientAndTentacle.RunningTentacle.InstanceName + ".cfg");
-            stdout.Should().Contain($"Instance '{clientAndTentacle.RunningTentacle.InstanceName}' uses configuration '{configPath}'.", "the current instance should be listed");
-            stderr.Should().BeNullOrEmpty();
+            Logger.Information("Inside ListInstancesCommandText");
+
+            await using (var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken))
+            {
+                Logger.Information("Opened clientAndTentacle. Going to call stop on apparently running tentacle");
+
+                await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
+                
+                Logger.Information("Finished stopping apparently running tentacle");
+
+                Logger.Information("Listing instances");
+                var (exitCode, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
+                    tc,
+                    clientAndTentacle.RunningTentacle.RunTentacleEnvironmentVariables,
+                    "list-instances", "--format=text");
+
+                Logger.Information("Finished Listing instances");
+
+                exitCode.Should().Be(0, $"we expected the command to succeed.\r\nStdErr: '{stderr}'\r\nStdOut: '{stdout}'");
+                var configPath = Path.Combine(clientAndTentacle.RunningTentacle.HomeDirectory, clientAndTentacle.RunningTentacle.InstanceName + ".cfg");
+                stdout.Should().Contain($"Instance '{clientAndTentacle.RunningTentacle.InstanceName}' uses configuration '{configPath}'.", "the current instance should be listed");
+                stderr.Should().BeNullOrEmpty();
+            }
         }
 
         [Test]
