@@ -96,7 +96,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         public async ValueTask DisposeAsync()
         {
-            using var disposeCancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            using var disposeCancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(100));
             var cancellationToken = disposeCancellationTokenSource.Token;
             logger.Information("Starting DisposeAsync");
             
