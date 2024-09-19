@@ -36,6 +36,8 @@ RUN apt-get update  \
     && apt-get clean  \
     && rm -rf /var/lib/apt/lists/*
 
+RUN apt-get install -y curl
+
 WORKDIR /
 
 # We know this won't reduce the image size at all. It's just to make the filesystem a little tidier.
