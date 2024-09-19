@@ -734,19 +734,36 @@ Or one of the common options:
             {
                 environmentVariablesToRunTentacleWith.Add(EnvironmentVariables.TentacleMachineConfigurationHomeDirectory, tempDirectory.DirectoryPath);
             }
+            
+            Logger.Information("Listing instances: going to call TentacleExeFinder.FindTentacleExe");
 
             var tentacleExe = TentacleExeFinder.FindTentacleExe(tentacleConfigurationTestCase.TentacleRuntime);
             var output = new StringBuilder();
             var errorOut = new StringBuilder();
             
+            Logger.Information("Listing instances: going to call await RetryHelper.RetryAsync");
+
             var result = await RetryHelper.RetryAsync<CommandResult, CommandExecutionException>(
-                () => Cli.Wrap(tentacleExe)
-                    .WithArguments(arguments)
-                    .WithValidation(CommandResultValidation.None)
-                    .WithStandardOutputPipe(PipeTarget.ToStringBuilder(output))
-                    .WithStandardErrorPipe(PipeTarget.ToStringBuilder(errorOut))
-                    .WithEnvironmentVariables(environmentVariablesToRunTentacleWith)
-                    .ExecuteAsync(CancellationToken));
+                () =>
+                {
+                    Logger.Information($"Listing instances: going to call Cli.Wrap with exe: {tentacleExe} ...");
+                    try
+                    {
+                        return Cli.Wrap(tentacleExe)
+                            .WithArguments(arguments)
+                            .WithValidation(CommandResultValidation.None)
+                            .WithStandardOutputPipe(PipeTarget.ToStringBuilder(output))
+                            .WithStandardErrorPipe(PipeTarget.ToStringBuilder(errorOut))
+                            .WithEnvironmentVariables(environmentVariablesToRunTentacleWith)
+                            .ExecuteAsync(CancellationToken);
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Information($"Listing instances threw an exception:{e.Message}: {e.StackTrace}");
+                        throw;
+                    }
+                    
+                });
 
             return (result.ExitCode, output.ToString(), errorOut.ToString());
         }
