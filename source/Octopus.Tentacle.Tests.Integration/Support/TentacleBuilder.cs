@@ -160,7 +160,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 instanceName,
                 HomeDirectory.DirectoryPath,
                 applicationDirectory,
-                deleteInstanceFunction: ct => DeleteInstanceIgnoringFailure(installAsService, tentacleExe, instanceName, tempDirectory, logger, ct),
+                deleteInstanceFunction: ct =>
+                {
+                    log.Information("This is the deleteInstanceFunction");
+                    return DeleteInstanceIgnoringFailure(installAsService, tentacleExe, instanceName, tempDirectory, logger, ct);
+                },
                 runTentacleEnvironmentVariables,
                 logger);
 
@@ -173,7 +177,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             {
                 try
                 {
+                    log.Information("disposing tentacle after tentacle failed to start.");
                     await runningTentacle.DisposeAsync();
+                    log.Information("finished disposing tentacle after tentacle failed to start.");
                 }
                 catch (Exception e)
                 {
@@ -406,12 +412,16 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         internal async Task DeleteInstanceIgnoringFailure(bool runningAsService, string tentacleExe, string instanceName, TemporaryDirectory tmp, ILogger logger, CancellationToken cancellationToken)
         {
+            logger.Information($"Deleting instance in DeleteInstanceIgnoringFailure: {instanceName}");
+
             using (await GetConfigureAndStartTentacleLockIfRequired(logger, cancellationToken))
             {
                 if (runningAsService)
                 {
                     try
                     {
+                        logger.Information($"Deleting instance in DeleteInstanceIgnoringFailure: {instanceName}, trying to stop");
+
                         await RunCommandOutOfProcess(
                             tentacleExe,
                             new[] { "service", $"--instance={instanceName}", "--stop" },
@@ -424,6 +434,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                             logger,
                             cancellationToken);
 
+                        logger.Information($"Deleting instance in DeleteInstanceIgnoringFailure: {instanceName}, trying to uninstall");
                         await RunCommandOutOfProcess(
                             tentacleExe,
                             new[] { "service", "--uninstall", $"--instance={instanceName}" },
@@ -457,7 +468,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         internal async Task DeleteInstanceAsync(string tentacleExe, string instanceName, TemporaryDirectory tmp, ILogger logger, CancellationToken cancellationToken)
         {
+            logger.Information($"Deleting instance in DeleteInstanceAsync: {instanceName}");
             await RunTentacleCommand(tentacleExe, new[] {"delete-instance", $"--instance={instanceName}"}, tmp, logger, cancellationToken);
+            logger.Information($"Deleted instance in DeleteInstanceAsync: {instanceName}");
         }
 
         internal string InstanceNameGenerator()
