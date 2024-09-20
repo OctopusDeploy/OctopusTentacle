@@ -493,6 +493,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
             async Task ProcessLogs(string s, CancellationToken ct)
             {
+                logger.Information($"In ProcessLogs(): {s}");
                 await Task.CompletedTask;
                 logger.Information($"[{commandName}] " + s);
                 commandOutput(s);
@@ -505,21 +506,30 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                     () =>
                     {
                         logger.Information("Going to try to run Cli.Wrap(targetFilePath)");
-                        return Cli.Wrap(targetFilePath)
+                        var res = Cli.Wrap(targetFilePath)
                             .WithArguments(args)
                             .WithEnvironmentVariables(environmentVariables)
                             .WithWorkingDirectory(tmp.DirectoryPath)
                             .WithStandardOutputPipe(PipeTarget.ToDelegate(ProcessLogs))
                             .WithStandardErrorPipe(PipeTarget.ToDelegate(ProcessLogs))
                             .ExecuteAsync(cancellationToken);
+                        logger.Information("Cli.Wrap(targetFilePath) returned");
+                        logger.Information($"Exit code: {res.Task.Result.ExitCode}");
+                        return res;
                     });
 
-                if (cancellationToken.IsCancellationRequested) return;
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    logger.Information("Cancelled RunCommandOutOfProcess");                    
+                    return;
+                }
 
                 if (commandResult.ExitCode != 0)
                 {
                     throw new Exception($"{commandName} returns non zero exit code: " + commandResult.ExitCode);
                 }
+                
+                logger.Information("End of RunCommandOutOfProcess");
             }
             catch (OperationCanceledException)
             {
