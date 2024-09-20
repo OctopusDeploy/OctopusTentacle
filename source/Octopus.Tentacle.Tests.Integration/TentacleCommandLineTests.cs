@@ -351,7 +351,7 @@ The details are logged above. These commands probably need to take Lazy<T> depen
         [NonParallelizable]
         public async Task ShowThumbprintCommandText(TentacleConfigurationTestCase tc)
         {
-            await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
+            var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
             await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
             var (exitCode, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
                 tc, 
@@ -369,7 +369,7 @@ The details are logged above. These commands probably need to take Lazy<T> depen
         [NonParallelizable]
         public async Task ShowThumbprintCommandJson(TentacleConfigurationTestCase tc)
         {
-            await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
+            var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
             await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
             var (exitCode, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
                 tc, 
@@ -389,8 +389,8 @@ The details are logged above. These commands probably need to take Lazy<T> depen
         {
             Logger.Information("Inside ListInstancesCommandText");
 
-            await using (var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken))
-            {
+            var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
+            
                 Logger.Information("Opened clientAndTentacle. Going to call stop on apparently running tentacle");
 
                 await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
@@ -410,8 +410,7 @@ The details are logged above. These commands probably need to take Lazy<T> depen
                 stdout.Should().Contain($"Instance '{clientAndTentacle.RunningTentacle.InstanceName}' uses configuration '{configPath}'.", "the current instance should be listed");
                 stderr.Should().BeNullOrEmpty();
                 Logger.Information("Done with  clientAndTentacle. Going to dispose soon");
-
-            }
+            
             
             Logger.Information("Finished Disposing clientAndTentacle");
 
@@ -423,7 +422,7 @@ The details are logged above. These commands probably need to take Lazy<T> depen
         [NonParallelizable]
         public async Task ListInstancesCommandJson(TentacleConfigurationTestCase tc)
         {
-            await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
+            var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
             await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
                 tc, 
@@ -537,7 +536,7 @@ Or one of the common options:
         [NonParallelizable]
         public async Task ShowConfigurationCommand(TentacleConfigurationTestCase tc)
         {
-            await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
+            var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
             await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
                 tc, 
