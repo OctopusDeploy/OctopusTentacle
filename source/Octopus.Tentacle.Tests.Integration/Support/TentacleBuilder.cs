@@ -489,6 +489,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             ILogger logger,
             CancellationToken cancellationToken)
         {
+            logger.Information("Inside RunCommandOutOfProcess");
+
             async Task ProcessLogs(string s, CancellationToken ct)
             {
                 await Task.CompletedTask;
@@ -498,14 +500,19 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
             try
             {
+                logger.Information("Going to try to run Cli.Wrap(targetFilePath) with retries...");
                 var commandResult = await RetryHelper.RetryAsync<CommandResult, CommandExecutionException>(
-                    () => Cli.Wrap(targetFilePath)
-                        .WithArguments(args)
-                        .WithEnvironmentVariables(environmentVariables)
-                        .WithWorkingDirectory(tmp.DirectoryPath)
-                        .WithStandardOutputPipe(PipeTarget.ToDelegate(ProcessLogs))
-                        .WithStandardErrorPipe(PipeTarget.ToDelegate(ProcessLogs))
-                        .ExecuteAsync(cancellationToken));
+                    () =>
+                    {
+                        logger.Information("Going to try to run Cli.Wrap(targetFilePath)");
+                        return Cli.Wrap(targetFilePath)
+                            .WithArguments(args)
+                            .WithEnvironmentVariables(environmentVariables)
+                            .WithWorkingDirectory(tmp.DirectoryPath)
+                            .WithStandardOutputPipe(PipeTarget.ToDelegate(ProcessLogs))
+                            .WithStandardErrorPipe(PipeTarget.ToDelegate(ProcessLogs))
+                            .ExecuteAsync(cancellationToken);
+                    });
 
                 if (cancellationToken.IsCancellationRequested) return;
 
@@ -516,6 +523,13 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             }
             catch (OperationCanceledException)
             {
+                logger.Information("We have an OperationCanceledException");
+            }
+            catch (Exception ex)
+            {
+                logger.Information($"We have an Exception: {ex.Message}: {ex.StackTrace}");
+                logger.Information($"We have an Inner Exception?: {ex.InnerException?.Message}: {ex.InnerException?.StackTrace}");
+                throw;
             }
         }
     }
