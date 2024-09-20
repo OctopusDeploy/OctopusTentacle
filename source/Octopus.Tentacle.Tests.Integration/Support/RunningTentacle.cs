@@ -70,20 +70,42 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         public async Task<bool> Stop(CancellationToken cancellationToken)
         {
+            logger.Information("Stopping Tentacle");
             if (cancellationTokenSource != null)
             {
+                logger.Information("Calling Tentacle cancellation token source.cancel");
+
                 cancellationTokenSource.Cancel();
+                
+                logger.Information("Disposing Tentacle cancellation token source");
+
                 cancellationTokenSource.Dispose();
+                
+                logger.Information("Disposed Tentacle cancellation token source");
+
                 cancellationTokenSource = null;
             }
 
             if (runningTentacleTask != null)
             {
+                
                 var task = runningTentacleTask;
                 runningTentacleTask = null;
 
-                return await task.WaitTillCompletedOrCancelled(cancellationToken);
+                logger.Information("Going to call task.WaitTillCompletedOrCancelled(cancellationToken)");
+
+                if (await task.WaitTillCompletedOrCancelled(cancellationToken))
+                {
+                    logger.Information("returning true for task.WaitTillCompletedOrCancelled(cancellationToken)");
+                    
+                    return true;
+                }
+                logger.Information("returning false for task.WaitTillCompletedOrCancelled(cancellationToken)");
+                
+                return false;
             }
+
+            logger.Information("Stopping Tentacle: returning true");
 
             return true;
         }
