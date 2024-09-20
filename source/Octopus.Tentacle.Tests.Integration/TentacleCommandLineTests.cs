@@ -410,8 +410,8 @@ The details are logged above. These commands probably need to take Lazy<T> depen
                 stdout.Should().Contain($"Instance '{clientAndTentacle.RunningTentacle.InstanceName}' uses configuration '{configPath}'.", "the current instance should be listed");
                 stderr.Should().BeNullOrEmpty();
                 Logger.Information("Done with  clientAndTentacle. Going to dispose soon");
-            
-            
+
+                await clientAndTentacle.DisposeAsync();
             Logger.Information("Finished Disposing clientAndTentacle");
 
         }
