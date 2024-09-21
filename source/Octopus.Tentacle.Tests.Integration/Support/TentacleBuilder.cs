@@ -160,10 +160,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 instanceName,
                 HomeDirectory.DirectoryPath,
                 applicationDirectory,
-                deleteInstanceFunction: ct =>
+                deleteInstanceFunction: async ct =>
                 {
                     log.Information("This is the deleteInstanceFunction");
-                    return DeleteInstanceIgnoringFailure(installAsService, tentacleExe, instanceName, tempDirectory, logger, ct);
+                    await DeleteInstanceIgnoringFailure(installAsService, tentacleExe, instanceName, tempDirectory, logger, ct);
+                    log.Information("This is the deleteInstanceFunction after it has finished");
                 },
                 runTentacleEnvironmentVariables,
                 logger);
