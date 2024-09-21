@@ -351,7 +351,7 @@ The details are logged above. These commands probably need to take Lazy<T> depen
         [NonParallelizable]
         public async Task ShowThumbprintCommandText(TentacleConfigurationTestCase tc)
         {
-            var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
+            await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
             await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
             var (exitCode, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
                 tc, 
@@ -369,7 +369,7 @@ The details are logged above. These commands probably need to take Lazy<T> depen
         [NonParallelizable]
         public async Task ShowThumbprintCommandJson(TentacleConfigurationTestCase tc)
         {
-            var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
+            await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
             await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
             var (exitCode, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
                 tc, 
@@ -422,7 +422,7 @@ The details are logged above. These commands probably need to take Lazy<T> depen
         [NonParallelizable]
         public async Task ListInstancesCommandJson(TentacleConfigurationTestCase tc)
         {
-            var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
+            await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
             await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
                 tc, 
@@ -536,7 +536,7 @@ Or one of the common options:
         [NonParallelizable]
         public async Task ShowConfigurationCommand(TentacleConfigurationTestCase tc)
         {
-            var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
+            await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
             await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
                 tc, 
