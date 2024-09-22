@@ -516,19 +516,26 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             try
             {
                 logger.Information("Going to try to run Cli.Wrap(targetFilePath) with retries...");
-                var commandResult = await RetryHelper.RetryAsync<CommandResult, CommandExecutionException>(
-                    () =>
+                var commandResult = await RetryHelper.RetryAsync<CommandResult, CommandExecutionException>(async () =>
                     {
                         logger.Information("Going to try to run Cli.Wrap(targetFilePath)");
-                        var res = Cli.Wrap(targetFilePath)
+                        foreach (var a in args)
+                        {
+                            logger.Information($"with arg: {a}");
+                        }
+                        
+                        var command = Cli.Wrap(targetFilePath)
                             .WithArguments(args)
                             .WithEnvironmentVariables(environmentVariables)
                             .WithWorkingDirectory(tmp.DirectoryPath)
                             .WithStandardOutputPipe(PipeTarget.ToDelegate(ProcessLogs))
-                            .WithStandardErrorPipe(PipeTarget.ToDelegate(ProcessLogs))
-                            .ExecuteAsync(cancellationToken);
+                            .WithStandardErrorPipe(PipeTarget.ToDelegate(ProcessLogs));
+                            
+                        logger.Information("ok, calling now)");
+                        var res = await command.ExecuteAsync(cancellationToken);
                         logger.Information("Cli.Wrap(targetFilePath) returned");
-                        logger.Information($"Exit code: {res.Task.Result.ExitCode}");
+                        
+                        logger.Information($"Exit code: {res.ExitCode}");
                         return res;
                     });
 
