@@ -739,26 +739,36 @@ Or one of the common options:
                 environmentVariablesToRunTentacleWith.Add(EnvironmentVariables.TentacleMachineConfigurationHomeDirectory, tempDirectory.DirectoryPath);
             }
 
-            if (arguments is not null && arguments.Length == 2 && arguments[0] == "list-instances")
+            if (arguments is not null)
             {
-                Logger.Information("Listing instances: going to call TentacleExeFinder.FindTentacleExe");
+                Logger.Information($"Going to call Cli.Wrap ...");
             }
 
             var tentacleExe = TentacleExeFinder.FindTentacleExe(tentacleConfigurationTestCase.TentacleRuntime);
             var output = new StringBuilder();
             var errorOut = new StringBuilder();
 
-            if (arguments is not null && arguments.Length == 2 && arguments[0] == "list-instances")
+            if (arguments is not null)
             {
-                Logger.Information("Listing instances: going to call await RetryHelper.RetryAsync");
+                Logger.Information($"Going to call Cli.Wrap ... with exe: {tentacleExe}");
+                foreach (var argument in arguments)
+                {
+                    Logger.Information($" ... with argument: {argument}");
+                }
+                Logger.Information($"----");
             }
 
             var result = await RetryHelper.RetryAsync<CommandResult, CommandExecutionException>(
                 () =>
                 {
-                    if (arguments is not null && arguments.Length == 2 && arguments[0] == "list-instances")
+                    if (arguments is not null)
                     {
-                        Logger.Information($"Listing instances: going to call Cli.Wrap with exe: {tentacleExe} ...");
+                        Logger.Information($"Going to call Cli.Wrap with exe: {tentacleExe}");
+                        foreach (var argument in arguments)
+                        {
+                            Logger.Information($" ... with argument: {argument}");
+                        }
+                        Logger.Information($"----");
                     }
                     
                     try
