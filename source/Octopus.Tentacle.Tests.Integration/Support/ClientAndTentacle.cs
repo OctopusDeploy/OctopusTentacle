@@ -79,8 +79,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             await Task.WhenAll(serverTask.AsTask());
             
             logger.Information("Starting RunningTentacle.DisposeAsync()");
-            var runningTentacleTask = RunningTentacle.DisposeAsync();
-            await Task.WhenAll(runningTentacleTask.AsTask());
+            // var runningTentacleTask = RunningTentacle.DisposeAsync();
+            // await Task.WhenAll(runningTentacleTask.AsTask());
 
             logger.Information("Starting TentacleClient.Dispose");
             TentacleClient.Dispose();
