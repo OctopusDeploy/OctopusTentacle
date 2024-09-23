@@ -400,286 +400,286 @@ namespace Octopus.Tentacle.Tests.Integration
             stderr.Should().BeNullOrEmpty();
         }
 
-//         [Test]
-//         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-//         // Run these tests in serial to avoid conflicts
-//         [NonParallelizable]
-//         public async Task ListInstancesCommandJson(TentacleConfigurationTestCase tc)
-//         {
-//             await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
-//             await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
-//             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
-//                 tc, 
-//                 clientAndTentacle.RunningTentacle.RunTentacleEnvironmentVariables, 
-//                 "list-instances", "--format=json");
-//             
-//             stdout.Should().Contain($"\"InstanceName\": \"{clientAndTentacle.RunningTentacle.InstanceName}\"", "the current instance should be listed");
-//             var configPath = Path.Combine(clientAndTentacle.RunningTentacle.HomeDirectory, clientAndTentacle.RunningTentacle.InstanceName + ".cfg");
-//             var jsonFormattedPath = JsonFormattedPath(configPath);
-//             stdout.Should().Contain($"\"ConfigurationFilePath\": \"{jsonFormattedPath}\"", "the path to the config file for the current instance should be listed");
-//             stderr.Should().BeNullOrEmpty();
-//         }
-//
-//         [Test]
-//         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-//         // Run these tests in serial to avoid conflicts
-//         [NonParallelizable]
-//         public async Task ShouldLogStartupDiagnosticsToInstanceLogFileOnly(TentacleConfigurationTestCase tc)
-//         {
-//             await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
-//             await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
-//
-//             var startingLogText = clientAndTentacle.RunningTentacle.ReadAllLogFileText();
-//
-//             var (exitCode, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
-//                 tc, 
-//                 clientAndTentacle.RunningTentacle.RunTentacleEnvironmentVariables, 
-//                 "show-thumbprint", $"--instance={clientAndTentacle.RunningTentacle.InstanceName}");
-//
-//             try
-//             {
-//                 var logFileText = Policy
-//                     .Handle<NotLoggedYetException>()
-//                     .WaitAndRetry(
-//                         20,
-//                         i => TimeSpan.FromMilliseconds(100 * i),
-//                         (exception, _) => { Logger.Information($"Failed to get new log content: {exception.Message}. Retrying!"); })
-//                     .Execute(
-//                         () =>
-//                         {
-//                             var wholeLog = clientAndTentacle.RunningTentacle.ReadAllLogFileText();
-//                             var newLog = wholeLog.Replace(startingLogText, string.Empty);
-//                             if (string.IsNullOrWhiteSpace(newLog) || !newLog.Contains("CommandLine:"))
-//                             {
-//                                 throw new NotLoggedYetException();
-//                             }
-//                             return newLog;
-//                         });
-//                 
-//                 logFileText.Should().ContainEquivalentOf($"OperatingSystem: {RuntimeInformation.OSDescription}", "the OSVersion should be in our diagnostics");
-//                 logFileText.Should().ContainEquivalentOf("OperatingSystem:", "the OSVersion should be in our diagnostics");
-//                 logFileText.Should().ContainEquivalentOf($"OsBitVersion: {(Environment.Is64BitOperatingSystem ? "x64" : "x86")}", "the OsBitVersion should be in our diagnostics");
-//                 logFileText.Should().ContainEquivalentOf($"Is64BitProcess: {Environment.Is64BitProcess}", "the Is64BitProcess should be in our diagnostics");
-//
-//                 if (PlatformDetection.IsRunningOnWindows)
-//                 {
-// #pragma warning disable CA1416
-//                     logFileText.Should().ContainEquivalentOf($"CurrentUser: {WindowsIdentity.GetCurrent().Name}", "the CurrentUser should be in our diagnostics");
-// #pragma warning disable CA1416
-//                 }
-//                 else
-//                 {
-//                     logFileText.Should().ContainEquivalentOf($"CurrentUser: {Environment.UserName}", "the CurrentUser should be in our diagnostics");
-//                 }
-//                 
-//                 logFileText.Should().ContainEquivalentOf($"MachineName: {Environment.MachineName}", "the MachineName should be in our diagnostics");
-//                 logFileText.Should().ContainEquivalentOf($"ProcessorCount: {Environment.ProcessorCount}", "the ProcessorCount should be in our diagnostics");
-//                 logFileText.Should().ContainEquivalentOf($"CurrentDirectory: {Directory.GetCurrentDirectory()}", "the CurrentDirectory should be in our diagnostics");
-//                 logFileText.Should().ContainEquivalentOf($"TempDirectory: {Path.GetTempPath()}", "the TempDirectory should be in our diagnostics");
-//                 logFileText.Should().ContainEquivalentOf("HostProcessName: ", "the HostProcessName should be in our diagnostics");
-//                 stdout.Should().NotContainEquivalentOf($"{RuntimeInformation.OSDescription}", "the OSVersion should not be written to stdout");
-//                 await Task.CompletedTask;
-//             }
-//             catch (NotLoggedYetException)
-//             {
-//                 Logger.Error("Failed to get new log content");
-//                 Logger.Error($"Process exit code {exitCode}");
-//                 Logger.Error($"Starting log text: {Environment.NewLine}{startingLogText}");
-//                 Logger.Error($"Current log text: {Environment.NewLine}{clientAndTentacle.RunningTentacle.ReadAllLogFileText()}");
-//                 Logger.Error($"Command StdOut: {Environment.NewLine}{stdout}");
-//                 Logger.Error($"Command StdErr: {Environment.NewLine}{stderr}");
-//
-//                 throw;
-//             }
-//         }
-//
-//         [Test]
-//         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-//         public async Task HelpAsFirstArgumentShouldShowCommandSpecificHelp(TentacleConfigurationTestCase tc)
-//         {
-//             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "help", "version");
-//             stderr.Should().BeNullOrEmpty();
-//
-//             stdout.Should().Be(
-// @"Usage: Tentacle version [<options>]
-//
-// Where [<options>] is any of: 
-//
-//       --format=VALUE         The format of the output (text,json). Defaults 
-//                                to text.
-//
-// Or one of the common options: 
-//
-//       --help                 Show detailed help for this command
-// ");
-//         }
-//
-//         [Test]
-//         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-//         // Run these tests in serial to avoid conflicts
-//         [NonParallelizable]
-//         public async Task ShowConfigurationCommand(TentacleConfigurationTestCase tc)
-//         {
-//             await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
-//             await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
-//             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
-//                 tc, 
-//                 clientAndTentacle.RunningTentacle.RunTentacleEnvironmentVariables, 
-//                 "show-configuration", $"--instance={clientAndTentacle.RunningTentacle.InstanceName}");
-//
-//             stderr.Should().BeNullOrEmpty();
-//
-//             // Actually parse and query the document just like our consumer will
-//             dynamic? settings = JsonConvert.DeserializeObject(stdout);
-//
-//             ((string)settings.Octopus.Home).Should().Be(clientAndTentacle.RunningTentacle.HomeDirectory, "the home directory should match");
-//             ((string)settings.Tentacle.Deployment.ApplicationDirectory).Should().Be(clientAndTentacle.RunningTentacle.ApplicationDirectory, "the application directory should match");
-//         }
-//
-//         [Test]
-//         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-//         // Run these tests in serial to avoid conflicts
-//         [NonParallelizable]
-//         public async Task ShowConfigurationCommandOnPartiallyConfiguredTentacle(TentacleConfigurationTestCase tc)
-//         {
-//             using var homeDirectory = new TemporaryDirectory();
-//             var environmentVariables = new Dictionary<string, string?> { { EnvironmentVariables.TentacleMachineConfigurationHomeDirectory, homeDirectory.DirectoryPath } };
-//
-//             var instanceId = Guid.NewGuid().ToString();
-//             using var temporaryDirectory = new TemporaryDirectory();
-//             await RunCommandAndAssertExitsWithSuccessExitCode(
-//                 tc, 
-//                 environmentVariables,
-//                 "create-instance", $"--instance={instanceId}", "--config", Path.Combine(temporaryDirectory.DirectoryPath, instanceId + ".cfg"));
-//
-//             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
-//                 tc, 
-//                 environmentVariables,
-//                 "show-configuration", 
-//                 $"--instance={instanceId}");
-//
-//             stderr.Should().BeNullOrEmpty();
-//
-//             // Actually parse and query the document just like our consumer will
-//             dynamic? settings = JsonConvert.DeserializeObject(stdout);
-//             ((string)settings.Octopus.Home).Should().Be(temporaryDirectory.DirectoryPath, "the home directory should match");
-//         }
-//
-//         [Test]
-//         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-//         // Run these tests in serial to avoid conflicts
-//         [NonParallelizable]
-//         public async Task ShowConfigurationCommandLooksSensibleToHumans(TentacleConfigurationTestCase tc)
-//         {
-//             await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
-//             await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
-//             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
-//                 tc, 
-//                 clientAndTentacle.RunningTentacle.RunTentacleEnvironmentVariables,
-//                 "show-configuration", $"--instance={clientAndTentacle.RunningTentacle.InstanceName}");
-//
-//             stderr.Should().BeNullOrEmpty();
-//
-//             if (tc.TentacleType == TentacleType.Polling)
-//             {
-//                 stdout.Should().Be($@"{{
-//   ""Octopus"": {{
-//     ""Home"": ""{JsonFormattedPath(clientAndTentacle.RunningTentacle.HomeDirectory)}"",
-//     ""Watchdog"": {{
-//       ""Enabled"": false,
-//       ""Instances"": ""*"",
-//       ""Interval"": 0
-//     }}
-//   }},
-//   ""Tentacle"": {{
-//     ""CertificateThumbprint"": ""{clientAndTentacle.RunningTentacle.Thumbprint}"",
-//     ""Communication"": {{
-//       ""TrustedOctopusServers"": [
-//         {{
-//           ""Thumbprint"": ""{clientAndTentacle.Server.Thumbprint}"",
-//           ""CommunicationStyle"": 2,
-//           ""Address"": ""https://localhost:{clientAndTentacle.Server.ServerListeningPort}"",
-//           ""Squid"": null,
-//           ""SubscriptionId"": ""{clientAndTentacle.RunningTentacle.ServiceUri}""
-//         }}
-//       ]
-//     }},
-//     ""Deployment"": {{
-//       ""ApplicationDirectory"": ""{JsonFormattedPath(clientAndTentacle.RunningTentacle.ApplicationDirectory)}""
-//     }},
-//     ""Services"": {{
-//       ""ListenIP"": null,
-//       ""NoListen"": true,
-//       ""PortNumber"": 10933
-//     }}
-//   }}
-// }}
-// ");
-//             }
-//             else
-//             {
-//                 stdout.Should().Be($@"{{
-//   ""Octopus"": {{
-//     ""Home"": ""{JsonFormattedPath(clientAndTentacle.RunningTentacle.HomeDirectory)}"",
-//     ""Watchdog"": {{
-//       ""Enabled"": false,
-//       ""Instances"": ""*"",
-//       ""Interval"": 0
-//     }}
-//   }},
-//   ""Tentacle"": {{
-//     ""CertificateThumbprint"": ""{clientAndTentacle.RunningTentacle.Thumbprint}"",
-//     ""Communication"": {{
-//       ""TrustedOctopusServers"": [
-//         {{
-//           ""Thumbprint"": ""{clientAndTentacle.Server.Thumbprint}"",
-//           ""CommunicationStyle"": 1,
-//           ""Address"": null,
-//           ""Squid"": null,
-//           ""SubscriptionId"": null
-//         }}
-//       ]
-//     }},
-//     ""Deployment"": {{
-//       ""ApplicationDirectory"": ""{JsonFormattedPath(clientAndTentacle.RunningTentacle.ApplicationDirectory)}""
-//     }},
-//     ""Services"": {{
-//       ""ListenIP"": null,
-//       ""NoListen"": false,
-//       ""PortNumber"": {clientAndTentacle.RunningTentacle.ServiceUri.Port}
-//     }}
-//   }}
-// }}
-// ");
-//             }
-//
-//             await Task.CompletedTask;
-//         }
-//
-//         [Test]
-//         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-//         [WindowsTest]
-//         // Run these tests in serial to avoid conflicts
-//         [NonParallelizable]
-//         public async Task WatchdogCreateAndDeleteCommand(TentacleConfigurationTestCase tc)
-//         {
-//             await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
-//             await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
-//             var create = await RunCommandAndAssertExitsWithSuccessExitCode(
-//                 tc, 
-//                 clientAndTentacle.RunningTentacle.RunTentacleEnvironmentVariables,
-//                 "watchdog", "--create", $"--instances={clientAndTentacle.RunningTentacle.InstanceName}");
-//
-//             create.StdError.Should().BeNullOrEmpty();
-//             create.StdOut.Should().ContainEquivalentOf("Creating watchdog task");
-//             var delete = await RunCommandAndAssertExitsWithSuccessExitCode(
-//                 tc, 
-//                 clientAndTentacle.RunningTentacle.RunTentacleEnvironmentVariables,
-//                 "watchdog", "--delete", $"--instances={clientAndTentacle.RunningTentacle.InstanceName}");
-//
-//             delete.StdError.Should().BeNullOrEmpty();
-//             delete.StdOut.Should().ContainEquivalentOf("Removing watchdog task");
-//         }
+        [Test]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        // Run these tests in serial to avoid conflicts
+        [NonParallelizable]
+        public async Task ListInstancesCommandJson(TentacleConfigurationTestCase tc)
+        {
+            await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
+            await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
+            var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
+                tc, 
+                clientAndTentacle.RunningTentacle.RunTentacleEnvironmentVariables, 
+                "list-instances", "--format=json");
+            
+            stdout.Should().Contain($"\"InstanceName\": \"{clientAndTentacle.RunningTentacle.InstanceName}\"", "the current instance should be listed");
+            var configPath = Path.Combine(clientAndTentacle.RunningTentacle.HomeDirectory, clientAndTentacle.RunningTentacle.InstanceName + ".cfg");
+            var jsonFormattedPath = JsonFormattedPath(configPath);
+            stdout.Should().Contain($"\"ConfigurationFilePath\": \"{jsonFormattedPath}\"", "the path to the config file for the current instance should be listed");
+            stderr.Should().BeNullOrEmpty();
+        }
+
+        [Test]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        // Run these tests in serial to avoid conflicts
+        [NonParallelizable]
+        public async Task ShouldLogStartupDiagnosticsToInstanceLogFileOnly(TentacleConfigurationTestCase tc)
+        {
+            await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
+            await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
+
+            var startingLogText = clientAndTentacle.RunningTentacle.ReadAllLogFileText();
+
+            var (exitCode, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
+                tc, 
+                clientAndTentacle.RunningTentacle.RunTentacleEnvironmentVariables, 
+                "show-thumbprint", $"--instance={clientAndTentacle.RunningTentacle.InstanceName}");
+
+            try
+            {
+                var logFileText = Policy
+                    .Handle<NotLoggedYetException>()
+                    .WaitAndRetry(
+                        20,
+                        i => TimeSpan.FromMilliseconds(100 * i),
+                        (exception, _) => { Logger.Information($"Failed to get new log content: {exception.Message}. Retrying!"); })
+                    .Execute(
+                        () =>
+                        {
+                            var wholeLog = clientAndTentacle.RunningTentacle.ReadAllLogFileText();
+                            var newLog = wholeLog.Replace(startingLogText, string.Empty);
+                            if (string.IsNullOrWhiteSpace(newLog) || !newLog.Contains("CommandLine:"))
+                            {
+                                throw new NotLoggedYetException();
+                            }
+                            return newLog;
+                        });
+                
+                logFileText.Should().ContainEquivalentOf($"OperatingSystem: {RuntimeInformation.OSDescription}", "the OSVersion should be in our diagnostics");
+                logFileText.Should().ContainEquivalentOf("OperatingSystem:", "the OSVersion should be in our diagnostics");
+                logFileText.Should().ContainEquivalentOf($"OsBitVersion: {(Environment.Is64BitOperatingSystem ? "x64" : "x86")}", "the OsBitVersion should be in our diagnostics");
+                logFileText.Should().ContainEquivalentOf($"Is64BitProcess: {Environment.Is64BitProcess}", "the Is64BitProcess should be in our diagnostics");
+
+                if (PlatformDetection.IsRunningOnWindows)
+                {
+#pragma warning disable CA1416
+                    logFileText.Should().ContainEquivalentOf($"CurrentUser: {WindowsIdentity.GetCurrent().Name}", "the CurrentUser should be in our diagnostics");
+#pragma warning disable CA1416
+                }
+                else
+                {
+                    logFileText.Should().ContainEquivalentOf($"CurrentUser: {Environment.UserName}", "the CurrentUser should be in our diagnostics");
+                }
+                
+                logFileText.Should().ContainEquivalentOf($"MachineName: {Environment.MachineName}", "the MachineName should be in our diagnostics");
+                logFileText.Should().ContainEquivalentOf($"ProcessorCount: {Environment.ProcessorCount}", "the ProcessorCount should be in our diagnostics");
+                logFileText.Should().ContainEquivalentOf($"CurrentDirectory: {Directory.GetCurrentDirectory()}", "the CurrentDirectory should be in our diagnostics");
+                logFileText.Should().ContainEquivalentOf($"TempDirectory: {Path.GetTempPath()}", "the TempDirectory should be in our diagnostics");
+                logFileText.Should().ContainEquivalentOf("HostProcessName: ", "the HostProcessName should be in our diagnostics");
+                stdout.Should().NotContainEquivalentOf($"{RuntimeInformation.OSDescription}", "the OSVersion should not be written to stdout");
+                await Task.CompletedTask;
+            }
+            catch (NotLoggedYetException)
+            {
+                Logger.Error("Failed to get new log content");
+                Logger.Error($"Process exit code {exitCode}");
+                Logger.Error($"Starting log text: {Environment.NewLine}{startingLogText}");
+                Logger.Error($"Current log text: {Environment.NewLine}{clientAndTentacle.RunningTentacle.ReadAllLogFileText()}");
+                Logger.Error($"Command StdOut: {Environment.NewLine}{stdout}");
+                Logger.Error($"Command StdErr: {Environment.NewLine}{stderr}");
+
+                throw;
+            }
+        }
+
+        [Test]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        public async Task HelpAsFirstArgumentShouldShowCommandSpecificHelp(TentacleConfigurationTestCase tc)
+        {
+            var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "help", "version");
+            stderr.Should().BeNullOrEmpty();
+
+            stdout.Should().Be(
+@"Usage: Tentacle version [<options>]
+
+Where [<options>] is any of: 
+
+      --format=VALUE         The format of the output (text,json). Defaults 
+                               to text.
+
+Or one of the common options: 
+
+      --help                 Show detailed help for this command
+");
+        }
+
+        [Test]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        // Run these tests in serial to avoid conflicts
+        [NonParallelizable]
+        public async Task ShowConfigurationCommand(TentacleConfigurationTestCase tc)
+        {
+            await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
+            await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
+            var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
+                tc, 
+                clientAndTentacle.RunningTentacle.RunTentacleEnvironmentVariables, 
+                "show-configuration", $"--instance={clientAndTentacle.RunningTentacle.InstanceName}");
+
+            stderr.Should().BeNullOrEmpty();
+
+            // Actually parse and query the document just like our consumer will
+            dynamic? settings = JsonConvert.DeserializeObject(stdout);
+
+            ((string)settings.Octopus.Home).Should().Be(clientAndTentacle.RunningTentacle.HomeDirectory, "the home directory should match");
+            ((string)settings.Tentacle.Deployment.ApplicationDirectory).Should().Be(clientAndTentacle.RunningTentacle.ApplicationDirectory, "the application directory should match");
+        }
+
+        [Test]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        // Run these tests in serial to avoid conflicts
+        [NonParallelizable]
+        public async Task ShowConfigurationCommandOnPartiallyConfiguredTentacle(TentacleConfigurationTestCase tc)
+        {
+            using var homeDirectory = new TemporaryDirectory();
+            var environmentVariables = new Dictionary<string, string?> { { EnvironmentVariables.TentacleMachineConfigurationHomeDirectory, homeDirectory.DirectoryPath } };
+
+            var instanceId = Guid.NewGuid().ToString();
+            using var temporaryDirectory = new TemporaryDirectory();
+            await RunCommandAndAssertExitsWithSuccessExitCode(
+                tc, 
+                environmentVariables,
+                "create-instance", $"--instance={instanceId}", "--config", Path.Combine(temporaryDirectory.DirectoryPath, instanceId + ".cfg"));
+
+            var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
+                tc, 
+                environmentVariables,
+                "show-configuration", 
+                $"--instance={instanceId}");
+
+            stderr.Should().BeNullOrEmpty();
+
+            // Actually parse and query the document just like our consumer will
+            dynamic? settings = JsonConvert.DeserializeObject(stdout);
+            ((string)settings.Octopus.Home).Should().Be(temporaryDirectory.DirectoryPath, "the home directory should match");
+        }
+
+        [Test]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        // Run these tests in serial to avoid conflicts
+        [NonParallelizable]
+        public async Task ShowConfigurationCommandLooksSensibleToHumans(TentacleConfigurationTestCase tc)
+        {
+            await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
+            await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
+            var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
+                tc, 
+                clientAndTentacle.RunningTentacle.RunTentacleEnvironmentVariables,
+                "show-configuration", $"--instance={clientAndTentacle.RunningTentacle.InstanceName}");
+
+            stderr.Should().BeNullOrEmpty();
+
+            if (tc.TentacleType == TentacleType.Polling)
+            {
+                stdout.Should().Be($@"{{
+  ""Octopus"": {{
+    ""Home"": ""{JsonFormattedPath(clientAndTentacle.RunningTentacle.HomeDirectory)}"",
+    ""Watchdog"": {{
+      ""Enabled"": false,
+      ""Instances"": ""*"",
+      ""Interval"": 0
+    }}
+  }},
+  ""Tentacle"": {{
+    ""CertificateThumbprint"": ""{clientAndTentacle.RunningTentacle.Thumbprint}"",
+    ""Communication"": {{
+      ""TrustedOctopusServers"": [
+        {{
+          ""Thumbprint"": ""{clientAndTentacle.Server.Thumbprint}"",
+          ""CommunicationStyle"": 2,
+          ""Address"": ""https://localhost:{clientAndTentacle.Server.ServerListeningPort}"",
+          ""Squid"": null,
+          ""SubscriptionId"": ""{clientAndTentacle.RunningTentacle.ServiceUri}""
+        }}
+      ]
+    }},
+    ""Deployment"": {{
+      ""ApplicationDirectory"": ""{JsonFormattedPath(clientAndTentacle.RunningTentacle.ApplicationDirectory)}""
+    }},
+    ""Services"": {{
+      ""ListenIP"": null,
+      ""NoListen"": true,
+      ""PortNumber"": 10933
+    }}
+  }}
+}}
+");
+            }
+            else
+            {
+                stdout.Should().Be($@"{{
+  ""Octopus"": {{
+    ""Home"": ""{JsonFormattedPath(clientAndTentacle.RunningTentacle.HomeDirectory)}"",
+    ""Watchdog"": {{
+      ""Enabled"": false,
+      ""Instances"": ""*"",
+      ""Interval"": 0
+    }}
+  }},
+  ""Tentacle"": {{
+    ""CertificateThumbprint"": ""{clientAndTentacle.RunningTentacle.Thumbprint}"",
+    ""Communication"": {{
+      ""TrustedOctopusServers"": [
+        {{
+          ""Thumbprint"": ""{clientAndTentacle.Server.Thumbprint}"",
+          ""CommunicationStyle"": 1,
+          ""Address"": null,
+          ""Squid"": null,
+          ""SubscriptionId"": null
+        }}
+      ]
+    }},
+    ""Deployment"": {{
+      ""ApplicationDirectory"": ""{JsonFormattedPath(clientAndTentacle.RunningTentacle.ApplicationDirectory)}""
+    }},
+    ""Services"": {{
+      ""ListenIP"": null,
+      ""NoListen"": false,
+      ""PortNumber"": {clientAndTentacle.RunningTentacle.ServiceUri.Port}
+    }}
+  }}
+}}
+");
+            }
+
+            await Task.CompletedTask;
+        }
+
+        [Test]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        [WindowsTest]
+        // Run these tests in serial to avoid conflicts
+        [NonParallelizable]
+        public async Task WatchdogCreateAndDeleteCommand(TentacleConfigurationTestCase tc)
+        {
+            await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
+            await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
+            var create = await RunCommandAndAssertExitsWithSuccessExitCode(
+                tc, 
+                clientAndTentacle.RunningTentacle.RunTentacleEnvironmentVariables,
+                "watchdog", "--create", $"--instances={clientAndTentacle.RunningTentacle.InstanceName}");
+
+            create.StdError.Should().BeNullOrEmpty();
+            create.StdOut.Should().ContainEquivalentOf("Creating watchdog task");
+            var delete = await RunCommandAndAssertExitsWithSuccessExitCode(
+                tc, 
+                clientAndTentacle.RunningTentacle.RunTentacleEnvironmentVariables,
+                "watchdog", "--delete", $"--instances={clientAndTentacle.RunningTentacle.InstanceName}");
+
+            delete.StdError.Should().BeNullOrEmpty();
+            delete.StdOut.Should().ContainEquivalentOf("Removing watchdog task");
+        }
         
         FileVersionInfo GetVersionInfo(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
