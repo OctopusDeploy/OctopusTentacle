@@ -748,15 +748,15 @@ Or one of the common options:
             var output = new StringBuilder();
             var errorOut = new StringBuilder();
 
-            if (arguments is not null)
-            {
-                Logger.Information($"Going to call Cli.Wrap ... with exe: {tentacleExe}");
-                foreach (var argument in arguments)
-                {
-                    Logger.Information($" ... with argument: {argument}");
-                }
-                Logger.Information($"----");
-            }
+            // if (arguments is not null)
+            // {
+            //     Logger.Information($"Going to call Cli.Wrap ... with exe: {tentacleExe}");
+            //     foreach (var argument in arguments)
+            //     {
+            //         Logger.Information($" ... with argument: {argument}");
+            //     }
+            //     Logger.Information($"----");
+            // }
 
             var result = await RetryHelper.RetryAsync<CommandResult, CommandExecutionException>(async () =>
                 {

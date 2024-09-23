@@ -37,7 +37,7 @@ namespace Octopus.Tentacle.Tests.Integration
         public async Task ShouldUseTheCustomMachineConfigurationHomeDirectoryWhenACustomLocationIsProvided(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             using var tempDirectory = new TemporaryDirectory();
-            await using var clientAndTentacle = await tentacleConfigurationTestCase
+            var clientAndTentacle = await tentacleConfigurationTestCase
                 .CreateBuilder()
                 .UseDefaultMachineConfigurationHomeDirectory()
                 .WithTentacle(x =>
