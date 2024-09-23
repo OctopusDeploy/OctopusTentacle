@@ -30,356 +30,356 @@ namespace Octopus.Tentacle.Tests.Integration
     [IntegrationTestTimeout]
     public class TentacleCommandLineTests : IntegrationTest
     {
-//         [Test]
-//         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-//         public async Task TentacleExeNoArguments(TentacleConfigurationTestCase tc)
-//         {
-//             var (exitCode, stdout, stderr) = await RunCommand(tc, null);
-//             
-//             exitCode.Should().Be(2, "the exit code should be 2 if the command wasn't understood");
-//             stdout.Should().StartWithEquivalentOf("Usage: Tentacle <command> [<options>]", "should show help by default if no other commands are specified");
-//             stdout.Should().ContainEquivalentOf("Or use <command> --help for more details.", "should provide the hint for command-specific help");
-//             stderr.Should().BeNullOrEmpty();
-//         }
-//         
-//         [Test]
-//         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-//         public async Task UnknownCommand(TentacleConfigurationTestCase tc)
-//         {
-//             var (exitCode, stdout, stderr) = await RunCommand(tc, null, "unknown-command");
-//             
-//             exitCode.Should().Be(2, "the exit code should be 2 if the command wasn't understood");
-//             stderr.Should().StartWithEquivalentOf("Command 'unknown-command' is not supported", "the error should clearly indicate the command which is not understood");
-//             stdout.Should().StartWithEquivalentOf("See 'Tentacle help'", "should provide the hint to use help");
-//         }     
-//         
-//         [Test]
-//         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-//         public async Task UnknownArgument(TentacleConfigurationTestCase tc)
-//         {
-//             var (exitCode, stdout, stderr) = await RunCommand(tc, null, "version", "--unknown=argument");
-//             
-//             exitCode.Should().Be(1, "the exit code should be 1 if the command has unknown arguments");
-//             stdout.Should().BeNullOrEmpty("the error message should be written to stderr, not stdout");
-//             stderr.Should().ContainEquivalentOf("Unrecognized command line arguments: --unknown=argument", "the error message (written to stderr) should clearly indicate which arguments couldn't be parsed.");
-//         }
-//         
-//         [Test]
-//         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-//         public async Task InvalidArgument(TentacleConfigurationTestCase tc)
-//         {
-//             var (exitCode, stdout, stderr) = await RunCommand(tc, null, "version", "--format=unsupported");
-//             
-//             exitCode.Should().Be(1, "the exit code should be 1 if the command has unknown arguments");
-//             stdout.Should().BeNullOrEmpty("the error message should be written to stderr, not stdout");
-//             stderr.Should().ContainEquivalentOf("The format 'unsupported' is not supported. Try text or json.", "the error message (written to stderr) should clearly indicate which argument was invalid.");
-//         }
-//         
-//         [Test]
-//         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-//         public async Task NoConsoleLoggingSwitchStillSilentlySupportedForBackwardsCompat(TentacleConfigurationTestCase tc)
-//         {
-//             var (_, _, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "version", "--noconsolelogging");
-//
-//             stderr.Should().BeNullOrEmpty();
-//         }
-//         
-//         [Test]
-//         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-//         public async Task NoLogoSwitchStillSilentlySupportedForBackwardsCompat(TentacleConfigurationTestCase tc)
-//         {
-//             var (_, _, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "version", "--nologo");
-//
-//             stderr.Should().BeNullOrEmpty();
-//         }
-//
-//         [Test]
-//         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-//         public async Task ConsoleSwitchStillSilentlySupportedForBackwardsCompat(TentacleConfigurationTestCase tc)
-//         {
-//             var (_, _, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "version", "--console");
-//
-//             stderr.Should().BeNullOrEmpty();
-//         }
-//         
-//         [Test]
-//         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-//         public async Task ShouldSupportFuzzyCommandParsing(TentacleConfigurationTestCase tc)
-//         {
-//             await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "version");
-//             await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "--version");
-//             await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "/version");
-//         }
-//
-//         [Test]
-//         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-//         public async Task VersionCommandTextFormat(TentacleConfigurationTestCase tc)
-//         {
-//             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "version");
-//
-//             var expectedVersion = GetVersionInfo(tc);
-//
-//             stdout.Should().Be(expectedVersion.ProductVersion, "The version command should print the informational version as text");
-//             stderr.Should().BeNullOrEmpty();
-//         }
-//
-//         [Test]
-//         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-//         public async Task VersionCommandJsonFormat(TentacleConfigurationTestCase tc)
-//         {
-//             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "version", "--format=json");
-//
-//             var expectedVersion = GetVersionInfo(tc);
-//             var output = JObject.Parse(stdout);
-//
-//             output["InformationalVersion"].Value<string>().Should().Be(expectedVersion.ProductVersion, "The version command should print the informational version in the JSON output");
-//             output["MajorMinorPatch"].Value<string>().Should().Be($"{expectedVersion.FileMajorPart}.{expectedVersion.FileMinorPart}.{expectedVersion.FileBuildPart}", "The version command should print the version in the json output");
-//             output["NuGetVersion"].Value<string>().Should().NotBeNull("The version command should print the NuGet version in the JSON output");
-//             output["SourceBranchName"].Value<string>().Should().NotBeNull("The version command should print the source branch in the JSON output");
-//
-//             stderr.Should().BeNullOrEmpty();
-//         }
-//
-//         [Test]
-//         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-//         public async Task CanGetHelpForHelp(TentacleConfigurationTestCase tc)
-//         {
-//             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "help", "--help");
-//             stderr.Should().BeNullOrEmpty();
-//
-//             stdout.Should().Be(
-// @"Usage: Tentacle help [<options>]
-//
-// Where [<options>] is any of: 
-//
-//       --format=VALUE         The format of the output (text,json). Defaults 
-//                                to text.
-//
-// Or one of the common options: 
-//
-//       --help                 Show detailed help for this command
-// ");
-//         }
-//
-//         [Test]
-//         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-//         public async Task HelpAsSwitchShouldShowCommandSpecificHelp(TentacleConfigurationTestCase tc)
-//         {
-//             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "version", "--help");
-//             stderr.Should().BeNullOrEmpty();
-//
-//             stdout.Should().Be(
-//                 @"Usage: Tentacle version [<options>]
-//
-// Where [<options>] is any of: 
-//
-//       --format=VALUE         The format of the output (text,json). Defaults 
-//                                to text.
-//
-// Or one of the common options: 
-//
-//       --help                 Show detailed help for this command
-// ");
-//         }
-//
-//         [Test]
-//         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-//         public async Task GeneralHelpAsJsonCanBeParsedByAutomationScripts(TentacleConfigurationTestCase tc)
-//         {
-//             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "help", "--format=json");
-//
-//             stderr.Should().BeNullOrEmpty();
-//             var help = JsonConvert.DeserializeAnonymousType(
-//                 stdout,
-//                 new
-//                 {
-//                     Commands = new[]
-//                     {
-//                         new
-//                         {
-//                             Name = "",
-//                             Description = "",
-//                             Aliases = Array.Empty<string>()
-//                         }
-//                     }
-//                 });
-//
-//             help.Commands.Select(c => c.Name)
-//                 .Should()
-//                 .Contain(
-//                     "configure",
-//                     "help",
-//                     "run",
-//                     "version",
-//                     "show-master-key",
-//                     "show-thumbprint");
-//         }
-//
-//         [Test]
-//         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-//         public async Task CommandSpecificHelpAsJsonCanBeParsedByAutomationScripts(TentacleConfigurationTestCase tc)
-//         {
-//             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "version", "--help", "--format=json");
-//
-//             stderr.Should().BeNullOrEmpty();
-//             var help = JsonConvert.DeserializeAnonymousType(
-//                 stdout,
-//                 new
-//                 {
-//                     Name = "",
-//                     Description = "",
-//                     Aliases = Array.Empty<string>(),
-//                     Options = new[]
-//                     {
-//                         new
-//                         {
-//                             Name = "",
-//                             Description = ""
-//                         }
-//                     }
-//                 });
-//
-//             help.Name.Should().Be("version");
-//             help.Options.Select(o => o.Name).Should().Contain("format");
-//         }
-//
-//         [Test]
-//         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-//         public async Task CommandSpecificHelpAsJsonLooksSensibleToHumans(TentacleConfigurationTestCase tc)
-//         {
-//             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "version", "--help", "--format=json");
-//             stderr.Should().BeNullOrEmpty();
-//
-//             stdout.Should().Be(
-// @"{
-//   ""Name"": ""version"",
-//   ""Description"": ""Show the Tentacle version information"",
-//   ""Aliases"": [],
-//   ""Options"": [
-//     {
-//       ""Name"": ""format"",
-//       ""Description"": ""The format of the output (text,json). Defaults to text.""
-//     }
-//   ],
-//   ""CommonOptions"": [
-//     {
-//       ""Name"": ""help"",
-//       ""Description"": ""Show detailed help for this command""
-//     }
-//   ]
-// }");
-//         }
-//
-//         [Test]
-//         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-//         public async Task HelpForInstanceSpecificCommandsAlwaysWorks(TentacleConfigurationTestCase tc)
-//         {
-//             var (_, stdout, stderr) = await RunCommand(tc, null, "help", "--format=json");
-//
-//             stderr.Should().BeNullOrEmpty();
-//             var help = JsonConvert.DeserializeAnonymousType(
-//                 stdout,
-//                 new
-//                 {
-//                     Commands = new[]
-//                     {
-//                         new
-//                         {
-//                             Name = "",
-//                             Description = "",
-//                             Aliases = new string[0]
-//                         }
-//                     }
-//                 });
-//
-//             help.Commands.Should().HaveCountGreaterThan(0);
-//
-//             var failed = help.Commands.Select(async c =>
-//                     {
-//                         var (exitCode2, stdout2, stderr2) = await RunCommand(tc, null,$"{c.Name}", "--help");
-//                         return new
-//                         {
-//                             Command = c,
-//                             ExitCode = exitCode2,
-//                             StdOut = stdout2,
-//                             StdErr = stderr2,
-//                             HasExpectedExitCode = exitCode2 == 0,
-//                             HasExpectedHelpMessage = stdout2.StartsWith($"Usage: Tentacle {c.Name} [<options>]")
-//                         };
-//                     })
-//                 .Where(r => !(r.Result.HasExpectedExitCode && r.Result.HasExpectedHelpMessage))
-//                 .ToArray();
-//
-//             if (failed.Any())
-//             {
-//                 var failureDetails = string.Empty;
-//
-//                 foreach (var failure in failed)
-//                 {
-//                     failureDetails += $@"{failure.Result.Command.Name}
-// StdErr:{failure.Result.StdErr}
-// StdOut:{failure.Result.StdOut}";
-//                 }
-//
-//                 Assert.Fail(
-// $@"The following commands cannot show help without specifying the --instance argument:
-// {failureDetails}
-// The details are logged above. These commands probably need to take Lazy<T> dependencies so they can be instantiated for showing help without requiring every dependency to be resolvable.");
-//             }
-//         }
-//         
-//         [Test]
-//         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-//         // Run these tests in serial to avoid conflicts
-//         [NonParallelizable]
-//         public async Task InvalidInstance(TentacleConfigurationTestCase tc)
-//         {
-//             var (exitCode, stdout, stderr) = await RunCommand(
-//                 tc, 
-//                 null,
-//                 "show-thumbprint", "--instance=invalidinstance");
-//             
-//             exitCode.Should().Be(1, $"the exit code should be 1 if the instance is not able to be resolved");
-//             stderr.Should().ContainEquivalentOf("Instance invalidinstance of tentacle has not been configured", "the error message should make it clear the instance has not been configured");
-//             stderr.Should().ContainEquivalentOf("Available instances:", "should provide a hint as to which instances are available on the machine");
-//             stdout.Should().BeNullOrEmpty();
-//         }
-//
-//         [Test]
-//         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-//         // Run these tests in serial to avoid conflicts
-//         [NonParallelizable]
-//         public async Task ShowThumbprintCommandText(TentacleConfigurationTestCase tc)
-//         {
-//             await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
-//             await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
-//             var (exitCode, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
-//                 tc, 
-//                 clientAndTentacle.RunningTentacle.RunTentacleEnvironmentVariables, 
-//                 "show-thumbprint", $"--instance={clientAndTentacle.RunningTentacle.InstanceName}");
-//
-//             exitCode.Should().Be(0, $"we expected the command to succeed.\r\nStdErr: '{stderr}'\r\nStdOut: '{stdout}'");
-//             stdout.Should().Be(TestCertificates.TentaclePublicThumbprint, "the thumbprint should be written directly to stdout");
-//             stderr.Should().BeNullOrEmpty();
-//         }
-//
-//         [Test]
-//         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-//         // Run these tests in serial to avoid conflicts
-//         [NonParallelizable]
-//         public async Task ShowThumbprintCommandJson(TentacleConfigurationTestCase tc)
-//         {
-//             await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
-//             await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
-//             var (exitCode, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
-//                 tc, 
-//                 clientAndTentacle.RunningTentacle.RunTentacleEnvironmentVariables,
-//                 "show-thumbprint", $"--instance={clientAndTentacle.RunningTentacle.InstanceName}", "--format=json");
-//             
-//             exitCode.Should().Be(0, $"we expected the command to succeed.\r\nStdErr: '{stderr}'\r\nStdOut: '{stdout}'");
-//             stdout.Should().Be(JsonConvert.SerializeObject(new { Thumbprint = TestCertificates.TentaclePublicThumbprint }), "the thumbprint should be written directly to stdout as JSON");
-//             stderr.Should().BeNullOrEmpty();
-//         }
+        [Test]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        public async Task TentacleExeNoArguments(TentacleConfigurationTestCase tc)
+        {
+            var (exitCode, stdout, stderr) = await RunCommand(tc, null);
+            
+            exitCode.Should().Be(2, "the exit code should be 2 if the command wasn't understood");
+            stdout.Should().StartWithEquivalentOf("Usage: Tentacle <command> [<options>]", "should show help by default if no other commands are specified");
+            stdout.Should().ContainEquivalentOf("Or use <command> --help for more details.", "should provide the hint for command-specific help");
+            stderr.Should().BeNullOrEmpty();
+        }
+        
+        [Test]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        public async Task UnknownCommand(TentacleConfigurationTestCase tc)
+        {
+            var (exitCode, stdout, stderr) = await RunCommand(tc, null, "unknown-command");
+            
+            exitCode.Should().Be(2, "the exit code should be 2 if the command wasn't understood");
+            stderr.Should().StartWithEquivalentOf("Command 'unknown-command' is not supported", "the error should clearly indicate the command which is not understood");
+            stdout.Should().StartWithEquivalentOf("See 'Tentacle help'", "should provide the hint to use help");
+        }     
+        
+        [Test]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        public async Task UnknownArgument(TentacleConfigurationTestCase tc)
+        {
+            var (exitCode, stdout, stderr) = await RunCommand(tc, null, "version", "--unknown=argument");
+            
+            exitCode.Should().Be(1, "the exit code should be 1 if the command has unknown arguments");
+            stdout.Should().BeNullOrEmpty("the error message should be written to stderr, not stdout");
+            stderr.Should().ContainEquivalentOf("Unrecognized command line arguments: --unknown=argument", "the error message (written to stderr) should clearly indicate which arguments couldn't be parsed.");
+        }
+        
+        [Test]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        public async Task InvalidArgument(TentacleConfigurationTestCase tc)
+        {
+            var (exitCode, stdout, stderr) = await RunCommand(tc, null, "version", "--format=unsupported");
+            
+            exitCode.Should().Be(1, "the exit code should be 1 if the command has unknown arguments");
+            stdout.Should().BeNullOrEmpty("the error message should be written to stderr, not stdout");
+            stderr.Should().ContainEquivalentOf("The format 'unsupported' is not supported. Try text or json.", "the error message (written to stderr) should clearly indicate which argument was invalid.");
+        }
+        
+        [Test]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        public async Task NoConsoleLoggingSwitchStillSilentlySupportedForBackwardsCompat(TentacleConfigurationTestCase tc)
+        {
+            var (_, _, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "version", "--noconsolelogging");
+
+            stderr.Should().BeNullOrEmpty();
+        }
+        
+        [Test]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        public async Task NoLogoSwitchStillSilentlySupportedForBackwardsCompat(TentacleConfigurationTestCase tc)
+        {
+            var (_, _, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "version", "--nologo");
+
+            stderr.Should().BeNullOrEmpty();
+        }
+
+        [Test]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        public async Task ConsoleSwitchStillSilentlySupportedForBackwardsCompat(TentacleConfigurationTestCase tc)
+        {
+            var (_, _, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "version", "--console");
+
+            stderr.Should().BeNullOrEmpty();
+        }
+        
+        [Test]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        public async Task ShouldSupportFuzzyCommandParsing(TentacleConfigurationTestCase tc)
+        {
+            await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "version");
+            await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "--version");
+            await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "/version");
+        }
+
+        [Test]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        public async Task VersionCommandTextFormat(TentacleConfigurationTestCase tc)
+        {
+            var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "version");
+
+            var expectedVersion = GetVersionInfo(tc);
+
+            stdout.Should().Be(expectedVersion.ProductVersion, "The version command should print the informational version as text");
+            stderr.Should().BeNullOrEmpty();
+        }
+
+        [Test]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        public async Task VersionCommandJsonFormat(TentacleConfigurationTestCase tc)
+        {
+            var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "version", "--format=json");
+
+            var expectedVersion = GetVersionInfo(tc);
+            var output = JObject.Parse(stdout);
+
+            output["InformationalVersion"].Value<string>().Should().Be(expectedVersion.ProductVersion, "The version command should print the informational version in the JSON output");
+            output["MajorMinorPatch"].Value<string>().Should().Be($"{expectedVersion.FileMajorPart}.{expectedVersion.FileMinorPart}.{expectedVersion.FileBuildPart}", "The version command should print the version in the json output");
+            output["NuGetVersion"].Value<string>().Should().NotBeNull("The version command should print the NuGet version in the JSON output");
+            output["SourceBranchName"].Value<string>().Should().NotBeNull("The version command should print the source branch in the JSON output");
+
+            stderr.Should().BeNullOrEmpty();
+        }
+
+        [Test]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        public async Task CanGetHelpForHelp(TentacleConfigurationTestCase tc)
+        {
+            var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "help", "--help");
+            stderr.Should().BeNullOrEmpty();
+
+            stdout.Should().Be(
+@"Usage: Tentacle help [<options>]
+
+Where [<options>] is any of: 
+
+      --format=VALUE         The format of the output (text,json). Defaults 
+                               to text.
+
+Or one of the common options: 
+
+      --help                 Show detailed help for this command
+");
+        }
+
+        [Test]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        public async Task HelpAsSwitchShouldShowCommandSpecificHelp(TentacleConfigurationTestCase tc)
+        {
+            var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "version", "--help");
+            stderr.Should().BeNullOrEmpty();
+
+            stdout.Should().Be(
+                @"Usage: Tentacle version [<options>]
+
+Where [<options>] is any of: 
+
+      --format=VALUE         The format of the output (text,json). Defaults 
+                               to text.
+
+Or one of the common options: 
+
+      --help                 Show detailed help for this command
+");
+        }
+
+        [Test]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        public async Task GeneralHelpAsJsonCanBeParsedByAutomationScripts(TentacleConfigurationTestCase tc)
+        {
+            var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "help", "--format=json");
+
+            stderr.Should().BeNullOrEmpty();
+            var help = JsonConvert.DeserializeAnonymousType(
+                stdout,
+                new
+                {
+                    Commands = new[]
+                    {
+                        new
+                        {
+                            Name = "",
+                            Description = "",
+                            Aliases = Array.Empty<string>()
+                        }
+                    }
+                });
+
+            help.Commands.Select(c => c.Name)
+                .Should()
+                .Contain(
+                    "configure",
+                    "help",
+                    "run",
+                    "version",
+                    "show-master-key",
+                    "show-thumbprint");
+        }
+
+        [Test]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        public async Task CommandSpecificHelpAsJsonCanBeParsedByAutomationScripts(TentacleConfigurationTestCase tc)
+        {
+            var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "version", "--help", "--format=json");
+
+            stderr.Should().BeNullOrEmpty();
+            var help = JsonConvert.DeserializeAnonymousType(
+                stdout,
+                new
+                {
+                    Name = "",
+                    Description = "",
+                    Aliases = Array.Empty<string>(),
+                    Options = new[]
+                    {
+                        new
+                        {
+                            Name = "",
+                            Description = ""
+                        }
+                    }
+                });
+
+            help.Name.Should().Be("version");
+            help.Options.Select(o => o.Name).Should().Contain("format");
+        }
+
+        [Test]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        public async Task CommandSpecificHelpAsJsonLooksSensibleToHumans(TentacleConfigurationTestCase tc)
+        {
+            var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, null, "version", "--help", "--format=json");
+            stderr.Should().BeNullOrEmpty();
+
+            stdout.Should().Be(
+@"{
+  ""Name"": ""version"",
+  ""Description"": ""Show the Tentacle version information"",
+  ""Aliases"": [],
+  ""Options"": [
+    {
+      ""Name"": ""format"",
+      ""Description"": ""The format of the output (text,json). Defaults to text.""
+    }
+  ],
+  ""CommonOptions"": [
+    {
+      ""Name"": ""help"",
+      ""Description"": ""Show detailed help for this command""
+    }
+  ]
+}");
+        }
+
+        [Test]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        public async Task HelpForInstanceSpecificCommandsAlwaysWorks(TentacleConfigurationTestCase tc)
+        {
+            var (_, stdout, stderr) = await RunCommand(tc, null, "help", "--format=json");
+
+            stderr.Should().BeNullOrEmpty();
+            var help = JsonConvert.DeserializeAnonymousType(
+                stdout,
+                new
+                {
+                    Commands = new[]
+                    {
+                        new
+                        {
+                            Name = "",
+                            Description = "",
+                            Aliases = new string[0]
+                        }
+                    }
+                });
+
+            help.Commands.Should().HaveCountGreaterThan(0);
+
+            var failed = help.Commands.Select(async c =>
+                    {
+                        var (exitCode2, stdout2, stderr2) = await RunCommand(tc, null,$"{c.Name}", "--help");
+                        return new
+                        {
+                            Command = c,
+                            ExitCode = exitCode2,
+                            StdOut = stdout2,
+                            StdErr = stderr2,
+                            HasExpectedExitCode = exitCode2 == 0,
+                            HasExpectedHelpMessage = stdout2.StartsWith($"Usage: Tentacle {c.Name} [<options>]")
+                        };
+                    })
+                .Where(r => !(r.Result.HasExpectedExitCode && r.Result.HasExpectedHelpMessage))
+                .ToArray();
+
+            if (failed.Any())
+            {
+                var failureDetails = string.Empty;
+
+                foreach (var failure in failed)
+                {
+                    failureDetails += $@"{failure.Result.Command.Name}
+StdErr:{failure.Result.StdErr}
+StdOut:{failure.Result.StdOut}";
+                }
+
+                Assert.Fail(
+$@"The following commands cannot show help without specifying the --instance argument:
+{failureDetails}
+The details are logged above. These commands probably need to take Lazy<T> dependencies so they can be instantiated for showing help without requiring every dependency to be resolvable.");
+            }
+        }
+        
+        [Test]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        // Run these tests in serial to avoid conflicts
+        [NonParallelizable]
+        public async Task InvalidInstance(TentacleConfigurationTestCase tc)
+        {
+            var (exitCode, stdout, stderr) = await RunCommand(
+                tc, 
+                null,
+                "show-thumbprint", "--instance=invalidinstance");
+            
+            exitCode.Should().Be(1, $"the exit code should be 1 if the instance is not able to be resolved");
+            stderr.Should().ContainEquivalentOf("Instance invalidinstance of tentacle has not been configured", "the error message should make it clear the instance has not been configured");
+            stderr.Should().ContainEquivalentOf("Available instances:", "should provide a hint as to which instances are available on the machine");
+            stdout.Should().BeNullOrEmpty();
+        }
+
+        [Test]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        // Run these tests in serial to avoid conflicts
+        [NonParallelizable]
+        public async Task ShowThumbprintCommandText(TentacleConfigurationTestCase tc)
+        {
+            await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
+            await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
+            var (exitCode, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
+                tc, 
+                clientAndTentacle.RunningTentacle.RunTentacleEnvironmentVariables, 
+                "show-thumbprint", $"--instance={clientAndTentacle.RunningTentacle.InstanceName}");
+
+            exitCode.Should().Be(0, $"we expected the command to succeed.\r\nStdErr: '{stderr}'\r\nStdOut: '{stdout}'");
+            stdout.Should().Be(TestCertificates.TentaclePublicThumbprint, "the thumbprint should be written directly to stdout");
+            stderr.Should().BeNullOrEmpty();
+        }
+
+        [Test]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        // Run these tests in serial to avoid conflicts
+        [NonParallelizable]
+        public async Task ShowThumbprintCommandJson(TentacleConfigurationTestCase tc)
+        {
+            await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
+            await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
+            var (exitCode, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
+                tc, 
+                clientAndTentacle.RunningTentacle.RunTentacleEnvironmentVariables,
+                "show-thumbprint", $"--instance={clientAndTentacle.RunningTentacle.InstanceName}", "--format=json");
+            
+            exitCode.Should().Be(0, $"we expected the command to succeed.\r\nStdErr: '{stderr}'\r\nStdOut: '{stdout}'");
+            stdout.Should().Be(JsonConvert.SerializeObject(new { Thumbprint = TestCertificates.TentaclePublicThumbprint }), "the thumbprint should be written directly to stdout as JSON");
+            stderr.Should().BeNullOrEmpty();
+        }
 
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
