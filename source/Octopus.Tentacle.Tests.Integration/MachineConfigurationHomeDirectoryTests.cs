@@ -16,20 +16,17 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task ShouldUseTheDefaultMachineConfigurationHomeDirectoryWhenACustomLocationIsNotProvided(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
-            await using (var clientAndTentacle = await tentacleConfigurationTestCase
-                             .CreateBuilder()
-                             .UseDefaultMachineConfigurationHomeDirectory()
-                             .Build(CancellationToken))
-            {
-                
-                var defaultMachineConfigurationHomeDirectory = PlatformDetection.IsRunningOnWindows ? 
-                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Octopus", "Tentacle", "Instances") : 
-                    "/etc/octopus/Tentacle/Instances";
+            var clientAndTentacle = await tentacleConfigurationTestCase
+                .CreateBuilder()
+                .UseDefaultMachineConfigurationHomeDirectory()
+                .Build(CancellationToken);
+            var defaultMachineConfigurationHomeDirectory = PlatformDetection.IsRunningOnWindows ? 
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Octopus", "Tentacle", "Instances") : 
+                "/etc/octopus/Tentacle/Instances";
 
-                var expectedInstanceConfigurationFilePath = new FileInfo(Path.Combine(defaultMachineConfigurationHomeDirectory, $"{clientAndTentacle.RunningTentacle.InstanceName}.config"));
+            var expectedInstanceConfigurationFilePath = new FileInfo(Path.Combine(defaultMachineConfigurationHomeDirectory, $"{clientAndTentacle.RunningTentacle.InstanceName}.config"));
 
-                expectedInstanceConfigurationFilePath.Exists.Should().BeTrue($"Instance configuration file should exist {expectedInstanceConfigurationFilePath.FullName}");
-            }
+            expectedInstanceConfigurationFilePath.Exists.Should().BeTrue($"Instance configuration file should exist {expectedInstanceConfigurationFilePath.FullName}");
         }
 
         [Test]
