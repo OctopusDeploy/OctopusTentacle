@@ -292,6 +292,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     }
                 });
 
+            
             help.Commands.Should().HaveCountGreaterThan(0);
 
             var failed = help.Commands.Select(async c =>
@@ -727,14 +728,37 @@ The details are logged above. These commands probably need to take Lazy<T> depen
              var output = new StringBuilder();
              var errorOut = new StringBuilder();
              
-             var result = await RetryHelper.RetryAsync<CommandResult, CommandExecutionException>(
-                 () => Cli.Wrap(tentacleExe)
-                     .WithArguments(arguments)
-                     .WithValidation(CommandResultValidation.None)
-                     .WithStandardOutputPipe(PipeTarget.ToStringBuilder(output))
-                     .WithStandardErrorPipe(PipeTarget.ToStringBuilder(errorOut))
-                     .WithEnvironmentVariables(environmentVariablesToRunTentacleWith)
-                     .ExecuteAsync(CancellationToken));
+             var result = await RetryHelper.RetryAsync<CommandResult, CommandExecutionException>(async () =>
+                 {
+                     if (arguments is not null)
+                     {
+                         Logger.Information($"Going to call Cli.Wrap with exe: {tentacleExe}");
+                         foreach (var argument in arguments)
+                         {
+                             Logger.Information($" ... with argument: {argument}");
+                         }
+                         Logger.Information($"----");
+                     }
+                     try
+                     {
+                         var command = Cli.Wrap(tentacleExe)
+                             .WithArguments(arguments)
+                             .WithValidation(CommandResultValidation.None)
+                             .WithStandardOutputPipe(PipeTarget.ToStringBuilder(output))
+                             .WithStandardErrorPipe(PipeTarget.ToStringBuilder(errorOut))
+                             .WithEnvironmentVariables(environmentVariablesToRunTentacleWith);
+                        
+                         Logger.Information($"Going to call Cli.Wrap with exe - in try");
+                         var result = await command.ExecuteAsync(CancellationToken);
+                         Logger.Information($"Finished calling Cli.Wrap with exe - in try");
+                         return result;
+                     }
+                     catch (Exception e)
+                     {
+                         Logger.Information($"Cli.Wrap(tentacleExe threw an exception:{e.Message}: {e.StackTrace}");
+                         throw;
+                     }
+                 });
 
              return (result.ExitCode, output.ToString(), errorOut.ToString());
          }
