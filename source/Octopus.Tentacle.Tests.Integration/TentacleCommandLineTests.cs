@@ -758,8 +758,7 @@ Or one of the common options:
                 Logger.Information($"----");
             }
 
-            var result = await RetryHelper.RetryAsync<CommandResult, CommandExecutionException>(
-                () =>
+            var result = await RetryHelper.RetryAsync<CommandResult, CommandExecutionException>(async () =>
                 {
                     if (arguments is not null)
                     {
@@ -773,13 +772,17 @@ Or one of the common options:
                     
                     try
                     {
-                        return Cli.Wrap(tentacleExe)
+                        var command = Cli.Wrap(tentacleExe)
                             .WithArguments(arguments)
                             .WithValidation(CommandResultValidation.None)
                             .WithStandardOutputPipe(PipeTarget.ToStringBuilder(output))
                             .WithStandardErrorPipe(PipeTarget.ToStringBuilder(errorOut))
-                            .WithEnvironmentVariables(environmentVariablesToRunTentacleWith)
-                            .ExecuteAsync(CancellationToken);
+                            .WithEnvironmentVariables(environmentVariablesToRunTentacleWith);
+                        
+                        Logger.Information($"Going to call Cli.Wrap with exe - in try");
+                        var result = await command.ExecuteAsync(CancellationToken);
+                        Logger.Information($"Finished calling Cli.Wrap with exe - in try");
+                        return result;
                     }
                     catch (Exception e)
                     {
