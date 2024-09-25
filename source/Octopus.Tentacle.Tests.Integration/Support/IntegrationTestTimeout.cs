@@ -13,8 +13,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public IntegrationTestTimeout() : base(TestTimeoutInMilliseconds())
         {
         }
-        
-        
 
         public static int TestTimeoutInMilliseconds()
         {
@@ -23,7 +21,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 return (int)TimeSpan.FromHours(1).TotalMilliseconds;
             }
 
-            return GetTimeoutFromEnvironmentVariable() ?? (int)TimeSpan.FromMinutes(10).TotalMilliseconds;
+            return GetTimeoutFromEnvironmentVariable() ?? (int)TimeSpan.FromMinutes(2).TotalMilliseconds;
         }
         
         static int? GetTimeoutFromEnvironmentVariable()
