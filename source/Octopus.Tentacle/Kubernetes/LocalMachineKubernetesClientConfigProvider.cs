@@ -12,6 +12,7 @@ namespace Octopus.Tentacle.Kubernetes
             var kubeConfigEnvVar = Environment.GetEnvironmentVariable("KUBECONFIG");
             if (kubeConfigEnvVar != null && !Path.IsPathRooted(kubeConfigEnvVar))
             {
+                // Path.GetFullPath doesn't work with ~, so we need to expand it manually
                 if (kubeConfigEnvVar.StartsWith("~"))
                 {
                     kubeConfigEnvVar = kubeConfigEnvVar
