@@ -11,7 +11,7 @@ namespace Octopus.Tentacle.Diagnostics
     [LayoutRenderer("octopusLogsDirectory")]
     public class OctopusLogsDirectoryRenderer : LayoutRenderer
     {
-        public static readonly string DefaultLogsDirectory =
+        public static readonly string DefaultLogsDirectory = Environment.GetEnvironmentVariable("DefaultLogDirectory") ??
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Path.Combine("Octopus", "Logs"));
 
         public static readonly HashSet<string> History = new HashSet<string>();

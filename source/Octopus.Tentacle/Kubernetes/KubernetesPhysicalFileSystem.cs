@@ -13,7 +13,7 @@ namespace Octopus.Tentacle.Kubernetes
         // Set like this for now because we don't have a way to get the home directory from the provider without requiring ourselves
         // DI can be painful when circular dependencies happen with constructed classes :sad-panda:
         // When we can get an Injectable KubernetesConfiguration, we can remove this, alternatively, we can pull apart the configuration stores into different implementations
-        const string HomeDir = "/octopus";
+        readonly string HomeDir = Environment.GetEnvironmentVariable("TentacleHome") ?? "/octopus";
 
         public KubernetesPhysicalFileSystem(IKubernetesDirectoryInformationProvider directoryInformationProvider,
             ISystemLog log) : base(log)
