@@ -5,13 +5,14 @@ using System.Linq;
 using System.Text;
 using NLog;
 using NLog.LayoutRenderers;
+using Octopus.Tentacle.Variables;
 
 namespace Octopus.Tentacle.Diagnostics
 {
     [LayoutRenderer("octopusLogsDirectory")]
     public class OctopusLogsDirectoryRenderer : LayoutRenderer
     {
-        public static readonly string DefaultLogsDirectory = Environment.GetEnvironmentVariable("DefaultLogDirectory") ??
+        public static readonly string DefaultLogsDirectory = Environment.GetEnvironmentVariable(EnvironmentVariables.DefaultLogDirectory) ??
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Path.Combine("Octopus", "Logs"));
 
         public static readonly HashSet<string> History = new HashSet<string>();

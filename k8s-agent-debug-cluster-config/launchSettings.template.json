@@ -3,7 +3,6 @@
     "Octopus Kubernetes Agent": {
       "commandName": "Project",
       "commandLineArgs": "agent --instance Tentacle --noninteractive",
-      "framework": "net8.0",
       "environmentVariables": {
         "ACCEPT_EULA": "Y",
         "OCTOPUS__K8STENTACLE__NAMESPACE": "octopus-agent-<agent-name>",
