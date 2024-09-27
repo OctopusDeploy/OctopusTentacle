@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "This script will create a kind cluster configured for debugging the k8s agent locally in Rider"
-echo "NOTE: This has only been tested on MacOS"
+echo "NOTE: This has only been tested on MacOS and for agents running as deployment targets."
 echo "Requirements: Docker Desktop, Kind CLI, Go CLI, Rider"
 echo "continue? Y/n"
 
