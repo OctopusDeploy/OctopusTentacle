@@ -38,7 +38,7 @@ echo "🏗️  - Adding local persistent volume to kind cluster"
 kubectl apply -f k8s-agent-debug-cluster-config/local-persistent-volume.yaml
 
 if [ $? -ne 0 ]; then
-  echo "❗  - Failed to create local persisten volume. Aborting."
+  echo "❗  - Failed to create local persistent volume. Aborting."
   exit -1
 fi
 
