@@ -272,6 +272,7 @@ Or one of the common options:
 
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        [SkipOnEnvironmentsWithKnownPerformanceIssues]
         public async Task HelpForInstanceSpecificCommandsAlwaysWorks(TentacleConfigurationTestCase tc)
         {
             var (_, stdout, stderr) = await RunCommand(tc, null, "help", "--format=json");
