@@ -83,6 +83,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
 
         [Test]
         [Retry(3)]
+        [SkipOnEnvironmentsWithKnownPerformanceIssues]
         public void CancellationToken_ShouldForceKillTheProcess()
         {
             // Terminate the process after a very short time so the test doesn't run forever

@@ -9,6 +9,7 @@ using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators;
 using Octopus.Tentacle.Tests.Integration.Support;
+using Octopus.Tentacle.Tests.Integration.Support.TestAttributes;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
 using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
@@ -132,6 +133,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
         [Test]
         [TentacleConfigurations]
+        [SkipOnEnvironmentsWithKnownPerformanceIssues]
         public async Task WhenALongRunningScriptIsCancelled_TheScriptShouldStop(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()

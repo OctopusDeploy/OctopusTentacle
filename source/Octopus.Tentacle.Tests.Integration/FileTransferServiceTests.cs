@@ -6,6 +6,7 @@ using Halibut;
 using NUnit.Framework;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Tests.Integration.Support;
+using Octopus.Tentacle.Tests.Integration.Support.TestAttributes;
 using Octopus.Tentacle.Tests.Integration.Util;
 
 namespace Octopus.Tentacle.Tests.Integration
@@ -15,6 +16,7 @@ namespace Octopus.Tentacle.Tests.Integration
     {
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        [SkipOnEnvironmentsWithKnownPerformanceIssues]
         public async Task UploadFileSuccessfully(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             using var fileToUpload = new RandomTemporaryFileBuilder().Build();
@@ -42,6 +44,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        [SkipOnEnvironmentsWithKnownPerformanceIssues]
         public async Task DownloadFileSuccessfully(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             using var fileToDownload = new RandomTemporaryFileBuilder().Build();
