@@ -1,0 +1,28 @@
+{
+  "profiles": {
+    "Octopus Kubernetes Agent": {
+      "commandName": "Project",
+      "commandLineArgs": "agent --instance Tentacle --noninteractive",
+      "environmentVariables": {
+        "ACCEPT_EULA": "Y",
+        "OCTOPUS__K8STENTACLE__NAMESPACE": "octopus-agent-<agent-name>",
+        "OCTOPUS__K8STENTACLE__PODSERVICEACCOUNTNAME": "octopus-agent-scripts",
+        "OCTOPUS__K8STENTACLE__PODVOLUMECLAIMNAME": "octopus-agent-<agent-name>-pvc",
+        "OCTOPUS__K8STENTACLE__HELMRELEASENAME": "<agent-name>",
+        "OCTOPUS__K8STENTACLE__HELMCHARTVERSION": "2.4.0",
+        "OCTOPUS__K8STENTACLE__DISABLEAUTOPODCLEANUP": "false",
+        "OCTOPUS__K8STENTACLE__DISABLEPODEVENTSINTASKLOG": "false",
+        "OCTOPUS__TENTACLE__LOGLEVEL": "Info",
+        "TentacleHome": "/tmp/k8s-agent-debug-vol",
+        "TentacleApplications": "/tmp/k8s-agent-debug-vol/Applications",
+        "TentaclePollingConnectionCount": "5",
+        "OCTOPUS__K8STENTACLE__ENABLEMETRICSCAPTURE": "false",
+        "OCTOPUS__K8STENTACLE__PERSISTENTVOLUMESIZE": "10Gi",
+        "KUBECONFIG": "<kube-config>",
+        "DefaultLogDirectory": "/tmp/k8s-agent-debug-vol/logs",
+        "BOOTSTRAPRUNNEREXECUTABLEPATH": "/tmp/k8s-agent-debug-vol/bootstrapRunner",
+        "OCTOPUS__K8STENTACLE__PODRESOURCEJSON": "{\"requests\":{\"cpu\":\"25m\",\"memory\":\"100Mi\"}}"
+      }
+    }
+  }
+}
