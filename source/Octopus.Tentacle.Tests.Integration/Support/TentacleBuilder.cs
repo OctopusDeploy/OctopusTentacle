@@ -293,7 +293,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 }
             }, cancellationToken);
 
-            await Task.WhenAny(runningTentacle, WaitHandleAsyncFactory.FromWaitHandle(hasTentacleStarted.WaitHandle, TimeSpan.FromMinutes(5), cancellationToken));
+            await Task.WhenAny(runningTentacle, WaitHandleAsyncFactory.FromWaitHandle(hasTentacleStarted.WaitHandle, TimeSpan.FromMinutes(1), cancellationToken));
 
             // Will throw.
             if (runningTentacle.IsCompleted)
