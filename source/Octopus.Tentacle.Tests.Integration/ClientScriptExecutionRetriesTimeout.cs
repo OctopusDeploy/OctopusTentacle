@@ -218,7 +218,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
         [Test]
         [TentacleConfigurations]
-        [SkipOnEnvironmentsWithKnownPerformanceIssues]
+        [SkipOnEnvironmentsWithKnownPerformanceIssues("it relies on timing, which may be inconsistent within the environment")]
         public async Task WhenStartScriptFails_AndTakesLongerThanTheRetryDuration_TheCallIsNotRetried_AndTimesOut(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             var retryDuration = TimeSpan.FromSeconds(15);

@@ -16,7 +16,6 @@ namespace Octopus.Tentacle.Tests.Integration
     {
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-        [SkipOnEnvironmentsWithKnownPerformanceIssues]
         public async Task UploadFileSuccessfully(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             using var fileToUpload = new RandomTemporaryFileBuilder().Build();
@@ -44,7 +43,6 @@ namespace Octopus.Tentacle.Tests.Integration
 
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
-        [SkipOnEnvironmentsWithKnownPerformanceIssues]
         public async Task DownloadFileSuccessfully(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             using var fileToDownload = new RandomTemporaryFileBuilder().Build();

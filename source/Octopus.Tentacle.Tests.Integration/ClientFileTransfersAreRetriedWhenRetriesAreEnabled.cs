@@ -10,6 +10,7 @@ using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods;
+using Octopus.Tentacle.Tests.Integration.Support.TestAttributes;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
 using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
 using Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers;
@@ -20,6 +21,7 @@ namespace Octopus.Tentacle.Tests.Integration
     {
         [Test]
         [TentacleConfigurations(testCommonVersions: true, scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        [SkipOnEnvironmentsWithKnownPerformanceIssues("it relies on timing, which may be inconsistent within the environment")]
         public async Task FailedUploadsAreRetriedAndIsEventuallySuccessful(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
