@@ -55,7 +55,7 @@ namespace Octopus.Tentacle.Kubernetes
             }
             catch (Exception ex)
             {
-                log.Error($"Failed to fetch version metadata for the agent tools container image. Details: {ex.Message}");
+                log.Error(ex, "Failed to fetch version metadata for the agent tools container image.");
                 return null;
             }
         }
