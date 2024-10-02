@@ -15,7 +15,13 @@ namespace Octopus.Tentacle.Kubernetes
         {
             builder.RegisterType<KubernetesPodService>().As<IKubernetesPodService>().SingleInstance();
             builder.RegisterType<KubernetesClusterService>().As<IKubernetesClusterService>().SingleInstance();
-            builder.RegisterType<KubernetesAgentToolsImageVersionMetadataProvider>().As<IToolsImageVersionMetadataProvider>().SingleInstance();
+
+            const string agentToolsImageMetadataProvider = "AgentToolsImageMetadataProvider";
+            builder.RegisterType<KubernetesAgentToolsImageVersionMetadataProvider>().Named<IToolsImageVersionMetadataProvider>(agentToolsImageMetadataProvider);
+            builder.RegisterDecorator<IToolsImageVersionMetadataProvider>(
+                (context, inner) => new CachingKubernetesAgentToolsImageVersionMetadataProvider(
+                    inner, context.Resolve<IMemoryCache>()), fromKey: agentToolsImageMetadataProvider);
+            
             builder.RegisterType<KubernetesPodContainerResolver>().As<IKubernetesPodContainerResolver>().SingleInstance();
             builder.RegisterType<KubernetesConfigMapService>().As<IKubernetesConfigMapService>().SingleInstance();
             builder.RegisterType<KubernetesSecretService>().As<IKubernetesSecretService>().SingleInstance();
