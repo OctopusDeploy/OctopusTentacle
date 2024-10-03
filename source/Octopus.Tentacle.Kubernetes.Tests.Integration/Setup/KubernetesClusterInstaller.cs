@@ -153,7 +153,7 @@ public class KubernetesClusterInstaller
             "--atomic",
             "--repo https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/charts",
             "--namespace kube-system",
-            "--version v4.6.0",
+            "--version \"v4.*.*\"",
             $"--kubeconfig \"{KubeConfigPath}\"",
             "csi-driver-nfs",
             "csi-driver-nfs"
