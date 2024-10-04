@@ -164,7 +164,6 @@ partial class Build : NukeBuild
                 }
 
                 versionInfoFile.Dispose();
-                productWxsFile.Dispose();
 
                 var hardenInstallationDirectoryScript = RootDirectory / "scripts" / "Harden-InstallationDirectory.ps1";
                 var directoriesToCopyHardenScriptInto = new[]
