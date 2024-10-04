@@ -21,7 +21,7 @@ namespace Octopus.Tentacle.Kubernetes
             lazyVersion = new AsyncLazy<ClusterVersion>(async () =>
             {
                 var versionInfo = await Client.Version.GetCodeAsync();
-                return KubernetesVersionParser.ParseClusterVersion(versionInfo);
+                return ClusterVersion.FromVersionInfo(versionInfo);
             }, AsyncLazyFlags.RetryOnFailure);
         }
 
