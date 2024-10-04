@@ -141,7 +141,7 @@ partial class Build : NukeBuild
             .Executes(() =>
             {
                 using var versionInfoFile = ModifyTemplatedVersionAndProductFilesWithValues();
-                using var productWxsFile = UpdateMsiProductVersion();
+                UpdateMsiProductVersion();
 
                 var runtimeIds = RuntimeIds.Where(x => x.StartsWith("win"));
 
@@ -203,7 +203,7 @@ partial class Build : NukeBuild
             .Executes(() =>
             {
                 using var versionInfoFile = ModifyTemplatedVersionAndProductFilesWithValues();
-                using var productWxsFile = UpdateMsiProductVersion();
+                UpdateMsiProductVersion();
 
                 RuntimeIds.Where(x => x.StartsWith("linux-"))
                     .ForEach(runtimeId =>
@@ -212,7 +212,6 @@ partial class Build : NukeBuild
                     });
 
                 versionInfoFile.Dispose();
-                productWxsFile.Dispose();
             });
 
     [PublicAPI]
@@ -222,7 +221,7 @@ partial class Build : NukeBuild
             .Executes(() =>
             {
                 using var versionInfoFile = ModifyTemplatedVersionAndProductFilesWithValues();
-                using var productWxsFile = UpdateMsiProductVersion();
+                UpdateMsiProductVersion();
 
                 RuntimeIds.Where(x => x.StartsWith("osx-"))
                     .ForEach(runtimeId =>
@@ -231,7 +230,6 @@ partial class Build : NukeBuild
                     });
 
                 versionInfoFile.Dispose();
-                productWxsFile.Dispose();
             });
 
     [PublicAPI]
@@ -291,10 +289,9 @@ partial class Build : NukeBuild
     }
 
 //Modifies Product.wxs to embed version information into the shipped product.
-    ModifiableFileWithRestoreContentsOnDispose UpdateMsiProductVersion()
+    void UpdateMsiProductVersion()
     {
         var productWxsFilePath = RootDirectory / "installer" / "Octopus.Tentacle.Installer" / "Product.wxs";
-
         var xmlDoc = new XmlDocument();
         xmlDoc.Load(productWxsFilePath);
 
@@ -310,8 +307,6 @@ partial class Build : NukeBuild
         product.Attributes["Version"]!.Value = OctoVersionInfo.MajorMinorPatch;
 
         xmlDoc.Save(productWxsFilePath);
-
-        return new ModifiableFileWithRestoreContentsOnDispose(productWxsFilePath);
     }
 
     void RunBuildFor(string framework, string runtimeId)
