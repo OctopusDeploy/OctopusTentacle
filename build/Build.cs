@@ -164,7 +164,6 @@ partial class Build : NukeBuild
                 }
 
                 versionInfoFile.Dispose();
-                productWxsFile.Dispose();
 
                 var hardenInstallationDirectoryScript = RootDirectory / "scripts" / "Harden-InstallationDirectory.ps1";
                 var directoriesToCopyHardenScriptInto = new[]
@@ -194,6 +193,7 @@ partial class Build : NukeBuild
                     .ToArray();
 
                 Signing.Sign(filesToSign);
+                productWxsFile.Dispose();
             });
 
     [PublicAPI]
@@ -294,7 +294,7 @@ partial class Build : NukeBuild
     ModifiableFileWithRestoreContentsOnDispose UpdateMsiProductVersion()
     {
         var productWxsFilePath = RootDirectory / "installer" / "Octopus.Tentacle.Installer" / "Product.wxs";
-
+        var productWxsFile = new ModifiableFileWithRestoreContentsOnDispose(productWxsFilePath);
         var xmlDoc = new XmlDocument();
         xmlDoc.Load(productWxsFilePath);
 
@@ -311,7 +311,7 @@ partial class Build : NukeBuild
 
         xmlDoc.Save(productWxsFilePath);
 
-        return new ModifiableFileWithRestoreContentsOnDispose(productWxsFilePath);
+        return productWxsFile;
     }
 
     void RunBuildFor(string framework, string runtimeId)
