@@ -29,7 +29,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                             $"An error occurred when sending a request to '{clientAndTentacle.ServiceEndPoint}/', before the request could begin: Transport endpoint is not connected",
                             $"An error occurred when sending a request to '{clientAndTentacle.ServiceEndPoint}/', before the request could begin: Connection refused",
                             $"An error occurred when sending a request to '{clientAndTentacle.ServiceEndPoint}/', before the request could begin: Broken pipe",
-                            $"An error occurred when sending a request to '{clientAndTentacle.ServiceEndPoint}/', before the request could begin:  Received an unexpected EOF or 0 bytes from the transport stream",
+                            $"An error occurred when sending a request to '{clientAndTentacle.ServiceEndPoint}/', before the request could begin: Received an unexpected EOF or 0 bytes from the transport stream",
                             $"An error occurred when sending a request to '{clientAndTentacle.ServiceEndPoint}/', before the request could begin: Unable to write data to the transport connection: Broken pipe",
                             $"An error occurred when sending a request to '{clientAndTentacle.ServiceEndPoint}/', before the request could begin: Unable to read data from the transport connection: Broken pipe",
                             $"An error occurred when sending a request to '{clientAndTentacle.ServiceEndPoint}/', before the request could begin: Unable to read data from the transport connection: Connection reset by peer.",
@@ -42,7 +42,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                             $"An error occurred when sending a request to '{clientAndTentacle.ServiceEndPoint}/', before the request could begin: Unable to read data from the transport connection: An existing connection was forcibly closed by the remote host",
                             
                             $"An error occurred when sending a request to '{clientAndTentacle.ServiceEndPoint}/', after the request began: Broken pipe",
-                            $"An error occurred when sending a request to '{clientAndTentacle.ServiceEndPoint}/', after the request began:  Received an unexpected EOF or 0 bytes from the transport stream",
+                            $"An error occurred when sending a request to '{clientAndTentacle.ServiceEndPoint}/', after the request began: Received an unexpected EOF or 0 bytes from the transport stream",
                             $"An error occurred when sending a request to '{clientAndTentacle.ServiceEndPoint}/', after the request began: Unable to write data to the transport connection: Broken pipe",
                             $"An error occurred when sending a request to '{clientAndTentacle.ServiceEndPoint}/', after the request began: Unable to read data from the transport connection: Broken pipe",
                             $"An error occurred when sending a request to '{clientAndTentacle.ServiceEndPoint}/', after the request began: Attempted to read past the end of the stream.",
