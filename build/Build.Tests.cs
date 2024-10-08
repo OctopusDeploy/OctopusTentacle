@@ -319,7 +319,9 @@ partial class Build
                     .SetProjectFile(projectPath)
                     .SetFramework(testFramework)
                     .SetFilter(filter)
-                    .SetLoggers("console;verbosity=normal", "teamcity"))
+                    .SetLoggers("console;verbosity=normal", "teamcity")
+                    .SetNoBuild(true)
+                    .SetNoRestore(true))
             );
         }
         catch (Exception e)
