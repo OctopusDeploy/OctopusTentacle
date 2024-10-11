@@ -53,7 +53,6 @@ FPM_DEB_OPTS=(
 )
 FPM_RPM_OPTS=(
   --depends 'openssl-3'
-  --depends 'openssl-libs'
   --architecture "$RPM_PACKAGE_ARCHITECTURE"
 )
 
