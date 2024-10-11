@@ -52,7 +52,7 @@ FPM_DEB_OPTS=(
   --architecture "$DEB_PACKAGE_ARCHITECTURE"
 )
 FPM_RPM_OPTS=(
-  --depends 'openssl-libs'
+  --depends 'openssl-libs | openssl'
   --architecture "$RPM_PACKAGE_ARCHITECTURE"
 )
 
