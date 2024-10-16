@@ -378,44 +378,37 @@ partial class Build
         .Executes(() =>
         {
             (ArtifactsDirectory / "chocolatey").CreateDirectory();
-
-            var md5ChecksumNetFramework = (ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}.msi").GetFileHash();
-            Log.Information($"MD5 Checksum: Octopus.Tentacle.msi = {md5ChecksumNetFramework}");
-
-            var md5ChecksumX64NetFramework = (ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-x64.msi").GetFileHash();
-            Log.Information($"Checksum: Octopus.Tentacle-x64.msi = {md5ChecksumX64NetFramework}");
-
-            var md5ChecksumSelfContained = (ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net8.0-windows-win-x86.msi").GetFileHash();
-            Log.Information($"MD5 Checksum: Octopus.Tentacle.msi = {md5ChecksumSelfContained}");
-
-            var md5ChecksumX64SelfContained = (ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net8.0-windows-win-x64.msi").GetFileHash();
-            Log.Information($"Checksum: Octopus.Tentacle-x64.msi = {md5ChecksumX64SelfContained}");
-
-            var chocolateyInstallScriptPath = SourceDirectory / "Chocolatey" / "chocolateyInstall.ps1";
-            using var chocolateyInstallScriptFile = new ModifiableFileWithRestoreContentsOnDispose(chocolateyInstallScriptPath);
-
-            chocolateyInstallScriptFile.ReplaceRegexInFiles("0.0.0", FullSemVer);
             
-            chocolateyInstallScriptFile.ReplaceRegexInFiles("<checksum-net-framework>", md5ChecksumNetFramework);
-            chocolateyInstallScriptFile.ReplaceRegexInFiles("<checksumtype-net-framework>", "md5");
-            chocolateyInstallScriptFile.ReplaceRegexInFiles("<checksum64-net-framework>", md5ChecksumX64NetFramework);
-            chocolateyInstallScriptFile.ReplaceRegexInFiles("<checksumtype64-net-framework>", "md5");
+            var chocolateyNetFrameworkSourceDirectory = SourceDirectory / "Chocolatey-Net-Framework";
+            const string chocolateyNetFrameworkNuspecFileName = "OctopusDeploy.Tentacle.nuspec";
+            PackChocolateyPackageToArtifactsDirectory("", "-x64", chocolateyNetFrameworkSourceDirectory, chocolateyNetFrameworkNuspecFileName);
             
-            chocolateyInstallScriptFile.ReplaceRegexInFiles("<checksum-self-contained>", md5ChecksumSelfContained);
-            chocolateyInstallScriptFile.ReplaceRegexInFiles("<checksumtype-self-contained>", "md5");
-            chocolateyInstallScriptFile.ReplaceRegexInFiles("<checksum64-self-contained>", md5ChecksumX64SelfContained);
-            chocolateyInstallScriptFile.ReplaceRegexInFiles("<checksumtype64-self-contained>", "md5");
-
-            ChocolateyTasks.ChocolateyPack(settings => settings
-                .SetPathToNuspec(SourceDirectory / "Chocolatey" / "OctopusDeploy.Tentacle.nuspec")
-                .SetVersion(NuGetVersion)
-                .SetOutputDirectory(ArtifactsDirectory / "chocolatey"));
-            
-            ChocolateyTasks.ChocolateyPack(settings => settings
-                .SetPathToNuspec(SourceDirectory / "Chocolatey" / "OctopusDeploy.Tentacle.SelfContained.nuspec")
-                .SetVersion(NuGetVersion)
-                .SetOutputDirectory(ArtifactsDirectory / "chocolatey"));
+            var chocolateySelfContainedSourceDirectory = SourceDirectory / "Chocolatey-Self-Contained";
+            const string chocolateySelfContainedNuspecFileName = "OctopusDeploy.Tentacle.SelfContained.nuspec";
+            PackChocolateyPackageToArtifactsDirectory("-net8.0-windows-win-x86", "-net8.0-windows-win-x64", chocolateySelfContainedSourceDirectory, chocolateySelfContainedNuspecFileName);
         });
+
+    void PackChocolateyPackageToArtifactsDirectory(string x86FileSuffix, string x64FileSuffix, AbsolutePath chocolateySourceDirectory, string pathToChocolateyNuspec)
+    {
+        var md5ChecksumNetFramework = (ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}{x86FileSuffix}.msi").GetFileHash();
+        Log.Information($"MD5 Checksum: Octopus.Tentacle{x86FileSuffix}.msi = {md5ChecksumNetFramework}");
+
+        var md5ChecksumX64NetFramework = (ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}{x64FileSuffix}.msi").GetFileHash();
+        Log.Information($"Checksum: Octopus.Tentacle{x64FileSuffix}.msi = {md5ChecksumX64NetFramework}");
+
+        var chocolateyNetFrameworkInstallScriptPath = chocolateySourceDirectory / "chocolateyInstall.ps1";
+        using var chocolateyInstallScriptFile = new ModifiableFileWithRestoreContentsOnDispose(chocolateyNetFrameworkInstallScriptPath);
+        chocolateyInstallScriptFile.ReplaceRegexInFiles("0.0.0", FullSemVer);
+        chocolateyInstallScriptFile.ReplaceRegexInFiles("<checksum>", md5ChecksumNetFramework);
+        chocolateyInstallScriptFile.ReplaceRegexInFiles("<checksumtype>", "md5");
+        chocolateyInstallScriptFile.ReplaceRegexInFiles("<checksum64>", md5ChecksumX64NetFramework);
+        chocolateyInstallScriptFile.ReplaceRegexInFiles("<checksumtype64>", "md5");
+
+        ChocolateyTasks.ChocolateyPack(settings => settings
+            .SetPathToNuspec(chocolateySourceDirectory / pathToChocolateyNuspec)
+            .SetVersion(NuGetVersion)
+            .SetOutputDirectory(ArtifactsDirectory / "chocolatey"));
+    }
 
     [PublicAPI]
     Target PackContracts => _ => _
