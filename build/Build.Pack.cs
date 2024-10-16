@@ -377,8 +377,10 @@ partial class Build
         .DependsOn(PackWindowsInstallers)
         .Executes(() =>
         {
-            (ArtifactsDirectory / "chocolatey-net-framework").CreateDirectory();
+            (ArtifactsDirectory / "chocolatey").CreateDirectory();
 
+            
+            
             var md5ChecksumNetFramework = (ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}.msi").GetFileHash();
             Log.Information($"MD5 Checksum: Octopus.Tentacle.msi = {md5ChecksumNetFramework}");
 
@@ -398,10 +400,10 @@ partial class Build
                 ChocolateyTasks.ChocolateyPack(settings => settings
                     .SetPathToNuspec(SourceDirectory / "Chocolatey-Net-Framework" / "OctopusDeploy.Tentacle.nuspec")
                     .SetVersion(NuGetVersion)
-                    .SetOutputDirectory(ArtifactsDirectory / "chocolatey-net-framework"));
+                    .SetOutputDirectory(ArtifactsDirectory / "chocolatey"));
             }
             
-            (ArtifactsDirectory / "chocolatey-self-contained").CreateDirectory();
+            
 
             var md5ChecksumSelfContained = (ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net8.0-windows-win-x86.msi").GetFileHash();
             Log.Information($"MD5 Checksum: Octopus.Tentacle.msi = {md5ChecksumSelfContained}");
@@ -422,7 +424,7 @@ partial class Build
                 ChocolateyTasks.ChocolateyPack(settings => settings
                     .SetPathToNuspec(SourceDirectory / "Chocolatey-Self-Contained" / "OctopusDeploy.Tentacle.SelfContained.nuspec")
                     .SetVersion(NuGetVersion)
-                    .SetOutputDirectory(ArtifactsDirectory / "chocolatey-self-contained"));
+                    .SetOutputDirectory(ArtifactsDirectory / "chocolatey"));
             }
         });
 
