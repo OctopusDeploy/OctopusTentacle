@@ -86,6 +86,8 @@ namespace Octopus.Tentacle.Configuration
         bool IsRegistered { get; }
 
         void WriteTo(IWritableKeyValueStore outputStore, IEnumerable<string> excluding);
+
+        ConfigurationChangedEventHandler? Changed { get; set; }
     }
 
     public interface IWritableTentacleConfiguration : ITentacleConfiguration
