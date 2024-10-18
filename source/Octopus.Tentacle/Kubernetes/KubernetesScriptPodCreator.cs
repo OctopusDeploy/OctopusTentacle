@@ -210,7 +210,7 @@ namespace Octopus.Tentacle.Kubernetes
 
             var createdPod = await podService.Create(pod, cancellationToken);
             podMonitor.AddPendingPod(command.ScriptTicket, createdPod);
-            
+
             var scriptContainer = createdPod.Spec.Containers.First(c => c.Name == podName);
             LogVerboseToBothLogs($"Executing script in Kubernetes Pod '{podName}'. Image: '{scriptContainer.Image}'.", tentacleScriptLog);
         }
@@ -256,12 +256,27 @@ namespace Octopus.Tentacle.Kubernetes
 
             var resourceRequirements = GetScriptPodResourceRequirements(tentacleScriptLog);
 
-            var commandString = string.Join(" ", new[] {                         
-                $"{homeDir}/Work/{command.ScriptTicket.TaskId}/bootstrapRunner",
-                Path.Combine(homeDir, workspacePath),
-                Path.Combine(homeDir, workspacePath, scriptName)
-            }.Concat(scriptArguments ?? Array.Empty<string>())
-            .Select(x => $"\"{x}\""));
+            var commandString = string.Join(" ", new[]
+                {
+                    $"{homeDir}/Work/{command.ScriptTicket.TaskId}/bootstrapRunner",
+                    Path.Combine(homeDir, workspacePath),
+                    Path.Combine(homeDir, workspacePath, scriptName)
+                }.Concat(scriptArguments ?? Array.Empty<string>())
+                .Select(x => $"\"{x}\""));
+
+            var envFrom = new List<V1EnvFromSource>();
+            //if there is a scrip pod proxies defined
+            if (!string.IsNullOrWhiteSpace(KubernetesConfig.ScriptPodProxiesSecretName))
+            {
+                //add sourcing environment variables from the secret
+                envFrom.Add(new V1EnvFromSource
+                {
+                    SecretRef = new V1SecretEnvSource
+                    {
+                        Name = KubernetesConfig.ScriptPodProxiesSecretName
+                    }
+                });
+            }
 
             return new V1Container
             {
@@ -292,6 +307,7 @@ namespace Octopus.Tentacle.Kubernetes
 
                     //We intentionally exclude setting "TentacleJournal" since it doesn't make sense to keep a Deployment Journal for Kubernetes deployments
                 },
+                EnvFrom = envFrom,
                 Resources = resourceRequirements
             };
         }
@@ -355,13 +371,13 @@ namespace Octopus.Tentacle.Kubernetes
                 KubernetesConfig.PodSecurityContextJson,
                 KubernetesConfig.PodSecurityContextJsonVariableName,
                 "pod security context");
-        
+
         [return: NotNullIfNotNull("defaultValue")]
-        T? ParseScriptPodJson<T>(InMemoryTentacleScriptLog tentacleScriptLog, string? json, string envVarName, string description, T? defaultValue = null) where T: class
+        T? ParseScriptPodJson<T>(InMemoryTentacleScriptLog tentacleScriptLog, string? json, string envVarName, string description, T? defaultValue = null) where T : class
         {
-            if (string.IsNullOrWhiteSpace(json)) 
+            if (string.IsNullOrWhiteSpace(json))
                 return defaultValue;
-            
+
             try
             {
                 return KubernetesJson.Deserialize<T>(json);
@@ -369,9 +385,9 @@ namespace Octopus.Tentacle.Kubernetes
             catch (Exception e)
             {
                 var defaultMessage = defaultValue != null ? $"default {description}" : $"no custom {description}";
-                    
+
                 var message = $"Failed to deserialize env.{envVarName} into a valid {description}.{Environment.NewLine}JSON value: {json}{Environment.NewLine}Using {defaultMessage} for script pods.";
-                    
+
                 //if we can't parse the JSON, fall back to the defaults below and warn the user
                 log.WarnFormat(e, message);
                 //write a verbose message to the script log. 
