@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Kubernetes;
@@ -7,7 +6,7 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Configuration.Instances
 {
-    class ApplicationInstanceSelector : IApplicationInstanceSelector
+    class ApplicationInstanceSelector : IApplicationInstanceSelector, IDisposable
     {
         readonly IApplicationInstanceStore applicationInstanceStore;
         readonly StartUpInstanceRequest startUpInstanceRequest;
@@ -64,18 +63,23 @@ namespace Octopus.Tentacle.Configuration.Instances
             }
 
             return current;
+
+            ApplicationInstanceConfiguration LoadInstance()
+            {
+                var appInstance = LocateApplicationPrimaryConfiguration();
+
+                var (aggregatedKeyValueStore, writableConfig) = LoadConfigurationStore(appInstance);
+
+                return new ApplicationInstanceConfiguration(
+                    appInstance.instanceName, 
+                    appInstance.configurationpath, 
+                    aggregatedKeyValueStore, 
+                    writableConfig,
+                    () => LoadConfigurationStore(new(appInstance.instanceName, appInstance.configurationpath)).KeyValueStore);
+            }
         }
 
-        ApplicationInstanceConfiguration LoadInstance()
-        {
-            var appInstance = LocateApplicationPrimaryConfiguration();
-
-            var (aggregatedKeyValueStore, writableConfig) = LoadConfigurationStore(appInstance);
-
-            return new ApplicationInstanceConfiguration(appInstance.instanceName, appInstance.configurationpath, aggregatedKeyValueStore, writableConfig);
-        }
-
-        (IKeyValueStore, IWritableKeyValueStore) LoadConfigurationStore((string? instanceName, string? configurationpath) appInstance)
+        (IKeyValueStore KeyValueStore, IWritableKeyValueStore WritableKeyValueStore) LoadConfigurationStore((string? instanceName, string? configurationpath) appInstance)
         {
             if (appInstance is { instanceName: not null, configurationpath: null } &&
                 PlatformDetection.Kubernetes.IsRunningAsKubernetesAgent)
@@ -150,6 +154,11 @@ namespace Octopus.Tentacle.Configuration.Instances
                     return (indexDefaultInstance.InstanceName, indexDefaultInstance.ConfigurationFilePath);
                 }
             }
+        }
+
+        public void Dispose()
+        {
+            current?.Dispose();
         }
     }
 }
