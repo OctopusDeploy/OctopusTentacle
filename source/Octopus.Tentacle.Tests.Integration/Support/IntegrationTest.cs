@@ -95,6 +95,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 }
                 catch
                 {
+                    throw new Exception($"Unable to delete Tentacle Log file at {logFilePath}");
                 }
             }
         }
@@ -106,8 +107,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         public void Dispose()
         {
-            Try.CatchingError(() => cancellationTokenSource?.Cancel(), _ => {});
-            Try.CatchingError(() => cancellationTokenSource?.Dispose(), _ => {});
+            Try.CatchingError(() => cancellationTokenSource?.Cancel(), _ => throw new Exception("Test has failed to Cancel"));
+            Try.CatchingError(() => cancellationTokenSource?.Dispose(), _ => throw new Exception("Test has failed to Dispose"));
         }
     }
 }
