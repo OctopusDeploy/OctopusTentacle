@@ -21,7 +21,7 @@ namespace Octopus.Tentacle.Tests.Integration
             using var tmp = new TemporaryDirectory();
             var path = Path.Combine(tmp.DirectoryPath, "file");
 
-            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+            var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .Build(CancellationToken);
 
             var scriptBuilder = new ScriptBuilder()
