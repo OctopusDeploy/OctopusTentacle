@@ -67,7 +67,9 @@ namespace Octopus.Tentacle.Client.Execution
 
                             try
                             {
+                                logger.Verbose("Before action");
                                 var response = await action(ct);
+                                logger.Verbose("After action");
 
                                 rpcCallMetricsBuilder.WithAttempt(TimedOperation.Success(start));
                                 return response;
@@ -82,7 +84,9 @@ namespace Octopus.Tentacle.Client.Execution
                         {
                             await Task.CompletedTask;
 
+                            logger.Verbose("Before error action");
                             onErrorAction?.Invoke(lastException);
+                            logger.Verbose("After error action");
 
                             var remainingDurationInSeconds = (int)(totalRetryDuration - elapsedDuration).TotalSeconds;
                             logger.Info($"An error occurred communicating with Tentacle. This action will be retried after {(int)sleepDuration.TotalSeconds} seconds. Retry attempt {retryCount}. Retries will be performed for up to {remainingDurationInSeconds} seconds.");
@@ -101,7 +105,8 @@ namespace Octopus.Tentacle.Client.Execution
                                 logger.Info($"Could not communicate with Tentacle after {(int)elapsedDuration.TotalSeconds} seconds.");
                             }
                         },
-                        cancellationToken);
+                        cancellationToken,
+                        logger);
 
                 return response;
             }
