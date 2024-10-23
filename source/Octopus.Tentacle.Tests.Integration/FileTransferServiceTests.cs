@@ -6,6 +6,7 @@ using Halibut;
 using NUnit.Framework;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Tests.Integration.Support;
+using Octopus.Tentacle.Tests.Integration.Support.TestAttributes;
 using Octopus.Tentacle.Tests.Integration.Util;
 
 namespace Octopus.Tentacle.Tests.Integration
