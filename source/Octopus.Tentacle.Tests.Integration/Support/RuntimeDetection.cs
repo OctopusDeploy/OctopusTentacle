@@ -6,7 +6,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     public static class RuntimeDetection
     {
         public const string Framework48 = "net48";
-        public const string DotNet6 = "net6.0";
         public const string DotNet8 = "net8.0";
 
         public static string GetCurrentRuntime()
@@ -23,11 +22,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             if (frameworkDescription.StartsWith(".NET Framework 4.8"))
             {
                 return Framework48;
-            }
-
-            if (frameworkDescription.StartsWith(".NET 6"))
-            {
-                return DotNet6;
             }
 
             if (frameworkDescription.StartsWith(".NET 8"))
