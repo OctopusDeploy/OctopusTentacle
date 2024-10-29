@@ -71,11 +71,6 @@ else {
         ExecSafe { & $DotNetInstallFile -InstallDir $DotNetDirectory -Version $DotNetVersion -NoPath }
     }
 
-    # Octopus Modification
-    # Install the .NET 8.0 runtime as well (this is required to run the tests)
-    ExecSafe { & $DotNetInstallFile -InstallDir $DotNetDirectory -Runtime dotnet -Channel 8.0 -NoPath }
-    #End Octopus Modification
-
     $env:DOTNET_EXE = "$DotNetDirectory\dotnet.exe"
 }
 
