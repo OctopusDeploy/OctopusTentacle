@@ -2,10 +2,12 @@ using System;
 using System.Collections;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Halibut;
 using NUnit.Framework;
+using Octopus.Client.Extensions;
 using Octopus.Tentacle.CommonTestUtils.Diagnostics;
 using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators;
@@ -146,6 +148,10 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None, additionalParameterTypes: new object[] { typeof(StopPortForwarderAfterFirstCallValues) })]
         public async Task WhenRpcRetriesTimeOut_DuringDownloadFile_TheRpcCallIsCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase, bool stopPortForwarderAfterFirstCall)
         {
+            var driveInfos = DriveInfo.GetDrives();
+
+            Logger.Information($"WhenRpcRetriesTimeOut_DuringDownloadFile_TheRpcCallIsCancelled Available Disk space before starting: {driveInfos.Select(d => $"{d.Name}: {d.AvailableFreeSpace}").ToList().StringJoin(", ")}");
+
             PortForwarder portForwarder = null!;
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 // Set a short retry duration so we cancel fairly quickly
@@ -187,14 +193,18 @@ namespace Octopus.Tentacle.Tests.Integration
                 .Build(CancellationToken);
 
             portForwarder = clientAndTentacle.PortForwarder;
+            Logger.Information($"WhenRpcRetriesTimeOut_DuringDownloadFile_TheRpcCallIsCancelled Available Disk space after CreateLegacyBuilder: {driveInfos.Select(d => $"{d.Name}: {d.AvailableFreeSpace}").ToList().StringJoin(", ")}");
 
             using var tempFile = new RandomTemporaryFileBuilder().Build();
+            Logger.Information($"WhenRpcRetriesTimeOut_DuringDownloadFile_TheRpcCallIsCancelled Available Disk space after RandomTemporaryFileBuilder: {driveInfos.Select(d => $"{d.Name}: {d.AvailableFreeSpace}").ToList().StringJoin(", ")}");
 
             var inMemoryLog = new InMemoryLog();
-
+            
             // Start the script which will wait for a file to exist
             var duration = Stopwatch.StartNew();
             var executeScriptTask = clientAndTentacle.TentacleClient.DownloadFile(tempFile.File.FullName, CancellationToken, inMemoryLog);
+            
+            Logger.Information($"WhenRpcRetriesTimeOut_DuringDownloadFile_TheRpcCallIsCancelled Available Disk space after TentacleClient.DownloadFile: {driveInfos.Select(d => $"{d.Name}: {d.AvailableFreeSpace}").ToList().StringJoin(", ")}");
 
             var expectedException = new ExceptionContractAssertionBuilder(FailureScenario.ConnectionFaulted, tentacleConfigurationTestCase.TentacleType, clientAndTentacle).Build();
 
@@ -204,6 +214,8 @@ namespace Octopus.Tentacle.Tests.Integration
 
             recordedUsages.For(nameof(IAsyncClientFileTransferService.DownloadFileAsync)).Started.Should().BeGreaterOrEqualTo(2);
             recordedUsages.For(nameof(IAsyncClientFileTransferService.UploadFileAsync)).Started.Should().Be(0);
+            
+            Logger.Information($"WhenRpcRetriesTimeOut_DuringDownloadFile_TheRpcCallIsCancelled Available Disk space after recordedUsages: {driveInfos.Select(d => $"{d.Name}: {d.AvailableFreeSpace}").ToList().StringJoin(", ")}");
 
             // Ensure we actually waited and retried until the timeout policy kicked in
             duration.Elapsed.Should().BeGreaterOrEqualTo(clientAndTentacle.RpcRetrySettings.RetryDuration - retryIfRemainingDurationAtLeastBuffer - retryBackoffBuffer);
@@ -215,6 +227,10 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task WhenDownloadFileFails_AndTakesLongerThanTheRetryDuration_TheCallIsNotRetried_AndTimesOut(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
+            var driveInfos = DriveInfo.GetDrives();
+
+            Logger.Information($"WhenDownloadFileFails_AndTakesLongerThanTheRetryDuration_TheCallIsNotRetried_AndTimesOut Available Disk space before starting: {driveInfos.Select(d => $"{d.Name}: {d.AvailableFreeSpace}").ToList().StringJoin(", ")}");
+
             var retryDuration = TimeSpan.FromSeconds(15);
 
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
@@ -240,14 +256,20 @@ namespace Octopus.Tentacle.Tests.Integration
                 .Build(CancellationToken);
 
             using var tempFile = new RandomTemporaryFileBuilder().Build();
+            Logger.Information($"WhenDownloadFileFails_AndTakesLongerThanTheRetryDuration_TheCallIsNotRetried_AndTimesOut Available Disk space after RandomTemporaryFileBuilder: {driveInfos.Select(d => $"{d.Name}: {d.AvailableFreeSpace}").ToList().StringJoin(", ")}");
+            
             var inMemoryLog = new InMemoryLog();
             var executeScriptTask = clientAndTentacle.TentacleClient.DownloadFile(tempFile.File.FullName, CancellationToken, inMemoryLog);
+            
+            Logger.Information($"WhenRpcRetriesTimeOut_DuringDownloadFile_TheRpcCallIsCancelled Available Disk space after TentacleClient.DownloadFile: {driveInfos.Select(d => $"{d.Name}: {d.AvailableFreeSpace}").ToList().StringJoin(", ")}");
 
             Func<Task<DataStream>> action = async () => await executeScriptTask;
             await action.Should().ThrowAsync<HalibutClientException>();
 
             recordedUsages.For(nameof(IAsyncClientFileTransferService.DownloadFileAsync)).Started.Should().Be(1);
             recordedUsages.For(nameof(IAsyncClientFileTransferService.UploadFileAsync)).Started.Should().Be(0);
+            
+            Logger.Information($"WhenDownloadFileFails_AndTakesLongerThanTheRetryDuration_TheCallIsNotRetried_AndTimesOut Available Disk space after recordedUsages: {driveInfos.Select(d => $"{d.Name}: {d.AvailableFreeSpace}").ToList().StringJoin(", ")}");
 
             inMemoryLog.ShouldHaveLoggedRetryFailureAndNoRetryAttempts();
         }
