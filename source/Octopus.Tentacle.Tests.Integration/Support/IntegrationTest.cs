@@ -22,7 +22,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public void SetUp()
         {
             Logger = new SerilogLoggerBuilder().Build().ForContext(GetType());
-            var driveInfos = DriveInfo.GetDrives();
+            var driveInfos = DriveInfo.GetDrives().Where(d => d.IsReady);
             Logger.Information($"Test started. Available Disk space before starting: {driveInfos.Select(d => $"{d.Name}: {d.AvailableFreeSpace}").ToList().StringJoin(", ")}");
 
             // Time out the cancellation token so we cancel the test if it takes too long
@@ -43,7 +43,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             Logger.Information("Disposing CancellationTokenSource");
             cancellationTokenSource?.Dispose();
             cancellationTokenSource = null;
-            var driveInfos = DriveInfo.GetDrives();
+            var driveInfos = DriveInfo.GetDrives().Where(d => d.IsReady);
             Logger.Information($"Finished Test Tearing Down. Available Disk space before starting: {driveInfos.Select(d => $"{d.Name}: {d.AvailableFreeSpace}").ToList().StringJoin(", ")}");
 
         }

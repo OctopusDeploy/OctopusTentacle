@@ -37,7 +37,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None, additionalParameterTypes: new object[] { typeof(StopPortForwarderAfterFirstCallValues) })]
         public async Task WhenRpcRetriesTimeOut_DuringUploadFile_TheRpcCallIsCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase, bool stopPortForwarderAfterFirstCall)
         {
-            var driveInfos = DriveInfo.GetDrives();
+            var driveInfos = DriveInfo.GetDrives().Where(d => d.IsReady);
 
             Logger.Information($"WhenRpcRetriesTimeOut_DuringUploadFile_TheRpcCallIsCancelled Available Disk space before starting: {driveInfos.Select(d => $"{d.Name}: {d.AvailableFreeSpace}").ToList().StringJoin(", ")}");
 
@@ -115,7 +115,7 @@ namespace Octopus.Tentacle.Tests.Integration
         public async Task WhenUploadFileFails_AndTakesLongerThanTheRetryDuration_TheCallIsNotRetried_AndTimesOut(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {            
             
-            var driveInfos = DriveInfo.GetDrives();
+            var driveInfos = DriveInfo.GetDrives().Where(d => d.IsReady);
 
             Logger.Information($"WhenUploadFileFails_AndTakesLongerThanTheRetryDuration_TheCallIsNotRetried_AndTimesOut Available Disk space before starting: {driveInfos.Select(d => $"{d.Name}: {d.AvailableFreeSpace}").ToList().StringJoin(", ")}");
 
@@ -165,7 +165,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None, additionalParameterTypes: new object[] { typeof(StopPortForwarderAfterFirstCallValues) })]
         public async Task WhenRpcRetriesTimeOut_DuringDownloadFile_TheRpcCallIsCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase, bool stopPortForwarderAfterFirstCall)
         {
-            var driveInfos = DriveInfo.GetDrives();
+            var driveInfos = DriveInfo.GetDrives().Where(d => d.IsReady);
 
             Logger.Information($"WhenRpcRetriesTimeOut_DuringDownloadFile_TheRpcCallIsCancelled Available Disk space before starting: {driveInfos.Select(d => $"{d.Name}: {d.AvailableFreeSpace}").ToList().StringJoin(", ")}");
 
@@ -244,7 +244,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task WhenDownloadFileFails_AndTakesLongerThanTheRetryDuration_TheCallIsNotRetried_AndTimesOut(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
-            var driveInfos = DriveInfo.GetDrives();
+            var driveInfos = DriveInfo.GetDrives().Where(d => d.IsReady);
 
             Logger.Information($"WhenDownloadFileFails_AndTakesLongerThanTheRetryDuration_TheCallIsNotRetried_AndTimesOut Available Disk space before starting: {driveInfos.Select(d => $"{d.Name}: {d.AvailableFreeSpace}").ToList().StringJoin(", ")}");
 

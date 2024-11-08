@@ -20,7 +20,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task UploadFileSuccessfully(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
-            var driveInfos = DriveInfo.GetDrives();
+            var driveInfos = DriveInfo.GetDrives().Where(d => d.IsReady);
 
             Logger.Information($"UploadFileSuccessfully Available Disk space before starting: {driveInfos.Select(d => $"{d.Name}: {d.AvailableFreeSpace}").ToList().StringJoin(", ")}");
 
@@ -60,7 +60,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task DownloadFileSuccessfully(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {            
-            var driveInfos = DriveInfo.GetDrives();
+            var driveInfos = DriveInfo.GetDrives().Where(d => d.IsReady);
 
             using var fileToDownload = new RandomTemporaryFileBuilder().Build();
             Logger.Information($"DownloadFileSuccessfully Available Disk space before RandomTemporaryFileBuilder: {driveInfos.Select(d => $"{d.Name}: {d.AvailableFreeSpace}").ToList().StringJoin(", ")}");
