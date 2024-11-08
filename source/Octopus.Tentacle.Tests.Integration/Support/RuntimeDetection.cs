@@ -6,6 +6,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     public static class RuntimeDetection
     {
         public const string Framework48 = "net48";
+        public const string DotNet6 = "net6.0";
         public const string DotNet8 = "net8.0";
 
         public static string GetCurrentRuntime()
