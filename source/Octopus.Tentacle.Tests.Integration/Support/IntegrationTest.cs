@@ -1,9 +1,11 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using Halibut.Util;
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
+using Octopus.Client.Extensions;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Serilog;
 
@@ -20,7 +22,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public void SetUp()
         {
             Logger = new SerilogLoggerBuilder().Build().ForContext(GetType());
-            Logger.Information("Test started");
+            var driveInfos = DriveInfo.GetDrives();
+            Logger.Information($"Test started. Available Disk space before starting: {driveInfos.Select(d => $"{d.Name}: {d.AvailableFreeSpace}").ToList().StringJoin(", ")}");
 
             // Time out the cancellation token so we cancel the test if it takes too long
             // The IntegrationTestTimeout attribute will also cancel the test if it takes too long, but nunit will not call TearDown on the test 
@@ -40,7 +43,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             Logger.Information("Disposing CancellationTokenSource");
             cancellationTokenSource?.Dispose();
             cancellationTokenSource = null;
-            Logger.Information("Finished Test Tearing Down");
+            var driveInfos = DriveInfo.GetDrives();
+            Logger.Information($"Finished Test Tearing Down. Available Disk space before starting: {driveInfos.Select(d => $"{d.Name}: {d.AvailableFreeSpace}").ToList().StringJoin(", ")}");
+
         }
 
         void WriteTentacleLogToOutputIfTestHasFailed()
