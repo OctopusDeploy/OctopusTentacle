@@ -43,8 +43,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     {
         private readonly NUnitTestCaseBuilder _builder = new();
         
+        public const string Net60ClientNet48Service = nameof(Net60ClientNet48Service);
         public const string Net80ClientNet48Service = nameof(Net80ClientNet48Service);
-        
+
         /// <summary>
         /// Tests which are testing against a previous version of tentacle, e.g. testing tentacle client
         /// with version 5.0.12 of tentacle.
@@ -169,6 +170,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                         #if !NETFRAMEWORK
                         if (item is TentacleConfigurationTestCase {TentacleRuntime: TentacleRuntime.Framework48} testCase)
                         {
+                            parms.Properties.Add(PropertyNames.Category, Net60ClientNet48Service);
                             parms.Properties.Add(PropertyNames.Category, Net80ClientNet48Service);
                         }
                         #endif
