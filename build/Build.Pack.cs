@@ -545,7 +545,7 @@ partial class Build
             // Note: Nuke automatically escapes this string by using the string interpolation syntax
             ProcessTasks.StartProcess(
                 octopus,
-                $"package nuget create --id {id} --version {FullSemVer} --base-path {workingDirectory} --out-folder {outFolder} --author {author} --title {title} --description {description}"
+                $"package nuget create --id {id} --version {FullSemVer} --base-path {workingDirectory} --out-folder {outFolder} --author {author} --title {title} --description {description} --no-prompt"
             ).WaitForExit();
         });
 
