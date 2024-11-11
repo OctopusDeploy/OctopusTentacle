@@ -7,12 +7,11 @@ using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
-using CliWrap;
-using CliWrap.Exceptions;
 using FluentAssertions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
+using Octopus.Shellfish;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.TestAttributes;
@@ -727,14 +726,14 @@ Or one of the common options:
             var output = new StringBuilder();
             var errorOut = new StringBuilder();
             
-            var result = await RetryHelper.RetryAsync<CommandResult, CommandExecutionException>(
-                () => Cli.Wrap(tentacleExe)
+            var result = await RetryHelper.RetryAsync<ShellCommandResult, Exception>(
+                ct => new ShellCommand(tentacleExe)
                     .WithArguments(arguments)
-                    .WithValidation(CommandResultValidation.None)
-                    .WithStandardOutputPipe(PipeTarget.ToStringBuilder(output))
-                    .WithStandardErrorPipe(PipeTarget.ToStringBuilder(errorOut))
+                    .CaptureStdOutTo(output)
+                    .CaptureStdErrTo(output)
                     .WithEnvironmentVariables(environmentVariablesToRunTentacleWith)
-                    .ExecuteAsync(CancellationToken));
+                    .ExecuteAsync(ct),
+                CancellationToken);
 
             return (result.ExitCode, output.ToString(), errorOut.ToString());
         }
