@@ -10,6 +10,7 @@ using Octopus.Tentacle.Util;
 namespace Octopus.Tentacle.Tests.Integration.Util
 {
     [TestFixture]
+    [SkipOnEnvironmentsWithKnownPerformanceIssues("it relies on timing, which may be inconsistent within the environment")]
     public class SilentProcessRunnerFixture : IntegrationTest
     {
         const int SIG_TERM = 143;
@@ -33,7 +34,6 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         }
 
         [Test]
-        [SkipOnEnvironmentsWithKnownPerformanceIssues("it relies on timing, which may be inconsistent within the environment")]
         public void ExitCode_ShouldBeReturned()
         {
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
@@ -57,7 +57,6 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         }
 
         [Test]
-        [SkipOnEnvironmentsWithKnownPerformanceIssues("it relies on timing, which may be inconsistent within the environment")]
         public void DebugLogging_ShouldContainDiagnosticsInfo_ForDefault()
         {
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
@@ -85,7 +84,6 @@ namespace Octopus.Tentacle.Tests.Integration.Util
 
         [Test]
         [Retry(3)]
-        [SkipOnEnvironmentsWithKnownPerformanceIssues("it relies on timing, which may be inconsistent within the environment")]
         public void CancellationToken_ShouldForceKillTheProcess()
         {
             // Terminate the process after a very short time so the test doesn't run forever
@@ -118,7 +116,6 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         }
 
         [Test]
-        [SkipOnEnvironmentsWithKnownPerformanceIssues("it relies on timing, which may be inconsistent within the environment")]
         public void EchoHello_ShouldWriteToStdOut()
         {
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
@@ -141,7 +138,6 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         }
 
         [Test]
-        [SkipOnEnvironmentsWithKnownPerformanceIssues("it relies on timing, which may be inconsistent within the environment")]
         public void EchoError_ShouldWriteToStdErr()
         {
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
@@ -164,7 +160,6 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         }
 
         [Test]
-        [SkipOnEnvironmentsWithKnownPerformanceIssues("it relies on timing, which may be inconsistent within the environment")]
         public void RunAsCurrentUser_ShouldWork()
         {
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
@@ -191,7 +186,6 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         [Test]
         [WindowsTest]
         [TestCase("powershell.exe", "-command \"Write-Host $env:userdomain\\$env:username\"")]
-        [SkipOnEnvironmentsWithKnownPerformanceIssues("it relies on timing, which may be inconsistent within the environment")]
         public void RunAsCurrentUser_PowerShell_ShouldWork(string command, string arguments)
         {
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
