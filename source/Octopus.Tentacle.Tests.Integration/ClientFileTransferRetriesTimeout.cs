@@ -24,7 +24,6 @@ namespace Octopus.Tentacle.Tests.Integration
     /// from RPC calls when they are being retried and the rpc timeout period elapses.
     /// </summary>
     [IntegrationTestTimeout]
-    // [SkipOnEnvironmentsWithKnownPerformanceIssues("it relies on timing, which may be inconsistent within the environment")]
     public class ClientFileTransferRetriesTimeout : IntegrationTest
     {
         readonly TimeSpan retryIfRemainingDurationAtLeastBuffer = TimeSpan.FromSeconds(1);
