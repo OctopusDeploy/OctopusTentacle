@@ -22,10 +22,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support.TestAttributes
             if (test.RunState == RunState.NotRunnable || test.RunState == RunState.Ignored)
                 return;
 
-            if (bool.TryParse(Environment.GetEnvironmentVariable("Has_Known_Performance_Issues"), out _))
+            if (bool.TryParse(Environment.GetEnvironmentVariable("Has_NET8_Compatibility_Issues"), out _))
             {
                 test.RunState = RunState.Skipped;
-                test.Properties.Add("_SKIPREASON", $"This test only runs on environments without performance issues because {Reason}");
+                test.Properties.Add("_SKIPREASON", $"This test does not run on environments with .NET 8 performance issues because {Reason}");
             }
         }
     }
