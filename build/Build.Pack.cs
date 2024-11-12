@@ -693,6 +693,7 @@ partial class Build
         HttpTasks.HttpDownloadFile(downloadUri, archiveDestination);
 
         archiveDestination.UncompressTo(cliFolder);
+        Assert.FileExists(cliPath, "The Octopus CLI executable was not found after extracting the archive");
 
         if (!EnvironmentInfo.IsWin)
         {
@@ -700,7 +701,6 @@ partial class Build
             ProcessTasks.StartProcess("chmod", $"+x {cliPath}").WaitForExit();
         }
 
-        Assert.FileExists(cliPath, "The Octopus CLI executable was not found after extracting the archive");
         return cliPath;
     }
 }
