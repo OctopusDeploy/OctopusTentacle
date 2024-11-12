@@ -13,7 +13,7 @@ using Octopus.Tentacle.Tests.Integration.Support.TestAttributes;
 namespace Octopus.Tentacle.Tests.Integration
 {
     [IntegrationTestTimeout]
-    [SkipOnEnvironmentsWithKnownPerformanceIssues("we keep facing issues with disk space running out")]
+    // [SkipOnEnvironmentsWithKnownPerformanceIssues("we keep facing issues with disk space running out")]
     public class ScriptServiceTests : IntegrationTest
     {
         [Test]
