@@ -12,7 +12,7 @@
     <UseWPF>true</UseWPF>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
-    <TargetFrameworks>net48;net6.0-windows;net8.0-windows</TargetFrameworks>
+    <TargetFrameworks>net48;net8.0-windows</TargetFrameworks>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Properties\Icon.ico</ApplicationIcon>
@@ -23,17 +23,6 @@
     <When Condition="'$(TargetFramework)' == 'net48'">
       <PropertyGroup>
         <RuntimeIdentifiers>win</RuntimeIdentifiers><!-- This is AnyCPU -->
-      </PropertyGroup>
-    </When>
-    <When Condition="'$(TargetFramework)' == 'net6.0-windows'">
-      <PropertyGroup>
-        <RuntimeIdentifiers>win-x86;win-x64;</RuntimeIdentifiers>
-        <!--
-          Suppressing those validations error due to validation bugs in .NET 6.
-          This can be removed when we upgrade to .NET7 or above.
-          More info: https://octopusdeploy.slack.com/archives/C039PL7PCUE/p1708490934364109
-        -->
-        <ValidateExecutableReferencesMatchSelfContained>false</ValidateExecutableReferencesMatchSelfContained>
       </PropertyGroup>
     </When>
     <When Condition="'$(TargetFramework)' == 'net8.0-windows'">

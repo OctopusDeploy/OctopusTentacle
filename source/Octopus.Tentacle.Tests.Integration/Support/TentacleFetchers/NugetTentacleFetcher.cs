@@ -79,7 +79,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
                 string runtimeForVersion = version.Major >= 8 && version.Minor >= 2
                     ? RuntimeDetection.DotNet8
                     : RuntimeDetection.DotNet6;
-                
+
                 var net48ArtifactNames = new[] {"tentacle-net48-win.zip"};
                 var dotnetArtifactNames = Architectures()
                     .Select(a => $"tentacle-{runtimeForVersion}-win-{a}.zip")
