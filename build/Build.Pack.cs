@@ -538,15 +538,15 @@ partial class Build
             const string author = "Octopus Deploy";
             const string title = "Octopus Tentacle cross platform bundle";
 
-            OctopusTasks.OctopusPack(o => o
-                .SetId("Octopus.Tentacle.CrossPlatformBundle")
-                .SetVersion(FullSemVer)
-                .SetBasePath(workingDirectory)
-                .SetOutputFolder(ArtifactsDirectory / "nuget")
-                .SetAuthors(author)
-                .SetTitle(title)
-                .SetDescription(description)
-            );
+            const string id = "Octopus.Tentacle.CrossPlatformBundle";
+            var outFolder = ArtifactsDirectory / "nuget";
+
+            var octopus = InstallOctopusCli();
+            // Note: Nuke automatically escapes this string by using the string interpolation syntax
+            ProcessTasks.StartProcess(
+                octopus,
+                $"package nuget create --id {id} --version {FullSemVer} --base-path {workingDirectory} --out-folder {outFolder} --author {author} --title {title} --description {description} --no-prompt"
+            ).WaitForExit();
         });
 
     [PublicAPI]
@@ -649,4 +649,58 @@ partial class Build
         { "linux-arm64", ("arm64", "arm64") },
         { "linux-arm", ("armhf", "armv7") }
     };
+
+    AbsolutePath InstallOctopusCli()
+    {
+        const string cliVersion = "2.11.0";
+
+        // Windows uses octopus.exe, everything else uses octopus
+        var cliName = EnvironmentInfo.IsWin ? "octopus.exe" : "octopus";
+
+        var unversionedCliFolder = TemporaryDirectory / "octopus-cli";
+        var cliFolder = unversionedCliFolder / cliVersion;
+        var cliPath = cliFolder / cliName;
+        if (cliPath.FileExists())
+        {
+            // Assume it has already been installed
+            return cliPath;
+        }
+
+        cliFolder.CreateDirectory();
+
+        var osId = true switch
+        {
+            _ when EnvironmentInfo.IsWin => "windows",
+            _ when EnvironmentInfo.IsOsx => "macOS",
+            _ when EnvironmentInfo.IsLinux => "linux",
+            _ => throw new NotSupportedException("Unsupported OS")
+        };
+
+        var archId = EnvironmentInfo.IsArm64
+            ? "arm64"
+            : "amd64";
+
+        var archiveExtension = EnvironmentInfo.IsWin ? "zip" : "tar.gz";
+
+        var downloadUri = $"https://github.com/OctopusDeploy/cli/releases/download/v{cliVersion}/octopus_{cliVersion}_{osId}_{archId}.{archiveExtension}";
+
+        var archiveDestination = unversionedCliFolder / $"octopus-cli-archive.{cliVersion}.{archiveExtension}";
+
+        // If the archive already exists, we will download it again
+        archiveDestination.DeleteFile();
+
+        Log.Information("Downloading Octopus CLI from {downloadUri}", downloadUri);
+        HttpTasks.HttpDownloadFile(downloadUri, archiveDestination);
+
+        archiveDestination.UncompressTo(cliFolder);
+        Assert.FileExists(cliPath, "The Octopus CLI executable was not found after extracting the archive");
+
+        if (!EnvironmentInfo.IsWin)
+        {
+            // We need to make the file executable as Nuke doesn't do that for us
+            ProcessTasks.StartProcess("chmod", $"+x {cliPath}").WaitForExit();
+        }
+
+        return cliPath;
+    }
 }

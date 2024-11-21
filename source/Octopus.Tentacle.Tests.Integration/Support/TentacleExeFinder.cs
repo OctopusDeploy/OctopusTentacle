@@ -19,7 +19,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             if (TeamCityDetection.IsRunningInTeamCity())
             {
                 // Example current directory of assembly.
-                // /opt/TeamCity/BuildAgent/work/639265b01610d682/build/outputs/integrationtests/net6.0/linux-x64
+                // /opt/TeamCity/BuildAgent/work/639265b01610d682/build/outputs/integrationtests/net8.0/linux-x64
                 // Desired path to tentacle.
                 // /opt/TeamCity/BuildAgent/work/639265b01610d682/build/outputs/tentaclereal/tentacle/Tentacle
 
