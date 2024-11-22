@@ -28,8 +28,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <PackageReference Include="Halibut" Version="7.0.894-pull-618" />
-    <PackageReference Include="Halibut" Version="8.0.916" />
+    <PackageReference Include="Halibut" Version="7.0.893-pull-618" /><!-- Uses SslProtocol.None -->
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Solution Items\SolutionInfo.cs">
