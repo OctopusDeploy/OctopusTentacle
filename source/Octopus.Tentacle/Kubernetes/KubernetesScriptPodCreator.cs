@@ -17,8 +17,6 @@ using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Util;
 using Octopus.Tentacle.Variables;
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
 
 namespace Octopus.Tentacle.Kubernetes
 {
@@ -210,25 +208,7 @@ namespace Octopus.Tentacle.Kubernetes
                 }
             };
 
-            V1Pod createdPod;
-            LogVerboseToBothLogs("Does this even go out?", tentacleScriptLog);
-            try
-            {
-                createdPod = await podService.Create(pod, cancellationToken);
-            }
-            catch(Exception)
-            {
-                var serializer = new SerializerBuilder()
-                    .WithNamingConvention(CamelCaseNamingConvention.Instance)
-                    .Build();
-                
-                var yaml = serializer.Serialize(pod);
-                LogVerboseToBothLogs($"Failed to create pod: {yaml}", tentacleScriptLog);
-                
-                throw;
-
-            }
-            
+            var createdPod = await podService.Create(pod, cancellationToken);
             podMonitor.AddPendingPod(command.ScriptTicket, createdPod);
 
             var scriptContainer = createdPod.Spec.Containers.First(c => c.Name == podName);
@@ -266,7 +246,7 @@ namespace Octopus.Tentacle.Kubernetes
                     Name = "agent-upgrade",
                     Secret = new V1SecretVolumeSource
                     {
-                        SecretName = "upgrade-helm-secret",
+                        SecretName = "agent-upgrade-secret",
                         Items = new List<V1KeyToPath>()
                         {
                             new()

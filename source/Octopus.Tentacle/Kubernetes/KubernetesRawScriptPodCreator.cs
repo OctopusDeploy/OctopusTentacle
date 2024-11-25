@@ -86,7 +86,7 @@ namespace Octopus.Tentacle.Kubernetes
                     Name = "agent-upgrade",
                     Secret = new V1SecretVolumeSource
                     {
-                        SecretName = "upgrade-helm-secret",
+                        SecretName = "agent-upgrade-secret,
                         Items = new List<V1KeyToPath>()
                         {
                             new()
