@@ -17,6 +17,8 @@ using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Util;
 using Octopus.Tentacle.Variables;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
 
 namespace Octopus.Tentacle.Kubernetes
 {
@@ -208,7 +210,23 @@ namespace Octopus.Tentacle.Kubernetes
                 }
             };
 
-            var createdPod = await podService.Create(pod, cancellationToken);
+            V1Pod createdPod;
+            try
+            {
+                createdPod = await podService.Create(pod, cancellationToken);
+            }
+            catch
+            {
+                var serializer = new SerializerBuilder()
+                    .WithNamingConvention(CamelCaseNamingConvention.Instance)
+                    .Build();
+                
+                var yaml = serializer.Serialize(pod);
+                LogVerboseToBothLogs($"Failed to create pod: {yaml}", tentacleScriptLog);
+                throw;
+
+            }
+            
             podMonitor.AddPendingPod(command.ScriptTicket, createdPod);
 
             var scriptContainer = createdPod.Spec.Containers.First(c => c.Name == podName);
@@ -240,7 +258,23 @@ namespace Octopus.Tentacle.Kubernetes
                     {
                         ClaimName = KubernetesConfig.PodVolumeClaimName
                     }
-                }
+                },
+                new()
+                {
+                    Name = "agent-upgrade",
+                    Secret = new V1SecretVolumeSource
+                    {
+                        Items = new List<V1KeyToPath>()
+                        {
+                            new()
+                            {
+                                Key = ".dockerconfigjson",
+                                Path = "config.json"
+                            }
+                        },
+                        Optional = true
+                    },
+                },
             };
         }
 
@@ -290,7 +324,11 @@ namespace Octopus.Tentacle.Kubernetes
                         commandString
                     }
                     .ToList(),
-                VolumeMounts = new List<V1VolumeMount> { new(homeDir, "tentacle-home") },
+                VolumeMounts = new List<V1VolumeMount>
+                {
+                    new(homeDir, "tentacle-home"),
+                    new (Path.Combine(homeDir, ".config", "helm", "registry"), "agent-upgrade")
+                },
                 Env = new List<V1EnvVar>
                 {
                     new(KubernetesConfig.NamespaceVariableName, KubernetesConfig.Namespace),
