@@ -255,6 +255,7 @@ namespace Octopus.Tentacle.Kubernetes
                                 Path = "config.json"
                             }
                         },
+                        Optional = true,
                     },
                 },
             };
