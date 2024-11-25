@@ -8,31 +8,13 @@
 		<NoWin32Manifest>true</NoWin32Manifest>
 		<OutputPath>bin</OutputPath>
 		<OutputType>Exe</OutputType>
-		<PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
 		<RootNamespace>Octopus.Tentacle</RootNamespace>
-		<TargetFrameworks>net48;net8.0;net8.0-windows</TargetFrameworks>
+		<TargetFramework>net8.0</TargetFramework>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<LangVersion>9</LangVersion>
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 
-	<Choose>
-		<When Condition="'$(TargetFramework)' == 'net48'">
-			<PropertyGroup>
-				<RuntimeIdentifiers>win</RuntimeIdentifiers><!-- This is AnyCPU -->
-			</PropertyGroup>
-		</When>
-		<When Condition="'$(TargetFramework)' == 'net8.0-windows'">
-			<PropertyGroup>
-				<RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
-			</PropertyGroup>
-		</When>
-		<Otherwise>
-			<PropertyGroup>
-				<RuntimeIdentifiers>win-x86;win-x64;linux-x64;osx-x64;osx-arm64;linux-arm64;linux-arm;linux-musl-x64</RuntimeIdentifiers>
-			</PropertyGroup>
-		</Otherwise>
-	</Choose>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 		<Optimize>True</Optimize>
