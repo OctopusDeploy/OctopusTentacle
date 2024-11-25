@@ -211,6 +211,7 @@ namespace Octopus.Tentacle.Kubernetes
             };
 
             V1Pod createdPod;
+            LogVerboseToBothLogs("Does this even go out?", tentacleScriptLog);
             try
             {
                 createdPod = await podService.Create(pod, cancellationToken);
@@ -223,6 +224,7 @@ namespace Octopus.Tentacle.Kubernetes
                 
                 var yaml = serializer.Serialize(pod);
                 LogVerboseToBothLogs($"Failed to create pod: {yaml}", tentacleScriptLog);
+                
                 throw;
 
             }
@@ -264,6 +266,7 @@ namespace Octopus.Tentacle.Kubernetes
                     Name = "agent-upgrade",
                     Secret = new V1SecretVolumeSource
                     {
+                        SecretName = "upgrade-helm-secret",
                         Items = new List<V1KeyToPath>()
                         {
                             new()
@@ -272,7 +275,6 @@ namespace Octopus.Tentacle.Kubernetes
                                 Path = "config.json"
                             }
                         },
-                        Optional = true
                     },
                 },
             };
@@ -327,7 +329,7 @@ namespace Octopus.Tentacle.Kubernetes
                 VolumeMounts = new List<V1VolumeMount>
                 {
                     new(homeDir, "tentacle-home"),
-                    new (Path.Combine(homeDir, ".config", "helm", "registry"), "agent-upgrade")
+                    new ("/root/.config/helm/registry/", "agent-upgrade")
                 },
                 Env = new List<V1EnvVar>
                 {
