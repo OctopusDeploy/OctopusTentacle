@@ -215,7 +215,7 @@ namespace Octopus.Tentacle.Kubernetes
             {
                 createdPod = await podService.Create(pod, cancellationToken);
             }
-            catch
+            catch(Exception)
             {
                 var serializer = new SerializerBuilder()
                     .WithNamingConvention(CamelCaseNamingConvention.Instance)
