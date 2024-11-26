@@ -181,7 +181,7 @@ namespace Octopus.Tentacle.Kubernetes
                 .WhereNotNull()
                 .Select(secretName => new V1LocalObjectReference(secretName))
                 .ToList();
-
+             
             var pod = new V1Pod
             {
                 Metadata = new V1ObjectMeta
@@ -240,7 +240,29 @@ namespace Octopus.Tentacle.Kubernetes
                     {
                         ClaimName = KubernetesConfig.PodVolumeClaimName
                     }
-                }
+                },
+                CreateAgentUpgradeSecretVolume(),
+            };
+        }
+
+        protected V1Volume CreateAgentUpgradeSecretVolume()
+        {
+            return new()
+            {
+                Name = "agent-upgrade",
+                Secret = new V1SecretVolumeSource
+                {
+                    SecretName = "agent-upgrade-secret",
+                    Items = new List<V1KeyToPath>()
+                    {
+                        new()
+                        {
+                            Key = ".dockerconfigjson",
+                            Path = "config.json"
+                        }
+                    },
+                    Optional = true,
+                },
             };
         }
 
@@ -290,7 +312,11 @@ namespace Octopus.Tentacle.Kubernetes
                         commandString
                     }
                     .ToList(),
-                VolumeMounts = new List<V1VolumeMount> { new(homeDir, "tentacle-home") },
+                VolumeMounts = new List<V1VolumeMount>
+                {
+                    new(homeDir, "tentacle-home"),
+                    new ("/root/.config/helm/registry/", "agent-upgrade")
+                },
                 Env = new List<V1EnvVar>
                 {
                     new(KubernetesConfig.NamespaceVariableName, KubernetesConfig.Namespace),
