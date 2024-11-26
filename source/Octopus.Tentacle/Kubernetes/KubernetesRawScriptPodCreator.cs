@@ -81,23 +81,7 @@ namespace Octopus.Tentacle.Kubernetes
                         ClaimName = KubernetesConfig.PodVolumeClaimName
                     }
                 },
-                new()
-                {
-                    Name = "agent-upgrade",
-                    Secret = new V1SecretVolumeSource
-                    {
-                        SecretName = "agent-upgrade-secret",
-                        Items = new List<V1KeyToPath>()
-                        {
-                            new()
-                            {
-                                Key = ".dockerconfigjson",
-                                Path = "config.json"
-                            }
-                        },
-                        Optional = true,
-                    },
-                },
+                CreateAgentUpgradeSecretVolume(),
             };
         }
 
