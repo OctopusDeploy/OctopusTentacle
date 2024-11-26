@@ -181,10 +181,7 @@ namespace Octopus.Tentacle.Kubernetes
                 .WhereNotNull()
                 .Select(secretName => new V1LocalObjectReference(secretName))
                 .ToList();
-
-            var volumes = CreateVolumes(command);
-            volumes.Append(CreateAgentUpgradeSecretVolume());
-            
+             
             var pod = new V1Pod
             {
                 Metadata = new V1ObjectMeta
