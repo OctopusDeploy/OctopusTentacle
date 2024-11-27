@@ -82,6 +82,9 @@ set +ex
 
 echo "Creating .rpm package."
 set -ex
+
+export EDITOR="sed -i -e '/Requires: placeholder/c%if 0%{?suse_version} >= 15000\nRequires: openssl-3\n%else\nRequires: openssl-libs\n%endif'"
+
 fpm --version "$VERSION" \
   --name "$PACKAGE_NAME" \
   --input-type dir \
