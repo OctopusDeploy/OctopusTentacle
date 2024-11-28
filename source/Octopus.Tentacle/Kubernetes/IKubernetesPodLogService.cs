@@ -108,8 +108,8 @@ namespace Octopus.Tentacle.Kubernetes
             async Task<(IReadOnlyCollection<ProcessOutput> Outputs, long NextSequenceNumber, int? ExitCode)> ReadPodLogsFromStream(Stream stream)
             {
                 using var reader = new StreamReader(stream);
-                var encryptionKeyBytes = scriptPodLogEncryptionKeyProvider.GetEncryptionKey(scriptTicket);
-                return await PodLogReader.ReadPodLogs(lastLogSequence, reader, scriptPodLogEncryptionKeyProvider.GetEncryptionKey(scriptTicket));
+                var encryptionProvider = PodLogEncryptionProvider.Create(scriptPodLogEncryptionKeyProvider.GetEncryptionKey(scriptTicket));
+                return await PodLogReader.ReadPodLogs(lastLogSequence, reader, encryptionProvider);
             }
         }
 

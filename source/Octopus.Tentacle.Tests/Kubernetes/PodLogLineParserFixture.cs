@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using FluentAssertions;
+using NSubstitute;
 using NUnit.Framework;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Kubernetes;
@@ -10,40 +11,50 @@ namespace Octopus.Tentacle.Tests.Kubernetes
     [TestFixture]
     public class PodLogLineParserFixture
     {
-        static readonly byte[] EncryptionKeyBytes = new byte[32];
+        IPodLogEncryptionProvider encryptionProvider;
+
+        [SetUp]
+        public void SetUp()
+        {
+            encryptionProvider = Substitute.For<IPodLogEncryptionProvider>();
+            
+            //for the purpose of this, don't do any testing of the encryption
+            encryptionProvider.Decrypt(Arg.Any<string>())
+                .Returns(ci => ci.ArgAt<string>(0));
+        }
 
         [TestCase("a|b|c", Reason = "Doesn't have 4 parts")]
         public void NotCorrectlyPipeDelimited(string line)
         {
-            var result = PodLogLineParser.ParseLine(line, EncryptionKeyBytes).Should().BeOfType<InvalidPodLogLineParseResult>().Subject;
+            var result = PodLogLineParser.ParseLine(line, encryptionProvider).Should().BeOfType<InvalidPodLogLineParseResult>().Subject;
             result.Error.Should().Contain("delimited").And.Contain(line);
         }
 
         [TestCase("1 |b|c|d", Reason = "Not a date")]
         public void FirstPartIsNotALineDate(string line)
         {
-            var result = PodLogLineParser.ParseLine(line, EncryptionKeyBytes).Should().BeOfType<InvalidPodLogLineParseResult>().Subject;
+            var result = PodLogLineParser.ParseLine(line, encryptionProvider).Should().BeOfType<InvalidPodLogLineParseResult>().Subject;
             result.Error.Should().Contain("log timestamp").And.Contain(line);
         }
 
         [TestCase("2024-04-03T06:03:10.501025551Z |b|c|d", Reason = "Not a line number")]
         public void SecondPartIsNotALineNumber(string line)
         {
-            var result = PodLogLineParser.ParseLine(line, EncryptionKeyBytes).Should().BeOfType<InvalidPodLogLineParseResult>().Subject;
+            var result = PodLogLineParser.ParseLine(line, encryptionProvider).Should().BeOfType<InvalidPodLogLineParseResult>().Subject;
             result.Error.Should().Contain("line number").And.Contain(line);
         }
 
         [TestCase("2024-04-03T06:03:10.501025551Z |1|c|d", Reason = "Not a valid source")]
         public void ThirdPartIsNotAValidSource(string line)
         {
-            var result = PodLogLineParser.ParseLine(line, EncryptionKeyBytes).Should().BeOfType<InvalidPodLogLineParseResult>().Subject;
+            var result = PodLogLineParser.ParseLine(line, encryptionProvider).Should().BeOfType<InvalidPodLogLineParseResult>().Subject;
             result.Error.Should().Contain("log level").And.Contain(line);
         }
 
         [Test]
         public void SimpleMessage()
         {
-            var logLine = PodLogLineParser.ParseLine($"2024-04-03T06:03:10.501025551Z |123|stdout|This is the message", EncryptionKeyBytes)
+            var logLine = PodLogLineParser.ParseLine($"2024-04-03T06:03:10.501025551Z |123|stdout|This is the message", encryptionProvider)
                 .Should().BeOfType<ValidPodLogLineParseResult>().Subject.LogLine;
 
             logLine.LineNumber.Should().Be(123);
@@ -55,7 +66,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         [Test]
         public void ServiceMessage()
         {
-            var logLine = PodLogLineParser.ParseLine("2024-04-03T06:03:10.501025551Z |123|stdout|##octopus[stdout-verbose]", EncryptionKeyBytes)
+            var logLine = PodLogLineParser.ParseLine("2024-04-03T06:03:10.501025551Z |123|stdout|##octopus[stdout-verbose]", encryptionProvider)
                 .Should().BeOfType<ValidPodLogLineParseResult>().Subject.LogLine;
 
             logLine.LineNumber.Should().Be(123);
@@ -67,7 +78,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         [Test]
         public void ErrorMessage()
         {
-            var logLine = PodLogLineParser.ParseLine("2024-04-03T06:03:10.501025551Z |123|stderr|Error!", EncryptionKeyBytes)
+            var logLine = PodLogLineParser.ParseLine("2024-04-03T06:03:10.501025551Z |123|stderr|Error!", encryptionProvider)
                 .Should().BeOfType<ValidPodLogLineParseResult>().Subject.LogLine;
 
             logLine.LineNumber.Should().Be(123);
@@ -79,7 +90,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         [Test]
         public void MessageHasPipeInIt()
         {
-            var logLine = PodLogLineParser.ParseLine("2024-04-03T06:03:10.501025551Z |123|stdout|This is the me|ss|age", EncryptionKeyBytes)
+            var logLine = PodLogLineParser.ParseLine("2024-04-03T06:03:10.501025551Z |123|stdout|This is the me|ss|age", encryptionProvider)
                 .Should().BeOfType<ValidPodLogLineParseResult>().Subject.LogLine;
 
             logLine.LineNumber.Should().Be(123);
@@ -91,7 +102,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         [Test]
         public void ValidEndOfStreamWithPositiveExitCode()
         {
-            var result = PodLogLineParser.ParseLine("2024-04-03T06:03:10.501025551Z |123|debug|EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE<<>>4", EncryptionKeyBytes)
+            var result = PodLogLineParser.ParseLine("2024-04-03T06:03:10.501025551Z |123|debug|EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE<<>>4", encryptionProvider)
                 .Should().BeOfType<EndOfStreamPodLogLineParseResult>().Subject;
 
             result.ExitCode.Should().Be(4);
@@ -105,7 +116,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         [Test]
         public void ValidEndOfStreamWithNegativeExitCode()
         {
-            var result = PodLogLineParser.ParseLine("2024-04-03T06:03:10.501025551Z |123|debug|EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE<<>>-64", EncryptionKeyBytes)
+            var result = PodLogLineParser.ParseLine("2024-04-03T06:03:10.501025551Z |123|debug|EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE<<>>-64", encryptionProvider)
                 .Should().BeOfType<EndOfStreamPodLogLineParseResult>().Subject;
 
             result.ExitCode.Should().Be(-64);
@@ -120,7 +131,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         public void InvalidEndOfStream()
         {
             var line = "2024-04-03T06:03:10.501025551Z |123|stdout|EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE<<>>";
-            var result = PodLogLineParser.ParseLine(line, EncryptionKeyBytes)
+            var result = PodLogLineParser.ParseLine(line, encryptionProvider)
                 .Should().BeOfType<InvalidPodLogLineParseResult>().Subject;
 
             result.Error.Should().Contain("end of stream").And.Contain(line);

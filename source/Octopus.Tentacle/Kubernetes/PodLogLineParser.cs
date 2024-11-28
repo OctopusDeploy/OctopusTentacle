@@ -1,7 +1,5 @@
 using System;
 using Octopus.Tentacle.Contracts;
-using Octopus.Tentacle.Startup;
-using YamlDotNet.Core.Tokens;
 
 namespace Octopus.Tentacle.Kubernetes
 {
@@ -61,7 +59,7 @@ namespace Octopus.Tentacle.Kubernetes
         const string EndOfStreamMarkerPrefix = "EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE";
         const string EndOfStreamMarkerExitCodeDelimiter = "<<>>";
 
-        public static PodLogLineParseResult ParseLine(string line, byte[] encryptionKeyBytes)
+        public static PodLogLineParseResult ParseLine(string line, IPodLogEncryptionProvider encryptionProvider)
         {
             var logParts = line.Split(new[] { '|' }, 4);
             if (logParts.Length != 4)
@@ -90,7 +88,7 @@ namespace Octopus.Tentacle.Kubernetes
             }
 
             //the log messages are being returned from the pods encrypted, decrypt them here
-            var decryptedMessagePath = AesLogDecryptor.DecryptLogMessage(encryptedMessagePart, encryptionKeyBytes);
+            var decryptedMessagePath = encryptionProvider.Decrypt(encryptedMessagePart);
             if (decryptedMessagePath.StartsWith(EndOfStreamMarkerPrefix))
             {
                 try
