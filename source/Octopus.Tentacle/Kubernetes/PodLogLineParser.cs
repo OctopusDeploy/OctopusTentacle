@@ -61,7 +61,7 @@ namespace Octopus.Tentacle.Kubernetes
         const string EndOfStreamMarkerPrefix = "EOS-075CD4F0-8C76-491D-BA76-0879D35E9CFE";
         const string EndOfStreamMarkerExitCodeDelimiter = "<<>>";
 
-        public static PodLogLineParseResult ParseLine(string line)
+        public static PodLogLineParseResult ParseLine(string line, byte[] encryptionKeyBytes)
         {
             var logParts = line.Split(new[] { '|' }, 4);
             if (logParts.Length != 4)
@@ -72,7 +72,7 @@ namespace Octopus.Tentacle.Kubernetes
             var datePart = logParts[0];
             var lineNumberPart = logParts[1];
             var outputSourcePart = logParts[2];
-            var messagePart = logParts[3];
+            var encryptedMessagePart = logParts[3];
 
             if (!DateTimeOffset.TryParse(datePart, out var occurred))
             {
@@ -88,13 +88,15 @@ namespace Octopus.Tentacle.Kubernetes
             {
                 return new InvalidPodLogLineParseResult($"Pod log level '{outputSourcePart}' is invalid: '{line}'");
             }
-            
-            if (messagePart.StartsWith(EndOfStreamMarkerPrefix))
+
+            //the log messages are being returned from the pods encrypted, decrypt them here
+            var decryptedMessagePath = AesLogDecryptor.DecryptLogMessage(encryptedMessagePart, encryptionKeyBytes);
+            if (decryptedMessagePath.StartsWith(EndOfStreamMarkerPrefix))
             {
                 try
                 {
-                    var exitCode = int.Parse(messagePart.Split(new[] { EndOfStreamMarkerExitCodeDelimiter }, StringSplitOptions.None)[1]);
-                    return new EndOfStreamPodLogLineParseResult(new PodLogLine(lineNumber, source, messagePart, occurred), exitCode);
+                    var exitCode = int.Parse(decryptedMessagePath.Split(new[] { EndOfStreamMarkerExitCodeDelimiter }, StringSplitOptions.None)[1]);
+                    return new EndOfStreamPodLogLineParseResult(new PodLogLine(lineNumber, source, decryptedMessagePath, occurred), exitCode);
                 }
                 catch (Exception)
                 {
@@ -102,7 +104,7 @@ namespace Octopus.Tentacle.Kubernetes
                 }
             }
             
-            return new ValidPodLogLineParseResult(new PodLogLine(lineNumber, source, messagePart, occurred));
+            return new ValidPodLogLineParseResult(new PodLogLine(lineNumber, source, decryptedMessagePath, occurred));
         }
     }
 }

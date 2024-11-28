@@ -28,8 +28,9 @@ namespace Octopus.Tentacle.Kubernetes
             ISystemLog log,
             ITentacleScriptLogProvider scriptLogProvider,
             IHomeConfiguration homeConfiguration,
-            KubernetesPhysicalFileSystem kubernetesPhysicalFileSystem)
-            : base(podService, podMonitor, secretService, containerResolver, appInstanceSelector, log, scriptLogProvider, homeConfiguration, kubernetesPhysicalFileSystem)
+            KubernetesPhysicalFileSystem kubernetesPhysicalFileSystem,
+            IScriptPodLogEncryptionKeyProvider scriptPodLogEncryptionKeyProvider)
+            : base(podService, podMonitor, secretService, containerResolver, appInstanceSelector, log, scriptLogProvider, homeConfiguration, kubernetesPhysicalFileSystem, scriptPodLogEncryptionKeyProvider)
         {
             this.containerResolver = containerResolver;
         }

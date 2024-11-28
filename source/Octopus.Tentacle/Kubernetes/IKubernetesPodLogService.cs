@@ -22,6 +22,7 @@ namespace Octopus.Tentacle.Kubernetes
         readonly IKubernetesPodMonitor podMonitor;
         readonly ITentacleScriptLogProvider scriptLogProvider;
         readonly IScriptPodSinceTimeStore scriptPodSinceTimeStore;
+        readonly IScriptPodLogEncryptionKeyProvider scriptPodLogEncryptionKeyProvider;
         readonly IKubernetesEventService eventService;
 
         public KubernetesPodLogService(
@@ -29,6 +30,7 @@ namespace Octopus.Tentacle.Kubernetes
             IKubernetesPodMonitor podMonitor,
             ITentacleScriptLogProvider scriptLogProvider,
             IScriptPodSinceTimeStore scriptPodSinceTimeStore,
+            IScriptPodLogEncryptionKeyProvider scriptPodLogEncryptionKeyProvider,
             IKubernetesEventService eventService,
             ISystemLog log)
             : base(configProvider, log)
@@ -36,6 +38,7 @@ namespace Octopus.Tentacle.Kubernetes
             this.podMonitor = podMonitor;
             this.scriptLogProvider = scriptLogProvider;
             this.scriptPodSinceTimeStore = scriptPodSinceTimeStore;
+            this.scriptPodLogEncryptionKeyProvider = scriptPodLogEncryptionKeyProvider;
             this.eventService = eventService;
         }
 
@@ -105,7 +108,8 @@ namespace Octopus.Tentacle.Kubernetes
             async Task<(IReadOnlyCollection<ProcessOutput> Outputs, long NextSequenceNumber, int? ExitCode)> ReadPodLogsFromStream(Stream stream)
             {
                 using var reader = new StreamReader(stream);
-                return await PodLogReader.ReadPodLogs(lastLogSequence, reader);
+                var encryptionKeyBytes = scriptPodLogEncryptionKeyProvider.GetEncryptionKey(scriptTicket);
+                return await PodLogReader.ReadPodLogs(lastLogSequence, reader, scriptPodLogEncryptionKeyProvider.GetEncryptionKey(scriptTicket));
             }
         }
 

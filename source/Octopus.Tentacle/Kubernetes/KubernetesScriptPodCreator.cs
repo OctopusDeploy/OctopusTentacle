@@ -36,6 +36,7 @@ namespace Octopus.Tentacle.Kubernetes
         readonly ITentacleScriptLogProvider scriptLogProvider;
         readonly IHomeConfiguration homeConfiguration;
         readonly KubernetesPhysicalFileSystem kubernetesPhysicalFileSystem;
+        readonly IScriptPodLogEncryptionKeyProvider scriptPodLogEncryptionKeyProvider;
 
         public KubernetesScriptPodCreator(
             IKubernetesPodService podService,
@@ -46,7 +47,8 @@ namespace Octopus.Tentacle.Kubernetes
             ISystemLog log,
             ITentacleScriptLogProvider scriptLogProvider,
             IHomeConfiguration homeConfiguration,
-            KubernetesPhysicalFileSystem kubernetesPhysicalFileSystem)
+            KubernetesPhysicalFileSystem kubernetesPhysicalFileSystem,
+            IScriptPodLogEncryptionKeyProvider scriptPodLogEncryptionKeyProvider)
         {
             this.podService = podService;
             this.podMonitor = podMonitor;
@@ -57,6 +59,7 @@ namespace Octopus.Tentacle.Kubernetes
             this.scriptLogProvider = scriptLogProvider;
             this.homeConfiguration = homeConfiguration;
             this.kubernetesPhysicalFileSystem = kubernetesPhysicalFileSystem;
+            this.scriptPodLogEncryptionKeyProvider = scriptPodLogEncryptionKeyProvider;
         }
 
         public async Task CreatePod(StartKubernetesScriptCommandV1 command, IScriptWorkspace workspace, CancellationToken cancellationToken)
@@ -74,6 +77,9 @@ namespace Octopus.Tentacle.Kubernetes
                        cancellationToken,
                        log))
             {
+                //Write the log encryption key here
+                scriptPodLogEncryptionKeyProvider.WriteEncryptionKeyfileToWorkspace(command.ScriptTicket);
+                
                 //Possibly create the image pull secret name
                 var imagePullSecretName = await CreateImagePullSecret(command, cancellationToken);
 

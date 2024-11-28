@@ -22,12 +22,19 @@ namespace Octopus.Tentacle.Kubernetes
         readonly IClock clock;
         readonly ITentacleScriptLogProvider scriptLogProvider;
         readonly IScriptPodSinceTimeStore scriptPodSinceTimeStore;
-        
+        readonly IScriptPodLogEncryptionKeyProvider scriptPodLogEncryptionKeyProvider;
+
         readonly TimeSpan initialDelay = TimeSpan.FromMinutes(1);
         internal readonly TimeSpan CompletedPodConsideredOrphanedAfterTimeSpan = KubernetesConfig.PodsConsideredOrphanedAfterTimeSpan;
 
-        public KubernetesOrphanedPodCleaner(IKubernetesPodStatusProvider podStatusProvider, IKubernetesPodService podService, ISystemLog log, IClock clock,
-            ITentacleScriptLogProvider scriptLogProvider, IScriptPodSinceTimeStore scriptPodSinceTimeStore)
+        public KubernetesOrphanedPodCleaner(
+            IKubernetesPodStatusProvider podStatusProvider, 
+            IKubernetesPodService podService,
+            ISystemLog log, 
+            IClock clock,
+            ITentacleScriptLogProvider scriptLogProvider, 
+            IScriptPodSinceTimeStore scriptPodSinceTimeStore,
+            IScriptPodLogEncryptionKeyProvider scriptPodLogEncryptionKeyProvider)
         {
             this.podStatusProvider = podStatusProvider;
             this.podService = podService;
@@ -35,6 +42,7 @@ namespace Octopus.Tentacle.Kubernetes
             this.clock = clock;
             this.scriptLogProvider = scriptLogProvider;
             this.scriptPodSinceTimeStore = scriptPodSinceTimeStore;
+            this.scriptPodLogEncryptionKeyProvider = scriptPodLogEncryptionKeyProvider;
         }
 
         async Task IKubernetesOrphanedPodCleaner.StartAsync(CancellationToken cancellationToken)
@@ -93,6 +101,7 @@ namespace Octopus.Tentacle.Kubernetes
             {
                 scriptLogProvider.Delete(pod.ScriptTicket);
                 scriptPodSinceTimeStore.Delete(pod.ScriptTicket);
+                scriptPodLogEncryptionKeyProvider.Delete(pod.ScriptTicket);
 
                 if (KubernetesConfig.DisableAutomaticPodCleanup)
                 {
