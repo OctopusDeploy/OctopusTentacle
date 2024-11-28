@@ -9,12 +9,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
 using Autofac.Util;
-using CliWrap;
-using CliWrap.Exceptions;
 using Microsoft.Win32;
 using Nito.AsyncEx;
 using Nito.AsyncEx.Interop;
 using NUnit.Framework;
+using Octopus.Shellfish;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Tests.Integration.Util;
@@ -489,22 +488,21 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             ILogger logger,
             CancellationToken cancellationToken)
         {
-            async Task ProcessLogs(string s, CancellationToken ct)
+            void ProcessLogs(string s)
             {
-                await Task.CompletedTask;
                 logger.Information($"[{commandName}] " + s);
                 commandOutput(s);
             }
 
             try
             {
-                var commandResult = await RetryHelper.RetryAsync<CommandResult, CommandExecutionException>(
-                    () => Cli.Wrap(targetFilePath)
+                var commandResult = await RetryHelper.RetryAsync<ShellCommandResult, Exception>(
+                    () => new ShellCommand(targetFilePath)
                         .WithArguments(args)
                         .WithEnvironmentVariables(environmentVariables)
                         .WithWorkingDirectory(tmp.DirectoryPath)
-                        .WithStandardOutputPipe(PipeTarget.ToDelegate(ProcessLogs))
-                        .WithStandardErrorPipe(PipeTarget.ToDelegate(ProcessLogs))
+                        .WithStdOutTarget(ProcessLogs)
+                        .WithStdErrTarget(ProcessLogs)
                         .ExecuteAsync(cancellationToken));
 
                 if (cancellationToken.IsCancellationRequested) return;
