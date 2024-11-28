@@ -15,7 +15,7 @@ namespace Octopus.Tentacle.Kubernetes
 
     public class ScriptPodLogEncryptionKeyProvider : IScriptPodLogEncryptionKeyProvider
     {
-        const string Filename = "keyfile"; 
+        const string Filename = "keyfile";
         readonly IScriptWorkspaceFactory scriptWorkspaceFactory;
 
         readonly ConcurrentDictionary<ScriptTicket, byte[]> encryptionKeyCache = new();
@@ -29,13 +29,13 @@ namespace Octopus.Tentacle.Kubernetes
         {
             if (encryptionKeyCache.ContainsKey(scriptTicket))
             {
-                throw new InvalidOperationException($"An encryption key already exists for script {scriptTicket.TaskId}");
+                throw new PodLogEncryptionKeyException($"An encryption key already exists for script {scriptTicket.TaskId}");
             }
 
             var encryptionKeyBytes = GenerateEncryptionKeyBytes();
             if (!encryptionKeyCache.TryAdd(scriptTicket, encryptionKeyBytes))
             {
-                throw new InvalidOperationException($"Failed to store encryption key in memory cache for script {scriptTicket.TaskId}");
+                throw new PodLogEncryptionKeyException($"Failed to store encryption key in memory cache for script {scriptTicket.TaskId}");
             }
 
             try
@@ -46,7 +46,7 @@ namespace Octopus.Tentacle.Kubernetes
             }
             catch (Exception e)
             {
-                throw new InvalidOperationException($"Failed to write encryption key to workspace for script {scriptTicket.TaskId}", e);
+                throw new PodLogEncryptionKeyException($"Failed to write encryption key to workspace for script {scriptTicket.TaskId}", e);
             }
         }
 
@@ -56,24 +56,24 @@ namespace Octopus.Tentacle.Kubernetes
             {
                 return keyBytes;
             }
-            
+
             //read from file
             var workspace = scriptWorkspaceFactory.GetWorkspace(scriptTicket);
             var fileContents = workspace.TryReadFile(Filename);
             if (fileContents == null)
             {
-                throw new InvalidOperationException($"Failed to load encryption key from workspace for script {scriptTicket.TaskId}");
+                throw new PodLogEncryptionKeyException($"Failed to load encryption key from workspace for script {scriptTicket.TaskId}");
             }
 
             if (string.IsNullOrWhiteSpace(fileContents))
             {
-                throw new InvalidOperationException($"Encryption key loaded from workspace for script {scriptTicket.TaskId} is empty or whitespace");
+                throw new PodLogEncryptionKeyException($"Encryption key loaded from workspace for script {scriptTicket.TaskId} is empty or whitespace");
             }
 
             var encryptionKeyBytes = Convert.FromBase64String(fileContents);
             if (!encryptionKeyCache.TryAdd(scriptTicket, encryptionKeyBytes))
             {
-                throw new InvalidOperationException($"Failed to store encryption key in memory cache for script {scriptTicket.TaskId}");
+                throw new PodLogEncryptionKeyException($"Failed to store encryption key in memory cache for script {scriptTicket.TaskId}");
             }
 
             return encryptionKeyBytes;
@@ -98,6 +98,17 @@ namespace Octopus.Tentacle.Kubernetes
 #else
             return RandomNumberGenerator.GetBytes(keyLength);
 #endif
+        }
+    }
+
+    public class PodLogEncryptionKeyException : Exception
+    {
+        public PodLogEncryptionKeyException(string message) : base(message)
+        {
+        }
+        
+        public PodLogEncryptionKeyException(string message, Exception innerException) : base(message, innerException)
+        {
         }
     }
 }
