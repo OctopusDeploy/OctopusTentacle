@@ -7,6 +7,7 @@ using NSubstitute;
 using NUnit.Framework;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Kubernetes;
+using Octopus.Tentacle.Kubernetes.Crypto;
 using Octopus.Tentacle.Tests.Support;
 using Octopus.Time;
 

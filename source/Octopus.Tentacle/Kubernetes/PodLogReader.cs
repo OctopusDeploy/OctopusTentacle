@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Kubernetes.Crypto;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Kubernetes

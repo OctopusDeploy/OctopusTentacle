@@ -3,6 +3,8 @@ using Autofac;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Octopus.Tentacle.Background;
+using Octopus.Tentacle.Kubernetes.Configuration;
+using Octopus.Tentacle.Kubernetes.Crypto;
 using Octopus.Tentacle.Kubernetes.Diagnostics;
 using Octopus.Tentacle.Kubernetes.Synchronisation;
 using Octopus.Tentacle.Kubernetes.Synchronisation.Internal;
@@ -30,8 +32,14 @@ namespace Octopus.Tentacle.Kubernetes
             builder.RegisterType<KubernetesRawScriptPodCreator>().As<IKubernetesRawScriptPodCreator>().SingleInstance();
             builder.RegisterType<KubernetesPodLogService>().As<IKubernetesPodLogService>().SingleInstance();
             builder.RegisterType<ScriptPodSinceTimeStore>().As<IScriptPodSinceTimeStore>().SingleInstance();
-            builder.RegisterType<ScriptPodLogEncryptionKeyProvider>().As<IScriptPodLogEncryptionKeyProvider>().SingleInstance();
             builder.RegisterType<TentacleScriptLogProvider>().As<ITentacleScriptLogProvider>().SingleInstance();
+            
+            builder.RegisterType<ConfigMapKeyValueStore>().SingleInstance();
+            
+            builder.RegisterType<KubernetesMachineEncryptionKeyProvider>().As<IKubernetesMachineEncryptionKeyProvider>().SingleInstance();
+            builder.RegisterType<KubernetesMachineKeyEncryptor>().As<IKubernetesMachineKeyEncryptor>().SingleInstance();
+            builder.RegisterType<ScriptPodLogEncryptionKeyProvider>().As<IScriptPodLogEncryptionKeyProvider>().SingleInstance();
+            builder.RegisterType<ScriptPodLogEncryptionKeyGenerator>().As<IScriptPodLogEncryptionKeyGenerator>().SingleInstance();
 
             builder.RegisterType<KubernetesPodMonitorTask>().As<IKubernetesPodMonitorTask>().As<IBackgroundTask>().SingleInstance();
             builder.RegisterType<KubernetesPodMonitor>().As<IKubernetesPodMonitor>().As<IKubernetesPodStatusProvider>().SingleInstance();

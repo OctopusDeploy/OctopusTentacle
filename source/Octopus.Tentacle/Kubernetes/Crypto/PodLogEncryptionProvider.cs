@@ -6,7 +6,7 @@ using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Utilities.Encoders;
 
-namespace Octopus.Tentacle.Kubernetes
+namespace Octopus.Tentacle.Kubernetes.Crypto
 {
     public interface IPodLogEncryptionProvider
     {

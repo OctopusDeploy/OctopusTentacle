@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
 using Octopus.Tentacle.Kubernetes;
+using Octopus.Tentacle.Kubernetes.Crypto;
 using Octopus.Tentacle.Kubernetes.Synchronisation;
 using Octopus.Tentacle.Maintenance;
 using Octopus.Tentacle.Scripts;

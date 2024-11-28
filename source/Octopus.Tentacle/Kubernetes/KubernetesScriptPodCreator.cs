@@ -14,6 +14,7 @@ using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
+using Octopus.Tentacle.Kubernetes.Crypto;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Util;
 using Octopus.Tentacle.Variables;
@@ -78,7 +79,7 @@ namespace Octopus.Tentacle.Kubernetes
                        log))
             {
                 //Write the log encryption key here
-                scriptPodLogEncryptionKeyProvider.WriteEncryptionKeyfileToWorkspace(command.ScriptTicket);
+                await scriptPodLogEncryptionKeyProvider.WriteEncryptionKeyfileToWorkspace(command.ScriptTicket, cancellationToken);
                 
                 //Possibly create the image pull secret name
                 var imagePullSecretName = await CreateImagePullSecret(command, cancellationToken);

@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Kubernetes;
+using Octopus.Tentacle.Kubernetes.Configuration;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Configuration.Instances

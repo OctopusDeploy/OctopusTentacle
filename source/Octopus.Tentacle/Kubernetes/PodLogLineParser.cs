@@ -1,5 +1,6 @@
 using System;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Kubernetes.Crypto;
 
 namespace Octopus.Tentacle.Kubernetes
 {

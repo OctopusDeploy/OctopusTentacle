@@ -7,6 +7,7 @@ using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
+using Octopus.Tentacle.Kubernetes.Crypto;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Kubernetes

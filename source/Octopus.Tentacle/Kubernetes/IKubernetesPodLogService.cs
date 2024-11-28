@@ -9,6 +9,7 @@ using k8s.Autorest;
 using k8s.Models;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Kubernetes.Crypto;
 
 namespace Octopus.Tentacle.Kubernetes
 {
@@ -120,7 +121,8 @@ namespace Octopus.Tentacle.Kubernetes
             async Task<(IReadOnlyCollection<ProcessOutput> Outputs, long NextSequenceNumber, int? ExitCode)> ReadPodLogsFromStream(Stream stream)
             {
                 using var reader = new StreamReader(stream);
-                var encryptionProvider = PodLogEncryptionProvider.Create(scriptPodLogEncryptionKeyProvider.GetEncryptionKey(scriptTicket));
+                var encryptionKey = await scriptPodLogEncryptionKeyProvider.GetEncryptionKey(scriptTicket, CancellationToken.None);
+                var encryptionProvider = PodLogEncryptionProvider.Create(encryptionKey);
                 return await PodLogReader.ReadPodLogs(lastLogSequence, reader, encryptionProvider);
             }
         }

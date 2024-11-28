@@ -1,38 +1,48 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Security.Cryptography;
+using System.Threading;
+using System.Threading.Tasks;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Scripts;
 
-namespace Octopus.Tentacle.Kubernetes
+namespace Octopus.Tentacle.Kubernetes.Crypto
 {
     public interface IScriptPodLogEncryptionKeyProvider
     {
-        void WriteEncryptionKeyfileToWorkspace(ScriptTicket scriptTicket);
-        byte[] GetEncryptionKey(ScriptTicket scriptTicket);
+        Task WriteEncryptionKeyfileToWorkspace(ScriptTicket scriptTicket, CancellationToken cancellationToken);
+        Task<byte[]> GetEncryptionKey(ScriptTicket scriptTicket, CancellationToken cancellationToken);
         void Delete(ScriptTicket scriptTicket);
     }
 
     public class ScriptPodLogEncryptionKeyProvider : IScriptPodLogEncryptionKeyProvider
     {
+        const int KeyLengthInBytes = 32;
         const string Filename = "keyfile";
         readonly IScriptWorkspaceFactory scriptWorkspaceFactory;
+        readonly IScriptPodLogEncryptionKeyGenerator encryptionKeyGenerator;
 
         readonly ConcurrentDictionary<ScriptTicket, byte[]> encryptionKeyCache = new();
 
-        public ScriptPodLogEncryptionKeyProvider(IScriptWorkspaceFactory scriptWorkspaceFactory)
+        public ScriptPodLogEncryptionKeyProvider(IScriptWorkspaceFactory scriptWorkspaceFactory, IScriptPodLogEncryptionKeyGenerator encryptionKeyGenerator)
         {
             this.scriptWorkspaceFactory = scriptWorkspaceFactory;
+            this.encryptionKeyGenerator = encryptionKeyGenerator;
         }
 
-        public void WriteEncryptionKeyfileToWorkspace(ScriptTicket scriptTicket)
+        public async Task WriteEncryptionKeyfileToWorkspace(ScriptTicket scriptTicket, CancellationToken cancellationToken)
         {
             if (encryptionKeyCache.ContainsKey(scriptTicket))
             {
                 throw new PodLogEncryptionKeyException($"An encryption key already exists for script {scriptTicket.TaskId}");
             }
+            
+            var workspace = scriptWorkspaceFactory.GetWorkspace(scriptTicket);
+            await GenerateAndWriteEncryptionKeyfileToWorkspace(scriptTicket, workspace, cancellationToken);
+        }
 
-            var encryptionKeyBytes = GenerateEncryptionKeyBytes();
+        async Task<byte[]> GenerateAndWriteEncryptionKeyfileToWorkspace(ScriptTicket scriptTicket, IScriptWorkspace workspace,CancellationToken cancellationToken)
+        {
+            var encryptionKeyBytes = await encryptionKeyGenerator.GenerateKey(scriptTicket, KeyLengthInBytes, cancellationToken);
             if (!encryptionKeyCache.TryAdd(scriptTicket, encryptionKeyBytes))
             {
                 throw new PodLogEncryptionKeyException($"Failed to store encryption key in memory cache for script {scriptTicket.TaskId}");
@@ -40,9 +50,9 @@ namespace Octopus.Tentacle.Kubernetes
 
             try
             {
-                var workspace = scriptWorkspaceFactory.GetWorkspace(scriptTicket);
                 var fileContents = Convert.ToBase64String(encryptionKeyBytes);
                 workspace.WriteFile(Filename, fileContents);
+                return encryptionKeyBytes;
             }
             catch (Exception e)
             {
@@ -50,19 +60,20 @@ namespace Octopus.Tentacle.Kubernetes
             }
         }
 
-        public byte[] GetEncryptionKey(ScriptTicket scriptTicket)
+        public async Task<byte[]> GetEncryptionKey(ScriptTicket scriptTicket, CancellationToken cancellationToken)
         {
             if (encryptionKeyCache.TryGetValue(scriptTicket, out var keyBytes))
             {
                 return keyBytes;
             }
 
-            //read from file
             var workspace = scriptWorkspaceFactory.GetWorkspace(scriptTicket);
             var fileContents = workspace.TryReadFile(Filename);
+            //If we can't load the encryption key from the filesystem
             if (fileContents == null)
             {
-                throw new PodLogEncryptionKeyException($"Failed to load encryption key from workspace for script {scriptTicket.TaskId}");
+                //regenerate the encryption key, write to the filesystem and return the key
+                return await GenerateAndWriteEncryptionKeyfileToWorkspace(scriptTicket, workspace, cancellationToken);
             }
 
             if (string.IsNullOrWhiteSpace(fileContents))
@@ -83,22 +94,6 @@ namespace Octopus.Tentacle.Kubernetes
         {
             encryptionKeyCache.TryRemove(scriptTicket, out _);
         }
-
-#if NETFRAMEWORK
-        static readonly RNGCryptoServiceProvider RandomCryptoServiceProvider = new RNGCryptoServiceProvider();
-#endif
-        static byte[] GenerateEncryptionKeyBytes()
-        {
-            //A 32-byte key results in AES-256 being used
-            const int keyLength = 32;
-#if NETFRAMEWORK
-            var buffer = new byte[keyLength];
-            RandomCryptoServiceProvider.GetBytes(buffer);
-            return buffer;
-#else
-            return RandomNumberGenerator.GetBytes(keyLength);
-#endif
-        }
     }
 
     public class PodLogEncryptionKeyException : Exception
@@ -106,7 +101,7 @@ namespace Octopus.Tentacle.Kubernetes
         public PodLogEncryptionKeyException(string message) : base(message)
         {
         }
-        
+
         public PodLogEncryptionKeyException(string message, Exception innerException) : base(message, innerException)
         {
         }
