@@ -120,11 +120,14 @@ func CreateCipher(workspaceDir string) (cipher.AEAD, error) {
 	}
 
 	//the key is encoded in the file in Base64
-	key := make([]byte, base64.StdEncoding.EncodedLen(len(fileBytes)))
-	_, err = base64.StdEncoding.Decode(key, fileBytes)
+	key := make([]byte, base64.StdEncoding.DecodedLen(len(fileBytes)))
+	length, err := base64.StdEncoding.Decode(key, fileBytes)
 	if err != nil {
 		return nil, err
 	}
+
+	// use the decoded length to slice the array to the correct length (removes padding bytes)
+	key = key[:length]
 
 	// Ensure the key length is valid for AES (16, 24, or 32 bytes for AES-128, AES-192, or AES-256)
 	keyLength := len(key)
