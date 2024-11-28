@@ -34,10 +34,6 @@ namespace Octopus.Tentacle.Kubernetes
             builder.RegisterType<ScriptPodSinceTimeStore>().As<IScriptPodSinceTimeStore>().SingleInstance();
             builder.RegisterType<TentacleScriptLogProvider>().As<ITentacleScriptLogProvider>().SingleInstance();
             
-            builder.RegisterType<ConfigMapKeyValueStore>().SingleInstance();
-            
-            builder.RegisterType<KubernetesMachineEncryptionKeyProvider>().As<IKubernetesMachineEncryptionKeyProvider>().SingleInstance();
-            builder.RegisterType<KubernetesMachineKeyEncryptor>().As<IKubernetesMachineKeyEncryptor>().SingleInstance();
             builder.RegisterType<ScriptPodLogEncryptionKeyProvider>().As<IScriptPodLogEncryptionKeyProvider>().SingleInstance();
             builder.RegisterType<ScriptPodLogEncryptionKeyGenerator>().As<IScriptPodLogEncryptionKeyGenerator>().SingleInstance();
 
