@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
+using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Scripts;
 
@@ -20,13 +21,15 @@ namespace Octopus.Tentacle.Kubernetes.Crypto
         const string Filename = "keyfile";
         readonly IScriptWorkspaceFactory scriptWorkspaceFactory;
         readonly IScriptPodLogEncryptionKeyGenerator encryptionKeyGenerator;
+        readonly ISystemLog log;
 
         readonly ConcurrentDictionary<ScriptTicket, byte[]> encryptionKeyCache = new();
 
-        public ScriptPodLogEncryptionKeyProvider(IScriptWorkspaceFactory scriptWorkspaceFactory, IScriptPodLogEncryptionKeyGenerator encryptionKeyGenerator)
+        public ScriptPodLogEncryptionKeyProvider(IScriptWorkspaceFactory scriptWorkspaceFactory, IScriptPodLogEncryptionKeyGenerator encryptionKeyGenerator, ISystemLog log)
         {
             this.scriptWorkspaceFactory = scriptWorkspaceFactory;
             this.encryptionKeyGenerator = encryptionKeyGenerator;
+            this.log = log;
         }
 
         public async Task WriteEncryptionKeyfileToWorkspace(ScriptTicket scriptTicket, CancellationToken cancellationToken)
@@ -42,6 +45,7 @@ namespace Octopus.Tentacle.Kubernetes.Crypto
 
         async Task<byte[]> GenerateAndWriteEncryptionKeyfileToWorkspace(ScriptTicket scriptTicket, IScriptWorkspace workspace,CancellationToken cancellationToken)
         {
+            log.Verbose($"Generating log encryption key for script pod {scriptTicket.TaskId}");
             var encryptionKeyBytes = await encryptionKeyGenerator.GenerateKey(scriptTicket, KeyLengthInBytes, cancellationToken);
             if (!encryptionKeyCache.TryAdd(scriptTicket, encryptionKeyBytes))
             {
