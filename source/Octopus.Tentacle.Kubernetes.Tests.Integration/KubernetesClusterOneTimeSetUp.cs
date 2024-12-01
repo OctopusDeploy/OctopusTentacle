@@ -36,6 +36,10 @@ public class KubernetesClusterOneTimeSetUp
             var tag = Environment.GetEnvironmentVariable("KubernetesAgentTests_ImageTag");
             imageAndTag = $"docker.packages.octopushq.com/octopusdeploy/kubernetes-agent-tentacle:{tag}";
         }
+        else if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("KubernetesAgentTests_ImageAndTag")))
+        {
+            imageAndTag = Environment.GetEnvironmentVariable("KubernetesAgentTests_ImageAndTag");
+        }
         else if(bool.TryParse(Environment.GetEnvironmentVariable("KubernetesAgentTests_UseLatestLocalImage"), out var useLocal) && useLocal)
         {
             //if we should use the latest locally build image, load the tag from docker and load it into kind

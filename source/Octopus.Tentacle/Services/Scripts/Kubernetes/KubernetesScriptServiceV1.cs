@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
 using Octopus.Tentacle.Kubernetes;
+using Octopus.Tentacle.Kubernetes.Crypto;
 using Octopus.Tentacle.Kubernetes.Synchronisation;
 using Octopus.Tentacle.Maintenance;
 using Octopus.Tentacle.Scripts;
@@ -23,6 +24,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
         readonly IKubernetesPodLogService podLogService;
         readonly ITentacleScriptLogProvider scriptLogProvider;
         readonly IScriptPodSinceTimeStore scriptPodSinceTimeStore;
+        readonly IScriptPodLogEncryptionKeyProvider scriptPodLogEncryptionKeyProvider;
         readonly IKeyedSemaphore<ScriptTicket> keyedSemaphore;
 
         public KubernetesScriptServiceV1(
@@ -34,6 +36,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             IKubernetesPodLogService podLogService,
             ITentacleScriptLogProvider scriptLogProvider,
             IScriptPodSinceTimeStore scriptPodSinceTimeStore,
+            IScriptPodLogEncryptionKeyProvider scriptPodLogEncryptionKeyProvider,
             IKeyedSemaphore<ScriptTicket> keyedSemaphore)
         {
             this.podService = podService;
@@ -44,6 +47,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             this.podLogService = podLogService;
             this.scriptLogProvider = scriptLogProvider;
             this.scriptPodSinceTimeStore = scriptPodSinceTimeStore;
+            this.scriptPodLogEncryptionKeyProvider = scriptPodLogEncryptionKeyProvider;
             this.keyedSemaphore = keyedSemaphore;
         }
 
@@ -123,6 +127,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
 
             scriptLogProvider.Delete(command.ScriptTicket);
             scriptPodSinceTimeStore.Delete(command.ScriptTicket);
+            scriptPodLogEncryptionKeyProvider.Delete(command.ScriptTicket);
 
             if (!KubernetesConfig.DisableAutomaticPodCleanup)
                 await podService.DeleteIfExists(command.ScriptTicket, cancellationToken);

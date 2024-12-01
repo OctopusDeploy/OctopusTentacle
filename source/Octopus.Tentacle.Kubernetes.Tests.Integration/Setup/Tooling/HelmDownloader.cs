@@ -9,7 +9,7 @@ namespace Octopus.Tentacle.Kubernetes.Tests.Integration.Setup.Tooling;
 
 public class HelmDownloader : ToolDownloader
 {
-    const string LatestVersion = "v3.14.3";
+    const string LatestVersion = "v3.16.3";
     public HelmDownloader( ILogger logger)
         : base("helm", logger)
     {
