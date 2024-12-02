@@ -31,6 +31,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             result.Error.Should().Contain("delimited").And.Contain(line);
         }
 
+        [TestCase("1 |e|b|c|d", Reason = "Not a date")]
         [TestCase("1 |b|c|d", Reason = "Not a date")]
         public void FirstPartIsNotALineDate(string line)
         {
@@ -38,30 +39,45 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             result.Error.Should().Contain("log timestamp").And.Contain(line);
         }
 
+        [TestCase("2024-04-03T06:03:10.501025551Z |e|b|c|d", Reason = "Not a line number")]
+        [TestCase("2024-04-03T06:03:10.501025551Z |p|b|c|d", Reason = "Not a line number")]
         [TestCase("2024-04-03T06:03:10.501025551Z |b|c|d", Reason = "Not a line number")]
-        public void SecondPartIsNotALineNumber(string line)
+        [TestCase("2024-04-03T06:03:10.501025551Z |p|1|c|d", Reason = "Not a line number")]
+        public void ThirdPartIsNotALineNumber(string line)
         {
             var result = PodLogLineParser.ParseLine(line, encryptionProvider).Should().BeOfType<InvalidPodLogLineParseResult>().Subject;
             result.Error.Should().Contain("line number").And.Contain(line);
         }
 
+        [TestCase("2024-04-03T06:03:10.501025551Z |e|1|c|d", Reason = "Not a valid source")]
         [TestCase("2024-04-03T06:03:10.501025551Z |1|c|d", Reason = "Not a valid source")]
-        public void ThirdPartIsNotAValidSource(string line)
+        public void FourthPartIsNotAValidSource(string line)
         {
             var result = PodLogLineParser.ParseLine(line, encryptionProvider).Should().BeOfType<InvalidPodLogLineParseResult>().Subject;
             result.Error.Should().Contain("log level").And.Contain(line);
         }
 
-        [Test]
-        public void SimpleMessage()
+        [TestCase("2024-04-03T06:03:10.501025551Z |e|123|stdout|This is the message", true)]
+        //This is the previous log message format where we didn't have the encryption control section
+        [TestCase("2024-04-03T06:03:10.501025551Z |123|stdout|This is the message", false)]
+        public void SimpleMessage(string line, bool isLogMessageEncrypted)
         {
-            var logLine = PodLogLineParser.ParseLine($"2024-04-03T06:03:10.501025551Z |123|stdout|This is the message", encryptionProvider)
+            var logLine = PodLogLineParser.ParseLine(line, encryptionProvider)
                 .Should().BeOfType<ValidPodLogLineParseResult>().Subject.LogLine;
 
             logLine.LineNumber.Should().Be(123);
             logLine.Source.Should().Be(ProcessOutputSource.StdOut);
             logLine.Message.Should().Be("This is the message");
             logLine.Occurred.Should().BeCloseTo(new DateTimeOffset(2024, 4, 3, 6, 3, 10, 501, TimeSpan.Zero), TimeSpan.FromMilliseconds(1));
+
+            if (isLogMessageEncrypted)
+            {
+                encryptionProvider.Received(1).Decrypt(Arg.Is("This is the message"));
+            }
+            else
+            {
+                encryptionProvider.DidNotReceive().Decrypt(Arg.Is("This is the message"));
+            }
         }
 
         [Test]

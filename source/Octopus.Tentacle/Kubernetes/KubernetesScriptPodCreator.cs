@@ -81,8 +81,8 @@ namespace Octopus.Tentacle.Kubernetes
                        log))
             {
                 //Write the log encryption key here
-                await scriptPodLogEncryptionKeyProvider.WriteEncryptionKeyfileToWorkspace(command.ScriptTicket, cancellationToken);
-
+                await scriptPodLogEncryptionKeyProvider.GenerateAndWriteEncryptionKeyfileToWorkspace(command.ScriptTicket, cancellationToken);
+                
                 //Possibly create the image pull secret name
                 var imagePullSecretName = await CreateImagePullSecret(command, cancellationToken);
 
@@ -337,7 +337,7 @@ namespace Octopus.Tentacle.Kubernetes
                 VolumeMounts = new List<V1VolumeMount>
                 {
                     new(homeDir, "tentacle-home"),
-                    new("/root/.config/helm/registry", "helm_registry_config_dir") // this is an empty directory populated by the init container.
+                    new("/root/.config/helm/registry/", "helm_registry_config_dir") // this is an empty directory populated by the init container.
                 },
                 Env = new List<V1EnvVar>
                 {

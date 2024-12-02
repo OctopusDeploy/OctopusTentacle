@@ -31,7 +31,7 @@ namespace Octopus.Tentacle.Kubernetes.Crypto
             var pdb = new Pkcs5S2ParametersGenerator(new Sha256Digest());
             
             //we use the machine encryption key as the password and the script ticket is the salt
-            pdb.Init(PbeParametersGenerator.Pkcs5PasswordToBytes(Encoding.ASCII.GetChars(machineEncryptionKey)), Encoding.UTF8.GetBytes(scriptTicket.TaskId), 1000);
+            pdb.Init(machineEncryptionKey, Encoding.UTF8.GetBytes(scriptTicket.TaskId), 1000);
             var key = (KeyParameter)pdb.GenerateDerivedMacParameters(keySizeInBytes * 8);
 
             return key.GetKey();

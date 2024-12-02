@@ -105,7 +105,7 @@ namespace Octopus.Tentacle.Kubernetes
                 {
                     //if we can't read the pod log encryption key for a while
                     var message = $"Failed to read pod log encryption key. No new pod logs will be read.";
-                    tentacleScriptLog.Verbose(message);
+                    tentacleScriptLog.Warning(message);
                     Log.Warn(ex, message);
 
                     return (new List<ProcessOutput>(), lastLogSequence, null);
