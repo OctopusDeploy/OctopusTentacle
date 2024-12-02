@@ -10,7 +10,7 @@ namespace Octopus.Tentacle.Kubernetes.Crypto
 {
     public interface IScriptPodLogEncryptionKeyProvider
     {
-        Task WriteEncryptionKeyfileToWorkspace(ScriptTicket scriptTicket, CancellationToken cancellationToken);
+        Task GenerateAndWriteEncryptionKeyfileToWorkspace(ScriptTicket scriptTicket, CancellationToken cancellationToken);
         Task<byte[]> GetEncryptionKey(ScriptTicket scriptTicket, CancellationToken cancellationToken);
         void Delete(ScriptTicket scriptTicket);
     }
@@ -32,7 +32,7 @@ namespace Octopus.Tentacle.Kubernetes.Crypto
             this.log = log;
         }
 
-        public async Task WriteEncryptionKeyfileToWorkspace(ScriptTicket scriptTicket, CancellationToken cancellationToken)
+        public async Task GenerateAndWriteEncryptionKeyfileToWorkspace(ScriptTicket scriptTicket, CancellationToken cancellationToken)
         {
             if (encryptionKeyCache.ContainsKey(scriptTicket))
             {
