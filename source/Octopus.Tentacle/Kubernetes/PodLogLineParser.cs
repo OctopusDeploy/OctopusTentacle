@@ -41,14 +41,14 @@ namespace Octopus.Tentacle.Kubernetes
             Error = error;
         }
     }
-    
+
     public class EndOfStreamPodLogLineParseResult : ValidPodLogLineParseResult
     {
         public override LogLineType Type => LogLineType.EndOfStream;
 
         public int ExitCode { get; }
 
-        public EndOfStreamPodLogLineParseResult( PodLogLine logLine, int exitCode) : base(logLine)
+        public EndOfStreamPodLogLineParseResult(PodLogLine logLine, int exitCode) : base(logLine)
         {
             ExitCode = exitCode;
         }
@@ -62,23 +62,42 @@ namespace Octopus.Tentacle.Kubernetes
 
         public static PodLogLineParseResult ParseLine(string line, IPodLogEncryptionProvider encryptionProvider)
         {
-            var logParts = line.Split(new[] { '|' }, 4);
-            if (logParts.Length != 4)
+            var initialParts = line.Split(new[] { '|' }, 2);
+
+            var datePart = initialParts[0];
+
+            var remainingMessage = initialParts[1];
+
+            //get the first 2 control chars and check
+            var encryptionControl = remainingMessage.Substring(0, 2);
+
+            var isEncryptedMessage = false;
+            //there is an encryption control part at the start of the remaining message
+            if (encryptionControl.Equals("e|", StringComparison.Ordinal) ||
+                encryptionControl.Equals("p|", StringComparison.Ordinal))
+            {
+                isEncryptedMessage = encryptionControl[0] == 'e';
+
+                //we slice the encryption control from the start of the message, then parse as normal
+                remainingMessage = remainingMessage.Substring(2);
+            }
+
+            var logParts = remainingMessage.Split(new[] { '|' }, 3);
+            if (logParts.Length != 3)
             {
                 return new InvalidPodLogLineParseResult($"Pod log line is not correctly pipe-delimited: '{line}'");
             }
 
-            var datePart = logParts[0];
-            var lineNumberPart = logParts[1];
-            var outputSourcePart = logParts[2];
-            var encryptedMessagePart = logParts[3];
+            var lineNumberPart = logParts[0];
+            var outputSourcePart = logParts[1];
+            var messagePart = logParts[2];
 
             if (!DateTimeOffset.TryParse(datePart, out var occurred))
             {
                 return new InvalidPodLogLineParseResult($"Pod log timestamp '{datePart}' is invalid: '{line}'");
             }
 
-            if (!int.TryParse(lineNumberPart, out int lineNumber))
+            if (!int.TryParse(lineNumberPart, out var lineNumber))
             {
                 return new InvalidPodLogLineParseResult($"Pod log line number '{lineNumberPart}' is invalid: '{line}'");
             }
@@ -88,22 +107,25 @@ namespace Octopus.Tentacle.Kubernetes
                 return new InvalidPodLogLineParseResult($"Pod log level '{outputSourcePart}' is invalid: '{line}'");
             }
 
-            //the log messages are being returned from the pods encrypted, decrypt them here
-            var decryptedMessagePath = encryptionProvider.Decrypt(encryptedMessagePart);
-            if (decryptedMessagePath.StartsWith(EndOfStreamMarkerPrefix))
+            //if the log messages are being returned from the pods encrypted, decrypt them here
+            var logMessage = isEncryptedMessage
+                ? encryptionProvider.Decrypt(messagePart)
+                : messagePart;
+
+            if (logMessage.StartsWith(EndOfStreamMarkerPrefix))
             {
                 try
                 {
-                    var exitCode = int.Parse(decryptedMessagePath.Split(new[] { EndOfStreamMarkerExitCodeDelimiter }, StringSplitOptions.None)[1]);
-                    return new EndOfStreamPodLogLineParseResult(new PodLogLine(lineNumber, source, decryptedMessagePath, occurred), exitCode);
+                    var exitCode = int.Parse(logMessage.Split(new[] { EndOfStreamMarkerExitCodeDelimiter }, StringSplitOptions.None)[1]);
+                    return new EndOfStreamPodLogLineParseResult(new PodLogLine(lineNumber, source, logMessage, occurred), exitCode);
                 }
                 catch (Exception)
                 {
                     return new InvalidPodLogLineParseResult($"Pod log end of stream marker is invalid: '{line}'");
                 }
             }
-            
-            return new ValidPodLogLineParseResult(new PodLogLine(lineNumber, source, decryptedMessagePath, occurred));
+
+            return new ValidPodLogLineParseResult(new PodLogLine(lineNumber, source, logMessage, occurred));
         }
     }
 }

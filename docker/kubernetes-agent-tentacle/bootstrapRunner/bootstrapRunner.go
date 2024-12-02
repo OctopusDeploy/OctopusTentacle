@@ -106,7 +106,8 @@ func Write(stream string, text string, counter *SafeCounter, gcm cipher.AEAD) {
 
 	ciphertext := gcm.Seal(nonce, nonce, []byte(text), nil)
 
-	fmt.Printf("|%d|%s|%x\n", counter.Value, stream, ciphertext)
+	// the |e| indicates the line is encrypted (if we every supported plain, we'd put |p| here)
+	fmt.Printf("|e|%d|%s|%x\n", counter.Value, stream, ciphertext)
 	counter.Value++
 
 	counter.Mutex.Unlock()

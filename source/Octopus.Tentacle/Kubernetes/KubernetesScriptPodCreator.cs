@@ -79,7 +79,7 @@ namespace Octopus.Tentacle.Kubernetes
                        log))
             {
                 //Write the log encryption key here
-                await scriptPodLogEncryptionKeyProvider.WriteEncryptionKeyfileToWorkspace(command.ScriptTicket, cancellationToken);
+                await scriptPodLogEncryptionKeyProvider.GenerateAndWriteEncryptionKeyfileToWorkspace(command.ScriptTicket, cancellationToken);
                 
                 //Possibly create the image pull secret name
                 var imagePullSecretName = await CreateImagePullSecret(command, cancellationToken);

@@ -52,16 +52,28 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             result.Error.Should().Contain("log level").And.Contain(line);
         }
 
-        [Test]
-        public void SimpleMessage()
+        [TestCase("2024-04-03T06:03:10.501025551Z |e|123|stdout|This is the message", true)]
+        [TestCase("2024-04-03T06:03:10.501025551Z |p|123|stdout|This is the message", false)]
+        //This is the previous log message format where we didn't have the encryption control section
+        [TestCase("2024-04-03T06:03:10.501025551Z |123|stdout|This is the message", false)]
+        public void SimpleMessage(string line, bool isLogMessageEncrypted)
         {
-            var logLine = PodLogLineParser.ParseLine($"2024-04-03T06:03:10.501025551Z |123|stdout|This is the message", encryptionProvider)
+            var logLine = PodLogLineParser.ParseLine(line, encryptionProvider)
                 .Should().BeOfType<ValidPodLogLineParseResult>().Subject.LogLine;
 
             logLine.LineNumber.Should().Be(123);
             logLine.Source.Should().Be(ProcessOutputSource.StdOut);
             logLine.Message.Should().Be("This is the message");
             logLine.Occurred.Should().BeCloseTo(new DateTimeOffset(2024, 4, 3, 6, 3, 10, 501, TimeSpan.Zero), TimeSpan.FromMilliseconds(1));
+
+            if (isLogMessageEncrypted)
+            {
+                encryptionProvider.Received(1).Decrypt(Arg.Is("This is the message"));
+            }
+            else
+            {
+                encryptionProvider.DidNotReceive().Decrypt(Arg.Is("This is the message"));
+            }
         }
 
         [Test]
