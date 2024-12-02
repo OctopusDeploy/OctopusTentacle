@@ -77,10 +77,9 @@ namespace Octopus.Tentacle.Kubernetes
 
             var isEncryptedMessage = false;
             //there is an encryption control part at the start of the remaining message
-            if (encryptionControl.Equals("e|", StringComparison.Ordinal) ||
-                encryptionControl.Equals("p|", StringComparison.Ordinal))
+            if (encryptionControl.Equals("e|", StringComparison.Ordinal))
             {
-                isEncryptedMessage = encryptionControl[0] == 'e';
+                isEncryptedMessage = true;
 
                 //we slice the encryption control from the start of the message, then parse as normal
                 remainingMessage = remainingMessage.Substring(2);
