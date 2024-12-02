@@ -63,6 +63,10 @@ namespace Octopus.Tentacle.Kubernetes
         public static PodLogLineParseResult ParseLine(string line, IPodLogEncryptionProvider encryptionProvider)
         {
             var initialParts = line.Split(new[] { '|' }, 2);
+            if (initialParts.Length != 2)
+            {
+                return new InvalidPodLogLineParseResult($"Pod log line is not correctly pipe-delimited: '{line}'");
+            }
 
             var datePart = initialParts[0];
 
