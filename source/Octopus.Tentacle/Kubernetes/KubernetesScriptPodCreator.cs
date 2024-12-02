@@ -234,7 +234,7 @@ namespace Octopus.Tentacle.Kubernetes
 
         protected virtual async Task<IList<V1Container>> CreateInitContainers(StartKubernetesScriptCommandV1 command, string podName, string homeDir, string workspacePath)
         {
-            return new List<V1Container> { await helmUpgradeInitContainer.Create(podName, "secretName", "helm-registry-config-dir") };
+            return new List<V1Container> { await helmUpgradeInitContainer.Create(podName, "agent-upgrade", "helm-registry-config-dir") };
         }
 
         IList<V1Volume> CreateVolumes(StartKubernetesScriptCommandV1 command)
@@ -337,7 +337,7 @@ namespace Octopus.Tentacle.Kubernetes
                 VolumeMounts = new List<V1VolumeMount>
                 {
                     new(homeDir, "tentacle-home"),
-                    new("/root/.config/helm/registry/", "helm_registry_config_dir") // this is an empty directory populated by the init container.
+                    new("/root/.config/helm/registry/", "helm-registry-config-dir") // this is an empty directory populated by the init container.
                 },
                 Env = new List<V1EnvVar>
                 {
