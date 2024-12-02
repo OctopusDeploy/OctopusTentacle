@@ -23,7 +23,7 @@ namespace Octopus.Tentacle.Kubernetes
             //need to assume the secret has been mounted already
             var container = new V1Container
             {
-                Name = $"{podName}-init",
+                Name = $"{podName}-helm-upgrade-init",
                 Image = await containerResolver.GetContainerImageForCluster(),
                 ImagePullPolicy = KubernetesConfig.ScriptPodPullPolicy,
                 Command = new List<string> { "sh", "-c", GetInitExecutionScript(Path.Combine(secretMountLocation, "config.json"), targetDirectoryName) },

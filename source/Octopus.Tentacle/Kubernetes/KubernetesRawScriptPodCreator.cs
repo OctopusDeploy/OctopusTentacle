@@ -41,7 +41,7 @@ namespace Octopus.Tentacle.Kubernetes
         {
             var container = new V1Container
             {
-                Name = $"{podName}-init",
+                Name = $"{podName}-raw-script-init",
                 Image = command.PodImageConfiguration?.Image ?? await containerResolver.GetContainerImageForCluster(),
                 ImagePullPolicy = KubernetesConfig.ScriptPodPullPolicy,
                 Command = new List<string> { "sh", "-c", GetInitExecutionScript("/nfs-mount", homeDir, workspacePath) },
