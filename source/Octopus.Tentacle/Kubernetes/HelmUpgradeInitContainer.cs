@@ -44,8 +44,10 @@ namespace Octopus.Tentacle.Kubernetes
         {
             // assume the target volume gets mounted to ~/.config/helm/registry in the execution container
             return $@"
-                    cp -r ""{sourceFilename}"" ""{targetDirectoryName}"";
-                    ";
+                    if [ -e {sourceFilename} ]
+                    then
+                        cp -r ""{sourceFilename}"" ""{targetDirectoryName}""
+                    fi";
         }
     }
 }
