@@ -38,7 +38,6 @@ namespace Octopus.Tentacle.Kubernetes
         readonly IHomeConfiguration homeConfiguration;
         readonly KubernetesPhysicalFileSystem kubernetesPhysicalFileSystem;
         readonly IScriptPodLogEncryptionKeyProvider scriptPodLogEncryptionKeyProvider;
-        readonly HelmUpgradeInitContainer helmUpgradeInitContainer;
 
         public KubernetesScriptPodCreator(
             IKubernetesPodService podService,
@@ -50,7 +49,7 @@ namespace Octopus.Tentacle.Kubernetes
             ITentacleScriptLogProvider scriptLogProvider,
             IHomeConfiguration homeConfiguration,
             KubernetesPhysicalFileSystem kubernetesPhysicalFileSystem,
-            IScriptPodLogEncryptionKeyProvider scriptPodLogEncryptionKeyProvider, HelmUpgradeInitContainer helmUpgradeInitContainer)
+            IScriptPodLogEncryptionKeyProvider scriptPodLogEncryptionKeyProvider)
         {
             this.podService = podService;
             this.podMonitor = podMonitor;
@@ -62,7 +61,6 @@ namespace Octopus.Tentacle.Kubernetes
             this.homeConfiguration = homeConfiguration;
             this.kubernetesPhysicalFileSystem = kubernetesPhysicalFileSystem;
             this.scriptPodLogEncryptionKeyProvider = scriptPodLogEncryptionKeyProvider;
-            this.helmUpgradeInitContainer = helmUpgradeInitContainer;
         }
 
         public async Task CreatePod(StartKubernetesScriptCommandV1 command, IScriptWorkspace workspace, CancellationToken cancellationToken)
@@ -190,7 +188,7 @@ namespace Octopus.Tentacle.Kubernetes
                 .WhereNotNull()
                 .Select(secretName => new V1LocalObjectReference(secretName))
                 .ToList();
-
+             
             var pod = new V1Pod
             {
                 Metadata = new V1ObjectMeta
@@ -234,60 +232,47 @@ namespace Octopus.Tentacle.Kubernetes
 
         protected virtual async Task<IList<V1Container>> CreateInitContainers(StartKubernetesScriptCommandV1 command, string podName, string homeDir, string workspacePath)
         {
-            return new List<V1Container> { await helmUpgradeInitContainer.Create(podName, "agent-upgrade", "helm-registry-config-dir") };
+            await Task.CompletedTask;
+            return new List<V1Container>();
         }
 
-        IList<V1Volume> CreateVolumes(StartKubernetesScriptCommandV1 command)
-        {
-            var result = CreateVolumesForAgentUpgrade();
-            result.AddRange(CreateExecutionVolumes());
-
-            return result;
-        }
-        
-        protected virtual IList<V1Volume> CreateExecutionVolumes()
+        protected virtual IList<V1Volume> CreateVolumes(StartKubernetesScriptCommandV1 command)
         {
             return new List<V1Volume>
             {
-                new() {
+                new()
+                {
                     Name = "tentacle-home",
                     PersistentVolumeClaim = new V1PersistentVolumeClaimVolumeSource
                     {
                         ClaimName = KubernetesConfig.PodVolumeClaimName
                     }
-                }
-            };
-        }
-        
-        IList<V1Volume> CreateVolumesForAgentUpgrade()
-        {
-            return new List<V1Volume>
-            {
-                new()
-                {
-                    Name = "helm-registry-config-dir",
-                    EmptyDir = new V1EmptyDirVolumeSource()
                 },
-                new()
-                {
-                    Name = "agent-upgrade",
-                    Secret = new V1SecretVolumeSource
-                    {
-                        SecretName = "agent-upgrade-secret",
-                        Items = new List<V1KeyToPath>()
-                        {
-                            new()
-                            {
-                                Key = ".dockerconfigjson",
-                                Path = "config.json"
-                            }
-                        },
-                        Optional = true,
-                    }
-                }
+                CreateAgentUpgradeSecretVolume(),
             };
         }
-        
+
+        protected V1Volume CreateAgentUpgradeSecretVolume()
+        {
+            return new()
+            {
+                Name = "agent-upgrade",
+                Secret = new V1SecretVolumeSource
+                {
+                    SecretName = "agent-upgrade-secret",
+                    Items = new List<V1KeyToPath>()
+                    {
+                        new()
+                        {
+                            Key = ".dockerconfigjson",
+                            Path = "config.json"
+                        }
+                    },
+                    Optional = true,
+                },
+            };
+        }
+
         void LogVerboseToBothLogs(string message, InMemoryTentacleScriptLog tentacleScriptLog)
         {
             log.Verbose(message);
@@ -337,7 +322,7 @@ namespace Octopus.Tentacle.Kubernetes
                 VolumeMounts = new List<V1VolumeMount>
                 {
                     new(homeDir, "tentacle-home"),
-                    new("/root/.config/helm/registry/", "helm-registry-config-dir") // this is an empty directory populated by the init container.
+                    new ("/root/.config/helm/registry/", "agent-upgrade")
                 },
                 Env = new List<V1EnvVar>
                 {

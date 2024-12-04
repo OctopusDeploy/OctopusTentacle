@@ -30,9 +30,8 @@ namespace Octopus.Tentacle.Kubernetes
             ITentacleScriptLogProvider scriptLogProvider,
             IHomeConfiguration homeConfiguration,
             KubernetesPhysicalFileSystem kubernetesPhysicalFileSystem,
-            IScriptPodLogEncryptionKeyProvider scriptPodLogEncryptionKeyProvider,
-            HelmUpgradeInitContainer helmUpgradeInitContainer)
-            : base(podService, podMonitor, secretService, containerResolver, appInstanceSelector, log, scriptLogProvider, homeConfiguration, kubernetesPhysicalFileSystem, scriptPodLogEncryptionKeyProvider, helmUpgradeInitContainer)
+            IScriptPodLogEncryptionKeyProvider scriptPodLogEncryptionKeyProvider)
+            : base(podService, podMonitor, secretService, containerResolver, appInstanceSelector, log, scriptLogProvider, homeConfiguration, kubernetesPhysicalFileSystem, scriptPodLogEncryptionKeyProvider)
         {
             this.containerResolver = containerResolver;
         }
@@ -41,11 +40,11 @@ namespace Octopus.Tentacle.Kubernetes
         {
             var container = new V1Container
             {
-                Name = $"{podName}-raw-script-init",
+                Name = $"{podName}-init",
                 Image = command.PodImageConfiguration?.Image ?? await containerResolver.GetContainerImageForCluster(),
                 ImagePullPolicy = KubernetesConfig.ScriptPodPullPolicy,
                 Command = new List<string> { "sh", "-c", GetInitExecutionScript("/nfs-mount", homeDir, workspacePath) },
-                VolumeMounts = new List<V1VolumeMount> { new("/nfs-mount", "init-nfs-volume"), new(homeDir, "tentacle-home"), new ("/root/.config/helm/registry", "helm-registry-config-dir") },
+                VolumeMounts = new List<V1VolumeMount> { new("/nfs-mount", "init-nfs-volume"), new(homeDir, "tentacle-home") },
                 Resources = new V1ResourceRequirements
                 {
                     Requests = new Dictionary<string, ResourceQuantity>
@@ -67,7 +66,7 @@ namespace Octopus.Tentacle.Kubernetes
             };
         }
 
-        protected override IList<V1Volume> CreateExecutionVolumes()
+        protected override IList<V1Volume> CreateVolumes(StartKubernetesScriptCommandV1 command)
         {
             return new List<V1Volume>
             {
@@ -84,6 +83,7 @@ namespace Octopus.Tentacle.Kubernetes
                         ClaimName = KubernetesConfig.PodVolumeClaimName
                     }
                 },
+                CreateAgentUpgradeSecretVolume(),
             };
         }
 
