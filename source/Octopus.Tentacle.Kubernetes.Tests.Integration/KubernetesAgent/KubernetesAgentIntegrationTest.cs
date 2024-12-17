@@ -1,4 +1,5 @@
-﻿using Halibut;
+﻿using System;
+using Halibut;
 using Halibut.Diagnostics;
 using Halibut.Diagnostics.LogCreators;
 using Halibut.Logging;
@@ -12,7 +13,7 @@ using Octopus.Tentacle.Kubernetes.Tests.Integration.Tooling;
 using Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators;
 using Octopus.Tentacle.Tests.Integration.Common.Logging;
 
-namespace Octopus.Tentacle.Kubernetes.Tests.Integration;
+namespace Octopus.Tentacle.Kubernetes.Tests.Integration.KubernetesAgent;
 
 public abstract class KubernetesAgentIntegrationTest
 {

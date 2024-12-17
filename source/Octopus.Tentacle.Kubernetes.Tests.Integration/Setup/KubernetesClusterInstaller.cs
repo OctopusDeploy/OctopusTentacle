@@ -37,7 +37,7 @@ public class KubernetesClusterInstaller
 
     public async Task Install()
     {
-        var configFilePath = await WriteFileToTemporaryDirectory("kind-config.yaml");
+        var configFilePath = await WriteFileToTemporaryDirectory("kind-config-v1-31.yaml");
 
         var sw = new Stopwatch();
         sw.Restart();

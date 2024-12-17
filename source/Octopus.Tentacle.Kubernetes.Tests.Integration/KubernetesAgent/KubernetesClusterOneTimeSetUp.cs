@@ -1,7 +1,8 @@
-﻿using Octopus.Tentacle.Kubernetes.Tests.Integration.Setup;
+﻿using System;
+using Octopus.Tentacle.Kubernetes.Tests.Integration.Setup;
 using Octopus.Tentacle.Util;
 
-namespace Octopus.Tentacle.Kubernetes.Tests.Integration;
+namespace Octopus.Tentacle.Kubernetes.Tests.Integration.KubernetesAgent;
 
 [SetUpFixture]
 public class KubernetesClusterOneTimeSetUp
