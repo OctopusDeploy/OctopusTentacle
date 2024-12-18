@@ -18,13 +18,11 @@ public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrati
 {
     IRecordedMethodUsages recordedMethodUsages = null!;
 
-    protected override TentacleServiceDecoratorBuilder ConfigureTentacleServiceDecoratorBuilder(TentacleServiceDecoratorBuilder builder)
+    protected override void ConfigureTentacleServiceDecoratorBuilder(TentacleServiceDecoratorBuilder builder)
     {
         builder.RecordMethodUsages<IAsyncClientKubernetesScriptServiceV1>(out var recordedUsages);
 
         recordedMethodUsages = recordedUsages;
-
-        return builder;
     }
 
     [Test]
