@@ -26,41 +26,54 @@ public class KubernetesClientCompatibilityTests
         new object[] {new ClusterVersion(1, 29)},
         new object[] {new ClusterVersion(1, 28)},
     ];
-    
+
+    KubernetesTestsGlobalContext? testContext;
+    ILogger logger = null!;
+    TemporaryDirectory toolsTemporaryDirectory;
     string kindExePath;
     string helmExePath;
     string kubeCtlPath;
-    KubernetesClusterInstaller clusterInstaller = null!;
+    KubernetesClusterInstaller? clusterInstaller;
     KubernetesAgentInstaller? kubernetesAgentInstaller;
     HalibutRuntime serverHalibutRuntime = null!;
     string? agentThumbprint;
     TraceLogFileLogger? traceLogFileLogger;
     CancellationToken cancellationToken;
     CancellationTokenSource? cancellationTokenSource;
-    ILogger? logger;
     TentacleClient tentacleClient = null!;
     IRecordedMethodUsages recordedMethodUsages = null!;
 
     [OneTimeSetUp]
     public async Task OneTimeSetup()
     {
-        var toolDownloader = new RequiredToolDownloader(KubernetesTestsGlobalContext.Instance.TemporaryDirectory, KubernetesTestsGlobalContext.Instance.Logger);
+        logger = new SerilogLoggerBuilder().Build();
+        toolsTemporaryDirectory = new TemporaryDirectory();
+        var toolDownloader = new RequiredToolDownloader(toolsTemporaryDirectory, logger);
         (kindExePath, helmExePath, kubeCtlPath) = await toolDownloader.DownloadRequiredTools(CancellationToken.None);
+    }
+
+    [OneTimeTearDown]
+    public void OneTimeTearDown()
+    {
+        toolsTemporaryDirectory.Dispose();
     }
 
     [TearDown]
     public async Task TearDown()
     {
         if (traceLogFileLogger is not null) await traceLogFileLogger.DisposeAsync();
-
         if (cancellationTokenSource is not null)
         {
             await cancellationTokenSource.CancelAsync();
             cancellationTokenSource.Dispose();
         }
+        clusterInstaller?.Dispose();
+        testContext?.Dispose();
 
-        clusterInstaller.Dispose();
-        KubernetesTestsGlobalContext.Instance.Dispose();
+        traceLogFileLogger = null;
+        cancellationTokenSource = null;
+        clusterInstaller = null;
+        testContext = null;
     }
 
     [Test]
@@ -111,20 +124,22 @@ public class KubernetesClientCompatibilityTests
     
     async Task SetUp(ClusterVersion clusterVersion)
     {
+        testContext = new KubernetesTestsGlobalContext(logger);
+        
         await SetupCluster(clusterVersion);
 
         kubernetesAgentInstaller = new KubernetesAgentInstaller(
-            KubernetesTestsGlobalContext.Instance.TemporaryDirectory,
-            KubernetesTestsGlobalContext.Instance.HelmExePath,
-            KubernetesTestsGlobalContext.Instance.KubeCtlExePath,
-            KubernetesTestsGlobalContext.Instance.KubeConfigPath,
-            KubernetesTestsGlobalContext.Instance.Logger);
+            testContext.TemporaryDirectory,
+            testContext.HelmExePath,
+            testContext.KubeCtlExePath,
+            testContext.KubeConfigPath,
+            testContext.Logger);
 
         //create a new server halibut runtime
         serverHalibutRuntime = SetupHelpers.BuildServerHalibutRuntime();
         var listeningPort = serverHalibutRuntime.Listen();
 
-        agentThumbprint = await kubernetesAgentInstaller.InstallAgent(listeningPort, KubernetesTestsGlobalContext.Instance.TentacleImageAndTag, new Dictionary<string, string>());
+        agentThumbprint = await kubernetesAgentInstaller.InstallAgent(listeningPort, testContext.TentacleImageAndTag, new Dictionary<string, string>());
 
         //trust the generated cert thumbprint
         serverHalibutRuntime.Trust(agentThumbprint);
@@ -148,11 +163,11 @@ public class KubernetesClientCompatibilityTests
     
     async Task SetupCluster(ClusterVersion clusterVersion)
     {
-        clusterInstaller = new KubernetesClusterInstaller(KubernetesTestsGlobalContext.Instance.TemporaryDirectory, kindExePath, helmExePath, kubeCtlPath, KubernetesTestsGlobalContext.Instance.Logger);
+        clusterInstaller = new KubernetesClusterInstaller(testContext.TemporaryDirectory, kindExePath, helmExePath, kubeCtlPath, testContext.Logger);
         await clusterInstaller.Install(clusterVersion);
 
-        KubernetesTestsGlobalContext.Instance.TentacleImageAndTag = SetupHelpers.GetTentacleImageAndTag(kindExePath, clusterInstaller);
-        KubernetesTestsGlobalContext.Instance.SetToolExePaths(helmExePath, kubeCtlPath);
-        KubernetesTestsGlobalContext.Instance.KubeConfigPath = clusterInstaller.KubeConfigPath;
+        testContext.TentacleImageAndTag = SetupHelpers.GetTentacleImageAndTag(kindExePath, clusterInstaller);
+        testContext.SetToolExePaths(helmExePath, kubeCtlPath);
+        testContext.KubeConfigPath = clusterInstaller.KubeConfigPath;
     }
 }
