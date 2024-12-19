@@ -20,6 +20,8 @@ public class KubernetesClusterInstaller
     readonly string kubeCtlPath;
     readonly ILogger logger;
 
+    readonly ClusterVersion latestSupportedClusterVersion = new(1, 31);
+
     public string KubeConfigPath => Path.Combine(tempDir.DirectoryPath, kubeConfigName);
     public string ClusterName => clusterName;
 
@@ -35,9 +37,19 @@ public class KubernetesClusterInstaller
         kubeConfigName = $"{clusterName}.config";
     }
 
-    public async Task Install()
+    public Task InstallLatestSupported()
     {
-        var configFilePath = await WriteFileToTemporaryDirectory("kind-config.yaml");
+        return InstallCluster(latestSupportedClusterVersion);
+    }
+
+    public Task Install(ClusterVersion clusterVersion)
+    {
+        return InstallCluster(clusterVersion);
+    }
+
+    async Task InstallCluster(ClusterVersion clusterVersion)
+    {
+        var configFilePath = await WriteFileToTemporaryDirectory($"kind-config-v{clusterVersion.Major}-{clusterVersion.Minor}.yaml");
 
         var sw = new Stopwatch();
         sw.Restart();

@@ -1,18 +1,13 @@
-﻿using Halibut;
-using Halibut.Diagnostics;
-using Halibut.Diagnostics.LogCreators;
-using Halibut.Logging;
+﻿using System;
+using Halibut;
 using Octopus.Tentacle.Client;
-using Octopus.Tentacle.Client.Retries;
-using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.CommonTestUtils;
-using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Kubernetes.Tests.Integration.Setup;
 using Octopus.Tentacle.Kubernetes.Tests.Integration.Tooling;
 using Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators;
 using Octopus.Tentacle.Tests.Integration.Common.Logging;
 
-namespace Octopus.Tentacle.Kubernetes.Tests.Integration;
+namespace Octopus.Tentacle.Kubernetes.Tests.Integration.KubernetesAgent;
 
 public abstract class KubernetesAgentIntegrationTest
 {
@@ -23,9 +18,7 @@ public abstract class KubernetesAgentIntegrationTest
     protected ILogger? Logger { get; private set; }
     
     protected KubernetesAgentInstaller KubernetesAgentInstaller => kubernetesAgentInstaller ?? throw new InvalidOperationException("Expected kubernetesAgentInstaller to be set");
-
-    protected HalibutRuntime ServerHalibutRuntime { get; private set; } = null!;
-
+    
     protected TentacleClient TentacleClient { get; private set; } = null!;
 
     protected CancellationToken CancellationToken { get; private set; }
@@ -33,6 +26,8 @@ public abstract class KubernetesAgentIntegrationTest
     protected KubeCtlTool KubeCtl => kubeCtl ?? throw new InvalidOperationException("Expected kubeCtl to be set");
 
     protected readonly IDictionary<string, string> CustomHelmValues = new Dictionary<string, string>();
+
+    HalibutRuntime serverHalibutRuntime;
 
     string? agentThumbprint;
 
@@ -54,12 +49,13 @@ public abstract class KubernetesAgentIntegrationTest
             KubernetesTestsGlobalContext.Instance.Logger);
 
         //create a new server halibut runtime
-        var listeningPort = BuildServerHalibutRuntimeAndListen();
+        serverHalibutRuntime = SetupHelpers.BuildServerHalibutRuntime();
+        var listeningPort = serverHalibutRuntime.Listen();
 
         agentThumbprint = await kubernetesAgentInstaller.InstallAgent(listeningPort, KubernetesTestsGlobalContext.Instance.TentacleImageAndTag, CustomHelmValues);
 
         //trust the generated cert thumbprint
-        ServerHalibutRuntime.Trust(agentThumbprint);
+        serverHalibutRuntime.Trust(agentThumbprint);
     }
 
     [SetUp]
@@ -76,7 +72,7 @@ public abstract class KubernetesAgentIntegrationTest
         CancellationToken = cancellationTokenSource.Token;
 
         //each test should get its own tentacle client, so it gets its own builders
-        BuildTentacleClient();
+        TentacleClient = SetupHelpers.BuildTentacleClient(KubernetesAgentInstaller.SubscriptionId, agentThumbprint, serverHalibutRuntime, ConfigureTentacleServiceDecoratorBuilder);
     }
 
     [TearDown]
@@ -91,45 +87,14 @@ public abstract class KubernetesAgentIntegrationTest
         cancellationTokenSource?.Dispose();
     }
 
-    protected virtual TentacleServiceDecoratorBuilder ConfigureTentacleServiceDecoratorBuilder(TentacleServiceDecoratorBuilder builder) => builder;
-
-    void BuildTentacleClient()
+    protected virtual void ConfigureTentacleServiceDecoratorBuilder(TentacleServiceDecoratorBuilder builder)
     {
-        var endpoint = new ServiceEndPoint(KubernetesAgentInstaller.SubscriptionId, agentThumbprint, ServerHalibutRuntime.TimeoutsAndLimits);
-
-        var retrySettings = new RpcRetrySettings(true, TimeSpan.FromMinutes(2));
-        var clientOptions = new TentacleClientOptions(retrySettings);
-
-        TentacleClient.CacheServiceWasNotFoundResponseMessages(ServerHalibutRuntime);
-
-        var builder = new TentacleServiceDecoratorBuilder();
-        ConfigureTentacleServiceDecoratorBuilder(builder);
-
-        TentacleClient = new TentacleClient(
-            endpoint,
-            ServerHalibutRuntime,
-            new PollingTentacleScriptObserverBackoffStrategy(),
-            new NoTentacleClientObserver(),
-            clientOptions,
-            builder.Build());
-    }
-
-    int BuildServerHalibutRuntimeAndListen()
-    {
-        var serverHalibutRuntimeBuilder = new HalibutRuntimeBuilder()
-            .WithServerCertificate(TestCertificates.Server)
-            .WithHalibutTimeoutsAndLimits(HalibutTimeoutsAndLimits.RecommendedValues())
-            .WithLogFactory(new TestContextLogCreator("Server", LogLevel.Trace).ToCachingLogFactory());
-
-        ServerHalibutRuntime = serverHalibutRuntimeBuilder.Build();
-
-        return ServerHalibutRuntime.Listen();
     }
 
     [OneTimeTearDown]
     public async Task OneTimeTearDown()
     {
-        await ServerHalibutRuntime.DisposeAsync();
+        await serverHalibutRuntime.DisposeAsync();
         kubernetesAgentInstaller?.Dispose();
     }
 }

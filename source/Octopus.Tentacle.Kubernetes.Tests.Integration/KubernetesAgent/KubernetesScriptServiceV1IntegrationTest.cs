@@ -1,32 +1,28 @@
+using System;
 using FluentAssertions;
 using FluentAssertions.Execution;
-using Octopus.Client.Model.Endpoints;
 using Octopus.Tentacle.Client.Scripts.Models;
 using Octopus.Tentacle.Client.Scripts.Models.Builders;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.CommonTestUtils.Diagnostics;
 using Octopus.Tentacle.Contracts;
-using Octopus.Tentacle.Contracts.Capabilities;
 using Octopus.Tentacle.Contracts.ClientServices;
-using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
-using Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators;
 using Octopus.Tentacle.Kubernetes.Tests.Integration.Util;
+using Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators;
 using Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators.Proxies;
 
-namespace Octopus.Tentacle.Kubernetes.Tests.Integration;
+namespace Octopus.Tentacle.Kubernetes.Tests.Integration.KubernetesAgent;
 
 [TestFixture]
 public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrationTest
 {
     IRecordedMethodUsages recordedMethodUsages = null!;
 
-    protected override TentacleServiceDecoratorBuilder ConfigureTentacleServiceDecoratorBuilder(TentacleServiceDecoratorBuilder builder)
+    protected override void ConfigureTentacleServiceDecoratorBuilder(TentacleServiceDecoratorBuilder builder)
     {
         builder.RecordMethodUsages<IAsyncClientKubernetesScriptServiceV1>(out var recordedUsages);
 
         recordedMethodUsages = recordedUsages;
-
-        return builder;
     }
 
     [Test]
