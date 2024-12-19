@@ -7,15 +7,14 @@ using Octopus.Diagnostics;
 
 namespace Octopus.Tentacle.Kubernetes.Tests.Integration.Support
 {
-
     // This is a copy of the production ConfigMapService, but allows the namespace to be explicitly
     // defined.
     public class TestSupportConfigMapService : KubernetesService, IKubernetesConfigMapService
     {
         readonly string targetNamespace;
 
-        public TestSupportConfigMapService(IKubernetesClientConfigProvider configProvider, ISystemLog log, string targetNamespace)
-            : base(configProvider, log)
+        public TestSupportConfigMapService(IKubernetesConfiguration kubernetesConfiguration, IKubernetesClientConfigProvider configProvider, ISystemLog log, string targetNamespace)
+            : base(configProvider, kubernetesConfiguration, log)
         {
             this.targetNamespace = targetNamespace;
         }

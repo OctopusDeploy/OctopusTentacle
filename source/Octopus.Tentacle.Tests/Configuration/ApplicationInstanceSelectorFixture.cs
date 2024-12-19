@@ -188,13 +188,16 @@ namespace Octopus.Tentacle.Tests.Configuration
             IApplicationConfigurationContributor[]? additionalConfigurations = null)
         {
             var log = Substitute.For<ISystemLog>();
+            var kubernetesConfig = Substitute.For<IKubernetesConfiguration>();
+            var k8sDetection = Substitute.For<IKubernetesAgentDetection>();
             return new ApplicationInstanceSelector(ApplicationName.Tentacle,
                 applicationInstanceStore,
                 instanceRequest ?? new StartUpDynamicInstanceRequest(),
-                additionalConfigurations ?? new IApplicationConfigurationContributor[0],
-                new Lazy<ConfigMapKeyValueStore>(() => new ConfigMapKeyValueStore(Substitute.For<IKubernetesConfigMapService>(), Substitute.For<IKubernetesMachineKeyEncryptor>())),
+                additionalConfigurations ?? Array.Empty<IApplicationConfigurationContributor>(),
+                new Lazy<ConfigMapKeyValueStore>(() => new ConfigMapKeyValueStore(kubernetesConfig,Substitute.For<IKubernetesConfigMapService>(), Substitute.For<IKubernetesMachineKeyEncryptor>())),
                 octopusFileSystem,
-                log);
+                log,
+                k8sDetection);
         }
     }
 }

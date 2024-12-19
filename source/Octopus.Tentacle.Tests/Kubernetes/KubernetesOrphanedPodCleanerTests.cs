@@ -28,6 +28,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         ITentacleScriptLogProvider scriptLogProvider;
         IScriptPodSinceTimeStore scriptPodSinceTimeStore;
         IScriptPodLogEncryptionKeyProvider scriptPodLogEncryptionKeyProvider;
+        IKubernetesConfiguration config;
 
         [SetUp]
         public void Setup()
@@ -42,8 +43,12 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             scriptPodLogEncryptionKeyProvider = Substitute.For<IScriptPodLogEncryptionKeyProvider>();
             monitor = Substitute.For<IKubernetesPodStatusProvider>();
             scriptTicket = new ScriptTicket(Guid.NewGuid().ToString());
+            
+            config = Substitute.For<IKubernetesConfiguration>();
+            config.PodsConsideredOrphanedAfterTimeSpan.Returns(TimeSpan.FromMinutes(10));
+            config.DisableAutomaticPodCleanup.Returns(false);
 
-            cleaner = new KubernetesOrphanedPodCleaner(monitor, podService, log, clock, scriptLogProvider, scriptPodSinceTimeStore, scriptPodLogEncryptionKeyProvider);
+            cleaner = new KubernetesOrphanedPodCleaner(config, monitor, podService, log, clock, scriptLogProvider, scriptPodSinceTimeStore, scriptPodLogEncryptionKeyProvider);
 
             overCutoff = cleaner.CompletedPodConsideredOrphanedAfterTimeSpan + 1.Minutes();
             underCutoff = cleaner.CompletedPodConsideredOrphanedAfterTimeSpan - 1.Minutes();
@@ -149,7 +154,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         public async Task OrphanedPodNotCleanedUpIfPodCleanupIsDisabled()
         {
             //Arrange
-            Environment.SetEnvironmentVariable("OCTOPUS__K8STENTACLE__DISABLEAUTOPODCLEANUP", "true");
+            config.DisableAutomaticPodCleanup.Returns(true);
             var pods = new List<ITrackedScriptPod>
             {
                 CreatePod(TrackedScriptPodState.Succeeded(0, startTime))
@@ -172,10 +177,10 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         public async Task EnvironmentVariableDictatesWhenPodsAreConsideredOrphaned(int checkAfterMinutes, bool shouldDelete)
         {
             //Arrange
-            Environment.SetEnvironmentVariable("OCTOPUS__K8STENTACLE__PODSCONSIDEREDORPHANEDAFTERMINUTES", "2");
+            config.PodsConsideredOrphanedAfterTimeSpan.Returns(TimeSpan.FromMinutes(2));
 
             // We need to reinitialise the sut after changing the env var value
-            cleaner = new KubernetesOrphanedPodCleaner(monitor, podService, log, clock, scriptLogProvider, scriptPodSinceTimeStore, scriptPodLogEncryptionKeyProvider);
+            cleaner = new KubernetesOrphanedPodCleaner(config, monitor, podService, log, clock, scriptLogProvider, scriptPodSinceTimeStore, scriptPodLogEncryptionKeyProvider);
             var pods = new List<ITrackedScriptPod>
             {
                 CreatePod(TrackedScriptPodState.Succeeded(0, startTime))

@@ -17,6 +17,10 @@ public interface IKubernetesAgentDetection
     string? Namespace { get; }
 }
 
+/// <summary>
+/// Used for detection if the tentacle is running as part of the Kubernetes agent helm chart
+/// Can be used with dependency injection via <see cref="IKubernetesAgentDetection"/> or statically
+/// </summary>
 public class KubernetesAgentDetection : IKubernetesAgentDetection
 {
     public static bool IsRunningAsKubernetesAgent => !string.IsNullOrWhiteSpace(Namespace);
