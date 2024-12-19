@@ -351,7 +351,7 @@ namespace Octopus.Tentacle.Kubernetes
 
         V1ResourceRequirements GetScriptPodResourceRequirements(InMemoryTentacleScriptLog tentacleScriptLog)
         {
-            var json = KubernetesConfiguration.PodResourceJson;
+            var json = KubernetesConfiguration.ScriptPodResourceJson;
             if (!string.IsNullOrWhiteSpace(json))
             {
                 try

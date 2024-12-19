@@ -19,10 +19,19 @@ namespace Octopus.Tentacle.Kubernetes
             public const string HelmChartVersionVariableName = $"{EnvVarPrefix}__HELMCHARTVERSION";
             public const string ServerCommsAddressesVariableName = "ServerCommsAddresses";
 
+            public const string ScriptPodResourceJsonVariableName = $"{EnvVarPrefix}__PODRESOURCEJSON";
             public const string PodAffinityJsonVariableName = $"{EnvVarPrefix}__PODAFFINITYJSON";
             public const string PodTolerationsJsonVariableName = $"{EnvVarPrefix}__PODTOLERATIONSJSON";
             public const string PodSecurityContextJsonVariableName = $"{EnvVarPrefix}__PODSECURITYCONTEXTJSON";
             public const string PodResourceJsonVariableName = $"{EnvVarPrefix}__PODRESOURCEJSON";
+            
+
+            public const string ScriptPodContainerImage = $"{EnvVarPrefix}__SCRIPTPODIMAGE";
+            public const string ScriptPodContainerImageTag = $"{EnvVarPrefix}__SCRIPTPODIMAGETAG";
+            public const string ScriptPodPullPolicy = $"{EnvVarPrefix}__SCRIPTPODPULLPOLICY";
+
+
+            public const string ScriptPodProxiesSecretNameVariableName = $"{EnvVarPrefix}__PODPROXIESSECRETNAME";
         }
 
         public string Namespace => GetRequiredEnvVar(VariableNames.NamespaceVariableName, "Unable to determine Kubernetes namespace.");
@@ -36,20 +45,19 @@ namespace Octopus.Tentacle.Kubernetes
             .ToArray() ?? [];
 
         public string ScriptPodVolumeClaimName => GetRequiredEnvVar($"{VariableNames.EnvVarPrefix}__PODVOLUMECLAIMNAME", "Unable to determine Kubernetes Pod persistent volume claim name.");
-        public string? ScriptPodResourceJson => Environment.GetEnvironmentVariable(ScriptPodResourceJsonVariableName);
-        public string ScriptPodResourceJsonVariableName => $"{VariableNames.EnvVarPrefix}__PODRESOURCEJSON";
+        public string? ScriptPodResourceJson => Environment.GetEnvironmentVariable(VariableNames.ScriptPodResourceJsonVariableName);
+
+        public string? ScriptPodContainerImage => Environment.GetEnvironmentVariable(VariableNames.ScriptPodContainerImage);
+        public string ScriptPodContainerImageTag => Environment.GetEnvironmentVariable(VariableNames.ScriptPodContainerImageTag) ?? "latest";
+        public string? ScriptPodPullPolicy => Environment.GetEnvironmentVariable(VariableNames.ScriptPodPullPolicy);
 
         public static string NfsWatchdogImageVariableName => $"{VariableNames.EnvVarPrefix}__NFSWATCHDOGIMAGE";
         public string? NfsWatchdogImage => Environment.GetEnvironmentVariable(NfsWatchdogImageVariableName);
+        
+        public string HelmReleaseName => GetRequiredEnvVar(VariableNames.HelmReleaseNameVariableName, "Unable to determine Helm release name.");
+        public string HelmChartVersion => GetRequiredEnvVar(VariableNames.HelmChartVersionVariableName, "Unable to determine Helm chart version.");
 
-        public static string HelmReleaseNameVariableName => $"{VariableNames.EnvVarPrefix}__HELMRELEASENAME";
-        public static string HelmChartVersionVariableName => $"{VariableNames.EnvVarPrefix}__HELMCHARTVERSION";
         const string ServerCommsAddressVariableName = "ServerCommsAddress";
-        public const string ServerCommsAddressesVariableName = "ServerCommsAddresses";
-
-        public string HelmReleaseName => GetRequiredEnvVar(HelmReleaseNameVariableName, "Unable to determine Helm release name.");
-        public string HelmChartVersion => GetRequiredEnvVar(HelmChartVersionVariableName, "Unable to determine Helm chart version.");
-
         public string[] ServerCommsAddresses
         {
             get
@@ -60,7 +68,7 @@ namespace Octopus.Tentacle.Kubernetes
                     addresses.Add(addressString);
                 }
 
-                if (Environment.GetEnvironmentVariable(ServerCommsAddressesVariableName) is { } addressesString)
+                if (Environment.GetEnvironmentVariable(VariableNames.ServerCommsAddressesVariableName) is { } addressesString)
                 {
                     addresses.AddRange(addressesString.Split(',').Where(a => !a.IsNullOrEmpty()));
                 }
@@ -73,11 +81,14 @@ namespace Octopus.Tentacle.Kubernetes
         public int? PodMonitorTimeoutSeconds => int.TryParse(Environment.GetEnvironmentVariable($"{VariableNames.EnvVarPrefix}__PODMONITORTIMEOUT"), out var podMonitorTimeout) ? podMonitorTimeout : 10 * 60; //10min
         public TimeSpan PodsConsideredOrphanedAfterTimeSpan => TimeSpan.FromMinutes(int.TryParse(Environment.GetEnvironmentVariable($"{VariableNames.EnvVarPrefix}__PODSCONSIDEREDORPHANEDAFTERMINUTES"), out var podsConsideredOrphanedAfterTimeSpan) ? podsConsideredOrphanedAfterTimeSpan : 10);
         public bool DisableAutomaticPodCleanup => bool.TryParse(Environment.GetEnvironmentVariable($"{VariableNames.EnvVarPrefix}__DISABLEAUTOPODCLEANUP"), out var disableAutoCleanup) && disableAutoCleanup;
-
-        public static string PersistentVolumeSizeVariableName => $"{VariableNames.EnvVarPrefix}__PERSISTENTVOLUMESIZE";
-        public string PersistentVolumeSize => GetRequiredEnvVar(PersistentVolumeSizeVariableName, "Unable to determine Persistent Volume Size");
+        public bool DisablePodEventsInTaskLog => bool.TryParse(Environment.GetEnvironmentVariable($"{VariableNames.EnvVarPrefix}__DISABLEPODEVENTSINTASKLOG"), out var disable) && disable;
+        public string PersistentVolumeSize => GetRequiredEnvVar($"{VariableNames.EnvVarPrefix}__PERSISTENTVOLUMESIZE", "Unable to determine Persistent Volume Size");
 
         public bool IsMetricsEnabled => !bool.TryParse(Environment.GetEnvironmentVariable($"{VariableNames.EnvVarPrefix}__ENABLEMETRICSCAPTURE"), out var enableMetrics) || enableMetrics;
+        public string? PodAffinityJson => Environment.GetEnvironmentVariable(VariableNames.PodAffinityJsonVariableName);
+        public string? PodTolerationsJson => Environment.GetEnvironmentVariable(VariableNames.PodTolerationsJsonVariableName);
+        public string? PodSecurityContextJson => Environment.GetEnvironmentVariable(VariableNames.PodSecurityContextJsonVariableName);
+        public string? ScriptPodProxiesSecretName => Environment.GetEnvironmentVariable(VariableNames.ScriptPodProxiesSecretNameVariableName);
 
         static string GetRequiredEnvVar(string variable, string errorMessage)
             => Environment.GetEnvironmentVariable(variable)

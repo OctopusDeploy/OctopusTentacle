@@ -12,10 +12,9 @@ namespace Octopus.Tentacle.Kubernetes
         IEnumerable<string?> ScriptPodImagePullSecretNames { get;  }
         string ScriptPodVolumeClaimName { get; }
         string? ScriptPodResourceJson { get;  }
-        string ScriptPodResourceJsonVariableName { get;  }
-        string ScriptPodContainerImage { get; }
+        string? ScriptPodContainerImage { get; }
         string ScriptPodContainerImageTag { get;}
-        string ScriptPodPullPolicy { get; set; }
+        string? ScriptPodPullPolicy { get; }
         string? NfsWatchdogImage { get;  }
         string HelmReleaseName { get; }
         string HelmChartVersion { get; }    
@@ -27,10 +26,9 @@ namespace Octopus.Tentacle.Kubernetes
         bool DisablePodEventsInTaskLog { get; }
         string PersistentVolumeSize { get;  }
         bool IsMetricsEnabled { get;  }
-        string? PodResourceJson { get; set; }
-        string? PodAffinityJson { get; set; }
-        string? PodTolerationsJson { get; set; }
-        string? PodSecurityContextJson { get; set; }
-        string? ScriptPodProxiesSecretName { get; set; }
+        string? PodAffinityJson { get;  }
+        string? PodTolerationsJson { get;  }
+        string? PodSecurityContextJson { get;  }
+        string? ScriptPodProxiesSecretName { get;  }
     }
 }

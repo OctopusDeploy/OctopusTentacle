@@ -16,6 +16,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
     [KubernetesService(typeof(IKubernetesScriptServiceV1))]
     public class KubernetesScriptServiceV1 : IAsyncKubernetesScriptServiceV1, IRunningScriptReporter
     {
+        readonly IKubernetesConfiguration kubernetesConfiguration;
         readonly IKubernetesPodService podService;
         readonly IScriptWorkspaceFactory workspaceFactory;
         readonly IKubernetesPodStatusProvider podStatusProvider;
@@ -28,6 +29,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
         readonly IKeyedSemaphore<ScriptTicket> keyedSemaphore;
 
         public KubernetesScriptServiceV1(
+            IKubernetesConfiguration kubernetesConfiguration,
             IKubernetesPodService podService,
             IScriptWorkspaceFactory workspaceFactory,
             IKubernetesPodStatusProvider podStatusProvider,
@@ -39,6 +41,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             IScriptPodLogEncryptionKeyProvider scriptPodLogEncryptionKeyProvider,
             IKeyedSemaphore<ScriptTicket> keyedSemaphore)
         {
+            this.kubernetesConfiguration = kubernetesConfiguration;
             this.podService = podService;
             this.workspaceFactory = workspaceFactory;
             this.podStatusProvider = podStatusProvider;
@@ -129,7 +132,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
             scriptPodSinceTimeStore.Delete(command.ScriptTicket);
             scriptPodLogEncryptionKeyProvider.Delete(command.ScriptTicket);
 
-            if (!KubernetesConfig.DisableAutomaticPodCleanup)
+            if (!kubernetesConfiguration.DisableAutomaticPodCleanup)
                 await podService.DeleteIfExists(command.ScriptTicket, cancellationToken);
         }
 
