@@ -15,7 +15,7 @@ public class KubernetesClusterOneTimeSetUp
         var (kindExePath, helmExePath, kubeCtlPath) = await toolDownloader.DownloadRequiredTools(CancellationToken.None);
 
         installer = new KubernetesClusterInstaller(KubernetesTestsGlobalContext.Instance.TemporaryDirectory, kindExePath, helmExePath, kubeCtlPath, KubernetesTestsGlobalContext.Instance.Logger);
-        await installer.Install();
+        await installer.InstallLatestSupported();
 
         KubernetesTestsGlobalContext.Instance.TentacleImageAndTag = SetupHelpers.GetTentacleImageAndTag(kindExePath, installer);
         KubernetesTestsGlobalContext.Instance.SetToolExePaths(helmExePath, kubeCtlPath);

@@ -37,7 +37,7 @@ public class KubernetesClusterInstaller
         kubeConfigName = $"{clusterName}.config";
     }
 
-    public Task Install()
+    public Task InstallLatestSupported()
     {
         return InstallCluster(latestSupportedClusterVersion);
     }
