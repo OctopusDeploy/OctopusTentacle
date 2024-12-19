@@ -46,7 +46,9 @@ namespace Octopus.Tentacle.Configuration.Instances
 
         public void DeleteInstance(string instanceName)
         {
+            log.Info($"Inside Delete instance of ApplicationInstanceManager: {instanceName}");
             instanceStore.DeleteInstance(instanceName);
+            log.Info($"Finished Delete instance of ApplicationInstanceManager: {instanceName}");
         }
 
         void RegisterInstanceInIndex(string instanceName, string configurationFile)
