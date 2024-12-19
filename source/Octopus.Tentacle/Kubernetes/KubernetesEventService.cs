@@ -18,7 +18,8 @@ namespace Octopus.Tentacle.Kubernetes
     
     public class KubernetesEventService : KubernetesService, IKubernetesEventService
     {
-        public KubernetesEventService(IKubernetesClientConfigProvider configProvider, ISystemLog log) : base(configProvider, log)
+        public KubernetesEventService(IKubernetesClientConfigProvider configProvider, IKubernetesConfiguration kubernetesConfiguration, ISystemLog log) 
+            : base(configProvider, kubernetesConfiguration, log)
         {
         }
 

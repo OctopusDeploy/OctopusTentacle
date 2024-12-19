@@ -19,8 +19,8 @@ namespace Octopus.Tentacle.Kubernetes
 
     public class KubernetesSecretService : KubernetesService, IKubernetesSecretService
     {
-        public KubernetesSecretService(IKubernetesClientConfigProvider configProvider, ISystemLog log)
-            : base(configProvider, log)
+        public KubernetesSecretService(IKubernetesClientConfigProvider configProvider, IKubernetesConfiguration kubernetesConfiguration, ISystemLog log)
+            : base(configProvider,kubernetesConfiguration, log)
         {
         }
 
@@ -30,7 +30,7 @@ namespace Octopus.Tentacle.Kubernetes
             {
                 try
                 {
-                    return await Client.ReadNamespacedSecretAsync(name, KubernetesConfig.Namespace, cancellationToken: cancellationToken);
+                    return await Client.ReadNamespacedSecretAsync(name, Namespace, cancellationToken: cancellationToken);
                 }
                 catch (HttpOperationException opException)
                     when (opException.Response.StatusCode == HttpStatusCode.NotFound)
@@ -45,7 +45,7 @@ namespace Octopus.Tentacle.Kubernetes
             AddStandardMetadata(secret);
           
             //We only want to retry read/modify operations for now (since they are idempotent)
-            await Client.CreateNamespacedSecretAsync(secret, KubernetesConfig.Namespace, cancellationToken: cancellationToken);
+            await Client.CreateNamespacedSecretAsync(secret, Namespace, cancellationToken: cancellationToken);
         }
 
         public async Task<V1Secret> UpdateSecretDataAsync(string secretName, IDictionary<string, byte[]> secretData, CancellationToken cancellationToken)
@@ -58,7 +58,7 @@ namespace Octopus.Tentacle.Kubernetes
             var patchYaml = KubernetesJson.Serialize(patchSecret);
 
             return await RetryPolicy.ExecuteAsync(async () =>
-                await Client.PatchNamespacedSecretAsync(new V1Patch(patchYaml, V1Patch.PatchType.MergePatch), secretName, KubernetesConfig.Namespace, cancellationToken: cancellationToken));
+                await Client.PatchNamespacedSecretAsync(new V1Patch(patchYaml, V1Patch.PatchType.MergePatch), secretName, Namespace, cancellationToken: cancellationToken));
         }
     }
 }

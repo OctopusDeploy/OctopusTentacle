@@ -12,7 +12,7 @@
 		<RootNamespace>Octopus.Tentacle</RootNamespace>
 		<TargetFrameworks>net48;net8.0;net8.0-windows</TargetFrameworks>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-		<LangVersion>9</LangVersion>
+		<LangVersion>default</LangVersion>
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 

@@ -21,6 +21,7 @@ namespace Octopus.Tentacle.Kubernetes
         readonly IKubernetesPodContainerResolver containerResolver;
 
         public KubernetesRawScriptPodCreator(
+            IKubernetesConfiguration kubernetesConfiguration,
             IKubernetesPodService podService,
             IKubernetesPodMonitor podMonitor,
             IKubernetesSecretService secretService,
@@ -31,7 +32,7 @@ namespace Octopus.Tentacle.Kubernetes
             IHomeConfiguration homeConfiguration,
             KubernetesPhysicalFileSystem kubernetesPhysicalFileSystem,
             IScriptPodLogEncryptionKeyProvider scriptPodLogEncryptionKeyProvider)
-            : base(podService, podMonitor, secretService, containerResolver, appInstanceSelector, log, scriptLogProvider, homeConfiguration, kubernetesPhysicalFileSystem, scriptPodLogEncryptionKeyProvider)
+            : base(kubernetesConfiguration, podService, podMonitor, secretService, containerResolver, appInstanceSelector, log, scriptLogProvider, homeConfiguration, kubernetesPhysicalFileSystem, scriptPodLogEncryptionKeyProvider)
         {
             this.containerResolver = containerResolver;
         }
@@ -42,7 +43,7 @@ namespace Octopus.Tentacle.Kubernetes
             {
                 Name = $"{podName}-init",
                 Image = command.PodImageConfiguration?.Image ?? await containerResolver.GetContainerImageForCluster(),
-                ImagePullPolicy = KubernetesConfig.ScriptPodPullPolicy,
+                ImagePullPolicy = KubernetesConfiguration.ScriptPodPullPolicy,
                 Command = new List<string> { "sh", "-c", GetInitExecutionScript("/nfs-mount", homeDir, workspacePath) },
                 VolumeMounts = new List<V1VolumeMount> { new("/nfs-mount", "init-nfs-volume"), new(homeDir, "tentacle-home") },
                 Resources = new V1ResourceRequirements
@@ -80,7 +81,7 @@ namespace Octopus.Tentacle.Kubernetes
                     Name = "init-nfs-volume",
                     PersistentVolumeClaim = new V1PersistentVolumeClaimVolumeSource
                     {
-                        ClaimName = KubernetesConfig.PodVolumeClaimName
+                        ClaimName = KubernetesConfiguration.PodVolumeClaimName
                     }
                 },
                 CreateAgentUpgradeSecretVolume(),

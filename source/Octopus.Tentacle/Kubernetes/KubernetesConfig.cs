@@ -5,7 +5,7 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Kubernetes
 {
-    public static class KubernetesConfig
+    public static class KubernetesConfigz
     {
         const string ServerCommsAddressVariableName = "ServerCommsAddress";
         const string EnvVarPrefix = "OCTOPUS__K8STENTACLE";
