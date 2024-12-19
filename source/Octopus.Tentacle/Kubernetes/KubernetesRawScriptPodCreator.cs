@@ -81,7 +81,7 @@ namespace Octopus.Tentacle.Kubernetes
                     Name = "init-nfs-volume",
                     PersistentVolumeClaim = new V1PersistentVolumeClaimVolumeSource
                     {
-                        ClaimName = KubernetesConfiguration.PodVolumeClaimName
+                        ClaimName = KubernetesConfiguration.ScriptPodVolumeClaimName
                     }
                 },
                 CreateAgentUpgradeSecretVolume(),

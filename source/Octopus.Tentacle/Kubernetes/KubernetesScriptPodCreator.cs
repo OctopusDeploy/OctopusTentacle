@@ -249,7 +249,7 @@ namespace Octopus.Tentacle.Kubernetes
                     Name = "tentacle-home",
                     PersistentVolumeClaim = new V1PersistentVolumeClaimVolumeSource
                     {
-                        ClaimName = KubernetesConfiguration.PodVolumeClaimName
+                        ClaimName = KubernetesConfiguration.ScriptPodVolumeClaimName
                     }
                 },
                 CreateAgentUpgradeSecretVolume(),
@@ -330,12 +330,12 @@ namespace Octopus.Tentacle.Kubernetes
                 },
                 Env = new List<V1EnvVar>
                 {
-                    new(EnvironmentKubernetesConfiguration.VariableNames.NamespaceVariableName, KubernetesConfiguration.Namespace),
-                    new(EnvironmentKubernetesConfiguration.VariableNames.HelmReleaseNameVariableName, KubernetesConfiguration.HelmReleaseName),
-                    new(EnvironmentKubernetesConfiguration.VariableNames.HelmChartVersionVariableName, KubernetesConfiguration.HelmChartVersion),
-                    new(EnvironmentKubernetesConfiguration.VariableNames.ServerCommsAddressesVariableName, string.Join(",", KubernetesConfiguration.ServerCommsAddresses)),
-                    new(EnvironmentKubernetesConfiguration.VariableNames.PersistentVolumeFreeBytesVariableName, spaceInformation?.freeSpaceBytes.ToString()),
-                    new(EnvironmentKubernetesConfiguration.VariableNames.PersistentVolumeSizeBytesVariableName, spaceInformation?.totalSpaceBytes.ToString()),
+                    new(EnvironmentKubernetesConfiguration.VariableNames.Namespace, KubernetesConfiguration.Namespace),
+                    new(EnvironmentKubernetesConfiguration.VariableNames.HelmReleaseName, KubernetesConfiguration.HelmReleaseName),
+                    new(EnvironmentKubernetesConfiguration.VariableNames.HelmChartVersion, KubernetesConfiguration.HelmChartVersion),
+                    new(EnvironmentKubernetesConfiguration.VariableNames.ServerCommsAddresses, string.Join(",", KubernetesConfiguration.ServerCommsAddresses)),
+                    new(EnvironmentKubernetesConfiguration.VariableNames.PersistentVolumeFreeBytes, spaceInformation?.freeSpaceBytes.ToString()),
+                    new(EnvironmentKubernetesConfiguration.VariableNames.PersistentVolumeSizeBytes, spaceInformation?.totalSpaceBytes.ToString()),
                     new(EnvironmentVariables.TentacleHome, homeDir),
                     new(EnvironmentVariables.TentacleInstanceName, appInstanceSelector.Current.InstanceName),
                     new(EnvironmentVariables.TentacleVersion, Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleVersion)),
@@ -360,7 +360,7 @@ namespace Octopus.Tentacle.Kubernetes
                 }
                 catch (Exception e)
                 {
-                    var message = $"Failed to deserialize env.{EnvironmentKubernetesConfiguration.VariableNames.PodResourceJsonVariableName} into valid pod resource requirements.{Environment.NewLine}JSON value: {json}{Environment.NewLine}Using default resource requests for script pod.";
+                    var message = $"Failed to deserialize env.{EnvironmentKubernetesConfiguration.VariableNames.ScriptPodResourceJson} into valid pod resource requirements.{Environment.NewLine}JSON value: {json}{Environment.NewLine}Using default resource requests for script pod.";
                     //if we can't parse the JSON, fall back to the defaults below and warn the user
                     log.WarnFormat(e, message);
                     //write a verbose message to the script log. 
@@ -383,7 +383,7 @@ namespace Octopus.Tentacle.Kubernetes
             => ParseScriptPodJson(
                 tentacleScriptLog,
                 KubernetesConfiguration.PodAffinityJson,
-                EnvironmentKubernetesConfiguration.VariableNames.PodAffinityJsonVariableName,
+                EnvironmentKubernetesConfiguration.VariableNames.ScriptPodAffinityJson,
                 "pod affinity",
                 //we default to running on linux/arm64 and linux/amd64 nodes
                 new V1Affinity(new V1NodeAffinity(requiredDuringSchedulingIgnoredDuringExecution: new V1NodeSelector(new List<V1NodeSelectorTerm>
@@ -399,14 +399,14 @@ namespace Octopus.Tentacle.Kubernetes
             => ParseScriptPodJson<List<V1Toleration>>(
                 tentacleScriptLog,
                 KubernetesConfiguration.PodTolerationsJson,
-                EnvironmentKubernetesConfiguration.VariableNames.PodTolerationsJsonVariableName,
+                EnvironmentKubernetesConfiguration.VariableNames.ScriptPodTolerationsJson,
                 "pod tolerations");
 
         V1PodSecurityContext? ParseScriptPodSecurityContext(InMemoryTentacleScriptLog tentacleScriptLog)
             => ParseScriptPodJson<V1PodSecurityContext>(
                 tentacleScriptLog,
                 KubernetesConfiguration.PodSecurityContextJson,
-                EnvironmentKubernetesConfiguration.VariableNames.PodSecurityContextJsonVariableName,
+                EnvironmentKubernetesConfiguration.VariableNames.ScriptPodSecurityContextJson,
                 "pod security context");
 
         [return: NotNullIfNotNull("defaultValue")]

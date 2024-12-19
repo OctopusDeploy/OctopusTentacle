@@ -24,7 +24,7 @@ public interface IKubernetesAgentDetection
 public class KubernetesAgentDetection : IKubernetesAgentDetection
 {
     public static bool IsRunningAsKubernetesAgent => !string.IsNullOrWhiteSpace(Namespace);
-    public static string? Namespace => Environment.GetEnvironmentVariable(EnvironmentKubernetesConfiguration.VariableNames.NamespaceVariableName);
+    public static string? Namespace => Environment.GetEnvironmentVariable(EnvironmentKubernetesConfiguration.VariableNames.Namespace);
         
     /// <inheritdoc/>
     bool IKubernetesAgentDetection.IsRunningAsKubernetesAgent => IsRunningAsKubernetesAgent;

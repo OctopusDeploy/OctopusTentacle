@@ -19,7 +19,6 @@ namespace Octopus.Tentacle.Kubernetes
         string HelmReleaseName { get; }
         string HelmChartVersion { get; }    
         string[] ServerCommsAddresses { get; }
-        string PodVolumeClaimName { get; }
         int? PodMonitorTimeoutSeconds { get;  }
         TimeSpan PodsConsideredOrphanedAfterTimeSpan { get; }
         bool DisableAutomaticPodCleanup { get;  }
