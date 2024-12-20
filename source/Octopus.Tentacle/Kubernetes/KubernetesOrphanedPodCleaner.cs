@@ -27,7 +27,7 @@ namespace Octopus.Tentacle.Kubernetes
         readonly IScriptPodLogEncryptionKeyProvider scriptPodLogEncryptionKeyProvider;
 
         readonly TimeSpan initialDelay = TimeSpan.FromMinutes(1);
-        internal TimeSpan CompletedPodConsideredOrphanedAfterTimeSpan => kubernetesConfiguration.PodsConsideredOrphanedAfterTimeSpan;
+        internal TimeSpan CompletedPodConsideredOrphanedAfterTimeSpan => kubernetesConfiguration.ScriptPodConsideredOrphanedAfterTimeSpan;
 
         public KubernetesOrphanedPodCleaner(
             IKubernetesConfiguration kubernetesConfiguration,

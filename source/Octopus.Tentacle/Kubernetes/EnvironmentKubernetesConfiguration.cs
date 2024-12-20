@@ -94,16 +94,16 @@ namespace Octopus.Tentacle.Kubernetes
             }
         }
 
-        public int? PodMonitorTimeoutSeconds => int.TryParse(Environment.GetEnvironmentVariable(VariableNames.ScriptPodMonitorTimeout), out var podMonitorTimeout) ? podMonitorTimeout : 10 * 60; //10min
-        public TimeSpan PodsConsideredOrphanedAfterTimeSpan => TimeSpan.FromMinutes(int.TryParse(Environment.GetEnvironmentVariable(VariableNames.ScriptPodConsideredOrphanedAfterTimeSpan), out var podsConsideredOrphanedAfterTimeSpan) ? podsConsideredOrphanedAfterTimeSpan : 10);
+        public int? ScriptPodMonitorTimeoutSeconds => int.TryParse(Environment.GetEnvironmentVariable(VariableNames.ScriptPodMonitorTimeout), out var podMonitorTimeout) ? podMonitorTimeout : 10 * 60; //10min
+        public TimeSpan ScriptPodConsideredOrphanedAfterTimeSpan => TimeSpan.FromMinutes(int.TryParse(Environment.GetEnvironmentVariable(VariableNames.ScriptPodConsideredOrphanedAfterTimeSpan), out var podsConsideredOrphanedAfterTimeSpan) ? podsConsideredOrphanedAfterTimeSpan : 10);
         public bool DisableAutomaticPodCleanup => bool.TryParse(Environment.GetEnvironmentVariable(VariableNames.DisableAutomaticPodCleanup), out var disableAutoCleanup) && disableAutoCleanup;
         public bool DisablePodEventsInTaskLog => bool.TryParse(Environment.GetEnvironmentVariable(VariableNames.DisablePodEventsInTaskLog), out var disable) && disable;
         public string PersistentVolumeSize => GetRequiredEnvVar(VariableNames.PersistentVolumeSize, "Unable to determine Persistent Volume Size");
 
         public bool IsMetricsEnabled => !bool.TryParse(Environment.GetEnvironmentVariable(VariableNames.IsMetricsEnabled), out var enableMetrics) || enableMetrics;
-        public string? PodAffinityJson => Environment.GetEnvironmentVariable(VariableNames.ScriptPodAffinityJson);
-        public string? PodTolerationsJson => Environment.GetEnvironmentVariable(VariableNames.ScriptPodTolerationsJson);
-        public string? PodSecurityContextJson => Environment.GetEnvironmentVariable(VariableNames.ScriptPodSecurityContextJson);
+        public string? ScriptPodAffinityJson => Environment.GetEnvironmentVariable(VariableNames.ScriptPodAffinityJson);
+        public string? ScriptPodTolerationsJson => Environment.GetEnvironmentVariable(VariableNames.ScriptPodTolerationsJson);
+        public string? ScriptPodSecurityContextJson => Environment.GetEnvironmentVariable(VariableNames.ScriptPodSecurityContextJson);
         public string? ScriptPodProxiesSecretName => Environment.GetEnvironmentVariable(VariableNames.ScriptPodProxiesSecretName);
 
         static string GetRequiredEnvVar(string variable, string errorMessage)

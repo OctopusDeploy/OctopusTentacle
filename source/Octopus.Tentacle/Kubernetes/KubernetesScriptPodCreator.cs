@@ -382,7 +382,7 @@ namespace Octopus.Tentacle.Kubernetes
         V1Affinity ParseScriptPodAffinity(InMemoryTentacleScriptLog tentacleScriptLog)
             => ParseScriptPodJson(
                 tentacleScriptLog,
-                KubernetesConfiguration.PodAffinityJson,
+                KubernetesConfiguration.ScriptPodAffinityJson,
                 EnvironmentKubernetesConfiguration.VariableNames.ScriptPodAffinityJson,
                 "pod affinity",
                 //we default to running on linux/arm64 and linux/amd64 nodes
@@ -398,14 +398,14 @@ namespace Octopus.Tentacle.Kubernetes
         List<V1Toleration>? ParseScriptPodTolerations(InMemoryTentacleScriptLog tentacleScriptLog)
             => ParseScriptPodJson<List<V1Toleration>>(
                 tentacleScriptLog,
-                KubernetesConfiguration.PodTolerationsJson,
+                KubernetesConfiguration.ScriptPodTolerationsJson,
                 EnvironmentKubernetesConfiguration.VariableNames.ScriptPodTolerationsJson,
                 "pod tolerations");
 
         V1PodSecurityContext? ParseScriptPodSecurityContext(InMemoryTentacleScriptLog tentacleScriptLog)
             => ParseScriptPodJson<V1PodSecurityContext>(
                 tentacleScriptLog,
-                KubernetesConfiguration.PodSecurityContextJson,
+                KubernetesConfiguration.ScriptPodSecurityContextJson,
                 EnvironmentKubernetesConfiguration.VariableNames.ScriptPodSecurityContextJson,
                 "pod security context");
 

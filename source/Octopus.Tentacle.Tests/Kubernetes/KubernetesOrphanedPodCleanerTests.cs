@@ -45,7 +45,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             scriptTicket = new ScriptTicket(Guid.NewGuid().ToString());
             
             config = Substitute.For<IKubernetesConfiguration>();
-            config.PodsConsideredOrphanedAfterTimeSpan.Returns(TimeSpan.FromMinutes(10));
+            config.ScriptPodConsideredOrphanedAfterTimeSpan.Returns(TimeSpan.FromMinutes(10));
             config.DisableAutomaticPodCleanup.Returns(false);
 
             cleaner = new KubernetesOrphanedPodCleaner(config, monitor, podService, log, clock, scriptLogProvider, scriptPodSinceTimeStore, scriptPodLogEncryptionKeyProvider);
@@ -177,7 +177,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         public async Task EnvironmentVariableDictatesWhenPodsAreConsideredOrphaned(int checkAfterMinutes, bool shouldDelete)
         {
             //Arrange
-            config.PodsConsideredOrphanedAfterTimeSpan.Returns(TimeSpan.FromMinutes(2));
+            config.ScriptPodConsideredOrphanedAfterTimeSpan.Returns(TimeSpan.FromMinutes(2));
 
             // We need to reinitialise the sut after changing the env var value
             cleaner = new KubernetesOrphanedPodCleaner(config, monitor, podService, log, clock, scriptLogProvider, scriptPodSinceTimeStore, scriptPodLogEncryptionKeyProvider);
