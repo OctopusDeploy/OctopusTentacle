@@ -24,7 +24,7 @@ namespace Octopus.Tentacle.Kubernetes
             public static readonly string ServerCommsAddress = "ServerCommsAddress";
             public static readonly string ServerCommsAddresses = "ServerCommsAddresses";
 
-            public static readonly string ScriptPodServiceAccountName = $"{EnvVarPrefix}__SCRIPTPODSERVICEACCOUNTNAME";
+            public static readonly string ScriptPodServiceAccountName = $"{EnvVarPrefix}__PODSERVICEACCOUNTNAME";
             public static readonly string ScriptPodImagePullSecretNames = $"{EnvVarPrefix}__PODIMAGEPULLSECRETNAMES";
             public static readonly string ScriptPodVolumeClaimName = $"{EnvVarPrefix}__PODVOLUMECLAIMNAME";
 
@@ -38,9 +38,7 @@ namespace Octopus.Tentacle.Kubernetes
             public static readonly string ScriptPodContainerImageTag = $"{EnvVarPrefix}__SCRIPTPODIMAGETAG";
             public static readonly string ScriptPodPullPolicy = $"{EnvVarPrefix}__SCRIPTPODPULLPOLICY";
 
-
             public static readonly string ScriptPodProxiesSecretName = $"{EnvVarPrefix}__PODPROXIESSECRETNAME";
-            
             
             public static readonly string NfsWatchdogImage = $"{EnvVarPrefix}__NFSWATCHDOGIMAGE";
             public static readonly string ScriptPodMonitorTimeout = $"{EnvVarPrefix}__PODMONITORTIMEOUT";
