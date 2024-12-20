@@ -18,8 +18,8 @@ namespace Octopus.Tentacle.Kubernetes
 
     public class KubernetesConfigMapService : KubernetesService, IKubernetesConfigMapService
     {
-        public KubernetesConfigMapService(IKubernetesClientConfigProvider configProvider, ISystemLog log)
-            : base(configProvider, log)
+        public KubernetesConfigMapService(IKubernetesClientConfigProvider configProvider, IKubernetesConfiguration kubernetesConfiguration, ISystemLog log)
+            : base(configProvider, kubernetesConfiguration, log)
         {
         }
 
@@ -29,7 +29,7 @@ namespace Octopus.Tentacle.Kubernetes
             {
                 try
                 {
-                    return await Client.CoreV1.ReadNamespacedConfigMapAsync(name, KubernetesConfig.Namespace, cancellationToken: cancellationToken);
+                    return await Client.CoreV1.ReadNamespacedConfigMapAsync(name, Namespace, cancellationToken: cancellationToken);
                 }
                 catch (HttpOperationException opException)
                     when (opException.Response.StatusCode == HttpStatusCode.NotFound)
@@ -49,7 +49,7 @@ namespace Octopus.Tentacle.Kubernetes
             var configMapJson = KubernetesJson.Serialize(configMap);
 
             return await RetryPolicy.ExecuteAsync(async () =>
-                await Client.CoreV1.PatchNamespacedConfigMapAsync(new V1Patch(configMapJson, V1Patch.PatchType.MergePatch), name, KubernetesConfig.Namespace, cancellationToken: cancellationToken));
+                await Client.CoreV1.PatchNamespacedConfigMapAsync(new V1Patch(configMapJson, V1Patch.PatchType.MergePatch), name, Namespace, cancellationToken: cancellationToken));
         }
     }
 }

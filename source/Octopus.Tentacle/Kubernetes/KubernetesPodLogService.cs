@@ -28,13 +28,14 @@ namespace Octopus.Tentacle.Kubernetes
 
         public KubernetesPodLogService(
             IKubernetesClientConfigProvider configProvider,
+            IKubernetesConfiguration kubernetesConfiguration,
             IKubernetesPodMonitor podMonitor,
             ITentacleScriptLogProvider scriptLogProvider,
             IScriptPodSinceTimeStore scriptPodSinceTimeStore,
             IScriptPodLogEncryptionKeyProvider scriptPodLogEncryptionKeyProvider,
             IKubernetesEventService eventService,
             ISystemLog log)
-            : base(configProvider, log)
+            : base(configProvider, kubernetesConfiguration,log)
         {
             this.podMonitor = podMonitor;
             this.scriptLogProvider = scriptLogProvider;
@@ -130,14 +131,14 @@ namespace Octopus.Tentacle.Kubernetes
         async Task<IEnumerable<ProcessOutput>> GetPodEvents(ScriptTicket scriptTicket, string podName, CancellationToken cancellationToken)
         {
             //if we don't want to write pod events to the task log, don't do anything
-            if (KubernetesConfig.DisablePodEventsInTaskLog)
+            if (KubernetesConfiguration.DisablePodEventsInTaskLog)
             {
                 return Array.Empty<ProcessOutput>();
             }
 
             var sinceTime = scriptPodSinceTimeStore.GetPodEventsSinceTime(scriptTicket);
 
-            var allEvents = await eventService.FetchAllEventsAsync(KubernetesConfig.Namespace, podName, cancellationToken);
+            var allEvents = await eventService.FetchAllEventsAsync(podName, cancellationToken);
             if (allEvents is null)
             {
                 return Array.Empty<ProcessOutput>();
@@ -188,7 +189,7 @@ namespace Octopus.Tentacle.Kubernetes
             {
                 try
                 {
-                    return await Client.GetNamespacedPodLogsAsync(podName, KubernetesConfig.Namespace, podName, sinceTime, cancellationToken: cancellationToken);
+                    return await Client.GetNamespacedPodLogsAsync(podName, Namespace, podName, sinceTime, cancellationToken: cancellationToken);
                 }
                 catch (HttpOperationException ex)
                 {

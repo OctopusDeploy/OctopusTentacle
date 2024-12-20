@@ -17,6 +17,7 @@ namespace Octopus.Tentacle.Kubernetes
     public class KubernetesDirectoryInformationProvider : IKubernetesDirectoryInformationProvider
     {
         readonly ISystemLog log;
+        readonly IKubernetesConfiguration kubernetesConfiguration;
         readonly ISilentProcessRunner silentProcessRunner;
         readonly IMemoryCache directoryInformationCache;
         
@@ -29,9 +30,10 @@ namespace Octopus.Tentacle.Kubernetes
         //No calls to `du` at all: 8min ea.
         static readonly TimeSpan CacheExpiry = TimeSpan.FromSeconds(30);
 
-        public KubernetesDirectoryInformationProvider(ISystemLog log, ISilentProcessRunner silentProcessRunner, IMemoryCache directoryInformationCache)
+        public KubernetesDirectoryInformationProvider(ISystemLog log, IKubernetesConfiguration kubernetesConfiguration, ISilentProcessRunner silentProcessRunner, IMemoryCache directoryInformationCache)
         {
             this.log = log;
+            this.kubernetesConfiguration = kubernetesConfiguration;
             this.silentProcessRunner = silentProcessRunner;
             this.directoryInformationCache = directoryInformationCache;
         }
@@ -47,7 +49,7 @@ namespace Octopus.Tentacle.Kubernetes
 
         public ulong? GetPathTotalBytes()
         {
-            return KubernetesUtilities.GetResourceBytes(KubernetesConfig.PersistentVolumeSize);
+            return KubernetesUtilities.GetResourceBytes(kubernetesConfiguration.PersistentVolumeSize);
         }
         
         

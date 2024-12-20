@@ -18,12 +18,14 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
         public delegate PersistenceProvider Factory(string configMapName);
         
         readonly string configMapName;
+        readonly IKubernetesConfiguration kubernetesConfiguration;
         readonly IKubernetesConfigMapService configMapService;
 
-        public PersistenceProvider(string configMapName, IKubernetesConfigMapService configMapService)
+        public PersistenceProvider(string configMapName, IKubernetesConfiguration kubernetesConfiguration, IKubernetesConfigMapService configMapService)
         {
             this.configMapService = configMapService;
             this.configMapName = configMapName;
+            this.kubernetesConfiguration = kubernetesConfiguration;
         }
 
         public async Task<string?> GetValue(string key, CancellationToken cancellationToken)
@@ -35,7 +37,7 @@ namespace Octopus.Tentacle.Kubernetes.Diagnostics
         public async Task PersistValue(string key, string value, CancellationToken cancellationToken)
         {
             var configMapData = await LoadConfigMapData(cancellationToken);
-            if (configMapData is null) throw new InvalidOperationException($"Unable to retrieve Tentacle Configuration from config map for namespace {KubernetesConfig.Namespace}");
+            if (configMapData is null) throw new InvalidOperationException($"Unable to retrieve Tentacle Configuration from config map for namespace {kubernetesConfiguration.Namespace}");
 
             configMapData[key] = value;
             await configMapService.Patch(configMapName, configMapData, cancellationToken);

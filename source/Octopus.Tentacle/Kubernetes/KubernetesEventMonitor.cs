@@ -18,27 +18,25 @@ namespace Octopus.Tentacle.Kubernetes
 
     public class KubernetesEventMonitor : IKubernetesEventMonitor
     {
-        public delegate KubernetesEventMonitor Factory(string kubernetesNamespace);
-        
+        readonly IKubernetesConfiguration kubernetesConfiguration;
         readonly IKubernetesAgentMetrics agentMetrics;
         readonly IKubernetesEventService eventService;
-        readonly string kubernetesNamespace;
         readonly IEventMapper[] eventMappers;
         readonly ISystemLog log;
 
-        public KubernetesEventMonitor(IKubernetesAgentMetrics agentMetrics, IKubernetesEventService eventService, string kubernetesNamespace, IEventMapper[] eventMappers, ISystemLog log)
+        public KubernetesEventMonitor(IKubernetesConfiguration kubernetesConfiguration, IKubernetesAgentMetrics agentMetrics, IKubernetesEventService eventService, IEventMapper[] eventMappers, ISystemLog log)
         {
+            this.kubernetesConfiguration = kubernetesConfiguration;
             this.agentMetrics = agentMetrics;
             this.eventService = eventService;
-            this.kubernetesNamespace = kubernetesNamespace;
             this.eventMappers = eventMappers;
             this.log = log;
         }
 
         public async Task CacheNewEvents(CancellationToken cancellationToken)
         {
-            log.Info($"Parsing kubernetes event list for namespace {kubernetesNamespace}.");
-            var allEvents = await eventService.FetchAllEventsAsync(kubernetesNamespace, cancellationToken) ?? new Corev1EventList(new List<Corev1Event>());
+            log.Info($"Parsing kubernetes event list for namespace {kubernetesConfiguration.Namespace}.");
+            var allEvents = await eventService.FetchAllEventsAsync(cancellationToken) ?? new Corev1EventList(new List<Corev1Event>());
 
             var lastCachedEventTimeStamp = await agentMetrics.GetLatestEventTimestamp(cancellationToken);
 
