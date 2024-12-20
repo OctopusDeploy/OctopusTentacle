@@ -11,58 +11,58 @@ namespace Octopus.Tentacle.Kubernetes
         {
             const string EnvVarPrefix = "OCTOPUS__K8STENTACLE";
             
-            public const string Namespace = $"{EnvVarPrefix}__NAMESPACE";
+            public static readonly string Namespace = $"{EnvVarPrefix}__NAMESPACE";
 
-            public const string BoolstrapRunnerExecutablePath = "BOOTSTRAPRUNNEREXECUTABLEPATH";
+            public static readonly string BootstrapRunnerExecutablePath = "BOOTSTRAPRUNNEREXECUTABLEPATH";
 
-            public const string PersistentVolumeSizeBytes = $"{EnvVarPrefix}__PERSISTENTVOLUMETOTALBYTES";
-            public const string PersistentVolumeFreeBytes = $"{EnvVarPrefix}__PERSISTENTVOLUMEFREEBYTES";
+            public static readonly string PersistentVolumeSizeBytes = $"{EnvVarPrefix}__PERSISTENTVOLUMETOTALBYTES";
+            public static readonly string PersistentVolumeFreeBytes = $"{EnvVarPrefix}__PERSISTENTVOLUMEFREEBYTES";
 
-            public const string HelmReleaseName = $"{EnvVarPrefix}__HELMRELEASENAME";
-            public const string HelmChartVersion = $"{EnvVarPrefix}__HELMCHARTVERSION";
+            public static readonly string HelmReleaseName = $"{EnvVarPrefix}__HELMRELEASENAME";
+            public static readonly string HelmChartVersion = $"{EnvVarPrefix}__HELMCHARTVERSION";
             
-            public const string ServerCommsAddress = "ServerCommsAddress";
-            public const string ServerCommsAddresses = "ServerCommsAddresses";
+            public static readonly string ServerCommsAddress = "ServerCommsAddress";
+            public static readonly string ServerCommsAddresses = "ServerCommsAddresses";
 
-            public const string ScriptPodServiceAccountName = $"{EnvVarPrefix}__SCRIPTPODSERVICEACCOUNTNAME";
-            public const string ScriptPodImagePullSecretNames = $"{EnvVarPrefix}__PODIMAGEPULLSECRETNAMES";
-            public const string ScriptPodVolumeClaimName = $"{EnvVarPrefix}__PODVOLUMECLAIMNAME";
+            public static readonly string ScriptPodServiceAccountName = $"{EnvVarPrefix}__SCRIPTPODSERVICEACCOUNTNAME";
+            public static readonly string ScriptPodImagePullSecretNames = $"{EnvVarPrefix}__PODIMAGEPULLSECRETNAMES";
+            public static readonly string ScriptPodVolumeClaimName = $"{EnvVarPrefix}__PODVOLUMECLAIMNAME";
 
-            public const string ScriptPodResourceJson = $"{EnvVarPrefix}__PODRESOURCEJSON";
-            public const string ScriptPodAffinityJson = $"{EnvVarPrefix}__PODAFFINITYJSON";
-            public const string ScriptPodTolerationsJson = $"{EnvVarPrefix}__PODTOLERATIONSJSON";
-            public const string ScriptPodSecurityContextJson = $"{EnvVarPrefix}__PODSECURITYCONTEXTJSON";
+            public static readonly string ScriptPodResourceJson = $"{EnvVarPrefix}__PODRESOURCEJSON";
+            public static readonly string ScriptPodAffinityJson = $"{EnvVarPrefix}__PODAFFINITYJSON";
+            public static readonly string ScriptPodTolerationsJson = $"{EnvVarPrefix}__PODTOLERATIONSJSON";
+            public static readonly string ScriptPodSecurityContextJson = $"{EnvVarPrefix}__PODSECURITYCONTEXTJSON";
             
 
-            public const string ScriptPodContainerImage = $"{EnvVarPrefix}__SCRIPTPODIMAGE";
-            public const string ScriptPodContainerImageTag = $"{EnvVarPrefix}__SCRIPTPODIMAGETAG";
-            public const string ScriptPodPullPolicy = $"{EnvVarPrefix}__SCRIPTPODPULLPOLICY";
+            public static readonly string ScriptPodContainerImage = $"{EnvVarPrefix}__SCRIPTPODIMAGE";
+            public static readonly string ScriptPodContainerImageTag = $"{EnvVarPrefix}__SCRIPTPODIMAGETAG";
+            public static readonly string ScriptPodPullPolicy = $"{EnvVarPrefix}__SCRIPTPODPULLPOLICY";
 
 
-            public const string ScriptPodProxiesSecretName = $"{EnvVarPrefix}__PODPROXIESSECRETNAME";
+            public static readonly string ScriptPodProxiesSecretName = $"{EnvVarPrefix}__PODPROXIESSECRETNAME";
             
             
-            public const string NfsWatchdogImage = $"{EnvVarPrefix}__NFSWATCHDOGIMAGE";
-            public const string ScriptPodMonitorTimeout = $"{EnvVarPrefix}__PODMONITORTIMEOUT";
-            public const string ScriptPodConsideredOrphanedAfterTimeSpan = $"{EnvVarPrefix}__PODSCONSIDEREDORPHANEDAFTERMINUTES";
+            public static readonly string NfsWatchdogImage = $"{EnvVarPrefix}__NFSWATCHDOGIMAGE";
+            public static readonly string ScriptPodMonitorTimeout = $"{EnvVarPrefix}__PODMONITORTIMEOUT";
+            public static readonly string ScriptPodConsideredOrphanedAfterTimeSpan = $"{EnvVarPrefix}__PODSCONSIDEREDORPHANEDAFTERMINUTES";
 
-            public const string DisableAutomaticPodCleanup = $"{EnvVarPrefix}__DISABLEAUTOPODCLEANUP";
-            public const string DisablePodEventsInTaskLog = $"{EnvVarPrefix}__DISABLEPODEVENTSINTASKLOG";
+            public static readonly string DisableAutomaticPodCleanup = $"{EnvVarPrefix}__DISABLEAUTOPODCLEANUP";
+            public static readonly string DisablePodEventsInTaskLog = $"{EnvVarPrefix}__DISABLEPODEVENTSINTASKLOG";
 
-            public const string PersistentVolumeSize = $"{EnvVarPrefix}__PERSISTENTVOLUMESIZE";
+            public static readonly string PersistentVolumeSize = $"{EnvVarPrefix}__PERSISTENTVOLUMESIZE";
 
-            public const string IsMetricsEnabled = $"{EnvVarPrefix}__ENABLEMETRICSCAPTURE";
+            public static readonly string IsMetricsEnabled = $"{EnvVarPrefix}__ENABLEMETRICSCAPTURE";
         }
 
         public string Namespace => GetRequiredEnvVar(VariableNames.Namespace, "Unable to determine Kubernetes namespace.");
-        public string BootstrapRunnerExecutablePath => GetRequiredEnvVar(VariableNames.BoolstrapRunnerExecutablePath, "Unable to determine Bootstrap Runner Executable Path");
+        public string BootstrapRunnerExecutablePath => GetRequiredEnvVar(VariableNames.BootstrapRunnerExecutablePath, "Unable to determine Bootstrap Runner Executable Path");
         public string ScriptPodServiceAccountName => GetRequiredEnvVar(VariableNames.ScriptPodServiceAccountName, "Unable to determine Kubernetes Pod service account name.");
 
         public IEnumerable<string?> ScriptPodImagePullSecretNames => Environment.GetEnvironmentVariable(VariableNames.ScriptPodImagePullSecretNames)
             ?.Split(',')
             .Select(str => str.Trim())
             .WhereNotNullOrWhiteSpace()
-            .ToArray() ?? [];
+            .ToArray() ?? Array.Empty<string>();
 
         public string ScriptPodVolumeClaimName => GetRequiredEnvVar(VariableNames.ScriptPodVolumeClaimName, "Unable to determine Kubernetes Pod persistent volume claim name.");
         public string? ScriptPodResourceJson => Environment.GetEnvironmentVariable(VariableNames.ScriptPodResourceJson);
