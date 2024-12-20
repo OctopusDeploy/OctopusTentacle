@@ -138,7 +138,7 @@ namespace Octopus.Tentacle.Kubernetes
 
             var sinceTime = scriptPodSinceTimeStore.GetPodEventsSinceTime(scriptTicket);
 
-            var allEvents = await eventService.FetchAllEventsAsync(Namespace, podName, cancellationToken);
+            var allEvents = await eventService.FetchAllEventsAsync(podName, cancellationToken);
             if (allEvents is null)
             {
                 return Array.Empty<ProcessOutput>();

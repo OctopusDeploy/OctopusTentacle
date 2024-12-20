@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -6,14 +5,13 @@ using k8s;
 using k8s.Autorest;
 using k8s.Models;
 using Octopus.Diagnostics;
-using Octopus.Tentacle.Contracts;
 
 namespace Octopus.Tentacle.Kubernetes
 {
     public interface IKubernetesEventService
     {
-        Task<Corev1EventList?> FetchAllEventsAsync(string kubernetesNamespace, CancellationToken cancellationToken);
-        Task<Corev1EventList?> FetchAllEventsAsync(string kubernetesNamespace, string podName, CancellationToken cancellationToken);
+        Task<Corev1EventList?> FetchAllEventsAsync(CancellationToken cancellationToken);
+        Task<Corev1EventList?> FetchAllEventsAsync(string podName, CancellationToken cancellationToken);
     }
     
     public class KubernetesEventService : KubernetesService, IKubernetesEventService
@@ -23,13 +21,13 @@ namespace Octopus.Tentacle.Kubernetes
         {
         }
 
-        public async Task<Corev1EventList?> FetchAllEventsAsync(string kubernetesNamespace, CancellationToken cancellationToken)
+        public async Task<Corev1EventList?> FetchAllEventsAsync(CancellationToken cancellationToken)
         {
             return await RetryPolicy.ExecuteAsync(async () =>
             { 
                 try
                 {
-                    return await Client.CoreV1.ListNamespacedEventAsync(kubernetesNamespace, cancellationToken: cancellationToken);
+                    return await Client.CoreV1.ListNamespacedEventAsync(Namespace, cancellationToken: cancellationToken);
                 }
                 catch (HttpOperationException opException)
                     when (opException.Response.StatusCode == HttpStatusCode.NotFound)
@@ -39,7 +37,7 @@ namespace Octopus.Tentacle.Kubernetes
             });
         }
 
-        public async Task<Corev1EventList?> FetchAllEventsAsync(string kubernetesNamespace, string podName, CancellationToken cancellationToken)
+        public async Task<Corev1EventList?> FetchAllEventsAsync(string podName, CancellationToken cancellationToken)
         {
             return await RetryPolicy.ExecuteAsync(async () =>
             { 
@@ -47,7 +45,7 @@ namespace Octopus.Tentacle.Kubernetes
                 {
                     //get all the events for a specific script pod
                     return await Client.CoreV1.ListNamespacedEventAsync(
-                        kubernetesNamespace,
+                        Namespace,
                         fieldSelector: $"involvedObject.name={podName}",
                         cancellationToken: cancellationToken);
                 }
