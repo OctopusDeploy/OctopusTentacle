@@ -60,7 +60,7 @@ namespace Octopus.Tentacle.Security
             var provider = Aes.Create();
             provider.Mode = CipherMode.CBC;
             provider.Padding = PaddingMode.PKCS7;
-            provider.KeySize = 128;
+            provider.KeySize = 256;
             provider.BlockSize = 128;
             provider.Key = key;
 
