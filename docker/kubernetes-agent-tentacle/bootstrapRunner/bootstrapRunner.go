@@ -20,6 +20,12 @@ type SafeCounter struct {
 	Value int
 }
 
+const (
+	// MaxScanTokenSize 10Mi Max token size
+	// 10Mi is the maximum default size of a pod's log file
+	MaxScanTokenSize = 10 * 1024 * 1024
+)
+
 // The bootstrapRunner applet is designed to execute a script in a specific folder
 // and format the script's output from stdout and stderr into the following format:
 // <line number>|<RFC3339Nano date time>|<"stdout" or "stderr">|<original string>
@@ -47,6 +53,11 @@ func main() {
 
 	stdOutScanner := bufio.NewScanner(stdOutCmdReader)
 	stdErrScanner := bufio.NewScanner(stdErrCmdReader)
+
+	// Create an initial buffer to be used by the scanners
+	buffer := make([]byte, 64*1024) // 64K initial buffer
+	stdOutScanner.Buffer(buffer, MaxScanTokenSize)
+	stdErrScanner.Buffer(buffer, MaxScanTokenSize)
 
 	doneStd := make(chan bool)
 	doneErr := make(chan bool)
