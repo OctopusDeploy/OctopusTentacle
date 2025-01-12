@@ -94,7 +94,7 @@ func reader(readCloser io.ReadCloser, stream string, done *chan bool, counter *S
 	scanner := bufio.NewScanner(readCloser)
 
 	// Create an initial buffer to be used by the scanners
-	buffer := make([]byte, 4096) // 4Ki initial buffer
+	buffer := make([]byte, 4096) // 4Ki initial buffer https://github.com/golang/go/blob/master/src/bufio/scan.go#L84
 	scanner.Buffer(buffer, MaxScanTokenSize)
 
 	for scanner.Scan() {
