@@ -20,6 +20,12 @@ type SafeCounter struct {
 	Value int
 }
 
+const (
+	// MaxScanTokenSize 10Mi Max token size
+	// 10Mi is the default maximum size of a Kubernetes container's log file
+	MaxScanTokenSize = 10 * 1024 * 1024
+)
+
 // The bootstrapRunner applet is designed to execute a script in a specific folder
 // and format the script's output from stdout and stderr into the following format:
 // <line number>|<RFC3339Nano date time>|<"stdout" or "stderr">|<original string>
@@ -42,17 +48,14 @@ func main() {
 		panic(err)
 	}
 
-	stdOutCmdReader, _ := cmd.StdoutPipe()
-	stdErrCmdReader, _ := cmd.StderrPipe()
-
-	stdOutScanner := bufio.NewScanner(stdOutCmdReader)
-	stdErrScanner := bufio.NewScanner(stdErrCmdReader)
+	stdOutCmdReadCloser, _ := cmd.StdoutPipe()
+	stdErrCmdReadCloser, _ := cmd.StderrPipe()
 
 	doneStd := make(chan bool)
 	doneErr := make(chan bool)
 
-	go reader(stdOutScanner, "stdout", &doneStd, &lineCounter, gcm)
-	go reader(stdErrScanner, "stderr", &doneErr, &lineCounter, gcm)
+	go reader(stdOutCmdReadCloser, "stdout", &doneStd, &lineCounter, gcm)
+	go reader(stdErrCmdReadCloser, "stderr", &doneErr, &lineCounter, gcm)
 
 	Write("stdout", "##octopus[stdout-verbose]", &lineCounter, gcm)
 	Write("stdout", "Kubernetes Script Pod started", &lineCounter, gcm)
@@ -87,10 +90,25 @@ func main() {
 	os.Exit(exitCode)
 }
 
-func reader(scanner *bufio.Scanner, stream string, done *chan bool, counter *SafeCounter, gcm cipher.AEAD) {
+func reader(readCloser io.ReadCloser, stream string, done *chan bool, counter *SafeCounter, gcm cipher.AEAD) {
+	scanner := bufio.NewScanner(readCloser)
+
+	// Create an initial buffer to be used by the scanners
+	buffer := make([]byte, 4096) // 4Ki initial buffer https://github.com/golang/go/blob/master/src/bufio/scan.go#L84
+	scanner.Buffer(buffer, MaxScanTokenSize)
+
 	for scanner.Scan() {
 		Write(stream, scanner.Text(), counter, gcm)
 	}
+
+	err := readCloser.Close()
+	if scanner.Err() != nil {
+		fmt.Fprintln(os.Stderr, "bootstrapRunner.go: Error reading from scanner", scanner.Err())
+	}
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "bootstrapRunner.go: Failed to close the command's %s pipe: %v\n", stream, err)
+	}
+
 	*done <- true
 }
 
