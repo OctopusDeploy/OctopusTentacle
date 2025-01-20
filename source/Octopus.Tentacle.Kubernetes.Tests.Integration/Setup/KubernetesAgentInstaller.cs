@@ -40,10 +40,11 @@ public class KubernetesAgentInstaller
 
     public Uri SubscriptionId { get; } = PollingSubscriptionId.Generate();
 
-    public async Task<string> InstallAgent(int listeningPort, string? tentacleImageAndTag)
+    public async Task<string> InstallAgent(int listeningPort, string? tentacleImageAndTag, IDictionary<string, string> customValues)
     {
         var valuesFilePath = await WriteValuesFile(listeningPort);
         var arguments = BuildAgentInstallArguments(valuesFilePath, tentacleImageAndTag);
+        arguments  = $"{arguments} {ToHelmCommandArgs(customValues)}";
 
         var sw = new Stopwatch();
         sw.Restart();
@@ -78,6 +79,11 @@ public class KubernetesAgentInstaller
         logger.Information("Agent certificate thumbprint: {Thumbprint:l}", thumbprint);
 
         return thumbprint;
+    }
+
+    string ToHelmCommandArgs(IDictionary<string, string> customValues)
+    {
+        return string.Join(' ', customValues.Select(kv => $"--set {kv.Key}=\"{kv.Value}\""));
     }
 
     async Task<string> WriteValuesFile(int listeningPort)
@@ -140,7 +146,7 @@ public class KubernetesAgentInstaller
         if (tentacleImageAndTag is null)
             return null;
 
-        var parts = tentacleImageAndTag.Split(":");
+        var parts = tentacleImageAndTag.Split(':',2,StringSplitOptions.TrimEntries);
         var repo = parts[0];
         var tag = parts[1];
 

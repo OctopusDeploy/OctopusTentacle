@@ -9,16 +9,16 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 #if NETFRAMEWORK
             TentacleRuntime.Framework48;
 #else
-            TentacleRuntime.DotNet6;
+            TentacleRuntime.DotNet8;
 #endif
     }
 
     public enum TentacleRuntime
     {
-        [Description(RuntimeDetection.DotNet6)]
-        DotNet6,
-        
         [Description(RuntimeDetection.Framework48)]
-        Framework48
+        Framework48,
+        
+        [Description(RuntimeDetection.DotNet8)]
+        DotNet8,
     }
 }

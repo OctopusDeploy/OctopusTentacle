@@ -6,6 +6,7 @@ using System.Security.Cryptography.X509Certificates;
 using Nuke.Common;
 using Nuke.Common.IO;
 using Nuke.Common.Tooling;
+using Nuke.Common.Tools.AzureSignTool;
 using Nuke.Common.Tools.SignTool;
 using Serilog;
 
@@ -23,7 +24,7 @@ public static class Signing
         {
             foreach (var file in files)
             {
-                if (!FileSystemTasks.FileExists(file)) throw new Exception($"File {file} does not exist");
+                if (!file.Exists()) throw new Exception($"File {file} does not exist");
                 var fileInfo = new FileInfo(file);
 
                 if (fileInfo.IsReadOnly)
@@ -106,19 +107,17 @@ public static class Signing
             {
                 try
                 {
-                    var arguments = "sign " +
-                        $"--azure-key-vault-url \"{Build.AzureKeyVaultUrl}\" " +
-                        $"--azure-key-vault-client-id \"{Build.AzureKeyVaultAppId}\" " +
-                        $"--azure-key-vault-tenant-id \"{Build.AzureKeyVaultTenantId}\" " +
-                        $"--azure-key-vault-client-secret \"{Build.AzureKeyVaultAppSecret}\" " +
-                        $"--azure-key-vault-certificate \"{Build.AzureKeyVaultCertificateName}\" " +
-                        "--file-digest sha256 " +
-                        $"--timestamp-rfc3161 \"{timestampUrl}\" ";
+                    AzureSignToolTasks.AzureSignTool(a => a
+                        .SetKeyVaultUrl(Build.AzureKeyVaultUrl)
+                        .SetKeyVaultClientId(Build.AzureKeyVaultAppId)
+                        .SetKeyVaultTenantId(Build.AzureKeyVaultTenantId)
+                        .SetKeyVaultClientSecret(Build.AzureKeyVaultAppSecret)
+                        .SetKeyVaultCertificateName(Build.AzureKeyVaultCertificateName)
+                        .SetFileDigest(AzureSignToolDigestAlgorithm.sha256)
+                        .SetTimestampRfc3161Url(timestampUrl)
+                        .SetFiles(files.Select(f => f.ToString()))
+                    );
 
-                    arguments = files.Aggregate(arguments, (current, file) => current + $"\"{file}\" ");
-
-                    Build.AzureSignTool(arguments);
-        
                     Log.Information($"Finished signing {files.Length} files.");
                 }
                 catch (Exception e)

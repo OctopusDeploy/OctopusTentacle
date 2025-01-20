@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd" xmlns:octopus="http://octopus.org">
+  <metadata>
+    <id>OctopusDeploy.Tentacle</id>
+    <title>Octopus Deploy - Tentacle</title>
+    <version>0.0.0</version>
+    <authors>Octopus Deploy</authors>
+    <summary>Deployment agent for Octopus Deploy, an automated deployment server.</summary>
+    <description>Octopus Deploy is a Continuous Delivery platform for complex deployments across your entire stack. Deploy with ease to Kubernetes, Linux, Windows virtual machines, Amazon Web Services, Azure, or Google Cloud. If the Octopus Tentacle agent, SSH, command line, or a web service can speak to it, Octopus can deploy to it.
+
+This package installs the Tentacle deployment agent service.</description>
+    <releaseNotes></releaseNotes>
+    <language>en-US</language>
+    <iconUrl>http://i.octopusdeploy.com/resources/Avatar3-32x32.png</iconUrl>
+    <projectUrl>http://octopusdeploy.com/</projectUrl>
+    <licenseUrl>http://octopusdeploy.com/pricing</licenseUrl>
+    <tags>octopus deploy</tags>
+  </metadata>
+</package>

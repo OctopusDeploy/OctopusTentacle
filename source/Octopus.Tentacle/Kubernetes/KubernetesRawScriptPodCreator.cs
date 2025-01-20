@@ -7,6 +7,8 @@ using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
+using Octopus.Tentacle.Kubernetes.Crypto;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Kubernetes
 {
@@ -27,8 +29,9 @@ namespace Octopus.Tentacle.Kubernetes
             ISystemLog log,
             ITentacleScriptLogProvider scriptLogProvider,
             IHomeConfiguration homeConfiguration,
-            KubernetesPhysicalFileSystem kubernetesPhysicalFileSystem)
-            : base(podService, podMonitor, secretService, containerResolver, appInstanceSelector, log, scriptLogProvider, homeConfiguration, kubernetesPhysicalFileSystem)
+            KubernetesPhysicalFileSystem kubernetesPhysicalFileSystem,
+            IScriptPodLogEncryptionKeyProvider scriptPodLogEncryptionKeyProvider)
+            : base(podService, podMonitor, secretService, containerResolver, appInstanceSelector, log, scriptLogProvider, homeConfiguration, kubernetesPhysicalFileSystem, scriptPodLogEncryptionKeyProvider)
         {
             this.containerResolver = containerResolver;
         }
@@ -39,8 +42,9 @@ namespace Octopus.Tentacle.Kubernetes
             {
                 Name = $"{podName}-init",
                 Image = command.PodImageConfiguration?.Image ?? await containerResolver.GetContainerImageForCluster(),
+                ImagePullPolicy = KubernetesConfig.ScriptPodPullPolicy,
                 Command = new List<string> { "sh", "-c", GetInitExecutionScript("/nfs-mount", homeDir, workspacePath) },
-                VolumeMounts = new List<V1VolumeMount>{new("/nfs-mount", "init-nfs-volume"), new(homeDir, "tentacle-home")},
+                VolumeMounts = new List<V1VolumeMount> { new("/nfs-mount", "init-nfs-volume"), new(homeDir, "tentacle-home") },
                 Resources = new V1ResourceRequirements
                 {
                     Requests = new Dictionary<string, ResourceQuantity>
@@ -54,11 +58,11 @@ namespace Octopus.Tentacle.Kubernetes
             return new List<V1Container> { container };
         }
 
-        protected override async Task<IList<V1Container>> CreateScriptContainers(StartKubernetesScriptCommandV1 command, string podName, string scriptName, string homeDir, string workspacePath, string[]? scriptArguments)
+        protected override async Task<IList<V1Container>> CreateScriptContainers(StartKubernetesScriptCommandV1 command, string podName, string scriptName, string homeDir, string workspacePath, string[]? scriptArguments, InMemoryTentacleScriptLog tentacleScriptLog)
         {
             return new List<V1Container>
             {
-                await CreateScriptContainer(command, podName, scriptName, homeDir, workspacePath, scriptArguments)
+                await CreateScriptContainer(command, podName, scriptName, homeDir, workspacePath, scriptArguments, tentacleScriptLog)
             };
         }
 
@@ -66,19 +70,20 @@ namespace Octopus.Tentacle.Kubernetes
         {
             return new List<V1Volume>
             {
-                new ()
+                new()
                 {
                     Name = "tentacle-home",
                     EmptyDir = new V1EmptyDirVolumeSource()
                 },
-                new ()
+                new()
                 {
                     Name = "init-nfs-volume",
                     PersistentVolumeClaim = new V1PersistentVolumeClaimVolumeSource
                     {
-                    ClaimName = KubernetesConfig.PodVolumeClaimName
+                        ClaimName = KubernetesConfig.PodVolumeClaimName
                     }
-                }
+                },
+                CreateAgentUpgradeSecretVolume(),
             };
         }
 

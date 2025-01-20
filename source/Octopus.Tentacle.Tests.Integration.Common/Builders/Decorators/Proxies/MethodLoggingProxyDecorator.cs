@@ -8,7 +8,7 @@ namespace Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators.Proxies
     public class MethodLoggingProxyDecorator : ServiceProxy
     {
         readonly ILogger logger = new SerilogLoggerBuilder().Build().ForContext<MethodLoggingProxyDecorator>();
-        string serviceTypeName;
+        string? serviceTypeName;
 
         void Configure(string serviceTypeName)
         {

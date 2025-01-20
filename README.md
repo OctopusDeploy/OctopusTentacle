@@ -68,7 +68,7 @@ Currently we can only debug netcore apps running in WSL from VSCode, Visual Stud
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/source/Octopus.Tentacle/bin/net6.0/Tentacle.dll",
+            "program": "${workspaceFolder}/source/Octopus.Tentacle/bin/net8.0/Tentacle.dll",
             "args": ["run"],
             "cwd": "${workspaceFolder}/source/Octopus.Tentacle",
             "console": "internalConsole",
@@ -83,7 +83,7 @@ Currently we can only debug netcore apps running in WSL from VSCode, Visual Stud
     ]
 }
 ```
-- Make sure the build task (in `.vscode/tasks.json`) specifies the target framework, by inclusing `--framework=net6.0` as a build arg, otherwise VSCode will attempt to build for all frameworks in the csproj and fail on full .Net framework. the build task should look similar to:
+- Make sure the build task (in `.vscode/tasks.json`) specifies the target framework, by including `--framework=net8.0` as a build arg, otherwise VSCode will attempt to build for all frameworks in the csproj and fail on full .Net framework. the build task should look similar to:
 ```
 {
     "label": "build",
@@ -91,7 +91,7 @@ Currently we can only debug netcore apps running in WSL from VSCode, Visual Stud
     "type": "process",
     "args": [
         "build",
-        "--framework=net6.0",
+        "--framework=net8.0",
         "${workspaceFolder}/source/Octopus.Tentacle/Octopus.Tentacle.csproj",
         "/property:GenerateFullPaths=true",
         "/consoleloggerparameters:NoSummary"
@@ -99,6 +99,12 @@ Currently we can only debug netcore apps running in WSL from VSCode, Visual Stud
     "problemMatcher": "$msCompile"
 }
 ```
+## Debugging the Kubernetes Agent Tentacle
+
+The Kubernetes Agent Tentacle is a bit more complex to debug, as it normally runs inside a Kubernetes Pod. To debug it locally, you can run the `setup-k8s-agent-for-local-debug.sh` script in the root of this repo which will guide you through the process of installing a specially configured kind cluster, deploying the agent to it and then scaling back the installed agent so you can run a local copy to take it's place.
+
+NOTE: This script has only been tested on MacOS so far and requires Docker Desktop, Kubectl, Go CLI and Kind to be installed. It is also only for the Kubernetes Agent Tentacle running as a Deployment Target, not as a Worker.
+
 ## Additional Resources
 
 - Scripts to help with manual testing can be found in [./testing](./testing/README.md).

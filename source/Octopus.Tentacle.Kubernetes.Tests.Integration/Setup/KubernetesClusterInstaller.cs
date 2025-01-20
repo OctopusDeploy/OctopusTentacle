@@ -20,6 +20,8 @@ public class KubernetesClusterInstaller
     readonly string kubeCtlPath;
     readonly ILogger logger;
 
+    readonly ClusterVersion latestSupportedClusterVersion = new(1, 31);
+
     public string KubeConfigPath => Path.Combine(tempDir.DirectoryPath, kubeConfigName);
     public string ClusterName => clusterName;
 
@@ -35,9 +37,19 @@ public class KubernetesClusterInstaller
         kubeConfigName = $"{clusterName}.config";
     }
 
-    public async Task Install()
+    public Task InstallLatestSupported()
     {
-        var configFilePath = await WriteFileToTemporaryDirectory("kind-config.yaml");
+        return InstallCluster(latestSupportedClusterVersion);
+    }
+
+    public Task Install(ClusterVersion clusterVersion)
+    {
+        return InstallCluster(clusterVersion);
+    }
+
+    async Task InstallCluster(ClusterVersion clusterVersion)
+    {
+        var configFilePath = await WriteFileToTemporaryDirectory($"kind-config-v{clusterVersion.Major}-{clusterVersion.Minor}.yaml");
 
         var sw = new Stopwatch();
         sw.Restart();
@@ -112,6 +124,7 @@ public class KubernetesClusterInstaller
 
     async Task InstallNfsCsiDriver()
     {
+        await Task.CompletedTask;
         //we need to perform a repo update in helm first
         // var exitCode = SilentProcessRunner.ExecuteCommand(
         //     helmPath,
@@ -152,7 +165,7 @@ public class KubernetesClusterInstaller
             "--atomic",
             "--repo https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/charts",
             "--namespace kube-system",
-            "--version v4.6.0",
+            "--version \"v4.*.*\"",
             $"--kubeconfig \"{KubeConfigPath}\"",
             "csi-driver-nfs",
             "csi-driver-nfs"

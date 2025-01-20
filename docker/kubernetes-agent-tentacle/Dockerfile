@@ -1,3 +1,6 @@
+ARG RuntimeDepsTag
+
+
 FROM golang:1.22 as bootstrapRunnerBuilder
 
 ARG TARGETARCH
@@ -9,7 +12,8 @@ WORKDIR /bootstrapRunner
 # Note: the given ldflags remove debug symbols
 RUN go build -ldflags "-s -w" -o "bin/bootstrapRunner"
 
-FROM mcr.microsoft.com/dotnet/runtime-deps:6.0
+
+FROM mcr.microsoft.com/dotnet/runtime-deps:$RuntimeDepsTag
 
 ARG BUILD_NUMBER
 ARG BUILD_DATE
@@ -49,8 +53,9 @@ RUN chgrp -R 0 /opt /usr /.dotnet && \
 
 # The same as above, but we shouldn't recursively own /etc, as it would add
 # ownership to system files like /etc/passwd
-RUN chgrp 0 /etc && \
-    chmod g=u /etc
+# We own /etc/ssl/certs so we can do a rehash
+RUN chgrp 0 /etc /etc/ssl/certs && \
+    chmod g=u /etc /etc/ssl/certs
 
 ENV BOOTSTRAPRUNNEREXECUTABLEPATH=/bootstrapRunner
 ENV OCTOPUS_RUNNING_IN_CONTAINER=Y
@@ -59,6 +64,7 @@ ENV CustomPublicHostName=""
 ENV ListeningPort=""
 ENV MachinePolicy="Default Machine Policy"
 ENV PublicHostNameConfiguration="ComputerName"
+ENV BearerToken=""
 ENV ServerApiKey=""
 ENV ServerPassword=""
 ENV ServerUsername=""
@@ -67,8 +73,10 @@ ENV ServerPort=""
 ENV ServerUrl=""
 ENV ServerSubscriptionId=""
 ENV Space="Default"
+ENV DeploymentTargetEnabled="False"
+ENV WorkerEnabled="False"
 ENV TargetEnvironment=""
-ENV TargetName=""
+ENV AgentName=""
 ENV TargetRole=""
 ENV TargetTenant=""
 ENV TargetTenantTag=""
@@ -81,6 +89,10 @@ ENV OCTOPUS__K8STENTACLE__DISABLEAUTOPODCLEANUP="False"
 ENV TentacleHome=""
 ENV TentacleApplications=""
 ENV TentacleCertificateBase64=""
+ENV TentaclePollingProxyHost=""
+ENV TentaclePollingProxyPort=""
+ENV TentaclePollingProxyUsername=""
+ENV TentaclePollingProxyPassword=""
 
 ENTRYPOINT ["/scripts/configure-and-run.sh"]
 

@@ -55,17 +55,6 @@ namespace Octopus.Tentacle.Client.Scripts
                     logger);
             }
 
-            if (scriptServiceToUse == ScriptServiceVersion.KubernetesScriptServiceVersion1Alpha)
-            {
-                return new KubernetesScriptServiceV1AlphaExecutor(
-                    clientsHolder.KubernetesScriptServiceV1Alpha,
-                    rpcCallExecutor,
-                    clientOperationMetricsBuilder,
-                    onCancellationAbandonCompleteScriptAfter,
-                    clientOptions,
-                    logger);
-            }
-            
             if (scriptServiceToUse == ScriptServiceVersion.KubernetesScriptServiceVersion1)
             {
                 return new KubernetesScriptServiceV1Executor(

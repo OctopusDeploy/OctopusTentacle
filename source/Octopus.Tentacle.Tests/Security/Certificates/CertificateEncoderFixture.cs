@@ -37,6 +37,7 @@ namespace Octopus.Tentacle.Tests.Security.Certificates
         
         
         [Test]
+        [NotMacTest] // macOS cannot access the Keychain store without a password
         public void WhenGivenABase64StringOfACertificate_ACertificateCanBeCreated()
         {
             // Given

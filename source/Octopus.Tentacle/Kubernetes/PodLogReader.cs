@@ -3,21 +3,22 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Kubernetes.Crypto;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Kubernetes
 {
     static class PodLogReader
     {
-        public static async Task<(IReadOnlyCollection<ProcessOutput> Lines, long NextSequenceNumber, int? exitCode)> ReadPodLogs(long lastLogSequence, StreamReader reader)
+        public static async Task<(IReadOnlyCollection<ProcessOutput> Lines, long NextSequenceNumber, int? exitCode)> ReadPodLogs(long lastLogSequence, StreamReader reader, IPodLogEncryptionProvider encryptionProvider)
         {
             int? exitCode = null;
             var results = new List<ProcessOutput>();
             var nextSequenceNumber = lastLogSequence;
-            long expectedLineNumber = lastLogSequence+1;
-            
-            bool haveReadPastPreviousBatchOfRows = false;
-            
+            var expectedLineNumber = lastLogSequence + 1;
+
+            var haveReadPastPreviousBatchOfRows = false;
+
             while (true)
             {
                 var line = await reader.ReadLineAsync();
@@ -28,7 +29,7 @@ namespace Octopus.Tentacle.Kubernetes
                     return (results, nextSequenceNumber, exitCode);
                 }
 
-                var parseResult = PodLogLineParser.ParseLine(line!);
+                var parseResult = PodLogLineParser.ParseLine(line!, encryptionProvider);
 
                 switch (parseResult)
                 {
@@ -50,7 +51,7 @@ namespace Octopus.Tentacle.Kubernetes
                                 throw new UnexpectedPodLogLineNumberException(expectedLineNumber, podLogLine.LineNumber);
 
                             expectedLineNumber++;
-                            
+
                             if (validParseResult is EndOfStreamPodLogLineParseResult endOfStreamParseResult)
                                 exitCode = endOfStreamParseResult.ExitCode;
 
@@ -74,7 +75,7 @@ namespace Octopus.Tentacle.Kubernetes
     class UnexpectedPodLogLineNumberException : Exception
     {
         public UnexpectedPodLogLineNumberException(long expectedLineNumber, long actualLineNumber)
-        : base($"Unexpected Script Pod log line number, expected: {expectedLineNumber}, actual: {actualLineNumber}")
+            : base($"Unexpected Script Pod log line number, expected: {expectedLineNumber}, actual: {actualLineNumber}")
         {
         }
     }

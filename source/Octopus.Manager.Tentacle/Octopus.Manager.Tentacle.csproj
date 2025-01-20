@@ -12,13 +12,7 @@
     <UseWPF>true</UseWPF>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
-    <TargetFrameworks>net48;net6.0-windows</TargetFrameworks>
-    <!-- 
-      Suppressing those validations error due to validation bugs in .NET 6.
-      This can be removed when we upgrade to .NET7 or above.
-      More info: https://octopusdeploy.slack.com/archives/C039PL7PCUE/p1708490934364109
-    -->
-    <ValidateExecutableReferencesMatchSelfContained>false</ValidateExecutableReferencesMatchSelfContained>
+    <TargetFrameworks>net48;net8.0-windows</TargetFrameworks>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Properties\Icon.ico</ApplicationIcon>
@@ -31,7 +25,7 @@
         <RuntimeIdentifiers>win</RuntimeIdentifiers><!-- This is AnyCPU -->
       </PropertyGroup>
     </When>
-    <When Condition="'$(TargetFramework)' == 'net6.0-windows'">
+    <When Condition="'$(TargetFramework)' == 'net8.0-windows'">
       <PropertyGroup>
         <RuntimeIdentifiers>win-x86;win-x64;</RuntimeIdentifiers>
       </PropertyGroup>
@@ -138,7 +132,10 @@
     <PackageReference Include="NuGet.Packaging.Core" Version="3.6.0-octopus-58692" />
     <PackageReference Include="NuGet.Packaging.Core.Types" Version="3.6.0-octopus-58692" />
     <PackageReference Include="NuGet.Versioning" Version="3.6.0-octopus-58692" />
-    <PackageReference Include="Portable.BouncyCastle" Version="1.9.0" />
+    <PackageReference Include="BouncyCastle.Cryptography" Version="2.4.0" />
+    <PackageReference Include="TaskScheduler" Version="2.7.2" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' != 'net8.0-windows'">
     <PackageReference Include="System.Collections" Version="4.3.0" />
     <PackageReference Include="System.Collections.Concurrent" Version="4.3.0" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
@@ -170,6 +167,5 @@
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
     <PackageReference Include="System.Xml.ReaderWriter" Version="4.3.1" />
     <PackageReference Include="System.Xml.XDocument" Version="4.3.0" />
-    <PackageReference Include="TaskScheduler" Version="2.7.2" />
   </ItemGroup>
 </Project>

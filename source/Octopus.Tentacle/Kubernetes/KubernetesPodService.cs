@@ -15,6 +15,7 @@ namespace Octopus.Tentacle.Kubernetes
         Task WatchAllPods(string initialResourceVersion, Func<WatchEventType, V1Pod, CancellationToken, Task> onChange, Action<Exception> onError, CancellationToken cancellationToken);
         Task<V1Pod> Create(V1Pod pod, CancellationToken cancellationToken);
         Task DeleteIfExists(ScriptTicket scriptTicket, CancellationToken cancellationToken);
+        Task DeleteIfExists(ScriptTicket scriptTicket, TimeSpan gracePeriod, CancellationToken cancellationToken);
     }
 
     public class KubernetesPodService : KubernetesService, IKubernetesPodService
@@ -81,6 +82,12 @@ namespace Octopus.Tentacle.Kubernetes
         }
 
         public async Task DeleteIfExists(ScriptTicket scriptTicket, CancellationToken cancellationToken)
-            => await TryExecuteAsync(async () => await Client.DeleteNamespacedPodAsync(scriptTicket.ToKubernetesScriptPodName(), KubernetesConfig.Namespace, cancellationToken: cancellationToken));
+            => await DeleteIfExistsInternal(scriptTicket, null, cancellationToken);
+
+        public async Task DeleteIfExists(ScriptTicket scriptTicket, TimeSpan gracePeriod, CancellationToken cancellationToken) 
+            => await DeleteIfExistsInternal(scriptTicket, (long)Math.Floor(gracePeriod.TotalSeconds), cancellationToken);
+
+        async Task DeleteIfExistsInternal(ScriptTicket scriptTicket, long? gracePeriodSeconds, CancellationToken cancellationToken)
+            => await TryExecuteAsync(async () => await Client.DeleteNamespacedPodAsync(scriptTicket.ToKubernetesScriptPodName(), KubernetesConfig.Namespace, new V1DeleteOptions(gracePeriodSeconds: gracePeriodSeconds), cancellationToken: cancellationToken));
     }
 }

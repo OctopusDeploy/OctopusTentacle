@@ -20,7 +20,6 @@ using Serilog;
 using static Nuke.Common.IO.FileSystemTasks;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
 
-[CheckBuildProjectConfigurations]
 [ShutdownDotNetAfterServerBuild]
 partial class Build : NukeBuild
 {
@@ -51,32 +50,24 @@ partial class Build : NukeBuild
 
     [Parameter("Branch name for OctoVersion to use to calculate the version number. Can be set via the environment variable OCTOVERSION_CurrentBranch.",
         Name = "OCTOVERSION_CurrentBranch")]
+#pragma warning disable CS0414
     readonly string BranchName = null!;
+#pragma warning restore CS0414
 
     [Parameter("Whether to auto-detect the branch name - this is okay for a local build, but should not be used under CI.")] readonly bool AutoDetectBranch = IsLocalBuild;
 
-    [OctoVersion(UpdateBuildNumber = true, BranchParameter = nameof(BranchName),
-        AutoDetectBranchParameter = nameof(AutoDetectBranch), Framework = "net6.0")]
+    [OctoVersion(UpdateBuildNumber = true, BranchMember = nameof(BranchName),
+        AutoDetectBranchMember = nameof(AutoDetectBranch), Framework = "net8.0")]
     readonly OctoVersionInfo OctoVersionInfo = null!;
 
     [Parameter] string TestFramework = "";
     [Parameter] string TestRuntime = "";
     [Parameter] string TestFilter = "";
 
-    [PackageExecutable(
-        packageId: "azuresigntool",
-        packageExecutable: "azuresigntool.dll")]
-    public static Tool AzureSignTool = null!;
-
-    [PackageExecutable(
+    [NuGetPackage(
         packageId: "wix",
         packageExecutable: "heat.exe")]
     readonly Tool WiXHeatTool = null!;
-
-    [PackageExecutable(
-        packageId: "OctopusTools",
-        packageExecutable: "octo.exe")]
-    readonly Tool OctoCliTool = null!;
 
     [Parameter] public static string AzureKeyVaultUrl = "";
     [Parameter] public static string AzureKeyVaultAppId = "";
@@ -96,8 +87,8 @@ partial class Build : NukeBuild
     readonly AbsolutePath TestDirectory = RootDirectory / "_test";
 
     const string NetFramework = "net48";
-    const string NetCore = "net6.0";
-    const string NetCoreWindows = "net6.0-windows";
+    const string NetCore = "net8.0";
+    const string NetCoreWindows = "net8.0-windows";
 
     IEnumerable<string> RuntimeIds => SpecificRuntimeId != null
         ? new[] { SpecificRuntimeId }
@@ -128,9 +119,9 @@ partial class Build : NukeBuild
         _ => _
             .Executes(() =>
             {
-                SourceDirectory.GlobDirectories("**/bin", "**/obj", "**/TestResults").ForEach(DeleteDirectory);
-                EnsureCleanDirectory(ArtifactsDirectory);
-                EnsureCleanDirectory(BuildDirectory);
+                SourceDirectory.GlobDirectories("**/bin", "**/obj", "**/TestResults").ForEach(p => p.DeleteDirectory());
+                ArtifactsDirectory.CreateOrCleanDirectory();
+                BuildDirectory.CreateOrCleanDirectory();
             });
 
     [PublicAPI]
@@ -150,7 +141,7 @@ partial class Build : NukeBuild
             .Executes(() =>
             {
                 using var versionInfoFile = ModifyTemplatedVersionAndProductFilesWithValues();
-                using var productWxsFile = UpdateMsiProductVersion();
+                UpdateMsiProductVersion();
 
                 var runtimeIds = RuntimeIds.Where(x => x.StartsWith("win"));
 
@@ -173,7 +164,6 @@ partial class Build : NukeBuild
                 }
 
                 versionInfoFile.Dispose();
-                productWxsFile.Dispose();
 
                 var hardenInstallationDirectoryScript = RootDirectory / "scripts" / "Harden-InstallationDirectory.ps1";
                 var directoriesToCopyHardenScriptInto = new[]
@@ -212,13 +202,15 @@ partial class Build : NukeBuild
             .Executes(() =>
             {
                 using var versionInfoFile = ModifyTemplatedVersionAndProductFilesWithValues();
-                using var productWxsFile = UpdateMsiProductVersion();
+                UpdateMsiProductVersion();
 
                 RuntimeIds.Where(x => x.StartsWith("linux-"))
-                    .ForEach(runtimeId => RunBuildFor(NetCore, runtimeId));
+                    .ForEach(runtimeId =>
+                    {
+                        RunBuildFor(NetCore, runtimeId);
+                    });
 
                 versionInfoFile.Dispose();
-                productWxsFile.Dispose();
             });
 
     [PublicAPI]
@@ -228,13 +220,15 @@ partial class Build : NukeBuild
             .Executes(() =>
             {
                 using var versionInfoFile = ModifyTemplatedVersionAndProductFilesWithValues();
-                using var productWxsFile = UpdateMsiProductVersion();
+                UpdateMsiProductVersion();
 
                 RuntimeIds.Where(x => x.StartsWith("osx-"))
-                    .ForEach(runtimeId => RunBuildFor(NetCore, runtimeId));
+                    .ForEach(runtimeId =>
+                    {
+                        RunBuildFor(NetCore, runtimeId);
+                    });
 
                 versionInfoFile.Dispose();
-                productWxsFile.Dispose();
             });
 
     [PublicAPI]
@@ -253,7 +247,7 @@ partial class Build : NukeBuild
             .Description("If not running on a build agent, this step copies the relevant built artifacts to the local packages cache.")
             .Executes(() =>
             {
-                EnsureExistingDirectory(LocalPackagesDirectory);
+                LocalPackagesDirectory.CreateDirectory();
                 CopyFileToDirectory(ArtifactsDirectory / "Chocolatey" / $"OctopusDeploy.Tentacle.{NuGetVersion}.nupkg", LocalPackagesDirectory);
             });
 
@@ -266,7 +260,7 @@ partial class Build : NukeBuild
             .Description("If not running on a build agent, this step copies the relevant built artifacts to the local packages cache.")
             .Executes(() =>
             {
-                EnsureExistingDirectory(LocalPackagesDirectory);
+                LocalPackagesDirectory.CreateDirectory();
                 CopyFileToDirectory(ArtifactsDirectory / "nuget" / $"Octopus.Tentacle.Contracts.{FullSemVer}.nupkg", LocalPackagesDirectory);
                 CopyFileToDirectory(ArtifactsDirectory / "nuget" / $"Octopus.Tentacle.Client.{FullSemVer}.nupkg", LocalPackagesDirectory);
             });
@@ -294,10 +288,9 @@ partial class Build : NukeBuild
     }
 
 //Modifies Product.wxs to embed version information into the shipped product.
-    ModifiableFileWithRestoreContentsOnDispose UpdateMsiProductVersion()
+    void UpdateMsiProductVersion()
     {
         var productWxsFilePath = RootDirectory / "installer" / "Octopus.Tentacle.Installer" / "Product.wxs";
-
         var xmlDoc = new XmlDocument();
         xmlDoc.Load(productWxsFilePath);
 
@@ -313,8 +306,6 @@ partial class Build : NukeBuild
         product.Attributes["Version"]!.Value = OctoVersionInfo.MajorMinorPatch;
 
         xmlDoc.Save(productWxsFilePath);
-
-        return new ModifiableFileWithRestoreContentsOnDispose(productWxsFilePath);
     }
 
     void RunBuildFor(string framework, string runtimeId)
@@ -325,7 +316,7 @@ partial class Build : NukeBuild
             .SetProject(SourceDirectory / "Tentacle.sln")
             .SetConfiguration(configuration)
             .SetFramework(framework)
-            //.SetSelfContained(true)
+            .SetSelfContained(true)
             .SetRuntime(runtimeId)
             .EnableNoRestore()
             .SetVersion(FullSemVer)

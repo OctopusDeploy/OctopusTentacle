@@ -8,18 +8,18 @@ namespace Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators.Proxies
 
     public class MethodInvocationHookProxyDecorator<TService,TRequest, TResponse> : ServiceProxy where TService : class
     {
-        PreMethodInvocationHook<TService, TRequest>? preInvocation;
-        PostMethodInvocationHook<TService, TResponse>? postInvocation;
-        string methodName;
+        PreMethodInvocationHook<TService?, TRequest?>? preInvocation;
+        PostMethodInvocationHook<TService?, TResponse?>? postInvocation;
+        string? methodName;
 
-        void Configure(string methodName, PreMethodInvocationHook<TService, TRequest>? preInvocation, PostMethodInvocationHook<TService, TResponse>? postInvocation)
+        void Configure(string methodName, PreMethodInvocationHook<TService?, TRequest?>? preInvocation, PostMethodInvocationHook<TService?, TResponse?>? postInvocation)
         {
             this.preInvocation = preInvocation;
             this.postInvocation = postInvocation;
             this.methodName = methodName;
         }
 
-        public static TService Create(TService targetService, string methodName, PreMethodInvocationHook<TService, TRequest>? preInvocation, PostMethodInvocationHook<TService, TResponse>? postInvocation)
+        public static TService Create(TService targetService, string methodName, PreMethodInvocationHook<TService?, TRequest?>? preInvocation, PostMethodInvocationHook<TService?, TResponse?>? postInvocation)
         {
             var proxiedService = DispatchProxyAsync.Create<TService, MethodInvocationHookProxyDecorator<TService, TRequest, TResponse>>();
             var proxy = (proxiedService as MethodInvocationHookProxyDecorator<TService, TRequest, TResponse>)!;
@@ -33,7 +33,7 @@ namespace Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators.Proxies
         {
             if (preInvocation is not null && IsMethodThatIsToBeHooked(targetMethod))
             {
-                await preInvocation((TService)TargetService, (TRequest)request);
+                await preInvocation((TService?)TargetService, (TRequest?)request);
             }
         }
 
@@ -41,7 +41,7 @@ namespace Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators.Proxies
         {
             if (postInvocation is not null && IsMethodThatIsToBeHooked(targetMethod))
             {
-                await postInvocation((TService)TargetService, (TResponse)response);
+                await postInvocation((TService?)TargetService, (TResponse?)response);
             }
         }
 

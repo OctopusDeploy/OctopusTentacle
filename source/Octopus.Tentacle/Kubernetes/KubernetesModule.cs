@@ -3,6 +3,8 @@ using Autofac;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Octopus.Tentacle.Background;
+using Octopus.Tentacle.Kubernetes.Configuration;
+using Octopus.Tentacle.Kubernetes.Crypto;
 using Octopus.Tentacle.Kubernetes.Diagnostics;
 using Octopus.Tentacle.Kubernetes.Synchronisation;
 using Octopus.Tentacle.Kubernetes.Synchronisation.Internal;
@@ -15,6 +17,13 @@ namespace Octopus.Tentacle.Kubernetes
         {
             builder.RegisterType<KubernetesPodService>().As<IKubernetesPodService>().SingleInstance();
             builder.RegisterType<KubernetesClusterService>().As<IKubernetesClusterService>().SingleInstance();
+
+            const string agentToolsImageMetadataProvider = "AgentToolsImageMetadataProvider";
+            builder.RegisterType<KubernetesAgentToolsImageVersionMetadataProvider>().Named<IToolsImageVersionMetadataProvider>(agentToolsImageMetadataProvider);
+            builder.RegisterDecorator<IToolsImageVersionMetadataProvider>(
+                (context, inner) => new CachingKubernetesAgentToolsImageVersionMetadataProvider(
+                    inner, context.Resolve<IMemoryCache>()), fromKey: agentToolsImageMetadataProvider);
+            
             builder.RegisterType<KubernetesPodContainerResolver>().As<IKubernetesPodContainerResolver>().SingleInstance();
             builder.RegisterType<KubernetesConfigMapService>().As<IKubernetesConfigMapService>().SingleInstance();
             builder.RegisterType<KubernetesSecretService>().As<IKubernetesSecretService>().SingleInstance();
@@ -24,6 +33,9 @@ namespace Octopus.Tentacle.Kubernetes
             builder.RegisterType<KubernetesPodLogService>().As<IKubernetesPodLogService>().SingleInstance();
             builder.RegisterType<ScriptPodSinceTimeStore>().As<IScriptPodSinceTimeStore>().SingleInstance();
             builder.RegisterType<TentacleScriptLogProvider>().As<ITentacleScriptLogProvider>().SingleInstance();
+            
+            builder.RegisterType<ScriptPodLogEncryptionKeyProvider>().As<IScriptPodLogEncryptionKeyProvider>().SingleInstance();
+            builder.RegisterType<ScriptPodLogEncryptionKeyGenerator>().As<IScriptPodLogEncryptionKeyGenerator>().SingleInstance();
 
             builder.RegisterType<KubernetesPodMonitorTask>().As<IKubernetesPodMonitorTask>().As<IBackgroundTask>().SingleInstance();
             builder.RegisterType<KubernetesPodMonitor>().As<IKubernetesPodMonitor>().As<IKubernetesPodStatusProvider>().SingleInstance();

@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<AppConfig Condition="'$(TargetFramework)' == 'net6.0'">app.netcore.config</AppConfig>
+		<AppConfig Condition="'$(TargetFramework)' == 'net8.0'">app.netcore.config</AppConfig>
 		<ApplicationManifest>Tentacle.exe.manifest</ApplicationManifest>
 		<AssemblyName>Tentacle</AssemblyName>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -10,7 +10,7 @@
 		<OutputType>Exe</OutputType>
 		<PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
 		<RootNamespace>Octopus.Tentacle</RootNamespace>
-		<TargetFrameworks>net48;net6.0;net6.0-windows</TargetFrameworks>
+		<TargetFrameworks>net48;net8.0;net8.0-windows</TargetFrameworks>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<LangVersion>9</LangVersion>
 		<Nullable>enable</Nullable>
@@ -22,7 +22,7 @@
 				<RuntimeIdentifiers>win</RuntimeIdentifiers><!-- This is AnyCPU -->
 			</PropertyGroup>
 		</When>
-		<When Condition="'$(TargetFramework)' == 'net6.0-windows'">
+		<When Condition="'$(TargetFramework)' == 'net8.0-windows'">
 			<PropertyGroup>
 				<RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
 			</PropertyGroup>
@@ -42,17 +42,18 @@
 		<NoWarn>8601</NoWarn>
 		<DefineConstants>$(DefineConstants);HAS_SYSTEM_IDENTITYMODEL_TOKENS;NLOG_HAS_EVENT_LOG_TARGET;NETFX;FULL_FRAMEWORK</DefineConstants>
 	</PropertyGroup>
-	<PropertyGroup Condition=" '$(TargetFramework)' == 'net6.0' Or '$(TargetFramework)' == 'net6.0-windows'">
+	<PropertyGroup Condition=" '$(TargetFramework)' == 'net8.0' Or '$(TargetFramework)' == 'net8.0-windows'">
 		<DefineConstants>$(DefineConstants);HTTP_CLIENT_SUPPORTS_SSL_OPTIONS;REQUIRES_EXPLICIT_LOG_CONFIG;REQUIRES_CODE_PAGE_PROVIDER;USER_INTERACTIVE_DOES_NOT_WORK;DEFAULT_PROXY_IS_NOT_AVAILABLE;HAS_NULLABLE_REF_TYPES</DefineConstants>
 	</PropertyGroup>
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
-		<PackageReference Include="KubernetesClient.Classic" Version="13.0.26" />
+		<PackageReference Include="KubernetesClient.Classic" Version="15.0.1" />
 	</ItemGroup>
-	<ItemGroup Condition="'$(TargetFramework)' == 'net6.0' Or '$(TargetFramework)' == 'net6.0-windows'">
-		<PackageReference Include="KubernetesClient" Version="13.0.26" />
+	<ItemGroup Condition="'$(TargetFramework)' == 'net8.0' Or '$(TargetFramework)' == 'net8.0-windows'">
+		<PackageReference Include="KubernetesClient" Version="15.0.1" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="Octopus.Client" Version="14.3.1436" />
+		<PackageReference Include="BouncyCastle.Cryptography" Version="2.4.0" />
+		<PackageReference Include="Octopus.Client" Version="14.3.1508" />
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Autofac" Version="4.6.2" />
@@ -65,14 +66,19 @@
 		<PackageReference Include="Octopus.Diagnostics" Version="2.1.0" />
 		<PackageReference Include="Octopus.Time" Version="1.1.339" />
 		<PackageReference Include="Polly" Version="7.2.2" />
-		<PackageReference Include="Portable.BouncyCastle" Version="1.9.0" />
-		<PackageReference Include="System.Management" Version="4.7.0" />
-		<PackageReference Include="System.ValueTuple" Version="4.5.0" />
-		<PackageReference Include="System.Net.Primitives" Version="4.3.1" />
 		<PackageReference Include="TaskScheduler" Version="2.7.2" />
 		<PackageReference Include="Nito.AsyncEx" Version="5.0.0" />
 		<PackageReference Include="NLog" Version="5.0.4" />
-		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.1" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(TargetFramework)' != 'net8.0' And '$(TargetFramework)' != 'net8.0-windows'">
+		<PackageReference Include="System.Management" Version="4.7.0" />
+		<PackageReference Include="System.Net.Primitives" Version="4.3.1" />
+		<PackageReference Include="System.ValueTuple" Version="4.5.0" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(TargetFramework)' == 'net8.0' Or '$(TargetFramework)' == 'net8.0-windows'">
+		<PackageReference Include="System.Management" Version="8.0.0" />
+		<PackageReference Include="System.Net.Primitives" Version="4.3.1" />
 	</ItemGroup>
 	<ItemGroup>
 		<Compile Include="..\Solution Items\SolutionInfo.cs">
@@ -98,16 +104,14 @@
 	<ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
 		<Reference Include="System.IdentityModel" />
 	</ItemGroup>
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net8.0' Or '$(TargetFramework)' == 'net8.0-windows' ">
+		<PackageReference Include="System.ServiceModel.Primitives" Version="8.0.0" />
+		<PackageReference Include="System.ServiceProcess.ServiceController" Version="8.0.0" />
+		<PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
+	</ItemGroup>
 	<ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETCoreApp' ">
-		<PackageReference Include="Microsoft.DotNet.Analyzers.Compatibility" Version="0.2.12-alpha">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-		</PackageReference>
-		<PackageReference Include="System.ServiceModel.Primitives" Version="4.5.3" />
-		<PackageReference Include="System.ServiceProcess.ServiceController" Version="7.0.1" />
 		<PackageReference Include="System.IO.FileSystem.AccessControl" Version="5.0.0" />
 		<PackageReference Include="System.Diagnostics.EventLog" Version="8.0.0" />
-		<PackageReference Include="System.Text.Encoding.CodePages" Version="6.0.0" />
 		<PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
 	</ItemGroup>
 	<ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
