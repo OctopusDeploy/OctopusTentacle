@@ -59,9 +59,9 @@ namespace Octopus.Tentacle.Client.Scripts
                 shellScriptCommand.Files.ToArray());
         }
         
-        (ScriptStatus, CommandContext) Map(ScriptStatusResponseV2 r)
+        ScriptExecutorResult Map(ScriptStatusResponseV2 r)
         {
-            return (MapToScriptStatus(r), MapToContextForNextCommand(r));
+            return new (MapToScriptStatus(r), MapToContextForNextCommand(r));
         }
         
         ScriptStatus MapToScriptStatus(ScriptStatusResponseV2 scriptStatusResponse)
@@ -74,7 +74,7 @@ namespace Octopus.Tentacle.Client.Scripts
             return new CommandContext(scriptStatusResponse.Ticket, scriptStatusResponse.NextLogSequence, ScriptServiceVersion.ScriptServiceVersion2);
         }
 
-        public async Task<(ScriptStatus, CommandContext)> StartScript(ExecuteScriptCommand executeScriptCommand,
+        public async Task<ScriptExecutorResult> StartScript(ExecuteScriptCommand executeScriptCommand,
             StartScriptIsBeingReAttempted startScriptIsBeingReAttempted,
             CancellationToken scriptExecutionCancellationToken)
         {
@@ -109,7 +109,7 @@ namespace Octopus.Tentacle.Client.Scripts
                     clientOperationMetricsBuilder,
                     scriptExecutionCancellationToken).ConfigureAwait(false);
 
-                return (MapToScriptStatus(scriptStatusResponse), MapToContextForNextCommand(scriptStatusResponse));
+                return new (MapToScriptStatus(scriptStatusResponse), MapToContextForNextCommand(scriptStatusResponse));
             }
             catch (Exception ex) when (scriptExecutionCancellationToken.IsCancellationRequested)
             {
@@ -124,8 +124,8 @@ namespace Octopus.Tentacle.Client.Scripts
                 if (!startScriptCallIsConnecting || startScriptCallIsBeingRetried)
                 {
                     var scriptStatus = new ScriptStatus(ProcessState.Pending, null, new List<ProcessOutput>());
-                    var defaultTicketForNextStatus = new CommandContext(command.ScriptTicket, 0, ScriptServiceVersion.ScriptServiceVersion2);
-                    return (scriptStatus, defaultTicketForNextStatus);
+                    var contextForNextCommand = new CommandContext(command.ScriptTicket, 0, ScriptServiceVersion.ScriptServiceVersion2);
+                    return new (scriptStatus, contextForNextCommand);
                 }
 
                 // If the StartScript call was not in-flight or being retries then we know the script has not started executing on Tentacle
@@ -134,7 +134,7 @@ namespace Octopus.Tentacle.Client.Scripts
             }
         }
 
-        public async Task<(ScriptStatus, CommandContext)> GetStatus(CommandContext commandContext, CancellationToken scriptExecutionCancellationToken)
+        public async Task<ScriptExecutorResult> GetStatus(CommandContext commandContext, CancellationToken scriptExecutionCancellationToken)
         {
             async Task<ScriptStatusResponseV2> GetStatusAction(CancellationToken ct)
             {
@@ -154,7 +154,7 @@ namespace Octopus.Tentacle.Client.Scripts
             return Map(scriptStatusResponseV2);
         }
 
-        public async Task<(ScriptStatus, CommandContext)> CancelScript(CommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<ScriptExecutorResult> CancelScript(CommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             async Task<ScriptStatusResponseV2> CancelScriptAction(CancellationToken ct)
             {

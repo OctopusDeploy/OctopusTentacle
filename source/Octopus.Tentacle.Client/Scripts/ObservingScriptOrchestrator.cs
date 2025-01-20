@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Octopus.Tentacle.Client.EventDriven;
 using Octopus.Tentacle.Client.Scripts.Models;
 using Octopus.Tentacle.Contracts;
-using Octopus.Tentacle.Contracts.Logging;
 
 namespace Octopus.Tentacle.Client.Scripts
 {
@@ -13,18 +11,15 @@ namespace Octopus.Tentacle.Client.Scripts
         readonly IScriptObserverBackoffStrategy scriptObserverBackOffStrategy;
         readonly OnScriptStatusResponseReceived onScriptStatusResponseReceived;
         readonly OnScriptCompleted onScriptCompleted;
-        readonly ITentacleClientTaskLog logger;
         readonly IScriptExecutor scriptExecutor;
 
         public ObservingScriptOrchestrator(
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
             OnScriptStatusResponseReceived onScriptStatusResponseReceived,
             OnScriptCompleted onScriptCompleted,
-            IScriptExecutor scriptExecutor, 
-            ITentacleClientTaskLog logger)
+            IScriptExecutor scriptExecutor)
         {
             this.scriptExecutor = scriptExecutor;
-            this.logger = logger;
             this.scriptObserverBackOffStrategy = scriptObserverBackOffStrategy;
             this.onScriptStatusResponseReceived = onScriptStatusResponseReceived;
             this.onScriptCompleted = onScriptCompleted;
@@ -32,11 +27,11 @@ namespace Octopus.Tentacle.Client.Scripts
 
         public async Task<ScriptExecutionResult> ExecuteScript(ExecuteScriptCommand command, CancellationToken scriptExecutionCancellationToken)
         {
-            var (scriptStatus, ticketForNextStatus) = await scriptExecutor.StartScript(command,
+            var startScriptResult = await scriptExecutor.StartScript(command,
                 StartScriptIsBeingReAttempted.FirstAttempt, // This is not re-entrant so this should be true.
                 scriptExecutionCancellationToken).ConfigureAwait(false);
 
-            (scriptStatus, _) = await ObserveUntilCompleteThenFinish(scriptStatus, ticketForNextStatus, scriptExecutionCancellationToken).ConfigureAwait(false);
+            var scriptStatus = await ObserveUntilCompleteThenFinish(startScriptResult, scriptExecutionCancellationToken).ConfigureAwait(false);
 
             if (scriptExecutionCancellationToken.IsCancellationRequested)
             {
@@ -48,45 +43,46 @@ namespace Octopus.Tentacle.Client.Scripts
             return new ScriptExecutionResult(scriptStatus.State, scriptStatus.ExitCode!.Value);
         }
 
-        async Task<(ScriptStatus, CommandContext)> ObserveUntilCompleteThenFinish(
-            ScriptStatus scriptStatus,
-            CommandContext commandContext,
+        async Task<ScriptStatus> ObserveUntilCompleteThenFinish(
+            ScriptExecutorResult startScriptResult,
             CancellationToken scriptExecutionCancellationToken)
         {
-            OnScriptStatusResponseReceived(scriptStatus);
+            OnScriptStatusResponseReceived(startScriptResult.ScriptStatus);
 
-            var (lastStatusResponse, lastTicketForNextStatus) =  await ObserveUntilComplete(scriptStatus, commandContext, scriptExecutionCancellationToken).ConfigureAwait(false);
+            var observingUntilCompleteResult =  await ObserveUntilComplete(startScriptResult, scriptExecutionCancellationToken).ConfigureAwait(false);
 
             await onScriptCompleted(scriptExecutionCancellationToken).ConfigureAwait(false);
             
-            lastStatusResponse = await scriptExecutor.CompleteScript(lastTicketForNextStatus, scriptExecutionCancellationToken).ConfigureAwait(false) ?? lastStatusResponse;
+            var completeScriptResponse = await scriptExecutor.CompleteScript(observingUntilCompleteResult.ContextForNextCommand, scriptExecutionCancellationToken).ConfigureAwait(false);
 
-            OnScriptStatusResponseReceived(lastStatusResponse);
+            // V1 can return a result when completing. But other versions do not.
+            // The behaviour we are maintaining is that the result to use for V1 is that of "complete"
+            // but the result to use for other versions is the last observing result.
+            var scriptStatusResponse = completeScriptResponse ?? observingUntilCompleteResult.ScriptStatus;
+            OnScriptStatusResponseReceived(scriptStatusResponse);
 
-            return (lastStatusResponse, lastTicketForNextStatus);
+            return scriptStatusResponse;
         }
 
-        async Task<(ScriptStatus lastStatusResponse, CommandContext lastTicketForNextStatus)> ObserveUntilComplete(
-            ScriptStatus scriptStatus,
-            CommandContext commandContext,
+        async Task<ScriptExecutorResult> ObserveUntilComplete(
+            ScriptExecutorResult startScriptResult,
             CancellationToken scriptExecutionCancellationToken)
         {
-            var lastTicketForNextStatus = commandContext;
-            var lastStatusResponse = scriptStatus;
             var iteration = 0;
             var cancellationIteration = 0;
+            var lastResult = startScriptResult;
 
-            while (lastStatusResponse.State != ProcessState.Complete)
+            while (lastResult.ScriptStatus.State != ProcessState.Complete)
             {
                 if (scriptExecutionCancellationToken.IsCancellationRequested)
                 {
-                    (lastStatusResponse, lastTicketForNextStatus) = await scriptExecutor.CancelScript(lastTicketForNextStatus, scriptExecutionCancellationToken).ConfigureAwait(false);
+                    lastResult = await scriptExecutor.CancelScript(lastResult.ContextForNextCommand, scriptExecutionCancellationToken).ConfigureAwait(false);
                 }
                 else
                 {
                     try
                     {
-                        (lastStatusResponse, lastTicketForNextStatus) = await scriptExecutor.GetStatus(lastTicketForNextStatus, scriptExecutionCancellationToken).ConfigureAwait(false);
+                        lastResult = await scriptExecutor.GetStatus(lastResult.ContextForNextCommand, scriptExecutionCancellationToken).ConfigureAwait(false);
                     }
                     catch (Exception)
                     {
@@ -99,9 +95,9 @@ namespace Octopus.Tentacle.Client.Scripts
                     }
                 }
 
-                OnScriptStatusResponseReceived(lastStatusResponse);
+                OnScriptStatusResponseReceived(lastResult.ScriptStatus);
 
-                if (lastStatusResponse.State == ProcessState.Complete)
+                if (lastResult.ScriptStatus.State == ProcessState.Complete)
                 {
                     continue;
                 }
@@ -120,7 +116,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 }
             }
 
-            return (lastStatusResponse, lastTicketForNextStatus);
+            return lastResult;
         }
 
         void OnScriptStatusResponseReceived(ScriptStatus scriptStatusResponse)

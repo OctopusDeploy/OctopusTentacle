@@ -60,24 +60,19 @@ namespace Octopus.Tentacle.Client.Scripts
             return new CommandContext(scriptStatusResponse.Ticket, scriptStatusResponse.NextLogSequence, ScriptServiceVersion.ScriptServiceVersion1);
         }
 
-        (ScriptStatus, CommandContext) Map(ScriptStatusResponse r)
+        ScriptExecutorResult Map(ScriptStatusResponse r)
         {
-            return (MapToScriptStatus(r), MapToContextForNextCommand(r));
+            return new (MapToScriptStatus(r), MapToContextForNextCommand(r));
         }
 
-        public async Task<(ScriptStatus, CommandContext)> StartScript(ExecuteScriptCommand executeScriptCommand,
+        public async Task<ScriptExecutorResult> StartScript(ExecuteScriptCommand executeScriptCommand,
             StartScriptIsBeingReAttempted startScriptIsBeingReAttempted,
             CancellationToken scriptExecutionCancellationToken)
         {
             // Script Service v1 is not idempotent, do not allow it to be re-attempted as it may run a second time.
             if (startScriptIsBeingReAttempted == StartScriptIsBeingReAttempted.PossiblyBeingReAttempted)
             {
-                return (new ScriptStatus(ProcessState.Complete,
-                        ScriptExitCodes.UnknownScriptExitCode,
-                        new List<ProcessOutput>()),
-                    // TODO: We should try to encourage a DefaultCommandContext which will do nothing perhaps set the ScriptServiceVersion to
-                    // one that always returns the above exit code.
-                    new CommandContext(new ScriptTicket(Guid.NewGuid().ToString()), 0, ScriptServiceVersion.ScriptServiceVersion1));
+                throw new UnsafeStartAttemptException("Cannot start V1 script service if there is a chance it has been attempted before.");
             }
 
             var command = Map(executeScriptCommand);
@@ -96,7 +91,7 @@ namespace Octopus.Tentacle.Client.Scripts
             return Map(new ScriptStatusResponse(scriptTicket, ProcessState.Pending, 0, new List<ProcessOutput>(), 0));
         }
 
-        public async Task<(ScriptStatus, CommandContext)> GetStatus(CommandContext commandContext, CancellationToken scriptExecutionCancellationToken)
+        public async Task<ScriptExecutorResult> GetStatus(CommandContext commandContext, CancellationToken scriptExecutionCancellationToken)
         {
             var scriptStatusResponseV1 = await rpcCallExecutor.ExecuteWithNoRetries(
                 RpcCall.Create<IScriptService>(nameof(IScriptService.GetStatus)),
@@ -114,7 +109,7 @@ namespace Octopus.Tentacle.Client.Scripts
             return Map(scriptStatusResponseV1);
         }
 
-        public async Task<(ScriptStatus, CommandContext)> CancelScript(CommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<ScriptExecutorResult> CancelScript(CommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             var response = await rpcCallExecutor.ExecuteWithNoRetries(
                 RpcCall.Create<IScriptService>(nameof(IScriptService.CancelScript)),

@@ -51,7 +51,7 @@ namespace Octopus.Tentacle.Client
             rpcCallExecutor = RpcCallExecutorFactory.Create(this.clientOptions.RpcRetrySettings.RetryDuration, this.tentacleClientObserver);
         }
 
-        public async Task<(ScriptStatus, CommandContext)> StartScript(ExecuteScriptCommand executeScriptCommand,
+        public async Task<ScriptExecutorResult> StartScript(ExecuteScriptCommand executeScriptCommand,
             StartScriptIsBeingReAttempted startScriptIsBeingReAttempted,
             CancellationToken cancellationToken)
         {
@@ -78,7 +78,7 @@ namespace Octopus.Tentacle.Client
             }
         }
 
-        public async Task<(ScriptStatus, CommandContext)> GetStatus(CommandContext ticketForNextNextStatus, CancellationToken cancellationToken)
+        public async Task<ScriptExecutorResult> GetStatus(CommandContext ticketForNextNextStatus, CancellationToken cancellationToken)
         {
             var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
             
@@ -89,7 +89,7 @@ namespace Octopus.Tentacle.Client
             return await scriptExecutor.GetStatus(ticketForNextNextStatus, cancellationToken);
         }
 
-        public async Task<(ScriptStatus, CommandContext)> CancelScript(CommandContext ticketForNextNextStatus, CancellationToken cancellationToken)
+        public async Task<ScriptExecutorResult> CancelScript(CommandContext ticketForNextNextStatus, CancellationToken cancellationToken)
         {
             var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
             

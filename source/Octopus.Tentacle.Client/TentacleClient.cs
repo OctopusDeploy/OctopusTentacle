@@ -176,8 +176,7 @@ namespace Octopus.Tentacle.Client
                 var orchestrator = new ObservingScriptOrchestrator(scriptObserverBackOffStrategy,
                     onScriptStatusResponseReceived,
                     onScriptCompleted,
-                    scriptExecutor,
-                    logger);
+                    scriptExecutor);
 
                 var result = await orchestrator.ExecuteScript(executeScriptCommand, scriptExecutionCancellationToken);
 
