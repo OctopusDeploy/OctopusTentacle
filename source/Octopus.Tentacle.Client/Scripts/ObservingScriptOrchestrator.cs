@@ -120,7 +120,6 @@ namespace Octopus.Tentacle.Client.Scripts
                 }
             }
 
-            new ShortCutTakenHere();
             return (lastStatusResponse, lastTicketForNextStatus);
         }
 
