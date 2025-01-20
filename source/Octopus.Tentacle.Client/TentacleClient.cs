@@ -27,7 +27,7 @@ namespace Octopus.Tentacle.Client
         
         readonly TentacleClientOptions clientOptions;
         readonly ITentacleServiceDecoratorFactory? tentacleServicesDecoratorFactory;
-        readonly ClientsHolder clientsHolder;
+        readonly AllClients allClients;
 
         public static void CacheServiceWasNotFoundResponseMessages(IHalibutRuntime halibutRuntime)
         {
@@ -77,7 +77,7 @@ namespace Octopus.Tentacle.Client
                 throw new ArgumentException("Ensure that TentacleClient.CacheServiceWasNotFoundResponseMessages has been called for the HalibutRuntime", nameof(halibutRuntime));
             }
 
-            clientsHolder = new ClientsHolder(halibutRuntime, serviceEndPoint, tentacleServicesDecoratorFactory);
+            allClients = new AllClients(halibutRuntime, serviceEndPoint, tentacleServicesDecoratorFactory);
 
             rpcCallExecutor = RpcCallExecutorFactory.Create(this.clientOptions.RpcRetrySettings.RetryDuration, this.tentacleClientObserver);
         }
@@ -91,7 +91,7 @@ namespace Octopus.Tentacle.Client
             async Task<UploadResult> UploadFileAction(CancellationToken ct)
             {
                 logger.Info($"Beginning upload of {fileName} to Tentacle");
-                var result = await clientsHolder.ClientFileTransferServiceV1.UploadFileAsync(path, package, new HalibutProxyRequestOptions(ct));
+                var result = await allClients.ClientFileTransferServiceV1.UploadFileAsync(path, package, new HalibutProxyRequestOptions(ct));
                 logger.Info("Upload complete");
 
                 return result;
@@ -126,7 +126,7 @@ namespace Octopus.Tentacle.Client
             async Task<DataStream> DownloadFileAction(CancellationToken ct)
             {
                 logger.Info($"Beginning download of {Path.GetFileName(remotePath)} from Tentacle");
-                var result = await clientsHolder.ClientFileTransferServiceV1.DownloadFileAsync(remotePath, new HalibutProxyRequestOptions(ct));
+                var result = await allClients.ClientFileTransferServiceV1.DownloadFileAsync(remotePath, new HalibutProxyRequestOptions(ct));
                 logger.Info("Download complete");
 
                 return result;
@@ -165,7 +165,7 @@ namespace Octopus.Tentacle.Client
             try
             {
                 
-                var eventDrivenScriptExecutor = new AggregateScriptExecutor(logger, 
+                var scriptExecutor = new ScriptExecutor(logger, 
                     tentacleClientObserver,
                     clientOptions,
                     halibutRuntime,
@@ -176,7 +176,7 @@ namespace Octopus.Tentacle.Client
                 var orchestrator = new ObservingScriptOrchestrator(scriptObserverBackOffStrategy,
                     onScriptStatusResponseReceived,
                     onScriptCompleted,
-                    eventDrivenScriptExecutor,
+                    scriptExecutor,
                     logger);
 
                 var result = await orchestrator.ExecuteScript(executeScriptCommand, scriptExecutionCancellationToken);

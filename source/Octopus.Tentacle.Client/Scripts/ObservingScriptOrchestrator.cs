@@ -48,9 +48,9 @@ namespace Octopus.Tentacle.Client.Scripts
             return new ScriptExecutionResult(scriptStatus.State, scriptStatus.ExitCode!.Value);
         }
 
-        async Task<(ScriptStatus, ICommandContext)> ObserveUntilCompleteThenFinish(
+        async Task<(ScriptStatus, CommandContext)> ObserveUntilCompleteThenFinish(
             ScriptStatus scriptStatus,
-            ICommandContext commandContext,
+            CommandContext commandContext,
             CancellationToken scriptExecutionCancellationToken)
         {
             OnScriptStatusResponseReceived(scriptStatus);
@@ -59,16 +59,16 @@ namespace Octopus.Tentacle.Client.Scripts
 
             await onScriptCompleted(scriptExecutionCancellationToken).ConfigureAwait(false);
             
-            lastStatusResponse = await scriptExecutor.CleanUpScript(lastTicketForNextStatus, scriptExecutionCancellationToken).ConfigureAwait(false) ?? lastStatusResponse;
+            lastStatusResponse = await scriptExecutor.CompleteScript(lastTicketForNextStatus, scriptExecutionCancellationToken).ConfigureAwait(false) ?? lastStatusResponse;
 
             OnScriptStatusResponseReceived(lastStatusResponse);
 
             return (lastStatusResponse, lastTicketForNextStatus);
         }
 
-        async Task<(ScriptStatus lastStatusResponse, ICommandContext lastTicketForNextStatus)> ObserveUntilComplete(
+        async Task<(ScriptStatus lastStatusResponse, CommandContext lastTicketForNextStatus)> ObserveUntilComplete(
             ScriptStatus scriptStatus,
-            ICommandContext commandContext,
+            CommandContext commandContext,
             CancellationToken scriptExecutionCancellationToken)
         {
             var lastTicketForNextStatus = commandContext;

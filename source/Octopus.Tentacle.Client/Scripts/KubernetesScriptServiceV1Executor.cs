@@ -68,22 +68,22 @@ namespace Octopus.Tentacle.Client.Scripts
                 kubernetesScriptCommand.Files.ToArray(),
                 kubernetesScriptCommand.IsRawScript);
         }
-        (ScriptStatus, ICommandContext) Map(KubernetesScriptStatusResponseV1 r)
+        (ScriptStatus, CommandContext) Map(KubernetesScriptStatusResponseV1 r)
         {
-            return (MapToScriptStatus(r), MapToNextStatus(r));
+            return (MapToScriptStatus(r), MapToContextForNextCommand(r));
         }
         
-        private ScriptStatus MapToScriptStatus(KubernetesScriptStatusResponseV1 scriptStatusResponse)
+        ScriptStatus MapToScriptStatus(KubernetesScriptStatusResponseV1 scriptStatusResponse)
         {
             return new ScriptStatus(scriptStatusResponse.State, scriptStatusResponse.ExitCode, scriptStatusResponse.Logs);
         }
 
-        private ICommandContext MapToNextStatus(KubernetesScriptStatusResponseV1 scriptStatusResponse)
+        CommandContext MapToContextForNextCommand(KubernetesScriptStatusResponseV1 scriptStatusResponse)
         {
-            return new DefaultCommandContext(scriptStatusResponse.ScriptTicket, scriptStatusResponse.NextLogSequence, ScriptServiceVersion.KubernetesScriptServiceVersion1);
+            return new CommandContext(scriptStatusResponse.ScriptTicket, scriptStatusResponse.NextLogSequence, ScriptServiceVersion.KubernetesScriptServiceVersion1);
         }
 
-        public async Task<(ScriptStatus, ICommandContext)> StartScript(ExecuteScriptCommand executeScriptCommand,
+        public async Task<(ScriptStatus, CommandContext)> StartScript(ExecuteScriptCommand executeScriptCommand,
             StartScriptIsBeingReAttempted startScriptIsBeingReAttempted,
             CancellationToken scriptExecutionCancellationToken)
         {
@@ -117,7 +117,7 @@ namespace Octopus.Tentacle.Client.Scripts
                     clientOperationMetricsBuilder,
                     scriptExecutionCancellationToken).ConfigureAwait(false);
                 
-                return (MapToScriptStatus(scriptStatusResponse), MapToNextStatus(scriptStatusResponse));
+                return (MapToScriptStatus(scriptStatusResponse), MapToContextForNextCommand(scriptStatusResponse));
             }
             catch (Exception ex) when (scriptExecutionCancellationToken.IsCancellationRequested)
             {
@@ -132,7 +132,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 if (!startScriptCallIsConnecting || startScriptCallIsBeingRetried)
                 {
                     var scriptStatus = new ScriptStatus(ProcessState.Pending, null, new List<ProcessOutput>());
-                    var defaultTicketForNextStatus = new DefaultCommandContext(command.ScriptTicket, 0, ScriptServiceVersion.KubernetesScriptServiceVersion1);
+                    var defaultTicketForNextStatus = new CommandContext(command.ScriptTicket, 0, ScriptServiceVersion.KubernetesScriptServiceVersion1);
                     return (scriptStatus, defaultTicketForNextStatus);
                 }
 
@@ -142,36 +142,27 @@ namespace Octopus.Tentacle.Client.Scripts
             }
         }
 
-        public async Task<(ScriptStatus, ICommandContext)> GetStatus(ICommandContext commandContext, CancellationToken scriptExecutionCancellationToken)
-        {
-            return Map(await _GetStatus(commandContext, scriptExecutionCancellationToken));
-        }
-
-        private async Task<KubernetesScriptStatusResponseV1> _GetStatus(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<(ScriptStatus, CommandContext)> GetStatus(CommandContext commandContext, CancellationToken scriptExecutionCancellationToken)
         {
             async Task<KubernetesScriptStatusResponseV1> GetStatusAction(CancellationToken ct)
             {
-                var request = new KubernetesScriptStatusRequestV1(lastStatusResponse.ScriptTicket, lastStatusResponse.NextLogSequence);
+                var request = new KubernetesScriptStatusRequestV1(commandContext.ScriptTicket, commandContext.NextLogSequence);
                 var result = await clientKubernetesScriptServiceV1.GetStatusAsync(request, new HalibutProxyRequestOptions(ct));
 
                 return result;
             }
 
-            return await rpcCallExecutor.Execute(
+            var kubernetesScriptStatusResponseV1 = await rpcCallExecutor.Execute(
                 retriesEnabled: clientOptions.RpcRetrySettings.RetriesEnabled,
                 RpcCall.Create<IKubernetesScriptServiceV1>(nameof(IKubernetesScriptServiceV1.GetStatus)),
                 GetStatusAction,
                 logger,
                 clientOperationMetricsBuilder,
                 scriptExecutionCancellationToken).ConfigureAwait(false);
+            return Map(kubernetesScriptStatusResponseV1);
         }
 
-        public async Task<(ScriptStatus, ICommandContext)> CancelScript(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
-        {
-            return Map(await _GetStatus(lastStatusResponse, scriptExecutionCancellationToken)); 
-        }
-
-        async Task<KubernetesScriptStatusResponseV1> _CancelScript(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<(ScriptStatus, CommandContext)> CancelScript(CommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             async Task<KubernetesScriptStatusResponseV1> CancelScriptAction(CancellationToken ct)
             {
@@ -185,7 +176,7 @@ namespace Octopus.Tentacle.Client.Scripts
             // If script execution is already triggering RPC Retries and then the script execution is cancelled there is a high chance that the cancel RPC call will fail as well and go into RPC retries.
             // We could potentially reduce the time to failure by not retrying the cancel RPC Call if the previous RPC call was already triggering RPC Retries.
 
-            return await rpcCallExecutor.Execute(
+            var kubernetesScriptStatusResponseV1 = await rpcCallExecutor.Execute(
                 retriesEnabled: clientOptions.RpcRetrySettings.RetriesEnabled,
                 RpcCall.Create<IKubernetesScriptServiceV1>(nameof(IKubernetesScriptServiceV1.CancelScript)),
                 CancelScriptAction,
@@ -193,9 +184,10 @@ namespace Octopus.Tentacle.Client.Scripts
                 clientOperationMetricsBuilder,
                 // We don't want to cancel this operation as it is responsible for stopping the script executing on the Tentacle
                 CancellationToken.None).ConfigureAwait(false);
+            return Map(kubernetesScriptStatusResponseV1);
         }
 
-        public async Task<ScriptStatus?> CleanUpScript(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<ScriptStatus?> CompleteScript(CommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             try
             {

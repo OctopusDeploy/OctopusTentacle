@@ -17,16 +17,16 @@ namespace Octopus.Tentacle.Client
     /// <summary>
     /// Executes scripts, on the best available script service. 
     /// </summary>
-    public class AggregateScriptExecutor : IScriptExecutor
+    public class ScriptExecutor : IScriptExecutor
     {
         readonly ITentacleClientTaskLog logger;
         readonly ITentacleClientObserver tentacleClientObserver; 
         readonly TentacleClientOptions clientOptions;
-        readonly ClientsHolder clientsHolder;
+        readonly AllClients allClients;
         readonly RpcCallExecutor rpcCallExecutor;
         readonly TimeSpan onCancellationAbandonCompleteScriptAfter;
 
-        public AggregateScriptExecutor(ITentacleClientTaskLog logger,
+        public ScriptExecutor(ITentacleClientTaskLog logger,
             ITentacleClientObserver tentacleClientObserver,
             TentacleClientOptions clientOptions,
             IHalibutRuntime halibutRuntime,
@@ -35,7 +35,7 @@ namespace Octopus.Tentacle.Client
         {
         }
         
-        internal AggregateScriptExecutor(ITentacleClientTaskLog logger,
+        internal ScriptExecutor(ITentacleClientTaskLog logger,
             ITentacleClientObserver tentacleClientObserver,
             TentacleClientOptions clientOptions,
             IHalibutRuntime halibutRuntime,
@@ -47,11 +47,11 @@ namespace Octopus.Tentacle.Client
             this.tentacleClientObserver = tentacleClientObserver;
             this.clientOptions = clientOptions;
             this.onCancellationAbandonCompleteScriptAfter = onCancellationAbandonCompleteScriptAfter;
-            clientsHolder = new ClientsHolder(halibutRuntime, serviceEndPoint, tentacleServicesDecoratorFactory);
+            allClients = new AllClients(halibutRuntime, serviceEndPoint, tentacleServicesDecoratorFactory);
             rpcCallExecutor = RpcCallExecutorFactory.Create(this.clientOptions.RpcRetrySettings.RetryDuration, this.tentacleClientObserver);
         }
 
-        public async Task<(ScriptStatus, ICommandContext)> StartScript(ExecuteScriptCommand executeScriptCommand,
+        public async Task<(ScriptStatus, CommandContext)> StartScript(ExecuteScriptCommand executeScriptCommand,
             StartScriptIsBeingReAttempted startScriptIsBeingReAttempted,
             CancellationToken cancellationToken)
         {
@@ -59,18 +59,18 @@ namespace Octopus.Tentacle.Client
             
             var scriptServiceToUse = await DetermineScriptServiceVersionToUse(cancellationToken, operationMetricsBuilder);
 
-            var scriptOrchestratorFactory = CreateScriptOrchestratorFactory(operationMetricsBuilder);
+            var scriptExecutorFactory = CreateScriptExecutorFactory(operationMetricsBuilder);
 
-            var orchestrator = scriptOrchestratorFactory.CreateScriptExecutor(scriptServiceToUse);
-            return await orchestrator.StartScript(executeScriptCommand, startScriptIsBeingReAttempted, cancellationToken);
+            var scriptExecutor = scriptExecutorFactory.CreateScriptExecutor(scriptServiceToUse);
+            return await scriptExecutor.StartScript(executeScriptCommand, startScriptIsBeingReAttempted, cancellationToken);
         }
 
         async Task<ScriptServiceVersion> DetermineScriptServiceVersionToUse(CancellationToken cancellationToken, ClientOperationMetricsBuilder operationMetricsBuilder)
         {
             try
             {
-                var scriptServicePicker = new ScriptServicePicker(clientsHolder.CapabilitiesServiceV2, logger, rpcCallExecutor, clientOptions, operationMetricsBuilder);
-                return await scriptServicePicker.DetermineScriptServiceVersionToUse(cancellationToken);
+                var scriptServiceVersionSelector = new ScriptServiceVersionSelector(allClients.CapabilitiesServiceV2, logger, rpcCallExecutor, clientOptions, operationMetricsBuilder);
+                return await scriptServiceVersionSelector.DetermineScriptServiceVersionToUse(cancellationToken);
             }
             catch (Exception ex) when (cancellationToken.IsCancellationRequested)
             {
@@ -78,42 +78,42 @@ namespace Octopus.Tentacle.Client
             }
         }
 
-        public async Task<(ScriptStatus, ICommandContext)> GetStatus(ICommandContext ticketForNextNextStatus, CancellationToken cancellationToken)
+        public async Task<(ScriptStatus, CommandContext)> GetStatus(CommandContext ticketForNextNextStatus, CancellationToken cancellationToken)
         {
             var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
             
-            var scriptOrchestratorFactory = CreateScriptOrchestratorFactory(operationMetricsBuilder);
+            var scriptExecutorFactory = CreateScriptExecutorFactory(operationMetricsBuilder);
 
-            var orchestrator = scriptOrchestratorFactory.CreateScriptExecutor(ticketForNextNextStatus.WhichService);
+            var scriptExecutor = scriptExecutorFactory.CreateScriptExecutor(ticketForNextNextStatus.ScripServiceVersionUsed);
 
-            return await orchestrator.GetStatus(ticketForNextNextStatus, cancellationToken);
+            return await scriptExecutor.GetStatus(ticketForNextNextStatus, cancellationToken);
         }
 
-        public async Task<(ScriptStatus, ICommandContext)> CancelScript(ICommandContext ticketForNextNextStatus, CancellationToken cancellationToken)
+        public async Task<(ScriptStatus, CommandContext)> CancelScript(CommandContext ticketForNextNextStatus, CancellationToken cancellationToken)
         {
             var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
             
-            var scriptOrchestratorFactory = CreateScriptOrchestratorFactory(operationMetricsBuilder);
+            var scriptExecutorFactory = CreateScriptExecutorFactory(operationMetricsBuilder);
 
-            var orchestrator = scriptOrchestratorFactory.CreateScriptExecutor(ticketForNextNextStatus.WhichService);
+            var scriptExecutor = scriptExecutorFactory.CreateScriptExecutor(ticketForNextNextStatus.ScripServiceVersionUsed);
 
-            return await orchestrator.CancelScript(ticketForNextNextStatus, cancellationToken);
-        }
-        
-        public async Task<ScriptStatus?> CleanUpScript(ICommandContext ticketForNextNextStatus, CancellationToken cancellationToken)
-        {
-            var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
-            
-            var scriptOrchestratorFactory = CreateScriptOrchestratorFactory(operationMetricsBuilder);
-
-            var orchestrator = scriptOrchestratorFactory.CreateScriptExecutor(ticketForNextNextStatus.WhichService);
-
-            return await orchestrator.CleanUpScript(ticketForNextNextStatus, cancellationToken);
+            return await scriptExecutor.CancelScript(ticketForNextNextStatus, cancellationToken);
         }
         
-        ScriptOrchestratorFactory CreateScriptOrchestratorFactory(ClientOperationMetricsBuilder operationMetricsBuilder)
+        public async Task<ScriptStatus?> CompleteScript(CommandContext ticketForNextNextStatus, CancellationToken cancellationToken)
         {
-            return new ScriptOrchestratorFactory(clientsHolder, 
+            var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
+            
+            var scriptExecutorFactory = CreateScriptExecutorFactory(operationMetricsBuilder);
+
+            var scriptExecutor = scriptExecutorFactory.CreateScriptExecutor(ticketForNextNextStatus.ScripServiceVersionUsed);
+
+            return await scriptExecutor.CompleteScript(ticketForNextNextStatus, cancellationToken);
+        }
+        
+        ScriptExecutorFactory CreateScriptExecutorFactory(ClientOperationMetricsBuilder operationMetricsBuilder)
+        {
+            return new ScriptExecutorFactory(allClients, 
                 rpcCallExecutor, 
                 operationMetricsBuilder,
                 onCancellationAbandonCompleteScriptAfter,

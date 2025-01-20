@@ -55,17 +55,17 @@ namespace Octopus.Tentacle.Client.Scripts
             return new ScriptStatus(scriptStatusResponse.State, scriptStatusResponse.ExitCode, scriptStatusResponse.Logs);
         }
 
-        ICommandContext MapToNextStatus(ScriptStatusResponse scriptStatusResponse)
+        CommandContext MapToContextForNextCommand(ScriptStatusResponse scriptStatusResponse)
         {
-            return new DefaultCommandContext(scriptStatusResponse.Ticket, scriptStatusResponse.NextLogSequence, ScriptServiceVersion.ScriptServiceVersion1);
+            return new CommandContext(scriptStatusResponse.Ticket, scriptStatusResponse.NextLogSequence, ScriptServiceVersion.ScriptServiceVersion1);
         }
 
-        (ScriptStatus, ICommandContext) Map(ScriptStatusResponse r)
+        (ScriptStatus, CommandContext) Map(ScriptStatusResponse r)
         {
-            return (MapToScriptStatus(r), MapToNextStatus(r));
+            return (MapToScriptStatus(r), MapToContextForNextCommand(r));
         }
 
-        public async Task<(ScriptStatus, ICommandContext)> StartScript(ExecuteScriptCommand executeScriptCommand,
+        public async Task<(ScriptStatus, CommandContext)> StartScript(ExecuteScriptCommand executeScriptCommand,
             StartScriptIsBeingReAttempted startScriptIsBeingReAttempted,
             CancellationToken scriptExecutionCancellationToken)
         {
@@ -77,7 +77,7 @@ namespace Octopus.Tentacle.Client.Scripts
                         new List<ProcessOutput>()),
                     // TODO: We should try to encourage a DefaultCommandContext which will do nothing perhaps set the ScriptServiceVersion to
                     // one that always returns the above exit code.
-                    new DefaultCommandContext(new ScriptTicket(Guid.NewGuid().ToString()), 0, ScriptServiceVersion.ScriptServiceVersion1));
+                    new CommandContext(new ScriptTicket(Guid.NewGuid().ToString()), 0, ScriptServiceVersion.ScriptServiceVersion1));
             }
 
             var command = Map(executeScriptCommand);
@@ -96,18 +96,13 @@ namespace Octopus.Tentacle.Client.Scripts
             return Map(new ScriptStatusResponse(scriptTicket, ProcessState.Pending, 0, new List<ProcessOutput>(), 0));
         }
 
-        public async Task<(ScriptStatus, ICommandContext)> GetStatus(ICommandContext commandContext, CancellationToken scriptExecutionCancellationToken)
-        {
-            return Map(await _GetStatus(commandContext, scriptExecutionCancellationToken));
-        }
-
-        async Task<ScriptStatusResponse> _GetStatus(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<(ScriptStatus, CommandContext)> GetStatus(CommandContext commandContext, CancellationToken scriptExecutionCancellationToken)
         {
             var scriptStatusResponseV1 = await rpcCallExecutor.ExecuteWithNoRetries(
                 RpcCall.Create<IScriptService>(nameof(IScriptService.GetStatus)),
                 async ct =>
                 {
-                    var request = new ScriptStatusRequest(lastStatusResponse.ScriptTicket, lastStatusResponse.NextLogSequence);
+                    var request = new ScriptStatusRequest(commandContext.ScriptTicket, commandContext.NextLogSequence);
                     var result = await clientScriptServiceV1.GetStatusAsync(request, new HalibutProxyRequestOptions(ct));
 
                     return result;
@@ -116,15 +111,10 @@ namespace Octopus.Tentacle.Client.Scripts
                 clientOperationMetricsBuilder,
                 scriptExecutionCancellationToken).ConfigureAwait(false);
 
-            return scriptStatusResponseV1;
+            return Map(scriptStatusResponseV1);
         }
 
-        public async Task<(ScriptStatus, ICommandContext)> CancelScript(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
-        {
-            return Map(await _Cancel(lastStatusResponse, scriptExecutionCancellationToken));
-        }
-
-        async Task<ScriptStatusResponse> _Cancel(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<(ScriptStatus, CommandContext)> CancelScript(CommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             var response = await rpcCallExecutor.ExecuteWithNoRetries(
                 RpcCall.Create<IScriptService>(nameof(IScriptService.CancelScript)),
@@ -139,15 +129,10 @@ namespace Octopus.Tentacle.Client.Scripts
                 clientOperationMetricsBuilder,
                 CancellationToken.None).ConfigureAwait(false);
 
-            return response;
+            return Map(response);
         }
 
-        public async Task<ScriptStatus?> CleanUpScript(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
-        {
-            return MapToScriptStatus(await _CleanUpScript(lastStatusResponse, scriptExecutionCancellationToken));
-        }
-
-        async Task<ScriptStatusResponse> _CleanUpScript(ICommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<ScriptStatus?> CompleteScript(CommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             var response = await rpcCallExecutor.ExecuteWithNoRetries(
                 RpcCall.Create<IScriptService>(nameof(IScriptService.CompleteScript)),
@@ -162,7 +147,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 clientOperationMetricsBuilder,
                 CancellationToken.None).ConfigureAwait(false);
 
-            return response;
+            return MapToScriptStatus(response);
         }
     }
 }

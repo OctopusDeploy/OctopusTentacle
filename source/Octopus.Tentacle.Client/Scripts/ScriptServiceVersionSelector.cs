@@ -12,7 +12,7 @@ using Octopus.Tentacle.Contracts.Observability;
 
 namespace Octopus.Tentacle.Client.Scripts
 {
-    public class ScriptServicePicker
+    public class ScriptServiceVersionSelector
     {
         readonly ITentacleClientTaskLog logger;
         readonly IAsyncClientCapabilitiesServiceV2 clientCapabilitiesServiceV2;
@@ -20,7 +20,7 @@ namespace Octopus.Tentacle.Client.Scripts
         readonly TentacleClientOptions clientOptions;
         readonly ClientOperationMetricsBuilder clientOperationMetricsBuilder;
 
-        internal ScriptServicePicker(
+        internal ScriptServiceVersionSelector(
             IAsyncClientCapabilitiesServiceV2 clientCapabilitiesServiceV2, 
             ITentacleClientTaskLog logger, 
             RpcCallExecutor rpcCallExecutor,

@@ -9,14 +9,14 @@ namespace Octopus.Tentacle.Client.Scripts
 {
     public interface IScriptExecutor 
     {
-        Task<(ScriptStatus, ICommandContext)> StartScript(ExecuteScriptCommand command,
+        Task<(ScriptStatus, CommandContext)> StartScript(ExecuteScriptCommand command,
             StartScriptIsBeingReAttempted startScriptIsBeingReAttempted,
             CancellationToken scriptExecutionCancellationToken);
         
-        Task<(ScriptStatus, ICommandContext)> GetStatus(ICommandContext commandContext, CancellationToken scriptExecutionCancellationToken);
+        Task<(ScriptStatus, CommandContext)> GetStatus(CommandContext commandContext, CancellationToken scriptExecutionCancellationToken);
         
-        Task<(ScriptStatus, ICommandContext)> CancelScript(ICommandContext commandContext, CancellationToken scriptExecutionCancellationToken);
+        Task<(ScriptStatus, CommandContext)> CancelScript(CommandContext commandContext, CancellationToken scriptExecutionCancellationToken);
         
-        Task<ScriptStatus?> CleanUpScript(ICommandContext commandContext, CancellationToken scriptExecutionCancellationToken);
+        Task<ScriptStatus?> CompleteScript(CommandContext commandContext, CancellationToken scriptExecutionCancellationToken);
     }
 }

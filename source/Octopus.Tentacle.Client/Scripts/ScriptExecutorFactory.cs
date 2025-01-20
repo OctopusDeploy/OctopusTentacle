@@ -6,25 +6,25 @@ using Octopus.Tentacle.Contracts.Logging;
 
 namespace Octopus.Tentacle.Client.Scripts
 {
-    class ScriptOrchestratorFactory
+    class ScriptExecutorFactory
     {
         readonly RpcCallExecutor rpcCallExecutor;
         readonly ClientOperationMetricsBuilder clientOperationMetricsBuilder;
         readonly TimeSpan onCancellationAbandonCompleteScriptAfter;
         readonly ITentacleClientTaskLog logger;
 
-        readonly ClientsHolder clientsHolder;
+        readonly AllClients allClients;
         readonly TentacleClientOptions clientOptions;
 
-        public ScriptOrchestratorFactory(
-            ClientsHolder clientsHolder,
+        public ScriptExecutorFactory(
+            AllClients allClients,
             RpcCallExecutor rpcCallExecutor,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
             TimeSpan onCancellationAbandonCompleteScriptAfter,
             TentacleClientOptions clientOptions,
             ITentacleClientTaskLog logger)
         {
-            this.clientsHolder = clientsHolder;
+            this.allClients = allClients;
             this.rpcCallExecutor = rpcCallExecutor;
             this.clientOperationMetricsBuilder = clientOperationMetricsBuilder;
             this.onCancellationAbandonCompleteScriptAfter = onCancellationAbandonCompleteScriptAfter;
@@ -37,7 +37,7 @@ namespace Octopus.Tentacle.Client.Scripts
             if (scriptServiceToUse == ScriptServiceVersion.ScriptServiceVersion1)
             {
                 return new ScriptServiceV1Executor(
-                    clientsHolder.ScriptServiceV1,
+                    allClients.ScriptServiceV1,
                     rpcCallExecutor,
                     clientOperationMetricsBuilder,
                     logger);
@@ -46,7 +46,7 @@ namespace Octopus.Tentacle.Client.Scripts
             if (scriptServiceToUse == ScriptServiceVersion.ScriptServiceVersion2)
             {
                 return new ScriptServiceV2Executor(
-                    clientsHolder.ScriptServiceV2,
+                    allClients.ScriptServiceV2,
                     rpcCallExecutor,
                     clientOperationMetricsBuilder,
                     onCancellationAbandonCompleteScriptAfter,
@@ -57,7 +57,7 @@ namespace Octopus.Tentacle.Client.Scripts
             if (scriptServiceToUse == ScriptServiceVersion.KubernetesScriptServiceVersion1)
             {
                 return new KubernetesScriptServiceV1Executor(
-                    clientsHolder.KubernetesScriptServiceV1,
+                    allClients.KubernetesScriptServiceV1,
                     rpcCallExecutor,
                     clientOperationMetricsBuilder,
                     onCancellationAbandonCompleteScriptAfter,
