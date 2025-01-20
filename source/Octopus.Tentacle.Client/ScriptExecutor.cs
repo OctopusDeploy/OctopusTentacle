@@ -1,7 +1,6 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Halibut;
 using Octopus.Tentacle.Client.EventDriven;
 using Octopus.Tentacle.Client.Execution;
 using Octopus.Tentacle.Client.Observability;
@@ -25,29 +24,18 @@ namespace Octopus.Tentacle.Client
         readonly AllClients allClients;
         readonly RpcCallExecutor rpcCallExecutor;
         readonly TimeSpan onCancellationAbandonCompleteScriptAfter;
-
-        public ScriptExecutor(ITentacleClientTaskLog logger,
-            ITentacleClientObserver tentacleClientObserver,
-            TentacleClientOptions clientOptions,
-            IHalibutRuntime halibutRuntime,
-            ServiceEndPoint serviceEndPoint,
-            TimeSpan onCancellationAbandonCompleteScriptAfter) : this(logger, tentacleClientObserver, clientOptions, halibutRuntime, serviceEndPoint, null, onCancellationAbandonCompleteScriptAfter)
-        {
-        }
         
-        internal ScriptExecutor(ITentacleClientTaskLog logger,
+        public ScriptExecutor(AllClients allClients,
+            ITentacleClientTaskLog logger,
             ITentacleClientObserver tentacleClientObserver,
             TentacleClientOptions clientOptions,
-            IHalibutRuntime halibutRuntime,
-            ServiceEndPoint serviceEndPoint,
-            ITentacleServiceDecoratorFactory? tentacleServicesDecoratorFactory, 
             TimeSpan onCancellationAbandonCompleteScriptAfter)
         {
+            this.allClients = allClients;
             this.logger = logger;
             this.tentacleClientObserver = tentacleClientObserver;
             this.clientOptions = clientOptions;
             this.onCancellationAbandonCompleteScriptAfter = onCancellationAbandonCompleteScriptAfter;
-            allClients = new AllClients(halibutRuntime, serviceEndPoint, tentacleServicesDecoratorFactory);
             rpcCallExecutor = RpcCallExecutorFactory.Create(this.clientOptions.RpcRetrySettings.RetryDuration, this.tentacleClientObserver);
         }
 

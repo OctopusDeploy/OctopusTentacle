@@ -19,14 +19,11 @@ namespace Octopus.Tentacle.Client
 {
     public class TentacleClient : ITentacleClient
     {
-        readonly ServiceEndPoint serviceEndPoint;
-        readonly IHalibutRuntime halibutRuntime;
         readonly IScriptObserverBackoffStrategy scriptObserverBackOffStrategy;
         readonly ITentacleClientObserver tentacleClientObserver;
         readonly RpcCallExecutor rpcCallExecutor;
         
         readonly TentacleClientOptions clientOptions;
-        readonly ITentacleServiceDecoratorFactory? tentacleServicesDecoratorFactory;
         readonly AllClients allClients;
 
         public static void CacheServiceWasNotFoundResponseMessages(IHalibutRuntime halibutRuntime)
@@ -62,14 +59,11 @@ namespace Octopus.Tentacle.Client
             TentacleClientOptions clientOptions,
             ITentacleServiceDecoratorFactory? tentacleServicesDecoratorFactory)
         {
-            this.serviceEndPoint = serviceEndPoint;
-            this.halibutRuntime = halibutRuntime;
             this.scriptObserverBackOffStrategy = scriptObserverBackOffStrategy;
             this.tentacleClientObserver = tentacleClientObserver.DecorateWithNonThrowingTentacleClientObserver();
 
             this.clientOptions = clientOptions;
-            this.tentacleServicesDecoratorFactory = tentacleServicesDecoratorFactory;
-
+            
             if (halibutRuntime.OverrideErrorResponseMessageCaching == null)
             {
                 // Best effort to make sure the HalibutRuntime has been configured to Cache ServiceNotFoundExceptions
@@ -165,12 +159,11 @@ namespace Octopus.Tentacle.Client
             try
             {
                 
-                var scriptExecutor = new ScriptExecutor(logger, 
+                var scriptExecutor = new ScriptExecutor(
+                    allClients,
+                    logger, 
                     tentacleClientObserver,
                     clientOptions,
-                    halibutRuntime,
-                    serviceEndPoint,
-                    tentacleServicesDecoratorFactory,
                     OnCancellationAbandonCompleteScriptAfter);
                     
                 var orchestrator = new ObservingScriptOrchestrator(scriptObserverBackOffStrategy,
