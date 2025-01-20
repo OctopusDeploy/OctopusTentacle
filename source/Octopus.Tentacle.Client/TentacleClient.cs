@@ -163,6 +163,7 @@ namespace Octopus.Tentacle.Client
                     allClients,
                     logger, 
                     tentacleClientObserver,
+                    operationMetricsBuilder,
                     clientOptions,
                     OnCancellationAbandonCompleteScriptAfter);
                     
@@ -182,7 +183,6 @@ namespace Octopus.Tentacle.Client
             }
             finally
             {
-                // TODO handle this in the new pipeline.
                 var operationMetrics = operationMetricsBuilder.Build();
                 tentacleClientObserver.ExecuteScriptCompleted(operationMetrics, logger);
             }

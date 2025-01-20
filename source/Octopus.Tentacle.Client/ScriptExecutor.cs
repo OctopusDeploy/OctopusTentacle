@@ -19,7 +19,7 @@ namespace Octopus.Tentacle.Client
     public class ScriptExecutor : IScriptExecutor
     {
         readonly ITentacleClientTaskLog logger;
-        readonly ITentacleClientObserver tentacleClientObserver; 
+        readonly ClientOperationMetricsBuilder operationMetricsBuilder; 
         readonly TentacleClientOptions clientOptions;
         readonly AllClients allClients;
         readonly RpcCallExecutor rpcCallExecutor;
@@ -27,33 +27,48 @@ namespace Octopus.Tentacle.Client
         
         public ScriptExecutor(AllClients allClients,
             ITentacleClientTaskLog logger,
+            ITentacleClientObserver tentacleClientObserver, 
+            TentacleClientOptions clientOptions,
+            TimeSpan onCancellationAbandonCompleteScriptAfter)
+        : this(
+            allClients,
+            logger,
+            tentacleClientObserver,
+            // For now, we do not support operation based metrics when used outside the TentacleClient. So just plug in builder to discard.
+            ClientOperationMetricsBuilder.Start(),
+            clientOptions,
+            onCancellationAbandonCompleteScriptAfter)
+        {
+        }
+
+        internal ScriptExecutor(AllClients allClients,
+            ITentacleClientTaskLog logger,
             ITentacleClientObserver tentacleClientObserver,
+            ClientOperationMetricsBuilder operationMetricsBuilder,
             TentacleClientOptions clientOptions,
             TimeSpan onCancellationAbandonCompleteScriptAfter)
         {
             this.allClients = allClients;
             this.logger = logger;
-            this.tentacleClientObserver = tentacleClientObserver;
             this.clientOptions = clientOptions;
             this.onCancellationAbandonCompleteScriptAfter = onCancellationAbandonCompleteScriptAfter;
-            rpcCallExecutor = RpcCallExecutorFactory.Create(this.clientOptions.RpcRetrySettings.RetryDuration, this.tentacleClientObserver);
+            this.operationMetricsBuilder = operationMetricsBuilder;
+            rpcCallExecutor = RpcCallExecutorFactory.Create(this.clientOptions.RpcRetrySettings.RetryDuration, tentacleClientObserver);
         }
 
         public async Task<ScriptExecutorResult> StartScript(ExecuteScriptCommand executeScriptCommand,
             StartScriptIsBeingReAttempted startScriptIsBeingReAttempted,
             CancellationToken cancellationToken)
         {
-            var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
-            
-            var scriptServiceToUse = await DetermineScriptServiceVersionToUse(cancellationToken, operationMetricsBuilder);
+            var scriptServiceToUse = await DetermineScriptServiceVersionToUse(cancellationToken);
 
-            var scriptExecutorFactory = CreateScriptExecutorFactory(operationMetricsBuilder);
+            var scriptExecutorFactory = CreateScriptExecutorFactory();
 
             var scriptExecutor = scriptExecutorFactory.CreateScriptExecutor(scriptServiceToUse);
             return await scriptExecutor.StartScript(executeScriptCommand, startScriptIsBeingReAttempted, cancellationToken);
         }
 
-        async Task<ScriptServiceVersion> DetermineScriptServiceVersionToUse(CancellationToken cancellationToken, ClientOperationMetricsBuilder operationMetricsBuilder)
+        async Task<ScriptServiceVersion> DetermineScriptServiceVersionToUse(CancellationToken cancellationToken)
         {
             try
             {
@@ -68,9 +83,7 @@ namespace Octopus.Tentacle.Client
 
         public async Task<ScriptExecutorResult> GetStatus(CommandContext ticketForNextNextStatus, CancellationToken cancellationToken)
         {
-            var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
-            
-            var scriptExecutorFactory = CreateScriptExecutorFactory(operationMetricsBuilder);
+            var scriptExecutorFactory = CreateScriptExecutorFactory();
 
             var scriptExecutor = scriptExecutorFactory.CreateScriptExecutor(ticketForNextNextStatus.ScripServiceVersionUsed);
 
@@ -79,9 +92,7 @@ namespace Octopus.Tentacle.Client
 
         public async Task<ScriptExecutorResult> CancelScript(CommandContext ticketForNextNextStatus, CancellationToken cancellationToken)
         {
-            var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
-            
-            var scriptExecutorFactory = CreateScriptExecutorFactory(operationMetricsBuilder);
+            var scriptExecutorFactory = CreateScriptExecutorFactory();
 
             var scriptExecutor = scriptExecutorFactory.CreateScriptExecutor(ticketForNextNextStatus.ScripServiceVersionUsed);
 
@@ -90,16 +101,14 @@ namespace Octopus.Tentacle.Client
         
         public async Task<ScriptStatus?> CompleteScript(CommandContext ticketForNextNextStatus, CancellationToken cancellationToken)
         {
-            var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
-            
-            var scriptExecutorFactory = CreateScriptExecutorFactory(operationMetricsBuilder);
+            var scriptExecutorFactory = CreateScriptExecutorFactory();
 
             var scriptExecutor = scriptExecutorFactory.CreateScriptExecutor(ticketForNextNextStatus.ScripServiceVersionUsed);
 
             return await scriptExecutor.CompleteScript(ticketForNextNextStatus, cancellationToken);
         }
         
-        ScriptExecutorFactory CreateScriptExecutorFactory(ClientOperationMetricsBuilder operationMetricsBuilder)
+        ScriptExecutorFactory CreateScriptExecutorFactory()
         {
             return new ScriptExecutorFactory(allClients, 
                 rpcCallExecutor, 
