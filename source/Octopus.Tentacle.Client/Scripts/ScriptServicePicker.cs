@@ -20,7 +20,12 @@ namespace Octopus.Tentacle.Client.Scripts
         readonly TentacleClientOptions clientOptions;
         readonly ClientOperationMetricsBuilder clientOperationMetricsBuilder;
 
-        internal ScriptServicePicker(IAsyncClientCapabilitiesServiceV2 clientCapabilitiesServiceV2, ITentacleClientTaskLog logger, RpcCallExecutor rpcCallExecutor, TentacleClientOptions clientOptions, ClientOperationMetricsBuilder clientOperationMetricsBuilder)
+        internal ScriptServicePicker(
+            IAsyncClientCapabilitiesServiceV2 clientCapabilitiesServiceV2, 
+            ITentacleClientTaskLog logger, 
+            RpcCallExecutor rpcCallExecutor,
+            TentacleClientOptions clientOptions, 
+            ClientOperationMetricsBuilder clientOperationMetricsBuilder)
         {
             this.clientCapabilitiesServiceV2 = clientCapabilitiesServiceV2;
             this.logger = logger;

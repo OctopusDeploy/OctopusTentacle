@@ -64,16 +64,15 @@ namespace Octopus.Tentacle.Client.Scripts
             return (MapToScriptStatus(r), MapToNextStatus(r));
         }
         
-        private ScriptStatus MapToScriptStatus(ScriptStatusResponseV2 scriptStatusResponse)
+        ScriptStatus MapToScriptStatus(ScriptStatusResponseV2 scriptStatusResponse)
         {
             return new ScriptStatus(scriptStatusResponse.State, scriptStatusResponse.ExitCode, scriptStatusResponse.Logs);
         }
 
-        private ICommandContext MapToNextStatus(ScriptStatusResponseV2 scriptStatusResponse)
+        ICommandContext MapToNextStatus(ScriptStatusResponseV2 scriptStatusResponse)
         {
             return new DefaultCommandContext(scriptStatusResponse.Ticket, scriptStatusResponse.NextLogSequence, ScriptServiceVersion.ScriptServiceVersion2);
         }
-        public ProcessState GetState(ScriptStatusResponseV2 response) => response.State;
 
         public async Task<(ScriptStatus, ICommandContext)> StartScript(ExecuteScriptCommand executeScriptCommand,
             StartScriptIsBeingReAttempted startScriptIsBeingReAttempted,

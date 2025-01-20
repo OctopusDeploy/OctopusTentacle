@@ -6,7 +6,6 @@ using Octopus.Tentacle.Contracts.Logging;
 
 namespace Octopus.Tentacle.Client.Scripts
 {
-    // TODO: this is not an orchestrator factory.
     class ScriptOrchestratorFactory
     {
         readonly RpcCallExecutor rpcCallExecutor;

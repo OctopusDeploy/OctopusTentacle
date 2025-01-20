@@ -8,14 +8,13 @@ using Octopus.Tentacle.Contracts.Logging;
 
 namespace Octopus.Tentacle.Client.Scripts
 {
-    public sealed class ObservingScriptOrchestrator : IScriptOrchestrator
+    public sealed class ObservingScriptOrchestrator
     {
         readonly IScriptObserverBackoffStrategy scriptObserverBackOffStrategy;
         readonly OnScriptStatusResponseReceived onScriptStatusResponseReceived;
         readonly OnScriptCompleted onScriptCompleted;
         readonly ITentacleClientTaskLog logger;
-
-        IScriptExecutor scriptExecutor;
+        readonly IScriptExecutor scriptExecutor;
 
         public ObservingScriptOrchestrator(
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
