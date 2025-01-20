@@ -54,7 +54,7 @@ namespace Octopus.Tentacle.Client.Scripts
             // It's implied (and tested) that GetCapabilities will only return Kubernetes or non-Kubernetes script services, never a mix
             if (tentacleCapabilities.HasAnyKubernetesScriptService())
             {
-                return DetermineKubernetesScriptServiceVersionToUse(tentacleCapabilities);
+                return DetermineKubernetesScriptServiceVersionToUse();
             }
 
             return DetermineShellScriptServiceVersionToUse(tentacleCapabilities);
@@ -76,25 +76,14 @@ namespace Octopus.Tentacle.Client.Scripts
             return ScriptServiceVersion.ScriptServiceVersion1;
         }
 
-        ScriptServiceVersion DetermineKubernetesScriptServiceVersionToUse(CapabilitiesResponseV2 tentacleCapabilities)
+        ScriptServiceVersion DetermineKubernetesScriptServiceVersionToUse()
         {
-            if (tentacleCapabilities.HasKubernetesScriptServiceV1())
-            {
-                logger.Verbose($"Using KubernetesScriptServiceV1");
-                logger.Verbose(clientOptions.RpcRetrySettings.RetriesEnabled
-                    ? $"RPC call retries are enabled. Retry timeout {rpcCallExecutor.RetryTimeout.TotalSeconds} seconds"
-                    : "RPC call retries are disabled.");
-                
-                return ScriptServiceVersion.KubernetesScriptServiceVersion1;
-            }
-
-            logger.Verbose($"Using KubernetesScriptServiceV1Alpha");
+            logger.Verbose($"Using KubernetesScriptServiceV1");
             logger.Verbose(clientOptions.RpcRetrySettings.RetriesEnabled
                 ? $"RPC call retries are enabled. Retry timeout {rpcCallExecutor.RetryTimeout.TotalSeconds} seconds"
                 : "RPC call retries are disabled.");
 
-            //this is the only supported kubernetes script service
-            return ScriptServiceVersion.KubernetesScriptServiceVersion1Alpha;
+            return ScriptServiceVersion.KubernetesScriptServiceVersion1;
         }
     }
 }
