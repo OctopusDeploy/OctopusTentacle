@@ -60,49 +60,33 @@ namespace Octopus.Tentacle.Client
             StartScriptIsBeingReAttempted startScriptIsBeingReAttempted,
             CancellationToken cancellationToken)
         {
-            var scriptServiceToUse = await DetermineScriptServiceVersionToUse(cancellationToken);
+            var scriptServiceVersionToUse = await DetermineScriptServiceVersionToUse(cancellationToken);
 
             var scriptExecutorFactory = CreateScriptExecutorFactory();
+            var scriptExecutor = scriptExecutorFactory.CreateScriptExecutor(scriptServiceVersionToUse);
 
-            var scriptExecutor = scriptExecutorFactory.CreateScriptExecutor(scriptServiceToUse);
             return await scriptExecutor.StartScript(executeScriptCommand, startScriptIsBeingReAttempted, cancellationToken);
-        }
-
-        async Task<ScriptServiceVersion> DetermineScriptServiceVersionToUse(CancellationToken cancellationToken)
-        {
-            try
-            {
-                var scriptServiceVersionSelector = new ScriptServiceVersionSelector(allClients.CapabilitiesServiceV2, logger, rpcCallExecutor, clientOptions, operationMetricsBuilder);
-                return await scriptServiceVersionSelector.DetermineScriptServiceVersionToUse(cancellationToken);
-            }
-            catch (Exception ex) when (cancellationToken.IsCancellationRequested)
-            {
-                throw new OperationCanceledException("Script execution was cancelled", ex);
-            }
         }
 
         public async Task<ScriptExecutorResult> GetStatus(CommandContext ticketForNextNextStatus, CancellationToken cancellationToken)
         {
             var scriptExecutorFactory = CreateScriptExecutorFactory();
-
             var scriptExecutor = scriptExecutorFactory.CreateScriptExecutor(ticketForNextNextStatus.ScripServiceVersionUsed);
 
             return await scriptExecutor.GetStatus(ticketForNextNextStatus, cancellationToken);
         }
 
-        public async Task<ScriptExecutorResult> CancelScript(CommandContext ticketForNextNextStatus, CancellationToken cancellationToken)
+        public async Task<ScriptExecutorResult> CancelScript(CommandContext ticketForNextNextStatus)
         {
             var scriptExecutorFactory = CreateScriptExecutorFactory();
-
             var scriptExecutor = scriptExecutorFactory.CreateScriptExecutor(ticketForNextNextStatus.ScripServiceVersionUsed);
 
-            return await scriptExecutor.CancelScript(ticketForNextNextStatus, cancellationToken);
+            return await scriptExecutor.CancelScript(ticketForNextNextStatus);
         }
         
         public async Task<ScriptStatus?> CompleteScript(CommandContext ticketForNextNextStatus, CancellationToken cancellationToken)
         {
             var scriptExecutorFactory = CreateScriptExecutorFactory();
-
             var scriptExecutor = scriptExecutorFactory.CreateScriptExecutor(ticketForNextNextStatus.ScripServiceVersionUsed);
 
             return await scriptExecutor.CompleteScript(ticketForNextNextStatus, cancellationToken);
@@ -116,6 +100,19 @@ namespace Octopus.Tentacle.Client
                 onCancellationAbandonCompleteScriptAfter,
                 clientOptions,
                 logger);
+        }
+
+        async Task<ScriptServiceVersion> DetermineScriptServiceVersionToUse(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var scriptServiceVersionSelector = new ScriptServiceVersionSelector(allClients.CapabilitiesServiceV2, logger, rpcCallExecutor, clientOptions, operationMetricsBuilder);
+                return await scriptServiceVersionSelector.DetermineScriptServiceVersionToUse(cancellationToken);
+            }
+            catch (Exception ex) when (cancellationToken.IsCancellationRequested)
+            {
+                throw new OperationCanceledException("Script execution was cancelled", ex);
+            }
         }
 
     }

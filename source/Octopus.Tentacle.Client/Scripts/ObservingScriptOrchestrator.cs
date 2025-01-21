@@ -31,16 +31,28 @@ namespace Octopus.Tentacle.Client.Scripts
                 StartScriptIsBeingReAttempted.FirstAttempt, // This is not re-entrant so this should be true.
                 scriptExecutionCancellationToken).ConfigureAwait(false);
 
-            var scriptStatus = await ObserveUntilCompleteThenFinish(startScriptResult, scriptExecutionCancellationToken).ConfigureAwait(false);
-
-            if (scriptExecutionCancellationToken.IsCancellationRequested)
+            try
             {
-                // Throw an error so the caller knows that execution of the script was cancelled
-                throw new OperationCanceledException("Script execution was cancelled");
-            }
+                var scriptStatus = await ObserveUntilCompleteThenFinish(startScriptResult, scriptExecutionCancellationToken).ConfigureAwait(false);
 
-            
-            return new ScriptExecutionResult(scriptStatus.State, scriptStatus.ExitCode!.Value);
+                if (scriptExecutionCancellationToken.IsCancellationRequested)
+                {
+                    // Throw an error so the caller knows that execution of the script was cancelled
+                    throw new OperationCanceledException("Script execution was cancelled");
+                }
+
+                return new ScriptExecutionResult(scriptStatus.State, scriptStatus.ExitCode!.Value);
+            }
+            catch (Exception)
+            {
+                if (scriptExecutionCancellationToken.IsCancellationRequested)
+                {
+                    // Throw an error so the caller knows that execution of the script was cancelled
+                    throw new OperationCanceledException("Script execution was cancelled");
+                }
+
+                throw;
+            }
         }
 
         async Task<ScriptStatus> ObserveUntilCompleteThenFinish(
@@ -76,7 +88,7 @@ namespace Octopus.Tentacle.Client.Scripts
             {
                 if (scriptExecutionCancellationToken.IsCancellationRequested)
                 {
-                    lastResult = await scriptExecutor.CancelScript(lastResult.ContextForNextCommand, scriptExecutionCancellationToken).ConfigureAwait(false);
+                    lastResult = await scriptExecutor.CancelScript(lastResult.ContextForNextCommand).ConfigureAwait(false);
                 }
                 else
                 {

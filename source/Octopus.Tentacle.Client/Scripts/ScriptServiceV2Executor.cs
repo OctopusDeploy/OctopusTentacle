@@ -123,9 +123,8 @@ namespace Octopus.Tentacle.Client.Scripts
 
                 if (!startScriptCallIsConnecting || startScriptCallIsBeingRetried)
                 {
-                    var scriptStatus = new ScriptStatus(ProcessState.Pending, null, new List<ProcessOutput>());
-                    var contextForNextCommand = new CommandContext(command.ScriptTicket, 0, ScriptServiceVersion.ScriptServiceVersion2);
-                    return new (scriptStatus, contextForNextCommand);
+                    // We want to observe and wait till we finish when this happens. Therefore, we want to return a result that will make the caller start that process.
+                    return ScriptExecutorResult.CreateWaitForStartedScriptResult(command.ScriptTicket, ScriptServiceVersion.ScriptServiceVersion2);
                 }
 
                 // If the StartScript call was not in-flight or being retries then we know the script has not started executing on Tentacle
@@ -133,6 +132,8 @@ namespace Octopus.Tentacle.Client.Scripts
                 throw new OperationCanceledException("Script execution was cancelled", ex);
             }
         }
+
+        
 
         public async Task<ScriptExecutorResult> GetStatus(CommandContext commandContext, CancellationToken scriptExecutionCancellationToken)
         {
@@ -154,7 +155,7 @@ namespace Octopus.Tentacle.Client.Scripts
             return Map(scriptStatusResponseV2);
         }
 
-        public async Task<ScriptExecutorResult> CancelScript(CommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<ScriptExecutorResult> CancelScript(CommandContext lastStatusResponse)
         {
             async Task<ScriptStatusResponseV2> CancelScriptAction(CancellationToken ct)
             {

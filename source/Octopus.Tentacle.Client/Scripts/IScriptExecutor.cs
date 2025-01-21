@@ -15,7 +15,7 @@ namespace Octopus.Tentacle.Client.Scripts
         
         Task<ScriptExecutorResult> GetStatus(CommandContext commandContext, CancellationToken scriptExecutionCancellationToken);
         
-        Task<ScriptExecutorResult> CancelScript(CommandContext commandContext, CancellationToken scriptExecutionCancellationToken);
+        Task<ScriptExecutorResult> CancelScript(CommandContext commandContext);
         
         Task<ScriptStatus?> CompleteScript(CommandContext commandContext, CancellationToken scriptExecutionCancellationToken);
     }
