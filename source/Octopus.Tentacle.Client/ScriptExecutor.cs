@@ -34,7 +34,7 @@ namespace Octopus.Tentacle.Client
             allClients,
             logger,
             tentacleClientObserver,
-            // For now, we do not support operation based metrics when used outside the TentacleClient. So just plug in builder to discard.
+            // For now, we do not support operation based metrics when used outside the TentacleClient. So just plug in a builder to discard.
             ClientOperationMetricsBuilder.Start(),
             clientOptions,
             onCancellationAbandonCompleteScriptAfter)
@@ -56,7 +56,7 @@ namespace Octopus.Tentacle.Client
             rpcCallExecutor = RpcCallExecutorFactory.Create(this.clientOptions.RpcRetrySettings.RetryDuration, tentacleClientObserver);
         }
 
-        public async Task<ScriptExecutorResult> StartScript(ExecuteScriptCommand executeScriptCommand,
+        public async Task<ScriptOperationExecutionResult> StartScript(ExecuteScriptCommand executeScriptCommand,
             StartScriptIsBeingReAttempted startScriptIsBeingReAttempted,
             CancellationToken cancellationToken)
         {
@@ -68,7 +68,7 @@ namespace Octopus.Tentacle.Client
             return await scriptExecutor.StartScript(executeScriptCommand, startScriptIsBeingReAttempted, cancellationToken);
         }
 
-        public async Task<ScriptExecutorResult> GetStatus(CommandContext ticketForNextNextStatus, CancellationToken cancellationToken)
+        public async Task<ScriptOperationExecutionResult> GetStatus(CommandContext ticketForNextNextStatus, CancellationToken cancellationToken)
         {
             var scriptExecutorFactory = CreateScriptExecutorFactory();
             var scriptExecutor = scriptExecutorFactory.CreateScriptExecutor(ticketForNextNextStatus.ScripServiceVersionUsed);
@@ -76,7 +76,7 @@ namespace Octopus.Tentacle.Client
             return await scriptExecutor.GetStatus(ticketForNextNextStatus, cancellationToken);
         }
 
-        public async Task<ScriptExecutorResult> CancelScript(CommandContext ticketForNextNextStatus)
+        public async Task<ScriptOperationExecutionResult> CancelScript(CommandContext ticketForNextNextStatus)
         {
             var scriptExecutorFactory = CreateScriptExecutorFactory();
             var scriptExecutor = scriptExecutorFactory.CreateScriptExecutor(ticketForNextNextStatus.ScripServiceVersionUsed);
@@ -114,6 +114,5 @@ namespace Octopus.Tentacle.Client
                 throw new OperationCanceledException("Script execution was cancelled", ex);
             }
         }
-
     }
 }

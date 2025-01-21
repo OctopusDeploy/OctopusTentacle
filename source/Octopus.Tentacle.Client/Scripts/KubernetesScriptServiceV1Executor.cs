@@ -69,14 +69,14 @@ namespace Octopus.Tentacle.Client.Scripts
                 kubernetesScriptCommand.IsRawScript);
         }
 
-        static ScriptExecutorResult Map(KubernetesScriptStatusResponseV1 scriptStatusResponse)
+        static ScriptOperationExecutionResult Map(KubernetesScriptStatusResponseV1 scriptStatusResponse)
         {
             return new(
                 new ScriptStatus(scriptStatusResponse.State, scriptStatusResponse.ExitCode, scriptStatusResponse.Logs),
                 new CommandContext(scriptStatusResponse.ScriptTicket, scriptStatusResponse.NextLogSequence, ScriptServiceVersion.KubernetesScriptServiceVersion1));
         }
 
-        public async Task<ScriptExecutorResult> StartScript(ExecuteScriptCommand executeScriptCommand,
+        public async Task<ScriptOperationExecutionResult> StartScript(ExecuteScriptCommand executeScriptCommand,
             StartScriptIsBeingReAttempted startScriptIsBeingReAttempted,
             CancellationToken scriptExecutionCancellationToken)
         {
@@ -125,7 +125,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 if (!startScriptCallIsConnecting || startScriptCallIsBeingRetried)
                 {
                     // We want to observe and wait till we finish when this happens. Therefore, we want to return a result that will make the caller start that process.
-                    return ScriptExecutorResult.CreateWaitForStartedScriptResult(command.ScriptTicket, ScriptServiceVersion.KubernetesScriptServiceVersion1);
+                    return ScriptOperationExecutionResult.CreateWaitForStartedScriptResult(command.ScriptTicket, ScriptServiceVersion.KubernetesScriptServiceVersion1);
                 }
 
                 // If the StartScript call was not in-flight or being retries then we know the script has not started executing on Tentacle
@@ -134,7 +134,7 @@ namespace Octopus.Tentacle.Client.Scripts
             }
         }
 
-        public async Task<ScriptExecutorResult> GetStatus(CommandContext commandContext, CancellationToken scriptExecutionCancellationToken)
+        public async Task<ScriptOperationExecutionResult> GetStatus(CommandContext commandContext, CancellationToken scriptExecutionCancellationToken)
         {
             async Task<KubernetesScriptStatusResponseV1> GetStatusAction(CancellationToken ct)
             {
@@ -154,7 +154,7 @@ namespace Octopus.Tentacle.Client.Scripts
             return Map(kubernetesScriptStatusResponseV1);
         }
 
-        public async Task<ScriptExecutorResult> CancelScript(CommandContext lastStatusResponse)
+        public async Task<ScriptOperationExecutionResult> CancelScript(CommandContext lastStatusResponse)
         {
             async Task<KubernetesScriptStatusResponseV1> CancelScriptAction(CancellationToken ct)
             {

@@ -56,7 +56,7 @@ namespace Octopus.Tentacle.Client.Scripts
         }
 
         async Task<ScriptStatus> ObserveUntilCompleteThenFinish(
-            ScriptExecutorResult startScriptResult,
+            ScriptOperationExecutionResult startScriptResult,
             CancellationToken scriptExecutionCancellationToken)
         {
             OnScriptStatusResponseReceived(startScriptResult.ScriptStatus);
@@ -76,8 +76,8 @@ namespace Octopus.Tentacle.Client.Scripts
             return scriptStatusResponse;
         }
 
-        async Task<ScriptExecutorResult> ObserveUntilComplete(
-            ScriptExecutorResult startScriptResult,
+        async Task<ScriptOperationExecutionResult> ObserveUntilComplete(
+            ScriptOperationExecutionResult startScriptResult,
             CancellationToken scriptExecutionCancellationToken)
         {
             var iteration = 0;

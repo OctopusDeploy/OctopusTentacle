@@ -4,12 +4,12 @@ using System.Collections.Generic;
 
 namespace Octopus.Tentacle.Client.Scripts
 {
-    public class ScriptExecutorResult
+    public class ScriptOperationExecutionResult
     {
         public ScriptStatus ScriptStatus { get; }
         public CommandContext ContextForNextCommand { get; }
 
-        public ScriptExecutorResult(ScriptStatus scriptStatus, CommandContext contextForNextCommand)
+        public ScriptOperationExecutionResult(ScriptStatus scriptStatus, CommandContext contextForNextCommand)
         {
             ScriptStatus = scriptStatus;
             ContextForNextCommand = contextForNextCommand;
@@ -19,7 +19,7 @@ namespace Octopus.Tentacle.Client.Scripts
         /// Create a result object for when we have most likely started a script, but cancellation has started, and we want to wait for
         /// this script to finish.
         /// </summary>
-        internal static ScriptExecutorResult CreateWaitForStartedScriptResult(ScriptTicket scriptTicket, ScriptServiceVersion scripServiceVersionUsed)
+        internal static ScriptOperationExecutionResult CreateWaitForStartedScriptResult(ScriptTicket scriptTicket, ScriptServiceVersion scripServiceVersionUsed)
         {
             var scriptStatus = new ScriptStatus(ProcessState.Pending, null, new List<ProcessOutput>());
             var contextForNextCommand = new CommandContext(scriptTicket, 0, scripServiceVersionUsed);
