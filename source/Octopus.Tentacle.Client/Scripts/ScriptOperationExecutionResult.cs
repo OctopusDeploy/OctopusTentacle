@@ -19,7 +19,7 @@ namespace Octopus.Tentacle.Client.Scripts
         /// Create a result object for when we have most likely started a script, but cancellation has started, and we want to wait for
         /// this script to finish.
         /// </summary>
-        internal static ScriptOperationExecutionResult CreateWaitForStartedScriptResult(ScriptTicket scriptTicket, ScriptServiceVersion scripServiceVersionUsed)
+        internal static ScriptOperationExecutionResult CreateScriptStartedResult(ScriptTicket scriptTicket, ScriptServiceVersion scripServiceVersionUsed)
         {
             var scriptStatus = new ScriptStatus(ProcessState.Pending, null, new List<ProcessOutput>());
             var contextForNextCommand = new CommandContext(scriptTicket, 0, scripServiceVersionUsed);

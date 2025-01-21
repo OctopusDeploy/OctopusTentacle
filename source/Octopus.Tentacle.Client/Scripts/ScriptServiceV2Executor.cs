@@ -123,8 +123,8 @@ namespace Octopus.Tentacle.Client.Scripts
 
                 if (!startScriptCallIsConnecting || startScriptCallIsBeingRetried)
                 {
-                    // We want to observe and wait till we finish when this happens. Therefore, we want to return a result that will make the caller start that process.
-                    return ScriptOperationExecutionResult.CreateWaitForStartedScriptResult(command.ScriptTicket, ScriptServiceVersion.ScriptServiceVersion2);
+                    // We want to cancel the potentially started script, and wait till it finishes. By returning a result, the outer orchestration will take care of this.
+                    return ScriptOperationExecutionResult.CreateScriptStartedResult(command.ScriptTicket, ScriptServiceVersion.ScriptServiceVersion2);
                 }
 
                 // If the StartScript call was not in-flight or being retries then we know the script has not started executing on Tentacle
