@@ -8,13 +8,11 @@ using Octopus.Tentacle.Client.Execution;
 using Octopus.Tentacle.Client.Observability;
 using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.Client.Scripts.Models;
+using Octopus.Tentacle.Client.ServiceHelpers;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Capabilities;
-using Octopus.Tentacle.Contracts.ClientServices;
-using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
 using Octopus.Tentacle.Contracts.Logging;
 using Octopus.Tentacle.Contracts.Observability;
-using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using ITentacleClientObserver = Octopus.Tentacle.Contracts.Observability.ITentacleClientObserver;
 
 namespace Octopus.Tentacle.Client
@@ -24,13 +22,9 @@ namespace Octopus.Tentacle.Client
         readonly IScriptObserverBackoffStrategy scriptObserverBackOffStrategy;
         readonly ITentacleClientObserver tentacleClientObserver;
         readonly RpcCallExecutor rpcCallExecutor;
-
-        readonly IAsyncClientScriptService scriptServiceV1;
-        readonly IAsyncClientScriptServiceV2 scriptServiceV2;
-        readonly IAsyncClientKubernetesScriptServiceV1 kubernetesScriptServiceV1;
-        readonly IAsyncClientFileTransferService clientFileTransferServiceV1;
-        readonly IAsyncClientCapabilitiesServiceV2 capabilitiesServiceV2;
+        
         readonly TentacleClientOptions clientOptions;
+        readonly AllClients allClients;
 
         public static void CacheServiceWasNotFoundResponseMessages(IHalibutRuntime halibutRuntime)
         {
@@ -69,7 +63,7 @@ namespace Octopus.Tentacle.Client
             this.tentacleClientObserver = tentacleClientObserver.DecorateWithNonThrowingTentacleClientObserver();
 
             this.clientOptions = clientOptions;
-
+            
             if (halibutRuntime.OverrideErrorResponseMessageCaching == null)
             {
                 // Best effort to make sure the HalibutRuntime has been configured to Cache ServiceNotFoundExceptions
@@ -77,20 +71,7 @@ namespace Octopus.Tentacle.Client
                 throw new ArgumentException("Ensure that TentacleClient.CacheServiceWasNotFoundResponseMessages has been called for the HalibutRuntime", nameof(halibutRuntime));
             }
 
-            scriptServiceV1 = halibutRuntime.CreateAsyncClient<IScriptService, IAsyncClientScriptService>(serviceEndPoint);
-            scriptServiceV2 = halibutRuntime.CreateAsyncClient<IScriptServiceV2, IAsyncClientScriptServiceV2>(serviceEndPoint);
-            kubernetesScriptServiceV1 = halibutRuntime.CreateAsyncClient<IKubernetesScriptServiceV1, IAsyncClientKubernetesScriptServiceV1>(serviceEndPoint);
-            clientFileTransferServiceV1 = halibutRuntime.CreateAsyncClient<IFileTransferService, IAsyncClientFileTransferService>(serviceEndPoint);
-            capabilitiesServiceV2 = halibutRuntime.CreateAsyncClient<ICapabilitiesServiceV2, IAsyncClientCapabilitiesServiceV2>(serviceEndPoint).WithBackwardsCompatability();
-
-            if (tentacleServicesDecoratorFactory != null)
-            {
-                scriptServiceV1 = tentacleServicesDecoratorFactory.Decorate(scriptServiceV1);
-                scriptServiceV2 = tentacleServicesDecoratorFactory.Decorate(scriptServiceV2);
-                kubernetesScriptServiceV1 = tentacleServicesDecoratorFactory.Decorate(kubernetesScriptServiceV1);
-                clientFileTransferServiceV1 = tentacleServicesDecoratorFactory.Decorate(clientFileTransferServiceV1);
-                capabilitiesServiceV2 = tentacleServicesDecoratorFactory.Decorate(capabilitiesServiceV2);
-            }
+            allClients = new AllClients(halibutRuntime, serviceEndPoint, tentacleServicesDecoratorFactory);
 
             rpcCallExecutor = RpcCallExecutorFactory.Create(this.clientOptions.RpcRetrySettings.RetryDuration, this.tentacleClientObserver);
         }
@@ -104,7 +85,7 @@ namespace Octopus.Tentacle.Client
             async Task<UploadResult> UploadFileAction(CancellationToken ct)
             {
                 logger.Info($"Beginning upload of {fileName} to Tentacle");
-                var result = await clientFileTransferServiceV1.UploadFileAsync(path, package, new HalibutProxyRequestOptions(ct));
+                var result = await allClients.ClientFileTransferServiceV1.UploadFileAsync(path, package, new HalibutProxyRequestOptions(ct));
                 logger.Info("Upload complete");
 
                 return result;
@@ -139,7 +120,7 @@ namespace Octopus.Tentacle.Client
             async Task<DataStream> DownloadFileAction(CancellationToken ct)
             {
                 logger.Info($"Beginning download of {Path.GetFileName(remotePath)} from Tentacle");
-                var result = await clientFileTransferServiceV1.DownloadFileAsync(remotePath, new HalibutProxyRequestOptions(ct));
+                var result = await allClients.ClientFileTransferServiceV1.DownloadFileAsync(remotePath, new HalibutProxyRequestOptions(ct));
                 logger.Info("Download complete");
 
                 return result;
@@ -177,21 +158,18 @@ namespace Octopus.Tentacle.Client
 
             try
             {
-                var factory = new ScriptOrchestratorFactory(
-                    scriptServiceV1,
-                    scriptServiceV2,
-                    kubernetesScriptServiceV1,
-                    capabilitiesServiceV2,
-                    scriptObserverBackOffStrategy,
-                    rpcCallExecutor,
+                var scriptExecutor = new ScriptExecutor(
+                    allClients,
+                    logger, 
+                    tentacleClientObserver,
                     operationMetricsBuilder,
+                    clientOptions,
+                    OnCancellationAbandonCompleteScriptAfter);
+                    
+                var orchestrator = new ObservingScriptOrchestrator(scriptObserverBackOffStrategy,
                     onScriptStatusResponseReceived,
                     onScriptCompleted,
-                    OnCancellationAbandonCompleteScriptAfter,
-                    clientOptions,
-                    logger);
-
-                var orchestrator = await factory.CreateOrchestrator(scriptExecutionCancellationToken);
+                    scriptExecutor);
 
                 var result = await orchestrator.ExecuteScript(executeScriptCommand, scriptExecutionCancellationToken);
 

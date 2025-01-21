@@ -6,21 +6,20 @@ using Octopus.Tentacle.Contracts;
 
 namespace Octopus.Tentacle.Client.Scripts
 {
-    abstract class ObservingScriptOrchestrator<TStartCommand, TScriptStatusResponse> : IScriptOrchestrator
+    public sealed class ObservingScriptOrchestrator
     {
         readonly IScriptObserverBackoffStrategy scriptObserverBackOffStrategy;
         readonly OnScriptStatusResponseReceived onScriptStatusResponseReceived;
         readonly OnScriptCompleted onScriptCompleted;
+        readonly IScriptExecutor scriptExecutor;
 
-        protected TentacleClientOptions ClientOptions { get; }
-
-        protected ObservingScriptOrchestrator(
+        public ObservingScriptOrchestrator(
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
             OnScriptStatusResponseReceived onScriptStatusResponseReceived,
             OnScriptCompleted onScriptCompleted,
-            TentacleClientOptions clientOptions)
+            IScriptExecutor scriptExecutor)
         {
-            ClientOptions = clientOptions;
+            this.scriptExecutor = scriptExecutor;
             this.scriptObserverBackOffStrategy = scriptObserverBackOffStrategy;
             this.onScriptStatusResponseReceived = onScriptStatusResponseReceived;
             this.onScriptCompleted = onScriptCompleted;
@@ -28,11 +27,11 @@ namespace Octopus.Tentacle.Client.Scripts
 
         public async Task<ScriptExecutionResult> ExecuteScript(ExecuteScriptCommand command, CancellationToken scriptExecutionCancellationToken)
         {
-            var mappedStartCommand = Map(command);
+            var startScriptResult = await scriptExecutor.StartScript(command,
+                StartScriptIsBeingReAttempted.FirstAttempt, // This is not re-entrant so this should be true.
+                scriptExecutionCancellationToken).ConfigureAwait(false);
 
-            var scriptStatusResponse = await StartScript(mappedStartCommand, scriptExecutionCancellationToken).ConfigureAwait(false);
-
-            scriptStatusResponse = await ObserveUntilCompleteThenFinish(scriptStatusResponse, scriptExecutionCancellationToken).ConfigureAwait(false);
+            var scriptStatus = await ObserveUntilCompleteThenFinish(startScriptResult, scriptExecutionCancellationToken).ConfigureAwait(false);
 
             if (scriptExecutionCancellationToken.IsCancellationRequested)
             {
@@ -40,45 +39,49 @@ namespace Octopus.Tentacle.Client.Scripts
                 throw new OperationCanceledException("Script execution was cancelled");
             }
 
-            var mappedResponse = MapToResult(scriptStatusResponse);
-
-            return new ScriptExecutionResult(mappedResponse.State, mappedResponse.ExitCode);
+            return new ScriptExecutionResult(scriptStatus.State, scriptStatus.ExitCode!.Value);
         }
 
-        protected async Task<TScriptStatusResponse> ObserveUntilCompleteThenFinish(
-            TScriptStatusResponse scriptStatusResponse,
+        async Task<ScriptStatus> ObserveUntilCompleteThenFinish(
+            ScriptOperationExecutionResult startScriptResult,
             CancellationToken scriptExecutionCancellationToken)
         {
-            OnScriptStatusResponseReceived(scriptStatusResponse);
+            OnScriptStatusResponseReceived(startScriptResult.ScriptStatus);
 
-            var lastScriptStatus = await ObserveUntilComplete(scriptStatusResponse, scriptExecutionCancellationToken).ConfigureAwait(false);
+            var observingUntilCompleteResult =  await ObserveUntilComplete(startScriptResult, scriptExecutionCancellationToken).ConfigureAwait(false);
 
             await onScriptCompleted(scriptExecutionCancellationToken).ConfigureAwait(false);
+            
+            var completeScriptResponse = await scriptExecutor.CompleteScript(observingUntilCompleteResult.ContextForNextCommand, scriptExecutionCancellationToken).ConfigureAwait(false);
 
-            lastScriptStatus = await Finish(lastScriptStatus, scriptExecutionCancellationToken).ConfigureAwait(false);
+            // V1 can return a result when completing. But other versions do not.
+            // The behaviour we are maintaining is that the result to use for V1 is that of "complete"
+            // but the result to use for other versions is the last observing result.
+            var scriptStatusResponse = completeScriptResponse ?? observingUntilCompleteResult.ScriptStatus;
+            OnScriptStatusResponseReceived(scriptStatusResponse);
 
-            return lastScriptStatus;
+            return scriptStatusResponse;
         }
 
-        async Task<TScriptStatusResponse> ObserveUntilComplete(
-            TScriptStatusResponse scriptStatusResponse,
+        async Task<ScriptOperationExecutionResult> ObserveUntilComplete(
+            ScriptOperationExecutionResult startScriptResult,
             CancellationToken scriptExecutionCancellationToken)
         {
-            var lastStatusResponse = scriptStatusResponse;
             var iteration = 0;
             var cancellationIteration = 0;
+            var lastResult = startScriptResult;
 
-            while (GetState(lastStatusResponse) != ProcessState.Complete)
+            while (lastResult.ScriptStatus.State != ProcessState.Complete)
             {
                 if (scriptExecutionCancellationToken.IsCancellationRequested)
                 {
-                    lastStatusResponse = await Cancel(lastStatusResponse, scriptExecutionCancellationToken).ConfigureAwait(false);
+                    lastResult = await scriptExecutor.CancelScript(lastResult.ContextForNextCommand).ConfigureAwait(false);
                 }
                 else
                 {
                     try
                     {
-                        lastStatusResponse = await GetStatus(lastStatusResponse, scriptExecutionCancellationToken).ConfigureAwait(false);
+                        lastResult = await scriptExecutor.GetStatus(lastResult.ContextForNextCommand, scriptExecutionCancellationToken).ConfigureAwait(false);
                     }
                     catch (Exception)
                     {
@@ -91,9 +94,9 @@ namespace Octopus.Tentacle.Client.Scripts
                     }
                 }
 
-                OnScriptStatusResponseReceived(lastStatusResponse);
+                OnScriptStatusResponseReceived(lastResult.ScriptStatus);
 
-                if (GetState(lastStatusResponse) == ProcessState.Complete)
+                if (lastResult.ScriptStatus.State == ProcessState.Complete)
                 {
                     continue;
                 }
@@ -112,28 +115,13 @@ namespace Octopus.Tentacle.Client.Scripts
                 }
             }
 
-            return lastStatusResponse;
+            return lastResult;
         }
 
-        protected abstract TStartCommand Map(ExecuteScriptCommand command);
-
-        protected abstract ScriptExecutionStatus MapToStatus(TScriptStatusResponse response);
-
-        protected abstract ScriptExecutionResult MapToResult(TScriptStatusResponse response);
-
-        protected abstract ProcessState GetState(TScriptStatusResponse response);
-
-        protected abstract Task<TScriptStatusResponse> StartScript(TStartCommand command, CancellationToken scriptExecutionCancellationToken);
-
-        protected abstract Task<TScriptStatusResponse> GetStatus(TScriptStatusResponse lastStatusResponse, CancellationToken scriptExecutionCancellationToken);
-
-        protected abstract Task<TScriptStatusResponse> Cancel(TScriptStatusResponse lastStatusResponse, CancellationToken scriptExecutionCancellationToken);
-
-        protected abstract Task<TScriptStatusResponse> Finish(TScriptStatusResponse lastStatusResponse, CancellationToken scriptExecutionCancellationToken);
-
-        protected void OnScriptStatusResponseReceived(TScriptStatusResponse scriptStatusResponse)
+        void OnScriptStatusResponseReceived(ScriptStatus scriptStatusResponse)
         {
-            onScriptStatusResponseReceived(MapToStatus(scriptStatusResponse));
+            var scriptExecutionStatus = new ScriptExecutionStatus(scriptStatusResponse.Logs);
+            onScriptStatusResponseReceived(scriptExecutionStatus);
         }
     }
 }
