@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
@@ -59,21 +58,13 @@ namespace Octopus.Tentacle.Client.Scripts
                 shellScriptCommand.Files.ToArray());
         }
         
-        ScriptOperationExecutionResult Map(ScriptStatusResponseV2 r)
+        static ScriptOperationExecutionResult Map(ScriptStatusResponseV2 scriptStatusResponse)
         {
-            return new (MapToScriptStatus(r), MapToContextForNextCommand(r));
+            return new (
+                new ScriptStatus(scriptStatusResponse.State, scriptStatusResponse.ExitCode, scriptStatusResponse.Logs),
+                new CommandContext(scriptStatusResponse.Ticket, scriptStatusResponse.NextLogSequence, ScriptServiceVersion.ScriptServiceVersion2));
         }
         
-        ScriptStatus MapToScriptStatus(ScriptStatusResponseV2 scriptStatusResponse)
-        {
-            return new ScriptStatus(scriptStatusResponse.State, scriptStatusResponse.ExitCode, scriptStatusResponse.Logs);
-        }
-
-        CommandContext MapToContextForNextCommand(ScriptStatusResponseV2 scriptStatusResponse)
-        {
-            return new CommandContext(scriptStatusResponse.Ticket, scriptStatusResponse.NextLogSequence, ScriptServiceVersion.ScriptServiceVersion2);
-        }
-
         public async Task<ScriptOperationExecutionResult> StartScript(ExecuteScriptCommand executeScriptCommand,
             StartScriptIsBeingReAttempted startScriptIsBeingReAttempted,
             CancellationToken scriptExecutionCancellationToken)
@@ -109,7 +100,7 @@ namespace Octopus.Tentacle.Client.Scripts
                     clientOperationMetricsBuilder,
                     scriptExecutionCancellationToken).ConfigureAwait(false);
 
-                return new (MapToScriptStatus(scriptStatusResponse), MapToContextForNextCommand(scriptStatusResponse));
+                return Map(scriptStatusResponse);
             }
             catch (Exception ex) when (scriptExecutionCancellationToken.IsCancellationRequested)
             {

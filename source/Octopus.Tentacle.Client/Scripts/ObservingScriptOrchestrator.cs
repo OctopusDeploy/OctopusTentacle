@@ -31,28 +31,15 @@ namespace Octopus.Tentacle.Client.Scripts
                 StartScriptIsBeingReAttempted.FirstAttempt, // This is not re-entrant so this should be true.
                 scriptExecutionCancellationToken).ConfigureAwait(false);
 
-            try
+            var scriptStatus = await ObserveUntilCompleteThenFinish(startScriptResult, scriptExecutionCancellationToken).ConfigureAwait(false);
+
+            if (scriptExecutionCancellationToken.IsCancellationRequested)
             {
-                var scriptStatus = await ObserveUntilCompleteThenFinish(startScriptResult, scriptExecutionCancellationToken).ConfigureAwait(false);
-
-                if (scriptExecutionCancellationToken.IsCancellationRequested)
-                {
-                    // Throw an error so the caller knows that execution of the script was cancelled
-                    throw new OperationCanceledException("Script execution was cancelled");
-                }
-
-                return new ScriptExecutionResult(scriptStatus.State, scriptStatus.ExitCode!.Value);
+                // Throw an error so the caller knows that execution of the script was cancelled
+                throw new OperationCanceledException("Script execution was cancelled");
             }
-            catch (Exception)
-            {
-                if (scriptExecutionCancellationToken.IsCancellationRequested)
-                {
-                    // Throw an error so the caller knows that execution of the script was cancelled
-                    throw new OperationCanceledException("Script execution was cancelled");
-                }
 
-                throw;
-            }
+            return new ScriptExecutionResult(scriptStatus.State, scriptStatus.ExitCode!.Value);
         }
 
         async Task<ScriptStatus> ObserveUntilCompleteThenFinish(

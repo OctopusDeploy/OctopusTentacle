@@ -50,19 +50,16 @@ namespace Octopus.Tentacle.Client.Scripts
                 shellScriptCommand.Files.ToArray());
         }
 
-        ScriptStatus MapToScriptStatus(ScriptStatusResponse scriptStatusResponse)
+        static ScriptOperationExecutionResult Map(ScriptStatusResponse scriptStatusResponse)
+        {
+            return new (
+                MapToScriptStatus(scriptStatusResponse),
+                new CommandContext(scriptStatusResponse.Ticket, scriptStatusResponse.NextLogSequence, ScriptServiceVersion.ScriptServiceVersion1));
+        }
+
+        static ScriptStatus MapToScriptStatus(ScriptStatusResponse scriptStatusResponse)
         {
             return new ScriptStatus(scriptStatusResponse.State, scriptStatusResponse.ExitCode, scriptStatusResponse.Logs);
-        }
-
-        CommandContext MapToContextForNextCommand(ScriptStatusResponse scriptStatusResponse)
-        {
-            return new CommandContext(scriptStatusResponse.Ticket, scriptStatusResponse.NextLogSequence, ScriptServiceVersion.ScriptServiceVersion1);
-        }
-
-        ScriptOperationExecutionResult Map(ScriptStatusResponse r)
-        {
-            return new (MapToScriptStatus(r), MapToContextForNextCommand(r));
         }
 
         public async Task<ScriptOperationExecutionResult> StartScript(ExecuteScriptCommand executeScriptCommand,
