@@ -15,6 +15,11 @@ namespace Octopus.Tentacle.Client.ServiceHelpers
         public IAsyncClientFileTransferService ClientFileTransferServiceV1 { get; }
         public IAsyncClientCapabilitiesServiceV2 CapabilitiesServiceV2 { get; }
 
+        public AllClients(IHalibutRuntime halibutRuntime, ServiceEndPoint serviceEndPoint) : this(halibutRuntime, serviceEndPoint, null)
+        {
+        }
+
+
         internal AllClients(IHalibutRuntime halibutRuntime, ServiceEndPoint serviceEndPoint, ITentacleServiceDecoratorFactory? tentacleServicesDecoratorFactory)
         {
             ScriptServiceV1 = halibutRuntime.CreateAsyncClient<IScriptService, IAsyncClientScriptService>(serviceEndPoint);

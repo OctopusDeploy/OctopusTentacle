@@ -158,7 +158,6 @@ namespace Octopus.Tentacle.Client
 
             try
             {
-                
                 var scriptExecutor = new ScriptExecutor(
                     allClients,
                     logger, 
