@@ -7,7 +7,7 @@ using Octopus.Tentacle.Contracts;
 
 namespace Octopus.Tentacle.Client.Scripts
 {
-    public interface IScriptExecutor 
+    interface IScriptExecutor 
     {
         /// <summary>
         /// Start the script.
