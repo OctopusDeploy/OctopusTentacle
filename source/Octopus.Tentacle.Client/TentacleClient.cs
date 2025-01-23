@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
 using Halibut.ServiceModel;
+using Octopus.Tentacle.Client.EventDriven;
 using Octopus.Tentacle.Client.Execution;
 using Octopus.Tentacle.Client.Observability;
 using Octopus.Tentacle.Client.Scripts;
@@ -185,6 +186,66 @@ namespace Octopus.Tentacle.Client
                 var operationMetrics = operationMetricsBuilder.Build();
                 tentacleClientObserver.ExecuteScriptCompleted(operationMetrics, logger);
             }
+        }
+
+        public async Task<ScriptOperationExecutionResult> StartScript(
+            ExecuteScriptCommand command,
+            StartScriptIsBeingReAttempted startScriptIsBeingReAttempted, 
+            ITentacleClientTaskLog logger, 
+            CancellationToken scriptExecutionCancellationToken)
+        {
+            var scriptExecutor = new ScriptExecutor(
+                allClients,
+                logger,
+                tentacleClientObserver,
+                // For now, we do not support metrics for event-based operations.
+                ClientOperationMetricsBuilder.Start(),
+                clientOptions,
+                OnCancellationAbandonCompleteScriptAfter);
+
+            return await scriptExecutor.StartScript(command, startScriptIsBeingReAttempted, scriptExecutionCancellationToken);
+        }
+
+        public async Task<ScriptOperationExecutionResult> GetStatus(CommandContext commandContext, ITentacleClientTaskLog logger, CancellationToken scriptExecutionCancellationToken)
+        {
+            var scriptExecutor = new ScriptExecutor(
+            allClients,
+                logger,
+                tentacleClientObserver,
+                // For now, we do not support metrics for event-based operations.
+                ClientOperationMetricsBuilder.Start(),
+                clientOptions,
+                OnCancellationAbandonCompleteScriptAfter);
+
+            return await scriptExecutor.GetStatus(commandContext, scriptExecutionCancellationToken);
+        }
+
+        public async Task<ScriptOperationExecutionResult> CancelScript(CommandContext commandContext, ITentacleClientTaskLog logger)
+        {
+            var scriptExecutor = new ScriptExecutor(
+                allClients,
+                logger,
+                tentacleClientObserver,
+                // For now, we do not support metrics for event-based operations.
+                ClientOperationMetricsBuilder.Start(),
+                clientOptions,
+                OnCancellationAbandonCompleteScriptAfter);
+
+            return await scriptExecutor.CancelScript(commandContext);
+        }
+
+        public async Task<ScriptStatus?> CompleteScript(CommandContext commandContext, ITentacleClientTaskLog logger, CancellationToken scriptExecutionCancellationToken)
+        {
+            var scriptExecutor = new ScriptExecutor(
+                allClients,
+                logger,
+                tentacleClientObserver,
+                // For now, we do not support metrics for event-based operations.
+                ClientOperationMetricsBuilder.Start(),
+                clientOptions,
+                OnCancellationAbandonCompleteScriptAfter);
+
+            return await scriptExecutor.CompleteScript(commandContext, scriptExecutionCancellationToken);
         }
 
         public void Dispose()
