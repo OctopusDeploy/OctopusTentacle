@@ -7,19 +7,14 @@ using Octopus.Tentacle.Contracts.ScriptServiceV2;
 
 namespace Octopus.Tentacle.Client.ServiceHelpers
 {
-    public class AllClients
+    class AllClients
     {
         public IAsyncClientScriptService ScriptServiceV1 { get; }
         public IAsyncClientScriptServiceV2 ScriptServiceV2 { get; }
         public IAsyncClientKubernetesScriptServiceV1 KubernetesScriptServiceV1 { get; }
         public IAsyncClientFileTransferService ClientFileTransferServiceV1 { get; }
         public IAsyncClientCapabilitiesServiceV2 CapabilitiesServiceV2 { get; }
-
-        public AllClients(IHalibutRuntime halibutRuntime, ServiceEndPoint serviceEndPoint) : this(halibutRuntime, serviceEndPoint, null)
-        {
-        }
-
-
+        
         internal AllClients(IHalibutRuntime halibutRuntime, ServiceEndPoint serviceEndPoint, ITentacleServiceDecoratorFactory? tentacleServicesDecoratorFactory)
         {
             ScriptServiceV1 = halibutRuntime.CreateAsyncClient<IScriptService, IAsyncClientScriptService>(serviceEndPoint);

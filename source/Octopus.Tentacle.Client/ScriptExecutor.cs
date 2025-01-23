@@ -16,7 +16,7 @@ namespace Octopus.Tentacle.Client
     /// <summary>
     /// Executes scripts, on the best available script service. 
     /// </summary>
-    public class ScriptExecutor : IScriptExecutor
+    class ScriptExecutor : IScriptExecutor
     {
         readonly ITentacleClientTaskLog logger;
         readonly ClientOperationMetricsBuilder operationMetricsBuilder; 
@@ -25,22 +25,6 @@ namespace Octopus.Tentacle.Client
         readonly RpcCallExecutor rpcCallExecutor;
         readonly TimeSpan onCancellationAbandonCompleteScriptAfter;
         
-        public ScriptExecutor(AllClients allClients,
-            ITentacleClientTaskLog logger,
-            ITentacleClientObserver tentacleClientObserver, 
-            TentacleClientOptions clientOptions,
-            TimeSpan onCancellationAbandonCompleteScriptAfter)
-        : this(
-            allClients,
-            logger,
-            tentacleClientObserver,
-            // For now, we do not support operation based metrics when used outside the TentacleClient. So just plug in a builder to discard.
-            ClientOperationMetricsBuilder.Start(),
-            clientOptions,
-            onCancellationAbandonCompleteScriptAfter)
-        {
-        }
-
         internal ScriptExecutor(AllClients allClients,
             ITentacleClientTaskLog logger,
             ITentacleClientObserver tentacleClientObserver,
