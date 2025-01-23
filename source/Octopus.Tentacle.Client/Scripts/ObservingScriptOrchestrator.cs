@@ -59,7 +59,7 @@ namespace Octopus.Tentacle.Client.Scripts
             // but the result to use for other versions is the last observing result.
             if (completeScriptResponse is not null)
             {
-                // Because V1 can actually return a result, needs to handle the response received as well (so the output appears in Octopus Server)
+                // Because V1 can actually return a result, we need to handle the response received as well (so the output appears in Octopus Server)
                 OnScriptStatusResponseReceived(completeScriptResponse);
                 return completeScriptResponse;
             }
