@@ -68,28 +68,28 @@ namespace Octopus.Tentacle.Client
             return await scriptExecutor.StartScript(executeScriptCommand, startScriptIsBeingReAttempted, cancellationToken);
         }
 
-        public async Task<ScriptOperationExecutionResult> GetStatus(CommandContext ticketForNextNextStatus, CancellationToken cancellationToken)
+        public async Task<ScriptOperationExecutionResult> GetStatus(CommandContext commandContext, CancellationToken cancellationToken)
         {
             var scriptExecutorFactory = CreateScriptExecutorFactory();
-            var scriptExecutor = scriptExecutorFactory.CreateScriptExecutor(ticketForNextNextStatus.ScripServiceVersionUsed);
+            var scriptExecutor = scriptExecutorFactory.CreateScriptExecutor(commandContext.ScripServiceVersionUsed);
 
-            return await scriptExecutor.GetStatus(ticketForNextNextStatus, cancellationToken);
+            return await scriptExecutor.GetStatus(commandContext, cancellationToken);
         }
 
-        public async Task<ScriptOperationExecutionResult> CancelScript(CommandContext ticketForNextNextStatus)
+        public async Task<ScriptOperationExecutionResult> CancelScript(CommandContext commandContext)
         {
             var scriptExecutorFactory = CreateScriptExecutorFactory();
-            var scriptExecutor = scriptExecutorFactory.CreateScriptExecutor(ticketForNextNextStatus.ScripServiceVersionUsed);
+            var scriptExecutor = scriptExecutorFactory.CreateScriptExecutor(commandContext.ScripServiceVersionUsed);
 
-            return await scriptExecutor.CancelScript(ticketForNextNextStatus);
+            return await scriptExecutor.CancelScript(commandContext);
         }
         
-        public async Task<ScriptStatus?> CompleteScript(CommandContext ticketForNextNextStatus, CancellationToken cancellationToken)
+        public async Task<ScriptStatus?> CompleteScript(CommandContext commandContext, CancellationToken cancellationToken)
         {
             var scriptExecutorFactory = CreateScriptExecutorFactory();
-            var scriptExecutor = scriptExecutorFactory.CreateScriptExecutor(ticketForNextNextStatus.ScripServiceVersionUsed);
+            var scriptExecutor = scriptExecutorFactory.CreateScriptExecutor(commandContext.ScripServiceVersionUsed);
 
-            return await scriptExecutor.CompleteScript(ticketForNextNextStatus, cancellationToken);
+            return await scriptExecutor.CompleteScript(commandContext, cancellationToken);
         }
         
         ScriptExecutorFactory CreateScriptExecutorFactory()
