@@ -39,7 +39,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 throw new OperationCanceledException("Script execution was cancelled");
             }
 
-            return new ScriptExecutionResult(scriptStatus.State, scriptStatus.ExitCode!.Value);
+            return new ScriptExecutionResult(scriptStatus.State, scriptStatus.ExitCode);
         }
 
         async Task<ScriptStatus> ObserveUntilCompleteThenFinish(

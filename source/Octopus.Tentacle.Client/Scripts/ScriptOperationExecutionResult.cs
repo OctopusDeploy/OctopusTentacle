@@ -21,7 +21,7 @@ namespace Octopus.Tentacle.Client.Scripts
         /// </summary>
         internal static ScriptOperationExecutionResult CreateScriptStartedResult(ScriptTicket scriptTicket, ScriptServiceVersion scripServiceVersionUsed)
         {
-            var scriptStatus = new ScriptStatus(ProcessState.Pending, null, new List<ProcessOutput>());
+            var scriptStatus = new ScriptStatus(ProcessState.Pending, 0, new List<ProcessOutput>());
             var contextForNextCommand = new CommandContext(scriptTicket, 0, scripServiceVersionUsed);
             return new(scriptStatus, contextForNextCommand);
         }

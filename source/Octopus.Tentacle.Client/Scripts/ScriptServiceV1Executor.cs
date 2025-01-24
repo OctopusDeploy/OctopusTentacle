@@ -106,13 +106,13 @@ namespace Octopus.Tentacle.Client.Scripts
             return Map(scriptStatusResponseV1);
         }
 
-        public async Task<ScriptOperationExecutionResult> CancelScript(CommandContext lastStatusResponse)
+        public async Task<ScriptOperationExecutionResult> CancelScript(CommandContext commandContext)
         {
             var response = await rpcCallExecutor.ExecuteWithNoRetries(
                 RpcCall.Create<IScriptService>(nameof(IScriptService.CancelScript)),
                 async ct =>
                 {
-                    var request = new CancelScriptCommand(lastStatusResponse.ScriptTicket, lastStatusResponse.NextLogSequence);
+                    var request = new CancelScriptCommand(commandContext.ScriptTicket, commandContext.NextLogSequence);
                     var result = await clientScriptServiceV1.CancelScriptAsync(request, new HalibutProxyRequestOptions(ct));
 
                     return result;
