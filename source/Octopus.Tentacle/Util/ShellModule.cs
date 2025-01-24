@@ -13,9 +13,9 @@ namespace Octopus.Tentacle.Util
             builder.RegisterType<SilentProcessRunnerWrapper>().As<ISilentProcessRunner>().SingleInstance();
 
             if (PlatformDetection.IsRunningOnWindows)
-                builder.RegisterType<PowerShell>().As<IShell>();
+                builder.RegisterType<PowerShell>().As<IShell>().SingleInstance();
             else
-                builder.RegisterType<Bash>().As<IShell>();
+                builder.RegisterType<Bash>().As<IShell>().SingleInstance();;
         }
     }
 }
