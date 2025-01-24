@@ -24,7 +24,7 @@ namespace Octopus.Tentacle.Tests.Commands
             log = Substitute.For<ISystemLog>();
             configuration = new StubTentacleConfiguration();
             var selector = Substitute.For<IApplicationInstanceSelector>();
-            selector.Current.Returns(info => new ApplicationInstanceConfiguration(null, null!, null!, null!));
+            selector.Current.Returns(info => new ApplicationInstanceConfiguration(null, null!, null!, null!, null));
             Command = new NewCertificateCommand(new Lazy<IWritableTentacleConfiguration>(() => configuration), log, selector, new Lazy<ICertificateGenerator>(() => Substitute.For<ICertificateGenerator>()), Substitute.For<ILogFileOnlyLogger>());
         }
 
