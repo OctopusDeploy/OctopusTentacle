@@ -66,6 +66,7 @@ namespace Octopus.Tentacle.Commands
         async Task StartAsync()
         {
             base.Start();
+            log.Info("Inside ShowConfigurationCommand Start().");
 
             DictionaryKeyValueStore outputFile;
 
@@ -81,6 +82,7 @@ namespace Octopus.Tentacle.Commands
             await CollectConfigurationSettings(outputFile);
 
             outputFile.Save();
+            log.Info("Finished ShowConfigurationCommand Start().");
         }
 
         async Task CollectConfigurationSettings(DictionaryKeyValueStore outputStore)
