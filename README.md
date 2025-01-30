@@ -108,3 +108,5 @@ NOTE: This script has only been tested on MacOS so far and requires Docker Deskt
 ## Additional Resources
 
 - Scripts to help with manual testing can be found in [./testing](./testing/README.md).
+- 
+Testing
