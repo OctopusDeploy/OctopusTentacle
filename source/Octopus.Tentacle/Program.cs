@@ -79,6 +79,7 @@ namespace Octopus.Tentacle
 #pragma warning restore CS0618 // Type or member is obsolete
             builder.RegisterCommand<RegisterKubernetesDeploymentTargetCommand>("register-k8s-target", "Registers this kubernetes agent as a deployment target with an Octopus Server");
             builder.RegisterCommand<RegisterKubernetesWorkerCommand>("register-k8s-worker", "Registers this kubernetes agent as a worker with an Octopus Server");
+            builder.RegisterCommand<MigratePreInstalledKubernetesDeploymentTargetCommand>("migrate-preinstalled-k8s-config", "Migrates the configuration from the pre-install hook to the running agent instance");
             builder.RegisterCommand<ExtractCommand>("extract", "Extracts a NuGet package");
             builder.RegisterCommand<DeregisterMachineCommand>("deregister-from", "Deregisters this deployment target from an Octopus Server");
             builder.RegisterCommand<DeregisterWorkerCommand>("deregister-worker", "Deregisters this worker from an Octopus Server");
