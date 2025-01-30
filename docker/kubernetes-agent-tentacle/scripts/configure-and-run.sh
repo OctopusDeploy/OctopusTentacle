@@ -156,6 +156,14 @@ function validateWorkerVariables() {
   echo " - worker pools '$WorkerPools'"
 }
 
+function migrateFromPreinstallScript() {
+  tentacle migrate-preinstalled-k8s-config \
+    --source-config-map-name "tentacle-config-pre" \
+    --source-secret-name "tentacle-secret-pre" \
+    --destination-config-map-name "tentacle-config" \
+    --destination-secret-name "tentacle-secret"
+}
+
 function configureTentacle() {
   tentacle create-instance --instance "$instanceName" --config "$configurationDirectory/tentacle.config" --home "$configurationDirectory"
 
@@ -424,6 +432,7 @@ else
 
   echo "==============================================="
 
+  migrateFromPreinstallScript
   configureTentacle
   registerTentacle
   addAdditionalServerInstancesIfRequired
