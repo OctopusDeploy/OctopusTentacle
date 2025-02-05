@@ -4,6 +4,7 @@ using Octopus.Diagnostics;
 using Octopus.Tentacle.Startup;
 using k8s;
 using k8s.Autorest;
+using k8s.Models;
 using Octopus.Tentacle.Kubernetes;
 
 namespace Octopus.Tentacle.Commands
@@ -17,6 +18,7 @@ namespace Octopus.Tentacle.Commands
         string? sourceSecretName;
         string? destinationConfigMapName;        
         string? destinationSecretName;
+        string? @namespace;
 
         public MigratePreInstalledKubernetesDeploymentTargetCommand(IKubernetesClientConfigProvider configProvider, ISystemLog log, ILogFileOnlyLogger logFileOnlyLogger) : base(logFileOnlyLogger)
         {
@@ -27,6 +29,7 @@ namespace Octopus.Tentacle.Commands
             Options.Add("source-secret-name=", "The name of the source secret (created by the pre-installation of the agent)", v => sourceSecretName = v);
             Options.Add("destination-config-map-name=", "The name of the destination config map", v => destinationConfigMapName = v);
             Options.Add("destination-secret-name=", "The name of the destination secret", v => destinationSecretName = v);
+            Options.Add("namespace=", "The namespace to use for the migration", v => @namespace = v);
         }
         
         // This command is only used as a way to programatically copy the config map and secret from the pre-installation hook to the new agent
@@ -40,46 +43,57 @@ namespace Octopus.Tentacle.Commands
                 return;
             }
             
+            var migrationNamespace = @namespace ?? KubernetesConfig.Namespace;
+            
             var config = configProvider.Get();
             var client = new k8s.Kubernetes(config);
+            var sourceConfigMap = TryGetCoreV1Object(() => client.CoreV1.ReadNamespacedConfigMap(sourceConfigMapName, migrationNamespace));
+            var sourceSecret = TryGetCoreV1Object(() => client.CoreV1.ReadNamespacedSecret(sourceSecretName, migrationNamespace));
+            var destinationConfigMap = TryGetCoreV1Object(() => client.CoreV1.ReadNamespacedConfigMap(destinationConfigMapName, migrationNamespace));
+            var destinationSecret = TryGetCoreV1Object(() => client.CoreV1.ReadNamespacedSecret(destinationSecretName, migrationNamespace));
+
+            var (migrateData, reason) = ShouldMigrateData(sourceConfigMap, sourceSecret, destinationConfigMap, destinationSecret);
+            if (!migrateData)
+            {
+                log.Info(reason);
+                return;
+            }
+
+            // Copy the data from the source to the destination
+            destinationConfigMap!.Data = sourceConfigMap!.Data;
+            destinationSecret!.Data = sourceSecret!.Data;
+            client.CoreV1.ReplaceNamespacedConfigMap(destinationConfigMap, destinationConfigMapName, migrationNamespace);
+            client.CoreV1.ReplaceNamespacedSecret(destinationSecret, destinationSecretName, migrationNamespace);
             
+            // Delete the sources (they are no longer needed)
+            client.CoreV1.DeleteNamespacedConfigMap(sourceConfigMapName, migrationNamespace);
+            client.CoreV1.DeleteNamespacedSecret(sourceSecretName, migrationNamespace);
+            
+            log.Info("Migration complete.");
+        }
+        
+        public static (bool, string) ShouldMigrateData(V1ConfigMap? sourceConfigMap, V1Secret? sourceSecret, V1ConfigMap? destinationConfigMap, V1Secret? destinationSecret)
+        {
             // Check that the sources exist
-            var sourceConfigMap = TryGetCoreV1Object(() => client.CoreV1.ReadNamespacedConfigMap(sourceConfigMapName, KubernetesConfig.Namespace));
-            var sourceSecret = TryGetCoreV1Object(() => client.CoreV1.ReadNamespacedSecret(sourceSecretName, KubernetesConfig.Namespace));
             if (sourceConfigMap is null || sourceSecret is null)
             {
-                log.Info("Source config map or secret not found, skipping migration.");
-                return;
+                return (false, "Source config map or secret not found, skipping migration");
             }
             
             // Check if the destinations exist
-            var destinationConfigMap = TryGetCoreV1Object(() => client.CoreV1.ReadNamespacedConfigMap(destinationConfigMapName, KubernetesConfig.Namespace));
-            var destinationSecret = TryGetCoreV1Object(() => client.CoreV1.ReadNamespacedSecret(destinationSecretName, KubernetesConfig.Namespace));
             if (destinationConfigMap is null || destinationSecret is null)
             {
-                log.Info("destination config map or secret not found, skipping migration.");
-                return;
+                return (false, "destination config map or secret not found, skipping migration.");
             }
 
 
             // Check if the destination is already registered
-            if (destinationConfigMap.Data is not null && destinationConfigMap.Data.TryGetValue("Tentacle.Services.IsRegistered", out var isRegistered) && isRegistered == "True")
+            if (destinationConfigMap.Data is not null && destinationConfigMap.Data.TryGetValue("Tentacle.Services.IsRegistered", out var isRegistered) && string.Equals(isRegistered, "true", StringComparison.OrdinalIgnoreCase))
             {
-                log.Info("Tentacle is already registered, skipping registration.");
-                return;
+                return (false, "Tentacle is already registered, skipping registration.");
             }
-            
-            // Copy the data from the source to the destination
-            destinationConfigMap.Data = sourceConfigMap.Data;
-            destinationSecret.Data = sourceSecret.Data;
-            client.CoreV1.ReplaceNamespacedConfigMap(destinationConfigMap, destinationConfigMapName, KubernetesConfig.Namespace);
-            client.CoreV1.ReplaceNamespacedSecret(destinationSecret, destinationSecretName, KubernetesConfig.Namespace);
-            
-            // Delete the sources (they are no longer needed)
-            client.CoreV1.DeleteNamespacedConfigMap(sourceConfigMapName, KubernetesConfig.Namespace);
-            client.CoreV1.DeleteNamespacedSecret(sourceSecretName, KubernetesConfig.Namespace);
-            
-            log.Info("Migration complete.");
+
+            return (true, string.Empty);
         }
 
         T? TryGetCoreV1Object<T>(Func<T> kubernetesFunc) where T : class
