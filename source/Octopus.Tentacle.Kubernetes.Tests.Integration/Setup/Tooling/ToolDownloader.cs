@@ -44,7 +44,7 @@ public abstract class ToolDownloader : IToolDownloader
         {
             var exitCode = SilentProcessRunner.ExecuteCommand(
                 "chmod",
-                $"+x {downloadFilePath}",
+                $"+x \"{downloadFilePath}\"",
                 targetDirectory,
                 Logger.Debug,
                 Logger.Information,
