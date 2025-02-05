@@ -81,7 +81,7 @@ public class HelmDownloader : ToolDownloader
 
         var exitCode = SilentProcessRunner.ExecuteCommand(
             "tar",
-            $"xzvf {gzArchiveName} -C {destFolder}",
+            $"xzvf \"{gzArchiveName}\" -C \"{destFolder}\"",
             tmp.DirectoryPath,
             Logger.Debug,
             Logger.Information,
