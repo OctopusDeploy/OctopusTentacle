@@ -12,7 +12,7 @@ namespace Octopus.Tentacle.Commands
     public class MigratePreInstalledKubernetesDeploymentTargetCommand : AbstractCommand
     {
         readonly ISystemLog log;
-        readonly IKubernetesClientConfigProvider configProvider;
+        readonly Lazy<IKubernetesClientConfigProvider> configProvider;
 
         string? sourceConfigMapName;
         string? sourceSecretName;
@@ -20,7 +20,7 @@ namespace Octopus.Tentacle.Commands
         string? destinationSecretName;
         string? @namespace;
 
-        public MigratePreInstalledKubernetesDeploymentTargetCommand(IKubernetesClientConfigProvider configProvider, ISystemLog log, ILogFileOnlyLogger logFileOnlyLogger) : base(logFileOnlyLogger)
+        public MigratePreInstalledKubernetesDeploymentTargetCommand(Lazy<IKubernetesClientConfigProvider> configProvider, ISystemLog log, ILogFileOnlyLogger logFileOnlyLogger) : base(logFileOnlyLogger)
         {
             this.log = log;
             this.configProvider = configProvider;
@@ -45,7 +45,7 @@ namespace Octopus.Tentacle.Commands
             
             var migrationNamespace = @namespace ?? KubernetesConfig.Namespace;
             
-            var config = configProvider.Get();
+            var config = configProvider.Value.Get();
             var client = new k8s.Kubernetes(config);
             var sourceConfigMap = TryGetCoreV1Object(() => client.CoreV1.ReadNamespacedConfigMap(sourceConfigMapName, migrationNamespace));
             var sourceSecret = TryGetCoreV1Object(() => client.CoreV1.ReadNamespacedSecret(sourceSecretName, migrationNamespace));

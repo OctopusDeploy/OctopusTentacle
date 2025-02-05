@@ -19,7 +19,7 @@ public class KubernetesAgentMigrateFromPreinstallationTest
     {
         //Arrange
         var kubernetesConfigClient = new KubernetesFileWrappedProvider(KubernetesTestsGlobalContext.Instance.KubeConfigPath);
-        var commandToRun = new MigratePreInstalledKubernetesDeploymentTargetCommand(kubernetesConfigClient, systemLog, new LogFileOnlyLogger());
+        var commandToRun = new MigratePreInstalledKubernetesDeploymentTargetCommand(new Lazy<IKubernetesClientConfigProvider>(kubernetesConfigClient), systemLog, new LogFileOnlyLogger());
         var client = new k8s.Kubernetes(kubernetesConfigClient.Get());
         var commandNamespace = Guid.NewGuid().ToString("N");
         var validationKey = Guid.NewGuid().ToString("N");
@@ -77,7 +77,7 @@ public class KubernetesAgentMigrateFromPreinstallationTest
     {
         //Arrange
         var kubernetesConfigClient = new KubernetesFileWrappedProvider(KubernetesTestsGlobalContext.Instance.KubeConfigPath);
-        var commandToRun = new MigratePreInstalledKubernetesDeploymentTargetCommand(kubernetesConfigClient, systemLog, new LogFileOnlyLogger());
+        var commandToRun = new MigratePreInstalledKubernetesDeploymentTargetCommand(new Lazy<IKubernetesClientConfigProvider>(kubernetesConfigClient), systemLog, new LogFileOnlyLogger());
         var client = new k8s.Kubernetes(kubernetesConfigClient.Get());
         var commandNamespace = Guid.NewGuid().ToString("N");
         var validationKey = Guid.NewGuid().ToString("N");
@@ -96,6 +96,12 @@ public class KubernetesAgentMigrateFromPreinstallationTest
             {"validationKey", validationKey},
             {"Tentacle.Services.IsRegistered", "true"}
         };
+        var destinationSecretData = new Dictionary<string, string>
+        {
+            {"machine-iv", "testData"},
+            {"machine-key", validationKey}
+        };
+
 
         const string sourceConfigMapName = "tentacle-config-pre";
         const string sourceSecretName = "tentacle-secret-pre";
@@ -121,7 +127,7 @@ public class KubernetesAgentMigrateFromPreinstallationTest
         
         // Targets
         await CreateConfigmap(client, destinationConfigMapName, commandNamespace, destinationConfigMapData);
-        await CreateSecret(client, destinationSecretName, commandNamespace);
+        await CreateSecret(client, destinationSecretName, commandNamespace, destinationSecretData);
         
         commandToRun.Start(commandArguments, new NoninteractiveHost(), []);
         
