@@ -6,6 +6,7 @@ using k8s;
 using k8s.Autorest;
 using k8s.Models;
 using Octopus.Tentacle.Kubernetes;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Commands
 {
@@ -36,6 +37,11 @@ namespace Octopus.Tentacle.Commands
         // It does not access tentacle configuration so that it doesn't 
         protected override void Start()
         {
+            if (!PlatformDetection.Kubernetes.IsRunningAsKubernetesAgent)
+            {
+                throw new ControlledFailureException("This command can only be run from within a Kubernetes agent.");
+            }
+
             // Check that the sources and destinations are different
             if (sourceSecretName == destinationSecretName || sourceConfigMapName == destinationConfigMapName)
             {
