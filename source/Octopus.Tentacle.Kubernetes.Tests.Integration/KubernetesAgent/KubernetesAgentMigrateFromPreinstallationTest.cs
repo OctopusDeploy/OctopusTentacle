@@ -141,7 +141,7 @@ public class KubernetesAgentMigrateFromPreinstallationTest
         validationKeyFromKubernetes.Should().NotBeNull().And.Be(validationKey);
         
         secret.Data.TryGetValue("machine-key", out var hostKeyFromKubernetes);
-        hostKeyFromKubernetes.Should().BeNullOrEmpty();
+        hostKeyFromKubernetes.Should().NotBeNull().And.Equal(Encoding.UTF8.GetBytes(validationKey));
     }
 
     async Task CreateCommandNamespace(k8s.Kubernetes client, string name)
