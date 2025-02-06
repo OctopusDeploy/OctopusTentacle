@@ -19,9 +19,10 @@ public class KubernetesAgentMigrateFromPreinstallationTest
     {
         //Arrange
         var kubernetesConfigClient = new KubernetesFileWrappedProvider(KubernetesTestsGlobalContext.Instance.KubeConfigPath);
+        var commandNamespace = Guid.NewGuid().ToString("N");
+        Environment.SetEnvironmentVariable(KubernetesConfig.NamespaceVariableName, commandNamespace);
         var commandToRun = new MigratePreInstalledKubernetesDeploymentTargetCommand(new Lazy<IKubernetesClientConfigProvider>(kubernetesConfigClient), systemLog, new LogFileOnlyLogger());
         var client = new k8s.Kubernetes(kubernetesConfigClient.Get());
-        var commandNamespace = Guid.NewGuid().ToString("N");
         var validationKey = Guid.NewGuid().ToString("N");
         var sourceConfigMapData = new Dictionary<string, string>
         {
@@ -77,9 +78,10 @@ public class KubernetesAgentMigrateFromPreinstallationTest
     {
         //Arrange
         var kubernetesConfigClient = new KubernetesFileWrappedProvider(KubernetesTestsGlobalContext.Instance.KubeConfigPath);
+        var commandNamespace = Guid.NewGuid().ToString("N");
+        Environment.SetEnvironmentVariable(KubernetesConfig.NamespaceVariableName, commandNamespace);
         var commandToRun = new MigratePreInstalledKubernetesDeploymentTargetCommand(new Lazy<IKubernetesClientConfigProvider>(kubernetesConfigClient), systemLog, new LogFileOnlyLogger());
         var client = new k8s.Kubernetes(kubernetesConfigClient.Get());
-        var commandNamespace = Guid.NewGuid().ToString("N");
         var validationKey = Guid.NewGuid().ToString("N");
         var sourceConfigMapData = new Dictionary<string, string>
         {
