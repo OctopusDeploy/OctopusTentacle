@@ -20,13 +20,15 @@ namespace Octopus.Tentacle.Kubernetes.Crypto
         const string MachineKeyName = "machine-key";
         const string MachineIvName = "machine-iv";
 
+        readonly IKubernetesConfiguration kubernetesConfiguration;
         readonly IKubernetesSecretService secretService;
         readonly ISystemLog log;
         V1Secret? secret;
         readonly SemaphoreSlim accessSemaphore;
 
-        public KubernetesMachineEncryptionKeyProvider(IKubernetesSecretService secretService, ISystemLog log)
+        public KubernetesMachineEncryptionKeyProvider(IKubernetesConfiguration kubernetesConfiguration, IKubernetesSecretService secretService, ISystemLog log)
         {
+            this.kubernetesConfiguration = kubernetesConfiguration;
             this.secretService = secretService;
             this.log = log;
             accessSemaphore = new SemaphoreSlim(1, 1);
@@ -42,7 +44,7 @@ namespace Octopus.Tentacle.Kubernetes.Crypto
                 secret ??= await secretService.TryGetSecretAsync(SecretName, CancellationToken.None);
 
                 if (secret is null)
-                    throw new InvalidOperationException($"Unable to retrieve MachineKey from secret for namespace {KubernetesConfig.Namespace}");
+                    throw new InvalidOperationException($"Unable to retrieve MachineKey from secret for namespace {kubernetesConfiguration.Namespace}");
 
                 var data = secret.Data;
                 if (data is null ||

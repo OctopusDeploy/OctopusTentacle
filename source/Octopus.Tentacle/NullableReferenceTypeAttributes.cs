@@ -5,7 +5,7 @@ using System;
 /// These attributes replicate the ones from System.Diagnostics.CodeAnalysis, and are here so we can still compile against the older frameworks.
 /// </summary>
 
-namespace Octopus.Tentacle
+namespace System.Diagnostics.CodeAnalysis
 {
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Parameter | AttributeTargets.ReturnValue, AllowMultiple = true)]
     public sealed class NotNullIfNotNullAttribute : Attribute
@@ -62,6 +62,13 @@ namespace Octopus.Tentacle
 
         /// <summary>Gets field or property member names.</summary>
         public string[] Members { get; }
+    }
+    
+    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, AllowMultiple = true)]
+    public sealed class MemberNotNullWhenAttribute : Attribute
+    {
+        public MemberNotNullWhenAttribute(bool returnValue, params string[] members) { }
+        public MemberNotNullWhenAttribute(bool returnValue, string member) { }
     }
 }
 #endif

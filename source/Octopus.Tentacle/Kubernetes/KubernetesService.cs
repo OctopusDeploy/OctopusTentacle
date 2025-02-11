@@ -20,9 +20,14 @@ namespace Octopus.Tentacle.Kubernetes
         protected ISystemLog Log { get; }
         protected AsyncRetryPolicy RetryPolicy { get; }
         protected k8sClient Client { get; }
+        
+        protected IKubernetesConfiguration KubernetesConfiguration { get; }
+        
+        protected string Namespace => KubernetesConfiguration.Namespace;
 
-        protected KubernetesService(IKubernetesClientConfigProvider configProvider, ISystemLog log)
+        protected KubernetesService(IKubernetesClientConfigProvider configProvider, IKubernetesConfiguration kubernetesConfiguration, ISystemLog log)
         {
+            KubernetesConfiguration = kubernetesConfiguration;
             Log = log;
             Client = new k8sClient(configProvider.Get());
             RetryPolicy = Policy.Handle<Exception>().WaitAndRetryAsync(5,
@@ -37,12 +42,12 @@ namespace Octopus.Tentacle.Kubernetes
         protected void AddStandardMetadata(IKubernetesObject<V1ObjectMeta> k8sObject)
         {
             //Everything should be in the main namespace
-            k8sObject.Metadata.NamespaceProperty = KubernetesConfig.Namespace;
+            k8sObject.Metadata.NamespaceProperty = Namespace;
 
-            //Add helm specific metadata so it's removed if the helm release is uninstalled
+            //Add helm specific metadata, so it's removed if the helm release is uninstalled
             k8sObject.Metadata.Annotations ??= new Dictionary<string, string>();
-            k8sObject.Metadata.Annotations["meta.helm.sh/release-name"] = KubernetesConfig.HelmReleaseName;
-            k8sObject.Metadata.Annotations["meta.helm.sh/release-namespace"] = KubernetesConfig.Namespace;
+            k8sObject.Metadata.Annotations["meta.helm.sh/release-name"] = KubernetesConfiguration.HelmReleaseName;
+            k8sObject.Metadata.Annotations["meta.helm.sh/release-namespace"] = Namespace;
 
             k8sObject.Metadata.Labels ??= new Dictionary<string, string>();
             k8sObject.Metadata.Labels["app.kubernetes.io/managed-by"] = "Helm";
