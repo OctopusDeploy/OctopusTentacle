@@ -14,6 +14,7 @@ using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
+using Octopus.Tentacle.Kubernetes.Crypto;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Util;
 using Octopus.Tentacle.Variables;
@@ -36,6 +37,7 @@ namespace Octopus.Tentacle.Kubernetes
         readonly ITentacleScriptLogProvider scriptLogProvider;
         readonly IHomeConfiguration homeConfiguration;
         readonly KubernetesPhysicalFileSystem kubernetesPhysicalFileSystem;
+        readonly IScriptPodLogEncryptionKeyProvider scriptPodLogEncryptionKeyProvider;
 
         public KubernetesScriptPodCreator(
             IKubernetesPodService podService,
@@ -46,7 +48,8 @@ namespace Octopus.Tentacle.Kubernetes
             ISystemLog log,
             ITentacleScriptLogProvider scriptLogProvider,
             IHomeConfiguration homeConfiguration,
-            KubernetesPhysicalFileSystem kubernetesPhysicalFileSystem)
+            KubernetesPhysicalFileSystem kubernetesPhysicalFileSystem,
+            IScriptPodLogEncryptionKeyProvider scriptPodLogEncryptionKeyProvider)
         {
             this.podService = podService;
             this.podMonitor = podMonitor;
@@ -57,6 +60,7 @@ namespace Octopus.Tentacle.Kubernetes
             this.scriptLogProvider = scriptLogProvider;
             this.homeConfiguration = homeConfiguration;
             this.kubernetesPhysicalFileSystem = kubernetesPhysicalFileSystem;
+            this.scriptPodLogEncryptionKeyProvider = scriptPodLogEncryptionKeyProvider;
         }
 
         public async Task CreatePod(StartKubernetesScriptCommandV1 command, IScriptWorkspace workspace, CancellationToken cancellationToken)
@@ -74,6 +78,9 @@ namespace Octopus.Tentacle.Kubernetes
                        cancellationToken,
                        log))
             {
+                //Write the log encryption key here
+                await scriptPodLogEncryptionKeyProvider.GenerateAndWriteEncryptionKeyfileToWorkspace(command.ScriptTicket, cancellationToken);
+                
                 //Possibly create the image pull secret name
                 var imagePullSecretName = await CreateImagePullSecret(command, cancellationToken);
 
@@ -181,7 +188,7 @@ namespace Octopus.Tentacle.Kubernetes
                 .WhereNotNull()
                 .Select(secretName => new V1LocalObjectReference(secretName))
                 .ToList();
-
+             
             var pod = new V1Pod
             {
                 Metadata = new V1ObjectMeta
@@ -240,7 +247,29 @@ namespace Octopus.Tentacle.Kubernetes
                     {
                         ClaimName = KubernetesConfig.PodVolumeClaimName
                     }
-                }
+                },
+                CreateAgentUpgradeSecretVolume(),
+            };
+        }
+
+        protected V1Volume CreateAgentUpgradeSecretVolume()
+        {
+            return new()
+            {
+                Name = "agent-upgrade",
+                Secret = new V1SecretVolumeSource
+                {
+                    SecretName = "agent-upgrade-secret",
+                    Items = new List<V1KeyToPath>()
+                    {
+                        new()
+                        {
+                            Key = ".dockerconfigjson",
+                            Path = "config.json"
+                        }
+                    },
+                    Optional = true,
+                },
             };
         }
 
@@ -290,7 +319,11 @@ namespace Octopus.Tentacle.Kubernetes
                         commandString
                     }
                     .ToList(),
-                VolumeMounts = new List<V1VolumeMount> { new(homeDir, "tentacle-home") },
+                VolumeMounts = new List<V1VolumeMount>
+                {
+                    new(homeDir, "tentacle-home"),
+                    new ("/root/agent_upgrade/", "agent-upgrade")
+                },
                 Env = new List<V1EnvVar>
                 {
                     new(KubernetesConfig.NamespaceVariableName, KubernetesConfig.Namespace),

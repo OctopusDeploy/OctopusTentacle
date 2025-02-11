@@ -7,6 +7,7 @@ using NSubstitute;
 using NUnit.Framework;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Kubernetes;
+using Octopus.Tentacle.Kubernetes.Crypto;
 using Octopus.Tentacle.Tests.Support;
 using Octopus.Time;
 
@@ -26,6 +27,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         DateTimeOffset startTime;
         ITentacleScriptLogProvider scriptLogProvider;
         IScriptPodSinceTimeStore scriptPodSinceTimeStore;
+        IScriptPodLogEncryptionKeyProvider scriptPodLogEncryptionKeyProvider;
 
         [SetUp]
         public void Setup()
@@ -37,10 +39,11 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             clock = new FixedClock(startTime);
             scriptLogProvider = Substitute.For<ITentacleScriptLogProvider>();
             scriptPodSinceTimeStore = Substitute.For<IScriptPodSinceTimeStore>();
+            scriptPodLogEncryptionKeyProvider = Substitute.For<IScriptPodLogEncryptionKeyProvider>();
             monitor = Substitute.For<IKubernetesPodStatusProvider>();
             scriptTicket = new ScriptTicket(Guid.NewGuid().ToString());
 
-            cleaner = new KubernetesOrphanedPodCleaner(monitor, podService, log, clock, scriptLogProvider, scriptPodSinceTimeStore);
+            cleaner = new KubernetesOrphanedPodCleaner(monitor, podService, log, clock, scriptLogProvider, scriptPodSinceTimeStore, scriptPodLogEncryptionKeyProvider);
 
             overCutoff = cleaner.CompletedPodConsideredOrphanedAfterTimeSpan + 1.Minutes();
             underCutoff = cleaner.CompletedPodConsideredOrphanedAfterTimeSpan - 1.Minutes();
@@ -71,6 +74,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             await podService.Received().DeleteIfExists(scriptTicket, Arg.Any<CancellationToken>());
             scriptLogProvider.Received().Delete(scriptTicket);
             scriptPodSinceTimeStore.Received().Delete(scriptTicket);
+            scriptPodLogEncryptionKeyProvider.Received().Delete(scriptTicket);
         }
 
         [TestCase(TrackedScriptPodPhase.Succeeded, true)]
@@ -95,12 +99,14 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                 await podService.Received().DeleteIfExists(scriptTicket, Arg.Any<CancellationToken>());
                 scriptLogProvider.Received().Delete(scriptTicket);
                 scriptPodSinceTimeStore.Received().Delete(scriptTicket);
+                scriptPodLogEncryptionKeyProvider.Received().Delete(scriptTicket);
             }
             else
             {
                 await podService.DidNotReceiveWithAnyArgs().DeleteIfExists(scriptTicket, Arg.Any<CancellationToken>());
                 scriptLogProvider.DidNotReceiveWithAnyArgs().Delete(scriptTicket);
                 scriptPodSinceTimeStore.DidNotReceiveWithAnyArgs().Delete(scriptTicket);
+                scriptPodLogEncryptionKeyProvider.DidNotReceiveWithAnyArgs().Delete(scriptTicket);
             }
             
             TrackedScriptPodState CreateState(TrackedScriptPodPhase phase)
@@ -136,6 +142,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             //Assert
             await podService.DidNotReceiveWithAnyArgs().DeleteIfExists(scriptTicket, Arg.Any<CancellationToken>());
             scriptLogProvider.DidNotReceiveWithAnyArgs().Delete(scriptTicket);
+            scriptPodLogEncryptionKeyProvider.DidNotReceiveWithAnyArgs().Delete(scriptTicket);
         }
 
         [Test]
@@ -157,6 +164,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             await podService.DidNotReceive().DeleteIfExists(scriptTicket, Arg.Any<CancellationToken>());
             scriptLogProvider.Received().Delete(scriptTicket);
             scriptPodSinceTimeStore.Received().Delete(scriptTicket);
+            scriptPodLogEncryptionKeyProvider.Received().Delete(scriptTicket);
         }
 
         [TestCase(1, false)]
@@ -167,7 +175,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             Environment.SetEnvironmentVariable("OCTOPUS__K8STENTACLE__PODSCONSIDEREDORPHANEDAFTERMINUTES", "2");
 
             // We need to reinitialise the sut after changing the env var value
-            cleaner = new KubernetesOrphanedPodCleaner(monitor, podService, log, clock, scriptLogProvider, scriptPodSinceTimeStore);
+            cleaner = new KubernetesOrphanedPodCleaner(monitor, podService, log, clock, scriptLogProvider, scriptPodSinceTimeStore, scriptPodLogEncryptionKeyProvider);
             var pods = new List<ITrackedScriptPod>
             {
                 CreatePod(TrackedScriptPodState.Succeeded(0, startTime))
@@ -184,12 +192,14 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                 await podService.Received().DeleteIfExists(scriptTicket, Arg.Any<CancellationToken>());
                 scriptLogProvider.Received().Delete(scriptTicket);
                 scriptPodSinceTimeStore.Received().Delete(scriptTicket);
+                scriptPodLogEncryptionKeyProvider.Received().Delete(scriptTicket);
             }
             else
             {
                 await podService.DidNotReceiveWithAnyArgs().DeleteIfExists(scriptTicket, Arg.Any<CancellationToken>());
                 scriptLogProvider.DidNotReceiveWithAnyArgs().Delete(scriptTicket);
                 scriptPodSinceTimeStore.DidNotReceiveWithAnyArgs().Delete(scriptTicket);
+                scriptPodLogEncryptionKeyProvider.DidNotReceiveWithAnyArgs().Delete(scriptTicket);
             }
         }
 

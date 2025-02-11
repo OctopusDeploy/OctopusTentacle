@@ -18,6 +18,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(testCommonVersions: true)]
         public async Task AdditionalScriptsWork(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
+            const string printOutput = "Hello";
             using var tmp = new TemporaryDirectory();
             var path = Path.Combine(tmp.DirectoryPath, "file");
 
@@ -26,7 +27,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var scriptBuilder = new ScriptBuilder()
                 .CreateFile(path) // How files are made are different in bash and powershell, doing this ensures the client and tentacle really are using the correct script.
-                .Print("Hello");
+                .Print(printOutput);
 
             var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
                 .WithAdditionalScriptType(ScriptType.Bash, scriptBuilder.BuildBashScript())
@@ -44,7 +45,10 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var allLogs = logs.JoinLogs();
 
-            allLogs.Should().Contain("Hello");
+            allLogs.Should().Contain(printOutput);
+            allLogs.IndexOf(printOutput, StringComparison.OrdinalIgnoreCase)
+                .Should()
+                .Be(allLogs.LastIndexOf(printOutput, StringComparison.OrdinalIgnoreCase), because: "We should not repeat the script output");
         }
     }
 }

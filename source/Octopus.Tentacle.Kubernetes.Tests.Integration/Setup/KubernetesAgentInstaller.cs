@@ -146,7 +146,7 @@ public class KubernetesAgentInstaller
         if (tentacleImageAndTag is null)
             return null;
 
-        var parts = tentacleImageAndTag.Split(":");
+        var parts = tentacleImageAndTag.Split(':',2,StringSplitOptions.TrimEntries);
         var repo = parts[0];
         var tag = parts[1];
 

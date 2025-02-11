@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Threading;
 using k8s.Models;
 using Newtonsoft.Json;
-using Octopus.Tentacle.Kubernetes;
-using Octopus.Tentacle.Configuration.Crypto;
+using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Configuration.Instances;
+using Octopus.Tentacle.Kubernetes.Crypto;
 
-namespace Octopus.Tentacle.Configuration.Instances
+namespace Octopus.Tentacle.Kubernetes.Configuration
 {
     class ConfigMapKeyValueStore : IWritableKeyValueStore, IAggregatableKeyValueStore
     {

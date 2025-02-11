@@ -9,6 +9,7 @@ using k8s.Autorest;
 using k8s.Models;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Kubernetes.Crypto;
 
 namespace Octopus.Tentacle.Kubernetes
 {
@@ -22,6 +23,7 @@ namespace Octopus.Tentacle.Kubernetes
         readonly IKubernetesPodMonitor podMonitor;
         readonly ITentacleScriptLogProvider scriptLogProvider;
         readonly IScriptPodSinceTimeStore scriptPodSinceTimeStore;
+        readonly IScriptPodLogEncryptionKeyProvider scriptPodLogEncryptionKeyProvider;
         readonly IKubernetesEventService eventService;
 
         public KubernetesPodLogService(
@@ -29,6 +31,7 @@ namespace Octopus.Tentacle.Kubernetes
             IKubernetesPodMonitor podMonitor,
             ITentacleScriptLogProvider scriptLogProvider,
             IScriptPodSinceTimeStore scriptPodSinceTimeStore,
+            IScriptPodLogEncryptionKeyProvider scriptPodLogEncryptionKeyProvider,
             IKubernetesEventService eventService,
             ISystemLog log)
             : base(configProvider, log)
@@ -36,6 +39,7 @@ namespace Octopus.Tentacle.Kubernetes
             this.podMonitor = podMonitor;
             this.scriptLogProvider = scriptLogProvider;
             this.scriptPodSinceTimeStore = scriptPodSinceTimeStore;
+            this.scriptPodLogEncryptionKeyProvider = scriptPodLogEncryptionKeyProvider;
             this.eventService = eventService;
         }
 
@@ -83,16 +87,28 @@ namespace Octopus.Tentacle.Kubernetes
                 var sinceTime = scriptPodSinceTimeStore.GetPodLogsSinceTime(scriptTicket);
                 try
                 {
-                    return await GetPodLogsWithSinceTime(sinceTime);
+                    try
+                    {
+                        return await GetPodLogsWithSinceTime(sinceTime);
+                    }
+                    catch (UnexpectedPodLogLineNumberException ex)
+                    {
+                        var message = $"Unexpected Pod log line numbers found with sinceTime='{sinceTime}', loading all logs";
+                        tentacleScriptLog.Verbose(message);
+                        Log.Warn(ex, message);
+
+                        //If we somehow come across weird/missing line numbers, try load the whole Pod logs to see if that helps
+                        return await GetPodLogsWithSinceTime(null);
+                    }
                 }
-                catch (UnexpectedPodLogLineNumberException ex)
+                catch (PodLogEncryptionKeyException ex)
                 {
-                    var message = $"Unexpected Pod log line numbers found with sinceTime='{sinceTime}', loading all logs";
-                    tentacleScriptLog.Verbose(message);
+                    //if we can't read the pod log encryption key for a while
+                    var message = $"Failed to read pod log encryption key. No new pod logs will be read.";
+                    tentacleScriptLog.Warning(message);
                     Log.Warn(ex, message);
 
-                    //If we somehow come across weird/missing line numbers, try load the whole Pod logs to see if that helps
-                    return await GetPodLogsWithSinceTime(null);
+                    return (new List<ProcessOutput>(), lastLogSequence, null);
                 }
             }
 
@@ -105,7 +121,9 @@ namespace Octopus.Tentacle.Kubernetes
             async Task<(IReadOnlyCollection<ProcessOutput> Outputs, long NextSequenceNumber, int? ExitCode)> ReadPodLogsFromStream(Stream stream)
             {
                 using var reader = new StreamReader(stream);
-                return await PodLogReader.ReadPodLogs(lastLogSequence, reader);
+                var encryptionKey = await scriptPodLogEncryptionKeyProvider.GetEncryptionKey(scriptTicket, CancellationToken.None);
+                var encryptionProvider = PodLogEncryptionProvider.Create(encryptionKey);
+                return await PodLogReader.ReadPodLogs(lastLogSequence, reader, encryptionProvider);
             }
         }
 
@@ -116,8 +134,7 @@ namespace Octopus.Tentacle.Kubernetes
             {
                 return Array.Empty<ProcessOutput>();
             }
-            
-            
+
             var sinceTime = scriptPodSinceTimeStore.GetPodEventsSinceTime(scriptTicket);
 
             var allEvents = await eventService.FetchAllEventsAsync(KubernetesConfig.Namespace, podName, cancellationToken);
@@ -215,6 +232,5 @@ namespace Octopus.Tentacle.Kubernetes
         public static bool IsPullingReason(this Corev1Event @event) => @event.Reason.Equals("Pulling", StringComparison.OrdinalIgnoreCase);
         public static bool IsPulledReason(this Corev1Event @event) => @event.Reason.Equals("Pulled", StringComparison.OrdinalIgnoreCase);
         public static bool IsWarning(this Corev1Event @event) => @event.Type.Equals("Warning", StringComparison.OrdinalIgnoreCase);
-
     }
 }

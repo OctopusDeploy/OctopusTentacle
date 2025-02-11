@@ -5,15 +5,29 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FluentAssertions;
+using NSubstitute;
 using NUnit.Framework;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Kubernetes;
+using Octopus.Tentacle.Kubernetes.Crypto;
 
 namespace Octopus.Tentacle.Tests.Kubernetes
 {
     [TestFixture]
     public class PodLogReaderFixture
     {
+        IPodLogEncryptionProvider encryptionProvider;
+
+        [SetUp]
+        public void SetUp()
+        {
+            encryptionProvider = Substitute.For<IPodLogEncryptionProvider>();
+            
+            //for the purpose of this, don't do any testing of the encryption
+            encryptionProvider.Decrypt(Arg.Any<string>())
+                .Returns(ci => ci.ArgAt<string>(0));
+        }
+
         [TestCase(0, Reason = "Initial position")]
         [TestCase(4, Reason = "Subsequent position")]
         [TestCase(12387126, Reason = "Large position")]
@@ -22,7 +36,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             string[] podLines = Array.Empty<string>();
 
             var reader = SetupReader(podLines);
-            var result = await PodLogReader.ReadPodLogs(lastLogSequence, reader);
+            var result = await PodLogReader.ReadPodLogs(lastLogSequence, reader, encryptionProvider);
             result.NextSequenceNumber.Should().Be(lastLogSequence);
             result.Lines.Should().BeEmpty();
         }
@@ -36,7 +50,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             };
 
             var reader = SetupReader(podLines);
-            var result = await PodLogReader.ReadPodLogs(0, reader);
+            var result = await PodLogReader.ReadPodLogs(0, reader, encryptionProvider);
             result.NextSequenceNumber.Should().Be(1);
             result.Lines.Should().BeEquivalentTo(new[]
             {
@@ -55,7 +69,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             };
 
             var reader = SetupReader(podLines);
-            var result = await PodLogReader.ReadPodLogs(4, reader);
+            var result = await PodLogReader.ReadPodLogs(4, reader, encryptionProvider);
             result.NextSequenceNumber.Should().Be(7);
             result.Lines.Should().BeEquivalentTo(new[]
             {
@@ -77,12 +91,12 @@ namespace Octopus.Tentacle.Tests.Kubernetes
 
             var allTaskLogs = new List<ProcessOutput>();
             var reader = SetupReader(podLines.Take(1).ToArray());
-            var result = await PodLogReader.ReadPodLogs(4, reader);
+            var result = await PodLogReader.ReadPodLogs(4, reader, encryptionProvider);
             result.NextSequenceNumber.Should().Be(5);
             allTaskLogs.AddRange(result.Lines);
 
             reader = SetupReader(podLines.ToArray());
-            result = await PodLogReader.ReadPodLogs(5, reader);
+            result = await PodLogReader.ReadPodLogs(5, reader,encryptionProvider);
             result.NextSequenceNumber.Should().Be(7);
             allTaskLogs.AddRange(result.Lines);
 
@@ -100,7 +114,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             var line = "abcdefg";
 
             var reader = SetupReader(new[] { line });
-            var result = await PodLogReader.ReadPodLogs(0, reader);
+            var result = await PodLogReader.ReadPodLogs(0, reader, encryptionProvider);
 
             result.NextSequenceNumber.Should().Be(0, "The sequence number doesn't move on parse errors");
             var outputLine = result.Lines.Should().ContainSingle().Subject;
@@ -118,7 +132,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             };
 
             var reader = SetupReader(podLines);
-            Func<Task> action = async () => await PodLogReader.ReadPodLogs(50, reader);
+            Func<Task> action = async () => await PodLogReader.ReadPodLogs(50, reader, encryptionProvider);
             await action.Should().ThrowAsync<UnexpectedPodLogLineNumberException>();
         }
 
@@ -132,7 +146,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             };
 
             var reader = SetupReader(podLines);
-            Func<Task> action = async () => await PodLogReader.ReadPodLogs(4, reader);
+            Func<Task> action = async () => await PodLogReader.ReadPodLogs(4, reader, encryptionProvider);
             await action.Should().ThrowAsync<UnexpectedPodLogLineNumberException>();
         }
 
@@ -147,7 +161,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             };
 
             var reader = SetupReader(podLines);
-            Func<Task> action = async () => await PodLogReader.ReadPodLogs(2, reader);
+            Func<Task> action = async () => await PodLogReader.ReadPodLogs(2, reader, encryptionProvider);
             await action.Should().ThrowAsync<UnexpectedPodLogLineNumberException>();
         }
 

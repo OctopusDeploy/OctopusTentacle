@@ -6,7 +6,7 @@ using Octopus.Diagnostics;
 using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Kubernetes.Diagnostics;
 
-namespace Octopus.Tentacle.Kubernetes.Tests.Integration;
+namespace Octopus.Tentacle.Kubernetes.Tests.Integration.KubernetesAgent;
 
 public class KubernetesAgentMetricsIntegrationTest : KubernetesAgentIntegrationTest
 {
