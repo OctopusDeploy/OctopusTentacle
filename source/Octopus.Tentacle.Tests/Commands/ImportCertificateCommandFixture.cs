@@ -23,7 +23,7 @@ namespace Octopus.Tentacle.Tests.Commands
         {
             configuration = Substitute.For<IWritableTentacleConfiguration>();
             var selector = Substitute.For<IApplicationInstanceSelector>();
-            selector.Current.Returns(_ => new ApplicationInstanceConfiguration(null, null!, null!, null!));
+            selector.Current.Returns(_ => new ApplicationInstanceConfiguration(null, null!, null!, null!, null));
             Command = new ImportCertificateCommand(
                 new Lazy<IWritableTentacleConfiguration>(() => configuration),
                 Substitute.For<ISystemLog>(),
