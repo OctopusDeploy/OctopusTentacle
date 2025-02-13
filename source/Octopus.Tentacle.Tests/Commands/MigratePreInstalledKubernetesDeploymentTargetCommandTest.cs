@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using FluentAssertions;
 using k8s.Models;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using NUnit.Framework;
 using Octopus.Tentacle.Commands;
 
@@ -16,12 +17,14 @@ namespace Octopus.Tentacle.Tests.Commands
         {
             var targetConfigMap = Substitute.For<V1ConfigMap>();
             var targetSecret = Substitute.For<V1Secret>();
-            
-            MigratePreInstalledKubernetesDeploymentTargetCommand.ShouldMigrateData(null, null, targetConfigMap, targetSecret).Item1.Should().BeFalse();
+
+            var (shouldMigrate, reason) = MigratePreInstalledKubernetesDeploymentTargetCommand.ShouldMigrateData(null, null, targetConfigMap, targetSecret);
+            shouldMigrate.Should().BeFalse();
+            reason.Should().Be("Source config map or secret not found, skipping migration");
         }
         
         [Test]
-        public void ShouldNotMigrate_ifNoDestination()
+        public void ShouldNotMigrate_IfNoDestination()
         {
             var sourceConfigMap = Substitute.For<V1ConfigMap>();
             var sourceSecret = Substitute.For<V1Secret>();
@@ -30,7 +33,7 @@ namespace Octopus.Tentacle.Tests.Commands
         }
         
         [Test]
-        public void ShouldNotMigrate_ifDestinationRegistered()
+        public void ShouldNotMigrate_IfDestinationRegistered()
         {
             var sourceConfigMap = Substitute.For<V1ConfigMap>();
             var sourceSecret = Substitute.For<V1Secret>();
