@@ -127,11 +127,11 @@ public class KubernetesAgentMigrateFromPreinstallationTest
         var configMap = await client.CoreV1.ReadNamespacedConfigMapAsync(DestinationConfigMapName, commandNamespace);
         var secret = await client.CoreV1.ReadNamespacedSecretAsync(DestinationSecretName, commandNamespace);
 
-        configMap.Data.TryGetValue("validationKey", out var validationKeyFromKubernetes);
-        validationKeyFromKubernetes.Should().Be(validationKey);
+        configMap.Data.TryGetValue("validationKey", out var validationKeyFromKubernetesConfigMap);
+        validationKeyFromKubernetesConfigMap.Should().Be(validationKey);
         
-        secret.Data.TryGetValue("machine-key", out var hostKeyFromKubernetes);
-        hostKeyFromKubernetes.Should().Equal(Encoding.UTF8.GetBytes(validationKey));
+        secret.Data.TryGetValue("validationKey", out var validationKeyFromKubernetesSecret);
+        validationKeyFromKubernetesSecret.Should().Equal(Encoding.UTF8.GetBytes(validationKey));
     }
 
     async Task CreateCommandNamespace(string name)
