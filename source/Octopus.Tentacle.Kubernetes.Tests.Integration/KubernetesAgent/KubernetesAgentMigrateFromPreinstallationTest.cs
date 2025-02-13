@@ -14,15 +14,37 @@ public class KubernetesAgentMigrateFromPreinstallationTest
     
     readonly ISystemLog systemLog = new SystemLog();
     
+    const string SourceConfigMapName = "tentacle-config-pre";
+    const string SourceSecretName = "tentacle-secret-pre";
+    const string DestinationConfigMapName = "tentacle-config";
+    const string DestinationSecretName = "tentacle-secret";
+    MigratePreInstalledKubernetesDeploymentTargetCommand commandToRun;
+    KubernetesFileWrappedProvider kubernetesConfigClient;
+    string commandNamespace;
+    k8s.Kubernetes client;
+    string[] commandArguments;
+
+    [SetUp]
+    public void Init()
+    {
+        kubernetesConfigClient = new KubernetesFileWrappedProvider(KubernetesTestsGlobalContext.Instance.KubeConfigPath);
+        commandToRun = new MigratePreInstalledKubernetesDeploymentTargetCommand(new Lazy<IKubernetesClientConfigProvider>(kubernetesConfigClient), systemLog, new LogFileOnlyLogger());
+        commandNamespace = Guid.NewGuid().ToString("N");
+        Environment.SetEnvironmentVariable(KubernetesConfig.NamespaceVariableName, commandNamespace);
+        client = new k8s.Kubernetes(kubernetesConfigClient.Get());
+        commandArguments = [
+            $"--source-config-map-name={SourceConfigMapName}", 
+            $"--source-secret-name={SourceSecretName}",
+            $"--destination-config-map-name={DestinationConfigMapName}",
+            $"--destination-secret-name={DestinationSecretName}",
+            $"--namespace={commandNamespace}"
+        ];
+    }
+    
     [Test]
-    public async Task MigrationFromPreinstallHookShouldCopyData()
+    public async Task MigrationFromPreinstallHook_ShouldCopyData()
     {
         //Arrange
-        var kubernetesConfigClient = new KubernetesFileWrappedProvider(KubernetesTestsGlobalContext.Instance.KubeConfigPath);
-        var commandNamespace = Guid.NewGuid().ToString("N");
-        Environment.SetEnvironmentVariable(KubernetesConfig.NamespaceVariableName, commandNamespace);
-        var commandToRun = new MigratePreInstalledKubernetesDeploymentTargetCommand(new Lazy<IKubernetesClientConfigProvider>(kubernetesConfigClient), systemLog, new LogFileOnlyLogger());
-        var client = new k8s.Kubernetes(kubernetesConfigClient.Get());
         var validationKey = Guid.NewGuid().ToString("N");
         var sourceConfigMapData = new Dictionary<string, string>
         {
@@ -31,57 +53,41 @@ public class KubernetesAgentMigrateFromPreinstallationTest
         };
         var sourceSecretData = new Dictionary<string, string>
         {
-            {"machine-iv", "testData"},
-            {"machine-key", validationKey}
+            {"validationKey", validationKey}
         };
-        const string sourceConfigMapName = "tentacle-config-pre";
-        const string sourceSecretName = "tentacle-secret-pre";
-        const string destinationConfigMapName = "tentacle-config";
-        const string destinationSecretName = "tentacle-secret";
-
         
-        string[] commandArguments = [
-            $"--source-config-map-name={sourceConfigMapName}", 
-            $"--source-secret-name={sourceSecretName}",
-            $"--destination-config-map-name={destinationConfigMapName}",
-            $"--destination-secret-name={destinationSecretName}",
-            $"--namespace={commandNamespace}"
-        ];
-
-        //Act
-        await CreateCommandNamespace(client, commandNamespace);
+        // Namespace
+        await CreateCommandNamespace(commandNamespace);
         
-        //Sources
-        await CreateConfigmap(client, sourceConfigMapName, commandNamespace, sourceConfigMapData);
-        await CreateSecret(client, sourceSecretName, commandNamespace, sourceSecretData);
+        // Sources
+        await CreateConfigmap(SourceConfigMapName, commandNamespace, sourceConfigMapData);
+        await CreateSecret(SourceSecretName, commandNamespace, sourceSecretData);
 
         
         // Targets
-        await CreateConfigmap(client, destinationConfigMapName, commandNamespace);
-        await CreateSecret(client, destinationSecretName, commandNamespace);
+        await CreateConfigmap(DestinationConfigMapName, commandNamespace);
+        await CreateSecret(DestinationSecretName, commandNamespace);
+
         
+
+        //Act
         commandToRun.Start(commandArguments, new NoninteractiveHost(), []);
         
         //Assert
-        var configMap = await client.CoreV1.ReadNamespacedConfigMapAsync(destinationConfigMapName, commandNamespace);
-        var secret = await client.CoreV1.ReadNamespacedSecretAsync(destinationSecretName, commandNamespace);
+        var configMap = await client.CoreV1.ReadNamespacedConfigMapAsync(DestinationConfigMapName, commandNamespace);
+        var secret = await client.CoreV1.ReadNamespacedSecretAsync(DestinationSecretName, commandNamespace);
 
-        configMap.Data.TryGetValue("validationKey", out var validationKeyFromKubernetes);
-        validationKeyFromKubernetes.Should().NotBeNull().And.Be(validationKey);
+        configMap.Data.TryGetValue("validationKey", out var validationKeyFromKubernetesConfigMap);
+        validationKeyFromKubernetesConfigMap.Should().Be(validationKey);
         
-        secret.Data.TryGetValue("machine-key", out var hostKeyFromKubernetes);
-        hostKeyFromKubernetes.Should().NotBeNull().And.Equal(Encoding.UTF8.GetBytes(validationKey));
+        secret.Data.TryGetValue("validationKey", out var validationKeyFromKubernetesSecret);
+        validationKeyFromKubernetesSecret.Should().Equal(Encoding.UTF8.GetBytes(validationKey));
     }
     
     [Test]
-    public async Task MigrationFromPreinstallHookShouldOnlyRunWhenNotRegistered()
+    public async Task MigrationFromPreinstallHook_ShouldNotRunWhenTentacleIsAlreadyRegistered()
     {
         //Arrange
-        var kubernetesConfigClient = new KubernetesFileWrappedProvider(KubernetesTestsGlobalContext.Instance.KubeConfigPath);
-        var commandNamespace = Guid.NewGuid().ToString("N");
-        Environment.SetEnvironmentVariable(KubernetesConfig.NamespaceVariableName, commandNamespace);
-        var commandToRun = new MigratePreInstalledKubernetesDeploymentTargetCommand(new Lazy<IKubernetesClientConfigProvider>(kubernetesConfigClient), systemLog, new LogFileOnlyLogger());
-        var client = new k8s.Kubernetes(kubernetesConfigClient.Get());
         var validationKey = Guid.NewGuid().ToString("N");
         var sourceConfigMapData = new Dictionary<string, string>
         {
@@ -90,8 +96,7 @@ public class KubernetesAgentMigrateFromPreinstallationTest
         };
         var sourceSecretData = new Dictionary<string, string>
         {
-            {"machine-iv", "testData"},
-            {"machine-key", validationKey}
+            {"validationKey", "should-not-be-here"}
         };
         var destinationConfigMapData = new Dictionary<string, string>
         {
@@ -100,51 +105,36 @@ public class KubernetesAgentMigrateFromPreinstallationTest
         };
         var destinationSecretData = new Dictionary<string, string>
         {
-            {"machine-iv", "testData"},
-            {"machine-key", validationKey}
+            {"validationKey", validationKey}
         };
-
-
-        const string sourceConfigMapName = "tentacle-config-pre";
-        const string sourceSecretName = "tentacle-secret-pre";
-        const string destinationConfigMapName = "tentacle-config";
-        const string destinationSecretName = "tentacle-secret";
-
         
-        string[] commandArguments = [
-            $"--source-config-map-name={sourceConfigMapName}", 
-            $"--source-secret-name={sourceSecretName}",
-            $"--destination-config-map-name={destinationConfigMapName}",
-            $"--destination-secret-name={destinationSecretName}",
-            $"--namespace={commandNamespace}"
-        ];
-
-        //Act
-        await CreateCommandNamespace(client, commandNamespace);
+        // namespace
+        await CreateCommandNamespace(commandNamespace);
         
         //Sources
-        await CreateConfigmap(client, sourceConfigMapName, commandNamespace, sourceConfigMapData);
-        await CreateSecret(client, sourceSecretName, commandNamespace, sourceSecretData);
-
+        await CreateConfigmap(SourceConfigMapName, commandNamespace, sourceConfigMapData);
+        await CreateSecret(SourceSecretName, commandNamespace, sourceSecretData);
         
         // Targets
-        await CreateConfigmap(client, destinationConfigMapName, commandNamespace, destinationConfigMapData);
-        await CreateSecret(client, destinationSecretName, commandNamespace, destinationSecretData);
+        await CreateConfigmap(DestinationConfigMapName, commandNamespace, destinationConfigMapData);
+        await CreateSecret(DestinationSecretName, commandNamespace, destinationSecretData);
+
         
+        //Act
         commandToRun.Start(commandArguments, new NoninteractiveHost(), []);
         
         //Assert
-        var configMap = await client.CoreV1.ReadNamespacedConfigMapAsync(destinationConfigMapName, commandNamespace);
-        var secret = await client.CoreV1.ReadNamespacedSecretAsync(destinationSecretName, commandNamespace);
+        var configMap = await client.CoreV1.ReadNamespacedConfigMapAsync(DestinationConfigMapName, commandNamespace);
+        var secret = await client.CoreV1.ReadNamespacedSecretAsync(DestinationSecretName, commandNamespace);
 
         configMap.Data.TryGetValue("validationKey", out var validationKeyFromKubernetes);
-        validationKeyFromKubernetes.Should().NotBeNull().And.Be(validationKey);
+        validationKeyFromKubernetes.Should().Be(validationKey);
         
         secret.Data.TryGetValue("machine-key", out var hostKeyFromKubernetes);
-        hostKeyFromKubernetes.Should().NotBeNull().And.Equal(Encoding.UTF8.GetBytes(validationKey));
+        hostKeyFromKubernetes.Should().Equal(Encoding.UTF8.GetBytes(validationKey));
     }
 
-    async Task CreateCommandNamespace(k8s.Kubernetes client, string name)
+    async Task CreateCommandNamespace(string name)
     {
         await client.CoreV1.CreateNamespaceAsync(new V1Namespace
         {
@@ -155,7 +145,7 @@ public class KubernetesAgentMigrateFromPreinstallationTest
         });
     }
     
-    async Task<V1ConfigMap> CreateConfigmap(k8s.Kubernetes client, string name, string ns, Dictionary<string, string>? data = null)
+    async Task<V1ConfigMap> CreateConfigmap(string name, string ns, Dictionary<string, string>? data = null)
     {
         return await client.CoreV1.CreateNamespacedConfigMapAsync(new V1ConfigMap
         {
@@ -167,7 +157,7 @@ public class KubernetesAgentMigrateFromPreinstallationTest
         }, ns);
     }
     
-    async Task<V1Secret> CreateSecret(k8s.Kubernetes client, string name, string ns, Dictionary<string, string>? data = null)
+    async Task<V1Secret> CreateSecret(string name, string ns, Dictionary<string, string>? data = null)
     {
         return await client.CoreV1.CreateNamespacedSecretAsync(new V1Secret
         {

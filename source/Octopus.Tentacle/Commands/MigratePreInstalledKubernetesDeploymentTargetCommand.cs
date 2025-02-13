@@ -34,7 +34,7 @@ namespace Octopus.Tentacle.Commands
         }
         
         // This command is only used as a way to programatically copy the config map and secret from the pre-installation hook to the new agent
-        // It does not access tentacle configuration so that it doesn't 
+        // It does not use the IWritableTentacleConfiguration so we don't accidentally generate any new keys
         protected override void Start()
         {
             if (!PlatformDetection.Kubernetes.IsRunningAsKubernetesAgent)
@@ -45,8 +45,7 @@ namespace Octopus.Tentacle.Commands
             // Check that the sources and destinations are different
             if (sourceSecretName == destinationSecretName || sourceConfigMapName == destinationConfigMapName)
             {
-                log.Error("Source and destination names must be different.");
-                return;
+                throw new ControlledFailureException("Source and destination names must be different.");
             }
             
             var migrationNamespace = @namespace ?? KubernetesConfig.Namespace;
@@ -78,7 +77,7 @@ namespace Octopus.Tentacle.Commands
             log.Info("Migration complete.");
         }
         
-        public static (bool, string) ShouldMigrateData(V1ConfigMap? sourceConfigMap, V1Secret? sourceSecret, V1ConfigMap? destinationConfigMap, V1Secret? destinationSecret)
+        public static (bool ShouldMigrate, string Reason) ShouldMigrateData(V1ConfigMap? sourceConfigMap, V1Secret? sourceSecret, V1ConfigMap? destinationConfigMap, V1Secret? destinationSecret)
         {
             // Check that the sources exist
             if (sourceConfigMap is null || sourceSecret is null)
@@ -102,7 +101,7 @@ namespace Octopus.Tentacle.Commands
             return (true, string.Empty);
         }
 
-        T? TryGetCoreV1Object<T>(Func<T> kubernetesFunc) where T : class
+        static T? TryGetCoreV1Object<T>(Func<T> kubernetesFunc) where T : class
         {
             try
             {

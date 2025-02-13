@@ -12,7 +12,7 @@ namespace Octopus.Tentacle.Tests.Commands
     public class MigratePreInstalledKubernetesDeploymentTargetCommandFixture
     { 
         [Test]
-        public void ShouldNotMigrate_ifNoSource()
+        public void ShouldNotMigrate_IfNoSource()
         {
             var targetConfigMap = Substitute.For<V1ConfigMap>();
             var targetSecret = Substitute.For<V1Secret>();
