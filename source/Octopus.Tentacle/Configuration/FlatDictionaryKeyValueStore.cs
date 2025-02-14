@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using Newtonsoft.Json;
 using Octopus.Tentacle.Configuration.Crypto;
 using Octopus.Tentacle.Configuration.Instances;
@@ -40,7 +41,7 @@ namespace Octopus.Tentacle.Configuration
 
                 return JsonConvert.DeserializeObject<TData>((string)data, JsonSerializerSettings);
             }
-            catch (Exception e)
+            catch (Exception e) when (e is not IOException)
             {
                 if (protectionLevel == ProtectionLevel.None)
                     throw new FormatException($"Unable to parse configuration key '{name}' as a '{typeof(TData).Name}'. Value was '{valueAsString}'.", e);
@@ -74,7 +75,7 @@ namespace Octopus.Tentacle.Configuration
 
                 return (true, JsonConvert.DeserializeObject<TData>((string)data, JsonSerializerSettings));
             }
-            catch (Exception e)
+            catch (Exception e) when (e is not IOException)
             {
                 if (protectionLevel == ProtectionLevel.None)
                     throw new FormatException($"Unable to parse configuration key '{name}' as a '{typeof(TData).Name}'. Value was '{valueAsString}'.", e);
