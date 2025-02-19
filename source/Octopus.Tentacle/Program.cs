@@ -58,7 +58,10 @@ namespace Octopus.Tentacle
             builder.RegisterModule(new VersioningModule(GetType().Assembly));
             builder.RegisterModule(new MaintenanceModule());
 
-            if (PlatformDetection.Kubernetes.IsRunningAsKubernetesAgent)
+            //register kubernetes agent detection
+            builder.RegisterType<KubernetesAgentDetection>().As<IKubernetesAgentDetection>().SingleInstance();
+            builder.RegisterType<EnvironmentKubernetesConfiguration>().As<IKubernetesConfiguration>().SingleInstance();
+            if (KubernetesAgentDetection.IsRunningAsKubernetesAgent)
             {
                 builder.RegisterModule<KubernetesModule>();
             }

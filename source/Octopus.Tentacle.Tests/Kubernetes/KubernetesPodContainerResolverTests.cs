@@ -26,11 +26,13 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         });
 
         readonly IToolsImageVersionMetadataProvider mockToolsImageVersionMetadataProvider = Substitute.For<IToolsImageVersionMetadataProvider>();
+        IKubernetesConfiguration kubernetesConfig;
 
         [SetUp]
         public void Init()
         {
             mockToolsImageVersionMetadataProvider.TryGetVersionMetadata().Returns(testVersionMetadata);
+            kubernetesConfig = Substitute.For<IKubernetesConfiguration>();
         }
 
         [TestCase(30)]
@@ -42,7 +44,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             var clusterService = Substitute.For<IKubernetesClusterService>();
             clusterService.GetClusterVersion().Returns(new ClusterVersion(1, clusterMinorVersion));
 
-            var podContainerResolver = new KubernetesPodContainerResolver(clusterService, mockToolsImageVersionMetadataProvider);
+            var podContainerResolver = new KubernetesPodContainerResolver(kubernetesConfig, clusterService, mockToolsImageVersionMetadataProvider);
 
             // Act
             var result = await podContainerResolver.GetContainerImageForCluster();
@@ -59,7 +61,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             var clusterService = Substitute.For<IKubernetesClusterService>();
             clusterService.GetClusterVersion().Returns(new ClusterVersion(1, clusterMinorVersion));
 
-            var podContainerResolver = new KubernetesPodContainerResolver(clusterService, mockToolsImageVersionMetadataProvider);
+            var podContainerResolver = new KubernetesPodContainerResolver(kubernetesConfig, clusterService, mockToolsImageVersionMetadataProvider);
 
             // Act
             var result = await podContainerResolver.GetContainerImageForCluster();
@@ -75,7 +77,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             var clusterService = Substitute.For<IKubernetesClusterService>();
             clusterService.GetClusterVersion().Returns(new ClusterVersion(1, 31));
 
-            var podContainerResolver = new KubernetesPodContainerResolver(clusterService, mockToolsImageVersionMetadataProvider);
+            var podContainerResolver = new KubernetesPodContainerResolver(kubernetesConfig, clusterService, mockToolsImageVersionMetadataProvider);
 
             // Act
             var result = await podContainerResolver.GetContainerImageForCluster();
@@ -91,7 +93,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             var clusterService = Substitute.For<IKubernetesClusterService>();
             clusterService.GetClusterVersion().Returns(new ClusterVersion(1, 40));
 
-            var podContainerResolver = new KubernetesPodContainerResolver(clusterService, mockToolsImageVersionMetadataProvider);
+            var podContainerResolver = new KubernetesPodContainerResolver(kubernetesConfig, clusterService, mockToolsImageVersionMetadataProvider);
 
             // Act
             var result = await podContainerResolver.GetContainerImageForCluster();
@@ -114,7 +116,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             clusterService.GetClusterVersion().Returns(new ClusterVersion(1, clusterMinorVersion));
             mockToolsImageVersionMetadataProvider.TryGetVersionMetadata().ReturnsNull();
 
-            var podContainerResolver = new KubernetesPodContainerResolver(clusterService, mockToolsImageVersionMetadataProvider);
+            var podContainerResolver = new KubernetesPodContainerResolver(kubernetesConfig, clusterService, mockToolsImageVersionMetadataProvider);
 
             // Act
             var result = await podContainerResolver.GetContainerImageForCluster();

@@ -13,11 +13,13 @@ namespace Octopus.Tentacle.Kubernetes
 
     public class KubernetesPodContainerResolver : IKubernetesPodContainerResolver
     {
+        readonly IKubernetesConfiguration kubernetesConfiguration;
         readonly IKubernetesClusterService clusterService;
         readonly IToolsImageVersionMetadataProvider imageVersionMetadataProvider;
 
-        public KubernetesPodContainerResolver(IKubernetesClusterService clusterService, IToolsImageVersionMetadataProvider imageVersionMetadataProvider)
+        public KubernetesPodContainerResolver(IKubernetesConfiguration kubernetesConfiguration, IKubernetesClusterService clusterService, IToolsImageVersionMetadataProvider imageVersionMetadataProvider)
         {
+            this.kubernetesConfiguration = kubernetesConfiguration;
             this.clusterService = clusterService;
             this.imageVersionMetadataProvider = imageVersionMetadataProvider;
         }
@@ -36,13 +38,13 @@ namespace Octopus.Tentacle.Kubernetes
 
         public async Task<string> GetContainerImageForCluster()
         {
-            var imageRepository = KubernetesConfig.ScriptPodContainerImage; 
+            var imageRepository = kubernetesConfiguration.ScriptPodContainerImage; 
             if (imageRepository.IsNullOrEmpty())
             {
                 return await GetAgentToolsContainerImage();
             }
 
-            var imageTag = KubernetesConfig.ScriptPodContainerImageTag; 
+            var imageTag = kubernetesConfiguration.ScriptPodContainerImageTag; 
             return $"{imageRepository}:{imageTag}";
         }
 
