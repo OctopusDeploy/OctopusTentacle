@@ -8,6 +8,7 @@ using Octopus.Tentacle.Kubernetes.Crypto;
 using Octopus.Tentacle.Kubernetes.Diagnostics;
 using Octopus.Tentacle.Kubernetes.Synchronisation;
 using Octopus.Tentacle.Kubernetes.Synchronisation.Internal;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Kubernetes
 {
@@ -15,6 +16,12 @@ namespace Octopus.Tentacle.Kubernetes
     {
         protected override void Load(ContainerBuilder builder)
         {
+            if (!PlatformDetection.Kubernetes.IsRunningAsKubernetesAgent)
+            {
+                builder.RegisterType<UnimplementedKubernetesConfigProvider>().As<IKubernetesClientConfigProvider>();
+                return;
+            }
+            
             builder.RegisterType<KubernetesPodService>().As<IKubernetesPodService>().SingleInstance();
             builder.RegisterType<KubernetesClusterService>().As<IKubernetesClusterService>().SingleInstance();
 
