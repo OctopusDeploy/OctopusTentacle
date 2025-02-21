@@ -13,8 +13,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support.SetupFixtures
         [Test]
         public void ShowOneTimeSetupLogInfoTest()
         {
-            this.Logger.Information(TentacleIntegrationSetupFixtures.OneTimeSetupLogOutput);
-            TentacleIntegrationSetupFixtures.OneTimeSetupLogOutput = null;
+            this.Logger.Information(TentacleIntegrationSetupCanBeLongRunningClickHereToSeeLogsFixtures.OneTimeSetupLogOutput);
+            TentacleIntegrationSetupCanBeLongRunningClickHereToSeeLogsFixtures.OneTimeSetupLogOutput = null;
         }
     }
 }
