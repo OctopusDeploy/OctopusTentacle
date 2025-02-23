@@ -64,7 +64,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
             Action<string> log = s => logger.Information(s);
             var exitCode = SilentProcessRunner.ExecuteCommand(
                 "tar",
-                $"xzvf {gzArchiveName} -C {destFolder}",
+                $"xzvf \"{gzArchiveName}\" -C \"{destFolder}\"",
                 tmp.DirectoryPath,
                 log,
                 log,
