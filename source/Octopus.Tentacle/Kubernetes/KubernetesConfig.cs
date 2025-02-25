@@ -64,7 +64,10 @@ namespace Octopus.Tentacle.Kubernetes
 
         public static readonly string PodSecurityContextJsonVariableName = $"{EnvVarPrefix}__PODSECURITYCONTEXTJSON";
         public static string? PodSecurityContextJson => Environment.GetEnvironmentVariable(PodSecurityContextJsonVariableName);
-        
+
+        public static readonly string PodAnnotationsJsonVariableName = $"{EnvVarPrefix}__PODANNOTATIONSJSON";
+        public static string? PodAnnotationsJson => Environment.GetEnvironmentVariable(PodAnnotationsJsonVariableName);
+
         public static readonly string TentacleConfigMapNameVariableName = $"{EnvVarPrefix}__TENTACLECONFIGMAPNAME";
         public static string TentacleConfigMapName => GetEnvironmentVariableOrDefault(TentacleConfigMapNameVariableName, "tentacle-config");
 
@@ -109,7 +112,7 @@ namespace Octopus.Tentacle.Kubernetes
         static string GetRequiredEnvVar(string variable, string errorMessage)
             => Environment.GetEnvironmentVariable(variable)
                 ?? throw new InvalidOperationException($"{errorMessage} The environment variable '{variable}' must be defined with a non-null value.");
-        
+
         static string GetEnvironmentVariableOrDefault(string variable, string defaultValue)
             => Environment.GetEnvironmentVariable(variable) ?? defaultValue;
     }

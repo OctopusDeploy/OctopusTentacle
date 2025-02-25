@@ -80,7 +80,7 @@ namespace Octopus.Tentacle.Kubernetes
             {
                 //Write the log encryption key here
                 await scriptPodLogEncryptionKeyProvider.GenerateAndWriteEncryptionKeyfileToWorkspace(command.ScriptTicket, cancellationToken);
-                
+
                 //Possibly create the image pull secret name
                 var imagePullSecretName = await CreateImagePullSecret(command, cancellationToken);
 
@@ -188,7 +188,7 @@ namespace Octopus.Tentacle.Kubernetes
                 .WhereNotNull()
                 .Select(secretName => new V1LocalObjectReference(secretName))
                 .ToList();
-             
+
             var pod = new V1Pod
             {
                 Metadata = new V1ObjectMeta
@@ -199,7 +199,8 @@ namespace Octopus.Tentacle.Kubernetes
                     {
                         ["octopus.com/serverTaskId"] = command.TaskId,
                         ["octopus.com/scriptTicketId"] = command.ScriptTicket.TaskId
-                    }
+                    },
+                    Annotations = ParseScriptPodAnnotations(tentacleScriptLog)
                 },
                 Spec = new V1PodSpec
                 {
@@ -405,6 +406,13 @@ namespace Octopus.Tentacle.Kubernetes
                 KubernetesConfig.PodSecurityContextJson,
                 KubernetesConfig.PodSecurityContextJsonVariableName,
                 "pod security context");
+
+        Dictionary<string, string>? ParseScriptPodAnnotations(InMemoryTentacleScriptLog tentacleScriptLog)
+            => ParseScriptPodJson<Dictionary<string, string>>(
+                tentacleScriptLog,
+                KubernetesConfig.PodAnnotationsJson,
+                KubernetesConfig.PodAnnotationsJsonVariableName,
+                "pod annotations");
 
         [return: NotNullIfNotNull("defaultValue")]
         T? ParseScriptPodJson<T>(InMemoryTentacleScriptLog tentacleScriptLog, string? json, string envVarName, string description, T? defaultValue = null) where T : class
