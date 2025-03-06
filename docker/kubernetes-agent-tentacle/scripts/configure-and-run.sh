@@ -434,10 +434,10 @@ else
 
   migrateFromPreinstallScript
   configureTentacle
+  setPollingProxy
   registerTentacle
   addAdditionalServerInstancesIfRequired
-  setPollingProxy
-
+  
   echo "Configuration successful"
 fi
 
