@@ -30,7 +30,7 @@ namespace Octopus.Tentacle.Kubernetes
         public static string HelmChartVersion => GetRequiredEnvVar(HelmChartVersionVariableName, "Unable to determine Helm chart version.");
 
         public static string KubernetesMonitorEnabledVariableName => $"{EnvVarPrefix}__KUBERNETESMONITORENABLED";
-        public static string KubernetesMonitorEnabled => Environment.GetEnvironmentVariable(KubernetesMonitorEnabledVariableName) ?? "false";
+        public static string? KubernetesMonitorEnabled => Environment.GetEnvironmentVariable(KubernetesMonitorEnabledVariableName);
 
         public static string BootstrapRunnerExecutablePath => GetRequiredEnvVar("BOOTSTRAPRUNNEREXECUTABLEPATH", "Unable to determine Bootstrap Runner Executable Path");
 
