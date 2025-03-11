@@ -16,7 +16,7 @@ namespace Octopus.Tentacle.Kubernetes.Crypto
 
     public class KubernetesMachineEncryptionKeyProvider : IKubernetesMachineEncryptionKeyProvider
     {
-        const string SecretName = "tentacle-secret";
+        static string SecretName => KubernetesConfig.TentacleEncryptionSecretName;
         const string MachineKeyName = "machine-key";
         const string MachineIvName = "machine-iv";
 

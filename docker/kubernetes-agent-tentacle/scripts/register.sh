@@ -156,14 +156,6 @@ function validateWorkerVariables() {
   echo " - worker pools '$WorkerPools'"
 }
 
-function migrateFromPreinstallScript() {
-  tentacle migrate-preinstalled-k8s-config \
-    --source-config-map-name "tentacle-config-pre" \
-    --source-secret-name "tentacle-secret-pre" \
-    --destination-config-map-name "tentacle-config" \
-    --destination-secret-name "tentacle-secret"
-}
-
 function configureTentacle() {
   tentacle create-instance --instance "$instanceName" --config "$configurationDirectory/tentacle.config" --home "$configurationDirectory"
 
@@ -313,139 +305,24 @@ function registerTentacle() {
   tentacle "${ARGS[@]}"
 }
 
-function addAdditionalServerInstancesIfRequired() {
-  if [[ -z "$ServerCommsAddresses" ]]; then
-    clearTrustedServersExcept "$ServerCommsAddress"
-    return
-  fi
-
-  IFS=',' read -ra SERVER_ADDRESSES <<<"$ServerCommsAddresses"
-  len=${#SERVER_ADDRESSES[@]}
-
-  if [[ -n "$ServerCommsAddress" ]]; then
-    clearTrustedServersExcept "$ServerCommsAddress"
-  else
-    clearTrustedServersExcept "${SERVER_ADDRESSES[0]}"
-  fi
-
-  # If ServerCommsAddress (singular) is not set and ServerCommsAddresses (plural)
-  # has only one element return as nothing to do.
-  if [[ -z "$ServerCommsAddress" && len -eq 1 ]]; then
-    return
-  # If ServerCommsAddresses (plural) is empty, return as nothing to do.
-  elif [[ len -eq 0 ]]; then
-    return
-  fi
-
-  echo "Registering additional HA Servers..."
-
-  # If ServerCommsAddress (singular) is not set, skip the first value in
-  # ServerCommsAddresses (plural) as the first value was used for the main
-  # registration.
-  if [[ -z "$ServerCommsAddress" ]]; then
-    # The ":1" skips the first element of the array
-    for i in "${SERVER_ADDRESSES[@]:1}"; do
-      registerAdditionalServer "$i"
-    done
-  else
-    for i in "${SERVER_ADDRESSES[@]}"; do
-      registerAdditionalServer "$i"
-    done
-  fi
-}
-
-function clearTrustedServersExcept()
-{
-  tentacle clear-trusted-servers --instance "$instanceName" --keep "$1"
-}
-
-function registerAdditionalServer() {
-  serverCommsAddress=$1
-
-  echo "Registering server '${serverCommsAddress}'"
-
-  local ARGS=()
-  ARGS+=('poll-server' '--reuse-server-thumbprint')
-
-  ARGS+=('--instance' "$instanceName"
-    '--server' "$ServerUrl")
-
-  if [[ -n "$ServerApiKey" ]]; then
-    echo "Registering Tentacle with API key"
-    ARGS+=('--apiKey' $ServerApiKey)
-  elif [[ -n "$BearerToken" ]]; then
-    echo "Registering Tentacle with Bearer Token"
-    ARGS+=('--bearerToken' "$BearerToken")
-  else
-    echo "Registering Tentacle with username/password"
-    ARGS+=(
-      '--username' "$ServerUsername"
-      '--password' "$ServerPassword")
-  fi
-
-  ARGS+=('--server-comms-address' "$serverCommsAddress")
-
-  tentacle "${ARGS[@]}"
-}
-
-function setPollingProxy() {
-  local ARGS=()
-  ARGS+=('polling-proxy'
-    '--instance' "$instanceName")
-
-  if [[ -n "$TentaclePollingProxyHost" ]]; then
-    echo "Using polling proxy at $TentaclePollingProxyHost:$TentaclePollingProxyPort"
-    ARGS+=(
-      '--proxyEnable' 'true'
-      '--proxyHost' "$TentaclePollingProxyHost"
-      '--proxyPort' "$TentaclePollingProxyPort"
-      '--proxyUsername' "$TentaclePollingProxyUsername"
-      '--proxyPassword' "$TentaclePollingProxyPassword")
-  else
-    echo "Disabling polling proxy"
-        ARGS+=('--proxyEnable' 'false')
-  fi
-
-  tentacle "${ARGS[@]}"
-}
-
-function markAsInitialised() {
-    # There is a startupProbe which checks for this file
-    mkdir -p /etc/octopus && touch /etc/octopus/initialized
-}
-
 setupVariablesForRegistrationCheck
 getStatusOfRegistration
 
-# We expect the tentacle to always be registered due to the new pre-install hook
-# But keeping this here just in case
-# We can remove it in future if we need to
 if [ "$IS_REGISTERED" == "true" ]; then
   echo "Tentacle is already configured and registered with server."
-  addAdditionalServerInstancesIfRequired
-  setPollingProxy
 else
   echo "==============================================="
   echo "Configuring Octopus Deploy Kubernetes Tentacle"
+  echo "==============================================="
 
   validateVariables
 
-  echo "==============================================="
-
-  migrateFromPreinstallScript
   configureTentacle
-  setPollingProxy
   registerTentacle
-  addAdditionalServerInstancesIfRequired
-  
   echo "Configuration successful"
 fi
 
-markAsInitialised
-
 echo "==============================================="
-echo "Starting Octopus Deploy Kubernetes Tentacle"
+echo "Finished Configuring Octopus Deploy Kubernetes Tentacle"
 echo "==============================================="
-
-# the exec here means that the host bash process is replaced by the tentacle process
-exec tentacle agent --instance Tentacle --noninteractive
+exit 0

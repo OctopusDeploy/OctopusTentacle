@@ -6,7 +6,7 @@ using Octopus.Tentacle.Contracts;
 
 namespace Octopus.Tentacle.Client.Scripts
 {
-    public sealed class ObservingScriptOrchestrator
+    sealed class ObservingScriptOrchestrator
     {
         readonly IScriptObserverBackoffStrategy scriptObserverBackOffStrategy;
         readonly OnScriptStatusResponseReceived onScriptStatusResponseReceived;
@@ -39,7 +39,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 throw new OperationCanceledException("Script execution was cancelled");
             }
 
-            return new ScriptExecutionResult(scriptStatus.State, scriptStatus.ExitCode!.Value);
+            return new ScriptExecutionResult(scriptStatus.State, scriptStatus.ExitCode);
         }
 
         async Task<ScriptStatus> ObserveUntilCompleteThenFinish(
@@ -57,10 +57,14 @@ namespace Octopus.Tentacle.Client.Scripts
             // V1 can return a result when completing. But other versions do not.
             // The behaviour we are maintaining is that the result to use for V1 is that of "complete"
             // but the result to use for other versions is the last observing result.
-            var scriptStatusResponse = completeScriptResponse ?? observingUntilCompleteResult.ScriptStatus;
-            OnScriptStatusResponseReceived(scriptStatusResponse);
-
-            return scriptStatusResponse;
+            if (completeScriptResponse is not null)
+            {
+                // Because V1 can actually return a result, we need to handle the response received as well (so the output appears in Octopus Server)
+                OnScriptStatusResponseReceived(completeScriptResponse);
+                return completeScriptResponse;
+            }
+            
+            return observingUntilCompleteResult.ScriptStatus;
         }
 
         async Task<ScriptOperationExecutionResult> ObserveUntilComplete(

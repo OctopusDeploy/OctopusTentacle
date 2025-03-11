@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
 using Halibut.Diagnostics;
+using Octopus.Tentacle.Client.EventDriven;
 using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.Client.Scripts.Models;
 using Octopus.Tentacle.Contracts;
@@ -16,7 +17,7 @@ namespace Octopus.Tentacle.Client
         Task<DataStream?> DownloadFile(string remotePath, ITentacleClientTaskLog logger, CancellationToken cancellationToken);
 
         /// <summary>
-        /// Execute a script on Tentacle
+        /// Execute a script on Tentacle in its entirety. 
         /// </summary>
         /// <param name="executeScriptCommand">The execute script command</param>
         /// <param name="onScriptStatusResponseReceived"></param>
@@ -31,5 +32,39 @@ namespace Octopus.Tentacle.Client
             OnScriptCompleted onScriptCompleted,
             ITentacleClientTaskLog logger,
             CancellationToken scriptExecutionCancellationToken);
+
+        /// <summary>
+        /// Start the script.
+        /// </summary>
+        /// <returns>The result, which includes the CommandContext for the next command</returns>
+        Task<ScriptOperationExecutionResult> StartScript(ExecuteScriptCommand command,
+            StartScriptIsBeingReAttempted startScriptIsBeingReAttempted,
+            ITentacleClientTaskLog logger,
+            CancellationToken scriptExecutionCancellationToken);
+
+        /// <summary>
+        /// Get the status.
+        /// </summary>
+        /// <param name="commandContext">The CommandContext from the previous command</param>
+        /// <param name="logger"></param>
+        /// <param name="scriptExecutionCancellationToken"></param>
+        /// <returns>The result, which includes the CommandContext for the next command</returns>
+        Task<ScriptOperationExecutionResult> GetStatus(CommandContext commandContext, ITentacleClientTaskLog logger, CancellationToken scriptExecutionCancellationToken);
+
+        /// <summary>
+        /// Cancel the script.
+        /// </summary>
+        /// <param name="commandContext">The CommandContext from the previous command</param>
+        /// <param name="logger"></param>
+        /// <returns>The result, which includes the CommandContext for the next command</returns>
+        Task<ScriptOperationExecutionResult> CancelScript(CommandContext commandContext, ITentacleClientTaskLog logger);
+
+        /// <summary>
+        /// Complete the script.
+        /// </summary>
+        /// <param name="commandContext">The CommandContext from the previous command</param>
+        /// <param name="logger"></param>
+        /// <param name="scriptExecutionCancellationToken"></param>
+        Task<ScriptStatus?> CompleteScript(CommandContext commandContext, ITentacleClientTaskLog logger, CancellationToken scriptExecutionCancellationToken);
     }
 }

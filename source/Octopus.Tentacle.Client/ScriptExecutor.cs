@@ -16,7 +16,7 @@ namespace Octopus.Tentacle.Client
     /// <summary>
     /// Executes scripts, on the best available script service. 
     /// </summary>
-    public class ScriptExecutor : IScriptExecutor
+    class ScriptExecutor : IScriptExecutor
     {
         readonly ITentacleClientTaskLog logger;
         readonly ClientOperationMetricsBuilder operationMetricsBuilder; 
@@ -25,22 +25,6 @@ namespace Octopus.Tentacle.Client
         readonly RpcCallExecutor rpcCallExecutor;
         readonly TimeSpan onCancellationAbandonCompleteScriptAfter;
         
-        public ScriptExecutor(AllClients allClients,
-            ITentacleClientTaskLog logger,
-            ITentacleClientObserver tentacleClientObserver, 
-            TentacleClientOptions clientOptions,
-            TimeSpan onCancellationAbandonCompleteScriptAfter)
-        : this(
-            allClients,
-            logger,
-            tentacleClientObserver,
-            // For now, we do not support operation based metrics when used outside the TentacleClient. So just plug in a builder to discard.
-            ClientOperationMetricsBuilder.Start(),
-            clientOptions,
-            onCancellationAbandonCompleteScriptAfter)
-        {
-        }
-
         internal ScriptExecutor(AllClients allClients,
             ITentacleClientTaskLog logger,
             ITentacleClientObserver tentacleClientObserver,
@@ -68,28 +52,28 @@ namespace Octopus.Tentacle.Client
             return await scriptExecutor.StartScript(executeScriptCommand, startScriptIsBeingReAttempted, cancellationToken);
         }
 
-        public async Task<ScriptOperationExecutionResult> GetStatus(CommandContext ticketForNextNextStatus, CancellationToken cancellationToken)
+        public async Task<ScriptOperationExecutionResult> GetStatus(CommandContext commandContext, CancellationToken cancellationToken)
         {
             var scriptExecutorFactory = CreateScriptExecutorFactory();
-            var scriptExecutor = scriptExecutorFactory.CreateScriptExecutor(ticketForNextNextStatus.ScripServiceVersionUsed);
+            var scriptExecutor = scriptExecutorFactory.CreateScriptExecutor(commandContext.ScripServiceVersionUsed);
 
-            return await scriptExecutor.GetStatus(ticketForNextNextStatus, cancellationToken);
+            return await scriptExecutor.GetStatus(commandContext, cancellationToken);
         }
 
-        public async Task<ScriptOperationExecutionResult> CancelScript(CommandContext ticketForNextNextStatus)
+        public async Task<ScriptOperationExecutionResult> CancelScript(CommandContext commandContext)
         {
             var scriptExecutorFactory = CreateScriptExecutorFactory();
-            var scriptExecutor = scriptExecutorFactory.CreateScriptExecutor(ticketForNextNextStatus.ScripServiceVersionUsed);
+            var scriptExecutor = scriptExecutorFactory.CreateScriptExecutor(commandContext.ScripServiceVersionUsed);
 
-            return await scriptExecutor.CancelScript(ticketForNextNextStatus);
+            return await scriptExecutor.CancelScript(commandContext);
         }
         
-        public async Task<ScriptStatus?> CompleteScript(CommandContext ticketForNextNextStatus, CancellationToken cancellationToken)
+        public async Task<ScriptStatus?> CompleteScript(CommandContext commandContext, CancellationToken cancellationToken)
         {
             var scriptExecutorFactory = CreateScriptExecutorFactory();
-            var scriptExecutor = scriptExecutorFactory.CreateScriptExecutor(ticketForNextNextStatus.ScripServiceVersionUsed);
+            var scriptExecutor = scriptExecutorFactory.CreateScriptExecutor(commandContext.ScripServiceVersionUsed);
 
-            return await scriptExecutor.CompleteScript(ticketForNextNextStatus, cancellationToken);
+            return await scriptExecutor.CompleteScript(commandContext, cancellationToken);
         }
         
         ScriptExecutorFactory CreateScriptExecutorFactory()

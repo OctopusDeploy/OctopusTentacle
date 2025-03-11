@@ -146,11 +146,11 @@ namespace Octopus.Tentacle.Client.Scripts
             return Map(scriptStatusResponseV2);
         }
 
-        public async Task<ScriptOperationExecutionResult> CancelScript(CommandContext lastStatusResponse)
+        public async Task<ScriptOperationExecutionResult> CancelScript(CommandContext commandContext)
         {
             async Task<ScriptStatusResponseV2> CancelScriptAction(CancellationToken ct)
             {
-                var request = new CancelScriptCommandV2(lastStatusResponse.ScriptTicket, lastStatusResponse.NextLogSequence);
+                var request = new CancelScriptCommandV2(commandContext.ScriptTicket, commandContext.NextLogSequence);
                 var result = await clientScriptServiceV2.CancelScriptAsync(request, new HalibutProxyRequestOptions(ct));
 
                 return result;

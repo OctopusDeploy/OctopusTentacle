@@ -73,13 +73,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
 
         public string[] TentacleArtifactNames(Version version, TentacleRuntime runtime)
         {
+            // Tentacle 8.2 is/was built on .NET8, previous versions were built on .NET6
+            string runtimeForVersion = version.Major >= 8 && version.Minor >= 2
+                ? RuntimeDetection.DotNet8
+                : RuntimeDetection.DotNet6;
             if (PlatformDetection.IsRunningOnWindows)
             {
-                // Tentacle 8.2 is/was built on .NET8, previous versions were built on .NET6
-                string runtimeForVersion = version.Major >= 8 && version.Minor >= 2
-                    ? RuntimeDetection.DotNet8
-                    : RuntimeDetection.DotNet6;
-
                 var net48ArtifactNames = new[] {"tentacle-net48-win.zip"};
                 var dotnetArtifactNames = Architectures()
                     .Select(a => $"tentacle-{runtimeForVersion}-win-{a}.zip")
@@ -98,14 +97,14 @@ namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
             if (PlatformDetection.IsRunningOnMac)
             {
                 return Architectures()
-                    .Select(a => $"tentacle-{RuntimeDetection.GetCurrentRuntime()}-osx-{a}.tar.gz")
+                    .Select(a => $"tentacle-{runtimeForVersion}-osx-{a}.tar.gz")
                     .ToArray();
             }
 
             if (PlatformDetection.IsRunningOnNix)
             {
                 return Architectures()
-                    .Select(a => $"tentacle-{RuntimeDetection.GetCurrentRuntime()}-linux-{a}.tar.gz")
+                    .Select(a => $"tentacle-{runtimeForVersion}-linux-{a}.tar.gz")
                     .ToArray();
             }
 
