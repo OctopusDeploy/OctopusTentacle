@@ -56,7 +56,8 @@ namespace Octopus.Tentacle.Commands
             {
                 try
                 {
-                    var extracted = packageInstaller.Value.Install(packageFile, destinationDirectory, log, true);
+                    var extractedTask = packageInstaller.Value.Install(packageFile, destinationDirectory, log, true, CancellationToken.None);
+                    var extracted = extractedTask.GetAwaiter().GetResult();
                     log.Info($"{extracted:n0} files extracted");
                     return;
                 }

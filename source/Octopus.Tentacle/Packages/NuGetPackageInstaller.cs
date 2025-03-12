@@ -2,11 +2,14 @@
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using NuGet.Common;
-using NuGet.Packaging;
-using NuGet.Packaging.Core;
+using NuGet.Configuration;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Util;
+using NuGet.Packaging;
+using NuGet.Packaging.Core;
+using NuGet.Packaging.Signing;
 
 namespace Octopus.Tentacle.Packages
 {
@@ -19,20 +22,21 @@ namespace Octopus.Tentacle.Packages
             this.fileSystem = fileSystem;
         }
 
-        public int Install(string packageFile, string directory, ILog log, bool suppressNestedScriptWarning)
+        public async Task<int> Install(string packageFile, string directory, ILog log, bool suppressNestedScriptWarning, CancellationToken cancellationToken)
         {
             using (var packageStream = fileSystem.OpenFile(packageFile, FileMode.Open, FileAccess.Read))
             {
-                return Install(packageStream, directory, log, suppressNestedScriptWarning);
+                return await Install(packageStream, directory, log, suppressNestedScriptWarning, cancellationToken);
             }
         }
 
-        public int Install(Stream packageStream, string directory, ILog log, bool suppressNestedScriptWarning)
+        public async Task<int> Install(Stream packageStream, string directory, ILog log, bool suppressNestedScriptWarning, CancellationToken cancellationToken)
         {
-            var extracted = PackageExtractor.ExtractPackage(packageStream,
+            var extracted = await PackageExtractor.ExtractPackageAsync(
+                string.Empty,
+                packageStream,
                 new SuppliedDirectoryPackagePathResolver(directory),
-                new PackageExtractionContext(NullLogger.Instance) { PackageSaveMode = PackageSaveMode.Files, XmlDocFileSaveMode = XmlDocFileSaveMode.None, CopySatelliteFiles = false },
-                CancellationToken.None);
+                new PackageExtractionContext(PackageSaveMode.Files, XmlDocFileSaveMode.None, ClientPolicyContext.GetClientPolicy(new NullSettings(), new NullLogger()), new NullLogger()) { CopySatelliteFiles = false }, cancellationToken);
 
             return extracted.Count();
         }
