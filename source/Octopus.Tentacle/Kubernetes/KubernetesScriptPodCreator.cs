@@ -203,7 +203,7 @@ namespace Octopus.Tentacle.Kubernetes
                 },
                 Spec = new V1PodSpec
                 {
-                    InitContainers = await CreateInitContainers(command, podName, homeDir, workspacePath),
+                    InitContainers = await CreateInitContainers(command, podName, homeDir, workspacePath, tentacleScriptLog),
                     Containers = await CreateScriptContainers(command, podName, scriptName, homeDir, workspacePath, workspace.ScriptArguments, tentacleScriptLog),
                     ImagePullSecrets = imagePullSecretNames,
                     ServiceAccountName = serviceAccountName,
@@ -230,7 +230,7 @@ namespace Octopus.Tentacle.Kubernetes
             }.AddIfNotNull(CreateWatchdogContainer(homeDir));
         }
 
-        protected virtual async Task<IList<V1Container>> CreateInitContainers(StartKubernetesScriptCommandV1 command, string podName, string homeDir, string workspacePath)
+        protected virtual async Task<IList<V1Container>> CreateInitContainers(StartKubernetesScriptCommandV1 command, string podName, string homeDir, string workspacePath, InMemoryTentacleScriptLog tentacleScriptLog)
         {
             await Task.CompletedTask;
             return new List<V1Container>();
@@ -346,7 +346,7 @@ namespace Octopus.Tentacle.Kubernetes
             };
         }
 
-        V1ResourceRequirements GetScriptPodResourceRequirements(InMemoryTentacleScriptLog tentacleScriptLog)
+        protected V1ResourceRequirements GetScriptPodResourceRequirements(InMemoryTentacleScriptLog tentacleScriptLog)
         {
             var json = KubernetesConfig.PodResourceJson;
             if (!string.IsNullOrWhiteSpace(json))
