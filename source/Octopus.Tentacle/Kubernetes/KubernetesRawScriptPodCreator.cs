@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using k8s;
 using k8s.Models;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration;
@@ -36,7 +37,7 @@ namespace Octopus.Tentacle.Kubernetes
             this.containerResolver = containerResolver;
         }
 
-        protected override async Task<IList<V1Container>> CreateInitContainers(StartKubernetesScriptCommandV1 command, string podName, string homeDir, string workspacePath)
+        protected override async Task<IList<V1Container>> CreateInitContainers(StartKubernetesScriptCommandV1 command, string podName, string homeDir, string workspacePath, InMemoryTentacleScriptLog tentacleScriptLog)
         {
             var container = new V1Container
             {
@@ -45,19 +46,12 @@ namespace Octopus.Tentacle.Kubernetes
                 ImagePullPolicy = KubernetesConfig.ScriptPodPullPolicy,
                 Command = new List<string> { "sh", "-c", GetInitExecutionScript("/nfs-mount", homeDir, workspacePath) },
                 VolumeMounts = new List<V1VolumeMount> { new("/nfs-mount", "init-nfs-volume"), new(homeDir, "tentacle-home") },
-                Resources = new V1ResourceRequirements
-                {
-                    Requests = new Dictionary<string, ResourceQuantity>
-                    {
-                        ["cpu"] = new("25m"),
-                        ["memory"] = new("100Mi")
-                    }
-                }
+                Resources = GetScriptPodResourceRequirements(tentacleScriptLog)
             };
 
             return new List<V1Container> { container };
         }
-
+        
         protected override async Task<IList<V1Container>> CreateScriptContainers(StartKubernetesScriptCommandV1 command, string podName, string scriptName, string homeDir, string workspacePath, string[]? scriptArguments, InMemoryTentacleScriptLog tentacleScriptLog)
         {
             return new List<V1Container>
