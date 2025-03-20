@@ -2,17 +2,24 @@ using System;
 
 namespace Octopus.Tentacle.Configuration.Instances
 {
-    public class ApplicationInstanceConfiguration {
+    public class ApplicationInstanceConfiguration : IDisposable
+    {
         public ApplicationInstanceConfiguration(
             string? instanceName,
             string? configurationPath,
             IKeyValueStore? configuration,
-            IWritableKeyValueStore? writableConfiguration)
+            IWritableKeyValueStore? writableConfiguration,
+            Func<IKeyValueStore?>? loadConfigurationFunction)
         {
             InstanceName = instanceName;
             ConfigurationPath = configurationPath;
             Configuration = configuration;
             WritableConfiguration = writableConfiguration;
+            
+            if (configuration != null)
+            {
+                ChangeDetectingConfiguration = new ChangeDetectingKeyValueStore(configuration, configurationPath, loadConfigurationFunction);
+            }
         }
 
         public string? ConfigurationPath { get;  }
@@ -20,6 +27,13 @@ namespace Octopus.Tentacle.Configuration.Instances
 
         public IKeyValueStore? Configuration { get; }
 
+        public ChangeDetectingKeyValueStore? ChangeDetectingConfiguration { get; }
+
         public IWritableKeyValueStore? WritableConfiguration { get; }
+
+        public void Dispose()
+        {
+            ChangeDetectingConfiguration?.Dispose();
+        }
     }
 }
