@@ -1,5 +1,6 @@
 const excludeList = [
     "dotnet-sdk", // The dotnet SDK update is a non-trivial piece of work.
+    "FluentAssertions", // FluentAssertions 8 and above introduced potential fees for developers
 ];
 
 module.exports = {

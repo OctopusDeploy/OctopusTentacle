@@ -28,7 +28,7 @@
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.2" />                       
         <PackageReference Include="NetCoreStack.DispatchProxyAsync" Version="2.2.0" />
         <PackageReference Include="NSubstitute" Version="4.4.0" />
-        <PackageReference Include="FluentAssertions" Version="6.7.0" />
+        <PackageReference Include="FluentAssertions" Version="7.0.0" />
         <PackageReference Include="Assent" Version="1.8.2" />
         <PackageReference Include="NUnit" Version="3.13.3" />
         <PackageReference Include="Octopus.TestPortForwarder" Version="7.0.682" />
