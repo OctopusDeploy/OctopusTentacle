@@ -13,6 +13,7 @@ using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods;
+using Octopus.Tentacle.Tests.Integration.Support.TestAttributes;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
 using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
@@ -22,6 +23,7 @@ using Octopus.TestPortForwarder;
 namespace Octopus.Tentacle.Tests.Integration
 {
     [IntegrationTestTimeout]
+    [SkipOnEnvironmentsWithKnownPerformanceIssues("we keep facing issues with disk space running out")]
     public class ClientScriptExecutionCanRecoverFromNetworkIssues : IntegrationTest
     {
         [Test]
