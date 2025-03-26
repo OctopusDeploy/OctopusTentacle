@@ -43,7 +43,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var hasPausedOrStoppedPortForwarder = false;
             var ensureCancellationOccursDuringAnRpcCall = new SemaphoreSlim(0, 1);
 
-            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+            var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithPendingRequestQueueFactory(new CancellationObservingPendingRequestQueueFactory()) // Partially works around disconnected polling tentacles take work from the queue
                 .WithServiceEndpointModifier(point =>
                 {
@@ -142,7 +142,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var hasPausedOrStoppedPortForwarder = false;
             var ensureCancellationOccursDuringAnRpcCall = new SemaphoreSlim(0, 1);
 
-            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+            var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithPendingRequestQueueFactory(new CancellationObservingPendingRequestQueueFactory()) // Partially works around disconnected polling tentacles take work from the queue
                 .WithServiceEndpointModifier(point =>
                 {
@@ -274,7 +274,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var started = false;
             var cancelExecutionCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
 
-            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+            var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithRetryDuration(TimeSpan.FromHours(1))
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder().RecordMethodUsages(tentacleConfigurationTestCase, out var scriptServiceRecordedUsages).Build())
                 .WithPendingRequestQueueFactory(new CancelWhenRequestQueuedPendingRequestQueueFactory(
@@ -342,7 +342,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var cancelExecutionCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
 
-            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+            var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithRetryDuration(TimeSpan.FromHours(1))
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder().RecordMethodUsages(tentacleConfigurationTestCase, out var scriptServiceRecordedUsages).Build())
                 .WithHalibutTimeoutsAndLimits(halibutTimeoutsAndLimits)
@@ -409,7 +409,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var hasPausedOrStoppedPortForwarder = false;
             var ensureCancellationOccursDuringAnRpcCall = new SemaphoreSlim(0, 1);
 
-            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+            var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithPendingRequestQueueFactory(new CancellationObservingPendingRequestQueueFactory()) // Partially works around disconnected polling tentacles take work from the queue
                 .WithServiceEndpointModifier(point =>
                 {
@@ -520,7 +520,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var rpcCallHasStarted = new Reference<bool>(false);
             var hasPausedOrStoppedPortForwarder = false;
 
-            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+            var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithPendingRequestQueueFactory(new CancellationObservingPendingRequestQueueFactory()) // Partially works around disconnected polling tentacles take work from the queue
                 .WithRetryDuration(TimeSpan.FromHours(1))
                 .WithPortForwarderDataLogging()
