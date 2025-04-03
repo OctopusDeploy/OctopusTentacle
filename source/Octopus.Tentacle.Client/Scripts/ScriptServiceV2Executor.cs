@@ -146,7 +146,7 @@ namespace Octopus.Tentacle.Client.Scripts
             return Map(scriptStatusResponseV2);
         }
 
-        public async Task<ScriptOperationExecutionResult> CancelScript(CommandContext commandContext)
+        public async Task<ScriptOperationExecutionResult> CancelScript(CommandContext commandContext, CancellationToken cancellationToken)
         {
             async Task<ScriptStatusResponseV2> CancelScriptAction(CancellationToken ct)
             {
@@ -166,8 +166,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 CancelScriptAction,
                 logger,
                 clientOperationMetricsBuilder,
-                // We don't want to cancel this operation as it is responsible for stopping the script executing on the Tentacle
-                CancellationToken.None).ConfigureAwait(false);
+                cancellationToken).ConfigureAwait(false);
             return Map(scriptStatusResponseV2);
         }
 

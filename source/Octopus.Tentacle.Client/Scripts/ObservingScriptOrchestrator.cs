@@ -79,7 +79,8 @@ namespace Octopus.Tentacle.Client.Scripts
             {
                 if (scriptExecutionCancellationToken.IsCancellationRequested)
                 {
-                    lastResult = await scriptExecutor.CancelScript(lastResult.ContextForNextCommand).ConfigureAwait(false);
+                    // We don't want to cancel this operation as it is responsible for stopping the script executing on the Tentacle
+                    lastResult = await scriptExecutor.CancelScript(lastResult.ContextForNextCommand, CancellationToken.None).ConfigureAwait(false);
                 }
                 else
                 {
