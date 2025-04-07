@@ -60,7 +60,7 @@ module.exports = {
     {
       matchPackageNames: ['Autofac'],
       prBodyNotes: [
-        'Autofac is very important to Octopus. We need to be careful upgrading this package.',
+        'Autofac is very important to Tentacle. We need to be careful upgrading this package.',
         'Review release notes to ensure there are no breaking changes.',
       ],
     },
