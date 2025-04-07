@@ -52,17 +52,7 @@ module.exports = {
     {
       // These packages use a custom fork of NuGet which we still rely on.
       groupName: 'NuGet Libraries',
-      matchPackageNames: [
-        'NuGet.Common',
-        'NuGet.Configuration',
-        'NuGet.Frameworks',
-        'NuGet.Packaging',
-        'NuGet.Packaging.Core',
-        'NuGet.Packaging.Core.Types',
-        'NuGet.Protocol.Core.Types',
-        'NuGet.Protocol.Core.v3',
-        'NuGet.Versioning',
-      ],
+      matchPackageNames: ['NuGet.Packaging'],
       enabled: false,
     },
     // Keep the rest of the packages in alphabetical order (of package name). However, non-greenMeansGo packages should be placed before greenMeansGo packages 
@@ -72,9 +62,6 @@ module.exports = {
       prBodyNotes: [
         'Autofac is very important to Octopus. We need to be careful upgrading this package.',
         'Review release notes to ensure there are no breaking changes.',
-        'Create a public issue regarding the upgrade.',
-        "Merge the upgrade and take note of which release it's included in.",
-        'Monitor memory usage in deploy to ensure there are no significant changes.',
       ],
     },
     // greenMeansGo packages
