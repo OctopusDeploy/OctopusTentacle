@@ -65,13 +65,8 @@ module.exports = {
       ],
       enabled: false,
     },
-    {
-      matchPackageNames: ['Nsubstitute'],
-      prBodyNotes: [
-        ...preCannedPrNotes.greenMeansGo,
-        'Used extensively throughout tests.',
-      ],
-    },
+    // Keep the rest of the packages in alphabetical order (of package name). However, non-greenMeansGo packages should be placed before greenMeansGo packages 
+    // Non-greenMeansGo packages
     {
       matchPackageNames: ['Autofac'],
       prBodyNotes: [
@@ -80,6 +75,14 @@ module.exports = {
         'Create a public issue regarding the upgrade.',
         "Merge the upgrade and take note of which release it's included in.",
         'Monitor memory usage in deploy to ensure there are no significant changes.',
+      ],
+    },
+    // greenMeansGo packages
+    {
+      matchPackageNames: ['Nsubstitute'],
+      prBodyNotes: [
+        ...preCannedPrNotes.greenMeansGo,
+        'Used extensively throughout tests.',
       ],
     },
     {
