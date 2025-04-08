@@ -19,18 +19,21 @@ namespace Octopus.Tentacle.Services.Scripts
         readonly IScriptWorkspaceFactory workspaceFactory;
         readonly IScriptStateStoreFactory scriptStateStoreFactory;
         readonly ISystemLog log;
+        readonly ScriptIsolationMutex scriptIsolationMutex;
         readonly ConcurrentDictionary<ScriptTicket, RunningScriptWrapper> runningScripts = new();
 
         public ScriptServiceV2(
             IShell shell,
             IScriptWorkspaceFactory workspaceFactory,
             IScriptStateStoreFactory scriptStateStoreFactory,
+            ScriptIsolationMutex scriptIsolationMutex,
             ISystemLog log)
         {
             this.shell = shell;
             this.workspaceFactory = workspaceFactory;
             this.scriptStateStoreFactory = scriptStateStoreFactory;
             this.log = log;
+            this.scriptIsolationMutex = scriptIsolationMutex;
         }
 
         public async Task<ScriptStatusResponseV2> StartScriptAsync(StartScriptCommandV2 command, CancellationToken cancellationToken)
@@ -127,7 +130,7 @@ namespace Octopus.Tentacle.Services.Scripts
 
         RunningScript LaunchShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, IScriptStateStore stateStore, CancellationToken cancellationToken)
         {
-            var runningScript = new RunningScript(shell, workspace, stateStore, workspace.CreateLog(), serverTaskId, cancellationToken, log);
+            var runningScript = new RunningScript(shell, workspace, stateStore, workspace.CreateLog(), serverTaskId, scriptIsolationMutex, cancellationToken, log);
             var thread = new Thread(runningScript.Execute) { Name = "Executing PowerShell runningScript for " + ticket.TaskId };
             thread.Start();
             return runningScript;
