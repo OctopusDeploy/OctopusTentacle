@@ -54,16 +54,16 @@ We bundle Tentacle inside Octopus Server to make it super duper easy to keep Ten
 
 To include a new version into the next Octopus Server release, update the [reference in Octopus.Server.csproj](https://github.com/OctopusDeploy/OctopusDeploy/blob/master/source/Octopus.Server/Octopus.Server.csproj#L36). This is how we guarantee the version of Tentacle we bundle is also the version we use for all the end to end tests.
 
-### Bumping the Tentacle Major Version
-
-To bump the major version, you need to create a 
-
 ## Debugging
 
 In most scenarios, Tentacle is simple to debug:
 
 1. Just like a customer, set up an instance of Tentacle and connect it to an Octopus Server
 2. Start Tentacle using the debugger in your development environment of choice, using the `Tentacle.exe run --instance=YOUR_INSTANCE_NAME` command
+
+If you need to set up Tentacle, Halibut and Octopus Server for local development, refer to the Local Packages in the Halibut repository.
+
+Refer to the [Local Development chain docs](https://github.com/OctopusDeploy/Halibut/blob/152535a0a8052ddf85c4a8f9b11375d0adc6fe3b/docs/local-build-chain.md) on Halibut
 
 ## Debugging in WSL (Windows Subsystem for Linux )
 Currently we can only debug netcore apps running in WSL from VSCode, Visual Studio and Rider dont seem to have good working solutions
