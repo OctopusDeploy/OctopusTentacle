@@ -39,9 +39,12 @@ For external developers, or if ReleaseBot fails for some reason, please add a co
 
 #### Incrementing Major Versions
 
-To increment a major version, make an empty commit with the commit message `+semver: major.`
+To increment a major version, make an empty commit with the commit message `+semver: major`. This is a special instruction to GitVersion. 
 
-`git commit --allow-empty -m "+semver: major"` (This is a special instruction to GitVersion)
+```
+git commit --allow-empty -m "+semver: major"
+```
+
 
 For further details refer to [Build and Release - Step by Step](./docs/build-and-release.md).
 
