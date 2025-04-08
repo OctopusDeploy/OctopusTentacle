@@ -49,7 +49,7 @@ To increment a major version, make an empty commit with the commit message `+sem
 git commit --allow-empty -m "+semver: major"
 ```
 
-For further details refer to [Build and Release - Step by Step](./docs/build-and-release.md).
+For further details refer to [Tentacle Rollout](docs/rollout.md).
 
 ### Bundling Tentacle with Octopus Server
 
