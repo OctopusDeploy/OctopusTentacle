@@ -20,11 +20,13 @@ If you're unable to find an open issue addressing the problem, please follow our
 
 :+1::tada: First off, thanks for your contribution to Tentacle! :tada::+1:
 
-Please [create a new issue](issues/new) for each bug fix or enhancement. [Issues in this repository](issues) are automatically used to create release notes for [releases](releases).
+Please [create a new issue](https://github.com/OctopusDeploy/OctopusTentacle/issues/new) for each bug fix or enhancement. [Issues in this repository](https://github.com/OctopusDeploy/OctopusTentacle/issues) are automatically used to create release notes for [releases](https://github.com/OctopusDeploy/OctopusTentacle/releases).
 
-Please ensure every commit that hits `main` links either to an issue directly, or to a PR that in turn links to an issue. Please use the [appropriate keywords to close issues](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword).
+Please ensure every commit that hits `main` links either to an issue directly, or to a PR that in turn links to an issue. Please use the [appropriate keywords to close issues](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword). Doing so will ensure that your changes are available for users to download via the [Downloads](https://octopus.com/downloads/tentacle) page. 
 
-### Build, Test, and delivery
+If you don't use a keyword, even if your changes are merged into main and a new version created, it will not appear on the Downloads page.
+
+### Build, Test, and Delivery
 
 We use the [Octopus Tentacle project in our private TeamCity server](https://build.octopushq.com/project/OctopusDeploy_OctopusTentacle) for automated build and test reporting status changes to pull requests.
 
@@ -35,11 +37,23 @@ Deployments happen automatically - a merge to `main` will trigger a build and a 
 For internal developers, on closing an issue, ReleaseBot will ask you for release notes.
 For external developers, or if ReleaseBot fails for some reason, please add a comment to the issue `Release note: XXXX` to ensure release notes are generated correctly.
 
+#### Incrementing Major Versions
+
+To increment a major version, make an empty commit with the commit message `+semver: major.`
+
+`git commit --allow-empty -m "+semver: major"` (This is a special instruction to GitVersion)
+
+For further details refer to [Build and Release - Step by Step](./docs/build-and-release.md).
+
 ### Bundling Tentacle with Octopus Server
 
 We bundle Tentacle inside Octopus Server to make it super duper easy to keep Tentacle updated across entire fleets of customer installations. Choosing the version of Tentacle to bundle inside Octopus Server is currently a manual process.
 
 To include a new version into the next Octopus Server release, update the [reference in Octopus.Server.csproj](https://github.com/OctopusDeploy/OctopusDeploy/blob/master/source/Octopus.Server/Octopus.Server.csproj#L36). This is how we guarantee the version of Tentacle we bundle is also the version we use for all the end to end tests.
+
+### Bumping the Tentacle Major Version
+
+To bump the major version, you need to create a 
 
 ## Debugging
 
