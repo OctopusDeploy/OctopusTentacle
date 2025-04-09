@@ -1,4 +1,4 @@
-using Octopus.Diagnostics;
+using Octopus.Tentacle.Core.Diagnostics;
 
 namespace Octopus.Manager.Tentacle.Infrastructure
 {

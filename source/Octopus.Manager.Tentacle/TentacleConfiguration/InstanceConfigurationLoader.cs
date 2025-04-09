@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-using Octopus.Diagnostics;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
