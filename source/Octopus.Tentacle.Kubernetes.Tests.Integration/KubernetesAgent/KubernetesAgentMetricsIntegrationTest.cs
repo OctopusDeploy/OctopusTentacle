@@ -2,7 +2,7 @@ using System;
 using FluentAssertions;
 using k8s;
 using Newtonsoft.Json;
-using Octopus.Diagnostics;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Kubernetes.Diagnostics;
 

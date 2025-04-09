@@ -4,8 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Microsoft.Win32.TaskScheduler;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Core.Diagnostics;
 
 namespace Octopus.Tentacle.Watchdog
 {

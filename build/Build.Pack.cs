@@ -426,6 +426,24 @@ partial class Build
                 .SetVerbosity(DotNetVerbosity.normal)
                 .SetProperty("NuspecProperties", $"Version={FullSemVer}"));
         });
+    
+    [PublicAPI]
+    Target PackCore => _ => _
+        .Description("Packs the NuGet package for Tentacle core.")
+        .DependsOn(PackContracts)
+        .Executes(() =>
+        {
+            (ArtifactsDirectory / "nuget").CreateDirectory();
+            using var versionInfoFile = ModifyTemplatedVersionAndProductFilesWithValues();
+
+            DotNetPack(p => p
+                .SetProject(RootDirectory / "source" / "Octopus.Tentacle.Core" / "Octopus.Tentacle.Core.csproj")
+                .SetVersion(FullSemVer)
+                .SetOutputDirectory(ArtifactsDirectory / "nuget")
+                .DisableIncludeSymbols()
+                .SetVerbosity(DotNetVerbosity.normal)
+                .SetProperty("NuspecProperties", $"Version={FullSemVer}"));
+        });
 
     [PublicAPI]
     Target PackClient => _ => _
@@ -554,6 +572,7 @@ partial class Build
         .Description("Pack all the artifacts. Notional task - running this on a single host is possible but cumbersome.")
         .DependsOn(PackCrossPlatformBundle)
         .DependsOn(PackContracts)
+        .DependsOn(PackCore)
         .DependsOn(PackClient);
 
     void PackTarballs(string framework, string runtimeId)

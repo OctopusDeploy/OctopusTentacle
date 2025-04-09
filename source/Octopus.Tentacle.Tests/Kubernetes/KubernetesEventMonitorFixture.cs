@@ -7,7 +7,7 @@ using FluentAssertions;
 using k8s.Models;
 using NSubstitute;
 using NUnit.Framework;
-using Octopus.Diagnostics;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Kubernetes.Diagnostics;
 

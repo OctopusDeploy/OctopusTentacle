@@ -3,8 +3,8 @@ using System.Security.Cryptography;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration.Crypto;
+using Octopus.Tentacle.Core.Diagnostics;
 
 namespace Octopus.Tentacle.Tests.Configuration.Crypto
 {

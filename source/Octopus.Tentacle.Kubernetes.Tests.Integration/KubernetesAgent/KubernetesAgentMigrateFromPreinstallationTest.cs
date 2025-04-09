@@ -2,8 +2,8 @@ using System.Text;
 using FluentAssertions;
 using k8s;
 using k8s.Models;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.Commands;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Startup;
 

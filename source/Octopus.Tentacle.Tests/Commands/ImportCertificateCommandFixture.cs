@@ -3,11 +3,11 @@ using System.Security.Cryptography.X509Certificates;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Commands;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Startup;
 

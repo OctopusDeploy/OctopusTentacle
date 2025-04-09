@@ -7,7 +7,7 @@ using SecurityTokenValidationException = System.Exception;
 using System;
 using NSubstitute;
 using NUnit.Framework;
-using Octopus.Diagnostics;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Security;
 using CertificateGenerator = Octopus.Tentacle.Certificates.CertificateGenerator;

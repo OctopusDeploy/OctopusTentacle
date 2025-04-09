@@ -1,10 +1,10 @@
 using System;
 using System.Net;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.Startup;
 using k8s;
 using k8s.Autorest;
 using k8s.Models;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Util;
 

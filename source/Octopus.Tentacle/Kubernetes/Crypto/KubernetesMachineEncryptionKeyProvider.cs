@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using k8s.Models;
 using Nito.AsyncEx;
-using Octopus.Diagnostics;
+using Octopus.Tentacle.Core.Diagnostics;
 
 namespace Octopus.Tentacle.Kubernetes.Crypto
 {

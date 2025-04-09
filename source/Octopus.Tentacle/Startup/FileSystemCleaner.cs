@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO;
-using Octopus.Diagnostics;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Startup
