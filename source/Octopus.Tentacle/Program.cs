@@ -10,6 +10,7 @@ using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Maintenance;
 using Octopus.Tentacle.Properties;
+using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Services;
 using Octopus.Tentacle.Startup;
 using Octopus.Tentacle.Time;
@@ -58,6 +59,7 @@ namespace Octopus.Tentacle
             builder.RegisterModule(new VersioningModule(GetType().Assembly));
             builder.RegisterModule(new MaintenanceModule());
             builder.RegisterModule(new KubernetesModule());
+            builder.RegisterModule(new ScriptsModule());
 
             builder.RegisterCommand<CreateInstanceCommand>("create-instance", "Registers a new instance of the Tentacle service");
             builder.RegisterCommand<DeleteInstanceCommand>("delete-instance", "Deletes an instance of the Tentacle service");

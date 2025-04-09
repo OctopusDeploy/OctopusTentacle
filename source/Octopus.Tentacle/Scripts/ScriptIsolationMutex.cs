@@ -10,19 +10,19 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Scripts
 {
-    public static class ScriptIsolationMutex
+    public class ScriptIsolationMutex
     {
         // Reader-writer locks allow multiple readers, but only one writer which blocks readers. This is perfect for our scenario, because
         // we want to allow lots of scripts to run with the 'no' isolation level, but nothing should be running under the 'full' isolation level.
         // NOTE: Changed from ReaderWriterLockSlim to AsyncReaderWriterLock to enable cooperative cancellation whilst waiting for the lock.
         //       Hopefully in a future version of .NET there will be a fully supported ReaderWriterLock with cooperative cancellation support so we can remove this dependency.
-        static readonly ConcurrentDictionary<string, TaskLock> ReaderWriterLocks = new ConcurrentDictionary<string, TaskLock>();
+        readonly ConcurrentDictionary<string, TaskLock> ReaderWriterLocks = new ConcurrentDictionary<string, TaskLock>();
         static readonly TimeSpan InitialWaitTime = TimeSpan.FromMilliseconds(100);
         internal static TimeSpan SubsequentWaitTime = TimeSpan.FromMinutes(10);
 
         public static readonly TimeSpan NoTimeout = TimeSpan.FromMilliseconds(int.MaxValue);
 
-        public static IDisposable Acquire(ScriptIsolationLevel isolation,
+        public IDisposable Acquire(ScriptIsolationLevel isolation,
             TimeSpan mutexAcquireTimeout,
             string lockName,
             Action<string> taskLog,

@@ -30,6 +30,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         IScriptWorkspace workspace;
         TestScriptLog scriptLog;
         RunningScript runningScript;
+        ScriptIsolationMutex scriptIsolationMutex;
 
         [SetUp]
         public void SetUpLocal()
@@ -59,10 +60,12 @@ namespace Octopus.Tentacle.Tests.Integration.Util
             Console.WriteLine($"Working directory: {workspace.WorkingDirectory}");
             scriptLog = new TestScriptLog();
             cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            scriptIsolationMutex = new ScriptIsolationMutex();
             runningScript = new RunningScript(shell,
                 workspace,
                 scriptLog,
                 taskId,
+                scriptIsolationMutex,
                 cancellationTokenSource.Token,
                 log);
         }
@@ -162,6 +165,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
                     workspace,
                     scriptLog,
                     taskId,
+                    scriptIsolationMutex,
                     cts.Token,
                     new InMemoryLog());
 

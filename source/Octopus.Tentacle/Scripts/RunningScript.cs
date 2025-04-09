@@ -15,12 +15,14 @@ namespace Octopus.Tentacle.Scripts
         readonly string taskId;
         readonly CancellationToken token;
         readonly ILog log;
+        readonly ScriptIsolationMutex scriptIsolationMutex;
 
         public RunningScript(IShell shell,
             IScriptWorkspace workspace,
             IScriptStateStore? stateStore,
             IScriptLog scriptLog,
             string taskId,
+            ScriptIsolationMutex scriptIsolationMutex,
             CancellationToken token,
             ILog log)
         {
@@ -30,6 +32,7 @@ namespace Octopus.Tentacle.Scripts
             this.taskId = taskId;
             this.token = token;
             this.log = log;
+            this.scriptIsolationMutex = scriptIsolationMutex;
             this.ScriptLog = scriptLog;
             this.State = ProcessState.Pending;
         }
@@ -38,8 +41,9 @@ namespace Octopus.Tentacle.Scripts
             IScriptWorkspace workspace,
             IScriptLog scriptLog,
             string taskId,
+            ScriptIsolationMutex scriptIsolationMutex,
             CancellationToken token,
-            ILog log) : this(shell, workspace, null, scriptLog, taskId, token, log)
+            ILog log) : this(shell, workspace, null, scriptLog, taskId, scriptIsolationMutex, token, log)
         {
         }
 
@@ -61,7 +65,7 @@ namespace Octopus.Tentacle.Scripts
                 {
                     try
                     {
-                        using (ScriptIsolationMutex.Acquire(workspace.IsolationLevel,
+                        using (scriptIsolationMutex.Acquire(workspace.IsolationLevel,
                                    workspace.ScriptMutexAcquireTimeout,
                                    workspace.ScriptMutexName ?? nameof(RunningScript),
                                    message => writer.WriteOutput(ProcessOutputSource.StdOut, message),
