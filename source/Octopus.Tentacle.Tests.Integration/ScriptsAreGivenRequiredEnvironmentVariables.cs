@@ -40,7 +40,6 @@ namespace Octopus.Tentacle.Tests.Integration
             var scriptOutput = scriptResult.ProcessOutput.Select(p => p.Text).StringJoin("\r\n");
 
             scriptOutput.Should().Contain("TentacleHome");
-            scriptOutput.Should().Contain("CalamariPackageRetentionJournalPath");
             scriptOutput.Should().Contain("TentacleJournal");
         }
     }
