@@ -4,11 +4,11 @@ using System.Threading.Tasks;
 using Halibut;
 using Octopus.Client;
 using Octopus.Client.Model;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.Commands.OptionSets;
 using Octopus.Tentacle.Communications;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Startup;
 using Octopus.Tentacle.Util;
 

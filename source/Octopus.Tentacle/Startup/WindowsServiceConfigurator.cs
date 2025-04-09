@@ -7,7 +7,7 @@ using System.Management;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading;
-using Octopus.Diagnostics;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Util;
 using Polly;
 

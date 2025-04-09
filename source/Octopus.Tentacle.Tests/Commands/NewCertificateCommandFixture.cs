@@ -1,11 +1,11 @@
 ﻿using System;
 using NSubstitute;
 using NUnit.Framework;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Commands;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Startup;
 
 namespace Octopus.Tentacle.Tests.Commands

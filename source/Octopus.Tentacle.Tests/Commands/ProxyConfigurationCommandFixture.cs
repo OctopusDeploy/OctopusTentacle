@@ -3,9 +3,9 @@ using System.IO;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Startup;
 using Octopus.Tentacle.Util;
 

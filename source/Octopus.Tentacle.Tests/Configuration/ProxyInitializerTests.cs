@@ -2,8 +2,8 @@
 using System.Net;
 using NSubstitute;
 using NUnit.Framework;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Tests.Support;
 
 namespace Octopus.Tentacle.Tests.Configuration

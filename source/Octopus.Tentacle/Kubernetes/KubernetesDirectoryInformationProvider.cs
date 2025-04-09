@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Octopus.Client.Extensions;
 using Microsoft.Extensions.Caching.Memory;
-using Octopus.Diagnostics;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Kubernetes

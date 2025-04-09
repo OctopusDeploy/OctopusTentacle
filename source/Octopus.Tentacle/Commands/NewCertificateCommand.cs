@@ -2,10 +2,10 @@
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Security;
 using Octopus.Tentacle.Security.Certificates;
 using Octopus.Tentacle.Startup;

@@ -2,7 +2,7 @@ using System;
 using System.Net;
 using Halibut;
 using Halibut.Transport.Proxy;
-using Octopus.Diagnostics;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Configuration

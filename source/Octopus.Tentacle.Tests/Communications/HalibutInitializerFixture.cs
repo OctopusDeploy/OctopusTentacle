@@ -4,8 +4,8 @@ using FluentAssertions;
 using Halibut;
 using NSubstitute;
 using NUnit.Framework;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Core.Diagnostics;
 
 namespace Octopus.Tentacle.Tests.Communications
 {

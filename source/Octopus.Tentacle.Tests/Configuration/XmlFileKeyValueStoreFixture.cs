@@ -11,9 +11,9 @@ using FluentAssertions;
 using Newtonsoft.Json;
 using NSubstitute;
 using NUnit.Framework;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Crypto;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Util;
 using Formatting = System.Xml.Formatting;
 
