@@ -177,7 +177,7 @@ namespace Octopus.Tentacle.Scripts
             }
         }
 
-        internal class TaskLock
+        public class TaskLock
         {
             readonly object stateLock = new();
             readonly IDictionary<string, int> readersTaskIds = new Dictionary<string, int>();

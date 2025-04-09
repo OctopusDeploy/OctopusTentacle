@@ -13,7 +13,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
         readonly IOctopusFileSystem fileSystem;
 
         static string FileName =>
-            PlatformDetection.Kubernetes.IsRunningAsKubernetesAgent
+            KubernetesSupportDetection.IsRunningAsKubernetesAgent
                 //if we are running in K8S, we want to save the machine key to the home directory, which is likely on a network drives
                 ? Path.Combine(Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleHome)!, "machinekey")
                 : "/etc/octopus/machinekey";

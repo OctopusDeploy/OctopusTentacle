@@ -3,7 +3,7 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Scripts
 {
-    internal class ScriptStateStoreFactory : IScriptStateStoreFactory
+    public class ScriptStateStoreFactory : IScriptStateStoreFactory
     {
         readonly IOctopusFileSystem fileSystem;
 
