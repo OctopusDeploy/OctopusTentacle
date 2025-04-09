@@ -97,7 +97,7 @@ ForEach ($arg in $args){
 printenv
 ");
             windowsScript.AppendLine(@"
-SET
+dir env:
 ");
             return this;
         }
