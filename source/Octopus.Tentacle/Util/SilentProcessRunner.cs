@@ -84,6 +84,7 @@ namespace Octopus.Tentacle.Util
                 LogFileOnlyLogger.Current.Info,
                 info,
                 error,
+                customEnvironmentVariables: null,
                 cancel: cancel);
 
         public static int ExecuteCommand(
@@ -95,7 +96,7 @@ namespace Octopus.Tentacle.Util
             Action<string> error,
             CancellationToken cancel)
         {
-            return ExecuteCommand(executable, arguments, workingDirectory, debug, info, error, cancel: cancel);
+            return ExecuteCommand(executable, arguments, workingDirectory, debug, info, error, customEnvironmentVariables: null, cancel: cancel);
         }
 
         public static int ExecuteCommand(
