@@ -97,7 +97,7 @@ ForEach ($arg in $args){
 printenv
 ");
             windowsScript.AppendLine(@"
-dir env:
+Get-ChildItem env: | Format-List
 ");
             return this;
         }

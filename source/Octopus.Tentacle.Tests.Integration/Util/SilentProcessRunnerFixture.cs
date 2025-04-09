@@ -49,7 +49,11 @@ namespace Octopus.Tentacle.Tests.Integration.Util
                     cts.Token);
 
                 exitCode.Should().Be(99, "our custom exit code should be reflected");
-                debugMessages.ToString().Should().ContainEquivalentOf($"Starting {command} in working directory '' using '{SilentProcessRunner.EncodingDetector.GetOEMEncoding().EncodingName}' encoding running as '{TestEnvironmentHelper.CurrentUserName}'");
+                
+                // It seems the encoding can change during the lifetime of the OS so don't expect it wont change in tests.
+                debugMessages.ToString().Should().ContainEquivalentOf($"Starting {command} in working directory '' using '");
+                debugMessages.ToString().Should().ContainEquivalentOf($"' encoding running as '{TestEnvironmentHelper.CurrentUserName}'");
+                
                 errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
                 infoMessages.ToString().Should().BeEmpty("no messages should be written to stdout");
             }
