@@ -28,11 +28,7 @@
         <ProjectReference Include="..\Octopus.Tentacle.Contracts\Octopus.Tentacle.Contracts.csproj" />
     </ItemGroup>
     <ItemGroup>
-        <Compile Include="..\Solution Items\SolutionInfo.cs">
-            <Link>SolutionInfo.cs</Link>
-        </Compile>
-        <Compile Include="..\Solution Items\VersionInfo.cs">
-            <Link>VersionInfo.cs</Link>
-        </Compile>
+        <Compile Include="..\Solution Items\VersionInfo.cs" Link="VersionInfo.cs" />
+        <Compile Include="..\Solution Items\SolutionInfo.cs" Link="SolutionInfo.cs" />
     </ItemGroup>
 </Project>
