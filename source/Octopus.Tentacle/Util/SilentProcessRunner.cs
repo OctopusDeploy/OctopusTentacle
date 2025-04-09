@@ -171,7 +171,7 @@ namespace Octopus.Tentacle.Util
 
                     if (customEnvironmentVariables != null && customEnvironmentVariables.Any())
                     {
-                        // Note this will add to the environment variables and not replace them.
+                        // Note this will add to the environment variables, potentially replacing existing ones.
                         foreach (var variable in customEnvironmentVariables)
                         {
                             process.StartInfo.EnvironmentVariables[variable.Key] = variable.Value;
