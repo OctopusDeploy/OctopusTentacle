@@ -90,6 +90,17 @@ ForEach ($arg in $args){
 ");
             return this;
         }
+        
+        public ScriptBuilder PrintEnv()
+        {
+            bashScript.AppendLine(@"
+printenv
+");
+            windowsScript.AppendLine(@"
+SET
+");
+            return this;
+        }
 
         public ScriptBuilder PrintFileContents(string file)
         {

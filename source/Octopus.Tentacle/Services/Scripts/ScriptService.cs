@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Diagnostics;
@@ -86,7 +87,7 @@ namespace Octopus.Tentacle.Services.Scripts
 
         RunningScript LaunchShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, CancellationTokenSource cancel)
         {
-            var runningScript = new RunningScript(shell, workspace, workspace.CreateLog(), serverTaskId, scriptIsolationMutex, cancel.Token, log);
+            var runningScript = new RunningScript(shell, workspace, workspace.CreateLog(), serverTaskId, scriptIsolationMutex, cancel.Token, new Dictionary<string, string>(), log);
             var thread = new Thread(runningScript.Execute) { Name = "Executing PowerShell script for " + ticket.TaskId };
             thread.Start();
             return runningScript;

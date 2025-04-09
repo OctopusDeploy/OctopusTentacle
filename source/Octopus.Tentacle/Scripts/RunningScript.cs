@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Diagnostics;
@@ -14,6 +15,7 @@ namespace Octopus.Tentacle.Scripts
         readonly IShell shell;
         readonly string taskId;
         readonly CancellationToken token;
+        readonly IReadOnlyDictionary<string, string> environmentVariables;
         readonly ILog log;
         readonly ScriptIsolationMutex scriptIsolationMutex;
 
@@ -24,6 +26,7 @@ namespace Octopus.Tentacle.Scripts
             string taskId,
             ScriptIsolationMutex scriptIsolationMutex,
             CancellationToken token,
+            IReadOnlyDictionary<string, string> environmentVariables,
             ILog log)
         {
             this.shell = shell;
@@ -31,6 +34,7 @@ namespace Octopus.Tentacle.Scripts
             this.stateStore = stateStore;
             this.taskId = taskId;
             this.token = token;
+            this.environmentVariables = environmentVariables;
             this.log = log;
             this.scriptIsolationMutex = scriptIsolationMutex;
             this.ScriptLog = scriptLog;
@@ -43,7 +47,8 @@ namespace Octopus.Tentacle.Scripts
             string taskId,
             ScriptIsolationMutex scriptIsolationMutex,
             CancellationToken token,
-            ILog log) : this(shell, workspace, null, scriptLog, taskId, scriptIsolationMutex, token, log)
+            IReadOnlyDictionary<string, string> environmentVariables,
+            ILog log) : this(shell, workspace, null, scriptLog, taskId, scriptIsolationMutex, token, environmentVariables, log)
         {
         }
 
@@ -171,6 +176,7 @@ namespace Octopus.Tentacle.Scripts
                     output => writer.WriteOutput(ProcessOutputSource.Debug, output),
                     output => writer.WriteOutput(ProcessOutputSource.StdOut, output),
                     output => writer.WriteOutput(ProcessOutputSource.StdErr, output),
+                    environmentVariables,
                     token);
 
                 return exitCode;

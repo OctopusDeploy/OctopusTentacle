@@ -42,7 +42,7 @@ namespace Octopus.Tentacle.Util
 
         public int ExecuteCommand(string executable, string arguments, string workingDirectory, Action<string> debug, Action<string> info, Action<string> error, CancellationToken cancel = default)
         {
-            return SilentProcessRunner.ExecuteCommand(executable, arguments, workingDirectory, debug, info, error, cancel);
+            return SilentProcessRunner.ExecuteCommand(executable, arguments, workingDirectory, debug, info, error, cancel: cancel);
         }
     }
 
@@ -84,7 +84,7 @@ namespace Octopus.Tentacle.Util
                 LogFileOnlyLogger.Current.Info,
                 info,
                 error,
-                cancel);
+                cancel: cancel);
 
         public static int ExecuteCommand(
             string executable,
@@ -93,6 +93,19 @@ namespace Octopus.Tentacle.Util
             Action<string> debug,
             Action<string> info,
             Action<string> error,
+            CancellationToken cancel)
+        {
+            return ExecuteCommand(executable, arguments, workingDirectory, debug, info, error, cancel: cancel);
+        }
+
+        public static int ExecuteCommand(
+            string executable,
+            string arguments,
+            string workingDirectory,
+            Action<string> debug,
+            Action<string> info,
+            Action<string> error,
+            IReadOnlyDictionary<string, string>? customEnvironmentVariables = null,
             CancellationToken cancel = default)
         {
             if (executable == null)
@@ -154,6 +167,16 @@ namespace Octopus.Tentacle.Util
                     process.StartInfo.FileName = executable;
                     process.StartInfo.Arguments = arguments;
                     process.StartInfo.WorkingDirectory = workingDirectory;
+
+                    if (customEnvironmentVariables != null && customEnvironmentVariables.Any())
+                    {
+                        // Note this will add to the environment variables and not replace them.
+                        foreach (var variable in customEnvironmentVariables)
+                        {
+                            process.StartInfo.EnvironmentVariables[variable.Key] = variable.Value;
+                        }
+                    }
+
                     process.StartInfo.UseShellExecute = false;
                     process.StartInfo.CreateNoWindow = true;
                     process.StartInfo.RedirectStandardOutput = true;
