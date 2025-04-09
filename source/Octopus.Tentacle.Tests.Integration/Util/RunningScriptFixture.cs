@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using FluentAssertions;
@@ -67,6 +68,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
                 taskId,
                 scriptIsolationMutex,
                 cancellationTokenSource.Token,
+                new Dictionary<string, string>(),
                 log);
         }
 
@@ -167,6 +169,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
                     taskId,
                     scriptIsolationMutex,
                     cts.Token,
+                    new Dictionary<string, string>(),
                     new InMemoryLog());
 
                 workspace.BootstrapScript($"echo Starting\n{sleepCommand} 30\necho Finito");
