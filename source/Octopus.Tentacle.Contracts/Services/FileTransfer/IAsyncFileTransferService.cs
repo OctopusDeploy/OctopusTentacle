@@ -2,9 +2,8 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
-using Octopus.Tentacle.Contracts;
 
-namespace Octopus.Tentacle.Services.FileTransfer
+namespace Octopus.Tentacle.Contracts.Services.FileTransfer
 {
     public interface IAsyncFileTransferService
     {
