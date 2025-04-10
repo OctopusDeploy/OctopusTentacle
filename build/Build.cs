@@ -257,12 +257,14 @@ partial class Build : NukeBuild
             .OnlyWhenStatic(() => IsLocalBuild)
             .DependsOn(PackContracts)
             .DependsOn(PackClient)
+            .DependsOn(PackCore)
             .Description("If not running on a build agent, this step copies the relevant built artifacts to the local packages cache.")
             .Executes(() =>
             {
                 LocalPackagesDirectory.CreateDirectory();
                 CopyFileToDirectory(ArtifactsDirectory / "nuget" / $"Octopus.Tentacle.Contracts.{FullSemVer}.nupkg", LocalPackagesDirectory);
                 CopyFileToDirectory(ArtifactsDirectory / "nuget" / $"Octopus.Tentacle.Client.{FullSemVer}.nupkg", LocalPackagesDirectory);
+                CopyFileToDirectory(ArtifactsDirectory / "nuget" / $"Octopus.Tentacle.Core.{FullSemVer}.nupkg", LocalPackagesDirectory);
             });
 
     [PublicAPI]
