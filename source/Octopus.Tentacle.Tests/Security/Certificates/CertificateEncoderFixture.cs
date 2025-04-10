@@ -6,7 +6,7 @@ using System.Security.Cryptography.X509Certificates;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
-using Octopus.Diagnostics;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Security.Certificates;
 using Octopus.Tentacle.Tests.Support.TestAttributes;
 

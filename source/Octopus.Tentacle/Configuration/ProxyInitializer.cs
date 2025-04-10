@@ -1,7 +1,7 @@
 using System;
 using System.Net;
 using Autofac.Core;
-using Octopus.Diagnostics;
+using Octopus.Tentacle.Core.Diagnostics;
 
 namespace Octopus.Tentacle.Configuration
 {

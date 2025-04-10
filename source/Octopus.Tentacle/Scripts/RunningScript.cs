@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Scripts
@@ -14,14 +15,18 @@ namespace Octopus.Tentacle.Scripts
         readonly IShell shell;
         readonly string taskId;
         readonly CancellationToken token;
+        readonly IReadOnlyDictionary<string, string> environmentVariables;
         readonly ILog log;
+        readonly ScriptIsolationMutex scriptIsolationMutex;
 
         public RunningScript(IShell shell,
             IScriptWorkspace workspace,
             IScriptStateStore? stateStore,
             IScriptLog scriptLog,
             string taskId,
+            ScriptIsolationMutex scriptIsolationMutex,
             CancellationToken token,
+            IReadOnlyDictionary<string, string> environmentVariables,
             ILog log)
         {
             this.shell = shell;
@@ -29,7 +34,9 @@ namespace Octopus.Tentacle.Scripts
             this.stateStore = stateStore;
             this.taskId = taskId;
             this.token = token;
+            this.environmentVariables = environmentVariables;
             this.log = log;
+            this.scriptIsolationMutex = scriptIsolationMutex;
             this.ScriptLog = scriptLog;
             this.State = ProcessState.Pending;
         }
@@ -38,8 +45,10 @@ namespace Octopus.Tentacle.Scripts
             IScriptWorkspace workspace,
             IScriptLog scriptLog,
             string taskId,
+            ScriptIsolationMutex scriptIsolationMutex,
             CancellationToken token,
-            ILog log) : this(shell, workspace, null, scriptLog, taskId, token, log)
+            IReadOnlyDictionary<string, string> environmentVariables,
+            ILog log) : this(shell, workspace, null, scriptLog, taskId, scriptIsolationMutex, token, environmentVariables, log)
         {
         }
 
@@ -61,7 +70,7 @@ namespace Octopus.Tentacle.Scripts
                 {
                     try
                     {
-                        using (ScriptIsolationMutex.Acquire(workspace.IsolationLevel,
+                        using (scriptIsolationMutex.Acquire(workspace.IsolationLevel,
                                    workspace.ScriptMutexAcquireTimeout,
                                    workspace.ScriptMutexName ?? nameof(RunningScript),
                                    message => writer.WriteOutput(ProcessOutputSource.StdOut, message),
@@ -167,6 +176,7 @@ namespace Octopus.Tentacle.Scripts
                     output => writer.WriteOutput(ProcessOutputSource.Debug, output),
                     output => writer.WriteOutput(ProcessOutputSource.StdOut, output),
                     output => writer.WriteOutput(ProcessOutputSource.StdErr, output),
+                    environmentVariables,
                     token);
 
                 return exitCode;

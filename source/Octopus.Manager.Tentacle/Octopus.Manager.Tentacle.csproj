@@ -124,12 +124,6 @@
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="NETStandard.Library" Version="2.0.3" />
     <PackageReference Include="NLog" Version="5.0.4" />
-    <PackageReference Include="NuGet.Common" Version="3.6.0-octopus-58692" />
-    <PackageReference Include="NuGet.Frameworks" Version="3.6.0-octopus-58692" />
-    <PackageReference Include="NuGet.Packaging" Version="3.6.0-octopus-58692" />
-    <PackageReference Include="NuGet.Packaging.Core" Version="3.6.0-octopus-58692" />
-    <PackageReference Include="NuGet.Packaging.Core.Types" Version="3.6.0-octopus-58692" />
-    <PackageReference Include="NuGet.Versioning" Version="3.6.0-octopus-58692" />
     <PackageReference Include="BouncyCastle.Cryptography" Version="2.5.1" />
     <PackageReference Include="TaskScheduler" Version="2.7.2" />
   </ItemGroup>

@@ -1,7 +1,7 @@
 using System;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.CommonTestUtils.Diagnostics;
 using Octopus.Tentacle.Contracts.Logging;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Diagnostics;
 using Serilog;
 

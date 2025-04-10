@@ -8,8 +8,8 @@ using Halibut;
 using Halibut.Diagnostics;
 using Octopus.Client.Model;
 using Octopus.Client.Model.Endpoints;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Variables;
 
 namespace Octopus.Tentacle.Communications

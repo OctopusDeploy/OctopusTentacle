@@ -4,7 +4,7 @@
 using System;
 using System.Linq;
 using Autofac;
-using Octopus.Diagnostics;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Startup;
 
 namespace Octopus.Tentacle.Diagnostics
