@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Text;
 using Octopus.Tentacle.Contracts;
-using Octopus.Tentacle.Diagnostics;
+using Octopus.Tentacle.Core.Services.Scripts.Security.Masking;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Scripts

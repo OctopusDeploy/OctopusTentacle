@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using Autofac;
 using Octopus.Tentacle.Configuration.Proxy;
+using Octopus.Tentacle.Core.Services.Scripts.Security.Masking;
 using Octopus.Tentacle.Diagnostics;
 
 namespace Octopus.Tentacle.Configuration

@@ -1,7 +1,7 @@
 ﻿using System;
 using Octopus.Tentacle.Contracts;
 
-namespace Octopus.Tentacle.Scripts
+namespace Octopus.Tentacle.Core.Services.Scripts.Logging
 {
     public interface IScriptLogWriter : IDisposable
     {

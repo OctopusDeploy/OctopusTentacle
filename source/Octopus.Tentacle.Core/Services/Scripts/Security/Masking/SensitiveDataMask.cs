@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Octopus.Tentacle.Security.Masking
+namespace Octopus.Tentacle.Core.Services.Scripts.Security.Masking
 {
     public class SensitiveDataMask
     {

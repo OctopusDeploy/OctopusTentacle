@@ -2,9 +2,10 @@
 using System.IO;
 using System.Threading;
 using Newtonsoft.Json;
+using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Util;
 
-namespace Octopus.Tentacle.Scripts
+namespace Octopus.Tentacle.Core.Services.Scripts.StateStore
 {
     public class ScriptStateStore : IScriptStateStore
     {

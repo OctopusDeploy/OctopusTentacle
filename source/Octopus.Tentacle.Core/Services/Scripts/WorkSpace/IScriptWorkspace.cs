@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Core.Services.Scripts.Logging;
 
 namespace Octopus.Tentacle.Scripts
 {

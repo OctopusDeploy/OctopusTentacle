@@ -1,7 +1,7 @@
 using System;
 using System.Text;
 
-namespace Octopus.Tentacle.Scripts
+namespace Octopus.Tentacle.Core.Services.Scripts.Shell
 {
     public class Bash : IShell
     {

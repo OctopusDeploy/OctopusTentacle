@@ -1,4 +1,5 @@
 using Autofac;
+using Octopus.Tentacle.Core.Services.Scripts.Locking;
 using Octopus.Tentacle.Scripts;
 
 namespace Octopus.Tentacle.Util

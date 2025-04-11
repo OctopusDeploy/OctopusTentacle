@@ -6,9 +6,9 @@ using System.Threading;
 using Nito.AsyncEx;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Core.Diagnostics;
-using Octopus.Tentacle.Util;
+using Octopus.Tentacle.Core.Services.Scripts.Util;
 
-namespace Octopus.Tentacle.Scripts
+namespace Octopus.Tentacle.Core.Services.Scripts.Locking
 {
     public class ScriptIsolationMutex
     {

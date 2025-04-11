@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Octopus.Tentacle.Scripts
+namespace Octopus.Tentacle.Core.Services.Scripts.Locking
 {
     public class AcquireLockResult
     {

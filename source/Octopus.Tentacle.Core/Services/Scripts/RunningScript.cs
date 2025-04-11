@@ -4,9 +4,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Core.Diagnostics;
+using Octopus.Tentacle.Core.Services.Scripts.Locking;
+using Octopus.Tentacle.Core.Services.Scripts.Logging;
+using Octopus.Tentacle.Core.Services.Scripts.Shell;
+using Octopus.Tentacle.Core.Services.Scripts.StateStore;
+using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Util;
 
-namespace Octopus.Tentacle.Scripts
+namespace Octopus.Tentacle.Core.Services.Scripts
 {
     public class RunningScript: IRunningScript
     {

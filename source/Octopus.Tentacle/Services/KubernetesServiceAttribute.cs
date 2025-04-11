@@ -1,4 +1,5 @@
 ﻿using System;
+using Octopus.Tentacle.Core.Services;
 
 namespace Octopus.Tentacle.Services
 {

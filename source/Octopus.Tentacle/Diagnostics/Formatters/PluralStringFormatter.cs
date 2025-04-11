@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using Octopus.Tentacle.Core.Services.Scripts.Util;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Diagnostics.Formatters

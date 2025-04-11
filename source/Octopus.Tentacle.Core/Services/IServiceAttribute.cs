@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Octopus.Tentacle.Services
+namespace Octopus.Tentacle.Core.Services
 {
     public interface IServiceAttribute
     {
