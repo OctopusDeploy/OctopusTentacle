@@ -31,9 +31,6 @@
         <Compile Include="..\Solution Items\VersionInfo.cs" Link="VersionInfo.cs" />
         <Compile Include="..\Solution Items\SolutionInfo.cs" Link="SolutionInfo.cs" />
     </ItemGroup>
-    <ItemGroup>
-      <Folder Include="Util\Extensions\" />
-    </ItemGroup>
     <ItemGroup Condition="'$(TargetFramework)' != 'net8.0' And '$(TargetFramework)' != 'net8.0-windows'">
         <PackageReference Include="System.Management" Version="4.7.0" />
     </ItemGroup>
