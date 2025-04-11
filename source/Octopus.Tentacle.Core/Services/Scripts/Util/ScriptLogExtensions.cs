@@ -1,8 +1,8 @@
 ﻿using System;
 using Octopus.Tentacle.Contracts;
-using Octopus.Tentacle.Scripts;
+using Octopus.Tentacle.Core.Services.Scripts.Logging;
 
-namespace Octopus.Tentacle.Util
+namespace Octopus.Tentacle.Core.Services.Scripts.Util
 {
     public static class ScriptLogExtensions
     {

@@ -8,6 +8,7 @@ using Octopus.Tentacle.Communications;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Core.Diagnostics;
+using Octopus.Tentacle.Core.Services.Scripts.Util;
 using Octopus.Tentacle.Startup;
 using Octopus.Tentacle.Util;
 

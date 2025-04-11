@@ -7,11 +7,16 @@ using System.Threading.Tasks;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Core.Diagnostics;
-using Octopus.Tentacle.Maintenance;
+using Octopus.Tentacle.Core.Maintenance;
+using Octopus.Tentacle.Core.Services.Scripts.Locking;
+using Octopus.Tentacle.Core.Services.Scripts.Shell;
+using Octopus.Tentacle.Core.Services.Scripts.StateStore;
 using Octopus.Tentacle.Scripts;
+using Octopus.Tentacle.Services;
+using Octopus.Tentacle.Services.Scripts;
 using Octopus.Tentacle.Util;
 
-namespace Octopus.Tentacle.Services.Scripts
+namespace Octopus.Tentacle.Core.Services.Scripts
 {
     [Service(typeof(IScriptServiceV2))]
     public class ScriptServiceV2 : IAsyncScriptServiceV2, IRunningScriptReporter

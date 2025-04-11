@@ -4,11 +4,10 @@ using System.IO;
 using System.Text;
 using Newtonsoft.Json;
 using Octopus.Tentacle.Contracts;
-using Octopus.Tentacle.Diagnostics;
-using Octopus.Tentacle.Scripts;
+using Octopus.Tentacle.Core.Services.Scripts.Security.Masking;
 using Octopus.Tentacle.Util;
 
-namespace Octopus.Tentacle.Services.Scripts
+namespace Octopus.Tentacle.Core.Services.Scripts.Logging
 {
     public class ScriptLog : IScriptLog
     {

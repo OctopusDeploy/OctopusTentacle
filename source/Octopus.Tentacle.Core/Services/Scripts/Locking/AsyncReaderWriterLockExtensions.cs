@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Nito.AsyncEx;
 
-namespace Octopus.Tentacle.Scripts
+namespace Octopus.Tentacle.Core.Services.Scripts.Locking
 {
     public static class AsyncReaderWriterLockExtensions
     {

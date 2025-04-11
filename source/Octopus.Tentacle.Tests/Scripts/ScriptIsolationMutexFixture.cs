@@ -3,6 +3,7 @@ using System.Threading;
 using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Core.Services.Scripts.Locking;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Tests.Support;
 

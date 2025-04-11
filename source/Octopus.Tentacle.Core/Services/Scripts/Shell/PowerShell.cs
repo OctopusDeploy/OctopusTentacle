@@ -2,7 +2,7 @@
 using System.IO;
 using System.Text;
 
-namespace Octopus.Tentacle.Scripts
+namespace Octopus.Tentacle.Core.Services.Scripts.Shell
 {
     public class PowerShell : IShell
     {
