@@ -5,6 +5,6 @@
     { "pattern": "_artifacts/msi/*", "target": "msi" },
     { "pattern": "_artifacts/nuget/OctopusTentacle/*", "target": "nuget" },
     { "pattern": "_artifacts/rpm/*", "target": "rpm" },
-    { "pattern": "_artifacts/zip/*", "target": "zip" },
+    { "pattern": "_artifacts/zip/*", "target": "zip" }
   ]
 }
