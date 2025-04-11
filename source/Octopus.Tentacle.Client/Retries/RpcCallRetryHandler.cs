@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Tentacle.Client.Scripts;
+using Octopus.Tentacle.Contracts.Logging;
 using Polly;
 using Polly.Timeout;
 
@@ -37,12 +38,15 @@ namespace Octopus.Tentacle.Client.Retries
             Func<CancellationToken, Task<T>> action,
             OnRetryAction? onRetryAction,
             OnTimeoutAction? onTimeoutAction,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken,
+            ITentacleClientTaskLog? logger = null)
         {
             Exception? lastException = null;
             var started = new Stopwatch();
             var nextSleepDuration = TimeSpan.Zero;
             var totalRetryCount = 0;
+
+            logger ??= new EmptyLog();
 
             async Task OnRetryAction(Exception exception, TimeSpan sleepDuration, int retryCount, Context context)
             {
@@ -53,11 +57,11 @@ namespace Octopus.Tentacle.Client.Retries
                 // Cancellation/Retry Timeout will result in a TransferringRequestCancelledException or ConnectingRequestCancelledException
                 // which will hide the original exception. We ignore a cancellation/retry timeout triggered exception so we don't hide the last real exception
                 // that occurred during the retry process
-                else if(cancellationToken.IsCancellationRequested || !exception.IsConnectingOrTransferringRequestCancelledException())
+                else if (cancellationToken.IsCancellationRequested || !exception.IsConnectingOrTransferringRequestCancelledException())
                 {
                     lastException = exception;
                 }
-                
+
                 nextSleepDuration = sleepDuration;
                 var elapsedDuration = started.Elapsed;
                 var remainingRetryDuration = RetryTimeout - elapsedDuration - sleepDuration;
@@ -83,12 +87,16 @@ namespace Octopus.Tentacle.Client.Retries
                 }
             }
 
+            Stopwatch sw = new();
+            sw.Start();
             var policyBuilder = new RpcCallRetryPolicyBuilder()
                 .WithRetryTimeout(RetryTimeout)
                 .WithOnRetryAction(OnRetryAction)
                 .WithOnTimeoutAction(OnTimeoutAction);
-
             var retryPolicy = policyBuilder.BuildRetryPolicy();
+            sw.Stop();
+            logger.VerboseTimed(sw, "Built retry policy");
+            
             var isInitialAction = true;
 
             // This ensures the timeout policy does not apply to the initial request and only applies to retries
@@ -97,7 +105,11 @@ namespace Octopus.Tentacle.Client.Retries
                 if (isInitialAction)
                 {
                     isInitialAction = false;
-                    return await action(ct).ConfigureAwait(false);
+                    sw.Start();
+                    var result = await action(ct).ConfigureAwait(false);
+                    sw.Stop();
+                    logger.VerboseTimed(sw, "ExecuteAction - initial action");
+                    return result;
                 }
 
                 var remainingRetryDuration = RetryTimeout - started.Elapsed - nextSleepDuration;
@@ -105,16 +117,26 @@ namespace Octopus.Tentacle.Client.Retries
                 if (!ShouldRetryWithRemainingDuration(remainingRetryDuration))
                 {
                     // We are short circuiting as the retry duration has elapsed
+                    sw.Start();
                     await OnTimeoutAction(null, RetryTimeout, null, null).ConfigureAwait(false);
+                    sw.Stop();
+                    logger.VerboseTimed(sw, "ExecuteAction - timeout action");
                     throw new TimeoutRejectedException("The delegate executed asynchronously through TimeoutPolicy did not complete within the timeout.");
                 }
 
+                sw.Start();
                 var timeoutPolicy = policyBuilder
                     // Ensure the remaining retry time excludes the elapsed time
                     .WithRetryTimeout(remainingRetryDuration)
                     .BuildTimeoutPolicy();
+                sw.Stop();
+                logger.VerboseTimed(sw, "ExecuteAction - built retry policy for remaining timeout");
 
-                return await timeoutPolicy.ExecuteAsync(action, ct).ConfigureAwait(false);
+                sw.Start();
+                var timeoutResult = await timeoutPolicy.ExecuteAsync(action, ct).ConfigureAwait(false);
+                sw.Stop();
+                logger.VerboseTimed(sw, "ExecuteAction - execute action with new retry timeout");
+                return timeoutResult;
             }
 
             try
@@ -122,7 +144,7 @@ namespace Octopus.Tentacle.Client.Retries
                 started.Start();
                 return await retryPolicy.ExecuteAsync(ExecuteAction, cancellationToken);
             }
-            catch (Exception ex) when (ex is TimeoutRejectedException or TaskCanceledException || 
+            catch (Exception ex) when (ex is TimeoutRejectedException or TaskCanceledException ||
                                        ex.IsConnectingOrTransferringRequestCancelledException())
             {
                 // If the timeout policy timed out or the cancellation token caused a generic task cancellation 
