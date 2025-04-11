@@ -28,6 +28,8 @@ Please ensure every commit that hits `main` links either to an issue directly, o
 
 If you don't use a keyword, even if your changes are merged into main and a new version created, it will not appear on the Downloads page.
 
+Please see [How to Raise a Meaningful Change](docs/meaningful-change.md) for a step-by-step guide.
+
 ### Build, Test, and Delivery
 
 We use the [Octopus Tentacle project in our private TeamCity server](https://build.octopushq.com/project/OctopusDeploy_OctopusTentacle) for automated build and test reporting status changes to pull requests.
