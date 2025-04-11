@@ -33,7 +33,7 @@ namespace Octopus.Manager.Tentacle.PreReq
             // to detect 3.0, it failed to detect 4. Going the direct route:
             try
             {
-                SilentProcessRunner.ExecuteCommand(
+                SilentProcessRunnerExtended.ExecuteCommand(
                     powerShellExe,
                     arguments,
                     ".",

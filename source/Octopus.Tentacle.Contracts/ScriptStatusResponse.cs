@@ -7,6 +7,7 @@ namespace Octopus.Tentacle.Contracts
 {
     public enum ProcessState
     {
+        // Never re-order these, since they are used in deserialisation
         Pending,
         Running,
         Complete

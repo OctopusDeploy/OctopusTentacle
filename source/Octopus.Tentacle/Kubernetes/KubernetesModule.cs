@@ -16,7 +16,7 @@ namespace Octopus.Tentacle.Kubernetes
     {
         protected override void Load(ContainerBuilder builder)
         {
-            if (!PlatformDetection.Kubernetes.IsRunningAsKubernetesAgent)
+            if (!KubernetesSupportDetection.IsRunningAsKubernetesAgent)
             {
                 builder.RegisterType<UnimplementedKubernetesConfigProvider>().As<IKubernetesClientConfigProvider>();
                 return;
