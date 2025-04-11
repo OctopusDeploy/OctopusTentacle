@@ -9,16 +9,21 @@ namespace Octopus.Tentacle.Scripts
     public class ScriptStateStore : IScriptStateStore
     {
         readonly SemaphoreSlim scriptStateLock = new(1, 1);
-        readonly IScriptWorkspace workspace;
+        readonly Func<string, string> pathResolver;
         readonly IOctopusFileSystem fileSystem;
 
         public ScriptStateStore(IScriptWorkspace workspace, IOctopusFileSystem fileSystem)
+        : this(fileSystem, workspace.ResolvePath)
         {
-            this.workspace = workspace;
-            this.fileSystem = fileSystem;
         }
 
-        string StateFilePath => workspace.ResolvePath("scriptstate.json");
+        public ScriptStateStore(IOctopusFileSystem fileSystem, Func<string, string> pathResolver)
+        {
+            this.fileSystem = fileSystem;
+            this.pathResolver = pathResolver;
+        }
+
+        string StateFilePath => pathResolver("scriptstate.json");
 
         public ScriptState Create()
         {
@@ -68,8 +73,8 @@ namespace Octopus.Tentacle.Scripts
             }
 
             var serialized = SerializeState(state);
-            var tempFilePath = workspace.ResolvePath(Guid.NewGuid().ToString());
-            var backupPath = workspace.ResolvePath(Guid.NewGuid().ToString());
+            var tempFilePath = pathResolver(Guid.NewGuid().ToString());
+            var backupPath = pathResolver(Guid.NewGuid().ToString());
             using (var writer = GetStreamWriter(tempFilePath, FileMode.Create))
             {
                 writer.Write(serialized);
