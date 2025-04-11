@@ -69,14 +69,8 @@ namespace Octopus.Tentacle.CommonTestUtils
                             var buffer = new byte[8192*4];
                             var singleReadTimeout = TimeSpan.FromSeconds(60); // 60s to read 32k
                             
-                            using var readCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                            readCts.CancelAfter(singleReadTimeout); 
-                            var readTask = contentStream.ReadAsync(buffer, 0, buffer.Length, readCts.Token);
-                            // Don't trust that cancellation tokens will work on all dotnet versions or OSs we have to test in, so also add Task.Delay ;(
-                            await Task.WhenAny(Task.Delay(singleReadTimeout, cancellationToken), readTask);
-                            if(!readTask.IsCompleted) throw new TimeoutException();
-                            var read = await readTask;
-                            
+                            var read = await ReadToBufferWithTimeout(cancellationToken, singleReadTimeout, contentStream, buffer);
+
                             while (read != 0)
                             {
                                 await fileStream.WriteAsync(buffer, 0, read, cancellationToken);
@@ -89,7 +83,7 @@ namespace Octopus.Tentacle.CommonTestUtils
                                     sw.Start();
                                 }
 
-                                read = await contentStream.ReadAsync(buffer, 0, buffer.Length, cancellationToken);
+                                read = await ReadToBufferWithTimeout(cancellationToken, singleReadTimeout, contentStream, buffer);
                                 totalRead += read;
                             }
                             
@@ -106,6 +100,18 @@ namespace Octopus.Tentacle.CommonTestUtils
             }
 
             ValidateDownload(filePath, expectedHash);
+        }
+
+        static async Task<int> ReadToBufferWithTimeout(CancellationToken cancellationToken, TimeSpan singleReadTimeout, Stream contentStream, byte[] buffer)
+        {
+            using var readCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            readCts.CancelAfter(singleReadTimeout); 
+            var readTask = contentStream.ReadAsync(buffer, 0, buffer.Length, readCts.Token);
+            // Don't trust that cancellation tokens will work on all dotnet versions or OSs we have to test in, so also add Task.Delay ;(
+            await Task.WhenAny(Task.Delay(singleReadTimeout, cancellationToken), readTask);
+            if(!readTask.IsCompleted) throw new TimeoutException();
+            var read = await readTask;
+            return read;
         }
 
         static string? TryGetExpectedHashFromHeaders(HttpResponseMessage response, string? expectedHash)
