@@ -66,9 +66,16 @@ namespace Octopus.Tentacle.CommonTestUtils
                                    true))
                         {
 
-                            var buffer = new byte[8192];
+                            var buffer = new byte[8192*4];
 
-                            var read = await contentStream.ReadAsync(buffer, 0, buffer.Length, cancellationToken);
+                            var singleReadTimeout = TimeSpan.FromSeconds(60);
+                            using var readCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                            readCts.CancelAfter(singleReadTimeout); // 60s to read 32k
+                            var readTask = contentStream.ReadAsync(buffer, 0, buffer.Length, readCts.Token);
+                            await Task.WhenAny(Task.Delay(singleReadTimeout, cancellationToken), readTask);
+                            if(!readTask.IsCompleted) throw new TimeoutException();
+                            var read = await readTask;
+                            
                             while (read != 0)
                             {
                                 await fileStream.WriteAsync(buffer, 0, read, cancellationToken);
