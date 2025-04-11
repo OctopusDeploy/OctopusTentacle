@@ -2,11 +2,8 @@ using System;
 
 namespace Octopus.Tentacle.Configuration
 {
-    public interface IHomeConfiguration
+    public interface IHomeConfiguration : IHomeDirectoryProvider
     {
-        string? ApplicationSpecificHomeDirectory { get; }
-        string? HomeDirectory { get; }
-
         void WriteTo(IWritableKeyValueStore outputStore);
     }
 

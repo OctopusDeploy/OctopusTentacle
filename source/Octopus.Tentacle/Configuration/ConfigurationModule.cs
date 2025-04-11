@@ -84,6 +84,7 @@ namespace Octopus.Tentacle.Configuration
 
             builder.RegisterType<HomeConfiguration>()
                 .As<IHomeConfiguration>()
+                .As<IHomeDirectoryProvider>()
                 .SingleInstance();
             builder.RegisterType<WritableHomeConfiguration>()
                 .As<IWritableHomeConfiguration>()
@@ -147,6 +148,7 @@ namespace Octopus.Tentacle.Configuration
 
             builder.RegisterType<HomeConfiguration>()
                 .As<IHomeConfiguration>()
+                .As<IHomeDirectoryProvider>()
                 .SingleInstance();
             builder.RegisterType<WritableHomeConfiguration>()
                 .As<IWritableHomeConfiguration>()

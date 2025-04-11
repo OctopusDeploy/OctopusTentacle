@@ -17,12 +17,12 @@ namespace Octopus.Tentacle.Scripts
         public const string WorkDirectory = "Work";
 
         readonly IOctopusFileSystem fileSystem;
-        readonly IHomeConfiguration home;
+        readonly IHomeDirectoryProvider home;
         readonly SensitiveValueMasker sensitiveValueMasker;
 
         public ScriptWorkspaceFactory(
             IOctopusFileSystem fileSystem,
-            IHomeConfiguration home,
+            IHomeDirectoryProvider home,
             SensitiveValueMasker sensitiveValueMasker)
         {
             if (home.ApplicationSpecificHomeDirectory == null)

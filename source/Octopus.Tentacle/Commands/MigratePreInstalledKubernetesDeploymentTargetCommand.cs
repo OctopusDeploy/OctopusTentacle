@@ -37,7 +37,7 @@ namespace Octopus.Tentacle.Commands
         // It does not use the IWritableTentacleConfiguration so we don't accidentally generate any new keys
         protected override void Start()
         {
-            if (!PlatformDetection.Kubernetes.IsRunningAsKubernetesAgent)
+            if (!KubernetesSupportDetection.IsRunningAsKubernetesAgent)
             {
                 throw new ControlledFailureException("This command can only be run from within a Kubernetes agent.");
             }

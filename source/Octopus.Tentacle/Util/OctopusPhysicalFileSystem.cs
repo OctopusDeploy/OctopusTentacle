@@ -266,7 +266,7 @@ namespace Octopus.Tentacle.Util
                 return;
 
             //We can't perform this check in Kubernetes due to how drives are mounted and reported (always returns 0 byte sized drives)
-            if(PlatformDetection.Kubernetes.IsRunningAsKubernetesAgent)
+            if(KubernetesSupportDetection.IsRunningAsKubernetesAgent)
                 return;
 
             var driveInfo = SafelyGetDriveInfo(directoryPath);

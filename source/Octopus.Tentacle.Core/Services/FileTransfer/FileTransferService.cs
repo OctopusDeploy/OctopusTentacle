@@ -16,9 +16,9 @@ namespace Octopus.Tentacle.Services.FileTransfer
     {
         readonly ISystemLog log;
         readonly IOctopusFileSystem fileSystem;
-        readonly IHomeConfiguration home;
+        readonly IHomeDirectoryProvider home;
 
-        public FileTransferService(IOctopusFileSystem fileSystem, IHomeConfiguration home, ISystemLog log)
+        public FileTransferService(IOctopusFileSystem fileSystem, IHomeDirectoryProvider home, ISystemLog log)
         {
             this.fileSystem = fileSystem;
             this.home = home;
