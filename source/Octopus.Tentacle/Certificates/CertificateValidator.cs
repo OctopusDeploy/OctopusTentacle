@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IdentityModel.Selectors;
 using System.Security.Cryptography.X509Certificates;
-using Octopus.Diagnostics;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Security;
 
 namespace Octopus.Tentacle.Certificates

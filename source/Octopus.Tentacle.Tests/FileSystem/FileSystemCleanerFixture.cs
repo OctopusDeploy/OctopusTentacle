@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using NSubstitute;
 using NUnit.Framework;
-using Octopus.Diagnostics;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Startup;
 using Octopus.Tentacle.Util;
 

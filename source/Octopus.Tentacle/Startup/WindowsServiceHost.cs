@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.ServiceProcess;
-using Octopus.Diagnostics;
+using Octopus.Tentacle.Core.Diagnostics;
 
 namespace Octopus.Tentacle.Startup
 {

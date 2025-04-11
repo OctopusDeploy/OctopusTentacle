@@ -3,9 +3,10 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Contracts.Services.FileTransfer;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Services.FileTransfer
@@ -15,9 +16,9 @@ namespace Octopus.Tentacle.Services.FileTransfer
     {
         readonly ISystemLog log;
         readonly IOctopusFileSystem fileSystem;
-        readonly IHomeConfiguration home;
+        readonly IHomeDirectoryProvider home;
 
-        public FileTransferService(IOctopusFileSystem fileSystem, IHomeConfiguration home, ISystemLog log)
+        public FileTransferService(IOctopusFileSystem fileSystem, IHomeDirectoryProvider home, ISystemLog log)
         {
             this.fileSystem = fileSystem;
             this.home = home;

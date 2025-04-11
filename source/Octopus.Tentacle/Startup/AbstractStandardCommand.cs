@@ -1,6 +1,6 @@
 using System;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration.Instances;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Internals.Options;
 
 namespace Octopus.Tentacle.Startup

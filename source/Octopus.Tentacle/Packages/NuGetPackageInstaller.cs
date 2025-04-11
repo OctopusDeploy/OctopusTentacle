@@ -5,7 +5,7 @@ using System.Threading;
 using NuGet.Common;
 using NuGet.Packaging;
 using NuGet.Packaging.Core;
-using Octopus.Diagnostics;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Packages

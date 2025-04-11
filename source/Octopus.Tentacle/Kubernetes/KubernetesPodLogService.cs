@@ -7,8 +7,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using k8s.Autorest;
 using k8s.Models;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Kubernetes.Crypto;
 
 namespace Octopus.Tentacle.Kubernetes

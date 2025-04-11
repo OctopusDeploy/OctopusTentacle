@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using System.Text;
-using Octopus.Diagnostics;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Internals.Options;
 

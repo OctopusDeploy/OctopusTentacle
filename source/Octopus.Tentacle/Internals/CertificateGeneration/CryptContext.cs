@@ -4,7 +4,7 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
-using Octopus.Diagnostics;
+using Octopus.Tentacle.Core.Diagnostics;
 
 namespace Octopus.Tentacle.Internals.CertificateGeneration
 {

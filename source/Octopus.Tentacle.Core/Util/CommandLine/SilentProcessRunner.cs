@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -8,83 +8,23 @@ using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Text;
 using System.Threading;
-using Octopus.Diagnostics;
-using Octopus.Tentacle.Startup;
+using Octopus.Tentacle.Core.Diagnostics;
 
 namespace Octopus.Tentacle.Util
 {
-    public interface ISilentProcessRunner
-    {
-        public int ExecuteCommand(
-            string executable,
-            string arguments,
-            string workingDirectory,
-            Action<string> info,
-            Action<string> error,
-            CancellationToken cancel = default);
-
-        public int ExecuteCommand(
-            string executable,
-            string arguments,
-            string workingDirectory,
-            Action<string> debug,
-            Action<string> info,
-            Action<string> error,
-            CancellationToken cancel = default);
-    }
-
-    public class SilentProcessRunnerWrapper : ISilentProcessRunner
-    {
-        public int ExecuteCommand(string executable, string arguments, string workingDirectory, Action<string> info, Action<string> error, CancellationToken cancel = default)
-        {
-            return SilentProcessRunner.ExecuteCommand(executable, arguments, workingDirectory, info, error, cancel);
-        }
-
-        public int ExecuteCommand(string executable, string arguments, string workingDirectory, Action<string> debug, Action<string> info, Action<string> error, CancellationToken cancel = default)
-        {
-            return SilentProcessRunner.ExecuteCommand(executable, arguments, workingDirectory, debug, info, error, cancel);
-        }
-    }
-
     public static class SilentProcessRunner
     {
-        public static CmdResult ExecuteCommand(this CommandLineInvocation invocation)
-            => ExecuteCommand(invocation, Environment.CurrentDirectory);
-
-        public static CmdResult ExecuteCommand(this CommandLineInvocation invocation, string workingDirectory)
-        {
-            if (workingDirectory == null)
-                throw new ArgumentNullException(nameof(workingDirectory));
-
-            var arguments = $"{invocation.Arguments} {invocation.SystemArguments ?? string.Empty}";
-            var infos = new List<string>();
-            var errors = new List<string>();
-
-            var exitCode = ExecuteCommand(
-                invocation.Executable,
-                arguments,
-                workingDirectory,
-                infos.Add,
-                errors.Add
-            );
-
-            return new CmdResult(exitCode, infos, errors);
-        }
-
         public static int ExecuteCommand(
             string executable,
             string arguments,
             string workingDirectory,
+            Action<string> debug,
             Action<string> info,
             Action<string> error,
-            CancellationToken cancel = default)
-            => ExecuteCommand(executable,
-                arguments,
-                workingDirectory,
-                LogFileOnlyLogger.Current.Info,
-                info,
-                error,
-                cancel);
+            CancellationToken cancel)
+        {
+            return ExecuteCommand(executable, arguments, workingDirectory, debug, info, error, customEnvironmentVariables: null, cancel: cancel);
+        }
 
         public static int ExecuteCommand(
             string executable,
@@ -93,6 +33,7 @@ namespace Octopus.Tentacle.Util
             Action<string> debug,
             Action<string> info,
             Action<string> error,
+            IReadOnlyDictionary<string, string>? customEnvironmentVariables = null,
             CancellationToken cancel = default)
         {
             if (executable == null)
@@ -154,6 +95,16 @@ namespace Octopus.Tentacle.Util
                     process.StartInfo.FileName = executable;
                     process.StartInfo.Arguments = arguments;
                     process.StartInfo.WorkingDirectory = workingDirectory;
+
+                    if (customEnvironmentVariables != null && customEnvironmentVariables.Any())
+                    {
+                        // Note this will add to the environment variables, potentially replacing existing ones.
+                        foreach (var variable in customEnvironmentVariables)
+                        {
+                            process.StartInfo.EnvironmentVariables[variable.Key] = variable.Value;
+                        }
+                    }
+
                     process.StartInfo.UseShellExecute = false;
                     process.StartInfo.CreateNoWindow = true;
                     process.StartInfo.RedirectStandardOutput = true;
@@ -179,9 +130,9 @@ namespace Octopus.Tentacle.Util
                     var running = true;
 
                     using (cancel.Register(() =>
-                    {
-                        if (running) DoOurBestToCleanUp(process, error);
-                    }))
+                           {
+                               if (running) DoOurBestToCleanUp(process, error);
+                           }))
                     {
                         if (cancel.IsCancellationRequested)
                             DoOurBestToCleanUp(process,  error);
@@ -219,7 +170,7 @@ namespace Octopus.Tentacle.Util
             }
             catch (InvalidOperationException ex) 
                 when (ex.Message == "No process is associated with this object." || 
-                        ex.Message == "Process was not started by this object, so requested information cannot be determined.")
+                      ex.Message == "Process was not started by this object, so requested information cannot be determined.")
             {
                 return -1;
             }

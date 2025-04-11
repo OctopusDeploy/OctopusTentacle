@@ -1,6 +1,6 @@
 using System;
 using Newtonsoft.Json;
-using Octopus.Diagnostics;
+using Octopus.Tentacle.Core.Diagnostics;
 
 namespace Octopus.Tentacle.Diagnostics
 {

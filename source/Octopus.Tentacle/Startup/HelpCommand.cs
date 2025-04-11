@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Newtonsoft.Json;
-using Octopus.Diagnostics;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Internals.Options;
 using Octopus.Tentacle.Util;
 

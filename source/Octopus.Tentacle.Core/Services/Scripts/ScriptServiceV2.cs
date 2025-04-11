@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Maintenance;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Util;
@@ -21,19 +22,31 @@ namespace Octopus.Tentacle.Services.Scripts
         readonly ISystemLog log;
         readonly ScriptIsolationMutex scriptIsolationMutex;
         readonly ConcurrentDictionary<ScriptTicket, RunningScriptWrapper> runningScripts = new();
+        readonly IReadOnlyDictionary<string, string> environmentVariables;
 
         public ScriptServiceV2(
             IShell shell,
             IScriptWorkspaceFactory workspaceFactory,
             IScriptStateStoreFactory scriptStateStoreFactory,
             ScriptIsolationMutex scriptIsolationMutex,
-            ISystemLog log)
+            ISystemLog log, 
+            IReadOnlyDictionary<string, string> environmentVariables)
         {
             this.shell = shell;
             this.workspaceFactory = workspaceFactory;
             this.scriptStateStoreFactory = scriptStateStoreFactory;
             this.log = log;
+            this.environmentVariables = environmentVariables;
             this.scriptIsolationMutex = scriptIsolationMutex;
+        }
+
+        public ScriptServiceV2(
+            IShell shell,
+            IScriptWorkspaceFactory workspaceFactory,
+            IScriptStateStoreFactory scriptStateStoreFactory,
+            ScriptIsolationMutex scriptIsolationMutex,
+            ISystemLog log) : this(shell, workspaceFactory, scriptStateStoreFactory, scriptIsolationMutex, log, new Dictionary<string, string>())
+        {
         }
 
         public async Task<ScriptStatusResponseV2> StartScriptAsync(StartScriptCommandV2 command, CancellationToken cancellationToken)
@@ -130,7 +143,7 @@ namespace Octopus.Tentacle.Services.Scripts
 
         RunningScript LaunchShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, IScriptStateStore stateStore, CancellationToken cancellationToken)
         {
-            var runningScript = new RunningScript(shell, workspace, stateStore, workspace.CreateLog(), serverTaskId, scriptIsolationMutex, cancellationToken, log);
+            var runningScript = new RunningScript(shell, workspace, stateStore, workspace.CreateLog(), serverTaskId, scriptIsolationMutex, cancellationToken, environmentVariables, log);
             var thread = new Thread(runningScript.Execute) { Name = "Executing PowerShell runningScript for " + ticket.TaskId };
             thread.Start();
             return runningScript;
