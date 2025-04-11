@@ -72,6 +72,7 @@ namespace Octopus.Tentacle.CommonTestUtils
                             using var readCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
                             readCts.CancelAfter(singleReadTimeout); // 60s to read 32k
                             var readTask = contentStream.ReadAsync(buffer, 0, buffer.Length, readCts.Token);
+                            // Don't trust that cancellation tokens will work on all dotnet versions or OSs we have to test in, so also add Task.Delay ;(
                             await Task.WhenAny(Task.Delay(singleReadTimeout, cancellationToken), readTask);
                             if(!readTask.IsCompleted) throw new TimeoutException();
                             var read = await readTask;
