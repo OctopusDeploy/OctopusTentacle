@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
-namespace Octopus.Tentacle.Security.Masking
+namespace Octopus.Tentacle.Core.Services.Scripts.Security.Masking
 {
     public class AhoCorasick
     {

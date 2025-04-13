@@ -1,6 +1,7 @@
-﻿using Octopus.Tentacle.Contracts;
+﻿using System;
+using Octopus.Tentacle.Contracts;
 
-namespace Octopus.Tentacle.Maintenance
+namespace Octopus.Tentacle.Core.Maintenance
 {
     public interface IRunningScriptReporter
     {

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Octopus.Tentacle.Util
+namespace Octopus.Tentacle.Core.Services.Scripts.Util
 {
     public static class Humanize
     {

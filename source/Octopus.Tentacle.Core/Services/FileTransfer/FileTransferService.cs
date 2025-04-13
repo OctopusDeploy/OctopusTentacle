@@ -9,7 +9,7 @@ using Octopus.Tentacle.Contracts.Services.FileTransfer;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Util;
 
-namespace Octopus.Tentacle.Services.FileTransfer
+namespace Octopus.Tentacle.Core.Services.FileTransfer
 {
     [Service(typeof(IFileTransferService))]
     public class FileTransferService : IAsyncFileTransferService

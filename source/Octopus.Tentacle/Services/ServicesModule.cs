@@ -4,9 +4,11 @@ using System.Linq;
 using System.Reflection;
 using Autofac;
 using Octopus.Tentacle.Communications;
+using Octopus.Tentacle.Core.Services;
+using Octopus.Tentacle.Core.Services.Scripts;
+using Octopus.Tentacle.Core.Services.Scripts.StateStore;
 using Octopus.Tentacle.Packages;
 using Octopus.Tentacle.Scripts;
-using Octopus.Tentacle.Services.Scripts;
 using Octopus.Tentacle.Util;
 using Module = Autofac.Module;
 

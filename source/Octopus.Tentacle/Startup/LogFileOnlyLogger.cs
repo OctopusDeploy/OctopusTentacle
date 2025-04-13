@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using NLog;
 using NLog.Targets;
+using Octopus.Tentacle.Core.Services.Scripts.Security.Masking;
 using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Util;
 

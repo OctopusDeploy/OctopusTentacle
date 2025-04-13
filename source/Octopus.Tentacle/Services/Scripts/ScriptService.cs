@@ -5,6 +5,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Core.Diagnostics;
+using Octopus.Tentacle.Core.Maintenance;
+using Octopus.Tentacle.Core.Services;
+using Octopus.Tentacle.Core.Services.Scripts;
+using Octopus.Tentacle.Core.Services.Scripts.Locking;
+using Octopus.Tentacle.Core.Services.Scripts.Shell;
 using Octopus.Tentacle.Maintenance;
 using Octopus.Tentacle.Scripts;
 

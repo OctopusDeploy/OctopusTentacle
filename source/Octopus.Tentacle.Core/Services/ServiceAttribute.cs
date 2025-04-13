@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Octopus.Tentacle.Services
+namespace Octopus.Tentacle.Core.Services
 {
     [AttributeUsage(AttributeTargets.Class)]
     public class ServiceAttribute : Attribute, IServiceAttribute
