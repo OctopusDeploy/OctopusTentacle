@@ -1,7 +1,8 @@
 ﻿using System;
+using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Util;
 
-namespace Octopus.Tentacle.Scripts
+namespace Octopus.Tentacle.Core.Services.Scripts.StateStore
 {
     public class ScriptStateStoreFactory : IScriptStateStoreFactory
     {

@@ -1,5 +1,6 @@
 ﻿using System;
 using NUnit.Framework;
+using Octopus.Tentacle.Core.Services.Scripts.Security.Masking;
 using Octopus.Tentacle.Diagnostics;
 
 namespace Octopus.Tentacle.Tests.Diagnostics

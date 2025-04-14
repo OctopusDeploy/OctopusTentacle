@@ -1,5 +1,6 @@
 using System;
 using Autofac;
+using Octopus.Tentacle.Core.Services.Scripts.Shell;
 using Octopus.Tentacle.Scripts;
 
 namespace Octopus.Tentacle.Util
