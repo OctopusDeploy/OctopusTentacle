@@ -3,7 +3,7 @@
     { "pattern": "_artifacts/chocolatey/*", "target": "chocolatey" },
     { "pattern": "_artifacts/deb/*", "target": "deb" },
     { "pattern": "_artifacts/msi/*", "target": "msi" },
-    { "pattern": "_artifacts/nuget/OctopusTentacle/*", "target": "nuget" },
+    { "pattern": "_artifacts/nuget/*", "target": "nuget/OctopusTentacle" },
     { "pattern": "_artifacts/rpm/*", "target": "rpm" },
     { "pattern": "_artifacts/zip/*", "target": "zip" }
   ]
