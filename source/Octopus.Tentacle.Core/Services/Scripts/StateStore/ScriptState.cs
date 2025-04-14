@@ -2,7 +2,7 @@
 using Newtonsoft.Json;
 using Octopus.Tentacle.Contracts;
 
-namespace Octopus.Tentacle.Scripts
+namespace Octopus.Tentacle.Core.Services.Scripts.StateStore
 {
     public class ScriptState
     {

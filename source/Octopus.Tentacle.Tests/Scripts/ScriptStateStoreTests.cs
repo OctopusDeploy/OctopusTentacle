@@ -2,7 +2,7 @@ using System.IO;
 using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Tentacle.Contracts;
-using Octopus.Tentacle.Scripts;
+using Octopus.Tentacle.Core.Services.Scripts.StateStore;
 using Octopus.Tentacle.Tests.Support;
 using Octopus.Tentacle.Util;
 using InMemoryLog = Octopus.Tentacle.CommonTestUtils.Diagnostics.InMemoryLog;

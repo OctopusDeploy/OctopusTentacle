@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 using Octopus.Tentacle.Contracts;
 
-namespace Octopus.Tentacle.Scripts
+namespace Octopus.Tentacle.Core.Services.Scripts
 {
     public static class ScriptTicketFactory
     {

@@ -5,6 +5,8 @@ using NSubstitute;
 using NUnit.Framework;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Core.Diagnostics;
+using Octopus.Tentacle.Core.Services.Scripts.Logging;
+using Octopus.Tentacle.Core.Services.Scripts.Security.Masking;
 using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Services.Scripts;
 using Octopus.Tentacle.Util;
