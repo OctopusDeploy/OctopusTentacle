@@ -293,7 +293,7 @@ namespace Octopus.Tentacle.Kubernetes
 
             var commandString = string.Join(" ", new[]
                 {
-                    $"{homeDir}/Work/{command.ScriptTicket.TaskId}/bootstrapRunner-$(arch)",
+                    $"{homeDir}/Work/{command.ScriptTicket.TaskId}/bootstrapRunner-$(arch | sed -n '/arm/ {{s/.*arm.*/arm/;p;q}}; $a\\amd64')",
                     Path.Combine(homeDir, workspacePath),
                     Path.Combine(homeDir, workspacePath, scriptName)
                 }.Concat(scriptArguments ?? Array.Empty<string>())
