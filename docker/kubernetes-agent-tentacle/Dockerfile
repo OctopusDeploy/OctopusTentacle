@@ -23,8 +23,8 @@ ARG TARGETVARIANT
 EXPOSE 10933
 
 COPY docker/kubernetes-agent-tentacle/scripts/* /scripts/
-COPY --from=bootstrapRunnerBuilder bootstrapRunner/bin/amd64/bootstrapRunner /bootstrapRunner/amd64
-COPY --from=bootstrapRunnerBuilder bootstrapRunner/bin/arm64/bootstrapRunner /bootstrapRunner/arm64
+COPY --from=bootstrapRunnerBuilder bootstrapRunner/bin/amd64/bootstrapRunner /bootstrapRunner/amd64/bootstrapRunner
+COPY --from=bootstrapRunnerBuilder bootstrapRunner/bin/arm64/bootstrapRunner /bootstrapRunner/arm64/bootstrapRunner
 RUN chmod +x /scripts/*.sh
 
 WORKDIR /tmp
