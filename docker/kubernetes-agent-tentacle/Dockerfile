@@ -9,8 +9,8 @@ COPY docker/kubernetes-agent-tentacle/bootstrapRunner/* /bootstrapRunner/
 WORKDIR /bootstrapRunner
 
 # Note: the given ldflags remove debug symbols
-RUN env GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o "bin/bootstrapRunner/amd64"
-RUN env GOOS=linux GOARCH=arm64 go build -ldflags "-s -w" -o "bin/bootstrapRunner/arm64"
+RUN env GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o "bin/amd64/bootstrapRunner"
+RUN env GOOS=linux GOARCH=arm64 go build -ldflags "-s -w" -o "bin/arm64/bootstrapRunner"
 
 FROM mcr.microsoft.com/dotnet/runtime-deps:$RuntimeDepsTag
 
@@ -23,7 +23,8 @@ ARG TARGETVARIANT
 EXPOSE 10933
 
 COPY docker/kubernetes-agent-tentacle/scripts/* /scripts/
-COPY --from=bootstrapRunnerBuilder bootstrapRunner/bin/bootstrapRunner /bootstrapRunner
+COPY --from=bootstrapRunnerBuilder bootstrapRunner/bin/amd64/bootstrapRunner /bootstrapRunner/amd64
+COPY --from=bootstrapRunnerBuilder bootstrapRunner/bin/arm64/bootstrapRunner /bootstrapRunner/arm64
 RUN chmod +x /scripts/*.sh
 
 WORKDIR /tmp
