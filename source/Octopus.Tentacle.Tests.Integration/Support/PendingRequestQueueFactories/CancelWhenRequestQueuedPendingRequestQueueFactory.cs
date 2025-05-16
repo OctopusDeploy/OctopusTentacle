@@ -29,6 +29,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support.PendingRequestQueueFactorie
             return new Decorator(new PendingRequestQueueAsync(halibutTimeoutsAndLimits, new LogFactory().ForEndpoint(endpoint)), cancellationTokenSource, shouldCancel);
         }
 
+        public Task<IPendingRequestQueue> CreateQueueAsync(Uri endpoint, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(CreateQueue(endpoint));
+        }
+
         class Decorator : IPendingRequestQueue
         {
             readonly CancellationTokenSource cancellationTokenSource;
