@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Halibut.Logging;
 using Octopus.Tentacle.Client.Scripts.Models;
 using Octopus.Tentacle.Contracts;
 
@@ -93,6 +94,18 @@ namespace Octopus.Tentacle.Client.Scripts
                         {
                             continue; // Enter cancellation mode.
                         }
+                        
+                        var _ = Task.Run(() =>
+                        {
+                            try
+                            {
+                                scriptExecutor.CancelScript(lastResult.ContextForNextCommand);
+                            }
+                            catch (Exception)
+                            {
+                                // ignored
+                            }
+                        });
 
                         throw;
                     }
