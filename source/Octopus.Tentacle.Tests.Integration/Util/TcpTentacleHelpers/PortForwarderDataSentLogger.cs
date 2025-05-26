@@ -17,19 +17,19 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
         private static PortForwarderBuilder WithDataLoggingForPolling(this PortForwarderBuilder portForwarderBuilder)
         {
             var logger = new SerilogLoggerBuilder().Build().ForContext<PortForwarder>();
-            return portForwarderBuilder.WithDataObserver(new BiDirectionalDataTransferObserverBuilder()
+            return portForwarderBuilder.WithDataObserver(() => new BiDirectionalDataTransferObserverBuilder()
                 .ObserveDataClientToOrigin(TentacleSent(logger))
                 .ObserveDataOriginToClient(ClientSent(logger))
-                .Build);
+                .Build());
         }
 
         private static PortForwarderBuilder WithDataLoggingForListening(this PortForwarderBuilder portForwarderBuilder)
         {
             var logger = new SerilogLoggerBuilder().Build().ForContext<PortForwarder>();
-            return portForwarderBuilder.WithDataObserver(new BiDirectionalDataTransferObserverBuilder()
+            return portForwarderBuilder.WithDataObserver(() => new BiDirectionalDataTransferObserverBuilder()
                 .ObserveDataOriginToClient(TentacleSent(logger))
                 .ObserveDataClientToOrigin(ClientSent(logger))
-                .Build);
+                .Build());
         }
 
         /// <summary>
@@ -39,12 +39,28 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
         /// <returns></returns>
         private static IDataTransferObserver ClientSent(ILogger logger)
         {
-            return new DataTransferObserverBuilder().WithWritingDataObserver((tcpPump, stream) => logger.Information("Client sent {Count} bytes", stream.Length)).Build();
+            long numberOfWrites = 0;
+            long totalSent = 0;
+            return new DataTransferObserverBuilder().WithWritingDataObserver((tcpPump, stream) =>
+            {
+                numberOfWrites++;
+                totalSent += stream.Length;
+                logger.Information("Client sent {Count} bytes. A total of {totalSent} bytes have been sent over {SentCount} distinct writes", 
+                    stream.Length, totalSent, numberOfWrites);
+            }).Build();
         }
 
         private static IDataTransferObserver TentacleSent(ILogger logger)
         {
-            return new DataTransferObserverBuilder().WithWritingDataObserver((tcpPump, stream) => logger.Information("Tentacle sent {Count} bytes", stream.Length)).Build();
+            long numberOfWrites = 0;
+            long totalSent = 0;
+            return new DataTransferObserverBuilder().WithWritingDataObserver((tcpPump, stream) =>
+            {
+                numberOfWrites++;
+                totalSent += stream.Length;
+                logger.Information("Tentacle sent {Count} bytes. A total of {totalSent} bytes have been sent over {SentCount} distinct writes", 
+                    stream.Length, totalSent, numberOfWrites);
+            }).Build();
         }
     }
 }

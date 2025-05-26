@@ -38,8 +38,22 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
 
         public IDataTransferObserver DataTransferObserver()
         {
+            int numberOfWritesFromTentacleSeen = 0;
             return new DataTransferObserverBuilder().WithWritingDataObserver((tcpPump, dataFromTentacle) =>
             {
+                numberOfWritesFromTentacleSeen++;
+                if (pauseConnection || killConnection)
+                {
+                    // For listening tentacle to be connected to, it must first send some ssl stuff, then a MX control message to
+                    // register itself and finally a control PROCEED message. This means it is not until the 4th
+                    // write that we could be processing a message.
+                    if (numberOfWritesFromTentacleSeen <= 3)
+                    {
+                        logger.Information("Too few writes ({WriteCount} seen from tentacle the connection is not setup.", numberOfWritesFromTentacleSeen);
+                        return;
+                    }
+                }
+                
                 // It seems messages around 45 and below are control messages - except for
                 // Windows Server 2012, where the max size seems to be ~85.
                 // So anything bigger must be the interesting one.
