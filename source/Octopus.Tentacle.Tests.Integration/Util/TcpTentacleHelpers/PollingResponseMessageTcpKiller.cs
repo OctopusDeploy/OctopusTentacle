@@ -57,6 +57,9 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
 
                 if (pauseConnection || killConnection)
                 {
+                    // For polling tentacle to connect it first sends some ssl stuff, then a MX control message to
+                    // register itself and finally a control PROCEED message. This means it is not until the 4th
+                    // write that we could be processing a message.
                     if (numberOfWritesFromTentacleSeen <= 4)
                     {
                         logger.Information("Too few writes seen from tentacle the connection is not setup.");
