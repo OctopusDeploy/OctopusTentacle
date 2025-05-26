@@ -5,6 +5,7 @@ using FluentAssertions;
 using Halibut.Diagnostics;
 using NUnit.Framework;
 using Octopus.Tentacle.CommonTestUtils.Diagnostics;
+using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators;
 using Octopus.Tentacle.Tests.Integration.Support;
@@ -22,6 +23,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations]
         public async Task WhenANetworkFailureOccurs_DuringGetStatus_AndTheGetStatusCallDoesNotRecover_AnAttemptToCancelTheScriptIsMade(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
+            bool isNetworkDown = true;
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithPortForwarderDataLogging()
                 .WithRetryDuration(TimeSpan.FromSeconds(10))
@@ -40,21 +42,21 @@ namespace Octopus.Tentacle.Tests.Integration
                             async () =>
                             {
                                 await Task.CompletedTask;
-                                responseMessageTcpKiller.KillConnectionOnNextResponse();
+                                if(isNetworkDown) responseMessageTcpKiller.KillConnectionOnNextResponse();
                             })
                     )
                     .Build())
                 .Build(CancellationToken);
 
             var waitForFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "waitforme");
-            var fileCreatedByScript = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "scriptFile");
 
             var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
                 .SetScriptBody(new ScriptBuilder()
                     .Print("hello")
                     .WaitForFileToExist(waitForFile)
-                    .Print("AllDone")
-                    .CreateFile(fileCreatedByScript))
+                    .Print("AllDone"))
+                .WithIsolationLevel(ScriptIsolationLevel.FullIsolation)
+                .WithIsolationMutexName("mutex")
                 .Build();
 
             var inMemoryLog = new InMemoryLog();
@@ -76,12 +78,18 @@ namespace Octopus.Tentacle.Tests.Integration
                 () => throw new Exception("Cancel script was never called."),
                 CancellationToken);
 
-            // Let the script finish.
-            File.WriteAllText(waitForFile, "");
-            await Task.Delay(TimeSpan.FromSeconds(2)); // It's hard to know if the script was killed or not, if we do the assert below too quickly we will
-            // incorrectly see the script as being cancelled.
-
-            File.Exists(fileCreatedByScript).Should().BeFalse("A cancel command should have been sent to the script, resulting in the script terminating");
+            isNetworkDown = false;
+            var secondScriptToRunInFullIsolation = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(new ScriptBuilder()
+                    .Print("hello"))
+                .WithIsolationLevel(ScriptIsolationLevel.FullIsolation)
+                .WithIsolationMutexName("mutex")
+                .Build();
+            
+            // We should be able to execute a second script in full isolation with the same isolation mutex, since the first script
+            // should have been cancelled.
+            var (result, _) = await clientTentacle.TentacleClient.ExecuteScript(secondScriptToRunInFullIsolation, CancellationToken);
+            result.State.Should().Be(ProcessState.Complete);
         }
     }
 }
