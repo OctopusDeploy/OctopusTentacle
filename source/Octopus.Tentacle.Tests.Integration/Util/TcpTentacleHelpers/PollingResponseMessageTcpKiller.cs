@@ -50,9 +50,20 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
 
         public IDataTransferObserver DataTransferObserver()
         {
+            int numberOfWritesFromTentacleSeen = 0;
             return new DataTransferObserverBuilder().WithWritingDataObserver((tcpPump, dataFromTentacle) =>
             {
-                var size = dataFromTentacle.Length;
+                numberOfWritesFromTentacleSeen++;
+
+                if (pauseConnection || killConnection)
+                {
+                    if (numberOfWritesFromTentacleSeen <= 4)
+                    {
+                        logger.Information("Too few writes seen from tentacle the connection is not setup.");
+                        return;
+                    }
+                }
+                
                 //logger.Information($"Received: {size} from tentacle");
                 if (pauseConnection)
                 {
