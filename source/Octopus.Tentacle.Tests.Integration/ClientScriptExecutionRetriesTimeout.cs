@@ -329,7 +329,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             recordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().Be(1);
             recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Started.Should().BeGreaterOrEqualTo(2);
-            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Started.Should().Be(0);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Started.Should().BeInRange(0, 1, "Since a non awaited cancel will be sent");
             recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).Started.Should().Be(0);
 
             // Ensure we actually waited and retried until the timeout policy kicked in
@@ -381,7 +381,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             recordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().Be(1);
             recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Started.Should().Be(1);
-            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Started.Should().Be(0);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Started.Should().BeInRange(0, 1, "Since a non awaited cancel will be sent");
             recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).Started.Should().Be(0);
 
             inMemoryLog.ShouldHaveLoggedRetryFailureAndNoRetryAttempts();
