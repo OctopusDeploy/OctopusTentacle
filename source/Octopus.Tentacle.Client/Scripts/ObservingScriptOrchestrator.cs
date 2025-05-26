@@ -95,6 +95,9 @@ namespace Octopus.Tentacle.Client.Scripts
                             continue; // Enter cancellation mode.
                         }
                         
+                        // Before giving up, send out an attempt to cancel the inflight script.
+                        // This can work around issues where the RPC retry duration is less than the timeout durations in halibut.
+                        // In cases of short network issues, this means we  have a chance of canceling the in flight script.
                         var _ = Task.Run(() =>
                         {
                             try
