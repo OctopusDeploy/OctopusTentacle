@@ -50,23 +50,8 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
 
         public IDataTransferObserver DataTransferObserver()
         {
-            int numberOfWritesFromTentacleSeen = 0;
             return new DataTransferObserverBuilder().WithWritingDataObserver((tcpPump, dataFromTentacle) =>
             {
-                numberOfWritesFromTentacleSeen++;
-
-                if (pauseConnection || killConnection)
-                {
-                    // For polling tentacle to connect it first sends some sort of "open" connection data,
-                    // then some ssl stuff, then a MX control message to register itself.
-                    // In practice, it is not until the 4th write that we could be processing a message.
-                    if (numberOfWritesFromTentacleSeen <= 4)
-                    {
-                        logger.Information("Too few writes seen from tentacle the connection is not setup.");
-                        return;
-                    }
-                }
-                
                 //logger.Information($"Received: {size} from tentacle");
                 if (pauseConnection)
                 {

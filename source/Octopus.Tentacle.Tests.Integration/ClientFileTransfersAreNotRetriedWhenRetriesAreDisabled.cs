@@ -31,7 +31,7 @@ namespace Octopus.Tentacle.Tests.Integration
                         .BeforeUploadFile(
                             async () =>
                             {
-                                await tcpConnectionUtilities.RestartTcpConnection();
+                                await tcpConnectionUtilities.EnsureConnectionIsSetupBeforeKillingIt();
 
                                 // Only kill the connection the first time, causing the upload
                                 // to succeed - and therefore failing the test - if retries are attempted
@@ -69,7 +69,7 @@ namespace Octopus.Tentacle.Tests.Integration
                         .BeforeDownloadFile(
                             async () =>
                             {
-                                await tcpConnectionUtilities.RestartTcpConnection();
+                                await tcpConnectionUtilities.EnsureConnectionIsSetupBeforeKillingIt();
 
                                 // Only kill the connection the first time, causing the upload
                                 // to succeed - and therefore failing the test - if retries are attempted
