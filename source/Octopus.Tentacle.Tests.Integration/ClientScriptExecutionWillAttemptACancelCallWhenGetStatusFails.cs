@@ -35,6 +35,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     PollingRequestQueueTimeout = TimeSpan.FromSeconds(5)
                 })
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
+                .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages(tentacleConfigurationTestCase, out var recordedUsages)
                     .DecorateAllScriptServicesWith(u => u
@@ -42,7 +43,11 @@ namespace Octopus.Tentacle.Tests.Integration
                             async () =>
                             {
                                 await Task.CompletedTask;
-                                if(isNetworkDown) responseMessageTcpKiller.KillConnectionOnNextResponse();
+                                if (isNetworkDown)
+                                {
+                                    await tcpConnectionUtilities.EnsureConnectionIsSetupBeforeKillingIt();
+                                    responseMessageTcpKiller.KillConnectionOnNextResponse();
+                                }
                             })
                     )
                     .Build())

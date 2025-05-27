@@ -64,7 +64,7 @@ namespace Octopus.Tentacle.Tests.Integration
                                 if (rpcCall == RpcCall.RetryingCall &&
                                     recordedUsages.ForGetCapabilitiesAsync().LastException == null)
                                 {
-                                    await tcpConnectionUtilities.RestartTcpConnection();
+                                    await tcpConnectionUtilities.EnsureConnectionIsSetupBeforeKillingIt();
 
                                     // Kill the first GetCapabilities call to force the rpc call into retries
                                     responseMessageTcpKiller.KillConnectionOnNextResponse();
@@ -72,7 +72,7 @@ namespace Octopus.Tentacle.Tests.Integration
                                 else if (!hasPausedOrStoppedPortForwarder)
                                 {
                                     hasPausedOrStoppedPortForwarder = true;
-                                    await tcpConnectionUtilities.RestartTcpConnection();
+                                    await tcpConnectionUtilities.EnsureConnectionIsSetupBeforeKillingIt();
 
                                     await PauseOrStopPortForwarder(rpcCallStage, portForwarder.Value, responseMessageTcpKiller, rpcCallHasStarted);
                                     if (rpcCallStage == RpcCallStage.Connecting && tentacleConfigurationTestCase.TentacleType == TentacleType.Polling)
@@ -160,7 +160,7 @@ namespace Octopus.Tentacle.Tests.Integration
                             {
                                 if (rpcCall == RpcCall.RetryingCall && recordedUsages.ForStartScriptAsync().LastException is null)
                                 {
-                                    await tcpConnectionUtilities.RestartTcpConnection();
+                                    await tcpConnectionUtilities.EnsureConnectionIsSetupBeforeKillingIt();
                                     // Kill the first StartScript call to force the rpc call into retries
                                     responseMessageTcpKiller.KillConnectionOnNextResponse();
                                 }
@@ -169,7 +169,7 @@ namespace Octopus.Tentacle.Tests.Integration
                                     if (!hasPausedOrStoppedPortForwarder)
                                     {
                                         hasPausedOrStoppedPortForwarder = true;
-                                        await tcpConnectionUtilities.RestartTcpConnection();
+                                        await tcpConnectionUtilities.EnsureConnectionIsSetupBeforeKillingIt();
                                         await PauseOrStopPortForwarder(rpcCallStage, portForwarder.Value, responseMessageTcpKiller, rpcCallHasStarted);
                                         if (rpcCallStage == RpcCallStage.Connecting)
                                         {
@@ -429,7 +429,7 @@ namespace Octopus.Tentacle.Tests.Integration
                                 if (rpcCall == RpcCall.RetryingCall &&
                                     recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).LastException is null)
                                 {
-                                    await tcpConnectionUtilities.RestartTcpConnection();
+                                    await tcpConnectionUtilities.EnsureConnectionIsSetupBeforeKillingIt();
                                     // Kill the first StartScript call to force the rpc call into retries
                                     responseMessageTcpKiller.KillConnectionOnNextResponse();
                                 }
@@ -438,7 +438,7 @@ namespace Octopus.Tentacle.Tests.Integration
                                     if (!hasPausedOrStoppedPortForwarder)
                                     {
                                         hasPausedOrStoppedPortForwarder = true;
-                                        await tcpConnectionUtilities.RestartTcpConnection();
+                                        await tcpConnectionUtilities.EnsureConnectionIsSetupBeforeKillingIt();
                                         await PauseOrStopPortForwarder(rpcCallStage, portForwarder.Value, responseMessageTcpKiller, rpcCallHasStarted);
                                         if (rpcCallStage == RpcCallStage.Connecting)
                                         {
@@ -536,7 +536,7 @@ namespace Octopus.Tentacle.Tests.Integration
                                 if (!hasPausedOrStoppedPortForwarder)
                                 {
                                     hasPausedOrStoppedPortForwarder = true;
-                                    await tcpConnectionUtilities.RestartTcpConnection();
+                                    await tcpConnectionUtilities.EnsureConnectionIsSetupBeforeKillingIt();
                                     await PauseOrStopPortForwarder(rpcCallStage, portForwarder.Value, responseMessageTcpKiller, rpcCallHasStarted);
                                     if (rpcCallStage == RpcCallStage.Connecting)
                                     {
