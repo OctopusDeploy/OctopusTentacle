@@ -327,7 +327,8 @@ namespace Octopus.Tentacle.Kubernetes
                 VolumeMounts = new List<V1VolumeMount>
                 {
                     new(homeDir, "tentacle-home"),
-                    new ("/root/agent_upgrade/", "agent-upgrade")
+                    new ("/root/agent_upgrade/", "agent-upgrade"),
+                    new ("/tmp/agent_upgrade/", "agent-upgrade")
                 },
                 Env = new List<V1EnvVar>
                 {
