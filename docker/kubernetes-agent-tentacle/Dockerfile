@@ -48,8 +48,8 @@ RUN mkdir /.dotnet
 # By default, OpenShift uses random UIDs 
 # This introduces support for it as per
 # https://docs.openshift.com/container-platform/4.15/openshift_images/create-images.html#use-uid_create-images
-RUN chgrp -R 0 /opt /usr /.dotnet && \
-    chmod -R g=u /opt /usr /.dotnet
+RUN chgrp -R 0 /opt /usr /.dotnet /root && \
+    chmod -R g=u /opt /usr /.dotnet /root
 
 # The same as above, but we shouldn't recursively own /etc, as it would add
 # ownership to system files like /etc/passwd
