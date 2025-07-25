@@ -5,13 +5,12 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Security.Principal;
+using System.Threading.Tasks;
 using Octopus.Tentacle.Background;
 using Octopus.Tentacle.Communications;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Core.Diagnostics;
-using Octopus.Tentacle.Kubernetes;
-using Octopus.Tentacle.Maintenance;
 using Octopus.Tentacle.Startup;
 using Octopus.Tentacle.Util;
 using Octopus.Tentacle.Variables;
@@ -38,6 +37,7 @@ namespace Octopus.Tentacle.Commands
         readonly IEnumerable<Lazy<IBackgroundTask>> backgroundTasks;
         int wait;
         bool halibutHasStarted;
+        string? relayConnectAddress;
 
         public override bool CanRunAsService => true;
 
@@ -67,6 +67,7 @@ namespace Octopus.Tentacle.Commands
             this.appVersion = appVersion;
             this.backgroundTasks = backgroundTasks;
 
+            Options.Add("relay-connect-address=", "Connect address of the relay", arg => relayConnectAddress = arg);
             Options.Add("wait=", "Delay (ms) before starting", arg => wait = int.Parse(arg));
             Options.Add("console", "Don't attempt to run as a service, even if the user is non-interactive", v =>
             {
@@ -133,6 +134,21 @@ namespace Octopus.Tentacle.Commands
             {
                 backgroundTaskLazy.Value.Start();
             }
+
+           #if NET8_0_OR_GREATER
+
+            if (relayConnectAddress != null)
+            {
+                log.InfoFormat("Enabling connection agent via {0}", relayConnectAddress);
+
+                Task.Run(async () =>
+                {
+                    var agent = new Octopus.Tentacle.SocksProxy.Agent(relayConnectAddress);
+                    await agent.StartAsync();
+                });
+            }
+
+            #endif
 
             Runtime.WaitForUserToExit();
         }
