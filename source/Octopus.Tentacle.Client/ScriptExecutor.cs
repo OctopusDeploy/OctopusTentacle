@@ -60,12 +60,12 @@ namespace Octopus.Tentacle.Client
             return await scriptExecutor.GetStatus(commandContext, cancellationToken);
         }
 
-        public async Task<ScriptOperationExecutionResult> CancelScript(CommandContext commandContext)
+        public async Task<ScriptOperationExecutionResult> CancelScript(CommandContext commandContext, CancellationToken cancellationToken)
         {
             var scriptExecutorFactory = CreateScriptExecutorFactory();
             var scriptExecutor = scriptExecutorFactory.CreateScriptExecutor(commandContext.ScripServiceVersionUsed);
 
-            return await scriptExecutor.CancelScript(commandContext);
+            return await scriptExecutor.CancelScript(commandContext, cancellationToken);
         }
         
         public async Task<ScriptStatus?> CompleteScript(CommandContext commandContext, CancellationToken cancellationToken)
