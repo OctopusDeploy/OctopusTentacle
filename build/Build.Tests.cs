@@ -84,7 +84,7 @@ partial class Build
             
             List<TestConfigurationOnLinuxDistribution> testOnLinuxDistributions = new()
             {
-                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "debian:bullseye", "deb"),
+                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "debian", "deb"),
 
                 // Debian dist oldoldstable appears to have been removed on 23/4/2023, maybe temporarily whilst a new stable release is created. 
                 // TODO: Revisit this when/if the dist becomes available again and reinstate if possible.
