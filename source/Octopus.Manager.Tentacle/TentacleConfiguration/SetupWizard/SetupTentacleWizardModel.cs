@@ -777,7 +777,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 AreTenantsSupported = spaceSpecificData.AreTenantsSupported;
                 PotentialTenantTags = spaceSpecificData.TenantTags.SelectMany(tt => tt.Tags.Select(t => t.CanonicalTagName)).ToArray();
                 UpdateSelection(SelectedTenantTags, PotentialTenantTags);
-                PotentialTenants = spaceSpecificData.Tenants.Select(tt => tt.Name).ToArray();
+                PotentialTenants = spaceSpecificData.Tenants.Select(tt => tt.IsDisabled ? $"{tt.Name} (disabled)" : tt.Name).ToArray();
                 UpdateSelection(SelectedTenants, PotentialTenants);
                 AreTenantsAvailable = PotentialTenants.Any();
             }
