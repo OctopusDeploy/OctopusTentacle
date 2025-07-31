@@ -7,7 +7,7 @@ using System.Management;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading;
-using Octopus.Diagnostics;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Util;
 using Polly;
 
@@ -342,7 +342,7 @@ namespace Octopus.Tentacle.Startup
             var sc = Path.Combine(system32, "sc.exe");
 
             logFileOnlyLogger.Info($"Executing sc.exe {argumentsToLog}");
-            var exitCode = SilentProcessRunner.ExecuteCommand(sc,
+            var exitCode = SilentProcessRunnerExtended.ExecuteCommand(sc,
                 arguments,
                 Environment.CurrentDirectory,
                 output => outputBuilder.AppendLine(output),

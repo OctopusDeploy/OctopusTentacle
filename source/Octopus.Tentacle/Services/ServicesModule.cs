@@ -4,6 +4,9 @@ using System.Linq;
 using System.Reflection;
 using Autofac;
 using Octopus.Tentacle.Communications;
+using Octopus.Tentacle.Core.Services;
+using Octopus.Tentacle.Core.Services.Scripts;
+using Octopus.Tentacle.Core.Services.Scripts.StateStore;
 using Octopus.Tentacle.Packages;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Util;
@@ -23,11 +26,11 @@ namespace Octopus.Tentacle.Services
             builder.RegisterType<NuGetPackageInstaller>().As<IPackageInstaller>();
 
             // Register our Halibut services
-            var allTypes = ThisAssembly.GetTypes();
+            var allTypes = ThisAssembly.GetTypes().Concat(typeof(ScriptServiceV2).Assembly.GetTypes());
             RegisterHalibutServices<ServiceAttribute>(builder, allTypes);
 
             //only register kubernetes services when
-            if (PlatformDetection.Kubernetes.IsRunningAsKubernetesAgent)
+            if (KubernetesSupportDetection.IsRunningAsKubernetesAgent)
             {
                 RegisterHalibutServices<KubernetesServiceAttribute>(builder, allTypes);
             }

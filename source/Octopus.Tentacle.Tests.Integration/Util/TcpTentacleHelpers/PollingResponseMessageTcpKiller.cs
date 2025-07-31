@@ -52,7 +52,6 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
         {
             return new DataTransferObserverBuilder().WithWritingDataObserver((tcpPump, dataFromTentacle) =>
             {
-                var size = dataFromTentacle.Length;
                 //logger.Information($"Received: {size} from tentacle");
                 if (pauseConnection)
                 {

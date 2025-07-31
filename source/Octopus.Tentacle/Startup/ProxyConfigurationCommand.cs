@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
+using Octopus.Tentacle.Core.Diagnostics;
 
 namespace Octopus.Tentacle.Startup
 {

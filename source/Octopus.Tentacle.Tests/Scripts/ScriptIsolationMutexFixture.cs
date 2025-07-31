@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Threading;
-using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Core.Services.Scripts.Locking;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Tests.Support;
 
@@ -118,8 +117,9 @@ namespace Octopus.Tentacle.Tests.Scripts
             public void AcquireCanBeCancelled()
             {
                 var cancellationToken = new CancellationTokenSource();
+                var scriptIsolationMutex = new ScriptIsolationMutex();
 
-                IDisposable AcquireMutex() => ScriptIsolationMutex.Acquire(ScriptIsolationLevel.FullIsolation,
+                IDisposable AcquireMutex() => scriptIsolationMutex.Acquire(ScriptIsolationLevel.FullIsolation,
                     TimeSpan.FromDays(1),
                     nameof(AcquireCanBeCancelled),
                     _ => { },
@@ -137,19 +137,21 @@ namespace Octopus.Tentacle.Tests.Scripts
             [Test]
             public void LocksBlockOthersThatShareAName()
             {
-                using var lock1 = AcquireNamedLock("Lock 1");
-                Action a = () => AcquireNamedLock("Lock 1");
+                var scriptIsolationMutex = new ScriptIsolationMutex();
+                using var lock1 = AcquireNamedLock(scriptIsolationMutex, "Lock 1");
+                Action a = () => AcquireNamedLock(scriptIsolationMutex, "Lock 1");
                 a.Should().Throw<TimeoutException>();
             }
 
             [Test]
             public void LocksWithDifferentNamesCanBeHeldAtTheSameTime()
             {
-                using var lock1 = AcquireNamedLock("Lock 1");
-                using var lock2 = AcquireNamedLock("Lock 2");
+                var scriptIsolationMutex = new ScriptIsolationMutex();
+                using var lock1 = AcquireNamedLock(scriptIsolationMutex, "Lock 1");
+                using var lock2 = AcquireNamedLock(scriptIsolationMutex, "Lock 2");
             }
 
-            static IDisposable AcquireNamedLock(string name) => ScriptIsolationMutex.Acquire(ScriptIsolationLevel.FullIsolation,
+            static IDisposable AcquireNamedLock(ScriptIsolationMutex scriptIsolationMutex, string name) => scriptIsolationMutex.Acquire(ScriptIsolationLevel.FullIsolation,
                 TimeSpan.FromSeconds(1),
                 name,
                 s =>

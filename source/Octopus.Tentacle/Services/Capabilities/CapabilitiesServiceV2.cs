@@ -5,6 +5,7 @@ using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Capabilities;
 using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
+using Octopus.Tentacle.Core.Services;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Services.Capabilities
@@ -17,7 +18,7 @@ namespace Octopus.Tentacle.Services.Capabilities
             await Task.CompletedTask;
 
             //the kubernetes agent only supports the kubernetes script services
-            if (PlatformDetection.Kubernetes.IsRunningAsKubernetesAgent)
+            if (KubernetesSupportDetection.IsRunningAsKubernetesAgent)
             {
                 return new CapabilitiesResponseV2(new List<string> { nameof(IFileTransferService),  nameof(IKubernetesScriptServiceV1)  });
             }

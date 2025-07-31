@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using NSubstitute;
-using Octopus.Diagnostics;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Manager.Tentacle.Shell;
 using Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard;
 using Octopus.Manager.Tentacle.Util;

@@ -5,9 +5,11 @@ Tentacle is the secure, lightweight, cross-platform agent for [Octopus Server](h
 ![Tentacles Everywhere](https://user-images.githubusercontent.com/1627582/92418318-430ed000-f1aa-11ea-8a46-6d6763feef3a.png)
 
 ## Code of Conduct
+
 This project and everyone participating in it is governed by the [Octopus Deploy Code of Conduct](https://github.com/OctopusDeploy/.github/blob/main/CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior using the instructions in the code of conduct.
 
 ## Did you find a bug?
+
 If the bug is a security vulnerability in Octopus Deploy, please refer to our [security policy](https://github.com/OctopusDeploy/.github/blob/main/SECURITY.md).
 
 Search our [public Issues repository](https://github.com/OctopusDeploy/Issues) to ensure the bug was not already reported.
@@ -20,11 +22,15 @@ If you're unable to find an open issue addressing the problem, please follow our
 
 :+1::tada: First off, thanks for your contribution to Tentacle! :tada::+1:
 
-Please [create a new issue](issues/new) for each bug fix or enhancement. [Issues in this repository](issues) are automatically used to create release notes for [releases](releases).
+Please [create a new issue](https://github.com/OctopusDeploy/OctopusTentacle/issues/new) for each bug fix or enhancement. [Issues in this repository](https://github.com/OctopusDeploy/OctopusTentacle/issues) are automatically used to create release notes for [releases](https://github.com/OctopusDeploy/OctopusTentacle/releases).
 
-Please ensure every commit that hits `main` links either to an issue directly, or to a PR that in turn links to an issue. Please use the [appropriate keywords to close issues](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword).
+Please ensure every commit that hits `main` links either to an issue directly, or to a PR that in turn links to an issue. Please use the [appropriate keywords to close issues](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword). Doing so will ensure that your changes are available for users to download via the [Downloads](https://octopus.com/downloads/tentacle) page.
 
-### Build, Test, and delivery
+If you don't use a keyword, even if your changes are merged into main and a new version created, it will not appear on the Downloads page.
+
+Please see [How to Raise a Meaningful Change](docs/meaningful-change.md) for a step-by-step guide.
+
+### Build, Test, and Delivery
 
 We use the [Octopus Tentacle project in our private TeamCity server](https://build.octopushq.com/project/OctopusDeploy_OctopusTentacle) for automated build and test reporting status changes to pull requests.
 
@@ -34,6 +40,18 @@ Deployments happen automatically - a merge to `main` will trigger a build and a 
 
 For internal developers, on closing an issue, ReleaseBot will ask you for release notes.
 For external developers, or if ReleaseBot fails for some reason, please add a comment to the issue `Release note: XXXX` to ensure release notes are generated correctly.
+
+An easy way to find the code associated with a particular version of Tentacle is to check out the [tags](https://github.com/OctopusDeploy/OctopusTentacle/tags). 
+
+#### Incrementing Major Versions
+
+To increment a major version, make an empty commit with the commit message `+semver: major`. This is a special instruction to GitVersion.
+
+```
+git commit --allow-empty -m "+semver: major"
+```
+
+For further details refer to [Tentacle Rollout](docs/rollout.md).
 
 ### Bundling Tentacle with Octopus Server
 
@@ -48,7 +66,10 @@ In most scenarios, Tentacle is simple to debug:
 1. Just like a customer, set up an instance of Tentacle and connect it to an Octopus Server
 2. Start Tentacle using the debugger in your development environment of choice, using the `Tentacle.exe run --instance=YOUR_INSTANCE_NAME` command
 
+If you need to set up Tentacle, Halibut and Octopus Server for local development, refer to the [Local Development chain docs](https://github.com/OctopusDeploy/Halibut/blob/152535a0a8052ddf85c4a8f9b11375d0adc6fe3b/docs/local-build-chain.md) in the Halibut repository.
+
 ## Debugging in WSL (Windows Subsystem for Linux )
+
 Currently we can only debug netcore apps running in WSL from VSCode, Visual Studio and Rider dont seem to have good working solutions
 
 - Install VSCode
@@ -56,6 +77,7 @@ Currently we can only debug netcore apps running in WSL from VSCode, Visual Stud
 - Open a WSL VSCode session https://code.visualstudio.com/docs/remote/wsl#_getting-started
 - Install C# extension, Even if this extension is already installed, this will need to be done within a WSL session as the extension binaries are platform specific.
 - Open the Tentacle repository folder in VSCode and create a debug profile (https://code.visualstudio.com/docs/editor/debugging) example `.vscode/launch.json` file:
+
 ```
 {
     // Use IntelliSense to learn about possible attributes.
@@ -83,7 +105,9 @@ Currently we can only debug netcore apps running in WSL from VSCode, Visual Stud
     ]
 }
 ```
+
 - Make sure the build task (in `.vscode/tasks.json`) specifies the target framework, by including `--framework=net8.0` as a build arg, otherwise VSCode will attempt to build for all frameworks in the csproj and fail on full .Net framework. the build task should look similar to:
+
 ```
 {
     "label": "build",
@@ -99,6 +123,7 @@ Currently we can only debug netcore apps running in WSL from VSCode, Visual Stud
     "problemMatcher": "$msCompile"
 }
 ```
+
 ## Debugging the Kubernetes Agent Tentacle
 
 The Kubernetes Agent Tentacle is more complex to debug, as it normally runs inside a Kubernetes Pod. To debug it locally, you can run the `setup-k8s-agent-for-local-debug.sh` script in the root of this repo which will guide you through the process of installing a specially configured kind cluster, deploying the agent to it and then scaling back the installed agent so you can run a local copy to take it's place.

@@ -49,7 +49,7 @@ namespace Octopus.Tentacle.Tests.Integration
                                 if (methodUsages.For(nameof(IAsyncClientFileTransferService.UploadFileAsync)).LastException is null)
                                 {
                                     // Ensure there is an active connection so it can be killed correctly
-                                    await tcpConnectionUtilities.RestartTcpConnection();
+                                    await tcpConnectionUtilities.EnsureConnectionIsSetupBeforeKillingIt();
                                     responseMessageTcpKiller.KillConnectionOnNextResponse();
                                 }
                                 else
@@ -63,7 +63,7 @@ namespace Octopus.Tentacle.Tests.Integration
                                     else
                                     {
                                         // Ensure there is an active connection so it can be killed correctly
-                                        await tcpConnectionUtilities.RestartTcpConnection();
+                                        await tcpConnectionUtilities.EnsureConnectionIsSetupBeforeKillingIt();
                                         // Pause the port forwarder so the next requests are in-flight when retries timeout
                                         responseMessageTcpKiller.PauseConnectionOnNextResponse();
                                     }
@@ -114,7 +114,7 @@ namespace Octopus.Tentacle.Tests.Integration
                         .BeforeUploadFile(
                             async () =>
                             {
-                                await tcpConnectionUtilities.RestartTcpConnection();
+                                await tcpConnectionUtilities.EnsureConnectionIsSetupBeforeKillingIt();
 
                                 // Sleep to make the initial RPC call take longer than the allowed retry duration
                                 await Task.Delay(retryDuration + TimeSpan.FromSeconds(1));
@@ -160,7 +160,7 @@ namespace Octopus.Tentacle.Tests.Integration
                                 if (recordedUsages.For(nameof(IAsyncClientFileTransferService.DownloadFileAsync)).LastException is null)
                                 {
                                     // Ensure there is an active connection so it can be killed correctly
-                                    await tcpConnectionUtilities.RestartTcpConnection();
+                                    await tcpConnectionUtilities.EnsureConnectionIsSetupBeforeKillingIt();
                                     responseMessageTcpKiller.KillConnectionOnNextResponse();
                                 }
                                 else
@@ -175,7 +175,7 @@ namespace Octopus.Tentacle.Tests.Integration
                                     else
                                     {
                                         // Ensure there is an active connection so it can be killed correctly
-                                        await tcpConnectionUtilities.RestartTcpConnection();
+                                        await tcpConnectionUtilities.EnsureConnectionIsSetupBeforeKillingIt();
                                         // Pause the port forwarder so the next requests are in-flight when retries timeout
                                         responseMessageTcpKiller.PauseConnectionOnNextResponse();
                                     }
@@ -226,7 +226,7 @@ namespace Octopus.Tentacle.Tests.Integration
                         .BeforeDownloadFile(
                             async () =>
                             {
-                                await tcpConnectionUtilities.RestartTcpConnection();
+                                await tcpConnectionUtilities.EnsureConnectionIsSetupBeforeKillingIt();
 
                                 // Sleep to make the initial RPC call take longer than the allowed retry duration
                                 await Task.Delay(retryDuration + TimeSpan.FromSeconds(1));

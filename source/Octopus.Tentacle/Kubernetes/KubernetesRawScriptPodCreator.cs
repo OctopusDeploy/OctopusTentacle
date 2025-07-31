@@ -2,14 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using k8s;
 using k8s.Models;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
+using Octopus.Tentacle.Core.Diagnostics;
+using Octopus.Tentacle.Core.Services.Scripts.Locking;
 using Octopus.Tentacle.Kubernetes.Crypto;
-using Octopus.Tentacle.Util;
+using Octopus.Tentacle.Scripts;
 
 namespace Octopus.Tentacle.Kubernetes
 {
@@ -31,8 +31,9 @@ namespace Octopus.Tentacle.Kubernetes
             ITentacleScriptLogProvider scriptLogProvider,
             IHomeConfiguration homeConfiguration,
             KubernetesPhysicalFileSystem kubernetesPhysicalFileSystem,
-            IScriptPodLogEncryptionKeyProvider scriptPodLogEncryptionKeyProvider)
-            : base(podService, podMonitor, secretService, containerResolver, appInstanceSelector, log, scriptLogProvider, homeConfiguration, kubernetesPhysicalFileSystem, scriptPodLogEncryptionKeyProvider)
+            IScriptPodLogEncryptionKeyProvider scriptPodLogEncryptionKeyProvider,
+            ScriptIsolationMutex scriptIsolationMutex)
+            : base(podService, podMonitor, secretService, containerResolver, appInstanceSelector, log, scriptLogProvider, homeConfiguration, kubernetesPhysicalFileSystem, scriptPodLogEncryptionKeyProvider, scriptIsolationMutex)
         {
             this.containerResolver = containerResolver;
         }

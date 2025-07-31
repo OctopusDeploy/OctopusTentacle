@@ -10,7 +10,7 @@ using FluentValidation;
 using Octopus.Client;
 using Octopus.Client.Exceptions;
 using Octopus.Client.Model;
-using Octopus.Diagnostics;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Manager.Tentacle.Infrastructure;
 using Octopus.Manager.Tentacle.Proxy;
 using Octopus.Manager.Tentacle.Shell;

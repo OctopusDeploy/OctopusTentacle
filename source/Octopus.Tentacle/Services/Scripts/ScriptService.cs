@@ -1,9 +1,15 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Core.Diagnostics;
+using Octopus.Tentacle.Core.Maintenance;
+using Octopus.Tentacle.Core.Services;
+using Octopus.Tentacle.Core.Services.Scripts;
+using Octopus.Tentacle.Core.Services.Scripts.Locking;
+using Octopus.Tentacle.Core.Services.Scripts.Shell;
 using Octopus.Tentacle.Maintenance;
 using Octopus.Tentacle.Scripts;
 
@@ -17,15 +23,18 @@ namespace Octopus.Tentacle.Services.Scripts
         readonly ISystemLog log;
         readonly ConcurrentDictionary<string, RunningScript> running = new(StringComparer.OrdinalIgnoreCase);
         readonly ConcurrentDictionary<string, CancellationTokenSource> cancellationTokens = new(StringComparer.OrdinalIgnoreCase);
+        ScriptIsolationMutex scriptIsolationMutex;
 
         public ScriptService(
             IShell shell,
             IScriptWorkspaceFactory workspaceFactory,
+            ScriptIsolationMutex scriptIsolationMutex,
             ISystemLog log)
         {
             this.shell = shell;
             this.workspaceFactory = workspaceFactory;
             this.log = log;
+            this.scriptIsolationMutex = scriptIsolationMutex;
         }
 
         public async Task<ScriptTicket> StartScriptAsync(StartScriptCommand command, CancellationToken cancellationToken)
@@ -83,7 +92,7 @@ namespace Octopus.Tentacle.Services.Scripts
 
         RunningScript LaunchShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, CancellationTokenSource cancel)
         {
-            var runningScript = new RunningScript(shell, workspace, workspace.CreateLog(), serverTaskId, cancel.Token, log);
+            var runningScript = new RunningScript(shell, workspace, workspace.CreateLog(), serverTaskId, scriptIsolationMutex, cancel.Token, new Dictionary<string, string>(), log);
             var thread = new Thread(runningScript.Execute) { Name = "Executing PowerShell script for " + ticket.TaskId };
             thread.Start();
             return runningScript;

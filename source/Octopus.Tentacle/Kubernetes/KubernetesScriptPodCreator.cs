@@ -10,10 +10,11 @@ using System.Threading.Tasks;
 using k8s;
 using k8s.Models;
 using Newtonsoft.Json;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
+using Octopus.Tentacle.Core.Diagnostics;
+using Octopus.Tentacle.Core.Services.Scripts.Locking;
 using Octopus.Tentacle.Kubernetes.Crypto;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Util;
@@ -38,6 +39,7 @@ namespace Octopus.Tentacle.Kubernetes
         readonly IHomeConfiguration homeConfiguration;
         readonly KubernetesPhysicalFileSystem kubernetesPhysicalFileSystem;
         readonly IScriptPodLogEncryptionKeyProvider scriptPodLogEncryptionKeyProvider;
+        readonly ScriptIsolationMutex scriptIsolationMutex;
 
         public KubernetesScriptPodCreator(
             IKubernetesPodService podService,
@@ -49,7 +51,8 @@ namespace Octopus.Tentacle.Kubernetes
             ITentacleScriptLogProvider scriptLogProvider,
             IHomeConfiguration homeConfiguration,
             KubernetesPhysicalFileSystem kubernetesPhysicalFileSystem,
-            IScriptPodLogEncryptionKeyProvider scriptPodLogEncryptionKeyProvider)
+            IScriptPodLogEncryptionKeyProvider scriptPodLogEncryptionKeyProvider,
+            ScriptIsolationMutex scriptIsolationMutex)
         {
             this.podService = podService;
             this.podMonitor = podMonitor;
@@ -61,13 +64,14 @@ namespace Octopus.Tentacle.Kubernetes
             this.homeConfiguration = homeConfiguration;
             this.kubernetesPhysicalFileSystem = kubernetesPhysicalFileSystem;
             this.scriptPodLogEncryptionKeyProvider = scriptPodLogEncryptionKeyProvider;
+            this.scriptIsolationMutex = scriptIsolationMutex;
         }
 
         public async Task CreatePod(StartKubernetesScriptCommandV1 command, IScriptWorkspace workspace, CancellationToken cancellationToken)
         {
             var tentacleScriptLog = scriptLogProvider.GetOrCreate(command.ScriptTicket);
 
-            using (ScriptIsolationMutex.Acquire(workspace.IsolationLevel,
+            using (scriptIsolationMutex.Acquire(workspace.IsolationLevel,
                        workspace.ScriptMutexAcquireTimeout,
                        workspace.ScriptMutexName ?? nameof(KubernetesScriptPodCreator),
                        message =>
@@ -323,7 +327,8 @@ namespace Octopus.Tentacle.Kubernetes
                 VolumeMounts = new List<V1VolumeMount>
                 {
                     new(homeDir, "tentacle-home"),
-                    new ("/root/agent_upgrade/", "agent-upgrade")
+                    new ("/root/agent_upgrade/", "agent-upgrade"),
+                    new ("/tmp/agent_upgrade/", "agent-upgrade")
                 },
                 Env = new List<V1EnvVar>
                 {

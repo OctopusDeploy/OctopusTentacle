@@ -59,7 +59,7 @@ namespace Octopus.Tentacle.Tests.Integration
                                 if (!hasPausedOrStoppedPortForwarder)
                                 {
                                     hasPausedOrStoppedPortForwarder = true;
-                                    await tcpConnectionUtilities.RestartTcpConnection();
+                                    await tcpConnectionUtilities.EnsureConnectionIsSetupBeforeKillingIt();
 
                                     PauseOrStopPortForwarder(rpcCallStage, portForwarder.Value, responseMessageTcpKiller, rpcCallHasStarted);
                                     if (rpcCallStage == RpcCallStage.Connecting)
@@ -129,7 +129,7 @@ namespace Octopus.Tentacle.Tests.Integration
                                 if (!hasPausedOrStoppedPortForwarder)
                                 {
                                     hasPausedOrStoppedPortForwarder = true;
-                                    await tcpConnectionUtilities.RestartTcpConnection();
+                                    await tcpConnectionUtilities.EnsureConnectionIsSetupBeforeKillingIt();
                                     PauseOrStopPortForwarder(rpcCallStage, portForwarder.Value, responseMessageTcpKiller, rpcCallHasStarted);
                                     if (rpcCallStage == RpcCallStage.Connecting)
                                     {
@@ -225,7 +225,7 @@ namespace Octopus.Tentacle.Tests.Integration
                                 if (!hasPausedOrStoppedPortForwarder)
                                 {
                                     hasPausedOrStoppedPortForwarder = true;
-                                    await tcpConnectionUtilities.RestartTcpConnection();
+                                    await tcpConnectionUtilities.EnsureConnectionIsSetupBeforeKillingIt();
                                     PauseOrStopPortForwarder(rpcCallStage, portForwarder.Value, responseMessageTcpKiller, rpcCallHasStarted);
                                     if (rpcCallStage == RpcCallStage.Connecting)
                                     {
@@ -309,7 +309,7 @@ namespace Octopus.Tentacle.Tests.Integration
                                 if (!hasPausedOrStoppedPortForwarder)
                                 {
                                     hasPausedOrStoppedPortForwarder = true;
-                                    await tcpConnectionUtilities.RestartTcpConnection();
+                                    await tcpConnectionUtilities.EnsureConnectionIsSetupBeforeKillingIt();
                                     PauseOrStopPortForwarder(rpcCallStage, portForwarder.Value, responseMessageTcpKiller, rpcCallHasStarted);
                                     if (rpcCallStage == RpcCallStage.Connecting)
                                     {
