@@ -56,7 +56,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         string[] potentialRoles;
         string[] potentialMachinePolicies;
         string[] potentialTenantTags;
-        string[] potentialTenants;
+        TenantDisplayItem[] potentialTenants;
         string[] potentialWorkerPools;
         string[] potentialSpaces;
         string machineName;
@@ -321,7 +321,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             }
         }
 
-        public string[] PotentialTenants
+        public TenantDisplayItem[] PotentialTenants
         {
             get => potentialTenants;
             set
@@ -329,7 +329,13 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 if (Equals(value, potentialTenants)) return;
                 potentialTenants = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(PotentialTenantNames));
             }
+        }
+
+        public string[] PotentialTenantNames
+        {
+            get => potentialTenants?.Select(t => t.GetDisplayName()).ToArray() ?? Array.Empty<string>();
         }
 
         public string[] PotentialWorkerPools
@@ -777,8 +783,8 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 AreTenantsSupported = spaceSpecificData.AreTenantsSupported;
                 PotentialTenantTags = spaceSpecificData.TenantTags.SelectMany(tt => tt.Tags.Select(t => t.CanonicalTagName)).ToArray();
                 UpdateSelection(SelectedTenantTags, PotentialTenantTags);
-                PotentialTenants = spaceSpecificData.Tenants.Select(tt => tt.IsDisabled ? $"{tt.Name} (disabled)" : tt.Name).ToArray();
-                UpdateSelection(SelectedTenants, PotentialTenants);
+                PotentialTenants = spaceSpecificData.Tenants.Select(tt => new TenantDisplayItem(tt.Name, tt.IsDisabled)).ToArray();
+                UpdateSelection(SelectedTenants, PotentialTenants.Select(t => t.GetDisplayName()));
                 AreTenantsAvailable = PotentialTenants.Any();
             }
 
@@ -929,7 +935,10 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                             register.Argument("tenanttag", tag);
 
                         foreach (var tenant in SelectedTenants)
-                            register.Argument("tenant", tenant);
+                        {
+                            var tenantItem = PotentialTenants.FirstOrDefault(t => t.GetDisplayName() == tenant);
+                            register.Argument("tenant", tenantItem?.Name ?? tenant);
+                        }
                     }
 
                     foreach (var role in SelectedRoles)
@@ -1084,6 +1093,23 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             Tenants = tenants;
             MachinePoliciesAreSupported = machinePoliciesAreSupported;
             MachinePolicies = machinePolicies;
+        }
+    }
+
+    public class TenantDisplayItem
+    {
+        public string Name { get; }
+        public bool IsDisabled { get; }
+
+        public TenantDisplayItem(string name, bool isDisabled)
+        {
+            Name = name;
+            IsDisabled = isDisabled;
+        }
+
+        public string GetDisplayName()
+        {
+            return IsDisabled ? $"{Name} (disabled)" : Name;
         }
     }
 }
