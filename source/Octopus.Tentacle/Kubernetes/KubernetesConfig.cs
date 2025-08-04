@@ -68,6 +68,9 @@ namespace Octopus.Tentacle.Kubernetes
         public static readonly string PodAnnotationsJsonVariableName = $"{EnvVarPrefix}__PODANNOTATIONSJSON";
         public static string? PodAnnotationsJson => Environment.GetEnvironmentVariable(PodAnnotationsJsonVariableName);
 
+        public static readonly string PodLabelsJsonVariableName = $"{EnvVarPrefix}__PODLABELSJSON";
+        public static string? PodLabelsJson => Environment.GetEnvironmentVariable(PodLabelsJsonVariableName);
+        
         public static readonly string TentacleConfigMapNameVariableName = $"{EnvVarPrefix}__TENTACLECONFIGMAPNAME";
         public static string TentacleConfigMapName => GetEnvironmentVariableOrDefault(TentacleConfigMapNameVariableName, "tentacle-config");
 

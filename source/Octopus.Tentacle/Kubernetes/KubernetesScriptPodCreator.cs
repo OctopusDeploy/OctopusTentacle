@@ -199,11 +199,7 @@ namespace Octopus.Tentacle.Kubernetes
                 {
                     Name = podName,
                     NamespaceProperty = KubernetesConfig.Namespace,
-                    Labels = new Dictionary<string, string>
-                    {
-                        ["octopus.com/serverTaskId"] = command.TaskId,
-                        ["octopus.com/scriptTicketId"] = command.ScriptTicket.TaskId
-                    },
+                    Labels = GetScriptPodLabels(tentacleScriptLog, command),
                     Annotations = ParseScriptPodAnnotations(tentacleScriptLog)
                 },
                 Spec = new V1PodSpec
@@ -418,6 +414,25 @@ namespace Octopus.Tentacle.Kubernetes
                 KubernetesConfig.PodAnnotationsJson,
                 KubernetesConfig.PodAnnotationsJsonVariableName,
                 "pod annotations");
+
+        Dictionary<string, string>? GetScriptPodLabels(InMemoryTentacleScriptLog tentacleScriptLog, StartKubernetesScriptCommandV1 command)
+        {
+            var labels = new Dictionary<string, string>
+            {
+                ["octopus.com/serverTaskId"] = command.TaskId,
+                ["octopus.com/scriptTicketId"] = command.ScriptTicket.TaskId
+            };
+            var extraLabels = ParseScriptPodJson<Dictionary<string, string>>(
+                tentacleScriptLog,
+                KubernetesConfig.PodLabelsJson,
+                KubernetesConfig.PodLabelsJsonVariableName,
+                "pod labels");
+            labels.AddRange(extraLabels);
+            
+            return labels;
+        }
+
+        
 
         [return: NotNullIfNotNull("defaultValue")]
         T? ParseScriptPodJson<T>(InMemoryTentacleScriptLog tentacleScriptLog, string? json, string envVarName, string description, T? defaultValue = null) where T : class
