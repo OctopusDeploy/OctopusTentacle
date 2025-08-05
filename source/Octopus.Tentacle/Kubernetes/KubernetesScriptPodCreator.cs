@@ -427,7 +427,11 @@ namespace Octopus.Tentacle.Kubernetes
                 KubernetesConfig.PodLabelsJson,
                 KubernetesConfig.PodLabelsJsonVariableName,
                 "pod labels");
-            labels.AddRange(extraLabels);
+
+            if (extraLabels != null)
+            {
+                labels.AddRange(extraLabels);
+            }            
             
             return labels;
         }
