@@ -32,11 +32,15 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var (_, logs) = await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken);
 
+            var maxGetStatusCalls = tentacleConfigurationTestCase.ScriptServiceToTest == TentacleConfigurationTestCases.ScriptServiceV1Type
+                ? 4 // When using ScriptServiceV1 we check the final status twice on completion
+                : 3;
+
             recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Started
                 .Should()
                 .BeGreaterThan(0)
                 .And
-                .BeLessThan(3);
+                .BeLessThan(maxGetStatusCalls);
         }
     }
 }
