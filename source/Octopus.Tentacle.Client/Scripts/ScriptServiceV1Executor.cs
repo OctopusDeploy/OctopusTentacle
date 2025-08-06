@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Halibut.ServiceModel;
@@ -57,6 +58,21 @@ namespace Octopus.Tentacle.Client.Scripts
                 new CommandContext(scriptStatusResponse.Ticket, scriptStatusResponse.NextLogSequence, ScriptServiceVersion.ScriptServiceVersion1));
         }
 
+        static ScriptOperationExecutionResult AggregateAndMap(ScriptStatusResponse initialResponse, ScriptStatusResponse subsequentResponse)
+        {
+            var aggregatedLogs = initialResponse.Logs.Concat(subsequentResponse.Logs).ToList();
+
+            var aggregatedResponse = new ScriptStatusResponse(
+                ticket: initialResponse.Ticket,
+                state: subsequentResponse.State,
+                exitCode: subsequentResponse.ExitCode,
+                logs: aggregatedLogs,
+                nextLogSequence: subsequentResponse.NextLogSequence
+            );
+
+            return Map(aggregatedResponse);
+        }
+
         static ScriptStatus MapToScriptStatus(ScriptStatusResponse scriptStatusResponse)
         {
             return new ScriptStatus(scriptStatusResponse.State, scriptStatusResponse.ExitCode, scriptStatusResponse.Logs);
@@ -90,6 +106,25 @@ namespace Octopus.Tentacle.Client.Scripts
 
         public async Task<ScriptOperationExecutionResult> GetStatus(CommandContext commandContext, CancellationToken scriptExecutionCancellationToken)
         {
+            var scriptStatusResponseV1 = await GetStatusV1(commandContext, scriptExecutionCancellationToken).ConfigureAwait(false);
+
+            if (scriptStatusResponseV1.State != ProcessState.Complete)
+            {
+                return Map(scriptStatusResponseV1);
+            }
+
+            // Build a new CommandContext to return any remaining logs
+            var nextCommandContext = new CommandContext(
+                scriptTicket: scriptStatusResponseV1.Ticket,
+                nextLogSequence: scriptStatusResponseV1.NextLogSequence,
+                scripServiceVersionUsed: ScriptServiceVersion.ScriptServiceVersion1
+            );
+            var nextScriptStatusResponseV1 = await GetStatusV1(nextCommandContext, scriptExecutionCancellationToken).ConfigureAwait(false);
+            return AggregateAndMap(scriptStatusResponseV1, nextScriptStatusResponseV1);
+        }
+
+        async Task<ScriptStatusResponse> GetStatusV1(CommandContext commandContext, CancellationToken scriptExecutionCancellationToken)
+        {
             var scriptStatusResponseV1 = await rpcCallExecutor.ExecuteWithNoRetries(
                 RpcCall.Create<IScriptService>(nameof(IScriptService.GetStatus)),
                 async ct =>
@@ -102,8 +137,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 logger,
                 clientOperationMetricsBuilder,
                 scriptExecutionCancellationToken).ConfigureAwait(false);
-
-            return Map(scriptStatusResponseV1);
+            return scriptStatusResponseV1;
         }
 
         public async Task<ScriptOperationExecutionResult> CancelScript(CommandContext commandContext)
