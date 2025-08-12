@@ -19,6 +19,36 @@ namespace Octopus.Tentacle.Client.Tests
     {
         readonly TimeSpan retryBackoffBuffer = TimeSpan.FromSeconds(2);
 
+        //[Test]
+        public async Task? WhatDoesCancelledDo()
+        {
+            var expectedResult = Guid.NewGuid();
+
+            var handler = new RpcCallRetryHandler(TimeSpan.FromSeconds(60));
+
+            int count = 0;
+
+            var result = await handler.ExecuteWithRetries(
+                async ct =>
+                {
+                    await Task.CompletedTask;
+
+                    count++;
+                    if (count == 5)
+                    {
+                        return expectedResult;
+                    }
+
+                    throw new Exception();
+                },
+                onRetryAction: null,
+                onTimeoutAction: null,
+                CancellationToken.None);
+
+            result.Should().Be(expectedResult);
+        }
+        
+        
         [Test]
         public async Task ReturnsTheResultWhenNoRetries()
         {

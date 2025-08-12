@@ -38,6 +38,15 @@ namespace Octopus.Tentacle.Client.Retries
             Func<CancellationToken, Task<T>> action,
             OnRetryAction? onRetryAction,
             OnTimeoutAction? onTimeoutAction,
+            CancellationToken cancellationToken)
+        {
+            return await ExecuteWithRetries<T>(action, onRetryAction, onTimeoutAction, null, cancellationToken);
+        }
+
+        public async Task<T> ExecuteWithRetries<T>(
+            Func<CancellationToken, Task<T>> action,
+            OnRetryAction? onRetryAction,
+            OnTimeoutAction? onTimeoutAction,
             ITentacleClientTaskLog? logger,
             CancellationToken cancellationToken)
         {
