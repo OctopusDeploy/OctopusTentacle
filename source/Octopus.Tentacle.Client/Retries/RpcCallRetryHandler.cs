@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Tentacle.Client.Scripts;
+using Octopus.Tentacle.Contracts.Logging;
 using Polly;
 using Polly.Timeout;
 
@@ -37,6 +38,7 @@ namespace Octopus.Tentacle.Client.Retries
             Func<CancellationToken, Task<T>> action,
             OnRetryAction? onRetryAction,
             OnTimeoutAction? onTimeoutAction,
+            ITentacleClientTaskLog? logger,
             CancellationToken cancellationToken)
         {
             Exception? lastException = null;
@@ -70,6 +72,10 @@ namespace Octopus.Tentacle.Client.Retries
                     {
                         await onRetryAction.Invoke(exception, sleepDuration, retryCount, RetryTimeout, elapsedDuration, cancellationToken).ConfigureAwait(false);
                     }
+                }
+                else
+                {
+                    logger?.Info("Decided not to retry");
                 }
             }
 
