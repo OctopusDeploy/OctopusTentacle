@@ -24,7 +24,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             Version? version = tentacleConfigurationTestCase.Version;
 
-            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateLegacyBuilder().Build(CancellationToken);
+            var clientAndTentacle = await tentacleConfigurationTestCase.CreateLegacyBuilder().Build(CancellationToken);
 
             var capabilities = (await clientAndTentacle.TentacleClient.CapabilitiesServiceV2.GetCapabilitiesAsync(new(CancellationToken))).SupportedCapabilities;
 
@@ -48,7 +48,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             var version = tentacleConfigurationTestCase.Version;
 
-            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateLegacyBuilder().Build(CancellationToken);
+            var clientAndTentacle = await tentacleConfigurationTestCase.CreateLegacyBuilder().Build(CancellationToken);
 
             var capabilities = (await clientAndTentacle.TentacleClient.CapabilitiesServiceV2.GetCapabilitiesAsync(new(CancellationToken))).SupportedCapabilities;
 
@@ -75,7 +75,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var capabilitiesResponses = new List<CapabilitiesResponseV2>();
             var resumePortForwarder = false;
 
-            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+            var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithPortForwarder(out var portForwarder)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .DecorateCapabilitiesServiceV2With(d => d
