@@ -28,6 +28,7 @@ namespace Octopus.Tentacle.Tests.Integration
     /// Please review any changes to the assertions made by these tests carefully.
     /// </summary>
     [IntegrationTestTimeout]
+    [SkipOnEnvironmentsWithKnownPerformanceIssues("we don't expect customers to execute it in this environment in a situation where it needs to behave within a reasonable timeframe.")]
     public class TentacleCommandLineTests : IntegrationTest
     {
         [Test]

@@ -5,11 +5,13 @@ using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Tests.Integration.Support;
+using Octopus.Tentacle.Tests.Integration.Support.TestAttributes;
 using Octopus.Tentacle.Variables;
 
 namespace Octopus.Tentacle.Tests.Integration
 {
     [IntegrationTestTimeout]
+    // [SkipOnEnvironmentsWithKnownPerformanceIssues("we keep facing issues with disk space running out")]
     public class MachineConfigurationHomeDirectoryTests : IntegrationTest
     {
         [Test]
