@@ -53,7 +53,7 @@ namespace Octopus.Tentacle.Client.Retries
         public AsyncPolicy BuildRetryPolicy()
         {
             var handleAndRetryPolicy = Policy
-                .Handle<HalibutClientException>(exceptionPredicate: ex => ex.IsNetworkError() != HalibutNetworkExceptionType.NotANetworkError)
+                .Handle<HalibutClientException>(exceptionPredicate: ex => ex.IsRetryableError() != HalibutRetryableErrorType.NotRetryable)
                 .WaitAndRetryAsync(
                     retryCount: int.MaxValue,
                     sleepDurationProvider: retryAttempt => TimeSpan.FromSeconds(Math.Min(retryAttempt, 10)),

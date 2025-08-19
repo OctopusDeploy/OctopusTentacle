@@ -12,12 +12,14 @@ public class TestContextConnectionLog : ILog, ILogWriter
     readonly string endpoint;
     readonly string name;
     readonly LogLevel logLevel;
+    readonly Type? forContext;
 
-    public TestContextConnectionLog(string endpoint, string name, LogLevel logLevel)
+    public TestContextConnectionLog(string endpoint, string name, LogLevel logLevel, Type? forContext = null)
     {
         this.endpoint = endpoint;
         this.name = name;
         this.logLevel = logLevel;
+        this.forContext = forContext;
     }
 
     public void Write(EventType type, string message, params object?[] args)
@@ -35,15 +37,20 @@ public class TestContextConnectionLog : ILog, ILogWriter
         throw new NotImplementedException();
     }
 
+    public ILog ForContext<T>()
+    {
+        return new TestContextConnectionLog(endpoint, name, logLevel, typeof(T));
+    }
+
     void WriteInternal(LogEvent logEvent)
     {
         var logEventLogLevel = GetLogLevel(logEvent);
 
         if (logEventLogLevel >= logLevel)
         {
-            new SerilogLoggerBuilder().Build()
-                .ForContext<TestContextConnectionLog>()
-                .Write(GetSerilogLevel(logEvent), string.Format("{5, 16}: {0}:{1} {2}  {3} {4}", logEventLogLevel, logEvent.Error, endpoint, Thread.CurrentThread.ManagedThreadId, logEvent.FormattedMessage, name));
+            var logger = new SerilogLoggerBuilder().Build();
+            logger = forContext != null ? logger.ForContext(forContext) : logger.ForContext<TestContextConnectionLog>();
+            logger.Write(GetSerilogLevel(logEvent), string.Format("{5, 16}: {0}:{1} {2}  {3} {4}", logEventLogLevel, logEvent.Error, endpoint, Thread.CurrentThread.ManagedThreadId, logEvent.FormattedMessage, name));
         }
     }
 
