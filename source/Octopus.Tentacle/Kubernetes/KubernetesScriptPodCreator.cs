@@ -12,6 +12,7 @@ using k8s.Models;
 using Newtonsoft.Json;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
+using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Core.Services.Scripts.Locking;
@@ -362,7 +363,7 @@ namespace Octopus.Tentacle.Kubernetes
                     var message = $"Failed to deserialize env.{KubernetesConfig.PodResourceJsonVariableName} into valid pod resource requirements.{Environment.NewLine}JSON value: {json}{Environment.NewLine}Using default resource requests for script pod.";
                     //if we can't parse the JSON, fall back to the defaults below and warn the user
                     log.WarnFormat(e, message);
-                    //write a verbose message to the script log. 
+                    //write a verbose message to the script log.
                     tentacleScriptLog.Verbose(message);
                 }
             }
@@ -431,12 +432,43 @@ namespace Octopus.Tentacle.Kubernetes
             if (extraLabels != null)
             {
                 labels.AddRange(extraLabels);
-            }            
-            
+            }
+
+            labels.AddRange(GetAuthContextLabels(command));
+
             return labels;
         }
 
-        
+        static Dictionary<string, string> GetAuthContextLabels(StartKubernetesScriptCommandV1 command)
+        {
+            var labels = new Dictionary<string, string>();
+            if (command.AuthContext is not KubernetesAgentAuthContext kubernetesAgentAuthContext)
+            {
+                return labels;
+            }
+
+            if (kubernetesAgentAuthContext.ProjectSlug is not null)
+            {
+                labels["octopus.com/project"] = kubernetesAgentAuthContext.ProjectSlug;
+            }
+
+            if (kubernetesAgentAuthContext.EnvironmentSlug is not null)
+            {
+                labels["octopus.com/environment"] = kubernetesAgentAuthContext.EnvironmentSlug;
+            }
+
+            if (kubernetesAgentAuthContext.TenantSlug is not null)
+            {
+                labels["octopus.com/tenant"] = kubernetesAgentAuthContext.TenantSlug;
+            }
+
+            if (kubernetesAgentAuthContext.StepSlug is not null)
+            {
+                labels["octopus.com/step"] = kubernetesAgentAuthContext.StepSlug;
+            }
+
+            return labels;
+        }
 
         [return: NotNullIfNotNull("defaultValue")]
         T? ParseScriptPodJson<T>(InMemoryTentacleScriptLog tentacleScriptLog, string? json, string envVarName, string description, T? defaultValue = null) where T : class
@@ -456,7 +488,7 @@ namespace Octopus.Tentacle.Kubernetes
 
                 //if we can't parse the JSON, fall back to the defaults below and warn the user
                 log.WarnFormat(e, message);
-                //write a verbose message to the script log. 
+                //write a verbose message to the script log.
                 tentacleScriptLog.Verbose(message);
             }
 
