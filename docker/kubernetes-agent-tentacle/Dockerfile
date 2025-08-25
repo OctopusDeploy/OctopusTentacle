@@ -41,6 +41,9 @@ WORKDIR /
 # We know this won't reduce the image size at all. It's just to make the filesystem a little tidier.
 RUN rm -rf /tmp/*
 
+# Symlink the Tentacle executable without the capital T
+RUN ln -s /opt/octopus/tentacle/Tentacle /usr/bin/tentacle
+
 # Make the /.dotnet directory so that we can ensure ownership for the
 # certificate store 
 RUN mkdir /.dotnet

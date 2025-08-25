@@ -8,8 +8,10 @@ fi
 
 # In the scenario where a customer is using a custom certificate (which is mounted via a config map), we need to rehash the certificates
 # We just do this all the time because there is no downside
+set +e
 echo "Rehashing SSL/TLS certificates"
 openssl rehash /etc/ssl/certs
+set -e
 
 # Tentacle Docker images only support once instance per container. Running multiple instances can be achieved by running multiple containers.
 instanceName=Tentacle
