@@ -201,7 +201,7 @@ namespace Octopus.Tentacle.Kubernetes
                     Name = podName,
                     NamespaceProperty = KubernetesConfig.Namespace,
                     Labels = GetScriptPodLabels(tentacleScriptLog, command),
-                    Annotations = ParseScriptPodAnnotations(tentacleScriptLog)
+                    Annotations = GetScriptPodAnnotations(tentacleScriptLog, command),
                 },
                 Spec = new V1PodSpec
                 {
@@ -416,6 +416,13 @@ namespace Octopus.Tentacle.Kubernetes
                 KubernetesConfig.PodAnnotationsJsonVariableName,
                 "pod annotations");
 
+        Dictionary<string, string>? GetScriptPodAnnotations(InMemoryTentacleScriptLog tentacleScriptLog, StartKubernetesScriptCommandV1 command)
+        {
+            var annotations = ParseScriptPodAnnotations(tentacleScriptLog);
+            annotations.AddRange(GetAuthContext(command));
+            return annotations;
+        }
+
         Dictionary<string, string>? GetScriptPodLabels(InMemoryTentacleScriptLog tentacleScriptLog, StartKubernetesScriptCommandV1 command)
         {
             var labels = new Dictionary<string, string>
@@ -434,12 +441,17 @@ namespace Octopus.Tentacle.Kubernetes
                 labels.AddRange(extraLabels);
             }
 
-            labels.AddRange(GetAuthContextLabels(command));
+            if (KubernetesConfig.AgentPermissionsEnabled)
+            {
+                labels.Add($"{KubernetesConfig.AgentLabelNamespace}/permissions", "enabled");
+            }
+
+            labels.AddRange(GetAuthContext(command, true));
 
             return labels;
         }
 
-        static Dictionary<string, string> GetAuthContextLabels(StartKubernetesScriptCommandV1 command)
+        static Dictionary<string, string> GetAuthContext(StartKubernetesScriptCommandV1 command, bool hash = false)
         {
             var labels = new Dictionary<string, string>();
             if (command.AuthContext is not KubernetesAgentAuthContext kubernetesAgentAuthContext)
@@ -449,25 +461,40 @@ namespace Octopus.Tentacle.Kubernetes
 
             if (kubernetesAgentAuthContext.ProjectSlug is not null)
             {
-                labels["octopus.com/project"] = kubernetesAgentAuthContext.ProjectSlug;
+                labels[$"{KubernetesConfig.AgentLabelNamespace}/project"] = hash
+                    ? HashValue(kubernetesAgentAuthContext.ProjectSlug)
+                    : kubernetesAgentAuthContext.ProjectSlug;
             }
 
             if (kubernetesAgentAuthContext.EnvironmentSlug is not null)
             {
-                labels["octopus.com/environment"] = kubernetesAgentAuthContext.EnvironmentSlug;
+                labels[$"{KubernetesConfig.AgentLabelNamespace}/environment"] = hash
+                    ? HashValue(kubernetesAgentAuthContext.EnvironmentSlug)
+                    : kubernetesAgentAuthContext.EnvironmentSlug;
             }
 
             if (kubernetesAgentAuthContext.TenantSlug is not null)
             {
-                labels["octopus.com/tenant"] = kubernetesAgentAuthContext.TenantSlug;
+                labels[$"{KubernetesConfig.AgentLabelNamespace}/tenant"] = hash
+                    ? HashValue(kubernetesAgentAuthContext.TenantSlug)
+                    : kubernetesAgentAuthContext.TenantSlug;
             }
 
             if (kubernetesAgentAuthContext.StepSlug is not null)
             {
-                labels["octopus.com/step"] = kubernetesAgentAuthContext.StepSlug;
+                labels[$"{KubernetesConfig.AgentLabelNamespace}/step"] = hash
+                    ? HashValue(kubernetesAgentAuthContext.StepSlug)
+                    : kubernetesAgentAuthContext.StepSlug;
             }
 
             return labels;
+        }
+
+        static string HashValue(string value)
+        {
+            using var sha1 = SHA1.Create();
+            var bytes = sha1.ComputeHash(Encoding.UTF8.GetBytes(value));
+            return BitConverter.ToString(bytes);
         }
 
         [return: NotNullIfNotNull("defaultValue")]
