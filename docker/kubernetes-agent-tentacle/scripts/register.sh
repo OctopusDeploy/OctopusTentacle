@@ -199,6 +199,27 @@ function getStatusOfRegistration() {
     cut -d'"' -f4)
 }
 
+function setPollingProxy() {
+  local ARGS=()
+  ARGS+=('polling-proxy'
+    '--instance' "$instanceName")
+
+  if [[ -n "$TentaclePollingProxyHost" ]]; then
+    echo "Using polling proxy at $TentaclePollingProxyHost:$TentaclePollingProxyPort"
+    ARGS+=(
+      '--proxyEnable' 'true'
+      '--proxyHost' "$TentaclePollingProxyHost"
+      '--proxyPort' "$TentaclePollingProxyPort"
+      '--proxyUsername' "$TentaclePollingProxyUsername"
+      '--proxyPassword' "$TentaclePollingProxyPassword")
+  else
+    echo "Disabling polling proxy"
+        ARGS+=('--proxyEnable' 'false')
+  fi
+
+  tentacle "${ARGS[@]}"
+}
+
 function registerTentacle() {
   echo "Registering with server ..."
 
@@ -320,6 +341,7 @@ else
   validateVariables
 
   configureTentacle
+  setPollingProxy
   registerTentacle
   echo "Configuration successful"
 fi
