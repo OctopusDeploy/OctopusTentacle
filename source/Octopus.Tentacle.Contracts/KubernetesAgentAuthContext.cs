@@ -2,11 +2,7 @@ using System;
 
 namespace Octopus.Tentacle.Contracts
 {
-    public interface IAuthContext
-    {
-    }
-
-    public class KubernetesAgentAuthContext : IAuthContext
+    public class KubernetesAgentAuthContext
     {
         public KubernetesAgentAuthContext(string? projectSlug, string? environmentSlug, string? tenantSlug, string? stepSlug)
         {
