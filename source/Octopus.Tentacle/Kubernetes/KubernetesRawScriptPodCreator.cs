@@ -9,7 +9,6 @@ using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Core.Services.Scripts.Locking;
 using Octopus.Tentacle.Kubernetes.Crypto;
-using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Kubernetes
 {
@@ -44,7 +43,8 @@ namespace Octopus.Tentacle.Kubernetes
             V1Container container;
             if (containerSpec is not null)
             {
-                container = containerSpec;
+                // Deep clone the container spec to avoid modifying the original
+                container = containerSpec.Clone()!;
             }
             else
             {
