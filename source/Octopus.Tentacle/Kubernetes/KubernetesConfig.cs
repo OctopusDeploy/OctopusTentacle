@@ -79,6 +79,10 @@ namespace Octopus.Tentacle.Kubernetes
 
         public static string MetricsEnableVariableName => $"{EnvVarPrefix}__ENABLEMETRICSCAPTURE";
 
+        public static readonly string AgentLabelNamespace = "agent.octopus.com";
+        public static readonly string AgentPermissionsEnabledVariableName = $"{EnvVarPrefix}__PERMISSIONSENABLED";
+        public static bool AgentPermissionsEnabled => GetBoolEnvironmentVariableOrDefault(AgentPermissionsEnabledVariableName, true);
+
         public static bool MetricsIsEnabled
         {
             get
@@ -118,5 +122,8 @@ namespace Octopus.Tentacle.Kubernetes
 
         static string GetEnvironmentVariableOrDefault(string variable, string defaultValue)
             => Environment.GetEnvironmentVariable(variable) ?? defaultValue;
+
+        static bool GetBoolEnvironmentVariableOrDefault(string variable, bool defaultValue)
+            => bool.TryParse(Environment.GetEnvironmentVariable(variable), out var result) ? result : defaultValue;
     }
 }
