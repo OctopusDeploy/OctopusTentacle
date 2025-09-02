@@ -6,7 +6,7 @@ namespace Octopus.Tentacle.Kubernetes
 {
     public static class KubernetesContainerExtensionMethods
     {
-        [return: NotNullIfNotNull("source")]
+        [return: NotNullIfNotNull(nameof(source))]
         public static V1Container? Clone(this V1Container? source)
         {
             if (source is null)

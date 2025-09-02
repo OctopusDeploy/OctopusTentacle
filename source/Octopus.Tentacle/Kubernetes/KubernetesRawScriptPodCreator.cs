@@ -40,19 +40,12 @@ namespace Octopus.Tentacle.Kubernetes
 
         protected override async Task<IList<V1Container>> CreateInitContainers(StartKubernetesScriptCommandV1 command, string podName, string homeDir, string workspacePath, InMemoryTentacleScriptLog tentacleScriptLog, V1Container? containerSpec)
         {
-            V1Container container;
-            if (containerSpec is not null)
-            {
-                // Deep clone the container spec to avoid modifying the original
-                container = containerSpec.Clone()!;
-            }
-            else
-            {
-                container = new V1Container
+            // Deep clone the container spec to avoid modifying the original
+            var container = containerSpec.Clone() ??
+                new V1Container
                 {
                     Resources = GetScriptPodResourceRequirements(tentacleScriptLog)
                 };
-            }
 
             container.Name = $"{podName}-init";
             container.Image = command.PodImageConfiguration?.Image ?? await containerResolver.GetContainerImageForCluster();
