@@ -32,6 +32,7 @@ namespace Octopus.Tentacle.Kubernetes
         readonly IKubernetesPodService podService;
         readonly IKubernetesPodMonitor podMonitor;
         readonly IKubernetesSecretService secretService;
+        readonly IKubernetesCustomResourceService customResourceService;
         readonly IKubernetesPodContainerResolver containerResolver;
         readonly IApplicationInstanceSelector appInstanceSelector;
         readonly ISystemLog log;
@@ -45,6 +46,7 @@ namespace Octopus.Tentacle.Kubernetes
             IKubernetesPodService podService,
             IKubernetesPodMonitor podMonitor,
             IKubernetesSecretService secretService,
+            IKubernetesCustomResourceService customResourceService,
             IKubernetesPodContainerResolver containerResolver,
             IApplicationInstanceSelector appInstanceSelector,
             ISystemLog log,
@@ -57,6 +59,7 @@ namespace Octopus.Tentacle.Kubernetes
             this.podService = podService;
             this.podMonitor = podMonitor;
             this.secretService = secretService;
+            this.customResourceService = customResourceService;
             this.containerResolver = containerResolver;
             this.appInstanceSelector = appInstanceSelector;
             this.log = log;
@@ -193,6 +196,8 @@ namespace Octopus.Tentacle.Kubernetes
                 .Select(secretName => new V1LocalObjectReference(secretName))
                 .ToList();
 
+            var scriptPodTemplate = await customResourceService.GetOldestScriptPodTemplateCustomResource(cancellationToken);
+
             var pod = new V1Pod
             {
                 Metadata = new V1ObjectMeta
@@ -201,20 +206,42 @@ namespace Octopus.Tentacle.Kubernetes
                     NamespaceProperty = KubernetesConfig.Namespace,
                     Labels = GetScriptPodLabels(tentacleScriptLog, command),
                     Annotations = ParseScriptPodAnnotations(tentacleScriptLog)
-                },
-                Spec = new V1PodSpec
+                }
+            };
+
+            //if the script pod template has been defined, use that
+            if (scriptPodTemplate is not null)
+            {
+                pod.Spec = scriptPodTemplate.Spec.PodSpec;
+                // new V1PodSpec
+                // {
+                //     InitContainers = await CreateInitContainers(command, podName, homeDir, workspacePath, tentacleScriptLog),
+                //     Containers = await CreateScriptContainers(command, podName, scriptName, homeDir, workspacePath, workspace.ScriptArguments, tentacleScriptLog),
+                //     ImagePullSecrets = imagePullSecretNames,
+                //     ServiceAccountName = serviceAccountName,
+                //     RestartPolicy = "Never",
+                //     Volumes = CreateVolumes(command),
+                //     Affinity = ParseScriptPodAffinity(tentacleScriptLog),
+                //     Tolerations = ParseScriptPodTolerations(tentacleScriptLog),
+                //     SecurityContext = ParseScriptPodSecurityContext(tentacleScriptLog)
+                // }
+            }
+            else
+            {
+                pod.Spec = new V1PodSpec
                 {
-                    InitContainers = await CreateInitContainers(command, podName, homeDir, workspacePath, tentacleScriptLog),
-                    Containers = await CreateScriptContainers(command, podName, scriptName, homeDir, workspacePath, workspace.ScriptArguments, tentacleScriptLog),
-                    ImagePullSecrets = imagePullSecretNames,
-                    ServiceAccountName = serviceAccountName,
                     RestartPolicy = "Never",
-                    Volumes = CreateVolumes(command),
                     Affinity = ParseScriptPodAffinity(tentacleScriptLog),
                     Tolerations = ParseScriptPodTolerations(tentacleScriptLog),
                     SecurityContext = ParseScriptPodSecurityContext(tentacleScriptLog)
-                }
-            };
+                };
+            }
+
+            pod.Spec.InitContainers = await CreateInitContainers(command, podName, homeDir, workspacePath, tentacleScriptLog, scriptPodTemplate?.Spec.ScriptContainerSpec);
+            pod.Spec.Containers = await CreateScriptContainers(command, podName, scriptName, homeDir, workspacePath, workspace.ScriptArguments, tentacleScriptLog, scriptPodTemplate?.Spec);
+            pod.Spec.ImagePullSecrets = imagePullSecretNames;
+            pod.Spec.ServiceAccountName = serviceAccountName;
+            pod.Spec.Volumes = CreateVolumes(command);
 
             var createdPod = await podService.Create(pod, cancellationToken);
             podMonitor.AddPendingPod(command.ScriptTicket, createdPod);
@@ -223,15 +250,15 @@ namespace Octopus.Tentacle.Kubernetes
             LogVerboseToBothLogs($"Executing script in Kubernetes Pod '{podName}'. Image: '{scriptContainer.Image}'.", tentacleScriptLog);
         }
 
-        protected virtual async Task<IList<V1Container>> CreateScriptContainers(StartKubernetesScriptCommandV1 command, string podName, string scriptName, string homeDir, string workspacePath, string[]? scriptArguments, InMemoryTentacleScriptLog tentacleScriptLog)
+        protected virtual async Task<IList<V1Container>> CreateScriptContainers(StartKubernetesScriptCommandV1 command, string podName, string scriptName, string homeDir, string workspacePath, string[]? scriptArguments, InMemoryTentacleScriptLog tentacleScriptLog, ScriptPodTemplateSpec? spec)
         {
             return new List<V1Container>
             {
-                await CreateScriptContainer(command, podName, scriptName, homeDir, workspacePath, scriptArguments, tentacleScriptLog)
-            }.AddIfNotNull(CreateWatchdogContainer(homeDir));
+                await CreateScriptContainer(command, podName, scriptName, homeDir, workspacePath, scriptArguments, tentacleScriptLog, spec?.ScriptContainerSpec)
+            }.AddIfNotNull(CreateWatchdogContainer(homeDir, spec?.WatchdogContainerSpec));
         }
 
-        protected virtual async Task<IList<V1Container>> CreateInitContainers(StartKubernetesScriptCommandV1 command, string podName, string homeDir, string workspacePath, InMemoryTentacleScriptLog tentacleScriptLog)
+        protected virtual async Task<IList<V1Container>> CreateInitContainers(StartKubernetesScriptCommandV1 command, string podName, string homeDir, string workspacePath, InMemoryTentacleScriptLog tentacleScriptLog, V1Container? containerSpec)
         {
             await Task.CompletedTask;
             return new List<V1Container>();
@@ -280,11 +307,9 @@ namespace Octopus.Tentacle.Kubernetes
             tentacleScriptLog.Verbose(message);
         }
 
-        protected async Task<V1Container> CreateScriptContainer(StartKubernetesScriptCommandV1 command, string podName, string scriptName, string homeDir, string workspacePath, string[]? scriptArguments, InMemoryTentacleScriptLog tentacleScriptLog)
+        protected async Task<V1Container> CreateScriptContainer(StartKubernetesScriptCommandV1 command, string podName, string scriptName, string homeDir, string workspacePath, string[]? scriptArguments, InMemoryTentacleScriptLog tentacleScriptLog, V1Container? containerSpec)
         {
             var spaceInformation = kubernetesPhysicalFileSystem.GetStorageInformation();
-
-            var resourceRequirements = GetScriptPodResourceRequirements(tentacleScriptLog);
 
             var commandString = string.Join(" ", new[]
                 {
@@ -308,44 +333,55 @@ namespace Octopus.Tentacle.Kubernetes
                 });
             }
 
-            return new V1Container
+            V1Container container;
+            if (containerSpec is not null)
             {
-                Name = podName,
-                Image = command.PodImageConfiguration?.Image ?? await containerResolver.GetContainerImageForCluster(),
-                ImagePullPolicy = KubernetesConfig.ScriptPodPullPolicy,
-                Command = new List<string> { "sh" },
-                Args = new List<string>
-                    {
-                        "-c",
-                        commandString
-                    }
-                    .ToList(),
-                VolumeMounts = new List<V1VolumeMount>
+                container = containerSpec;
+            }
+            else
+            {
+                var resourceRequirements = GetScriptPodResourceRequirements(tentacleScriptLog);
+                container = new V1Container
                 {
-                    new(homeDir, "tentacle-home"),
-                    new ("/root/agent_upgrade/", "agent-upgrade"),
-                    new ("/tmp/agent_upgrade/", "agent-upgrade")
-                },
-                Env = new List<V1EnvVar>
-                {
-                    new(KubernetesConfig.NamespaceVariableName, KubernetesConfig.Namespace),
-                    new(KubernetesConfig.HelmReleaseNameVariableName, KubernetesConfig.HelmReleaseName),
-                    new(KubernetesConfig.HelmChartVersionVariableName, KubernetesConfig.HelmChartVersion),
-                    new(KubernetesConfig.KubernetesMonitorEnabledVariableName, KubernetesConfig.KubernetesMonitorEnabled),
-                    new(KubernetesConfig.ServerCommsAddressesVariableName, string.Join(",", KubernetesConfig.ServerCommsAddresses)),
-                    new(KubernetesConfig.PersistentVolumeFreeBytesVariableName, spaceInformation?.freeSpaceBytes.ToString()),
-                    new(KubernetesConfig.PersistentVolumeSizeBytesVariableName, spaceInformation?.totalSpaceBytes.ToString()),
-                    new(EnvironmentVariables.TentacleHome, homeDir),
-                    new(EnvironmentVariables.TentacleInstanceName, appInstanceSelector.Current.InstanceName),
-                    new(EnvironmentVariables.TentacleVersion, Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleVersion)),
-                    new(EnvironmentVariables.TentacleCertificateSignatureAlgorithm, Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleCertificateSignatureAlgorithm)),
-                    new("OCTOPUS_RUNNING_IN_CONTAINER", "Y")
+                    Resources = resourceRequirements
+                };
+            }
 
-                    //We intentionally exclude setting "TentacleJournal" since it doesn't make sense to keep a Deployment Journal for Kubernetes deployments
-                },
-                EnvFrom = envFrom,
-                Resources = resourceRequirements
+            container.Name = podName;
+            container.Image = command.PodImageConfiguration?.Image ?? await containerResolver.GetContainerImageForCluster();
+            container.ImagePullPolicy = KubernetesConfig.ScriptPodPullPolicy;
+            container.Command = new List<string> { "sh" };
+            container.Args = new List<string>
+            {
+                "-c",
+                commandString
             };
+            container.VolumeMounts = new List<V1VolumeMount>
+            {
+                new(homeDir, "tentacle-home"),
+                new("/root/agent_upgrade/", "agent-upgrade"),
+                new("/tmp/agent_upgrade/", "agent-upgrade")
+            };
+            container.Env = new List<V1EnvVar>
+            {
+                new(KubernetesConfig.NamespaceVariableName, KubernetesConfig.Namespace),
+                new(KubernetesConfig.HelmReleaseNameVariableName, KubernetesConfig.HelmReleaseName),
+                new(KubernetesConfig.HelmChartVersionVariableName, KubernetesConfig.HelmChartVersion),
+                new(KubernetesConfig.KubernetesMonitorEnabledVariableName, KubernetesConfig.KubernetesMonitorEnabled),
+                new(KubernetesConfig.ServerCommsAddressesVariableName, string.Join(",", KubernetesConfig.ServerCommsAddresses)),
+                new(KubernetesConfig.PersistentVolumeFreeBytesVariableName, spaceInformation?.freeSpaceBytes.ToString()),
+                new(KubernetesConfig.PersistentVolumeSizeBytesVariableName, spaceInformation?.totalSpaceBytes.ToString()),
+                new(EnvironmentVariables.TentacleHome, homeDir),
+                new(EnvironmentVariables.TentacleInstanceName, appInstanceSelector.Current.InstanceName),
+                new(EnvironmentVariables.TentacleVersion, Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleVersion)),
+                new(EnvironmentVariables.TentacleCertificateSignatureAlgorithm, Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleCertificateSignatureAlgorithm)),
+                new("OCTOPUS_RUNNING_IN_CONTAINER", "Y")
+
+                //We intentionally exclude setting "TentacleJournal" since it doesn't make sense to keep a Deployment Journal for Kubernetes deployments
+            };
+            container.EnvFrom = envFrom;
+
+            return container;
         }
 
         protected V1ResourceRequirements GetScriptPodResourceRequirements(InMemoryTentacleScriptLog tentacleScriptLog)
@@ -431,12 +467,10 @@ namespace Octopus.Tentacle.Kubernetes
             if (extraLabels != null)
             {
                 labels.AddRange(extraLabels);
-            }            
-            
+            }
+
             return labels;
         }
-
-        
 
         [return: NotNullIfNotNull("defaultValue")]
         T? ParseScriptPodJson<T>(InMemoryTentacleScriptLog tentacleScriptLog, string? json, string envVarName, string description, T? defaultValue = null) where T : class
@@ -463,35 +497,46 @@ namespace Octopus.Tentacle.Kubernetes
             return defaultValue;
         }
 
-        static V1Container? CreateWatchdogContainer(string homeDir)
+        static V1Container? CreateWatchdogContainer(string homeDir, V1Container? containerSpec)
         {
             if (KubernetesConfig.NfsWatchdogImage is null)
             {
                 return null;
             }
 
-            return new V1Container
+            V1Container container;
+            if (containerSpec is not null)
             {
-                Name = "nfs-watchdog",
-                Image = KubernetesConfig.NfsWatchdogImage,
-                VolumeMounts = new List<V1VolumeMount>
+                container = containerSpec;
+            }
+            else
+            {
+                container = new V1Container
                 {
-                    new(homeDir, "tentacle-home"),
-                },
-                Env = new List<V1EnvVar>
-                {
-                    new(EnvironmentVariables.NfsWatchdogDirectory, homeDir)
-                },
-                Resources = new V1ResourceRequirements
-                {
-                    //The watchdog should be very lightweight
-                    Requests = new Dictionary<string, ResourceQuantity>
+                    Resources = new V1ResourceRequirements
                     {
-                        ["cpu"] = new("25m"),
-                        ["memory"] = new("100Mi")
+                        //The watchdog should be very lightweight
+                        Requests = new Dictionary<string, ResourceQuantity>
+                        {
+                            ["cpu"] = new("25m"),
+                            ["memory"] = new("100Mi")
+                        }
                     }
-                }
+                };
+            }
+
+            container.Name = "nfs-watchdog";
+            container.Image = KubernetesConfig.NfsWatchdogImage;
+            container.VolumeMounts = new List<V1VolumeMount>
+            {
+                new(homeDir, "tentacle-home"),
             };
+            container.Env = new List<V1EnvVar>
+            {
+                new(EnvironmentVariables.NfsWatchdogDirectory, homeDir)
+            };
+
+            return container;
         }
     }
 }
