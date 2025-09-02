@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -36,9 +37,10 @@ namespace Octopus.Tentacle.Kubernetes
                         "scriptpodtemplates",
                         cancellationToken: cancellationToken);
                 }
-                catch (HttpOperationException opException)
-                    when (opException.Response.StatusCode == HttpStatusCode.NotFound)
+                catch (Exception ex)
                 {
+                    // we are happy to handle all exceptions here and just fallback
+                    Log.WarnFormat(ex, "Failed to retrieve 'scriptpodtemplates' custom resource");
                     return null;
                 }
 
