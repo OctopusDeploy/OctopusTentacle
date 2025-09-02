@@ -19,6 +19,9 @@ namespace Octopus.Tentacle.Kubernetes
 
     public class ScriptPodTemplateSpec
     {
+        [JsonPropertyName("podMetadata")]
+        public V1ObjectMeta? PodMetadata { get; set; }
+        
         [JsonPropertyName("podSpec")]
         public V1PodSpec PodSpec { get; set; }
 

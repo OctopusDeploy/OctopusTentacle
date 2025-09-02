@@ -198,24 +198,17 @@ namespace Octopus.Tentacle.Kubernetes
 
             var scriptPodTemplate = await customResourceService.GetOldestScriptPodTemplateCustomResource(cancellationToken);
 
-            var pod = new V1Pod
-            {
-                Metadata = new V1ObjectMeta
-                {
-                    Name = podName,
-                    NamespaceProperty = KubernetesConfig.Namespace,
-                    Labels = GetScriptPodLabels(tentacleScriptLog, command),
-                    Annotations = ParseScriptPodAnnotations(tentacleScriptLog)
-                }
-            };
+            var pod = new V1Pod();
 
             //if the script pod template has been defined, use that
             if (scriptPodTemplate is not null)
             {
                 pod.Spec = scriptPodTemplate.Spec.PodSpec;
+                pod.Metadata = scriptPodTemplate.Spec.PodMetadata ?? new V1ObjectMeta();
             }
             else
             {
+                pod.Metadata = new V1ObjectMeta();
                 pod.Spec = new V1PodSpec
                 {
                     RestartPolicy = "Never",
@@ -225,11 +218,16 @@ namespace Octopus.Tentacle.Kubernetes
                 };
             }
 
+            pod.Metadata.Name = podName;
+            pod.Metadata.NamespaceProperty = KubernetesConfig.Namespace;
+            pod.Metadata.Labels = Merge(pod.Metadata.Labels, GetScriptPodLabels(tentacleScriptLog, command));
+            pod.Metadata.Annotations = Merge(pod.Metadata.Annotations, ParseScriptPodAnnotations(tentacleScriptLog));
+
             pod.Spec.InitContainers = await CreateInitContainers(command, podName, homeDir, workspacePath, tentacleScriptLog, scriptPodTemplate?.Spec.ScriptContainerSpec);
             pod.Spec.Containers = await CreateScriptContainers(command, podName, scriptName, homeDir, workspacePath, workspace.ScriptArguments, tentacleScriptLog, scriptPodTemplate?.Spec);
             pod.Spec.ImagePullSecrets = imagePullSecretNames;
             pod.Spec.ServiceAccountName = serviceAccountName;
-            pod.Spec.Volumes.AddRange(CreateVolumes(command));
+            pod.Spec.Volumes = Merge(pod.Spec.Volumes, CreateVolumes(command));
 
             var createdPod = await podService.Create(pod, cancellationToken);
             podMonitor.AddPendingPod(command.ScriptTicket, createdPod);
@@ -344,15 +342,15 @@ namespace Octopus.Tentacle.Kubernetes
                 "-c",
                 commandString
             };
-            
-            container.VolumeMounts.AddRange(new[]
+
+            container.VolumeMounts = Merge(container.VolumeMounts, new[]
             {
                 new V1VolumeMount(homeDir, "tentacle-home"),
                 new V1VolumeMount("/root/agent_upgrade/", "agent-upgrade"),
                 new V1VolumeMount("/tmp/agent_upgrade/", "agent-upgrade")
             });
 
-            container.Env.AddRange(new List<V1EnvVar>
+            container.Env = Merge(container.Env, new List<V1EnvVar>
             {
                 new(KubernetesConfig.NamespaceVariableName, KubernetesConfig.Namespace),
                 new(KubernetesConfig.HelmReleaseNameVariableName, KubernetesConfig.HelmReleaseName),
@@ -370,7 +368,7 @@ namespace Octopus.Tentacle.Kubernetes
                 //We intentionally exclude setting "TentacleJournal" since it doesn't make sense to keep a Deployment Journal for Kubernetes deployments
             });
 
-            container.EnvFrom.AddRange(envFrom);
+            container.EnvFrom = Merge(container.EnvFrom, envFrom);
             return container;
         }
 
@@ -524,6 +522,38 @@ namespace Octopus.Tentacle.Kubernetes
             container.Env.Add(new V1EnvVar(EnvironmentVariables.NfsWatchdogDirectory, homeDir));
 
             return container;
+        }
+
+        protected static IDictionary<string, string> Merge(IDictionary<string, string>? a, IDictionary<string, string>? b)
+        {
+            var dict = new Dictionary<string, string>();
+            if (a is not null)
+            {
+                dict.AddRange(a);
+            }
+
+            if (b is not null)
+            {
+                dict.AddRange(b);
+            }
+
+            return dict;
+        }
+
+        protected static IList<T> Merge<T>(IEnumerable<T>? a, IEnumerable<T>? b)
+        {
+            var list = new List<T>();
+            if (a is not null)
+            {
+                list.AddRange(a);
+            }
+
+            if (b is not null)
+            {
+                list.AddRange(b);
+            }
+
+            return list;
         }
     }
 }

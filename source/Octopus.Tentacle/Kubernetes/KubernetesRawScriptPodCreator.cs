@@ -58,7 +58,7 @@ namespace Octopus.Tentacle.Kubernetes
             container.Image = command.PodImageConfiguration?.Image ?? await containerResolver.GetContainerImageForCluster();
             container.ImagePullPolicy = KubernetesConfig.ScriptPodPullPolicy;
             container.Command = new List<string> { "sh", "-c", GetInitExecutionScript("/nfs-mount", homeDir, workspacePath) };
-            container.VolumeMounts.AddRange(new[] { new V1VolumeMount("/nfs-mount", "init-nfs-volume"), new V1VolumeMount(homeDir, "tentacle-home") });
+            container.VolumeMounts = Merge(container.VolumeMounts, new[] { new V1VolumeMount("/nfs-mount", "init-nfs-volume"), new V1VolumeMount(homeDir, "tentacle-home") });
 
             return new List<V1Container> { container };
         }
