@@ -509,11 +509,11 @@ namespace Octopus.Tentacle.Kubernetes
 
             container.Name = "nfs-watchdog";
             container.Image = KubernetesConfig.NfsWatchdogImage;
-            container.VolumeMounts.AddRange(new List<V1VolumeMount>
+            container.VolumeMounts = Merge(container.VolumeMounts, new List<V1VolumeMount>
             {
                 new(homeDir, "tentacle-home"),
             });
-            container.Env.Add(new V1EnvVar(EnvironmentVariables.NfsWatchdogDirectory, homeDir));
+            container.Env = Merge(container.Env, new[] { new V1EnvVar(EnvironmentVariables.NfsWatchdogDirectory, homeDir) });
 
             return container;
         }
