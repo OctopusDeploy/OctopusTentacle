@@ -9,7 +9,7 @@ using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Core.Services.Scripts.Locking;
 using Octopus.Tentacle.Kubernetes.Crypto;
-using Octopus.Tentacle.Scripts;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Kubernetes
 {
@@ -58,7 +58,7 @@ namespace Octopus.Tentacle.Kubernetes
             container.Image = command.PodImageConfiguration?.Image ?? await containerResolver.GetContainerImageForCluster();
             container.ImagePullPolicy = KubernetesConfig.ScriptPodPullPolicy;
             container.Command = new List<string> { "sh", "-c", GetInitExecutionScript("/nfs-mount", homeDir, workspacePath) };
-            container.VolumeMounts = new List<V1VolumeMount> { new("/nfs-mount", "init-nfs-volume"), new(homeDir, "tentacle-home") };
+            container.VolumeMounts.AddRange(new[] { new V1VolumeMount("/nfs-mount", "init-nfs-volume"), new V1VolumeMount(homeDir, "tentacle-home") });
 
             return new List<V1Container> { container };
         }

@@ -213,18 +213,6 @@ namespace Octopus.Tentacle.Kubernetes
             if (scriptPodTemplate is not null)
             {
                 pod.Spec = scriptPodTemplate.Spec.PodSpec;
-                // new V1PodSpec
-                // {
-                //     InitContainers = await CreateInitContainers(command, podName, homeDir, workspacePath, tentacleScriptLog),
-                //     Containers = await CreateScriptContainers(command, podName, scriptName, homeDir, workspacePath, workspace.ScriptArguments, tentacleScriptLog),
-                //     ImagePullSecrets = imagePullSecretNames,
-                //     ServiceAccountName = serviceAccountName,
-                //     RestartPolicy = "Never",
-                //     Volumes = CreateVolumes(command),
-                //     Affinity = ParseScriptPodAffinity(tentacleScriptLog),
-                //     Tolerations = ParseScriptPodTolerations(tentacleScriptLog),
-                //     SecurityContext = ParseScriptPodSecurityContext(tentacleScriptLog)
-                // }
             }
             else
             {
@@ -241,7 +229,7 @@ namespace Octopus.Tentacle.Kubernetes
             pod.Spec.Containers = await CreateScriptContainers(command, podName, scriptName, homeDir, workspacePath, workspace.ScriptArguments, tentacleScriptLog, scriptPodTemplate?.Spec);
             pod.Spec.ImagePullSecrets = imagePullSecretNames;
             pod.Spec.ServiceAccountName = serviceAccountName;
-            pod.Spec.Volumes = CreateVolumes(command);
+            pod.Spec.Volumes.AddRange(CreateVolumes(command));
 
             var createdPod = await podService.Create(pod, cancellationToken);
             podMonitor.AddPendingPod(command.ScriptTicket, createdPod);
@@ -356,13 +344,15 @@ namespace Octopus.Tentacle.Kubernetes
                 "-c",
                 commandString
             };
-            container.VolumeMounts = new List<V1VolumeMount>
+            
+            container.VolumeMounts.AddRange(new[]
             {
-                new(homeDir, "tentacle-home"),
-                new("/root/agent_upgrade/", "agent-upgrade"),
-                new("/tmp/agent_upgrade/", "agent-upgrade")
-            };
-            container.Env = new List<V1EnvVar>
+                new V1VolumeMount(homeDir, "tentacle-home"),
+                new V1VolumeMount("/root/agent_upgrade/", "agent-upgrade"),
+                new V1VolumeMount("/tmp/agent_upgrade/", "agent-upgrade")
+            });
+
+            container.Env.AddRange(new List<V1EnvVar>
             {
                 new(KubernetesConfig.NamespaceVariableName, KubernetesConfig.Namespace),
                 new(KubernetesConfig.HelmReleaseNameVariableName, KubernetesConfig.HelmReleaseName),
@@ -378,9 +368,9 @@ namespace Octopus.Tentacle.Kubernetes
                 new("OCTOPUS_RUNNING_IN_CONTAINER", "Y")
 
                 //We intentionally exclude setting "TentacleJournal" since it doesn't make sense to keep a Deployment Journal for Kubernetes deployments
-            };
-            container.EnvFrom = envFrom;
+            });
 
+            container.EnvFrom.AddRange(envFrom);
             return container;
         }
 
@@ -527,14 +517,11 @@ namespace Octopus.Tentacle.Kubernetes
 
             container.Name = "nfs-watchdog";
             container.Image = KubernetesConfig.NfsWatchdogImage;
-            container.VolumeMounts = new List<V1VolumeMount>
+            container.VolumeMounts.AddRange(new List<V1VolumeMount>
             {
                 new(homeDir, "tentacle-home"),
-            };
-            container.Env = new List<V1EnvVar>
-            {
-                new(EnvironmentVariables.NfsWatchdogDirectory, homeDir)
-            };
+            });
+            container.Env.Add(new V1EnvVar(EnvironmentVariables.NfsWatchdogDirectory, homeDir));
 
             return container;
         }
