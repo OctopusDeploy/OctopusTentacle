@@ -198,30 +198,24 @@ namespace Octopus.Tentacle.Kubernetes
 
             var scriptPodTemplate = await customResourceService.GetOldestScriptPodTemplateCustomResource(cancellationToken);
 
-            var pod = new V1Pod();
-
-            //if the script pod template has been defined, use that
-            if (scriptPodTemplate is not null)
+            var pod = new V1Pod
             {
-                pod.Spec = scriptPodTemplate.Spec.PodSpec;
-                pod.Metadata = scriptPodTemplate.Spec.PodMetadata ?? new V1ObjectMeta();
-            }
-            else
-            {
-                pod.Metadata = new V1ObjectMeta();
-                pod.Spec = new V1PodSpec
+                Metadata = new V1ObjectMeta
+                {
+                    Name = podName,
+                    NamespaceProperty = KubernetesConfig.Namespace,
+                    Labels = Merge(scriptPodTemplate?.Spec.PodMetadata?.Labels, GetScriptPodLabels(tentacleScriptLog, command)),
+                    Annotations = Merge(scriptPodTemplate?.Spec.PodMetadata?.Annotations, ParseScriptPodAnnotations(tentacleScriptLog))
+                },
+                //if the script pod template spec has been defined, use that
+                Spec = scriptPodTemplate?.Spec.PodSpec ?? new V1PodSpec
                 {
                     RestartPolicy = "Never",
                     Affinity = ParseScriptPodAffinity(tentacleScriptLog),
                     Tolerations = ParseScriptPodTolerations(tentacleScriptLog),
                     SecurityContext = ParseScriptPodSecurityContext(tentacleScriptLog)
-                };
-            }
-
-            pod.Metadata.Name = podName;
-            pod.Metadata.NamespaceProperty = KubernetesConfig.Namespace;
-            pod.Metadata.Labels = Merge(pod.Metadata.Labels, GetScriptPodLabels(tentacleScriptLog, command));
-            pod.Metadata.Annotations = Merge(pod.Metadata.Annotations, ParseScriptPodAnnotations(tentacleScriptLog));
+                }
+            };
 
             pod.Spec.InitContainers = await CreateInitContainers(command, podName, homeDir, workspacePath, tentacleScriptLog, scriptPodTemplate?.Spec.ScriptContainerSpec);
             pod.Spec.Containers = await CreateScriptContainers(command, podName, scriptName, homeDir, workspacePath, workspace.ScriptArguments, tentacleScriptLog, scriptPodTemplate?.Spec);
