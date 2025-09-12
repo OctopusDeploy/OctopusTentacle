@@ -32,14 +32,14 @@ esac
 
 # Construct binary name
 BINARY_NAME="bootstrapRunner-${OS}-${GO_ARCH}"
-BINARY_PATH="$(dirname "$0")/$BINARY_NAME"
+BINARY_PATH="/bootstrapRunner/$BINARY_NAME"
 
 # Check if the binary exists
 if [ ! -f "$BINARY_PATH" ]; then
     echo "Error: Bootstrap runner binary not found for architecture ${OS}-${GO_ARCH}" >&2
     echo "Looking for: $BINARY_PATH" >&2
     echo "Available binaries:" >&2
-    ls -1 "$(dirname "$0")"/bootstrapRunner-* 2>/dev/null || echo "  No bootstrap binaries found" >&2
+    ls -1 "/bootstrapRunner"/bootstrapRunner-* 2>/dev/null || echo "  No bootstrap binaries found" >&2
     exit 1
 fi
 
