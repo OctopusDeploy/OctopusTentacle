@@ -8,8 +8,10 @@ fi
 
 # In the scenario where a customer is using a custom certificate (which is mounted via a config map), we need to rehash the certificates
 # We just do this all the time because there is no downside
+set +e
 echo "Rehashing SSL/TLS certificates"
 openssl rehash /etc/ssl/certs
+set -e
 
 # Tentacle Docker images only support once instance per container. Running multiple instances can be achieved by running multiple containers.
 instanceName=Tentacle
@@ -197,6 +199,27 @@ function getStatusOfRegistration() {
     cut -d'"' -f4)
 }
 
+function setPollingProxy() {
+  local ARGS=()
+  ARGS+=('polling-proxy'
+    '--instance' "$instanceName")
+
+  if [[ -n "$TentaclePollingProxyHost" ]]; then
+    echo "Using polling proxy at $TentaclePollingProxyHost:$TentaclePollingProxyPort"
+    ARGS+=(
+      '--proxyEnable' 'true'
+      '--proxyHost' "$TentaclePollingProxyHost"
+      '--proxyPort' "$TentaclePollingProxyPort"
+      '--proxyUsername' "$TentaclePollingProxyUsername"
+      '--proxyPassword' "$TentaclePollingProxyPassword")
+  else
+    echo "Disabling polling proxy"
+        ARGS+=('--proxyEnable' 'false')
+  fi
+
+  tentacle "${ARGS[@]}"
+}
+
 function registerTentacle() {
   echo "Registering with server ..."
 
@@ -318,6 +341,7 @@ else
   validateVariables
 
   configureTentacle
+  setPollingProxy
   registerTentacle
   echo "Configuration successful"
 fi
