@@ -473,6 +473,11 @@ namespace Octopus.Tentacle.Kubernetes
         {
             var labels = new Dictionary<string, string>();
 
+            if (command.AuthContext is null)
+            {
+                return labels;
+            }
+
             labels[$"{KubernetesConfig.AgentLabelNamespace}/project"] = hash
                 ? HashValue(command.AuthContext.ProjectSlug)
                 : command.AuthContext.ProjectSlug;
