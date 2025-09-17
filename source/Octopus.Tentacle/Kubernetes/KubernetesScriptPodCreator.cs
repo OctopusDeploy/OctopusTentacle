@@ -381,7 +381,7 @@ namespace Octopus.Tentacle.Kubernetes
                     var message = $"Failed to deserialize env.{KubernetesConfig.PodResourceJsonVariableName} into valid pod resource requirements.{Environment.NewLine}JSON value: {json}{Environment.NewLine}Using default resource requests for script pod.";
                     //if we can't parse the JSON, fall back to the defaults below and warn the user
                     log.WarnFormat(e, message);
-                    //write a verbose message to the script log. 
+                    //write a verbose message to the script log.
                     tentacleScriptLog.Verbose(message);
                 }
             }
@@ -472,38 +472,29 @@ namespace Octopus.Tentacle.Kubernetes
         static Dictionary<string, string> GetAuthContext(StartKubernetesScriptCommandV1 command, bool hash = false)
         {
             var labels = new Dictionary<string, string>();
-            if (command.AuthContext is not KubernetesAgentAuthContext kubernetesAgentAuthContext)
-            {
-                return labels;
-            }
 
-            if (kubernetesAgentAuthContext.ProjectSlug is not null)
-            {
-                labels[$"{KubernetesConfig.AgentLabelNamespace}/project"] = hash
-                    ? HashValue(kubernetesAgentAuthContext.ProjectSlug)
-                    : kubernetesAgentAuthContext.ProjectSlug;
-            }
+            labels[$"{KubernetesConfig.AgentLabelNamespace}/project"] = hash
+                ? HashValue(command.AuthContext.ProjectSlug)
+                : command.AuthContext.ProjectSlug;
 
-            if (kubernetesAgentAuthContext.EnvironmentSlug is not null)
-            {
-                labels[$"{KubernetesConfig.AgentLabelNamespace}/environment"] = hash
-                    ? HashValue(kubernetesAgentAuthContext.EnvironmentSlug)
-                    : kubernetesAgentAuthContext.EnvironmentSlug;
-            }
+            labels[$"{KubernetesConfig.AgentLabelNamespace}/environment"] = hash
+                ? HashValue(command.AuthContext.EnvironmentSlug)
+                : command.AuthContext.EnvironmentSlug;
 
-            if (kubernetesAgentAuthContext.TenantSlug is not null)
+            if (command.AuthContext.TenantSlug is not null)
             {
                 labels[$"{KubernetesConfig.AgentLabelNamespace}/tenant"] = hash
-                    ? HashValue(kubernetesAgentAuthContext.TenantSlug)
-                    : kubernetesAgentAuthContext.TenantSlug;
+                    ? HashValue(command.AuthContext.TenantSlug)
+                    : command.AuthContext.TenantSlug;
             }
 
-            if (kubernetesAgentAuthContext.StepSlug is not null)
-            {
-                labels[$"{KubernetesConfig.AgentLabelNamespace}/step"] = hash
-                    ? HashValue(kubernetesAgentAuthContext.StepSlug)
-                    : kubernetesAgentAuthContext.StepSlug;
-            }
+            labels[$"{KubernetesConfig.AgentLabelNamespace}/step"] = hash
+                ? HashValue(command.AuthContext.StepSlug)
+                : command.AuthContext.StepSlug;
+
+            labels[$"{KubernetesConfig.AgentLabelNamespace}/space"] = hash
+                ? HashValue(command.AuthContext.SpaceSlug)
+                : command.AuthContext.SpaceSlug;
 
             return labels;
         }
@@ -533,7 +524,7 @@ namespace Octopus.Tentacle.Kubernetes
 
                 //if we can't parse the JSON, fall back to the defaults below and warn the user
                 log.WarnFormat(e, message);
-                //write a verbose message to the script log. 
+                //write a verbose message to the script log.
                 tentacleScriptLog.Verbose(message);
             }
 

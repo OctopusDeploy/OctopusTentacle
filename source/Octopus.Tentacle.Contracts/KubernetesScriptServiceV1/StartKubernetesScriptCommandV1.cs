@@ -61,6 +61,6 @@ namespace Octopus.Tentacle.Contracts.KubernetesScriptServiceV1
 
         public string? ScriptPodServiceAccountName { get; }
 
-        public KubernetesAgentAuthContext? AuthContext { get; }
+        public KubernetesAgentAuthContext AuthContext { get; }
     }
 }
