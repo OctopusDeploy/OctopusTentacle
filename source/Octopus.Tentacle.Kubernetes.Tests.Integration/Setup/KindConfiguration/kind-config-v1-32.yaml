@@ -1,4 +1,4 @@
-renovate-dotnet/nuget-kubernetesclient-vulnerabilitykind: Cluster
+kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 
 nodes:
