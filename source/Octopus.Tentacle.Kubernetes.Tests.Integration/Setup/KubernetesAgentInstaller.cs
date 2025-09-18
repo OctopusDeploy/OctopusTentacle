@@ -121,6 +121,7 @@ public class KubernetesAgentInstaller
             "upgrade",
             "--install",
             "--atomic",
+            "--timeout \"2m30s\"",
             $"-f \"{valuesFilePath}\"",
             GetImageAndRepository(tentacleImageAndTag),
             $"--version \"{chartVersion}\"",
