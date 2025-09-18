@@ -20,7 +20,7 @@ public class KubernetesClusterInstaller
     readonly string kubeCtlPath;
     readonly ILogger logger;
 
-    readonly ClusterVersion latestSupportedClusterVersion = new(1, 31);
+    readonly ClusterVersion latestSupportedClusterVersion = new(1, 33);
 
     public string KubeConfigPath => Path.Combine(tempDir.DirectoryPath, kubeConfigName);
     public string ClusterName => clusterName;
