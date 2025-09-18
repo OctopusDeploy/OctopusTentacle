@@ -81,7 +81,7 @@ namespace Octopus.Tentacle.Kubernetes
 
         public static readonly string AgentLabelNamespace = "agent.octopus.com";
         public static readonly string AgentPermissionsEnabledVariableName = $"{EnvVarPrefix}__PERMISSIONSENABLED";
-        public static bool AgentPermissionsEnabled => GetBoolEnvironmentVariableOrDefault(AgentPermissionsEnabledVariableName, true);
+        public static bool AgentPermissionsEnabled => GetBoolEnvironmentVariableOrDefault(AgentPermissionsEnabledVariableName, false);
 
         public static bool MetricsIsEnabled
         {

@@ -471,37 +471,37 @@ namespace Octopus.Tentacle.Kubernetes
 
         static Dictionary<string, string> GetAuthContext(StartKubernetesScriptCommandV1 command, bool hash = false)
         {
-            var labels = new Dictionary<string, string>();
+            var dict = new Dictionary<string, string>();
 
             if (command.AuthContext is null)
             {
-                return labels;
+                return dict;
             }
 
-            labels[$"{KubernetesConfig.AgentLabelNamespace}/project"] = hash
+            dict[$"{KubernetesConfig.AgentLabelNamespace}/project"] = hash
                 ? HashValue(command.AuthContext.ProjectSlug)
                 : command.AuthContext.ProjectSlug;
 
-            labels[$"{KubernetesConfig.AgentLabelNamespace}/environment"] = hash
+            dict[$"{KubernetesConfig.AgentLabelNamespace}/environment"] = hash
                 ? HashValue(command.AuthContext.EnvironmentSlug)
                 : command.AuthContext.EnvironmentSlug;
 
             if (command.AuthContext.TenantSlug is not null)
             {
-                labels[$"{KubernetesConfig.AgentLabelNamespace}/tenant"] = hash
+                dict[$"{KubernetesConfig.AgentLabelNamespace}/tenant"] = hash
                     ? HashValue(command.AuthContext.TenantSlug)
                     : command.AuthContext.TenantSlug;
             }
 
-            labels[$"{KubernetesConfig.AgentLabelNamespace}/step"] = hash
+            dict[$"{KubernetesConfig.AgentLabelNamespace}/step"] = hash
                 ? HashValue(command.AuthContext.StepSlug)
                 : command.AuthContext.StepSlug;
 
-            labels[$"{KubernetesConfig.AgentLabelNamespace}/space"] = hash
+            dict[$"{KubernetesConfig.AgentLabelNamespace}/space"] = hash
                 ? HashValue(command.AuthContext.SpaceSlug)
                 : command.AuthContext.SpaceSlug;
 
-            return labels;
+            return dict;
         }
 
         static string HashValue(string value)
