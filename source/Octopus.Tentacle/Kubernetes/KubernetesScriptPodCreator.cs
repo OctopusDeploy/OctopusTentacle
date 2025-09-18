@@ -436,12 +436,12 @@ namespace Octopus.Tentacle.Kubernetes
 
         Dictionary<string, string>? GetScriptPodAnnotations(InMemoryTentacleScriptLog tentacleScriptLog, StartKubernetesScriptCommandV1 command)
         {
-            var annotations = ParseScriptPodAnnotations(tentacleScriptLog);
+            var annotations = ParseScriptPodAnnotations(tentacleScriptLog) ?? new Dictionary<string, string>();
             annotations.AddRange(GetAuthContext(command));
             return annotations;
         }
 
-        Dictionary<string, string>? GetScriptPodLabels(InMemoryTentacleScriptLog tentacleScriptLog, StartKubernetesScriptCommandV1 command)
+        Dictionary<string, string> GetScriptPodLabels(InMemoryTentacleScriptLog tentacleScriptLog, StartKubernetesScriptCommandV1 command)
         {
             var labels = new Dictionary<string, string>
             {
@@ -508,7 +508,7 @@ namespace Octopus.Tentacle.Kubernetes
         {
             using var sha1 = SHA1.Create();
             var bytes = sha1.ComputeHash(Encoding.UTF8.GetBytes(value));
-            return BitConverter.ToString(bytes);
+            return BitConverter.ToString(bytes).Replace("-","");
         }
 
         [return: NotNullIfNotNull("defaultValue")]
