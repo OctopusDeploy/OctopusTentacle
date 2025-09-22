@@ -14,18 +14,18 @@ using Serilog;
 
 partial class Build
 {
-    [ParameterFromPasswordStore(Name = "DEPENDENCY_TRACK_URL", SecretReference = "op://Calamari Secrets for Tests/Dependency Track SBOM API/hostname")] 
-    readonly string? DependencyTrackUrl;
-    [ParameterFromPasswordStore(Name = "DEPENDENCY_TRACK_API_KEY", SecretReference = "op://Calamari Secrets for Tests/Dependency Track SBOM API/credential"), Secret] 
-    readonly string? DependencyTrackApiKey;
+    // [ParameterFromPasswordStore(Name = "DEPENDENCY_TRACK_URL", SecretReference = "op://Calamari Secrets for Tests/Dependency Track SBOM API/hostname")] 
+    // readonly string? DependencyTrackUrl;
+    // [ParameterFromPasswordStore(Name = "DEPENDENCY_TRACK_API_KEY", SecretReference = "op://Calamari Secrets for Tests/Dependency Track SBOM API/credential"), Secret] 
+    // readonly string? DependencyTrackApiKey;
     
     readonly List<string> ContainersWeHaveCreated = new();
     
     // ReSharper disable InconsistentNaming
     [PublicAPI("Called by TeamCity")]
     public Target BuildSoftwareBillOfMaterials => _ => _
-        .Requires(() => DependencyTrackUrl)
-        .Requires(() => DependencyTrackApiKey)
+        // .Requires(() => DependencyTrackUrl)
+        // .Requires(() => DependencyTrackApiKey)
         .DependsOn(BuildAll)
         .Executes(async () =>
         {
@@ -97,43 +97,43 @@ partial class Build
     {
         await Logging.InBlock($"Uploading SBOM to Dependency Track", () =>
         {
-            if (string.IsNullOrWhiteSpace(DependencyTrackUrl) || string.IsNullOrWhiteSpace(DependencyTrackApiKey))
-            {
-                Log.Warning("Skipping upload to Dependency Track as DEPENDENCY_TRACK_URL and DEPENDENCY_TRACK_API_KEY are not set");
-                return Task.CompletedTask;
-            }
-
-            var parentName = $"Tentacle-{octoVersionInfo.Major}.{octoVersionInfo.Minor}";
-            var version = octoVersionInfo.FullSemVer;
-            var containerName = $"tentacle-sbom-uploader-{version}";
-            var projectName = "Tentacle";
-
-            var args = new List<string>();
-            if (BranchName != null && (BranchName is "refs/heads/main" || BranchName.StartsWith("refs/heads/release/")))
-            {
-                args.Add("--latest");
-            }
-            args.Add("--sbom");
-            args.Add($"/sboms/{fileName}");
-            ContainersWeHaveCreated.Add(containerName);
-            
-            DockerTasks.DockerRun(x => x
-                .SetName(containerName)
-                .SetPlatform("linux/amd64")
-                .SetImage("docker.packages.octopushq.com/octopusdeploy/tool-containers/tool-sbom-cli:latest")
-                .SetVolume($"{ArtifactsDirectory}:/sboms")
-                .SetCommand($"sbom-uploader")
-                .SetEnv(
-                        $"SBOM_UPLOADER_URL={DependencyTrackUrl}",
-                        $"SBOM_UPLOADER_API_KEY={DependencyTrackApiKey}", 
-                        $"SBOM_UPLOADER_NAME={projectName}", 
-                        $"SBOM_UPLOADER_VERSION={octoVersionInfo.FullSemVer}",
-                        $"SBOM_UPLOADER_PARENT={parentName}",
-                        $"SBOM_UPLOADER_TAGS={projectName},{parentName}")
-                .SetArgs(args)
-                .SetRm(true)
-                .SetProcessLogInvocation(false)); // don't log the invocation, as in this version of nuke (8.1.4), it logs the api key
-            
+            // if (string.IsNullOrWhiteSpace(DependencyTrackUrl) || string.IsNullOrWhiteSpace(DependencyTrackApiKey))
+            // {
+            //     Log.Warning("Skipping upload to Dependency Track as DEPENDENCY_TRACK_URL and DEPENDENCY_TRACK_API_KEY are not set");
+            //     return Task.CompletedTask;
+            // }
+            //
+            // var parentName = $"Tentacle-{octoVersionInfo.Major}.{octoVersionInfo.Minor}";
+            // var version = octoVersionInfo.FullSemVer;
+            // var containerName = $"tentacle-sbom-uploader-{version}";
+            // var projectName = "Tentacle";
+            //
+            // var args = new List<string>();
+            // if (BranchName != null && (BranchName is "refs/heads/main" || BranchName.StartsWith("refs/heads/release/")))
+            // {
+            //     args.Add("--latest");
+            // }
+            // args.Add("--sbom");
+            // args.Add($"/sboms/{fileName}");
+            // ContainersWeHaveCreated.Add(containerName);
+            //
+            // DockerTasks.DockerRun(x => x
+            //     .SetName(containerName)
+            //     .SetPlatform("linux/amd64")
+            //     .SetImage("docker.packages.octopushq.com/octopusdeploy/tool-containers/tool-sbom-cli:latest")
+            //     .SetVolume($"{ArtifactsDirectory}:/sboms")
+            //     .SetCommand($"sbom-uploader")
+            //     .SetEnv(
+            //             $"SBOM_UPLOADER_URL={DependencyTrackUrl}",
+            //             $"SBOM_UPLOADER_API_KEY={DependencyTrackApiKey}", 
+            //             $"SBOM_UPLOADER_NAME={projectName}", 
+            //             $"SBOM_UPLOADER_VERSION={octoVersionInfo.FullSemVer}",
+            //             $"SBOM_UPLOADER_PARENT={parentName}",
+            //             $"SBOM_UPLOADER_TAGS={projectName},{parentName}")
+            //     .SetArgs(args)
+            //     .SetRm(true)
+            //     .SetProcessLogInvocation(false)); // don't log the invocation, as in this version of nuke (8.1.4), it logs the api key
+            //
             return Task.CompletedTask;
         });
     }
