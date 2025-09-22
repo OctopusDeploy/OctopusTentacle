@@ -43,7 +43,7 @@ partial class Build
             {
                 Logging.InBlock("Extracting *.deps.json files", () =>
                 {
-                    folderToSearchForDepsJson = folderToSearchForDepsJson / "zips";
+                    folderToSearchForDepsJson = RootDirectory / "zips";
                     //teamcity downloads the artifacts to a "zips" folder
                     foreach (AbsolutePath file in Directory.EnumerateFiles(folderToSearchForDepsJson, "*.zip", SearchOption.AllDirectories))
                     {
