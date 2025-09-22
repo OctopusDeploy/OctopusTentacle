@@ -46,12 +46,18 @@ partial class Build
                     folderToSearchForDepsJson = RootDirectory / "zips";
                     Log.Information("Searching for zip files in {FolderToSearchForDepsJson}", folderToSearchForDepsJson);
                     //teamcity downloads the artifacts to a "zips" folder
-                    foreach (AbsolutePath file in Directory.EnumerateFiles(folderToSearchForDepsJson, "*.zip", SearchOption.AllDirectories))
+                    var zipFiles = Directory.EnumerateFiles(folderToSearchForDepsJson, "*.zip", SearchOption.AllDirectories);
+                    var tarGzipFiles = Directory.EnumerateFiles(folderToSearchForDepsJson, "*.tar.gz", SearchOption.AllDirectories);
+                    
+                    foreach (var file in zipFiles.Concat(tarGzipFiles).Select(x => (AbsolutePath)x))
                     {
-                        Log.Information("Extracting {File} to {Folder}", file, folderToSearchForDepsJson / file.NameWithoutExtension);
-                        (folderToSearchForDepsJson / file.NameWithoutExtension).CreateOrCleanDirectory();
-                        file.UncompressTo(folderToSearchForDepsJson / file.NameWithoutExtension);
+                        var relativePath = file.Parent.GetRelativePathTo(folderToSearchForDepsJson);
+                        Log.Information("Extracting {File} to {Folder}", file, folderToSearchForDepsJson / relativePath /file.NameWithoutExtension);
+                        (folderToSearchForDepsJson / relativePath /file.NameWithoutExtension).CreateOrCleanDirectory();
+                        file.UncompressTo(folderToSearchForDepsJson / relativePath / file.NameWithoutExtension);
                     }
+                    
+                    ProcessTasks.StartProcess("ls", "-alR", folderToSearchForDepsJson).AssertZeroExitCode();
                 });
             }
             
@@ -59,6 +65,7 @@ partial class Build
             Logging.InBlock("Creating individual SBOMs", () =>
             {
                 ArtifactsDirectory.CreateOrCleanDirectory();
+                Log.Information("Recursively searching for .deps.json files in {FolderToSearchForDepsJson}", folderToSearchForDepsJson);
                 var components = Directory
                     .EnumerateFiles(folderToSearchForDepsJson, "*.deps.json", SearchOption.AllDirectories)
                     .Where(path => !path.Contains("/obj/"))
@@ -66,8 +73,11 @@ partial class Build
                     .Where(path => !path.Contains("/.git/"))
                     .Where(path => !path.Contains(".Test"))
                     .Where(path => !path.Contains("/_build"))
-                    .Select(ResolveTentacleComponent);
+                    .Select(ResolveTentacleComponent)
+                    .ToArray();
 
+                Log.Information("Found {ComponentCount} components", components.Length);
+                
                 foreach (var component in components)
                 {
                     var sbomFile = CreateSBOM(component.Directory, component.Project, component.Framework, octoVersionInfo.FullSemVer, component.Runtime);
