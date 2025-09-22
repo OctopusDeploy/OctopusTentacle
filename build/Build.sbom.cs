@@ -38,12 +38,26 @@ partial class Build
             
             EnsureDockerImagesExistLocally();
 
+            var folderToSearchForDepsJson = SourceDirectory;
+            if (TeamCity.Instance != null)
+            {
+                Logging.InBlock("Extracting *.deps.json files", () =>
+                {
+                    //teamcity downloads the artifacts to a "zips" folder
+                    foreach (AbsolutePath file in Directory.EnumerateFiles(folderToSearchForDepsJson, "*.deps.json", SearchOption.AllDirectories))
+                    {
+                        (folderToSearchForDepsJson / file.NameWithoutExtension).CreateOrCleanDirectory();
+                        file.UncompressTo(folderToSearchForDepsJson / file.NameWithoutExtension);
+                    }
+                });
+            }
+            
             var results = new List<string>();
             Logging.InBlock("Creating individual SBOMs", () =>
             {
                 ArtifactsDirectory.CreateOrCleanDirectory();
                 var components = Directory
-                    .EnumerateFiles(RootDirectory, "*.deps.json", SearchOption.AllDirectories)
+                    .EnumerateFiles(folderToSearchForDepsJson, "*.deps.json", SearchOption.AllDirectories)
                     .Where(path => !path.Contains("/obj/"))
                     .Where(path => !path.Contains("/TestResults/"))
                     .Where(path => !path.Contains("/.git/"))
