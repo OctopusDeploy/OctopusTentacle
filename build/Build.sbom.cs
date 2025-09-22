@@ -44,9 +44,11 @@ partial class Build
                 Logging.InBlock("Extracting *.deps.json files", () =>
                 {
                     folderToSearchForDepsJson = RootDirectory / "zips";
+                    Log.Information("Searching for zip files in {FolderToSearchForDepsJson}", folderToSearchForDepsJson);
                     //teamcity downloads the artifacts to a "zips" folder
                     foreach (AbsolutePath file in Directory.EnumerateFiles(folderToSearchForDepsJson, "*.zip", SearchOption.AllDirectories))
                     {
+                        Log.Information("Extracting {File} to {Folder}", file, folderToSearchForDepsJson / file.NameWithoutExtension);
                         (folderToSearchForDepsJson / file.NameWithoutExtension).CreateOrCleanDirectory();
                         file.UncompressTo(folderToSearchForDepsJson / file.NameWithoutExtension);
                     }
@@ -73,6 +75,10 @@ partial class Build
                 }
 
             });
+            if (!results.Any())
+            {
+                throw new Exception($"No components were found in '{folderToSearchForDepsJson}'; unable to create SBOMs");
+            }
             CombineAndValidateSBOM(octoVersionInfo, results.Select(fileName => $"/sboms/{fileName}").ToArray(), combinedFileName);
             await UploadToDependencyTrack(octoVersionInfo, combinedFileName);
         });
