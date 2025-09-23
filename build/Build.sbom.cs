@@ -52,7 +52,7 @@ partial class Build
                     foreach (var file in zipFiles.Concat(tarGzipFiles).Select(x => (AbsolutePath)x))
                     {
                         Log.Information("Found zip file {File}", file);
-                        var relativePath = file.Parent.GetRelativePathTo(folderToSearchForDepsJson);
+                        var relativePath = folderToSearchForDepsJson.GetRelativePathTo(file.Parent);
                         Log.Information("Relative path is {RelativePath}", relativePath);
                         
                         Log.Information("Creating folder {Folder}", folderToSearchForDepsJson / relativePath / file.NameWithoutExtension);
