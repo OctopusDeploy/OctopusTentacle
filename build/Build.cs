@@ -51,7 +51,7 @@ partial class Build : NukeBuild
     [Parameter("Branch name for OctoVersion to use to calculate the version number. Can be set via the environment variable OCTOVERSION_CurrentBranch.",
         Name = "OCTOVERSION_CurrentBranch")]
 #pragma warning disable CS0414
-    readonly string BranchName = null!;
+    readonly string? BranchName = null!;
 #pragma warning restore CS0414
 
     [Parameter("Whether to auto-detect the branch name - this is okay for a local build, but should not be used under CI.")] readonly bool AutoDetectBranch = IsLocalBuild;

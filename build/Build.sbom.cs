@@ -38,64 +38,75 @@ partial class Build
             
             EnsureDockerImagesExistLocally();
 
-            var folderToSearchForDepsJson = SourceDirectory;
-            if (TeamCity.Instance != null)
-            {
-                Logging.InBlock("Extracting *.deps.json files", () =>
-                {
-                    folderToSearchForDepsJson = RootDirectory / "zips";
-                    Log.Information("Searching for zip files in {FolderToSearchForDepsJson}", folderToSearchForDepsJson);
-                    //teamcity downloads the artifacts to a "zips" folder
-                    var zipFiles = Directory.EnumerateFiles(folderToSearchForDepsJson, "*.zip", SearchOption.AllDirectories);
-                    var tarGzipFiles = Directory.EnumerateFiles(folderToSearchForDepsJson, "*.tar.gz", SearchOption.AllDirectories);
-                    
-                    foreach (var file in zipFiles.Concat(tarGzipFiles).Select(x => (AbsolutePath)x))
-                    {
-                        Log.Information("Found zip file {File}", file);
-                        var relativePath = folderToSearchForDepsJson.GetRelativePathTo(file.Parent);
-                        Log.Information("Relative path is {RelativePath}", relativePath);
-                        
-                        Log.Information("Creating folder {Folder}", folderToSearchForDepsJson / relativePath / file.NameWithoutExtension);
-                        (folderToSearchForDepsJson / relativePath / file.NameWithoutExtension).CreateOrCleanDirectory();
-                        
-                        Log.Information("Extracting {File} to {Folder}", file, folderToSearchForDepsJson / relativePath / file.NameWithoutExtension);
-                        file.UncompressTo(folderToSearchForDepsJson / relativePath / file.NameWithoutExtension);
-                    }
-                    
-                });
-            }
+            var folderToSearchForDepsJson = ResolvePathToDepsJsonFiles();
             
-            var results = new List<string>();
-            Logging.InBlock("Creating individual SBOMs", () =>
-            {
-                ArtifactsDirectory.CreateOrCleanDirectory();
-                Log.Information("Recursively searching for .deps.json files in {FolderToSearchForDepsJson}", folderToSearchForDepsJson);
-                var components = Directory
-                    .EnumerateFiles(folderToSearchForDepsJson, "*.deps.json", SearchOption.AllDirectories)
-                    .Where(path => !path.Contains("/obj/"))
-                    .Where(path => !path.Contains("/TestResults/"))
-                    .Where(path => !path.Contains("/.git/"))
-                    .Where(path => !path.Contains(".Test"))
-                    .Where(path => !path.Contains("/_build"))
-                    .Select(ResolveTentacleComponent)
-                    .ToArray();
-
-                Log.Information("Found {ComponentCount} components", components.Length);
-                
-                foreach (var component in components)
-                {
-                    var sbomFile = CreateSBOM(component.Directory, component.Project, component.Framework, octoVersionInfo.FullSemVer, component.Runtime);
-                    results.Add(sbomFile);
-                }
-
-            });
-            if (!results.Any())
-            {
+            var individualSbomFiles = CreateIndividualSBOM(folderToSearchForDepsJson, octoVersionInfo);
+            if (!individualSbomFiles.Any())
                 throw new Exception($"No components were found in '{folderToSearchForDepsJson}'; unable to create SBOMs");
-            }
-            CombineAndValidateSBOM(octoVersionInfo, results.Select(fileName => $"/sboms/{fileName}").ToArray(), combinedFileName);
+
+            CombineAndValidateSBOM(octoVersionInfo, individualSbomFiles.Select(fileName => $"/sboms/{fileName}").ToArray(), combinedFileName);
+            
             await UploadToDependencyTrack(octoVersionInfo, combinedFileName);
         });
+
+    List<string> CreateIndividualSBOM(string folderToSearchForDepsJson, OctoVersionInfo octoVersionInfo)
+    {
+        var results = new List<string>();
+        Logging.InBlock("Creating individual SBOMs", () =>
+        {
+            ArtifactsDirectory.CreateOrCleanDirectory();
+            Log.Information("Recursively searching for .deps.json files in {FolderToSearchForDepsJson}", folderToSearchForDepsJson);
+            var components = Directory
+                .EnumerateFiles(folderToSearchForDepsJson, "*.deps.json", SearchOption.AllDirectories)
+                .Where(path => !path.Contains("/obj/"))
+                .Where(path => !path.Contains("/TestResults/"))
+                .Where(path => !path.Contains("/.git/"))
+                .Where(path => !path.Contains(".Test"))
+                .Where(path => !path.Contains("/_build"))
+                .Select(ResolveTentacleComponent)
+                .ToArray();
+
+            Log.Information("Found {ComponentCount} components", components.Length);
+                
+            foreach (var component in components)
+            {
+                var sbomFile = CreateSBOM(component.Directory, component.Project, component.Framework, octoVersionInfo.FullSemVer, component.Runtime);
+                results.Add(sbomFile);
+            }
+
+        });
+        return results;
+    }
+
+    string ResolvePathToDepsJsonFiles()
+    {
+        if (TeamCity.Instance == null)
+            return SourceDirectory;
+        
+        var folderToSearchForDepsJson = RootDirectory / "zips";
+        ExtractCompressedFiles(folderToSearchForDepsJson);
+        return folderToSearchForDepsJson;
+    }
+
+    void ExtractCompressedFiles(AbsolutePath folderToSearchForDepsJson)
+    {
+        Logging.InBlock("Extracting *.deps.json files", () =>
+        {
+            Log.Information("Searching for zip files in {FolderToSearchForDepsJson}", folderToSearchForDepsJson);
+            //teamcity downloads the artifacts to a "zips" folder
+            var zipFiles = Directory.EnumerateFiles(folderToSearchForDepsJson, "*.zip", SearchOption.AllDirectories);
+            var tarGzipFiles = Directory.EnumerateFiles(folderToSearchForDepsJson, "*.tar.gz", SearchOption.AllDirectories);
+
+            foreach (var file in zipFiles.Concat(tarGzipFiles).Select(x => (AbsolutePath) x))
+            {
+                var relativePath = folderToSearchForDepsJson.GetRelativePathTo(file.Parent);
+                (folderToSearchForDepsJson / relativePath / file.NameWithoutExtension).CreateOrCleanDirectory();
+
+                Log.Information("Extracting {File} to {Folder}", file, folderToSearchForDepsJson / relativePath / file.NameWithoutExtension);
+                file.UncompressTo(folderToSearchForDepsJson / relativePath / file.NameWithoutExtension);
+            }
+        });
+    }
 
     void EnsureDockerImagesExistLocally()
     {
