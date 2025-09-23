@@ -26,12 +26,13 @@ partial class Build
     public Target BuildSoftwareBillOfMaterials => _ => _
         .Requires(() => DependencyTrackUrl)
         .Requires(() => DependencyTrackApiKey)
+        .Requires(() => BranchName)
+        .Requires(() => Solution)
+        .Requires(() => OctoVersionInfo)
         .DependsOn(BuildAll)
         .Executes(async () =>
         {
-            ArgumentNullException.ThrowIfNull(Solution, nameof(Solution));
-            var octoVersionInfo = OctoVersionInfo ?? throw new InvalidOperationException("Required OctoVersionInfo was not populated");
-            var combinedFileName = $"tentacle.{octoVersionInfo.FullSemVer}-sbom.cdx.json";
+            var combinedFileName = $"tentacle.{OctoVersionInfo.FullSemVer}-sbom.cdx.json";
 
             // redirect all docker output to stdout, as lots of it goes as stderr when it's just progress messages
             DockerTasks.DockerLogger = (_, message) => Log.Information("[Docker] {Message}", message);
@@ -40,13 +41,14 @@ partial class Build
 
             var folderToSearchForDepsJson = ResolvePathToDepsJsonFiles();
             
-            var individualSbomFiles = CreateIndividualSBOM(folderToSearchForDepsJson, octoVersionInfo);
+            var individualSbomFiles = CreateIndividualSBOM(folderToSearchForDepsJson, OctoVersionInfo);
             if (!individualSbomFiles.Any())
                 throw new Exception($"No components were found in '{folderToSearchForDepsJson}'; unable to create SBOMs");
 
-            CombineAndValidateSBOM(octoVersionInfo, individualSbomFiles.Select(fileName => $"/sboms/{fileName}").ToArray(), combinedFileName);
-            
-            await UploadToDependencyTrack(octoVersionInfo, combinedFileName);
+            CombineAndValidateSBOM(OctoVersionInfo, individualSbomFiles.Select(fileName => $"/sboms/{fileName}").ToArray(), combinedFileName);
+
+            var tagAsLatest = BranchName != null && (BranchName is "refs/heads/main" || BranchName.StartsWith("refs/heads/release/"));
+            await UploadToDependencyTrack(OctoVersionInfo, combinedFileName, tagAsLatest);
         });
 
     List<string> CreateIndividualSBOM(string folderToSearchForDepsJson, OctoVersionInfo octoVersionInfo)
@@ -125,7 +127,7 @@ partial class Build
         });
     }
 
-    async Task UploadToDependencyTrack(OctoVersionInfo octoVersionInfo, string fileName)
+    async Task UploadToDependencyTrack(OctoVersionInfo octoVersionInfo, string fileName, bool tagAsLatest)
     {
         await Logging.InBlock($"Uploading SBOM to Dependency Track", () =>
         {
@@ -141,7 +143,7 @@ partial class Build
             var projectName = "Tentacle";
             
             var args = new List<string>();
-            if (BranchName != null && (BranchName is "refs/heads/main" || BranchName.StartsWith("refs/heads/release/")))
+            if (tagAsLatest)
             {
                 args.Add("--latest");
             }
