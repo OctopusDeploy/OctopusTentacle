@@ -459,11 +459,7 @@ namespace Octopus.Tentacle.Kubernetes
                 labels.AddRange(extraLabels);
             }
 
-            if (KubernetesConfig.AgentPermissionsEnabled)
-            {
-                labels.Add($"{KubernetesConfig.AgentLabelNamespace}/permissions", "enabled");
-            }
-
+            labels.Add($"{KubernetesConfig.AgentLabelNamespace}/permissions", "enabled");
             labels.AddRange(GetAuthContext(command, true));
 
             return labels;
