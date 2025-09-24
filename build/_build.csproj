@@ -12,7 +12,9 @@
 
   <ItemGroup>
     <PackageReference Include="Nuke.Common" Version="8.0.0" />
+    <PackageReference Include="Octopus.1Password.Sdk" Version="0.0.261" />
     <PackageReference Include="System.IO.FileSystem.AccessControl" Version="5.0.0" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>
