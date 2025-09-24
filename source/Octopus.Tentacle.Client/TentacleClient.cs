@@ -79,6 +79,9 @@ namespace Octopus.Tentacle.Client
 
         public TimeSpan OnCancellationAbandonCompleteScriptAfter { get; set; } = TimeSpan.FromMinutes(1);
 
+        RpcCallExecutor FileTransferRpcCallExecutor => 
+            RpcCallExecutorFactory.Create(this.clientOptions.RpcRetrySettings.RetryDuration, this.tentacleClientObserver, clientOptions.MinimumAttemptsForInterruptedLongRunningCalls);
+
         public async Task<UploadResult> UploadFile(string fileName, string path, DataStream package, ITentacleClientTaskLog logger, CancellationToken cancellationToken)
         {
             var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
@@ -94,7 +97,7 @@ namespace Octopus.Tentacle.Client
 
             try
             {
-                return await rpcCallExecutor.Execute(
+                return await FileTransferRpcCallExecutor.Execute(
                     retriesEnabled: clientOptions.RpcRetrySettings.RetriesEnabled,
                     RpcCall.Create<IFileTransferService>(nameof(IFileTransferService.UploadFile)),
                     UploadFileAction,
@@ -129,7 +132,7 @@ namespace Octopus.Tentacle.Client
 
             try
             {
-                return await rpcCallExecutor.Execute(
+                return await FileTransferRpcCallExecutor.Execute(
                     retriesEnabled: clientOptions.RpcRetrySettings.RetriesEnabled,
                     RpcCall.Create<IFileTransferService>(nameof(IFileTransferService.DownloadFile)),
                     DownloadFileAction,
