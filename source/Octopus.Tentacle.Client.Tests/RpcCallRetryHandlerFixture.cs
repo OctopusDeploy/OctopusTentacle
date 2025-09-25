@@ -825,8 +825,14 @@ namespace Octopus.Tentacle.Client.Tests
             onTimeoutActionCalled.Should().BeFalse(); // Should succeed before timeout
         }
         
+        /// <summary>
+        /// Connection error means the tentacle did not get the request, which means the tentacle is considered to be offline.
+        /// This shows that we won't exceed the retry duration attempting to connect to an offline tentacle to meet the
+        /// minimumAttemptsForInterruptedLongRunningCalls count.
+        /// </summary>
+        /// <exception cref="HalibutClientException"></exception>
         [Test]
-        public async Task WhenConfiguredToMakeAMinimumNumberOfAttempts_ButWeReceiveConnectingExceptions_ThatExceedTheTimeout_TheMinimumNumberOfAttemptsAreNotMade()
+        public async Task WhenConfiguredToMakeAMinimumNumberOfAttempts_AndTheFirstAttemptExceedsTheRetryDuration_AndTheFailureIsAConnectingFailure_ARetryIsNotMade()
         {
             var callCount = 0;
             var onRetryActionCalled = false;
