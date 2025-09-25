@@ -75,12 +75,12 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithRetryDuration(TimeSpan.FromSeconds(1))
                 .WithMinimumAttemptsForInterruptedLongRunningCalls(5)
                 .WithPortForwarder(out var portForwarder)
-                .WithByteTransferTracker(bytesTransferredCallback: (ClientToTentacleBytes, _, _) =>
+                .WithByteTransferTracker(bytesTransferredCallback: async (ClientToTentacleBytes, _, _) =>
                 {
                     if (ClientToTentacleBytes > count / 3 && !hasSlept)
                     {
                         // Exceed the RPC retry duration
-                        Thread.Sleep(5000);
+                        await Task.Delay(TimeSpan.FromSeconds(5));
                         // Terminate the file upload.
                         portForwarder.Value.EnterKillNewAndExistingConnectionsMode();
                         portForwarder.Value.ReturnToNormalMode();
