@@ -704,7 +704,9 @@ namespace Octopus.Tentacle.Client.Tests
                 async ct =>
                 {
                     callCount++;
-                    await Task.CompletedTask;
+                    
+                    // Sleep for 3 seconds to simulate a long-running operation
+                    await Task.Delay(TimeSpan.FromSeconds(3), ct);
                     
                     // Succeed on the first (and only) attempt since minimumAttemptsForInterruptedLongRunningCalls = 1
                     if (callCount == 1)
@@ -830,7 +832,6 @@ namespace Octopus.Tentacle.Client.Tests
         /// This shows that we won't exceed the retry duration attempting to connect to an offline tentacle to meet the
         /// minimumAttemptsForInterruptedLongRunningCalls count.
         /// </summary>
-        /// <exception cref="HalibutClientException"></exception>
         [Test]
         public async Task WhenConfiguredToMakeAMinimumNumberOfAttempts_AndTheFirstAttemptExceedsTheRetryDuration_AndTheFailureIsAConnectingFailure_ARetryIsNotMade()
         {
@@ -848,8 +849,8 @@ namespace Octopus.Tentacle.Client.Tests
                 {
                     callCount++;
                     
-                    // Delay 2 seconds to ensure the ct doesn't get canceled.
-                    await Task.Delay(TimeSpan.FromSeconds(1), ct);
+                    // Delay 2 second to ensure the ct doesn't get canceled.
+                    await Task.Delay(TimeSpan.FromSeconds(2), ct);
                     
                     if(callCount == -1) return Guid.NewGuid(); // Never called used to make the typing work.
 
