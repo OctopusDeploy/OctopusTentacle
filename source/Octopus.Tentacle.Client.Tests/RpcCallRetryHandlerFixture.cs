@@ -706,6 +706,7 @@ namespace Octopus.Tentacle.Client.Tests
                     callCount++;
                     
                     // Sleep for 3 seconds to simulate a long-running operation
+                    // must exceed retry duration
                     await Task.Delay(TimeSpan.FromSeconds(3), ct);
                     
                     // Succeed on the first (and only) attempt since minimumAttemptsForInterruptedLongRunningCalls = 1
