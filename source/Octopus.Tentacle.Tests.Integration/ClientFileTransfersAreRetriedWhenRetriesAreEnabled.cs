@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Halibut;
@@ -57,6 +58,67 @@ namespace Octopus.Tentacle.Tests.Integration
             var downloadFile = await clientTentacle.TentacleClient.DownloadFile(remotePath, CancellationToken);
             var actuallySent = await downloadFile.GetUtf8String(CancellationToken);
             actuallySent.Should().Be("Hello");
+
+            inMemoryLog.ShouldHaveLoggedRetryAttemptsAndNoRetryFailures();
+        }
+        
+        [Test]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        public async Task LongRunningFileUploadsToTentacleAreRetried(TentacleConfigurationTestCase tentacleConfigurationTestCase)
+        {
+            var count = 1024*1024*100;
+            bool hasSlept = false;
+            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+                .WithPortForwarderDataLogging()
+                .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
+                .WithTcpConnectionUtilities(Logger, out var tcpConnectionUtilities)
+                .WithRetryDuration(TimeSpan.FromSeconds(1))
+                .WithMinimumAttemptsForInterruptedLongRunningCalls(5)
+                .WithPortForwarder(out var portForwarder)
+                .WithByteTransferTracker(bytesTransferredCallback: (ClientToTentacleBytes, _, _) =>
+                {
+                    if (ClientToTentacleBytes > count / 3 && !hasSlept)
+                    {
+                        // Exceed the RPC retry duration
+                        Thread.Sleep(5000);
+                        // Terminate the file upload.
+                        portForwarder.Value.EnterKillNewAndExistingConnectionsMode();
+                        portForwarder.Value.ReturnToNormalMode();
+                        hasSlept = true;
+                    }       
+                })
+                .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
+                    .RecordMethodUsages<IAsyncClientFileTransferService>(out var recordedUsages)
+                    .DecorateFileTransferServiceWith(d => d
+                        .BeforeUploadFile(
+                            async () =>
+                            {
+                                await tcpConnectionUtilities.EnsureConnectionIsSetupBeforeKillingIt();
+
+                                // Only kill the connection the first time, causing the upload
+                                // to succeed - and therefore failing the test - if retries are attempted
+                                if (recordedUsages.For(nameof(IAsyncClientFileTransferService.UploadFileAsync)).LastException is null)
+                                {
+                                    responseMessageTcpKiller.KillConnectionOnNextResponse();
+                                }
+                            }))
+                    .Build())
+                .Build(CancellationToken);
+
+            var inMemoryLog = new InMemoryLog();
+
+            var remotePath = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "UploadFile.txt");
+
+            
+            var res = await clientTentacle.TentacleClient.UploadFile(remotePath, DataStream.FromString(new string('a', count)), CancellationToken, inMemoryLog);
+            res.Length.Should().Be(count);
+
+            recordedUsages.For(nameof(IAsyncClientFileTransferService.UploadFileAsync)).LastException.Should().NotBeNull();
+            recordedUsages.For(nameof(IAsyncClientFileTransferService.UploadFileAsync)).Started.Should().Be(2);
+
+            var downloadFile = await clientTentacle.TentacleClient.DownloadFile(remotePath, CancellationToken);
+            var actuallySent = await downloadFile.GetUtf8String(CancellationToken);
+            actuallySent.Length.Should().Be(count);
 
             inMemoryLog.ShouldHaveLoggedRetryAttemptsAndNoRetryFailures();
         }
