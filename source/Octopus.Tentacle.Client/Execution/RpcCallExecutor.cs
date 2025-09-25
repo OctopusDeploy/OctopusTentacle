@@ -74,6 +74,7 @@ namespace Octopus.Tentacle.Client.Execution
                             }
                             catch (Exception e)
                             {
+                                logger.Warn(e, $"Error occured talking to tentacle, Is given CancellationToken cancelled? {cancellationToken.IsCancellationRequested} Is inner CT cancelled {ct.IsCancellationRequested}");
                                 rpcCallMetricsBuilder.WithAttempt(TimedOperation.Failure(start, e, ct));
                                 throw;
                             }
@@ -101,12 +102,14 @@ namespace Octopus.Tentacle.Client.Execution
                                 logger.Info($"Could not communicate with Tentacle after {(int)elapsedDuration.TotalSeconds} seconds.");
                             }
                         },
+                        logger,
                         cancellationToken);
 
                 return response;
             }
             catch (Exception e)
             {
+                logger.Warn(e, "Some error occured talking to tentacle");
                 rpcCallMetricsBuilder.Failure(e, cancellationToken);
                 throw;
             }
