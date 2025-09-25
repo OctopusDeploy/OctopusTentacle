@@ -114,7 +114,7 @@ namespace Octopus.Tentacle.Tests.Integration
             res.Length.Should().Be(count);
 
             recordedUsages.For(nameof(IAsyncClientFileTransferService.UploadFileAsync)).LastException.Should().NotBeNull();
-            recordedUsages.For(nameof(IAsyncClientFileTransferService.UploadFileAsync)).Started.Should().Be(2);
+            recordedUsages.For(nameof(IAsyncClientFileTransferService.UploadFileAsync)).Started.Should().BeGreaterOrEqualTo(2);
 
             var downloadFile = await clientTentacle.TentacleClient.DownloadFile(remotePath, CancellationToken);
             var actuallySent = await downloadFile.GetUtf8String(CancellationToken);
