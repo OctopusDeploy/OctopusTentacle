@@ -66,7 +66,7 @@ namespace Octopus.Tentacle.Client.Retries
                 // to make a min number of attempts, then our next attempt (if any) should be done without a timeout.
                 // However, if tentacle was to be offline, then we would want to revert to retries being done under a timeout
                 // so that we limit how long we try to communicate with a tentacle offline.
-                // We must evaluate this each an attempt fails.
+                // We must re-evaluate this each an attempt fails since the failure type can change on each attempt.
                 shouldExecuteNextRetryUnderTimeout = !(MinimumAttemptsForInterruptedLongRunningCalls.HasValue && !exception.IsConnectionException());
                 
                 if (lastException == null)
