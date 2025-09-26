@@ -25,6 +25,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         ITentacleServiceDecoratorFactory? tentacleServiceDecorator;
         TimeSpan retryDuration = TimeSpan.FromMinutes(2);
         bool retriesEnabled = true;
+        int? minimumAttemptsForInterruptedLongRunningCalls = null;
         IScriptObserverBackoffStrategy scriptObserverBackoffStrategy = new DefaultScriptObserverBackoffStrategy();
         public readonly TentacleType TentacleType;
         Version? tentacleVersion;
@@ -75,6 +76,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public ClientAndTentacleBuilder WithRetriesDisabled()
         {
             this.retriesEnabled = false;
+            return this;
+        }
+
+        public ClientAndTentacleBuilder WithMinimumAttemptsForInterruptedLongRunningCalls(int minimumAttempts)
+        {
+            this.minimumAttemptsForInterruptedLongRunningCalls = minimumAttempts;
             return this;
         }
 
@@ -271,7 +278,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             TentacleClient.CacheServiceWasNotFoundResponseMessages(server.ServerHalibutRuntime);
 
             var retrySettings = new RpcRetrySettings(retriesEnabled, retryDuration);
-            var clientOptions = new TentacleClientOptions(retrySettings);
+            var clientOptions = new TentacleClientOptions(retrySettings, minimumAttemptsForInterruptedLongRunningCalls);
+            
 
             //configure the client options
             configureClientOptions?.Invoke(clientOptions);
