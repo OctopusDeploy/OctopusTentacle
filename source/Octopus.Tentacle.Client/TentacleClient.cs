@@ -79,6 +79,7 @@ namespace Octopus.Tentacle.Client
 
         public TimeSpan OnCancellationAbandonCompleteScriptAfter { get; set; } = TimeSpan.FromMinutes(1);
 
+        // Created on the fly since, most of the time we don't need this executor.
         RpcCallExecutor FileTransferRpcCallExecutor => 
             RpcCallExecutorFactory.Create(this.clientOptions.RpcRetrySettings.RetryDuration, this.tentacleClientObserver, clientOptions.MinimumAttemptsForInterruptedLongRunningCalls);
 
