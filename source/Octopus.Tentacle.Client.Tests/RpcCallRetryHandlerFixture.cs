@@ -842,7 +842,7 @@ namespace Octopus.Tentacle.Client.Tests
             var onTimeoutActionCalled = false;
 
             // Short timeout to ensure it's exceeded, but minimumAttemptsForInterruptedLongRunningCalls = 2
-            var handler = new RpcCallRetryHandler(TimeSpan.FromSeconds(5), minimumAttemptsForInterruptedLongRunningCalls: 9999);
+            var handler = new RpcCallRetryHandler(TimeSpan.FromSeconds(2), minimumAttemptsForInterruptedLongRunningCalls: 9999);
             
             var exception = await AssertThrowsAny.Exception(async () =>
                 await handler.ExecuteWithRetries(
@@ -850,8 +850,8 @@ namespace Octopus.Tentacle.Client.Tests
                     {
                         callCount++;
                         
-                        // Delay 2 second to ensure the ct doesn't get canceled.
-                        await Task.Delay(TimeSpan.FromSeconds(2), ct);
+                        // Must exceed retry duration
+                        await Task.Delay(TimeSpan.FromSeconds(5), ct);
                         
                         if(callCount == -1) return Guid.NewGuid(); // Never called used to make the typing work.
 
