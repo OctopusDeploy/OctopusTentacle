@@ -62,7 +62,8 @@ namespace Octopus.Tentacle.Client.Retries
 
             async Task OnRetryAction(Exception exception, TimeSpan sleepDuration, int retryCount, Context context)
             {
-                
+                // If tentacle was online (by virtue of NOT getting a connecting exception) AND we have been told
+                // to make a min number of attempts, then our next attempt (if any) should be done without a timeout.
                 shouldExecuteNextRetryUnderTimeout = !(MinimumAttemptsForInterruptedLongRunningCalls.HasValue && !exception.IsConnectionException());
                 
                 if (lastException == null)
