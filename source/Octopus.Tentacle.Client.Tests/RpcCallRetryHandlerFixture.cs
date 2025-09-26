@@ -10,6 +10,7 @@ using Halibut.Exceptions;
 using Halibut.Transport;
 using NUnit.Framework;
 using Octopus.Tentacle.Client.Retries;
+using Octopus.Tentacle.CommonTestUtils.Assertions;
 using Polly.Timeout;
 
 namespace Octopus.Tentacle.Client.Tests
@@ -842,38 +843,32 @@ namespace Octopus.Tentacle.Client.Tests
 
             // Short timeout to ensure it's exceeded, but minimumAttemptsForInterruptedLongRunningCalls = 2
             var handler = new RpcCallRetryHandler(TimeSpan.FromSeconds(5), minimumAttemptsForInterruptedLongRunningCalls: 9999);
-
-            // TODO Assert this throws an exception
-            try
-            {
+            
+            var exception = await AssertThrowsAny.Exception(async () =>
                 await handler.ExecuteWithRetries(
-                async ct =>
-                {
-                    callCount++;
-                    
-                    // Delay 2 second to ensure the ct doesn't get canceled.
-                    await Task.Delay(TimeSpan.FromSeconds(2), ct);
-                    
-                    if(callCount == -1) return Guid.NewGuid(); // Never called used to make the typing work.
+                    async ct =>
+                    {
+                        callCount++;
+                        
+                        // Delay 2 second to ensure the ct doesn't get canceled.
+                        await Task.Delay(TimeSpan.FromSeconds(2), ct);
+                        
+                        if(callCount == -1) return Guid.NewGuid(); // Never called used to make the typing work.
 
-                    throw new HalibutClientException("", new Exception(), ConnectionState.Connecting);
-                },
-                onRetryAction: async (_, _, _, _, _, _) =>
-                {
-                    await Task.CompletedTask;
-                    onRetryActionCalled = true;
-                },
-                onTimeoutAction: async (_, _, _, _) =>
-                {
-                    await Task.CompletedTask;
-                    onTimeoutActionCalled = true;
-                },
-                CancellationToken.None);
-            }
-            catch (HalibutClientException)
-            {
-                // Expected to throw since we're always throwing connecting exceptions
-            }
+                        throw new HalibutClientException("", new Exception(), ConnectionState.Connecting);
+                    },
+                    onRetryAction: async (_, _, _, _, _, _) =>
+                    {
+                        await Task.CompletedTask;
+                        onRetryActionCalled = true;
+                    },
+                    onTimeoutAction: async (_, _, _, _) =>
+                    {
+                        await Task.CompletedTask;
+                        onTimeoutActionCalled = true;
+                    },
+                    CancellationToken.None));
+            exception.Should().BeAssignableTo<HalibutClientException>();
             
             callCount.Should().Be(1);
             onRetryActionCalled.Should().BeTrue();
