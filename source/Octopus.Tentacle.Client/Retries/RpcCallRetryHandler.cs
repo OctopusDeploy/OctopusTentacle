@@ -140,13 +140,9 @@ namespace Octopus.Tentacle.Client.Retries
                 }
                 else
                 {
-                    // Retry with a timeout on how long the operation can be.
-                    // Ensure we don't pass negative or very small timeouts to the policy
-                    var effectiveTimeout = remainingRetryDuration > TimeSpan.Zero ? remainingRetryDuration : TimeSpan.FromSeconds(1);
-                
                     var timeoutPolicy = policyBuilder
                         // Ensure the remaining retry time excludes the elapsed time
-                        .WithRetryTimeout(effectiveTimeout)
+                        .WithRetryTimeout(remainingRetryDuration)
                         .BuildTimeoutPolicy();
                 
                 
