@@ -62,10 +62,8 @@ namespace Octopus.Tentacle.Client.Retries
 
             async Task OnRetryAction(Exception exception, TimeSpan sleepDuration, int retryCount, Context context)
             {
-                if (MinimumAttemptsForInterruptedLongRunningCalls.HasValue && !exception.IsConnectionException())
-                {
-                    shouldExecuteNextRetryUnderTimeout = false;   
-                }
+                
+                shouldExecuteNextRetryUnderTimeout = !(MinimumAttemptsForInterruptedLongRunningCalls.HasValue && !exception.IsConnectionException());
                 
                 if (lastException == null)
                 {
