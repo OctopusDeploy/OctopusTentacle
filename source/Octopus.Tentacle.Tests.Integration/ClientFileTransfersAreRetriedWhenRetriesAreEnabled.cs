@@ -78,6 +78,8 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithPortForwarder(out var portForwarder)
                 .WithByteTransferTracker(bytesTransferredCallback: async (ClientToTentacleBytes, _, _) =>
                 {
+                    // Once about 30MB has been sent over the network, we are sure this is the file upload.
+                    // which is what we want to interrupt.
                     if (ClientToTentacleBytes > fileSize / 3 && !hasSlept)
                     {
                         // Exceed the RPC retry duration
