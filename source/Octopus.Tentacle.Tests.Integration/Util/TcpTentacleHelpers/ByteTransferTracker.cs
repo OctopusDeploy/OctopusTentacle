@@ -1,8 +1,6 @@
 using System;
-using System.Threading.Tasks;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.TestPortForwarder;
-using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
 {
@@ -12,8 +10,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
     /// </summary>
     public class ByteTransferTracker
     {
-        private readonly ILogger logger;
-        private readonly Func<long, long, long, Task>? bytesTransferredCallback;
+        private readonly Action<long, long, long>? bytesTransferredCallback;
         
         private long clientToTentacleBytes = 0;
         private long tentacleToClientBytes = 0;
@@ -21,13 +18,10 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
         /// <summary>
         /// Creates a new ByteTransferTracker
         /// </summary>
-        /// <param name="bytesTransferredCallback">Async callback invoked with (clientToTentacleBytes, tentacleToClientBytes, totalBytes) whenever bytes are transferred</param>
-        public ByteTransferTracker(Func<long, long, long, Task>? bytesTransferredCallback = null)
+        /// <param name="bytesTransferredCallback">Callback invoked with (clientToTentacleBytes, tentacleToClientBytes, totalBytes) whenever bytes are transferred</param>
+        public ByteTransferTracker(Action<long, long, long>? bytesTransferredCallback = null)
         {
             this.bytesTransferredCallback = bytesTransferredCallback;
-            logger = new SerilogLoggerBuilder().Build().ForContext<ByteTransferTracker>();
-            
-            logger.Information("ByteTransferTracker created");
         }
 
         /// <summary>
@@ -53,10 +47,6 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
             return new DataTransferObserverBuilder().WithWritingDataObserver((tcpPump, stream) =>
             {
                 clientToTentacleBytes += stream.Length;
-                
-                logger.Verbose("Client sent {BytesSent} bytes. Total client-to-tentacle: {TotalClientToTentacle}", 
-                    stream.Length, clientToTentacleBytes);
-
                 InvokeCallback();
             }).Build();
         }
@@ -69,45 +59,34 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
             return new DataTransferObserverBuilder().WithWritingDataObserver((tcpPump, stream) =>
             {
                 tentacleToClientBytes += stream.Length;
-                
-                logger.Verbose("Tentacle sent {BytesSent} bytes. Total tentacle-to-client: {TotalTentacleToClient}", 
-                    stream.Length, tentacleToClientBytes);
-
                 InvokeCallback();
             }).Build();
         }
 
         private void InvokeCallback()
         {
-            // Fire and forget - we don't want to block data transfer on the callback
-            _ = Task.Run(async () =>
+            try
             {
-                try
-                {
-                    if (bytesTransferredCallback != null)
-                    {
-                        await bytesTransferredCallback(clientToTentacleBytes, tentacleToClientBytes, TotalBytes);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    logger.Warning(ex, "Exception occurred in byte transfer callback");
-                }
-            });
+                bytesTransferredCallback?.Invoke(clientToTentacleBytes, tentacleToClientBytes, TotalBytes);
+            }
+            catch
+            {
+                // Swallow exceptions to avoid disrupting data transfer
+            }
         }
     }
 
     public static class ClientAndTentacleBuilderByteTransferTrackerExtensionMethods
     {
         /// <summary>
-        /// Configures the port forwarder to track bytes transferred and invoke an async callback with the current counts
+        /// Configures the port forwarder to track bytes transferred and invoke a callback with the current counts
         /// </summary>
         /// <param name="clientAndTentacleBuilder">The builder to configure</param>
-        /// <param name="bytesTransferredCallback">Async callback invoked with (clientToTentacleBytes, tentacleToClientBytes, totalBytes) whenever bytes are transferred</param>
+        /// <param name="bytesTransferredCallback">Callback invoked with (clientToTentacleBytes, tentacleToClientBytes, totalBytes) whenever bytes are transferred</param>
         /// <returns>The configured builder</returns>
         public static ClientAndTentacleBuilder WithByteTransferTracker(
             this ClientAndTentacleBuilder clientAndTentacleBuilder,
-            Func<long, long, long, Task>? bytesTransferredCallback)
+            Action<long, long, long>? bytesTransferredCallback)
         {
             var byteTracker = new ByteTransferTracker(bytesTransferredCallback);
 

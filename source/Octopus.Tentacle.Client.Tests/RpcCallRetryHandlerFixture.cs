@@ -843,6 +843,7 @@ namespace Octopus.Tentacle.Client.Tests
             // Short timeout to ensure it's exceeded, but minimumAttemptsForInterruptedLongRunningCalls = 2
             var handler = new RpcCallRetryHandler(TimeSpan.FromSeconds(5), minimumAttemptsForInterruptedLongRunningCalls: 9999);
 
+            // TODO Assert this throws an exception
             try
             {
                 await handler.ExecuteWithRetries(

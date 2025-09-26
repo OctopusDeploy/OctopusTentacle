@@ -76,14 +76,14 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithRetryDuration(TimeSpan.FromSeconds(1))
                 .WithMinimumAttemptsForInterruptedLongRunningCalls(5)
                 .WithPortForwarder(out var portForwarder)
-                .WithByteTransferTracker(bytesTransferredCallback: async (ClientToTentacleBytes, _, _) =>
+                .WithByteTransferTracker(bytesTransferredCallback: (ClientToTentacleBytes, _, _) =>
                 {
                     // Once about 30MB has been sent over the network, we are sure this is the file upload.
                     // which is what we want to interrupt.
                     if (ClientToTentacleBytes > fileSize / 3 && !hasSlept)
                     {
                         // Exceed the RPC retry duration
-                        await Task.Delay(TimeSpan.FromSeconds(5));
+                        Thread.Sleep(TimeSpan.FromSeconds(5));
                         // Terminate the file upload.
                         portForwarder.Value.EnterKillNewAndExistingConnectionsMode();
                         portForwarder.Value.ReturnToNormalMode();
@@ -92,19 +92,6 @@ namespace Octopus.Tentacle.Tests.Integration
                 })
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages<IAsyncClientFileTransferService>(out var recordedUsages)
-                    .DecorateFileTransferServiceWith(d => d
-                        .BeforeUploadFile(
-                            async () =>
-                            {
-                                await tcpConnectionUtilities.EnsureConnectionIsSetupBeforeKillingIt();
-
-                                // Only kill the connection the first time, causing the upload
-                                // to succeed - and therefore failing the test - if retries are attempted
-                                if (recordedUsages.For(nameof(IAsyncClientFileTransferService.UploadFileAsync)).LastException is null)
-                                {
-                                    responseMessageTcpKiller.KillConnectionOnNextResponse();
-                                }
-                            }))
                     .Build())
                 .Build(CancellationToken);
 
