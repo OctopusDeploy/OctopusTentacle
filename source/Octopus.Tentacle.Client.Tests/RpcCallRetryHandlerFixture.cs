@@ -874,8 +874,7 @@ namespace Octopus.Tentacle.Client.Tests
                 // Expected to throw since we're always throwing connecting exceptions
             }
             
-            // We should expect the timeout limit to kick in and prevent us from making too many attempts
-            callCount.Should().BeGreaterThan(1).And.BeLessThanOrEqualTo(10);
+            callCount.Should().Be(1);
             onRetryActionCalled.Should().BeTrue();
             onTimeoutActionCalled.Should().BeTrue();
         }

@@ -66,7 +66,8 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task LongRunningFileUploadsToTentacleAreRetried(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
-            var count = 1024*1024*100;
+            // 100MB file which well exceeds any networking buffers, making it easy to control what is happening over the network.
+            var fileSize = 1024*1024*100;
             bool hasSlept = false;
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithPortForwarderDataLogging()
@@ -77,7 +78,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithPortForwarder(out var portForwarder)
                 .WithByteTransferTracker(bytesTransferredCallback: async (ClientToTentacleBytes, _, _) =>
                 {
-                    if (ClientToTentacleBytes > count / 3 && !hasSlept)
+                    if (ClientToTentacleBytes > fileSize / 3 && !hasSlept)
                     {
                         // Exceed the RPC retry duration
                         await Task.Delay(TimeSpan.FromSeconds(5));
@@ -110,15 +111,15 @@ namespace Octopus.Tentacle.Tests.Integration
             var remotePath = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "UploadFile.txt");
 
             
-            var res = await clientTentacle.TentacleClient.UploadFile(remotePath, DataStream.FromString(new string('a', count)), CancellationToken, inMemoryLog);
-            res.Length.Should().Be(count);
+            var res = await clientTentacle.TentacleClient.UploadFile(remotePath, DataStream.FromString(new string('a', fileSize)), CancellationToken, inMemoryLog);
+            res.Length.Should().Be(fileSize);
 
             recordedUsages.For(nameof(IAsyncClientFileTransferService.UploadFileAsync)).LastException.Should().NotBeNull();
             recordedUsages.For(nameof(IAsyncClientFileTransferService.UploadFileAsync)).Started.Should().BeGreaterOrEqualTo(2);
 
             var downloadFile = await clientTentacle.TentacleClient.DownloadFile(remotePath, CancellationToken);
             var actuallySent = await downloadFile.GetUtf8String(CancellationToken);
-            actuallySent.Length.Should().Be(count);
+            actuallySent.Length.Should().Be(fileSize);
 
             inMemoryLog.ShouldHaveLoggedRetryAttemptsAndNoRetryFailures();
         }
