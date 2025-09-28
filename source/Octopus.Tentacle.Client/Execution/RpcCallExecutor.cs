@@ -84,7 +84,7 @@ namespace Octopus.Tentacle.Client.Execution
 
                             onErrorAction?.Invoke(lastException);
 
-                            var remainingDurationInSeconds = (int)(totalRetryDuration - elapsedDuration).TotalSeconds;
+                            var remainingDurationInSeconds = Math.Max((int)(totalRetryDuration - elapsedDuration).TotalSeconds, 0);
                             logger.Info($"An error occurred communicating with Tentacle. This action will be retried after {(int)sleepDuration.TotalSeconds} seconds. Retry attempt {retryCount}. Retries will be performed for up to {remainingDurationInSeconds} seconds.");
                             logger.Verbose(lastException);
                         },
