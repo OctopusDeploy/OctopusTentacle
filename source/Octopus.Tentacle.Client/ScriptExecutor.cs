@@ -44,6 +44,8 @@ namespace Octopus.Tentacle.Client
             StartScriptIsBeingReAttempted startScriptIsBeingReAttempted,
             CancellationToken cancellationToken)
         {
+            // Note: This class deliberately does not create OpenTelemetry Trace activities.
+            // It is a facade over other ScriptExecutor services, and the facade doesn't do anything interesting
             var scriptServiceVersionToUse = await DetermineScriptServiceVersionToUse(cancellationToken);
 
             var scriptExecutorFactory = CreateScriptExecutorFactory();

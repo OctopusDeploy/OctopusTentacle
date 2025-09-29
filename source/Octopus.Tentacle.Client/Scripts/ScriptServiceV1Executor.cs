@@ -82,6 +82,8 @@ namespace Octopus.Tentacle.Client.Scripts
             StartScriptIsBeingReAttempted startScriptIsBeingReAttempted,
             CancellationToken scriptExecutionCancellationToken)
         {
+            using var activity = TentacleClient.ActivitySource.StartActivity($"{nameof(ScriptServiceV1Executor)}.{nameof(StartScript)}");
+            
             // Script Service v1 is not idempotent, do not allow it to be re-attempted as it may run a second time.
             if (startScriptIsBeingReAttempted == StartScriptIsBeingReAttempted.PossiblyBeingReAttempted)
             {
@@ -106,6 +108,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
         public async Task<ScriptOperationExecutionResult> GetStatus(CommandContext commandContext, CancellationToken scriptExecutionCancellationToken)
         {
+            using var activity = TentacleClient.ActivitySource.StartActivity($"{nameof(ScriptServiceV1Executor)}.{nameof(GetStatus)}");
             var scriptStatusResponseV1 = await GetStatusV1(commandContext, scriptExecutionCancellationToken).ConfigureAwait(false);
 
             if (scriptStatusResponseV1.State != ProcessState.Complete)
@@ -125,6 +128,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
         async Task<ScriptStatusResponse> GetStatusV1(CommandContext commandContext, CancellationToken scriptExecutionCancellationToken)
         {
+            using var activity = TentacleClient.ActivitySource.StartActivity($"{nameof(ScriptServiceV1Executor)}.{nameof(GetStatusV1)}");
             var scriptStatusResponseV1 = await rpcCallExecutor.ExecuteWithNoRetries(
                 RpcCall.Create<IScriptService>(nameof(IScriptService.GetStatus)),
                 async ct =>
@@ -142,6 +146,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
         public async Task<ScriptOperationExecutionResult> CancelScript(CommandContext commandContext)
         {
+            using var activity = TentacleClient.ActivitySource.StartActivity($"{nameof(ScriptServiceV1Executor)}.{nameof(CancelScript)}");
             var response = await rpcCallExecutor.ExecuteWithNoRetries(
                 RpcCall.Create<IScriptService>(nameof(IScriptService.CancelScript)),
                 async ct =>
@@ -160,6 +165,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
         public async Task<ScriptStatus?> CompleteScript(CommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
+            using var activity = TentacleClient.ActivitySource.StartActivity($"{nameof(ScriptServiceV1Executor)}.{nameof(CompleteScript)}");
             var response = await rpcCallExecutor.ExecuteWithNoRetries(
                 RpcCall.Create<IScriptService>(nameof(IScriptService.CompleteScript)),
                 async ct =>

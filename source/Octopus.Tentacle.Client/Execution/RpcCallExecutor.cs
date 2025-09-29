@@ -56,6 +56,9 @@ namespace Octopus.Tentacle.Client.Execution
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
         {
+            using var activity = TentacleClient.ActivitySource.StartActivity($"{nameof(RpcCallExecutor)}.{nameof(ExecuteWithRetries)}");
+            activity?.AddTag("octopus.tentacle.rpc_call.service", rpcCall.Service);
+            activity?.AddTag("octopus.tentacle.rpc_call.name", rpcCall.Name);
             var rpcCallMetricsBuilder = RpcCallMetricsBuilder.StartWithRetries(rpcCall, rpcCallRetryHandler.RetryTimeout);
 
             try
@@ -125,6 +128,9 @@ namespace Octopus.Tentacle.Client.Execution
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
         {
+            using var activity = TentacleClient.ActivitySource.StartActivity($"{nameof(RpcCallExecutor)}.{nameof(ExecuteWithNoRetries)}");
+            activity?.AddTag("octopus.tentacle.rpc_call.service", rpcCall.Service);
+            activity?.AddTag("octopus.tentacle.rpc_call.name", rpcCall.Name);
             var rpcCallMetricsBuilder = RpcCallMetricsBuilder.StartWithoutRetries(rpcCall);
             var start = DateTimeOffset.UtcNow;
 
@@ -156,6 +162,9 @@ namespace Octopus.Tentacle.Client.Execution
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
         {
+            using var activity = TentacleClient.ActivitySource.StartActivity($"{nameof(RpcCallExecutor)}.{nameof(ExecuteWithNoRetries)}");
+            activity?.AddTag("octopus.tentacle.rpc_call.service", rpcCall.Service);
+            activity?.AddTag("octopus.tentacle.rpc_call.name", rpcCall.Name);
             var rpcCallMetricsBuilder = RpcCallMetricsBuilder.StartWithoutRetries(rpcCall);
             var start = DateTimeOffset.UtcNow;
 

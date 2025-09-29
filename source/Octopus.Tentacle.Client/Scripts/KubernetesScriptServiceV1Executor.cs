@@ -79,6 +79,8 @@ namespace Octopus.Tentacle.Client.Scripts
             StartScriptIsBeingReAttempted startScriptIsBeingReAttempted,
             CancellationToken scriptExecutionCancellationToken)
         {
+            using var activity = TentacleClient.ActivitySource.StartActivity($"{nameof(KubernetesScriptServiceV1Executor)}.{nameof(StartScript)}");
+            
             var command = Map(executeScriptCommand);
             var startScriptCallsConnectedCount = 0;
             try
@@ -135,6 +137,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
         public async Task<ScriptOperationExecutionResult> GetStatus(CommandContext commandContext, CancellationToken scriptExecutionCancellationToken)
         {
+            using var activity = TentacleClient.ActivitySource.StartActivity($"{nameof(KubernetesScriptServiceV1Executor)}.{nameof(GetStatus)}");
             async Task<KubernetesScriptStatusResponseV1> GetStatusAction(CancellationToken ct)
             {
                 var request = new KubernetesScriptStatusRequestV1(commandContext.ScriptTicket, commandContext.NextLogSequence);
@@ -155,6 +158,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
         public async Task<ScriptOperationExecutionResult> CancelScript(CommandContext commandContext)
         {
+            using var activity = TentacleClient.ActivitySource.StartActivity($"{nameof(KubernetesScriptServiceV1Executor)}.{nameof(CancelScript)}");
             async Task<KubernetesScriptStatusResponseV1> CancelScriptAction(CancellationToken ct)
             {
                 var request = new CancelKubernetesScriptCommandV1(commandContext.ScriptTicket, commandContext.NextLogSequence);
@@ -180,6 +184,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
         public async Task<ScriptStatus?> CompleteScript(CommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
+            using var activity = TentacleClient.ActivitySource.StartActivity($"{nameof(KubernetesScriptServiceV1Executor)}.{nameof(CompleteScript)}");
             try
             {
                 // Finish performs a best effort cleanup of the Workspace on Tentacle
