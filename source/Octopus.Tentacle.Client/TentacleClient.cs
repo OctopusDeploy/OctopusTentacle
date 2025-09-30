@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
@@ -20,6 +22,8 @@ namespace Octopus.Tentacle.Client
 {
     public class TentacleClient : ITentacleClient
     {
+        public static readonly ActivitySource ActivitySource = new("Octopus.TentacleClient");
+        
         readonly IScriptObserverBackoffStrategy scriptObserverBackOffStrategy;
         readonly ITentacleClientObserver tentacleClientObserver;
         readonly RpcCallExecutor rpcCallExecutor;
@@ -29,6 +33,8 @@ namespace Octopus.Tentacle.Client
 
         public static void CacheServiceWasNotFoundResponseMessages(IHalibutRuntime halibutRuntime)
         {
+            using var activity = ActivitySource.StartActivity($"{nameof(TentacleClient)}.{nameof(CacheServiceWasNotFoundResponseMessages)}");
+            
             var innerHandler = halibutRuntime.OverrideErrorResponseMessageCaching;
             halibutRuntime.OverrideErrorResponseMessageCaching = response =>
             {
@@ -85,6 +91,9 @@ namespace Octopus.Tentacle.Client
 
         public async Task<UploadResult> UploadFile(string fileName, string path, DataStream package, ITentacleClientTaskLog logger, CancellationToken cancellationToken)
         {
+            using var activity = ActivitySource.StartActivity($"{nameof(TentacleClient)}.{nameof(UploadFile)}");
+            activity?.AddTag("octopus.tentacle.file_name", fileName);
+            activity?.AddTag("octopus.tentacle.file_path", path);
             var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
 
             async Task<UploadResult> UploadFileAction(CancellationToken ct)
@@ -120,6 +129,8 @@ namespace Octopus.Tentacle.Client
 
         public async Task<DataStream?> DownloadFile(string remotePath, ITentacleClientTaskLog logger, CancellationToken cancellationToken)
         {
+            using var activity = ActivitySource.StartActivity($"{nameof(TentacleClient)}.{nameof(DownloadFile)}");
+            activity?.AddTag("octopus.tentacle.remote_path", remotePath);
             var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
 
             async Task<DataStream> DownloadFileAction(CancellationToken ct)
@@ -159,6 +170,9 @@ namespace Octopus.Tentacle.Client
             ITentacleClientTaskLog logger,
             CancellationToken scriptExecutionCancellationToken)
         {
+            using var activity = ActivitySource.StartActivity($"{nameof(TentacleClient)}.{nameof(ExecuteScript)}");
+            activity?.AddTag("octopus.tentacle.script.files", string.Join(",", executeScriptCommand.Files.Select(f => f.Name)));
+            // don't trace the script body, it could be megabytes in size
             var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
 
             try
@@ -198,6 +212,10 @@ namespace Octopus.Tentacle.Client
             ITentacleClientTaskLog logger, 
             CancellationToken scriptExecutionCancellationToken)
         {
+            using var activity = ActivitySource.StartActivity($"{nameof(TentacleClient)}.{nameof(StartScript)}");
+            activity?.AddTag("octopus.tentacle.script.files", string.Join(",", command.Files.Select(f => f.Name)));
+            // don't trace the script body, it could be megabytes in size
+            
             var scriptExecutor = new ScriptExecutor(
                 allClients,
                 logger,
@@ -212,6 +230,8 @@ namespace Octopus.Tentacle.Client
 
         public async Task<ScriptOperationExecutionResult> GetStatus(CommandContext commandContext, ITentacleClientTaskLog logger, CancellationToken scriptExecutionCancellationToken)
         {
+            using var activity = ActivitySource.StartActivity($"{nameof(TentacleClient)}.{nameof(GetStatus)}");
+            
             var scriptExecutor = new ScriptExecutor(
             allClients,
                 logger,
@@ -226,6 +246,8 @@ namespace Octopus.Tentacle.Client
 
         public async Task<ScriptOperationExecutionResult> CancelScript(CommandContext commandContext, ITentacleClientTaskLog logger)
         {
+            using var activity = ActivitySource.StartActivity($"{nameof(TentacleClient)}.{nameof(CancelScript)}");
+            
             var scriptExecutor = new ScriptExecutor(
                 allClients,
                 logger,
@@ -240,6 +262,8 @@ namespace Octopus.Tentacle.Client
 
         public async Task<ScriptStatus?> CompleteScript(CommandContext commandContext, ITentacleClientTaskLog logger, CancellationToken scriptExecutionCancellationToken)
         {
+            using var activity = ActivitySource.StartActivity($"{nameof(TentacleClient)}.{nameof(CompleteScript)}");
+            
             var scriptExecutor = new ScriptExecutor(
                 allClients,
                 logger,

@@ -128,6 +128,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
         public async Task<ScriptOperationExecutionResult> GetStatus(CommandContext commandContext, CancellationToken scriptExecutionCancellationToken)
         {
+            using var activity = TentacleClient.ActivitySource.StartActivity($"{nameof(ScriptServiceV2Executor)}.{nameof(GetStatus)}");
             async Task<ScriptStatusResponseV2> GetStatusAction(CancellationToken ct)
             {
                 var request = new ScriptStatusRequestV2(commandContext.ScriptTicket, commandContext.NextLogSequence);
@@ -148,6 +149,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
         public async Task<ScriptOperationExecutionResult> CancelScript(CommandContext commandContext)
         {
+            using var activity = TentacleClient.ActivitySource.StartActivity($"{nameof(ScriptServiceV2Executor)}.{nameof(CancelScript)}");
             async Task<ScriptStatusResponseV2> CancelScriptAction(CancellationToken ct)
             {
                 var request = new CancelScriptCommandV2(commandContext.ScriptTicket, commandContext.NextLogSequence);
@@ -173,6 +175,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
         public async Task<ScriptStatus?> CompleteScript(CommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
+            using var activity = TentacleClient.ActivitySource.StartActivity($"{nameof(ScriptServiceV2Executor)}.{nameof(CompleteScript)}");
             try
             {
                 // Finish performs a best effort cleanup of the Workspace on Tentacle
