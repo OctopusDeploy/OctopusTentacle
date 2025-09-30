@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Tentacle.Client.Observability;
@@ -110,6 +111,10 @@ namespace Octopus.Tentacle.Client.Execution
             }
             catch (Exception e)
             {
+                activity?.SetStatus(ActivityStatusCode.Error);
+                // We should use activity.AddException here, but need to update the referenced version of System.Diagnostics.DiagnosticSource.
+                // We inherit the reference from Halibut so that would have to change first.
+                activity?.AddTag("exception.message", e.Message); 
                 rpcCallMetricsBuilder.Failure(e, cancellationToken);
                 throw;
             }
@@ -142,6 +147,11 @@ namespace Octopus.Tentacle.Client.Execution
             }
             catch (Exception e)
             {
+                activity?.SetStatus(ActivityStatusCode.Error);
+                // We should use activity.AddException here, but need to update the referenced version of System.Diagnostics.DiagnosticSource.
+                // We inherit the reference from Halibut so that would have to change first.
+                activity?.AddTag("exception.message", e.Message); 
+                
                 rpcCallMetricsBuilder.WithAttempt(TimedOperation.Failure(start, e, cancellationToken));
                 rpcCallMetricsBuilder.Failure(e, cancellationToken);
                 throw;
@@ -175,6 +185,10 @@ namespace Octopus.Tentacle.Client.Execution
             }
             catch (Exception e)
             {
+                activity?.SetStatus(ActivityStatusCode.Error);
+                // We should use activity.AddException here, but need to update the referenced version of System.Diagnostics.DiagnosticSource.
+                // We inherit the reference from Halibut so that would have to change first.
+                activity?.AddTag("exception.message", e.Message); 
                 rpcCallMetricsBuilder.WithAttempt(TimedOperation.Failure(start, e, cancellationToken));
                 rpcCallMetricsBuilder.Failure(e, cancellationToken);
                 throw;
