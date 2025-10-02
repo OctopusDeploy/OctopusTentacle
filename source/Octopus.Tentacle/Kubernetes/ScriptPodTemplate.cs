@@ -27,8 +27,8 @@ namespace Octopus.Tentacle.Kubernetes
             {
                 PodMetadata = new PodMetadata
                 {
-                    Labels = deployment.Spec.Template.Metadata.Labels,
-                    Annotations = deployment.Spec.Template.Metadata.Annotations,
+                    Labels = deployment.Spec.Template.Metadata.Labels.Clone(),
+                    Annotations = deployment.Spec.Template.Metadata.Annotations.Clone(),
                 },
                 PodSpec = deployment.Spec.Template.Spec.Clone(),
                 ScriptContainerSpec = deployment.Spec.Template.Spec.Containers.First(c => c.Name == ContainerNames.PodTemplateScriptContainerName).Clone(),
@@ -47,8 +47,8 @@ namespace Octopus.Tentacle.Kubernetes
         {
             var template = new ScriptPodTemplate
             {
-                PodMetadata = scriptPodTemplateCustomResource.Spec.PodMetadata,
-                PodSpec = scriptPodTemplateCustomResource.Spec.PodSpec,
+                PodMetadata = scriptPodTemplateCustomResource.Spec.PodMetadata.Clone(),
+                PodSpec = scriptPodTemplateCustomResource.Spec.PodSpec.Clone(),
                 ScriptContainerSpec = scriptPodTemplateCustomResource.Spec.ScriptContainerSpec.Clone(),
                 ScriptInitContainerSpec = scriptPodTemplateCustomResource.Spec.ScriptContainerSpec.Clone(),
                 WatchdogContainerSpec = scriptPodTemplateCustomResource.Spec.WatchdogContainerSpec.Clone()
