@@ -30,12 +30,16 @@ namespace Octopus.Tentacle.Kubernetes
                     Labels = deployment.Spec.Template.Metadata.Labels,
                     Annotations = deployment.Spec.Template.Metadata.Annotations,
                 },
-                PodSpec = deployment.Spec.Template.Spec,
+                PodSpec = deployment.Spec.Template.Spec.Clone(),
                 ScriptContainerSpec = deployment.Spec.Template.Spec.Containers.First(c => c.Name == ContainerNames.PodTemplateScriptContainerName).Clone(),
                 ScriptInitContainerSpec = deployment.Spec.Template.Spec.Containers.First(c => c.Name == ContainerNames.PodTemplateScriptContainerName).Clone(),
                 WatchdogContainerSpec = deployment.Spec.Template.Spec.Containers.First(c => c.Name == ContainerNames.PodTemplateWatchdogContainerName).Clone()
             };
-            template.PodSpec.Containers = null;
+            
+            // The deployment will have the containers, we should not pull them in here though - we overwrite them and programatically create them later
+            if (template.PodSpec != null) {
+                template.PodSpec.Containers = null;
+            }
             return template;
         }
 

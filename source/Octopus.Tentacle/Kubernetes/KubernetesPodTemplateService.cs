@@ -5,28 +5,49 @@ using System.Threading;
 using System.Threading.Tasks;
 using k8s;
 using k8s.Models;
+using Microsoft.Extensions.Caching.Memory;
 using Octopus.Tentacle.Core.Diagnostics;
 
 namespace Octopus.Tentacle.Kubernetes
 {
     public interface IKubernetesPodTemplateService
     {
-        Task<ScriptPodTemplateCustomResource?> GetOldestScriptPodTemplateCustomResource(CancellationToken cancellationToken);
         Task<ScriptPodTemplate?> GetScriptPodTemplate(CancellationToken cancellationToken);
     }
     
+    public class CachingKubernetesPodTemplateService : IKubernetesPodTemplateService
+    {
+        readonly IKubernetesPodTemplateService inner;
+        readonly IMemoryCache memoryCache;
+        static readonly TimeSpan CacheExpiry = TimeSpan.FromMinutes(15);
+        
+        public CachingKubernetesPodTemplateService(IKubernetesPodTemplateService inner, IMemoryCache memoryCache)
+        {
+            this.inner = inner;
+            this.memoryCache = memoryCache;
+        }
+        
+        public async Task<ScriptPodTemplate?> GetScriptPodTemplate(CancellationToken cancellationToken)
+        {
+            var cacheKey = $"{nameof(ScriptPodTemplate)}";
+            var template = await memoryCache.GetOrCreateAsync<ScriptPodTemplate?>(cacheKey, async entry =>
+            {
+                entry.AbsoluteExpirationRelativeToNow = CacheExpiry;
+                return await inner.GetScriptPodTemplate(cancellationToken);
+            });
+            return template.Clone();
+        }
+    }
+
+    
     public class KubernetesPodTemplateService : KubernetesService, IKubernetesPodTemplateService
     {
-        ScriptPodTemplate? CachedPodTemplate {get; set;}
-        
         public KubernetesPodTemplateService(IKubernetesClientConfigProvider configProvider, ISystemLog log)
             : base(configProvider, log)
         {}
 
         public async Task<ScriptPodTemplate?> GetScriptPodTemplate(CancellationToken cancellationToken)
         {
-            if (CachedPodTemplate != null) return CachedPodTemplate.Clone();
-            
             ScriptPodTemplate? scriptPodTemplate = null;
             
             var scriptPodTemplateCustomResource = await GetOldestScriptPodTemplateCustomResource(cancellationToken);
@@ -41,8 +62,7 @@ namespace Octopus.Tentacle.Kubernetes
                 scriptPodTemplate = ScriptPodTemplate.GetScriptPodTemplateFromDeployment(scriptPodTemplateDeployment);
             }
             
-            CachedPodTemplate = scriptPodTemplate;
-            return scriptPodTemplate.Clone();
+            return scriptPodTemplate;
         }
 
         public async Task<ScriptPodTemplateCustomResource?> GetOldestScriptPodTemplateCustomResource(CancellationToken cancellationToken)
