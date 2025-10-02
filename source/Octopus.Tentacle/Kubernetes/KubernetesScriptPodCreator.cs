@@ -33,7 +33,7 @@ namespace Octopus.Tentacle.Kubernetes
         readonly IKubernetesPodService podService;
         readonly IKubernetesPodMonitor podMonitor;
         readonly IKubernetesSecretService secretService;
-        readonly IKubernetesCustomResourceService customResourceService;
+        readonly IKubernetesPodTemplateService podTemplateService;
         readonly IKubernetesPodContainerResolver containerResolver;
         readonly IApplicationInstanceSelector appInstanceSelector;
         readonly ISystemLog log;
@@ -47,7 +47,7 @@ namespace Octopus.Tentacle.Kubernetes
             IKubernetesPodService podService,
             IKubernetesPodMonitor podMonitor,
             IKubernetesSecretService secretService,
-            IKubernetesCustomResourceService customResourceService,
+            IKubernetesPodTemplateService podTemplateService,
             IKubernetesPodContainerResolver containerResolver,
             IApplicationInstanceSelector appInstanceSelector,
             ISystemLog log,
@@ -60,7 +60,7 @@ namespace Octopus.Tentacle.Kubernetes
             this.podService = podService;
             this.podMonitor = podMonitor;
             this.secretService = secretService;
-            this.customResourceService = customResourceService;
+            this.podTemplateService = podTemplateService;
             this.containerResolver = containerResolver;
             this.appInstanceSelector = appInstanceSelector;
             this.log = log;
@@ -197,7 +197,7 @@ namespace Octopus.Tentacle.Kubernetes
                 .Select(secretName => new V1LocalObjectReference(secretName))
                 .ToList();
 
-            var scriptPodTemplate = await customResourceService.GetOldestScriptPodTemplateCustomResource(cancellationToken);
+            var scriptPodTemplate = await podTemplateService.GetScriptPodTemplate(cancellationToken);
 
             var pod = new V1Pod
             {
@@ -205,11 +205,11 @@ namespace Octopus.Tentacle.Kubernetes
                 {
                     Name = podName,
                     NamespaceProperty = KubernetesConfig.Namespace,
-                    Labels = Merge(scriptPodTemplate?.Spec.PodMetadata?.Labels, GetScriptPodLabels(tentacleScriptLog, command)),
-                    Annotations = Merge(scriptPodTemplate?.Spec.PodMetadata?.Annotations, GetScriptPodAnnotations(tentacleScriptLog, command))
+                    Labels = Merge(scriptPodTemplate?.PodMetadata?.Labels, GetScriptPodLabels(tentacleScriptLog, command)),
+                    Annotations = Merge(scriptPodTemplate?.PodMetadata?.Annotations, GetScriptPodAnnotations(tentacleScriptLog, command))
                 },
                 //if the script pod template spec has been defined, use that
-                Spec = scriptPodTemplate?.Spec.PodSpec ?? new V1PodSpec
+                Spec = scriptPodTemplate?.PodSpec ?? new V1PodSpec
                 {
                     RestartPolicy = "Never",
                     Affinity = ParseScriptPodAffinity(tentacleScriptLog),
@@ -218,8 +218,8 @@ namespace Octopus.Tentacle.Kubernetes
                 }
             };
 
-            pod.Spec.InitContainers = await CreateInitContainers(command, podName, homeDir, workspacePath, tentacleScriptLog, scriptPodTemplate?.Spec.ScriptContainerSpec);
-            pod.Spec.Containers = await CreateScriptContainers(command, podName, scriptName, homeDir, workspacePath, workspace.ScriptArguments, tentacleScriptLog, scriptPodTemplate?.Spec);
+            pod.Spec.InitContainers = await CreateInitContainers(command, podName, homeDir, workspacePath, tentacleScriptLog, scriptPodTemplate?.ScriptInitContainerSpec);
+            pod.Spec.Containers = await CreateScriptContainers(command, podName, scriptName, homeDir, workspacePath, workspace.ScriptArguments, tentacleScriptLog, scriptPodTemplate);
             pod.Spec.ImagePullSecrets = imagePullSecretNames;
             pod.Spec.ServiceAccountName = serviceAccountName;
             pod.Spec.Volumes = Merge(pod.Spec.Volumes, CreateVolumes(command));
@@ -231,12 +231,12 @@ namespace Octopus.Tentacle.Kubernetes
             LogVerboseToBothLogs($"Executing script in Kubernetes Pod '{podName}'. Image: '{scriptContainer.Image}'.", tentacleScriptLog);
         }
 
-        protected virtual async Task<IList<V1Container>> CreateScriptContainers(StartKubernetesScriptCommandV1 command, string podName, string scriptName, string homeDir, string workspacePath, string[]? scriptArguments, InMemoryTentacleScriptLog tentacleScriptLog, ScriptPodTemplateSpec? spec)
+        protected virtual async Task<IList<V1Container>> CreateScriptContainers(StartKubernetesScriptCommandV1 command, string podName, string scriptName, string homeDir, string workspacePath, string[]? scriptArguments, InMemoryTentacleScriptLog tentacleScriptLog, ScriptPodTemplate? template)
         {
             return new List<V1Container>
             {
-                await CreateScriptContainer(command, podName, scriptName, homeDir, workspacePath, scriptArguments, tentacleScriptLog, spec?.ScriptContainerSpec)
-            }.AddIfNotNull(CreateWatchdogContainer(homeDir, spec?.WatchdogContainerSpec));
+                await CreateScriptContainer(command, podName, scriptName, homeDir, workspacePath, scriptArguments, tentacleScriptLog, template?.ScriptContainerSpec)
+            }.AddIfNotNull(CreateWatchdogContainer(homeDir, template?.WatchdogContainerSpec));
         }
 
         protected virtual async Task<IList<V1Container>> CreateInitContainers(StartKubernetesScriptCommandV1 command, string podName, string homeDir, string workspacePath, InMemoryTentacleScriptLog tentacleScriptLog, V1Container? containerSpec)
