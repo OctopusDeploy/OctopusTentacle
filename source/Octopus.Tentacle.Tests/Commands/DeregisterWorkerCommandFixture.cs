@@ -34,7 +34,7 @@ namespace Octopus.Tentacle.Tests.Commands
             proxyConfig = Substitute.For<IProxyConfigParser>();
             log = Substitute.For<ISystemLog>();
             selector = Substitute.For<IApplicationInstanceSelector>();
-            selector.Current.Returns(new ApplicationInstanceConfiguration("my-instance", "myconfig.config", Substitute.For<IKeyValueStore>(), Substitute.For<IWritableKeyValueStore>()));
+            selector.Current.Returns(new ApplicationInstanceConfiguration("my-instance", "myconfig.config", Substitute.For<IKeyValueStore>(), Substitute.For<IWritableKeyValueStore>(), null));
         }
 
         [Test]
