@@ -53,7 +53,7 @@
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="BouncyCastle.Cryptography" Version="2.5.1" />
-		<PackageReference Include="Octopus.Client" Version="17.0.2288" />
+		<PackageReference Include="Octopus.Client" Version="17.15.2394" />
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Autofac" Version="4.6.2" />
