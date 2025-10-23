@@ -4,6 +4,7 @@ using Autofac;
 using Halibut;
 using Halibut.Diagnostics;
 using Halibut.ServiceModel;
+using Halibut.Transport;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Contracts.Legacy;
 using Octopus.Tentacle.Variables;
@@ -63,6 +64,7 @@ namespace Octopus.Tentacle.Communications
                     .WithServerCertificate(configuration.TentacleCertificate!)
                     .WithMessageSerializer(serializerBuilder => serializerBuilder.WithLegacyContractSupport())
                     .WithHalibutTimeoutsAndLimits(halibutTimeoutsAndLimits)
+                    .WithSslConfigurationProvider(new LegacySslConfigurationProvider())
                     .Build();
 
                 halibutRuntime.SetFriendlyHtmlPageContent(FriendlyHtmlPageContent);
