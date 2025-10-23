@@ -64,9 +64,16 @@ namespace Octopus.Tentacle.Client.Execution
 
             try
             {
+                var attemptNumber = 1;
                 var response = await rpcCallRetryHandler.ExecuteWithRetries(
                         async ct =>
                         {
+                            using var attemptActivity = TentacleClient.ActivitySource.StartActivity($"{nameof(RpcCallExecutor)}.{nameof(ExecuteWithRetries)} - Attempt");
+                            attemptActivity?.AddTag("octopus.tentacle.rpc_call.service", rpcCall.Service);
+                            attemptActivity?.AddTag("octopus.tentacle.rpc_call.name", rpcCall.Name);
+                            attemptActivity?.AddTag("octopus.tentacle.rpc_call.attempt_number", attemptNumber.ToString());
+                            attemptNumber++;
+                            
                             var start = DateTimeOffset.UtcNow;
 
                             try
@@ -85,6 +92,7 @@ namespace Octopus.Tentacle.Client.Execution
                         onRetryAction: async (lastException, sleepDuration, retryCount, totalRetryDuration, elapsedDuration, _) =>
                         {
                             await Task.CompletedTask;
+                            activity?.AddEvent(new ActivityEvent("Retry"));
 
                             onErrorAction?.Invoke(lastException);
 
@@ -95,6 +103,7 @@ namespace Octopus.Tentacle.Client.Execution
                         onTimeoutAction: async (timeoutDuration, elapsedDuration, retryCount, _) =>
                         {
                             await Task.CompletedTask;
+                            activity?.AddEvent(new ActivityEvent("Timeout"));
 
                             if (retryCount > 0)
                             {
