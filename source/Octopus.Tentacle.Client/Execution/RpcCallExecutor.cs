@@ -71,7 +71,7 @@ namespace Octopus.Tentacle.Client.Execution
                             using var attemptActivity = TentacleClient.ActivitySource.StartActivity($"{nameof(RpcCallExecutor)}.{nameof(ExecuteWithRetries)} - Attempt");
                             attemptActivity?.AddTag("octopus.tentacle.rpc_call.service", rpcCall.Service);
                             attemptActivity?.AddTag("octopus.tentacle.rpc_call.name", rpcCall.Name);
-                            attemptActivity?.AddTag("octopus.tentacle.rpc_call.attempt_number", attemptNumber.ToString());
+                            attemptActivity?.AddTag("octopus.tentacle.rpc_call.attempt_number", attemptNumber);
                             attemptNumber++;
                             
                             var start = DateTimeOffset.UtcNow;
