@@ -21,6 +21,13 @@ ARG TARGETARCH
 ARG TARGETOS
 ARG TARGETVARIANT
 
+RUN groupadd -g 999 octopus \
+    && useradd -m -u 999 -g octopus octopus \
+    && mkdir -p -m 0700 /run/user/999 \
+    && chown octopus:octopus /run/user/999 \
+    && echo 'octopus:265536:65536' >> /etc/subuid \
+    && echo 'octopus:265536:65536' >> /etc/subgid
+
 EXPOSE 10933
 
 COPY docker/kubernetes-agent-tentacle/scripts/* /scripts/
