@@ -21,6 +21,7 @@ RUN apt-get update && \
         dos2unix \
         jq \
         sudo \
+        xxd \
         && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
