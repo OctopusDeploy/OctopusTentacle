@@ -41,6 +41,25 @@ function showFinishedMessage {
     echo
 }
 
+function get_proxy_details {
+    read -p "Enter the proxy Host (eg. http://proxyserver): " proxyurl
+    proxyarg+=" --proxyHost=\"$proxyurl\""
+    read -p "Enter the proxy Port (eg. 8080): " proxyport
+    if [ -n "$proxyport" ]; then
+        proxyarg+=" --proxyPort=\"$proxyport\""
+    fi
+    read -p "Enter the proxy Username (leave blank for none): " proxyusername
+    if [ -n "$proxyusername" ]; then
+        proxyarg+=" --proxyUsername=\"$proxyusername\""
+        read -sp "Enter the proxy Password: " proxypassword
+        if [ -n "$proxypassword" ]; then
+            proxyarg+=" --proxyPassword=\"$proxypassword\""
+        fi
+    fi
+
+    echo $proxyarg
+}
+
 function setupListeningTentacle {
     instancename=$@
     logpath="/etc/octopus"
@@ -56,6 +75,22 @@ function setupListeningTentacle {
     read -p "Enter the port that this Tentacle will listen on ($port):" inputport
     port=$(assignNonEmptyValue "$inputport" $port)
 
+    read -p "Should the Tentacle use a proxy to communicate with Octopus? (y/N): " useproxy
+    case "${useproxy,,}" in
+        y | yes)
+            proxyarg="$(get_proxy_details)"
+            # Mask the proxy password in the display string
+            proxyargdisplay=$(echo -n "$proxyarg" | sed 's/proxyPassword=.*/proxyPassword=\"**********\"/')
+            # Added newline if password is present to improve readability
+            if [[ $proxyargdisplay == *"proxyPassword="* ]]; then
+                echo
+            fi
+            ;;
+        *)
+            proxyarg=""
+            ;;
+    esac
+
     while [ -z "$thumbprint" ] 
     do
         read -p 'Enter the thumbprint of the Octopus Server: ' thumbprint
@@ -67,6 +102,9 @@ function setupListeningTentacle {
     echo "sudo /opt/octopus/tentacle/Tentacle new-certificate --instance \"$instancename\" --if-blank"
     echo "sudo /opt/octopus/tentacle/Tentacle configure --instance \"$instancename\" --app \"$applicationpath\" --port $port --noListen False --reset-trust"
     echo -e "sudo /opt/octopus/tentacle/Tentacle configure --instance \"$instancename\" --trust $thumbprint"
+    if [ -n "$proxyarg" ]; then
+        echo -e "sudo /opt/octopus/tentacle/Tentacle proxy --instance \"$instancename\" --proxyEnable=\"true\" $proxyargdisplay"
+    fi
 
     echo -e "sudo /opt/octopus/tentacle/Tentacle service --install --start --instance \"$instancename\"${NC}"
 
@@ -83,6 +121,11 @@ function setupListeningTentacle {
 
     eval sudo /opt/octopus/tentacle/Tentacle configure --instance \"$instancename\" --trust $thumbprint
     exitIfCommandFailed
+
+    if [ -n "$proxyarg" ]; then
+        eval sudo /opt/octopus/tentacle/Tentacle proxy --instance \"$instancename\" --proxyEnable=\"true\" $proxyarg
+        exitIfCommandFailed
+    fi
 
     eval sudo /opt/octopus/tentacle/Tentacle service --install --start --instance \"$instancename\"
     exitIfCommandFailed
@@ -195,6 +238,22 @@ function setupPollingTentacle {
             ;;
     esac
 
+    read -p "Should the Tentacle use a proxy to communicate with Octopus? (y/N): " useproxy
+    case "${useproxy,,}" in
+        y | yes)
+            proxyarg="$(get_proxy_details)"
+            # Mask the proxy password in the display string
+            proxyargdisplay=$(echo -n "$proxyarg" | sed 's/proxyPassword=.*/proxyPassword=\"**********\"/')
+            # Added newline if password is present to improve readability
+            if [[ $proxyargdisplay == *"proxyPassword="* ]]; then
+                echo
+            fi
+            ;;
+        *)
+            proxyarg=""
+            ;;
+    esac
+
     echo -e "${GREEN}The following configuration commands will be run to configure Tentacle:"
     echo -e "${YELLOW}sudo /opt/octopus/tentacle/Tentacle create-instance --instance \"$instancename\" --config \"$logpath/$instancename/tentacle-$instancename.config\""
     echo -e "sudo /opt/octopus/tentacle/Tentacle new-certificate --instance \"$instancename\" --if-blank"
@@ -204,6 +263,10 @@ function setupPollingTentacle {
         echo -e "sudo /opt/octopus/tentacle/Tentacle register-worker --instance \"$instancename\" --server \"$octopusserverurl\" --name \"$displayname\" --comms-style \"TentacleActive\" $commsAddressOrPortArgs $displayauth --space \"$space\" $workerpoolsstring"
     else
         echo -e "sudo /opt/octopus/tentacle/Tentacle register-with --instance \"$instancename\" --server \"$octopusserverurl\" --name \"$displayname\" --comms-style \"TentacleActive\" $commsAddressOrPortArgs $displayauth --space \"$space\" $envstring $rolesstring"
+    fi
+
+    if [ -n "$proxyarg" ]; then
+        echo -e "sudo /opt/octopus/tentacle/Tentacle polling-proxy --instance \"$instancename\" --proxyEnable=\"true\" $proxyargdisplay"
     fi
 
     echo -e "sudo /opt/octopus/tentacle/Tentacle service --install --start --instance \"$instancename\"${NC}"
@@ -224,8 +287,12 @@ function setupPollingTentacle {
     else
         eval sudo /opt/octopus/tentacle/Tentacle register-with --instance \"$instancename\" --server \"$octopusserverurl\" --name \"$displayname\" --comms-style \"TentacleActive\" $commsAddressOrPortArgs $auth --space \"$space\" $envstring $rolesstring
     fi
-
     exitIfCommandFailed
+
+    if [ -n "$proxyarg" ]; then
+        eval sudo /opt/octopus/tentacle/Tentacle polling-proxy --instance \"$instancename\" --proxyEnable=\"true\" $proxyarg
+        exitIfCommandFailed
+    fi
 
     eval sudo /opt/octopus/tentacle/Tentacle service --install --start --instance \"$instancename\"
     exitIfCommandFailed
