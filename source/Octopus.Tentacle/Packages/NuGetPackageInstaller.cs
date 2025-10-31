@@ -29,10 +29,24 @@ namespace Octopus.Tentacle.Packages
 
         public int Install(Stream packageStream, string directory, ILog log, bool suppressNestedScriptWarning)
         {
-            var extracted = PackageExtractor.ExtractPackage(packageStream,
-                new SuppliedDirectoryPackagePathResolver(directory),
-                new PackageExtractionContext(NullLogger.Instance) { PackageSaveMode = PackageSaveMode.Files, XmlDocFileSaveMode = XmlDocFileSaveMode.None, CopySatelliteFiles = false },
-                CancellationToken.None);
+            // The 'source' parameter is used for logging/tracking purposes in NuGet's new API.
+            // It can be null or any string identifier. We use null here as we don't need tracking.
+            // Signature verification is bypassed by passing null for ClientPolicyContext (3rd param in PackageExtractionContext).
+            var extracted = PackageExtractor.ExtractPackageAsync(
+                    null, // source - not needed for our use case and can be null because ClientPolicyContext is null.
+                    packageStream,
+                    new SuppliedDirectoryPackagePathResolver(directory),
+                    new PackageExtractionContext(
+                        PackageSaveMode.Files,
+                        XmlDocFileSaveMode.None,
+                        null, // ClientPolicyContext - null bypasses signature verification
+                        NullLogger.Instance)
+                    {
+                        CopySatelliteFiles = false
+                    },
+                    CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
 
             return extracted.Count();
         }
