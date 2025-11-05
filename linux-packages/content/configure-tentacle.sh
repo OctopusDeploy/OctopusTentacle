@@ -259,14 +259,14 @@ function setupPollingTentacle {
     echo -e "sudo /opt/octopus/tentacle/Tentacle new-certificate --instance \"$instancename\" --if-blank"
     echo -e "sudo /opt/octopus/tentacle/Tentacle configure --instance \"$instancename\" --app \"$applicationpath\" --noListen \"True\" --reset-trust"
 
+    if [ -n "$proxyarg" ]; then
+        echo -e "sudo /opt/octopus/tentacle/Tentacle polling-proxy --instance \"$instancename\" --proxyEnable=\"true\" $proxyargdisplay"
+    fi
+
     if [ $machinetype = 2 ] || [ $machinetype = "worker" ]; then
         echo -e "sudo /opt/octopus/tentacle/Tentacle register-worker --instance \"$instancename\" --server \"$octopusserverurl\" --name \"$displayname\" --comms-style \"TentacleActive\" $commsAddressOrPortArgs $displayauth --space \"$space\" $workerpoolsstring"
     else
         echo -e "sudo /opt/octopus/tentacle/Tentacle register-with --instance \"$instancename\" --server \"$octopusserverurl\" --name \"$displayname\" --comms-style \"TentacleActive\" $commsAddressOrPortArgs $displayauth --space \"$space\" $envstring $rolesstring"
-    fi
-
-    if [ -n "$proxyarg" ]; then
-        echo -e "sudo /opt/octopus/tentacle/Tentacle polling-proxy --instance \"$instancename\" --proxyEnable=\"true\" $proxyargdisplay"
     fi
 
     echo -e "sudo /opt/octopus/tentacle/Tentacle service --install --start --instance \"$instancename\"${NC}"
@@ -282,17 +282,17 @@ function setupPollingTentacle {
     eval sudo /opt/octopus/tentacle/Tentacle configure --instance \"$instancename\" --app \"$applicationpath\" --noListen \"True\" --reset-trust
     exitIfCommandFailed 
 
+    if [ -n "$proxyarg" ]; then
+        eval sudo /opt/octopus/tentacle/Tentacle polling-proxy --instance \"$instancename\" --proxyEnable=\"true\" $proxyarg
+        exitIfCommandFailed
+    fi
+
     if [ $machinetype = 2 ] || [ $machinetype = "worker" ]; then
         eval sudo /opt/octopus/tentacle/Tentacle register-worker --instance \"$instancename\" --server \"$octopusserverurl\" --name \"$displayname\" --comms-style \"TentacleActive\" $commsAddressOrPortArgs $auth --space \"$space\" $workerpoolsstring
     else
         eval sudo /opt/octopus/tentacle/Tentacle register-with --instance \"$instancename\" --server \"$octopusserverurl\" --name \"$displayname\" --comms-style \"TentacleActive\" $commsAddressOrPortArgs $auth --space \"$space\" $envstring $rolesstring
     fi
     exitIfCommandFailed
-
-    if [ -n "$proxyarg" ]; then
-        eval sudo /opt/octopus/tentacle/Tentacle polling-proxy --instance \"$instancename\" --proxyEnable=\"true\" $proxyarg
-        exitIfCommandFailed
-    fi
 
     eval sudo /opt/octopus/tentacle/Tentacle service --install --start --instance \"$instancename\"
     exitIfCommandFailed
