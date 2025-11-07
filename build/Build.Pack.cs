@@ -21,7 +21,7 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
 
 partial class Build
 {
-    const string KubernetesTentacleContainerRuntimeDepsTag = "8.0-bookworm-slim";
+    const string KubernetesTentacleContainerRuntimeDepsTag = "8.0-jammy-chiseled-extra";
     
     //We don't sign linux packages when building locally
     readonly bool SignLinuxPackages = !IsLocalBuild;
