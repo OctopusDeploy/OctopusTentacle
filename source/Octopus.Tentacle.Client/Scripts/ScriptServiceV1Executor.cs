@@ -144,7 +144,7 @@ namespace Octopus.Tentacle.Client.Scripts
             return scriptStatusResponseV1;
         }
 
-        public async Task<ScriptOperationExecutionResult> CancelScript(CommandContext commandContext)
+        public async Task<ScriptOperationExecutionResult> CancelScript(CommandContext commandContext, CancellationToken cancellationToken)
         {
             using var activity = TentacleClient.ActivitySource.StartActivity($"{nameof(ScriptServiceV1Executor)}.{nameof(CancelScript)}");
             var response = await rpcCallExecutor.ExecuteWithNoRetries(
@@ -158,7 +158,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 },
                 logger,
                 clientOperationMetricsBuilder,
-                CancellationToken.None).ConfigureAwait(false);
+                cancellationToken).ConfigureAwait(false);
 
             return Map(response);
         }
