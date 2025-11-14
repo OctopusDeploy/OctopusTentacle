@@ -536,6 +536,7 @@ partial class Build
                 }
             }
 
+            // Get the .NET 8.0 archives for Tentacle (w/ Tentacle Manager)
             FileSystemTasks.CopyFile(ArtifactsDirectory / "zip" / $"tentacle-{FullSemVer}-{NetCoreWindows}-win-x86.zip",
                 workingDirectory / $"tentacle-{NetCoreWindows}-win-x86.zip");
             FileSystemTasks.CopyFile(ArtifactsDirectory / "zip" / $"tentacle-{FullSemVer}-{NetCoreWindows}-win-x64.zip",
