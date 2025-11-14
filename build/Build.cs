@@ -92,6 +92,8 @@ partial class Build : NukeBuild
         ? new[] { SpecificRuntimeId }
         : new[] { "win", "win-x86", "win-x64", "linux-x64", "linux-musl-x64", "linux-arm64", "linux-arm", "osx-x64", "osx-arm64" };
 
+    IEnumerable<string> CrossPlatformBundleForServerRequiredRuntimes => ["win", "win-x86", "win-x64", "linux-x64", "linux-arm64", "linux-arm"];
+
     static readonly string Timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
 
     string FullSemVer =>
