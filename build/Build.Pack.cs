@@ -536,6 +536,11 @@ partial class Build
                 }
             }
 
+            FileSystemTasks.CopyFile(ArtifactsDirectory / "zip" / $"tentacle-{FullSemVer}-{NetCoreWindows}-win-x86.zip",
+                workingDirectory / $"tentacle-{NetCoreWindows}-win-x86.zip");
+            FileSystemTasks.CopyFile(ArtifactsDirectory / "zip" / $"tentacle-{FullSemVer}-{NetCoreWindows}-win-x64.zip",
+                workingDirectory / $"tentacle-{NetCoreWindows}-win-x64.zip");
+
             // Assert all the expected files have been successfully copied
             Assert.True((workingDirectory / "Octopus.Tentacle.msi").FileExists(), "Missing Octopus.Tentacle.msi");
             Assert.True((workingDirectory / "Octopus.Tentacle-x64.msi").FileExists(), "Missing Octopus.Tentacle-x64.msi");
