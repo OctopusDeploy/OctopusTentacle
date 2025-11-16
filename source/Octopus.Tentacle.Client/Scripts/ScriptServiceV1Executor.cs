@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Halibut;
 using Halibut.ServiceModel;
 using Octopus.Tentacle.Client.EventDriven;
 using Octopus.Tentacle.Client.Execution;
@@ -165,21 +166,31 @@ namespace Octopus.Tentacle.Client.Scripts
 
         public async Task<ScriptStatus?> CompleteScript(CommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
-            using var activity = TentacleClient.ActivitySource.StartActivity($"{nameof(ScriptServiceV1Executor)}.{nameof(CompleteScript)}");
-            var response = await rpcCallExecutor.ExecuteWithNoRetries(
-                RpcCall.Create<IScriptService>(nameof(IScriptService.CompleteScript)),
-                async ct =>
-                {
-                    var request = new CompleteScriptCommand(lastStatusResponse.ScriptTicket, lastStatusResponse.NextLogSequence);
-                    var result = await clientScriptServiceV1.CompleteScriptAsync(request, new HalibutProxyRequestOptions(ct));
+            try
+            {
+                using var activity = TentacleClient.ActivitySource.StartActivity($"{nameof(ScriptServiceV1Executor)}.{nameof(CompleteScript)}");
+                var response = await rpcCallExecutor.ExecuteWithNoRetries(
+                    RpcCall.Create<IScriptService>(nameof(IScriptService.CompleteScript)),
+                    async ct =>
+                    {
+                        var request = new CompleteScriptCommand(lastStatusResponse.ScriptTicket, lastStatusResponse.NextLogSequence);
+                        var result = await clientScriptServiceV1.CompleteScriptAsync(request, new HalibutProxyRequestOptions(ct));
 
-                    return result;
-                },
-                logger,
-                clientOperationMetricsBuilder,
-                CancellationToken.None).ConfigureAwait(false);
+                        return result;
+                    },
+                    logger,
+                    clientOperationMetricsBuilder,
+                    CancellationToken.None).ConfigureAwait(false);
 
-            return MapToScriptStatus(response);
+                return MapToScriptStatus(response);
+            }
+            catch (Exception ex) when (ex is HalibutClientException or OperationCanceledException)
+            {
+                logger.Warn("Failed to cleanup the script working directory on Tentacle");
+                logger.Verbose(ex);
+            }
+
+            return null;
         }
     }
 }
