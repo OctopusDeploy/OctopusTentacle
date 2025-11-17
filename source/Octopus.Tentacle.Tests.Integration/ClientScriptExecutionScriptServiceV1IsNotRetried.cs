@@ -235,11 +235,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var startScriptCommand = new TestExecuteShellScriptCommandBuilder().SetScriptBody(new ScriptBuilder().Print("hello")).Build();
 
             var logs = new List<ProcessOutput>();
-            var executeScriptTask = clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, logs, CancellationToken);
-
-            var expectedException = new ExceptionContractAssertionBuilder(FailureScenario.ConnectionFaulted, tentacleConfigurationTestCase.TentacleType, clientTentacle).Build();
-
-            await AssertionExtensions.Should(async () => await executeScriptTask).ThrowExceptionContractAsync(expectedException);
+            await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, logs, CancellationToken);
 
             // We Can not verify what will be in the logs because of race conditions in tentacle.
             // The last complete script which we fail might come back with the logs.
