@@ -7,7 +7,7 @@
         <OutputPath>bin</OutputPath>
         <PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
         <IsPackable>false</IsPackable>
-        <TargetFrameworks>net6.0;net8.0</TargetFrameworks>
+        <TargetFramework>net8.0</TargetFramework>
         <RuntimeIdentifiers>win-x86;win-x64;linux-x64;osx-x64;osx-arm64;linux-arm64;linux-arm;linux-musl-x64</RuntimeIdentifiers>
     </PropertyGroup>
 
@@ -31,9 +31,6 @@
         <PackageReference Include="TeamCity.VSTest.TestAdapter" Version="1.0.40" />
     </ItemGroup>
 
-    <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
-        <PackageReference Include="System.Threading.Channels" Version="6.0.0" />
-    </ItemGroup>
     <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
         <PackageReference Include="System.Threading.Channels" Version="8.0.0" />
     </ItemGroup>
@@ -55,14 +52,23 @@
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </EmbeddedResource>
       <None Remove="Setup\kind-config.yaml" />
-      <EmbeddedResource Include="Setup\kind-config.yaml">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </EmbeddedResource>
       <None Remove="Setup\local-network-routing.yaml" />
       <EmbeddedResource Include="Setup\docker-desktop-network-routing.yaml">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </EmbeddedResource>
       <None Remove="Setup\teamcity-network-routing.yaml" />
+      <EmbeddedResource Include="Setup\KindConfiguration\kind-config-v1-30.yaml">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </EmbeddedResource>
+      <EmbeddedResource Include="Setup\KindConfiguration\kind-config-v1-31.yaml">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </EmbeddedResource>
+      <EmbeddedResource Include="Setup\KindConfiguration\kind-config-v1-32.yaml">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </EmbeddedResource>
+      <EmbeddedResource Include="Setup\KindConfiguration\kind-config-v1-33.yaml">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </EmbeddedResource>
       <EmbeddedResource Include="Setup\linux-network-routing.yaml">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </EmbeddedResource>

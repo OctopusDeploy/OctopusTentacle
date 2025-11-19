@@ -56,3 +56,4 @@ _test
 scripts/development/
 
 **/.idea/*
+/.nuke/temp

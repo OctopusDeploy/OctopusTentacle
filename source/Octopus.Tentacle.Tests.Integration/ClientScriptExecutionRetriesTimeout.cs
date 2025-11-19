@@ -47,7 +47,7 @@ namespace Octopus.Tentacle.Tests.Integration
                                 if (capabilitiesMethodUsages.For(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)).LastException is null)
                                 {
                                     // Ensure there is an active connection so it can be killed correctly
-                                    await tcpConnectionUtilities.RestartTcpConnection();
+                                    await tcpConnectionUtilities.EnsureConnectionIsSetupBeforeKillingIt();
                                     responseMessageTcpKiller.KillConnectionOnNextResponse();
                                 }
                                 else
@@ -61,7 +61,7 @@ namespace Octopus.Tentacle.Tests.Integration
                                     else
                                     {
                                         // Ensure there is an active connection so it can be killed correctly
-                                        await tcpConnectionUtilities.RestartTcpConnection();
+                                        await tcpConnectionUtilities.EnsureConnectionIsSetupBeforeKillingIt();
                                         // Pause the port forwarder so the next requests are in-flight when retries timeout
                                         responseMessageTcpKiller.PauseConnectionOnNextResponse();
                                     }
@@ -114,7 +114,7 @@ namespace Octopus.Tentacle.Tests.Integration
                         .BeforeGetCapabilities(
                             async () =>
                             {
-                                await tcpConnectionUtilities.RestartTcpConnection();
+                                await tcpConnectionUtilities.EnsureConnectionIsSetupBeforeKillingIt();
 
                                 // Sleep to make the initial RPC call take longer than the allowed retry duration
                                 await Task.Delay(retryDuration + TimeSpan.FromSeconds(1));
@@ -163,7 +163,7 @@ namespace Octopus.Tentacle.Tests.Integration
                                 if (recordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).LastException == null)
                                 {
                                     // Ensure there is an active connection so it can be killed correctly
-                                    await tcpConnectionUtilities.RestartTcpConnection();
+                                    await tcpConnectionUtilities.EnsureConnectionIsSetupBeforeKillingIt();
                                     responseMessageTcpKiller.KillConnectionOnNextResponse();
                                 }
                                 else
@@ -177,7 +177,7 @@ namespace Octopus.Tentacle.Tests.Integration
                                     else
                                     {
                                         // Ensure there is an active connection so it can be killed correctly
-                                        await tcpConnectionUtilities.RestartTcpConnection();
+                                        await tcpConnectionUtilities.EnsureConnectionIsSetupBeforeKillingIt();
                                         // Pause the port forwarder so the next requests are in-flight when retries timeout
                                         responseMessageTcpKiller.PauseConnectionOnNextResponse();
                                     }
@@ -283,7 +283,7 @@ namespace Octopus.Tentacle.Tests.Integration
                                 if (recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).LastException == null)
                                 {
                                     // Ensure there is an active connection so it can be killed correctly
-                                    await tcpConnectionUtilities.RestartTcpConnection();
+                                    await tcpConnectionUtilities.EnsureConnectionIsSetupBeforeKillingIt();
                                     responseMessageTcpKiller.KillConnectionOnNextResponse();
                                 }
                                 else
@@ -297,7 +297,7 @@ namespace Octopus.Tentacle.Tests.Integration
                                     else
                                     {
                                         // Ensure there is an active connection so it can be killed correctly
-                                        await tcpConnectionUtilities.RestartTcpConnection();
+                                        await tcpConnectionUtilities.EnsureConnectionIsSetupBeforeKillingIt();
                                         // Pause the port forwarder so the next requests are in-flight when retries timeout
                                         responseMessageTcpKiller.PauseConnectionOnNextResponse();
                                     }
@@ -329,7 +329,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             recordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().Be(1);
             recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Started.Should().BeGreaterOrEqualTo(2);
-            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Started.Should().Be(0);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Started.Should().BeInRange(0, 1, "Since a non awaited cancel will be sent");
             recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).Started.Should().Be(0);
 
             // Ensure we actually waited and retried until the timeout policy kicked in
@@ -381,7 +381,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             recordedUsages.For(nameof(IAsyncClientScriptServiceV2.StartScriptAsync)).Started.Should().Be(1);
             recordedUsages.For(nameof(IAsyncClientScriptServiceV2.GetStatusAsync)).Started.Should().Be(1);
-            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Started.Should().Be(0);
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Started.Should().BeInRange(0, 1, "Since a non awaited cancel will be sent");
             recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CompleteScriptAsync)).Started.Should().Be(0);
 
             inMemoryLog.ShouldHaveLoggedRetryFailureAndNoRetryAttempts();
@@ -408,7 +408,7 @@ namespace Octopus.Tentacle.Tests.Integration
                                 if (recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).LastException == null)
                                 {
                                     // Ensure there is an active connection so it can be killed correctly
-                                    await tcpConnectionUtilities.RestartTcpConnection();
+                                    await tcpConnectionUtilities.EnsureConnectionIsSetupBeforeKillingIt();
                                     responseMessageTcpKiller.KillConnectionOnNextResponse();
                                 }
                                 else
@@ -422,7 +422,7 @@ namespace Octopus.Tentacle.Tests.Integration
                                     else
                                     {
                                         // Ensure there is an active connection so it can be killed correctly
-                                        await tcpConnectionUtilities.RestartTcpConnection();
+                                        await tcpConnectionUtilities.EnsureConnectionIsSetupBeforeKillingIt();
                                         // Pause the port forwarder so the next requests are in-flight when retries timeout
                                         responseMessageTcpKiller.PauseConnectionOnNextResponse();
                                     }

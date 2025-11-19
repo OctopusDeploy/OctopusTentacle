@@ -41,7 +41,7 @@ namespace Octopus.Tentacle.Tests.Integration
                                 // use a different service to ensure Tentacle is connected to Server.
                                 // Otherwise, the response to the 'ensure connection' will get cached
                                 // and any subsequent calls will succeed w/o using the network.
-                                await tcpConnectionUtilities.RestartTcpConnection();
+                                await tcpConnectionUtilities.EnsureConnectionIsSetupBeforeKillingIt();
 
                                 if (capabilitiesRecordedUsages.For(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)).LastException is null)
                                 {
@@ -210,7 +210,7 @@ namespace Octopus.Tentacle.Tests.Integration
                             {
                                 if (recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).LastException is null)
                                 {
-                                    await tcpConnectionUtilities.RestartTcpConnection();
+                                    await tcpConnectionUtilities.EnsureConnectionIsSetupBeforeKillingIt();
                                     responseMessageTcpKiller.KillConnectionOnNextResponse();
                                 }
                             }))

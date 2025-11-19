@@ -50,9 +50,7 @@ partial class Build : NukeBuild
 
     [Parameter("Branch name for OctoVersion to use to calculate the version number. Can be set via the environment variable OCTOVERSION_CurrentBranch.",
         Name = "OCTOVERSION_CurrentBranch")]
-#pragma warning disable CS0414
-    readonly string BranchName = null!;
-#pragma warning restore CS0414
+    readonly string? BranchName;
 
     [Parameter("Whether to auto-detect the branch name - this is okay for a local build, but should not be used under CI.")] readonly bool AutoDetectBranch = IsLocalBuild;
 
@@ -93,6 +91,8 @@ partial class Build : NukeBuild
     IEnumerable<string> RuntimeIds => SpecificRuntimeId != null
         ? new[] { SpecificRuntimeId }
         : new[] { "win", "win-x86", "win-x64", "linux-x64", "linux-musl-x64", "linux-arm64", "linux-arm", "osx-x64", "osx-arm64" };
+
+    IEnumerable<string> CrossPlatformBundleForServerRequiredRuntimes => ["win", "win-x86", "win-x64", "linux-x64", "linux-arm64", "linux-arm"];
 
     static readonly string Timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
 
@@ -257,12 +257,14 @@ partial class Build : NukeBuild
             .OnlyWhenStatic(() => IsLocalBuild)
             .DependsOn(PackContracts)
             .DependsOn(PackClient)
+            .DependsOn(PackCore)
             .Description("If not running on a build agent, this step copies the relevant built artifacts to the local packages cache.")
             .Executes(() =>
             {
                 LocalPackagesDirectory.CreateDirectory();
                 CopyFileToDirectory(ArtifactsDirectory / "nuget" / $"Octopus.Tentacle.Contracts.{FullSemVer}.nupkg", LocalPackagesDirectory);
                 CopyFileToDirectory(ArtifactsDirectory / "nuget" / $"Octopus.Tentacle.Client.{FullSemVer}.nupkg", LocalPackagesDirectory);
+                CopyFileToDirectory(ArtifactsDirectory / "nuget" / $"Octopus.Tentacle.Core.{FullSemVer}.nupkg", LocalPackagesDirectory);
             });
 
     [PublicAPI]

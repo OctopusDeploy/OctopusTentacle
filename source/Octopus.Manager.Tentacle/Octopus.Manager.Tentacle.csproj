@@ -12,7 +12,7 @@
     <UseWPF>true</UseWPF>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
-    <TargetFrameworks>net48;net6.0-windows;net8.0-windows</TargetFrameworks>
+    <TargetFrameworks>net48;net8.0-windows</TargetFrameworks>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Properties\Icon.ico</ApplicationIcon>
@@ -23,17 +23,6 @@
     <When Condition="'$(TargetFramework)' == 'net48'">
       <PropertyGroup>
         <RuntimeIdentifiers>win</RuntimeIdentifiers><!-- This is AnyCPU -->
-      </PropertyGroup>
-    </When>
-    <When Condition="'$(TargetFramework)' == 'net6.0-windows'">
-      <PropertyGroup>
-        <RuntimeIdentifiers>win-x86;win-x64;</RuntimeIdentifiers>
-        <!--
-          Suppressing those validations error due to validation bugs in .NET 6.
-          This can be removed when we upgrade to .NET7 or above.
-          More info: https://octopusdeploy.slack.com/archives/C039PL7PCUE/p1708490934364109
-        -->
-        <ValidateExecutableReferencesMatchSelfContained>false</ValidateExecutableReferencesMatchSelfContained>
       </PropertyGroup>
     </When>
     <When Condition="'$(TargetFramework)' == 'net8.0-windows'">
@@ -134,16 +123,8 @@
     <PackageReference Include="MaterialDesignThemes" Version="4.9.0" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="NETStandard.Library" Version="2.0.3" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="Newtonsoft.Json.Bson" Version="1.0.2" />
     <PackageReference Include="NLog" Version="5.0.4" />
-    <PackageReference Include="NuGet.Common" Version="3.6.0-octopus-58692" />
-    <PackageReference Include="NuGet.Frameworks" Version="3.6.0-octopus-58692" />
-    <PackageReference Include="NuGet.Packaging" Version="3.6.0-octopus-58692" />
-    <PackageReference Include="NuGet.Packaging.Core" Version="3.6.0-octopus-58692" />
-    <PackageReference Include="NuGet.Packaging.Core.Types" Version="3.6.0-octopus-58692" />
-    <PackageReference Include="NuGet.Versioning" Version="3.6.0-octopus-58692" />
-    <PackageReference Include="Portable.BouncyCastle" Version="1.9.0" />
+    <PackageReference Include="BouncyCastle.Cryptography" Version="2.5.1" />
     <PackageReference Include="TaskScheduler" Version="2.7.2" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' != 'net8.0-windows'">

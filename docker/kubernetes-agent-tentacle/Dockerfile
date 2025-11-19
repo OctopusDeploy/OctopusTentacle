@@ -21,6 +21,13 @@ ARG TARGETARCH
 ARG TARGETOS
 ARG TARGETVARIANT
 
+RUN groupadd -g 999 octopus \
+    && useradd -m -u 999 -g octopus octopus \
+    && mkdir -p -m 0700 /run/user/999 \
+    && chown octopus:octopus /run/user/999 \
+    && echo 'octopus:265536:65536' >> /etc/subuid \
+    && echo 'octopus:265536:65536' >> /etc/subgid
+
 EXPOSE 10933
 
 COPY docker/kubernetes-agent-tentacle/scripts/* /scripts/
@@ -40,6 +47,9 @@ WORKDIR /
 
 # We know this won't reduce the image size at all. It's just to make the filesystem a little tidier.
 RUN rm -rf /tmp/*
+
+# Symlink the Tentacle executable without the capital T
+RUN ln -s /opt/octopus/tentacle/Tentacle /usr/bin/tentacle
 
 # Make the /.dotnet directory so that we can ensure ownership for the
 # certificate store 

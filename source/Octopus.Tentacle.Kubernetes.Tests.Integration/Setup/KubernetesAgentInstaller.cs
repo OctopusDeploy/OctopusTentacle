@@ -121,6 +121,7 @@ public class KubernetesAgentInstaller
             "upgrade",
             "--install",
             "--atomic",
+            "--timeout \"2m30s\"",
             $"-f \"{valuesFilePath}\"",
             GetImageAndRepository(tentacleImageAndTag),
             $"--version \"{chartVersion}\"",
@@ -138,7 +139,7 @@ public class KubernetesAgentInstaller
     {
         var customHelmChartVersion = Environment.GetEnvironmentVariable("KubernetesIntegrationTests_HelmChartVersion");
         
-        return !string.IsNullOrWhiteSpace(customHelmChartVersion) ? customHelmChartVersion : "1.*.*";
+        return !string.IsNullOrWhiteSpace(customHelmChartVersion) ? customHelmChartVersion : "2.*.*";
     }
 
     static string? GetImageAndRepository(string? tentacleImageAndTag)
@@ -146,7 +147,7 @@ public class KubernetesAgentInstaller
         if (tentacleImageAndTag is null)
             return null;
 
-        var parts = tentacleImageAndTag.Split(":");
+        var parts = tentacleImageAndTag.Split(':',2,StringSplitOptions.TrimEntries);
         var repo = parts[0];
         var tag = parts[1];
 

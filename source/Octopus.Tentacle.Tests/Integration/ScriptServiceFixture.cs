@@ -5,11 +5,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using NSubstitute;
 using NUnit.Framework;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Builders;
+using Octopus.Tentacle.Core.Diagnostics;
+using Octopus.Tentacle.Core.Services.Scripts.Locking;
+using Octopus.Tentacle.Core.Services.Scripts.Security.Masking;
+using Octopus.Tentacle.Core.Services.Scripts.Shell;
 using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Services.Scripts;
@@ -33,6 +36,7 @@ namespace Octopus.Tentacle.Tests.Integration
             service = new ScriptService(
                 PlatformDetection.IsRunningOnWindows ? (IShell) new PowerShell() : new Bash(),
                 new ScriptWorkspaceFactory(octopusPhysicalFileSystem, homeConfiguration, new SensitiveValueMasker()),
+                new ScriptIsolationMutex(),
                 Substitute.For<ISystemLog>());
         }
 

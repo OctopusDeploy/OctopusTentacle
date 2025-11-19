@@ -60,7 +60,7 @@
                             <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Choose at least one role that this deployment target will provide." FontSize="10" HorizontalAlignment="Stretch" />
                             <Expander Padding="0" Header="Tenants" Style="{StaticResource CustomMaterialDesignExpander}" IsExpanded="{Binding AreTenantsAvailable}" Visibility="{Binding Path=AreTenantsSupported, Converter={StaticResource Converter.BooleanToVisibilityConverter}}" Background="White" Margin="0,20,0,0">
                                 <StackPanel Background="White">
-                                    <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialTenants}" SelectedTags="{Binding SelectedTenants}" TagName="tenants" CanCreateNewTags="False"/>
+                                    <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialTenantNames}" SelectedTags="{Binding SelectedTenants}" TagName="tenants" CanCreateNewTags="False"/>
                                     <controls:ErrorMessage ErrorPath="SelectedTenants" />
                                     <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Choose tenants this deployment target should be associated with." FontSize="10"/>
 

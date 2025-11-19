@@ -25,11 +25,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 return Framework48;
             }
 
-            if (frameworkDescription.StartsWith(".NET 6"))
-            {
-                return DotNet6;
-            }
-
             if (frameworkDescription.StartsWith(".NET 8"))
             {
                 return DotNet8;

@@ -7,8 +7,8 @@ using System.Text;
 using System.Threading;
 using FluentAssertions;
 using NUnit.Framework;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts.Logging;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Diagnostics;
 
 namespace Octopus.Tentacle.CommonTestUtils.Diagnostics

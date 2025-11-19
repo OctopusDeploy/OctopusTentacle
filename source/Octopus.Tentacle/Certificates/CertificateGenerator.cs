@@ -1,8 +1,7 @@
 using System;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
-using Octopus.Diagnostics;
-
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Util;
 
 #if NETFRAMEWORK

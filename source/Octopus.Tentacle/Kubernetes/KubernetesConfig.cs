@@ -29,6 +29,9 @@ namespace Octopus.Tentacle.Kubernetes
         public static string HelmChartVersionVariableName => $"{EnvVarPrefix}__HELMCHARTVERSION";
         public static string HelmChartVersion => GetRequiredEnvVar(HelmChartVersionVariableName, "Unable to determine Helm chart version.");
 
+        public static string KubernetesMonitorEnabledVariableName => $"{EnvVarPrefix}__KUBERNETESMONITORENABLED";
+        public static string? KubernetesMonitorEnabled => Environment.GetEnvironmentVariable(KubernetesMonitorEnabledVariableName);
+
         public static string BootstrapRunnerExecutablePath => GetRequiredEnvVar("BOOTSTRAPRUNNEREXECUTABLEPATH", "Unable to determine Bootstrap Runner Executable Path");
 
         public static string PersistentVolumeSizeVariableName => $"{EnvVarPrefix}__PERSISTENTVOLUMESIZE";
@@ -61,8 +64,22 @@ namespace Octopus.Tentacle.Kubernetes
 
         public static readonly string PodSecurityContextJsonVariableName = $"{EnvVarPrefix}__PODSECURITYCONTEXTJSON";
         public static string? PodSecurityContextJson => Environment.GetEnvironmentVariable(PodSecurityContextJsonVariableName);
+
+        public static readonly string PodAnnotationsJsonVariableName = $"{EnvVarPrefix}__PODANNOTATIONSJSON";
+        public static string? PodAnnotationsJson => Environment.GetEnvironmentVariable(PodAnnotationsJsonVariableName);
+
+        public static readonly string PodLabelsJsonVariableName = $"{EnvVarPrefix}__PODLABELSJSON";
+        public static string? PodLabelsJson => Environment.GetEnvironmentVariable(PodLabelsJsonVariableName);
         
+        public static readonly string TentacleConfigMapNameVariableName = $"{EnvVarPrefix}__TENTACLECONFIGMAPNAME";
+        public static string TentacleConfigMapName => GetEnvironmentVariableOrDefault(TentacleConfigMapNameVariableName, "tentacle-config");
+
+        public static readonly string TentacleEncryptionSecretNameVariableName = $"{EnvVarPrefix}__TENTACLEENCRYPTIONSECRETNAME";
+        public static string TentacleEncryptionSecretName => GetEnvironmentVariableOrDefault(TentacleEncryptionSecretNameVariableName, "tentacle-secret");
+
         public static string MetricsEnableVariableName => $"{EnvVarPrefix}__ENABLEMETRICSCAPTURE";
+
+        public static readonly string AgentLabelNamespace = "agent.octopus.com";
 
         public static bool MetricsIsEnabled
         {
@@ -100,5 +117,11 @@ namespace Octopus.Tentacle.Kubernetes
         static string GetRequiredEnvVar(string variable, string errorMessage)
             => Environment.GetEnvironmentVariable(variable)
                 ?? throw new InvalidOperationException($"{errorMessage} The environment variable '{variable}' must be defined with a non-null value.");
+
+        static string GetEnvironmentVariableOrDefault(string variable, string defaultValue)
+            => Environment.GetEnvironmentVariable(variable) ?? defaultValue;
+
+        static bool GetBoolEnvironmentVariableOrDefault(string variable, bool defaultValue)
+            => bool.TryParse(Environment.GetEnvironmentVariable(variable), out var result) ? result : defaultValue;
     }
 }

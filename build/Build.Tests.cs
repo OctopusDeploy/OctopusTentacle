@@ -84,7 +84,7 @@ partial class Build
             
             List<TestConfigurationOnLinuxDistribution> testOnLinuxDistributions = new()
             {
-                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "debian:buster", "deb"),
+                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "debian", "deb"),
 
                 // Debian dist oldoldstable appears to have been removed on 23/4/2023, maybe temporarily whilst a new stable release is created. 
                 // TODO: Revisit this when/if the dist becomes available again and reinstate if possible.
@@ -99,7 +99,6 @@ partial class Build
                 new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:focal", "deb"), // 20.04
                 new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:bionic", "deb"), // 18.04
                 new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:xenial", "deb"), // 16.04
-                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "fedora:39", "rpm"),
                 new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "roboxes/rhel8", "rpm"),
             };
             

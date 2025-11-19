@@ -9,7 +9,7 @@ namespace Octopus.Tentacle.Kubernetes.Tests.Integration.Setup.Tooling;
 
 public class HelmDownloader : ToolDownloader
 {
-    const string LatestVersion = "v3.14.3";
+    const string LatestVersion = "v3.18.6";
     public HelmDownloader( ILogger logger)
         : base("helm", logger)
     {
@@ -81,7 +81,7 @@ public class HelmDownloader : ToolDownloader
 
         var exitCode = SilentProcessRunner.ExecuteCommand(
             "tar",
-            $"xzvf {gzArchiveName} -C {destFolder}",
+            $"xzvf \"{gzArchiveName}\" -C \"{destFolder}\"",
             tmp.DirectoryPath,
             Logger.Debug,
             Logger.Information,

@@ -9,7 +9,7 @@ using Newtonsoft.Json;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using NUnit.Framework;
-using Octopus.Diagnostics;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Kubernetes.Diagnostics;
 
 namespace Octopus.Tentacle.Tests.Diagnostics.Metrics

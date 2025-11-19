@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO;
-using Octopus.Diagnostics;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Util;
 
@@ -68,7 +68,7 @@ namespace Octopus.Tentacle.Configuration.Instances
         void EnsureConfigurationFileExists(string configurationFile, string homeDirectory)
         {
             //Skip this step if we're running on Kubernetes
-            if (PlatformDetection.Kubernetes.IsRunningAsKubernetesAgent) return;
+            if (KubernetesSupportDetection.IsRunningAsKubernetesAgent) return;
 
             // Ensure we can write configuration file
             string configurationDirectory = Path.GetDirectoryName(configurationFile) ?? homeDirectory;

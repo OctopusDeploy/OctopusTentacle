@@ -7,8 +7,8 @@ using Microsoft.Extensions.Internal;
 using NSubstitute;
 using NSubstitute.Extensions;
 using NUnit.Framework;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.CommonTestUtils.Diagnostics;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Util;
 

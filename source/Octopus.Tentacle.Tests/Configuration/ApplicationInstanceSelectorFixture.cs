@@ -3,11 +3,13 @@ using FluentAssertions;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using NUnit.Framework;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Crypto;
 using Octopus.Tentacle.Configuration.Instances;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Kubernetes;
+using Octopus.Tentacle.Kubernetes.Configuration;
+using Octopus.Tentacle.Kubernetes.Crypto;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Configuration

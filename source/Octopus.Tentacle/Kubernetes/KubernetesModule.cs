@@ -3,9 +3,12 @@ using Autofac;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Octopus.Tentacle.Background;
+using Octopus.Tentacle.Kubernetes.Configuration;
+using Octopus.Tentacle.Kubernetes.Crypto;
 using Octopus.Tentacle.Kubernetes.Diagnostics;
 using Octopus.Tentacle.Kubernetes.Synchronisation;
 using Octopus.Tentacle.Kubernetes.Synchronisation.Internal;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Kubernetes
 {
@@ -13,6 +16,12 @@ namespace Octopus.Tentacle.Kubernetes
     {
         protected override void Load(ContainerBuilder builder)
         {
+            if (!KubernetesSupportDetection.IsRunningAsKubernetesAgent)
+            {
+                builder.RegisterType<UnimplementedKubernetesConfigProvider>().As<IKubernetesClientConfigProvider>();
+                return;
+            }
+            
             builder.RegisterType<KubernetesPodService>().As<IKubernetesPodService>().SingleInstance();
             builder.RegisterType<KubernetesClusterService>().As<IKubernetesClusterService>().SingleInstance();
 
@@ -25,12 +34,21 @@ namespace Octopus.Tentacle.Kubernetes
             builder.RegisterType<KubernetesPodContainerResolver>().As<IKubernetesPodContainerResolver>().SingleInstance();
             builder.RegisterType<KubernetesConfigMapService>().As<IKubernetesConfigMapService>().SingleInstance();
             builder.RegisterType<KubernetesSecretService>().As<IKubernetesSecretService>().SingleInstance();
+            
+            const string kubernetesPodTemplateService = "KubernetesPodTemplateService";
+            builder.RegisterType<KubernetesPodTemplateService>().Named<IKubernetesPodTemplateService>(kubernetesPodTemplateService);
+            builder.RegisterDecorator<IKubernetesPodTemplateService>(
+                (context, inner) => new CachingKubernetesPodTemplateService(
+                    inner, context.Resolve<IMemoryCache>()), fromKey: kubernetesPodTemplateService);
 
             builder.RegisterType<KubernetesScriptPodCreator>().As<IKubernetesScriptPodCreator>().SingleInstance();
             builder.RegisterType<KubernetesRawScriptPodCreator>().As<IKubernetesRawScriptPodCreator>().SingleInstance();
             builder.RegisterType<KubernetesPodLogService>().As<IKubernetesPodLogService>().SingleInstance();
             builder.RegisterType<ScriptPodSinceTimeStore>().As<IScriptPodSinceTimeStore>().SingleInstance();
             builder.RegisterType<TentacleScriptLogProvider>().As<ITentacleScriptLogProvider>().SingleInstance();
+            
+            builder.RegisterType<ScriptPodLogEncryptionKeyProvider>().As<IScriptPodLogEncryptionKeyProvider>().SingleInstance();
+            builder.RegisterType<ScriptPodLogEncryptionKeyGenerator>().As<IScriptPodLogEncryptionKeyGenerator>().SingleInstance();
 
             builder.RegisterType<KubernetesPodMonitorTask>().As<IKubernetesPodMonitorTask>().As<IBackgroundTask>().SingleInstance();
             builder.RegisterType<KubernetesPodMonitor>().As<IKubernetesPodMonitor>().As<IKubernetesPodStatusProvider>().SingleInstance();

@@ -3,9 +3,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Newtonsoft.Json;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Startup;
 
 namespace Octopus.Tentacle.Commands

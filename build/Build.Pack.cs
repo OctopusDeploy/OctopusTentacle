@@ -22,7 +22,7 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
 partial class Build
 {
     const string KubernetesTentacleContainerRuntimeDepsTag = "8.0-bookworm-slim";
-    
+
     //We don't sign linux packages when building locally
     readonly bool SignLinuxPackages = !IsLocalBuild;
 
@@ -34,8 +34,7 @@ partial class Build
         Name = "DockerPlatform")]
     string DockerPlatform = "linux/arm64,linux/amd64";
 
-    [PathVariable]
-    readonly Tool Multipass = null!;
+    [PathVariable] readonly Tool Multipass = null!;
 
     [PublicAPI]
     Target PackOsxTarballs => _ => _
@@ -177,7 +176,7 @@ partial class Build
             var host = GetMicrok8sIpAddress();
             const int port = 32000;
             var hostPort = $"{host}:{port}";
-            
+
             BuildAndPushOrLoadKubernetesTentacleContainerImage(push: true, load: false, KubernetesTentacleContainerRuntimeDepsTag, host: hostPort);
         });
 
@@ -277,7 +276,7 @@ partial class Build
                 {
                     (BuildDirectory / "Tentacle" / framework / $"win-{platform}").GlobFiles("*")
                         .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, installerDirectory, FileExistsPolicy.Overwrite));
-                    
+
                     (BuildDirectory / "Octopus.Manager.Tentacle" / framework / $"win-{platform}").GlobFiles("*")
                         .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, installerDirectory, FileExistsPolicy.Overwrite));
                 }
@@ -366,7 +365,7 @@ partial class Build
 
             PackWindowsInstallers(MSBuildTargetPlatform.x64, wixNugetInstalledPackage.Directory, NetCore, "NetCore");
             PackWindowsInstallers(MSBuildTargetPlatform.x86, wixNugetInstalledPackage.Directory, NetCore, "NetCore");
-            
+
             PackWindowsInstallers(MSBuildTargetPlatform.x64, wixNugetInstalledPackage.Directory, NetCoreWindows, "NetCoreWindows");
             PackWindowsInstallers(MSBuildTargetPlatform.x86, wixNugetInstalledPackage.Directory, NetCoreWindows, "NetCoreWindows");
         });
@@ -378,11 +377,11 @@ partial class Build
         .Executes(() =>
         {
             (ArtifactsDirectory / "chocolatey").CreateDirectory();
-            
+
             var chocolateyNetFrameworkSourceDirectory = SourceDirectory / "Chocolatey-Net-Framework";
             const string chocolateyNetFrameworkNuspecFileName = "OctopusDeploy.Tentacle.nuspec";
             PackChocolateyPackageToArtifactsDirectory("", "-x64", chocolateyNetFrameworkSourceDirectory, chocolateyNetFrameworkNuspecFileName);
-            
+
             var chocolateySelfContainedSourceDirectory = SourceDirectory / "Chocolatey-Self-Contained";
             const string chocolateySelfContainedNuspecFileName = "OctopusDeploy.Tentacle.SelfContained.nuspec";
             PackChocolateyPackageToArtifactsDirectory("-net8.0-windows-win-x86", "-net8.0-windows-win-x64", chocolateySelfContainedSourceDirectory, chocolateySelfContainedNuspecFileName);
@@ -420,6 +419,24 @@ partial class Build
 
             DotNetPack(p => p
                 .SetProject(RootDirectory / "source" / "Octopus.Tentacle.Contracts" / "Octopus.Tentacle.Contracts.csproj")
+                .SetVersion(FullSemVer)
+                .SetOutputDirectory(ArtifactsDirectory / "nuget")
+                .DisableIncludeSymbols()
+                .SetVerbosity(DotNetVerbosity.normal)
+                .SetProperty("NuspecProperties", $"Version={FullSemVer}"));
+        });
+
+    [PublicAPI]
+    Target PackCore => _ => _
+        .Description("Packs the NuGet package for Tentacle core.")
+        .DependsOn(PackContracts)
+        .Executes(() =>
+        {
+            (ArtifactsDirectory / "nuget").CreateDirectory();
+            using var versionInfoFile = ModifyTemplatedVersionAndProductFilesWithValues();
+
+            DotNetPack(p => p
+                .SetProject(RootDirectory / "source" / "Octopus.Tentacle.Core" / "Octopus.Tentacle.Core.csproj")
                 .SetVersion(FullSemVer)
                 .SetOutputDirectory(ArtifactsDirectory / "nuget")
                 .DisableIncludeSymbols()
@@ -469,34 +486,43 @@ partial class Build
             var workingDirectory = BuildDirectory / "Octopus.Tentacle.CrossPlatformBundle";
             workingDirectory.CreateDirectory();
 
-            var debAmd64PackageFilename = ConstructDebianPackageFilename("tentacle", "amd64");
-            var debArm64PackageFilename = ConstructDebianPackageFilename("tentacle", "arm64");
-            var debArm32PackageFilename = ConstructDebianPackageFilename("tentacle", "armhf");
-
-            var rpmArm64PackageFilename = ConstructRedHatPackageFilename("tentacle", "aarch64");
-            var rpmArm32PackageFilename = ConstructRedHatPackageFilename("tentacle", "armv7hl");
-            var rpmx64PackageFilename = ConstructRedHatPackageFilename("tentacle", "x86_64");
-
+            // Get .NET Framework 4.8 installers for Tentacle
             FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}.msi", workingDirectory / "Octopus.Tentacle.msi");
             FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-x64.msi", workingDirectory / "Octopus.Tentacle-x64.msi");
 
+            // Get .NET 8.0 installers for Tentacle (w/o Tentacle Manager)
             FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net8.0-win-x86.msi", workingDirectory / "Octopus.Tentacle-net8.0-win-x86.msi");
             FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net8.0-win-x64.msi", workingDirectory / "Octopus.Tentacle-net8.0-win-x64.msi");
+
+            // Get .NET 8.0 installers for Tentacle (w/ Tentacle Manager)
             FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net8.0-windows-win-x86.msi", workingDirectory / "Octopus.Tentacle-net8.0-windows-win-x86.msi");
             FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net8.0-windows-win-x64.msi", workingDirectory / "Octopus.Tentacle-net8.0-windows-win-x64.msi");
 
+            // Get .NET 8.0 installers for Tentacle Upgrader
             FileSystemTasks.CopyFile(BuildDirectory / "Octopus.Tentacle.Upgrader" / NetCore / "win-x86" / "Octopus.Tentacle.Upgrader.exe", workingDirectory / "Octopus.Tentacle.Upgrader-net8.0-win-x86.exe");
             FileSystemTasks.CopyFile(BuildDirectory / "Octopus.Tentacle.Upgrader" / NetCore / "win-x64" / "Octopus.Tentacle.Upgrader.exe", workingDirectory / "Octopus.Tentacle.Upgrader-net8.0-win-x64.exe");
 
+            // Get all .NET Framework 4.8 files (installers and archives) for Tentacle Upgrader
             var octopusTentacleUpgraderDirectory = BuildDirectory / "Octopus.Tentacle.Upgrader" / NetFramework / "win";
             octopusTentacleUpgraderDirectory.GlobFiles("*").ForEach(x => FileSystemTasks.CopyFileToDirectory(x, workingDirectory));
+
+            // Get all DEB packages for Linux
+            var debAmd64PackageFilename = ConstructDebianPackageFilename("tentacle", "amd64");
+            var debArm64PackageFilename = ConstructDebianPackageFilename("tentacle", "arm64");
+            var debArm32PackageFilename = ConstructDebianPackageFilename("tentacle", "armhf");
             FileSystemTasks.CopyFile(ArtifactsDirectory / "deb" / debAmd64PackageFilename, workingDirectory / debAmd64PackageFilename);
             FileSystemTasks.CopyFile(ArtifactsDirectory / "deb" / debArm64PackageFilename, workingDirectory / debArm64PackageFilename);
             FileSystemTasks.CopyFile(ArtifactsDirectory / "deb" / debArm32PackageFilename, workingDirectory / debArm32PackageFilename);
+
+            // Get all RPM packages for Linux
+            var rpmArm64PackageFilename = ConstructRedHatPackageFilename("tentacle", "aarch64");
+            var rpmArm32PackageFilename = ConstructRedHatPackageFilename("tentacle", "armv7hl");
+            var rpmx64PackageFilename = ConstructRedHatPackageFilename("tentacle", "x86_64");
             FileSystemTasks.CopyFile(ArtifactsDirectory / "rpm" / rpmArm64PackageFilename, workingDirectory / rpmArm64PackageFilename);
             FileSystemTasks.CopyFile(ArtifactsDirectory / "rpm" / rpmArm32PackageFilename, workingDirectory / rpmArm32PackageFilename);
             FileSystemTasks.CopyFile(ArtifactsDirectory / "rpm" / rpmx64PackageFilename, workingDirectory / rpmx64PackageFilename);
 
+            // Get the archives for all runtimes
             foreach (var framework in new[] { NetFramework, NetCore })
             {
                 foreach (var runtimeId in RuntimeIds)
@@ -509,24 +535,23 @@ partial class Build
                         workingDirectory / $"tentacle-{framework}-{runtimeId}.{fileExtension}");
                 }
             }
-            
+
+            // Get the .NET 8.0 archives for Tentacle (w/ Tentacle Manager)
             FileSystemTasks.CopyFile(ArtifactsDirectory / "zip" / $"tentacle-{FullSemVer}-{NetCoreWindows}-win-x86.zip",
                 workingDirectory / $"tentacle-{NetCoreWindows}-win-x86.zip");
             FileSystemTasks.CopyFile(ArtifactsDirectory / "zip" / $"tentacle-{FullSemVer}-{NetCoreWindows}-win-x64.zip",
                 workingDirectory / $"tentacle-{NetCoreWindows}-win-x64.zip");
 
+            // Assert all the expected files have been successfully copied
             Assert.True((workingDirectory / "Octopus.Tentacle.msi").FileExists(), "Missing Octopus.Tentacle.msi");
             Assert.True((workingDirectory / "Octopus.Tentacle-x64.msi").FileExists(), "Missing Octopus.Tentacle-x64.msi");
             Assert.True((workingDirectory / "Octopus.Tentacle.Upgrader.exe").FileExists(), "Missing Octopus.Tentacle.Upgrader.exe");
-            foreach (var framework in new[] {NetCore})
-            {
-                Assert.True((workingDirectory / $"Octopus.Tentacle-{framework}-win-x86.msi").FileExists(), $"Missing Octopus.Tentacle-{framework}-win-x86.msi");
-                Assert.True((workingDirectory / $"Octopus.Tentacle-{framework}-win-x64.msi").FileExists(), $"Missing Octopus.Tentacle-{framework}-win-x64.msi");
-                Assert.True((workingDirectory / $"Octopus.Tentacle-{framework}-windows-win-x86.msi").FileExists(), $"Missing Octopus.Tentacle-{framework}-windows-win-x86.msi");
-                Assert.True((workingDirectory / $"Octopus.Tentacle-{framework}-windows-win-x64.msi").FileExists(), $"Missing Octopus.Tentacle-{framework}-windows-win-x64.msi");
-                Assert.True((workingDirectory / $"Octopus.Tentacle.Upgrader-{framework}-win-x86.exe").FileExists(), $"Missing Octopus.Tentacle.Upgrader-{framework}-win-x86.exe");
-                Assert.True((workingDirectory / $"Octopus.Tentacle.Upgrader-{framework}-win-x64.exe").FileExists(), $"Missing Octopus.Tentacle.Upgrader-{framework}-win-x64.exe");
-            }
+            Assert.True((workingDirectory / $"Octopus.Tentacle-{NetCore}-win-x86.msi").FileExists(), $"Missing Octopus.Tentacle-{NetCore}-win-x86.msi");
+            Assert.True((workingDirectory / $"Octopus.Tentacle-{NetCore}-win-x64.msi").FileExists(), $"Missing Octopus.Tentacle-{NetCore}-win-x64.msi");
+            Assert.True((workingDirectory / $"Octopus.Tentacle-{NetCore}-windows-win-x86.msi").FileExists(), $"Missing Octopus.Tentacle-{NetCore}-windows-win-x86.msi");
+            Assert.True((workingDirectory / $"Octopus.Tentacle-{NetCore}-windows-win-x64.msi").FileExists(), $"Missing Octopus.Tentacle-{NetCore}-windows-win-x64.msi");
+            Assert.True((workingDirectory / $"Octopus.Tentacle.Upgrader-{NetCore}-win-x86.exe").FileExists(), $"Missing Octopus.Tentacle.Upgrader-{NetCore}-win-x86.exe");
+            Assert.True((workingDirectory / $"Octopus.Tentacle.Upgrader-{NetCore}-win-x64.exe").FileExists(), $"Missing Octopus.Tentacle.Upgrader-{NetCore}-win-x64.exe");
             Assert.True((workingDirectory / debAmd64PackageFilename).FileExists(), $"Missing {debAmd64PackageFilename}");
             Assert.True((workingDirectory / debArm64PackageFilename).FileExists(), $"Missing {debArm64PackageFilename}");
             Assert.True((workingDirectory / debArm32PackageFilename).FileExists(), $"Missing {debArm32PackageFilename}");
@@ -534,26 +559,94 @@ partial class Build
             Assert.True((workingDirectory / rpmArm32PackageFilename).FileExists(), $"Missing {rpmArm32PackageFilename}");
             Assert.True((workingDirectory / rpmx64PackageFilename).FileExists(), $"Missing {rpmx64PackageFilename}");
 
-            const string description = "The deployment agent that is installed on each machine you plan to deploy to using Octopus.";
+            const string id = "Octopus.Tentacle.CrossPlatformBundle";
+
             const string author = "Octopus Deploy";
             const string title = "Octopus Tentacle cross platform bundle";
+            const string description = "The deployment agent that is installed on each machine you plan to deploy to using Octopus.";
 
-            OctopusTasks.OctopusPack(o => o
-                .SetId("Octopus.Tentacle.CrossPlatformBundle")
-                .SetVersion(FullSemVer)
-                .SetBasePath(workingDirectory)
-                .SetOutputFolder(ArtifactsDirectory / "nuget")
-                .SetAuthors(author)
-                .SetTitle(title)
-                .SetDescription(description)
-            );
+            CreateNugetPackage(workingDirectory, id, description, author, title);
         });
+
+    [PublicAPI]
+    Target PackCrossPlatformBundleForServer => _ => _
+        .Description("Packs the cross-platform Tentacle.nupkg used by Octopus Server to dynamically upgrade Tentacles.")
+        .Executes(() =>
+        {
+            (ArtifactsDirectory / "nuget").CreateDirectory();
+
+            var workingDirectory = BuildDirectory / "Octopus.Tentacle.CrossPlatformBundle.Server";
+            workingDirectory.CreateDirectory();
+
+            // Get the .NET Framework 4.8 installers for Tentacle
+            FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}.msi", workingDirectory / "Octopus.Tentacle.msi");
+            FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-x64.msi", workingDirectory / "Octopus.Tentacle-x64.msi");
+
+            // Get the .NET 8.0 installers for Tentacle
+            FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net8.0-win-x86.msi", workingDirectory / "Octopus.Tentacle-net8.0-win-x86.msi");
+            FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net8.0-win-x64.msi", workingDirectory / "Octopus.Tentacle-net8.0-win-x64.msi");
+
+            // Get the .NET 8.0 installers for the Tentacle Upgrader
+            FileSystemTasks.CopyFile(BuildDirectory / "Octopus.Tentacle.Upgrader" / NetCore / "win-x86" / "Octopus.Tentacle.Upgrader.exe", workingDirectory / "Octopus.Tentacle.Upgrader-net8.0-win-x86.exe");
+            FileSystemTasks.CopyFile(BuildDirectory / "Octopus.Tentacle.Upgrader" / NetCore / "win-x64" / "Octopus.Tentacle.Upgrader.exe", workingDirectory / "Octopus.Tentacle.Upgrader-net8.0-win-x64.exe");
+
+            // Get the .NET Framework 4.8 installers for the Tentacle Upgrader
+            var octopusTentacleUpgraderDirectory = BuildDirectory / "Octopus.Tentacle.Upgrader" / NetFramework / "win";
+            octopusTentacleUpgraderDirectory.GlobFiles("*").ForEach(x => FileSystemTasks.CopyFileToDirectory(x, workingDirectory));
+
+            // Get the archives for all required runtimes
+            foreach (var runtimeId in CrossPlatformBundleForServerRequiredRuntimes)
+            {
+                // We don't need the zip archives for Windows runtimes
+                // as we've already manually grabbed the installers
+                if (runtimeId.StartsWith("win")) continue;
+
+                FileSystemTasks.CopyFile(ArtifactsDirectory / "zip" / $"tentacle-{FullSemVer}-{NetCore}-{runtimeId}.{"tar.gz"}",
+                    workingDirectory / $"tentacle-{NetCore}-{runtimeId}.{"tar.gz"}");
+            }
+
+            // Assert all the expected files have been successfully copied
+            Assert.True((workingDirectory / "Octopus.Tentacle.msi").FileExists(), "Missing Octopus.Tentacle.msi");
+            Assert.True((workingDirectory / "Octopus.Tentacle-x64.msi").FileExists(), "Missing Octopus.Tentacle-x64.msi");
+            Assert.True((workingDirectory / "Octopus.Tentacle.Upgrader.exe").FileExists(), "Missing Octopus.Tentacle.Upgrader.exe");
+            Assert.True((workingDirectory / $"Octopus.Tentacle-{NetCore}-win-x86.msi").FileExists(), $"Missing Octopus.Tentacle-{NetCore}-win-x86.msi");
+            Assert.True((workingDirectory / $"Octopus.Tentacle-{NetCore}-win-x64.msi").FileExists(), $"Missing Octopus.Tentacle-{NetCore}-win-x64.msi");
+            Assert.True((workingDirectory / $"Octopus.Tentacle.Upgrader-{NetCore}-win-x86.exe").FileExists(), $"Missing Octopus.Tentacle.Upgrader-{NetCore}-win-x86.exe");
+            Assert.True((workingDirectory / $"Octopus.Tentacle.Upgrader-{NetCore}-win-x64.exe").FileExists(), $"Missing Octopus.Tentacle.Upgrader-{NetCore}-win-x64.exe");
+
+            const string id = "Octopus.Tentacle.CrossPlatformBundle.Server";
+
+            const string author = "Octopus Deploy";
+            const string title = "Octopus Tentacle cross platform bundle (for Octopus Server)";
+            const string description = "The deployment agent that is installed on each machine you plan to deploy to using Octopus.";
+
+            CreateNugetPackage(workingDirectory, id, author, title, description);
+        });
+
+    void CreateNugetPackage(
+        AbsolutePath workingDirectory,
+        string id,
+        string author,
+        string title,
+        string description)
+    {
+        var outFolder = ArtifactsDirectory / "nuget";
+        var octopus = InstallOctopusCli();
+
+        // Note: Nuke automatically escapes this string by using the string interpolation syntax
+        ProcessTasks.StartProcess(
+            octopus,
+            $"package nuget create --id {id} --version {FullSemVer} --base-path {workingDirectory} --out-folder {outFolder} --author {author} --title {title} --description {description} --no-prompt"
+        ).WaitForExit();
+    }
 
     [PublicAPI]
     Target Pack => _ => _
         .Description("Pack all the artifacts. Notional task - running this on a single host is possible but cumbersome.")
         .DependsOn(PackCrossPlatformBundle)
+        .DependsOn(PackCrossPlatformBundleForServer)
         .DependsOn(PackContracts)
+        .DependsOn(PackCore)
         .DependsOn(PackClient);
 
     void PackTarballs(string framework, string runtimeId)
@@ -578,7 +671,7 @@ partial class Build
             $"tentacle-{FullSemVer}-{framework}-{runtimeId}.tar.gz");
     }
 
-    void BuildAndPushOrLoadKubernetesTentacleContainerImage(bool push, bool load, string runtimeDepsImageTag, string? host = null,  bool includeDebugger = false, string? tagSuffix = null)
+    void BuildAndPushOrLoadKubernetesTentacleContainerImage(bool push, bool load, string runtimeDepsImageTag, string? host = null, bool includeDebugger = false, string? tagSuffix = null)
     {
         var hostPrefix = host is not null ? $"{host}/" : string.Empty;
         DockerTasks.DockerBuildxBuild(settings =>
@@ -635,7 +728,7 @@ partial class Build
 
         FileSystemTasks.CopyFile(packageFilePath, dockerDir / $"tentacle_{FullSemVer}_linux-{dockerArch}.deb");
     }
-    
+
     string GetMicrok8sIpAddress()
     {
         var microk8sInfoOutput = Multipass.Invoke("info microk8s-vm --format json");
@@ -649,4 +742,58 @@ partial class Build
         { "linux-arm64", ("arm64", "arm64") },
         { "linux-arm", ("armhf", "armv7") }
     };
+
+    AbsolutePath InstallOctopusCli()
+    {
+        const string cliVersion = "2.11.0";
+
+        // Windows uses octopus.exe, everything else uses octopus
+        var cliName = EnvironmentInfo.IsWin ? "octopus.exe" : "octopus";
+
+        var unversionedCliFolder = TemporaryDirectory / "octopus-cli";
+        var cliFolder = unversionedCliFolder / cliVersion;
+        var cliPath = cliFolder / cliName;
+        if (cliPath.FileExists())
+        {
+            // Assume it has already been installed
+            return cliPath;
+        }
+
+        cliFolder.CreateDirectory();
+
+        var osId = true switch
+        {
+            _ when EnvironmentInfo.IsWin => "windows",
+            _ when EnvironmentInfo.IsOsx => "macOS",
+            _ when EnvironmentInfo.IsLinux => "linux",
+            _ => throw new NotSupportedException("Unsupported OS")
+        };
+
+        var archId = EnvironmentInfo.IsArm64
+            ? "arm64"
+            : "amd64";
+
+        var archiveExtension = EnvironmentInfo.IsWin ? "zip" : "tar.gz";
+
+        var downloadUri = $"https://github.com/OctopusDeploy/cli/releases/download/v{cliVersion}/octopus_{cliVersion}_{osId}_{archId}.{archiveExtension}";
+
+        var archiveDestination = unversionedCliFolder / $"octopus-cli-archive.{cliVersion}.{archiveExtension}";
+
+        // If the archive already exists, we will download it again
+        archiveDestination.DeleteFile();
+
+        Log.Information("Downloading Octopus CLI from {downloadUri}", downloadUri);
+        HttpTasks.HttpDownloadFile(downloadUri, archiveDestination);
+
+        archiveDestination.UncompressTo(cliFolder);
+        Assert.FileExists(cliPath, "The Octopus CLI executable was not found after extracting the archive");
+
+        if (!EnvironmentInfo.IsWin)
+        {
+            // We need to make the file executable as Nuke doesn't do that for us
+            ProcessTasks.StartProcess("chmod", $"+x {cliPath}").WaitForExit();
+        }
+
+        return cliPath;
+    }
 }

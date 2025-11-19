@@ -4,7 +4,6 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using k8s.Autorest;
-using Octopus.Diagnostics;
 
 namespace Octopus.Tentacle.Kubernetes
 {

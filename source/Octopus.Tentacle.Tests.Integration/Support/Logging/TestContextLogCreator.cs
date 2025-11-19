@@ -1,6 +1,7 @@
 ﻿using System;
 using Halibut.Diagnostics.LogCreators;
 using Halibut.Logging;
+using Octopus.Tentacle.Tests.Integration.Common.Logging;
 using ILog = Halibut.Diagnostics.ILog;
 
 namespace Octopus.Tentacle.Tests.Integration.Support.Logging

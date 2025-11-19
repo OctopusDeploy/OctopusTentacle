@@ -27,6 +27,16 @@ namespace Octopus.Tentacle.Kubernetes
                 logs.Add(new ProcessOutput(ProcessOutputSource.StdErr, message));
         }
 
+        public void Warning(string message)
+        {
+            lock (logs)
+            {
+                logs.Add(new ProcessOutput(ProcessOutputSource.StdOut, "##octopus[stdout-warning]"));
+                logs.Add(new ProcessOutput(ProcessOutputSource.StdOut, message));
+                logs.Add(new ProcessOutput(ProcessOutputSource.StdOut, "##octopus[stdout-default]"));
+            }
+        }
+
         public IReadOnlyCollection<ProcessOutput> PopLogs()
         {
             lock (logs)

@@ -1,0 +1,21 @@
+{
+  "profiles": {
+    "Telepresence - <deployment-name>": {
+      "commandName": "Project",
+      "commandLineArgs": "agent --instance Tentacle --noninteractive",
+      "environmentVariables": {
+        "TentacleHome": "<telepresence-root>/octopus",
+        "TentacleApplications": "<telepresence-root>/octopus/Applications",
+        "DefaultLogDirectory": "<telepresence-root>/octopus/logs",
+        "BOOTSTRAPRUNNEREXECUTABLEPATH": "/tmp/k8s-agent-debug-vol/bootstrapRunner",
+        "TELEPRESENCE_ROOT": "<telepresence-root>",
+        "OCTOPUS_HOME": "<telepresence-root>/octopus",
+        "OCTOPUS_CONTRIBUTE_ENV_SETTINGS": "true"
+      },
+      "dotnetRunMessages": true,
+      "workingDirectory": "<telepresence-root>",
+      "launchBrowser": false,
+      "nativeDebugging": false
+    }
+  }
+}

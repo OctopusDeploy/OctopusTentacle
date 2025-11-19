@@ -26,7 +26,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
             this.serviceEndPoint = serviceEndPoint;
         }
 
-        public async Task RestartTcpConnection()
+        public async Task EnsureConnectionIsSetupBeforeKillingIt()
         {
             logger.Information("Call DownloadFile to work around an issue where the tcp killer kills setup of new connections");
             await ExecuteDownloadFile(new HalibutProxyRequestOptions(CancellationToken.None));
@@ -60,7 +60,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
 
     public interface ITcpConnectionUtilities
     {
-        Task RestartTcpConnection();
+        Task EnsureConnectionIsSetupBeforeKillingIt();
         Task EnsurePollingQueueWontSendMessageToDisconnectedTentacles();
     }
 }

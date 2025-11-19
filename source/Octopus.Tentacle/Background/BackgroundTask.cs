@@ -1,7 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Octopus.Diagnostics;
+using Octopus.Tentacle.Core.Diagnostics;
 
 namespace Octopus.Tentacle.Background
 {

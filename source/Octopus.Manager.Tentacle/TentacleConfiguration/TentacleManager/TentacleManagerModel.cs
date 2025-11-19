@@ -11,6 +11,7 @@ using Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard;
 using Octopus.Manager.Tentacle.Util;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
+using Octopus.Tentacle.Core.Services.Scripts.Util;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager

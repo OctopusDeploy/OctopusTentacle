@@ -277,7 +277,7 @@ namespace Octopus.Tentacle.Tests.Integration
                             {
                                 if (recordedUsages.For(nameof(IAsyncClientCapabilitiesServiceV2.GetCapabilitiesAsync)).LastException == null)
                                 {
-                                    await tcpConnectionUtilities.RestartTcpConnection();
+                                    await tcpConnectionUtilities.EnsureConnectionIsSetupBeforeKillingIt();
 
                                     responseMessageTcpKiller.KillConnectionOnNextResponse();
                                 }

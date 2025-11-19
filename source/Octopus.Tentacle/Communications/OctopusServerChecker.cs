@@ -3,7 +3,7 @@ using System.IO;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using Halibut;
-using Octopus.Diagnostics;
+using Octopus.Tentacle.Core.Diagnostics;
 
 namespace Octopus.Tentacle.Communications
 {

@@ -3,6 +3,8 @@ using Autofac;
 using Octopus.Tentacle.Configuration.Crypto;
 using Octopus.Tentacle.Configuration.EnvironmentVariableMappings;
 using Octopus.Tentacle.Configuration.Instances;
+using Octopus.Tentacle.Kubernetes.Configuration;
+using Octopus.Tentacle.Kubernetes.Crypto;
 using Octopus.Tentacle.Startup;
 using Octopus.Tentacle.Util;
 using Octopus.Tentacle.Watchdog;
@@ -56,9 +58,6 @@ namespace Octopus.Tentacle.Configuration
                 .As<IApplicationInstanceSelector>()
                 .SingleInstance();
 
-            builder.RegisterType<KubernetesMachineKeyEncryptor>().As<IKubernetesMachineKeyEncryptor>().SingleInstance();
-            builder.RegisterType<ConfigMapKeyValueStore>().SingleInstance();
-
             builder.RegisterType<WindowsLocalAdminRightsChecker>()
                 .As<IWindowsLocalAdminRightsChecker>()
                 .SingleInstance();
@@ -85,6 +84,7 @@ namespace Octopus.Tentacle.Configuration
 
             builder.RegisterType<HomeConfiguration>()
                 .As<IHomeConfiguration>()
+                .As<IHomeDirectoryProvider>()
                 .SingleInstance();
             builder.RegisterType<WritableHomeConfiguration>()
                 .As<IWritableHomeConfiguration>()
@@ -96,6 +96,12 @@ namespace Octopus.Tentacle.Configuration
             builder.RegisterType<ProxyConfiguration>().As<IProxyConfiguration>();
             builder.RegisterType<WritableProxyConfiguration>().As<IWritableProxyConfiguration>();
             builder.RegisterType<ProxyInitializer>().As<IProxyInitializer>().SingleInstance();
+            
+            //Even though these are Kubernetes types, we need to include them in this module as they are used lazily in the base types
+            builder.RegisterType<ConfigMapKeyValueStore>().SingleInstance();
+            builder.RegisterType<KubernetesMachineEncryptionKeyProvider>().As<IKubernetesMachineEncryptionKeyProvider>().SingleInstance();
+            builder.RegisterType<KubernetesMachineKeyEncryptor>().As<IKubernetesMachineKeyEncryptor>().SingleInstance();
+            
             RegisterWatchdog(builder);
         }
 
@@ -142,6 +148,7 @@ namespace Octopus.Tentacle.Configuration
 
             builder.RegisterType<HomeConfiguration>()
                 .As<IHomeConfiguration>()
+                .As<IHomeDirectoryProvider>()
                 .SingleInstance();
             builder.RegisterType<WritableHomeConfiguration>()
                 .As<IWritableHomeConfiguration>()

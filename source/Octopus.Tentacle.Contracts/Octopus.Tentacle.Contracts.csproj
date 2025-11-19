@@ -5,7 +5,7 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>bin\</OutputPath>
-    <TargetFrameworks>net48;net6.0;net6.0-windows;net8.0;net8.0-windows</TargetFrameworks>
+    <TargetFrameworks>net48;net8.0;net8.0-windows</TargetFrameworks>
     <DisableImplicitPackageTargetFallback>true</DisableImplicitPackageTargetFallback>
     <Optimize Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">True</Optimize>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -28,7 +28,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <PackageReference Include="Halibut" Version="7.0.682" />
+    <PackageReference Include="Halibut" Version="8.1.1707" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Solution Items\SolutionInfo.cs">

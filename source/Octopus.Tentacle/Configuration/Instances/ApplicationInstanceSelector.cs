@@ -1,8 +1,9 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Octopus.Diagnostics;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Kubernetes;
+using Octopus.Tentacle.Kubernetes.Configuration;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Configuration.Instances
@@ -78,7 +79,7 @@ namespace Octopus.Tentacle.Configuration.Instances
         (IKeyValueStore, IWritableKeyValueStore) LoadConfigurationStore((string? instanceName, string? configurationpath) appInstance)
         {
             if (appInstance is { instanceName: not null, configurationpath: null } &&
-                PlatformDetection.Kubernetes.IsRunningAsKubernetesAgent)
+                KubernetesSupportDetection.IsRunningAsKubernetesAgent)
             {
                 log.Verbose($"Loading configuration from ConfigMap for namespace {KubernetesConfig.Namespace}");
                 var configMapWritableStore = configMapStoreFactory.Value;

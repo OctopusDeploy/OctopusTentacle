@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using FluentAssertions;
@@ -8,6 +9,10 @@ using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.CommonTestUtils.Diagnostics;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Core.Services.Scripts;
+using Octopus.Tentacle.Core.Services.Scripts.Locking;
+using Octopus.Tentacle.Core.Services.Scripts.Security.Masking;
+using Octopus.Tentacle.Core.Services.Scripts.Shell;
 using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Tests.Integration.Support;
@@ -30,6 +35,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         IScriptWorkspace workspace;
         TestScriptLog scriptLog;
         RunningScript runningScript;
+        ScriptIsolationMutex scriptIsolationMutex;
 
         [SetUp]
         public void SetUpLocal()
@@ -59,11 +65,14 @@ namespace Octopus.Tentacle.Tests.Integration.Util
             Console.WriteLine($"Working directory: {workspace.WorkingDirectory}");
             scriptLog = new TestScriptLog();
             cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            scriptIsolationMutex = new ScriptIsolationMutex();
             runningScript = new RunningScript(shell,
                 workspace,
                 scriptLog,
                 taskId,
+                scriptIsolationMutex,
                 cancellationTokenSource.Token,
+                new Dictionary<string, string>(),
                 log);
         }
 
@@ -162,7 +171,9 @@ namespace Octopus.Tentacle.Tests.Integration.Util
                     workspace,
                     scriptLog,
                     taskId,
+                    scriptIsolationMutex,
                     cts.Token,
+                    new Dictionary<string, string>(),
                     new InMemoryLog());
 
                 workspace.BootstrapScript($"echo Starting\n{sleepCommand} 30\necho Finito");

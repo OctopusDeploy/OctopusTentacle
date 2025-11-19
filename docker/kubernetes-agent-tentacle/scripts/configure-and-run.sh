@@ -8,8 +8,11 @@ fi
 
 # In the scenario where a customer is using a custom certificate (which is mounted via a config map), we need to rehash the certificates
 # We just do this all the time because there is no downside
+# We specifically want to avoid exiting the script if this fails, as it is not critical to the operation of the tentacle
+set +e
 echo "Rehashing SSL/TLS certificates"
 openssl rehash /etc/ssl/certs
+set -e
 
 # Tentacle Docker images only support once instance per container. Running multiple instances can be achieved by running multiple containers.
 instanceName=Tentacle
@@ -154,6 +157,14 @@ function validateWorkerVariables() {
   fi
 
   echo " - worker pools '$WorkerPools'"
+}
+
+function migrateFromPreinstallScript() {
+  tentacle migrate-preinstalled-k8s-config \
+    --source-config-map-name "tentacle-config-pre" \
+    --source-secret-name "tentacle-secret-pre" \
+    --destination-config-map-name "tentacle-config" \
+    --destination-secret-name "tentacle-secret"
 }
 
 function configureTentacle() {
@@ -409,6 +420,9 @@ function markAsInitialised() {
 setupVariablesForRegistrationCheck
 getStatusOfRegistration
 
+# We expect the tentacle to always be registered due to the new pre-install hook
+# But keeping this here just in case
+# We can remove it in future if we need to
 if [ "$IS_REGISTERED" == "true" ]; then
   echo "Tentacle is already configured and registered with server."
   addAdditionalServerInstancesIfRequired
@@ -421,11 +435,12 @@ else
 
   echo "==============================================="
 
+  migrateFromPreinstallScript
   configureTentacle
+  setPollingProxy
   registerTentacle
   addAdditionalServerInstancesIfRequired
-  setPollingProxy
-
+  
   echo "Configuration successful"
 fi
 

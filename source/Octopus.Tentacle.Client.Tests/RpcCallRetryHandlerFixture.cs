@@ -7,8 +7,10 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Halibut;
 using Halibut.Exceptions;
+using Halibut.Transport;
 using NUnit.Framework;
 using Octopus.Tentacle.Client.Retries;
+using Octopus.Tentacle.CommonTestUtils.Assertions;
 using Polly.Timeout;
 
 namespace Octopus.Tentacle.Client.Tests
@@ -686,6 +688,185 @@ namespace Octopus.Tentacle.Client.Tests
         private TimeSpan GetMinTimeoutDuration(RpcCallRetryHandler handler)
         {
             return handler.RetryTimeout - handler.RetryIfRemainingDurationAtLeast - retryBackoffBuffer;
+        }
+
+        [Test]
+        public async Task MinimumAttempts_WhenSetTo1_DoesNotRetryAfterTimeoutExceeded()
+        {
+            var expectedResult = Guid.NewGuid();
+            var callCount = 0;
+            var onRetryActionCalled = false;
+            var onTimeoutActionCalled = false;
+
+            // Short timeout to ensure it's exceeded, but minimumAttemptsForInterruptedLongRunningCalls = 1
+            var handler = new RpcCallRetryHandler(TimeSpan.FromSeconds(1), minimumAttemptsForInterruptedLongRunningCalls: 1);
+
+            var result = await handler.ExecuteWithRetries(
+                async ct =>
+                {
+                    callCount++;
+                    
+                    // Sleep for 3 seconds to simulate a long-running operation
+                    // must exceed retry duration
+                    await Task.Delay(TimeSpan.FromSeconds(3), ct);
+                    
+                    // Succeed on the first (and only) attempt since minimumAttemptsForInterruptedLongRunningCalls = 1
+                    if (callCount == 1)
+                    {
+                        return expectedResult;
+                    }
+                    
+                    throw new HalibutClientException($"An error has occurred on attempt {callCount}");
+                },
+                onRetryAction: async (_, _, _, _, _, _) =>
+                {
+                    await Task.CompletedTask;
+                    onRetryActionCalled = true;
+                },
+                onTimeoutAction: async (_, _, _, _) =>
+                {
+                    await Task.CompletedTask;
+                    onTimeoutActionCalled = true;
+                },
+                CancellationToken.None);
+
+            // With minimumAttemptsForInterruptedLongRunningCalls = 1, we should only make one attempt (no retries)
+            result.Should().Be(expectedResult);
+            callCount.Should().Be(1);
+            onRetryActionCalled.Should().BeFalse();
+            onTimeoutActionCalled.Should().BeFalse();
+        }
+
+        [Test]
+        public async Task MinimumAttempts_WhenSetTo2_MakesOneRetryEvenAfterTimeoutExceeded()
+        {
+            var expectedResult = Guid.NewGuid();
+            var callCount = 0;
+            var onRetryActionCalled = false;
+            var onTimeoutActionCalled = false;
+
+            // Short timeout to ensure it's exceeded, but minimumAttemptsForInterruptedLongRunningCalls = 2
+            var handler = new RpcCallRetryHandler(TimeSpan.FromSeconds(5), minimumAttemptsForInterruptedLongRunningCalls: 2);
+
+            var result = await handler.ExecuteWithRetries(
+                async ct =>
+                {
+                    callCount++;
+                    
+                    // Delay 2 seconds to ensure the ct doesn't get canceled.
+                    await Task.Delay(TimeSpan.FromSeconds(2), ct);
+                    
+                    // Fail on first attempt, succeed on second
+                    if (callCount == 1)
+                    {
+                        throw new HalibutClientException($"An error has occurred on attempt {callCount}");
+                    }
+                    
+                    return expectedResult;
+                },
+                onRetryAction: async (_, _, _, _, _, _) =>
+                {
+                    await Task.CompletedTask;
+                    onRetryActionCalled = true;
+                },
+                onTimeoutAction: async (_, _, _, _) =>
+                {
+                    await Task.CompletedTask;
+                    onTimeoutActionCalled = true;
+                },
+                CancellationToken.None);
+
+            // With minimumAttemptsForInterruptedLongRunningCalls = 2, we should make 2 attempts (1 initial + 1 retry)
+            result.Should().Be(expectedResult);
+            callCount.Should().Be(2);
+            onRetryActionCalled.Should().BeTrue();
+            onTimeoutActionCalled.Should().BeFalse(); // Should succeed before timeout
+        }
+
+        [Test]
+        public async Task MinimumAttempts_WhenSetTo3_MakesTwoRetriesEvenAfterTimeoutExceeded()
+        {
+            var expectedResult = Guid.NewGuid();
+            var callCount = 0;
+            var retryCount = 0;
+            var onTimeoutActionCalled = false;
+
+            // Short timeout to ensure it's exceeded, but minimumAttemptsForInterruptedLongRunningCalls = 3
+            var handler = new RpcCallRetryHandler(TimeSpan.FromSeconds(8), minimumAttemptsForInterruptedLongRunningCalls: 3);
+
+            var result = await handler.ExecuteWithRetries(
+                async ct =>
+                {
+                    callCount++;
+                    
+                    // Always add 2 second delay as requested
+                    await Task.Delay(TimeSpan.FromSeconds(2), ct);
+                    
+                    // Fail on first two attempts, succeed on third
+                    if (callCount <= 2)
+                    {
+                        throw new HalibutClientException($"An error has occurred on attempt {callCount}");
+                    }
+                    
+                    return expectedResult;
+                },
+                onRetryAction: async (_, _, _, _, _, _) =>
+                {
+                    await Task.CompletedTask;
+                    retryCount++;
+                },
+                onTimeoutAction: async (_, _, _, _) =>
+                {
+                    await Task.CompletedTask;
+                    onTimeoutActionCalled = true;
+                },
+                CancellationToken.None);
+
+            // With minimumAttemptsForInterruptedLongRunningCalls = 3, we should make 3 attempts (1 initial + 2 retries)
+            result.Should().Be(expectedResult);
+            callCount.Should().Be(3);
+            retryCount.Should().Be(2);
+            onTimeoutActionCalled.Should().BeFalse(); // Should succeed before timeout
+        }
+        
+        /// <summary>
+        /// Connection error means the tentacle did not get the request, which means the tentacle is considered to be offline.
+        /// This shows that we won't exceed the retry duration attempting to connect to an offline tentacle to meet the
+        /// minimumAttemptsForInterruptedLongRunningCalls count.
+        /// </summary>
+        [Test]
+        public async Task WhenConfiguredToMakeAMinimumNumberOfAttempts_AndTheFirstAttemptExceedsTheRetryDuration_AndTheFailureIsAConnectingFailure_ARetryIsNotMade()
+        {
+            var callCount = 0;
+
+            // Short timeout to ensure it's exceeded, but minimumAttemptsForInterruptedLongRunningCalls = 2
+            var handler = new RpcCallRetryHandler(TimeSpan.FromSeconds(2), minimumAttemptsForInterruptedLongRunningCalls: 9999);
+            
+            var exception = await AssertThrowsAny.Exception(async () =>
+                await handler.ExecuteWithRetries(
+                    async ct =>
+                    {
+                        callCount++;
+                        
+                        // Must exceed retry duration
+                        await Task.Delay(TimeSpan.FromSeconds(5), ct);
+                        
+                        if(callCount == -1) return Guid.NewGuid(); // Never called used to make the typing work.
+
+                        throw new HalibutClientException("", new Exception(), ConnectionState.Connecting);
+                    },
+                    onRetryAction: async (_, _, _, _, _, _) =>
+                    {
+                        await Task.CompletedTask;
+                    },
+                    onTimeoutAction: async (_, _, _, _) =>
+                    {
+                        await Task.CompletedTask;
+                    },
+                    CancellationToken.None));
+            exception.Should().BeAssignableTo<HalibutClientException>();
+            
+            callCount.Should().Be(1);
         }
     }
 }

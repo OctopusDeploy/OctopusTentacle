@@ -16,9 +16,9 @@ namespace Octopus.Tentacle.Tests.Integration.Util.PendingRequestQueueHelpers
             this.pendingRequestQueue = pendingRequestQueue;
         }
 
-        public async Task ApplyResponse(ResponseMessage response, ServiceEndPoint destination)
+        public async Task ApplyResponse(ResponseMessage response, Guid activityId)
         {
-            await pendingRequestQueue.ApplyResponse(response, destination);
+            await pendingRequestQueue.ApplyResponse(response, activityId);
         }
 
         public async Task<RequestMessageWithCancellationToken> DequeueAsync(CancellationToken cancellationToken)
