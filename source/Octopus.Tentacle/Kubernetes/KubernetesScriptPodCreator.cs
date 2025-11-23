@@ -194,7 +194,7 @@ namespace Octopus.Tentacle.Kubernetes
             var imagePullSecretNames = new[] { imagePullSecretName }
                 .Concat(KubernetesConfig.PodImagePullSecretNames)
                 .WhereNotNull()
-                .Select(secretName => new V1LocalObjectReference(secretName))
+                .Select(secretName => new V1LocalObjectReference { Name = secretName })
                 .ToList();
 
             var scriptPodTemplate = await podTemplateService.GetScriptPodTemplate(cancellationToken);
@@ -340,25 +340,37 @@ namespace Octopus.Tentacle.Kubernetes
 
             container.VolumeMounts = Merge(container.VolumeMounts, new[]
             {
-                new V1VolumeMount(homeDir, "tentacle-home"),
-                new V1VolumeMount("/root/agent_upgrade/", "agent-upgrade"),
-                new V1VolumeMount("/tmp/agent_upgrade/", "agent-upgrade")
+                new V1VolumeMount
+                {
+                    MountPath = homeDir,
+                    Name = "tentacle-home"
+                },
+                new V1VolumeMount
+                {
+                    MountPath = "/root/agent_upgrade/",
+                    Name = "agent-upgrade"
+                },
+                new V1VolumeMount
+                {
+                    MountPath = "/tmp/agent_upgrade/",
+                    Name = "agent-upgrade"
+                }
             });
 
             container.Env = Merge(container.Env, new List<V1EnvVar>
             {
-                new(KubernetesConfig.NamespaceVariableName, KubernetesConfig.Namespace),
-                new(KubernetesConfig.HelmReleaseNameVariableName, KubernetesConfig.HelmReleaseName),
-                new(KubernetesConfig.HelmChartVersionVariableName, KubernetesConfig.HelmChartVersion),
-                new(KubernetesConfig.KubernetesMonitorEnabledVariableName, KubernetesConfig.KubernetesMonitorEnabled),
-                new(KubernetesConfig.ServerCommsAddressesVariableName, string.Join(",", KubernetesConfig.ServerCommsAddresses)),
-                new(KubernetesConfig.PersistentVolumeFreeBytesVariableName, spaceInformation?.freeSpaceBytes.ToString()),
-                new(KubernetesConfig.PersistentVolumeSizeBytesVariableName, spaceInformation?.totalSpaceBytes.ToString()),
-                new(EnvironmentVariables.TentacleHome, homeDir),
-                new(EnvironmentVariables.TentacleInstanceName, appInstanceSelector.Current.InstanceName),
-                new(EnvironmentVariables.TentacleVersion, Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleVersion)),
-                new(EnvironmentVariables.TentacleCertificateSignatureAlgorithm, Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleCertificateSignatureAlgorithm)),
-                new("OCTOPUS_RUNNING_IN_CONTAINER", "Y")
+                new() { Name = KubernetesConfig.NamespaceVariableName, Value = KubernetesConfig.Namespace },
+                new() { Name = KubernetesConfig.HelmReleaseNameVariableName, Value = KubernetesConfig.HelmReleaseName },
+                new() { Name = KubernetesConfig.HelmChartVersionVariableName, Value = KubernetesConfig.HelmChartVersion },
+                new() { Name = KubernetesConfig.KubernetesMonitorEnabledVariableName, Value = KubernetesConfig.KubernetesMonitorEnabled },
+                new() { Name = KubernetesConfig.ServerCommsAddressesVariableName, Value = string.Join(",", KubernetesConfig.ServerCommsAddresses) },
+                new() { Name = KubernetesConfig.PersistentVolumeFreeBytesVariableName, Value = spaceInformation?.freeSpaceBytes.ToString() },
+                new() { Name = KubernetesConfig.PersistentVolumeSizeBytesVariableName, Value = spaceInformation?.totalSpaceBytes.ToString() },
+                new() { Name = EnvironmentVariables.TentacleHome, Value = homeDir },
+                new() { Name = EnvironmentVariables.TentacleInstanceName, Value = appInstanceSelector.Current.InstanceName },
+                new() { Name = EnvironmentVariables.TentacleVersion, Value = Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleVersion) },
+                new() { Name = EnvironmentVariables.TentacleCertificateSignatureAlgorithm, Value = Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleCertificateSignatureAlgorithm) },
+                new() { Name = "OCTOPUS_RUNNING_IN_CONTAINER", Value = "Y" }
 
                 //We intentionally exclude setting "TentacleJournal" since it doesn't make sense to keep a Deployment Journal for Kubernetes deployments
             });
@@ -404,14 +416,36 @@ namespace Octopus.Tentacle.Kubernetes
                 KubernetesConfig.PodAffinityJsonVariableName,
                 "pod affinity",
                 //we default to running on linux/arm64 and linux/amd64 nodes
-                new V1Affinity(new V1NodeAffinity(requiredDuringSchedulingIgnoredDuringExecution: new V1NodeSelector(new List<V1NodeSelectorTerm>
+                new V1Affinity()
                 {
-                    new(matchExpressions: new List<V1NodeSelectorRequirement>
+                    NodeAffinity = new V1NodeAffinity()
                     {
-                        new("kubernetes.io/os", "In", new List<string> { "linux" }),
-                        new("kubernetes.io/arch", "In", new List<string> { "arm64", "amd64" })
-                    })
-                }))))!;
+                        RequiredDuringSchedulingIgnoredDuringExecution = new V1NodeSelector
+                        {
+                            NodeSelectorTerms = new List<V1NodeSelectorTerm>
+                            {
+                                new()
+                                {
+                                    MatchExpressions = new List<V1NodeSelectorRequirement>
+                                    {
+                                        new()
+                                        {
+                                            Key = "kubernetes.io/os",
+                                            OperatorProperty = "In",
+                                            Values = new List<string> { "linux" }
+                                        },
+                                        new()
+                                        {
+                                            Key = "kubernetes.io/arch",
+                                            OperatorProperty = "In",
+                                            Values = new List<string> { "arm64", "amd64" }
+                                        },
+                                    }
+                                }
+                            }
+                        }
+                    }
+                })!;
 
         List<V1Toleration>? ParseScriptPodTolerations(InMemoryTentacleScriptLog tentacleScriptLog)
             => ParseScriptPodJson<List<V1Toleration>>(
@@ -504,7 +538,7 @@ namespace Octopus.Tentacle.Kubernetes
         {
             using var sha1 = SHA1.Create();
             var bytes = sha1.ComputeHash(Encoding.UTF8.GetBytes(value));
-            return BitConverter.ToString(bytes).Replace("-","");
+            return BitConverter.ToString(bytes).Replace("-", "");
         }
 
         [return: NotNullIfNotNull("defaultValue")]
@@ -564,9 +598,9 @@ namespace Octopus.Tentacle.Kubernetes
             container.Image = KubernetesConfig.NfsWatchdogImage;
             container.VolumeMounts = Merge(container.VolumeMounts, new List<V1VolumeMount>
             {
-                new(homeDir, "tentacle-home"),
+                new V1VolumeMount{MountPath = homeDir, Name = "tentacle-home"},
             });
-            container.Env = Merge(container.Env, new[] { new V1EnvVar(EnvironmentVariables.NfsWatchdogDirectory, homeDir) });
+            container.Env = Merge(container.Env, new[] { new V1EnvVar{Name = EnvironmentVariables.NfsWatchdogDirectory, Value = homeDir} });
 
             return container;
         }

@@ -29,7 +29,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         {
             podService = Substitute.For<IKubernetesPodService>();
             log = new InMemoryLog();
-            clock = new FixedClock(new DateTimeOffset(2023,5,17,13,4,5, TimeSpan.Zero));
+            clock = new FixedClock(new DateTimeOffset(2023, 5, 17, 13, 4, 5, TimeSpan.Zero));
             monitor = new KubernetesPodMonitor(podService, log, new TentacleScriptLogProvider(), clock);
 
             scriptTicket = new ScriptTicket(Guid.NewGuid().ToString());
@@ -111,7 +111,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
                     new()
                     {
                         Name = scriptTicket.ToKubernetesScriptPodName(),
-                        State = new V1ContainerState(terminated: new V1ContainerStateTerminated(0, finishedAt: DateTime.UtcNow))
+                        State = new V1ContainerState { Terminated = new V1ContainerStateTerminated { ExitCode = 0, FinishedAt = DateTime.UtcNow } }
                     }
                 }
             };
