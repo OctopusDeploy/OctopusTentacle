@@ -6,7 +6,7 @@ namespace Octopus.Tentacle.Kubernetes.Tests.Integration.Setup.Tooling
 {
     public class KindDownloader : ToolDownloader
     {
-        const string LatestKindVersion = "v0.29.0";
+        const string LatestKindVersion = "v0.30.0";
 
         public KindDownloader(ILogger logger)
             : base("kind", logger)
