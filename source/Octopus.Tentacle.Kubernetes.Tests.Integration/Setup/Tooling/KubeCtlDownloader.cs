@@ -4,7 +4,7 @@ namespace Octopus.Tentacle.Kubernetes.Tests.Integration.Setup.Tooling;
 
 public class KubeCtlDownloader : ToolDownloader
 {
-    public const string LatestKubeCtlVersion = "v1.33.5";
+    public const string LatestKubeCtlVersion = "v1.34.2";
     
     public KubeCtlDownloader(ILogger logger) 
         : base("kubectl", logger)
