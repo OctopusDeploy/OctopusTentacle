@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Octopus.Tentacle.Core.Diagnostics;
 
 namespace Octopus.Tentacle.Util
@@ -29,10 +30,31 @@ namespace Octopus.Tentacle.Util
 
         bool RunServiceCommand(string command, string serviceName, bool logFailureAsError)
         {
+            // Try without sudo first
             var commandLineInvocation = new CommandLineInvocation("/bin/bash", $"-c \"systemctl {command} {serviceName}\"");
             var result = commandLineInvocation.ExecuteCommand();
 
             if (result.ExitCode == 0) return true;
+
+            // Check if failure is due to authentication/permission issues
+            var needsElevation = result.Errors.Any(e =>
+                e.Contains("Interactive authentication required") ||
+                e.Contains("Failed to") ||
+                e.Contains("Access denied") ||
+                e.Contains("Permission denied"));
+
+            // If authentication issue detected, retry with sudo
+            if (needsElevation)
+            {
+                log.Verbose($"Retrying 'systemctl {command} {serviceName}' with sudo");
+                var sudoInvocation = new CommandLineInvocation("/bin/bash", $"-c \"sudo systemctl {command} {serviceName}\"");
+                var sudoResult = sudoInvocation.ExecuteCommand();
+
+                if (sudoResult.ExitCode == 0) return true;
+
+                // Log sudo attempt failure
+                result = sudoResult;
+            }
 
             void LogErrorOrWarning(string error)
             {
