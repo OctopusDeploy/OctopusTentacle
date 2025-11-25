@@ -8,10 +8,12 @@ using NUnit.Framework;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.Legacy;
+using Octopus.Tentacle.Tests.Integration.Support.TestAttributes;
 
 namespace Octopus.Tentacle.Tests.Integration
 {
     [IntegrationTestTimeout]
+    // [SkipOnEnvironmentsWithKnownPerformanceIssues("we keep facing issues with disk space running out")]
     public class ScriptServiceTests : IntegrationTest
     {
         [Test]
