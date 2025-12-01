@@ -33,7 +33,6 @@ namespace Octopus.Tentacle.Util
             // Try without sudo first
             var commandLineInvocation = new CommandLineInvocation("/bin/bash", $"-c \"systemctl {command} {serviceName}\"");
             var result = commandLineInvocation.ExecuteCommand();
-
             if (result.ExitCode == 0) return true;
 
             // Check if failure is due to authentication/permission issues
@@ -43,17 +42,16 @@ namespace Octopus.Tentacle.Util
                 e.Contains("Access denied") ||
                 e.Contains("Permission denied"));
 
+            var usedSudo = false;
             // If authentication issue detected, retry with sudo
             if (needsElevation)
             {
                 log.Verbose($"Retrying 'systemctl {command} {serviceName}' with sudo");
                 var sudoInvocation = new CommandLineInvocation("/bin/bash", $"-c \"sudo systemctl {command} {serviceName}\"");
-                var sudoResult = sudoInvocation.ExecuteCommand();
-
-                if (sudoResult.ExitCode == 0) return true;
-
-                // Log sudo attempt failure
-                result = sudoResult;
+                result = sudoInvocation.ExecuteCommand();
+                if (result.ExitCode == 0) return true;
+                
+                usedSudo = true;
             }
 
             void LogErrorOrWarning(string error)
@@ -64,7 +62,7 @@ namespace Octopus.Tentacle.Util
                     log.Warn(error);
             }
 
-            LogErrorOrWarning($"The command 'systemctl {command} {serviceName}' failed with exit code: {result.ExitCode}");
+            LogErrorOrWarning($"The command '{(usedSudo ? "sudo systemctl" : "systemctl")} {command} {serviceName}' failed with exit code: { result.ExitCode}");
             foreach (var error in result.Errors)
                 LogErrorOrWarning(error);
 
