@@ -46,7 +46,7 @@ namespace Octopus.Tentacle.Util
             // If authentication issue detected, retry with sudo
             if (needsElevation)
             {
-                log.Verbose($"Retrying 'systemctl {command} {serviceName}' with sudo");
+                log.Info($"Permission denied. Retrying 'systemctl {command} {serviceName}' with sudo...");
                 var sudoInvocation = new CommandLineInvocation("/bin/bash", $"-c \"sudo systemctl {command} {serviceName}\"");
                 result = sudoInvocation.ExecuteCommand();
                 if (result.ExitCode == 0) return true;
