@@ -27,10 +27,13 @@ namespace Octopus.Tentacle
             OctopusTentacle.EnvironmentInformation,
             commandLineArguments)
         {
-            ServicePointManager.SecurityProtocol =
-                SecurityProtocolType.Tls
-                | SecurityProtocolType.Tls11
-                | SecurityProtocolType.Tls12;
+            if (EnvironmentOverrides.UseLegacyExplicitSslConfiguration)
+            {
+                ServicePointManager.SecurityProtocol =
+                    SecurityProtocolType.Tls
+                    | SecurityProtocolType.Tls11
+                    | SecurityProtocolType.Tls12;
+            }
         }
 
         protected override ApplicationName ApplicationName => ApplicationName.Tentacle;
