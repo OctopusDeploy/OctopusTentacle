@@ -60,7 +60,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
                 command.ScriptTicket,
                 _ =>
                 {
-                    var workspace = workspaceFactory.GetWorkspace(command.ScriptTicket, WorkspaceReadinessCheck.Skip);
+                    var workspace = workspaceFactory.GetWorkspace(command.ScriptTicket, WorkspaceReadinessCheck.Perform);
                     var scriptState = scriptStateStoreFactory.Create(workspace);
                     return new RunningScriptWrapper(scriptState);
                 });

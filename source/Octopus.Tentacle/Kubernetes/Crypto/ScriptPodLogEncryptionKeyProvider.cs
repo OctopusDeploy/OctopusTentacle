@@ -71,7 +71,7 @@ namespace Octopus.Tentacle.Kubernetes.Crypto
                 return keyBytes;
             }
 
-            var workspace = scriptWorkspaceFactory.GetWorkspace(scriptTicket, WorkspaceReadinessCheck.Skip);
+            var workspace = scriptWorkspaceFactory.GetWorkspace(scriptTicket, WorkspaceReadinessCheck.Perform);
             var fileContents = workspace.TryReadFile(Filename);
             //If we can't load the encryption key from the filesystem
             if (fileContents == null)
