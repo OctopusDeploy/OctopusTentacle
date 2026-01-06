@@ -121,10 +121,7 @@
 	  <EmbeddedResource Include="Startup\PathsToDeleteOnStartup.netfx.txt" />
 	  <None Remove="Kubernetes\bootstrapRunner.sh" />
 	</ItemGroup>
-	<ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
-	  <PackageReference Include="KubernetesClient" Version="17.0.14" />
-	</ItemGroup>
-	<ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
-	  <PackageReference Include="KubernetesClient" Version="17.0.14" />
-	</ItemGroup>
+    <ItemGroup Condition=" '$(TargetFramework)' != 'net48' ">
+        <PackageReference Include="KubernetesClient" Version="17.0.14" />
+    </ItemGroup>
 </Project>
