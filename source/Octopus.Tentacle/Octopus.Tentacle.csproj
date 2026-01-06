@@ -48,6 +48,9 @@
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
 		<PackageReference Include="KubernetesClient.Classic" Version="16.0.2" />
 	</ItemGroup>
+	<ItemGroup Condition="'$(TargetFramework)' == 'net8.0' Or '$(TargetFramework)' == 'net8.0-windows'">
+        <PackageReference Include="KubernetesClient" Version="17.0.14" />
+	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="BouncyCastle.Cryptography" Version="2.5.1" />
 		<PackageReference Include="Octopus.Client" Version="15.2.2240" />
@@ -121,7 +124,4 @@
 	  <EmbeddedResource Include="Startup\PathsToDeleteOnStartup.netfx.txt" />
 	  <None Remove="Kubernetes\bootstrapRunner.sh" />
 	</ItemGroup>
-    <ItemGroup Condition=" '$(TargetFramework)' != 'net48' ">
-        <PackageReference Include="KubernetesClient" Version="17.0.14" />
-    </ItemGroup>
 </Project>
