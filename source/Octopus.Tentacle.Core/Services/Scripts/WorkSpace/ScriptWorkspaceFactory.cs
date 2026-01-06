@@ -56,7 +56,7 @@ namespace Octopus.Tentacle.Scripts
             List<ScriptFile> files,
             CancellationToken cancellationToken)
         {
-            var workspace = GetWorkspace(ticket);
+            var workspace = GetWorkspace(ticket, WorkspaceReadinessCheck.Perform);
             workspace.IsolationLevel = isolationLevel;
             workspace.ScriptMutexAcquireTimeout = scriptMutexAcquireTimeout;
             workspace.ScriptArguments = scriptArguments;
