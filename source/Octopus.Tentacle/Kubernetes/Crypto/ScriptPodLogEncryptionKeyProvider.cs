@@ -39,7 +39,7 @@ namespace Octopus.Tentacle.Kubernetes.Crypto
                 throw new PodLogEncryptionKeyException($"An encryption key already exists for script {scriptTicket.TaskId}");
             }
             
-            var workspace = scriptWorkspaceFactory.GetWorkspace(scriptTicket);
+            var workspace = scriptWorkspaceFactory.GetWorkspace(scriptTicket, WorkspaceReadinessCheck.Perform);
             await GenerateAndWriteEncryptionKeyfileToWorkspace(scriptTicket, workspace, cancellationToken);
         }
 
@@ -71,7 +71,7 @@ namespace Octopus.Tentacle.Kubernetes.Crypto
                 return keyBytes;
             }
 
-            var workspace = scriptWorkspaceFactory.GetWorkspace(scriptTicket);
+            var workspace = scriptWorkspaceFactory.GetWorkspace(scriptTicket, WorkspaceReadinessCheck.Skip);
             var fileContents = workspace.TryReadFile(Filename);
             //If we can't load the encryption key from the filesystem
             if (fileContents == null)
