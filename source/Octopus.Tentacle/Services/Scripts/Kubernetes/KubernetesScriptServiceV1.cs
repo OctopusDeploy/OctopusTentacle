@@ -123,7 +123,7 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
 
         public async Task CompleteScriptAsync(CompleteKubernetesScriptCommandV1 command, CancellationToken cancellationToken)
         {
-            var workspace = workspaceFactory.GetWorkspace(command.ScriptTicket);
+            var workspace = workspaceFactory.GetWorkspace(command.ScriptTicket, WorkspaceReadinessCheck.Skip);
             await workspace.Delete(cancellationToken);
 
             scriptLogProvider.Delete(command.ScriptTicket);
