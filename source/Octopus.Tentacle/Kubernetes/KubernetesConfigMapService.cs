@@ -14,6 +14,7 @@ namespace Octopus.Tentacle.Kubernetes
         Task<V1ConfigMap?> TryGet(string name, CancellationToken cancellationToken);
 
         Task<V1ConfigMap> Patch(string name, IDictionary<string, string> data, CancellationToken cancellationToken);
+        Task<V1ConfigMap> Create(string name,IDictionary<string, byte[]> data, CancellationToken cancellationToken);
     }
 
     public class KubernetesConfigMapService : KubernetesService, IKubernetesConfigMapService
@@ -51,5 +52,8 @@ namespace Octopus.Tentacle.Kubernetes
             return await RetryPolicy.ExecuteAsync(async () =>
                 await Client.CoreV1.PatchNamespacedConfigMapAsync(new V1Patch(configMapJson, V1Patch.PatchType.MergePatch), name, KubernetesConfig.Namespace, cancellationToken: cancellationToken));
         }
+        
+        public async Task<V1ConfigMap> Create(string name, IDictionary<string, byte[]> data, CancellationToken cancellationToken) => 
+            await RetryPolicy.ExecuteAsync(async () => await Client.CoreV1.CreateNamespacedConfigMapAsync(new V1ConfigMap(metadata: new V1ObjectMeta(){ Name = name }, binaryData: data), KubernetesConfig.Namespace, cancellationToken: cancellationToken));
     }
 }
