@@ -41,11 +41,11 @@ namespace Octopus.Tentacle.Kubernetes
 
             //Add helm specific metadata so it's removed if the helm release is uninstalled
             k8sObject.Metadata.Annotations ??= new Dictionary<string, string>();
-            k8sObject.Metadata.Annotations["meta.helm.sh/release-name"] = KubernetesConfig.HelmReleaseName;
-            k8sObject.Metadata.Annotations["meta.helm.sh/release-namespace"] = KubernetesConfig.Namespace;
+            //k8sObject.Metadata.Annotations["meta.helm.sh/release-name"] = KubernetesConfig.HelmReleaseName;
+            //k8sObject.Metadata.Annotations["meta.helm.sh/release-namespace"] = KubernetesConfig.Namespace;
 
             k8sObject.Metadata.Labels ??= new Dictionary<string, string>();
-            k8sObject.Metadata.Labels["app.kubernetes.io/managed-by"] = "Helm";
+            //k8sObject.Metadata.Labels["app.kubernetes.io/managed-by"] = "Helm";
         }
 
         protected async Task<T?> TryGetAsync<T>(Func<Task<T>> loadAction) where T: class
