@@ -85,7 +85,7 @@ namespace Octopus.Tentacle.Services.Scripts
             running.TryRemove(command.Ticket.TaskId, out var script);
             cancellationTokens.TryRemove(command.Ticket.TaskId, out _);
             var response = GetResponse(command.Ticket, script, command.LastLogSequence);
-            var workspace = workspaceFactory.GetWorkspace(command.Ticket);
+            var workspace = workspaceFactory.GetWorkspace(command.Ticket, WorkspaceReadinessCheck.Skip);
             await workspace.Delete(cancellationToken);
             return response;
         }
@@ -102,7 +102,7 @@ namespace Octopus.Tentacle.Services.Scripts
         {
             var exitCode = script != null ? script.ExitCode : 0;
             var state = script != null ? script.State : ProcessState.Complete;
-            var scriptLog = script != null ? script.ScriptLog : workspaceFactory.GetWorkspace(ticket).CreateLog();
+            var scriptLog = script != null ? script.ScriptLog : workspaceFactory.GetWorkspace(ticket, WorkspaceReadinessCheck.Skip).CreateLog();
 
             var logs = scriptLog.GetOutput(lastLogSequence, out var next);
             return new ScriptStatusResponse(ticket, state, exitCode, logs, next);

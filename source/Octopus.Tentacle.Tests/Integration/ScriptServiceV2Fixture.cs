@@ -493,14 +493,14 @@ namespace Octopus.Tentacle.Tests.Integration
 
         private ScriptStateStore SetupScriptStateStore(ScriptTicket ticket)
         {
-            var workspace = workspaceFactory.GetWorkspace(ticket);
+            var workspace = workspaceFactory.GetWorkspace(ticket, WorkspaceReadinessCheck.Perform);
             var stateWorkspace = stateStoreFactory.Create(workspace);
             return stateWorkspace;
         }
 
         private async Task CleanupWorkspace(ScriptTicket ticket, CancellationToken cancellationToken)
         {
-            var workspace = workspaceFactory.GetWorkspace(ticket);
+            var workspace = workspaceFactory.GetWorkspace(ticket, WorkspaceReadinessCheck.Skip);
             await workspace.Delete(cancellationToken);
         }
 

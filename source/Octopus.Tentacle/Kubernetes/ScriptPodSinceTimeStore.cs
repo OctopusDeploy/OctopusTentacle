@@ -39,7 +39,7 @@ namespace Octopus.Tentacle.Kubernetes
 
         public void UpdatePodEventsSinceTime(ScriptTicket scriptTicket, DateTimeOffset nextSinceTime) => SaveTimestampInMemoryAndDisk(scriptTicket, nextSinceTime, eventsSinceTimes, PodEventsSinceTimeFilename);
 
-        IScriptWorkspace GetWorkspace(ScriptTicket scriptTicket) => workspaces.GetOrAdd(scriptTicket, new Lazy<IScriptWorkspace>(() => workspaceFactory.GetWorkspace(scriptTicket))).Value;
+        IScriptWorkspace GetWorkspace(ScriptTicket scriptTicket) => workspaces.GetOrAdd(scriptTicket, new Lazy<IScriptWorkspace>(() => workspaceFactory.GetWorkspace(scriptTicket, WorkspaceReadinessCheck.Perform))).Value;
 
         DateTimeOffset? GetTimestampFromMemoryOrDisk(ScriptTicket scriptTicket, ConcurrentDictionary<ScriptTicket, DateTimeOffset> memoryCache, string filename)
         {
