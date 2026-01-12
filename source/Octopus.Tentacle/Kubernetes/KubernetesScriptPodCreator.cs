@@ -12,7 +12,6 @@ using k8s.Models;
 using Newtonsoft.Json;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
-using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Core.Services.Scripts.Locking;
@@ -434,7 +433,7 @@ namespace Octopus.Tentacle.Kubernetes
                 KubernetesConfig.PodAnnotationsJsonVariableName,
                 "pod annotations");
 
-        Dictionary<string, string>? GetScriptPodAnnotations(InMemoryTentacleScriptLog tentacleScriptLog, StartKubernetesScriptCommandV1 command)
+        Dictionary<string, string> GetScriptPodAnnotations(InMemoryTentacleScriptLog tentacleScriptLog, StartKubernetesScriptCommandV1 command)
         {
             var annotations = ParseScriptPodAnnotations(tentacleScriptLog) ?? new Dictionary<string, string>();
             annotations.AddRange(GetAuthContext(command));
@@ -477,6 +476,13 @@ namespace Octopus.Tentacle.Kubernetes
             dict[$"{KubernetesConfig.AgentLabelNamespace}/project"] = hash
                 ? HashValue(command.AuthContext.ProjectSlug)
                 : command.AuthContext.ProjectSlug;
+
+            if (command.AuthContext.ProjectGroupSlug is not null)
+            {
+                dict[$"{KubernetesConfig.AgentLabelNamespace}/project-group"] = hash
+                    ? HashValue(command.AuthContext.ProjectGroupSlug)
+                    : command.AuthContext.ProjectGroupSlug;
+            }
 
             dict[$"{KubernetesConfig.AgentLabelNamespace}/environment"] = hash
                 ? HashValue(command.AuthContext.EnvironmentSlug)
