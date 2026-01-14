@@ -11,7 +11,7 @@ fi
 # We specifically want to avoid exiting the script if this fails, as it is not critical to the operation of the tentacle
 set +e
 echo "Rehashing SSL/TLS certificates"
-openssl rehash /etc/ssl/certs
+openssl rehash /etc/ssl/certs || true
 set -e
 
 # Tentacle Docker images only support once instance per container. Running multiple instances can be achieved by running multiple containers.
