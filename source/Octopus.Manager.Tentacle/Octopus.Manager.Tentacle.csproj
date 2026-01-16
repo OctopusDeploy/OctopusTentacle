@@ -124,7 +124,7 @@
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="NETStandard.Library" Version="2.0.3" />
     <PackageReference Include="NLog" Version="5.0.4" />
-    <PackageReference Include="BouncyCastle.Cryptography" Version="2.5.1" />
+    <PackageReference Include="BouncyCastle.Cryptography" Version="2.6.2" />
     <PackageReference Include="TaskScheduler" Version="2.7.2" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' != 'net8.0-windows'">
