@@ -35,7 +35,7 @@ namespace Octopus.Tentacle.Kubernetes
                 entry.AbsoluteExpirationRelativeToNow = CacheExpiry;
                 return await inner.GetScriptPodTemplate(cancellationToken);
             });
-            return template.Clone();
+            return template?.Clone();
         }
     }
 
