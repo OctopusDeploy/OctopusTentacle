@@ -46,7 +46,7 @@
 		<DefineConstants>$(DefineConstants);HTTP_CLIENT_SUPPORTS_SSL_OPTIONS;REQUIRES_EXPLICIT_LOG_CONFIG;REQUIRES_CODE_PAGE_PROVIDER;USER_INTERACTIVE_DOES_NOT_WORK;DEFAULT_PROXY_IS_NOT_AVAILABLE;HAS_NULLABLE_REF_TYPES</DefineConstants>
 	</PropertyGroup>
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
-		<PackageReference Include="KubernetesClient.Classic" Version="18.0.5" />
+		<PackageReference Include="KubernetesClient.Classic" Version="18.0.13" />
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="BouncyCastle.Cryptography" Version="2.6.2" />
@@ -121,9 +121,9 @@
 	  <None Remove="Kubernetes\bootstrapRunner.sh" />
 	</ItemGroup>
 	<ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
-	  <PackageReference Include="KubernetesClient" Version="18.0.5" />
+	  <PackageReference Include="KubernetesClient" Version="18.0.13" />
 	</ItemGroup>
 	<ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
-	  <PackageReference Include="KubernetesClient" Version="18.0.5" />
+	  <PackageReference Include="KubernetesClient" Version="18.0.13" />
 	</ItemGroup>
 </Project>
