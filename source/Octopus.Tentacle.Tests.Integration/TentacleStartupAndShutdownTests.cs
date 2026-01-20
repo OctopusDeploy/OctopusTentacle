@@ -16,6 +16,7 @@ using Octopus.Tentacle.Tests.Integration.Util.Builders;
 namespace Octopus.Tentacle.Tests.Integration
 {
     [IntegrationTestTimeout]
+    [SkipOnEnvironmentsWithKnownPerformanceIssues("it relies on timing, which may be inconsistent within the environment")]
     public class TentacleStartupAndShutdownTests : IntegrationTest
     {
         [Test]

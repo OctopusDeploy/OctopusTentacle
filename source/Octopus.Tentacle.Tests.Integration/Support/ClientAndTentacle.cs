@@ -1,8 +1,10 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Halibut;
+using Octopus.Client.Extensions;
 using Octopus.Tentacle.Client;
 using Octopus.Tentacle.Client.Retries;
 using Octopus.Tentacle.CommonTestUtils;
@@ -53,6 +55,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         public async ValueTask DisposeAsync()
         {
+            
+            var driveInfos = DriveInfo.GetDrives().Where(d => d.IsReady);
+
+            logger.Information($"DisposeAsync() Available Disk space before starting: {driveInfos.Select(d => $"{d.Name}: {d.AvailableFreeSpace}").ToList().StringJoin(", ")}");
+            
             SafelyMoveTentacleLogFileToSharedLocation();
 
             var banner = new StringBuilder();

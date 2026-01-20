@@ -10,6 +10,7 @@ using Octopus.Tentacle.Util;
 namespace Octopus.Tentacle.Tests.Integration.Util
 {
     [TestFixture]
+    [SkipOnEnvironmentsWithKnownPerformanceIssues("it relies on timing, which may be inconsistent within the environment")]
     public class SilentProcessRunnerFixture : IntegrationTest
     {
         const int SIG_TERM = 143;

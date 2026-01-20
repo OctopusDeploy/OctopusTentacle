@@ -18,6 +18,7 @@ using Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators.Proxies;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods;
 using Octopus.Tentacle.Tests.Integration.Support.PendingRequestQueueFactories;
+using Octopus.Tentacle.Tests.Integration.Support.TestAttributes;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
 using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
@@ -32,6 +33,7 @@ namespace Octopus.Tentacle.Tests.Integration
     /// These tests make sure that we can cancel the ExecuteScript operation when using Tentacle Client with RPC retries enabled.
     /// </summary>
     [IntegrationTestTimeout]
+    [SkipOnEnvironmentsWithKnownPerformanceIssues("we keep facing issues with disk space running out")]
     public class ClientScriptExecutionCanBeCancelledWhenRetriesAreEnabled : IntegrationTest
     {
         [Test]
