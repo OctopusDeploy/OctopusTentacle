@@ -58,7 +58,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             var agentMetrics = Substitute.For<IKubernetesAgentMetrics>();
             agentMetrics.GetLatestEventTimestamp(Arg.Any<CancellationToken>()).ReturnsForAnyArgs(testEpoch);
             var eventService = Substitute.For<IKubernetesEventService>();
-            var sut = new KubernetesEventMonitor(agentMetrics, eventService, "arbitraryNamespace", new IEventMapper[]{new NfsPodRestarted(), new TentacleKilledEventMapper(), new NfsStaleEventMapper()}, log);
+            var sut = new KubernetesEventMonitor(agentMetrics, eventService, "arbitraryNamespace", new IEventMapper[] { new NfsPodRestarted(), new TentacleKilledEventMapper(), new NfsStaleEventMapper() }, log);
 
             await sut.CacheNewEvents(tokenSource.Token);
 
@@ -72,20 +72,23 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             var agentMetrics = new StubbedAgentMetrics(testEpoch);
             var eventService = Substitute.For<IKubernetesEventService>();
             eventService.FetchAllEventsAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).ReturnsForAnyArgs(
-                new Corev1EventList(new List<Corev1Event>
+                new Corev1EventList
                 {
-                    new()
+                    Items = new List<Corev1Event>
                     {
-                        Reason = "Killing",
-                        Metadata = new V1ObjectMeta()
+                        new()
                         {
-                            Name = "octopus-agent-nfs-123412-1234123",
-                        },
-                        FirstTimestamp = testEpoch.DateTime.AddMinutes(1),
-                        LastTimestamp = testEpoch.DateTime.AddMinutes(1)
+                            Reason = "Killing",
+                            Metadata = new V1ObjectMeta()
+                            {
+                                Name = "octopus-agent-nfs-123412-1234123",
+                            },
+                            FirstTimestamp = testEpoch.DateTime.AddMinutes(1),
+                            LastTimestamp = testEpoch.DateTime.AddMinutes(1)
+                        }
                     }
-                }));
-            var sut = new KubernetesEventMonitor(agentMetrics, eventService, "arbitraryNamespace", new IEventMapper[]{new NfsPodRestarted(), new TentacleKilledEventMapper(), new NfsStaleEventMapper()}, log);
+                });
+            var sut = new KubernetesEventMonitor(agentMetrics, eventService, "arbitraryNamespace", new IEventMapper[] { new NfsPodRestarted(), new TentacleKilledEventMapper(), new NfsStaleEventMapper() }, log);
 
             //Act
             await sut.CacheNewEvents(tokenSource.Token);
@@ -105,21 +108,24 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             var agentMetrics = new StubbedAgentMetrics(testEpoch);
             var eventService = Substitute.For<IKubernetesEventService>();
             eventService.FetchAllEventsAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).ReturnsForAnyArgs(
-                new Corev1EventList(new List<Corev1Event>
+                new Corev1EventList
                 {
-                    new()
+                    Items = new List<Corev1Event>
                     {
-                        Reason = "NfsWatchdogTimeout",
-                        Metadata = new V1ObjectMeta()
+                        new()
                         {
-                            Name = podName,
-                        },
-                        FirstTimestamp = testEpoch.DateTime.AddSeconds(1),
-                        LastTimestamp = testEpoch.DateTime.AddSeconds(1)
+                            Reason = "NfsWatchdogTimeout",
+                            Metadata = new V1ObjectMeta()
+                            {
+                                Name = podName,
+                            },
+                            FirstTimestamp = testEpoch.DateTime.AddSeconds(1),
+                            LastTimestamp = testEpoch.DateTime.AddSeconds(1)
+                        }
                     }
-                }));
+                });
 
-            var sut = new KubernetesEventMonitor(agentMetrics, eventService, "arbitraryNamespace", new IEventMapper[]{new NfsPodRestarted(), new TentacleKilledEventMapper(), new NfsStaleEventMapper()}, log);
+            var sut = new KubernetesEventMonitor(agentMetrics, eventService, "arbitraryNamespace", new IEventMapper[] { new NfsPodRestarted(), new TentacleKilledEventMapper(), new NfsStaleEventMapper() }, log);
 
             //Act
             await sut.CacheNewEvents(tokenSource.Token);
@@ -139,24 +145,27 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             var agentMetrics = new StubbedAgentMetrics(testEpoch);
             var eventService = Substitute.For<IKubernetesEventService>();
             eventService.FetchAllEventsAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).ReturnsForAnyArgs(
-                new Corev1EventList(new List<Corev1Event>
+                new Corev1EventList
                 {
-                    new()
+                    Items = new List<Corev1Event>
                     {
-                        Reason = "NfsWatchdogTimeout",
-                        Metadata = new V1ObjectMeta()
+                        new()
                         {
-                            Name = podName,
-                        },
-                        FirstTimestamp = testEpoch.DateTime,
-                        LastTimestamp = testEpoch.DateTime
+                            Reason = "NfsWatchdogTimeout",
+                            Metadata = new V1ObjectMeta()
+                            {
+                                Name = podName,
+                            },
+                            FirstTimestamp = testEpoch.DateTime,
+                            LastTimestamp = testEpoch.DateTime
+                        }
                     }
-                }));
-            
-            var sut = new KubernetesEventMonitor(agentMetrics, eventService, "arbitraryNamespace", new IEventMapper[]{new NfsPodRestarted(), new TentacleKilledEventMapper(), new NfsStaleEventMapper()}, log);
+                });
+
+            var sut = new KubernetesEventMonitor(agentMetrics, eventService, "arbitraryNamespace", new IEventMapper[] { new NfsPodRestarted(), new TentacleKilledEventMapper(), new NfsStaleEventMapper() }, log);
             //Act
             await sut.CacheNewEvents(tokenSource.Token);
-            
+
             //Assert
             agentMetrics.Events.Should().BeEquivalentTo(new Dictionary<string, Dictionary<string, List<DateTimeOffset>>>());
         }
@@ -169,25 +178,28 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             var agentMetrics = new StubbedAgentMetrics(testEpoch);
             var eventService = Substitute.For<IKubernetesEventService>();
             eventService.FetchAllEventsAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).ReturnsForAnyArgs(
-                new Corev1EventList(new List<Corev1Event>
+                new Corev1EventList
                 {
-                    new()
+                    Items = new List<Corev1Event>
                     {
-                        Reason = "NfsWatchdogTimeout",
-                        Metadata = new V1ObjectMeta()
+                        new()
                         {
-                            Name = podName,
-                        },
-                        FirstTimestamp = testEpoch.DateTime.AddMinutes(-2),
-                        LastTimestamp = testEpoch.DateTime.AddMinutes(-1),
-                        EventTime = testEpoch.DateTime.AddMinutes(1)
+                            Reason = "NfsWatchdogTimeout",
+                            Metadata = new V1ObjectMeta()
+                            {
+                                Name = podName,
+                            },
+                            FirstTimestamp = testEpoch.DateTime.AddMinutes(-2),
+                            LastTimestamp = testEpoch.DateTime.AddMinutes(-1),
+                            EventTime = testEpoch.DateTime.AddMinutes(1)
+                        }
                     }
-                }));
-            
-            var sut = new KubernetesEventMonitor(agentMetrics, eventService, "arbitraryNamespace", new IEventMapper[]{new NfsPodRestarted(), new TentacleKilledEventMapper(), new NfsStaleEventMapper()}, log);
+                });
+
+            var sut = new KubernetesEventMonitor(agentMetrics, eventService, "arbitraryNamespace", new IEventMapper[] { new NfsPodRestarted(), new TentacleKilledEventMapper(), new NfsStaleEventMapper() }, log);
             //Act
             await sut.CacheNewEvents(tokenSource.Token);
-            
+
             //Assert
             // The event.EventTime is newest event Time stamp, and is larger than the last metric date (TestEpoch) as such
             // the event should factored into the metrics, and should report this latest time value.

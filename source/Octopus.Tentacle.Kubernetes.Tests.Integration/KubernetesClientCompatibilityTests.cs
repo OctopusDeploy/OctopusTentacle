@@ -21,10 +21,10 @@ public class KubernetesClientCompatibilityTests
 {
     static readonly object[] TestClusterVersions =
     [
+        new object[] {new ClusterVersion(1, 35)},
+        new object[] {new ClusterVersion(1, 34)},
         new object[] {new ClusterVersion(1, 33)},
         new object[] {new ClusterVersion(1, 32)},
-        new object[] {new ClusterVersion(1, 31)},
-        new object[] {new ClusterVersion(1, 30)},
     ];
 
     KubernetesTestsGlobalContext? testContext;
