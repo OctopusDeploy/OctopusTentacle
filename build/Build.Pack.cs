@@ -476,7 +476,7 @@ partial class Build
 
             string ConstructRedHatPackageFilename(string packageName, string architecture)
             {
-                var transformedVersion = FullSemVer.Replace("-", "_");
+                var transformedVersion = FullSemVer; //.Replace("-", "_");
                 var filename = $"{packageName}-{transformedVersion}-1.{architecture}.rpm";
                 return filename;
             }
