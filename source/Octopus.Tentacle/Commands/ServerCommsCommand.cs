@@ -35,6 +35,8 @@ namespace Octopus.Tentacle.Commands
 
         protected override void Start()
         {
+            log.Info("Inside ServerCommsCommand Start().");
+
             var distinctTrustedThumbprints = tentacleConfiguration.Value.TrustedOctopusThumbprints.Distinct().ToArray();
             if (!distinctTrustedThumbprints.Any())
                 throw new ControlledFailureException("Before server communications can be modified, trust must be established with the configure command");

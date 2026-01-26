@@ -33,10 +33,12 @@ namespace Octopus.Tentacle.Startup
 
         protected override void Start()
         {
+            SystemLog.Info("Inside AbstractStandardCommand Start()");
             // These kinds of commands depend on being able to load the correct instance
             // We need to assert the current instance can be loaded otherwise the rest of the command won't work as expected
             // NOTE: This method should throw a ControlledFailureException with the most appropriate message inside it
             var unused = instanceSelector.Current.InstanceName;
+            SystemLog.Info("Finished AbstractStandardCommand Start()");
         }
 
         protected override void Completed()

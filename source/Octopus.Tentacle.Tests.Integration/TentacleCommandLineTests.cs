@@ -351,7 +351,7 @@ The details are logged above. These commands probably need to take Lazy<T> depen
         [NonParallelizable]
         public async Task ShowThumbprintCommandText(TentacleConfigurationTestCase tc)
         {
-            await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
+            var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
             await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
             var (exitCode, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
                 tc, 
@@ -369,7 +369,7 @@ The details are logged above. These commands probably need to take Lazy<T> depen
         [NonParallelizable]
         public async Task ShowThumbprintCommandJson(TentacleConfigurationTestCase tc)
         {
-            await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
+            var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
             await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
             var (exitCode, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
                 tc, 
@@ -387,17 +387,33 @@ The details are logged above. These commands probably need to take Lazy<T> depen
         [NonParallelizable]
         public async Task ListInstancesCommandText(TentacleConfigurationTestCase tc)
         {
-            await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
-            await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
-            var (exitCode, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
-                tc, 
-                clientAndTentacle.RunningTentacle.RunTentacleEnvironmentVariables, 
-                "list-instances", "--format=text");
+            Logger.Information("Inside ListInstancesCommandText");
+
+            var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
             
-            exitCode.Should().Be(0, $"we expected the command to succeed.\r\nStdErr: '{stderr}'\r\nStdOut: '{stdout}'");
-            var configPath = Path.Combine(clientAndTentacle.RunningTentacle.HomeDirectory, clientAndTentacle.RunningTentacle.InstanceName + ".cfg");
-            stdout.Should().Contain($"Instance '{clientAndTentacle.RunningTentacle.InstanceName}' uses configuration '{configPath}'.", "the current instance should be listed");
-            stderr.Should().BeNullOrEmpty();
+                Logger.Information("Opened clientAndTentacle. Going to call stop on apparently running tentacle");
+
+                await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
+                
+                Logger.Information("Finished stopping apparently running tentacle");
+
+                Logger.Information("Listing instances");
+                var (exitCode, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
+                    tc,
+                    clientAndTentacle.RunningTentacle.RunTentacleEnvironmentVariables,
+                    "list-instances", "--format=text");
+
+                Logger.Information("Finished Listing instances");
+
+                exitCode.Should().Be(0, $"we expected the command to succeed.\r\nStdErr: '{stderr}'\r\nStdOut: '{stdout}'");
+                var configPath = Path.Combine(clientAndTentacle.RunningTentacle.HomeDirectory, clientAndTentacle.RunningTentacle.InstanceName + ".cfg");
+                stdout.Should().Contain($"Instance '{clientAndTentacle.RunningTentacle.InstanceName}' uses configuration '{configPath}'.", "the current instance should be listed");
+                stderr.Should().BeNullOrEmpty();
+                Logger.Information("Done with  clientAndTentacle. Going to dispose soon");
+
+                await clientAndTentacle.DisposeAsync();
+            Logger.Information("Finished Disposing clientAndTentacle");
+
         }
 
         [Test]
@@ -406,7 +422,7 @@ The details are logged above. These commands probably need to take Lazy<T> depen
         [NonParallelizable]
         public async Task ListInstancesCommandJson(TentacleConfigurationTestCase tc)
         {
-            await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
+            var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
             await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
                 tc, 
@@ -426,7 +442,7 @@ The details are logged above. These commands probably need to take Lazy<T> depen
         [NonParallelizable]
         public async Task ShouldLogStartupDiagnosticsToInstanceLogFileOnly(TentacleConfigurationTestCase tc)
         {
-            await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
+            var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
             await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
 
             var startingLogText = clientAndTentacle.RunningTentacle.ReadAllLogFileText();
@@ -520,7 +536,7 @@ Or one of the common options:
         [NonParallelizable]
         public async Task ShowConfigurationCommand(TentacleConfigurationTestCase tc)
         {
-            await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
+            var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
             await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
                 tc, 
@@ -571,7 +587,7 @@ Or one of the common options:
         [NonParallelizable]
         public async Task ShowConfigurationCommandLooksSensibleToHumans(TentacleConfigurationTestCase tc)
         {
-            await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
+            var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
             await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(
                 tc, 
@@ -663,7 +679,7 @@ Or one of the common options:
         [NonParallelizable]
         public async Task WatchdogCreateAndDeleteCommand(TentacleConfigurationTestCase tc)
         {
-            await using var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
+            var clientAndTentacle = await tc.CreateBuilder().Build(CancellationToken);
             await clientAndTentacle.RunningTentacle.Stop(CancellationToken);
             var create = await RunCommandAndAssertExitsWithSuccessExitCode(
                 tc, 
@@ -723,18 +739,58 @@ Or one of the common options:
                 environmentVariablesToRunTentacleWith.Add(EnvironmentVariables.TentacleMachineConfigurationHomeDirectory, tempDirectory.DirectoryPath);
             }
 
+            if (arguments is not null)
+            {
+                Logger.Information($"Going to call Cli.Wrap ...");
+            }
+
             var tentacleExe = TentacleExeFinder.FindTentacleExe(tentacleConfigurationTestCase.TentacleRuntime);
             var output = new StringBuilder();
             var errorOut = new StringBuilder();
-            
-            var result = await RetryHelper.RetryAsync<CommandResult, CommandExecutionException>(
-                () => Cli.Wrap(tentacleExe)
-                    .WithArguments(arguments)
-                    .WithValidation(CommandResultValidation.None)
-                    .WithStandardOutputPipe(PipeTarget.ToStringBuilder(output))
-                    .WithStandardErrorPipe(PipeTarget.ToStringBuilder(errorOut))
-                    .WithEnvironmentVariables(environmentVariablesToRunTentacleWith)
-                    .ExecuteAsync(CancellationToken));
+
+            // if (arguments is not null)
+            // {
+            //     Logger.Information($"Going to call Cli.Wrap ... with exe: {tentacleExe}");
+            //     foreach (var argument in arguments)
+            //     {
+            //         Logger.Information($" ... with argument: {argument}");
+            //     }
+            //     Logger.Information($"----");
+            // }
+
+            var result = await RetryHelper.RetryAsync<CommandResult, CommandExecutionException>(async () =>
+                {
+                    if (arguments is not null)
+                    {
+                        Logger.Information($"Going to call Cli.Wrap with exe: {tentacleExe}");
+                        foreach (var argument in arguments)
+                        {
+                            Logger.Information($" ... with argument: {argument}");
+                        }
+                        Logger.Information($"----");
+                    }
+                    
+                    try
+                    {
+                        var command = Cli.Wrap(tentacleExe)
+                            .WithArguments(arguments)
+                            .WithValidation(CommandResultValidation.None)
+                            .WithStandardOutputPipe(PipeTarget.ToStringBuilder(output))
+                            .WithStandardErrorPipe(PipeTarget.ToStringBuilder(errorOut))
+                            .WithEnvironmentVariables(environmentVariablesToRunTentacleWith);
+                        
+                        Logger.Information($"Going to call Cli.Wrap with exe - in try");
+                        var result = await command.ExecuteAsync(CancellationToken);
+                        Logger.Information($"Finished calling Cli.Wrap with exe - in try");
+                        return result;
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Information($"Cli.Wrap(tentacleExe threw an exception:{e.Message}: {e.StackTrace}");
+                        throw;
+                    }
+                    
+                });
 
             return (result.ExitCode, output.ToString(), errorOut.ToString());
         }
