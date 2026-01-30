@@ -1,4 +1,4 @@
-* @OctopusDeploy/team-server-at-scale
+* @OctopusDeploy/team-executions-foundations
 
 # The Kubernetes parts of Tentacle are owned by Modern Deployments
 /docker/kubernetes-agent-tentacle/ @OctopusDeploy/team-modern-deployments
