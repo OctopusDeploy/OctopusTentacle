@@ -36,7 +36,7 @@ module.exports = {
 
   platform: 'github',
   repositories: ['OctopusDeploy/OctopusTentacle'],
-  reviewers: ['OctopusDeploy/team-server-at-scale'],
+  reviewers: ['OctopusDeploy/team-executions-foundations'],
   labels: ['dependencies', 'Tentacle'],
   branchPrefix: 'renovate-dotnet/',
 
