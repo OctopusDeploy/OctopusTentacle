@@ -7,7 +7,7 @@ using Halibut.ServiceModel;
 using Halibut.Transport;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Contracts.Legacy;
-using Octopus.Tentacle.Variables;
+using Octopus.Tentacle.Core.Util;
 
 namespace Octopus.Tentacle.Communications
 {

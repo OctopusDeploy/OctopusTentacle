@@ -14,10 +14,10 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using Octopus.Tentacle.CommonTestUtils;
+using Octopus.Tentacle.Core.Util;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.TestAttributes;
 using Octopus.Tentacle.Util;
-using Octopus.Tentacle.Variables;
 using Polly;
 using PlatformDetection = Octopus.Tentacle.Util.PlatformDetection;
 

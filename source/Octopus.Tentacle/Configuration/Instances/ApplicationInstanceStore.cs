@@ -4,8 +4,8 @@ using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
 using Octopus.Tentacle.Core.Diagnostics;
+using Octopus.Tentacle.Core.Util;
 using Octopus.Tentacle.Util;
-using Octopus.Tentacle.Variables;
 
 namespace Octopus.Tentacle.Configuration.Instances
 {

@@ -10,11 +10,11 @@ using Octopus.Tentacle.Communications;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Core.Diagnostics;
+using Octopus.Tentacle.Core.Util;
 using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Maintenance;
 using Octopus.Tentacle.Startup;
 using Octopus.Tentacle.Util;
-using Octopus.Tentacle.Variables;
 using Octopus.Tentacle.Versioning;
 using Octopus.Time;
 
@@ -100,7 +100,9 @@ namespace Octopus.Tentacle.Commands
                 return;
             }
 
-            Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleHome, home.Value.HomeDirectory);
+            var tentacleHomeEnvVar = EnvironmentVariables.CreateTentacleHomeEnvironmentVariable(home.Value);
+            Environment.SetEnvironmentVariable(tentacleHomeEnvVar.Key, tentacleHomeEnvVar.Value);
+            
             Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleApplications, configuration.Value.ApplicationDirectory);
             Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleJournal, configuration.Value.JournalFilePath);
             Environment.SetEnvironmentVariable(EnvironmentVariables.CalamariPackageRetentionJournalPath, configuration.Value.PackageRetentionJournalPath);

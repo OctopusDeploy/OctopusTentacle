@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using Octopus.Tentacle.Core.Configuration;
 
-namespace Octopus.Tentacle.Variables
+namespace Octopus.Tentacle.Core.Util
 {
     public static class EnvironmentVariables
     {
@@ -28,5 +30,11 @@ namespace Octopus.Tentacle.Variables
         public static string TentacleUseTcpNoDelay = "TentacleUseTcpNoDelay";
         public static string TentacleUseAsyncListener = "TentacleUseAsyncListener";
         public static string DefaultLogDirectory = "DefaultLogDirectory";
+
+
+        public static TentacleEnvironmentVariable CreateTentacleHomeEnvironmentVariable(IHomeDirectoryProvider homeDirectoryProvider)
+        {
+            return new TentacleEnvironmentVariable(TentacleHome, homeDirectoryProvider.HomeDirectory);
+        }
     }
 }
