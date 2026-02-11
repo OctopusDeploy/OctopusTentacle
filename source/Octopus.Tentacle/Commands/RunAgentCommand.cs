@@ -11,8 +11,6 @@ using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Core.Util;
-using Octopus.Tentacle.Kubernetes;
-using Octopus.Tentacle.Maintenance;
 using Octopus.Tentacle.Startup;
 using Octopus.Tentacle.Util;
 using Octopus.Tentacle.Versioning;
