@@ -3,6 +3,7 @@ using Autofac;
 using Octopus.Tentacle.Configuration.Crypto;
 using Octopus.Tentacle.Configuration.EnvironmentVariableMappings;
 using Octopus.Tentacle.Configuration.Instances;
+using Octopus.Tentacle.Core.Configuration;
 using Octopus.Tentacle.Kubernetes.Configuration;
 using Octopus.Tentacle.Kubernetes.Crypto;
 using Octopus.Tentacle.Startup;

@@ -8,20 +8,15 @@ namespace Octopus.Tentacle.Configuration
     {
         internal const string OctopusHomeSettingName = "Octopus.Home";
         internal const string OctopusNodeCacheSettingName = "Octopus.Node.Cache";
-
-        readonly ApplicationName application;
+        
         readonly IKeyValueStore? settings;
         readonly IApplicationInstanceSelector applicationInstanceSelector;
 
-        public HomeConfiguration(ApplicationName application,
-            IApplicationInstanceSelector applicationInstanceSelector)
+        public HomeConfiguration(IApplicationInstanceSelector applicationInstanceSelector)
         {
-            this.application = application;
             settings = applicationInstanceSelector.Current.Configuration;
             this.applicationInstanceSelector = applicationInstanceSelector;
         }
-
-        public string? ApplicationSpecificHomeDirectory => HomeDirectory == null ? null : Path.Combine(HomeDirectory, application.ToString());
 
         public string? HomeDirectory
         {
@@ -67,7 +62,7 @@ namespace Octopus.Tentacle.Configuration
     {
         readonly IWritableKeyValueStore? settings;
 
-        public WritableHomeConfiguration(ApplicationName application, IApplicationInstanceSelector applicationInstanceSelector, IWritableKeyValueStore? writableConfiguration = null) : base(application, applicationInstanceSelector)
+        public WritableHomeConfiguration(IApplicationInstanceSelector applicationInstanceSelector, IWritableKeyValueStore? writableConfiguration = null) : base(applicationInstanceSelector)
         {
             settings = writableConfiguration ?? applicationInstanceSelector.Current.WritableConfiguration;
         }

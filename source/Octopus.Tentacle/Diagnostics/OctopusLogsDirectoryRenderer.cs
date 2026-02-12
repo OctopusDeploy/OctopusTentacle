@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using NLog;
 using NLog.LayoutRenderers;
-using Octopus.Tentacle.Variables;
+using Octopus.Tentacle.Core.Util;
 
 namespace Octopus.Tentacle.Diagnostics
 {

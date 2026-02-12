@@ -3,9 +3,9 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
-using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Services.FileTransfer;
+using Octopus.Tentacle.Core.Configuration;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Util;
 

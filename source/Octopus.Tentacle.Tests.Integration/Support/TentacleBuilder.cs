@@ -17,8 +17,8 @@ using Nito.AsyncEx.Interop;
 using NUnit.Framework;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Core.Util;
 using Octopus.Tentacle.Tests.Integration.Util;
-using Octopus.Tentacle.Variables;
 using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
