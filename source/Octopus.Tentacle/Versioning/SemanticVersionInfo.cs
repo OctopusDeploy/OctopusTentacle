@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
-using NuGet.Versioning;
+using Octopus.Versioning;
+using Octopus.Versioning.Semver;
 
 namespace Octopus.Tentacle.Versioning
 {
@@ -11,7 +12,7 @@ namespace Octopus.Tentacle.Versioning
     {
         public SemanticVersionInfo(Assembly assembly)
         {
-            SemanticVersion = SemanticVersion.Parse(assembly.GetInformationalVersion() ?? "0.0.0");
+            SemanticVersion = SemVerFactory.Parse(assembly.GetInformationalVersion() ?? "0.0.0");
             MajorMinorPatch = SemanticVersion.ToString("V", new VersionFormatter());
             BranchName = assembly.GetCustomAttribute<AssemblyGitBranchAttribute>()!.BranchName;
             NuGetVersion = assembly.GetCustomAttribute<AssemblyNuGetVersionAttribute>()!.NuGetVersion;
