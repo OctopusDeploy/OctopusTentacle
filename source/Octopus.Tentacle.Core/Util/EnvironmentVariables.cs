@@ -1,5 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Runtime.InteropServices;
 using Octopus.Tentacle.Core.Configuration;
 
 namespace Octopus.Tentacle.Core.Util
@@ -35,6 +37,98 @@ namespace Octopus.Tentacle.Core.Util
         public static TentacleEnvironmentVariable CreateTentacleHomeEnvironmentVariable(IHomeDirectoryProvider homeDirectoryProvider)
         {
             return new TentacleEnvironmentVariable(TentacleHome, homeDirectoryProvider.HomeDirectory);
+        }
+
+        /// <summary>
+        /// Gets the file where deployment entries should be added.
+        /// </summary>
+        public static TentacleEnvironmentVariable JournalPathEnvVar(IHomeDirectoryProvider home, Func<string> alternateHomeDir)
+        {
+            var homeDir = home.HomeDirectory ?? alternateHomeDir();
+            var journalPath = Path.Combine(homeDir, "DeploymentJournal.xml");
+            return new TentacleEnvironmentVariable(TentacleJournal, journalPath);
+        }
+
+        /// <summary>
+        /// Gets the file where package usages should be stored.
+        /// </summary>
+        public static TentacleEnvironmentVariable PackageRetentionJournalPathEnvVar(IHomeDirectoryProvider home, Func<string> alternateHomeDir)
+        {
+            var homeDir = home.HomeDirectory ?? alternateHomeDir();
+            var packageRetentionJournalPath = Path.Combine(homeDir, "PackageRetentionJournal.json");
+            return new TentacleEnvironmentVariable(CalamariPackageRetentionJournalPath, packageRetentionJournalPath);
+        }
+
+        /// <summary>
+        /// Gets the environment variables for the Tentacle executable paths.
+        /// </summary>
+        public static IEnumerable<TentacleEnvironmentVariable> TentacleExecutablePathEnvVars(string exePath)
+        {
+            var programDirectory = Path.GetDirectoryName(exePath);
+            return new[]
+            {
+                new TentacleEnvironmentVariable(TentacleExecutablePath, exePath),
+                new TentacleEnvironmentVariable(TentacleProgramDirectoryPath, programDirectory),
+                new TentacleEnvironmentVariable(AgentProgramDirectoryPath, programDirectory)
+            };
+        }
+
+        /// <summary>
+        /// Gets the environment variable for the .NET Framework description.
+        /// </summary>
+        public static TentacleEnvironmentVariable TentacleNetFrameworkDescriptionEnvVar()
+        {
+            return new TentacleEnvironmentVariable(TentacleNetFrameworkDescription, RuntimeInformation.FrameworkDescription);
+        }
+
+        /// <summary>
+        /// Gets the environment variable for the Tentacle applications directory.
+        /// </summary>
+        public static TentacleEnvironmentVariable TentacleApplicationsEnvVar(string applicationDirectory)
+        {
+            return new TentacleEnvironmentVariable(TentacleApplications, applicationDirectory);
+        }
+
+        /// <summary>
+        /// Gets the environment variable for the Tentacle instance name.
+        /// </summary>
+        public static TentacleEnvironmentVariable TentacleInstanceNameEnvVar(string? instanceName)
+        {
+            return new TentacleEnvironmentVariable(TentacleInstanceName, instanceName);
+        }
+
+        /// <summary>
+        /// Gets the environment variable for the Tentacle version.
+        /// </summary>
+        public static TentacleEnvironmentVariable TentacleVersionEnvVar(string version)
+        {
+            return new TentacleEnvironmentVariable(TentacleVersion, version);
+        }
+
+        /// <summary>
+        /// Gets most environment variables for scripts.
+        /// This will be enough for running a Tentacle in testing.
+        /// </summary>
+        public static List<TentacleEnvironmentVariable> EnvironmentVariablesForScripts(
+            IHomeDirectoryProvider home,
+            Func<string> alternateHomeDir,
+            string applicationDirectory,
+            string? instanceName,
+            string exePath,
+            string version)
+        {
+            var envVars = new List<TentacleEnvironmentVariable>
+            {
+                CreateTentacleHomeEnvironmentVariable(home),
+                TentacleApplicationsEnvVar(applicationDirectory),
+                JournalPathEnvVar(home, alternateHomeDir),
+                PackageRetentionJournalPathEnvVar(home, alternateHomeDir),
+                TentacleInstanceNameEnvVar(instanceName),
+                TentacleVersionEnvVar(version),
+                TentacleNetFrameworkDescriptionEnvVar()
+            };
+            envVars.AddRange(TentacleExecutablePathEnvVars(exePath));
+            return envVars;
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -98,22 +98,24 @@ namespace Octopus.Tentacle.Commands
                 return;
             }
 
-            var tentacleHomeEnvVar = EnvironmentVariables.CreateTentacleHomeEnvironmentVariable(home.Value);
-            Environment.SetEnvironmentVariable(tentacleHomeEnvVar.Key, tentacleHomeEnvVar.Value);
-            
-            Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleApplications, configuration.Value.ApplicationDirectory);
-            Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleJournal, configuration.Value.JournalFilePath);
-            Environment.SetEnvironmentVariable(EnvironmentVariables.CalamariPackageRetentionJournalPath, configuration.Value.PackageRetentionJournalPath);
-            Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleInstanceName, selector.Current.InstanceName);
             var currentPath = typeof(RunAgentCommand).Assembly.FullLocalPath();
             var exePath = PlatformDetection.IsRunningOnWindows
                 ? Path.ChangeExtension(currentPath, "exe")
                 : Path.Combine(Path.GetDirectoryName(currentPath) ?? string.Empty, Path.GetFileNameWithoutExtension(currentPath) ?? string.Empty);
-            Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleExecutablePath, exePath);
-            Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleProgramDirectoryPath, Path.GetDirectoryName(exePath));
-            Environment.SetEnvironmentVariable(EnvironmentVariables.AgentProgramDirectoryPath, Path.GetDirectoryName(exePath));
-            Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleVersion, appVersion.ToString());
-            Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleNetFrameworkDescription, RuntimeInformation.FrameworkDescription);
+
+            var tentacleEnvironmentVariables = EnvironmentVariables.EnvironmentVariablesForScripts(
+                home: home.Value,
+                alternateHomeDir: () => ".",
+                applicationDirectory: configuration.Value.ApplicationDirectory,
+                instanceName: selector.Current.InstanceName,
+                exePath: exePath,
+                version: appVersion.ToString());
+
+            foreach (var envVar in tentacleEnvironmentVariables)
+            {
+                Environment.SetEnvironmentVariable(envVar.Key, envVar.Value);
+            }
+
             if (configuration.Value.TentacleCertificate != null)
                 Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleCertificateSignatureAlgorithm, configuration.Value.TentacleCertificate.SignatureAlgorithm.FriendlyName);
             Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleUseDefaultProxy, proxyConfiguration.Value.UseDefaultProxy.ToString());
