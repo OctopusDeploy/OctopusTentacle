@@ -43,16 +43,6 @@ namespace Octopus.Tentacle.Configuration
         string PackagesDirectory { get; }
 
         /// <summary>
-        /// Gets the file where deployment entries should be added.
-        /// </summary>
-        string JournalFilePath { get; }
-
-        /// <summary>
-        /// Gets the file where package usages should be stored.
-        /// </summary>
-        string PackageRetentionJournalPath { get; }
-
-        /// <summary>
         /// Gets or sets the X509 certificate used by the Tentacle.
         /// </summary>
         X509Certificate2? TentacleCertificate { get; }
