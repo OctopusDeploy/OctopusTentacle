@@ -67,7 +67,7 @@ namespace Octopus.Tentacle.Client.Scripts
         
         public async Task<ScriptOperationExecutionResult> StartScript(ExecuteScriptCommand executeScriptCommand,
             StartScriptIsBeingReAttempted startScriptIsBeingReAttempted,
-            CancellationToken scriptExecutionCancellationToken)
+            CancellationToken requestCancellationToken)
         {
             var command = Map(executeScriptCommand);
             ScriptStatusResponseV2 scriptStatusResponse;
@@ -98,11 +98,11 @@ namespace Octopus.Tentacle.Client.Scripts
                     OnErrorAction,
                     logger,
                     clientOperationMetricsBuilder,
-                    scriptExecutionCancellationToken).ConfigureAwait(false);
+                    requestCancellationToken).ConfigureAwait(false);
 
                 return Map(scriptStatusResponse);
             }
-            catch (Exception ex) when (scriptExecutionCancellationToken.IsCancellationRequested)
+            catch (Exception ex) when (requestCancellationToken.IsCancellationRequested)
             {
                 // If the call to StartScript is in-flight (being transferred to the Service) or we are retrying the StartScript call
                 // then we do not know if the script has been started or not on Tentacle so need to call CancelScript and CompleteScript
@@ -126,7 +126,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
         
 
-        public async Task<ScriptOperationExecutionResult> GetStatus(CommandContext commandContext, CancellationToken scriptExecutionCancellationToken)
+        public async Task<ScriptOperationExecutionResult> GetStatus(CommandContext commandContext, CancellationToken requestCancellationToken)
         {
             using var activity = TentacleClient.ActivitySource.StartActivity($"{nameof(ScriptServiceV2Executor)}.{nameof(GetStatus)}");
             async Task<ScriptStatusResponseV2> GetStatusAction(CancellationToken ct)
@@ -143,11 +143,11 @@ namespace Octopus.Tentacle.Client.Scripts
                 GetStatusAction,
                 logger,
                 clientOperationMetricsBuilder,
-                scriptExecutionCancellationToken).ConfigureAwait(false);
+                requestCancellationToken).ConfigureAwait(false);
             return Map(scriptStatusResponseV2);
         }
 
-        public async Task<ScriptOperationExecutionResult> CancelScript(CommandContext commandContext)
+        public async Task<ScriptOperationExecutionResult> CancelScript(CommandContext commandContext, CancellationToken requestCancellationToken)
         {
             using var activity = TentacleClient.ActivitySource.StartActivity($"{nameof(ScriptServiceV2Executor)}.{nameof(CancelScript)}");
             async Task<ScriptStatusResponseV2> CancelScriptAction(CancellationToken ct)
@@ -168,12 +168,11 @@ namespace Octopus.Tentacle.Client.Scripts
                 CancelScriptAction,
                 logger,
                 clientOperationMetricsBuilder,
-                // We don't want to cancel this operation as it is responsible for stopping the script executing on the Tentacle
-                CancellationToken.None).ConfigureAwait(false);
+                requestCancellationToken).ConfigureAwait(false);
             return Map(scriptStatusResponseV2);
         }
 
-        public async Task<ScriptStatus?> CompleteScript(CommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
+        public async Task<ScriptStatus?> CompleteScript(CommandContext lastStatusResponse, CancellationToken requestCancellationToken)
         {
             using var activity = TentacleClient.ActivitySource.StartActivity($"{nameof(ScriptServiceV2Executor)}.{nameof(CompleteScript)}");
             try
@@ -183,7 +182,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
                 using var completeScriptCancellationTokenSource = new CancellationTokenSource();
 
-                await using var _ = scriptExecutionCancellationToken.Register(() => completeScriptCancellationTokenSource.CancelAfter(onCancellationAbandonCompleteScriptAfter));
+                await using var _ = requestCancellationToken.Register(() => completeScriptCancellationTokenSource.CancelAfter(onCancellationAbandonCompleteScriptAfter));
 
                 await rpcCallExecutor.ExecuteWithNoRetries(
                         RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.CompleteScript)),
