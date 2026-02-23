@@ -56,14 +56,8 @@ public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrati
         result.ExitCode.Should().Be(0);
         result.State.Should().Be(ProcessState.Complete);
 
-        // re: flaky: "An error occurred communicating with Tentacle.
-        //            This action will be retried after 1 second.
-        //            Retry attempt 1.
-        //            Retries will be performed for up to 89 seconds."
-        // Note: Occasionally we see that communication with Tentacle gets interrupted,
-        //       and Tentacle does what it _should_ do (I think) and reconnects and restarts the script.
-        // Action: This seems like what you would want to happen,
-        //         so I've updated this assertion to: BeGreaterThanOrEqualTo(1).
+        // We occasionally see that communication with Tentacle gets interrupted, causing Tentacle to reconnect and restart the script.
+        // This could therefore happen more than once, which this assertion supports.
         recordedMethodUsages.For(nameof(IAsyncClientKubernetesScriptServiceV1.StartScriptAsync)).Started.Should().BeGreaterThanOrEqualTo(1);
         
         recordedMethodUsages.For(nameof(IAsyncClientKubernetesScriptServiceV1.GetStatusAsync)).Started.Should().BeGreaterThan(1);
