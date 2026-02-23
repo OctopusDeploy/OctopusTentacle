@@ -179,7 +179,8 @@ namespace Octopus.Tentacle.Kubernetes
 
             LogVerboseToBothLogs($"Creating Kubernetes Pod '{podName}'.", tentacleScriptLog);
 
-            workspace.CopyFile(KubernetesConfig.BootstrapRunnerExecutablePath, "bootstrapRunner", true);
+            workspace.CopyFile($"{KubernetesConfig.BootstrapRunnerExecutablePath}-amd64", "bootstrapRunner-amd64", true);
+            workspace.CopyFile($"{KubernetesConfig.BootstrapRunnerExecutablePath}-arm64", "bootstrapRunner-arm64", true);
 
             var scriptName = Path.GetFileName(workspace.BootstrapScriptFilePath);
             var workspacePath = Path.Combine("Work", workspace.ScriptTicket.TaskId);
@@ -293,7 +294,7 @@ namespace Octopus.Tentacle.Kubernetes
 
             var commandString = string.Join(" ", new[]
                 {
-                    $"{homeDir}/Work/{command.ScriptTicket.TaskId}/bootstrapRunner",
+                    $"{homeDir}/Work/{command.ScriptTicket.TaskId}/bootstrapRunner-$(arch | sed -n '/arm/ {{s/.*arm.*/arm/;p;q}}; $a\\amd64')",
                     Path.Combine(homeDir, workspacePath),
                     Path.Combine(homeDir, workspacePath, scriptName)
                 }.Concat(scriptArguments ?? Array.Empty<string>())
