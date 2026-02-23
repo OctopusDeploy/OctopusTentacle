@@ -38,7 +38,7 @@ namespace Octopus.Tentacle.Kubernetes
         public async Task CacheNewEvents(CancellationToken cancellationToken)
         {
             log.Info($"Parsing kubernetes event list for namespace {kubernetesNamespace}.");
-            var allEvents = await eventService.FetchAllEventsAsync(kubernetesNamespace, cancellationToken) ?? new Corev1EventList(new List<Corev1Event>());
+            var allEvents = await eventService.FetchAllEventsAsync(kubernetesNamespace, cancellationToken) ?? new  Corev1EventList { Items = new List<Corev1Event>()};
 
             var lastCachedEventTimeStamp = await agentMetrics.GetLatestEventTimestamp(cancellationToken);
 
@@ -49,7 +49,7 @@ namespace Octopus.Tentacle.Kubernetes
             }).ToImmutableList();
             
             log.Info($"Found {unseenEvents.Count} events since last logged event {lastCachedEventTimeStamp:O}");
-            int trackedEventCount = 0;
+            var trackedEventCount = 0;
             foreach (var kEvent in unseenEvents)
             {
                 var result = MapToRecordableMetric(kEvent);
