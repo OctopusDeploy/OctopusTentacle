@@ -14,9 +14,9 @@ using Serilog;
 
 partial class Build
 {
-    [ParameterFromPasswordStore(Name = "DEPENDENCY_TRACK_URL", SecretReference = "op://Tentacle Secrets for Tests/Dependency Track SBOM API/hostname")] 
+    [ParameterFromPasswordStore(Name = "DEPENDENCY_TRACK_URL", SecretReference = "op://Tentacle Secrets for Tests/Dependency Track API/hostname")] 
     readonly string? DependencyTrackUrl;
-    [ParameterFromPasswordStore(Name = "DEPENDENCY_TRACK_API_KEY", SecretReference = "op://Tentacle Secrets for Tests/Dependency Track SBOM API/credential"), Secret] 
+    [ParameterFromPasswordStore(Name = "DEPENDENCY_TRACK_API_KEY", SecretReference = "op://Tentacle Secrets for Tests/Dependency Track API/credential"), Secret] 
     readonly string? DependencyTrackApiKey;
     
     readonly List<string> ContainersWeHaveCreated = new();
