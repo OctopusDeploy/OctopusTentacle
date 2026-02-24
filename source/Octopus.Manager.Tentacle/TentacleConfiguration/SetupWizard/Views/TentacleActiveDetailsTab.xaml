@@ -56,6 +56,7 @@
                             <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Choose at least one environment for the deployment target." FontSize="10"/>
 
                             <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialRoles}" SelectedTags="{Binding SelectedRoles}" TagName="roles" HorizontalAlignment="Stretch" CanCreateNewTags="True" Margin="0,10,0,5"/>
+                            <TextBlock Text="{Binding Path=RoleSelectionError}" TextWrapping="Wrap" Foreground="Red" FontSize="11" Visibility="{Binding Path=RoleSelectionError, Converter={StaticResource Converter.StringToVisibilityConverter}}" Margin="0,0,0,5"/>
                             <controls:ErrorMessage ErrorPath="SelectedRoles" />
                             <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Choose at least one role that this deployment target will provide." FontSize="10" HorizontalAlignment="Stretch" />
                             <Expander Padding="0" Header="Tenants" Style="{StaticResource CustomMaterialDesignExpander}" IsExpanded="{Binding AreTenantsAvailable}" Visibility="{Binding Path=AreTenantsSupported, Converter={StaticResource Converter.BooleanToVisibilityConverter}}" Background="White" Margin="0,20,0,0">

@@ -50,6 +50,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         bool isSpaceDataLoaded;
         bool isLoadingSpaceData;
         string spaceDataLoadError;
+        string roleSelectionError;
         string selectedMachinePolicy;
         string selectedSpace;
         string[] potentialEnvironments;
@@ -75,6 +76,8 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         bool areSpacesSupported;
         bool areWorkersSupported;
         string currentUserId;
+        TagSetResource[] targetTagSets;
+        Dictionary<string, (string tagSetId, string tagSetType)> roleToTagSetMap;
 
         public SetupTentacleWizardModel(
             InstanceSelectionModel instanceSelectionModel,
@@ -96,6 +99,8 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             SelectedTenants = new ObservableCollection<string>();
             SelectedTenantTags = new ObservableCollection<string>();
             SelectedWorkerPools = new ObservableCollection<string>();
+
+            SelectedRoles.CollectionChanged += SelectedRoles_CollectionChanged;
 
             this.applicationName = ApplicationName.Tentacle;
             this.ProxyWizardModel = new PollingProxyWizardModel(instanceSelectionModel);
@@ -564,6 +569,17 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             }
         }
 
+        public string RoleSelectionError
+        {
+            get => roleSelectionError;
+            set
+            {
+                if (value == roleSelectionError) return;
+                roleSelectionError = value;
+                OnPropertyChanged();
+            }
+        }
+
         public bool IsNextEnabled => !IsLoadingSpaceData && string.IsNullOrEmpty(SpaceDataLoadError);
 
         public IEnumerable<OctoService> Services
@@ -763,6 +779,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             UpdateWorkerPools();
             UpdateTenants();
             UpdateMachinePolicies();
+            UpdateTargetTagSets();
 
             void UpdateRoles() => PotentialRoles = spaceSpecificData.RoleNames.ToArray();
 
@@ -809,6 +826,66 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             {
                 var potentialValuesSet = new HashSet<string>(potentialValues, StringComparer.Ordinal);
                 selectedCollection.RemoveWhere(v => !potentialValuesSet.Contains(v));
+            }
+
+            void UpdateTargetTagSets()
+            {
+                try
+                {
+                    if (spaceSpecificData?.TargetTagSets == null)
+                    {
+                        targetTagSets = null;
+                        roleToTagSetMap = null;
+                        return;
+                    }
+
+                    targetTagSets = spaceSpecificData.TargetTagSets.ToArray();
+                    BuildRoleToTagSetMap();
+                    UpdatePotentialRolesWithTagSets();
+                }
+                catch
+                {
+                    targetTagSets = null;
+                    roleToTagSetMap = null;
+                }
+            }
+        }
+
+        void BuildRoleToTagSetMap()
+        {
+            roleToTagSetMap = new Dictionary<string, (string tagSetId, string tagSetType)>(StringComparer.OrdinalIgnoreCase);
+
+            if (targetTagSets == null) return;
+
+            foreach (var tagSet in targetTagSets)
+            {
+                if (tagSet?.Tags == null) continue;
+
+                foreach (var tag in tagSet.Tags)
+                {
+                    if (!string.IsNullOrEmpty(tag?.Name))
+                        roleToTagSetMap[tag.Name] = (tagSet.Id, tagSet.Type);
+                }
+            }
+        }
+
+        void UpdatePotentialRolesWithTagSets()
+        {
+            try
+            {
+                if (targetTagSets == null || targetTagSets.Length == 0) return;
+
+                var tagSetRoles = targetTagSets
+                    .Where(ts => ts?.Tags != null)
+                    .SelectMany(ts => ts.Tags.Where(t => !string.IsNullOrEmpty(t?.Name)).Select(t => t.Name))
+                    .ToList();
+
+                if (tagSetRoles.Any())
+                    PotentialRoles = PotentialRoles.Concat(tagSetRoles).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+            }
+            catch
+            {
+                // If anything fails, PotentialRoles remains unchanged (old flow works)
             }
         }
 
@@ -857,10 +934,121 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 validator.RuleFor(m => m.SelectedSpace).NotEmpty().WithMessage("Please select a space").When(m => m.AreSpacesSupported);
                 validator.RuleFor(m => m.MachineName).NotEmpty().WithMessage("Please enter a machine name");
                 validator.RuleFor(m => m.SelectedRoles).NotEmpty().WithMessage("Please select or enter at least one role").Unless(m => m.MachineType == MachineType.Worker);
+                validator.RuleFor(m => m.SelectedRoles).Must(ValidateSingleSelectTagSets).WithMessage(m => GetSingleSelectValidationMessage()).Unless(m => m.MachineType == MachineType.Worker);
                 validator.RuleFor(m => m.SelectedEnvironments).NotEmpty().WithMessage("Please select an environment").Unless(m => m.MachineType == MachineType.Worker);
                 validator.RuleFor(m => m.SelectedWorkerPools).NotEmpty().WithMessage("Please select at least one worker pool").Unless(m => m.MachineType == MachineType.DeploymentTarget);
             });
             return validator;
+        }
+
+        void SelectedRoles_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            try
+            {
+                if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Remove)
+                    return;
+
+                if (e.Action != System.Collections.Specialized.NotifyCollectionChangedAction.Add || roleToTagSetMap == null || targetTagSets == null || e.NewItems == null)
+                    return;
+
+                foreach (var newItem in e.NewItems)
+                {
+                    var newRole = newItem as string;
+                    if (string.IsNullOrEmpty(newRole) || !roleToTagSetMap.ContainsKey(newRole))
+                    {
+                        RoleSelectionError = null;
+                        continue;
+                    }
+
+                    var (tagSetId, tagSetType) = roleToTagSetMap[newRole];
+
+                    if (tagSetType == "SingleSelect")
+                    {
+                        var existingRoleFromSameTagSet = SelectedRoles?.FirstOrDefault(r => r != newRole && roleToTagSetMap.ContainsKey(r) && roleToTagSetMap[r].tagSetId == tagSetId);
+
+                        if (existingRoleFromSameTagSet != null)
+                        {
+                            var tagSet = targetTagSets.FirstOrDefault(ts => ts.Id == tagSetId);
+                            var roleToRemove = newRole;
+
+                            if (System.Windows.Application.Current?.Dispatcher != null)
+                            {
+                                System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+                                {
+                                    try
+                                    {
+                                        SelectedRoles?.Remove(roleToRemove);
+                                    }
+                                    catch
+                                    {
+                                        // Silently fail - role stays selected, validation will catch it
+                                    }
+                                }));
+                            }
+
+                            RoleSelectionError = $"You can only select one role from the '{tagSet?.Name ?? "this"}' tagset. '{existingRoleFromSameTagSet}' is already selected.";
+                            return;
+                        }
+                    }
+
+                    RoleSelectionError = null;
+                }
+            }
+            catch
+            {
+                // Silently fail - old flow continues to work
+                RoleSelectionError = null;
+            }
+        }
+
+        bool ValidateSingleSelectTagSets(ObservableCollection<string> selectedRoles)
+        {
+            try
+            {
+                if (selectedRoles == null || roleToTagSetMap == null || targetTagSets == null) return true;
+
+                var selectedRolesByTagSet = selectedRoles.Where(r => !string.IsNullOrEmpty(r) && roleToTagSetMap.ContainsKey(r)).GroupBy(r => roleToTagSetMap[r].tagSetId);
+
+                foreach (var tagSetGroup in selectedRolesByTagSet)
+                {
+                    var tagSetId = tagSetGroup.Key;
+                    var tagSet = targetTagSets.FirstOrDefault(ts => ts.Id == tagSetId);
+
+                    if (tagSet?.Type == "SingleSelect" && tagSetGroup.Count() > 1)
+                        return false;
+                }
+
+                return true;
+            }
+            catch
+            {
+                return true; // On error, pass validation (old flow works)
+            }
+        }
+
+        string GetSingleSelectValidationMessage()
+        {
+            try
+            {
+                if (SelectedRoles == null || roleToTagSetMap == null || targetTagSets == null) return string.Empty;
+
+                var selectedRolesByTagSet = SelectedRoles.Where(r => !string.IsNullOrEmpty(r) && roleToTagSetMap.ContainsKey(r)).GroupBy(r => roleToTagSetMap[r].tagSetId);
+
+                foreach (var tagSetGroup in selectedRolesByTagSet)
+                {
+                    var tagSetId = tagSetGroup.Key;
+                    var tagSet = targetTagSets.FirstOrDefault(ts => ts.Id == tagSetId);
+
+                    if (tagSet?.Type == "SingleSelect" && tagSetGroup.Count() > 1)
+                        return $"You can only select one role from the '{tagSet.Name}' tagset. Please deselect: {string.Join(", ", tagSetGroup.Skip(1))}";
+                }
+
+                return string.Empty;
+            }
+            catch
+            {
+                return string.Empty; // On error, no validation message
+            }
         }
 
         bool BeAValidUrl(string s)
@@ -1019,6 +1207,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         public List<TenantResource> Tenants { get; }
         public bool MachinePoliciesAreSupported { get; }
         public List<MachinePolicyResource> MachinePolicies { get; }
+        public List<TagSetResource> TargetTagSets { get; }
 
         // Don't update any state while loading data.
         // This prevents the UI from changing multiple times while loading.
@@ -1040,7 +1229,9 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
             var (machinePoliciesAreSupported, machinePolicies) = await GetMachinePolicies();
 
-            return new SpaceSpecificData(machineRoles, environments, workerPools, areTenantsSupported, tenantTagSets, tenants, machinePoliciesAreSupported, machinePolicies);
+            var targetTagSets = await LoadTargetTagSets();
+
+            return new SpaceSpecificData(machineRoles, environments, workerPools, areTenantsSupported, tenantTagSets, tenants, machinePoliciesAreSupported, machinePolicies, targetTagSets);
 
             async Task<List<WorkerPoolResource>> LoadWorkerPools()
             {
@@ -1074,6 +1265,21 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                     return (false, new List<MachinePolicyResource>());
                 }
             }
+
+            async Task<List<TagSetResource>> LoadTargetTagSets()
+            {
+                try
+                {
+                    onProgress("Getting available target tagsets...");
+                    var allTagSets = await repository.TagSets.GetAll(CancellationToken.None);
+                    return allTagSets.Where(ts => ts.Type != "FreeText" && ts.Scopes != null && ts.Scopes.Contains("Target")).OrderBy(ts => ts.SortOrder).ToList();
+                }
+                catch
+                {
+                    // Backward compatibility - older servers don't have target tagsets
+                    return new List<TagSetResource>();
+                }
+            }
         }
 
         SpaceSpecificData(List<string> roleNames,
@@ -1083,7 +1289,8 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             List<TagSetResource> tenantTags,
             List<TenantResource> tenants,
             bool machinePoliciesAreSupported,
-            List<MachinePolicyResource> machinePolicies)
+            List<MachinePolicyResource> machinePolicies,
+            List<TagSetResource> targetTagSets)
         {
             RoleNames = roleNames;
             Environments = environments;
@@ -1093,6 +1300,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             Tenants = tenants;
             MachinePoliciesAreSupported = machinePoliciesAreSupported;
             MachinePolicies = machinePolicies;
+            TargetTagSets = targetTagSets;
         }
     }
 
