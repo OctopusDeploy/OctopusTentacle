@@ -156,7 +156,7 @@ partial class Build : NukeBuild
                     (BuildDirectory / "Tentacle" / NetCoreWindows / "win-x86"),
                     (BuildDirectory / "Tentacle" / NetCoreWindows / "win-x64"),
                 };
-                directoriesToCopyHardenScriptInto.ForEach(dir => CopyFileToDirectory(hardenInstallationDirectoryScript, dir, FileExistsPolicy.Overwrite));
+                directoriesToCopyHardenScriptInto.ForEach(dir => hardenInstallationDirectoryScript.CopyToDirectory(dir, ExistsPolicy.FileOverwrite));
 
                 // Sign any unsigned libraries that Octopus Deploy authors so that they play nicely with security scanning tools.
                 // Refer: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1551655877004400
@@ -230,7 +230,7 @@ partial class Build : NukeBuild
             .Executes(() =>
             {
                 LocalPackagesDirectory.CreateDirectory();
-                CopyFileToDirectory(ArtifactsDirectory / "Chocolatey" / $"OctopusDeploy.Tentacle.{NuGetVersion}.nupkg", LocalPackagesDirectory);
+                (ArtifactsDirectory / "Chocolatey" / $"OctopusDeploy.Tentacle.{NuGetVersion}.nupkg").CopyToDirectory(LocalPackagesDirectory);
             });
 
     [PublicAPI]
@@ -244,9 +244,9 @@ partial class Build : NukeBuild
             .Executes(() =>
             {
                 LocalPackagesDirectory.CreateDirectory();
-                CopyFileToDirectory(ArtifactsDirectory / "nuget" / $"Octopus.Tentacle.Contracts.{FullSemVer}.nupkg", LocalPackagesDirectory);
-                CopyFileToDirectory(ArtifactsDirectory / "nuget" / $"Octopus.Tentacle.Client.{FullSemVer}.nupkg", LocalPackagesDirectory);
-                CopyFileToDirectory(ArtifactsDirectory / "nuget" / $"Octopus.Tentacle.Core.{FullSemVer}.nupkg", LocalPackagesDirectory);
+                (ArtifactsDirectory / "nuget" / $"Octopus.Tentacle.Contracts.{FullSemVer}.nupkg").CopyToDirectory(LocalPackagesDirectory);
+                (ArtifactsDirectory / "nuget" / $"Octopus.Tentacle.Client.{FullSemVer}.nupkg").CopyToDirectory(LocalPackagesDirectory);
+                (ArtifactsDirectory / "nuget" / $"Octopus.Tentacle.Core.{FullSemVer}.nupkg").CopyToDirectory(LocalPackagesDirectory);
             });
 
     [PublicAPI]
@@ -304,13 +304,10 @@ partial class Build : NukeBuild
             .SetRuntime(runtimeId)
             .EnableNoRestore()
             .SetVersion(FullSemVer)
-            .SetProcessArgumentConfigurator(args =>
-            {
-                // There is a race condition in dotnet publish where building the entire solution
-                // can cause locking issues depending on multiple CPUs. The solution is to not run builds in parallel
-                // https://github.com/dotnet/sdk/issues/9585
-                return args.Add("-maxcpucount:1");
-            }));
+            // There is a race condition in dotnet publish where building the entire solution
+            // can cause locking issues depending on multiple CPUs. The solution is to not run builds in parallel
+            // https://github.com/dotnet/sdk/issues/9585
+            .AddProcessAdditionalArguments("-maxcpucount:1"));
     }
 
 // We need to use tar directly, because .NET utilities aren't able to preserve the file permissions
