@@ -45,6 +45,8 @@ namespace Octopus.Tentacle.Kubernetes
 
         public (ulong freeSpaceBytes, ulong totalSpaceBytes)? GetStorageInformation()
         {
+            if(Environment.GetEnvironmentVariable("OCTOPUS__SKIP_DISK_SPACE_CHECK") == "true") return null;
+
             var bytesUsed = directoryInformationProvider.GetPathUsedBytes(HomeDir);
             var bytesTotal = directoryInformationProvider.GetPathTotalBytes();
             if (bytesUsed.HasValue && bytesTotal.HasValue)
