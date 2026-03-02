@@ -402,7 +402,7 @@ namespace Octopus.Tentacle.Kubernetes
                                 {
                                     //match on the instance (Helm Release name) of the tentacle pod
                                     Key = "app.kubernetes.io/instance",
-                                    OperatorProperty = "",
+                                    OperatorProperty = "In",
                                     Values = new List<string> { KubernetesConfig.HelmReleaseName }
                                 }
                             }
