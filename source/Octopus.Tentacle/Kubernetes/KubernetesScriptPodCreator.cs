@@ -437,7 +437,7 @@ namespace Octopus.Tentacle.Kubernetes
                         ["cpu"] = new("25m"),
                         ["memory"] = new("100Mi")
                     }
-                });
+                })!;
 
         V1Affinity ParseScriptPodAffinity(InMemoryTentacleScriptLog tentacleScriptLog)
             => ParseScriptPodJson(
