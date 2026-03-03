@@ -376,14 +376,14 @@ namespace Octopus.Tentacle.Kubernetes
             var json = KubernetesConfig.PersistenceAccessModesJson;
 
             //no json, nothing to do :)
-            if (string.IsNullOrWhiteSpace(json)) 
+            if (string.IsNullOrWhiteSpace(json))
                 return podSpec;
-            
+
             tentacleScriptLog.Verbose($"Tentacle access modes: {json}");
             try
             {
                 var accessModes = KubernetesJson.Deserialize<string[]>(json);
-                if (accessModes.Length == 1 && accessModes[0] == "ReadWriteOnce")
+                if (accessModes.Length == 1 && string.Equals(accessModes[0], "ReadWriteOnce", StringComparison.OrdinalIgnoreCase))
                 {
                     tentacleScriptLog.Verbose($"Access mode is 'ReadWriteOnce'. Adding podAffinity to co-locate script pod with tentacle pod.");
 
@@ -404,6 +404,12 @@ namespace Octopus.Tentacle.Kubernetes
                                     Key = "app.kubernetes.io/instance",
                                     OperatorProperty = "In",
                                     Values = new List<string> { KubernetesConfig.HelmReleaseName }
+                                },
+                                new()
+                                {
+                                    Key = "agent.octopus.com/component",
+                                    OperatorProperty = "In",
+                                    Values = new List<string> { "tentacle" }
                                 }
                             }
                         }
