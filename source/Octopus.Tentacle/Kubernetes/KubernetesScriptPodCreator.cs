@@ -385,7 +385,7 @@ namespace Octopus.Tentacle.Kubernetes
                 var accessModes = KubernetesJson.Deserialize<string[]>(json);
                 if (accessModes.Length == 1 && string.Equals(accessModes[0], "ReadWriteOnce", StringComparison.OrdinalIgnoreCase))
                 {
-                    tentacleScriptLog.Verbose($"Access mode is 'ReadWriteOnce'. Adding podAffinity to co-locate script pod with tentacle pod.");
+                    tentacleScriptLog.Verbose($"Access mode is 'ReadWriteOnce'. Adding podAffinity to co-locate script pod with tentacle pod on the same node.");
 
                     var affinity = podSpec.Affinity ??= new V1Affinity();
                     var podAffinity = affinity.PodAffinity ??= new V1PodAffinity();
