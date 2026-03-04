@@ -14,10 +14,9 @@ RUN mkdir -p bin
 
 # Build for multiple architectures
 # Note: the given ldflags remove debug symbols
-RUN GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o "bin/bootstrapRunner-linux-amd64" \
-    && GOOS=linux GOARCH=arm64 go build -ldflags "-s -w" -o "bin/bootstrapRunner-linux-arm64" \
-    && GOOS=linux GOARCH=386 go build -ldflags "-s -w" -o "bin/bootstrapRunner-linux-386" \
-    && GOOS=linux GOARCH=arm go build -ldflags "-s -w" -o "bin/bootstrapRunner-linux-arm"
+RUN for arch in amd64 arm64 386 arm; do \
+        GOOS=linux GOARCH=$arch go build -ldflags "-s -w" -o "bin/bootstrapRunner-linux-$arch"; \
+    done
 
 # Copy the architecture detection script from source and make it executable
 COPY docker/kubernetes-agent-tentacle/bootstrapRunner/select-bootstrapRunner.sh bin/
@@ -65,7 +64,7 @@ RUN \
 # We know this won't reduce the image size at all. It's just to make the filesystem a little tidier.
 RUN rm -rf /tmp/*
 
-ENV BOOTSTRAPRUNNEREXECUTABLEPATH=/bootstrapRunner/select-bootstrapRunner.sh
+ENV BOOTSTRAPRUNNEREXECUTABLEPATH=/bootstrapRunner/execute-bootstrapRunner.sh
 ENV OCTOPUS_RUNNING_IN_CONTAINER=Y
 ENV ACCEPT_EULA=N
 ENV CustomPublicHostName=""

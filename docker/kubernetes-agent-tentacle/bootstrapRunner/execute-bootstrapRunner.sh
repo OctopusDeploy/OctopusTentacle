@@ -43,8 +43,6 @@ if [ ! -f "$BINARY_PATH" ]; then
     exit 1
 fi
 
-# Make sure the binary is executable
-chmod +x "$BINARY_PATH"
 
 # Execute the appropriate binary with all arguments passed through
 exec "$BINARY_PATH" "$@"

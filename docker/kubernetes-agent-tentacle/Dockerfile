@@ -16,10 +16,10 @@ WORKDIR /bootstrapRunner
 RUN mkdir -p bin
 
 RUN for platform in $platforms; do \
-    Run for arch in $architectures; do \
-      GOOS=$platform GOARCH=$arch go build -ldflags "-s -w" -o "bin/bootstrapRunner-$platform-$arch" \
-    done; \
-done;
+        for arch in $architectures; do \
+            GOOS=$platform GOARCH=$arch go build -ldflags "-s -w" -o "bin/bootstrapRunner-$platform-$arch"; \
+        done; \
+    done
 
 FROM mcr.microsoft.com/dotnet/runtime-deps:$RuntimeDepsTag
 
