@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Tentacle.Client.Observability;
@@ -56,13 +57,23 @@ namespace Octopus.Tentacle.Client.Execution
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
         {
+            using var activity = TentacleClient.ActivitySource.StartActivity($"{nameof(RpcCallExecutor)}.{nameof(ExecuteWithRetries)}");
+            activity?.AddTag("octopus.tentacle.rpc_call.service", rpcCall.Service);
+            activity?.AddTag("octopus.tentacle.rpc_call.name", rpcCall.Name);
             var rpcCallMetricsBuilder = RpcCallMetricsBuilder.StartWithRetries(rpcCall, rpcCallRetryHandler.RetryTimeout);
 
             try
             {
+                var attemptNumber = 1;
                 var response = await rpcCallRetryHandler.ExecuteWithRetries(
                         async ct =>
                         {
+                            using var attemptActivity = TentacleClient.ActivitySource.StartActivity($"{nameof(RpcCallExecutor)}.{nameof(ExecuteWithRetries)} - Attempt");
+                            attemptActivity?.AddTag("octopus.tentacle.rpc_call.service", rpcCall.Service);
+                            attemptActivity?.AddTag("octopus.tentacle.rpc_call.name", rpcCall.Name);
+                            attemptActivity?.AddTag("octopus.tentacle.rpc_call.attempt_number", attemptNumber);
+                            attemptNumber++;
+                            
                             var start = DateTimeOffset.UtcNow;
 
                             try
@@ -81,16 +92,18 @@ namespace Octopus.Tentacle.Client.Execution
                         onRetryAction: async (lastException, sleepDuration, retryCount, totalRetryDuration, elapsedDuration, _) =>
                         {
                             await Task.CompletedTask;
+                            activity?.AddEvent(new ActivityEvent("Retry"));
 
                             onErrorAction?.Invoke(lastException);
 
-                            var remainingDurationInSeconds = (int)(totalRetryDuration - elapsedDuration).TotalSeconds;
+                            var remainingDurationInSeconds = Math.Max((int)(totalRetryDuration - elapsedDuration).TotalSeconds, 0);
                             logger.Info($"An error occurred communicating with Tentacle. This action will be retried after {(int)sleepDuration.TotalSeconds} seconds. Retry attempt {retryCount}. Retries will be performed for up to {remainingDurationInSeconds} seconds.");
                             logger.Verbose(lastException);
                         },
                         onTimeoutAction: async (timeoutDuration, elapsedDuration, retryCount, _) =>
                         {
                             await Task.CompletedTask;
+                            activity?.AddEvent(new ActivityEvent("Timeout"));
 
                             if (retryCount > 0)
                             {
@@ -107,6 +120,10 @@ namespace Octopus.Tentacle.Client.Execution
             }
             catch (Exception e)
             {
+                activity?.SetStatus(ActivityStatusCode.Error);
+                // We should use activity.AddException here, but need to update the referenced version of System.Diagnostics.DiagnosticSource.
+                // We inherit the reference from Halibut so that would have to change first.
+                activity?.AddTag("exception.message", e.Message); 
                 rpcCallMetricsBuilder.Failure(e, cancellationToken);
                 throw;
             }
@@ -125,6 +142,9 @@ namespace Octopus.Tentacle.Client.Execution
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
         {
+            using var activity = TentacleClient.ActivitySource.StartActivity($"{nameof(RpcCallExecutor)}.{nameof(ExecuteWithNoRetries)}");
+            activity?.AddTag("octopus.tentacle.rpc_call.service", rpcCall.Service);
+            activity?.AddTag("octopus.tentacle.rpc_call.name", rpcCall.Name);
             var rpcCallMetricsBuilder = RpcCallMetricsBuilder.StartWithoutRetries(rpcCall);
             var start = DateTimeOffset.UtcNow;
 
@@ -136,6 +156,11 @@ namespace Octopus.Tentacle.Client.Execution
             }
             catch (Exception e)
             {
+                activity?.SetStatus(ActivityStatusCode.Error);
+                // We should use activity.AddException here, but need to update the referenced version of System.Diagnostics.DiagnosticSource.
+                // We inherit the reference from Halibut so that would have to change first.
+                activity?.AddTag("exception.message", e.Message); 
+                
                 rpcCallMetricsBuilder.WithAttempt(TimedOperation.Failure(start, e, cancellationToken));
                 rpcCallMetricsBuilder.Failure(e, cancellationToken);
                 throw;
@@ -156,6 +181,9 @@ namespace Octopus.Tentacle.Client.Execution
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
         {
+            using var activity = TentacleClient.ActivitySource.StartActivity($"{nameof(RpcCallExecutor)}.{nameof(ExecuteWithNoRetries)}");
+            activity?.AddTag("octopus.tentacle.rpc_call.service", rpcCall.Service);
+            activity?.AddTag("octopus.tentacle.rpc_call.name", rpcCall.Name);
             var rpcCallMetricsBuilder = RpcCallMetricsBuilder.StartWithoutRetries(rpcCall);
             var start = DateTimeOffset.UtcNow;
 
@@ -166,6 +194,10 @@ namespace Octopus.Tentacle.Client.Execution
             }
             catch (Exception e)
             {
+                activity?.SetStatus(ActivityStatusCode.Error);
+                // We should use activity.AddException here, but need to update the referenced version of System.Diagnostics.DiagnosticSource.
+                // We inherit the reference from Halibut so that would have to change first.
+                activity?.AddTag("exception.message", e.Message); 
                 rpcCallMetricsBuilder.WithAttempt(TimedOperation.Failure(start, e, cancellationToken));
                 rpcCallMetricsBuilder.Failure(e, cancellationToken);
                 throw;

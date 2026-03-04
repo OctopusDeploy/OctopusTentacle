@@ -1,12 +1,17 @@
 agent:
   acceptEula: "Y"
-  targetName: "#{TargetName}"
+  name: "#{TargetName}"
   serverCommsAddress: "#{ServerCommsAddress}"
   serverUrl: "https://this.is.not.required.com/"
   bearerToken: "this-is-a-fake-bearer-token"
   space: "Default"
-  targetEnvironments: ["development"]
-  targetRoles: ["Testing Cluster", "another-testing-cluster"]
+  
+  deploymentTarget:
+    enabled: true
+    initial:
+      environments: ["development"]
+      tags: ["Testing Cluster", "another-testing-cluster"]
+      enabled: "true"
   
   image:
     repository: docker.packages.octopushq.com/octopusdeploy/kubernetes-agent-tentacle

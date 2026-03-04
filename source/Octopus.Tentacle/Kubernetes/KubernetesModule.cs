@@ -34,7 +34,12 @@ namespace Octopus.Tentacle.Kubernetes
             builder.RegisterType<KubernetesPodContainerResolver>().As<IKubernetesPodContainerResolver>().SingleInstance();
             builder.RegisterType<KubernetesConfigMapService>().As<IKubernetesConfigMapService>().SingleInstance();
             builder.RegisterType<KubernetesSecretService>().As<IKubernetesSecretService>().SingleInstance();
-            builder.RegisterType<KubernetesCustomResourceService>().As<IKubernetesCustomResourceService>().SingleInstance();
+            
+            const string kubernetesPodTemplateService = "KubernetesPodTemplateService";
+            builder.RegisterType<KubernetesPodTemplateService>().Named<IKubernetesPodTemplateService>(kubernetesPodTemplateService);
+            builder.RegisterDecorator<IKubernetesPodTemplateService>(
+                (context, inner) => new CachingKubernetesPodTemplateService(
+                    inner, context.Resolve<IMemoryCache>()), fromKey: kubernetesPodTemplateService);
 
             builder.RegisterType<KubernetesScriptPodCreator>().As<IKubernetesScriptPodCreator>().SingleInstance();
             builder.RegisterType<KubernetesRawScriptPodCreator>().As<IKubernetesRawScriptPodCreator>().SingleInstance();

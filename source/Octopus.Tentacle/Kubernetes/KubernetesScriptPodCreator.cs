@@ -15,10 +15,10 @@ using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Core.Services.Scripts.Locking;
+using Octopus.Tentacle.Core.Util;
 using Octopus.Tentacle.Kubernetes.Crypto;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Util;
-using Octopus.Tentacle.Variables;
 
 namespace Octopus.Tentacle.Kubernetes
 {
@@ -32,7 +32,7 @@ namespace Octopus.Tentacle.Kubernetes
         readonly IKubernetesPodService podService;
         readonly IKubernetesPodMonitor podMonitor;
         readonly IKubernetesSecretService secretService;
-        readonly IKubernetesCustomResourceService customResourceService;
+        readonly IKubernetesPodTemplateService podTemplateService;
         readonly IKubernetesPodContainerResolver containerResolver;
         readonly IApplicationInstanceSelector appInstanceSelector;
         readonly ISystemLog log;
@@ -46,7 +46,7 @@ namespace Octopus.Tentacle.Kubernetes
             IKubernetesPodService podService,
             IKubernetesPodMonitor podMonitor,
             IKubernetesSecretService secretService,
-            IKubernetesCustomResourceService customResourceService,
+            IKubernetesPodTemplateService podTemplateService,
             IKubernetesPodContainerResolver containerResolver,
             IApplicationInstanceSelector appInstanceSelector,
             ISystemLog log,
@@ -59,7 +59,7 @@ namespace Octopus.Tentacle.Kubernetes
             this.podService = podService;
             this.podMonitor = podMonitor;
             this.secretService = secretService;
-            this.customResourceService = customResourceService;
+            this.podTemplateService = podTemplateService;
             this.containerResolver = containerResolver;
             this.appInstanceSelector = appInstanceSelector;
             this.log = log;
@@ -196,7 +196,7 @@ namespace Octopus.Tentacle.Kubernetes
                 .Select(secretName => new V1LocalObjectReference(secretName))
                 .ToList();
 
-            var scriptPodTemplate = await customResourceService.GetOldestScriptPodTemplateCustomResource(cancellationToken);
+            var scriptPodTemplate = await podTemplateService.GetScriptPodTemplate(cancellationToken);
 
             var pod = new V1Pod
             {
@@ -204,11 +204,11 @@ namespace Octopus.Tentacle.Kubernetes
                 {
                     Name = podName,
                     NamespaceProperty = KubernetesConfig.Namespace,
-                    Labels = Merge(scriptPodTemplate?.Spec.PodMetadata?.Labels, GetScriptPodLabels(tentacleScriptLog, command)),
-                    Annotations = Merge(scriptPodTemplate?.Spec.PodMetadata?.Annotations, ParseScriptPodAnnotations(tentacleScriptLog))
+                    Labels = Merge(scriptPodTemplate?.PodMetadata?.Labels, GetScriptPodLabels(tentacleScriptLog, command)),
+                    Annotations = Merge(scriptPodTemplate?.PodMetadata?.Annotations, GetScriptPodAnnotations(tentacleScriptLog, command))
                 },
                 //if the script pod template spec has been defined, use that
-                Spec = scriptPodTemplate?.Spec.PodSpec ?? new V1PodSpec
+                Spec = scriptPodTemplate?.PodSpec ?? new V1PodSpec
                 {
                     RestartPolicy = "Never",
                     Affinity = ParseScriptPodAffinity(tentacleScriptLog),
@@ -217,8 +217,8 @@ namespace Octopus.Tentacle.Kubernetes
                 }
             };
 
-            pod.Spec.InitContainers = await CreateInitContainers(command, podName, homeDir, workspacePath, tentacleScriptLog, scriptPodTemplate?.Spec.ScriptContainerSpec);
-            pod.Spec.Containers = await CreateScriptContainers(command, podName, scriptName, homeDir, workspacePath, workspace.ScriptArguments, tentacleScriptLog, scriptPodTemplate?.Spec);
+            pod.Spec.InitContainers = await CreateInitContainers(command, podName, homeDir, workspacePath, tentacleScriptLog, scriptPodTemplate?.ScriptInitContainerSpec);
+            pod.Spec.Containers = await CreateScriptContainers(command, podName, scriptName, homeDir, workspacePath, workspace.ScriptArguments, tentacleScriptLog, scriptPodTemplate);
             pod.Spec.ImagePullSecrets = imagePullSecretNames;
             pod.Spec.ServiceAccountName = serviceAccountName;
             pod.Spec.Volumes = Merge(pod.Spec.Volumes, CreateVolumes(command));
@@ -230,12 +230,12 @@ namespace Octopus.Tentacle.Kubernetes
             LogVerboseToBothLogs($"Executing script in Kubernetes Pod '{podName}'. Image: '{scriptContainer.Image}'.", tentacleScriptLog);
         }
 
-        protected virtual async Task<IList<V1Container>> CreateScriptContainers(StartKubernetesScriptCommandV1 command, string podName, string scriptName, string homeDir, string workspacePath, string[]? scriptArguments, InMemoryTentacleScriptLog tentacleScriptLog, ScriptPodTemplateSpec? spec)
+        protected virtual async Task<IList<V1Container>> CreateScriptContainers(StartKubernetesScriptCommandV1 command, string podName, string scriptName, string homeDir, string workspacePath, string[]? scriptArguments, InMemoryTentacleScriptLog tentacleScriptLog, ScriptPodTemplate? template)
         {
             return new List<V1Container>
             {
-                await CreateScriptContainer(command, podName, scriptName, homeDir, workspacePath, scriptArguments, tentacleScriptLog, spec?.ScriptContainerSpec)
-            }.AddIfNotNull(CreateWatchdogContainer(homeDir, spec?.WatchdogContainerSpec));
+                await CreateScriptContainer(command, podName, scriptName, homeDir, workspacePath, scriptArguments, tentacleScriptLog, template?.ScriptContainerSpec)
+            }.AddIfNotNull(CreateWatchdogContainer(homeDir, template?.WatchdogContainerSpec));
         }
 
         protected virtual async Task<IList<V1Container>> CreateInitContainers(StartKubernetesScriptCommandV1 command, string podName, string homeDir, string workspacePath, InMemoryTentacleScriptLog tentacleScriptLog, V1Container? containerSpec)
@@ -380,7 +380,7 @@ namespace Octopus.Tentacle.Kubernetes
                     var message = $"Failed to deserialize env.{KubernetesConfig.PodResourceJsonVariableName} into valid pod resource requirements.{Environment.NewLine}JSON value: {json}{Environment.NewLine}Using default resource requests for script pod.";
                     //if we can't parse the JSON, fall back to the defaults below and warn the user
                     log.WarnFormat(e, message);
-                    //write a verbose message to the script log. 
+                    //write a verbose message to the script log.
                     tentacleScriptLog.Verbose(message);
                 }
             }
@@ -433,7 +433,14 @@ namespace Octopus.Tentacle.Kubernetes
                 KubernetesConfig.PodAnnotationsJsonVariableName,
                 "pod annotations");
 
-        Dictionary<string, string>? GetScriptPodLabels(InMemoryTentacleScriptLog tentacleScriptLog, StartKubernetesScriptCommandV1 command)
+        Dictionary<string, string> GetScriptPodAnnotations(InMemoryTentacleScriptLog tentacleScriptLog, StartKubernetesScriptCommandV1 command)
+        {
+            var annotations = ParseScriptPodAnnotations(tentacleScriptLog) ?? new Dictionary<string, string>();
+            annotations.AddRange(GetAuthContext(command));
+            return annotations;
+        }
+
+        Dictionary<string, string> GetScriptPodLabels(InMemoryTentacleScriptLog tentacleScriptLog, StartKubernetesScriptCommandV1 command)
         {
             var labels = new Dictionary<string, string>
             {
@@ -451,7 +458,59 @@ namespace Octopus.Tentacle.Kubernetes
                 labels.AddRange(extraLabels);
             }
 
+            labels.Add($"{KubernetesConfig.AgentLabelNamespace}/permissions", "enabled");
+            labels.AddRange(GetAuthContext(command, true));
+
             return labels;
+        }
+
+        static Dictionary<string, string> GetAuthContext(StartKubernetesScriptCommandV1 command, bool hash = false)
+        {
+            var dict = new Dictionary<string, string>();
+
+            if (command.AuthContext is null)
+            {
+                return dict;
+            }
+
+            dict[$"{KubernetesConfig.AgentLabelNamespace}/project"] = hash
+                ? HashValue(command.AuthContext.ProjectSlug)
+                : command.AuthContext.ProjectSlug;
+
+            if (command.AuthContext.ProjectGroupSlug is not null)
+            {
+                dict[$"{KubernetesConfig.AgentLabelNamespace}/project-group"] = hash
+                    ? HashValue(command.AuthContext.ProjectGroupSlug)
+                    : command.AuthContext.ProjectGroupSlug;
+            }
+
+            dict[$"{KubernetesConfig.AgentLabelNamespace}/environment"] = hash
+                ? HashValue(command.AuthContext.EnvironmentSlug)
+                : command.AuthContext.EnvironmentSlug;
+
+            if (command.AuthContext.TenantSlug is not null)
+            {
+                dict[$"{KubernetesConfig.AgentLabelNamespace}/tenant"] = hash
+                    ? HashValue(command.AuthContext.TenantSlug)
+                    : command.AuthContext.TenantSlug;
+            }
+
+            dict[$"{KubernetesConfig.AgentLabelNamespace}/step"] = hash
+                ? HashValue(command.AuthContext.StepSlug)
+                : command.AuthContext.StepSlug;
+
+            dict[$"{KubernetesConfig.AgentLabelNamespace}/space"] = hash
+                ? HashValue(command.AuthContext.SpaceSlug)
+                : command.AuthContext.SpaceSlug;
+
+            return dict;
+        }
+
+        static string HashValue(string value)
+        {
+            using var sha1 = SHA1.Create();
+            var bytes = sha1.ComputeHash(Encoding.UTF8.GetBytes(value));
+            return BitConverter.ToString(bytes).Replace("-","");
         }
 
         [return: NotNullIfNotNull("defaultValue")]
@@ -472,7 +531,7 @@ namespace Octopus.Tentacle.Kubernetes
 
                 //if we can't parse the JSON, fall back to the defaults below and warn the user
                 log.WarnFormat(e, message);
-                //write a verbose message to the script log. 
+                //write a verbose message to the script log.
                 tentacleScriptLog.Verbose(message);
             }
 

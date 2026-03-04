@@ -66,16 +66,5 @@ namespace Octopus.Tentacle.Client.Retries
                 await Task.CompletedTask;
             }
         }
-
-        public AsyncPolicy Build()
-        {
-            var timeoutPolicy = BuildTimeoutPolicy();
-
-            var handleAndRetryPolicy = BuildRetryPolicy();
-
-            var policyWrap = Policy.WrapAsync(timeoutPolicy, handleAndRetryPolicy);
-
-            return policyWrap!;
-        }
     }
 }

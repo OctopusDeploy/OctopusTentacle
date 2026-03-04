@@ -219,16 +219,16 @@ partial class Build
 
     void InstallMsi(AbsolutePath installerPath, AbsolutePath destination)
     {
-        var installLogName = Path.Combine(TestDirectory, $"{GetTestName(installerPath)}.install.log");
+        var installLogName = TestDirectory / $"{GetTestName(installerPath)}.install.log";
 
-        Log.Information($"Installing {installerPath} to {destination}");
+        Log.Information("Installing {InstallerPath} to {Destination}", installerPath, destination);
 
         var arguments = $"/i {installerPath} /QN INSTALLLOCATION={destination} /L*V {installLogName}";
-        Log.Information($"Running msiexec {arguments}");
+        Log.Information("Running msiexec {Arguments}", arguments);
         var installationProcess = ProcessTasks.StartProcess("msiexec", arguments);
         installationProcess.WaitForExit();
 
-        FileSystemTasks.CopyFileToDirectory(installLogName, ArtifactsDirectory, FileExistsPolicy.Overwrite);
+        installLogName.CopyToDirectory(ArtifactsDirectory, ExistsPolicy.FileOverwrite);
         if (installationProcess.ExitCode != 0) {
             throw new Exception($"The installation process exited with a non-zero exit code ({installationProcess.ExitCode}). Check the log {installLogName} for details.");
         }
@@ -236,14 +236,14 @@ partial class Build
     
     void UninstallMsi(AbsolutePath installerPath)
     {
-        Log.Information($"Uninstalling {installerPath}");
-        var uninstallLogName = Path.Combine(TestDirectory, $"{GetTestName(installerPath)}.uninstall.log");
+        Log.Information("Uninstalling {InstallerPath}", installerPath);
+        var uninstallLogName = TestDirectory / $"{GetTestName(installerPath)}.uninstall.log";
 
         var arguments = $"/x {installerPath} /QN /L*V {uninstallLogName}";
-        Log.Information($"Running msiexec {arguments}");
+        Log.Information("Running msiexec {Arguments}", arguments);
         var uninstallProcess = ProcessTasks.StartProcess("msiexec", arguments);
         uninstallProcess.WaitForExit();
-        FileSystemTasks.CopyFileToDirectory(uninstallLogName, ArtifactsDirectory, FileExistsPolicy.Overwrite);
+        (uninstallLogName).CopyToDirectory(ArtifactsDirectory, ExistsPolicy.FileOverwrite);
     }
 
     [SupportedOSPlatform("windows")]

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Halibut.Logging;
@@ -47,6 +48,10 @@ namespace Octopus.Tentacle.Client.Scripts
             ScriptOperationExecutionResult startScriptResult,
             CancellationToken scriptExecutionCancellationToken)
         {
+            using var activity = TentacleClient.ActivitySource.StartActivity($"{nameof(ObservingScriptOrchestrator)}.{nameof(ObserveUntilCompleteThenFinish)}");
+            activity?.AddTag("octopus.tentacle.script.status.state", startScriptResult.ScriptStatus.State);
+            activity?.AddTag("octopus.tentacle.script.status.exit_code", startScriptResult.ScriptStatus.ExitCode);
+            
             OnScriptStatusResponseReceived(startScriptResult.ScriptStatus);
 
             var observingUntilCompleteResult =  await ObserveUntilComplete(startScriptResult, scriptExecutionCancellationToken).ConfigureAwait(false);

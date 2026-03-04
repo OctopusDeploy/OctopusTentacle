@@ -4,8 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Core.Configuration;
 using Octopus.Tentacle.Core.Services.Scripts.Security.Masking;
 using Octopus.Tentacle.Security;
 using Octopus.Tentacle.Util;
@@ -25,20 +25,20 @@ namespace Octopus.Tentacle.Scripts
             IHomeDirectoryProvider home,
             SensitiveValueMasker sensitiveValueMasker)
         {
-            if (home.ApplicationSpecificHomeDirectory == null)
-                throw new ArgumentException($"{GetType().Name} cannot function without the HomeDirectory configured.", nameof(home));
-
             this.fileSystem = fileSystem;
             this.home = home;
             this.sensitiveValueMasker = sensitiveValueMasker;
         }
 
-        public IScriptWorkspace GetWorkspace(ScriptTicket ticket)
+        public IScriptWorkspace GetWorkspace(ScriptTicket ticket, WorkspaceReadinessCheck readinessCheck)
         {
             var workingDirectory = FindWorkingDirectory(ticket);
 
             var workspace = CreateWorkspace(ticket, workingDirectory);
-            workspace.CheckReadiness();
+            if (readinessCheck == WorkspaceReadinessCheck.Perform)
+            {
+                workspace.CheckReadiness();
+            }
             return workspace;
         }
 
@@ -53,7 +53,7 @@ namespace Octopus.Tentacle.Scripts
             List<ScriptFile> files,
             CancellationToken cancellationToken)
         {
-            var workspace = GetWorkspace(ticket);
+            var workspace = GetWorkspace(ticket, WorkspaceReadinessCheck.Perform);
             workspace.IsolationLevel = isolationLevel;
             workspace.ScriptMutexAcquireTimeout = scriptMutexAcquireTimeout;
             workspace.ScriptArguments = scriptArguments;

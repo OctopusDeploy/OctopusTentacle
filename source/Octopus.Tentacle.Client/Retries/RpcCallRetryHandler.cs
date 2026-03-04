@@ -24,12 +24,26 @@ namespace Octopus.Tentacle.Client.Retries
 
         public delegate Task OnTimeoutAction(TimeSpan retryTimeout, TimeSpan elapsedDuration, int retryCount, CancellationToken cancellationToken);
 
-        public RpcCallRetryHandler(TimeSpan retryTimeout)
+        public RpcCallRetryHandler(TimeSpan retryTimeout, int? minimumAttemptsForInterruptedLongRunningCalls = null)
         {
             RetryTimeout = retryTimeout;
+            MinimumAttemptsForInterruptedLongRunningCalls = minimumAttemptsForInterruptedLongRunningCalls;
         }
 
         public TimeSpan RetryTimeout { get; }
+
+        /// <summary>
+        /// This is the minimum number of attempts that will be made to long-running calls,
+        /// that are interrupted while executing.
+        /// For example, if a long-running file upload is interrupted after ten minutes of transfering,
+        /// and this is set to 2, we will make another attempt to upload the file even if the RetryTimeout
+        /// is exceeded.
+        /// If this is set to 9999, and a polling tentacle did not collect the file upload request from the queue,
+        /// we will not continue to make attempts until we have made 9999 attempts. This is because the RPC call
+        /// is not considered to be interrupted as the RPC call never started. This means we won't try 9999 times
+        /// to send a request to a tentacle that is not connected.
+        /// </summary>
+        public int? MinimumAttemptsForInterruptedLongRunningCalls { get; }
 
         public TimeSpan RetryIfRemainingDurationAtLeast { get; } = TimeSpan.FromSeconds(1);
 
@@ -43,9 +57,18 @@ namespace Octopus.Tentacle.Client.Retries
             var started = new Stopwatch();
             var nextSleepDuration = TimeSpan.Zero;
             var totalRetryCount = 0;
+            var totalAttemptCount = 0;
+            bool shouldExecuteNextRetryUnderTimeout = true;
 
             async Task OnRetryAction(Exception exception, TimeSpan sleepDuration, int retryCount, Context context)
             {
+                // If tentacle was online (by virtue of NOT getting a connecting exception) AND we have been told
+                // to make a min number of attempts, then our next attempt (if any) should be done without a timeout.
+                // However, if tentacle was to be offline, then we would want to revert to retries being done under a timeout
+                // so that we limit how long we try to communicate with a tentacle offline.
+                // We must re-evaluate this each failed attempt, since the failure type can change on each attempt.
+                shouldExecuteNextRetryUnderTimeout = !(MinimumAttemptsForInterruptedLongRunningCalls.HasValue && !exception.IsConnectionException());
+                
                 if (lastException == null)
                 {
                     lastException = exception;
@@ -62,7 +85,7 @@ namespace Octopus.Tentacle.Client.Retries
                 var elapsedDuration = started.Elapsed;
                 var remainingRetryDuration = RetryTimeout - elapsedDuration - sleepDuration;
 
-                if (ShouldRetryWithRemainingDuration(remainingRetryDuration))
+                if (ShouldRetry(remainingRetryDuration, totalAttemptCount, !shouldExecuteNextRetryUnderTimeout))
                 {
                     totalRetryCount = retryCount;
 
@@ -96,25 +119,37 @@ namespace Octopus.Tentacle.Client.Retries
             {
                 if (isInitialAction)
                 {
+                    totalAttemptCount++;
                     isInitialAction = false;
                     return await action(ct).ConfigureAwait(false);
                 }
 
                 var remainingRetryDuration = RetryTimeout - started.Elapsed - nextSleepDuration;
 
-                if (!ShouldRetryWithRemainingDuration(remainingRetryDuration))
+                if (!ShouldRetry(remainingRetryDuration, totalAttemptCount, !shouldExecuteNextRetryUnderTimeout))
                 {
-                    // We are short circuiting as the retry duration has elapsed
+                    // We are short circuiting as the retry duration has elapsed and minimum attempts have been satisfied
                     await OnTimeoutAction(null, RetryTimeout, null, null).ConfigureAwait(false);
                     throw new TimeoutRejectedException("The delegate executed asynchronously through TimeoutPolicy did not complete within the timeout.");
                 }
 
-                var timeoutPolicy = policyBuilder
-                    // Ensure the remaining retry time excludes the elapsed time
-                    .WithRetryTimeout(remainingRetryDuration)
-                    .BuildTimeoutPolicy();
-
-                return await timeoutPolicy.ExecuteAsync(action, ct).ConfigureAwait(false);
+                totalAttemptCount++;
+                
+                if (!shouldExecuteNextRetryUnderTimeout)
+                {
+                    // Retry a long-running operation with no timeout
+                    return await action(ct);
+                }
+                else
+                {
+                    var timeoutPolicy = policyBuilder
+                        // Ensure the remaining retry time excludes the elapsed time
+                        .WithRetryTimeout(remainingRetryDuration)
+                        .BuildTimeoutPolicy();
+                
+                
+                    return await timeoutPolicy.ExecuteAsync(action, ct).ConfigureAwait(false);
+                }
             }
 
             try
@@ -135,8 +170,12 @@ namespace Octopus.Tentacle.Client.Retries
                 throw;
             }
 
-            bool ShouldRetryWithRemainingDuration(TimeSpan remainingRetryDuration)
+            bool ShouldRetry(TimeSpan remainingRetryDuration, int currentAttemptCount, bool retryRegardlessOfTimeout)
             {
+                if (MinimumAttemptsForInterruptedLongRunningCalls.HasValue
+                    && currentAttemptCount < MinimumAttemptsForInterruptedLongRunningCalls.Value
+                    && retryRegardlessOfTimeout) return true;
+                
                 return remainingRetryDuration > RetryIfRemainingDurationAtLeast;
             }
         }

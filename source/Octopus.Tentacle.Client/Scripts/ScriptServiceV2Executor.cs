@@ -128,6 +128,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
         public async Task<ScriptOperationExecutionResult> GetStatus(CommandContext commandContext, CancellationToken scriptExecutionCancellationToken)
         {
+            using var activity = TentacleClient.ActivitySource.StartActivity($"{nameof(ScriptServiceV2Executor)}.{nameof(GetStatus)}");
             async Task<ScriptStatusResponseV2> GetStatusAction(CancellationToken ct)
             {
                 var request = new ScriptStatusRequestV2(commandContext.ScriptTicket, commandContext.NextLogSequence);
@@ -148,6 +149,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
         public async Task<ScriptOperationExecutionResult> CancelScript(CommandContext commandContext)
         {
+            using var activity = TentacleClient.ActivitySource.StartActivity($"{nameof(ScriptServiceV2Executor)}.{nameof(CancelScript)}");
             async Task<ScriptStatusResponseV2> CancelScriptAction(CancellationToken ct)
             {
                 var request = new CancelScriptCommandV2(commandContext.ScriptTicket, commandContext.NextLogSequence);
@@ -156,7 +158,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 return result;
             }
 
-            // TODO: SaST - This could be optimized for the failure scenario.
+            // TODO: EFT - This could be optimized for the failure scenario.
             // If script execution is already triggering RPC Retries and then the script execution is cancelled there is a high chance that the cancel RPC call will fail as well and go into RPC retries.
             // We could potentially reduce the time to failure by not retrying the cancel RPC Call if the previous RPC call was already triggering RPC Retries.
 
@@ -173,6 +175,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
         public async Task<ScriptStatus?> CompleteScript(CommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
+            using var activity = TentacleClient.ActivitySource.StartActivity($"{nameof(ScriptServiceV2Executor)}.{nameof(CompleteScript)}");
             try
             {
                 // Finish performs a best effort cleanup of the Workspace on Tentacle

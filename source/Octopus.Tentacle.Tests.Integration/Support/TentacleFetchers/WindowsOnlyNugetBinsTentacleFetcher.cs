@@ -11,7 +11,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
 {
     public class WindowsOnlyNugetBinsTentacleFetcher : ITentacleFetcher
     {
-        static string DownloadUrlForVersion(string versionString) => $"https://f.feedz.io/octopus-deploy/dependencies/packages/Tentacle.Binaries.win-x64/{versionString}/download";
+        static string DownloadUrlForVersion(string versionString) => $"https://f.feedz.io/octopus-deploy/dependencies/packages/Octopus.Tentacle.Binaries.win-x64/{versionString}/download";
 
         private ILogger logger;
 

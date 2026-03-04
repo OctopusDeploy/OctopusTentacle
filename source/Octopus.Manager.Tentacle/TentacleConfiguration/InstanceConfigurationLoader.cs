@@ -60,7 +60,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration
                 systemLog,
                 applicationInstanceRecord.ConfigurationFilePath);
 
-            var homeConfig = new HomeConfiguration(ApplicationName.Tentacle, selector);
+            var homeConfig = new HomeConfiguration(selector);
             var loggingConfig = new LoggingConfiguration(homeConfig);
             var tentacleConfig = new Octopus.Tentacle.Configuration.TentacleConfiguration(
                 selector,

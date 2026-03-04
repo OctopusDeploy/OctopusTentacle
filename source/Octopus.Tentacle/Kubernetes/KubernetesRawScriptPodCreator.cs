@@ -24,7 +24,7 @@ namespace Octopus.Tentacle.Kubernetes
             IKubernetesPodService podService,
             IKubernetesPodMonitor podMonitor,
             IKubernetesSecretService secretService,
-            IKubernetesCustomResourceService customResourceService,
+            IKubernetesPodTemplateService podTemplateService,
             IKubernetesPodContainerResolver containerResolver,
             IApplicationInstanceSelector appInstanceSelector,
             ISystemLog log,
@@ -33,15 +33,14 @@ namespace Octopus.Tentacle.Kubernetes
             KubernetesPhysicalFileSystem kubernetesPhysicalFileSystem,
             IScriptPodLogEncryptionKeyProvider scriptPodLogEncryptionKeyProvider,
             ScriptIsolationMutex scriptIsolationMutex)
-            : base(podService, podMonitor, secretService, customResourceService, containerResolver, appInstanceSelector, log, scriptLogProvider, homeConfiguration, kubernetesPhysicalFileSystem, scriptPodLogEncryptionKeyProvider, scriptIsolationMutex)
+            : base(podService, podMonitor, secretService, podTemplateService, containerResolver, appInstanceSelector, log, scriptLogProvider, homeConfiguration, kubernetesPhysicalFileSystem, scriptPodLogEncryptionKeyProvider, scriptIsolationMutex)
         {
             this.containerResolver = containerResolver;
         }
 
         protected override async Task<IList<V1Container>> CreateInitContainers(StartKubernetesScriptCommandV1 command, string podName, string homeDir, string workspacePath, InMemoryTentacleScriptLog tentacleScriptLog, V1Container? containerSpec)
         {
-            // Deep clone the container spec to avoid modifying the original
-            var container = containerSpec.Clone() ??
+            var container = containerSpec ??
                 new V1Container
                 {
                     Resources = GetScriptPodResourceRequirements(tentacleScriptLog)
@@ -56,11 +55,11 @@ namespace Octopus.Tentacle.Kubernetes
             return new List<V1Container> { container };
         }
 
-        protected override async Task<IList<V1Container>> CreateScriptContainers(StartKubernetesScriptCommandV1 command, string podName, string scriptName, string homeDir, string workspacePath, string[]? scriptArguments, InMemoryTentacleScriptLog tentacleScriptLog, ScriptPodTemplateSpec? spec)
+        protected override async Task<IList<V1Container>> CreateScriptContainers(StartKubernetesScriptCommandV1 command, string podName, string scriptName, string homeDir, string workspacePath, string[]? scriptArguments, InMemoryTentacleScriptLog tentacleScriptLog, ScriptPodTemplate? template)
         {
             return new List<V1Container>
             {
-                await CreateScriptContainer(command, podName, scriptName, homeDir, workspacePath, scriptArguments, tentacleScriptLog, spec?.ScriptContainerSpec)
+                await CreateScriptContainer(command, podName, scriptName, homeDir, workspacePath, scriptArguments, tentacleScriptLog, template?.ScriptContainerSpec)
             };
         }
 

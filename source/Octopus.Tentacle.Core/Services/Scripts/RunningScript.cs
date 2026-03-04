@@ -178,9 +178,9 @@ namespace Octopus.Tentacle.Core.Services.Scripts
                     shellPath,
                     shell.FormatCommandArguments(workspace.BootstrapScriptFilePath, workspace.ScriptArguments, false),
                     workspace.WorkingDirectory,
-                    output => writer.WriteOutput(ProcessOutputSource.Debug, output),
-                    output => writer.WriteOutput(ProcessOutputSource.StdOut, output),
-                    output => writer.WriteOutput(ProcessOutputSource.StdErr, output),
+                    LogScriptOutputTo(writer, ProcessOutputSource.Debug),
+                    LogScriptOutputTo(writer, ProcessOutputSource.StdOut),
+                    LogScriptOutputTo(writer, ProcessOutputSource.StdErr),
                     environmentVariables,
                     token);
 
@@ -192,6 +192,19 @@ namespace Octopus.Tentacle.Core.Services.Scripts
                 writer.WriteOutput(ProcessOutputSource.StdErr, ex.ToString());
 
                 return ScriptExitCodes.PowershellInvocationErrorExitCode;
+            }
+        }
+
+        Action<string> LogScriptOutputTo(IScriptLogWriter logOutput, ProcessOutputSource level)
+        {
+            try
+            {
+                return output => logOutput.WriteOutput(level, output);
+            }
+            catch (Exception e)
+            {
+                log.Warn(e, $"Could not write script output to log, for task {taskId}");
+                throw;
             }
         }
     }

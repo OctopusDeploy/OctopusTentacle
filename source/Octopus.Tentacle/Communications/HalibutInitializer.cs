@@ -10,7 +10,7 @@ using Octopus.Client.Model;
 using Octopus.Client.Model.Endpoints;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Core.Diagnostics;
-using Octopus.Tentacle.Variables;
+using Octopus.Tentacle.Core.Util;
 
 namespace Octopus.Tentacle.Communications
 {

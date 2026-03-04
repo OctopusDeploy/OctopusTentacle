@@ -26,6 +26,7 @@
     </Choose>
     <ItemGroup>
         <ProjectReference Include="..\Octopus.Tentacle.Contracts\Octopus.Tentacle.Contracts.csproj" />
+        <PackageReference Include="Polly" Version="7.2.2" />
     </ItemGroup>
     <ItemGroup>
         <Compile Include="..\Solution Items\VersionInfo.cs" Link="VersionInfo.cs" />

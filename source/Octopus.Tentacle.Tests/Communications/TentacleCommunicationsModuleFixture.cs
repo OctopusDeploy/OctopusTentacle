@@ -5,8 +5,8 @@ using Halibut;
 using NUnit.Framework;
 using Octopus.Tentacle.Communications;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Core.Util;
 using Octopus.Tentacle.Tests.Commands;
-using Octopus.Tentacle.Variables;
 
 namespace Octopus.Tentacle.Tests.Communications
 {
