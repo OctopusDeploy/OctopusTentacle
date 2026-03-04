@@ -179,8 +179,15 @@ namespace Octopus.Tentacle.Kubernetes
 
             LogVerboseToBothLogs($"Creating Kubernetes Pod '{podName}'.", tentacleScriptLog);
 
-            workspace.CopyFile(KubernetesConfig.BootstrapRunnerExecutablePath, "bootstrapRunner", true);
-
+            
+            //TODO(tmm): Need to copy over ALL the bootstrap files and bootstrap run selector.
+            //need to determine whate files are available
+            foreach(var file in kubernetesPhysicalFileSystem.EnumerateFiles(KubernetesConfig.BootstrapRunnerExecutablePath))
+            {
+                var baseName = Path.GetFileName(file);
+                workspace.CopyFile(file, baseName, true);    
+            }
+            
             var scriptName = Path.GetFileName(workspace.BootstrapScriptFilePath);
             var workspacePath = Path.Combine("Work", workspace.ScriptTicket.TaskId);
 
@@ -295,10 +302,10 @@ namespace Octopus.Tentacle.Kubernetes
         protected async Task<V1Container> CreateScriptContainer(StartKubernetesScriptCommandV1 command, string podName, string scriptName, string homeDir, string workspacePath, string[]? scriptArguments, InMemoryTentacleScriptLog tentacleScriptLog, V1Container? containerSpec)
         {
             var spaceInformation = kubernetesPhysicalFileSystem.GetStorageInformation();
-
+            
             var commandString = string.Join(" ", new[]
                 {
-                    $"{homeDir}/Work/{command.ScriptTicket.TaskId}/bootstrapRunner",
+                    $"{homeDir}/Work/{command.ScriptTicket.TaskId}/execute-bootstrapRunner.sh",
                     Path.Combine(homeDir, workspacePath),
                     Path.Combine(homeDir, workspacePath, scriptName)
                 }.Concat(scriptArguments ?? Array.Empty<string>())

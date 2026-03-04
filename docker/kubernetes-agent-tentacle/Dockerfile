@@ -43,7 +43,7 @@ EXPOSE 10933
 
 COPY docker/kubernetes-agent-tentacle/scripts/* /scripts/
 COPY --from=bootstrapRunnerBuilder bootstrapRunner/bin/* /bootstrapRunner/
-RUN chmod +x /scripts/*.sh && chmod +x /bootstrapRunner/*
+RUN chmod +x /scripts/*.sh
 
 WORKDIR /tmp
 
@@ -78,7 +78,7 @@ RUN chgrp -R 0 /opt /usr /.dotnet && \
 RUN chgrp 0 /etc /etc/ssl/certs && \
     chmod g=u /etc /etc/ssl/certs
 
-ENV BOOTSTRAPRUNNEREXECUTABLEPATH=/bootstrapRunner/select-bootstrapRunner.sh
+ENV BOOTSTRAPRUNNEREXECUTABLEPATH=/bootstrapRunner
 ENV OCTOPUS_RUNNING_IN_CONTAINER=Y
 ENV ACCEPT_EULA=N
 ENV CustomPublicHostName=""
