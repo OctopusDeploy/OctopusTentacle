@@ -9,6 +9,7 @@ using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Core.Services.Scripts.Locking;
 using Octopus.Tentacle.Kubernetes.Crypto;
+using Octopus.Tentacle.Scripts;
 
 namespace Octopus.Tentacle.Kubernetes
 {
@@ -24,6 +25,7 @@ namespace Octopus.Tentacle.Kubernetes
             IKubernetesPodService podService,
             IKubernetesPodMonitor podMonitor,
             IKubernetesSecretService secretService,
+            IKubernetesConfigMapService configMapService,
             IKubernetesPodTemplateService podTemplateService,
             IKubernetesPodContainerResolver containerResolver,
             IApplicationInstanceSelector appInstanceSelector,
@@ -33,7 +35,7 @@ namespace Octopus.Tentacle.Kubernetes
             KubernetesPhysicalFileSystem kubernetesPhysicalFileSystem,
             IScriptPodLogEncryptionKeyProvider scriptPodLogEncryptionKeyProvider,
             ScriptIsolationMutex scriptIsolationMutex)
-            : base(podService, podMonitor, secretService, podTemplateService, containerResolver, appInstanceSelector, log, scriptLogProvider, homeConfiguration, kubernetesPhysicalFileSystem, scriptPodLogEncryptionKeyProvider, scriptIsolationMutex)
+            : base(podService, podMonitor, secretService, configMapService, podTemplateService, containerResolver, appInstanceSelector, log, scriptLogProvider, homeConfiguration, kubernetesPhysicalFileSystem, scriptPodLogEncryptionKeyProvider, scriptIsolationMutex)
         {
             this.containerResolver = containerResolver;
         }
@@ -50,16 +52,16 @@ namespace Octopus.Tentacle.Kubernetes
             container.Image = command.PodImageConfiguration?.Image ?? await containerResolver.GetContainerImageForCluster();
             container.ImagePullPolicy = KubernetesConfig.ScriptPodPullPolicy;
             container.Command = new List<string> { "sh", "-c", GetInitExecutionScript("/nfs-mount", homeDir, workspacePath) };
-            container.VolumeMounts = Merge(container.VolumeMounts, new[] { new V1VolumeMount("/nfs-mount", "init-nfs-volume"), new V1VolumeMount(homeDir, "tentacle-home") });
+            //container.VolumeMounts = Merge(container.VolumeMounts, new[] { new V1VolumeMount("/nfs-mount", "init-nfs-volume"), new V1VolumeMount(homeDir, "tentacle-home") });
 
             return new List<V1Container> { container };
         }
 
-        protected override async Task<IList<V1Container>> CreateScriptContainers(StartKubernetesScriptCommandV1 command, string podName, string scriptName, string homeDir, string workspacePath, string[]? scriptArguments, InMemoryTentacleScriptLog tentacleScriptLog, ScriptPodTemplate? template)
+        protected override async Task<IList<V1Container>> CreateScriptContainers(StartKubernetesScriptCommandV1 command, string podName, string scriptName, string homeDir, string workspacePath, string[]? scriptArguments, InMemoryTentacleScriptLog tentacleScriptLog, ScriptPodTemplate? template, IScriptWorkspace workspace)
         {
             return new List<V1Container>
             {
-                await CreateScriptContainer(command, podName, scriptName, homeDir, workspacePath, scriptArguments, tentacleScriptLog, template?.ScriptContainerSpec)
+                await CreateScriptContainer(command, podName, scriptName, homeDir, workspacePath, scriptArguments, tentacleScriptLog, template?.ScriptContainerSpec, workspace)
             };
         }
 
@@ -69,15 +71,21 @@ namespace Octopus.Tentacle.Kubernetes
             {
                 new()
                 {
-                    Name = "tentacle-home",
+                    Name = "workspace",
                     EmptyDir = new V1EmptyDirVolumeSource()
                 },
-                new()
+                new V1Volume
                 {
-                    Name = "init-nfs-volume",
-                    PersistentVolumeClaim = new V1PersistentVolumeClaimVolumeSource
-                    {
-                        ClaimName = KubernetesConfig.PodVolumeClaimName
+                    Name = "calamari",
+                    EmptyDir = new V1EmptyDirVolumeSource()
+                },
+
+                new () {
+                    Name = "bootstrap-runner",
+                    Image =
+                    new() {
+                        Reference = "octopusdeploy/kubernetes-agent-tentacle:8.3.3359",
+                        PullPolicy = "IfNotPresent"
                     }
                 },
                 CreateAgentUpgradeSecretVolume(),
