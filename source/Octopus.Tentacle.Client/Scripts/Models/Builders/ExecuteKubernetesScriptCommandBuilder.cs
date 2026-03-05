@@ -7,6 +7,7 @@ namespace Octopus.Tentacle.Client.Scripts.Models.Builders
     {
         KubernetesImageConfiguration? configuration;
         string? scriptPodServiceAccountName;
+        string? scriptPodPlatformAffinity;
         bool isRawScript;
         KubernetesAgentAuthContext? authContext;
 
@@ -39,6 +40,12 @@ namespace Octopus.Tentacle.Client.Scripts.Models.Builders
             return this;
         }
 
+        public ExecuteKubernetesScriptCommandBuilder WithScriptPodPlatformAffinity(string scriptPodPlatformAffinity)
+        {
+            this.scriptPodPlatformAffinity = scriptPodPlatformAffinity;
+            return this;
+        }
+
         public override ExecuteScriptCommand Build()
             => new ExecuteKubernetesScriptCommand(
                 ScriptTicket,
@@ -51,7 +58,8 @@ namespace Octopus.Tentacle.Client.Scripts.Models.Builders
                 configuration,
                 scriptPodServiceAccountName,
                 isRawScript,
-                authContext
+                authContext,
+                scriptPodPlatformAffinity
             );
     }
 }

@@ -180,7 +180,7 @@ namespace Octopus.Tentacle.Kubernetes
             LogVerboseToBothLogs($"Creating Kubernetes Pod '{podName}'.", tentacleScriptLog);
 
             workspace.CopyFile(KubernetesConfig.BootstrapRunnerExecutablePath, "bootstrapRunner", true);
-
+            
             var scriptName = Path.GetFileName(workspace.BootstrapScriptFilePath);
             var workspacePath = Path.Combine("Work", workspace.ScriptTicket.TaskId);
 
@@ -209,6 +209,8 @@ namespace Octopus.Tentacle.Kubernetes
 
             //we always add on the pod affinity if this is a read-write once
             podSpec = AddPodAffinityIfReadWriteOnce(podSpec, tentacleScriptLog);
+            
+            podSpec = AddNodeAffinityFromCommand(podSpec, command, tentacleScriptLog);
 
             var pod = new V1Pod
             {
@@ -295,7 +297,7 @@ namespace Octopus.Tentacle.Kubernetes
         protected async Task<V1Container> CreateScriptContainer(StartKubernetesScriptCommandV1 command, string podName, string scriptName, string homeDir, string workspacePath, string[]? scriptArguments, InMemoryTentacleScriptLog tentacleScriptLog, V1Container? containerSpec)
         {
             var spaceInformation = kubernetesPhysicalFileSystem.GetStorageInformation();
-
+            
             var commandString = string.Join(" ", new[]
                 {
                     $"{homeDir}/Work/{command.ScriptTicket.TaskId}/bootstrapRunner",
@@ -425,6 +427,43 @@ namespace Octopus.Tentacle.Kubernetes
                 //write a verbose message to the script log.
                 tentacleScriptLog.Verbose(message);
             }
+
+            return podSpec;
+        }
+        
+        V1PodSpec AddNodeAffinityFromCommand(V1PodSpec podSpec, StartKubernetesScriptCommandV1 command, InMemoryTentacleScriptLog tentacleScriptLog)
+        {
+            var platformAffinity = command.ScriptPodPlatformAffinity;
+            if (platformAffinity == null || platformAffinity.IsNullOrEmpty())
+            {
+                return podSpec;   
+            }
+            
+            //the actual affinity strings can be found in OctopusServer repo `KnownPlatforms.cs`
+            var parts = platformAffinity.Split('-');
+            if (parts.Length != 2)
+            {
+                var message = $"Invalid platform affinity '{platformAffinity}'. Expected format: '<os>/<arch>'.";
+                log.Warn(message);
+                tentacleScriptLog.Verbose(message);
+                return podSpec;
+            }
+
+            var os = parts[0];
+            var arch = parts[1];
+
+            tentacleScriptLog.Verbose($"Adding node affinity for platform '{platformAffinity}'.");
+
+            var affinity = podSpec.Affinity ??= new V1Affinity();
+            var nodeAffinity = affinity.NodeAffinity ??= new V1NodeAffinity();
+            nodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution = new V1NodeSelector(new List<V1NodeSelectorTerm>
+            {
+                new(matchExpressions: new List<V1NodeSelectorRequirement>
+                {
+                    new("kubernetes.io/os", "In", new List<string> { os }),
+                    new("kubernetes.io/arch", "In", new List<string> { arch })
+                })
+            });
 
             return podSpec;
         }
