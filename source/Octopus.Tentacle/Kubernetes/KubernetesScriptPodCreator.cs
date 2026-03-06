@@ -180,7 +180,7 @@ namespace Octopus.Tentacle.Kubernetes
             LogVerboseToBothLogs($"Creating Kubernetes Pod '{podName}'.", tentacleScriptLog);
 
             workspace.CopyFile(KubernetesConfig.BootstrapRunnerExecutablePath, "bootstrapRunner", true);
-            
+
             var scriptName = Path.GetFileName(workspace.BootstrapScriptFilePath);
             var workspacePath = Path.Combine("Work", workspace.ScriptTicket.TaskId);
 
@@ -297,7 +297,7 @@ namespace Octopus.Tentacle.Kubernetes
         protected async Task<V1Container> CreateScriptContainer(StartKubernetesScriptCommandV1 command, string podName, string scriptName, string homeDir, string workspacePath, string[]? scriptArguments, InMemoryTentacleScriptLog tentacleScriptLog, V1Container? containerSpec)
         {
             var spaceInformation = kubernetesPhysicalFileSystem.GetStorageInformation();
-            
+
             var commandString = string.Join(" ", new[]
                 {
                     $"{homeDir}/Work/{command.ScriptTicket.TaskId}/bootstrapRunner",
@@ -433,7 +433,7 @@ namespace Octopus.Tentacle.Kubernetes
         
         V1PodSpec AddNodeAffinityFromCommand(V1PodSpec podSpec, StartKubernetesScriptCommandV1 command, InMemoryTentacleScriptLog tentacleScriptLog)
         {
-            var platformAffinity = command.ScriptPodPlatformAffinity;
+            var platformAffinity = command.ScriptPodPlatform;
             if (platformAffinity == null || platformAffinity.IsNullOrEmpty())
             {
                 return podSpec;   

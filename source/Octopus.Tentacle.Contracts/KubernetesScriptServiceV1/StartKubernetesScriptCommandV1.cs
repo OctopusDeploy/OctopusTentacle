@@ -20,7 +20,7 @@ namespace Octopus.Tentacle.Contracts.KubernetesScriptServiceV1
             ScriptFile[]? additionalFiles,
             bool isRawScript,
             KubernetesAgentAuthContext? authContext,
-            string? scriptPodPlatformAffinity)
+            string? scriptPodPlatform)
         {
             Arguments = arguments;
             TaskId = taskId;
@@ -33,7 +33,7 @@ namespace Octopus.Tentacle.Contracts.KubernetesScriptServiceV1
             ScriptPodServiceAccountName = scriptPodServiceAccountName;
             IsRawScript = isRawScript;
             AuthContext = authContext;
-            ScriptPodPlatformAffinity = scriptPodPlatformAffinity;
+            ScriptPodPlatform = scriptPodPlatform;
 
             if (additionalFiles != null)
                 Files.AddRange(additionalFiles);
@@ -65,6 +65,6 @@ namespace Octopus.Tentacle.Contracts.KubernetesScriptServiceV1
 
         public KubernetesAgentAuthContext? AuthContext { get; }
         
-        public string? ScriptPodPlatformAffinity { get; }
+        public string? ScriptPodPlatform { get; }
     }
 }

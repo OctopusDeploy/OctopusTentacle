@@ -10,7 +10,7 @@ namespace Octopus.Tentacle.Client.Scripts.Models
 
         public string? ScriptPodServiceAccountName { get;}
 
-        public string? ScriptPodPlatformAffinity { get; }
+        public string? ScriptPodPlatform { get; }
 
         public bool IsRawScript { get; }
 
@@ -28,14 +28,14 @@ namespace Octopus.Tentacle.Client.Scripts.Models
             string? scriptPodServiceAccountName,
             bool isRawScript,
             KubernetesAgentAuthContext? authContext,
-            string? scriptPodPlatformAffinity)
+            string? scriptPodPlatform)
             : base(scriptTicket, taskId, scriptBody, arguments, isolationConfiguration, additionalScripts, additionalFiles)
         {
             ImageConfiguration = imageConfiguration;
             ScriptPodServiceAccountName = scriptPodServiceAccountName;
             IsRawScript = isRawScript;
             AuthContext = authContext;
-            ScriptPodPlatformAffinity = scriptPodPlatformAffinity;
+            ScriptPodPlatform = scriptPodPlatform;
         }
     }
 }

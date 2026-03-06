@@ -67,7 +67,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 kubernetesScriptCommand.Files.ToArray(),
                 kubernetesScriptCommand.IsRawScript,
                 kubernetesScriptCommand.AuthContext,
-                kubernetesScriptCommand.ScriptPodPlatformAffinity);
+                kubernetesScriptCommand.ScriptPodPlatform);
         }
 
         static ScriptOperationExecutionResult Map(KubernetesScriptStatusResponseV1 scriptStatusResponse)
