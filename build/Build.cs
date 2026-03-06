@@ -58,7 +58,7 @@ partial class Build : NukeBuild
     [Parameter(Name = "signing_certificate_path")] public static string SigningCertificatePath = RootDirectory / "certificates" / "OctopusDevelopment.pfx";
     [Secret] [Parameter(Name = "signing_certificate_password")] public static string SigningCertificatePassword = "Password01!";
 
-    [Parameter(Name = "RuntimeIds")] public string? SpecificRuntimeIds;
+    [Parameter(Name = "RuntimeIds")] public string[] SpecificRuntimeIds = [];
 
     readonly AbsolutePath SourceDirectory = RootDirectory / "source";
     readonly AbsolutePath ArtifactsDirectory = RootDirectory / "_artifacts";
@@ -70,9 +70,9 @@ partial class Build : NukeBuild
     const string NetCore = "net8.0";
     const string NetCoreWindows = "net8.0-windows";
 
-    IEnumerable<string> RuntimeIds => SpecificRuntimeIds != null
-        ? SpecificRuntimeIds.Split(",")
-        : new[] { "win", "win-x86", "win-x64", "linux-x64", "linux-musl-x64", "linux-arm64", "linux-arm", "osx-x64", "osx-arm64" };
+    IEnumerable<string> RuntimeIds => !SpecificRuntimeIds.IsEmpty()
+        ? SpecificRuntimeIds
+        : ["win", "win-x86", "win-x64", "linux-x64", "linux-musl-x64", "linux-arm64", "linux-arm", "osx-x64", "osx-arm64"];
 
     IEnumerable<string> CrossPlatformBundleForServerRequiredRuntimes => ["win", "win-x86", "win-x64", "linux-x64", "linux-arm64", "linux-arm"];
 
