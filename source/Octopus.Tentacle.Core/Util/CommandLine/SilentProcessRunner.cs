@@ -151,18 +151,18 @@ namespace Octopus.Tentacle.Util
                                 process.Refresh();
                                 if (lastTotalProcessorTime == process.TotalProcessorTime && lastMemoryUsage == process.WorkingSet64 && lastStuckProcessorTime != process.TotalProcessorTime)
                                 { 
-                                    debug("Tentacle has detected a potential stuck process.");
+                                    //debug("Tentacle has detected a potential stuck process.");
                                     lastStuckProcessorTime = process.TotalProcessorTime;
                                 }
                                 lastTotalProcessorTime = process.TotalProcessorTime;
                                 lastMemoryUsage = process.WorkingSet64;
                             }
                         }
-                        catch (Exception e)
+                        catch (SystemException)
                         {
                             try
                             {
-                                error($"Error occured while executing {executable}: {e.PrettyPrint()}");
+                                //error($"Error occured while executing {executable}: {e.PrettyPrint()}");
                             }
                             catch
                             {
