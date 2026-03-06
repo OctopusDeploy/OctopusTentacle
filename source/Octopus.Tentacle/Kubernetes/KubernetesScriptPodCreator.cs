@@ -179,9 +179,6 @@ namespace Octopus.Tentacle.Kubernetes
 
             LogVerboseToBothLogs($"Creating Kubernetes Pod '{podName}'.", tentacleScriptLog);
 
-            
-            //TODO(tmm): Need to copy over ALL the bootstrap files and bootstrap run selector.
-            //need to determine whate files are available
             foreach(var file in kubernetesPhysicalFileSystem.EnumerateFiles(KubernetesConfig.BootstrapRunnerExecutablePath))
             {
                 var baseName = Path.GetFileName(file);
