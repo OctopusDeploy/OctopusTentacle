@@ -140,7 +140,35 @@ namespace Octopus.Tentacle.Util
                         process.BeginOutputReadLine();
                         process.BeginErrorReadLine();
 
-                        process.WaitForExit();
+                        var lastMemoryUsage = process.WorkingSet64;
+                        var lastTotalProcessorTime = process.TotalProcessorTime;
+                        var lastStuckProcessorTime = process.TotalProcessorTime;
+                        try
+                        {
+                            while (!process.WaitForExit(1000))
+                            {
+                                if (process.HasExited) break;
+                                process.Refresh();
+                                if (lastTotalProcessorTime == process.TotalProcessorTime && lastMemoryUsage == process.WorkingSet64 && lastStuckProcessorTime != process.TotalProcessorTime)
+                                { 
+                                    debug("Tentacle has detected a potential stuck process.");
+                                    lastStuckProcessorTime = process.TotalProcessorTime;
+                                }
+                                lastTotalProcessorTime = process.TotalProcessorTime;
+                                lastMemoryUsage = process.WorkingSet64;
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            try
+                            {
+                                error($"Error occured while executing {executable}: {e.PrettyPrint()}");
+                            }
+                            catch
+                            {
+                                // Ignore
+                            }
+                        }
 
                         SafelyCancelRead(process.CancelErrorRead, debug);
                         SafelyCancelRead(process.CancelOutputRead, debug);
