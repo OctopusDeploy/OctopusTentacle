@@ -2,7 +2,7 @@
 set -eu
 
 # Architecture detection and bootstrap runner selection script
-# This script automatically detects the runtime architecture and selects 
+# This script automatically detects the runtime architecture and selects
 # the appropriate bootstrapRunner binary for execution.
 
 # Detect the current architecture
@@ -32,17 +32,8 @@ esac
 
 # Construct binary name
 BINARY_NAME="bootstrapRunner-${OS}-${GO_ARCH}"
-BINARY_PATH="/bootstrapRunner/$BINARY_NAME"
 
-# Check if the binary exists
-if [ ! -f "$BINARY_PATH" ]; then
-    echo "Error: Bootstrap runner binary not found for architecture ${OS}-${GO_ARCH}" >&2
-    echo "Looking for: $BINARY_PATH" >&2
-    echo "Available binaries:" >&2
-    ls -1 "/bootstrapRunner"/bootstrapRunner-* 2>/dev/null || echo "  No bootstrap binaries found" >&2
-    exit 1
-fi
-
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 # Execute the appropriate binary with all arguments passed through
-exec "$BINARY_PATH" "$@"
+exec "$SCRIPT_DIR/$BINARY_NAME" "$@"

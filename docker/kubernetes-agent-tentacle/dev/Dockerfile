@@ -19,8 +19,8 @@ RUN for arch in amd64 arm64 386 arm; do \
     done
 
 # Copy the architecture detection script from source and make it executable
-COPY docker/kubernetes-agent-tentacle/bootstrapRunner/select-bootstrapRunner.sh bin/
-RUN chmod +x bin/select-bootstrapRunner.sh
+COPY docker/kubernetes-agent-tentacle/bootstrapRunner/execute-bootstrapRunner.sh bin/
+RUN chmod +x bin/execute-bootstrapRunner.sh
 
 
 FROM mcr.microsoft.com/dotnet/runtime-deps:$RuntimeDepsTag
