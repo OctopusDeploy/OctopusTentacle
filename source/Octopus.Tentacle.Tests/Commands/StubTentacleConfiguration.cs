@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
@@ -30,8 +30,6 @@ namespace Octopus.Tentacle.Tests.Commands
         public string ApplicationDirectory { get; set; } = null!;
         public string PackagesDirectory { get; private set; } = null!;
         public string LogsDirectory { get; private set; } = null!;
-        public string JournalFilePath { get; private set; } = null!;
-        public string PackageRetentionJournalPath { get; private set; } = null!;
         public X509Certificate2 TentacleCertificate { get; set; } = null!;
         public string? ListenIpAddress { get; set; } = null!;
         public bool NoListen { get; set; }

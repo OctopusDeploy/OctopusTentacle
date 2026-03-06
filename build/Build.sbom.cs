@@ -14,9 +14,9 @@ using Serilog;
 
 partial class Build
 {
-    [ParameterFromPasswordStore(Name = "DEPENDENCY_TRACK_URL", SecretReference = "op://Tentacle Secrets for Tests/Dependency Track SBOM API/hostname")] 
+    [ParameterFromPasswordStore(Name = "DEPENDENCY_TRACK_URL", SecretReference = "op://Tentacle Secrets for Tests/Dependency Track API/hostname")] 
     readonly string? DependencyTrackUrl;
-    [ParameterFromPasswordStore(Name = "DEPENDENCY_TRACK_API_KEY", SecretReference = "op://Tentacle Secrets for Tests/Dependency Track SBOM API/credential"), Secret] 
+    [ParameterFromPasswordStore(Name = "DEPENDENCY_TRACK_API_KEY", SecretReference = "op://Tentacle Secrets for Tests/Dependency Track API/credential"), Secret] 
     readonly string? DependencyTrackApiKey;
     
     readonly List<string> ContainersWeHaveCreated = new();
@@ -34,9 +34,6 @@ partial class Build
         {
             var combinedFileName = $"tentacle.{OctoVersionInfo.FullSemVer}-sbom.cdx.json";
 
-            // redirect all docker output to stdout, as lots of it goes as stderr when it's just progress messages
-            DockerTasks.DockerLogger = (_, message) => Log.Information("[Docker] {Message}", message);
-            
             EnsureDockerImagesExistLocally();
 
             var folderToSearchForDepsJson = ResolvePathToDepsJsonFiles();
@@ -166,7 +163,7 @@ partial class Build
                         $"SBOM_UPLOADER_TAGS={projectName},{parentName}")
                 .SetArgs(args)
                 .SetRm(true)
-                .SetProcessLogInvocation(false)); // don't log the invocation, as in this version of nuke (8.1.4), it logs the api key
+                .AddProcessRedactedSecrets(DependencyTrackApiKey));
             
             return Task.CompletedTask;
         });

@@ -57,11 +57,10 @@ namespace Octopus.Tentacle.Tests.Integration.Util
             temporaryDirectory = new TemporaryDirectory(Substitute.For<IOctopusFileSystem>(), testRootPath);
             var homeConfiguration = Substitute.For<IHomeConfiguration>();
             homeConfiguration.HomeDirectory.Returns(temporaryDirectory.DirectoryPath);
-            homeConfiguration.ApplicationSpecificHomeDirectory.Returns(temporaryDirectory.DirectoryPath);
             var log = new InMemoryLog();
             var workspaceFactory = new ScriptWorkspaceFactory(new OctopusPhysicalFileSystem(log), homeConfiguration, new SensitiveValueMasker());
             taskId = Guid.NewGuid().ToString();
-            workspace = workspaceFactory.GetWorkspace(new ScriptTicket(taskId));
+            workspace = workspaceFactory.GetWorkspace(new ScriptTicket(taskId), WorkspaceReadinessCheck.Perform);
             Console.WriteLine($"Working directory: {workspace.WorkingDirectory}");
             scriptLog = new TestScriptLog();
             cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));

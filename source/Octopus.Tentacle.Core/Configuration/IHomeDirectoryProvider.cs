@@ -1,8 +1,9 @@
-namespace Octopus.Tentacle.Configuration
+using System;
+
+namespace Octopus.Tentacle.Core.Configuration
 {
     public interface IHomeDirectoryProvider
     {
         string? HomeDirectory { get; }
-        string? ApplicationSpecificHomeDirectory { get; }
     }
 }

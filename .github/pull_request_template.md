@@ -8,9 +8,7 @@
 
 <!-- Describe the result of the change -->
 
-Fixes https://github.com/OctopusDeploy/Issues/issues/... _(optional public issue)_
-
-Fixes https://github.com/OctopusDeploy/ResearchAndDevelopment/issues/... _(optional private issue)_
+Fixes https://github.com/OctopusDeploy/OctopusTentacle/issues/... _(optional public issue)_
 
 See [How we use GitHub Issues](https://github.com/OctopusDeploy/Issues/blob/main/docs/CONTRIBUTING.internal.md) (including [this flowchart](https://whimsical.com/r-d-incoming-work-workflow-aug-21-NsDnGQXcwBLwU66a88Zhue) 
 
@@ -18,13 +16,9 @@ See [How we use GitHub Issues](https://github.com/OctopusDeploy/Issues/blob/main
 
 <!-- Consider adding a log excerpt or screen capture. -->
 
-![Before](https://user-images.githubusercontent.com/5088479/120727281-72762180-c51d-11eb-9776-85363dc084e2.png)
-
 ## After
 
 <!-- Consider adding a log excerpt or screen capture. -->
-
-![After](https://user-images.githubusercontent.com/5088479/120727258-67bb8c80-c51d-11eb-8d2a-e047095b2d01.png)
 
 # How to review this PR
 

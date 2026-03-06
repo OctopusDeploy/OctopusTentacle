@@ -60,7 +60,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
                 command.ScriptTicket,
                 _ =>
                 {
-                    var workspace = workspaceFactory.GetWorkspace(command.ScriptTicket);
+                    var workspace = workspaceFactory.GetWorkspace(command.ScriptTicket, WorkspaceReadinessCheck.Perform);
                     var scriptState = scriptStateStoreFactory.Create(workspace);
                     return new RunningScriptWrapper(scriptState);
                 });
@@ -79,7 +79,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
                         return GetResponse(command.ScriptTicket, 0, runningScript.Process);
                     }
 
-                    workspace = workspaceFactory.GetWorkspace(command.ScriptTicket);
+                    workspace = workspaceFactory.GetWorkspace(command.ScriptTicket, WorkspaceReadinessCheck.Perform);
                 }
                 else
                 {
@@ -142,7 +142,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
                 runningScript.Dispose();
             }
 
-            var workspace = workspaceFactory.GetWorkspace(command.Ticket);
+            var workspace = workspaceFactory.GetWorkspace(command.Ticket, WorkspaceReadinessCheck.Skip);
             await workspace.Delete(cancellationToken);
         }
 
@@ -156,7 +156,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
 
         ScriptStatusResponseV2 GetResponse(ScriptTicket ticket, long lastLogSequence, RunningScript? runningScript)
         {
-            var workspace = workspaceFactory.GetWorkspace(ticket);
+            var workspace = workspaceFactory.GetWorkspace(ticket, WorkspaceReadinessCheck.Skip);
             var scriptLog = runningScript?.ScriptLog ?? workspace.CreateLog();
             var logs = scriptLog.GetOutput(lastLogSequence, out var next);
 
