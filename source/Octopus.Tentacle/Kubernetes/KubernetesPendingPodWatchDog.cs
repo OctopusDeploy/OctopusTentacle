@@ -94,7 +94,7 @@ namespace Octopus.Tentacle.Kubernetes
                     log.Verbose($"PendingPodWatchdog: Pod {pendingPod.ScriptTicket} has been pending for more than {consideredStuckTimeSpan.Minutes} minutes");
 
                     var podScriptLog = scriptLogProvider.GetOrCreate(pendingPod.ScriptTicket);
-                    podScriptLog.Error($"The Kubernetes Pod '{pendingPod.ScriptTicket.ToKubernetesScriptPodName()}' has been in the '{pendingPod.State.Phase}' for more than {consideredStuckTimeSpan.Minutes} minute.");
+                    podScriptLog.Error($"The Kubernetes Pod '{pendingPod.ScriptTicket.ToKubernetesScriptPodName()}' has been in the '{pendingPod.State.Phase}' for more than {consideredStuckTimeSpan.Minutes} minutes and will be deleted.");
                     
                     //marks the pod as completed with a timeout exit code, which then lets the script orchestration handle it :)
                     pendingPod.MarkAsCompleted(ScriptExitCodes.TimeoutExitCode, now);
