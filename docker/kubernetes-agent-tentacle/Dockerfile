@@ -6,12 +6,20 @@ FROM golang:1.22 as bootstrapRunnerBuilder
 ARG TARGETARCH
 ARG TARGETOS
 
+ARG platforms="linux"
+ARG architectures="amd64 arm64 386 arm"
+
 COPY docker/kubernetes-agent-tentacle/bootstrapRunner/* /bootstrapRunner/
 WORKDIR /bootstrapRunner
 
-# Note: the given ldflags remove debug symbols
-RUN go build -ldflags "-s -w" -o "bin/bootstrapRunner"
+# Create bin directory for multiple architectures
+RUN mkdir -p bin
 
+RUN for platform in $platforms; do \
+        for arch in $architectures; do \
+            GOOS=$platform GOARCH=$arch go build -ldflags "-s -w" -o "bin/bootstrapRunner-$platform-$arch"; \
+        done; \
+    done
 
 FROM mcr.microsoft.com/dotnet/runtime-deps:$RuntimeDepsTag
 
@@ -31,8 +39,12 @@ RUN groupadd -g 999 octopus \
 EXPOSE 10933
 
 COPY docker/kubernetes-agent-tentacle/scripts/* /scripts/
-COPY --from=bootstrapRunnerBuilder bootstrapRunner/bin/bootstrapRunner /bootstrapRunner
+COPY --from=bootstrapRunnerBuilder bootstrapRunner/bin/* /bootstrapRunner/
 RUN chmod +x /scripts/*.sh
+
+# Copy the architecture detection script from source and make it executable
+COPY docker/kubernetes-agent-tentacle/bootstrapRunner/execute-bootstrapRunner.sh /bootstrapRunner/
+RUN chmod +x /bootstrapRunner/execute-bootstrapRunner.sh
 
 WORKDIR /tmp
 
@@ -67,7 +79,7 @@ RUN chgrp -R 0 /opt /usr /.dotnet && \
 RUN chgrp 0 /etc /etc/ssl/certs && \
     chmod g=u /etc /etc/ssl/certs
 
-ENV BOOTSTRAPRUNNEREXECUTABLEPATH=/bootstrapRunner
+ENV BOOTSTRAPRUNNEREXECUTABLEPATH=/bootstrapRunner/
 ENV OCTOPUS_RUNNING_IN_CONTAINER=Y
 ENV ACCEPT_EULA=N
 ENV CustomPublicHostName=""
