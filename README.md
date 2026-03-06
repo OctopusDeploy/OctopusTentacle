@@ -22,7 +22,7 @@ If you're unable to find an open issue addressing the problem, please follow our
 
 :+1::tada: First off, thanks for your contribution to Tentacle! :tada::+1:
 
-Please [create a new issue](https://github.com/OctopusDeploy/OctopusTentacle/issues/new) for each bug fix or enhancement. [Issues in this repository](https://github.com/OctopusDeploy/OctopusTentacle/issues) are automatically used to create release notes for [releases](https://github.com/OctopusDeploy/OctopusTentacle/releases).
+Please [create a new issue](https://github.com/OctopusDeploy/OctopusTentacle/issues/new) for each bug fix or enhancement. [Issues in this repository](https://github.com/OctopusDeploy/OctopusTentacle/issues) are automatically used to create release notes for [releases](https://octopus.com/downloads/tentacle).
 
 Please ensure every commit that hits `main` links either to an issue directly, or to a PR that in turn links to an issue. Please use the [appropriate keywords to close issues](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword). Doing so will ensure that your changes are available for users to download via the [Downloads](https://octopus.com/downloads/tentacle) page.
 

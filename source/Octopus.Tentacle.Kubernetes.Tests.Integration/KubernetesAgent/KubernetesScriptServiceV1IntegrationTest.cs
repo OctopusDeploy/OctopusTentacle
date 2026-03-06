@@ -56,7 +56,10 @@ public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrati
         result.ExitCode.Should().Be(0);
         result.State.Should().Be(ProcessState.Complete);
 
-        recordedMethodUsages.For(nameof(IAsyncClientKubernetesScriptServiceV1.StartScriptAsync)).Started.Should().Be(1);
+        // We occasionally see that communication with Tentacle gets interrupted, causing Tentacle to reconnect and restart the script.
+        // This could therefore happen more than once, which this assertion supports.
+        recordedMethodUsages.For(nameof(IAsyncClientKubernetesScriptServiceV1.StartScriptAsync)).Started.Should().BeGreaterThanOrEqualTo(1);
+        
         recordedMethodUsages.For(nameof(IAsyncClientKubernetesScriptServiceV1.GetStatusAsync)).Started.Should().BeGreaterThan(1);
         recordedMethodUsages.For(nameof(IAsyncClientKubernetesScriptServiceV1.CompleteScriptAsync)).Started.Should().Be(1);
         recordedMethodUsages.For(nameof(IAsyncClientKubernetesScriptServiceV1.CancelScriptAsync)).Started.Should().Be(0);

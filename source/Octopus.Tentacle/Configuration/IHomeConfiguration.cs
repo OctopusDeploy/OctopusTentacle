@@ -1,4 +1,5 @@
 using System;
+using Octopus.Tentacle.Core.Configuration;
 
 namespace Octopus.Tentacle.Configuration
 {

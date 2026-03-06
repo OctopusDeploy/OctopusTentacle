@@ -19,6 +19,9 @@ namespace Octopus.Tentacle.Kubernetes
         public static string NfsWatchdogImageVariableName => $"{EnvVarPrefix}__NFSWATCHDOGIMAGE";
         public static string? NfsWatchdogImage => Environment.GetEnvironmentVariable(NfsWatchdogImageVariableName);
 
+        public static readonly string PersistenceAccessModesJsonVariableName = $"{EnvVarPrefix}__ACCESSMODESJSON";
+        public static string? PersistenceAccessModesJson => Environment.GetEnvironmentVariable(PersistenceAccessModesJsonVariableName);
+
         public static TimeSpan PodsConsideredOrphanedAfterTimeSpan => TimeSpan.FromMinutes(int.TryParse(Environment.GetEnvironmentVariable($"{EnvVarPrefix}__PODSCONSIDEREDORPHANEDAFTERMINUTES"), out var podsConsideredOrphanedAfterTimeSpan) ? podsConsideredOrphanedAfterTimeSpan : 10);
         public static bool DisableAutomaticPodCleanup => bool.TryParse(Environment.GetEnvironmentVariable($"{EnvVarPrefix}__DISABLEAUTOPODCLEANUP"), out var disableAutoCleanup) && disableAutoCleanup;
         public static bool DisablePodEventsInTaskLog => bool.TryParse(Environment.GetEnvironmentVariable($"{EnvVarPrefix}__DISABLEPODEVENTSINTASKLOG"), out var disable) && disable;

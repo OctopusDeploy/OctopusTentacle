@@ -1,8 +1,8 @@
 using System;
 using System.IO;
 using Octopus.Tentacle.Core.Diagnostics;
+using Octopus.Tentacle.Core.Util;
 using Octopus.Tentacle.Util;
-using Octopus.Tentacle.Variables;
 
 namespace Octopus.Tentacle.Kubernetes
 {

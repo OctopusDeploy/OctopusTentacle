@@ -168,7 +168,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 return result;
             }
 
-            // TODO: SaST - This could be optimized for the failure scenario.
+            // TODO: EFT - This could be optimized for the failure scenario.
             // If script execution is already triggering RPC Retries and then the script execution is cancelled there is a high chance that the cancel RPC call will fail as well and go into RPC retries.
             // We could potentially reduce the time to failure by not retrying the cancel RPC Call if the previous RPC call was already triggering RPC Retries.
 

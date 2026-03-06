@@ -4,8 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Core.Configuration;
 using Octopus.Tentacle.Core.Services.Scripts.Security.Masking;
 using Octopus.Tentacle.Security;
 using Octopus.Tentacle.Util;
@@ -25,9 +25,6 @@ namespace Octopus.Tentacle.Scripts
             IHomeDirectoryProvider home,
             SensitiveValueMasker sensitiveValueMasker)
         {
-            if (home.ApplicationSpecificHomeDirectory == null)
-                throw new ArgumentException($"{GetType().Name} cannot function without the HomeDirectory configured.", nameof(home));
-
             this.fileSystem = fileSystem;
             this.home = home;
             this.sensitiveValueMasker = sensitiveValueMasker;

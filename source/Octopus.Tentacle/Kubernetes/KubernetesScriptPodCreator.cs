@@ -12,14 +12,13 @@ using k8s.Models;
 using Newtonsoft.Json;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
-using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Core.Services.Scripts.Locking;
+using Octopus.Tentacle.Core.Util;
 using Octopus.Tentacle.Kubernetes.Crypto;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Util;
-using Octopus.Tentacle.Variables;
 
 namespace Octopus.Tentacle.Kubernetes
 {
@@ -199,6 +198,18 @@ namespace Octopus.Tentacle.Kubernetes
 
             var scriptPodTemplate = await podTemplateService.GetScriptPodTemplate(cancellationToken);
 
+            //if the script pod template spec has been defined, use that
+            var podSpec = scriptPodTemplate?.PodSpec ?? new V1PodSpec
+            {
+                RestartPolicy = "Never",
+                Affinity = ParseScriptPodAffinity(tentacleScriptLog),
+                Tolerations = ParseScriptPodTolerations(tentacleScriptLog),
+                SecurityContext = ParseScriptPodSecurityContext(tentacleScriptLog)
+            };
+
+            //we always add on the pod affinity if this is a read-write once
+            podSpec = AddPodAffinityIfReadWriteOnce(podSpec, tentacleScriptLog);
+
             var pod = new V1Pod
             {
                 Metadata = new V1ObjectMeta
@@ -208,14 +219,7 @@ namespace Octopus.Tentacle.Kubernetes
                     Labels = Merge(scriptPodTemplate?.PodMetadata?.Labels, GetScriptPodLabels(tentacleScriptLog, command)),
                     Annotations = Merge(scriptPodTemplate?.PodMetadata?.Annotations, GetScriptPodAnnotations(tentacleScriptLog, command))
                 },
-                //if the script pod template spec has been defined, use that
-                Spec = scriptPodTemplate?.PodSpec ?? new V1PodSpec
-                {
-                    RestartPolicy = "Never",
-                    Affinity = ParseScriptPodAffinity(tentacleScriptLog),
-                    Tolerations = ParseScriptPodTolerations(tentacleScriptLog),
-                    SecurityContext = ParseScriptPodSecurityContext(tentacleScriptLog)
-                }
+                Spec = podSpec
             };
 
             pod.Spec.InitContainers = await CreateInitContainers(command, podName, homeDir, workspacePath, tentacleScriptLog, scriptPodTemplate?.ScriptInitContainerSpec);
@@ -379,35 +383,79 @@ namespace Octopus.Tentacle.Kubernetes
             return container;
         }
 
-        protected V1ResourceRequirements GetScriptPodResourceRequirements(InMemoryTentacleScriptLog tentacleScriptLog)
+        V1PodSpec AddPodAffinityIfReadWriteOnce(V1PodSpec podSpec, InMemoryTentacleScriptLog tentacleScriptLog)
         {
-            var json = KubernetesConfig.PodResourceJson;
-            if (!string.IsNullOrWhiteSpace(json))
+            var json = KubernetesConfig.PersistenceAccessModesJson;
+
+            //no json, nothing to do :)
+            if (string.IsNullOrWhiteSpace(json))
+                return podSpec;
+
+            tentacleScriptLog.Verbose($"Tentacle access modes: {json}");
+            try
             {
-                try
+                var accessModes = KubernetesJson.Deserialize<string[]>(json);
+                if (accessModes.Length == 1 && string.Equals(accessModes[0], "ReadWriteOnce", StringComparison.OrdinalIgnoreCase))
                 {
-                    return KubernetesJson.Deserialize<V1ResourceRequirements>(json);
-                }
-                catch (Exception e)
-                {
-                    var message = $"Failed to deserialize env.{KubernetesConfig.PodResourceJsonVariableName} into valid pod resource requirements.{Environment.NewLine}JSON value: {json}{Environment.NewLine}Using default resource requests for script pod.";
-                    //if we can't parse the JSON, fall back to the defaults below and warn the user
-                    log.WarnFormat(e, message);
-                    //write a verbose message to the script log.
-                    tentacleScriptLog.Verbose(message);
+                    tentacleScriptLog.Verbose($"Access mode is 'ReadWriteOnce'. Adding podAffinity to co-locate script pod with tentacle pod on the same node.");
+
+                    var affinity = podSpec.Affinity ??= new V1Affinity();
+                    var podAffinity = affinity.PodAffinity ??= new V1PodAffinity();
+                    var affinities = podAffinity.RequiredDuringSchedulingIgnoredDuringExecution ??= new List<V1PodAffinityTerm>();
+                    affinities.Add(new V1PodAffinityTerm
+                    {
+                        //forces this script pod to be on the same host (node) as the tentacle pod
+                        TopologyKey = "kubernetes.io/hostname",
+                        LabelSelector = new V1LabelSelector
+                        {
+                            MatchExpressions = new List<V1LabelSelectorRequirement>
+                            {
+                                new()
+                                {
+                                    //match on the instance (Helm Release name) of the tentacle pod
+                                    Key = "app.kubernetes.io/instance",
+                                    OperatorProperty = "In",
+                                    Values = new List<string> { KubernetesConfig.HelmReleaseName }
+                                },
+                                new()
+                                {
+                                    Key = "agent.octopus.com/component",
+                                    OperatorProperty = "In",
+                                    Values = new List<string> { "tentacle" }
+                                }
+                            }
+                        }
+                    });
                 }
             }
-
-            return new V1ResourceRequirements
+            catch (Exception e)
             {
-                //set resource requests to be quite low for now as the scripts tend to run fairly quickly
-                Requests = new Dictionary<string, ResourceQuantity>
-                {
-                    ["cpu"] = new("25m"),
-                    ["memory"] = new("100Mi")
-                }
-            };
+                var message = $"Failed to deserialize env.{KubernetesConfig.PersistenceAccessModesJsonVariableName} into a valid string array.{Environment.NewLine}JSON value: {json}";
+
+                //if we can't parse the JSON, warn the user
+                log.WarnFormat(e, message);
+                //write a verbose message to the script log.
+                tentacleScriptLog.Verbose(message);
+            }
+
+            return podSpec;
         }
+
+        protected V1ResourceRequirements GetScriptPodResourceRequirements(InMemoryTentacleScriptLog tentacleScriptLog)
+            => ParseScriptPodJson(
+                tentacleScriptLog,
+                KubernetesConfig.PodResourceJson,
+                KubernetesConfig.PodResourceJsonVariableName,
+                "pod resource requirements",
+                new V1ResourceRequirements
+                {
+                    //set resource requests to be quite low for now as the scripts tend to run fairly quickly
+                    Requests = new Dictionary<string, ResourceQuantity>
+                    {
+                        ["cpu"] = new("25m"),
+                        ["memory"] = new("100Mi")
+                    }
+                })!;
 
         V1Affinity ParseScriptPodAffinity(InMemoryTentacleScriptLog tentacleScriptLog)
             => ParseScriptPodJson(
@@ -468,7 +516,7 @@ namespace Octopus.Tentacle.Kubernetes
                 KubernetesConfig.PodAnnotationsJsonVariableName,
                 "pod annotations");
 
-        Dictionary<string, string>? GetScriptPodAnnotations(InMemoryTentacleScriptLog tentacleScriptLog, StartKubernetesScriptCommandV1 command)
+        Dictionary<string, string> GetScriptPodAnnotations(InMemoryTentacleScriptLog tentacleScriptLog, StartKubernetesScriptCommandV1 command)
         {
             var annotations = ParseScriptPodAnnotations(tentacleScriptLog) ?? new Dictionary<string, string>();
             annotations.AddRange(GetAuthContext(command));
@@ -511,6 +559,13 @@ namespace Octopus.Tentacle.Kubernetes
             dict[$"{KubernetesConfig.AgentLabelNamespace}/project"] = hash
                 ? HashValue(command.AuthContext.ProjectSlug)
                 : command.AuthContext.ProjectSlug;
+
+            if (command.AuthContext.ProjectGroupSlug is not null)
+            {
+                dict[$"{KubernetesConfig.AgentLabelNamespace}/project-group"] = hash
+                    ? HashValue(command.AuthContext.ProjectGroupSlug)
+                    : command.AuthContext.ProjectGroupSlug;
+            }
 
             dict[$"{KubernetesConfig.AgentLabelNamespace}/environment"] = hash
                 ? HashValue(command.AuthContext.EnvironmentSlug)

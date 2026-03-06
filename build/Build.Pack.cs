@@ -95,14 +95,14 @@ partial class Build
                     packagingScriptsDirectory /= "unsigned";
 
                 packagingScriptsDirectory.GlobFiles("*")
-                    .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, debBuildDir / "scripts"));
+                    .ForEach(x => x.CopyToDirectory(debBuildDir / "scripts"));
 
                 DockerTasks.DockerPull(settings => settings
-                    .When(RuntimeInformation.OSArchitecture == Architecture.Arm64, _ => _.SetPlatform("linux/amd64"))
+                    .When(_ => RuntimeInformation.OSArchitecture == Architecture.Arm64, _ => _.SetPlatform("linux/amd64"))
                     .SetName(dockerToolsContainerImage));
 
                 DockerTasks.DockerRun(settings => settings
-                    .When(RuntimeInformation.OSArchitecture == Architecture.Arm64, _ => _.SetPlatform("linux/amd64"))
+                    .When(_ => RuntimeInformation.OSArchitecture == Architecture.Arm64, _ => _.SetPlatform("linux/amd64"))
                     .EnableRm()
                     .EnableTty()
                     .SetEnv(
@@ -132,13 +132,13 @@ partial class Build
 
                 (ArtifactsDirectory / "deb").CreateDirectory();
                 debOutputDirectory.GlobFiles("*.deb")
-                    .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, ArtifactsDirectory / "deb"));
+                    .ForEach(x => x.CopyToDirectory(ArtifactsDirectory / "deb"));
 
                 CopyDebianPackageToDockerFolder(runtimeId);
 
                 (ArtifactsDirectory / "rpm").CreateDirectory();
                 debOutputDirectory.GlobFiles("*.rpm")
-                    .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, ArtifactsDirectory / "rpm"));
+                    .ForEach(x => x.CopyToDirectory(ArtifactsDirectory / "rpm"));
             }
         });
 
@@ -245,7 +245,7 @@ partial class Build
         workingTentacleDirectory.CreateOrCleanDirectory();
 
         (BuildDirectory / "Tentacle" / framework / runtimeId).GlobFiles($"*")
-            .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, workingTentacleDirectory));
+            .ForEach(x => x.CopyToDirectory(workingTentacleDirectory));
 
         ZipFile.CreateFromDirectory(
             workingDirectory,
@@ -267,23 +267,23 @@ partial class Build
                 if (framework == NetFramework)
                 {
                     (BuildDirectory / "Tentacle" / framework / "win").GlobFiles("*")
-                        .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, installerDirectory, FileExistsPolicy.Overwrite));
+                        .ForEach(x => x.CopyToDirectory(installerDirectory, ExistsPolicy.FileOverwrite));
 
                     (BuildDirectory / "Octopus.Manager.Tentacle" / framework / "win").GlobFiles("*")
-                        .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, installerDirectory, FileExistsPolicy.Overwrite));
+                        .ForEach(x => x.CopyToDirectory(installerDirectory, ExistsPolicy.FileOverwrite));
                 }
                 else if (framework is NetCoreWindows)
                 {
                     (BuildDirectory / "Tentacle" / framework / $"win-{platform}").GlobFiles("*")
-                        .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, installerDirectory, FileExistsPolicy.Overwrite));
+                        .ForEach(x => x.CopyToDirectory(installerDirectory, ExistsPolicy.FileOverwrite));
 
                     (BuildDirectory / "Octopus.Manager.Tentacle" / framework / $"win-{platform}").GlobFiles("*")
-                        .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, installerDirectory, FileExistsPolicy.Overwrite));
+                        .ForEach(x => x.CopyToDirectory(installerDirectory, ExistsPolicy.FileOverwrite));
                 }
                 else
                 {
                     (BuildDirectory / "Tentacle" / framework / $"win-{platform}").GlobFiles("*")
-                        .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, installerDirectory, FileExistsPolicy.Overwrite));
+                        .ForEach(x => x.CopyToDirectory(installerDirectory, ExistsPolicy.FileOverwrite));
                 }
 
                 var harvestFilePath = RootDirectory / "installer" / "Octopus.Tentacle.Installer" / "Tentacle.Generated.wxs";
@@ -348,9 +348,7 @@ partial class Build
                         _ => $"-{framework}-win" + (platform == MSBuildTargetPlatform.x64 ? "-x64" : "-x86")
                     };
 
-                    FileSystemTasks.MoveFile(
-                        builtMsi,
-                        ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}{platformString}.msi");
+                    builtMsi.Move(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}{platformString}.msi");
                 });
             }
 
@@ -487,40 +485,40 @@ partial class Build
             workingDirectory.CreateDirectory();
 
             // Get .NET Framework 4.8 installers for Tentacle
-            FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}.msi", workingDirectory / "Octopus.Tentacle.msi");
-            FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-x64.msi", workingDirectory / "Octopus.Tentacle-x64.msi");
+            (ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}.msi").Copy(workingDirectory / "Octopus.Tentacle.msi");
+            (ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-x64.msi").Copy(workingDirectory / "Octopus.Tentacle-x64.msi");
 
             // Get .NET 8.0 installers for Tentacle (w/o Tentacle Manager)
-            FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net8.0-win-x86.msi", workingDirectory / "Octopus.Tentacle-net8.0-win-x86.msi");
-            FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net8.0-win-x64.msi", workingDirectory / "Octopus.Tentacle-net8.0-win-x64.msi");
+            (ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net8.0-win-x86.msi").Copy(workingDirectory / "Octopus.Tentacle-net8.0-win-x86.msi");
+            (ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net8.0-win-x64.msi").Copy(workingDirectory / "Octopus.Tentacle-net8.0-win-x64.msi");
 
             // Get .NET 8.0 installers for Tentacle (w/ Tentacle Manager)
-            FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net8.0-windows-win-x86.msi", workingDirectory / "Octopus.Tentacle-net8.0-windows-win-x86.msi");
-            FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net8.0-windows-win-x64.msi", workingDirectory / "Octopus.Tentacle-net8.0-windows-win-x64.msi");
+            (ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net8.0-windows-win-x86.msi").Copy(workingDirectory / "Octopus.Tentacle-net8.0-windows-win-x86.msi");
+            (ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net8.0-windows-win-x64.msi").Copy(workingDirectory / "Octopus.Tentacle-net8.0-windows-win-x64.msi");
 
             // Get .NET 8.0 installers for Tentacle Upgrader
-            FileSystemTasks.CopyFile(BuildDirectory / "Octopus.Tentacle.Upgrader" / NetCore / "win-x86" / "Octopus.Tentacle.Upgrader.exe", workingDirectory / "Octopus.Tentacle.Upgrader-net8.0-win-x86.exe");
-            FileSystemTasks.CopyFile(BuildDirectory / "Octopus.Tentacle.Upgrader" / NetCore / "win-x64" / "Octopus.Tentacle.Upgrader.exe", workingDirectory / "Octopus.Tentacle.Upgrader-net8.0-win-x64.exe");
+            (BuildDirectory / "Octopus.Tentacle.Upgrader" / NetCore / "win-x86" / "Octopus.Tentacle.Upgrader.exe").Copy(workingDirectory / "Octopus.Tentacle.Upgrader-net8.0-win-x86.exe");
+            (BuildDirectory / "Octopus.Tentacle.Upgrader" / NetCore / "win-x64" / "Octopus.Tentacle.Upgrader.exe").Copy(workingDirectory / "Octopus.Tentacle.Upgrader-net8.0-win-x64.exe");
 
             // Get all .NET Framework 4.8 files (installers and archives) for Tentacle Upgrader
             var octopusTentacleUpgraderDirectory = BuildDirectory / "Octopus.Tentacle.Upgrader" / NetFramework / "win";
-            octopusTentacleUpgraderDirectory.GlobFiles("*").ForEach(x => FileSystemTasks.CopyFileToDirectory(x, workingDirectory));
+            octopusTentacleUpgraderDirectory.GlobFiles("*").ForEach(x => x.CopyToDirectory(workingDirectory));
 
             // Get all DEB packages for Linux
             var debAmd64PackageFilename = ConstructDebianPackageFilename("tentacle", "amd64");
             var debArm64PackageFilename = ConstructDebianPackageFilename("tentacle", "arm64");
             var debArm32PackageFilename = ConstructDebianPackageFilename("tentacle", "armhf");
-            FileSystemTasks.CopyFile(ArtifactsDirectory / "deb" / debAmd64PackageFilename, workingDirectory / debAmd64PackageFilename);
-            FileSystemTasks.CopyFile(ArtifactsDirectory / "deb" / debArm64PackageFilename, workingDirectory / debArm64PackageFilename);
-            FileSystemTasks.CopyFile(ArtifactsDirectory / "deb" / debArm32PackageFilename, workingDirectory / debArm32PackageFilename);
+            (ArtifactsDirectory / "deb" / debAmd64PackageFilename).Copy(workingDirectory / debAmd64PackageFilename);
+            (ArtifactsDirectory / "deb" / debArm64PackageFilename).Copy(workingDirectory / debArm64PackageFilename);
+            (ArtifactsDirectory / "deb" / debArm32PackageFilename).Copy(workingDirectory / debArm32PackageFilename);
 
             // Get all RPM packages for Linux
             var rpmArm64PackageFilename = ConstructRedHatPackageFilename("tentacle", "aarch64");
             var rpmArm32PackageFilename = ConstructRedHatPackageFilename("tentacle", "armv7hl");
             var rpmx64PackageFilename = ConstructRedHatPackageFilename("tentacle", "x86_64");
-            FileSystemTasks.CopyFile(ArtifactsDirectory / "rpm" / rpmArm64PackageFilename, workingDirectory / rpmArm64PackageFilename);
-            FileSystemTasks.CopyFile(ArtifactsDirectory / "rpm" / rpmArm32PackageFilename, workingDirectory / rpmArm32PackageFilename);
-            FileSystemTasks.CopyFile(ArtifactsDirectory / "rpm" / rpmx64PackageFilename, workingDirectory / rpmx64PackageFilename);
+            (ArtifactsDirectory / "rpm" / rpmArm64PackageFilename).Copy(workingDirectory / rpmArm64PackageFilename);
+            (ArtifactsDirectory / "rpm" / rpmArm32PackageFilename).Copy(workingDirectory / rpmArm32PackageFilename);
+            (ArtifactsDirectory / "rpm" / rpmx64PackageFilename).Copy(workingDirectory / rpmx64PackageFilename);
 
             // Get the archives for all runtimes
             foreach (var framework in new[] { NetFramework, NetCore })
@@ -531,15 +529,15 @@ partial class Build
                         || runtimeId != "win" && framework == NetFramework) continue;
 
                     var fileExtension = runtimeId.StartsWith("win") ? "zip" : "tar.gz";
-                    FileSystemTasks.CopyFile(ArtifactsDirectory / "zip" / $"tentacle-{FullSemVer}-{framework}-{runtimeId}.{fileExtension}",
-                        workingDirectory / $"tentacle-{framework}-{runtimeId}.{fileExtension}");
+                    var path = ArtifactsDirectory / "zip" / $"tentacle-{FullSemVer}-{framework}-{runtimeId}.{fileExtension}";
+                    path.Copy(workingDirectory / $"tentacle-{framework}-{runtimeId}.{fileExtension}");
                 }
             }
 
             // Get the .NET 8.0 archives for Tentacle (w/ Tentacle Manager)
-            FileSystemTasks.CopyFile(ArtifactsDirectory / "zip" / $"tentacle-{FullSemVer}-{NetCoreWindows}-win-x86.zip",
+            (ArtifactsDirectory / "zip" / $"tentacle-{FullSemVer}-{NetCoreWindows}-win-x86.zip").Copy(
                 workingDirectory / $"tentacle-{NetCoreWindows}-win-x86.zip");
-            FileSystemTasks.CopyFile(ArtifactsDirectory / "zip" / $"tentacle-{FullSemVer}-{NetCoreWindows}-win-x64.zip",
+            (ArtifactsDirectory / "zip" / $"tentacle-{FullSemVer}-{NetCoreWindows}-win-x64.zip").Copy(
                 workingDirectory / $"tentacle-{NetCoreWindows}-win-x64.zip");
 
             // Assert all the expected files have been successfully copied
@@ -579,20 +577,20 @@ partial class Build
             workingDirectory.CreateDirectory();
 
             // Get the .NET Framework 4.8 installers for Tentacle
-            FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}.msi", workingDirectory / "Octopus.Tentacle.msi");
-            FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-x64.msi", workingDirectory / "Octopus.Tentacle-x64.msi");
+            (ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}.msi").Copy(workingDirectory / "Octopus.Tentacle.msi");
+            (ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-x64.msi").Copy(workingDirectory / "Octopus.Tentacle-x64.msi");
 
             // Get the .NET 8.0 installers for Tentacle
-            FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net8.0-win-x86.msi", workingDirectory / "Octopus.Tentacle-net8.0-win-x86.msi");
-            FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net8.0-win-x64.msi", workingDirectory / "Octopus.Tentacle-net8.0-win-x64.msi");
+            (ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net8.0-win-x86.msi").Copy(workingDirectory / "Octopus.Tentacle-net8.0-win-x86.msi");
+            (ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net8.0-win-x64.msi").Copy(workingDirectory / "Octopus.Tentacle-net8.0-win-x64.msi");
 
             // Get the .NET 8.0 installers for the Tentacle Upgrader
-            FileSystemTasks.CopyFile(BuildDirectory / "Octopus.Tentacle.Upgrader" / NetCore / "win-x86" / "Octopus.Tentacle.Upgrader.exe", workingDirectory / "Octopus.Tentacle.Upgrader-net8.0-win-x86.exe");
-            FileSystemTasks.CopyFile(BuildDirectory / "Octopus.Tentacle.Upgrader" / NetCore / "win-x64" / "Octopus.Tentacle.Upgrader.exe", workingDirectory / "Octopus.Tentacle.Upgrader-net8.0-win-x64.exe");
+            (BuildDirectory / "Octopus.Tentacle.Upgrader" / NetCore / "win-x86" / "Octopus.Tentacle.Upgrader.exe").Copy(workingDirectory / "Octopus.Tentacle.Upgrader-net8.0-win-x86.exe");
+            (BuildDirectory / "Octopus.Tentacle.Upgrader" / NetCore / "win-x64" / "Octopus.Tentacle.Upgrader.exe").Copy(workingDirectory / "Octopus.Tentacle.Upgrader-net8.0-win-x64.exe");
 
             // Get the .NET Framework 4.8 installers for the Tentacle Upgrader
             var octopusTentacleUpgraderDirectory = BuildDirectory / "Octopus.Tentacle.Upgrader" / NetFramework / "win";
-            octopusTentacleUpgraderDirectory.GlobFiles("*").ForEach(x => FileSystemTasks.CopyFileToDirectory(x, workingDirectory));
+            octopusTentacleUpgraderDirectory.GlobFiles("*").ForEach(x => x.CopyToDirectory(workingDirectory));
 
             // Get the archives for all required runtimes
             foreach (var runtimeId in CrossPlatformBundleForServerRequiredRuntimes)
@@ -601,8 +599,8 @@ partial class Build
                 // as we've already manually grabbed the installers
                 if (runtimeId.StartsWith("win")) continue;
 
-                FileSystemTasks.CopyFile(ArtifactsDirectory / "zip" / $"tentacle-{FullSemVer}-{NetCore}-{runtimeId}.{"tar.gz"}",
-                    workingDirectory / $"tentacle-{NetCore}-{runtimeId}.{"tar.gz"}");
+                var path = ArtifactsDirectory / "zip" / $"tentacle-{FullSemVer}-{NetCore}-{runtimeId}.{"tar.gz"}";
+                path.Copy(workingDirectory / $"tentacle-{NetCore}-{runtimeId}.{"tar.gz"}");
             }
 
             // Assert all the expected files have been successfully copied
@@ -660,9 +658,9 @@ partial class Build
         var tentacleDirectory = BuildDirectory / "Tentacle" / framework / runtimeId;
 
         linuxPackagesContent.GlobFiles("*")
-            .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, workingDir / "tentacle"));
+            .ForEach(x => x.CopyToDirectory(workingDir / "tentacle"));
         tentacleDirectory.GlobFiles("*")
-            .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, workingDir / "tentacle"));
+            .ForEach(x => x.CopyToDirectory(workingDir / "tentacle"));
 
         TarGZipCompress(
             workingDir,
@@ -726,7 +724,7 @@ partial class Build
         var dockerDir = ArtifactsDirectory / "docker";
         dockerDir.CreateDirectory();
 
-        FileSystemTasks.CopyFile(packageFilePath, dockerDir / $"tentacle_{FullSemVer}_linux-{dockerArch}.deb");
+        packageFilePath.Copy(dockerDir / $"tentacle_{FullSemVer}_linux-{dockerArch}.deb");
     }
 
     string GetMicrok8sIpAddress()
