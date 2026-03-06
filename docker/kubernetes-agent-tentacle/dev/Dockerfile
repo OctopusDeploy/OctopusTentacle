@@ -6,6 +6,9 @@ FROM golang:1.22 as bootstrapRunnerBuilder
 ARG TARGETARCH
 ARG TARGETOS
 
+ARG platforms="linux"
+ARG architectures="amd64 arm64 386 arm"
+
 COPY docker/kubernetes-agent-tentacle/bootstrapRunner/* /bootstrapRunner/
 WORKDIR /bootstrapRunner
 
@@ -17,10 +20,6 @@ RUN for platform in $platforms; do \
             GOOS=$platform GOARCH=$arch go build -ldflags "-s -w" -o "bin/bootstrapRunner-$platform-$arch"; \
         done; \
     done
-
-# Copy the architecture detection script from source and make it executable
-COPY docker/kubernetes-agent-tentacle/bootstrapRunner/execute-bootstrapRunner.sh bin/
-RUN chmod +x bin/execute-bootstrapRunner.sh
 
 
 FROM mcr.microsoft.com/dotnet/runtime-deps:$RuntimeDepsTag
