@@ -11,7 +11,10 @@ namespace Octopus.Tentacle.Util
             base.Load(builder);
             if (KubernetesSupportDetection.IsRunningAsKubernetesAgent)
             {
-                builder.RegisterType<KubernetesPhysicalFileSystem>().AsSelf().As<IOctopusFileSystem>();
+                builder.RegisterType<KubernetesPhysicalFileSystem>().AsSelf().Named<IOctopusFileSystem>("fileSystem");
+                builder.RegisterDecorator<IOctopusFileSystem>(
+                    (c, inner) => new RetryingKubernetesPhysicalFileSystem(inner),
+                    fromKey: "fileSystem");
             }
             else
             {

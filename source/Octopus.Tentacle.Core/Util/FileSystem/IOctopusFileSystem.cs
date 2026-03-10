@@ -16,7 +16,7 @@ namespace Octopus.Tentacle.Util
         Task DeleteDirectory(string path, CancellationToken cancellationToken, DeletionOptions? options = null);
         IEnumerable<string> EnumerateFiles(string parentDirectoryPath, params string[] searchPatterns);
         long GetFileSize(string path);
-        string ReadFile(string path);
+        string ReadFile(string path, bool withRetry = true);
         void OverwriteFile(string path, string contents);
         void OverwriteFile(string path, string contents, Encoding encoding);
         void CopyFile(string source, string destination, bool overwrite);
