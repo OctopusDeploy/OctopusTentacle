@@ -24,14 +24,15 @@ namespace Octopus.Tentacle.Kubernetes
             this.log = log;
 
             // There are scenarios where we the IO can have errors, mainly due to the NFS being restarted.
-            // This retry policy retries up to 5 times, with an exponential backoff from a base of 50ms. The last retry will be ~1.5s.
+            // This retry policy retries up to 10 times, with an exponential backoff from a base of 50ms
+            const int retryCount = 10;
             Func<int, TimeSpan> sleepDurationFunc = retry => TimeSpan.FromMilliseconds(50 * Math.Pow(retry, 2));
             Action<Exception, TimeSpan> onRetry = (exception, span) => log.Warn($"IO operation failed. Retrying in {span}.{Environment.NewLine}{exception}");
-            
+
             asyncRetryPolicy = Policy.Handle<IOException>()
-                .WaitAndRetryAsync(5, sleepDurationFunc, onRetry);
+                .WaitAndRetryAsync(retryCount, sleepDurationFunc, onRetry);
             syncRetryPolicy = Policy.Handle<IOException>()
-                .WaitAndRetry(5, sleepDurationFunc,onRetry);
+                .WaitAndRetry(retryCount, sleepDurationFunc, onRetry);
         }
 
         public bool FileExists(string path)
@@ -71,9 +72,10 @@ namespace Octopus.Tentacle.Kubernetes
 
         public string ReadFile(string path, bool withRetry = true)
         {
+            //If no retry is specified here, we just pass through to the inner withRetry being false
             return !withRetry
                 ? inner.ReadFile(path, withRetry)
-                //we want to handle the retry at this level
+                //otherwise, we want to handle the retry at this level, so perform the retries here, but tell the inner _not_ to do retries
                 : syncRetryPolicy.Execute(() => inner.ReadFile(path, false));
         }
 
