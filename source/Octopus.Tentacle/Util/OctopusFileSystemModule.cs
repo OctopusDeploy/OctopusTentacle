@@ -1,5 +1,6 @@
 ﻿using System;
 using Autofac;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Kubernetes;
 
 namespace Octopus.Tentacle.Util
@@ -13,7 +14,7 @@ namespace Octopus.Tentacle.Util
             {
                 builder.RegisterType<KubernetesPhysicalFileSystem>().AsSelf().Named<IOctopusFileSystem>("fileSystem");
                 builder.RegisterDecorator<IOctopusFileSystem>(
-                    (c, inner) => new RetryingKubernetesPhysicalFileSystem(inner),
+                    (c, inner) => new RetryingKubernetesPhysicalFileSystem(inner, c.Resolve<ISystemLog>()),
                     fromKey: "fileSystem");
             }
             else

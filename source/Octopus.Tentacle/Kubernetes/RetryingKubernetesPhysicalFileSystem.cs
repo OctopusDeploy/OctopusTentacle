@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Util;
 using Polly;
 using Polly.Retry;
@@ -13,20 +14,24 @@ namespace Octopus.Tentacle.Kubernetes
     public class RetryingKubernetesPhysicalFileSystem : IOctopusFileSystem
     {
         readonly IOctopusFileSystem inner;
+        readonly ISystemLog log;
         readonly AsyncRetryPolicy asyncRetryPolicy;
         readonly RetryPolicy syncRetryPolicy;
 
-        public RetryingKubernetesPhysicalFileSystem(IOctopusFileSystem inner)
+        public RetryingKubernetesPhysicalFileSystem(IOctopusFileSystem inner, ISystemLog log)
         {
             this.inner = inner;
+            this.log = log;
 
             // There are scenarios where we the IO can have errors, mainly due to the NFS being restarted.
             // This retry policy retries up to 5 times, with an exponential backoff from a base of 50ms. The last retry will be ~1.5s.
             Func<int, TimeSpan> sleepDurationFunc = retry => TimeSpan.FromMilliseconds(50 * Math.Pow(retry, 2));
+            Action<Exception, TimeSpan> onRetry = (exception, span) => log.Warn($"IO operation failed. Retrying in {span}.{Environment.NewLine}{exception}");
+            
             asyncRetryPolicy = Policy.Handle<IOException>()
-                .WaitAndRetryAsync(5, sleepDurationFunc);
+                .WaitAndRetryAsync(5, sleepDurationFunc, onRetry);
             syncRetryPolicy = Policy.Handle<IOException>()
-                .WaitAndRetry(5, sleepDurationFunc);
+                .WaitAndRetry(5, sleepDurationFunc,onRetry);
         }
 
         public bool FileExists(string path)
