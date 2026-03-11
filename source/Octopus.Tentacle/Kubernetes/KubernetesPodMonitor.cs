@@ -222,6 +222,7 @@ namespace Octopus.Tentacle.Kubernetes
         TrackedScriptPodState State { get; }
         ScriptTicket ScriptTicket { get; }
         void MarkAsCompleted(int exitCode, DateTimeOffset finishedAt);
+        public DateTimeOffset? CreationTimestamp { get; }
     }
     
     public class TrackedScriptPod : ITrackedScriptPod
@@ -234,6 +235,8 @@ namespace Octopus.Tentacle.Kubernetes
         //We create a tracked Pod entry when creating the script Pod so we don't need to wait for the K8s watch event to come through
         public bool MightNotExistInClusterYet { get; set; }
         
+        public DateTimeOffset? CreationTimestamp { get; private set; }
+        
         public TrackedScriptPod(ScriptTicket ticket, IClock clock)
         {
             this.clock = clock;
@@ -243,6 +246,11 @@ namespace Octopus.Tentacle.Kubernetes
 
         public void Update(V1Pod pod)
         {
+            //we assume the creation timestamp is in UTC
+            CreationTimestamp = pod.Metadata.CreationTimestamp is not null
+                ? new DateTimeOffset(pod.Metadata.CreationTimestamp.Value)
+                : null;
+            
             var scriptContainerState = GetScriptContainerState();
             
             //If we can't find the container state, but the Pod exists, assume it's still creating/pending
