@@ -434,7 +434,7 @@ namespace Octopus.Tentacle.Kubernetes
         V1PodSpec AddNodeAffinityFromCommand(V1PodSpec podSpec, StartKubernetesScriptCommandV1 command, InMemoryTentacleScriptLog tentacleScriptLog)
         {
             var platformAffinity = command.ScriptPodPlatform;
-            if (platformAffinity == null || platformAffinity.IsNullOrEmpty())
+            if (string.IsNullOrEmpty(platformAffinity))
             {
                 return podSpec;   
             }
