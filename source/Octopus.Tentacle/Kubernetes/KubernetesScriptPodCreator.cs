@@ -443,7 +443,7 @@ namespace Octopus.Tentacle.Kubernetes
             var parts = platformAffinity.Split('-');
             if (parts.Length != 2)
             {
-                var message = $"Invalid platform affinity '{platformAffinity}'. Expected format: '<os>/<arch>'.";
+                var message = $"Invalid platform affinity '{platformAffinity}'. Expected format: '<os>-<arch>'.";
                 log.Warn(message);
                 tentacleScriptLog.Verbose(message);
                 return podSpec;
