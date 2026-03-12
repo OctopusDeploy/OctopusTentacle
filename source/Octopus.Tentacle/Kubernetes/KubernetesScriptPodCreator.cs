@@ -209,7 +209,7 @@ namespace Octopus.Tentacle.Kubernetes
 
             //we always add on the pod affinity if this is a read-write once
             podSpec = AddPodAffinityIfReadWriteOnce(podSpec, tentacleScriptLog);
-            
+
             podSpec = AddNodeAffinityFromCommand(podSpec, command, tentacleScriptLog);
 
             var pod = new V1Pod
@@ -442,15 +442,15 @@ namespace Octopus.Tentacle.Kubernetes
 
             return podSpec;
         }
-        
+
         V1PodSpec AddNodeAffinityFromCommand(V1PodSpec podSpec, StartKubernetesScriptCommandV1 command, InMemoryTentacleScriptLog tentacleScriptLog)
         {
             var platformAffinity = command.ScriptPodPlatform;
             if (platformAffinity == null || platformAffinity.IsNullOrEmpty())
             {
-                return podSpec;   
+                return podSpec;
             }
-            
+
             //the actual affinity strings can be found in OctopusServer repo `KnownPlatforms.cs`
             var parts = platformAffinity.Split('-');
             if (parts.Length != 2)
@@ -468,14 +468,30 @@ namespace Octopus.Tentacle.Kubernetes
 
             var affinity = podSpec.Affinity ??= new V1Affinity();
             var nodeAffinity = affinity.NodeAffinity ??= new V1NodeAffinity();
-            nodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution = new V1NodeSelector(new List<V1NodeSelectorTerm>
+            nodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution = new V1NodeSelector
             {
-                new(matchExpressions: new List<V1NodeSelectorRequirement>
+                NodeSelectorTerms = new List<V1NodeSelectorTerm>
                 {
-                    new("kubernetes.io/os", "In", new List<string> { os }),
-                    new("kubernetes.io/arch", "In", new List<string> { arch })
-                })
-            });
+                    new()
+                    {
+                        MatchExpressions = new List<V1NodeSelectorRequirement>
+                        {
+                            new()
+                            {
+                                Key = "kubernetes.io/os",
+                                OperatorProperty = "In",
+                                Values = new List<string> { os }
+                            },
+                            new()
+                            {
+                                Key = "kubernetes.io/arch",
+                                OperatorProperty = "In",
+                                Values = new List<string> { arch }
+                            },
+                        }
+                    }
+                }
+            };
 
             return podSpec;
         }
@@ -692,9 +708,9 @@ namespace Octopus.Tentacle.Kubernetes
             container.Image = KubernetesConfig.NfsWatchdogImage;
             container.VolumeMounts = Merge(container.VolumeMounts, new List<V1VolumeMount>
             {
-                new V1VolumeMount{MountPath = homeDir, Name = "tentacle-home"},
+                new V1VolumeMount { MountPath = homeDir, Name = "tentacle-home" },
             });
-            container.Env = Merge(container.Env, new[] { new V1EnvVar{Name = EnvironmentVariables.NfsWatchdogDirectory, Value = homeDir} });
+            container.Env = Merge(container.Env, new[] { new V1EnvVar { Name = EnvironmentVariables.NfsWatchdogDirectory, Value = homeDir } });
 
             return container;
         }
