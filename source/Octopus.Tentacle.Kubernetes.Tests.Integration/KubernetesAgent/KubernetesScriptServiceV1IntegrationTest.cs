@@ -460,6 +460,147 @@ public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrati
         }
     }
 
+    [Test]
+    [TestCase("linux-amd64")]
+    [TestCase("linux-arm64")]
+    [TestCase("windows-amd64")]
+    public async Task RunScriptWithPlatformAffinity_ShouldScheduleOnCorrectNode(string platform)
+    {
+        // Arrange
+        var logs = new List<ProcessOutput>();
+        var scriptCompleted = false;
+
+        var command = new ExecuteKubernetesScriptCommandBuilder(LoggingUtils.CurrentTestHash())
+            .WithScriptBody(script => script
+                .Print("Hello World from platform-specific node")
+                .Print($"Platform: {platform}"))
+            .WithScriptPodPlatform(platform)
+            .Build();
+
+        // Act
+        var result = await TentacleClient.ExecuteScript(command, StatusReceived, ScriptCompleted, new InMemoryLog(), CancellationToken);
+
+        // Assert
+        logs.Should().Contain(po => po.Source == ProcessOutputSource.StdOut && po.Text == "Hello World from platform-specific node");
+        logs.Should().Contain(po => po.Source == ProcessOutputSource.StdOut && po.Text.Contains($"Platform: {platform}"));
+        scriptCompleted.Should().BeTrue();
+        result.ExitCode.Should().Be(0);
+        result.State.Should().Be(ProcessState.Complete);
+
+        // Verify the pod was created with the correct node affinity
+        var podCommand = await KubeCtl.ExecuteNamespacedCommand($"get pods -l octopus.com/scriptTicketId={command.ScriptTicket.TaskId} -o jsonpath='{{.items[0].spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions}}'");
+        podCommand.StdOut.Should().NotBeEmpty("Pod should have node affinity configured");
+
+        var parts = platform.Split('-');
+        var expectedOs = parts[0];
+        var expectedArch = parts[1];
+
+        // Verify OS and architecture selectors are present
+        var nodeAffinityJson = string.Join("", podCommand.StdOut);
+        nodeAffinityJson.Should().Contain("kubernetes.io/os");
+        nodeAffinityJson.Should().Contain("kubernetes.io/arch");
+        nodeAffinityJson.Should().Contain(expectedOs);
+        nodeAffinityJson.Should().Contain(expectedArch);
+
+        return;
+
+        void StatusReceived(ScriptExecutionStatus status)
+        {
+            logs.AddRange(status.Logs);
+        }
+
+        Task ScriptCompleted(CancellationToken ct)
+        {
+            scriptCompleted = true;
+            return Task.CompletedTask;
+        }
+    }
+
+    [Test]
+    public async Task RunScriptWithoutPlatformAffinity_ShouldNotHaveNodeAffinity()
+    {
+        // Arrange
+        var logs = new List<ProcessOutput>();
+        var scriptCompleted = false;
+
+        var command = new ExecuteKubernetesScriptCommandBuilder(LoggingUtils.CurrentTestHash())
+            .WithScriptBody(script => script
+                .Print("Hello World without platform affinity"))
+            .Build();
+
+        // Act
+        var result = await TentacleClient.ExecuteScript(command, StatusReceived, ScriptCompleted, new InMemoryLog(), CancellationToken);
+
+        // Assert
+        logs.Should().Contain(po => po.Source == ProcessOutputSource.StdOut && po.Text == "Hello World without platform affinity");
+        scriptCompleted.Should().BeTrue();
+        result.ExitCode.Should().Be(0);
+        result.State.Should().Be(ProcessState.Complete);
+
+        // Verify the pod was created without node affinity (except for any existing pod affinity from ReadWriteOnce volumes)
+        var podCommand = await KubeCtl.ExecuteNamespacedCommand($"get pods -l octopus.com/scriptTicketId={command.ScriptTicket.TaskId} -o jsonpath='{{.items[0].spec.affinity.nodeAffinity}}'");
+
+        // Should either be empty or only contain pod affinity (not node affinity)
+        var nodeAffinityOutput = string.Join("", podCommand.StdOut);
+        if (!string.IsNullOrEmpty(nodeAffinityOutput))
+        {
+            nodeAffinityOutput.Should().NotContain("kubernetes.io/os", "Node affinity for OS should not be set when no platform is specified");
+            nodeAffinityOutput.Should().NotContain("kubernetes.io/arch", "Node affinity for arch should not be set when no platform is specified");
+        }
+
+        return;
+
+        void StatusReceived(ScriptExecutionStatus status)
+        {
+            logs.AddRange(status.Logs);
+        }
+
+        Task ScriptCompleted(CancellationToken ct)
+        {
+            scriptCompleted = true;
+            return Task.CompletedTask;
+        }
+    }
+
+    [Test]
+    public async Task RunScriptWithInvalidPlatformFormat_ShouldLogWarningAndExecuteWithoutNodeAffinity()
+    {
+        // Arrange
+        var logs = new List<ProcessOutput>();
+        var scriptCompleted = false;
+
+        var command = new ExecuteKubernetesScriptCommandBuilder(LoggingUtils.CurrentTestHash())
+            .WithScriptBody(script => script
+                .Print("Hello World with invalid platform"))
+            .WithScriptPodPlatform("invalid-platform-format")
+            .Build();
+
+        // Act
+        var result = await TentacleClient.ExecuteScript(command, StatusReceived, ScriptCompleted, new InMemoryLog(), CancellationToken);
+
+        // Assert
+        logs.Should().Contain(po => po.Source == ProcessOutputSource.StdOut && po.Text == "Hello World with invalid platform");
+        scriptCompleted.Should().BeTrue();
+        result.ExitCode.Should().Be(0);
+        result.State.Should().Be(ProcessState.Complete);
+
+        // Verify warning was logged about invalid platform format
+        logs.Should().Contain(po => po.Text.Contains("Invalid platform affinity 'invalid-platform-format'"));
+
+        return;
+
+        void StatusReceived(ScriptExecutionStatus status)
+        {
+            logs.AddRange(status.Logs);
+        }
+
+        Task ScriptCompleted(CancellationToken ct)
+        {
+            scriptCompleted = true;
+            return Task.CompletedTask;
+        }
+    }
+
     public enum ScriptType
     {
         Raw,
