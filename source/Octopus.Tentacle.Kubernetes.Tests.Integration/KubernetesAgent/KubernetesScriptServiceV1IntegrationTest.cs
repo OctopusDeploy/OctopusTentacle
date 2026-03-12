@@ -460,6 +460,101 @@ public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrati
         }
     }
 
+    [Test]
+    [TestCase("linux-amd64")]
+    public async Task RunScriptWithPlatformAffinity_ShouldScheduleOnCorrectNode(string platform)
+    {
+        // Arrange
+        var logs = new List<ProcessOutput>();
+        var scriptCompleted = false;
+
+        var command = new ExecuteKubernetesScriptCommandBuilder(LoggingUtils.CurrentTestHash())
+            .WithScriptBody(script => script
+                .Print("Hello World from platform-specific node")
+                .Print($"Platform: {platform}"))
+            .WithScriptPodPlatform(platform)
+            .Build();
+
+        // Act
+        var result = await TentacleClient.ExecuteScript(command, StatusReceived, ScriptCompleted, new InMemoryLog(), CancellationToken);
+
+        // Assert
+        logs.Should().Contain(po => po.Source == ProcessOutputSource.StdOut && po.Text == "Hello World from platform-specific node");
+        logs.Should().Contain(po => po.Source == ProcessOutputSource.StdOut && po.Text.Contains($"Platform: {platform}"));
+        scriptCompleted.Should().BeTrue();
+        result.ExitCode.Should().Be(0);
+        result.State.Should().Be(ProcessState.Complete);
+
+        // Verify the pod was created with the correct node affinity
+        var podCommand = await KubeCtl.ExecuteNamespacedCommand($"get pods -l octopus.com/scriptTicketId={command.ScriptTicket.TaskId} -o jsonpath='{{.items[0].spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions}}'");
+        podCommand.StdOut.Should().NotBeEmpty("Pod should have node affinity configured");
+
+        var parts = platform.Split('-');
+        var expectedOs = parts[0];
+        var expectedArch = parts[1];
+
+        // Verify OS and architecture selectors are present with the specific platform values
+        var nodeAffinityJson = string.Join("", podCommand.StdOut);
+        nodeAffinityJson.Should().Contain("kubernetes.io/os");
+        nodeAffinityJson.Should().Contain("kubernetes.io/arch");
+
+        // Verify the specific platform constraints are applied (not just any OS/arch)
+        nodeAffinityJson.Should().Contain($"\"values\":[\"{expectedOs}\"]", $"Should have specific OS constraint for {expectedOs}");
+        nodeAffinityJson.Should().Contain($"\"values\":[\"{expectedArch}\"]", $"Should have specific architecture constraint for {expectedArch}");
+
+        return;
+
+        void StatusReceived(ScriptExecutionStatus status)
+        {
+            logs.AddRange(status.Logs);
+        }
+
+        Task ScriptCompleted(CancellationToken ct)
+        {
+            scriptCompleted = true;
+            return Task.CompletedTask;
+        }
+    }
+
+    [Test]
+    public async Task RunScriptWithInvalidPlatformFormat_ShouldLogWarningAndExecuteWithoutNodeAffinity()
+    {
+        // Arrange
+        var logs = new List<ProcessOutput>();
+        var scriptCompleted = false;
+
+        var command = new ExecuteKubernetesScriptCommandBuilder(LoggingUtils.CurrentTestHash())
+            .WithScriptBody(script => script
+                .Print("Hello World with invalid platform"))
+            .WithScriptPodPlatform("invalid-platform-format")
+            .Build();
+
+        // Act
+        var result = await TentacleClient.ExecuteScript(command, StatusReceived, ScriptCompleted, new InMemoryLog(), CancellationToken);
+
+        // Assert
+        logs.Should().Contain(po => po.Source == ProcessOutputSource.StdOut && po.Text == "Hello World with invalid platform");
+        scriptCompleted.Should().BeTrue();
+        result.ExitCode.Should().Be(0);
+        result.State.Should().Be(ProcessState.Complete);
+
+        // Verify warning was logged about invalid platform format
+        logs.Should().Contain(po => po.Text.Contains("Invalid platform affinity 'invalid-platform-format'"));
+
+        return;
+
+        void StatusReceived(ScriptExecutionStatus status)
+        {
+            logs.AddRange(status.Logs);
+        }
+
+        Task ScriptCompleted(CancellationToken ct)
+        {
+            scriptCompleted = true;
+            return Task.CompletedTask;
+        }
+    }
+
     public enum ScriptType
     {
         Raw,
