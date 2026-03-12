@@ -495,12 +495,14 @@ public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrati
         var expectedOs = parts[0];
         var expectedArch = parts[1];
 
-        // Verify OS and architecture selectors are present
+        // Verify OS and architecture selectors are present with the specific platform values
         var nodeAffinityJson = string.Join("", podCommand.StdOut);
         nodeAffinityJson.Should().Contain("kubernetes.io/os");
         nodeAffinityJson.Should().Contain("kubernetes.io/arch");
-        nodeAffinityJson.Should().Contain(expectedOs);
-        nodeAffinityJson.Should().Contain(expectedArch);
+
+        // Verify the specific platform constraints are applied (not just any OS/arch)
+        nodeAffinityJson.Should().Contain($"\"values\":[\"{expectedOs}\"]", $"Should have specific OS constraint for {expectedOs}");
+        nodeAffinityJson.Should().Contain($"\"values\":[\"{expectedArch}\"]", $"Should have specific architecture constraint for {expectedArch}");
 
         return;
 
@@ -517,7 +519,7 @@ public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrati
     }
 
     [Test]
-    public async Task RunScriptWithoutPlatformAffinity_ShouldNotHaveNodeAffinity()
+    public async Task RunScriptWithoutPlatformAffinity_ShouldNotOverrideExistingNodeAffinity()
     {
         // Arrange
         var logs = new List<ProcessOutput>();
@@ -537,15 +539,17 @@ public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrati
         result.ExitCode.Should().Be(0);
         result.State.Should().Be(ProcessState.Complete);
 
-        // Verify the pod was created without node affinity (except for any existing pod affinity from ReadWriteOnce volumes)
+        // Verify that no specific single-platform node affinity was added (existing cluster-wide affinity may remain)
         var podCommand = await KubeCtl.ExecuteNamespacedCommand($"get pods -l octopus.com/scriptTicketId={command.ScriptTicket.TaskId} -o jsonpath='{{.items[0].spec.affinity.nodeAffinity}}'");
 
-        // Should either be empty or only contain pod affinity (not node affinity)
         var nodeAffinityOutput = string.Join("", podCommand.StdOut);
         if (!string.IsNullOrEmpty(nodeAffinityOutput))
         {
-            nodeAffinityOutput.Should().NotContain("kubernetes.io/os", "Node affinity for OS should not be set when no platform is specified");
-            nodeAffinityOutput.Should().NotContain("kubernetes.io/arch", "Node affinity for arch should not be set when no platform is specified");
+            // If there is existing node affinity (from cluster defaults), it should not be platform-specific
+            // (i.e., it should support multiple architectures, not lock to a single one like "amd64" only)
+            nodeAffinityOutput.Should().NotContain("\"values\":[\"linux\"]", "Should not have single OS restriction when no platform specified");
+            nodeAffinityOutput.Should().NotContain("\"values\":[\"amd64\"]", "Should not have single architecture restriction when no platform specified");
+            nodeAffinityOutput.Should().NotContain("\"values\":[\"windows\"]", "Should not have single OS restriction when no platform specified");
         }
 
         return;
