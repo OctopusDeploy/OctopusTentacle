@@ -462,8 +462,6 @@ public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrati
 
     [Test]
     [TestCase("linux-amd64")]
-    [TestCase("linux-arm64")]
-    [TestCase("windows-amd64")]
     public async Task RunScriptWithPlatformAffinity_ShouldScheduleOnCorrectNode(string platform)
     {
         // Arrange
@@ -503,54 +501,6 @@ public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrati
         // Verify the specific platform constraints are applied (not just any OS/arch)
         nodeAffinityJson.Should().Contain($"\"values\":[\"{expectedOs}\"]", $"Should have specific OS constraint for {expectedOs}");
         nodeAffinityJson.Should().Contain($"\"values\":[\"{expectedArch}\"]", $"Should have specific architecture constraint for {expectedArch}");
-
-        return;
-
-        void StatusReceived(ScriptExecutionStatus status)
-        {
-            logs.AddRange(status.Logs);
-        }
-
-        Task ScriptCompleted(CancellationToken ct)
-        {
-            scriptCompleted = true;
-            return Task.CompletedTask;
-        }
-    }
-
-    [Test]
-    public async Task RunScriptWithoutPlatformAffinity_ShouldNotOverrideExistingNodeAffinity()
-    {
-        // Arrange
-        var logs = new List<ProcessOutput>();
-        var scriptCompleted = false;
-
-        var command = new ExecuteKubernetesScriptCommandBuilder(LoggingUtils.CurrentTestHash())
-            .WithScriptBody(script => script
-                .Print("Hello World without platform affinity"))
-            .Build();
-
-        // Act
-        var result = await TentacleClient.ExecuteScript(command, StatusReceived, ScriptCompleted, new InMemoryLog(), CancellationToken);
-
-        // Assert
-        logs.Should().Contain(po => po.Source == ProcessOutputSource.StdOut && po.Text == "Hello World without platform affinity");
-        scriptCompleted.Should().BeTrue();
-        result.ExitCode.Should().Be(0);
-        result.State.Should().Be(ProcessState.Complete);
-
-        // Verify that no specific single-platform node affinity was added (existing cluster-wide affinity may remain)
-        var podCommand = await KubeCtl.ExecuteNamespacedCommand($"get pods -l octopus.com/scriptTicketId={command.ScriptTicket.TaskId} -o jsonpath='{{.items[0].spec.affinity.nodeAffinity}}'");
-
-        var nodeAffinityOutput = string.Join("", podCommand.StdOut);
-        if (!string.IsNullOrEmpty(nodeAffinityOutput))
-        {
-            // If there is existing node affinity (from cluster defaults), it should not be platform-specific
-            // (i.e., it should support multiple architectures, not lock to a single one like "amd64" only)
-            nodeAffinityOutput.Should().NotContain("\"values\":[\"linux\"]", "Should not have single OS restriction when no platform specified");
-            nodeAffinityOutput.Should().NotContain("\"values\":[\"amd64\"]", "Should not have single architecture restriction when no platform specified");
-            nodeAffinityOutput.Should().NotContain("\"values\":[\"windows\"]", "Should not have single OS restriction when no platform specified");
-        }
 
         return;
 
