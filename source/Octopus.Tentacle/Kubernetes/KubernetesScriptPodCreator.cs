@@ -179,7 +179,7 @@ namespace Octopus.Tentacle.Kubernetes
 
             LogVerboseToBothLogs($"Creating Kubernetes Pod '{podName}'.", tentacleScriptLog);
 
-            foreach(var file in kubernetesPhysicalFileSystem.EnumerateFiles(KubernetesConfig.BootstrapRunnerExecutablePath))
+            foreach(var file in kubernetesPhysicalFileSystem.EnumerateFiles(KubernetesConfig.BootstrapRunnerExecutableDirectory))
             {
                 var baseName = Path.GetFileName(file);
                 workspace.CopyFile(file, baseName, true);    

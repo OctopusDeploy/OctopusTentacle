@@ -6,7 +6,6 @@ FROM golang:1.22 as bootstrapRunnerBuilder
 ARG TARGETARCH
 ARG TARGETOS
 
-ARG platforms="linux"
 ARG architectures="amd64 arm64 386 arm"
 
 COPY docker/kubernetes-agent-tentacle/bootstrapRunner/* /bootstrapRunner/
@@ -15,10 +14,8 @@ WORKDIR /bootstrapRunner
 # Create bin directory for multiple architectures
 RUN mkdir -p bin
 
-RUN for platform in $platforms; do \
-        for arch in $architectures; do \
-            GOOS=$platform GOARCH=$arch go build -ldflags "-s -w" -o "bin/bootstrapRunner-$platform-$arch"; \
-        done; \
+RUN for arch in $architectures; do \
+        GOOS=linux GOARCH=$arch go build -ldflags "-s -w" -o "bin/bootstrapRunner-linux-$arch"; \
     done
 
 FROM mcr.microsoft.com/dotnet/runtime-deps:$RuntimeDepsTag
@@ -79,7 +76,7 @@ RUN chgrp -R 0 /opt /usr /.dotnet && \
 RUN chgrp 0 /etc /etc/ssl/certs && \
     chmod g=u /etc /etc/ssl/certs
 
-ENV BOOTSTRAPRUNNEREXECUTABLEPATH=/bootstrapRunner/
+ENV BOOTSTRAPRUNNEREXECUTABLEDIRECTORY=/bootstrapRunner/
 ENV OCTOPUS_RUNNING_IN_CONTAINER=Y
 ENV ACCEPT_EULA=N
 ENV CustomPublicHostName=""

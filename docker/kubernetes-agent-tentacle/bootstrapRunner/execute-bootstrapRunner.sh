@@ -7,7 +7,6 @@ set -eu
 
 # Detect the current architecture
 ARCH=$(uname -m)
-OS=$(uname -s | tr '[:upper:]' '[:lower:]')
 
 # Map architecture names to Go architecture naming
 case "$ARCH" in
@@ -31,7 +30,7 @@ case "$ARCH" in
 esac
 
 # Construct binary name
-BINARY_NAME="bootstrapRunner-${OS}-${GO_ARCH}"
+BINARY_NAME="bootstrapRunner-linux-${GO_ARCH}"
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
