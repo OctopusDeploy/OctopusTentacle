@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Core.Services.Scripts;
 using Octopus.Tentacle.Core.Services.Scripts.Locking;
 using Octopus.Tentacle.Core.Services.Scripts.Logging;
 using Octopus.Tentacle.Core.Services.Scripts.Security.Masking;
@@ -78,8 +79,19 @@ namespace Octopus.Tentacle.Scripts
 
         public virtual void BootstrapScript(string scriptBody)
         {
+            // Inject PowerShell startup detection code if the special comment is present
+            var processedScriptBody = scriptBody;
+            if (PowerShellStartupDetection.ContainsSpecialComment(scriptBody))
+            {
+                processedScriptBody = PowerShellStartupDetection.InjectDetectionCode(scriptBody, WorkingDirectory);
+                
+                // Create the "should run" file to signal that the script should proceed
+                var shouldRunFile = PowerShellStartupDetection.GetShouldRunFilePath(WorkingDirectory);
+                FileSystem.OverwriteFile(shouldRunFile, "");
+            }
+            
             // default is UTF8noBOM but powershell doesn't interpret that correctly
-            FileSystem.OverwriteFile(BootstrapScriptFilePath, scriptBody, Encoding.UTF8);
+            FileSystem.OverwriteFile(BootstrapScriptFilePath, processedScriptBody, Encoding.UTF8);
         }
 
         public string ResolvePath(string fileName)
