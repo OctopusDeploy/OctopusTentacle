@@ -184,7 +184,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             {
                 try
                 {
-                    await Task.Delay(powerShellStartupCheckDelay, cancellationToken);
+                    await DelayWithoutException.Delay(powerShellStartupCheckDelay, cancellationToken);
                     
                     if (cancellationToken.IsCancellationRequested)
                     {
