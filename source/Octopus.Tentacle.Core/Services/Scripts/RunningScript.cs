@@ -158,9 +158,6 @@ namespace Octopus.Tentacle.Core.Services.Scripts
                     
                     return ScriptExitCodes.PowerShellNeverStartedExitCode;
                 }
-                
-                // PowerShell started, wait for script to complete
-                return await scriptTask;
             }
 
             // Script completed first
