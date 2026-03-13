@@ -165,9 +165,8 @@ namespace Octopus.Tentacle.Core.Services.Scripts
 
             // Script completed first
             var exitCode = await scriptTask;
-                
-            // Check if PowerShell never started based on file existence
-            return CheckForPowerShellNeverStarted(writer, exitCode);
+            
+            return exitCode;
         }
         
         Task<PowerShellStartupStatus> StartPowerShellStartupMonitoring(IScriptLogWriter writer, CancellationToken cancellationToken)
@@ -310,9 +309,6 @@ namespace Octopus.Tentacle.Core.Services.Scripts
                     environmentVariables,
                     token);
 
-                // Check if PowerShell never started (if detection was enabled)
-                exitCode = CheckForPowerShellNeverStarted(writer, exitCode);
-
                 return exitCode;
             }
             catch (Exception ex)
@@ -324,53 +320,6 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             }
         }
         
-        int CheckForPowerShellNeverStarted(IScriptLogWriter writer, int originalExitCode)
-        {
-            var shouldRunFilePath = PowerShellStartupDetection.GetShouldRunFilePath(workspace.WorkingDirectory);
-            
-            // Only check if detection was enabled (should-run file was created)
-            if (!File.Exists(shouldRunFilePath))
-            {
-                return originalExitCode;
-            }
-            
-            var startedFilePath = PowerShellStartupDetection.GetStartedFilePath(workspace.WorkingDirectory);
-            
-            // If the started file doesn't exist, PowerShell never started
-            if (!File.Exists(startedFilePath))
-            {
-                // Try to create it to confirm
-                try
-                {
-                    using (var fileStream = File.Open(startedFilePath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
-                    {
-                        // Successfully created the file, confirming PowerShell never started
-                        writer.WriteOutput(ProcessOutputSource.StdErr, 
-                            "PowerShell process completed without ever executing the script startup detection code. " +
-                            "This indicates that powershell.exe started but never began executing the script body.");
-                        
-                        // Clean up the should-run file
-                        try
-                        {
-                            File.Delete(shouldRunFilePath);
-                        }
-                        catch
-                        {
-                            // Best effort cleanup
-                        }
-                        
-                        return ScriptExitCodes.PowerShellNeverStartedExitCode;
-                    }
-                }
-                catch (IOException)
-                {
-                    // File was created by another thread (monitoring task), still means PowerShell never started
-                    return ScriptExitCodes.PowerShellNeverStartedExitCode;
-                }
-            }
-            
-            return originalExitCode;
-        }
 
         Action<string> LogScriptOutputTo(IScriptLogWriter logOutput, ProcessOutputSource level)
         {
