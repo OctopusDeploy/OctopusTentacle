@@ -129,7 +129,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
         async Task<int> RunScriptWithMonitoring(string shellPath, IScriptLogWriter writer)
         {
             // Create a linked cancellation token that we can cancel when exiting early
-            using var cts = CancellationTokenSource.CreateLinkedTokenSource(token);
+            await using var cts = new CancelOnDisposeCancellationToken(token);
             var cancelOnDisposeToken = cts.Token;
             
             // Start PowerShell startup monitoring if applicable
@@ -156,23 +156,18 @@ namespace Octopus.Tentacle.Core.Services.Scripts
                     // Clean up should-run file
                     CleanupShouldRunFile();
                     
-                    // Cancel the script task since we're exiting early
-                    cts.Cancel();
-                    
                     return ScriptExitCodes.PowerShellNeverStartedExitCode;
                 }
                 
                 // PowerShell started, wait for script to complete
                 return await scriptTask;
             }
-            else
-            {
-                // Script completed first
-                var exitCode = await scriptTask;
+
+            // Script completed first
+            var exitCode = await scriptTask;
                 
-                // Check if PowerShell never started based on file existence
-                return CheckForPowerShellNeverStarted(writer, exitCode);
-            }
+            // Check if PowerShell never started based on file existence
+            return CheckForPowerShellNeverStarted(writer, exitCode);
         }
         
         Task<PowerShellStartupStatus> StartPowerShellStartupMonitoring(IScriptLogWriter writer, CancellationToken cancellationToken)
