@@ -24,20 +24,8 @@ namespace Octopus.Tentacle.Scripts
 
         public override void BootstrapScript(string scriptBody)
         {
-            // Inject PowerShell startup detection code if the special comment is present
-            // This works for pwsh (PowerShell Core) on Linux/Mac
-            var processedScriptBody = scriptBody;
-            if (PowerShellStartupDetection.ContainsSpecialComment(scriptBody))
-            {
-                processedScriptBody = PowerShellStartupDetection.InjectDetectionCode(scriptBody, WorkingDirectory);
-                
-                // Create the "should run" file to signal that the script should proceed
-                var shouldRunFile = PowerShellStartupDetection.GetShouldRunFilePath(WorkingDirectory);
-                FileSystem.OverwriteFile(shouldRunFile, "");
-            }
-            
-            processedScriptBody = processedScriptBody.Replace("\r\n", "\n");
-            FileSystem.OverwriteFile(BootstrapScriptFilePath, processedScriptBody, Encoding.Default);
+            scriptBody = scriptBody.Replace("\r\n", "\n");
+            FileSystem.OverwriteFile(BootstrapScriptFilePath, scriptBody, Encoding.Default);
         }
 
         public static string GetBashBootstrapScriptFilePath(string workspaceDirectory)
