@@ -187,25 +187,15 @@ namespace Octopus.Tentacle.Core.Services.Scripts
                         return PowerShellStartupStatus.NotMonitored;
                     }
                     
-                    // Check if the started file was created by PowerShell
-                    var startedFilePath = PowerShellStartupDetection.GetStartedFilePath(workspace.WorkingDirectory);
-                    
-                    if (File.Exists(startedFilePath))
-                    {
-                        // PowerShell started successfully
-                        return PowerShellStartupStatus.Started;
-                    }
-                    
                     // Try to create the started file
                     try
                     {
-                        using (var fileStream = File.Open(startedFilePath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
-                        {
-                            // Successfully created the file, meaning PowerShell never started
-                            log.Warn($"PowerShell startup detection: PowerShell did not start within {powerShellStartupCheckDelay.TotalMinutes} minutes for task {taskId}");
+                        var startedFilePath = PowerShellStartupDetection.GetStartedFilePath(workspace.WorkingDirectory);
+                        using var fileStream = File.Open(startedFilePath, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+                        // Successfully created the file, meaning PowerShell never started
+                        log.Warn($"PowerShell startup detection: PowerShell did not start within {powerShellStartupCheckDelay.TotalMinutes} minutes for task {taskId}");
                             
-                            return PowerShellStartupStatus.NeverStarted;
-                        }
+                        return PowerShellStartupStatus.NeverStarted;
                     }
                     catch (IOException)
                     {
