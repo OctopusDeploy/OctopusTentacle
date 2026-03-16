@@ -274,7 +274,7 @@ write-output 'This should never be printed'
                     TimeSpan.FromSeconds(2)); // Use 2 second timeout for testing
 
                 // Execute in background
-                var executeTask = Task.Run(() => runningScript.Execute());
+                var executeTask = runningScript.Execute();
 
                 // Wait for completion (should take around 2 seconds for monitoring to kick in)
                 await executeTask;

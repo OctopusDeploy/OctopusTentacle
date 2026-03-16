@@ -68,7 +68,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
         public IScriptLog ScriptLog { get; }
         public Task Cleanup(CancellationToken cancellationToken) => Task.CompletedTask;
 
-        public void Execute()
+        public async Task Execute()
         {
             var exitCode = -1;
 
@@ -92,7 +92,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
 
                             RecordScriptHasStarted(writer);
 
-                            exitCode = RunScriptWithMonitoring(shellPath, writer).GetAwaiter().GetResult();
+                            exitCode = await RunScriptWithMonitoring(shellPath, writer);
                         }
                     }
                     catch (OperationCanceledException)
