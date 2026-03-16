@@ -80,15 +80,11 @@ namespace Octopus.Tentacle.Scripts
         public virtual void BootstrapScript(string scriptBody)
         {
             // Inject PowerShell startup detection code if the special comment is present
-            var processedScriptBody = scriptBody;
-            if (PowerShellStartupDetection.ContainsSpecialComment(scriptBody))
-            {
-                processedScriptBody = PowerShellStartupDetection.InjectDetectionCode(scriptBody, WorkingDirectory);
-                
-                // Create the "should run" file to signal that the script should proceed
-                var shouldRunFile = PowerShellStartupDetection.GetShouldRunFilePath(WorkingDirectory);
-                FileSystem.OverwriteFile(shouldRunFile, "");
-            }
+            var processedScriptBody = PowerShellStartupDetection.InjectDetectionCode(scriptBody, WorkingDirectory);
+
+            // Create the "should run" file to signal that the script should proceed
+            var shouldRunFile = PowerShellStartupDetection.GetShouldRunFilePath(WorkingDirectory);
+            FileSystem.OverwriteFile(shouldRunFile, "");
             
             // default is UTF8noBOM but powershell doesn't interpret that correctly
             FileSystem.OverwriteFile(BootstrapScriptFilePath, processedScriptBody, Encoding.UTF8);
