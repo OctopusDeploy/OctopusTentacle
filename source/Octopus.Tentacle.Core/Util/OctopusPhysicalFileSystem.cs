@@ -103,12 +103,13 @@ namespace Octopus.Tentacle.Core.Util
         public long GetFileSize(string path)
             => new FileInfo(path).Length;
 
-        public string ReadFile(string path)
+        public string ReadFile(string path, bool withRetry = true)
         {
             var content = Policy<string>
                 .Handle<IOException>()
-                .WaitAndRetry(10, retryCount => TimeSpan.FromMilliseconds(100 * retryCount))
+                .WaitAndRetry(withRetry ? 10 : 0, retryCount => TimeSpan.FromMilliseconds(100 * retryCount))
                 .Execute(() => File.ReadAllText(path));
+
             return content;
         }
 
@@ -269,7 +270,7 @@ namespace Octopus.Tentacle.Core.Util
                 return;
 
             //We can't perform this check in Kubernetes due to how drives are mounted and reported (always returns 0 byte sized drives)
-            if(IsRunningAsKubernetesAgent)
+            if (IsRunningAsKubernetesAgent)
                 return;
 
             var driveInfo = SafelyGetDriveInfo(directoryPath);

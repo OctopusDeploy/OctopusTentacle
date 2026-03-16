@@ -909,7 +909,13 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
                 if (CommunicationStyle == CommunicationStyle.TentacleActive)
                 {
-                    register = register.Argument("server-comms-port", serverCommsPort);
+                    // On Octopus Cloud (*.octopus.app), polling tentacles connecting over port 443 must use
+                    // the polling subdomain (polling.<instance>.octopus.app) rather than the main server hostname.
+                    // Using --server-comms-port "443" against the main hostname returns 404.
+                    if (serverCommsPort == "443" && Uri.TryCreate(OctopusServerUrl, UriKind.Absolute, out var serverUri) && serverUri.Host.EndsWith("octopus.app", StringComparison.OrdinalIgnoreCase))
+                        register = register.Argument("server-comms-address", $"https://polling.{serverUri.Host}");
+                    else
+                        register = register.Argument("server-comms-port", serverCommsPort);
                 }
 
                 if (!string.IsNullOrWhiteSpace(serverWebSocket))
