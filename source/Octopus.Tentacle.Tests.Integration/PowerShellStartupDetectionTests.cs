@@ -20,11 +20,13 @@ using Octopus.Tentacle.Core.Services.Scripts.Shell;
 using Octopus.Tentacle.Core.Services.Scripts.StateStore;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Services.Scripts;
+using Octopus.Tentacle.Tests.Integration.Support.TestAttributes;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Integration
 {
     [TestFixture]
+    [WindowsTest]
     public class PowerShellStartupDetectionTests
     {
         static (ScriptServiceV2 service, ScriptWorkspaceFactory workspaceFactory, ScriptStateStoreFactory stateStoreFactory, TemporaryDirectory tempDir) CreateScriptService()
