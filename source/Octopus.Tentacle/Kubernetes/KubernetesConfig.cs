@@ -38,7 +38,7 @@ namespace Octopus.Tentacle.Kubernetes
         public static string KubernetesMonitorEnabledVariableName => $"{EnvVarPrefix}__KUBERNETESMONITORENABLED";
         public static string? KubernetesMonitorEnabled => Environment.GetEnvironmentVariable(KubernetesMonitorEnabledVariableName);
 
-        public static string BootstrapRunnerExecutablePath => GetRequiredEnvVar("BOOTSTRAPRUNNEREXECUTABLEPATH", "Unable to determine Bootstrap Runner Executable Path");
+        public static string BootstrapRunnerExecutableDirectory => GetRequiredEnvVar("BOOTSTRAPRUNNEREXECUTABLEDIRECTORY", "Unable to determine Bootstrap Runner Executable Directory");
 
         public static string PersistentVolumeSizeVariableName => $"{EnvVarPrefix}__PERSISTENTVOLUMESIZE";
         public static string PersistentVolumeSize => GetRequiredEnvVar(PersistentVolumeSizeVariableName, "Unable to determine Persistent Volume Size");
