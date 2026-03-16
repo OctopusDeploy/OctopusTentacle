@@ -21,7 +21,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
         readonly IScriptStateStore? stateStore;
         readonly IShell shell;
         readonly string taskId;
-        readonly CancellationToken token;
+        readonly CancellationToken runningScriptToken;
         readonly IReadOnlyDictionary<string, string> environmentVariables;
         readonly ILog log;
         readonly ScriptIsolationMutex scriptIsolationMutex;
@@ -33,7 +33,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             IScriptLog scriptLog,
             string taskId,
             ScriptIsolationMutex scriptIsolationMutex,
-            CancellationToken token,
+            CancellationToken runningScriptToken,
             IReadOnlyDictionary<string, string> environmentVariables,
             ILog log,
             TimeSpan? powerShellStartupCheckDelay = null)
@@ -42,7 +42,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             this.workspace = workspace;
             this.stateStore = stateStore;
             this.taskId = taskId;
-            this.token = token;
+            this.runningScriptToken = runningScriptToken;
             this.environmentVariables = environmentVariables;
             this.log = log;
             this.scriptIsolationMutex = scriptIsolationMutex;
@@ -56,9 +56,9 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             IScriptLog scriptLog,
             string taskId,
             ScriptIsolationMutex scriptIsolationMutex,
-            CancellationToken token,
+            CancellationToken runningScriptToken,
             IReadOnlyDictionary<string, string> environmentVariables,
-            ILog log) : this(shell, workspace, null, scriptLog, taskId, scriptIsolationMutex, token, environmentVariables, log)
+            ILog log) : this(shell, workspace, null, scriptLog, taskId, scriptIsolationMutex, runningScriptToken, environmentVariables, log)
         {
         }
 
@@ -85,7 +85,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
                                    workspace.ScriptMutexName ?? nameof(RunningScript),
                                    message => writer.WriteOutput(ProcessOutputSource.StdOut, message),
                                    taskId,
-                                   token,
+                                   runningScriptToken,
                                    log))
                         {
                             State = ProcessState.Running;
@@ -129,14 +129,17 @@ namespace Octopus.Tentacle.Core.Services.Scripts
         async Task<int> RunScriptWithMonitoring(string shellPath, IScriptLogWriter writer)
         {
             // Create a linked cancellation token that we can cancel when exiting early
-            await using var cts = new CancelOnDisposeCancellationToken(token);
-            var cancelOnDisposeToken = cts.Token;
+            await using var scriptTaskCts = new CancelOnDisposeCancellationToken(runningScriptToken);
+            var scriptTaskCancelOnDisposeToken = scriptTaskCts.Token;
+            
+            await using var monitoringTaskCts = new CancelOnDisposeCancellationToken();
+            var monitoringTaskCancelOnDisposeToken = monitoringTaskCts.Token;
             
             // Start PowerShell startup monitoring if applicable
-            var monitoringTask = StartPowerShellStartupMonitoring(writer, cancelOnDisposeToken);
+            var monitoringTask = StartPowerShellStartupMonitoring(writer, monitoringTaskCancelOnDisposeToken);
             
             // Start script execution
-            var scriptTask = Task.Run(() => RunScript(shellPath, writer), cancelOnDisposeToken);
+            var scriptTask = Task.Run(() => RunScript(shellPath, writer), scriptTaskCancelOnDisposeToken);
             
             // Race between monitoring and script execution
             var completedTask = await Task.WhenAny(monitoringTask, scriptTask);
@@ -294,7 +297,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
                     LogScriptOutputTo(writer, ProcessOutputSource.StdOut),
                     LogScriptOutputTo(writer, ProcessOutputSource.StdErr),
                     environmentVariables,
-                    token);
+                    runningScriptToken);
 
                 return exitCode;
             }
