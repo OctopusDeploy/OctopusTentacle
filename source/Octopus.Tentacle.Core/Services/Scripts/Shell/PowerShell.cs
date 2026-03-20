@@ -50,7 +50,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts.Shell
             commandArguments.Append("-NoLogo ");
             commandArguments.Append("-ExecutionPolicy Unrestricted ");
             var escapedBootstrapFile = bootstrapFile.Replace("'", "''");
-            commandArguments.AppendFormat("-Command \"$ErrorActionPreference = 'Stop'; . {{. '{0}' {1}; if ((test-path variable:global:lastexitcode)) {{ exit $LastExitCode }}}}\"",
+            commandArguments.AppendFormat("-Command \"$ErrorActionPreference = 'Stop'; # OCTOPUS-POWERSHELL-STARTUP-DETECTION ; . {{. '{0}' {1}; if ((test-path variable:global:lastexitcode)) {{ exit $LastExitCode }}}}\"",
                 escapedBootstrapFile,
                 string.Join(" ", scriptArguments ?? new string[0]));
             return commandArguments.ToString();
