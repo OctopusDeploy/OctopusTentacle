@@ -111,7 +111,7 @@ write-output 'This should never be printed'
                 finalResponse.ExitCode.Should().Be(ScriptExitCodes.PowerShellNeverStartedExitCode);
 
                 var allLogs = string.Join("\n", logs.Select(l => l.Text));
-                allLogs.Should().Contain("PowerShell process did not start within");
+                allLogs.Should().Contain("PowerShell.exe process did not start within");
             }
         }
 
