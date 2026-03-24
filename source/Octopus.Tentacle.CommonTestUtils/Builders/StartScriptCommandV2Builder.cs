@@ -19,6 +19,7 @@ namespace Octopus.Tentacle.CommonTestUtils.Builders
         string taskId = Guid.NewGuid().ToString();
         ScriptTicket scriptTicket = new UniqueScriptTicketBuilder().Build();
         TimeSpan? durationStartScriptCanWaitForScriptToFinish = TimeSpan.FromSeconds(5);
+        TimeSpan? durationToWaitForPowerShellToStart = TimeSpan.FromSeconds(5);
 
         public StartScriptCommandV2Builder WithScriptBody(string scriptBody)
         {
@@ -84,6 +85,12 @@ namespace Octopus.Tentacle.CommonTestUtils.Builders
             return this;
         }
 
+        public StartScriptCommandV2Builder WithDurationToWaitForPowerShellToStart(TimeSpan? duration)
+        {
+            this.durationToWaitForPowerShellToStart = duration;
+            return this;
+        }
+
         public StartScriptCommandV2 Build()
             => new(scriptBody.ToString(),
                 isolation,
@@ -93,6 +100,7 @@ namespace Octopus.Tentacle.CommonTestUtils.Builders
                 taskId,
                 scriptTicket,
                 durationStartScriptCanWaitForScriptToFinish,
+                durationToWaitForPowerShellToStart,
                 additionalScripts,
                 files.ToArray());
     }

@@ -96,7 +96,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
                     runningScript.ScriptStateStore.Create();
                 }
 
-                var process = LaunchShell(command.ScriptTicket, command.TaskId, workspace, runningScript.ScriptStateStore, runningScript.CancellationToken);
+                var process = LaunchShell(command.ScriptTicket, command.TaskId, workspace, runningScript.ScriptStateStore, command.DurationToWaitForPowerShellToStartup, runningScript.CancellationToken);
 
                 runningScript.Process = process;
 
@@ -146,9 +146,9 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             await workspace.Delete(cancellationToken);
         }
 
-        RunningScript LaunchShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, IScriptStateStore stateStore, CancellationToken cancellationToken)
+        RunningScript LaunchShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, IScriptStateStore stateStore, TimeSpan? durationToWaitForPowerShellToStart, CancellationToken cancellationToken)
         {
-            var runningScript = new RunningScript(shell, workspace, stateStore, workspace.CreateLog(), serverTaskId, scriptIsolationMutex, cancellationToken, environmentVariables, log);
+            var runningScript = new RunningScript(shell, workspace, stateStore, workspace.CreateLog(), serverTaskId, scriptIsolationMutex, cancellationToken, environmentVariables, log, durationToWaitForPowerShellToStart);
             _ = Task.Run(async () => await runningScript.Execute(), cancellationToken);
             return runningScript;
         }
