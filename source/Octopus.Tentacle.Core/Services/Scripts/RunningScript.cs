@@ -92,7 +92,9 @@ namespace Octopus.Tentacle.Core.Services.Scripts
 
                             RecordScriptHasStarted(writer);
 
-                            exitCode = await RunScriptWithMonitoring(shellPath, writer);
+                            exitCode = workspace.ShouldMonitorPowerShellStartup
+                                ? await RunScriptWithMonitoring(shellPath, writer)
+                                : RunScript(shellPath, writer);
                         }
                     }
                     catch (OperationCanceledException)
@@ -153,8 +155,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
                 {
                     // PowerShell never started - exit immediately with appropriate code
                     writer.WriteOutput(ProcessOutputSource.StdErr, 
-                        $"PowerShell process did not start within {powerShellStartupCheckDelay.TotalMinutes} minutes. " +
-                        "Script execution aborted.");
+                        $"{shellPath} process did not start within {powerShellStartupCheckDelay.TotalMinutes} minutes. Script execution aborted.");
                     
                     // Clean up should-run file
                     CleanupShouldRunFile();

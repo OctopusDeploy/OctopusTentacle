@@ -71,6 +71,8 @@ namespace Octopus.Tentacle.Scripts
 
         public string? ScriptMutexName { get; set; }
 
+        public bool ShouldMonitorPowerShellStartup { get; set; }
+        
         public string[]? ScriptArguments { get; set; }
 
         public string WorkingDirectory { get; }
@@ -80,7 +82,8 @@ namespace Octopus.Tentacle.Scripts
         public virtual void BootstrapScript(string scriptBody)
         {
             // Inject PowerShell startup detection code if the special comment is present
-            var processedScriptBody = PowerShellStartupDetection.InjectDetectionCode(scriptBody, WorkingDirectory);
+            var (processedScriptBody, shouldMonitorPowerShellStartup) = PowerShellStartupDetection.InjectDetectionCode(scriptBody, WorkingDirectory);
+            ShouldMonitorPowerShellStartup = shouldMonitorPowerShellStartup;
 
             // Create the "should run" file to signal that the script should proceed
             var shouldRunFile = PowerShellStartupDetection.GetShouldRunFilePath(WorkingDirectory);

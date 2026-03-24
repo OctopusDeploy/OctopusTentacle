@@ -58,17 +58,17 @@ write-output ""PowerShell startup detection: Checks passed, continuing script ex
             return scriptBody.Contains(SpecialComment);
         }
         
-        public static string InjectDetectionCode(string scriptBody, string workingDirectory)
+        public static (string processedScriptBody, bool shouldMonitorPowerShellStartup) InjectDetectionCode(string scriptBody, string workingDirectory)
         {
             if (!ContainsSpecialComment(scriptBody))
             {
-                return scriptBody;
+                return (scriptBody, false);
             }
             
             var detectionCode = GenerateDetectionCode(workingDirectory);
-            return scriptBody.Replace(SpecialComment, detectionCode);
+            return (scriptBody.Replace(SpecialComment, detectionCode), true);
         }
-        
+
         static string EscapePowerShellString(string input)
         {
             return input.Replace("'", "''").Replace("\\", "\\\\");
