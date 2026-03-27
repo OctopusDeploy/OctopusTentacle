@@ -310,7 +310,6 @@ namespace Octopus.Tentacle.Core.Services.Scripts
                 return ScriptExitCodes.PowershellInvocationErrorExitCode;
             }
         }
-        
 
         Action<string> LogScriptOutputTo(IScriptLogWriter logOutput, ProcessOutputSource level)
         {
