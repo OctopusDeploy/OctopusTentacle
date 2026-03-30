@@ -9,6 +9,7 @@ using Halibut.Diagnostics;
 using Octopus.Client.Model;
 using Octopus.Client.Model.Endpoints;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Core.Configuration;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Core.Util;
 
@@ -102,7 +103,7 @@ namespace Octopus.Tentacle.Communications
                 log.Info($"Agent will poll Octopus Server at {pollingEndPoint.Address} for subscription {pollingEndPoint.SubscriptionId} expecting thumbprint {pollingEndPoint.Thumbprint}");
                 var halibutProxy = proxyConfigParser.ParseToHalibutProxy(configuration.PollingProxyConfiguration, pollingEndPoint.Address, log);
 
-                var halibutTimeoutsAndLimits = new HalibutTimeoutsAndLimits();
+                var halibutTimeoutsAndLimits = TentacleHalibutTimeoutAndLimitsFactory.CreateHalibutTimeoutsAndLimits();
                 var serviceEndPoint = new ServiceEndPoint(pollingEndPoint.Address, pollingEndPoint.Thumbprint, halibutProxy, halibutTimeoutsAndLimits);
 
                 var connectionCount = GetPollingConnectionCount();

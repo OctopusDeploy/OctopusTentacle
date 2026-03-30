@@ -7,6 +7,7 @@ using Halibut.ServiceModel;
 using Halibut.Transport;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Contracts.Legacy;
+using Octopus.Tentacle.Core.Configuration;
 using Octopus.Tentacle.Core.Util;
 
 namespace Octopus.Tentacle.Communications
@@ -26,38 +27,7 @@ namespace Octopus.Tentacle.Communications
                 var configuration = c.Resolve<ITentacleConfiguration>();
                 var services = c.Resolve<IServiceFactory>();
 
-                if (!bool.TryParse(Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleTcpKeepAliveEnabled), out var tcpKeepAliveEnabled))
-                {
-                    // Default to enabled if the environment variable is not provided
-                    tcpKeepAliveEnabled = true;
-                }
-
-                if (!bool.TryParse(Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleUseRecommendedTimeoutsAndLimits), out var useRecommendedTimeoutsAndLimits))
-                {
-                    useRecommendedTimeoutsAndLimits = true;
-                }
-                
-                if (!bool.TryParse(Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleUseTcpNoDelay), out var useTcpNoDelay))
-                {
-                    // Default to disabled
-                    useTcpNoDelay = false;
-                }
-                
-                if (!bool.TryParse(Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleUseAsyncListener), out var useAsyncListener))
-                {
-                    // Default to disabled
-                    useAsyncListener = false;
-                }
-                
-                
-
-                var halibutTimeoutsAndLimits = useRecommendedTimeoutsAndLimits 
-                    ? HalibutTimeoutsAndLimits.RecommendedValues() 
-                    : new HalibutTimeoutsAndLimits();
-
-                halibutTimeoutsAndLimits.TcpKeepAliveEnabled = tcpKeepAliveEnabled;
-                halibutTimeoutsAndLimits.TcpNoDelay = useTcpNoDelay;
-                halibutTimeoutsAndLimits.UseAsyncListener = useAsyncListener;
+                var halibutTimeoutsAndLimits = TentacleHalibutTimeoutAndLimitsFactory.CreateHalibutTimeoutsAndLimits();
 
                 ISslConfigurationProvider sslConfigurationProvider = EnvironmentOverrides.UseLegacyExplicitSslConfiguration
                     ? new LegacySslConfigurationProvider()
