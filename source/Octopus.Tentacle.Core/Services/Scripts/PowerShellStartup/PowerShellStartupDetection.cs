@@ -4,6 +4,48 @@ using Octopus.Tentacle.Core.Util;
 
 namespace Octopus.Tentacle.Core.Services.Scripts.PowerShellStartup
 {
+    /// <summary>
+    /// Provides opt-in detection of PowerShell processes that start but never execute the script body.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// When <c>powershell.exe</c> is invoked to run a script it can occasionally start the OS process
+    /// but silently stall before executing any script content. This was seen happening because
+    /// crowdstrike, prevented the script body from running.
+    /// 
+    /// When this happens, we get no output from the script AND the script is un-killable.
+    ///
+    /// To work-around this, powershell scripts can place: # TENTACLE-POWERSHELL-STARTUP-DETECTION
+    /// at the start. This will result in Tentacle being able to detect if the script has started
+    /// or not. If it has not started, Tentacle will prevent the script from ever progressing and
+    /// report the script as failed to start.
+    /// </para>
+    /// <para>
+    /// <b>How it works</b><br/>
+    /// Scripts opt in by including the marker comment <c># TENTACLE-POWERSHELL-STARTUP-DETECTION</c>
+    /// at the start of the script body, before any work is done in the scropt.
+    /// When Tentacle bootstraps the script via
+    /// <see cref="InjectDetectionCode"/>, the marker is replaced with generated PowerShell that:
+    /// <list type="number">
+    ///   <item>Attempts to exclusively create a <c>.octopus_powershell_started</c> sentinel file.
+    ///         If the file already exists (because <see cref="PowerShellStartupMonitor"/> beat it to
+    ///         the punch after the timeout), the script exits with code <c>-47</c>.</item>
+    ///   <item>Checks that the <c>.octopus_powershell_should_run</c> file written by Tentacle before
+    ///         launch is still present.  If it has been deleted by cleanup workspace or by the monitor,
+    ///         the script exits with code <c>-47</c>.</item>
+    /// </list>
+    /// When we run the script we also run<see cref="PowerShellStartupMonitor"/> which waits for the timeout window
+    /// (default 5 minutes, overridable via <c>OCTOPUS_TENTACLE_POWERSHELL_STARTUP_TIMEOUT</c>). It will then attempt
+    /// to exclusively create the <c>.octopus_powershell_started</c>.
+    ///   - If it can make the file, the running script is cancelled, although it likely will not cancel. Tentacle
+    ///    returns exit code <c>-47</c>, without waiting for the script to finish.
+    ///   - If it can't make then file, then  script started and tentacle simply waits for the script to complete.
+    /// </para>
+    /// <para>
+    /// <b>Design notes</b><br/>
+    /// Detection is entirely opt-in; scripts without the marker are unaffected.
+    /// </para>
+    /// </remarks>
     public static class PowerShellStartupDetection
     {
         public const string PowershellTentacleStartupDetectionComment = "# TENTACLE-POWERSHELL-STARTUP-DETECTION";
