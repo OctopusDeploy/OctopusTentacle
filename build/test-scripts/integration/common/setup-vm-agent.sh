@@ -7,5 +7,4 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 source $SCRIPT_DIR/dotnet-install.sh
 install_dotnet 8.0
 
-# Install pwsh (PowerShell Core) as a dotnet global tool so integration tests can use it
-$HOME/.dotnet/dotnet tool install --global PowerShell || true
+$SCRIPT_DIR/install-pwsh.sh
