@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Core.Util;
 
 namespace Octopus.Tentacle.Core.Services.Scripts.PowerShellStartup
@@ -48,7 +49,6 @@ namespace Octopus.Tentacle.Core.Services.Scripts.PowerShellStartup
     /// </remarks>
     public static class PowerShellStartupDetection
     {
-        public const string PowershellStartupDetectionComment = "# TENTACLE-POWERSHELL-STARTUP-DETECTION";
         public const string StartedFileName = ".octopus_powershell_started";
         public const string ShouldRunFileName = ".octopus_powershell_should_run";
 
@@ -104,7 +104,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts.PowerShellStartup
 
         public static bool ScriptContainsPowershellStartupDetectionComment(string scriptBody)
         {
-            return scriptBody.Contains(PowershellStartupDetectionComment);
+            return scriptBody.Contains(PowerShellStartupDetectionTemplateValues.PowershellStartupDetectionComment);
         }
 
         public static (string processedScriptBody, bool shouldMonitorPowerShellStartup) InjectDetectionCode(string scriptBody)
@@ -115,7 +115,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts.PowerShellStartup
             }
 
             var detectionCode = GenerateDetectionCode();
-            return (scriptBody.Replace(PowershellStartupDetectionComment, detectionCode), true);
+            return (scriptBody.Replace(PowerShellStartupDetectionTemplateValues.PowershellStartupDetectionComment, detectionCode), true);
         }
     }
 }
