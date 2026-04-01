@@ -70,12 +70,13 @@ namespace Octopus.Tentacle.Core.Services.Scripts.PowerShellStartup
         }
 
         /// <summary>
-        /// Since the powershell guard works by only running if it can create a file, we run into an
-        /// interesting situation when the powershell is blocked from running and the workspace is
-        /// cleaned up. If the workspace is cleaned up, then the file that the guard must create in
-        /// order to processed wont exist. This means it could proceed with execution. To ensure this
-        /// never happens, we delete the should-run file. Since the guard will only run if this file
-        /// exists, the workspace deleting problem goes away. 
+        /// Deletes the should-run file so that if PowerShell does eventually start, the startup guard
+        /// will detect its absence and exit immediately.
+        ///
+        /// Without this, a race exists: if the workspace is cleaned up while PowerShell is blocked,
+        /// the started sentinel file disappears. The guard would then be able to create it successfully
+        /// and incorrectly conclude that it is safe to proceed. Deleting the should-run file closes
+        /// that gap — the guard always checks for it and exits with code -47 if it is missing.
         /// </summary>
         public void DeleteShouldRunFileToEnsureThePowerShellCanNeverStart()
         {

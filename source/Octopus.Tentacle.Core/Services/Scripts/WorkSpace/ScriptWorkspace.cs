@@ -82,10 +82,13 @@ namespace Octopus.Tentacle.Scripts
             var (processedScriptBody, shouldMonitorPowerShellStartup) = PowerShellStartupDetection.InjectDetectionCode(scriptBody);
             this.shouldMonitorPowerShellStartup = shouldMonitorPowerShellStartup;
             
-            // Create the "should run" file to signal that the script should proceed
-            var shouldRunFile = PowerShellStartupDetection.GetShouldRunFilePath(WorkingDirectory);
-            FileSystem.OverwriteFile(shouldRunFile, "");
-            
+            if (shouldMonitorPowerShellStartup)
+            {
+                // Create the "should run" file to signal that the script should proceed
+                var shouldRunFile = PowerShellStartupDetection.GetShouldRunFilePath(WorkingDirectory);
+                FileSystem.OverwriteFile(shouldRunFile, "");
+            }
+
             // default is UTF8noBOM but powershell doesn't interpret that correctly
             FileSystem.OverwriteFile(BootstrapScriptFilePath, processedScriptBody, Encoding.UTF8);
         }

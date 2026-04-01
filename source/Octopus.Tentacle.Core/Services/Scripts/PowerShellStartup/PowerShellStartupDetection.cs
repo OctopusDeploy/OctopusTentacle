@@ -11,7 +11,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts.PowerShellStartup
     /// <para>
     /// When <c>powershell.exe</c> is invoked to run a script it can occasionally start the OS process
     /// but silently stall before executing any script content. This was seen happening because
-    /// crowdstrike, prevented the script body from running.
+    /// CrowdStrike prevented the script body from running.
     /// 
     /// When this happens, we get no output from the script AND the script is un-killable.
     ///
@@ -23,7 +23,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts.PowerShellStartup
     /// <para>
     /// <b>How it works</b><br/>
     /// Scripts opt in by including the marker comment <c># TENTACLE-POWERSHELL-STARTUP-DETECTION</c>
-    /// at the start of the script body, before any work is done in the scropt.
+    /// at the start of the script body, before any work is done in the script.
     /// When Tentacle bootstraps the script via
     /// <see cref="InjectDetectionCode"/>, the marker is replaced with generated PowerShell that:
     /// <list type="number">
@@ -34,12 +34,12 @@ namespace Octopus.Tentacle.Core.Services.Scripts.PowerShellStartup
     ///         launch is still present.  If it has been deleted by cleanup workspace or by the monitor,
     ///         the script exits with code <c>-47</c>.</item>
     /// </list>
-    /// When we run the script we also run<see cref="PowerShellStartupMonitor"/> which waits for the timeout window
-    /// (default 5 minutes, overridable via <c>OCTOPUS_TENTACLE_POWERSHELL_STARTUP_TIMEOUT</c>). It will then attempt
+    /// When we run the script we also run <see cref="PowerShellStartupMonitor"/> which waits for the timeout window
+    /// (default 5 minutes, overridable via <c>TentaclePowerShellStartupTimeout</c>). It will then attempt
     /// to exclusively create the <c>.octopus_powershell_started</c>.
     ///   - If it can make the file, the running script is cancelled, although it likely will not cancel. Tentacle
     ///    returns exit code <c>-47</c>, without waiting for the script to finish.
-    ///   - If it can't make then file, then  script started and tentacle simply waits for the script to complete.
+    ///   - If it can't make the file, then the script started and Tentacle simply waits for the script to complete.
     /// </para>
     /// <para>
     /// <b>Design notes</b><br/>
