@@ -38,7 +38,7 @@ When the marker is present, Tentacle:
 The default timeout is **5 minutes**. It can be overridden by setting the environment variable:
 
 ```
-OCTOPUS_TENTACLE_POWERSHELL_STARTUP_TIMEOUT=<TimeSpan>
+TentaclePowerShellStartupTimeout=<TimeSpan>
 ```
 
 For example, `00:02:00` for a 2-minute timeout.
