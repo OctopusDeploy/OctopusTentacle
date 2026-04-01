@@ -45,6 +45,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts.PowerShellStartup
                     try
                     {
                         var startedFilePath = PowerShellStartupDetection.GetStartedFilePath(workSpaceWorkingDirectory);
+                        // If we can make the file, then the script has not started.
                         using var fileStream = File.Open(startedFilePath, FileMode.CreateNew, FileAccess.Write, FileShare.None);
                         log.Warn($"PowerShell startup detection: PowerShell did not start within {powerShellStartupTimeout.TotalMinutes} minutes for task {taskId}");
                         DeleteShouldRunFileToEnsureThePowerShellCanNeverStart();
