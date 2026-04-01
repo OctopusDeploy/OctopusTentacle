@@ -10,7 +10,6 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders
             : base(Guid.NewGuid().ToString(), ScriptIsolationLevel.NoIsolation)
         {
             WithDurationStartScriptCanWaitForScriptToFinish(null);
-            WithDurationToWaitForPowerShellToStart(null);
         }
     }
 }

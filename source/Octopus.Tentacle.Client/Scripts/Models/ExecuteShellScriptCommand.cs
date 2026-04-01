@@ -14,15 +14,12 @@ namespace Octopus.Tentacle.Client.Scripts.Models
             ScriptIsolationConfiguration isolationConfiguration,
             Dictionary<ScriptType, string>? additionalScripts = null,
             ScriptFile[]? additionalFiles = null,
-            TimeSpan? durationToWaitForScriptToFinish = null,
-            TimeSpan? durationToWaitForPowerShellToStart = null)
+            TimeSpan? durationToWaitForScriptToFinish = null)
             : base(scriptTicket, taskId, scriptBody, arguments, isolationConfiguration, additionalScripts, additionalFiles)
         {
             DurationToWaitForScriptToFinish = durationToWaitForScriptToFinish;
-            DurationToWaitForPowerShellToStart = durationToWaitForPowerShellToStart;
         }
 
         public TimeSpan? DurationToWaitForScriptToFinish { get;  }
-        public TimeSpan? DurationToWaitForPowerShellToStart { get; }
     }
 }

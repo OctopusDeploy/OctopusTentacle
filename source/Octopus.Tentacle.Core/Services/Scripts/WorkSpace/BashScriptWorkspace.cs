@@ -27,6 +27,8 @@ namespace Octopus.Tentacle.Scripts
             FileSystem.OverwriteFile(BootstrapScriptFilePath, scriptBody, Encoding.Default);
         }
 
+        public override bool ShouldMonitorPowerShellStartup() => false;
+
         public static string GetBashBootstrapScriptFilePath(string workspaceDirectory)
             => Path.Combine(workspaceDirectory, BootstrapScriptFileName);
     }

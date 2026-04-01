@@ -15,14 +15,12 @@ namespace Octopus.Tentacle.Contracts.ScriptServiceV2
             string[] arguments,
             string taskId,
             ScriptTicket scriptTicket,
-            TimeSpan? durationToWaitForScriptToFinish,
-            TimeSpan? durationToWaitForPowerShellToStartup)
+            TimeSpan? durationToWaitForScriptToFinish)
         {
             Arguments = arguments;
             TaskId = taskId;
             ScriptTicket = scriptTicket;
             DurationToWaitForScriptToFinish = durationToWaitForScriptToFinish;
-            DurationToWaitForPowerShellToStartup = durationToWaitForPowerShellToStartup;
             ScriptBody = scriptBody;
             Isolation = isolation;
             ScriptIsolationMutexTimeout = scriptIsolationMutexTimeout;
@@ -37,7 +35,6 @@ namespace Octopus.Tentacle.Contracts.ScriptServiceV2
             string taskId,
             ScriptTicket scriptTicket,
             TimeSpan? durationToWaitForScriptToFinish,
-            TimeSpan? durationToWaitForPowerShellToStartup,
             params ScriptFile[]? additionalFiles)
             : this(scriptBody,
                 isolation,
@@ -46,8 +43,7 @@ namespace Octopus.Tentacle.Contracts.ScriptServiceV2
                 arguments,
                 taskId,
                 scriptTicket,
-                durationToWaitForScriptToFinish, 
-                durationToWaitForPowerShellToStartup)
+                durationToWaitForScriptToFinish)
         {
             if (additionalFiles != null)
                 Files.AddRange(additionalFiles);
@@ -61,7 +57,6 @@ namespace Octopus.Tentacle.Contracts.ScriptServiceV2
             string taskId,
             ScriptTicket scriptTicket,
             TimeSpan? durationToWaitForScriptToFinish,
-            TimeSpan? durationToWaitForPowerShellToStartup,
             Dictionary<ScriptType, string>? additionalScripts,
             params ScriptFile[]? additionalFiles)
             : this(scriptBody,
@@ -72,7 +67,6 @@ namespace Octopus.Tentacle.Contracts.ScriptServiceV2
                 taskId,
                 scriptTicket,
                 durationToWaitForScriptToFinish,
-                durationToWaitForPowerShellToStartup,
                 additionalFiles)
         {
             if (additionalScripts == null || !additionalScripts.Any())
@@ -88,7 +82,6 @@ namespace Octopus.Tentacle.Contracts.ScriptServiceV2
         public string ScriptBody { get; }
         public string TaskId { get; }
         public TimeSpan? DurationToWaitForScriptToFinish { get; }
-        public TimeSpan? DurationToWaitForPowerShellToStartup { get; }
 
         public ScriptIsolationLevel Isolation { get; }
         public TimeSpan ScriptIsolationMutexTimeout { get; }

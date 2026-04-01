@@ -6,7 +6,6 @@ namespace Octopus.Tentacle.Client.Scripts.Models.Builders
     public class ExecuteShellScriptCommandBuilder : ExecuteScriptCommandBuilder
     {
         TimeSpan? durationStartScriptCanWaitForScriptToFinish = TimeSpan.FromSeconds(5); // The UI refreshes every 5 seconds, so 5 seconds here might be reasonable.
-        TimeSpan? durationToWaitForPowerShellToStart = TimeSpan.FromMinutes(5);
 
         public ExecuteShellScriptCommandBuilder(string taskId, ScriptIsolationLevel defaultIsolationLevel) : base(taskId, defaultIsolationLevel)
         {
@@ -15,12 +14,6 @@ namespace Octopus.Tentacle.Client.Scripts.Models.Builders
         public ExecuteScriptCommandBuilder WithDurationStartScriptCanWaitForScriptToFinish(TimeSpan? duration)
         {
             durationStartScriptCanWaitForScriptToFinish = duration;
-            return this;
-        }
-
-        public ExecuteScriptCommandBuilder WithDurationToWaitForPowerShellToStart(TimeSpan? duration)
-        {
-            durationToWaitForPowerShellToStart = duration;
             return this;
         }
 
@@ -33,7 +26,6 @@ namespace Octopus.Tentacle.Client.Scripts.Models.Builders
                 IsolationConfiguration,
                 AdditionalScripts,
                 Files.ToArray(),
-                durationStartScriptCanWaitForScriptToFinish,
-                durationToWaitForPowerShellToStart);
+                durationStartScriptCanWaitForScriptToFinish);
     }
 }

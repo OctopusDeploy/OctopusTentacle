@@ -54,7 +54,6 @@ namespace Octopus.Tentacle.Client.Scripts
                 shellScriptCommand.TaskId,
                 shellScriptCommand.ScriptTicket,
                 shellScriptCommand.DurationToWaitForScriptToFinish,
-                shellScriptCommand.DurationToWaitForPowerShellToStart,
                 shellScriptCommand.Scripts,
                 shellScriptCommand.Files.ToArray());
         }

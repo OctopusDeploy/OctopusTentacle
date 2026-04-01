@@ -1,4 +1,4 @@
-namespace Octopus.Tentacle.Core.Services.Scripts
+namespace Octopus.Tentacle.Core.Services.Scripts.PowerShellStartup
 {
     public enum PowerShellStartupStatus
     {

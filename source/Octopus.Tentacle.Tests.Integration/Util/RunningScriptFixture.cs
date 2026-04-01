@@ -12,6 +12,7 @@ using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Core.Services.Scripts;
 using Octopus.Tentacle.Core.Services.Scripts.Locking;
+using Octopus.Tentacle.Core.Services.Scripts.PowerShellStartup;
 using Octopus.Tentacle.Core.Services.Scripts.Security.Masking;
 using Octopus.Tentacle.Core.Services.Scripts.Shell;
 using Octopus.Tentacle.Diagnostics;
@@ -73,6 +74,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
                 scriptIsolationMutex,
                 cancellationTokenSource.Token,
                 new Dictionary<string, string>(),
+                PowerShellStartupDetection.PowerShellStartupTimeout,
                 log);
         }
 
@@ -174,6 +176,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
                     scriptIsolationMutex,
                     cts.Token,
                     new Dictionary<string, string>(),
+                    PowerShellStartupDetection.PowerShellStartupTimeout,
                     new InMemoryLog());
 
                 workspace.BootstrapScript($"echo Starting\n{sleepCommand} 30\necho Finito");

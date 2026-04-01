@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Halibut.Util;
@@ -8,6 +7,7 @@ using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Core.Services.Scripts.Locking;
 using Octopus.Tentacle.Core.Services.Scripts.Logging;
+using Octopus.Tentacle.Core.Services.Scripts.PowerShellStartup;
 using Octopus.Tentacle.Core.Services.Scripts.Shell;
 using Octopus.Tentacle.Core.Services.Scripts.StateStore;
 using Octopus.Tentacle.Scripts;
@@ -25,7 +25,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
         readonly IReadOnlyDictionary<string, string> environmentVariables;
         readonly ILog log;
         readonly ScriptIsolationMutex scriptIsolationMutex;
-        readonly TimeSpan powerShellStartupCheckDelay;
+        readonly TimeSpan powerShellStartupTimeout;
 
         public RunningScript(IShell shell,
             IScriptWorkspace workspace,
@@ -35,8 +35,9 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             ScriptIsolationMutex scriptIsolationMutex,
             CancellationToken runningScriptToken,
             IReadOnlyDictionary<string, string> environmentVariables,
-            ILog log,
-            TimeSpan? powerShellStartupCheckDelay = null)
+            TimeSpan powerShellStartupTimeout,
+            ILog log
+            )
         {
             this.shell = shell;
             this.workspace = workspace;
@@ -48,7 +49,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             this.scriptIsolationMutex = scriptIsolationMutex;
             this.ScriptLog = scriptLog;
             this.State = ProcessState.Pending;
-            this.powerShellStartupCheckDelay = powerShellStartupCheckDelay ?? TimeSpan.FromMinutes(5);
+            this.powerShellStartupTimeout = powerShellStartupTimeout;
         }
 
         public RunningScript(IShell shell,
@@ -58,7 +59,8 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             ScriptIsolationMutex scriptIsolationMutex,
             CancellationToken runningScriptToken,
             IReadOnlyDictionary<string, string> environmentVariables,
-            ILog log) : this(shell, workspace, null, scriptLog, taskId, scriptIsolationMutex, runningScriptToken, environmentVariables, log)
+            TimeSpan powerShellStartupTimeout,
+            ILog log) : this(shell, workspace, null, scriptLog, taskId, scriptIsolationMutex, runningScriptToken, environmentVariables, powerShellStartupTimeout, log)
         {
         }
 
@@ -92,9 +94,9 @@ namespace Octopus.Tentacle.Core.Services.Scripts
 
                             RecordScriptHasStarted(writer);
 
-                            exitCode = workspace.ShouldMonitorPowerShellStartup
-                                ? await RunScriptWithMonitoring(shellPath, writer)
-                                : RunScript(shellPath, writer);
+                            exitCode = workspace.ShouldMonitorPowerShellStartup()
+                                ? await RunPowershellScriptWithMonitoring(shellPath, writer)
+                                : RunScript(shellPath, writer, runningScriptToken);
                         }
                     }
                     catch (OperationCanceledException)
@@ -128,115 +130,42 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             }
         }
 
-        async Task<int> RunScriptWithMonitoring(string shellPath, IScriptLogWriter writer)
+        async Task<int> RunPowershellScriptWithMonitoring(string shellPath, IScriptLogWriter writer)
         {
-            // Create a linked cancellation token that we can cancel when exiting early
+            // We want to be able to make some effort to cancel the running script, if the monitor task detects it as hung.
+            // Hence, we make a linked cancellation token with the runningScriptToken 
             await using var scriptTaskCts = new CancelOnDisposeCancellationToken(runningScriptToken);
-            var scriptTaskCancelOnDisposeToken = scriptTaskCts.Token;
             
+            // The monitoring task is NOT linked to the runningScriptToken, since it should keep monitoring even if an attempt to
+            // cancel the script is made. Remember, these hung powershell scripts WILL NOT CANCEL, so we must continue to monitor.
             await using var monitoringTaskCts = new CancelOnDisposeCancellationToken();
-            var monitoringTaskCancelOnDisposeToken = monitoringTaskCts.Token;
             
-            // Start PowerShell startup monitoring if applicable
-            var monitoringTask = StartPowerShellStartupMonitoring(writer, monitoringTaskCancelOnDisposeToken);
+            var monitor = new PowerShellStartupMonitor(workspace.WorkingDirectory, powerShellStartupTimeout, log, taskId);
             
-            // Start script execution
-            var scriptTask = Task.Run(() => RunScript(shellPath, writer), scriptTaskCancelOnDisposeToken);
+            var monitoringTask = monitor.WaitForStartup(monitoringTaskCts.Token);
+            var scriptTask = Task.Run(() => RunScript(shellPath, writer, scriptTaskCts.Token), scriptTaskCts.Token);
             
-            // Race between monitoring and script execution
             var completedTask = await Task.WhenAny(monitoringTask, scriptTask);
             
             if (completedTask == monitoringTask)
             {
-                // Monitoring task completed first
                 var startupStatus = await monitoringTask;
                 
                 if (startupStatus == PowerShellStartupStatus.NeverStarted)
                 {
                     // PowerShell never started - exit immediately with appropriate code
                     writer.WriteOutput(ProcessOutputSource.StdErr, 
-                        $"{shellPath} process did not start within {powerShellStartupCheckDelay.TotalMinutes} minutes. Script execution aborted.");
-                    
-                    // Clean up should-run file
-                    CleanupShouldRunFile();
+                        $"{shellPath} process did not start within {powerShellStartupTimeout.TotalMinutes} minutes. Script execution aborted.");
                     
                     return ScriptExitCodes.PowerShellNeverStartedExitCode;
                 }
             }
 
-            // Script completed first
             var exitCode = await scriptTask;
             
             return exitCode;
         }
         
-        Task<PowerShellStartupStatus> StartPowerShellStartupMonitoring(IScriptLogWriter writer, CancellationToken cancellationToken)
-        {
-            var shouldRunFilePath = PowerShellStartupDetection.GetShouldRunFilePath(workspace.WorkingDirectory);
-            
-            // Only start monitoring if the should-run file exists (meaning detection is enabled)
-            if (!File.Exists(shouldRunFilePath))
-            {
-                return Task.FromResult(PowerShellStartupStatus.NotMonitored);
-            }
-            
-            return Task.Run(async () =>
-            {
-                try
-                {
-                    await DelayWithoutException.Delay(powerShellStartupCheckDelay, cancellationToken);
-                    
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        return PowerShellStartupStatus.NotMonitored;
-                    }
-                    
-                    // Try to create the started file
-                    try
-                    {
-                        var startedFilePath = PowerShellStartupDetection.GetStartedFilePath(workspace.WorkingDirectory);
-                        using var fileStream = File.Open(startedFilePath, FileMode.CreateNew, FileAccess.Write, FileShare.None);
-                        // Successfully created the file, meaning PowerShell never started
-                        log.Warn($"PowerShell startup detection: PowerShell did not start within {powerShellStartupCheckDelay.TotalMinutes} minutes for task {taskId}");
-                            
-                        return PowerShellStartupStatus.NeverStarted;
-                    }
-                    catch (IOException)
-                    {
-                        // File already exists, meaning PowerShell did start (just very slowly)
-                        log.Info($"PowerShell startup detection: PowerShell started late (after {powerShellStartupCheckDelay.TotalMinutes} minutes) for task {taskId}");
-                        return PowerShellStartupStatus.Started;
-                    }
-                }
-                catch (OperationCanceledException)
-                {
-                    // Task was cancelled, this is expected
-                    return PowerShellStartupStatus.NotMonitored;
-                }
-                catch (Exception ex)
-                {
-                    log.Warn(ex, $"Error in PowerShell startup monitoring for task {taskId}");
-                    return PowerShellStartupStatus.NotMonitored;
-                }
-            });
-        }
-        
-        void CleanupShouldRunFile()
-        {
-            try
-            {
-                var shouldRunFilePath = PowerShellStartupDetection.GetShouldRunFilePath(workspace.WorkingDirectory);
-                if (File.Exists(shouldRunFilePath))
-                {
-                    File.Delete(shouldRunFilePath);
-                }
-            }
-            catch (Exception ex)
-            {
-                log.Warn(ex, $"Failed to delete should-run file for task {taskId}");
-            }
-        }
-
         void RecordScriptHasStarted(IScriptLogWriter writer)
         {
             try
@@ -286,7 +215,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             }
         }
 
-        int RunScript(string shellPath, IScriptLogWriter writer)
+        int RunScript(string shellPath, IScriptLogWriter writer, CancellationToken cancellationToken)
         {
             try
             {
@@ -298,7 +227,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
                     LogScriptOutputTo(writer, ProcessOutputSource.StdOut),
                     LogScriptOutputTo(writer, ProcessOutputSource.StdErr),
                     environmentVariables,
-                    runningScriptToken);
+                    cancellationToken);
 
                 return exitCode;
             }

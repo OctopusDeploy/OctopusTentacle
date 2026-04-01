@@ -21,7 +21,7 @@ The feature adds a special comment marker that Tentacle replaces with detection 
 Add the special comment to your PowerShell scripts:
 
 ```powershell
-# OCTOPUS-POWERSHELL-STARTUP-DETECTION
+# TENTACLE-POWERSHELL-STARTUP-DETECTION
 # Your actual script content here
 Write-Output "Hello World"
 ```
@@ -40,7 +40,7 @@ Tentacle will automatically replace this comment with detection code that:
 
 2. **PowerShellStartupDetection.cs** (new)
    - Contains logic to generate and inject detection code
-   - Defines the special comment: `# OCTOPUS-POWERSHELL-STARTUP-DETECTION`
+   - Defines the special comment: `# TENTACLE-POWERSHELL-STARTUP-DETECTION`
    - Manages file paths for detection files
 
 3. **ScriptWorkspace.cs**

@@ -19,15 +19,25 @@ namespace Octopus.Tentacle.Scripts
         readonly IOctopusFileSystem fileSystem;
         readonly IHomeDirectoryProvider home;
         readonly SensitiveValueMasker sensitiveValueMasker;
+        readonly bool useBashWorkspace;
 
         public ScriptWorkspaceFactory(
             IOctopusFileSystem fileSystem,
             IHomeDirectoryProvider home,
-            SensitiveValueMasker sensitiveValueMasker)
+            SensitiveValueMasker sensitiveValueMasker,
+            bool useBashWorkspace)
         {
             this.fileSystem = fileSystem;
             this.home = home;
             this.sensitiveValueMasker = sensitiveValueMasker;
+            this.useBashWorkspace = useBashWorkspace;
+        }
+        
+        public ScriptWorkspaceFactory(
+            IOctopusFileSystem fileSystem,
+            IHomeDirectoryProvider home,
+            SensitiveValueMasker sensitiveValueMasker) : this(fileSystem, home, sensitiveValueMasker, useBashWorkspace: !PlatformDetection.IsRunningOnWindows)
+        {
         }
 
         public IScriptWorkspace GetWorkspace(ScriptTicket ticket, WorkspaceReadinessCheck readinessCheck)
@@ -107,7 +117,7 @@ namespace Octopus.Tentacle.Scripts
 
         IScriptWorkspace CreateWorkspace(ScriptTicket scriptTicket, string workingDirectory)
         {
-            if (!PlatformDetection.IsRunningOnWindows)
+            if (useBashWorkspace)
             {
                 return new BashScriptWorkspace(scriptTicket, workingDirectory, fileSystem, sensitiveValueMasker);
             }
