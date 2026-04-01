@@ -400,8 +400,7 @@ write-output 'This should never be printed'
             }
 
             // Fall back to bash (tests will be skipped for PowerShell-specific features)
-            //Assert.Inconclusive("PowerShell (pwsh) not available on this platform. Install PowerShell Core to run these tests.");
-            Assert.Fail("PowerShell (pwsh) not available on this platform. Install PowerShell Core to run these tests.");
+            Assert.Inconclusive("PowerShell (pwsh) not available on this platform. Install PowerShell Core to run these tests.");
             return null!;
         }
 
