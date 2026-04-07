@@ -1,0 +1,49 @@
+source/Octopus.Tentacle/Kubernetes/Crypto/PodLogEncryptionProvider.cs
+  5d1c796c18c331e9 19-21,26-28,30,40
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "5c5911af0a447db0307644d5830d226fa4b853f0",
+  "prompts": {
+    "5d1c796c18c331e9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d3b0c4af-ecfa-4082-be73-f3d1b31856f8",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": null,
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 11,
+      "overriden_lines": 0
+    },
+    "9717174f9e52e889": {
+      "agent_id": {
+        "tool": "github-copilot-jetbrains",
+        "id": "1775128914339",
+        "model": "unknown"
+      },
+      "human_author": "oleksandr-codefresh",
+      "messages": [],
+      "total_additions": 12,
+      "total_deletions": 6,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    },
+    "ae061a682bc12195": {
+      "agent_id": {
+        "tool": "github-copilot-jetbrains",
+        "id": "1774874636040",
+        "model": "unknown"
+      },
+      "human_author": "oleksandr-codefresh",
+      "messages": [],
+      "total_additions": 9,
+      "total_deletions": 4,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    }
+  }
+}
