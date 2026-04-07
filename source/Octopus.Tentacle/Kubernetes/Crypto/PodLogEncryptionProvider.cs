@@ -16,14 +16,18 @@ namespace Octopus.Tentacle.Kubernetes.Crypto
     
     public class PodLogEncryptionProvider : IPodLogEncryptionProvider
     {
-        readonly byte[] keyBytes;
+        readonly KeyParameter keyParameter;
+        readonly GcmBlockCipher cipher;
+        readonly int macSize;
         const int NonceLength = 12;
 
         private PodLogEncryptionProvider(byte[] keyBytes)
         {
-            this.keyBytes = keyBytes;
+            keyParameter = new KeyParameter(keyBytes);
+            cipher = new GcmBlockCipher(new AesEngine());
+            macSize = 8 * cipher.GetBlockSize();
         }
-        
+
         public static IPodLogEncryptionProvider Create(byte[] keyBytes) => new PodLogEncryptionProvider(keyBytes);
 
         public string Decrypt(string encryptedLogMessage)
@@ -33,9 +37,7 @@ namespace Octopus.Tentacle.Kubernetes.Crypto
             var nonceSpan = allEncryptedBytes.Slice(0, NonceLength);
             var logMessageBytes = allEncryptedBytes.Slice(NonceLength);
 
-            var cipher = new GcmBlockCipher(new AesEngine());
-            var macSize = 8 * cipher.GetBlockSize();
-            cipher.Init(false, new AeadParameters(new KeyParameter(keyBytes), macSize, nonceSpan.ToArray()));
+            cipher.Init(false, new AeadParameters(keyParameter, macSize, nonceSpan.ToArray()));
 
             var outputSize = cipher.GetOutputSize(logMessageBytes.Length);
             var plainTextData = new byte[outputSize];
@@ -53,10 +55,7 @@ namespace Octopus.Tentacle.Kubernetes.Crypto
             //if no nonce is provided, generate one
             nonce ??= GenerateNonce();
 
-            var cipher = new GcmBlockCipher(new AesEngine());
-            var macSize = 8 * cipher.GetBlockSize();
-            var parameters = new AeadParameters(new KeyParameter(keyBytes), macSize, nonce, null);
-            cipher.Init(true, parameters);
+            cipher.Init(true, new AeadParameters(keyParameter, macSize, nonce, null));
 
             var cipherText = new byte[cipher.GetOutputSize(plainTextBytes.Length)];
             var len = cipher.ProcessBytes(plainTextBytes, 0, plainTextBytes.Length, cipherText, 0);
