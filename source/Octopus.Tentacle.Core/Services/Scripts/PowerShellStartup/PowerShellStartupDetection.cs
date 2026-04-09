@@ -57,7 +57,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts.PowerShellStartup
             get
             {
                 var raw = Environment.GetEnvironmentVariable(EnvironmentVariables.TentaclePowerShellStartupTimeout);
-                return TimeSpan.TryParse(raw, out var value) ? value : TimeSpan.FromMinutes(5);
+                return TimeSpan.TryParse(raw, out var value) ? value : TimeSpan.FromMinutes(13);
             }
         }
 
