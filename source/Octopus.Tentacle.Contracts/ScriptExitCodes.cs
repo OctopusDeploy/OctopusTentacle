@@ -11,6 +11,7 @@ namespace Octopus.Tentacle.Contracts
         public const int TimeoutExitCode = -44;
         public const int UnknownScriptExitCode = -45;
         public const int UnknownResultExitCode = -46;
+        public const int PowerShellNeverStartedExitCode = -47;
 
         //Kubernetes Agent
         public const int KubernetesScriptPodNotFound = -81;

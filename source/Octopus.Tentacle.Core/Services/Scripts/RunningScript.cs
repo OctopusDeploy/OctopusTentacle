@@ -1,11 +1,13 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Halibut.Util;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Core.Services.Scripts.Locking;
 using Octopus.Tentacle.Core.Services.Scripts.Logging;
+using Octopus.Tentacle.Core.Services.Scripts.PowerShellStartup;
 using Octopus.Tentacle.Core.Services.Scripts.Shell;
 using Octopus.Tentacle.Core.Services.Scripts.StateStore;
 using Octopus.Tentacle.Scripts;
@@ -19,10 +21,11 @@ namespace Octopus.Tentacle.Core.Services.Scripts
         readonly IScriptStateStore? stateStore;
         readonly IShell shell;
         readonly string taskId;
-        readonly CancellationToken token;
+        readonly CancellationToken runningScriptToken;
         readonly IReadOnlyDictionary<string, string> environmentVariables;
         readonly ILog log;
         readonly ScriptIsolationMutex scriptIsolationMutex;
+        readonly TimeSpan powerShellStartupTimeout;
 
         public RunningScript(IShell shell,
             IScriptWorkspace workspace,
@@ -30,20 +33,23 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             IScriptLog scriptLog,
             string taskId,
             ScriptIsolationMutex scriptIsolationMutex,
-            CancellationToken token,
+            CancellationToken runningScriptToken,
             IReadOnlyDictionary<string, string> environmentVariables,
-            ILog log)
+            TimeSpan powerShellStartupTimeout,
+            ILog log
+            )
         {
             this.shell = shell;
             this.workspace = workspace;
             this.stateStore = stateStore;
             this.taskId = taskId;
-            this.token = token;
+            this.runningScriptToken = runningScriptToken;
             this.environmentVariables = environmentVariables;
             this.log = log;
             this.scriptIsolationMutex = scriptIsolationMutex;
             this.ScriptLog = scriptLog;
             this.State = ProcessState.Pending;
+            this.powerShellStartupTimeout = powerShellStartupTimeout;
         }
 
         public RunningScript(IShell shell,
@@ -51,9 +57,10 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             IScriptLog scriptLog,
             string taskId,
             ScriptIsolationMutex scriptIsolationMutex,
-            CancellationToken token,
+            CancellationToken runningScriptToken,
             IReadOnlyDictionary<string, string> environmentVariables,
-            ILog log) : this(shell, workspace, null, scriptLog, taskId, scriptIsolationMutex, token, environmentVariables, log)
+            TimeSpan powerShellStartupTimeout,
+            ILog log) : this(shell, workspace, null, scriptLog, taskId, scriptIsolationMutex, runningScriptToken, environmentVariables, powerShellStartupTimeout, log)
         {
         }
 
@@ -63,7 +70,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
         public IScriptLog ScriptLog { get; }
         public Task Cleanup(CancellationToken cancellationToken) => Task.CompletedTask;
 
-        public void Execute()
+        public async Task Execute()
         {
             var exitCode = -1;
 
@@ -80,14 +87,16 @@ namespace Octopus.Tentacle.Core.Services.Scripts
                                    workspace.ScriptMutexName ?? nameof(RunningScript),
                                    message => writer.WriteOutput(ProcessOutputSource.StdOut, message),
                                    taskId,
-                                   token,
+                                   runningScriptToken,
                                    log))
                         {
                             State = ProcessState.Running;
 
                             RecordScriptHasStarted(writer);
 
-                            exitCode = RunScript(shellPath, writer);
+                            exitCode = workspace.ShouldMonitorPowerShellStartup()
+                                ? await RunPowershellScriptWithMonitoring(shellPath, writer, runningScriptToken)
+                                : RunScript(shellPath, writer, runningScriptToken);
                         }
                     }
                     catch (OperationCanceledException)
@@ -121,6 +130,49 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             }
         }
 
+        async Task<int> RunPowershellScriptWithMonitoring(string shellPath, IScriptLogWriter writer, CancellationToken runningScriptToken)
+        {
+            // We want to be able to make some effort to cancel the running script, if the monitor task detects it as hung.
+            // Hence, we make a linked cancellation token with the runningScriptToken 
+            await using var scriptTaskCts = new CancelOnDisposeCancellationToken(runningScriptToken);
+            
+            // The monitoring task is NOT linked to the runningScriptToken, since it should keep monitoring even if an attempt to
+            // cancel the script is made. Remember, these hung powershell scripts WILL NOT CANCEL, so we must continue to monitor.
+            // Note: We don't bother reacting to the runningScriptToken, since under normal circumstances cancellation will be
+            //       strictly after the script has started. Additionally, scripts can be killed. The only case that reacting to
+            //       the runningScriptToken would help is when we are in those situations where the script never starts AND won't
+            //       respond to being killed. The Additional effort doesn't seem worth it.
+            await using var monitoringTaskCts = new CancelOnDisposeCancellationToken();
+            
+            var monitor = new PowerShellStartupMonitor(workspace.WorkingDirectory, powerShellStartupTimeout, log, taskId);
+            
+            var monitoringTask = monitor.WaitForStartup(monitoringTaskCts.Token);
+            var scriptTask = Task.Run(() => RunScript(shellPath, writer, scriptTaskCts.Token), scriptTaskCts.Token);
+            
+            var completedTask = await Task.WhenAny(monitoringTask, scriptTask);
+            
+            if (completedTask == monitoringTask)
+            {
+                var startupStatus = await monitoringTask;
+                
+                if (startupStatus == PowerShellStartupStatus.NeverStarted)
+                {
+                    // PowerShell never started - exit immediately with appropriate code
+                    writer.WriteOutput(ProcessOutputSource.StdErr, 
+                        $"{shellPath} process did not start within {powerShellStartupTimeout.TotalMinutes} minutes. Script execution aborted.");
+                    
+                    // The script has not started, and the files on disk have been arranged, so it will never meaningfully progress.
+                    // We will now abandon the script, as we do we will cancel its cancellation token. Which will result in
+                    // the script possibly dying, although from what we have seen, the script will never die.
+                    return ScriptExitCodes.PowerShellNeverStartedExitCode;
+                }
+            }
+
+            var exitCode = await scriptTask;
+            
+            return exitCode;
+        }
+        
         void RecordScriptHasStarted(IScriptLogWriter writer)
         {
             try
@@ -170,7 +222,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             }
         }
 
-        int RunScript(string shellPath, IScriptLogWriter writer)
+        int RunScript(string shellPath, IScriptLogWriter writer, CancellationToken cancellationToken)
         {
             try
             {
@@ -182,7 +234,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
                     LogScriptOutputTo(writer, ProcessOutputSource.StdOut),
                     LogScriptOutputTo(writer, ProcessOutputSource.StdErr),
                     environmentVariables,
-                    token);
+                    cancellationToken);
 
                 return exitCode;
             }

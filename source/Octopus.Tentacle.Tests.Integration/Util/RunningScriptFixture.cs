@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
@@ -11,6 +12,7 @@ using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Core.Services.Scripts;
 using Octopus.Tentacle.Core.Services.Scripts.Locking;
+using Octopus.Tentacle.Core.Services.Scripts.PowerShellStartup;
 using Octopus.Tentacle.Core.Services.Scripts.Security.Masking;
 using Octopus.Tentacle.Core.Services.Scripts.Shell;
 using Octopus.Tentacle.Diagnostics;
@@ -72,6 +74,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
                 scriptIsolationMutex,
                 cancellationTokenSource.Token,
                 new Dictionary<string, string>(),
+                PowerShellStartupDetection.PowerShellStartupTimeout,
                 log);
         }
 
@@ -84,19 +87,19 @@ namespace Octopus.Tentacle.Tests.Integration.Util
 
         [Test]
         [Retry(3)]
-        public void ExitCode_ShouldBeReturned()
+        public async Task ExitCode_ShouldBeReturned()
         {
             workspace.BootstrapScript("exit 99");
-            runningScript.Execute();
+            await runningScript.Execute();
             runningScript.ExitCode.Should().Be(99, "the exit code of the script should be returned");
         }
 
         [Test]
         [Retry(3)]
-        public void WriteHost_WritesToStdOut_AndIsReturned()
+        public async Task WriteHost_WritesToStdOut_AndIsReturned()
         {
             workspace.BootstrapScript("echo Hello");
-            runningScript.Execute();
+            await runningScript.Execute();
             runningScript.ExitCode.Should().Be(0, "the script should have run to completion");
             scriptLog.StdErr.Length.Should().Be(0, "the script shouldn't have written to stderr");
             scriptLog.StdOut.ToString().Should().ContainEquivalentOf("Hello", "the message should have been written to stdout");
@@ -105,10 +108,10 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         [Test]
         [Retry(3)]
         [WindowsTest]
-        public void WriteDebug_DoesNotWriteAnywhere()
+        public async Task WriteDebug_DoesNotWriteAnywhere()
         {
             workspace.BootstrapScript("Write-Debug Hello");
-            runningScript.Execute();
+            await runningScript.Execute();
             runningScript.ExitCode.Should().Be(0, "the script should have run to completion");
             scriptLog.StdOut.ToString().Should().NotContain("Hello", "the script shouldn't have written to stdout");
             scriptLog.StdErr.ToString().Should().NotContain("Hello", "the script shouldn't have written to stderr");
@@ -117,10 +120,10 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         [Test]
         [Retry(3)]
         [WindowsTest]
-        public void WriteOutput_WritesToStdOut_AndIsReturned()
+        public async Task WriteOutput_WritesToStdOut_AndIsReturned()
         {
             workspace.BootstrapScript("Write-Output Hello");
-            runningScript.Execute();
+            await runningScript.Execute();
             runningScript.ExitCode.Should().Be(0, "the script should have run to completion");
             scriptLog.StdErr.ToString().Should().NotContain("Hello", "the script shouldn't have written to stderr");
             scriptLog.StdOut.ToString().Should().ContainEquivalentOf("Hello", "the message should have been written to stdout");
@@ -128,11 +131,11 @@ namespace Octopus.Tentacle.Tests.Integration.Util
 
         [Test]
         [Retry(3)]
-        public void WriteError_WritesToStdErr_AndIsReturned()
+        public async Task WriteError_WritesToStdErr_AndIsReturned()
         {
             workspace.BootstrapScript(PlatformDetection.IsRunningOnWindows ? "Write-Error EpicFail" : "&2 echo EpicFail");
 
-            runningScript.Execute();
+            await runningScript.Execute();
             if (PlatformDetection.IsRunningOnWindows)
                 runningScript.ExitCode.Should().Be(1, "Write-Error causes the exit code to be 1");
             else
@@ -144,13 +147,13 @@ namespace Octopus.Tentacle.Tests.Integration.Util
 
         [Test]
         [Retry(3)]
-        public void RunAsCurrentUser_ShouldWork()
+        public async Task RunAsCurrentUser_ShouldWork()
         {
             var scriptBody = PlatformDetection.IsRunningOnWindows
                 ? $"echo {EchoEnvironmentVariable("username")}"
                 : "whoami";
             workspace.BootstrapScript(scriptBody);
-            runningScript.Execute();
+            await runningScript.Execute();
             runningScript.ExitCode.Should().Be(0, "the script should have run to completion");
             scriptLog.StdErr.Length.Should().Be(0, "the script shouldn't have written to stderr");
             scriptLog.StdOut.ToString().Should().ContainEquivalentOf(TestEnvironmentHelper.EnvironmentUserName);
@@ -158,7 +161,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
 
         [Test]
         [Retry(5)]
-        public void CancellationToken_ShouldKillTheProcess()
+        public async Task CancellationToken_ShouldKillTheProcess()
         {
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
             {
@@ -173,10 +176,11 @@ namespace Octopus.Tentacle.Tests.Integration.Util
                     scriptIsolationMutex,
                     cts.Token,
                     new Dictionary<string, string>(),
+                    PowerShellStartupDetection.PowerShellStartupTimeout,
                     new InMemoryLog());
 
                 workspace.BootstrapScript($"echo Starting\n{sleepCommand} 30\necho Finito");
-                script.Execute();
+                await script.Execute();
                 runningScript.ExitCode.Should().Be(0, "the script should have been canceled");
                 scriptLog.StdErr.ToString().Should().Be("", "the script shouldn't have written to stderr");
                 scriptLog.StdOut.ToString().Should().ContainEquivalentOf("Starting", "the starting message should be written to stdout");
