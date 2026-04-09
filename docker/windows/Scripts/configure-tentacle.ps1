@@ -60,7 +60,14 @@ function Get-PublicHostName
   elseif ($publicHostNameConfiguration -eq "FQDN")
   {
     $computer = Get-CimInstance win32_computersystem
-    $publicHostName = "$($computer.DNSHostName).$($computer.Domain)"
+    # On domain-joined machines, DNSHostName is the short name and Domain is the DNS suffix.
+    # On non-domain-joined machines (e.g. EC2), DNSHostName is already fully qualified and
+    # Domain is empty or a non-DNS workgroup name, so use DNSHostName as-is.
+    if ($computer.DNSHostName.Contains('.') -or [string]::IsNullOrEmpty($computer.Domain)) {
+      $publicHostName = $computer.DNSHostName
+    } else {
+      $publicHostName = "$($computer.DNSHostName).$($computer.Domain)"
+    }
   }
   elseif ($publicHostNameConfiguration -eq "ComputerName")
   {
