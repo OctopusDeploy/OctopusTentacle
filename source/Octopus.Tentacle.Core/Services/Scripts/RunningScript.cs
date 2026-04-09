@@ -162,8 +162,8 @@ namespace Octopus.Tentacle.Core.Services.Scripts
                         $"{shellPath} process did not start within {powerShellStartupTimeout.TotalMinutes} minutes. Script execution aborted.");
                     
                     // The script has not started, and the files on disk have been arranged, so it will never meaningfully progress.
-                    // We will now abandon the script, as we do we will cancell its cancellation token. Which will result in
-                    // the script possibly dieing, although from what we have seen, the script will never die.
+                    // We will now abandon the script, as we do we will cancel its cancellation token. Which will result in
+                    // the script possibly dying, although from what we have seen, the script will never die.
                     return ScriptExitCodes.PowerShellNeverStartedExitCode;
                 }
             }

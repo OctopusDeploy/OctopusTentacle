@@ -179,7 +179,7 @@ write-output 'This should never be printed'
 
             await DeletePotentiallyInUseFile(stillRunning);
             await Task.Delay(TimeSpan.FromSeconds(5));
-            File.Exists(stillRunning).Should().BeFalse("Otherwise the script is still running and we made not effort to cancel it.");
+            File.Exists(stillRunning).Should().BeFalse("Otherwise the script is still running and we made no effort to cancel it.");
         }
 
         async Task DeletePotentiallyInUseFile(string file)
