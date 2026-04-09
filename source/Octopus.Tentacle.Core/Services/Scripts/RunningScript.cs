@@ -95,7 +95,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
                             RecordScriptHasStarted(writer);
 
                             exitCode = workspace.ShouldMonitorPowerShellStartup()
-                                ? await RunPowershellScriptWithMonitoring(shellPath, writer)
+                                ? await RunPowershellScriptWithMonitoring(shellPath, writer, runningScriptToken)
                                 : RunScript(shellPath, writer, runningScriptToken);
                         }
                     }
@@ -130,7 +130,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             }
         }
 
-        async Task<int> RunPowershellScriptWithMonitoring(string shellPath, IScriptLogWriter writer)
+        async Task<int> RunPowershellScriptWithMonitoring(string shellPath, IScriptLogWriter writer, CancellationToken runningScriptToken)
         {
             // We want to be able to make some effort to cancel the running script, if the monitor task detects it as hung.
             // Hence, we make a linked cancellation token with the runningScriptToken 
@@ -138,6 +138,10 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             
             // The monitoring task is NOT linked to the runningScriptToken, since it should keep monitoring even if an attempt to
             // cancel the script is made. Remember, these hung powershell scripts WILL NOT CANCEL, so we must continue to monitor.
+            // Note: We don't bother reacting to the runningScriptToken, since under normal circumstances cancellation will be
+            //       strictly after the script has started. Additionally, scripts can be killed. The only case that reacting to
+            //       the runningScriptToken would help is when we are in those situations where the script never starts AND won't
+            //       respond to being killed. The Additional effort doesn't seem worth it.
             await using var monitoringTaskCts = new CancelOnDisposeCancellationToken();
             
             var monitor = new PowerShellStartupMonitor(workspace.WorkingDirectory, powerShellStartupTimeout, log, taskId);
@@ -157,6 +161,9 @@ namespace Octopus.Tentacle.Core.Services.Scripts
                     writer.WriteOutput(ProcessOutputSource.StdErr, 
                         $"{shellPath} process did not start within {powerShellStartupTimeout.TotalMinutes} minutes. Script execution aborted.");
                     
+                    // The script has not started, and the files on disk have been arranged, so it will never meaningfully progress.
+                    // We will now abandon the script, as we do we will cancell its cancellation token. Which will result in
+                    // the script possibly dieing, although from what we have seen, the script will never die.
                     return ScriptExitCodes.PowerShellNeverStartedExitCode;
                 }
             }

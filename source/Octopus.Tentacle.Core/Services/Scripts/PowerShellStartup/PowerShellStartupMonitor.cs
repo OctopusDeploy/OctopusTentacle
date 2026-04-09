@@ -83,10 +83,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts.PowerShellStartup
             try
             {
                 var shouldRunFilePath = PowerShellStartupDetection.GetShouldRunFilePath(workSpaceWorkingDirectory);
-                if (File.Exists(shouldRunFilePath))
-                {
-                    File.Delete(shouldRunFilePath);
-                }
+                File.Delete(shouldRunFilePath);
             }
             catch (Exception ex)
             {

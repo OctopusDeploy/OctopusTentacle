@@ -104,7 +104,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts.PowerShellStartup
 
         public static bool ScriptContainsPowershellStartupDetectionComment(string scriptBody)
         {
-            return scriptBody.Contains(PowerShellStartupDetectionTemplateValues.PowershellStartupDetectionComment);
+            return scriptBody.Contains(PowerShellStartupDetectionTemplateValues.PowershellStartupDetectionCommentMustBeAtTheStartOfTheScript);
         }
 
         public static (string processedScriptBody, bool shouldMonitorPowerShellStartup) InjectDetectionCode(string scriptBody)
@@ -115,7 +115,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts.PowerShellStartup
             }
 
             var detectionCode = GenerateDetectionCode();
-            return (scriptBody.Replace(PowerShellStartupDetectionTemplateValues.PowershellStartupDetectionComment, detectionCode), true);
+            return (scriptBody.Replace(PowerShellStartupDetectionTemplateValues.PowershellStartupDetectionCommentMustBeAtTheStartOfTheScript, detectionCode), true);
         }
     }
 }
