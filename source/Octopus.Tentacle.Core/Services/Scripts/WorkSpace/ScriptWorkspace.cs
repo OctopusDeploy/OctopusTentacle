@@ -4,10 +4,11 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Core.Services.Scripts;
+using Octopus.Tentacle.Core.Services.Scripts.PowerShellStartup;
 using Octopus.Tentacle.Core.Services.Scripts.Locking;
 using Octopus.Tentacle.Core.Services.Scripts.Logging;
 using Octopus.Tentacle.Core.Services.Scripts.Security.Masking;
-using Octopus.Tentacle.Services.Scripts;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Scripts
@@ -69,7 +70,7 @@ namespace Octopus.Tentacle.Scripts
         }
 
         public string? ScriptMutexName { get; set; }
-
+        
         public string[]? ScriptArguments { get; set; }
 
         public string WorkingDirectory { get; }
@@ -78,9 +79,23 @@ namespace Octopus.Tentacle.Scripts
 
         public virtual void BootstrapScript(string scriptBody)
         {
+            var (processedScriptBody, shouldMonitorPowerShellStartup) = PowerShellStartupDetection.InjectDetectionCode(scriptBody);
+            this.shouldMonitorPowerShellStartup = shouldMonitorPowerShellStartup;
+            
+            if (shouldMonitorPowerShellStartup)
+            {
+                // Create the "should run" file to signal that the script should proceed
+                var shouldRunFile = PowerShellStartupDetection.GetShouldRunFilePath(WorkingDirectory);
+                FileSystem.OverwriteFile(shouldRunFile, "");
+            }
+
             // default is UTF8noBOM but powershell doesn't interpret that correctly
-            FileSystem.OverwriteFile(BootstrapScriptFilePath, scriptBody, Encoding.UTF8);
+            FileSystem.OverwriteFile(BootstrapScriptFilePath, processedScriptBody, Encoding.UTF8);
         }
+        
+        public virtual bool ShouldMonitorPowerShellStartup() => shouldMonitorPowerShellStartup;
+
+        bool shouldMonitorPowerShellStartup;
 
         public string ResolvePath(string fileName)
         {

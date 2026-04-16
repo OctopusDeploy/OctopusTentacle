@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Tentacle.Contracts;
@@ -16,6 +15,7 @@ namespace Octopus.Tentacle.Scripts
         ScriptIsolationLevel IsolationLevel { get; set; }
         TimeSpan ScriptMutexAcquireTimeout { get; set; }
         string? ScriptMutexName { get; set; }
+        bool ShouldMonitorPowerShellStartup();
         void BootstrapScript(string scriptBody);
         string ResolvePath(string fileName);
         Task Delete(CancellationToken cancellationToken);

@@ -9,10 +9,10 @@ using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Core.Maintenance;
 using Octopus.Tentacle.Core.Services.Scripts.Locking;
+using Octopus.Tentacle.Core.Services.Scripts.PowerShellStartup;
 using Octopus.Tentacle.Core.Services.Scripts.Shell;
 using Octopus.Tentacle.Core.Services.Scripts.StateStore;
 using Octopus.Tentacle.Scripts;
-using Octopus.Tentacle.Services;
 using Octopus.Tentacle.Services.Scripts;
 using Octopus.Tentacle.Util;
 
@@ -28,6 +28,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
         readonly ScriptIsolationMutex scriptIsolationMutex;
         readonly ConcurrentDictionary<ScriptTicket, RunningScriptWrapper> runningScripts = new();
         readonly IReadOnlyDictionary<string, string> environmentVariables;
+        readonly TimeSpan powerShellStartupTimeout;
 
         public ScriptServiceV2(
             IShell shell,
@@ -35,13 +36,15 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             IScriptStateStoreFactory scriptStateStoreFactory,
             ScriptIsolationMutex scriptIsolationMutex,
             ISystemLog log, 
-            IReadOnlyDictionary<string, string> environmentVariables)
+            IReadOnlyDictionary<string, string> environmentVariables,
+            TimeSpan powerShellStartupTimeout)
         {
             this.shell = shell;
             this.workspaceFactory = workspaceFactory;
             this.scriptStateStoreFactory = scriptStateStoreFactory;
             this.log = log;
             this.environmentVariables = environmentVariables;
+            this.powerShellStartupTimeout = powerShellStartupTimeout;
             this.scriptIsolationMutex = scriptIsolationMutex;
         }
 
@@ -50,7 +53,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             IScriptWorkspaceFactory workspaceFactory,
             IScriptStateStoreFactory scriptStateStoreFactory,
             ScriptIsolationMutex scriptIsolationMutex,
-            ISystemLog log) : this(shell, workspaceFactory, scriptStateStoreFactory, scriptIsolationMutex, log, new Dictionary<string, string>())
+            ISystemLog log) : this(shell, workspaceFactory, scriptStateStoreFactory, scriptIsolationMutex, log, new Dictionary<string, string>(), PowerShellStartupDetection.PowerShellStartupTimeout)
         {
         }
 
@@ -96,7 +99,11 @@ namespace Octopus.Tentacle.Core.Services.Scripts
                     runningScript.ScriptStateStore.Create();
                 }
 
-                var process = LaunchShell(command.ScriptTicket, command.TaskId, workspace, runningScript.ScriptStateStore, runningScript.CancellationToken);
+                var process = LaunchShell(command.ScriptTicket,
+                    command.TaskId,
+                    workspace,
+                    runningScript.ScriptStateStore,
+                    runningScript.CancellationToken);
 
                 runningScript.Process = process;
 
@@ -148,9 +155,8 @@ namespace Octopus.Tentacle.Core.Services.Scripts
 
         RunningScript LaunchShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, IScriptStateStore stateStore, CancellationToken cancellationToken)
         {
-            var runningScript = new RunningScript(shell, workspace, stateStore, workspace.CreateLog(), serverTaskId, scriptIsolationMutex, cancellationToken, environmentVariables, log);
-            var thread = new Thread(runningScript.Execute) { Name = "Executing PowerShell runningScript for " + ticket.TaskId };
-            thread.Start();
+            var runningScript = new RunningScript(shell, workspace, stateStore, workspace.CreateLog(), serverTaskId, scriptIsolationMutex, cancellationToken, environmentVariables, powerShellStartupTimeout, log);
+            _ = Task.Run(async () => await runningScript.Execute());
             return runningScript;
         }
 

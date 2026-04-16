@@ -9,6 +9,7 @@ using Octopus.Tentacle.Core.Maintenance;
 using Octopus.Tentacle.Core.Services;
 using Octopus.Tentacle.Core.Services.Scripts;
 using Octopus.Tentacle.Core.Services.Scripts.Locking;
+using Octopus.Tentacle.Core.Services.Scripts.PowerShellStartup;
 using Octopus.Tentacle.Core.Services.Scripts.Shell;
 using Octopus.Tentacle.Maintenance;
 using Octopus.Tentacle.Scripts;
@@ -92,9 +93,8 @@ namespace Octopus.Tentacle.Services.Scripts
 
         RunningScript LaunchShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, CancellationTokenSource cancel)
         {
-            var runningScript = new RunningScript(shell, workspace, workspace.CreateLog(), serverTaskId, scriptIsolationMutex, cancel.Token, new Dictionary<string, string>(), log);
-            var thread = new Thread(runningScript.Execute) { Name = "Executing PowerShell script for " + ticket.TaskId };
-            thread.Start();
+            var runningScript = new RunningScript(shell, workspace, workspace.CreateLog(), serverTaskId, scriptIsolationMutex, cancel.Token, new Dictionary<string, string>(), PowerShellStartupDetection.PowerShellStartupTimeout, log);
+            _ = Task.Run(async () => await runningScript.Execute());
             return runningScript;
         }
 
