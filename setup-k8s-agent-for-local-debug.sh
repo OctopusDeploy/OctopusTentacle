@@ -43,7 +43,17 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "🏗️  - Building bootstrap runner"
-env GOOS=linux go build -C docker/kubernetes-agent-tentacle/bootstrapRunner -ldflags "-s -w" -o "/tmp/k8s-agent-debug-vol/bootstrapRunner"
+case "$(uname -m)" in
+    x86_64)             GOARCH="amd64" ;;
+    aarch64|arm64)      GOARCH="arm64" ;;
+    i386|i686)          GOARCH="386" ;;
+    armv7l|armv6l)      GOARCH="arm" ;;
+    *)
+        echo "❗  - Unsupported architecture: $(uname -m). Aborting."
+        exit 1
+        ;;
+esac
+env GOOS=linux go build -C docker/kubernetes-agent-tentacle/bootstrapRunner -ldflags "-s -w" -o "/tmp/k8s-agent-debug-vol/bootstrapRunner-linux-${GOARCH}"
 
 if [ $? -ne 0 ]; then
   echo ""
@@ -51,6 +61,9 @@ if [ $? -ne 0 ]; then
   echo "❗  - Failed to build bootstrap runner. Aborting."
   exit -1
 fi
+
+echo "🏗️  - Coping bootstrap runner executor"
+cp docker/kubernetes-agent-tentacle/bootstrapRunner/execute-bootstrapRunner.sh /tmp/k8s-agent-debug-vol
 
 echo ""
 echo ""
