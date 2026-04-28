@@ -468,6 +468,14 @@ namespace Octopus.Tentacle.Kubernetes
             var os = parts[0];
             var arch = parts[1];
 
+            // Server can sometimes erroneously send an architecture of x64.
+            // This is not a supported arch in kubernetes, it should be amd64
+            if (arch.Equals("x64", StringComparison.OrdinalIgnoreCase))
+            {
+                arch = "amd64";
+                platformAffinity = $"{os}-{arch}";
+            }
+
             tentacleScriptLog.Verbose($"Adding node affinity for platform '{platformAffinity}'.");
 
             var affinity = podSpec.Affinity ??= new V1Affinity();
