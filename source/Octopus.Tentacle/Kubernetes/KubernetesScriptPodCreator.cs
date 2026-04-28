@@ -469,7 +469,7 @@ namespace Octopus.Tentacle.Kubernetes
             var arch = parts[1];
 
             // Server can sometimes erroneously send an architecture of x64.
-            // This is not a supported archin kubernetes, it should be amd64
+            // This is not a supported arch in kubernetes, it should be amd64
             if (arch.Equals("x64", StringComparison.OrdinalIgnoreCase))
             {
                 arch = "amd64";
