@@ -10,11 +10,11 @@ namespace Octopus.Manager.Tentacle.Util
         {
             try
             {
-                Process.Start(new ProcessStartInfo(uri.AbsoluteUri));
+                Process.Start(new ProcessStartInfo(uri.AbsoluteUri) { UseShellExecute = true });
             }
             catch (Win32Exception)
             {
-                Process.Start(new ProcessStartInfo("IExplore.exe", uri.AbsoluteUri));
+                Process.Start(new ProcessStartInfo("explorer.exe", uri.AbsoluteUri));
             }
         }
     }
