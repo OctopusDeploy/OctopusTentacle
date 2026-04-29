@@ -20,7 +20,7 @@
         "OCTOPUS__K8STENTACLE__PERSISTENTVOLUMESIZE": "10Gi",
         "KUBECONFIG": "<kube-config>",
         "DefaultLogDirectory": "/tmp/k8s-agent-debug-vol/logs",
-        "BOOTSTRAPRUNNEREXECUTABLEPATH": "/tmp/k8s-agent-debug-vol/bootstrapRunner",
+        "BOOTSTRAPRUNNEREXECUTABLEDIRECTORY": "/tmp/k8s-agent-debug-vol",
         "OCTOPUS__K8STENTACLE__PODRESOURCEJSON": "{\"requests\":{\"cpu\":\"25m\",\"memory\":\"100Mi\"}}"
       }
     }
