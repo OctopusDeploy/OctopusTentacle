@@ -46,8 +46,6 @@ echo "🏗️  - Building bootstrap runner"
 case "$(uname -m)" in
     x86_64)             GOARCH="amd64" ;;
     aarch64|arm64)      GOARCH="arm64" ;;
-    i386|i686)          GOARCH="386" ;;
-    armv7l|armv6l)      GOARCH="arm" ;;
     *)
         echo "❗  - Unsupported architecture: $(uname -m). Aborting."
         exit 1
