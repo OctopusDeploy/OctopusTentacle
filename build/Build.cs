@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Xml;
 using JetBrains.Annotations;
@@ -323,18 +322,4 @@ partial class Build : NukeBuild
     }
 
     public static int Main() => Execute<Build>(x => x.Default);
-
-    protected override void OnBuildFinished()
-    {
-        base.OnBuildFinished();
-        try
-        {
-            var process = Process.Start("dotnet", "build-server shutdown");
-            process?.WaitForExit(10_000);
-        }
-        catch (Exception e)
-        {
-            Log.Warning(e, "Failed to shut down dotnet build server — ignoring");
-        }
-    }
 }
