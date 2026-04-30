@@ -322,4 +322,11 @@ partial class Build : NukeBuild
     }
 
     public static int Main() => Execute<Build>(x => x.Default);
+
+    protected override void OnBuildFinished()
+    {
+        base.OnBuildFinished();
+        if (OperatingSystem.IsMacOS())
+            DotNetBuildServerShutdown();
+    }
 }
