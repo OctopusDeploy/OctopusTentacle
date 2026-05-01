@@ -19,7 +19,10 @@ using Nuke.Common.Utilities.Collections;
 using Serilog;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
 
+// macOS build agents are persistent (non-ephemeral), so compiler server processes may need to be cleaned up between builds.
+#if MACOS
 [ShutdownDotNetAfterServerBuild]
+#endif
 partial class Build : NukeBuild
 {
     /// Support plugins are available for:
