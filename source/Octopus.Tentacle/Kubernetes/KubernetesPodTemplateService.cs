@@ -82,15 +82,16 @@ namespace Octopus.Tentacle.Kubernetes
                 catch (Exception ex)
                 {
                     // we are happy to handle all exceptions here and just fallback
-                    Log.WarnFormat(ex, "Failed to retrieve 'scriptpodtemplates' custom resource");
+                    Log.Warn("Could not retrieve 'scriptpodtemplates' custom resource. Continuing without customisation...");
+                    Log.Verbose(ex);
                     return null;
                 }
 
                 return resourceList.Items.OrderBy(r => r.Metadata.CreationTimestamp).FirstOrDefault();
             });
         }
-        
-        public async Task<V1Deployment?> GetOldestScriptPodTemplateDeployment(CancellationToken cancellationToken)
+
+        async Task<V1Deployment?> GetOldestScriptPodTemplateDeployment(CancellationToken cancellationToken)
         {
             return await RetryPolicy.ExecuteAsync(async () =>
             {
@@ -105,7 +106,8 @@ namespace Octopus.Tentacle.Kubernetes
                 catch (Exception ex)
                 {
                     // we are happy to handle all exceptions here and just fallback
-                    Log.WarnFormat(ex, "Failed to retrieve 'scriptpodtemplates' custom resource");
+                    Log.Warn("Could not retrieve 'scriptpodtemplates' custom resource. Continuing without customisation...");
+                    Log.Verbose(ex);
                     return null;
                 }
 
