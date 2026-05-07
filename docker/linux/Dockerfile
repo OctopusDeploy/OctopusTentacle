@@ -1,4 +1,5 @@
 FROM ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
 ENV ASPNETCORE_URLS=http://+:80 DOTNET_RUNNING_IN_CONTAINER=true
 
 # .NET 8 runtime dependencies.
