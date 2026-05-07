@@ -1,16 +1,14 @@
 FROM debian:12-slim
+ENV DEBIAN_FRONTEND=noninteractive
 ENV ASPNETCORE_URLS=http://+:80 DOTNET_RUNNING_IN_CONTAINER=true
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         apt-utils \
         ca-certificates \
-        libc6 \
         libgcc1 \
         libgssapi-krb5-2 \
         libicu72 \
-        libssl3 \
-        libstdc++6 \
-        zlib1g && \
+        libssl3 && \
     rm -rf /var/lib/apt/lists/*
 
 ARG BUILD_NUMBER
