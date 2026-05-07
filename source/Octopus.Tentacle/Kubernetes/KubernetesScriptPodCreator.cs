@@ -230,7 +230,7 @@ namespace Octopus.Tentacle.Kubernetes
 
             pod.Spec.InitContainers = await CreateInitContainers(command, podName, homeDir, workspacePath, tentacleScriptLog, scriptPodTemplate?.ScriptInitContainerSpec);
             pod.Spec.Containers = await CreateScriptContainers(command, podName, scriptName, homeDir, workspacePath, workspace.ScriptArguments, tentacleScriptLog, scriptPodTemplate);
-            pod.Spec.ImagePullSecrets = imagePullSecretNames;
+            pod.Spec.ImagePullSecrets = Merge(imagePullSecretNames, scriptPodTemplate?.PodSpec?.ImagePullSecrets);
             pod.Spec.ServiceAccountName = serviceAccountName;
             pod.Spec.Volumes = Merge(pod.Spec.Volumes, CreateVolumes(command));
 

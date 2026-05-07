@@ -65,7 +65,7 @@ namespace Octopus.Tentacle.Kubernetes
             return scriptPodTemplate;
         }
 
-        public async Task<ScriptPodTemplateCustomResource?> GetOldestScriptPodTemplateCustomResource(CancellationToken cancellationToken)
+        async Task<ScriptPodTemplateCustomResource?> GetOldestScriptPodTemplateCustomResource(CancellationToken cancellationToken)
         {
             return await RetryPolicy.ExecuteAsync(async () =>
             {
