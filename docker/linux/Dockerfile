@@ -4,6 +4,7 @@ ENV ASPNETCORE_URLS=http://+:80 DOTNET_RUNNING_IN_CONTAINER=true
 # .NET 8 runtime dependencies.
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
+        apt-utils \
         ca-certificates \
         libicu70 \
         libssl3 && \
