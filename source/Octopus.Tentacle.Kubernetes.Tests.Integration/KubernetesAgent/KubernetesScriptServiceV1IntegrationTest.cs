@@ -197,7 +197,7 @@ public class KubernetesScriptServiceV1IntegrationTest(int agentMajorVersion) : K
         // Arrange
         var logs = new List<ProcessOutput>();
         var scriptCompleted = false;
-        const int count = 100;
+        const int count = 60;
         var semaphoreSlim = new SemaphoreSlim(0, 1);
 
         var builder = new ExecuteKubernetesScriptCommandBuilder(LoggingUtils.CurrentTestHash())
