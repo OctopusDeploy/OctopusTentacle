@@ -1,4 +1,4 @@
-FROM debian:11-slim
+FROM debian:12-slim
 ENV ASPNETCORE_URLS=http://+:80 DOTNET_RUNNING_IN_CONTAINER=true
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
