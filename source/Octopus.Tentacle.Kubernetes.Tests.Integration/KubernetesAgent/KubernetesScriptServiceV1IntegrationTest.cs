@@ -13,8 +13,9 @@ using Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators.Proxies;
 
 namespace Octopus.Tentacle.Kubernetes.Tests.Integration.KubernetesAgent;
 
-[TestFixture]
-public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrationTest
+[TestFixture(KubernetesAgentMajorVersion.V2)]
+[TestFixture(KubernetesAgentMajorVersion.V3)]
+public class KubernetesScriptServiceV1IntegrationTest(int agentMajorVersion) : KubernetesAgentIntegrationTest(agentMajorVersion)
 {
     IRecordedMethodUsages recordedMethodUsages = null!;
 
@@ -341,6 +342,11 @@ public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrati
     [Test]
     public async Task NfsPodIsTerminatedDuringNormalScriptExecution_ScriptFails()
     {
+        if (AgentMajorVersion != KubernetesAgentMajorVersion.V2)
+        {
+            Assert.Ignore("NFS is only tested against V2");
+        }
+        
         // Arrange
         var logs = new List<ProcessOutput>();
         var scriptCompleted = false;
@@ -395,6 +401,11 @@ public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrati
     [Test]
     public async Task NfsPodIsTerminatedDuringRawScriptExecution_ShouldRestartAndPickUpPodStatus()
     {
+        if (AgentMajorVersion != KubernetesAgentMajorVersion.V2)
+        {
+            Assert.Ignore("NFS is only tested against V2");
+        }
+        
         // Arrange
         var logs = new List<ProcessOutput>();
         var scriptCompleted = false;

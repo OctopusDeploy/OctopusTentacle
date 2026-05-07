@@ -48,7 +48,7 @@
 
     <ItemGroup>
       <None Remove="Setup\agent-values.yaml" />
-      <EmbeddedResource Include="Setup\agent-values.yaml">
+      <EmbeddedResource Include="Setup\agent-values-v2.yaml">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </EmbeddedResource>
       <None Remove="Setup\kind-config.yaml" />

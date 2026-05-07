@@ -9,7 +9,7 @@ using Octopus.Tentacle.Tests.Integration.Common.Logging;
 
 namespace Octopus.Tentacle.Kubernetes.Tests.Integration.KubernetesAgent;
 
-public abstract class KubernetesAgentIntegrationTest
+public abstract class KubernetesAgentIntegrationTest(int agentMajorVersion)
 {
     KubernetesAgentInstaller? kubernetesAgentInstaller;
     KubeCtlTool? kubeCtl;
@@ -27,9 +27,11 @@ public abstract class KubernetesAgentIntegrationTest
 
     protected readonly IDictionary<string, string> CustomHelmValues = new Dictionary<string, string>();
 
-    HalibutRuntime serverHalibutRuntime;
+    HalibutRuntime serverHalibutRuntime = null!;
 
     string? agentThumbprint;
+
+    protected int AgentMajorVersion { get; } = agentMajorVersion;
 
     [OneTimeSetUp]
     public async Task OneTimeSetUp()
@@ -39,6 +41,7 @@ public abstract class KubernetesAgentIntegrationTest
             KubernetesTestsGlobalContext.Instance.HelmExePath,
             KubernetesTestsGlobalContext.Instance.KubeCtlExePath,
             KubernetesTestsGlobalContext.Instance.KubeConfigPath,
+            AgentMajorVersion,
             KubernetesTestsGlobalContext.Instance.Logger);
         
         kubeCtl = new KubeCtlTool(

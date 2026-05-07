@@ -8,7 +8,7 @@ using Octopus.Tentacle.Kubernetes.Diagnostics;
 
 namespace Octopus.Tentacle.Kubernetes.Tests.Integration.KubernetesAgent;
 
-public class KubernetesAgentMetricsIntegrationTest : KubernetesAgentIntegrationTest
+public class KubernetesAgentMetricsIntegrationTest() : KubernetesAgentIntegrationTest(KubernetesAgentMajorVersion.Latest)
 {
     readonly ISystemLog systemLog = new SystemLog();
 
