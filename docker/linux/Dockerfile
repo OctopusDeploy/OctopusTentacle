@@ -16,7 +16,7 @@ ARG BUILD_NUMBER
 ARG BUILD_DATE
 
 RUN apt-get update && \
-    apt-get install -y \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y \
         curl \
         dos2unix \
         jq \
