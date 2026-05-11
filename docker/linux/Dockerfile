@@ -1,8 +1,7 @@
 FROM debian:12-slim
 ENV ASPNETCORE_URLS=http://+:80 DOTNET_RUNNING_IN_CONTAINER=true
 RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-        apt-utils \
+    apt-get install -y --no-install-recommends \
         ca-certificates \
         libgssapi-krb5-2 \
         libicu72 \
@@ -13,7 +12,7 @@ ARG BUILD_NUMBER
 ARG BUILD_DATE
 
 RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    apt-get install -y \
         curl \
         dos2unix \
         jq \
@@ -40,7 +39,7 @@ RUN /install-scripts/install-docker.sh
 # Install Tentacle
 COPY _artifacts/deb/tentacle_${BUILD_NUMBER}_amd64.deb /tmp/
 RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install ./tentacle_${BUILD_NUMBER}_amd64.deb && \
+    apt-get install ./tentacle_${BUILD_NUMBER}_amd64.deb && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
     ln -s /opt/octopus/tentacle/Tentacle /usr/bin/tentacle
