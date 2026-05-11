@@ -1,0 +1,19 @@
+docker/kubernetes-agent-tentacle/scripts/configure-and-run.sh
+  s_c4c74c78e99946::t_7ba7f4a3733ea6 417
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "5b09aa5623e235a0c36bc0ad704de2e584975395",
+  "prompts": {},
+  "sessions": {
+    "s_c4c74c78e99946": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "07108898-ca78-4dde-8e64-811cea36ea97",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "oleksandr-codefresh <oleksandr.saulyak@octopus.com>"
+    }
+  }
+}
