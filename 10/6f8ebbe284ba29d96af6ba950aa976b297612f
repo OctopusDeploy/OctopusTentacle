@@ -1,0 +1,14 @@
+source/Octopus.Tentacle/Services/Scripts/Kubernetes/KubernetesScriptServiceV1.cs
+  h_1903a5d928fbe4 127
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "106f8ebbe284ba29d96af6ba950aa976b297612f",
+  "prompts": {},
+  "humans": {
+    "h_1903a5d928fbe4": {
+      "author": "oleksandr-codefresh <oleksandr.saulyak@octopus.com>"
+    }
+  }
+}
