@@ -1,0 +1,25 @@
+docker/kubernetes-agent-tentacle/Dockerfile
+  f5624ec0856834d5 4
+docker/kubernetes-agent-tentacle/dev/Dockerfile
+  f5624ec0856834d5 4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "73ea10279faa78c6699f2cabe5a9d57e2d564b35",
+  "prompts": {
+    "f5624ec0856834d5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9f461610-3885-4145-93a2-66aa2ca1c76e",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Denys Melnyk",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 2,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    }
+  }
+}

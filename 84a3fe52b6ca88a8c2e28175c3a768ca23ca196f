@@ -1,0 +1,29 @@
+setup-k8s-agent-for-local-debug.sh
+  276bb30f8f0c1e83 46-55
+  h_85f895d38af546 56
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "84a3fe52b6ca88a8c2e28175c3a768ca23ca196f",
+  "prompts": {
+    "276bb30f8f0c1e83": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "32a8ae30-806c-440c-b57c-e445459b6bf8",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Denys Melnyk",
+      "messages": [],
+      "total_additions": 10,
+      "total_deletions": 1,
+      "accepted_lines": 10,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_85f895d38af546": {
+      "author": "Denys Melnyk"
+    }
+  }
+}
