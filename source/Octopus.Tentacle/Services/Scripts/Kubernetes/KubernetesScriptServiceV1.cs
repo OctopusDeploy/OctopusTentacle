@@ -124,7 +124,11 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
         public async Task CompleteScriptAsync(CompleteKubernetesScriptCommandV1 command, CancellationToken cancellationToken)
         {
             var workspace = workspaceFactory.GetWorkspace(command.ScriptTicket, WorkspaceReadinessCheck.Skip);
-            if (!KubernetesConfig.DisableAutomaticPodCleanup)
+
+            var podExitCode = podStatusProvider.TryGetTrackedScriptPod(command.ScriptTicket)?.State.ExitCode ?? 0;
+
+            // Preserve the workspace when the script pod failed so the files are available for debugging.
+            if (!KubernetesConfig.DisableAutomaticPodCleanup && podExitCode != 0)
                 await workspace.Delete(cancellationToken);
 
             scriptLogProvider.Delete(command.ScriptTicket);
