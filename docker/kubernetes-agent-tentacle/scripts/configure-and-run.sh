@@ -414,7 +414,7 @@ function setPollingProxy() {
 
 function markAsInitialised() {
     # There is a startupProbe which checks for this file
-    mkdir -p /etc/octopus && touch /etc/octopus/initialized
+    mkdir -p "$configurationDirectory" && touch "$configurationDirectory/initialized"
 }
 
 setupVariablesForRegistrationCheck
