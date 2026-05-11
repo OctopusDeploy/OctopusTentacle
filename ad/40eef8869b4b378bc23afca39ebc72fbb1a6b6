@@ -1,0 +1,25 @@
+source/Octopus.Tentacle/Services/Scripts/Kubernetes/KubernetesScriptServiceV1.cs
+  s_c4c74c78e99946::t_eb592348eed0fa 127-130
+  h_1903a5d928fbe4 131
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "ad40eef8869b4b378bc23afca39ebc72fbb1a6b6",
+  "prompts": {},
+  "humans": {
+    "h_1903a5d928fbe4": {
+      "author": "oleksandr-codefresh <oleksandr.saulyak@octopus.com>"
+    }
+  },
+  "sessions": {
+    "s_c4c74c78e99946": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "07108898-ca78-4dde-8e64-811cea36ea97",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "oleksandr-codefresh <oleksandr.saulyak@octopus.com>"
+    }
+  }
+}
