@@ -15,7 +15,10 @@ set -euo pipefail
 TENTACLE_REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SERVER_REPO="${SERVER_REPO:-$(cd "$TENTACLE_REPO/../OctopusDeploy" && pwd)}"
 ENV_FILE="$SERVER_REPO/.env"
-ENV_BACKUP="$ENV_FILE.smoke-test.bak"
+# .env backup path is assigned via mktemp in Step 2 (after we know $ENV_FILE
+# exists). Using a unique per-run path avoids clobbering a stale backup from
+# a previously-crashed run.
+ENV_BACKUP=""
 # Transient compose override: disables Docker-in-Docker on the Tentacle. The
 # default tentacle entrypoint launches a dockerd daemon, which requires the
 # container to run with `--privileged`; without that the daemon fails and its
@@ -48,7 +51,7 @@ teardown() {
     rm -f "$OVERRIDE_COMPOSE"
   fi
   (cd "$SERVER_REPO" && docker compose down 2>/dev/null) || true
-  if [[ -f "$ENV_BACKUP" ]]; then
+  if [[ -n "$ENV_BACKUP" && -f "$ENV_BACKUP" ]]; then
     mv "$ENV_BACKUP" "$ENV_FILE"
     log "Restored $ENV_FILE"
   fi
@@ -102,7 +105,9 @@ LICENSE_BASE64="$(op read "$ONEPASSWORD_LICENSE_REF" 2>/dev/null || true)"
 [[ -n "$LICENSE_BASE64" ]] || die "Could not read license from 1Password at: $ONEPASSWORD_LICENSE_REF"
 log "Fetched license from 1Password (${#LICENSE_BASE64} bytes)"
 
+ENV_BACKUP="$(mktemp "${TMPDIR:-/tmp}/octopus-server.env.smoke-tentacle.XXXXXX.bak")"
 cp "$ENV_FILE" "$ENV_BACKUP"
+log "Backed up .env to $ENV_BACKUP (will be restored on exit)"
 
 upsert_env_var() {
   # Pure-bash: avoids sed/awk escape headaches with a base64 value (which
