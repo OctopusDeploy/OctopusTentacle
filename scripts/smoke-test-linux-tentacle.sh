@@ -103,19 +103,22 @@ log "Fetched license from 1Password (${#LICENSE_BASE64} bytes)"
 cp "$ENV_FILE" "$ENV_BACKUP"
 
 upsert_env_var() {
+  # Pure-bash: avoids sed/awk escape headaches with a base64 value (which
+  # contains '/' and '=' but not '\' or '&'). Matches the line by literal
+  # "KEY=" prefix, not regex, so unusual keys won't bite us.
   local key="$1" value="$2"
-  if grep -q "^${key}=" "$ENV_FILE"; then
-    # Use a sed delimiter unlikely to appear in base64
-    python3 - "$ENV_FILE" "$key" "$value" <<'PY'
-import sys, re
-path, key, value = sys.argv[1], sys.argv[2], sys.argv[3]
-with open(path) as f: txt = f.read()
-txt = re.sub(rf'^{re.escape(key)}=.*$', f'{key}={value}', txt, count=1, flags=re.M)
-with open(path, 'w') as f: f.write(txt)
-PY
-  else
-    printf '\n%s=%s\n' "$key" "$value" >> "$ENV_FILE"
-  fi
+  local tmp="$ENV_FILE.tmp" line found=
+  : > "$tmp"
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    if [[ "$line" == "${key}="* ]]; then
+      printf '%s=%s\n' "$key" "$value" >> "$tmp"
+      found=1
+    else
+      printf '%s\n' "$line" >> "$tmp"
+    fi
+  done < "$ENV_FILE"
+  [[ -z "$found" ]] && printf '%s=%s\n' "$key" "$value" >> "$tmp"
+  mv "$tmp" "$ENV_FILE"
 }
 
 upsert_env_var TENTACLE_TAG "$IMAGE_TAG"
