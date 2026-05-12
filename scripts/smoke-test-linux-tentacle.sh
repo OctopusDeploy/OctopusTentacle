@@ -20,7 +20,9 @@ ENV_BACKUP="$ENV_FILE.smoke-test.bak"
 # default tentacle entrypoint launches a dockerd daemon, which requires the
 # container to run with `--privileged`; without that the daemon fails and its
 # wrapper script kills the Tentacle agent. Setting DISABLE_DIND=Y skips it.
-OVERRIDE_COMPOSE="$SERVER_REPO/docker-compose.smoke.yml"
+# Created via mktemp in Step 4 so we never clobber an unrelated file the user
+# may already have in the sibling repo.
+OVERRIDE_COMPOSE=""
 
 API="http://localhost:8065/api"
 API_KEY="API-APIKEY01"
@@ -41,8 +43,8 @@ require jq
 teardown() {
   local exit_code=$?
   log "--- teardown ---"
-  if [[ -f "$OVERRIDE_COMPOSE" ]]; then
-    (cd "$SERVER_REPO" && docker compose -f docker-compose.yml -f docker-compose.smoke.yml --profile tentacle down 2>/dev/null) || true
+  if [[ -n "$OVERRIDE_COMPOSE" && -f "$OVERRIDE_COMPOSE" ]]; then
+    (cd "$SERVER_REPO" && docker compose -f docker-compose.yml -f "$OVERRIDE_COMPOSE" --profile tentacle down 2>/dev/null) || true
     rm -f "$OVERRIDE_COMPOSE"
   fi
   (cd "$SERVER_REPO" && docker compose down 2>/dev/null) || true
@@ -145,6 +147,7 @@ done
 # Step 4: Bring up the Tentacle (Worker, polling mode, DIND disabled)
 ###############################################################################
 log "--- Step 4: start tentacle ---"
+OVERRIDE_COMPOSE="$(mktemp "${TMPDIR:-/tmp}/docker-compose.smoke-tentacle.XXXXXX.yml")"
 cat > "$OVERRIDE_COMPOSE" <<'YAML'
 services:
   tentacle:
@@ -152,7 +155,7 @@ services:
       DISABLE_DIND: "Y"
 YAML
 
-COMPOSE=(docker compose -f docker-compose.yml -f docker-compose.smoke.yml --profile tentacle)
+COMPOSE=(docker compose -f docker-compose.yml -f "$OVERRIDE_COMPOSE" --profile tentacle)
 
 # --no-deps because octopus-server may lack a healthcheck; we already polled
 # its API ping above and know it's ready.
