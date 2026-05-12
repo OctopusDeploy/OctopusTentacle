@@ -105,7 +105,7 @@ LICENSE_BASE64="$(op read "$ONEPASSWORD_LICENSE_REF" 2>/dev/null || true)"
 [[ -n "$LICENSE_BASE64" ]] || die "Could not read license from 1Password at: $ONEPASSWORD_LICENSE_REF"
 log "Fetched license from 1Password (${#LICENSE_BASE64} bytes)"
 
-ENV_BACKUP="$(mktemp "${TMPDIR:-/tmp}/octopus-server.env.smoke-tentacle.XXXXXX.bak")"
+ENV_BACKUP="$(mktemp "${TMPDIR:-/tmp}/octopus-server-env-smoke-tentacle-XXXXXX")"
 cp "$ENV_FILE" "$ENV_BACKUP"
 log "Backed up .env to $ENV_BACKUP (will be restored on exit)"
 
@@ -152,7 +152,7 @@ done
 # Step 4: Bring up the Tentacle (Worker, polling mode, DIND disabled)
 ###############################################################################
 log "--- Step 4: start tentacle ---"
-OVERRIDE_COMPOSE="$(mktemp "${TMPDIR:-/tmp}/docker-compose.smoke-tentacle.XXXXXX.yml")"
+OVERRIDE_COMPOSE="$(mktemp "${TMPDIR:-/tmp}/docker-compose-smoke-tentacle-XXXXXX")"
 cat > "$OVERRIDE_COMPOSE" <<'YAML'
 services:
   tentacle:
