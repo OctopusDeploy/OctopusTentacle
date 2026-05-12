@@ -39,7 +39,7 @@ RUN /install-scripts/install-docker.sh
 # Install Tentacle
 COPY _artifacts/deb/tentacle_${BUILD_NUMBER}_amd64.deb /tmp/
 RUN apt-get update && \
-    apt-get install ./tentacle_${BUILD_NUMBER}_amd64.deb && \
+    apt-get install -y --no-install-recommends ./tentacle_${BUILD_NUMBER}_amd64.deb && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
     ln -s /opt/octopus/tentacle/Tentacle /usr/bin/tentacle
