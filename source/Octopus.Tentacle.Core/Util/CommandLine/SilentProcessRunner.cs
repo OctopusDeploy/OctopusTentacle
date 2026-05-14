@@ -221,6 +221,21 @@ namespace Octopus.Tentacle.Util
                     error($"Failed to kill the launched process: {killProcessException}");
                 }
             }
+            finally
+            {
+                try
+                {
+                    // When cancelling, close the file handles.
+                    // If the child finishes, but the grandchild holds stdout/stderr and never completes,
+                    // THEN we won't issue a kill to the grandchild but will wait for the grandchild to
+                    // close the handles.
+                    process.Close();
+                }
+                catch (Exception ex)
+                {
+                    error($"Failed to close process resources: {ex.Message}");
+                }
+            }
         }
 
         [DllImport("kernel32.dll", SetLastError = true)]
