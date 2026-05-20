@@ -42,6 +42,12 @@ H="X-Octopus-ApiKey: $API_KEY"
 IMAGE_TAG="smoke-debian12"
 ONEPASSWORD_LICENSE_REF="op://software licencing/octopus deploy ultimate license key base64/value"
 
+# Per-run worker name. Tagging the worker with a unique name (rather than
+# relying on the container hostname / a "highest Workers-N" heuristic) keeps
+# the test idempotent across reused Server DB volumes and lets teardown find
+# the exact worker this run registered.
+WORKER_TARGET_NAME="smoke-tentacle-$(date +%Y%m%d-%H%M%S)-$$"
+
 log()  { printf '\033[1;34m[smoke]\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33m[smoke]\033[0m %s\n' "$*" >&2; }
 die()  { printf '\033[1;31m[smoke]\033[0m %s\n' "$*" >&2; exit 1; }
@@ -167,11 +173,12 @@ done
 ###############################################################################
 log "--- Step 4: start tentacle ---"
 OVERRIDE_COMPOSE="$(mktemp "${TMPDIR:-/tmp}/docker-compose-smoke-tentacle-XXXXXX")"
-cat > "$OVERRIDE_COMPOSE" <<'YAML'
+cat > "$OVERRIDE_COMPOSE" <<YAML
 services:
   tentacle:
     environment:
       DISABLE_DIND: "Y"
+      TargetName: "$WORKER_TARGET_NAME"
 YAML
 
 COMPOSE=(docker compose -f docker-compose.yml -f "$OVERRIDE_COMPOSE" --profile tentacle)
@@ -203,27 +210,26 @@ fi
 ###############################################################################
 log "--- Step 5: verify registration and run hello-world ---"
 
-# Find the worker we just registered. The Tentacle picks its container hostname
-# as the default name, so we can't filter by name reliably. Instead, take the
-# worker whose Id is the largest "Workers-N" — i.e. the most recent registration.
+# Find the worker we just registered by its per-run TargetName. This is
+# robust against reused Server DB volumes (where workers list grows across
+# runs) and avoids the previous "highest Workers-N" heuristic.
 WORKER_ID=""
-WORKER_NAME=""
 for i in {1..60}; do
-  WORKERS_JSON="$(curl -fsS -H "$H" "$API/workers?take=1000" 2>/dev/null || echo '{"Items":[]}')"
+  WORKERS_JSON="$(curl -fsS -H "$H" --data-urlencode "name=$WORKER_TARGET_NAME" -G "$API/workers" 2>/dev/null || echo '{"Items":[]}')"
   WORKER_ID="$(echo "$WORKERS_JSON" \
-    | jq -r '[.Items[] | select(.Id | startswith("Workers-"))] | sort_by(.Id | ltrimstr("Workers-") | tonumber) | last | .Id // empty')"
-  WORKER_NAME="$(echo "$WORKERS_JSON" | jq -r --arg id "$WORKER_ID" '.Items[] | select(.Id == $id) | .Name // empty')"
+    | jq -r --arg name "$WORKER_TARGET_NAME" '.Items[] | select(.Name == $name) | .Id' \
+    | head -n1)"
   [[ -n "$WORKER_ID" ]] && break
   sleep 1
 done
 if [[ -z "$WORKER_ID" ]]; then
-  warn "No worker appeared. Diagnostic dump of $API/workers:"
+  warn "No worker named '$WORKER_TARGET_NAME' appeared. Diagnostic dump of $API/workers:"
   curl -fsS -H "$H" "$API/workers" || true
   warn "Tentacle container logs (tail 80):"
   docker compose --profile tentacle logs --no-color --tail=80 tentacle || true
-  die "Worker did not appear after 60s"
+  die "Worker '$WORKER_TARGET_NAME' did not appear after 60s"
 fi
-log "Registered worker: $WORKER_ID  (name='$WORKER_NAME')"
+log "Registered worker: $WORKER_ID  (name='$WORKER_TARGET_NAME')"
 
 ADHOC_BODY="$(jq -nc \
   --arg id "$WORKER_ID" \
