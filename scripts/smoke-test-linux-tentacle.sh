@@ -118,8 +118,8 @@ upsert_env_var() {
   # contains '/' and '=' but not '\' or '&'). Matches the line by literal
   # "KEY=" prefix, not regex, so unusual keys won't bite us.
   local key="$1" value="$2"
-  local tmp="$ENV_FILE.tmp" line found=
-  : > "$tmp"
+  local tmp line found=
+  tmp="$(mktemp "${TMPDIR:-/tmp}/octopus-server-env-smoke-upsert-XXXXXX")"
   while IFS= read -r line || [[ -n "$line" ]]; do
     if [[ "$line" == "${key}="* ]]; then
       printf '%s=%s\n' "$key" "$value" >> "$tmp"
