@@ -9,6 +9,10 @@
 # Required tools: docker, op (signed in), curl, jq.
 # Required state: a built .deb in ../_artifacts/deb/tentacle_*_amd64.deb and the
 # OctopusDeploy repo checked out alongside OctopusTentacle.
+#
+# Note on $API_KEY below: "API-APIKEY01" is the well-known dev sentinel API key
+# provisioned by the sibling OctopusDeploy repo's docker-compose stack for its
+# local-only Server instance. It is not a real secret and is safe to commit.
 
 set -euo pipefail
 
