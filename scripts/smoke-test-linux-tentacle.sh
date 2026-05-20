@@ -168,7 +168,7 @@ COMPOSE=(docker compose -f docker-compose.yml -f "$OVERRIDE_COMPOSE" --profile t
 
 log "Waiting for Tentacle 'Configuration successful.' in logs ..."
 for i in {1..60}; do
-  if "${COMPOSE[@]}" logs --no-color tentacle 2>/dev/null | grep -q "Configuration successful."; then
+  if "${COMPOSE[@]}" logs --no-color tentacle 2>/dev/null | grep -qF "Configuration successful."; then
     log "Tentacle registered after ${i}s"
     break
   fi
