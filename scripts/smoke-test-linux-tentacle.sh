@@ -6,9 +6,14 @@
 # Server in the sibling OctopusDeploy repo, registers the Tentacle as a worker,
 # runs a hello-world AdHocScript on it, and asserts success.
 #
-# Required tools: docker, op (signed in), curl, jq.
+# Required tools: docker, curl, jq.
 # Required state: a built .deb in ../_artifacts/deb/tentacle_*_amd64.deb and the
 # OctopusDeploy repo checked out alongside OctopusTentacle.
+#
+# License source: set $OCTOPUS_LICENSE_BASE64 to a base64-encoded Octopus license
+# to skip the 1Password lookup (this is the path CI runners should use). When
+# the env var is unset, the script falls back to `op read` against 1Password
+# for local-dev use, in which case `op` must be installed and signed in.
 #
 # Note on $API_KEY below: "API-APIKEY01" is the well-known dev sentinel API key
 # provisioned by the sibling OctopusDeploy repo's docker-compose stack for its
@@ -43,9 +48,10 @@ die()  { printf '\033[1;31m[smoke]\033[0m %s\n' "$*" >&2; exit 1; }
 
 require() { command -v "$1" >/dev/null || die "Missing required tool: $1"; }
 require docker
-require op
 require curl
 require jq
+# `op` is only required when OCTOPUS_LICENSE_BASE64 is not pre-set (local-dev path).
+[[ -n "${OCTOPUS_LICENSE_BASE64:-}" ]] || require op
 
 teardown() {
   local exit_code=$?
@@ -96,18 +102,22 @@ docker build \
 log "Built $DST_IMAGE"
 
 ###############################################################################
-# Step 2: Fetch license from 1Password & patch .env
+# Step 2: Resolve license & patch .env
 ###############################################################################
-log "--- Step 2: fetch license and patch .env ---"
+log "--- Step 2: resolve license and patch .env ---"
 [[ -f "$ENV_FILE" ]] || die "Expected $ENV_FILE to exist."
 
-if ! op account list >/dev/null 2>&1; then
-  die "1Password CLI is not signed in. Run: eval \$(op signin)"
+if [[ -n "${OCTOPUS_LICENSE_BASE64:-}" ]]; then
+  LICENSE_BASE64="$OCTOPUS_LICENSE_BASE64"
+  log "Using license from \$OCTOPUS_LICENSE_BASE64 (${#LICENSE_BASE64} bytes)"
+else
+  if ! op account list >/dev/null 2>&1; then
+    die "1Password CLI is not signed in. Run: eval \$(op signin) — or pre-set \$OCTOPUS_LICENSE_BASE64."
+  fi
+  LICENSE_BASE64="$(op read "$ONEPASSWORD_LICENSE_REF" 2>/dev/null || true)"
+  [[ -n "$LICENSE_BASE64" ]] || die "Could not read license from 1Password at: $ONEPASSWORD_LICENSE_REF"
+  log "Fetched license from 1Password (${#LICENSE_BASE64} bytes)"
 fi
-
-LICENSE_BASE64="$(op read "$ONEPASSWORD_LICENSE_REF" 2>/dev/null || true)"
-[[ -n "$LICENSE_BASE64" ]] || die "Could not read license from 1Password at: $ONEPASSWORD_LICENSE_REF"
-log "Fetched license from 1Password (${#LICENSE_BASE64} bytes)"
 
 ENV_BACKUP="$(mktemp "${TMPDIR:-/tmp}/octopus-server-env-smoke-tentacle-XXXXXX")"
 cp "$ENV_FILE" "$ENV_BACKUP"
