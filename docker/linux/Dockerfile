@@ -15,17 +15,6 @@ RUN apt-get update && \
 ARG BUILD_NUMBER
 ARG BUILD_DATE
 
-RUN apt-get update && \
-    apt-get install -y \
-        curl \
-        dos2unix \
-        jq \
-        sudo \
-        xxd \
-        && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
 EXPOSE 10933
 
 WORKDIR /tmp
@@ -47,7 +36,7 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
     ln -s /opt/octopus/tentacle/Tentacle /usr/bin/tentacle
-    
+
 WORKDIR /
 
 # We know this won't reduce the image size at all. It's just to make the filesystem a little tidier.
