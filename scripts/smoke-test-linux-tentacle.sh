@@ -251,9 +251,11 @@ if [[ "$STATE" != "Success" ]]; then
   die "Task finished in state '$STATE' (expected Success)"
 fi
 
-# Sanity: the printed log should mention Debian 12.
-if ! curl -fsS -H "$H" "$API/tasks/$TASK_ID/raw" | grep -q 'Debian GNU/Linux 12'; then
-  warn "Task succeeded but the log does NOT mention 'Debian GNU/Linux 12'. Inspect output above."
+# Load-bearing assertion: the whole point of this smoke test is to prove the
+# Debian 12 base image is what's actually running on the Tentacle, so a missing
+# os-release line is a hard failure, not a warning.
+if ! curl -fsS -H "$H" "$API/tasks/$TASK_ID/raw" | grep -qF 'Debian GNU/Linux 12'; then
+  die "Task succeeded but the log does NOT mention 'Debian GNU/Linux 12'. Inspect output above."
 fi
 
 log "PASS — Tentacle (Debian 12) registered and executed hello-world."
