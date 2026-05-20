@@ -47,6 +47,10 @@ ONEPASSWORD_LICENSE_REF="op://software licencing/octopus deploy ultimate license
 # the test idempotent across reused Server DB volumes and lets teardown find
 # the exact worker this run registered.
 WORKER_TARGET_NAME="smoke-tentacle-$(date +%Y%m%d-%H%M%S)-$$"
+# Populated in Step 5 once the Server confirms registration; used by teardown
+# to deregister the worker via DELETE so the workers list doesn't grow
+# monotonically across runs that share a Server DB volume.
+WORKER_ID=""
 
 log()  { printf '\033[1;34m[smoke]\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33m[smoke]\033[0m %s\n' "$*" >&2; }
@@ -62,6 +66,13 @@ require jq
 teardown() {
   local exit_code=$?
   log "--- teardown ---"
+  # Deregister the worker first, while the Server is still up. Best-effort:
+  # if the Server is already dead or the worker never registered, we just
+  # move on — the goal is to keep the workers list clean across runs.
+  if [[ -n "$WORKER_ID" ]]; then
+    log "Deregistering worker $WORKER_ID"
+    curl -fsS -X DELETE -H "$H" "$API/workers/$WORKER_ID" >/dev/null 2>&1 || true
+  fi
   if [[ -n "$OVERRIDE_COMPOSE" && -f "$OVERRIDE_COMPOSE" ]]; then
     (cd "$SERVER_REPO" && docker compose -f docker-compose.yml -f "$OVERRIDE_COMPOSE" --profile tentacle down 2>/dev/null) || true
     rm -f "$OVERRIDE_COMPOSE"
@@ -213,7 +224,6 @@ log "--- Step 5: verify registration and run hello-world ---"
 # Find the worker we just registered by its per-run TargetName. This is
 # robust against reused Server DB volumes (where workers list grows across
 # runs) and avoids the previous "highest Workers-N" heuristic.
-WORKER_ID=""
 for i in {1..60}; do
   WORKERS_JSON="$(curl -fsS -H "$H" --data-urlencode "name=$WORKER_TARGET_NAME" -G "$API/workers" 2>/dev/null || echo '{"Items":[]}')"
   WORKER_ID="$(echo "$WORKERS_JSON" \
