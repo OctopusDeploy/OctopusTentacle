@@ -483,6 +483,81 @@ namespace Octopus.Tentacle.Tests.Integration
             lowerCaseResponse.ExitCode.Should().Be(0);
         }
 
+        [Test]
+        public async Task AbandonScript_OnUnknownTicket_ReturnsCompleteWithUnknownScriptExitCode()
+        {
+            var ticket = new ScriptTicket("unknown-ticket-" + Guid.NewGuid().ToString("N"));
+            var response = await service.AbandonScriptAsync(new AbandonScriptCommandV2(ticket, 0), CancellationToken.None);
+
+            response.State.Should().Be(ProcessState.Complete);
+            response.ExitCode.Should().Be(ScriptExitCodes.UnknownScriptExitCode);
+        }
+
+        [Test]
+        public async Task AbandonScript_OnRunningScript_FiresAbandonToken_ReturnsAbandonedExitCode()
+        {
+            var startCommand = new StartScriptCommandV2Builder()
+                .WithScriptBodyForCurrentOs("Start-Sleep -Seconds 60", "sleep 60")
+                .WithIsolation(ScriptIsolationLevel.NoIsolation)
+                .WithDurationStartScriptCanWaitForScriptToFinish(null)
+                .Build();
+
+            await service.StartScriptAsync(startCommand, CancellationToken.None);
+
+            // Wait for the script to reach Running state
+            ScriptStatusResponseV2 status;
+            var deadline = DateTime.UtcNow.AddSeconds(30);
+            do
+            {
+                status = await service.GetStatusAsync(new ScriptStatusRequestV2(startCommand.ScriptTicket, 0), CancellationToken.None);
+                if (status.State == ProcessState.Running) break;
+                await Task.Delay(50);
+            } while (DateTime.UtcNow < deadline);
+            status.State.Should().Be(ProcessState.Running, "script should have reached Running state within 30 seconds");
+
+            // Fire abandon
+            await service.AbandonScriptAsync(new AbandonScriptCommandV2(startCommand.ScriptTicket, 0), CancellationToken.None);
+
+            // Poll until the script completes (the abandon token causes the process runner to return AbandonedExitCode)
+            ScriptStatusResponseV2 finalResponse;
+            var completionDeadline = DateTime.UtcNow.AddSeconds(30);
+            do
+            {
+                finalResponse = await service.GetStatusAsync(new ScriptStatusRequestV2(startCommand.ScriptTicket, 0), CancellationToken.None);
+                if (finalResponse.State == ProcessState.Complete) break;
+                await Task.Delay(100);
+            } while (DateTime.UtcNow < completionDeadline);
+
+            finalResponse.State.Should().Be(ProcessState.Complete);
+            finalResponse.ExitCode.Should().Be(ScriptExitCodes.AbandonedExitCode);
+        }
+
+        [Test]
+        public async Task AbandonScript_OnAlreadyCompletedScript_ReturnsRealExitCode()
+        {
+            var startCommand = new StartScriptCommandV2Builder()
+                .WithScriptBody("echo \"finished\"")
+                .WithIsolation(ScriptIsolationLevel.NoIsolation)
+                .WithDurationStartScriptCanWaitForScriptToFinish(null)
+                .Build();
+
+            await service.StartScriptAsync(startCommand, CancellationToken.None);
+
+            // Wait for the script to complete
+            ScriptStatusResponseV2 status;
+            var deadline = DateTime.UtcNow.AddSeconds(30);
+            do
+            {
+                status = await service.GetStatusAsync(new ScriptStatusRequestV2(startCommand.ScriptTicket, 0), CancellationToken.None);
+                if (status.State == ProcessState.Complete) break;
+                await Task.Delay(50);
+            } while (DateTime.UtcNow < deadline);
+            status.State.Should().Be(ProcessState.Complete);
+
+            var abandonResponse = await service.AbandonScriptAsync(new AbandonScriptCommandV2(startCommand.ScriptTicket, 0), CancellationToken.None);
+            abandonResponse.ExitCode.Should().Be(0, "real exit code should be returned, not AbandonedExitCode");
+        }
+
         // TODO - Test the stateStore is updated.
 
         private void SetupScriptState(ScriptTicket ticket)

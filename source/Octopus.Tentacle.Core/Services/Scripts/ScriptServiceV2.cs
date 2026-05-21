@@ -72,8 +72,8 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             {
                 IScriptWorkspace workspace;
 
-                // why do we need all this checking, what dont I understand that means we are unsure of the state, can this be retried somewhere is it because tentacle might die but the scripts are running in seperate shells?
-                // If the state already exists then this runningScript is already running/has already run and we should not run it again
+                // If the state already exists then this runningScript is already running/has already run and we should not run it again.
+                // StartScript may be called multiple times for the same ticket (e.g. server retries), so we guard against double-launching.
                 if (runningScript.ScriptStateStore.Exists())
                 {
                     var state = runningScript.ScriptStateStore.Load();
@@ -104,7 +104,8 @@ namespace Octopus.Tentacle.Core.Services.Scripts
                     command.TaskId,
                     workspace,
                     runningScript.ScriptStateStore,
-                    runningScript.CancellationToken);
+                    runningScript.CancellationToken,
+                    runningScript.AbandonToken);
 
                 runningScript.Process = process;
 
@@ -144,7 +145,13 @@ namespace Octopus.Tentacle.Core.Services.Scripts
         public async Task<ScriptStatusResponseV2> AbandonScriptAsync(AbandonScriptCommandV2 command, CancellationToken cancellationToken)
         {
             await Task.CompletedTask;
-            throw new NotImplementedException("Implemented in Task 11");
+
+            if (runningScripts.TryGetValue(command.Ticket, out var runningScript))
+            {
+                runningScript.Abandon();
+            }
+
+            return GetResponse(command.Ticket, command.LastLogSequence, runningScript?.Process);
         }
 
         public async Task CompleteScriptAsync(CompleteScriptCommandV2 command, CancellationToken cancellationToken)
@@ -160,9 +167,9 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             await workspace.Delete(cancellationToken);
         }
 
-        RunningScript LaunchShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, IScriptStateStore stateStore, CancellationToken cancellationToken)
+        RunningScript LaunchShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, IScriptStateStore stateStore, CancellationToken cancellationToken, CancellationToken abandonToken)
         {
-            var runningScript = new RunningScript(shell, workspace, stateStore, workspace.CreateLog(), serverTaskId, scriptIsolationMutex, cancellationToken, CancellationToken.None, environmentVariables, powerShellStartupTimeout, log);
+            var runningScript = new RunningScript(shell, workspace, stateStore, workspace.CreateLog(), serverTaskId, scriptIsolationMutex, cancellationToken, abandonToken, environmentVariables, powerShellStartupTimeout, log);
             _ = Task.Run(async () => await runningScript.Execute());
             return runningScript;
         }
@@ -211,13 +218,14 @@ namespace Octopus.Tentacle.Core.Services.Scripts
 
         class RunningScriptWrapper : IDisposable
         {
-            readonly CancellationTokenSource cancellationTokenSource = new ();
+            readonly CancellationTokenSource cancellationTokenSource = new();
+            readonly CancellationTokenSource abandonTokenSource = new();
 
             public RunningScriptWrapper(ScriptStateStore scriptStateStore)
             {
                 ScriptStateStore = scriptStateStore;
-
                 CancellationToken = cancellationTokenSource.Token;
+                AbandonToken = abandonTokenSource.Token;
             }
 
             public RunningScript? Process { get; set; }
@@ -225,15 +233,15 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             public SemaphoreSlim StartScriptMutex { get; } = new(1, 1);
 
             public CancellationToken CancellationToken { get; }
+            public CancellationToken AbandonToken { get; }
 
-            public void Cancel()
-            {
-                cancellationTokenSource.Cancel();
-            }
+            public void Cancel() => cancellationTokenSource.Cancel();
+            public void Abandon() => abandonTokenSource.Cancel();
 
             public void Dispose()
             {
                 cancellationTokenSource.Dispose();
+                abandonTokenSource.Dispose();
             }
         }
     }
