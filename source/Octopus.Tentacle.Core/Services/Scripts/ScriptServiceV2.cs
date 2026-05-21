@@ -72,6 +72,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             {
                 IScriptWorkspace workspace;
 
+                // why do we need all this checking, what dont I understand that means we are unsure of the state, can this be retried somewhere is it because tentacle might die but the scripts are running in seperate shells?
                 // If the state already exists then this runningScript is already running/has already run and we should not run it again
                 if (runningScript.ScriptStateStore.Exists())
                 {
