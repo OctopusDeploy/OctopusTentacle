@@ -1,6 +1,6 @@
 # Tentacle script abandon — design
 
-**Status:** Draft — both implementation options preserved for external review.
+**Status:** Draft. Implementation approach locked (async); two open questions remain (workspace cleanup, Tentacle-side flag).
 **Ticket:** [EFT-3295](https://linear.app/octopus/issue/EFT-3295/tentacle-script-abandonment-to-release-the-mutex)
 **ADR:** [ADR-042 — Defer server-task Abandoned state](https://github.com/OctopusDeploy/adr/pull/226)
 **Parallel work:** Server-side (ProcessExecution layer) is being designed in a separate session and will consume the contract proposed here.
@@ -59,7 +59,7 @@ public class AbandonScriptCommandV2
 
 **Why a new verb (not a "force" flag on Cancel).** Different semantics: Cancel = "try to stop the OS process gracefully". Abandon = "give up tracking; release the mutex; the OS process may still be running". Two verbs map cleanly to ProcessExecution's two-step escalation (cancel first, abandon if cancel doesn't propagate).
 
-## Section 2 — Mutex release mechanics (TWO OPTIONS — external input requested)
+## Section 2 — Mutex release mechanics (locked: async)
 
 **The core constraint.** `RunningScript.Execute()` acquires `ScriptIsolationMutex` inside a `using` block that wraps a synchronous call to `SilentProcessRunner.ExecuteCommand`. `ExecuteCommand` blocks on `process.WaitForExit()` (line 143). When `WaitForExit` never returns:
 1. The mutex is welded shut (the `using`'s Dispose never runs).
@@ -67,104 +67,76 @@ public class AbandonScriptCommandV2
 
 Both problems need to be solved. The mutex problem is the ticket's primary deliverable; the parked-thread problem is required so Tentacle doesn't accumulate thread leaks each time the abandon path fires.
 
-Rejected alternatives (documented for the reviewer's benefit):
-- **Orphan the Task + release mutex via external Dispose.** Releases mutex but leaks a threadpool worker per abandon. Tentacle eventually starves the threadpool. **Rejected.**
-- **Manual `Thread` instead of `Task`.** Same leak problem, just trades threadpool for kernel thread handles + stack memory. **Rejected.**
-- **`Thread.Abort` / `Thread.Interrupt` / `TerminateThread` P/Invoke.** No safe managed mechanism to release a thread parked in unmanaged code. `TerminateThread` doesn't unwind stack or release locks — can corrupt Tentacle's own state. **Rejected.**
+**Rejected alternatives** (documented for the reviewer's benefit):
+
+- **Orphan the Task + release mutex via external Dispose.** Releases mutex but leaks a threadpool worker per abandon. Tentacle eventually starves the threadpool.
+- **Manual `Thread` instead of `Task`.** Same leak problem, just trades threadpool for kernel thread handles + stack memory.
+- **`Thread.Abort` / `Thread.Interrupt` / `TerminateThread` P/Invoke.** No safe managed mechanism to release a thread parked in unmanaged code. `TerminateThread` doesn't unwind stack or release locks; can corrupt Tentacle's own state.
 - **Out-of-process script worker.** Cleanly isolates the stuck-process problem from Tentacle, but is a massive refactor far outside EFT-3295's scope. Worth a separate proposal someday.
+- **Sync cancellable wait via `ManualResetEventSlim.Wait()`** (the earlier "Option 2" we held open for external input). Replaces only the blocking primitive inside `SilentProcessRunner`, leaves everything else synchronous. Smaller diff, but preserves a parked thread per running script in the normal case (same cost as today) and doesn't move the codebase toward async. Rejected in favour of the async approach below — direction matters, not just diff size.
 
-The only two real fixes both make the wait itself cancellable:
+### The chosen approach: async cancellable wait
 
-### Option 1 — Async cancellable wait (`WaitForExitAsync`)
-
-Replace the sync `process.WaitForExit()` with `await process.WaitForExitAsync(abandonToken)`. `SilentProcessRunner.ExecuteCommand` becomes (or gains an async sibling that becomes) async. `RunningScript.RunScript` / `Execute()` become async end-to-end.
+Replace the sync `process.WaitForExit()` with `await process.WaitForExitAsync(abandon)`. **Replace `ExecuteCommand` outright; do NOT ship an additive overload.** Every caller migrates to await.
 
 **Verified behaviour** (.NET source, `Process.cs:1523-1594`): `WaitForExitAsync` uses a `TaskCompletionSource` driven by either the process's `Exited` event or `cancellationToken.UnsafeRegister(... TrySetCanceled ...)`. When the token fires, the awaiter completes with `OperationCanceledException` independently of whether the OS process has exited. The `WaitUntilOutputEOF` follow-up is bypassed on cancellation. **No thread is parked during the wait.**
 
-**Diff shape (~6 files, async ripple):**
-- `Octopus.Tentacle.Core/Util/CommandLine/SilentProcessRunner.cs`: add `ExecuteCommandAsync(... CancellationToken cancel, CancellationToken abandon)`. New abandon-catch returns `AbandonedExitCode`, writes honest log line via the existing `info` callback.
-- `Octopus.Tentacle.Core/Services/Scripts/RunningScript.cs`: `RunScript` → `RunScriptAsync`; ctor takes a second `abandonToken`; `Execute()` already async, just awaits the new path.
-- `Octopus.Tentacle.Core/Services/Scripts/ScriptServiceV2.cs`: `LaunchShell` passes `abandonToken` from the wrapper. `RunningScriptWrapper` gains `abandonTokenSource`. New `AbandonScriptAsync` method.
-- `Octopus.Tentacle.Contracts/ScriptServiceV2/`: new command file, interface method (per Section 1).
-- `Octopus.Tentacle.Contracts/ScriptExitCodes.cs`: add `AbandonedExitCode = -48`.
-- Capabilities advertisement.
-
-**Tradeoffs:**
-- ✅ **Zero threads parked** even during normal script execution (async I/O all the way down).
-- ✅ Aligns with the long-term direction if/when the team does an async-everywhere pass on the script pipeline.
-- ❌ Larger diff and async ripple — touches the call chain that already has stable test coverage.
-- ❌ Async correctness rabbit holes (ConfigureAwait, deadlock potential if any caller `.Result`s the new method).
-
-### Option 2 — Sync cancellable wait (`ManualResetEventSlim`)
-
-Replace `process.WaitForExit()` with `ManualResetEventSlim.Wait()` that's signalled by **either** the process's `Exited` event or the abandon token's registration callback. Everything outside the swap stays synchronous.
+**Two tokens, one passed to the wait.** `cancel` keeps its existing job (`cancel.Register` fires `DoOurBestToCleanUp` → `Hitman.Kill`). `abandon` is the new signal whose only job is "stop waiting, do not touch the process". Only `abandon` is passed into `WaitForExitAsync`; do NOT link `cancel` in. When `cancel` fires and the kill works, the process exits and the wait returns naturally via the `Exited` event. When `cancel` fires and the kill DOESN'T work (Philips), the wait keeps going until `abandon` fires from the server's 2-minute escalation. Linking `cancel` into the wait token would race the kill against the wait-cancellation and lose the natural-exit code on the happy path.
 
 ```csharp
-process.EnableRaisingEvents = true;
-using var exited = new ManualResetEventSlim(false);
-EventHandler exitedHandler = (_, _) => exited.Set();
-process.Exited += exitedHandler;
-try
+using (cancel.Register(() => DoOurBestToCleanUp(process, error)))
 {
-    using (cancel.Register(() => DoOurBestToCleanUp(process, error)))   // existing
-    using (abandon.Register(() => exited.Set()))                        // NEW
+    process.BeginOutputReadLine();
+    process.BeginErrorReadLine();
+
+    try
     {
-        process.BeginOutputReadLine();
-        process.BeginErrorReadLine();
-
-        exited.Wait();   // replaces WaitForExit()
-
-        if (abandon.IsCancellationRequested && !process.HasExited)
-        {
-            info("Tentacle has abandoned this script. The underlying script process may still be running on this host.");
-            return ScriptExitCodes.AbandonedExitCode;
-        }
-
-        // existing cleanup path unchanged from here
-        SafelyCancelRead(process.CancelErrorRead, debug);
-        SafelyCancelRead(process.CancelOutputRead, debug);
-        SafelyWaitForAllOutput(outputResetEvent, cancel, debug);
-        SafelyWaitForAllOutput(errorResetEvent, cancel, debug);
-        return SafelyGetExitCode(process);
+        await process.WaitForExitAsync(abandon).ConfigureAwait(false);
     }
+    catch (OperationCanceledException) when (abandon.IsCancellationRequested && !process.HasExited)
+    {
+        info("Tentacle has abandoned this script. The underlying script process may still be running on this host.");
+        return ScriptExitCodes.AbandonedExitCode;
+    }
+
+    // process exited (naturally or via cancel-triggered kill) — existing cleanup path
+    SafelyCancelRead(process.CancelErrorRead, debug);
+    SafelyCancelRead(process.CancelOutputRead, debug);
+    return SafelyGetExitCode(process);
 }
-finally { process.Exited -= exitedHandler; }
 ```
 
-**Threading.** During the wait, one thread is parked on `exited.Wait()` — **same cost as today's `WaitForExit()`**. When the abandon token's registration callback runs, it sets the event, `Wait()` returns, the thread is released. Normal-script behaviour is identical to today; only the stuck-script path changes.
+**Diff shape — `ExecuteCommand` becomes `ExecuteCommandAsync`, all callers migrate.** Search across the repo found ~20 call sites. Every one updates.
 
-**Diff shape (~4 files, no async ripple):**
-- `SilentProcessRunner.cs`: one method swap, add `abandon` parameter (additive overload).
-- `RunningScript.cs`: ctor takes `abandonToken`, plumbs to `RunScript`. `Execute()` structure unchanged.
-- `ScriptServiceV2.cs`: new `AbandonScriptAsync` method, `RunningScriptWrapper` gains `abandonTokenSource`.
-- Contracts + exit code + capability (same as Option 1).
+Production code:
+- `source/Octopus.Tentacle.Core/Util/CommandLine/SilentProcessRunner.cs` — the method itself. Rename, return `Task<int>`, swap `WaitForExit()` for `await WaitForExitAsync(abandon)`. Two-token signature.
+- `source/Octopus.Tentacle/Util/ISilentProcessRunner.cs` — interface and the in-process wrapper become async.
+- `source/Octopus.Tentacle/Util/CommandLineRunner.cs` — caller migration.
+- `source/Octopus.Tentacle.Core/Services/Scripts/RunningScript.cs` — `RunScript` → `RunScriptAsync`; ctor takes `abandonToken` alongside `runningScriptToken`; `Execute()` awaits the new path.
+- `source/Octopus.Tentacle.Core/Services/Scripts/ScriptServiceV2.cs` — `LaunchShell` passes `abandonToken` from the wrapper. `RunningScriptWrapper` gains `abandonTokenSource`. New `AbandonScriptAsync` method.
+- `source/Octopus.Tentacle.Contracts/ScriptServiceV2/` — new `AbandonScriptCommandV2.cs`, interface method on `IScriptServiceV2.cs` (per Section 1).
+- `source/Octopus.Tentacle.Contracts/ScriptExitCodes.cs` — add `AbandonedExitCode = -48`.
+- Capabilities advertisement (`AbandonScriptV2`).
 
-**Tradeoffs:**
-- ✅ Minimal diff, surgical change to the single blocking primitive.
-- ✅ Existing sync call chain preserved — easier to review, easier to feature-flag, lower regression risk.
-- ✅ Normal-path performance identical to today (no shape change).
-- ❌ One threadpool thread parked per running script during the wait, same as today. Async option avoids this entirely. (Note: this matches current behaviour. We are not regressing; we're just not improving the *normal* case.)
-- ❌ Doesn't move the codebase toward async; the next person to do this work has to do Option 1's refactor anyway.
+Kubernetes integration test scaffolding (all caller-migration, no logic change):
+- `source/Octopus.Tentacle.Kubernetes.Tests.Integration/Tooling/KubeCtlTool.cs`
+- `source/Octopus.Tentacle.Kubernetes.Tests.Integration/Setup/DockerImageLoader.cs` (2 call sites)
+- `source/Octopus.Tentacle.Kubernetes.Tests.Integration/Setup/KubernetesAgentInstaller.cs` (3 call sites)
+- `source/Octopus.Tentacle.Kubernetes.Tests.Integration/Setup/KubernetesClusterInstaller.cs` (4 call sites)
+- `source/Octopus.Tentacle.Kubernetes.Tests.Integration/Setup/Tooling/HelmDownloader.cs`
+- `source/Octopus.Tentacle.Kubernetes.Tests.Integration/Setup/Tooling/ToolDownloader.cs`
 
-### Decision matrix
+Tentacle integration test scaffolding (caller migration):
+- `source/Octopus.Tentacle.Tests.Integration/PowerShellStartupDetectionTests.cs` (3 call sites)
+- `source/Octopus.Tentacle.Tests.Integration/Util/SilentProcessRunnerFixture.cs`
+- `source/Octopus.Tentacle.Tests.Integration/Support/TentacleFetchers/LinuxTentacleFetcher.cs`
 
-| | Option 1 (async) | Option 2 (sync, surgical) |
-|---|---|---|
-| Threads parked during normal run | 0 | 1 (same as today) |
-| Threads parked after abandon | 0 | 0 |
-| Files touched | ~6 | ~4 |
-| Async correctness risk | Real | None |
-| Async-everywhere shape progress | Yes | No |
-| Review effort | Higher | Lower |
-| Existing sync callers of `ExecuteCommand` | Unaffected (new overload) | Unaffected (additive param) |
+**What happens to stdout/stderr after abandon.** The OS process is still running and may still write to its stdout/stderr pipes. The `OutputDataReceived` handler we registered is still wired. On the abandon catch, we let the Process object's handles release through normal GC — the OS process eventually blocks on its next stdout write when the pipe buffer fills (~64KB), which is acceptable per the ticket's "we are not interfering" framing. Tentacle's resources are bounded.
 
-**Both options:**
-- Release the mutex correctly via the existing `using` exit (no external Dispose surgery needed).
-- Release the parked thread on abandon.
-- Leave the OS process alone (per ticket).
-- Write the honest log line and return `AbandonedExitCode`.
-
-**Recommendation pending external input.** Author's lean: Option 2 for the EFT-3295 ship (smaller blast radius, easier feature-flag rollback). Option 1 is the better long-term shape and is the natural next refactor cycle. Looking for an outside engineer's read.
+**Async correctness watch-outs for the implementation plan:**
+- Every new async method gets `.ConfigureAwait(false)`.
+- No `.Result` / `.Wait()` calls on the new path; if a caller can't easily be made async, surface it for separate handling rather than block-on-async.
+- Verify no deadlock under the Tentacle's synchronisation context (none, but worth confirming).
 
 ## Section 3 — State, exit code, log wording (common to both options)
 
@@ -192,9 +164,9 @@ Style: matches existing `SilentProcessRunnerFixture.cs`. Use short-lived helper 
 | Abandon AFTER natural exit (race) | Process that exits in ~50ms; fire abandon token at the moment exit fires | Return value is the process's real exit code, not `AbandonedExitCode`. No abandon log line. Verifies the `if (abandon.IsCancellationRequested && !process.HasExited)` guard. |
 | Both tokens fire | Long-running process; fire cancel; while cancel.Register is mocked to no-op, fire abandon | `info` callback gets abandon log line; return value is `AbandonedExitCode`. Verifies the unkillable-cancel + abandon escalation path that the integration tests then exercise end-to-end. |
 
-**Option 1 specific:** `WaitForExitAsync(token)` returns within ~50ms of cancellation. **Test verification:** wrap the await in `Stopwatch.StartNew()`; assert elapsed < 100ms. Proves async wait is independent of process exit.
+**Async-specific timing assertion:** `WaitForExitAsync(token)` returns within ~50ms of cancellation. **Test verification:** wrap the await in `Stopwatch.StartNew()`; assert elapsed < 100ms. Proves async wait is independent of process exit.
 
-**Option 2 specific:** `ManualResetEventSlim.Wait()` returns within ~50ms of abandon callback. **Test verification:** same `Stopwatch` approach. **Plus thread-leak test:** start 50 stuck processes via `ExecuteCommand` on dedicated threads, fire abandon on all; capture `Process.GetCurrentProcess().Threads.Count` before and 1s after; assert delta ≤ 5 (allow for threadpool jitter).
+**Thread-leak regression test:** start 50 stuck processes via `ExecuteCommandAsync` (all `await`ed in parallel), fire abandon on all; capture `Process.GetCurrentProcess().Threads.Count` before and 1s after; assert delta ≤ 5 (allow for threadpool jitter). The async path should produce zero parked threads at steady state.
 
 ### 4.2 `ScriptServiceV2` service-layer tests (both options)
 
@@ -233,9 +205,9 @@ Style: matches `Octopus.Tentacle.Tests.Integration/ClientScriptExecutionIsolatio
 | Windows workspace cleanup with open handles | Run the abandon path; leave the simulated zombie holding the workspace log file open; call CompleteScript | CompleteScript returns without exception. Tentacle systemLog contains a `Warn` naming the leaked workspace directory. Workspace dir on disk still exists (assert via `Directory.Exists`). No exception bubbles up to the calling test (which simulates Server). |
 | Polling Tentacle variant | Configure test fixture as Polling | All verifications from the kill-mocked-off row pass against a Polling Tentacle. |
 
-**Option 1 specific:** End-to-end async path. **Verify:** capture `Process.GetCurrentProcess().Threads.Count` 5s into a stuck-script scenario; assert no thread parked attributable to the script pipeline (use named threads or stack-walk via ETW if precise attribution needed). Most reliable proxy: total thread count not higher than baseline + epsilon.
+**End-to-end async thread audit.** Capture `Process.GetCurrentProcess().Threads.Count` 5s into a stuck-script scenario; assert no thread parked attributable to the script pipeline (use named threads or stack-walk via ETW if precise attribution needed). Most reliable proxy: total thread count not higher than baseline + epsilon.
 
-**Option 2 specific:** **Normal-path timing regression check.** Run a 100-iteration benchmark of normal short-script execution (`Write-Host "x"`); compare median wall-clock time vs. a baseline build without the changes. **Verify:** median delta < 5% (the MRES wait is functionally equivalent to WaitForExit; we don't expect measurable regression).
+**Normal-path timing regression check.** Run a 100-iteration benchmark of normal short-script execution (`Write-Host "x"`); compare median wall-clock time vs. a baseline build without the changes. **Verify:** median delta within margin of error. The async swap should not measurably slow normal script execution.
 
 ### 4.4 Feature flag verification
 
@@ -398,9 +370,8 @@ To turn the feature flag on by default in a future release: M1–M5 pass on Wind
 
 ## Open questions for external reviewer
 
-1. **Option 1 vs Option 2** for the mutex/thread mechanism. Author's lean: Option 2 for ship, Option 1 as future refactor. Looking for a second opinion.
-2. **Workspace cleanup policy.** Best-effort + leak + log is the proposed default. Should we instead schedule a janitor task? Disk-fill risk is bounded by feature-flag rarity, but a real customer with frequent abandons could accumulate workspaces.
-3. **Tentacle-side feature flag — is it pulling weight?** The current design has two off-switches: server-side toggle (governs whether server dispatches abandon at all) and a Tentacle-side flag governing capability advertisement. The server-side toggle is the *correct* location because the decision (when to escalate) is server-side. The Tentacle-side flag duplicates protection and adds config burden on every Tentacle host. Defensible if we want per-Tentacle emergency disable for self-hosted customers, but probably YAGNI for first release. Author's lean: drop the Tentacle-side flag. Capability advertisement becomes binary on Tentacle build version, server-side toggle is the sufficient kill-switch. Looking for Luke's read on this.
+1. **Workspace cleanup policy.** Best-effort + leak + log is the proposed default. Should we instead schedule a janitor task? Disk-fill risk is bounded by feature-flag rarity, but a real customer with frequent abandons could accumulate workspaces.
+2. **Tentacle-side feature flag — is it pulling weight?** The current design has two off-switches: server-side toggle (governs whether server dispatches abandon at all) and a Tentacle-side flag governing capability advertisement. The server-side toggle is the *correct* location because the decision (when to escalate) is server-side. The Tentacle-side flag duplicates protection and adds config burden on every Tentacle host. Defensible if we want per-Tentacle emergency disable for self-hosted customers, but probably YAGNI for first release. Author's lean: drop the Tentacle-side flag. Capability advertisement becomes binary on Tentacle build version, server-side toggle is the sufficient kill-switch. Looking for Luke's read on this.
 
 ## Coordination — locked with the server-side session (2026-05-21)
 
