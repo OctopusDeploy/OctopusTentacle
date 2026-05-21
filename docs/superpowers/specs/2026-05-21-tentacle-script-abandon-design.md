@@ -388,8 +388,9 @@ To turn the feature flag on by default in a future release: M1–M5 pass on Wind
 
 ## Open questions for external reviewer
 
-1. **Option 1 vs Option 2** for the mutex/thread mechanism. Author's lean: Option 2 for ship, Option 1 as future refactor. Looking for a second opinion. This is the only thing still open after the server-side session alignment below.
+1. **Option 1 vs Option 2** for the mutex/thread mechanism. Author's lean: Option 2 for ship, Option 1 as future refactor. Looking for a second opinion.
 2. **Workspace cleanup policy.** Best-effort + leak + log is the proposed default. Should we instead schedule a janitor task? Disk-fill risk is bounded by feature-flag rarity, but a real customer with frequent abandons could accumulate workspaces.
+3. **Tentacle-side feature flag — is it pulling weight?** The current design has two off-switches: server-side toggle (governs whether server dispatches abandon at all) and a Tentacle-side flag governing capability advertisement. The server-side toggle is the *correct* location because the decision (when to escalate) is server-side. The Tentacle-side flag duplicates protection and adds config burden on every Tentacle host. Defensible if we want per-Tentacle emergency disable for self-hosted customers, but probably YAGNI for first release. Author's lean: drop the Tentacle-side flag. Capability advertisement becomes binary on Tentacle build version, server-side toggle is the sufficient kill-switch. Looking for Luke's read on this.
 
 ## Coordination — locked with the server-side session (2026-05-21)
 
