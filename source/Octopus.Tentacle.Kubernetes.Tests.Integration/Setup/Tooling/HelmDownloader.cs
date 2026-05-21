@@ -27,7 +27,7 @@ public class HelmDownloader : ToolDownloader
 
     static string GetArchitectureLabel(Architecture processArchitecture) => processArchitecture == Architecture.Arm64 ? "arm64" : "amd64";
 
-    protected override string PostDownload(string targetDirectory, string downloadFilePath, Architecture processArchitecture, OperatingSystem operatingSystem)
+    protected override async Task<string> PostDownload(string targetDirectory, string downloadFilePath, Architecture processArchitecture, OperatingSystem operatingSystem)
     {
         var architecture = GetArchitectureLabel(processArchitecture);
         var osName = GetOsName(operatingSystem);
@@ -43,7 +43,7 @@ public class HelmDownloader : ToolDownloader
         else
         {
             //everything else is tar.gz
-            ExtractTarGzip(downloadFilePath, extractionDir);
+            await ExtractTarGzip(downloadFilePath, extractionDir);
         }
 
         //move the extracted helm executable to the root target directory
@@ -66,7 +66,7 @@ public class HelmDownloader : ToolDownloader
             _ => throw new ArgumentOutOfRangeException(nameof(operatingSystem), operatingSystem, null)
         };
 
-    void ExtractTarGzip(string gzArchiveName, string destFolder)
+    async Task ExtractTarGzip(string gzArchiveName, string destFolder)
     {
         if (!Directory.Exists(destFolder))
         {
@@ -79,14 +79,15 @@ public class HelmDownloader : ToolDownloader
         // Falling back to good old fashioned `tar` does the job nicely :)
         using var tmp = new TemporaryDirectory();
 
-        var exitCode = SilentProcessRunner.ExecuteCommand(
+        var exitCode = await SilentProcessRunner.ExecuteCommandAsync(
             "tar",
             $"xzvf \"{gzArchiveName}\" -C \"{destFolder}\"",
             tmp.DirectoryPath,
             Logger.Debug,
             Logger.Information,
             Logger.Error,
-            CancellationToken.None);
+            cancel: CancellationToken.None,
+            abandon: CancellationToken.None);
 
         if (exitCode != 0)
         {

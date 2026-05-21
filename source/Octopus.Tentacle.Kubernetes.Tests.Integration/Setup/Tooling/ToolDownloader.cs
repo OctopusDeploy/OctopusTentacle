@@ -37,19 +37,20 @@ public abstract class ToolDownloader : IToolDownloader
         Logger.Information("Downloading {DownloadUrl} to {DownloadFilePath}", downloadUrl, downloadFilePath);
         await OctopusPackageDownloader.DownloadPackage(downloadUrl, downloadFilePath, Logger, cancellationToken);
 
-        downloadFilePath = PostDownload(targetDirectory, downloadFilePath, RuntimeInformation.ProcessArchitecture, os);
+        downloadFilePath = await PostDownload(targetDirectory, downloadFilePath, RuntimeInformation.ProcessArchitecture, os);
 
         //if this is not running on windows, chmod the tool to be executable
         if (os is not OperatingSystem.Windows)
         {
-            var exitCode = SilentProcessRunner.ExecuteCommand(
+            var exitCode = await SilentProcessRunner.ExecuteCommandAsync(
                 "chmod",
                 $"+x \"{downloadFilePath}\"",
                 targetDirectory,
                 Logger.Debug,
                 Logger.Information,
                 Logger.Error,
-                CancellationToken.None);
+                cancel: CancellationToken.None,
+                abandon: CancellationToken.None);
 
             if (exitCode != 0)
             {
@@ -62,12 +63,12 @@ public abstract class ToolDownloader : IToolDownloader
 
     protected abstract string BuildDownloadUrl(Architecture processArchitecture, OperatingSystem operatingSystem);
 
-    protected virtual string PostDownload(string downloadDirectory, string downloadFilePath, Architecture processArchitecture, OperatingSystem operatingSystem)
+    protected virtual Task<string> PostDownload(string downloadDirectory, string downloadFilePath, Architecture processArchitecture, OperatingSystem operatingSystem)
     {
         var targetFilename = Path.Combine(downloadDirectory, ExecutableName);
         File.Move(downloadFilePath, targetFilename);
 
-        return targetFilename;
+        return Task.FromResult(targetFilename);
     }
 
     static OperatingSystem GetOperationSystem()

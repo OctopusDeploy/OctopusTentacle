@@ -56,14 +56,15 @@ public class KubernetesAgentInstaller
             .MinimumLevel.Debug()
             .CreateLogger();
 
-        var exitCode = SilentProcessRunner.ExecuteCommand(
+        var exitCode = await SilentProcessRunner.ExecuteCommandAsync(
             helmExePath,
             arguments,
             temporaryDirectory.DirectoryPath,
             sprLogger.Debug,
             sprLogger.Information,
             sprLogger.Error,
-            CancellationToken.None);
+            cancel: CancellationToken.None,
+            abandon: CancellationToken.None);
 
         sw.Stop();
 
@@ -169,7 +170,7 @@ public class KubernetesAgentInstaller
                 .MinimumLevel.Debug()
                 .CreateLogger();
             
-            var exitCode = SilentProcessRunner.ExecuteCommand(
+            var exitCode = await SilentProcessRunner.ExecuteCommandAsync(
                 kubeCtlExePath,
                 //get the generated thumbprint from the config map
                 $"get cm tentacle-config --namespace {Namespace} --kubeconfig=\"{kubeConfigPath}\" -o \"jsonpath={{.data['Tentacle\\.CertificateThumbprint']}}\"",
@@ -181,7 +182,8 @@ public class KubernetesAgentInstaller
                     thumbprint = x;
                 },
                 sprLogger.Error,
-                CancellationToken.None);
+                cancel: CancellationToken.None,
+                abandon: CancellationToken.None);
 
             if (exitCode != 0)
             {
@@ -219,14 +221,17 @@ public class KubernetesAgentInstaller
                 NamespaceFlag,
                 AgentName);
 
-            var exitCode = SilentProcessRunner.ExecuteCommand(
+            // Dispose() cannot be made async; .GetAwaiter().GetResult() is safe here
+            // because this runs in test teardown (not inside an async context with a sync-blocking SynchronizationContext).
+            var exitCode = SilentProcessRunner.ExecuteCommandAsync(
                 helmExePath,
                 uninstallArgs,
                 temporaryDirectory.DirectoryPath,
                 logger.Debug,
                 logger.Information,
                 logger.Error,
-                CancellationToken.None);
+                cancel: CancellationToken.None,
+                abandon: CancellationToken.None).GetAwaiter().GetResult();
 
             if (exitCode != 0)
             {
