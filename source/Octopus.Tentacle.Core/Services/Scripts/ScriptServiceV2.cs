@@ -162,7 +162,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
 
         RunningScript LaunchShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, IScriptStateStore stateStore, CancellationToken cancellationToken)
         {
-            var runningScript = new RunningScript(shell, workspace, stateStore, workspace.CreateLog(), serverTaskId, scriptIsolationMutex, cancellationToken, environmentVariables, powerShellStartupTimeout, log);
+            var runningScript = new RunningScript(shell, workspace, stateStore, workspace.CreateLog(), serverTaskId, scriptIsolationMutex, cancellationToken, CancellationToken.None, environmentVariables, powerShellStartupTimeout, log);
             _ = Task.Run(async () => await runningScript.Execute());
             return runningScript;
         }
