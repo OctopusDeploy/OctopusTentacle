@@ -156,15 +156,32 @@ namespace Octopus.Tentacle.Core.Services.Scripts
 
         public async Task CompleteScriptAsync(CompleteScriptCommandV2 command, CancellationToken cancellationToken)
         {
-            await Task.CompletedTask;
-
             if (runningScripts.TryRemove(command.Ticket, out var runningScript))
             {
                 runningScript.Dispose();
             }
 
             var workspace = workspaceFactory.GetWorkspace(command.Ticket, WorkspaceReadinessCheck.Skip);
-            await workspace.Delete(cancellationToken);
+
+            var stateStore = scriptStateStoreFactory.Create(workspace);
+            var wasAbandoned = stateStore.Exists()
+                               && stateStore.Load().ExitCode == ScriptExitCodes.AbandonedExitCode;
+
+            if (wasAbandoned)
+            {
+                try
+                {
+                    await workspace.Delete(cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    log.Warn(ex, $"Could not delete abandoned workspace at {workspace.WorkingDirectory}. Leaving on disk; the underlying script process may still hold open file handles.");
+                }
+            }
+            else
+            {
+                await workspace.Delete(cancellationToken);
+            }
         }
 
         RunningScript LaunchShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, IScriptStateStore stateStore, CancellationToken cancellationToken, CancellationToken abandonToken)

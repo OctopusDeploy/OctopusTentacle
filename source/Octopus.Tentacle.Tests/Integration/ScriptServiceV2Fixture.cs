@@ -558,6 +558,118 @@ namespace Octopus.Tentacle.Tests.Integration
             abandonResponse.ExitCode.Should().Be(0, "real exit code should be returned, not AbandonedExitCode");
         }
 
+        [Test]
+        public async Task CompleteScript_AfterAbandon_WhenWorkspaceDeleteFails_LogsWarnAndReturnsNormally()
+        {
+            var startCommand = new StartScriptCommandV2Builder()
+                .WithScriptBodyForCurrentOs("Start-Sleep -Seconds 60", "sleep 60")
+                .WithIsolation(ScriptIsolationLevel.NoIsolation)
+                .WithDurationStartScriptCanWaitForScriptToFinish(null)
+                .Build();
+
+            await service.StartScriptAsync(startCommand, CancellationToken.None);
+
+            // Wait for Running
+            ScriptStatusResponseV2 status;
+            var runningDeadline = DateTime.UtcNow.AddSeconds(30);
+            do
+            {
+                status = await service.GetStatusAsync(new ScriptStatusRequestV2(startCommand.ScriptTicket, 0), CancellationToken.None);
+                if (status.State == ProcessState.Running) break;
+                await Task.Delay(50);
+            } while (DateTime.UtcNow < runningDeadline);
+            status.State.Should().Be(ProcessState.Running, "script should have reached Running state within 30 seconds");
+
+            await service.AbandonScriptAsync(new AbandonScriptCommandV2(startCommand.ScriptTicket, 0), CancellationToken.None);
+
+            // Poll until Complete
+            var completeDeadline = DateTime.UtcNow.AddSeconds(30);
+            do
+            {
+                status = await service.GetStatusAsync(new ScriptStatusRequestV2(startCommand.ScriptTicket, 0), CancellationToken.None);
+                if (status.State == ProcessState.Complete) break;
+                await Task.Delay(50);
+            } while (DateTime.UtcNow < completeDeadline);
+            status.State.Should().Be(ProcessState.Complete);
+            status.ExitCode.Should().Be(ScriptExitCodes.AbandonedExitCode);
+
+            // Build a service whose workspace.Delete throws
+            var deleteException = new IOException("file in use");
+            var (mockFactory, mockLog) = BuildFactoryWithThrowingDelete(startCommand.ScriptTicket, deleteException);
+            var serviceUnderTest = new ScriptServiceV2(
+                PlatformDetection.IsRunningOnWindows ? (IShell)new PowerShell() : new Bash(),
+                mockFactory,
+                stateStoreFactory,
+                new ScriptIsolationMutex(),
+                mockLog);
+
+            Func<Task> complete = async () => await serviceUnderTest.CompleteScriptAsync(new CompleteScriptCommandV2(startCommand.ScriptTicket), CancellationToken.None);
+
+            await complete.Should().NotThrowAsync();
+            mockLog.Received().Warn(deleteException, Arg.Is<string>(m => m.Contains("Could not delete") && m.Contains(startCommand.ScriptTicket.TaskId)));
+        }
+
+        [Test]
+        public async Task CompleteScript_AfterNormalCompletion_WhenWorkspaceDeleteFails_PropagatesException()
+        {
+            var startCommand = new StartScriptCommandV2Builder()
+                .WithScriptBody("echo \"finished\"")
+                .WithIsolation(ScriptIsolationLevel.NoIsolation)
+                .WithDurationStartScriptCanWaitForScriptToFinish(null)
+                .Build();
+
+            await service.StartScriptAsync(startCommand, CancellationToken.None);
+
+            // Poll until natural completion
+            ScriptStatusResponseV2 status;
+            var deadline = DateTime.UtcNow.AddSeconds(30);
+            do
+            {
+                status = await service.GetStatusAsync(new ScriptStatusRequestV2(startCommand.ScriptTicket, 0), CancellationToken.None);
+                if (status.State == ProcessState.Complete) break;
+                await Task.Delay(50);
+            } while (DateTime.UtcNow < deadline);
+            status.State.Should().Be(ProcessState.Complete);
+            status.ExitCode.Should().Be(0, "the script exited cleanly, not via abandon");
+
+            var deleteException = new IOException("file in use");
+            var (mockFactory, mockLog) = BuildFactoryWithThrowingDelete(startCommand.ScriptTicket, deleteException);
+            var serviceUnderTest = new ScriptServiceV2(
+                PlatformDetection.IsRunningOnWindows ? (IShell)new PowerShell() : new Bash(),
+                mockFactory,
+                stateStoreFactory,
+                new ScriptIsolationMutex(),
+                mockLog);
+
+            Func<Task> complete = async () => await serviceUnderTest.CompleteScriptAsync(new CompleteScriptCommandV2(startCommand.ScriptTicket), CancellationToken.None);
+
+            await complete.Should().ThrowAsync<IOException>();
+        }
+
+        /// <summary>
+        /// Builds a mock IScriptWorkspaceFactory that delegates all calls to the real workspaceFactory except
+        /// workspace.Delete, which throws the supplied exception. Also returns a mock ISystemLog for assertion.
+        /// </summary>
+        (IScriptWorkspaceFactory factory, ISystemLog log) BuildFactoryWithThrowingDelete(ScriptTicket ticket, Exception deleteException)
+        {
+            var realWorkspace = workspaceFactory.GetWorkspace(ticket, WorkspaceReadinessCheck.Skip);
+
+            var fakeWorkspace = Substitute.For<IScriptWorkspace>();
+            fakeWorkspace.ScriptTicket.Returns(realWorkspace.ScriptTicket);
+            fakeWorkspace.WorkingDirectory.Returns(realWorkspace.WorkingDirectory);
+            fakeWorkspace.BootstrapScriptFilePath.Returns(realWorkspace.BootstrapScriptFilePath);
+            fakeWorkspace.LogFilePath.Returns(realWorkspace.LogFilePath);
+            fakeWorkspace.ResolvePath(Arg.Any<string>()).Returns(ci => realWorkspace.ResolvePath(ci.Arg<string>()));
+            fakeWorkspace.CreateLog().Returns(_ => realWorkspace.CreateLog());
+            fakeWorkspace.Delete(Arg.Any<CancellationToken>()).Returns<Task>(_ => throw deleteException);
+
+            var fakeFactory = Substitute.For<IScriptWorkspaceFactory>();
+            fakeFactory.GetWorkspace(Arg.Any<ScriptTicket>(), Arg.Any<WorkspaceReadinessCheck>()).Returns(fakeWorkspace);
+
+            var fakeLog = Substitute.For<ISystemLog>();
+            return (fakeFactory, fakeLog);
+        }
+
         // TODO - Test the stateStore is updated.
 
         private void SetupScriptState(ScriptTicket ticket)
