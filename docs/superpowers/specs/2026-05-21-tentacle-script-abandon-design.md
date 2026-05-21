@@ -1,6 +1,6 @@
 # Tentacle script abandon — design
 
-**Status:** Draft. Implementation approach locked (async). One open question remains (workspace cleanup policy).
+**Status:** Draft, ready for implementation planning. Async approach locked; contract locked with the parallel server-side session; workspace cleanup policy locked; no open questions outstanding.
 **Ticket:** [EFT-3295](https://linear.app/octopus/issue/EFT-3295/tentacle-script-abandonment-to-release-the-mutex)
 **ADR:** [ADR-042 — Defer server-task Abandoned state](https://github.com/OctopusDeploy/adr/pull/226)
 **Parallel work:** Server-side (ProcessExecution layer) is being designed in a separate session and will consume the contract proposed here.
@@ -143,7 +143,7 @@ Tentacle integration test scaffolding (caller migration):
 - **Exit code:** `ScriptExitCodes.AbandonedExitCode = -48`. Distinct from `CanceledExitCode (-43)`. Server-side telemetry can tell abandoned from cancelled even though task UI surfaces both as "Cancelled" per ADR-042.
 - **State on GetStatus after abandon:** `(ProcessState.Complete, AbandonedExitCode, latestLogs)`. Same shape as Cancel returns today.
 - **Honest log line:** `"Tentacle has abandoned this script. The underlying script process may still be running on this host."` Written once, into the workspace script log, near the end of the abandon path.
-- **Workspace cleanup on subsequent `CompleteScript`:** best-effort. `workspace.Delete` is wrapped in try/catch; failure logs a `Warn` to systemLog and leaks the directory. Justified by the low expected frequency of abandons. Periodic janitor is a future option if signal arrives.
+- **Workspace cleanup on subsequent `CompleteScript`:** targeted best-effort. `CompleteScript` reads the stateStore and checks the persisted exit code. If `AbandonedExitCode`, wrap `workspace.Delete` in try/catch, log a `Warn` to systemLog naming the leaked directory, return success. For any other exit code, `workspace.Delete` is called as today and exceptions propagate. This way the relaxed-deletion policy applies only to the rare abandon case; bugs that leak handles on normal-completion paths can't hide under a blanket try/catch. No janitor — the ticket already says OS-level state on the host is the customer's problem.
 - **Idempotency — actual-status return (NOT silent no-op):**
   - Abandon called twice on the same already-abandoned ticket → returns the cached `(Complete, AbandonedExitCode, logs)` response.
   - Abandon called on a ticket that completed naturally before the abandon arrived (race case the server-side session flagged) → returns `(Complete, realExitCode, logs)` with the **real exit code**, distinct from `AbandonedExitCode`. The server uses this distinction to log *"Script had already completed before abandon was needed"* instead of *"Tentacle abandoned the script"*. Silent no-op would hide this signal.
@@ -358,7 +358,7 @@ To turn the feature flag on by default in a future release: M1–M5 pass on Wind
 
 ## Open questions for external reviewer
 
-1. **Workspace cleanup policy.** Best-effort + leak + log is the proposed default. Should we instead schedule a janitor task? Disk-fill risk is bounded by the rarity of abandons, but a real customer with frequent abandons could accumulate workspaces.
+(None remaining. Workspace cleanup policy resolved 2026-05-21 — targeted best-effort gated on `AbandonedExitCode` in the stateStore. No janitor; OS-level state on the host is the customer's responsibility per the ticket.)
 
 ## Coordination — locked with the server-side session (2026-05-21)
 
