@@ -62,14 +62,15 @@ namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
             using var tmp = new TemporaryDirectory();
 
             Action<string> log = s => logger.Information(s);
-            var exitCode = SilentProcessRunner.ExecuteCommand(
+            var exitCode = SilentProcessRunner.ExecuteCommandAsync(
                 "tar",
                 $"xzvf \"{gzArchiveName}\" -C \"{destFolder}\"",
                 tmp.DirectoryPath,
                 log,
                 log,
                 log,
-                CancellationToken.None);
+                cancel: CancellationToken.None,
+                abandon: CancellationToken.None).GetAwaiter().GetResult();
 
             if (exitCode != 0)
             {
