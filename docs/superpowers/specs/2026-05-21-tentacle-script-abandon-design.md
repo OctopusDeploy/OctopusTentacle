@@ -213,7 +213,17 @@ Style: matches existing service-layer fixtures using in-memory script shells and
 
 ### 4.3 Integration tests (real shells, real processes)
 
-Style: matches `Octopus.Tentacle.Tests.Integration/ScriptServiceV2Fixture.cs`.
+Style: matches `Octopus.Tentacle.Tests.Integration/ClientScriptExecutionIsolationMutex.cs` (the closest existing analogue — real Tentacle, real script, mutex semantics under test).
+
+**Timing flakiness: use the existing builders, not raw shell + `Thread.Sleep`.** The integration test suite has stable patterns for this exact class of test:
+
+- `ScriptBuilder` (`Octopus.Tentacle.CommonTestUtils/Builders/ScriptBuilder.cs`) composes cross-platform script bodies. Use `.CreateFile(path)` to signal "script reached this line" and `.WaitForFileToExist(path)` to block the script on an event, not a sleep race. This is how `ClientScriptExecutionIsolationMutex` reliably exercises long-running scripts without `Thread.Sleep` timing assumptions.
+- `TestExecuteShellScriptCommandBuilder` (`Octopus.Tentacle.Tests.Integration/Util/Builders/`) composes the script command: `.SetScriptBody(ScriptBuilder)`, `.WithIsolationLevel(...)`, `.WithIsolationMutexName(...)`, `.Build()`.
+- `TentacleConfigurationTestCase.CreateBuilder()` and `ClientAndTentacleBuilder` set up real Tentacle + Halibut for the test. Same as existing tests.
+- `TentacleServiceDecoratorBuilder.RecordMethodUsages(...)` decorates the script service so the test can assert how many times each method was called. Use this to verify capability negotiation and call counts for the new `AbandonScript` verb.
+- `Wait.For(condition, timeout, onFail, ct)` is the event-driven polling helper. Always preferred over `Task.Delay` in test bodies.
+
+**Pattern to follow:** mirror `ClientScriptExecutionIsolationMutex.cs`. Stuck-script tests should use `ScriptBuilder.WaitForFileToExist(...)` as the "kernel-blocked" simulant rather than `sleep 600`. The file-wait is event-driven and the test can release it on demand by creating the file. For the unkillable variant, combine the file-wait pattern with the `Tentacle.Debug.DisableProcessKill` flag described in the manual test setup so `Hitman` becomes a no-op for the test's duration.
 
 | Test | Trigger | Verify |
 |---|---|---|
