@@ -179,12 +179,12 @@ namespace Octopus.Tentacle.Kubernetes
 
             LogVerboseToBothLogs($"Creating Kubernetes Pod '{podName}'.", tentacleScriptLog);
 
-            foreach(var file in kubernetesPhysicalFileSystem.EnumerateFiles(KubernetesConfig.BootstrapRunnerExecutableDirectory))
+            foreach (var file in kubernetesPhysicalFileSystem.EnumerateFiles(KubernetesConfig.BootstrapRunnerExecutableDirectory))
             {
                 var baseName = Path.GetFileName(file);
-                workspace.CopyFile(file, baseName, true);    
+                workspace.CopyFile(file, baseName, true);
             }
-            
+
             var scriptName = Path.GetFileName(workspace.BootstrapScriptFilePath);
             var workspacePath = Path.Combine("Work", workspace.ScriptTicket.TaskId);
 
@@ -257,7 +257,7 @@ namespace Octopus.Tentacle.Kubernetes
 
         protected virtual IList<V1Volume> CreateVolumes(StartKubernetesScriptCommandV1 command)
         {
-            return new List<V1Volume>
+            var volumes = new List<V1Volume>
             {
                 new()
                 {
@@ -269,6 +269,21 @@ namespace Octopus.Tentacle.Kubernetes
                 },
                 CreateAgentUpgradeSecretVolume(),
             };
+
+            if (command.CalamariImageConfiguration is not null)
+            {
+                volumes.Add(new V1Volume
+                {
+                    Name = "calamari",
+                    Image = new V1ImageVolumeSource
+                    {
+                        Reference = $"octopusdeploy/{command.CalamariImageConfiguration.Name}:{command.CalamariImageConfiguration.Version}",
+                        PullPolicy = "IfNotPresent"
+                    }
+                });
+            }
+
+            return volumes;
         }
 
         protected V1Volume CreateAgentUpgradeSecretVolume()
@@ -301,7 +316,7 @@ namespace Octopus.Tentacle.Kubernetes
         protected async Task<V1Container> CreateScriptContainer(StartKubernetesScriptCommandV1 command, string podName, string scriptName, string homeDir, string workspacePath, string[]? scriptArguments, InMemoryTentacleScriptLog tentacleScriptLog, V1Container? containerSpec)
         {
             var spaceInformation = kubernetesPhysicalFileSystem.GetStorageInformation();
-            
+
             var commandString = string.Join(" ", new[]
                 {
                     $"{homeDir}/Work/{command.ScriptTicket.TaskId}/execute-bootstrapRunner.sh",
@@ -384,6 +399,19 @@ namespace Octopus.Tentacle.Kubernetes
 
                 //We intentionally exclude setting "TentacleJournal" since it doesn't make sense to keep a Deployment Journal for Kubernetes deployments
             });
+
+            //if the image is configured, add that flag
+            if (command.CalamariImageConfiguration is not null)
+            {
+                container.VolumeMounts.Add(new V1VolumeMount
+                {
+                    MountPath = "/calamari",
+                    Name = "calamari",
+                    SubPath = command.CalamariImageConfiguration.Name //Calamari is always at the subpath of the app name
+                });
+
+                container.Env.Add(new V1EnvVar { Name = "CalamariImageDirectoryPath", Value = "/calamari" });
+            }
 
             container.EnvFrom = Merge(container.EnvFrom, envFrom);
             return container;

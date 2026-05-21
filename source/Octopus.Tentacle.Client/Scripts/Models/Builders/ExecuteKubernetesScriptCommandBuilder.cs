@@ -1,15 +1,17 @@
 using System;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
 
 namespace Octopus.Tentacle.Client.Scripts.Models.Builders
 {
     public class ExecuteKubernetesScriptCommandBuilder : ExecuteScriptCommandBuilder
     {
-        KubernetesImageConfiguration? configuration;
+        KubernetesImageConfiguration? imageConfiguration;
         string? scriptPodServiceAccountName;
         string? scriptPodPlatform;
         bool isRawScript;
         KubernetesAgentAuthContext? authContext;
+        CalamariImageConfiguration? calamariImageConfiguration;
 
         public ExecuteKubernetesScriptCommandBuilder(string taskId)
             : base(taskId, ScriptIsolationLevel.NoIsolation) //Kubernetes Agents don't need isolation since the scripts won't clash with each other (it won't clash more than Workers anyway)
@@ -18,7 +20,7 @@ namespace Octopus.Tentacle.Client.Scripts.Models.Builders
 
         public ExecuteKubernetesScriptCommandBuilder WithKubernetesImageConfiguration(KubernetesImageConfiguration configuration)
         {
-            this.configuration = configuration;
+            this.imageConfiguration = configuration;
             return this;
         }
 
@@ -46,6 +48,12 @@ namespace Octopus.Tentacle.Client.Scripts.Models.Builders
             return this;
         }
 
+        public ExecuteKubernetesScriptCommandBuilder WithCalamariImageConfiguration(CalamariImageConfiguration configuration)
+        {
+            calamariImageConfiguration = configuration;
+            return this;
+        }
+
         public override ExecuteScriptCommand Build()
             => new ExecuteKubernetesScriptCommand(
                 ScriptTicket,
@@ -55,11 +63,12 @@ namespace Octopus.Tentacle.Client.Scripts.Models.Builders
                 IsolationConfiguration,
                 AdditionalScripts,
                 Files.ToArray(),
-                configuration,
+                imageConfiguration,
                 scriptPodServiceAccountName,
                 isRawScript,
                 authContext,
-                scriptPodPlatform
+                scriptPodPlatform,
+                calamariImageConfiguration
             );
     }
 }
