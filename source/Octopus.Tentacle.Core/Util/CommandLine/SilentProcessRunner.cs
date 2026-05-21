@@ -263,10 +263,12 @@ namespace Octopus.Tentacle.Util
         // WaitForExitAsync is not available on .NET Framework 4.x; polyfill using Process.Exited event + TaskCompletionSource.
         static Task WaitForExitAsyncNetFramework(Process process, CancellationToken cancellationToken)
         {
-            var tcs = new TaskCompletionSource<object?>();
+            var tcs = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+            CancellationTokenRegistration registration = default;
 
             void OnExited(object? sender, EventArgs e)
             {
+                registration.Dispose();
                 tcs.TrySetResult(null);
             }
 
@@ -280,7 +282,7 @@ namespace Octopus.Tentacle.Util
 
             if (cancellationToken.CanBeCanceled)
             {
-                cancellationToken.Register(() =>
+                registration = cancellationToken.Register(() =>
                 {
                     process.Exited -= OnExited;
                     tcs.TrySetCanceled(cancellationToken);
