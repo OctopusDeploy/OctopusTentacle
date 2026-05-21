@@ -1,6 +1,6 @@
 # Tentacle script abandon — design
 
-**Status:** Draft. Implementation approach locked (async); two open questions remain (workspace cleanup, Tentacle-side flag).
+**Status:** Draft. Implementation approach locked (async). One open question remains (workspace cleanup policy).
 **Ticket:** [EFT-3295](https://linear.app/octopus/issue/EFT-3295/tentacle-script-abandonment-to-release-the-mutex)
 **ADR:** [ADR-042 — Defer server-task Abandoned state](https://github.com/OctopusDeploy/adr/pull/226)
 **Parallel work:** Server-side (ProcessExecution layer) is being designed in a separate session and will consume the contract proposed here.
@@ -22,7 +22,7 @@ Server-side will detect that cancellation hasn't propagated within its own timeo
 In scope:
 - `IScriptServiceV2` only (Listening + Polling Tentacles).
 - New Halibut RPC verb `AbandonScript`, new exit code `AbandonedExitCode = -48`.
-- Behind a feature flag (`Tentacle.AbandonScriptEnabled`) for the first release.
+- Gated by server-side feature flag (`AbandonTentacleScriptOnCancellationTimeoutFeatureToggle`) for the first release. No Tentacle-side flag — capability advertisement is binary on build version.
 
 Out of scope:
 - SSH targets (different lock model; ticket explicitly defers).
@@ -55,7 +55,7 @@ public class AbandonScriptCommandV2
 }
 ```
 
-**Capability advertisement.** Tentacle's `CapabilitiesServiceV2` advertises an `AbandonScriptV2` capability **iff** the feature flag is on. Server's existing `BackwardsCompatibleAsyncCapabilitiesV2Decorator` mechanism handles "Tentacle doesn't advertise it → don't call it". This is also how the Tentacle-side feature flag works: flag off → no capability advertised → server never calls Abandon for that Tentacle.
+**Capability advertisement.** Tentacle's `CapabilitiesServiceV2` advertises `AbandonScriptV2` once the build supports it. Binary on build version, no Tentacle-side toggle. Server's existing `BackwardsCompatibleAsyncCapabilitiesV2Decorator` handles "Tentacle doesn't advertise it → don't call it" for older Tentacles. Server-side `AbandonTentacleScriptOnCancellationTimeoutFeatureToggle` is the only feature-flag off-switch.
 
 **Why a new verb (not a "force" flag on Cancel).** Different semantics: Cancel = "try to stop the OS process gracefully". Abandon = "give up tracking; release the mutex; the OS process may still be running". Two verbs map cleanly to ProcessExecution's two-step escalation (cancel first, abandon if cancel doesn't propagate).
 
@@ -131,19 +131,19 @@ Tentacle integration test scaffolding (caller migration):
 - `source/Octopus.Tentacle.Tests.Integration/Util/SilentProcessRunnerFixture.cs`
 - `source/Octopus.Tentacle.Tests.Integration/Support/TentacleFetchers/LinuxTentacleFetcher.cs`
 
-**What happens to stdout/stderr after abandon.** The OS process is still running and may still write to its stdout/stderr pipes. The `OutputDataReceived` handler we registered is still wired. On the abandon catch, we let the Process object's handles release through normal GC — the OS process eventually blocks on its next stdout write when the pipe buffer fills (~64KB), which is acceptable per the ticket's "we are not interfering" framing. Tentacle's resources are bounded.
+**What happens to stdout/stderr after abandon.** Returning `AbandonedExitCode` unwinds the method. The outer `using (var process = new Process())` disposes the Process, which closes our end of the redirected pipes. The OS process may get EPIPE on its next stdout/stderr write. This is consistent with the ticket: we're closing our own handles, not killing the runaway process. The script's runtime keeps doing whatever it's doing; many scripts ignore broken-pipe errors, and scripts that fail on them already had nowhere to log anyway. The alternative — leaving the Process and its pipes pinned in memory indefinitely — is the resource-accumulation problem we already rejected.
 
 **Async correctness watch-outs for the implementation plan:**
 - Every new async method gets `.ConfigureAwait(false)`.
 - No `.Result` / `.Wait()` calls on the new path; if a caller can't easily be made async, surface it for separate handling rather than block-on-async.
 - Verify no deadlock under the Tentacle's synchronisation context (none, but worth confirming).
 
-## Section 3 — State, exit code, log wording (common to both options)
+## Section 3 — State, exit code, log wording
 
 - **Exit code:** `ScriptExitCodes.AbandonedExitCode = -48`. Distinct from `CanceledExitCode (-43)`. Server-side telemetry can tell abandoned from cancelled even though task UI surfaces both as "Cancelled" per ADR-042.
 - **State on GetStatus after abandon:** `(ProcessState.Complete, AbandonedExitCode, latestLogs)`. Same shape as Cancel returns today.
 - **Honest log line:** `"Tentacle has abandoned this script. The underlying script process may still be running on this host."` Written once, into the workspace script log, near the end of the abandon path.
-- **Workspace cleanup on subsequent `CompleteScript`:** best-effort. `workspace.Delete` is wrapped in try/catch; failure logs a `Warn` to systemLog and leaks the directory. Justified by feature-flag gating and low expected frequency. Periodic janitor is a future option if signal arrives.
+- **Workspace cleanup on subsequent `CompleteScript`:** best-effort. `workspace.Delete` is wrapped in try/catch; failure logs a `Warn` to systemLog and leaks the directory. Justified by the low expected frequency of abandons. Periodic janitor is a future option if signal arrives.
 - **Idempotency — actual-status return (NOT silent no-op):**
   - Abandon called twice on the same already-abandoned ticket → returns the cached `(Complete, AbandonedExitCode, logs)` response.
   - Abandon called on a ticket that completed naturally before the abandon arrived (race case the server-side session flagged) → returns `(Complete, realExitCode, logs)` with the **real exit code**, distinct from `AbandonedExitCode`. The server uses this distinction to log *"Script had already completed before abandon was needed"* instead of *"Tentacle abandoned the script"*. Silent no-op would hide this signal.
@@ -152,9 +152,9 @@ Tentacle integration test scaffolding (caller migration):
 
 ## Section 4 — Automated test strategy
 
-### 4.1 `SilentProcessRunner` unit tests (both options)
+### 4.1 `SilentProcessRunner` unit tests
 
-Style: matches existing `SilentProcessRunnerFixture.cs`. Use short-lived helper scripts/exes (`Thread.Sleep`-equivalent) as process subjects.
+Style: matches existing `SilentProcessRunnerFixture.cs`. Use short-lived helper scripts/exes as process subjects.
 
 | Test | Trigger | Verify |
 |---|---|---|
@@ -168,7 +168,7 @@ Style: matches existing `SilentProcessRunnerFixture.cs`. Use short-lived helper 
 
 **Thread-leak regression test:** start 50 stuck processes via `ExecuteCommandAsync` (all `await`ed in parallel), fire abandon on all; capture `Process.GetCurrentProcess().Threads.Count` before and 1s after; assert delta ≤ 5 (allow for threadpool jitter). The async path should produce zero parked threads at steady state.
 
-### 4.2 `ScriptServiceV2` service-layer tests (both options)
+### 4.2 `ScriptServiceV2` service-layer tests
 
 Style: matches existing service-layer fixtures using in-memory script shells and stub workspace factories.
 
@@ -180,8 +180,7 @@ Style: matches existing service-layer fixtures using in-memory script shells and
 | Abandon then Cancel | Abandon, then Cancel same ticket | Cancel returns the cached abandoned response unchanged. Asserts via response equality. |
 | **Cancel then Abandon (real flow)** | Long-running script; cancel; cancel.Register no-op'd to simulate unkillable; abandon | Final GetStatus returns `(Complete, AbandonedExitCode, logs)`. Log content includes the honest line. Subsequent same-ticket StartScript returns the cached state. |
 | Abandon during StartScript launch | Concurrent: StartScript holding `StartScriptMutex`, AbandonScript called | Abandon serialises behind StartScript via the existing wrapper mutex. Final state is consistent (no half-abandoned wrapper). |
-| Capability advertisement | Feature flag toggled at startup | With flag on, `CapabilitiesServiceV2.GetCapabilities()` response includes `AbandonScriptV2`. With flag off, capability is absent. |
-| Capability gating | Flag off; client calls AbandonScript anyway | Returns a "feature disabled" response shape (exact shape TBD with server session). Server side, no decorator should attempt the call when capability is missing. |
+| Capability advertisement | Tentacle build with the abandon feature; query `CapabilitiesServiceV2.GetCapabilities()` | Response includes `AbandonScriptV2`. Tentacle builds without the feature do not advertise it. |
 
 ### 4.3 Integration tests (real shells, real processes)
 
@@ -209,17 +208,6 @@ Style: matches `Octopus.Tentacle.Tests.Integration/ClientScriptExecutionIsolatio
 
 **Normal-path timing regression check.** Run a 100-iteration benchmark of normal short-script execution (`Write-Host "x"`); compare median wall-clock time vs. a baseline build without the changes. **Verify:** median delta within margin of error. The async swap should not measurably slow normal script execution.
 
-### 4.4 Feature flag verification
-
-Two flags, both default ON, either kills the feature. Tentacle-side flag governs capability advertisement (the primary gate). Server-side flag `AbandonTentacleScriptOnCancellationTimeoutFeatureToggle` governs whether server schedules the delayed dispatch at all. Tests here cover the Tentacle-side flag.
-
-| Test | Trigger | Verify |
-|---|---|---|
-| Flag off, capability absent | Restart Tentacle with `AbandonScriptEnabled=false`; call `CapabilitiesServiceV2.GetCapabilities()` | Response list does NOT contain `AbandonScriptV2`. |
-| Flag off, AbandonScript called (defensive fallback) | Same Tentacle; client invokes AbandonScript directly via Halibut (bypassing capability check) | Response is a "feature disabled" error response. Tentacle systemLog records the disabled-call attempt. **Pass:** no exception, no state mutation. This path is exercised only by a stale capability cache on the server side; production flow goes through the capability check first. |
-| Flag off, existing paths unchanged | Restart with flag off; run an existing `ScriptServiceV2Fixture` test suite | All existing tests pass byte-for-byte. Asserts no accidental change to Cancel/Complete/StartScript paths under the feature-flag boundary. |
-| Flag toggle reversible | Restart with flag on, then off, then on; capture capabilities response each time | `AbandonScriptV2` appears/disappears/appears in lockstep with the flag. Confirms the flag is the single source of truth on capability, not a startup-only switch. |
-
 ## Section 5 — Manual testing plan
 
 Manual scenarios on a real test Tentacle. All scenarios assume the parallel server-side build is deployed.
@@ -229,7 +217,7 @@ Manual scenarios on a real test Tentacle. All scenarios assume the parallel serv
 - Test Octopus Server with EFT-3295 server-side build.
 - Windows Tentacle (primary) + Linux Tentacle (smoke).
 - Debug Tentacle build with `Tentacle.Debug.DisableProcessKill=true` making `Hitman.TryKillProcessAndChildrenRecursively` a no-op — simulant for "kill doesn't work" without engineering real kernel-level waits.
-- Feature flag `Tentacle.AbandonScriptEnabled` exposed via config.
+- Server-side feature flag `AbandonTentacleScriptOnCancellationTimeoutFeatureToggle` (default ON, configured on the test Octopus Server).
 
 ### Where to find things (reference for verification steps below)
 
@@ -289,16 +277,16 @@ Capture baseline thread count and Tentacle process working-set memory. Run M3 te
 3. After all ten runs, deploy a normal project. **Pass:** runs normally, no perf degradation.
 4. Kill all leftover `powershell.exe` / `sleep` processes manually at end of test.
 
-This scenario most clearly distinguishes Option 1 (zero thread cost per abandon) from Option 2 (one thread released per abandon) from any rejected zombie-thread variant (growth per abandon).
+Async should produce zero thread cost per abandon; any growth across runs means the implementation diverged from the design.
 
-### M5 — Feature flag off (no behaviour change)
+### M5 — Server-side flag off (Tentacle behaves as today)
 
-Set `Tentacle.AbandonScriptEnabled=false`. Restart Tentacle.
+Set the server-side `AbandonTentacleScriptOnCancellationTimeoutFeatureToggle` to OFF in the test Octopus Server. Restart Server. Leave Tentacle untouched.
 
 **Verify:**
-1. **Capability not advertised.** Tentacle systemLog at startup: `grep "AbandonScriptV2" OctopusTentacle.txt` → zero matches in the capabilities list (the exact capability name will be confirmed with the server session). Alternatively: enable Halibut verbose tracing on the server and inspect the `CapabilitiesResponseV2` payload for this Tentacle — confirm the abandon capability is absent.
-2. **Server doesn't call Abandon.** Repeat the M3 setup. Wait for what would have been the server's abandon timeout. Server log: `grep "AbandonScript" OctopusServer.txt` → zero matches for this task ID.
-3. **Tentacle stays wedged.** Confirms today's behaviour is preserved. Subsequent deployment to this Tentacle queues with "Waiting for the script in task..." — verify by attempting a deploy and observing the queue message.
+1. **Server doesn't dispatch Abandon.** Repeat the M3 setup. Wait past the would-be 2-minute escalation point. Server log: `grep "AbandonScript" OctopusServer.txt` → zero matches for this task ID.
+2. **Tentacle still advertises the capability.** Optional sanity check via Halibut verbose tracing: `CapabilitiesResponseV2` from this Tentacle still contains `AbandonScriptV2`. The flag lives on the Server, not on Tentacle.
+3. **Tentacle stays wedged.** Subsequent deployment to this Tentacle queues with "Waiting for the script in task...". Confirms today's behaviour is preserved when Server has the feature off.
 4. Recovery: restart Tentacle (the existing workaround). Verify subsequent deployments work again.
 
 ### M6 — Workspace cleanup with open handles (Windows-specific)
@@ -366,12 +354,11 @@ To turn the feature flag on by default in a future release: M1–M5 pass on Wind
 - **Feature flag off by default** for the first release. Customer-by-customer opt-in.
 - **Sequence:** after EFT V1 cleanup closes (target end May 2026), before Task Cap 320, targeting Philips' July self-host release.
 - **Telemetry:** count of AbandonScript calls per Tentacle per day. Spike = signal that either Cancel is broken or this feature is masking a different bug.
-- **Soak test pre-release:** 1000 normal scripts with flag ON, verify no resource leak vs. flag OFF baseline.
+- **Soak test pre-release:** 1000 normal scripts with the server-side flag ON, verify no resource leak vs. flag OFF baseline.
 
 ## Open questions for external reviewer
 
-1. **Workspace cleanup policy.** Best-effort + leak + log is the proposed default. Should we instead schedule a janitor task? Disk-fill risk is bounded by feature-flag rarity, but a real customer with frequent abandons could accumulate workspaces.
-2. **Tentacle-side feature flag — is it pulling weight?** The current design has two off-switches: server-side toggle (governs whether server dispatches abandon at all) and a Tentacle-side flag governing capability advertisement. The server-side toggle is the *correct* location because the decision (when to escalate) is server-side. The Tentacle-side flag duplicates protection and adds config burden on every Tentacle host. Defensible if we want per-Tentacle emergency disable for self-hosted customers, but probably YAGNI for first release. Author's lean: drop the Tentacle-side flag. Capability advertisement becomes binary on Tentacle build version, server-side toggle is the sufficient kill-switch. Looking for Luke's read on this.
+1. **Workspace cleanup policy.** Best-effort + leak + log is the proposed default. Should we instead schedule a janitor task? Disk-fill risk is bounded by the rarity of abandons, but a real customer with frequent abandons could accumulate workspaces.
 
 ## Coordination — locked with the server-side session (2026-05-21)
 
@@ -387,13 +374,11 @@ Aligned via Linear thread on EFT-3295 (commenter Jim, both sessions). Items belo
 
 **Capability check is the primary gate.** Server uses `BackwardsCompatibleAsyncCapabilitiesV2Decorator` to query `AbandonScriptV2` once per session. Capability absent → server does not schedule the abandon dispatch at all. The RPC-fail-then-log path stays as a defensive fallback for capability-cache staleness, not the primary path.
 
-**Two independent off-switches:**
+**One off-switch, server-side:** `AbandonTentacleScriptOnCancellationTimeoutFeatureToggle` (default ON). Governs whether server escalates to AbandonScript at all. No Tentacle-side flag — Tentacle's capability advertisement is binary on build version. (Earlier draft had a Tentacle-side flag too; dropped after PR review surfaced that it can't be cleanly toggled at runtime without versioning the service contract.)
 
-- Tentacle-side: `Tentacle.AbandonScriptEnabled` (config flag), default ON. Governs capability advertisement.
-- Server-side: `AbandonTentacleScriptOnCancellationTimeoutFeatureToggle` (server toggle), default ON. Governs whether the server schedules the delayed abandon check at all.
-- Either side can disable; both must be on for the feature to fire.
+**Escalation timing (locked for first release):** 2 minutes. Both V1 and V2 execution pipelines escalate to AbandonScript on their next status-poll once cancellation has been pending that long. Hardcoded on the server toggle class, not configurable. Server-side updated 2026-05-21: trigger switched from a delayed NSB message to a polling-loop check; no new timers on the server side. The Tentacle-side contract is unchanged either way.
 
-**Escalation timing (locked for first release):** Server schedules the abandon dispatch 2 minutes after Cancel is issued and the script hasn't transitioned to Complete. Hardcoded `public static readonly TimeSpan` on the server toggle class, not configurable. May revisit if Luke's open question to the parallel session ("why not align with Force Cancel?") changes the trigger model.
+**Execution-pipeline scope (server-side, 2026-05-21):** V1 *and* V2 server-side execution pipelines call AbandonScript via the same contract. Philips is V1 self-host so V1 is actually the urgent path. Doesn't change anything Tentacle is building.
 
 **Post-abandon flow:**
 
