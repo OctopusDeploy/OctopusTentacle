@@ -342,11 +342,13 @@ namespace Octopus.Tentacle.Startup
             var sc = Path.Combine(system32, "sc.exe");
 
             logFileOnlyLogger.Info($"Executing sc.exe {argumentsToLog}");
-            var exitCode = SilentProcessRunnerExtended.ExecuteCommand(sc,
+            // Sync boundary: Sc() is called from synchronous service-management methods.
+            var exitCode = SilentProcessRunnerExtended.ExecuteCommandAsync(sc,
                 arguments,
                 Environment.CurrentDirectory,
                 output => outputBuilder.AppendLine(output),
-                error => outputBuilder.AppendLine("Error: " + error));
+                error => outputBuilder.AppendLine("Error: " + error))
+                .GetAwaiter().GetResult();
             if (exitCode == 0)
                 logFileOnlyLogger.Info(outputBuilder.ToString());
             else

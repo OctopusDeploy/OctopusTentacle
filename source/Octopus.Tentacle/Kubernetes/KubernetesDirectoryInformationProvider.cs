@@ -55,7 +55,9 @@ namespace Octopus.Tentacle.Kubernetes
         {
             var stdOut = new List<string>();
             var stdErr = new List<string>();
-            var exitCode = silentProcessRunner.ExecuteCommand("du", $"-s -B 1 {directoryPath}", "/", stdOut.Add, stdErr.Add);
+            // Sync boundary: called from IMemoryCache.GetOrCreate factory which is synchronous.
+            var exitCode = silentProcessRunner.ExecuteCommandAsync("du", $"-s -B 1 {directoryPath}", "/", stdOut.Add, stdErr.Add)
+                .GetAwaiter().GetResult();
 
             if (exitCode != 0)
             {

@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Octopus.Tentacle.Core.Diagnostics;
 
 namespace Octopus.Tentacle.Util
@@ -32,7 +33,8 @@ namespace Octopus.Tentacle.Util
         {
             // Try without sudo first
             var commandLineInvocation = new CommandLineInvocation("/bin/bash", $"-c \"systemctl {command} {serviceName}\"");
-            var result = commandLineInvocation.ExecuteCommand();
+            // Sync boundary: RunServiceCommand is called from synchronous service-management helpers.
+            var result = commandLineInvocation.ExecuteCommandAsync().GetAwaiter().GetResult();
             if (result.ExitCode == 0) return true;
 
             // Check if failure is due to authentication/permission issues
@@ -48,7 +50,8 @@ namespace Octopus.Tentacle.Util
             {
                 log.Info($"Permission denied. Retrying 'systemctl {command} {serviceName}' with sudo...");
                 var sudoInvocation = new CommandLineInvocation("/bin/bash", $"-c \"sudo systemctl {command} {serviceName}\"");
-                result = sudoInvocation.ExecuteCommand();
+                // Sync boundary: RunServiceCommand is called from synchronous service-management helpers.
+                result = sudoInvocation.ExecuteCommandAsync().GetAwaiter().GetResult();
                 if (result.ExitCode == 0) return true;
                 
                 usedSudo = true;
