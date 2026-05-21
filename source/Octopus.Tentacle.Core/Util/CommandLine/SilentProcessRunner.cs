@@ -8,25 +8,29 @@ using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
+using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Core.Diagnostics;
+using Octopus.Tentacle.Core.Util;
 
 namespace Octopus.Tentacle.Util
 {
     public static class SilentProcessRunner
     {
-        public static int ExecuteCommand(
+        public static Task<int> ExecuteCommandAsync(
             string executable,
             string arguments,
             string workingDirectory,
             Action<string> debug,
             Action<string> info,
             Action<string> error,
-            CancellationToken cancel)
+            CancellationToken cancel,
+            CancellationToken abandon)
         {
-            return ExecuteCommand(executable, arguments, workingDirectory, debug, info, error, customEnvironmentVariables: null, cancel: cancel);
+            return ExecuteCommandAsync(executable, arguments, workingDirectory, debug, info, error, customEnvironmentVariables: null, cancel: cancel, abandon: abandon);
         }
 
-        public static int ExecuteCommand(
+        public static async Task<int> ExecuteCommandAsync(
             string executable,
             string arguments,
             string workingDirectory,
@@ -34,7 +38,8 @@ namespace Octopus.Tentacle.Util
             Action<string> info,
             Action<string> error,
             IReadOnlyDictionary<string, string>? customEnvironmentVariables = null,
-            CancellationToken cancel = default)
+            CancellationToken cancel = default,
+            CancellationToken abandon = default)
         {
             if (executable == null)
                 throw new ArgumentNullException(nameof(executable));
@@ -109,6 +114,7 @@ namespace Octopus.Tentacle.Util
                     process.StartInfo.CreateNoWindow = true;
                     process.StartInfo.RedirectStandardOutput = true;
                     process.StartInfo.RedirectStandardError = true;
+                    process.EnableRaisingEvents = true;
                     if (PlatformDetection.IsRunningOnWindows)
                     {
                         process.StartInfo.StandardOutputEncoding = encoding;
@@ -135,12 +141,27 @@ namespace Octopus.Tentacle.Util
                            }))
                     {
                         if (cancel.IsCancellationRequested)
-                            DoOurBestToCleanUp(process,  error);
+                            DoOurBestToCleanUp(process, error);
 
                         process.BeginOutputReadLine();
                         process.BeginErrorReadLine();
 
-                        process.WaitForExit();
+                        try
+                        {
+#if NETFRAMEWORK
+                            await WaitForExitAsyncNetFramework(process, abandon).ConfigureAwait(false);
+#else
+                            await process.WaitForExitAsync(abandon).ConfigureAwait(false);
+#endif
+                        }
+                        catch (OperationCanceledException) when (abandon.IsCancellationRequested && !process.HasExited)
+                        {
+                            info("Tentacle has abandoned this script. The underlying script process may still be running on this host.");
+                            SafelyCancelRead(process.CancelErrorRead, debug);
+                            SafelyCancelRead(process.CancelOutputRead, debug);
+                            running = false;
+                            return ScriptExitCodes.AbandonedExitCode;
+                        }
 
                         SafelyCancelRead(process.CancelErrorRead, debug);
                         SafelyCancelRead(process.CancelOutputRead, debug);
@@ -238,6 +259,38 @@ namespace Octopus.Tentacle.Util
             }
         }
 
+#if NETFRAMEWORK
+        // WaitForExitAsync is not available on .NET Framework 4.x; polyfill using Process.Exited event + TaskCompletionSource.
+        static Task WaitForExitAsyncNetFramework(Process process, CancellationToken cancellationToken)
+        {
+            var tcs = new TaskCompletionSource<object?>();
+
+            void OnExited(object? sender, EventArgs e)
+            {
+                tcs.TrySetResult(null);
+            }
+
+            process.Exited += OnExited;
+
+            // Guard against race: process may have already exited before we subscribed.
+            if (process.HasExited)
+            {
+                tcs.TrySetResult(null);
+            }
+
+            if (cancellationToken.CanBeCanceled)
+            {
+                cancellationToken.Register(() =>
+                {
+                    process.Exited -= OnExited;
+                    tcs.TrySetCanceled(cancellationToken);
+                });
+            }
+
+            return tcs.Task;
+        }
+#endif
+
         [DllImport("kernel32.dll", SetLastError = true)]
 #pragma warning disable PC003 // Native API not available in UWP
         static extern bool GetCPInfoEx([MarshalAs(UnmanagedType.U4)]
@@ -251,11 +304,18 @@ namespace Octopus.Tentacle.Util
         {
             public static void TryKillProcessAndChildrenRecursively(Process process)
             {
+                if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleDebugDisableProcessKill)))
+                {
+                    // Test-only no-op: simulate "kill was attempted but didn't terminate the process".
+                    // Only activated when the test harness sets this env var on the Tentacle process.
+                    return;
+                }
+
 #if NETFRAMEWORK
                 TryKillWindowsProcessAndChildrenRecursively(process.Id);
 #endif
 #if !NETFRAMEWORK
-                // Since .NET Core 3.0 there is support for killing a process and it's children 
+                // Since .NET Core 3.0 there is support for killing a process and it's children
                 process.Kill(true);
 #endif
             }
