@@ -225,8 +225,21 @@ namespace Octopus.Tentacle.Tests.Integration.Util
 
             await executeTask;
 
-            script.State.Should().Be(ProcessState.Complete);
-            script.ExitCode.Should().Be(ScriptExitCodes.AbandonedExitCode);
+            try
+            {
+                script.State.Should().Be(ProcessState.Complete);
+                script.ExitCode.Should().Be(ScriptExitCodes.AbandonedExitCode);
+            }
+            finally
+            {
+                if (File.Exists(pidFile)
+                    && int.TryParse(SafelyReadPidFile(pidFile).Trim(), out var pid)
+                    && pid > 0)
+                {
+                    try { System.Diagnostics.Process.GetProcessById(pid).Kill(); }
+                    catch { /* process already exited */ }
+                }
+            }
         }
 
         static async Task WaitForPidFileAsync(string pidFile, TimeSpan timeout)
