@@ -381,7 +381,9 @@ write-output 'This should never be printed'
                     _ => { },
                     customEnvironmentVariables: new Dictionary<string, string>(),
                     cancel: CancellationToken.None,
-                    abandon: CancellationToken.None).GetAwaiter().GetResult();
+                    abandon: CancellationToken.None)
+                    // Safe: static helper, no synchronisation context.
+                    .GetAwaiter().GetResult();
 
                 if (result == 0)
                 {

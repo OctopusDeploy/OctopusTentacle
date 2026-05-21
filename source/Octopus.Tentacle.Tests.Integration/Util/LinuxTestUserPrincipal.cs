@@ -22,6 +22,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         static void RunCommand(string arguments, bool failOnNonZeroExitCode = true)
         {
             var commandLineInvocation = new CommandLineInvocation("/bin/bash", arguments);
+            // Safe: constructor-time helper, no synchronisation context.
             var result = commandLineInvocation.ExecuteCommandAsync().GetAwaiter().GetResult();
 
             foreach (var line in result.Errors)
