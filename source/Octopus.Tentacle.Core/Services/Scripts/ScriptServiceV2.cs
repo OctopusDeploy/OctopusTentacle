@@ -141,6 +141,12 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             return GetResponse(command.Ticket, command.LastLogSequence, runningScript?.Process);
         }
 
+        public async Task<ScriptStatusResponseV2> AbandonScriptAsync(AbandonScriptCommandV2 command, CancellationToken cancellationToken)
+        {
+            await Task.CompletedTask;
+            throw new NotImplementedException("Implemented in Task 11");
+        }
+
         public async Task CompleteScriptAsync(CompleteScriptCommandV2 command, CancellationToken cancellationToken)
         {
             await Task.CompletedTask;
