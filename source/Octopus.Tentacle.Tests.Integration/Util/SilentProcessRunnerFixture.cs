@@ -279,10 +279,13 @@ while ((Get-Date) -lt $deadline) {
         [Test]
         public async Task AbandonToken_ShouldReturnAbandonedExitCodeWithoutKillingProcess()
         {
-            var command = PlatformDetection.IsRunningOnWindows ? "powershell.exe" : "/bin/bash";
+            using var tempDir = new TemporaryDirectory();
+            var pidFile = Path.Combine(tempDir.DirectoryPath, "process.pid");
+
+            var abandonCommand = PlatformDetection.IsRunningOnWindows ? "powershell.exe" : "/bin/bash";
             var arguments = PlatformDetection.IsRunningOnWindows
-                ? "-NoProfile -NonInteractive -Command \"Start-Sleep -Seconds 300\""
-                : "-c \"sleep 300\"";
+                ? $"-NoProfile -NonInteractive -Command \"$PID | Out-File -FilePath '{pidFile}' -Encoding ASCII; Start-Sleep -Seconds 300\""
+                : $"-c \"echo $$ > '{pidFile}' && sleep 300\"";
 
             using var cancelCts = new CancellationTokenSource();
             using var abandonCts = new CancellationTokenSource();
@@ -292,7 +295,7 @@ while ((Get-Date) -lt $deadline) {
             var sw = Stopwatch.StartNew();
 
             var task = Task.Run(async () => await SilentProcessRunner.ExecuteCommandAsync(
-                command,
+                abandonCommand,
                 arguments,
                 Environment.CurrentDirectory,
                 debug: _ => { },
@@ -302,16 +305,27 @@ while ((Get-Date) -lt $deadline) {
                 cancel: cancelCts.Token,
                 abandon: abandonCts.Token));
 
-            // Give the process ~500ms to actually start before we abandon
-            await Task.Delay(500);
+            // Wait deterministically for the process to write its PID before we abandon
+            await WaitForGrandchildSpawnAsync(pidFile, TimeSpan.FromSeconds(30));
             abandonCts.Cancel();
 
-            var exitCode = await task;
-            sw.Stop();
+            try
+            {
+                var exitCode = await task;
+                sw.Stop();
 
-            sw.Elapsed.Should().BeLessThan(TimeSpan.FromSeconds(2), "abandon should return promptly");
-            exitCode.Should().Be(ScriptExitCodes.AbandonedExitCode);
-            infoMessages.ToString().Should().Contain("Tentacle has abandoned this script");
+                sw.Elapsed.Should().BeLessThan(TimeSpan.FromSeconds(2), "abandon should return promptly");
+                exitCode.Should().Be(ScriptExitCodes.AbandonedExitCode);
+                infoMessages.ToString().Should().Contain("Tentacle has abandoned this script");
+            }
+            finally
+            {
+                // Force-kill the sleeping process to avoid leaking it on CI
+                if (File.Exists(pidFile) && int.TryParse(SafelyReadAllText(pidFile).Trim(), out var pid) && pid > 0)
+                {
+                    try { Process.GetProcessById(pid).Kill(); } catch { /* already gone */ }
+                }
+            }
         }
 
         static async Task WaitForGrandchildSpawnAsync(string pidFile, TimeSpan timeout)
