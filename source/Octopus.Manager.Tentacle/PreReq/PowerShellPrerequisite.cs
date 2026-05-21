@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading;
 using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Util;
 
@@ -33,12 +34,17 @@ namespace Octopus.Manager.Tentacle.PreReq
             // to detect 3.0, it failed to detect 4. Going the direct route:
             try
             {
-                SilentProcessRunnerExtended.ExecuteCommand(
+                // Sync boundary: prerequisite check runs from the WPF installer
+                // (Octopus.Manager.Tentacle) on a ThreadPool.QueueUserWorkItem worker
+                // with no synchronisation context. GetAwaiter().GetResult() is deadlock-safe.
+                SilentProcessRunnerExtended.ExecuteCommandAsync(
                     powerShellExe,
                     arguments,
                     ".",
                     stdOut.WriteLine,
-                    s => stdErr.WriteLine($"ERR: {s}"));
+                    s => stdErr.WriteLine($"ERR: {s}"),
+                    cancel: CancellationToken.None,
+                    abandon: CancellationToken.None).GetAwaiter().GetResult();
 
                 var outputText = stdOut.ToString();
                 new SystemLog().Verbose("PowerShell prerequisite check output: " + outputText);
