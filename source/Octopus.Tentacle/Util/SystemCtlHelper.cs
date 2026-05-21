@@ -34,7 +34,7 @@ namespace Octopus.Tentacle.Util
             // Try without sudo first
             var commandLineInvocation = new CommandLineInvocation("/bin/bash", $"-c \"systemctl {command} {serviceName}\"");
             // Sync boundary: RunServiceCommand is called from synchronous service-management
-            // helpers (StartService, RestopService, etc.), which are themselves called from
+            // helpers (StartService, RestartService, etc.), which are themselves called from
             // the Tentacle service-management CLI on a threadpool worker with no sync context.
             // GetAwaiter().GetResult() is deadlock-safe here.
             var result = commandLineInvocation.ExecuteCommandAsync().GetAwaiter().GetResult();
