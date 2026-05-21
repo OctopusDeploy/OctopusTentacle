@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Tentacle.CommonTestUtils;
+using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.TestAttributes;
 using Octopus.Tentacle.Util;
@@ -273,6 +274,44 @@ while ((Get-Date) -lt $deadline) {
             {
                 TryKillGrandchild(grandchildPidFile);
             }
+        }
+
+        [Test]
+        public async Task AbandonToken_ShouldReturnAbandonedExitCodeWithoutKillingProcess()
+        {
+            var command = PlatformDetection.IsRunningOnWindows ? "powershell.exe" : "/bin/bash";
+            var arguments = PlatformDetection.IsRunningOnWindows
+                ? "-NoProfile -NonInteractive -Command \"Start-Sleep -Seconds 300\""
+                : "-c \"sleep 300\"";
+
+            using var cancelCts = new CancellationTokenSource();
+            using var abandonCts = new CancellationTokenSource();
+
+            var infoMessages = new StringBuilder();
+
+            var sw = Stopwatch.StartNew();
+
+            var task = Task.Run(async () => await SilentProcessRunner.ExecuteCommandAsync(
+                command,
+                arguments,
+                Environment.CurrentDirectory,
+                debug: _ => { },
+                info: msg => { lock (infoMessages) infoMessages.AppendLine(msg); },
+                error: _ => { },
+                customEnvironmentVariables: null,
+                cancel: cancelCts.Token,
+                abandon: abandonCts.Token));
+
+            // Give the process ~500ms to actually start before we abandon
+            await Task.Delay(500);
+            abandonCts.Cancel();
+
+            var exitCode = await task;
+            sw.Stop();
+
+            sw.Elapsed.Should().BeLessThan(TimeSpan.FromSeconds(2), "abandon should return promptly");
+            exitCode.Should().Be(ScriptExitCodes.AbandonedExitCode);
+            infoMessages.ToString().Should().Contain("Tentacle has abandoned this script");
         }
 
         static async Task WaitForGrandchildSpawnAsync(string pidFile, TimeSpan timeout)
