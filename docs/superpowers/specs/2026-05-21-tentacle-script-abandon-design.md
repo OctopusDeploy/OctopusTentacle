@@ -1,6 +1,6 @@
 # Tentacle script abandon — design
 
-**Status:** Draft, ready for implementation planning. Async approach locked; contract locked with the parallel server-side session; workspace cleanup policy locked; no open questions outstanding.
+**Status:** Draft, ready for implementation planning. Contract aligned with the parallel server-side session.
 **Ticket:** [EFT-3295](https://linear.app/octopus/issue/EFT-3295/tentacle-script-abandonment-to-release-the-mutex)
 **ADR:** [ADR-042 — Defer server-task Abandoned state](https://github.com/OctopusDeploy/adr/pull/226)
 **Parallel work:** Server-side (ProcessExecution layer) is being designed in a separate session and will consume the contract proposed here.
@@ -31,7 +31,7 @@ Out of scope:
 - Killing the runaway OS process.
 - Server-task Abandoned UI state — deferred by ADR-042; task continues to surface as Cancelled.
 
-## Section 1 — Contract surface (locked)
+## Section 1 — Contract surface
 
 Add a method to existing `IScriptServiceV2`. Do NOT introduce V3 — the convention here is method-addition + capability negotiation.
 
@@ -59,7 +59,7 @@ public class AbandonScriptCommandV2
 
 **Why a new verb (not a "force" flag on Cancel).** Different semantics: Cancel = "try to stop the OS process gracefully". Abandon = "give up tracking; release the mutex; the OS process may still be running". Two verbs map cleanly to ProcessExecution's two-step escalation (cancel first, abandon if cancel doesn't propagate).
 
-## Section 2 — Mutex release mechanics (locked: async)
+## Section 2 — Mutex release mechanics
 
 **The core constraint.** `RunningScript.Execute()` acquires `ScriptIsolationMutex` inside a `using` block that wraps a synchronous call to `SilentProcessRunner.ExecuteCommand`. `ExecuteCommand` blocks on `process.WaitForExit()` (line 143). When `WaitForExit` never returns:
 1. The mutex is welded shut (the `using`'s Dispose never runs).
@@ -73,7 +73,7 @@ Both problems need to be solved. The mutex problem is the ticket's primary deliv
 - **Manual `Thread` instead of `Task`.** Same leak problem, just trades threadpool for kernel thread handles + stack memory.
 - **`Thread.Abort` / `Thread.Interrupt` / `TerminateThread` P/Invoke.** No safe managed mechanism to release a thread parked in unmanaged code. `TerminateThread` doesn't unwind stack or release locks; can corrupt Tentacle's own state.
 - **Out-of-process script worker.** Cleanly isolates the stuck-process problem from Tentacle, but is a massive refactor far outside EFT-3295's scope. Worth a separate proposal someday.
-- **Sync cancellable wait via `ManualResetEventSlim.Wait()`** (the earlier "Option 2" we held open for external input). Replaces only the blocking primitive inside `SilentProcessRunner`, leaves everything else synchronous. Smaller diff, but preserves a parked thread per running script in the normal case (same cost as today) and doesn't move the codebase toward async. Rejected in favour of the async approach below — direction matters, not just diff size.
+- **Sync cancellable wait via `ManualResetEventSlim.Wait()`.** Replaces only the blocking primitive inside `SilentProcessRunner`, leaves everything else synchronous. Smaller diff, but preserves a parked thread per running script in the normal case (same cost as today) and doesn't move the codebase toward async. Rejected in favour of the async approach below. Tentacle's existing test coverage gives us confidence the wider async migration is safe to ship, so the smaller-diff defensiveness isn't compelling.
 
 ### The chosen approach: async cancellable wait
 
@@ -96,6 +96,8 @@ using (cancel.Register(() => DoOurBestToCleanUp(process, error)))
     catch (OperationCanceledException) when (abandon.IsCancellationRequested && !process.HasExited)
     {
         info("Tentacle has abandoned this script. The underlying script process may still be running on this host.");
+        SafelyCancelRead(process.CancelErrorRead, debug);
+        SafelyCancelRead(process.CancelOutputRead, debug);
         return ScriptExitCodes.AbandonedExitCode;
     }
 
