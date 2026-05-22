@@ -80,13 +80,7 @@ namespace Octopus.Tentacle.Commands
             Options.Add("tentacle-comms-port=", "When using passive communication, the comms port that the Octopus Server is instructed to call back on to reach this machine; defaults to the configured listening port", s => tentacleCommsPort = int.Parse(s));
         }
 
-        protected override void Start()
-        {
-            base.Start();
-            StartAsync().GetAwaiter().GetResult();
-        }
-
-        async Task StartAsync()
+        protected override async Task StartAsync()
         {
             CheckArgs();
 
