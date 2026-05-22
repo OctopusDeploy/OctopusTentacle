@@ -59,6 +59,10 @@ namespace Octopus.Tentacle.Kubernetes.Configuration
             }
         }
 
+        // Sync compat wrappers required by IWritableKeyValueStore. Callers that reach these
+        // methods run on plain thread-pool workers with no SynchronizationContext, so blocking
+        // with .GetAwaiter().GetResult() is deadlock-safe. Hot-path callers use the Async
+        // variants directly (SaveAsync, SetAsync, RemoveAsync).
         public bool Set(string name, string? value, ProtectionLevel protectionLevel = ProtectionLevel.None)
             => SetAsync(name, value, protectionLevel, CancellationToken.None).GetAwaiter().GetResult();
 

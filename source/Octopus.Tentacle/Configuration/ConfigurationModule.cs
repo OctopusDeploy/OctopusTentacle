@@ -105,6 +105,10 @@ namespace Octopus.Tentacle.Configuration
                 {
                     var configMapService = c.Resolve<IKubernetesConfigMapService>();
                     var encryptor = c.Resolve<IKubernetesMachineKeyEncryptor>();
+                    // We're inside an Autofac sync factory delegate — Autofac's Register() API has no
+                    // async overload. Container build happens once at startup on a plain thread-pool
+                    // worker with no SynchronizationContext, so blocking with .GetAwaiter().GetResult()
+                    // is deadlock-safe here.
                     return ConfigMapKeyValueStore.CreateAsync(configMapService, encryptor, CancellationToken.None).GetAwaiter().GetResult();
                 })
                 .SingleInstance();
@@ -157,6 +161,10 @@ namespace Octopus.Tentacle.Configuration
                 {
                     var configMapService = c.Resolve<IKubernetesConfigMapService>();
                     var encryptor = c.Resolve<IKubernetesMachineKeyEncryptor>();
+                    // We're inside an Autofac sync factory delegate — Autofac's Register() API has no
+                    // async overload. Container build happens once at startup on a plain thread-pool
+                    // worker with no SynchronizationContext, so blocking with .GetAwaiter().GetResult()
+                    // is deadlock-safe here.
                     return ConfigMapKeyValueStore.CreateAsync(configMapService, encryptor, CancellationToken.None).GetAwaiter().GetResult();
                 })
                 .SingleInstance();

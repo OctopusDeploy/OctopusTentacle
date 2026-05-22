@@ -47,8 +47,8 @@ namespace Octopus.Tentacle.Kubernetes.Crypto
             using var aes = Aes.Create();
             using var dec = aes.CreateDecryptor(key, iv);
             var fromBase = Convert.FromBase64String(encrypted);
-            var asd = dec.TransformFinalBlock(fromBase, 0, fromBase.Length);
-            return Encoding.UTF8.GetString(asd);
+            var decryptedBytes = dec.TransformFinalBlock(fromBase, 0, fromBase.Length);
+            return Encoding.UTF8.GetString(decryptedBytes);
         }
 
         [MemberNotNull(nameof(key), nameof(iv))]
