@@ -56,13 +56,7 @@ namespace Octopus.Tentacle.Commands
             Options.Add("reuse-server-thumbprint", "Reuse the Server Thumbprint from the first trusted server instance currently configured", _ => reuseThumbprint = true);
         }
 
-        protected override void Start()
-        {
-            base.Start();
-            StartAsync().GetAwaiter().GetResult();
-        }
-
-        async Task StartAsync()
+        protected override async Task StartAsync()
         {
             if (!reuseThumbprint)
             {

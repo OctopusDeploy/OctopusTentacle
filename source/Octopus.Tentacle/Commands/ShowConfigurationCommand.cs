@@ -58,14 +58,8 @@ namespace Octopus.Tentacle.Commands
             apiEndpointOptions = AddOptionSet(new ApiEndpointOptions(Options) { Optional = true });
         }
 
-        protected override void Start()
+        protected override async Task StartAsync()
         {
-            StartAsync().GetAwaiter().GetResult();
-        }
-
-        async Task StartAsync()
-        {
-            base.Start();
 
             DictionaryKeyValueStore outputFile;
 

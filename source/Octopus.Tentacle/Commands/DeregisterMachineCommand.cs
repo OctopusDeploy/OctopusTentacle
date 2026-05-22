@@ -47,13 +47,7 @@ namespace Octopus.Tentacle.Commands
             Options.Add("space=", "The space which this machine will be deregistered from, - e.g. 'Finance Department' where Finance Department is the name of an existing space; the default value is the Default space, if one is designated.", s => spaceName = s);
         }
 
-        protected override void Start()
-        {
-            base.Start();
-            StartAsync().GetAwaiter().GetResult();
-        }
-
-        async Task StartAsync()
+        protected override async Task StartAsync()
         {
             //if we are on a polling tentacle with a polling proxy set up, use the api through that proxy
             var proxyOverride = proxyConfig.ParseToWebProxy(configuration.Value.PollingProxyConfiguration);

@@ -76,8 +76,6 @@ namespace Octopus.Tentacle.Startup
 
         protected abstract ApplicationName ApplicationName { get; }
 
-        public int Run() => RunAsync().GetAwaiter().GetResult();
-
         public async Task<int> RunAsync()
         {
             var delayedLog = new DelayedLog();
