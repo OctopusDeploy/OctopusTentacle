@@ -1,5 +1,6 @@
 using System;
 using System.Net;
+using System.Threading.Tasks;
 using Autofac;
 using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Commands;
@@ -38,9 +39,9 @@ namespace Octopus.Tentacle
 
         protected override ApplicationName ApplicationName => ApplicationName.Tentacle;
 
-        static int Main(string[] args)
+        static async Task<int> Main(string[] args)
         {
-            return new Program(args).Run();
+            return await new Program(args).RunAsync();
         }
 
         public override IContainer BuildContainer(StartUpInstanceRequest startUpInstanceRequest)

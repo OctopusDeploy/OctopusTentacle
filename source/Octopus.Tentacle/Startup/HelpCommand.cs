@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Internals.Options;
@@ -29,9 +30,9 @@ namespace Octopus.Tentacle.Startup
 
         public string Format { get; set; } = TextFormat;
 
-        public override void Start(string[] commandLineArguments, ICommandRuntime commandRuntime, OptionSet commonOptions)
+        public override async Task StartAsync(string[] commandLineArguments, ICommandRuntime commandRuntime, OptionSet commonOptions)
         {
-            base.Start(commandLineArguments, commandRuntime, commonOptions);
+            await base.StartAsync(commandLineArguments, commandRuntime, commonOptions);
 
             var processPath = Assembly.GetEntryAssembly()?.FullProcessPath() ?? throw new Exception("Could not get path of the current process");
             var executable = PlatformDetection.IsRunningOnWindows
@@ -67,10 +68,6 @@ namespace Octopus.Tentacle.Startup
         protected override void UnrecognizedArguments(IList<string> arguments)
         {
             // Ignore - we're showing help!
-        }
-
-        protected override void Start()
-        {
         }
 
         void PrintCommandHelp(string executable, ICommand command, CommandMetadata metadata, OptionSet commonOptions)
