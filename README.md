@@ -39,7 +39,7 @@ We use the [Octopus Tentacle project in our private Octopus server](https://depl
 Deployments happen automatically - a merge to `main` will trigger a build and a deployment - continuous delivery for the win!
 
 For internal developers, on closing an issue, ReleaseBot will ask you for release notes.
-For external developers, or if ReleaseBot fails for some reason, please add a comment to the issue `Release note: XXXX` to ensure release notes are generated correctly.
+For external developers, or if ReleaseBot fails for some reason, add a comment to the issue `Release note: XXXX` to ensure release notes are generated correctly.
 
 An easy way to find the code associated with a particular version of Tentacle is to check out the [tags](https://github.com/OctopusDeploy/OctopusTentacle/tags). 
 
