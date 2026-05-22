@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
@@ -30,25 +31,25 @@ namespace Octopus.Tentacle.Tests.Startup
 
         [Test]
         [WindowsTest]
-        public void ThrowsControlledFailureExceptionWhenCreateOrDeleteIsNotSpecified()
+        public async Task ThrowsControlledFailureExceptionWhenCreateOrDeleteIsNotSpecified()
         {
-            var ex = Assert.Throws<ControlledFailureException>(() => command.Start(new string[0], Substitute.For<ICommandRuntime>(), new OptionSet()));
+            var ex = await Assert.ThrowsAsync<ControlledFailureException>(async () => await command.StartAsync(new string[0], Substitute.For<ICommandRuntime>(), new OptionSet()));
             ex.Message.Should().Be("Invalid arguments. Please specify either --create or --delete.");
         }
 
         [Test]
         [LinuxTest]
-        public void ThrowsControlledFailureWhenRunOnLinux()
+        public async Task ThrowsControlledFailureWhenRunOnLinux()
         {
-            var ex = Assert.Throws<ControlledFailureException>(() => command.Start(new[] { "--instances", "*" }, Substitute.For<ICommandRuntime>(), new OptionSet()));
+            var ex = await Assert.ThrowsAsync<ControlledFailureException>(async () => await command.StartAsync(new[] { "--instances", "*" }, Substitute.For<ICommandRuntime>(), new OptionSet()));
             ex.Message.Should().Be("This command is only supported on Windows.");
         }
 
         [Test]
         [WindowsTest]
-        public void ChecksThatUserIsElevated()
+        public async Task ChecksThatUserIsElevated()
         {
-            command.Start(new [] { "--create" }, Substitute.For<ICommandRuntime>(), new OptionSet());
+            await command.StartAsync(new[] { "--create" }, Substitute.For<ICommandRuntime>(), new OptionSet());
             windowsLocalAdminRightsChecker.Received(1).AssertIsRunningElevated();
         }
     }

@@ -27,14 +27,6 @@ namespace Octopus.Tentacle.Startup
             this.displayName = displayName;
         }
 
-        public void Run(Action<ICommandRuntime> start, Action shutdown)
-        {
-            Console.ResetColor();
-            SafelySetConsoleTitle(displayName);
-            start(this);
-            Stop(shutdown);
-        }
-
         public async Task RunAsync(Func<ICommandRuntime, Task> start, Action shutdown)
         {
             Console.ResetColor();

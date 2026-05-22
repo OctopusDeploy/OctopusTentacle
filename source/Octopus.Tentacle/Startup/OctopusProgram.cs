@@ -558,13 +558,6 @@ namespace Octopus.Tentacle.Startup
             return commonOptions.Parse(commandLineArguments).ToArray();
         }
 
-        void Start(ICommandRuntime commandRuntime)
-        {
-            if (responsibleCommand == null)
-                throw new InvalidOperationException("Responsible command not set");
-            responsibleCommand.Start(commandLineArguments, commandRuntime, commonOptions);
-        }
-
         Task StartAsync(ICommandRuntime commandRuntime)
         {
             if (responsibleCommand == null)

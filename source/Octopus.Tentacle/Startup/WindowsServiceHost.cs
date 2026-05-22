@@ -16,23 +16,6 @@ namespace Octopus.Tentacle.Startup
             this.log = log;
         }
 
-        public void Run(Action<ICommandRuntime> start, Action shutdown)
-        {
-            log.Trace("Creating the Windows Service host adapter");
-
-            var startService = new Action(delegate
-            {
-                log.Trace("Starting the Windows Service");
-                start(this);
-                log.Info("The Windows Service has started");
-            });
-
-            var adapter = new WindowsServiceAdapter(startService, () => Stop(shutdown), log);
-
-            log.Trace("Running the service host adapter");
-            ServiceBase.Run(adapter);
-        }
-
         public Task RunAsync(Func<ICommandRuntime, Task> start, Action shutdown)
         {
             log.Trace("Creating the Windows Service host adapter");

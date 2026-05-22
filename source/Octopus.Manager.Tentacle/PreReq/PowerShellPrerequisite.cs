@@ -34,9 +34,14 @@ namespace Octopus.Manager.Tentacle.PreReq
             // to detect 3.0, it failed to detect 4. Going the direct route:
             try
             {
-                // Sync boundary: prerequisite check runs from the WPF installer
-                // (Octopus.Manager.Tentacle) on a ThreadPool.QueueUserWorkItem worker
-                // with no synchronisation context. GetAwaiter().GetResult() is deadlock-safe.
+                // We're in the WPF installer prerequisite check. IPrerequisite.Check() must return
+                // synchronously — there's no async version of the interface — so we block on the async
+                // call with .GetAwaiter().GetResult().
+                // This is safe because we're on a plain thread-pool worker. The risk with blocking on
+                // async is a deadlock: if the async work needs to resume on the same thread that's
+                // blocked waiting for it, neither can make progress. Thread-pool workers don't have
+                // that constraint — when the async work finishes it can pick up on any free thread,
+                // not specifically this one, so the block resolves normally.
                 SilentProcessRunnerExtended.ExecuteCommandAsync(
                     powerShellExe,
                     arguments,

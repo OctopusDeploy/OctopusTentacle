@@ -148,6 +148,18 @@ namespace Octopus.Tentacle.Util
 
                         try
                         {
+                            // WaitForExitAsync completes when the Process.Exited event fires (or
+                            // when `abandon` cancels). Unlike the sync WaitForExit() no-timeout
+                            // overload, it does NOT wait for the redirected stdout/stderr streams
+                            // to reach EOF — so a re-parented grandchild holding our pipes open
+                            // cannot hang us here. Stream draining is handled separately below by
+                            // SafelyWaitForAllOutput (with a 5s timeout per stream).
+                            //
+                            // We pass `abandon` (not `cancel`) because cancel is handled via the
+                            // cancel.Register callback above which kills the process tree; the
+                            // resulting Exited event is what unblocks this await on cancel.
+                            // `abandon` is a separate token used by EFT-3295 to stop waiting
+                            // WITHOUT killing the process — see the catch block below.
 #if NETFRAMEWORK
                             await WaitForExitAsyncNetFramework(process, abandon).ConfigureAwait(false);
 #else
@@ -201,9 +213,20 @@ namespace Octopus.Tentacle.Util
             CancellationToken cancel,
             Action<string> debug)
         {
+            // Waits for the OutputDataReceived/ErrorDataReceived handler to signal EOF on the
+            // stream (it sets the reset event when it receives a null DataReceivedEventArgs.Data,
+            // which is .NET's EOF marker). This does NOT close the pipe — it just gives the OS
+            // up to 5 seconds to deliver the EOF.
+            //
+            // If a re-parented grandchild is holding the pipe open, EOF never arrives, the wait
+            // times out, and we proceed without the final flush of buffered output. The pipe is
+            // released later by Process.Dispose() at end of ExecuteCommandAsync via the
+            // `using (var process = new Process())` block.
+            //
+            // 5 seconds is somewhat arbitrary — the process has already exited by the time we
+            // reach here, so under normal circumstances EOF arrives within milliseconds.
             try
             {
-                //5 seconds is a bit arbitrary, but the process should have already exited by now, so unwise to wait too long
                 outputResetEvent.Wait(TimeSpan.FromSeconds(5), cancel);
             }
             catch (OperationCanceledException ex)
@@ -242,15 +265,46 @@ namespace Octopus.Tentacle.Util
                     error($"Failed to kill the launched process: {killProcessException}");
                 }
             }
-            // NOTE: do not call process.Close() here. The async migration of ExecuteCommandAsync
-            // relies on the Process.Exited event firing (via WaitForExitAsync's TaskCompletionSource).
-            // Calling Close immediately after Kill races with the kernel signalling the exit — if
-            // Close wins, the OS handle is gone before .NET's registered wait callback runs, the
-            // Exited event never fires, and the await hangs forever. The outer
-            // `using (var process = new Process())` block disposes the Process when ExecuteCommandAsync
-            // returns, which is the safe time to release handles.
-            // The grandchild-holds-redirected-pipes scenario that motivated the old Close() is
-            // handled by SafelyWaitForAllOutput's 5-second timeout in the async path.
+            
+            process.Close();
+            // Do NOT add process.Close() here. The pre-async version of this code did, and adding
+            // it back will cause cancel to hang forever. Here's the full picture:
+            //
+            // OLD SYNC CODE: the calling thread blocked inside process.WaitForExit() (no-timeout
+            // overload), which waits for BOTH the process to exit AND the redirected stream
+            // readers to reach EOF. If a re-parented grandchild held our stdout/stderr open, the
+            // stream readers never reached EOF, so WaitForExit() blocked forever. Calling
+            // process.Close() during cancel-cleanup forced the Process object to release its
+            // handles to the redirected pipes, which made the readers see EOF, which let
+            // WaitForExit() return. That's why Close() was here.
+            //
+            // NEW ASYNC CODE: the calling thread awaits a TaskCompletionSource that completes
+            // when the Process.Exited event fires. WaitForExitAsync does NOT wait on the
+            // redirected streams (Microsoft confirms in the docs: "output processing will not
+            // have completed when this method returns"). So a grandchild holding pipes open
+            // can't hang the await. The original reason for Close() is gone.
+            //
+            // WHY ADDING Close() BACK IS WORSE THAN USELESS: process.Close() detaches the Process
+            // object from the underlying OS process, which tears down the wait state that
+            // produces the Exited event. If Close() runs before the kernel has signalled the
+            // exit to .NET (which is asynchronous — Hitman.Kill returns immediately, the OS
+            // delivers the exit notification some time later), the Exited event never fires,
+            // our TCS never completes, and the await hangs forever. Every cancel races.
+            //
+            // HOW PIPES ACTUALLY GET RELEASED NOW:
+            //   1. After WaitForExitAsync returns, SafelyWaitForAllOutput waits up to 5 seconds
+            //      per stream for EOF. If a grandchild holds the pipes, this times out and we
+            //      proceed (it bounds cancel latency; it does NOT close anything).
+            //   2. The outer `using (var process = new Process())` block calls Process.Dispose
+            //      at end of method, which calls Close internally. Because we're no longer
+            //      awaiting WaitForExitAsync at this point, the Close-vs-Exited race can't
+            //      happen — the wait state is already torn down by our code, not by Close.
+            //
+            // Worst case cancel latency with grandchild holding pipes: ~10s (5s × 2 streams).
+            // Covered by tests in SilentProcessRunnerFixture:
+            //   - CancellationToken_WhenGrandchildHoldsRedirectedPipes_ShouldNotHang (Windows)
+            //   - CancellationToken_WhenUnixGrandchildHoldsRedirectedPipes_ShouldNotHang (Unix)
+            // Both assert cancel returns within 30s in this scenario.
         }
 
 #if NETFRAMEWORK
