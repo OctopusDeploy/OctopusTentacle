@@ -24,6 +24,7 @@ namespace Octopus.Tentacle.Scripts
         void WriteFile(string filename, string contents);
         void CopyFile(string sourceFilePath, string destFileName, bool overwrite);
         void CheckReadiness();
+        Task CheckReadinessAsync(CancellationToken cancellationToken = default);
         string? TryReadFile(string filename);
     }
 }

@@ -72,7 +72,7 @@ namespace Octopus.Tentacle.Core.Services.FileTransfer
             if (parentDirectory == null)
                 throw new InvalidOperationException($"Unable to determine parent directory from path {fullPath}");
             fileSystem.EnsureDirectoryExists(parentDirectory);
-            fileSystem.EnsureDiskHasEnoughFreeSpace(parentDirectory, upload.Length);
+            await fileSystem.EnsureDiskHasEnoughFreeSpaceAsync(parentDirectory, upload.Length, cancellationToken);
 
             log.Trace("Copying uploaded data stream to: " + fullPath);
             await upload.Receiver().SaveToAsync(fullPath, CancellationToken.None);

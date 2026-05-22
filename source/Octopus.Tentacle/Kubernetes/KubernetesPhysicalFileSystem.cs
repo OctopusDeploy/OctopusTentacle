@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Core.Util;
@@ -26,12 +27,17 @@ namespace Octopus.Tentacle.Kubernetes
 
         public override void EnsureDiskHasEnoughFreeSpace(string directoryPath, long requiredSpaceInBytes)
         {
-            // We're overriding a sync interface method (IOctopusFileSystem) that's called from
-            // contexts we can't make async (config writes, script workspace readiness checks).
-            // We block on the async call with .GetAwaiter().GetResult().
-            // This is safe because all callers run on plain thread-pool workers — no captured
-            // context — so the async work can resume on any free thread when it finishes.
-            var spaceInformation = GetStorageInformationAsync().GetAwaiter().GetResult();
+            // Sync bridge: all hot-path callers (ScriptServiceV2, FileTransferService) now use
+            // EnsureDiskHasEnoughFreeSpaceAsync. This sync overload remains for backward compat
+            // and is only reached from inherently-sync boundaries (config stores) that never
+            // exercise the Kubernetes path in production. The GetAwaiter here is acceptable
+            // because those callers run on plain thread-pool workers with no SynchronizationContext.
+            EnsureDiskHasEnoughFreeSpaceAsync(directoryPath, requiredSpaceInBytes).GetAwaiter().GetResult();
+        }
+
+        public override async Task EnsureDiskHasEnoughFreeSpaceAsync(string directoryPath, long requiredSpaceInBytes, CancellationToken cancellationToken = default)
+        {
+            var spaceInformation = await GetStorageInformationAsync();
             Log.Verbose($"Directory to be checked is {HomeDir}, script directory is {directoryPath}, required space is {requiredSpaceInBytes} bytes");
 
             // If we can't get the free bytes, we just skip the check

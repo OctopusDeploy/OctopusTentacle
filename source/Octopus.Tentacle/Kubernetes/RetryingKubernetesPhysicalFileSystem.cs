@@ -124,6 +124,12 @@ namespace Octopus.Tentacle.Kubernetes
             syncRetryPolicy.Execute(() => inner.EnsureDiskHasEnoughFreeSpace(directoryPath, requiredSpaceInBytes));
         }
 
+        public Task EnsureDiskHasEnoughFreeSpaceAsync(string directoryPath, CancellationToken cancellationToken = default)
+            => asyncRetryPolicy.ExecuteAsync(() => inner.EnsureDiskHasEnoughFreeSpaceAsync(directoryPath, cancellationToken));
+
+        public Task EnsureDiskHasEnoughFreeSpaceAsync(string directoryPath, long requiredSpaceInBytes, CancellationToken cancellationToken = default)
+            => asyncRetryPolicy.ExecuteAsync(() => inner.EnsureDiskHasEnoughFreeSpaceAsync(directoryPath, requiredSpaceInBytes, cancellationToken));
+
         public string GetFullPath(string relativeOrAbsoluteFilePath)
         {
             return syncRetryPolicy.Execute(() => inner.GetFullPath(relativeOrAbsoluteFilePath));

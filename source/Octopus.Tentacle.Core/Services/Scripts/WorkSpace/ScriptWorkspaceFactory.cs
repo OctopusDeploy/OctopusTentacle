@@ -53,6 +53,15 @@ namespace Octopus.Tentacle.Scripts
             return workspace;
         }
 
+        public async Task<IScriptWorkspace> GetWorkspaceAsync(ScriptTicket ticket, WorkspaceReadinessCheck readinessCheck, CancellationToken cancellationToken = default)
+        {
+            var workingDirectory = FindWorkingDirectory(ticket);
+            var workspace = CreateWorkspace(ticket, workingDirectory);
+            if (readinessCheck == WorkspaceReadinessCheck.Perform)
+                await workspace.CheckReadinessAsync(cancellationToken);
+            return workspace;
+        }
+
         public async Task<IScriptWorkspace> PrepareWorkspace(
             ScriptTicket ticket,
             string scriptBody,
@@ -64,7 +73,7 @@ namespace Octopus.Tentacle.Scripts
             List<ScriptFile> files,
             CancellationToken cancellationToken)
         {
-            var workspace = GetWorkspace(ticket, WorkspaceReadinessCheck.Perform);
+            var workspace = await GetWorkspaceAsync(ticket, WorkspaceReadinessCheck.Perform, cancellationToken);
             workspace.IsolationLevel = isolationLevel;
             workspace.ScriptMutexAcquireTimeout = scriptMutexAcquireTimeout;
             workspace.ScriptArguments = scriptArguments;

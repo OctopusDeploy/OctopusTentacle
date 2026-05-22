@@ -665,6 +665,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var fakeFactory = Substitute.For<IScriptWorkspaceFactory>();
             fakeFactory.GetWorkspace(Arg.Any<ScriptTicket>(), Arg.Any<WorkspaceReadinessCheck>()).Returns(fakeWorkspace);
+            fakeFactory.GetWorkspaceAsync(Arg.Any<ScriptTicket>(), Arg.Any<WorkspaceReadinessCheck>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(fakeWorkspace));
 
             var fakeLog = Substitute.For<ISystemLog>();
             return (fakeFactory, fakeLog);

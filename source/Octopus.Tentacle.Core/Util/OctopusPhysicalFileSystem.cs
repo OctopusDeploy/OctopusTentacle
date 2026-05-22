@@ -261,6 +261,18 @@ namespace Octopus.Tentacle.Core.Util
             EnsureDiskHasEnoughFreeSpace(directoryPath, FiveHundredMegabytes);
         }
 
+        public virtual Task EnsureDiskHasEnoughFreeSpaceAsync(string directoryPath, CancellationToken cancellationToken = default)
+        {
+            EnsureDiskHasEnoughFreeSpace(directoryPath);
+            return Task.CompletedTask;
+        }
+
+        public virtual Task EnsureDiskHasEnoughFreeSpaceAsync(string directoryPath, long requiredSpaceInBytes, CancellationToken cancellationToken = default)
+        {
+            EnsureDiskHasEnoughFreeSpace(directoryPath, requiredSpaceInBytes);
+            return Task.CompletedTask;
+        }
+
         public virtual void EnsureDiskHasEnoughFreeSpace(string directoryPath, long requiredSpaceInBytes)
         {
             if (IsUncPath(directoryPath))

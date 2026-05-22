@@ -63,7 +63,9 @@ namespace Octopus.Tentacle.Core.Services.Scripts
                 command.ScriptTicket,
                 _ =>
                 {
-                    var workspace = workspaceFactory.GetWorkspace(command.ScriptTicket, WorkspaceReadinessCheck.Perform);
+                    // Skip readiness check here — we're in a sync ConcurrentDictionary factory.
+                    // The async readiness check is performed below before launching the script.
+                    var workspace = workspaceFactory.GetWorkspace(command.ScriptTicket, WorkspaceReadinessCheck.Skip);
                     var scriptState = scriptStateStoreFactory.Create(workspace);
                     return new RunningScriptWrapper(scriptState);
                 });
@@ -83,7 +85,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
                         return GetResponse(command.ScriptTicket, 0, runningScript.Process);
                     }
 
-                    workspace = workspaceFactory.GetWorkspace(command.ScriptTicket, WorkspaceReadinessCheck.Perform);
+                    workspace = await workspaceFactory.GetWorkspaceAsync(command.ScriptTicket, WorkspaceReadinessCheck.Perform, cancellationToken);
                 }
                 else
                 {

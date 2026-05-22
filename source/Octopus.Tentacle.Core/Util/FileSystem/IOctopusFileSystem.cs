@@ -26,6 +26,8 @@ namespace Octopus.Tentacle.Util
         void EnsureDirectoryExists(string directoryPath);
         void EnsureDiskHasEnoughFreeSpace(string directoryPath);
         void EnsureDiskHasEnoughFreeSpace(string directoryPath, long requiredSpaceInBytes);
+        Task EnsureDiskHasEnoughFreeSpaceAsync(string directoryPath, CancellationToken cancellationToken = default);
+        Task EnsureDiskHasEnoughFreeSpaceAsync(string directoryPath, long requiredSpaceInBytes, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Resolves the full file path. Relative paths are taken relative to current working directory

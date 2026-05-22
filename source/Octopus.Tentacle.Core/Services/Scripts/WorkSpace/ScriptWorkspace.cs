@@ -134,5 +134,10 @@ namespace Octopus.Tentacle.Scripts
         {
             FileSystem.EnsureDiskHasEnoughFreeSpace(WorkingDirectory);
         }
+
+        public async Task CheckReadinessAsync(CancellationToken cancellationToken = default)
+        {
+            await FileSystem.EnsureDiskHasEnoughFreeSpaceAsync(WorkingDirectory, cancellationToken);
+        }
     }
 }
