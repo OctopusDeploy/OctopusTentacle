@@ -28,7 +28,7 @@ During the deployment, Octopus calls the Slipway API to create a Tentacle releas
 
 ![Slipway Create Release](slipway-create-release.png)
 
-This in turn allows the Tentacle to become visible on Slipway
+This in turn allows Tentacle to become visible on Slipway
 
 ![Slipway](slipway.png)
 
