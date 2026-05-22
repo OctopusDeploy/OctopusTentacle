@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Octopus.Client.Extensions;
 using Microsoft.Extensions.Caching.Memory;
 using Octopus.Tentacle.Core.Diagnostics;
@@ -10,16 +11,16 @@ namespace Octopus.Tentacle.Kubernetes
 {
     public interface IKubernetesDirectoryInformationProvider
     {
-        public ulong? GetPathUsedBytes(string directoryPath);
+        public Task<ulong?> GetPathUsedBytesAsync(string directoryPath);
         public ulong? GetPathTotalBytes();
     }
-    
+
     public class KubernetesDirectoryInformationProvider : IKubernetesDirectoryInformationProvider
     {
         readonly ISystemLog log;
         readonly ISilentProcessRunner silentProcessRunner;
         readonly IMemoryCache directoryInformationCache;
-        
+
         //30s gives us fairly up to date information, but doesn't impact performance too much.
         //For 50 concurrent Cloud deployments:
         //No cache: 30min ea.
@@ -36,12 +37,12 @@ namespace Octopus.Tentacle.Kubernetes
             this.directoryInformationCache = directoryInformationCache;
         }
 
-        public ulong? GetPathUsedBytes(string directoryPath)
+        public Task<ulong?> GetPathUsedBytesAsync(string directoryPath)
         {
-            return directoryInformationCache.GetOrCreate(directoryPath, e =>
+            return directoryInformationCache.GetOrCreateAsync(directoryPath, async e =>
             {
                 e.SetAbsoluteExpiration(CacheExpiry);
-                return GetDriveBytesUsingDu(directoryPath);
+                return await GetDriveBytesUsingDuAsync(directoryPath);
             });
         }
 
@@ -49,15 +50,12 @@ namespace Octopus.Tentacle.Kubernetes
         {
             return KubernetesUtilities.GetResourceBytes(KubernetesConfig.PersistentVolumeSize);
         }
-        
-        
-        ulong? GetDriveBytesUsingDu(string directoryPath)
+
+        async Task<ulong?> GetDriveBytesUsingDuAsync(string directoryPath)
         {
             var stdOut = new List<string>();
             var stdErr = new List<string>();
-            // Sync boundary: called from IMemoryCache.GetOrCreate factory which is synchronous.
-            var exitCode = silentProcessRunner.ExecuteCommandAsync("du", $"-s -B 1 {directoryPath}", "/", stdOut.Add, stdErr.Add)
-                .GetAwaiter().GetResult();
+            var exitCode = await silentProcessRunner.ExecuteCommandAsync("du", $"-s -B 1 {directoryPath}", "/", stdOut.Add, stdErr.Add);
 
             if (exitCode != 0)
             {

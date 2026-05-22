@@ -300,7 +300,7 @@ namespace Octopus.Tentacle.Kubernetes
 
         protected async Task<V1Container> CreateScriptContainer(StartKubernetesScriptCommandV1 command, string podName, string scriptName, string homeDir, string workspacePath, string[]? scriptArguments, InMemoryTentacleScriptLog tentacleScriptLog, V1Container? containerSpec)
         {
-            var spaceInformation = kubernetesPhysicalFileSystem.GetStorageInformation();
+            var spaceInformation = await kubernetesPhysicalFileSystem.GetStorageInformationAsync();
             
             var commandString = string.Join(" ", new[]
                 {

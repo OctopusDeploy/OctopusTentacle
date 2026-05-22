@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Core.Util;
 using Octopus.Tentacle.Util;
@@ -25,7 +26,12 @@ namespace Octopus.Tentacle.Kubernetes
 
         public override void EnsureDiskHasEnoughFreeSpace(string directoryPath, long requiredSpaceInBytes)
         {
-            var spaceInformation = GetStorageInformation();
+            // We're overriding a sync interface method (IOctopusFileSystem) that's called from
+            // contexts we can't make async (config writes, script workspace readiness checks).
+            // We block on the async call with .GetAwaiter().GetResult().
+            // This is safe because all callers run on plain thread-pool workers — no captured
+            // context — so the async work can resume on any free thread when it finishes.
+            var spaceInformation = GetStorageInformationAsync().GetAwaiter().GetResult();
             Log.Verbose($"Directory to be checked is {HomeDir}, script directory is {directoryPath}, required space is {requiredSpaceInBytes} bytes");
 
             // If we can't get the free bytes, we just skip the check
@@ -43,9 +49,9 @@ namespace Octopus.Tentacle.Kubernetes
             }
         }
 
-        public (ulong freeSpaceBytes, ulong totalSpaceBytes)? GetStorageInformation()
+        public async Task<(ulong freeSpaceBytes, ulong totalSpaceBytes)?> GetStorageInformationAsync()
         {
-            var bytesUsed = directoryInformationProvider.GetPathUsedBytes(HomeDir);
+            var bytesUsed = await directoryInformationProvider.GetPathUsedBytesAsync(HomeDir);
             var bytesTotal = directoryInformationProvider.GetPathTotalBytes();
             if (bytesUsed.HasValue && bytesTotal.HasValue)
             {
