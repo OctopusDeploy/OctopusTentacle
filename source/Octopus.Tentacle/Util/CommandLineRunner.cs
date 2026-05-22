@@ -1,42 +1,43 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using Octopus.Tentacle.Core.Diagnostics;
 
 namespace Octopus.Tentacle.Util
 {
     public class CommandLineRunner : ICommandLineRunner
     {
-        public bool Execute(IEnumerable<CommandLineInvocation> commandLineInvocations, ILog log)
+        public Task<bool> ExecuteAsync(IEnumerable<CommandLineInvocation> commandLineInvocations, ILog log)
         {
-            return Execute(commandLineInvocations,
+            return ExecuteAsync(commandLineInvocations,
                 log.Verbose,
                 log.Info,
                 log.Error,
                 log.Error);
         }
 
-        public bool Execute(IEnumerable<CommandLineInvocation> commandLineInvocations,
+        public async Task<bool> ExecuteAsync(IEnumerable<CommandLineInvocation> commandLineInvocations,
                 Action<string> debug,
                 Action<string> info,
                 Action<string> error,
                 Action<Exception, string> exception)
         {
             foreach (var invocation in commandLineInvocations)
-                if (!Execute(invocation, debug, info, error, exception))
+                if (!await ExecuteAsync(invocation, debug, info, error, exception))
                     return false;
 
             return true;
         }
 
-        public bool Execute(CommandLineInvocation invocation, ILog log)
-            => Execute(invocation,
+        public Task<bool> ExecuteAsync(CommandLineInvocation invocation, ILog log)
+            => ExecuteAsync(invocation,
                 log.Info,
                 log.Info,
                 log.Error,
                 log.Error);
 
-        public bool Execute(CommandLineInvocation invocation,
+        public async Task<bool> ExecuteAsync(CommandLineInvocation invocation,
             Action<string> debug,
             Action<string> info,
             Action<string> error,
@@ -44,20 +45,15 @@ namespace Octopus.Tentacle.Util
         {
             try
             {
-                // Sync boundary: ICommandLineRunner is a public interface consumed by
-                // Octopus.Manager.Tentacle (a WPF app) which calls Execute from a
-                // ThreadPool.QueueUserWorkItem — no synchronisation context, so
-                // GetAwaiter().GetResult() here is deadlock-safe.
-                var exitCode = SilentProcessRunner.ExecuteCommandAsync(
-                        invocation.Executable,
-                        (invocation.Arguments ?? "") + " " + (invocation.SystemArguments ?? ""),
-                        Environment.CurrentDirectory,
-                        debug,
-                        info,
-                        error,
-                        cancel: CancellationToken.None,
-                        abandon: CancellationToken.None)
-                    .GetAwaiter().GetResult();
+                var exitCode = await SilentProcessRunner.ExecuteCommandAsync(
+                    invocation.Executable,
+                    (invocation.Arguments ?? "") + " " + (invocation.SystemArguments ?? ""),
+                    Environment.CurrentDirectory,
+                    debug,
+                    info,
+                    error,
+                    cancel: CancellationToken.None,
+                    abandon: CancellationToken.None);
 
                 if (exitCode != 0)
                 {

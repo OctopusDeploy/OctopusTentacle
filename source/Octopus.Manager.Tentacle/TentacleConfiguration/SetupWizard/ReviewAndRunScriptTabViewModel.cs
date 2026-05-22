@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentValidation;
@@ -29,16 +29,16 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             this.commandLineRunner = commandLineRunner;
             this.onScriptSucceeded = onScriptSucceeded;
             this.onScriptFailed = onScriptFailed;
-            
+
             InstanceName = wizardModel.InstanceName;
             Executable = CommandLine.PathToTentacleExe();
             Validator = CreateValidator();
         }
-        
+
         public string InstanceName { get; }
-        
+
         public string Executable { get; }
-        
+
         public async Task<bool> GenerateAndExecuteScript()
         {
             var success = false;
@@ -46,7 +46,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             {
                 var script = GenerateScript();
                 ContributeSensitiveValues(logger);
-                success = commandLineRunner.Execute(script, logger);
+                success = await commandLineRunner.ExecuteAsync(script, logger);
             }
             catch (Exception ex)
             {
@@ -57,30 +57,25 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 if (success)
                 {
                     if (onScriptSucceeded != null)
-                    {
                         await onScriptSucceeded();
-                    }
                 }
                 else
                 {
-                    Rollback();
+                    await RollbackAsync();
                     if (onScriptFailed != null)
-                    {
                         await onScriptFailed();
-                    }
                 }
             }
 
-            await Task.CompletedTask;
             return success;
         }
-            
-        void Rollback()
+
+        async Task RollbackAsync()
         {
             try
             {
                 var script = GenerateRollbackScript();
-                commandLineRunner.Execute(script, logger);
+                await commandLineRunner.ExecuteAsync(script, logger);
             }
             catch (Exception ex)
             {
@@ -92,7 +87,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         {
             wizardModel.ContributeSensitiveValues(log);
         }
-        
+
         public IEnumerable<CommandLineInvocation> GenerateScript()
         {
             return wizardModel.GenerateScript();
@@ -102,7 +97,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         {
             return wizardModel.GenerateRollbackScript();
         }
-        
+
         IValidator CreateValidator()
         {
             var validator = new InlineValidator<ReviewAndRunScriptTabViewModel>();

@@ -1,22 +1,23 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Octopus.Tentacle.Core.Diagnostics;
 
 namespace Octopus.Tentacle.Util
 {
     public interface ICommandLineRunner
     {
-        bool Execute(IEnumerable<CommandLineInvocation> commandLineInvocations, ILog log);
+        Task<bool> ExecuteAsync(IEnumerable<CommandLineInvocation> commandLineInvocations, ILog log);
 
-        bool Execute(IEnumerable<CommandLineInvocation> commandLineInvocations,
+        Task<bool> ExecuteAsync(IEnumerable<CommandLineInvocation> commandLineInvocations,
             Action<string> debug,
             Action<string> info,
             Action<string> error,
             Action<Exception, string> exception);
 
-        bool Execute(CommandLineInvocation commandLineInvocation, ILog log);
+        Task<bool> ExecuteAsync(CommandLineInvocation commandLineInvocation, ILog log);
 
-        bool Execute(CommandLineInvocation invocation,
+        Task<bool> ExecuteAsync(CommandLineInvocation invocation,
             Action<string> debug,
             Action<string> info,
             Action<string> error,

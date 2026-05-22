@@ -30,8 +30,8 @@ namespace Octopus.Manager.Tentacle.Tests.Builders
             tentacleManagerInstanceIdentifierService.GetIdentifier().Returns(_ => Guid.NewGuid().ToString("N"));
 
             commandLineRunner = Substitute.For<ICommandLineRunner>();
-            commandLineRunner.Execute(Arg.Any<CommandLineInvocation>(), Arg.Any<ILog>()).Returns(true);
-            commandLineRunner.Execute(Arg.Any<IEnumerable<CommandLineInvocation>>(), Arg.Any<ILog>()).Returns(true);
+            commandLineRunner.ExecuteAsync(Arg.Any<CommandLineInvocation>(), Arg.Any<ILog>()).Returns(Task.FromResult(true));
+            commandLineRunner.ExecuteAsync(Arg.Any<IEnumerable<CommandLineInvocation>>(), Arg.Any<ILog>()).Returns(Task.FromResult(true));
         }
 
         public SetupTentacleWizardModelBuilder WithTelemetryService(ITelemetryService telemetryService)
