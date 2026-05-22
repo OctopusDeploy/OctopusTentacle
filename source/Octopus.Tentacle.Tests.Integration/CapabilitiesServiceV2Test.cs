@@ -39,6 +39,13 @@ namespace Octopus.Tentacle.Tests.Integration
                 expectedCapabilitiesCount++;
             }
 
+            // Latest tentacles also advertise AbandonScriptV2 (added in EFT-3295). Older versioned builds do not.
+            if (version == null)
+            {
+                capabilities.Should().Contain("AbandonScriptV2");
+                expectedCapabilitiesCount++;
+            }
+
             capabilities.Count.Should().Be(expectedCapabilitiesCount);
         }
 
@@ -60,6 +67,13 @@ namespace Octopus.Tentacle.Tests.Integration
             if (version.HasScriptServiceV2())
             {
                 capabilities.Should().Contain(nameof(IScriptServiceV2));
+                expectedCapabilitiesCount++;
+            }
+
+            // Latest tentacles also advertise AbandonScriptV2 (added in EFT-3295). Older versioned builds do not.
+            if (version == null)
+            {
+                capabilities.Should().Contain("AbandonScriptV2");
                 expectedCapabilitiesCount++;
             }
 

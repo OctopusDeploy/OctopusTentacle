@@ -242,21 +242,15 @@ namespace Octopus.Tentacle.Util
                     error($"Failed to kill the launched process: {killProcessException}");
                 }
             }
-            finally
-            {
-                try
-                {
-                    // When cancelling, close the file handles.
-                    // If the child finishes, but the grandchild holds stdout/stderr and never completes,
-                    // THEN we won't issue a kill to the grandchild but will wait for the grandchild to
-                    // close the handles.
-                    process.Close();
-                }
-                catch (Exception ex)
-                {
-                    error($"Failed to close process resources: {ex.Message}");
-                }
-            }
+            // NOTE: do not call process.Close() here. The async migration of ExecuteCommandAsync
+            // relies on the Process.Exited event firing (via WaitForExitAsync's TaskCompletionSource).
+            // Calling Close immediately after Kill races with the kernel signalling the exit — if
+            // Close wins, the OS handle is gone before .NET's registered wait callback runs, the
+            // Exited event never fires, and the await hangs forever. The outer
+            // `using (var process = new Process())` block disposes the Process when ExecuteCommandAsync
+            // returns, which is the safe time to release handles.
+            // The grandchild-holds-redirected-pipes scenario that motivated the old Close() is
+            // handled by SafelyWaitForAllOutput's 5-second timeout in the async path.
         }
 
 #if NETFRAMEWORK
