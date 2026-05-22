@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Halibut.ServiceModel;
@@ -57,9 +58,11 @@ namespace Octopus.Tentacle.Tests.Integration
 
             // Abandon fires the abandon token, which causes SilentProcessRunner to return AbandonedExitCode
             // without killing the process, and releases the isolation mutex
-            await scriptServiceV2.AbandonScriptAsync(
+            var firstAbandonResponse = await scriptServiceV2.AbandonScriptAsync(
                 new AbandonScriptCommandV2(firstCommand.ScriptTicket, 0),
                 new HalibutProxyRequestOptions(CancellationToken));
+            firstAbandonResponse.State.Should().Be(ProcessState.Complete);
+            firstAbandonResponse.ExitCode.Should().Be(ScriptExitCodes.AbandonedExitCode);
 
             // Load-bearing: second FullIsolation script with the same mutex name must now be able to start,
             // proving the mutex was released by the abandon
@@ -96,10 +99,15 @@ namespace Octopus.Tentacle.Tests.Integration
             // This mirrors a bootstrap → Calamari → user script hierarchy where the stuck process is NOT
             // the direct child of Tentacle.
             var releaseFileForwardSlash = releaseFile.Replace("\\", "/");
+            // Multi-level chain: outer shell (bootstrap) → child shell → grandchild polls for the release file.
+            // This mirrors a bootstrap → Calamari → user script hierarchy where the stuck process is NOT
+            // the direct child of Tentacle.
             var script = new ScriptBuilder()
                 .CreateFile(startFile)
                 .AppendRaw(
-                    bash: $"bash -c \"bash -c 'while [ ! -f {releaseFileForwardSlash} ]; do sleep 0.5; done'\"",
+                    // Path is double-quoted inside the inner bash command so paths with spaces
+                    // (e.g. macOS "Application Support/...") are treated as a single argument by [ -f ].
+                    bash: $"bash -c \"bash -c 'while [ ! -f \\\"{releaseFileForwardSlash}\\\" ]; do sleep 0.5; done'\"",
                     windows: $"powershell -NoProfile -Command \"powershell -NoProfile -Command 'while (-not (Test-Path \\\"{releaseFile}\\\")) {{ Start-Sleep -Milliseconds 500 }}'\"");
 
             var firstCommand = new TestExecuteShellScriptCommandBuilder()

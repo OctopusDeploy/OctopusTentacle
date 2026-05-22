@@ -144,11 +144,21 @@ namespace Octopus.Tentacle.Core.Services.Scripts
 
         public async Task<ScriptStatusResponseV2> AbandonScriptAsync(AbandonScriptCommandV2 command, CancellationToken cancellationToken)
         {
-            await Task.CompletedTask;
-
             if (runningScripts.TryGetValue(command.Ticket, out var runningScript))
             {
                 runningScript.Abandon();
+
+                // Wait briefly for Execute() to react to the abandon token and reach Complete state.
+                // The spec promises that AbandonScript returns (Complete, AbandonedExitCode) immediately.
+                // Without this wait, callers see Running state because they ran ahead of Execute()'s
+                // post-await unwinding.
+                var deadline = DateTime.UtcNow.AddSeconds(5);
+                while (DateTime.UtcNow < deadline
+                       && runningScript.Process?.State != ProcessState.Complete
+                       && !cancellationToken.IsCancellationRequested)
+                {
+                    await Task.Delay(25, cancellationToken).ConfigureAwait(false);
+                }
             }
 
             return GetResponse(command.Ticket, command.LastLogSequence, runningScript?.Process);
