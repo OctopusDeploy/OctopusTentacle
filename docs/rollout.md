@@ -1,6 +1,6 @@
 # Tentacle Rollout
 
-When you create a change through a PR in Tentacle, a whole lot of processes spring into action. This document tries to outline all the steps that happen.
+When you create a change through a PR in Tentacle, many processes spring into action. This document tries to outline the steps that happen.
 
 ## 1. TeamCity Build
 
