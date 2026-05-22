@@ -407,7 +407,7 @@ namespace Octopus.Tentacle.Kubernetes
                 {
                     MountPath = "/calamari",
                     Name = "calamari",
-                    SubPath = command.CalamariImageConfiguration.Name //Calamari is always at the subpath of the app name
+                    SubPath = "Calamari" //Calamari is always at the subpath of the app name
                 });
 
                 container.Env.Add(new V1EnvVar { Name = "CalamariImageDirectoryPath", Value = "/calamari" });
