@@ -51,12 +51,12 @@ namespace Octopus.Manager.Tentacle.Dialogs
 
             if (showOutputLog) ShowOutputLog();
 
-            ThreadPool.QueueUserWorkItem(delegate
+            _ = Task.Run(async () =>
             {
                 var success = false;
                 try
                 {
-                    success = commandLineRunner.Execute(commandLines, logger);
+                    success = await commandLineRunner.ExecuteAsync(commandLines, logger);
                 }
                 catch (Exception ex)
                 {
