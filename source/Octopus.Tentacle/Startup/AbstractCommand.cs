@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Octopus.Tentacle.Internals.Options;
 
 namespace Octopus.Tentacle.Startup
@@ -46,7 +47,16 @@ namespace Octopus.Tentacle.Startup
                 throw new ControlledFailureException("Unrecognized command line arguments: " + string.Join(" ", arguments));
         }
 
-        protected abstract void Start();
+        // Commands may override either Start() (sync) or StartAsync() (async).
+        // The dispatcher calls StartAsync(); the default implementation calls Start() so
+        // existing sync commands need no changes.
+        protected virtual void Start() { }
+
+        protected virtual Task StartAsync()
+        {
+            Start();
+            return Task.CompletedTask;
+        }
 
         protected virtual void Completed()
         {
@@ -76,7 +86,12 @@ namespace Octopus.Tentacle.Startup
             LogFileOnlyLogger.Info($"==== {GetType().Name} ====");
             LogFileOnlyLogger.Info($"CommandLine: {string.Join(" ", Environment.GetCommandLineArgs())}");
 
-            Start();
+            // We're in the CLI command dispatcher. The CLI host (OctopusProgram) invokes
+            // commands synchronously via ICommandHost.Run, so we block on the async command
+            // here with .GetAwaiter().GetResult(). This is the single sync↔async boundary
+            // for all async commands — callers are on plain thread-pool workers with no
+            // captured context, so the block cannot deadlock.
+            StartAsync().GetAwaiter().GetResult();
             Completed();
         }
 

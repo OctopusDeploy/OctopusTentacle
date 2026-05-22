@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading.Tasks;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Core.Diagnostics;
@@ -65,7 +66,7 @@ namespace Octopus.Tentacle.Startup
             Options.Add("instance=", "Name of the instance to use, or * to use all instances", v => instanceName = v);
         }
 
-        protected override void Start()
+        protected override async Task StartAsync()
         {
             var exePath = assemblyContainingService.FullProcessPath();
 
@@ -81,7 +82,7 @@ namespace Octopus.Tentacle.Startup
                     try
                     {
                         var thisServiceName = ServiceName.GetWindowsServiceName(applicationName, instance.InstanceName);
-                        serviceConfigurator.ConfigureServiceByInstanceName(thisServiceName,
+                        await serviceConfigurator.ConfigureServiceByInstanceNameAsync(thisServiceName,
                             exePath,
                             instance.InstanceName,
                             serviceDescription,
@@ -104,9 +105,9 @@ namespace Octopus.Tentacle.Startup
                 {
                     if (serviceConfigurationState.Install || serviceConfigurationState.Reconfigure)
                     {
-                        log.Warn("Please note, currently there can only be one un-named instance configured as a service on a machine at a time.");    
+                        log.Warn("Please note, currently there can only be one un-named instance configured as a service on a machine at a time.");
                     }
-                    serviceConfigurator.ConfigureServiceByConfigPath(thisServiceName,
+                    await serviceConfigurator.ConfigureServiceByConfigPathAsync(thisServiceName,
                         exePath,
                         instanceSelector.Current.ConfigurationPath!,
                         serviceDescription,
@@ -114,7 +115,7 @@ namespace Octopus.Tentacle.Startup
                 }
                 else
                 {
-                    serviceConfigurator.ConfigureServiceByInstanceName(thisServiceName,
+                    await serviceConfigurator.ConfigureServiceByInstanceNameAsync(thisServiceName,
                         exePath,
                         currentName,
                         serviceDescription,

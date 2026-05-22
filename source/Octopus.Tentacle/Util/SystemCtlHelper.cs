@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Octopus.Tentacle.Core.Diagnostics;
@@ -14,30 +13,26 @@ namespace Octopus.Tentacle.Util
             this.log = log;
         }
 
-        public bool StartService(string serviceName, bool logFailureAsError = false)
-            => RunServiceCommand("start", serviceName, logFailureAsError);
+        public Task<bool> StartService(string serviceName, bool logFailureAsError = false)
+            => RunServiceCommandAsync("start", serviceName, logFailureAsError);
 
-        public bool RestartService(string serviceName, bool logFailureAsError = false)
-            => RunServiceCommand("restart", serviceName, logFailureAsError);
+        public Task<bool> RestartService(string serviceName, bool logFailureAsError = false)
+            => RunServiceCommandAsync("restart", serviceName, logFailureAsError);
 
-        public bool StopService(string serviceName, bool logFailureAsError = false)
-            => RunServiceCommand("stop", serviceName, logFailureAsError);
+        public Task<bool> StopService(string serviceName, bool logFailureAsError = false)
+            => RunServiceCommandAsync("stop", serviceName, logFailureAsError);
 
-        public bool EnableService(string serviceName, bool logFailureAsError = false)
-            => RunServiceCommand("enable", serviceName, logFailureAsError);
+        public Task<bool> EnableService(string serviceName, bool logFailureAsError = false)
+            => RunServiceCommandAsync("enable", serviceName, logFailureAsError);
 
-        public bool DisableService(string serviceName, bool logFailureAsError = false)
-            => RunServiceCommand("disable", serviceName, logFailureAsError);
+        public Task<bool> DisableService(string serviceName, bool logFailureAsError = false)
+            => RunServiceCommandAsync("disable", serviceName, logFailureAsError);
 
-        bool RunServiceCommand(string command, string serviceName, bool logFailureAsError)
+        async Task<bool> RunServiceCommandAsync(string command, string serviceName, bool logFailureAsError)
         {
             // Try without sudo first
             var commandLineInvocation = new CommandLineInvocation("/bin/bash", $"-c \"systemctl {command} {serviceName}\"");
-            // Sync boundary: RunServiceCommand is called from synchronous service-management
-            // helpers (StartService, RestartService, etc.), which are themselves called from
-            // the Tentacle service-management CLI on a threadpool worker with no sync context.
-            // GetAwaiter().GetResult() is deadlock-safe here.
-            var result = commandLineInvocation.ExecuteCommandAsync().GetAwaiter().GetResult();
+            var result = await commandLineInvocation.ExecuteCommandAsync();
             if (result.ExitCode == 0) return true;
 
             // Check if failure is due to authentication/permission issues
@@ -48,18 +43,13 @@ namespace Octopus.Tentacle.Util
                 e.Contains("Permission denied"));
 
             var usedSudo = false;
-            // If authentication issue detected, retry with sudo
             if (needsElevation)
             {
                 log.Info($"Permission denied. Retrying 'systemctl {command} {serviceName}' with sudo...");
                 var sudoInvocation = new CommandLineInvocation("/bin/bash", $"-c \"sudo systemctl {command} {serviceName}\"");
-                // Sync boundary: RunServiceCommand is called from synchronous service-management
-                // helpers (StartService, RestartService, etc.), which are themselves called from
-                // the Tentacle service-management CLI on a threadpool worker with no sync context.
-                // GetAwaiter().GetResult() is deadlock-safe here.
-                result = sudoInvocation.ExecuteCommandAsync().GetAwaiter().GetResult();
+                result = await sudoInvocation.ExecuteCommandAsync();
                 if (result.ExitCode == 0) return true;
-                
+
                 usedSudo = true;
             }
 
