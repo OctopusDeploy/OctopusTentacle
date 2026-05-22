@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Util;
 
@@ -19,50 +20,35 @@ namespace Octopus.Tentacle.Startup
             systemCtlHelper = new SystemCtlHelper(log);
         }
 
-        public void ConfigureServiceByInstanceName(string thisServiceName,
+        public Task ConfigureServiceByInstanceNameAsync(string thisServiceName,
             string exePath,
             string instance,
             string serviceDescription,
             ServiceConfigurationState serviceConfigurationState)
-        {
-            ConfigureService(thisServiceName,
-                exePath,
-                instance,
-                null,
-                serviceDescription,
-                serviceConfigurationState);
-        }
+            => ConfigureServiceAsync(thisServiceName, exePath, instance, null, serviceDescription, serviceConfigurationState);
 
-        public void ConfigureServiceByConfigPath(string thisServiceName,
+        public Task ConfigureServiceByConfigPathAsync(string thisServiceName,
             string exePath,
             string configPath,
             string serviceDescription,
             ServiceConfigurationState serviceConfigurationState)
-        {
-            ConfigureService(thisServiceName,
-                exePath,
-                null,
-                configPath,
-                serviceDescription,
-                serviceConfigurationState);
-        }
+            => ConfigureServiceAsync(thisServiceName, exePath, null, configPath, serviceDescription, serviceConfigurationState);
 
-        void ConfigureService(string thisServiceName, string exePath, string? instance, string? configPath, string serviceDescription, ServiceConfigurationState serviceConfigurationState)
+        async Task ConfigureServiceAsync(string thisServiceName, string exePath, string? instance, string? configPath, string serviceDescription, ServiceConfigurationState serviceConfigurationState)
         {
-            //Check if system has bash and systemd
-            CheckSystemPrerequisites();
+            await CheckSystemPrerequisitesAsync();
 
             var cleanedInstanceName = SanitizeString(instance ?? thisServiceName);
             var systemdUnitFilePath = $"/etc/systemd/system/{cleanedInstanceName}.service";
 
             if (serviceConfigurationState.Restart)
-                RestartService(cleanedInstanceName);
+                await RestartServiceAsync(cleanedInstanceName);
 
             if (serviceConfigurationState.Stop)
-                StopService(cleanedInstanceName);
+                await StopServiceAsync(cleanedInstanceName);
 
             if (serviceConfigurationState.Uninstall)
-                UninstallService(cleanedInstanceName, systemdUnitFilePath);
+                await UninstallServiceAsync(cleanedInstanceName, systemdUnitFilePath);
 
             var serviceDependencies = new List<string>();
             serviceDependencies.AddRange(new[] {"network.target"});
@@ -72,62 +58,48 @@ namespace Octopus.Tentacle.Startup
 
             var userName = serviceConfigurationState.Username ?? "root";
             if (serviceConfigurationState.Install)
-                InstallService(cleanedInstanceName,
-                    instance,
-                    configPath,
-                    exePath,
-                    serviceDescription,
-                    systemdUnitFilePath,
-                    userName,
-                    serviceDependencies);
+                await InstallServiceAsync(cleanedInstanceName, instance, configPath, exePath, serviceDescription, systemdUnitFilePath, userName, serviceDependencies);
 
             if (serviceConfigurationState.Reconfigure)
-                ReconfigureService(cleanedInstanceName,
-                    instance,
-                    configPath,
-                    exePath,
-                    serviceDescription,
-                    systemdUnitFilePath,
-                    userName,
-                    serviceDependencies);
+                await ReconfigureServiceAsync(cleanedInstanceName, instance, configPath, exePath, serviceDescription, systemdUnitFilePath, userName, serviceDependencies);
 
             if (serviceConfigurationState.Start)
-                StartService(cleanedInstanceName);
+                await StartServiceAsync(cleanedInstanceName);
         }
 
-        void RestartService(string serviceName)
+        async Task RestartServiceAsync(string serviceName)
         {
             log.Info($"Restarting service: {serviceName}");
-            if (systemCtlHelper.RestartService(serviceName))
+            if (await systemCtlHelper.RestartService(serviceName))
                 log.Info("Service has been restarted");
             else
                 log.Error("The service could not be restarted");
         }
 
-        void StopService(string serviceName)
+        async Task StopServiceAsync(string serviceName)
         {
             log.Info($"Stopping service: {serviceName}");
-            if (systemCtlHelper.StopService(serviceName))
+            if (await systemCtlHelper.StopService(serviceName))
                 log.Info("Service stopped");
             else
                 log.Error("The service could not be stopped");
         }
 
-        void StartService(string serviceName)
+        async Task StartServiceAsync(string serviceName)
         {
-            if (systemCtlHelper.StartService(serviceName, true))
+            if (await systemCtlHelper.StartService(serviceName, true))
                 log.Info($"Service started: {serviceName}");
             else
                 log.Error($"Could not start the systemd service: {serviceName}");
         }
 
-        void UninstallService(string instance, string systemdUnitFilePath)
+        async Task UninstallServiceAsync(string instance, string systemdUnitFilePath)
         {
             log.Info($"Removing systemd service: {instance}");
             try
             {
-                systemCtlHelper.StopService(instance);
-                systemCtlHelper.DisableService(instance);
+                await systemCtlHelper.StopService(instance);
+                await systemCtlHelper.DisableService(instance);
                 File.Delete(systemdUnitFilePath);
                 log.Info("Service uninstalled");
             }
@@ -138,7 +110,7 @@ namespace Octopus.Tentacle.Startup
             }
         }
 
-        void InstallService(string serviceName, 
+        async Task InstallServiceAsync(string serviceName,
             string? instance,
             string? configPath,
             string exePath,
@@ -149,8 +121,8 @@ namespace Octopus.Tentacle.Startup
         {
             try
             {
-                WriteUnitFile(systemdUnitFilePath, GenerateSystemdUnitFile(instance, configPath, serviceDescription, exePath, userName, serviceDependencies));
-                systemCtlHelper.EnableService(serviceName, true);
+                await WriteUnitFileAsync(systemdUnitFilePath, GenerateSystemdUnitFile(instance, configPath, serviceDescription, exePath, userName, serviceDependencies));
+                await systemCtlHelper.EnableService(serviceName, true);
                 log.Info($"Service installed: {serviceName}");
             }
             catch (Exception e)
@@ -160,7 +132,7 @@ namespace Octopus.Tentacle.Startup
             }
         }
 
-        void ReconfigureService(string serviceName,
+        async Task ReconfigureServiceAsync(string serviceName,
             string? instance,
             string? configPath,
             string exePath,
@@ -172,14 +144,12 @@ namespace Octopus.Tentacle.Startup
             try
             {
                 log.Info($"Attempting to remove old service: {serviceName}");
-                //remove service
-                systemCtlHelper.StopService(serviceName);
-                systemCtlHelper.DisableService(serviceName);
+                await systemCtlHelper.StopService(serviceName);
+                await systemCtlHelper.DisableService(serviceName);
                 File.Delete(systemdUnitFilePath);
 
-                //re-add service
-                WriteUnitFile(systemdUnitFilePath, GenerateSystemdUnitFile(instance, configPath, serviceDescription, exePath, userName, serviceDependencies));
-                systemCtlHelper.EnableService(serviceName, true);
+                await WriteUnitFileAsync(systemdUnitFilePath, GenerateSystemdUnitFile(instance, configPath, serviceDescription, exePath, userName, serviceDependencies));
+                await systemCtlHelper.EnableService(serviceName, true);
                 log.Info($"Service installed: {serviceName}");
             }
             catch (Exception e)
@@ -189,60 +159,48 @@ namespace Octopus.Tentacle.Startup
             }
         }
 
-        void WriteUnitFile(string path, string contents)
+        async Task WriteUnitFileAsync(string path, string contents)
         {
             File.WriteAllText(path, contents);
 
             var commandLineInvocation = new CommandLineInvocation("/bin/bash", $"-c \"chmod 644 {path}\"");
-            // Sync boundary: WriteUnitFile is called from IServiceConfigurator.ConfigureService
-            // implementations, which are themselves called from the Tentacle service-management
-            // CLI on a threadpool worker with no sync context. GetAwaiter().GetResult() is
-            // deadlock-safe here.
-            var result = commandLineInvocation.ExecuteCommandAsync().GetAwaiter().GetResult();
+            var result = await commandLineInvocation.ExecuteCommandAsync();
 
             if (result.ExitCode == 0) return;
 
             result.Validate();
         }
 
-        void CheckSystemPrerequisites()
+        async Task CheckSystemPrerequisitesAsync()
         {
             if (!File.Exists("/bin/bash"))
                 throw new ControlledFailureException(
                     "Could not detect bash. bash is required to run tentacle.");
 
-            if (!HaveSudoPrivileges())
+            if (!await HaveSudoPrivilegesAsync())
                 throw new ControlledFailureException(
                     "Requires elevated privileges. Please run command as sudo.");
 
-            if (!IsSystemdInstalled())
+            if (!await IsSystemdInstalledAsync())
                 throw new ControlledFailureException(
                     "Could not detect systemd. systemd is required to run Tentacle as a service");
         }
 
-        bool IsSystemdInstalled()
+        async Task<bool> IsSystemdInstalledAsync()
         {
             var commandLineInvocation = new CommandLineInvocation("/bin/bash", "-c \"command -v systemctl >/dev/null\"");
-            // Sync boundary: IsSystemdInstalled is called from CheckSystemPrerequisites,
-            // which is called from IServiceConfigurator.ConfigureService, which is itself
-            // called from the Tentacle service-management CLI on a threadpool worker with
-            // no sync context. GetAwaiter().GetResult() is deadlock-safe here.
-            var result = commandLineInvocation.ExecuteCommandAsync().GetAwaiter().GetResult();
+            var result = await commandLineInvocation.ExecuteCommandAsync();
             return result.ExitCode == 0;
         }
 
-        bool HaveSudoPrivileges()
+        async Task<bool> HaveSudoPrivilegesAsync()
         {
             var commandLineInvocation = new CommandLineInvocation("/bin/bash", "-c \"sudo -vn 2> /dev/null\"");
-            // Sync boundary: HaveSudoPrivileges is called from CheckSystemPrerequisites,
-            // which is called from IServiceConfigurator.ConfigureService, which is itself
-            // called from the Tentacle service-management CLI on a threadpool worker with
-            // no sync context. GetAwaiter().GetResult() is deadlock-safe here.
-            var result = commandLineInvocation.ExecuteCommandAsync().GetAwaiter().GetResult();
+            var result = await commandLineInvocation.ExecuteCommandAsync();
             return result.ExitCode == 0;
         }
 
-        string GenerateSystemdUnitFile(string? instance, 
+        string GenerateSystemdUnitFile(string? instance,
             string? configPath,
             string serviceDescription, string exePath, string userName, IEnumerable<string> serviceDependencies)
         {
@@ -258,7 +216,7 @@ namespace Octopus.Tentacle.Startup
             if (!string.IsNullOrEmpty(instance))
             {
                 stringBuilder.Append($" --instance={instance}");
-            } 
+            }
             else if (!string.IsNullOrEmpty(configPath))
             {
                 stringBuilder.Append($" --config={configPath}");

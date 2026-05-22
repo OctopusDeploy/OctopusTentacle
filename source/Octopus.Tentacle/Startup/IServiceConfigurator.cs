@@ -1,16 +1,17 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace Octopus.Tentacle.Startup
 {
     public interface IServiceConfigurator
     {
-        void ConfigureServiceByInstanceName(string thisServiceName,
+        Task ConfigureServiceByInstanceNameAsync(string thisServiceName,
             string exePath,
             string instance,
             string serviceDescription,
             ServiceConfigurationState serviceConfigurationState);
-        
-        void ConfigureServiceByConfigPath(string thisServiceName,
+
+        Task ConfigureServiceByConfigPathAsync(string thisServiceName,
             string exePath,
             string configPath,
             string serviceDescription,

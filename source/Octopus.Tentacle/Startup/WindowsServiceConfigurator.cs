@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -7,6 +7,7 @@ using System.Management;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Util;
 using Polly;
@@ -30,35 +31,21 @@ namespace Octopus.Tentacle.Startup
             this.windowsLocalAdminRightsChecker = windowsLocalAdminRightsChecker;
         }
 
-        public void ConfigureServiceByInstanceName(string thisServiceName,
+        public Task ConfigureServiceByInstanceNameAsync(string thisServiceName,
             string exePath,
             string instance,
             string serviceDescription,
             ServiceConfigurationState serviceConfigurationState)
-        {
-            ConfigureService(thisServiceName,
-                exePath,
-                instance,
-                null,
-                serviceDescription,
-                serviceConfigurationState);
-        }
+            => ConfigureServiceAsync(thisServiceName, exePath, instance, null, serviceDescription, serviceConfigurationState);
 
-        public void ConfigureServiceByConfigPath(string thisServiceName,
+        public Task ConfigureServiceByConfigPathAsync(string thisServiceName,
             string exePath,
             string configPath,
             string serviceDescription,
             ServiceConfigurationState serviceConfigurationState)
-        {
-            ConfigureService(thisServiceName,
-                exePath,
-                null,
-                configPath,
-                serviceDescription,
-                serviceConfigurationState);
-        }
+            => ConfigureServiceAsync(thisServiceName, exePath, null, configPath, serviceDescription, serviceConfigurationState);
 
-        void ConfigureService(string thisServiceName,
+        async Task ConfigureServiceAsync(string thisServiceName,
             string exePath,
             string? instance,
             string? configPath,
@@ -70,19 +57,13 @@ namespace Octopus.Tentacle.Startup
             var controller = services.FirstOrDefault(s => s.ServiceName == thisServiceName);
 
             if (serviceConfigurationState.Restart)
-            {
                 RestartService(thisServiceName, controller);
-            }
 
             if (serviceConfigurationState.Stop)
-            {
                 StopService(thisServiceName, controller);
-            }
 
             if (serviceConfigurationState.Uninstall)
-            {
-                UninstallService(thisServiceName, controller);
-            }
+                await UninstallServiceAsync(thisServiceName, controller);
 
             var serviceDependencies = new List<string>();
             serviceDependencies.AddRange(new[] { "LanmanWorkstation", "TCPIP" });
@@ -95,28 +76,19 @@ namespace Octopus.Tentacle.Startup
             }
 
             if (serviceConfigurationState.Install)
-            {
-                controller = InstallService(thisServiceName, exePath, instance, configPath,
-                    serviceDescription, serviceConfigurationState, controller, serviceDependencies);
-            }
+                controller = await InstallServiceAsync(thisServiceName, exePath, instance, configPath, serviceDescription, serviceConfigurationState, controller, serviceDependencies);
 
             if (serviceConfigurationState.Reconfigure)
-            {
-                ReconfigureService(thisServiceName, exePath, instance, configPath, serviceDescription, serviceDependencies);
-            }
+                await ReconfigureServiceAsync(thisServiceName, exePath, instance, configPath, serviceDescription, serviceDependencies);
 
             if ((serviceConfigurationState.Install || serviceConfigurationState.Reconfigure) && !string.IsNullOrWhiteSpace(serviceConfigurationState.Username))
-            {
-                ConfigureCredentialsForService(thisServiceName, serviceConfigurationState);
-            }
+                await ConfigureCredentialsForServiceAsync(thisServiceName, serviceConfigurationState);
 
             if (serviceConfigurationState.Start)
-            {
                 StartService(thisServiceName, controller);
-            }
         }
 
-        void ConfigureCredentialsForService(string thisServiceName, ServiceConfigurationState serviceConfigurationState)
+        async Task ConfigureCredentialsForServiceAsync(string thisServiceName, ServiceConfigurationState serviceConfigurationState)
         {
             if (!string.IsNullOrWhiteSpace(serviceConfigurationState.Password))
             {
@@ -137,13 +109,13 @@ namespace Octopus.Tentacle.Startup
             }
             else
             {
-                Sc($"config \"{thisServiceName}\" obj= \"{serviceConfigurationState.Username}\"");
+                await ScAsync($"config \"{thisServiceName}\" obj= \"{serviceConfigurationState.Username}\"");
             }
 
             log.Info("Service credentials set");
         }
 
-        void ReconfigureService(string thisServiceName,
+        async Task ReconfigureServiceAsync(string thisServiceName,
             string exePath,
             string? instance,
             string? configPath,
@@ -154,13 +126,13 @@ namespace Octopus.Tentacle.Startup
             var command = exePath.EndsWith(".dll")
                 ? $"config \"{thisServiceName}\" binpath= \"dotnet \\\"{exePath}\\\" run {instanceIdentifier} DisplayName= \"{thisServiceName}\" depend= {string.Join("/", serviceDependencies)} start= auto"
                 : $"config \"{thisServiceName}\" binpath= \"\\\"{exePath}\\\" run {instanceIdentifier} DisplayName= \"{thisServiceName}\" depend= {string.Join("/", serviceDependencies)} start= auto";
-            Sc(command);
-            Sc($"description \"{thisServiceName}\" \"{serviceDescription}\"");
+            await ScAsync(command);
+            await ScAsync($"description \"{thisServiceName}\" \"{serviceDescription}\"");
 
             log.Info("Service reconfigured");
         }
 
-        ServiceController? InstallService(string thisServiceName,
+        async Task<ServiceController?> InstallServiceAsync(string thisServiceName,
             string exePath,
             string? instance,
             string? configPath,
@@ -181,8 +153,8 @@ namespace Octopus.Tentacle.Startup
                     ? $"create \"{thisServiceName}\" binpath= \"dotnet \\\"{exePath}\\\" run {instanceIdentifier} DisplayName= \"{thisServiceName}\" depend= {string.Join("/", serviceDependencies)} start= auto"
                     : $"create \"{thisServiceName}\" binpath= \"\\\"{exePath}\\\" run {instanceIdentifier} DisplayName= \"{thisServiceName}\" depend= {string.Join("/", serviceDependencies)} start= auto";
 
-                Sc(command);
-                Sc($"description \"{thisServiceName}\" \"{serviceDescription}\"");
+                await ScAsync(command);
+                await ScAsync($"description \"{thisServiceName}\" \"{serviceDescription}\"");
             }
 
             log.Info("Service installed");
@@ -195,19 +167,15 @@ namespace Octopus.Tentacle.Startup
         static string InstanceIdentifier(string? instance, string? configPath)
         {
             if (!string.IsNullOrEmpty(instance))
-            {
                 return $"--instance=\\\"{instance}\\\"\"";
-            }
 
             if (!string.IsNullOrEmpty(configPath))
-            {
                 return $"--config=\\\"{configPath}\\\"\"";
-            }
 
             throw new InvalidOperationException("Either the instance name of configuration path must be provided to configure a service");
         }
 
-        void UninstallService(string thisServiceName, ServiceController? controller)
+        async Task UninstallServiceAsync(string thisServiceName, ServiceController? controller)
         {
             if (controller == null)
             {
@@ -215,8 +183,7 @@ namespace Octopus.Tentacle.Startup
             }
             else
             {
-                Sc($"delete \"{thisServiceName}\"");
-
+                await ScAsync($"delete \"{thisServiceName}\"");
                 log.Info("Service uninstalled");
             }
         }
@@ -296,11 +263,7 @@ namespace Octopus.Tentacle.Startup
                     Policy
                         .Handle<Exception>()
                         .WaitAndRetry(5, i => TimeSpan.FromSeconds(Math.Pow(i + 1, 2)), (_, span) => log.Warn($"Failed to start the windows service. Trying again in...{span} "))
-                        .Execute(
-                            () =>
-                            {
-                                controller.Start();
-                            });
+                        .Execute(() => { controller.Start(); });
                 }
 
                 WaitForControllerStatus(controller, ServiceControllerStatus.Running);
@@ -333,7 +296,7 @@ namespace Octopus.Tentacle.Startup
                 150);
         }
 
-        void Sc(string arguments)
+        async Task ScAsync(string arguments)
         {
             var outputBuilder = new StringBuilder();
             var argumentsToLog = string.Join(" ", arguments);
@@ -342,18 +305,14 @@ namespace Octopus.Tentacle.Startup
             var sc = Path.Combine(system32, "sc.exe");
 
             logFileOnlyLogger.Info($"Executing sc.exe {argumentsToLog}");
-            // Sync boundary: Sc() is called from IServiceConfigurator.ConfigureService
-            // implementations, which are themselves called from the Tentacle
-            // service-management CLI on Windows (no sync context, threadpool worker).
-            // GetAwaiter().GetResult() is deadlock-safe here.
-            var exitCode = SilentProcessRunnerExtended.ExecuteCommandAsync(sc,
+            var exitCode = await SilentProcessRunnerExtended.ExecuteCommandAsync(sc,
                 arguments,
                 Environment.CurrentDirectory,
                 output => outputBuilder.AppendLine(output),
                 error => outputBuilder.AppendLine("Error: " + error),
                 cancel: CancellationToken.None,
-                abandon: CancellationToken.None)
-                .GetAwaiter().GetResult();
+                abandon: CancellationToken.None);
+
             if (exitCode == 0)
                 logFileOnlyLogger.Info(outputBuilder.ToString());
             else
