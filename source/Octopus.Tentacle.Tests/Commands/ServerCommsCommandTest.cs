@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
@@ -36,7 +37,7 @@ namespace Octopus.Tentacle.Tests.Commands
                 );
         }
 
-        void Execute(string thumbprint, CommunicationStyle style, string? host = null, string? port = null)
+        async Task Execute(string thumbprint, CommunicationStyle style, string? host = null, string? port = null)
         {
             var parameters = new List<string>
             {
@@ -49,7 +50,7 @@ namespace Octopus.Tentacle.Tests.Commands
             if (port != null)
                 parameters.Add($"--port={port}");
 
-            command.Start(
+            await command.StartAsync(
                 parameters.ToArray(),
                 Substitute.For<ICommandRuntime>(),
                 new OptionSet()
@@ -73,18 +74,18 @@ namespace Octopus.Tentacle.Tests.Commands
 
 
         [Test]
-        public void NoTrusts()
+        public async Task NoTrusts()
         {
-            Action action = () => Execute(Thumb1, CommunicationStyle.TentaclePassive);
-            action.Should().Throw<ControlledFailureException>()
+            Func<Task> action = async () => await Execute(Thumb1, CommunicationStyle.TentaclePassive);
+            await action.Should().ThrowAsync<ControlledFailureException>()
                 .WithMessage("Before server communications can be modified, trust must be established with the configure command");
         }
 
         [Test]
-        public void AddPassive()
+        public async Task AddPassive()
         {
             AddTrusts(Thumb1);
-            Execute(Thumb1, CommunicationStyle.TentaclePassive);
+            await Execute(Thumb1, CommunicationStyle.TentaclePassive);
 
             configuration.TrustedOctopusServers.Should().HaveCount(1);
             var server = configuration.TrustedOctopusServers.First();
@@ -92,20 +93,20 @@ namespace Octopus.Tentacle.Tests.Commands
         }
 
         [Test]
-        public void AddActiveNoHost()
+        public async Task AddActiveNoHost()
         {
             AddTrusts(Thumb1);
-            Action action = () => Execute(Thumb1, CommunicationStyle.TentacleActive, null, "1234");
-            action.Should().Throw<ControlledFailureException>()
+            Func<Task> action = async () => await Execute(Thumb1, CommunicationStyle.TentacleActive, null, "1234");
+            await action.Should().ThrowAsync<ControlledFailureException>()
                 .WithMessage("Please provide either the server hostname or websocket address, e.g. --host=OCTOPUS");
         }
 
         [Test]
-        public void AddActiveNoPort()
+        public async Task AddActiveNoPort()
         {
             AddTrusts(Thumb1);
 
-            Execute(Thumb1, CommunicationStyle.TentacleActive, "example.com", null);
+            await Execute(Thumb1, CommunicationStyle.TentacleActive, "example.com", null);
 
             configuration.TrustedOctopusServers.Should().HaveCount(1);
             var server = configuration.TrustedOctopusServers.First();
@@ -113,11 +114,11 @@ namespace Octopus.Tentacle.Tests.Commands
         }
 
         [Test]
-        public void AddActive()
+        public async Task AddActive()
         {
             AddTrusts(Thumb1);
 
-            Execute(Thumb1, CommunicationStyle.TentacleActive, "example.com", "1234");
+            await Execute(Thumb1, CommunicationStyle.TentacleActive, "example.com", "1234");
 
             configuration.TrustedOctopusServers.Should().HaveCount(1);
             var server = configuration.TrustedOctopusServers.First();
@@ -125,12 +126,12 @@ namespace Octopus.Tentacle.Tests.Commands
         }
 
         [Test]
-        public void AddPassive1ThenActive1()
+        public async Task AddPassive1ThenActive1()
         {
             AddTrusts(Thumb1);
 
-            Execute(Thumb1, CommunicationStyle.TentaclePassive);
-            Execute(Thumb1, CommunicationStyle.TentacleActive, "example.com", "1234");
+            await Execute(Thumb1, CommunicationStyle.TentaclePassive);
+            await Execute(Thumb1, CommunicationStyle.TentacleActive, "example.com", "1234");
 
             var servers = configuration.TrustedOctopusServers.ToArray();
             servers.Should().HaveCount(2);
@@ -139,12 +140,12 @@ namespace Octopus.Tentacle.Tests.Commands
         }
 
         [Test]
-        public void AddActive1ThenPassive1()
+        public async Task AddActive1ThenPassive1()
         {
             AddTrusts(Thumb1);
 
-            Execute(Thumb1, CommunicationStyle.TentacleActive, "example.com", "1234");
-            Execute(Thumb1, CommunicationStyle.TentaclePassive);
+            await Execute(Thumb1, CommunicationStyle.TentacleActive, "example.com", "1234");
+            await Execute(Thumb1, CommunicationStyle.TentaclePassive);
 
             var servers = configuration.TrustedOctopusServers.ToArray();
             servers.Should().HaveCount(2);
@@ -153,12 +154,12 @@ namespace Octopus.Tentacle.Tests.Commands
         }
 
         [Test]
-        public void AddPassive1ThenActive2()
+        public async Task AddPassive1ThenActive2()
         {
             AddTrusts(Thumb1, Thumb2);
 
-            Execute(Thumb1, CommunicationStyle.TentaclePassive);
-            Execute(Thumb2, CommunicationStyle.TentacleActive, "example.com", "1234");
+            await Execute(Thumb1, CommunicationStyle.TentaclePassive);
+            await Execute(Thumb2, CommunicationStyle.TentacleActive, "example.com", "1234");
 
             var servers = configuration.TrustedOctopusServers.ToArray();
             servers.Should().HaveCount(2);
@@ -167,12 +168,12 @@ namespace Octopus.Tentacle.Tests.Commands
         }
 
         [Test]
-        public void AddPassive1ThenPassive2()
+        public async Task AddPassive1ThenPassive2()
         {
             AddTrusts(Thumb1, Thumb2);
 
-            Execute(Thumb1, CommunicationStyle.TentaclePassive);
-            Execute(Thumb2, CommunicationStyle.TentaclePassive);
+            await Execute(Thumb1, CommunicationStyle.TentaclePassive);
+            await Execute(Thumb2, CommunicationStyle.TentaclePassive);
 
             var servers = configuration.TrustedOctopusServers.ToArray();
             servers.Should().HaveCount(2);
@@ -181,12 +182,12 @@ namespace Octopus.Tentacle.Tests.Commands
         }
 
         [Test]
-        public void AddActive1ThenActive2()
+        public async Task AddActive1ThenActive2()
         {
             AddTrusts(Thumb1, Thumb2);
 
-            Execute(Thumb1, CommunicationStyle.TentacleActive, "example.com", "1234");
-            Execute(Thumb2, CommunicationStyle.TentacleActive, "foo.com", "1234");
+            await Execute(Thumb1, CommunicationStyle.TentacleActive, "example.com", "1234");
+            await Execute(Thumb2, CommunicationStyle.TentacleActive, "foo.com", "1234");
 
             var servers = configuration.TrustedOctopusServers.ToArray();
             servers.Should().HaveCount(2);
@@ -195,12 +196,12 @@ namespace Octopus.Tentacle.Tests.Commands
         }
 
         [Test]
-        public void AddActive1ThenActive1SameAddress()
+        public async Task AddActive1ThenActive1SameAddress()
         {
             AddTrusts(Thumb1);
 
-            Execute(Thumb1, CommunicationStyle.TentacleActive, "example.com", "1234");
-            Execute(Thumb1, CommunicationStyle.TentacleActive, "EXAMPLE.cOm", "1234");
+            await Execute(Thumb1, CommunicationStyle.TentacleActive, "example.com", "1234");
+            await Execute(Thumb1, CommunicationStyle.TentacleActive, "EXAMPLE.cOm", "1234");
 
             configuration.TrustedOctopusServers.Should().HaveCount(1);
             var server = configuration.TrustedOctopusServers.First();
@@ -208,11 +209,11 @@ namespace Octopus.Tentacle.Tests.Commands
         }
 
         [Test]
-        public void AddActive1ThenActive1DifferentAddress()
+        public async Task AddActive1ThenActive1DifferentAddress()
         {
             AddTrusts(Thumb1);
 
-            Execute(Thumb1, CommunicationStyle.TentacleActive, "example.com", "1234");
+            await Execute(Thumb1, CommunicationStyle.TentacleActive, "example.com", "1234");
             Execute(Thumb1, CommunicationStyle.TentacleActive, "foo.com", "1234");
 
             var servers = configuration.TrustedOctopusServers.ToArray();

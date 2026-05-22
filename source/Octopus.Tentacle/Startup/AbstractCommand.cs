@@ -71,13 +71,6 @@ namespace Octopus.Tentacle.Startup
             Options.WriteOptionDescriptions(writer);
         }
 
-        public virtual void Start(string[] commandLineArguments, ICommandRuntime commandRuntime, OptionSet commonOptions)
-        {
-            // Sync wrapper for hosts that don't support async dispatch — kept for backwards
-            // compatibility. OctopusProgram calls StartAsync() directly.
-            StartAsync(commandLineArguments, commandRuntime, commonOptions).GetAwaiter().GetResult();
-        }
-
         public virtual async Task StartAsync(string[] commandLineArguments, ICommandRuntime commandRuntime, OptionSet commonOptions)
         {
             runtime = commandRuntime;

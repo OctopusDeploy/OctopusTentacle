@@ -71,7 +71,7 @@ public class KubernetesAgentMigrateFromPreinstallationTest
         
 
         //Act
-        commandToRun.Start(commandArguments, new NoninteractiveHost(), []);
+        await commandToRun.StartAsync(commandArguments, new NoninteractiveHost(), []);
         
         //Assert
         var configMap = await client.CoreV1.ReadNamespacedConfigMapAsync(DestinationConfigMapName, commandNamespace);
@@ -121,7 +121,7 @@ public class KubernetesAgentMigrateFromPreinstallationTest
 
         
         //Act
-        commandToRun.Start(commandArguments, new NoninteractiveHost(), []);
+        await commandToRun.StartAsync(commandArguments, new NoninteractiveHost(), []);
         
         //Assert
         var configMap = await client.CoreV1.ReadNamespacedConfigMapAsync(DestinationConfigMapName, commandNamespace);
