@@ -25,6 +25,7 @@ namespace Octopus.Tentacle.Kubernetes.Configuration
 
         public static async Task<ConfigMapKeyValueStore> CreateAsync(IKubernetesConfigMapService configMapService, IKubernetesMachineKeyEncryptor encryptor, CancellationToken cancellationToken)
         {
+            await encryptor.InitializeAsync(cancellationToken);
             var configMap = await configMapService.TryGet(Name, cancellationToken);
             var configMapData = configMap?.Data ?? new Dictionary<string, string>();
             return new ConfigMapKeyValueStore(configMapService, encryptor, configMapData);

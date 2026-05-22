@@ -3,12 +3,14 @@ using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Octopus.Tentacle.Configuration.Crypto;
 
 namespace Octopus.Tentacle.Kubernetes.Crypto
 {
     public interface IKubernetesMachineKeyEncryptor : IMachineKeyEncryptor
     {
+        Task InitializeAsync(CancellationToken cancellationToken);
     }
 
     public class KubernetesMachineKeyEncryptor : IKubernetesMachineKeyEncryptor
@@ -20,6 +22,11 @@ namespace Octopus.Tentacle.Kubernetes.Crypto
         public KubernetesMachineKeyEncryptor(IKubernetesMachineEncryptionKeyProvider encryptionKeyProvider)
         {
             this.encryptionKeyProvider = encryptionKeyProvider;
+        }
+
+        public async Task InitializeAsync(CancellationToken cancellationToken)
+        {
+            (key, iv) = await encryptionKeyProvider.GetMachineKey(cancellationToken);
         }
 
         public string Encrypt(string raw)
@@ -47,11 +54,8 @@ namespace Octopus.Tentacle.Kubernetes.Crypto
         [MemberNotNull(nameof(key), nameof(iv))]
         void EnsureMachineKeyAndIvLoaded()
         {
-            //if either is null, load it again
             if (key is null || iv is null)
-            {
-                (key, iv) = encryptionKeyProvider.GetMachineKey(CancellationToken.None).GetAwaiter().GetResult();
-            }
+                throw new InvalidOperationException("KubernetesMachineKeyEncryptor must be initialized by calling InitializeAsync before use.");
         }
     }
 }
