@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 
 namespace Octopus.Manager.Tentacle.Infrastructure
@@ -19,6 +20,21 @@ namespace Octopus.Manager.Tentacle.Infrastructure
                 try
                 {
                     callback();
+                }
+                catch (Exception ex)
+                {
+                    Foreground(() => throw new TargetInvocationException(ex));
+                }
+            });
+        }
+
+        public static void Background(Func<Task> asyncCallback)
+        {
+            Task.Run(async () =>
+            {
+                try
+                {
+                    await asyncCallback();
                 }
                 catch (Exception ex)
                 {

@@ -1,10 +1,11 @@
-using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Octopus.Manager.Tentacle.PreReq
 {
     public interface IPrerequisite
     {
         string StatusMessage { get; }
-        PrerequisiteCheckResult Check();
+        Task<PrerequisiteCheckResult> CheckAsync(CancellationToken cancellationToken);
     }
 }

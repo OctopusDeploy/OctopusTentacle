@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics;
+using System.Threading;
 using System.Windows;
 using System.Windows.Documents;
 using Octopus.Manager.Tentacle.Infrastructure;
@@ -37,7 +38,7 @@ namespace Octopus.Manager.Tentacle.PreReq
                 correctLinkBlock.Visibility = Visibility.Collapsed;
             });
 
-            DispatchHelper.Background(() =>
+            DispatchHelper.Background(async () =>
             {
                 var failed = false;
 
@@ -49,7 +50,7 @@ namespace Octopus.Manager.Tentacle.PreReq
                         progressBar.Visibility = Visibility.Visible;
                     });
 
-                    var result = prereq.Check();
+                    var result = await prereq.CheckAsync(CancellationToken.None);
 
                     if (result.Success)
                         continue;
