@@ -1,9 +1,11 @@
 using System;
+using System.Threading;
 using Autofac;
 using Octopus.Tentacle.Configuration.Crypto;
 using Octopus.Tentacle.Configuration.EnvironmentVariableMappings;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Core.Configuration;
+using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Kubernetes.Configuration;
 using Octopus.Tentacle.Kubernetes.Crypto;
 using Octopus.Tentacle.Startup;
@@ -99,7 +101,13 @@ namespace Octopus.Tentacle.Configuration
             builder.RegisterType<ProxyInitializer>().As<IProxyInitializer>().SingleInstance();
             
             //Even though these are Kubernetes types, we need to include them in this module as they are used lazily in the base types
-            builder.RegisterType<ConfigMapKeyValueStore>().SingleInstance();
+            builder.Register(c =>
+                {
+                    var configMapService = c.Resolve<IKubernetesConfigMapService>();
+                    var encryptor = c.Resolve<IKubernetesMachineKeyEncryptor>();
+                    return ConfigMapKeyValueStore.CreateAsync(configMapService, encryptor, CancellationToken.None).GetAwaiter().GetResult();
+                })
+                .SingleInstance();
             builder.RegisterType<KubernetesMachineEncryptionKeyProvider>().As<IKubernetesMachineEncryptionKeyProvider>().SingleInstance();
             builder.RegisterType<KubernetesMachineKeyEncryptor>().As<IKubernetesMachineKeyEncryptor>().SingleInstance();
             
@@ -145,7 +153,13 @@ namespace Octopus.Tentacle.Configuration
                 .As<IApplicationInstanceStore>();
 
             builder.RegisterType<KubernetesMachineKeyEncryptor>().As<IKubernetesMachineKeyEncryptor>().SingleInstance();
-            builder.RegisterType<ConfigMapKeyValueStore>().SingleInstance();
+            builder.Register(c =>
+                {
+                    var configMapService = c.Resolve<IKubernetesConfigMapService>();
+                    var encryptor = c.Resolve<IKubernetesMachineKeyEncryptor>();
+                    return ConfigMapKeyValueStore.CreateAsync(configMapService, encryptor, CancellationToken.None).GetAwaiter().GetResult();
+                })
+                .SingleInstance();
 
             builder.RegisterType<HomeConfiguration>()
                 .As<IHomeConfiguration>()

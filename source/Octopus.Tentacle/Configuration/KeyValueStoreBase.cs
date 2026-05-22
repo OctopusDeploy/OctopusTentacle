@@ -1,5 +1,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Octopus.Tentacle.Configuration
 {
@@ -42,5 +44,13 @@ namespace Octopus.Tentacle.Configuration
         }
 
         public abstract bool Save();
+
+        public virtual Task<bool> SaveAsync(CancellationToken cancellationToken = default) => Task.FromResult(Save());
+
+        public virtual Task<bool> SetAsync(string name, string? value, ProtectionLevel protectionLevel = ProtectionLevel.None, CancellationToken cancellationToken = default) => Task.FromResult(Set<string?>(name, value, protectionLevel));
+
+        public virtual Task<bool> SetAsync<TData>(string name, TData value, ProtectionLevel protectionLevel = ProtectionLevel.None, CancellationToken cancellationToken = default) => Task.FromResult(Set<TData>(name, value, protectionLevel));
+
+        public virtual Task<bool> RemoveAsync(string name, CancellationToken cancellationToken = default) => Task.FromResult(Remove(name));
     }
 }

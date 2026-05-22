@@ -74,7 +74,7 @@ namespace Octopus.Tentacle.Commands
 
             await CollectConfigurationSettings(outputFile);
 
-            outputFile.Save();
+            await outputFile.SaveAsync();
         }
 
         async Task CollectConfigurationSettings(DictionaryKeyValueStore outputStore)
