@@ -35,6 +35,9 @@ namespace Octopus.Tentacle.Kubernetes
             EnsureDiskHasEnoughFreeSpaceAsync(directoryPath, requiredSpaceInBytes).GetAwaiter().GetResult();
         }
 
+        public override Task EnsureDiskHasEnoughFreeSpaceAsync(string directoryPath, CancellationToken cancellationToken = default)
+            => EnsureDiskHasEnoughFreeSpaceAsync(directoryPath, 500L * 1024 * 1024, cancellationToken);
+
         public override async Task EnsureDiskHasEnoughFreeSpaceAsync(string directoryPath, long requiredSpaceInBytes, CancellationToken cancellationToken = default)
         {
             var spaceInformation = await GetStorageInformationAsync();
