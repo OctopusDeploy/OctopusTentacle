@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading.Tasks;
 using Octopus.Tentacle.Internals.Options;
 
 namespace Octopus.Tentacle.Startup
@@ -26,6 +27,7 @@ namespace Octopus.Tentacle.Startup
 
         // Common options are provided so that the Help command can inspect them
         void Start(string[] commandLineArguments, ICommandRuntime commandRuntime, OptionSet commonOptions);
+        Task StartAsync(string[] commandLineArguments, ICommandRuntime commandRuntime, OptionSet commonOptions);
         void Stop();
     }
 }

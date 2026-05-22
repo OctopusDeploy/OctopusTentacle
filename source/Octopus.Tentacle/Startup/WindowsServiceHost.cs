@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.ServiceProcess;
+using System.Threading.Tasks;
 using Octopus.Tentacle.Core.Diagnostics;
 
 namespace Octopus.Tentacle.Startup
@@ -30,6 +31,27 @@ namespace Octopus.Tentacle.Startup
 
             log.Trace("Running the service host adapter");
             ServiceBase.Run(adapter);
+        }
+
+        public Task RunAsync(Func<ICommandRuntime, Task> start, Action shutdown)
+        {
+            log.Trace("Creating the Windows Service host adapter");
+
+            var startService = new Action(delegate
+            {
+                log.Trace("Starting the Windows Service");
+                // ServiceBase.Run dispatches this on a dedicated background thread (WindowsServiceAdapter.workerThread)
+                // with no SynchronizationContext, so blocking here is deadlock-safe.
+                start(this).GetAwaiter().GetResult();
+                log.Info("The Windows Service has started");
+            });
+
+            var adapter = new WindowsServiceAdapter(startService, () => Stop(shutdown), log);
+
+            log.Trace("Running the service host adapter");
+            // ServiceBase.Run blocks until the Windows service stops — offload to thread pool
+            // so the caller can await it without pinning the main thread.
+            return Task.Run(() => ServiceBase.Run(adapter));
         }
 
         public void Stop(Action shutdown)

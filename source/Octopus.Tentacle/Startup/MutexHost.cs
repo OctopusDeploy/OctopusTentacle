@@ -47,6 +47,24 @@ namespace Octopus.Tentacle.Startup
             start(this);
         }
 
+        public async Task RunAsync(Func<ICommandRuntime, Task> start, Action shutdown)
+        {
+            if (Mutex.TryOpenExisting(monitorMutexHost, out var m))
+                task = Task.Run(() =>
+                {
+                    while (!sourceToken.IsCancellationRequested)
+                        if (m!.WaitOne(500))
+                        {
+                            shutdown();
+                            shutdownTrigger.Set();
+                            m.ReleaseMutex();
+                            break;
+                        }
+                });
+
+            await start(this);
+        }
+
         public void Stop(Action shutdown)
         {
             sourceToken.Cancel();

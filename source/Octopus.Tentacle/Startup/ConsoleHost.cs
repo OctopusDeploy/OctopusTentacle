@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Internals.Options;
@@ -31,6 +32,14 @@ namespace Octopus.Tentacle.Startup
             Console.ResetColor();
             SafelySetConsoleTitle(displayName);
             start(this);
+            Stop(shutdown);
+        }
+
+        public async Task RunAsync(Func<ICommandRuntime, Task> start, Action shutdown)
+        {
+            Console.ResetColor();
+            SafelySetConsoleTitle(displayName);
+            await start(this);
             Stop(shutdown);
         }
 

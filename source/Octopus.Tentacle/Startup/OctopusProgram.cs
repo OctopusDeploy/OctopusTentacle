@@ -76,7 +76,9 @@ namespace Octopus.Tentacle.Startup
 
         protected abstract ApplicationName ApplicationName { get; }
 
-        public int Run()
+        public int Run() => RunAsync().GetAwaiter().GetResult();
+
+        public async Task<int> RunAsync()
         {
             var delayedLog = new DelayedLog();
             // Need to clean up old files before anything else as they may interfere with initialization
@@ -152,7 +154,7 @@ namespace Octopus.Tentacle.Startup
                     forceNoninteractiveHost,
                     monitorMutexHost);
 
-                RunHost(host);
+                await RunHostAsync(host);
                 // If we make it to here we can set the error code as either an UnknownCommand for which you got some help, or Success!
                 exitCode = (int)(commandFromCommandLine == null ? ExitCode.UnknownCommand : ExitCode.Success);
             }
@@ -186,7 +188,7 @@ namespace Octopus.Tentacle.Startup
             return exitCode;
         }
 
-        void RunHost(ICommandHost host)
+        async Task RunHostAsync(ICommandHost host)
         {
 #if FULL_FRAMEWORK
             /*
@@ -202,7 +204,7 @@ namespace Octopus.Tentacle.Startup
                 return true;
             });
             CtrlSignaling.SetConsoleCtrlHandler(hr, true);
-            host.Run(Start, Shutdown);
+            await host.RunAsync(StartAsync, Shutdown);
             GC.KeepAlive(hr);
 #else
             Console.CancelKeyPress += (s, e) =>
@@ -217,7 +219,7 @@ namespace Octopus.Tentacle.Startup
                 log.Trace("AppDomain process exiting");
                 host.Stop(Shutdown);
             };
-            host.Run(Start, Shutdown);
+            await host.RunAsync(StartAsync, Shutdown);
 
 #endif
         }
@@ -561,6 +563,13 @@ namespace Octopus.Tentacle.Startup
             if (responsibleCommand == null)
                 throw new InvalidOperationException("Responsible command not set");
             responsibleCommand.Start(commandLineArguments, commandRuntime, commonOptions);
+        }
+
+        Task StartAsync(ICommandRuntime commandRuntime)
+        {
+            if (responsibleCommand == null)
+                throw new InvalidOperationException("Responsible command not set");
+            return responsibleCommand.StartAsync(commandLineArguments, commandRuntime, commonOptions);
         }
 
         static string[] TryResolveCommand(

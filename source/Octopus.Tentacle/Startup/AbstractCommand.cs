@@ -73,6 +73,13 @@ namespace Octopus.Tentacle.Startup
 
         public virtual void Start(string[] commandLineArguments, ICommandRuntime commandRuntime, OptionSet commonOptions)
         {
+            // Sync wrapper for hosts that don't support async dispatch — kept for backwards
+            // compatibility. OctopusProgram calls StartAsync() directly.
+            StartAsync(commandLineArguments, commandRuntime, commonOptions).GetAwaiter().GetResult();
+        }
+
+        public virtual async Task StartAsync(string[] commandLineArguments, ICommandRuntime commandRuntime, OptionSet commonOptions)
+        {
             runtime = commandRuntime;
 
             var unrecognized = Options.Parse(commandLineArguments);
@@ -86,12 +93,7 @@ namespace Octopus.Tentacle.Startup
             LogFileOnlyLogger.Info($"==== {GetType().Name} ====");
             LogFileOnlyLogger.Info($"CommandLine: {string.Join(" ", Environment.GetCommandLineArgs())}");
 
-            // We're in the CLI command dispatcher. The CLI host (OctopusProgram) invokes
-            // commands synchronously via ICommandHost.Run, so we block on the async command
-            // here with .GetAwaiter().GetResult(). This is the single sync↔async boundary
-            // for all async commands — callers are on plain thread-pool workers with no
-            // captured context, so the block cannot deadlock.
-            StartAsync().GetAwaiter().GetResult();
+            await StartAsync();
             Completed();
         }
 
