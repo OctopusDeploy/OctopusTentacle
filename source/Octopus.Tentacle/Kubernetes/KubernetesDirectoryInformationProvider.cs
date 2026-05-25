@@ -55,7 +55,15 @@ namespace Octopus.Tentacle.Kubernetes
         {
             var stdOut = new List<string>();
             var stdErr = new List<string>();
-            var exitCode = silentProcessRunner.ExecuteCommand("du", $"-s -B 1 {directoryPath}", "/", stdOut.Add, stdErr.Add);
+            // Sync boundary: called from IMemoryCache.GetOrCreate factory which is synchronous.
+            // We block on the async ExecuteCommandAsync with .GetAwaiter().GetResult().
+            // This is safe because we're on a plain thread-pool worker. The risk with blocking on
+            // async is a deadlock: if the async work needs to resume on the same thread that's
+            // blocked waiting for it, neither can make progress. Thread-pool workers don't have
+            // that constraint — when the async work finishes it can pick up on any free thread,
+            // not specifically this one, so the block resolves normally.
+            var exitCode = silentProcessRunner.ExecuteCommandAsync("du", $"-s -B 1 {directoryPath}", "/", stdOut.Add, stdErr.Add)
+                .GetAwaiter().GetResult();
 
             if (exitCode != 0)
             {

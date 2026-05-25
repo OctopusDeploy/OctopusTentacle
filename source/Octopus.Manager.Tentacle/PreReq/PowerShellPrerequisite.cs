@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading;
 using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Util;
 
@@ -33,12 +34,21 @@ namespace Octopus.Manager.Tentacle.PreReq
             // to detect 3.0, it failed to detect 4. Going the direct route:
             try
             {
-                SilentProcessRunnerExtended.ExecuteCommand(
+                // We're in the WPF installer prerequisite check. IPrerequisite.Check() must return
+                // synchronously — there's no async version of the interface — so we block on the async
+                // call with .GetAwaiter().GetResult().
+                // This is safe because we're on a plain thread-pool worker. The risk with blocking on
+                // async is a deadlock: if the async work needs to resume on the same thread that's
+                // blocked waiting for it, neither can make progress. Thread-pool workers don't have
+                // that constraint — when the async work finishes it can pick up on any free thread,
+                // not specifically this one, so the block resolves normally.
+                SilentProcessRunnerExtended.ExecuteCommandAsync(
                     powerShellExe,
                     arguments,
                     ".",
                     stdOut.WriteLine,
-                    s => stdErr.WriteLine($"ERR: {s}"));
+                    s => stdErr.WriteLine($"ERR: {s}"),
+                    cancel: CancellationToken.None).GetAwaiter().GetResult();
 
                 var outputText = stdOut.ToString();
                 new SystemLog().Verbose("PowerShell prerequisite check output: " + outputText);

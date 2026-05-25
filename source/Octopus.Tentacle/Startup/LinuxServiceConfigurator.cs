@@ -194,7 +194,11 @@ namespace Octopus.Tentacle.Startup
             File.WriteAllText(path, contents);
 
             var commandLineInvocation = new CommandLineInvocation("/bin/bash", $"-c \"chmod 644 {path}\"");
-            var result = commandLineInvocation.ExecuteCommand();
+            // Sync boundary: WriteUnitFile is called from IServiceConfigurator.ConfigureService
+            // implementations, which are themselves called from the Tentacle service-management
+            // CLI on a threadpool worker with no sync context. GetAwaiter().GetResult() is
+            // deadlock-safe here.
+            var result = commandLineInvocation.ExecuteCommandAsync().GetAwaiter().GetResult();
 
             if (result.ExitCode == 0) return;
 
@@ -219,14 +223,22 @@ namespace Octopus.Tentacle.Startup
         bool IsSystemdInstalled()
         {
             var commandLineInvocation = new CommandLineInvocation("/bin/bash", "-c \"command -v systemctl >/dev/null\"");
-            var result = commandLineInvocation.ExecuteCommand();
+            // Sync boundary: IsSystemdInstalled is called from CheckSystemPrerequisites,
+            // which is called from IServiceConfigurator.ConfigureService, which is itself
+            // called from the Tentacle service-management CLI on a threadpool worker with
+            // no sync context. GetAwaiter().GetResult() is deadlock-safe here.
+            var result = commandLineInvocation.ExecuteCommandAsync().GetAwaiter().GetResult();
             return result.ExitCode == 0;
         }
 
         bool HaveSudoPrivileges()
         {
             var commandLineInvocation = new CommandLineInvocation("/bin/bash", "-c \"sudo -vn 2> /dev/null\"");
-            var result = commandLineInvocation.ExecuteCommand();
+            // Sync boundary: HaveSudoPrivileges is called from CheckSystemPrerequisites,
+            // which is called from IServiceConfigurator.ConfigureService, which is itself
+            // called from the Tentacle service-management CLI on a threadpool worker with
+            // no sync context. GetAwaiter().GetResult() is deadlock-safe here.
+            var result = commandLineInvocation.ExecuteCommandAsync().GetAwaiter().GetResult();
             return result.ExitCode == 0;
         }
 
