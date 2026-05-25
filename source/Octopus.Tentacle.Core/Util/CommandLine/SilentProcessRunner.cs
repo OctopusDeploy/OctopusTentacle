@@ -8,13 +8,14 @@ using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Octopus.Tentacle.Core.Diagnostics;
 
 namespace Octopus.Tentacle.Util
 {
     public static class SilentProcessRunner
     {
-        public static int ExecuteCommand(
+        public static Task<int> ExecuteCommandAsync(
             string executable,
             string arguments,
             string workingDirectory,
@@ -23,10 +24,10 @@ namespace Octopus.Tentacle.Util
             Action<string> error,
             CancellationToken cancel)
         {
-            return ExecuteCommand(executable, arguments, workingDirectory, debug, info, error, customEnvironmentVariables: null, cancel: cancel);
+            return ExecuteCommandAsync(executable, arguments, workingDirectory, debug, info, error, customEnvironmentVariables: null, cancel: cancel);
         }
 
-        public static int ExecuteCommand(
+        public static async Task<int> ExecuteCommandAsync(
             string executable,
             string arguments,
             string workingDirectory,
@@ -125,6 +126,7 @@ namespace Octopus.Tentacle.Util
                         WriteData(error, errorResetEvent, e);
                     };
 
+                    process.EnableRaisingEvents = true;
                     process.Start();
 
                     var running = true;
@@ -140,7 +142,11 @@ namespace Octopus.Tentacle.Util
                         process.BeginOutputReadLine();
                         process.BeginErrorReadLine();
 
-                        process.WaitForExit();
+#if NETFRAMEWORK
+                        await WaitForExitAsyncNetFramework(process, cancel).ConfigureAwait(false);
+#else
+                        await process.WaitForExitAsync(cancel).ConfigureAwait(false);
+#endif
 
                         SafelyCancelRead(process.CancelErrorRead, debug);
                         SafelyCancelRead(process.CancelOutputRead, debug);
@@ -202,6 +208,30 @@ namespace Octopus.Tentacle.Util
                 debug($"Swallowing {ex.GetType().Name} calling {action.Method.Name}.");
             }
         }
+
+#if NETFRAMEWORK
+        static Task WaitForExitAsyncNetFramework(Process process, CancellationToken cancellationToken)
+        {
+            var tcs = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+            CancellationTokenRegistration registration = default;
+            void OnExited(object? sender, EventArgs e)
+            {
+                registration.Dispose();
+                tcs.TrySetResult(null);
+            }
+            process.Exited += OnExited;
+            if (process.HasExited) tcs.TrySetResult(null);
+            if (cancellationToken.CanBeCanceled)
+            {
+                registration = cancellationToken.Register(() =>
+                {
+                    process.Exited -= OnExited;
+                    tcs.TrySetCanceled(cancellationToken);
+                });
+            }
+            return tcs.Task;
+        }
+#endif
 
         static void DoOurBestToCleanUp(Process process, Action<string> error)
         {
