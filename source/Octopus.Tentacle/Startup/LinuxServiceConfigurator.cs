@@ -194,11 +194,20 @@ namespace Octopus.Tentacle.Startup
             File.WriteAllText(path, contents);
 
             var commandLineInvocation = new CommandLineInvocation("/bin/bash", $"-c \"chmod 644 {path}\"");
-            // We're in WriteUnitFile, called from IServiceConfigurator.ConfigureService implementations
-            // which are sync (called from the Tentacle service-management CLI), so we block on the
-            // async call with .GetAwaiter().GetResult().
-            // This is sync-over-async but is safe because the CLI dispatches us on a plain
-            // thread-pool worker. No captured SynchronizationContext, so no deadlock.
+            // We're in LinuxServiceConfigurator, which implements IServiceConfigurator.
+            // IServiceConfigurator is consumed by ServiceCommand (an AbstractCommand).
+            // AbstractCommand.Start() is sync because it implements ICommand.Start(),
+            // which is sync because Topshelf's runtime callback API is sync. So
+            // ConfigureService must return synchronously, and we block on the async
+            // call with .GetAwaiter().GetResult(). This is sync-over-async but is safe
+            // because no SynchronizationContext is ever captured on this call stack.
+            // When the user runs `tentacle service ...` from a shell, we enter through
+            // the process entry point (Main), and the main thread of a .NET console app
+            // has no SynchronizationContext installed by default. When running as an
+            // installed systemd service, Topshelf's OnStart callback runs on a
+            // dedicated worker (a `new Thread(...)`) that also has no
+            // SynchronizationContext. Either way, no captured context means no
+            // deadlock.
             // See https://blog.stephencleary.com/2012/07/dont-block-on-async-code.html
             var result = commandLineInvocation.ExecuteCommandAsync().GetAwaiter().GetResult();
 
@@ -225,8 +234,21 @@ namespace Octopus.Tentacle.Startup
         bool IsSystemdInstalled()
         {
             var commandLineInvocation = new CommandLineInvocation("/bin/bash", "-c \"command -v systemctl >/dev/null\"");
-            // Same sync-over-async boundary as WriteUnitFile: CheckSystemPrerequisites is called
-            // from the sync ConfigureService path, on a plain thread-pool worker.
+            // We're in LinuxServiceConfigurator, which implements IServiceConfigurator.
+            // IServiceConfigurator is consumed by ServiceCommand (an AbstractCommand).
+            // AbstractCommand.Start() is sync because it implements ICommand.Start(),
+            // which is sync because Topshelf's runtime callback API is sync. So
+            // ConfigureService must return synchronously, and we block on the async
+            // call with .GetAwaiter().GetResult(). This is sync-over-async but is safe
+            // because no SynchronizationContext is ever captured on this call stack.
+            // When the user runs `tentacle service ...` from a shell, we enter through
+            // the process entry point (Main), and the main thread of a .NET console app
+            // has no SynchronizationContext installed by default. When running as an
+            // installed systemd service, Topshelf's OnStart callback runs on a
+            // dedicated worker (a `new Thread(...)`) that also has no
+            // SynchronizationContext. Either way, no captured context means no
+            // deadlock.
+            // See https://blog.stephencleary.com/2012/07/dont-block-on-async-code.html
             var result = commandLineInvocation.ExecuteCommandAsync().GetAwaiter().GetResult();
             return result.ExitCode == 0;
         }
@@ -234,7 +256,21 @@ namespace Octopus.Tentacle.Startup
         bool HaveSudoPrivileges()
         {
             var commandLineInvocation = new CommandLineInvocation("/bin/bash", "-c \"sudo -vn 2> /dev/null\"");
-            // Same sync-over-async boundary as IsSystemdInstalled.
+            // We're in LinuxServiceConfigurator, which implements IServiceConfigurator.
+            // IServiceConfigurator is consumed by ServiceCommand (an AbstractCommand).
+            // AbstractCommand.Start() is sync because it implements ICommand.Start(),
+            // which is sync because Topshelf's runtime callback API is sync. So
+            // ConfigureService must return synchronously, and we block on the async
+            // call with .GetAwaiter().GetResult(). This is sync-over-async but is safe
+            // because no SynchronizationContext is ever captured on this call stack.
+            // When the user runs `tentacle service ...` from a shell, we enter through
+            // the process entry point (Main), and the main thread of a .NET console app
+            // has no SynchronizationContext installed by default. When running as an
+            // installed systemd service, Topshelf's OnStart callback runs on a
+            // dedicated worker (a `new Thread(...)`) that also has no
+            // SynchronizationContext. Either way, no captured context means no
+            // deadlock.
+            // See https://blog.stephencleary.com/2012/07/dont-block-on-async-code.html
             var result = commandLineInvocation.ExecuteCommandAsync().GetAwaiter().GetResult();
             return result.ExitCode == 0;
         }

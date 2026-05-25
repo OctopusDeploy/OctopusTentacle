@@ -406,8 +406,6 @@ while ((Get-Date) -lt $deadline) {
             return $"${varName}";
         }
 
-        // Sync-over-async is safe here: NUnit runs tests on a plain ThreadPool thread with no
-        // synchronisation context, so there is no risk of deadlock.
         static int Execute(
             string command,
             string arguments,
@@ -421,6 +419,13 @@ while ((Get-Date) -lt $deadline) {
             var info = new StringBuilder();
             var error = new StringBuilder();
 
+            // We're in a synchronous test helper (Execute) that exposes a sync int
+            // return and out parameters. The method must return synchronously, so we
+            // block on the async call with .GetAwaiter().GetResult(). This is
+            // sync-over-async but is safe because the NUnit test runner dispatches us
+            // on a worker thread without a captured SynchronizationContext, so no
+            // deadlock.
+            // See https://blog.stephencleary.com/2012/07/dont-block-on-async-code.html
             var exitCode = SilentProcessRunner.ExecuteCommandAsync(
                 command,
                 arguments,

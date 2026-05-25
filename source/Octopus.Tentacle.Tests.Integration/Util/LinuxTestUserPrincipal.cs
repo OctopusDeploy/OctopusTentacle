@@ -22,7 +22,12 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         static void RunCommand(string arguments, bool failOnNonZeroExitCode = true)
         {
             var commandLineInvocation = new CommandLineInvocation("/bin/bash", arguments);
-            // Safe: constructor-time helper, no synchronisation context.
+            // We're in a synchronous test helper called from the LinuxTestUserPrincipal
+            // constructor. Constructors must return synchronously, so we block on the
+            // async call with .GetAwaiter().GetResult(). This is sync-over-async but is
+            // safe because the NUnit test runner dispatches us on a worker thread without
+            // a captured SynchronizationContext, so no deadlock.
+            // See https://blog.stephencleary.com/2012/07/dont-block-on-async-code.html
             var result = commandLineInvocation.ExecuteCommandAsync().GetAwaiter().GetResult();
 
             foreach (var line in result.Errors)

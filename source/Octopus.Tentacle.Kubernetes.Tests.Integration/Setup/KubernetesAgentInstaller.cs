@@ -219,8 +219,11 @@ public class KubernetesAgentInstaller
                 NamespaceFlag,
                 AgentName);
 
-            // Dispose() cannot be made async; .GetAwaiter().GetResult() is safe here
-            // because this runs in test teardown (not inside an async context with a sync-blocking SynchronizationContext).
+            // We're in IDisposable.Dispose(). Dispose() must return synchronously, so we
+            // block on the async call with .GetAwaiter().GetResult(). This is sync-over-async
+            // but is safe because the NUnit test runner dispatches us on a worker thread
+            // without a captured SynchronizationContext, so no deadlock.
+            // See https://blog.stephencleary.com/2012/07/dont-block-on-async-code.html
             var exitCode = SilentProcessRunner.ExecuteCommandAsync(
                 helmExePath,
                 uninstallArgs,

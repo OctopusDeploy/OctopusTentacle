@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Tentacle.CommonTestUtils.Diagnostics;
@@ -21,22 +22,22 @@ namespace Octopus.Tentacle.Tests.Integration.Startup
     {
         [Test]
         [RequiresSudoOnLinux]
-        public void CanInstallServiceAsRoot()
+        public async Task CanInstallServiceAsRoot()
         {
-            CanInstallService(null, null);
+            await CanInstallService(null, null);
         }
 
         [Test]
         [RequiresSudoOnLinux]
-        public void CanInstallServiceAsUser()
+        public async Task CanInstallServiceAsUser()
         {
             var user = new LinuxTestUserPrincipal("octo-shared-svc-test");
-            CanInstallService(user.UserName, user.Password);
+            await CanInstallService(user.UserName, user.Password);
         }
 
         [Test]
         [RequiresSudoOnLinux]
-        public void CannotWriteToServiceFileAsUser()
+        public async Task CannotWriteToServiceFileAsUser()
         {
             const string serviceName = "OctopusShared.ServiceHelperTest";
             const string instance = "TestCannotWriteToServiceFileInstance";
@@ -47,8 +48,7 @@ namespace Octopus.Tentacle.Tests.Integration.Startup
             WriteUnixFile(scriptPath);
 
             var chmodCmd = new CommandLineInvocation("/bin/bash", $"-c \"chmod 777 {scriptPath}\"");
-            // Safe: sync test helper, no synchronisation context.
-            chmodCmd.ExecuteCommandAsync().GetAwaiter().GetResult();
+            await chmodCmd.ExecuteCommandAsync();
 
             var configureServiceHelper = new LinuxServiceConfigurator(log);
 
@@ -67,12 +67,11 @@ namespace Octopus.Tentacle.Tests.Integration.Startup
                 serviceConfigurationState);
 
             var statCmd = new CommandLineInvocation("/bin/bash", $"-c \"stat -c '%A' /etc/systemd/system/{instance}.service\"");
-            // Safe: sync test helper, no synchronisation context.
-            var result = statCmd.ExecuteCommandAsync().GetAwaiter().GetResult();
+            var result = await statCmd.ExecuteCommandAsync();
             result.Infos.Single().Should().Be("-rw-r--r--"); // Service file should only be writeable for the root user
         }
 
-        void CanInstallService(string username, string password)
+        async Task CanInstallService(string username, string password)
         {
             const string serviceName = "OctopusShared.ServiceHelperTest";
             const string instance = "TestInstance";
@@ -83,8 +82,7 @@ namespace Octopus.Tentacle.Tests.Integration.Startup
             WriteUnixFile(scriptPath);
 
             var commandLineInvocation = new CommandLineInvocation("/bin/bash", $"-c \"chmod 777 {scriptPath}\"");
-            // Safe: sync test helper, no synchronisation context.
-            commandLineInvocation.ExecuteCommandAsync().GetAwaiter().GetResult();
+            await commandLineInvocation.ExecuteCommandAsync();
 
             var configureServiceHelper = new LinuxServiceConfigurator(log);
 
@@ -103,19 +101,19 @@ namespace Octopus.Tentacle.Tests.Integration.Startup
                 serviceConfigurationState);
 
             //Check that the systemd unit service file has been written
-            Assert.IsTrue(DoesServiceUnitFileExist(instance), "The service unit file has not been created");
+            Assert.IsTrue(await DoesServiceUnitFileExist(instance), "The service unit file has not been created");
 
-            var status = GetServiceStatus(instance);
+            var status = await GetServiceStatus(instance);
             status["ActiveState"].Should().Be("active");
             status["SubState"].Should().Be("running");
             status["LoadState"].Should().Be("loaded");
             status["User"].Should().Be(username ?? "root");
 
             //Check that the Service is running
-            Assert.IsTrue(IsServiceRunning(instance), "The service is not running");
+            Assert.IsTrue(await IsServiceRunning(instance), "The service is not running");
 
             //Check that the service is enabled to run on startup
-            Assert.IsTrue(IsServiceEnabled(instance), "The service has not been enabled to run on startup");
+            Assert.IsTrue(await IsServiceEnabled(instance), "The service has not been enabled to run on startup");
 
             var stopServiceConfigurationState = new ServiceConfigurationState
             {
@@ -130,13 +128,13 @@ namespace Octopus.Tentacle.Tests.Integration.Startup
                 stopServiceConfigurationState);
 
             //Check that the Service has stopped
-            Assert.IsFalse(IsServiceRunning(instance), "The service has not been stopped");
+            Assert.IsFalse(await IsServiceRunning(instance), "The service has not been stopped");
 
             //Check that the service is disabled
-            Assert.IsFalse(IsServiceEnabled(instance), "The service has not been disabled");
+            Assert.IsFalse(await IsServiceEnabled(instance), "The service has not been disabled");
 
             //Check that the service is disabled
-            Assert.IsFalse(DoesServiceUnitFileExist(instance), "The service unit file still exists");
+            Assert.IsFalse(await DoesServiceUnitFileExist(instance), "The service unit file still exists");
         }
 
         void WriteUnixFile(string path)
@@ -151,11 +149,10 @@ namespace Octopus.Tentacle.Tests.Integration.Startup
             }
         }
 
-        Dictionary<string, string> GetServiceStatus(string serviceName)
+        async Task<Dictionary<string, string>> GetServiceStatus(string serviceName)
         {
             var commandLineInvocation = new CommandLineInvocation("/bin/bash", $"-c \"systemctl show {serviceName}\"");
-            // Safe: sync test helper, no synchronisation context.
-            var result = commandLineInvocation.ExecuteCommandAsync().GetAwaiter().GetResult();
+            var result = await commandLineInvocation.ExecuteCommandAsync();
             Console.WriteLine($"Status of service {serviceName}");
             foreach (var info in result.Infos)
                 Console.WriteLine(info);
@@ -164,29 +161,28 @@ namespace Octopus.Tentacle.Tests.Integration.Startup
                 .ToDictionary(x => x[0], x => x[1]);
         }
 
-        bool IsServiceRunning(string serviceName)
+        async Task<bool> IsServiceRunning(string serviceName)
         {
-            var result = RunBashCommand($"systemctl is-active --quiet {serviceName}");
+            var result = await RunBashCommand($"systemctl is-active --quiet {serviceName}");
             return result.ExitCode == 0;
         }
 
-        bool IsServiceEnabled(string serviceName)
+        async Task<bool> IsServiceEnabled(string serviceName)
         {
-            var result = RunBashCommand($"systemctl is-enabled --quiet {serviceName}");
+            var result = await RunBashCommand($"systemctl is-enabled --quiet {serviceName}");
             return result.ExitCode == 0;
         }
 
-        bool DoesServiceUnitFileExist(string serviceName)
+        async Task<bool> DoesServiceUnitFileExist(string serviceName)
         {
-            var result = RunBashCommand($"ls /etc/systemd/system | grep {serviceName}.service");
+            var result = await RunBashCommand($"ls /etc/systemd/system | grep {serviceName}.service");
             return result.ExitCode == 0;
         }
 
-        CmdResult RunBashCommand(string command)
+        async Task<CmdResult> RunBashCommand(string command)
         {
             var commandLineInvocation = new CommandLineInvocation("/bin/bash", $"-c \"{command}\"");
-            // Safe: sync test helper, no synchronisation context.
-            return commandLineInvocation.ExecuteCommandAsync().GetAwaiter().GetResult();
+            return await commandLineInvocation.ExecuteCommandAsync();
         }
     }
 }
