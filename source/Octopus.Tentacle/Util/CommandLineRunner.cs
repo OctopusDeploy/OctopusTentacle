@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Threading;
 using Octopus.Tentacle.Core.Diagnostics;
 
 namespace Octopus.Tentacle.Util
@@ -43,12 +44,19 @@ namespace Octopus.Tentacle.Util
         {
             try
             {
-                var exitCode = SilentProcessRunner.ExecuteCommand(invocation.Executable,
-                    (invocation.Arguments ?? "") + " " + (invocation.SystemArguments ?? ""),
-                    Environment.CurrentDirectory,
-                    debug,
-                    info,
-                    error);
+                // Sync boundary: ICommandLineRunner is a public interface consumed by
+                // Octopus.Manager.Tentacle (a WPF app) which calls Execute from a
+                // ThreadPool.QueueUserWorkItem — no synchronisation context, so
+                // GetAwaiter().GetResult() here is deadlock-safe.
+                var exitCode = SilentProcessRunner.ExecuteCommandAsync(
+                        invocation.Executable,
+                        (invocation.Arguments ?? "") + " " + (invocation.SystemArguments ?? ""),
+                        Environment.CurrentDirectory,
+                        debug,
+                        info,
+                        error,
+                        cancel: CancellationToken.None)
+                    .GetAwaiter().GetResult();
 
                 if (exitCode != 0)
                 {
