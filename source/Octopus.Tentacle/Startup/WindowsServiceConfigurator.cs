@@ -342,10 +342,12 @@ namespace Octopus.Tentacle.Startup
             var sc = Path.Combine(system32, "sc.exe");
 
             logFileOnlyLogger.Info($"Executing sc.exe {argumentsToLog}");
-            // Sync boundary: Sc() is called from IServiceConfigurator.ConfigureService
-            // implementations, which are themselves called from the Tentacle
-            // service-management CLI on Windows (no sync context, threadpool worker).
-            // GetAwaiter().GetResult() is deadlock-safe here.
+            // We're in Sc() running sc.exe, called from IServiceConfigurator.ConfigureService
+            // implementations which are sync (called from the Tentacle service-management CLI on
+            // Windows), so we block on the async call with .GetAwaiter().GetResult().
+            // This is sync-over-async but is safe because the CLI dispatches us on a plain
+            // thread-pool worker. No captured SynchronizationContext, so no deadlock.
+            // See https://blog.stephencleary.com/2012/07/dont-block-on-async-code.html
             var exitCode = SilentProcessRunnerExtended.ExecuteCommandAsync(sc,
                 arguments,
                 Environment.CurrentDirectory,

@@ -44,10 +44,12 @@ namespace Octopus.Tentacle.Util
         {
             try
             {
-                // Sync boundary: ICommandLineRunner is a public interface consumed by
-                // Octopus.Manager.Tentacle (a WPF app) which calls Execute from a
-                // ThreadPool.QueueUserWorkItem — no synchronisation context, so
-                // GetAwaiter().GetResult() here is deadlock-safe.
+                // We're in CommandLineRunner.Execute, consumed by Octopus.Manager.Tentacle (WPF).
+                // The WPF installer calls Execute from ThreadPool.QueueUserWorkItem (a sync
+                // delegate), so we block on the async call with .GetAwaiter().GetResult().
+                // This is sync-over-async but is safe because the installer dispatches us on a
+                // plain thread-pool worker. No captured SynchronizationContext, so no deadlock.
+                // See https://blog.stephencleary.com/2012/07/dont-block-on-async-code.html
                 var exitCode = SilentProcessRunner.ExecuteCommandAsync(
                         invocation.Executable,
                         (invocation.Arguments ?? "") + " " + (invocation.SystemArguments ?? ""),

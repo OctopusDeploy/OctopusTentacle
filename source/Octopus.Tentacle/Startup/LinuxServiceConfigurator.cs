@@ -194,10 +194,12 @@ namespace Octopus.Tentacle.Startup
             File.WriteAllText(path, contents);
 
             var commandLineInvocation = new CommandLineInvocation("/bin/bash", $"-c \"chmod 644 {path}\"");
-            // Sync boundary: WriteUnitFile is called from IServiceConfigurator.ConfigureService
-            // implementations, which are themselves called from the Tentacle service-management
-            // CLI on a threadpool worker with no sync context. GetAwaiter().GetResult() is
-            // deadlock-safe here.
+            // We're in WriteUnitFile, called from IServiceConfigurator.ConfigureService implementations
+            // which are sync (called from the Tentacle service-management CLI), so we block on the
+            // async call with .GetAwaiter().GetResult().
+            // This is sync-over-async but is safe because the CLI dispatches us on a plain
+            // thread-pool worker. No captured SynchronizationContext, so no deadlock.
+            // See https://blog.stephencleary.com/2012/07/dont-block-on-async-code.html
             var result = commandLineInvocation.ExecuteCommandAsync().GetAwaiter().GetResult();
 
             if (result.ExitCode == 0) return;
@@ -223,10 +225,8 @@ namespace Octopus.Tentacle.Startup
         bool IsSystemdInstalled()
         {
             var commandLineInvocation = new CommandLineInvocation("/bin/bash", "-c \"command -v systemctl >/dev/null\"");
-            // Sync boundary: IsSystemdInstalled is called from CheckSystemPrerequisites,
-            // which is called from IServiceConfigurator.ConfigureService, which is itself
-            // called from the Tentacle service-management CLI on a threadpool worker with
-            // no sync context. GetAwaiter().GetResult() is deadlock-safe here.
+            // Same sync-over-async boundary as WriteUnitFile: CheckSystemPrerequisites is called
+            // from the sync ConfigureService path, on a plain thread-pool worker.
             var result = commandLineInvocation.ExecuteCommandAsync().GetAwaiter().GetResult();
             return result.ExitCode == 0;
         }
@@ -234,10 +234,7 @@ namespace Octopus.Tentacle.Startup
         bool HaveSudoPrivileges()
         {
             var commandLineInvocation = new CommandLineInvocation("/bin/bash", "-c \"sudo -vn 2> /dev/null\"");
-            // Sync boundary: HaveSudoPrivileges is called from CheckSystemPrerequisites,
-            // which is called from IServiceConfigurator.ConfigureService, which is itself
-            // called from the Tentacle service-management CLI on a threadpool worker with
-            // no sync context. GetAwaiter().GetResult() is deadlock-safe here.
+            // Same sync-over-async boundary as IsSystemdInstalled.
             var result = commandLineInvocation.ExecuteCommandAsync().GetAwaiter().GetResult();
             return result.ExitCode == 0;
         }

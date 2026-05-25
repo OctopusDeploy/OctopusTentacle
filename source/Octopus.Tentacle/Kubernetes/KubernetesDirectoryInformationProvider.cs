@@ -55,13 +55,12 @@ namespace Octopus.Tentacle.Kubernetes
         {
             var stdOut = new List<string>();
             var stdErr = new List<string>();
-            // Sync boundary: called from IMemoryCache.GetOrCreate factory which is synchronous.
-            // We block on the async ExecuteCommandAsync with .GetAwaiter().GetResult().
-            // This is safe because we're on a plain thread-pool worker. The risk with blocking on
-            // async is a deadlock: if the async work needs to resume on the same thread that's
-            // blocked waiting for it, neither can make progress. Thread-pool workers don't have
-            // that constraint — when the async work finishes it can pick up on any free thread,
-            // not specifically this one, so the block resolves normally.
+            // We're in the IMemoryCache.GetOrCreate factory that populates the disk-space cache entry.
+            // The cache factory delegate is synchronous (Func<ICacheEntry, T>), so we block on the
+            // async call with .GetAwaiter().GetResult().
+            // This is sync-over-async but is safe because the cache factory runs on a plain
+            // thread-pool worker. No captured SynchronizationContext, so no deadlock.
+            // See https://blog.stephencleary.com/2012/07/dont-block-on-async-code.html
             var exitCode = silentProcessRunner.ExecuteCommandAsync("du", $"-s -B 1 {directoryPath}", "/", stdOut.Add, stdErr.Add)
                 .GetAwaiter().GetResult();
 
