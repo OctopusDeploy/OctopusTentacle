@@ -9,7 +9,9 @@ using System.Runtime.Versioning;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Core.Diagnostics;
+using Octopus.Tentacle.Core.Util;
 
 namespace Octopus.Tentacle.Util
 {
@@ -22,9 +24,10 @@ namespace Octopus.Tentacle.Util
             Action<string> debug,
             Action<string> info,
             Action<string> error,
-            CancellationToken cancel)
+            CancellationToken cancel,
+            CancellationToken abandon)
         {
-            return ExecuteCommandAsync(executable, arguments, workingDirectory, debug, info, error, customEnvironmentVariables: null, cancel: cancel);
+            return ExecuteCommandAsync(executable, arguments, workingDirectory, debug, info, error, customEnvironmentVariables: null, cancel: cancel, abandon: abandon);
         }
 
         public static async Task<int> ExecuteCommandAsync(
@@ -35,7 +38,8 @@ namespace Octopus.Tentacle.Util
             Action<string> info,
             Action<string> error,
             IReadOnlyDictionary<string, string>? customEnvironmentVariables = null,
-            CancellationToken cancel = default)
+            CancellationToken cancel = default,
+            CancellationToken abandon = default)
         {
             if (executable == null)
                 throw new ArgumentNullException(nameof(executable));
@@ -110,6 +114,7 @@ namespace Octopus.Tentacle.Util
                     process.StartInfo.CreateNoWindow = true;
                     process.StartInfo.RedirectStandardOutput = true;
                     process.StartInfo.RedirectStandardError = true;
+                    process.EnableRaisingEvents = true;
                     if (PlatformDetection.IsRunningOnWindows)
                     {
                         process.StartInfo.StandardOutputEncoding = encoding;
@@ -126,7 +131,6 @@ namespace Octopus.Tentacle.Util
                         WriteData(error, errorResetEvent, e);
                     };
 
-                    process.EnableRaisingEvents = true;
                     process.Start();
 
                     var running = true;
@@ -137,16 +141,39 @@ namespace Octopus.Tentacle.Util
                            }))
                     {
                         if (cancel.IsCancellationRequested)
-                            DoOurBestToCleanUp(process,  error);
+                            DoOurBestToCleanUp(process, error);
 
                         process.BeginOutputReadLine();
                         process.BeginErrorReadLine();
 
+                        try
+                        {
+                            // WaitForExitAsync completes when the Process.Exited event fires (or
+                            // when `abandon` cancels). Unlike the sync WaitForExit() no-timeout
+                            // overload, it does NOT wait for the redirected stdout/stderr streams
+                            // to reach EOF — so a re-parented grandchild holding our pipes open
+                            // cannot hang us here. Stream draining is handled separately below by
+                            // SafelyWaitForAllOutput (with a 5s timeout per stream).
+                            //
+                            // We pass `abandon` (not `cancel`) because cancel is handled via the
+                            // cancel.Register callback above which kills the process tree; the
+                            // resulting Exited event is what unblocks this await on cancel.
+                            // `abandon` is a separate token used by EFT-3295 to stop waiting
+                            // WITHOUT killing the process — see the catch block below.
 #if NETFRAMEWORK
-                        await WaitForExitAsyncNetFramework(process, cancel).ConfigureAwait(false);
+                            await WaitForExitAsyncNetFramework(process, abandon).ConfigureAwait(false);
 #else
-                        await process.WaitForExitAsync(cancel).ConfigureAwait(false);
+                            await process.WaitForExitAsync(abandon).ConfigureAwait(false);
 #endif
+                        }
+                        catch (OperationCanceledException) when (abandon.IsCancellationRequested && !process.HasExited)
+                        {
+                            info("Tentacle has abandoned this script. The underlying script process may still be running on this host.");
+                            SafelyCancelRead(process.CancelErrorRead, debug);
+                            SafelyCancelRead(process.CancelOutputRead, debug);
+                            running = false;
+                            return ScriptExitCodes.AbandonedExitCode;
+                        }
 
                         SafelyCancelRead(process.CancelErrorRead, debug);
                         SafelyCancelRead(process.CancelOutputRead, debug);
@@ -186,9 +213,20 @@ namespace Octopus.Tentacle.Util
             CancellationToken cancel,
             Action<string> debug)
         {
+            // Waits for the OutputDataReceived/ErrorDataReceived handler to signal EOF on the
+            // stream (it sets the reset event when it receives a null DataReceivedEventArgs.Data,
+            // which is .NET's EOF marker). This does NOT close the pipe — it just gives the OS
+            // up to 5 seconds to deliver the EOF.
+            //
+            // If a re-parented grandchild is holding the pipe open, EOF never arrives, the wait
+            // times out, and we proceed without the final flush of buffered output. The pipe is
+            // released later by Process.Dispose() at end of ExecuteCommandAsync via the
+            // `using (var process = new Process())` block.
+            //
+            // 5 seconds is somewhat arbitrary — the process has already exited by the time we
+            // reach here, so under normal circumstances EOF arrives within milliseconds.
             try
             {
-                //5 seconds is a bit arbitrary, but the process should have already exited by now, so unwise to wait too long
                 outputResetEvent.Wait(TimeSpan.FromSeconds(5), cancel);
             }
             catch (OperationCanceledException ex)
@@ -209,30 +247,6 @@ namespace Octopus.Tentacle.Util
             }
         }
 
-#if NETFRAMEWORK
-        static Task WaitForExitAsyncNetFramework(Process process, CancellationToken cancellationToken)
-        {
-            var tcs = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
-            CancellationTokenRegistration registration = default;
-            void OnExited(object? sender, EventArgs e)
-            {
-                registration.Dispose();
-                tcs.TrySetResult(null);
-            }
-            process.Exited += OnExited;
-            if (process.HasExited) tcs.TrySetResult(null);
-            if (cancellationToken.CanBeCanceled)
-            {
-                registration = cancellationToken.Register(() =>
-                {
-                    process.Exited -= OnExited;
-                    tcs.TrySetCanceled(cancellationToken);
-                });
-            }
-            return tcs.Task;
-        }
-#endif
-
         static void DoOurBestToCleanUp(Process process, Action<string> error)
         {
             try
@@ -251,22 +265,79 @@ namespace Octopus.Tentacle.Util
                     error($"Failed to kill the launched process: {killProcessException}");
                 }
             }
-            finally
-            {
-                try
-                {
-                    // When cancelling, close the file handles.
-                    // If the child finishes, but the grandchild holds stdout/stderr and never completes,
-                    // THEN we won't issue a kill to the grandchild but will wait for the grandchild to
-                    // close the handles.
-                    process.Close();
-                }
-                catch (Exception ex)
-                {
-                    error($"Failed to close process resources: {ex.Message}");
-                }
-            }
+            // Do NOT add process.Close() here. The pre-async version of this code did, and adding
+            // it back will cause cancel to hang forever. Here's the full picture:
+            //
+            // OLD SYNC CODE: the calling thread blocked inside process.WaitForExit() (no-timeout
+            // overload), which waits for BOTH the process to exit AND the redirected stream
+            // readers to reach EOF. If a re-parented grandchild held our stdout/stderr open, the
+            // stream readers never reached EOF, so WaitForExit() blocked forever. Calling
+            // process.Close() during cancel-cleanup forced the Process object to release its
+            // handles to the redirected pipes, which made the readers see EOF, which let
+            // WaitForExit() return. That's why Close() was here.
+            //
+            // NEW ASYNC CODE: the calling thread awaits a TaskCompletionSource that completes
+            // when the Process.Exited event fires. WaitForExitAsync does NOT wait on the
+            // redirected streams (Microsoft confirms in the docs: "output processing will not
+            // have completed when this method returns"). So a grandchild holding pipes open
+            // can't hang the await. The original reason for Close() is gone.
+            //
+            // WHY ADDING Close() BACK IS WORSE THAN USELESS: process.Close() detaches the Process
+            // object from the underlying OS process, which tears down the wait state that
+            // produces the Exited event. If Close() runs before the kernel has signalled the
+            // exit to .NET (which is asynchronous — Hitman.Kill returns immediately, the OS
+            // delivers the exit notification some time later), the Exited event never fires,
+            // our TCS never completes, and the await hangs forever. Every cancel races.
+            //
+            // HOW PIPES ACTUALLY GET RELEASED NOW:
+            //   1. After WaitForExitAsync returns, SafelyWaitForAllOutput waits up to 5 seconds
+            //      per stream for EOF. If a grandchild holds the pipes, this times out and we
+            //      proceed (it bounds cancel latency; it does NOT close anything).
+            //   2. The outer `using (var process = new Process())` block calls Process.Dispose
+            //      at end of method, which calls Close internally. Because we're no longer
+            //      awaiting WaitForExitAsync at this point, the Close-vs-Exited race can't
+            //      happen — the wait state is already torn down by our code, not by Close.
+            //
+            // Worst case cancel latency with grandchild holding pipes: ~10s (5s × 2 streams).
+            // Covered by tests in SilentProcessRunnerFixture:
+            //   - CancellationToken_WhenGrandchildHoldsRedirectedPipes_ShouldNotHang (Windows)
+            //   - CancellationToken_WhenUnixGrandchildHoldsRedirectedPipes_ShouldNotHang (Unix)
+            // Both assert cancel returns within 30s in this scenario.
         }
+
+#if NETFRAMEWORK
+        // WaitForExitAsync is not available on .NET Framework 4.x; polyfill using Process.Exited event + TaskCompletionSource.
+        static Task WaitForExitAsyncNetFramework(Process process, CancellationToken cancellationToken)
+        {
+            var tcs = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+            CancellationTokenRegistration registration = default;
+
+            void OnExited(object? sender, EventArgs e)
+            {
+                registration.Dispose();
+                tcs.TrySetResult(null);
+            }
+
+            process.Exited += OnExited;
+
+            // Guard against race: process may have already exited before we subscribed.
+            if (process.HasExited)
+            {
+                tcs.TrySetResult(null);
+            }
+
+            if (cancellationToken.CanBeCanceled)
+            {
+                registration = cancellationToken.Register(() =>
+                {
+                    process.Exited -= OnExited;
+                    tcs.TrySetCanceled(cancellationToken);
+                });
+            }
+
+            return tcs.Task;
+        }
+#endif
 
         [DllImport("kernel32.dll", SetLastError = true)]
 #pragma warning disable PC003 // Native API not available in UWP
@@ -281,11 +352,18 @@ namespace Octopus.Tentacle.Util
         {
             public static void TryKillProcessAndChildrenRecursively(Process process)
             {
+                if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleDebugDisableProcessKill)))
+                {
+                    // Test-only no-op: simulate "kill was attempted but didn't terminate the process".
+                    // Only activated when the test harness sets this env var on the Tentacle process.
+                    return;
+                }
+
 #if NETFRAMEWORK
                 TryKillWindowsProcessAndChildrenRecursively(process.Id);
 #endif
 #if !NETFRAMEWORK
-                // Since .NET Core 3.0 there is support for killing a process and it's children 
+                // Since .NET Core 3.0 there is support for killing a process and it's children
                 process.Kill(true);
 #endif
             }
