@@ -55,7 +55,8 @@ namespace Octopus.Tentacle.Util
                         debug,
                         info,
                         error,
-                        cancel: CancellationToken.None)
+                        cancel: CancellationToken.None,
+                        abandon: CancellationToken.None)
                     .GetAwaiter().GetResult();
 
                 if (exitCode != 0)
