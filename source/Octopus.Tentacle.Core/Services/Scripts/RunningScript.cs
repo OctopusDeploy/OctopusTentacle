@@ -96,7 +96,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
 
                             exitCode = workspace.ShouldMonitorPowerShellStartup()
                                 ? await RunPowershellScriptWithMonitoring(shellPath, writer, runningScriptToken)
-                                : RunScript(shellPath, writer, runningScriptToken);
+                                : await RunScriptAsync(shellPath, writer, runningScriptToken);
                         }
                     }
                     catch (OperationCanceledException)
@@ -147,7 +147,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             var monitor = new PowerShellStartupMonitor(workspace.WorkingDirectory, powerShellStartupTimeout, log, taskId);
             
             var monitoringTask = monitor.WaitForStartup(monitoringTaskCts.Token);
-            var scriptTask = Task.Run(() => RunScript(shellPath, writer, scriptTaskCts.Token), scriptTaskCts.Token);
+            var scriptTask = Task.Run(async () => await RunScriptAsync(shellPath, writer, scriptTaskCts.Token), scriptTaskCts.Token);
             
             var completedTask = await Task.WhenAny(monitoringTask, scriptTask);
             
@@ -222,11 +222,11 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             }
         }
 
-        int RunScript(string shellPath, IScriptLogWriter writer, CancellationToken cancellationToken)
+        async Task<int> RunScriptAsync(string shellPath, IScriptLogWriter writer, CancellationToken cancellationToken)
         {
             try
             {
-                var exitCode = SilentProcessRunner.ExecuteCommand(
+                var exitCode = await SilentProcessRunner.ExecuteCommandAsync(
                     shellPath,
                     shell.FormatCommandArguments(workspace.BootstrapScriptFilePath, workspace.ScriptArguments, false),
                     workspace.WorkingDirectory,
@@ -234,7 +234,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
                     LogScriptOutputTo(writer, ProcessOutputSource.StdOut),
                     LogScriptOutputTo(writer, ProcessOutputSource.StdErr),
                     environmentVariables,
-                    cancellationToken);
+                    cancel: cancellationToken);
 
                 return exitCode;
             }
