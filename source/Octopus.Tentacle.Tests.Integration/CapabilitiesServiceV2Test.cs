@@ -7,6 +7,7 @@ using Halibut;
 using NUnit.Framework;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Capabilities;
+using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators;
@@ -39,6 +40,13 @@ namespace Octopus.Tentacle.Tests.Integration
                 expectedCapabilitiesCount++;
             }
 
+            // Latest tentacles also advertise AbandonScriptAsync (added in EFT-3295). Older versioned builds do not.
+            if (version == null)
+            {
+                capabilities.Should().Contain(nameof(IAsyncClientScriptServiceV2.AbandonScriptAsync));
+                expectedCapabilitiesCount++;
+            }
+
             capabilities.Count.Should().Be(expectedCapabilitiesCount);
         }
 
@@ -60,6 +68,13 @@ namespace Octopus.Tentacle.Tests.Integration
             if (version.HasScriptServiceV2())
             {
                 capabilities.Should().Contain(nameof(IScriptServiceV2));
+                expectedCapabilitiesCount++;
+            }
+
+            // Latest tentacles also advertise AbandonScriptAsync (added in EFT-3295). Older versioned builds do not.
+            if (version == null)
+            {
+                capabilities.Should().Contain(nameof(IAsyncClientScriptServiceV2.AbandonScriptAsync));
                 expectedCapabilitiesCount++;
             }
 
