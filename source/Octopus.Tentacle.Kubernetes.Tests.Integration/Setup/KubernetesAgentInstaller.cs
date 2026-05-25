@@ -63,7 +63,8 @@ public class KubernetesAgentInstaller
             sprLogger.Debug,
             sprLogger.Information,
             sprLogger.Error,
-            cancel: CancellationToken.None);
+            cancel: CancellationToken.None,
+            abandon: CancellationToken.None);
 
         sw.Stop();
 
@@ -181,7 +182,8 @@ public class KubernetesAgentInstaller
                     thumbprint = x;
                 },
                 sprLogger.Error,
-                cancel: CancellationToken.None);
+                cancel: CancellationToken.None,
+                abandon: CancellationToken.None);
 
             if (exitCode != 0)
             {
@@ -228,7 +230,8 @@ public class KubernetesAgentInstaller
                 logger.Debug,
                 logger.Information,
                 logger.Error,
-                cancel: CancellationToken.None).GetAwaiter().GetResult();
+                cancel: CancellationToken.None,
+                abandon: CancellationToken.None).GetAwaiter().GetResult();
 
             if (exitCode != 0)
             {

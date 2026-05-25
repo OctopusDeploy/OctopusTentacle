@@ -69,7 +69,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
                 log,
                 log,
                 log,
-                cancel: CancellationToken.None)
+                cancel: CancellationToken.None,
+                abandon: CancellationToken.None)
                 // Safe: static void helper, no synchronisation context.
                 .GetAwaiter().GetResult();
 

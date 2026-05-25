@@ -47,7 +47,8 @@ public class DockerImageLoader
                 tags.Add(line);
             },
             sprLogger.Error,
-            cancel: CancellationToken.None
+            cancel: CancellationToken.None,
+            abandon: CancellationToken.None
         );
 
         if (exitCode != 0)
@@ -76,7 +77,8 @@ public class DockerImageLoader
             sprLogger.Debug,
             sprLogger.Information,
             sprLogger.Error,
-            cancel: CancellationToken.None
+            cancel: CancellationToken.None,
+            abandon: CancellationToken.None
         );
 
         if (exitCode != 0)

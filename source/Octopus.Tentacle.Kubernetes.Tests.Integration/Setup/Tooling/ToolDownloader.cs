@@ -49,7 +49,8 @@ public abstract class ToolDownloader : IToolDownloader
                 Logger.Debug,
                 Logger.Information,
                 Logger.Error,
-                cancel: CancellationToken.None);
+                cancel: CancellationToken.None,
+                abandon: CancellationToken.None);
 
             if (exitCode != 0)
             {

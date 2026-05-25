@@ -20,8 +20,8 @@ namespace Octopus.Tentacle.Tests.Capabilities
                 .GetCapabilitiesAsync(CancellationToken.None))
                 .SupportedCapabilities;
 
-            capabilities.Should().BeEquivalentTo(nameof(IScriptService), nameof(IFileTransferService), nameof(IScriptServiceV2));
-            capabilities.Count.Should().Be(3);
+            capabilities.Should().BeEquivalentTo(nameof(IScriptService), nameof(IFileTransferService), nameof(IScriptServiceV2), "AbandonScriptV2");
+            capabilities.Count.Should().Be(4);
 
             capabilities.Should().NotContainMatch("IKubernetesScriptService*");
         }
@@ -39,6 +39,26 @@ namespace Octopus.Tentacle.Tests.Capabilities
             capabilities.Count.Should().Be(2);
 
             capabilities.Should().NotContainMatch("IScriptService*");
+
+            Environment.SetEnvironmentVariable(KubernetesConfig.NamespaceVariableName, null);
+        }
+
+        [Test]
+        public async Task GetCapabilities_OnNonKubernetesTentacle_AdvertisesAbandonScriptV2()
+        {
+            var service = new CapabilitiesServiceV2();
+            var response = await service.GetCapabilitiesAsync(CancellationToken.None);
+            response.SupportedCapabilities.Should().Contain("AbandonScriptV2");
+        }
+
+        [Test]
+        public async Task GetCapabilities_OnKubernetesTentacle_DoesNotAdvertiseAbandonScriptV2()
+        {
+            Environment.SetEnvironmentVariable(KubernetesConfig.NamespaceVariableName, "ABC");
+
+            var service = new CapabilitiesServiceV2();
+            var response = await service.GetCapabilitiesAsync(CancellationToken.None);
+            response.SupportedCapabilities.Should().NotContain("AbandonScriptV2");
 
             Environment.SetEnvironmentVariable(KubernetesConfig.NamespaceVariableName, null);
         }
