@@ -18,16 +18,16 @@ public class DockerImageLoader
         this.kindExePath = kindExePath;
     }
 
-    public string? LoadMostRecentImageIntoKind(string clusterName)
+    public async Task<string?> LoadMostRecentImageIntoKind(string clusterName)
     {
-        var mostRecentTag = FindMostRecentTag();
+        var mostRecentTag = await FindMostRecentTag();
 
         return !string.IsNullOrWhiteSpace(mostRecentTag)
-            ? LoadImageIntoKind(mostRecentTag, clusterName)
+            ? await LoadImageIntoKind(mostRecentTag, clusterName)
             : null;
     }
 
-    string? FindMostRecentTag()
+    async Task<string?> FindMostRecentTag()
     {
         var sb = new StringBuilder();
         var tags = new List<string>();
@@ -36,7 +36,7 @@ public class DockerImageLoader
             .WriteTo.StringBuilder(sb)
             .CreateLogger();
 
-        var exitCode = SilentProcessRunner.ExecuteCommand(
+        var exitCode = await SilentProcessRunner.ExecuteCommandAsync(
             "docker",
             "images octopusdeploy/kubernetes-agent-tentacle --format \"{{.Tag}}\"",
             temporaryDirectory.DirectoryPath,
@@ -47,7 +47,7 @@ public class DockerImageLoader
                 tags.Add(line);
             },
             sprLogger.Error,
-            CancellationToken.None
+            cancel: CancellationToken.None
         );
 
         if (exitCode != 0)
@@ -55,11 +55,11 @@ public class DockerImageLoader
             logger.Error("Failed to get latest image tag from docker");
             throw new InvalidOperationException($"Failed to get latest image tag from docker. Logs: {sb}");
         }
-        
+
         return tags.FirstOrDefault();
     }
 
-    string LoadImageIntoKind(string mostRecentTag, string clusterName)
+    async Task<string> LoadImageIntoKind(string mostRecentTag, string clusterName)
     {
         var image = $"octopusdeploy/kubernetes-agent-tentacle:{mostRecentTag}";
 
@@ -69,14 +69,14 @@ public class DockerImageLoader
             .WriteTo.StringBuilder(sb)
             .CreateLogger();
 
-        var exitCode = SilentProcessRunner.ExecuteCommand(
+        var exitCode = await SilentProcessRunner.ExecuteCommandAsync(
             kindExePath,
             $"load docker-image {image} --name={clusterName}",
             temporaryDirectory.DirectoryPath,
             sprLogger.Debug,
             sprLogger.Information,
             sprLogger.Error,
-            CancellationToken.None
+            cancel: CancellationToken.None
         );
 
         if (exitCode != 0)

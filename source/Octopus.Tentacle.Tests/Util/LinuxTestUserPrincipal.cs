@@ -22,7 +22,7 @@ namespace Octopus.Tentacle.Tests.Util
         static void RunCommand(string arguments, bool failOnNonZeroExitCode = true)
         {
             var commandLineInvocation = new CommandLineInvocation("/bin/bash", arguments);
-            var result = commandLineInvocation.ExecuteCommand();
+            var result = commandLineInvocation.ExecuteCommandAsync().GetAwaiter().GetResult();
 
             foreach (var line in result.Errors)
                 Console.WriteLine(line);

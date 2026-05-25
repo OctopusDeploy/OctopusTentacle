@@ -406,6 +406,8 @@ while ((Get-Date) -lt $deadline) {
             return $"${varName}";
         }
 
+        // Sync-over-async is safe here: NUnit runs tests on a plain ThreadPool thread with no
+        // synchronisation context, so there is no risk of deadlock.
         static int Execute(
             string command,
             string arguments,
@@ -418,7 +420,8 @@ while ((Get-Date) -lt $deadline) {
             var debug = new StringBuilder();
             var info = new StringBuilder();
             var error = new StringBuilder();
-            var exitCode = SilentProcessRunner.ExecuteCommand(
+
+            var exitCode = SilentProcessRunner.ExecuteCommandAsync(
                 command,
                 arguments,
                 workingDirectory,
@@ -437,7 +440,7 @@ while ((Get-Date) -lt $deadline) {
                     Console.WriteLine($"{DateTime.UtcNow} ERR: {x}");
                     error.Append(x);
                 },
-                cancel);
+                cancel: cancel).GetAwaiter().GetResult();
 
             debugMessages = debug;
             infoMessages = info;

@@ -47,7 +47,8 @@ namespace Octopus.Tentacle.Tests.Integration.Startup
             WriteUnixFile(scriptPath);
 
             var chmodCmd = new CommandLineInvocation("/bin/bash", $"-c \"chmod 777 {scriptPath}\"");
-            chmodCmd.ExecuteCommand();
+            // Safe: sync test helper, no synchronisation context.
+            chmodCmd.ExecuteCommandAsync().GetAwaiter().GetResult();
 
             var configureServiceHelper = new LinuxServiceConfigurator(log);
 
@@ -66,7 +67,8 @@ namespace Octopus.Tentacle.Tests.Integration.Startup
                 serviceConfigurationState);
 
             var statCmd = new CommandLineInvocation("/bin/bash", $"-c \"stat -c '%A' /etc/systemd/system/{instance}.service\"");
-            var result = statCmd.ExecuteCommand();
+            // Safe: sync test helper, no synchronisation context.
+            var result = statCmd.ExecuteCommandAsync().GetAwaiter().GetResult();
             result.Infos.Single().Should().Be("-rw-r--r--"); // Service file should only be writeable for the root user
         }
 
@@ -81,7 +83,8 @@ namespace Octopus.Tentacle.Tests.Integration.Startup
             WriteUnixFile(scriptPath);
 
             var commandLineInvocation = new CommandLineInvocation("/bin/bash", $"-c \"chmod 777 {scriptPath}\"");
-            commandLineInvocation.ExecuteCommand();
+            // Safe: sync test helper, no synchronisation context.
+            commandLineInvocation.ExecuteCommandAsync().GetAwaiter().GetResult();
 
             var configureServiceHelper = new LinuxServiceConfigurator(log);
 
@@ -151,7 +154,8 @@ namespace Octopus.Tentacle.Tests.Integration.Startup
         Dictionary<string, string> GetServiceStatus(string serviceName)
         {
             var commandLineInvocation = new CommandLineInvocation("/bin/bash", $"-c \"systemctl show {serviceName}\"");
-            var result = commandLineInvocation.ExecuteCommand();
+            // Safe: sync test helper, no synchronisation context.
+            var result = commandLineInvocation.ExecuteCommandAsync().GetAwaiter().GetResult();
             Console.WriteLine($"Status of service {serviceName}");
             foreach (var info in result.Infos)
                 Console.WriteLine(info);
@@ -181,7 +185,8 @@ namespace Octopus.Tentacle.Tests.Integration.Startup
         CmdResult RunBashCommand(string command)
         {
             var commandLineInvocation = new CommandLineInvocation("/bin/bash", $"-c \"{command}\"");
-            return commandLineInvocation.ExecuteCommand();
+            // Safe: sync test helper, no synchronisation context.
+            return commandLineInvocation.ExecuteCommandAsync().GetAwaiter().GetResult();
         }
     }
 }

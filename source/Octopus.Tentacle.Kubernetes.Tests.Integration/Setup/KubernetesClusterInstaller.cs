@@ -53,7 +53,7 @@ public class KubernetesClusterInstaller
 
         var sw = new Stopwatch();
         sw.Restart();
-        var exitCode = SilentProcessRunner.ExecuteCommand(
+        var exitCode = await SilentProcessRunner.ExecuteCommandAsync(
             kindExePath,
             //we give the cluster a unique name
             $"create cluster --name={clusterName} --config=\"{configFilePath}\" --kubeconfig=\"{kubeConfigName}\"",
@@ -61,7 +61,7 @@ public class KubernetesClusterInstaller
             logger.Debug,
             logger.Information,
             logger.Error,
-            CancellationToken.None);
+            cancel: CancellationToken.None);
 
         sw.Stop();
 
@@ -92,7 +92,7 @@ public class KubernetesClusterInstaller
             .WriteTo.StringBuilder(sb)
             .CreateLogger();
 
-        var exitCode = SilentProcessRunner.ExecuteCommand(
+        var exitCode = await SilentProcessRunner.ExecuteCommandAsync(
             kubeCtlPath,
             //we give the cluster a unique name
             $"apply -n default -f \"{manifestFilePath}\" --kubeconfig=\"{KubeConfigPath}\"",
@@ -100,7 +100,7 @@ public class KubernetesClusterInstaller
             sprLogger.Debug,
             sprLogger.Information,
             sprLogger.Error,
-            CancellationToken.None);
+            cancel: CancellationToken.None);
 
         if (exitCode != 0)
         {
@@ -143,14 +143,14 @@ public class KubernetesClusterInstaller
             .WriteTo.StringBuilder(sb)
             .CreateLogger();
         
-        var exitCode = SilentProcessRunner.ExecuteCommand(
+        var exitCode = await SilentProcessRunner.ExecuteCommandAsync(
             helmExePath,
             installArgs,
             tempDir.DirectoryPath,
             sprLogger.Debug,
             sprLogger.Information,
             sprLogger.Error,
-            CancellationToken.None);
+            cancel: CancellationToken.None);
 
         if (exitCode != 0)
         {
@@ -174,7 +174,9 @@ public class KubernetesClusterInstaller
 
     public void Dispose()
     {
-        var exitCode = SilentProcessRunner.ExecuteCommand(
+        // Dispose() cannot be made async; .GetAwaiter().GetResult() is safe here
+        // because this runs in test teardown (not inside an async context with a sync-blocking SynchronizationContext).
+        var exitCode = SilentProcessRunner.ExecuteCommandAsync(
             kindExePath,
             //delete the cluster for this test run
             $"delete cluster --name={clusterName}",
@@ -182,7 +184,7 @@ public class KubernetesClusterInstaller
             logger.Debug,
             logger.Information,
             logger.Error,
-            CancellationToken.None);
+            cancel: CancellationToken.None).GetAwaiter().GetResult();
 
         if (exitCode != 0)
         {
