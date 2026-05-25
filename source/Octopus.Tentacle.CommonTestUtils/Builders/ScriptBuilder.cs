@@ -128,6 +128,13 @@ cat {file}
             return bashScript.ToString();
         }
 
+        public ScriptBuilder AppendRaw(string bash, string windows)
+        {
+            bashScript.AppendLine(bash);
+            windowsScript.AppendLine(windows);
+            return this;
+        }
+
         public ScriptBuilder ExitsWith(int exitCode)
         {
             bashScript.AppendLine($"exit {exitCode}");
