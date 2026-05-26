@@ -1,0 +1,29 @@
+source/Octopus.Tentacle/Diagnostics/LivenessHeartbeatTask.cs
+  s_999aa9b8ab920d::t_5a648ebed25fdb 1-82
+source/Octopus.Tentacle/Maintenance/MaintenanceModule.cs
+  s_999aa9b8ab920d::t_52b731094e72e1 3,16
+source/Octopus.Tentacle.Tests/Commands/LivezCommandFixture.cs
+  s_999aa9b8ab920d::t_f78e4621d3e4d8 1-146
+source/Octopus.Tentacle.Tests/Diagnostics/LivenessHeartbeatTaskFixture.cs
+  s_999aa9b8ab920d::t_e5280b84de5864 1-145
+source/Octopus.Tentacle/Program.cs
+  s_999aa9b8ab920d::t_52b731094e72e1 101
+source/Octopus.Tentacle/Commands/LivezCommand.cs
+  s_999aa9b8ab920d::t_6e54155e438b92 1-61
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.1",
+  "base_commit_sha": "f0d67351a1b3f230bfe76e3c3b43b1ecbe3028af",
+  "prompts": {},
+  "sessions": {
+    "s_999aa9b8ab920d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "002c06a8-69eb-4c95-b245-0a24cac1d133",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Noam Gal <noam.gal@octopus.com>"
+    }
+  }
+}
