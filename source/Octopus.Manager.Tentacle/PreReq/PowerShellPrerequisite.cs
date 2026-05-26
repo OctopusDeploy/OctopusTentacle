@@ -56,7 +56,8 @@ namespace Octopus.Manager.Tentacle.PreReq
                     ".",
                     stdOut.WriteLine,
                     s => stdErr.WriteLine($"ERR: {s}"),
-                    cancel: CancellationToken.None);
+                    cancel: CancellationToken.None,
+                    abandon: CancellationToken.None);
 
                 var outputText = stdOut.ToString();
                 new SystemLog().Verbose("PowerShell prerequisite check output: " + outputText);

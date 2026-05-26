@@ -91,7 +91,8 @@ namespace Octopus.Tentacle.Util
                     debug,
                     info,
                     error,
-                    cancel: CancellationToken.None);
+                    cancel: CancellationToken.None,
+                    abandon: CancellationToken.None);
 
                 if (exitCode != 0)
                 {
