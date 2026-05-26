@@ -188,6 +188,78 @@ namespace Octopus.Tentacle.Tests.Integration.Util
             }
         }
 
+        [Test]
+        public async Task Execute_WhenAbandonTokenFires_ReturnsAbandonedExitCode()
+        {
+            using var tempDir = new TemporaryDirectory();
+            var pidFile = Path.Combine(tempDir.DirectoryPath, "process.pid");
+
+            // Write a long-sleeping script that first records its PID, then sleeps.
+            var scriptBody = PlatformDetection.IsRunningOnWindows
+                ? $"$PID | Out-File -FilePath '{pidFile}' -Encoding ASCII; Start-Sleep -Seconds 300"
+                : $"echo $$ > '{pidFile}' && sleep 300";
+            workspace.BootstrapScript(scriptBody);
+
+            var shell = PlatformDetection.IsRunningOnWindows ? (IShell)new PowerShell() : new Bash();
+            using var runningCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            using var abandonCts = new CancellationTokenSource();
+
+            var script = new RunningScript(
+                shell,
+                workspace,
+                stateStore: null,
+                scriptLog,
+                taskId,
+                scriptIsolationMutex,
+                runningCts.Token,
+                abandonCts.Token,
+                new Dictionary<string, string>(),
+                PowerShellStartupDetection.PowerShellStartupTimeout,
+                new InMemoryLog());
+
+            var executeTask = script.Execute();
+
+            // Wait deterministically for the process to write its PID before we abandon.
+            await WaitForPidFileAsync(pidFile, TimeSpan.FromSeconds(30));
+            abandonCts.Cancel();
+
+            await executeTask;
+
+            try
+            {
+                script.State.Should().Be(ProcessState.Complete);
+                script.ExitCode.Should().Be(ScriptExitCodes.AbandonedExitCode);
+            }
+            finally
+            {
+                if (File.Exists(pidFile)
+                    && int.TryParse(SafelyReadPidFile(pidFile).Trim(), out var pid)
+                    && pid > 0)
+                {
+                    try { System.Diagnostics.Process.GetProcessById(pid).Kill(); }
+                    catch { /* process already exited */ }
+                }
+            }
+        }
+
+        static async Task WaitForPidFileAsync(string pidFile, TimeSpan timeout)
+        {
+            var deadline = DateTime.UtcNow + timeout;
+            while (DateTime.UtcNow < deadline)
+            {
+                if (File.Exists(pidFile) && int.TryParse(SafelyReadPidFile(pidFile).Trim(), out var pid) && pid > 0)
+                    return;
+                await Task.Delay(100);
+            }
+            Assert.Fail($"PID file '{pidFile}' was not written within {timeout.TotalSeconds}s — script process did not start.");
+        }
+
+        static string SafelyReadPidFile(string path)
+        {
+            try { return File.ReadAllText(path); }
+            catch { return string.Empty; }
+        }
+
         static string EchoEnvironmentVariable(string varName)
         {
             if (PlatformDetection.IsRunningOnWindows)
