@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Octopus.Client.Extensions;
 using Microsoft.Extensions.Caching.Memory;
 using Octopus.Tentacle.Core.Diagnostics;
@@ -13,13 +14,13 @@ namespace Octopus.Tentacle.Kubernetes
         public ulong? GetPathUsedBytes(string directoryPath);
         public ulong? GetPathTotalBytes();
     }
-    
+
     public class KubernetesDirectoryInformationProvider : IKubernetesDirectoryInformationProvider
     {
         readonly ISystemLog log;
         readonly ISilentProcessRunner silentProcessRunner;
         readonly IMemoryCache directoryInformationCache;
-        
+
         //30s gives us fairly up to date information, but doesn't impact performance too much.
         //For 50 concurrent Cloud deployments:
         //No cache: 30min ea.
@@ -36,12 +37,21 @@ namespace Octopus.Tentacle.Kubernetes
             this.directoryInformationCache = directoryInformationCache;
         }
 
+        // We're at the IKubernetesDirectoryInformationProvider boundary. Callers (capacity
+        // reporting) are sync, so this is the sync-over-async bridge: a one-line wrapper over
+        // the private async implementation. Safe because the consumer is a background sweeper
+        // running on a plain thread-pool worker. No captured SynchronizationContext, so no
+        // deadlock.
+        // See https://blog.stephencleary.com/2012/07/dont-block-on-async-code.html
         public ulong? GetPathUsedBytes(string directoryPath)
+            => GetPathUsedBytesAsync(directoryPath).GetAwaiter().GetResult();
+
+        async Task<ulong?> GetPathUsedBytesAsync(string directoryPath)
         {
-            return directoryInformationCache.GetOrCreate(directoryPath, e =>
+            return await directoryInformationCache.GetOrCreateAsync(directoryPath, async e =>
             {
                 e.SetAbsoluteExpiration(CacheExpiry);
-                return GetDriveBytesUsingDu(directoryPath);
+                return await GetDriveBytesUsingDuAsync(directoryPath);
             });
         }
 
@@ -49,20 +59,13 @@ namespace Octopus.Tentacle.Kubernetes
         {
             return KubernetesUtilities.GetResourceBytes(KubernetesConfig.PersistentVolumeSize);
         }
-        
-        
-        ulong? GetDriveBytesUsingDu(string directoryPath)
+
+
+        async Task<ulong?> GetDriveBytesUsingDuAsync(string directoryPath)
         {
             var stdOut = new List<string>();
             var stdErr = new List<string>();
-            // We're in the IMemoryCache.GetOrCreate factory that populates the disk-space cache entry.
-            // The cache factory delegate is synchronous (Func<ICacheEntry, T>), so we block on the
-            // async call with .GetAwaiter().GetResult().
-            // This is sync-over-async but is safe because the cache factory runs on a plain
-            // thread-pool worker. No captured SynchronizationContext, so no deadlock.
-            // See https://blog.stephencleary.com/2012/07/dont-block-on-async-code.html
-            var exitCode = silentProcessRunner.ExecuteCommandAsync("du", $"-s -B 1 {directoryPath}", "/", stdOut.Add, stdErr.Add)
-                .GetAwaiter().GetResult();
+            var exitCode = await silentProcessRunner.ExecuteCommandAsync("du", $"-s -B 1 {directoryPath}", "/", stdOut.Add, stdErr.Add);
 
             if (exitCode != 0)
             {
