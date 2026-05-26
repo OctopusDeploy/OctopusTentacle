@@ -278,7 +278,8 @@ write-output 'This should never be printed'
                 _ => { },
                 line => directOutput.Add(line),
                 line => directOutput.Add(line),
-                cancel: CancellationToken.None);
+                cancel: CancellationToken.None,
+                abandon: CancellationToken.None);
 
             var directOutputText = string.Join("\n", directOutput);
             Logger.Information("Direct invocation output:\n{Output}", directOutputText);
@@ -345,7 +346,8 @@ write-output 'This should never be printed'
                 _ => { },
                 line => directOutput.Add(line),
                 line => directOutput.Add(line),
-                cancel: CancellationToken.None);
+                cancel: CancellationToken.None,
+                abandon: CancellationToken.None);
 
             var directOutputText = string.Join("\n", directOutput);
             Logger.Information("Direct invocation output:\n{Output}", directOutputText);
@@ -378,7 +380,8 @@ write-output 'This should never be printed'
                     _ => { },
                     _ => { },
                     customEnvironmentVariables: new Dictionary<string, string>(),
-                    cancel: CancellationToken.None)
+                    cancel: CancellationToken.None,
+                    abandon: CancellationToken.None)
                     // Safe: static helper, no synchronisation context.
                     .GetAwaiter().GetResult();
 

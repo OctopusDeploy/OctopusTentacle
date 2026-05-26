@@ -69,7 +69,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
                 log,
                 log,
                 log,
-                cancel: CancellationToken.None);
+                cancel: CancellationToken.None,
+                abandon: CancellationToken.None);
 
             if (exitCode != 0)
             {

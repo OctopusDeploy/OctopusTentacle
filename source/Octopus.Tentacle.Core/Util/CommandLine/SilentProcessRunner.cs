@@ -169,14 +169,12 @@ namespace Octopus.Tentacle.Util
                         catch (OperationCanceledException) when (abandon.IsCancellationRequested && !process.HasExited)
                         {
                             info("Tentacle has abandoned this script. The underlying script process may still be running on this host.");
-                            SafelyCancelRead(process.CancelErrorRead, debug);
-                            SafelyCancelRead(process.CancelOutputRead, debug);
+                            SafelyCancelOutputAndErrorRead(process, debug);
                             running = false;
                             return ScriptExitCodes.AbandonedExitCode;
                         }
 
-                        SafelyCancelRead(process.CancelErrorRead, debug);
-                        SafelyCancelRead(process.CancelOutputRead, debug);
+                        SafelyCancelOutputAndErrorRead(process, debug);
 
                         SafelyWaitForAllOutput(outputResetEvent, cancel, debug);
                         SafelyWaitForAllOutput(errorResetEvent, cancel, debug);
@@ -233,6 +231,16 @@ namespace Octopus.Tentacle.Util
             {
                 debug($"Swallowing {ex.GetType().Name} while waiting for last of the process output.");
             }
+        }
+
+        static void SafelyCancelOutputAndErrorRead(Process process, Action<string> debug)
+        {
+            // Stops the OutputDataReceived / ErrorDataReceived handlers from firing further.
+            // Called in both the normal completion path and the abandon path; extracted here
+            // so the two callers stay consistent (a missed CancelXxxRead leaves the async
+            // readers firing during dispose, which can throw against the workspace log writer).
+            SafelyCancelRead(process.CancelErrorRead, debug);
+            SafelyCancelRead(process.CancelOutputRead, debug);
         }
 
         static void SafelyCancelRead(Action action, Action<string> debug)

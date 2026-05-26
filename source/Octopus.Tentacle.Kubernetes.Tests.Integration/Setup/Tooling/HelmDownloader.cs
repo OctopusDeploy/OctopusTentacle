@@ -86,7 +86,8 @@ public class HelmDownloader : ToolDownloader
             Logger.Debug,
             Logger.Information,
             Logger.Error,
-            cancel: CancellationToken.None);
+            cancel: CancellationToken.None,
+            abandon: CancellationToken.None);
 
         if (exitCode != 0)
         {
