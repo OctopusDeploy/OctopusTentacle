@@ -12,6 +12,7 @@ namespace Octopus.Tentacle.Kubernetes
     public interface IKubernetesDirectoryInformationProvider
     {
         public ulong? GetPathUsedBytes(string directoryPath);
+        public Task<ulong?> GetPathUsedBytesAsync(string directoryPath);
         public ulong? GetPathTotalBytes();
     }
 
@@ -37,16 +38,17 @@ namespace Octopus.Tentacle.Kubernetes
             this.directoryInformationCache = directoryInformationCache;
         }
 
-        // We're at the IKubernetesDirectoryInformationProvider boundary. Callers (capacity
-        // reporting) are sync, so this is the sync-over-async bridge: a one-line wrapper over
-        // the private async implementation. Safe because the consumer is a background sweeper
-        // running on a plain thread-pool worker. No captured SynchronizationContext, so no
-        // deadlock.
+        // Sync-over-async bridge for the one remaining sync caller: KubernetesPhysicalFileSystem
+        // overrides IOctopusFileSystem.EnsureDiskHasEnoughFreeSpace (sync), which calls
+        // GetStorageInformation (sync), which calls this. Async callers should use
+        // GetPathUsedBytesAsync directly. Safe because the Kubernetes agent is a console process
+        // (no SynchronizationContext) and the file-system call paths run on plain thread-pool
+        // workers, so no deadlock.
         // See https://blog.stephencleary.com/2012/07/dont-block-on-async-code.html
         public ulong? GetPathUsedBytes(string directoryPath)
             => GetPathUsedBytesAsync(directoryPath).GetAwaiter().GetResult();
 
-        async Task<ulong?> GetPathUsedBytesAsync(string directoryPath)
+        public async Task<ulong?> GetPathUsedBytesAsync(string directoryPath)
         {
             return await directoryInformationCache.GetOrCreateAsync(directoryPath, async e =>
             {

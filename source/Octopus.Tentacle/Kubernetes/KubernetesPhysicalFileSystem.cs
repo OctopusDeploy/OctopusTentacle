@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Core.Util;
 using Octopus.Tentacle.Util;
@@ -46,6 +47,18 @@ namespace Octopus.Tentacle.Kubernetes
         public (ulong freeSpaceBytes, ulong totalSpaceBytes)? GetStorageInformation()
         {
             var bytesUsed = directoryInformationProvider.GetPathUsedBytes(HomeDir);
+            var bytesTotal = directoryInformationProvider.GetPathTotalBytes();
+            if (bytesUsed.HasValue && bytesTotal.HasValue)
+            {
+                return (bytesTotal.Value - bytesUsed.Value, bytesTotal.Value);
+            }
+
+            return null;
+        }
+
+        public async Task<(ulong freeSpaceBytes, ulong totalSpaceBytes)?> GetStorageInformationAsync()
+        {
+            var bytesUsed = await directoryInformationProvider.GetPathUsedBytesAsync(HomeDir);
             var bytesTotal = directoryInformationProvider.GetPathTotalBytes();
             if (bytesUsed.HasValue && bytesTotal.HasValue)
             {
