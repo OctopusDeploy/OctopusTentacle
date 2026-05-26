@@ -72,7 +72,8 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             {
                 IScriptWorkspace workspace;
 
-                // If the state already exists then this runningScript is already running/has already run and we should not run it again
+                // If the state already exists then this runningScript is already running/has already run and we should not run it again.
+                // StartScript may be called multiple times for the same ticket (e.g. server retries), so we guard against double-launching.
                 if (runningScript.ScriptStateStore.Exists())
                 {
                     var state = runningScript.ScriptStateStore.Load();
@@ -103,7 +104,8 @@ namespace Octopus.Tentacle.Core.Services.Scripts
                     command.TaskId,
                     workspace,
                     runningScript.ScriptStateStore,
-                    runningScript.CancellationToken);
+                    runningScript.CancellationToken,
+                    runningScript.AbandonToken);
 
                 runningScript.Process = process;
 
@@ -140,22 +142,64 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             return GetResponse(command.Ticket, command.LastLogSequence, runningScript?.Process);
         }
 
+        public Task<ScriptStatusResponseV2> AbandonScriptAsync(AbandonScriptCommandV2 command, CancellationToken cancellationToken)
+        {
+            // Fires the abandon token (so Execute will return AbandonedExitCode on its next
+            // unwind) and returns the current status snapshot immediately. The caller (the
+            // Octopus Server) polls GetStatus to observe the eventual Complete + AbandonedExitCode,
+            // same as for the cancel flow, so there's no need to block the RPC handler waiting
+            // for the running script to reach Complete state.
+            if (runningScripts.TryGetValue(command.Ticket, out var runningScript))
+            {
+                runningScript.Abandon();
+            }
+
+            return Task.FromResult(GetResponse(command.Ticket, command.LastLogSequence, runningScript?.Process));
+        }
+
         public async Task CompleteScriptAsync(CompleteScriptCommandV2 command, CancellationToken cancellationToken)
         {
-            await Task.CompletedTask;
-
+            // Stop tracking and dispose the running-script bookkeeping. The underlying
+            // OS process may or may not still be running depending on whether this
+            // script completed normally, was cancelled, or was abandoned.
             if (runningScripts.TryRemove(command.Ticket, out var runningScript))
             {
                 runningScript.Dispose();
             }
 
             var workspace = workspaceFactory.GetWorkspace(command.Ticket, WorkspaceReadinessCheck.Skip);
-            await workspace.Delete(cancellationToken);
+
+            // For abandoned scripts the underlying OS process is, by design, still alive
+            // and may still hold open file handles inside the workspace (logs being written
+            // to, working files, etc.). workspace.Delete() will fail in that case on
+            // Windows (sharing violations) and may partially delete on Linux. Tolerate
+            // the failure: the workspace will be left on disk and reaped by another
+            // mechanism (manual cleanup, instance restart). For all other completion paths
+            // the process has exited and Delete should succeed; surface any failure there.
+            var stateStore = scriptStateStoreFactory.Create(workspace);
+            var wasAbandoned = stateStore.Exists()
+                               && stateStore.Load().ExitCode == ScriptExitCodes.AbandonedExitCode;
+
+            if (wasAbandoned)
+            {
+                try
+                {
+                    await workspace.Delete(cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    log.Warn(ex, $"Could not delete abandoned workspace at {workspace.WorkingDirectory}. Leaving on disk; the underlying script process may still hold open file handles.");
+                }
+            }
+            else
+            {
+                await workspace.Delete(cancellationToken);
+            }
         }
 
-        RunningScript LaunchShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, IScriptStateStore stateStore, CancellationToken cancellationToken)
+        RunningScript LaunchShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, IScriptStateStore stateStore, CancellationToken cancellationToken, CancellationToken abandonToken)
         {
-            var runningScript = new RunningScript(shell, workspace, stateStore, workspace.CreateLog(), serverTaskId, scriptIsolationMutex, cancellationToken, environmentVariables, powerShellStartupTimeout, log);
+            var runningScript = new RunningScript(shell, workspace, stateStore, workspace.CreateLog(), serverTaskId, scriptIsolationMutex, cancellationToken, abandonToken, environmentVariables, powerShellStartupTimeout, log);
             _ = Task.Run(async () => await runningScript.Execute());
             return runningScript;
         }
@@ -204,13 +248,14 @@ namespace Octopus.Tentacle.Core.Services.Scripts
 
         class RunningScriptWrapper : IDisposable
         {
-            readonly CancellationTokenSource cancellationTokenSource = new ();
+            readonly CancellationTokenSource cancellationTokenSource = new();
+            readonly CancellationTokenSource abandonTokenSource = new();
 
             public RunningScriptWrapper(ScriptStateStore scriptStateStore)
             {
                 ScriptStateStore = scriptStateStore;
-
                 CancellationToken = cancellationTokenSource.Token;
+                AbandonToken = abandonTokenSource.Token;
             }
 
             public RunningScript? Process { get; set; }
@@ -218,15 +263,15 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             public SemaphoreSlim StartScriptMutex { get; } = new(1, 1);
 
             public CancellationToken CancellationToken { get; }
+            public CancellationToken AbandonToken { get; }
 
-            public void Cancel()
-            {
-                cancellationTokenSource.Cancel();
-            }
+            public void Cancel() => cancellationTokenSource.Cancel();
+            public void Abandon() => abandonTokenSource.Cancel();
 
             public void Dispose()
             {
                 cancellationTokenSource.Dispose();
+                abandonTokenSource.Dispose();
             }
         }
     }
