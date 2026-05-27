@@ -29,13 +29,17 @@ ADMIN_API_KEY="API-SMOKETEST0000000000000"
 ADMIN_PASSWORD="Smoke-$(openssl rand -hex 16)!"
 SA_PASSWORD="Sa$(openssl rand -hex 12)!"
 H="X-Octopus-ApiKey: $ADMIN_API_KEY"
-IMAGE_TAG="smoke-debian12"
+# Local-only image name (not octopusdeploy/tentacle) so there is no chance of
+# colliding with — or accidentally pulling — a public Docker Hub tag.
+IMAGE_NAME="tentacle-smoke"
+IMAGE_TAG="debian12"
 
 # Per-run worker name. Mostly cosmetic since the DB is fresh every run, but it
 # makes container logs easier to trace and lets teardown deregister by ID.
 WORKER_TARGET_NAME="smoke-tentacle-$(date +%Y%m%d-%H%M%S)-$$"
 WORKER_ID=""
 
+TENTACLE_IMAGE="$IMAGE_NAME"
 TENTACLE_TAG="$IMAGE_TAG"
 OCTOPUS_SERVER_TAG="${OCTOPUS_SERVER_TAG:-latest}"
 
@@ -85,7 +89,7 @@ log "BUILD_NUMBER=$BUILD_NUMBER"
 # Use `docker build` directly rather than `docker compose -f docker-compose.build.yml`
 # because that compose file also defines kubernetes/windows tentacle services which
 # require extra env vars (BUILD_ARCH, BUILD_VARIANT) we don't care about here.
-DST_IMAGE="octopusdeploy/tentacle:${IMAGE_TAG}"
+DST_IMAGE="${IMAGE_NAME}:${IMAGE_TAG}"
 docker build \
   --platform linux/amd64 \
   --build-arg BUILD_NUMBER="$BUILD_NUMBER" \
@@ -104,7 +108,7 @@ log "--- Step 2: start mssql and octopus-server ---"
 # accepting queries before starting the Server. OCTOPUS_SERVER_BASE64_LICENSE
 # is pass-through: empty (the default) gives Community Edition, a real value
 # is honoured for testing against a paid edition.
-export TENTACLE_TAG OCTOPUS_SERVER_TAG SA_PASSWORD ADMIN_PASSWORD ADMIN_API_KEY \
+export TENTACLE_IMAGE TENTACLE_TAG OCTOPUS_SERVER_TAG SA_PASSWORD ADMIN_PASSWORD ADMIN_API_KEY \
   WORKER_TARGET_NAME
 export OCTOPUS_SERVER_BASE64_LICENSE="${OCTOPUS_SERVER_BASE64_LICENSE:-}"
 
