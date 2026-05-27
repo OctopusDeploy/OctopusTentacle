@@ -98,6 +98,7 @@ namespace Octopus.Tentacle
             builder.RegisterCommand<ClearTrustedServersCommand>("clear-trusted-servers", "Clears trusted servers in the Tentacle Configuration");
             builder.RegisterCommand<ListInstancesCommand>("list-instances", "Lists all installed Tentacle instances");
             builder.RegisterCommand<VersionCommand>("version", "Show the Tentacle version information");
+            builder.RegisterCommand<LivezCommand>("livez", "Checks that the Tentacle agent process is alive (suitable for a Kubernetes liveness probe).");
             builder.RegisterCommand<ShowConfigurationCommand>("show-configuration", "Outputs the Tentacle configuration");
 
             return builder.Build();
