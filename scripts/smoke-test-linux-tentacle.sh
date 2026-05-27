@@ -2,55 +2,43 @@
 #
 # End-to-end smoke test for the Linux Tentacle Docker image (EFT-3311).
 #
-# Builds the image from the .deb in _artifacts/deb, brings up a local Octopus
-# Server in the sibling OctopusDeploy repo, registers the Tentacle as a worker,
-# runs a hello-world AdHocScript on it, and asserts success.
+# Builds the image from the .deb in _artifacts/deb, brings up a self-contained
+# Octopus Server + MSSQL stack via docker compose, registers the Tentacle as a
+# worker, runs a hello-world AdHocScript on it, and asserts success.
 #
-# Required tools: docker, curl, jq.
-# Required state: a built .deb in ../_artifacts/deb/tentacle_*_amd64.deb and the
-# OctopusDeploy repo checked out alongside OctopusTentacle.
+# Required tools: docker, curl, jq, openssl.
+# Required state: a built .deb in _artifacts/deb/tentacle_*_amd64.deb.
 #
 # License source: set $OCTOPUS_LICENSE_BASE64 to a base64-encoded Octopus license
 # to skip the 1Password lookup (this is the path CI runners should use). When
 # the env var is unset, the script falls back to `op read` against 1Password
 # for local-dev use, in which case `op` must be installed and signed in.
-#
-# Note on $API_KEY below: "API-APIKEY01" is the well-known dev sentinel API key
-# provisioned by the sibling OctopusDeploy repo's docker-compose stack for its
-# local-only Server instance. It is not a real secret and is safe to commit.
 
 set -euo pipefail
 
 TENTACLE_REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SERVER_REPO="${SERVER_REPO:-$(cd "$TENTACLE_REPO/../OctopusDeploy" && pwd)}"
-ENV_FILE="$SERVER_REPO/.env"
-# .env backup path is assigned via mktemp in Step 2 (after we know $ENV_FILE
-# exists). Using a unique per-run path avoids clobbering a stale backup from
-# a previously-crashed run.
-ENV_BACKUP=""
-# Transient compose override: disables Docker-in-Docker on the Tentacle. The
-# default tentacle entrypoint launches a dockerd daemon, which requires the
-# container to run with `--privileged`; without that the daemon fails and its
-# wrapper script kills the Tentacle agent. Setting DISABLE_DIND=Y skips it.
-# Created via mktemp in Step 4 so we never clobber an unrelated file the user
-# may already have in the sibling repo.
-OVERRIDE_COMPOSE=""
+COMPOSE_FILE="$TENTACLE_REPO/scripts/smoke-test-linux-tentacle.compose.yml"
 
 API="http://localhost:8065/api"
-API_KEY="API-APIKEY01"
-H="X-Octopus-ApiKey: $API_KEY"
+# Ephemeral credentials — the Server DB is recreated from scratch on every run
+# (compose down -v in teardown), so a fixed sentinel is safe and keeps the
+# Authorization header below trivial. The SA password must satisfy SQL Server's
+# complexity policy (upper + lower + digit + special); openssl supplies entropy
+# for the digits/lowercase portion.
+ADMIN_API_KEY="API-SMOKETEST0000000000000"
+ADMIN_PASSWORD="Smoke-$(openssl rand -hex 16)!"
+SA_PASSWORD="Sa$(openssl rand -hex 12)!"
+H="X-Octopus-ApiKey: $ADMIN_API_KEY"
 IMAGE_TAG="smoke-debian12"
 ONEPASSWORD_LICENSE_REF="op://software licencing/octopus deploy ultimate license key base64/value"
 
-# Per-run worker name. Tagging the worker with a unique name (rather than
-# relying on the container hostname / a "highest Workers-N" heuristic) keeps
-# the test idempotent across reused Server DB volumes and lets teardown find
-# the exact worker this run registered.
+# Per-run worker name. Mostly cosmetic since the DB is fresh every run, but it
+# makes container logs easier to trace and lets teardown deregister by ID.
 WORKER_TARGET_NAME="smoke-tentacle-$(date +%Y%m%d-%H%M%S)-$$"
-# Populated in Step 5 once the Server confirms registration; used by teardown
-# to deregister the worker via DELETE so the workers list doesn't grow
-# monotonically across runs that share a Server DB volume.
 WORKER_ID=""
+
+TENTACLE_TAG="$IMAGE_TAG"
+OCTOPUS_SERVER_TAG="${OCTOPUS_SERVER_TAG:-latest}"
 
 log()  { printf '\033[1;34m[smoke]\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33m[smoke]\033[0m %s\n' "$*" >&2; }
@@ -60,36 +48,43 @@ require() { command -v "$1" >/dev/null || die "Missing required tool: $1"; }
 require docker
 require curl
 require jq
-# `op` is only required when OCTOPUS_LICENSE_BASE64 is not pre-set (local-dev path).
+require openssl
 [[ -n "${OCTOPUS_LICENSE_BASE64:-}" ]] || require op
+
+compose() { docker compose -f "$COMPOSE_FILE" "$@"; }
 
 teardown() {
   local exit_code=$?
   log "--- teardown ---"
-  # Deregister the worker first, while the Server is still up. Best-effort:
-  # if the Server is already dead or the worker never registered, we just
-  # move on — the goal is to keep the workers list clean across runs.
   if [[ -n "$WORKER_ID" ]]; then
     log "Deregistering worker $WORKER_ID"
     curl -fsS -X DELETE -H "$H" "$API/workers/$WORKER_ID" >/dev/null 2>&1 || true
   fi
-  if [[ -n "$OVERRIDE_COMPOSE" && -f "$OVERRIDE_COMPOSE" ]]; then
-    (cd "$SERVER_REPO" && docker compose -f docker-compose.yml -f "$OVERRIDE_COMPOSE" --profile tentacle down 2>/dev/null) || true
-    rm -f "$OVERRIDE_COMPOSE"
-  fi
-  (cd "$SERVER_REPO" && docker compose down 2>/dev/null) || true
-  if [[ -n "$ENV_BACKUP" && -f "$ENV_BACKUP" ]]; then
-    mv "$ENV_BACKUP" "$ENV_FILE"
-    log "Restored $ENV_FILE"
-  fi
+  compose down -v 2>/dev/null || true
   exit "$exit_code"
 }
 trap teardown EXIT
 
 ###############################################################################
-# Step 1: Build the Linux Tentacle image from the local .deb
+# Step 1: Resolve license
 ###############################################################################
-log "--- Step 1: build Tentacle image ---"
+log "--- Step 1: resolve license ---"
+if [[ -n "${OCTOPUS_LICENSE_BASE64:-}" ]]; then
+  LICENSE_BASE64="$OCTOPUS_LICENSE_BASE64"
+  log "Using license from \$OCTOPUS_LICENSE_BASE64 (${#LICENSE_BASE64} bytes)"
+else
+  if ! op account list >/dev/null 2>&1; then
+    die "1Password CLI is not signed in. Run: eval \$(op signin) — or pre-set \$OCTOPUS_LICENSE_BASE64."
+  fi
+  LICENSE_BASE64="$(op read "$ONEPASSWORD_LICENSE_REF" 2>/dev/null || true)"
+  [[ -n "$LICENSE_BASE64" ]] || die "Could not read license from 1Password at: $ONEPASSWORD_LICENSE_REF"
+  log "Fetched license from 1Password (${#LICENSE_BASE64} bytes)"
+fi
+
+###############################################################################
+# Step 2: Build the Linux Tentacle image from the local .deb
+###############################################################################
+log "--- Step 2: build Tentacle image ---"
 cd "$TENTACLE_REPO"
 
 shopt -s nullglob
@@ -119,63 +114,29 @@ docker build \
 log "Built $DST_IMAGE"
 
 ###############################################################################
-# Step 2: Resolve license & patch .env
+# Step 3: Bring up MSSQL + Octopus Server and wait for /api to respond
 ###############################################################################
-log "--- Step 2: resolve license and patch .env ---"
-[[ -f "$ENV_FILE" ]] || die "Expected $ENV_FILE to exist."
+log "--- Step 3: start mssql and octopus-server ---"
+# Export every var the compose file interpolates. octopus-server depends on
+# mssql with condition: service_healthy, so compose will block until MSSQL is
+# accepting queries before starting the Server.
+export TENTACLE_TAG OCTOPUS_SERVER_TAG SA_PASSWORD ADMIN_PASSWORD ADMIN_API_KEY \
+  WORKER_TARGET_NAME
+export OCTOPUS_SERVER_BASE64_LICENSE="$LICENSE_BASE64"
 
-if [[ -n "${OCTOPUS_LICENSE_BASE64:-}" ]]; then
-  LICENSE_BASE64="$OCTOPUS_LICENSE_BASE64"
-  log "Using license from \$OCTOPUS_LICENSE_BASE64 (${#LICENSE_BASE64} bytes)"
-else
-  if ! op account list >/dev/null 2>&1; then
-    die "1Password CLI is not signed in. Run: eval \$(op signin) — or pre-set \$OCTOPUS_LICENSE_BASE64."
-  fi
-  LICENSE_BASE64="$(op read "$ONEPASSWORD_LICENSE_REF" 2>/dev/null || true)"
-  [[ -n "$LICENSE_BASE64" ]] || die "Could not read license from 1Password at: $ONEPASSWORD_LICENSE_REF"
-  log "Fetched license from 1Password (${#LICENSE_BASE64} bytes)"
-fi
-
-ENV_BACKUP="$(mktemp "${TMPDIR:-/tmp}/octopus-server-env-smoke-tentacle-XXXXXX")"
-cp "$ENV_FILE" "$ENV_BACKUP"
-log "Backed up .env to $ENV_BACKUP (will be restored on exit)"
-
-upsert_env_var() {
-  # Pure-bash: avoids sed/awk escape headaches with a base64 value (which
-  # contains '/' and '=' but not '\' or '&'). Matches the line by literal
-  # "KEY=" prefix, not regex, so unusual keys won't bite us.
-  local key="$1" value="$2"
-  local tmp line found=
-  tmp="$(mktemp "${TMPDIR:-/tmp}/octopus-server-env-smoke-upsert-XXXXXX")"
-  while IFS= read -r line || [[ -n "$line" ]]; do
-    if [[ "$line" == "${key}="* ]]; then
-      printf '%s=%s\n' "$key" "$value" >> "$tmp"
-      found=1
-    else
-      printf '%s\n' "$line" >> "$tmp"
-    fi
-  done < "$ENV_FILE"
-  [[ -z "$found" ]] && printf '%s=%s\n' "$key" "$value" >> "$tmp"
-  mv "$tmp" "$ENV_FILE"
-}
-
-upsert_env_var TENTACLE_TAG "$IMAGE_TAG"
-upsert_env_var OCTOPUS_SERVER_BASE64_LICENSE "$LICENSE_BASE64"
-
-###############################################################################
-# Step 3: Bring up Octopus Server and wait for /api to respond
-###############################################################################
-log "--- Step 3: start octopus-server ---"
-cd "$SERVER_REPO"
-docker compose up -d octopus-server
+compose up -d mssql octopus-server
 
 log "Waiting for $API/octopusservernodes/ping ..."
-for i in {1..120}; do
+for i in {1..300}; do
   if curl -fsS -H "$H" "$API/octopusservernodes/ping" >/dev/null 2>&1; then
     log "Server is up after ${i}s"
     break
   fi
-  [[ $i -eq 120 ]] && die "Server did not become ready in 120s"
+  if [[ $i -eq 300 ]]; then
+    warn "Server did not become ready in 300s. Recent logs:"
+    compose logs --no-color --tail=120 octopus-server mssql || true
+    die "Octopus Server did not become ready"
+  fi
   sleep 1
 done
 
@@ -183,37 +144,26 @@ done
 # Step 4: Bring up the Tentacle (Worker, polling mode, DIND disabled)
 ###############################################################################
 log "--- Step 4: start tentacle ---"
-OVERRIDE_COMPOSE="$(mktemp "${TMPDIR:-/tmp}/docker-compose-smoke-tentacle-XXXXXX")"
-cat > "$OVERRIDE_COMPOSE" <<YAML
-services:
-  tentacle:
-    environment:
-      DISABLE_DIND: "Y"
-      TargetName: "$WORKER_TARGET_NAME"
-YAML
-
-COMPOSE=(docker compose -f docker-compose.yml -f "$OVERRIDE_COMPOSE" --profile tentacle)
-
-# --no-deps because octopus-server may lack a healthcheck; we already polled
-# its API ping above and know it's ready.
-"${COMPOSE[@]}" up -d --no-deps tentacle
+# --no-deps because octopus-server has no compose-level healthcheck; we already
+# polled its API ping above and know it's ready.
+compose up -d --no-deps tentacle
 
 log "Waiting for Tentacle 'Configuration successful.' in logs ..."
 for i in {1..60}; do
-  if "${COMPOSE[@]}" logs --no-color tentacle 2>/dev/null | grep -qF "Configuration successful."; then
+  if compose logs --no-color tentacle 2>/dev/null | grep -qF "Configuration successful."; then
     log "Tentacle registered after ${i}s"
     break
   fi
   [[ $i -eq 60 ]] && die "Tentacle did not register in 60s. Logs:
-$("${COMPOSE[@]}" logs --no-color --tail=80 tentacle)"
+$(compose logs --no-color --tail=80 tentacle)"
   sleep 1
 done
 
 # Make sure the agent is still running (the wrapper script can exit shortly
 # after registration if a sidecar like dockerd dies).
-if ! "${COMPOSE[@]}" ps --status running --services 2>/dev/null | grep -qx tentacle; then
+if ! compose ps --status running --services 2>/dev/null | grep -qx tentacle; then
   die "Tentacle container exited shortly after registration. Logs:
-$("${COMPOSE[@]}" logs --no-color --tail=80 tentacle)"
+$(compose logs --no-color --tail=80 tentacle)"
 fi
 
 ###############################################################################
@@ -221,9 +171,7 @@ fi
 ###############################################################################
 log "--- Step 5: verify registration and run hello-world ---"
 
-# Find the worker we just registered by its per-run TargetName. This is
-# robust against reused Server DB volumes (where workers list grows across
-# runs) and avoids the previous "highest Workers-N" heuristic.
+# Find the worker we just registered by its per-run TargetName.
 for i in {1..60}; do
   WORKERS_JSON="$(curl -fsS -H "$H" --data-urlencode "name=$WORKER_TARGET_NAME" -G "$API/workers" 2>/dev/null || echo '{"Items":[]}')"
   WORKER_ID="$(echo "$WORKERS_JSON" \
@@ -236,7 +184,7 @@ if [[ -z "$WORKER_ID" ]]; then
   warn "No worker named '$WORKER_TARGET_NAME' appeared. Diagnostic dump of $API/workers:"
   curl -fsS -H "$H" "$API/workers" || true
   warn "Tentacle container logs (tail 80):"
-  docker compose --profile tentacle logs --no-color --tail=80 tentacle || true
+  compose logs --no-color --tail=80 tentacle || true
   die "Worker '$WORKER_TARGET_NAME' did not appear after 60s"
 fi
 log "Registered worker: $WORKER_ID  (name='$WORKER_TARGET_NAME')"
