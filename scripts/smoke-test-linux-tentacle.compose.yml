@@ -4,7 +4,9 @@
 #
 # Driven by scripts/smoke-test-linux-tentacle.sh — env vars exported there
 # (TENTACLE_TAG, OCTOPUS_SERVER_TAG, SA_PASSWORD, ADMIN_PASSWORD, ADMIN_API_KEY,
-# OCTOPUS_SERVER_BASE64_LICENSE, WORKER_TARGET_NAME) are interpolated below.
+# WORKER_TARGET_NAME) are interpolated below. OCTOPUS_SERVER_BASE64_LICENSE is
+# optional: when empty, Octopus Server starts on the free Community Edition
+# license (1 space, 1 worker, 5 projects), which is enough for this test.
 
 name: octopustentacle-smoke
 
@@ -37,7 +39,7 @@ services:
       ADMIN_USERNAME: "admin"
       ADMIN_PASSWORD: "${ADMIN_PASSWORD}"
       ADMIN_API_KEY: "${ADMIN_API_KEY}"
-      OCTOPUS_SERVER_BASE64_LICENSE: "${OCTOPUS_SERVER_BASE64_LICENSE}"
+      OCTOPUS_SERVER_BASE64_LICENSE: "${OCTOPUS_SERVER_BASE64_LICENSE:-}"
     ports:
       - "8065:8080"
 

@@ -9,10 +9,10 @@
 # Required tools: docker, curl, jq, openssl.
 # Required state: a built .deb in _artifacts/deb/tentacle_*_amd64.deb.
 #
-# License source: set $OCTOPUS_LICENSE_BASE64 to a base64-encoded Octopus license
-# to skip the 1Password lookup (this is the path CI runners should use). When
-# the env var is unset, the script falls back to `op read` against 1Password
-# for local-dev use, in which case `op` must be installed and signed in.
+# License: not required. Octopus Server provisions a free Community Edition
+# license on first boot, which is well within limits for this test (1 space,
+# 1 worker, 0 projects). Set $OCTOPUS_SERVER_BASE64_LICENSE to override —
+# useful if you want to test against a paid edition — otherwise leave unset.
 
 set -euo pipefail
 
@@ -30,7 +30,6 @@ ADMIN_PASSWORD="Smoke-$(openssl rand -hex 16)!"
 SA_PASSWORD="Sa$(openssl rand -hex 12)!"
 H="X-Octopus-ApiKey: $ADMIN_API_KEY"
 IMAGE_TAG="smoke-debian12"
-ONEPASSWORD_LICENSE_REF="op://software licencing/octopus deploy ultimate license key base64/value"
 
 # Per-run worker name. Mostly cosmetic since the DB is fresh every run, but it
 # makes container logs easier to trace and lets teardown deregister by ID.
@@ -49,7 +48,6 @@ require docker
 require curl
 require jq
 require openssl
-[[ -n "${OCTOPUS_LICENSE_BASE64:-}" ]] || require op
 
 compose() { docker compose -f "$COMPOSE_FILE" "$@"; }
 
@@ -66,25 +64,9 @@ teardown() {
 trap teardown EXIT
 
 ###############################################################################
-# Step 1: Resolve license
+# Step 1: Build the Linux Tentacle image from the local .deb
 ###############################################################################
-log "--- Step 1: resolve license ---"
-if [[ -n "${OCTOPUS_LICENSE_BASE64:-}" ]]; then
-  LICENSE_BASE64="$OCTOPUS_LICENSE_BASE64"
-  log "Using license from \$OCTOPUS_LICENSE_BASE64 (${#LICENSE_BASE64} bytes)"
-else
-  if ! op account list >/dev/null 2>&1; then
-    die "1Password CLI is not signed in. Run: eval \$(op signin) — or pre-set \$OCTOPUS_LICENSE_BASE64."
-  fi
-  LICENSE_BASE64="$(op read "$ONEPASSWORD_LICENSE_REF" 2>/dev/null || true)"
-  [[ -n "$LICENSE_BASE64" ]] || die "Could not read license from 1Password at: $ONEPASSWORD_LICENSE_REF"
-  log "Fetched license from 1Password (${#LICENSE_BASE64} bytes)"
-fi
-
-###############################################################################
-# Step 2: Build the Linux Tentacle image from the local .deb
-###############################################################################
-log "--- Step 2: build Tentacle image ---"
+log "--- Step 1: build Tentacle image ---"
 cd "$TENTACLE_REPO"
 
 shopt -s nullglob
@@ -114,15 +96,17 @@ docker build \
 log "Built $DST_IMAGE"
 
 ###############################################################################
-# Step 3: Bring up MSSQL + Octopus Server and wait for /api to respond
+# Step 2: Bring up MSSQL + Octopus Server and wait for /api to respond
 ###############################################################################
-log "--- Step 3: start mssql and octopus-server ---"
+log "--- Step 2: start mssql and octopus-server ---"
 # Export every var the compose file interpolates. octopus-server depends on
 # mssql with condition: service_healthy, so compose will block until MSSQL is
-# accepting queries before starting the Server.
+# accepting queries before starting the Server. OCTOPUS_SERVER_BASE64_LICENSE
+# is pass-through: empty (the default) gives Community Edition, a real value
+# is honoured for testing against a paid edition.
 export TENTACLE_TAG OCTOPUS_SERVER_TAG SA_PASSWORD ADMIN_PASSWORD ADMIN_API_KEY \
   WORKER_TARGET_NAME
-export OCTOPUS_SERVER_BASE64_LICENSE="$LICENSE_BASE64"
+export OCTOPUS_SERVER_BASE64_LICENSE="${OCTOPUS_SERVER_BASE64_LICENSE:-}"
 
 compose up -d mssql octopus-server
 
@@ -141,9 +125,9 @@ for i in {1..300}; do
 done
 
 ###############################################################################
-# Step 4: Bring up the Tentacle (Worker, polling mode, DIND disabled)
+# Step 3: Bring up the Tentacle (Worker, polling mode, DIND disabled)
 ###############################################################################
-log "--- Step 4: start tentacle ---"
+log "--- Step 3: start tentacle ---"
 # --no-deps because octopus-server has no compose-level healthcheck; we already
 # polled its API ping above and know it's ready.
 compose up -d --no-deps tentacle
@@ -167,9 +151,9 @@ $(compose logs --no-color --tail=80 tentacle)"
 fi
 
 ###############################################################################
-# Step 5: Verify worker is registered & run hello-world AdHocScript
+# Step 4: Verify worker is registered & run hello-world AdHocScript
 ###############################################################################
-log "--- Step 5: verify registration and run hello-world ---"
+log "--- Step 4: verify registration and run hello-world ---"
 
 # Find the worker we just registered by its per-run TargetName.
 for i in {1..60}; do
