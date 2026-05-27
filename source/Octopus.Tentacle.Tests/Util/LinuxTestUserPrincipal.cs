@@ -19,6 +19,15 @@ namespace Octopus.Tentacle.Tests.Util
 
         public string UserName { get;  }
 
+        // Why this is sync: RunCommand is called from the constructor, which can't
+        // be async.
+        //
+        // Why blocking on the async call is safe: this only runs under NUnit, which
+        // dispatches us on a worker thread with no SynchronizationContext.
+        //
+        // Why low risk: this is test code. The worst case for a wrong call here is
+        // a hung test, not a production incident.
+        // See https://blog.stephencleary.com/2012/07/dont-block-on-async-code.html
         static void RunCommand(string arguments, bool failOnNonZeroExitCode = true)
         {
             var commandLineInvocation = new CommandLineInvocation("/bin/bash", arguments);

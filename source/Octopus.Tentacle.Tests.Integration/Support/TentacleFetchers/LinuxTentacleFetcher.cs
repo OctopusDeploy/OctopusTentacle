@@ -44,11 +44,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
 
             var extractionDirectory = new DirectoryInfo(Path.Combine(directoryPath, "extracted"));
 
-            ExtractTarGzip(downloadFilePath, extractionDirectory.FullName, logger);
+            await ExtractTarGzipAsync(downloadFilePath, extractionDirectory.FullName, logger);
             return Path.Combine(extractionDirectory.FullName, "tentacle", "Tentacle");
         }
 
-        public static void ExtractTarGzip(string gzArchiveName, string destFolder, ILogger logger)
+        public static async Task ExtractTarGzipAsync(string gzArchiveName, string destFolder, ILogger logger)
         {
             if (!Directory.Exists(destFolder))
             {
@@ -62,20 +62,14 @@ namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
             using var tmp = new TemporaryDirectory();
 
             Action<string> log = s => logger.Information(s);
-            // We're in a synchronous public static helper (ExtractTarGzip). The method
-            // must return synchronously, so we block on the async call with
-            // .GetAwaiter().GetResult(). This is sync-over-async but is safe because
-            // the NUnit test runner dispatches us on a worker thread without a captured
-            // SynchronizationContext, so no deadlock.
-            // See https://blog.stephencleary.com/2012/07/dont-block-on-async-code.html
-            var exitCode = SilentProcessRunner.ExecuteCommandAsync(
+            var exitCode = await SilentProcessRunner.ExecuteCommandAsync(
                 "tar",
                 $"xzvf \"{gzArchiveName}\" -C \"{destFolder}\"",
                 tmp.DirectoryPath,
                 log,
                 log,
                 log,
-                cancel: CancellationToken.None).GetAwaiter().GetResult();
+                cancel: CancellationToken.None);
 
             if (exitCode != 0)
             {

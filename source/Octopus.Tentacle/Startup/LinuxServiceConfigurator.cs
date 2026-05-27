@@ -48,15 +48,18 @@ namespace Octopus.Tentacle.Startup
                 serviceConfigurationState);
         }
 
-        // We're at the IServiceConfigurator boundary. IServiceConfigurator is consumed by
-        // ServiceCommand (an AbstractCommand), and AbstractCommand.Start() is sync because
-        // ICommand.Start() is sync (Topshelf's runtime callback API is sync). So
-        // ConfigureService must return synchronously. This is the single sync-over-async
-        // bridge for the Linux service-configuration code path: a one-line wrapper over the
-        // private async implementation. Safe because no SynchronizationContext is captured on
-        // this call stack: the console-app main thread has none by default, and Topshelf's
-        // OnStart callback runs on a `new Thread(...)` worker that also has none. Either way,
-        // no captured context means no deadlock.
+        // Used by ServiceCommand (an AbstractCommand) to install/configure the
+        // Tentacle as a Linux systemd service.
+        //
+        // Why this is sync: AbstractCommand.Start() is sync because ICommand.Start()
+        // is sync. When Tentacle runs as a Windows service we host AbstractCommands
+        // via Topshelf, whose runtime callback API is also sync — so the call path
+        // has to return sync end-to-end.
+        //
+        // Why blocking on the async call is safe: the console-app main thread has
+        // no SynchronizationContext. Topshelf's OnStart callback runs on a fresh
+        // `new Thread(...)` worker that also has none. Either way, nothing for the
+        // awaited continuation to wait on.
         // See https://blog.stephencleary.com/2012/07/dont-block-on-async-code.html
         void ConfigureService(string thisServiceName, string exePath, string? instance, string? configPath, string serviceDescription, ServiceConfigurationState serviceConfigurationState)
             => ConfigureServiceAsync(thisServiceName, exePath, instance, configPath, serviceDescription, serviceConfigurationState).GetAwaiter().GetResult();

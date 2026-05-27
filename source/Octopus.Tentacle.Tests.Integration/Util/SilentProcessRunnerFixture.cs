@@ -419,12 +419,15 @@ while ((Get-Date) -lt $deadline) {
             var info = new StringBuilder();
             var error = new StringBuilder();
 
-            // We're in a synchronous test helper (Execute) that exposes a sync int
-            // return and out parameters. The method must return synchronously, so we
-            // block on the async call with .GetAwaiter().GetResult(). This is
-            // sync-over-async but is safe because the NUnit test runner dispatches us
-            // on a worker thread without a captured SynchronizationContext, so no
-            // deadlock.
+            // Why this is sync: Execute is a test helper that returns int and uses
+            // out parameters — both force the signature to be sync. It's invoked
+            // directly from sync NUnit test methods.
+            //
+            // Why blocking on the async call is safe: NUnit dispatches us on a
+            // worker thread with no SynchronizationContext.
+            //
+            // Why low risk: this is test code. The worst case for a wrong call here
+            // is a hung test, not a production incident.
             // See https://blog.stephencleary.com/2012/07/dont-block-on-async-code.html
             var exitCode = SilentProcessRunner.ExecuteCommandAsync(
                 command,

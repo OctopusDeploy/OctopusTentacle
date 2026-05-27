@@ -11,10 +11,16 @@ namespace Octopus.Manager.Tentacle.PreReq
     {
         public string StatusMessage => "Checking that Windows PowerShell 2.0 is installed...";
 
-        // We're at the WPF installer prerequisite boundary. IPrerequisite.Check() must return
-        // synchronously, so this is the sync-over-async bridge: a one-line wrapper over the
-        // private async implementation. Safe because the installer dispatches us on a plain
-        // thread-pool worker. No captured SynchronizationContext, so no deadlock.
+        // Why this is sync: IPrerequisite.Check() is part of a sync interface used by
+        // the WPF installer's prerequisite plumbing. Making it async would mean
+        // converting the whole IPrerequisite chain, which is a wider refactor than
+        // this PR.
+        //
+        // Why blocking on the async call is safe: PreReqWindow.Start dispatches each
+        // prerequisite via DispatchHelper.Background, which queues us via
+        // ThreadPool.QueueUserWorkItem. That's a plain thread-pool worker with no
+        // SynchronizationContext, so there's nothing for the awaited continuation
+        // to wait on.
         // See https://blog.stephencleary.com/2012/07/dont-block-on-async-code.html
         public PrerequisiteCheckResult Check()
             => CheckAsync().GetAwaiter().GetResult();
