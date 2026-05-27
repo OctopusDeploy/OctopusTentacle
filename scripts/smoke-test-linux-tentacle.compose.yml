@@ -3,10 +3,11 @@
 # internal network so the test does not need a sibling OctopusDeploy checkout.
 #
 # Driven by scripts/smoke-test-linux-tentacle.sh — env vars exported there
-# (TENTACLE_TAG, OCTOPUS_SERVER_TAG, SA_PASSWORD, ADMIN_PASSWORD, ADMIN_API_KEY,
-# WORKER_TARGET_NAME) are interpolated below. OCTOPUS_SERVER_BASE64_LICENSE is
-# optional: when empty, Octopus Server starts on the free Community Edition
-# license (1 space, 1 worker, 5 projects), which is enough for this test.
+# (TENTACLE_IMAGE, TENTACLE_TAG, OCTOPUS_SERVER_TAG, SA_PASSWORD, ADMIN_PASSWORD,
+# ADMIN_API_KEY, WORKER_TARGET_NAME) are interpolated below.
+# OCTOPUS_SERVER_BASE64_LICENSE is optional: when empty, Octopus Server starts
+# on the free Community Edition license (1 space, 1 worker, 5 projects), which
+# is enough for this test.
 
 name: octopustentacle-smoke
 
@@ -44,7 +45,7 @@ services:
       - "8065:8080"
 
   tentacle:
-    image: octopusdeploy/tentacle:${TENTACLE_TAG}
+    image: ${TENTACLE_IMAGE}:${TENTACLE_TAG}
     platform: linux/amd64
     depends_on:
       - octopus-server
