@@ -7,7 +7,6 @@ using Halibut;
 using NUnit.Framework;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Capabilities;
-using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators;
@@ -43,11 +42,11 @@ namespace Octopus.Tentacle.Tests.Integration
             // tentacleConfigurationTestCase.Version == null indicates the "latest" build under
             // test (the code in this branch). Test cases with a concrete Version exercise older
             // released tentacles fetched from S3 to verify backwards compatibility. Older builds
-            // pre-date EFT-3295 and don't advertise the AbandonScriptAsync capability, so we only
+            // pre-date EFT-3295 and don't advertise the AbandonScriptV2 capability, so we only
             // assert it for the latest build.
             if (version == null)
             {
-                capabilities.Should().Contain(nameof(IAsyncClientScriptServiceV2.AbandonScriptAsync));
+                capabilities.Should().Contain("AbandonScriptV2");
                 expectedCapabilitiesCount++;
             }
 
@@ -78,11 +77,11 @@ namespace Octopus.Tentacle.Tests.Integration
             // tentacleConfigurationTestCase.Version == null indicates the "latest" build under
             // test (the code in this branch). Test cases with a concrete Version exercise older
             // released tentacles fetched from S3 to verify backwards compatibility. Older builds
-            // pre-date EFT-3295 and don't advertise the AbandonScriptAsync capability, so we only
+            // pre-date EFT-3295 and don't advertise the AbandonScriptV2 capability, so we only
             // assert it for the latest build.
             if (version == null)
             {
-                capabilities.Should().Contain(nameof(IAsyncClientScriptServiceV2.AbandonScriptAsync));
+                capabilities.Should().Contain("AbandonScriptV2");
                 expectedCapabilitiesCount++;
             }
 

@@ -3,7 +3,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Capabilities;
-using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Core.Services;
@@ -25,7 +24,7 @@ namespace Octopus.Tentacle.Services.Capabilities
             }
 
             //non-kubernetes agent tentacles only support the standard script services
-            return new CapabilitiesResponseV2(new List<string> { nameof(IScriptService), nameof(IFileTransferService), nameof(IScriptServiceV2), nameof(IAsyncClientScriptServiceV2.AbandonScriptAsync) });
+            return new CapabilitiesResponseV2(new List<string> { nameof(IScriptService), nameof(IFileTransferService), nameof(IScriptServiceV2), "AbandonScriptV2" });
         }
     }
 }
