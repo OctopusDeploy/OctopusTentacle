@@ -133,12 +133,16 @@ log "--- Step 3: start tentacle ---"
 compose up -d --no-deps tentacle
 
 log "Waiting for Tentacle 'Configuration successful.' in logs ..."
-for i in {1..60}; do
+# Loop count is iterations, not seconds: each iteration is one `docker compose
+# logs` invocation plus a 1s sleep, so wall-clock per iteration is ~1.5-3s on
+# a loaded host. 180 iterations comfortably covers a slow Apple-Silicon /
+# amd64-emulation case while still failing fast on a real regression.
+for i in {1..180}; do
   if compose logs --no-color tentacle 2>/dev/null | grep -qF "Configuration successful."; then
-    log "Tentacle registered after ${i}s"
+    log "Tentacle registered after ${i} iterations"
     break
   fi
-  [[ $i -eq 60 ]] && die "Tentacle did not register in 60s. Logs:
+  [[ $i -eq 180 ]] && die "Tentacle did not register in 180 iterations. Logs:
 $(compose logs --no-color --tail=80 tentacle)"
   sleep 1
 done
