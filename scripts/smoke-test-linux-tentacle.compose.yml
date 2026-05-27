@@ -46,6 +46,10 @@ services:
 
   tentacle:
     image: ${TENTACLE_IMAGE}:${TENTACLE_TAG}
+    # Fail loudly if the local build step was skipped — never silently pull
+    # from a registry. The script tags this image with a local-only name
+    # (no `octopusdeploy/` prefix), so a pull attempt would always be wrong.
+    pull_policy: never
     platform: linux/amd64
     depends_on:
       - octopus-server
