@@ -61,7 +61,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
             var tentacleFolder = Path.Combine(directoryPath, "tentacle");
             if (tentacleArtifact.EndsWith(".tar.gz"))
             {
-                LinuxTentacleFetcher.ExtractTarGzip(tentacleArtifact, tentacleFolder, logger);
+                await LinuxTentacleFetcher.ExtractTarGzipAsync(tentacleArtifact, tentacleFolder, logger);
             }
             else
             {

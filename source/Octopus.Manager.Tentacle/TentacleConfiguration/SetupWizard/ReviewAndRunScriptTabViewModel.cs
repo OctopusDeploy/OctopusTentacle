@@ -46,7 +46,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             {
                 var script = GenerateScript();
                 ContributeSensitiveValues(logger);
-                success = commandLineRunner.Execute(script, logger);
+                success = await commandLineRunner.ExecuteAsync(script, logger);
             }
             catch (Exception ex)
             {

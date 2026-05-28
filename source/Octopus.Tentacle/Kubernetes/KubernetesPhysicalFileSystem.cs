@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Core.Util;
 using Octopus.Tentacle.Util;
@@ -46,6 +47,21 @@ namespace Octopus.Tentacle.Kubernetes
         public (ulong freeSpaceBytes, ulong totalSpaceBytes)? GetStorageInformation()
         {
             var bytesUsed = directoryInformationProvider.GetPathUsedBytes(HomeDir);
+            return BuildStorageInformation(bytesUsed);
+        }
+
+        public async Task<(ulong freeSpaceBytes, ulong totalSpaceBytes)?> GetStorageInformationAsync()
+        {
+            var bytesUsed = await directoryInformationProvider.GetPathUsedBytesAsync(HomeDir);
+            return BuildStorageInformation(bytesUsed);
+        }
+
+        // Shared sync assembler used by both GetStorageInformation (sync, for the
+        // IOctopusFileSystem override path) and GetStorageInformationAsync (for
+        // CreateScriptContainer). Pulled out to keep the post-fetch logic DRY
+        // across the sync/async pair we need.
+        (ulong freeSpaceBytes, ulong totalSpaceBytes)? BuildStorageInformation(ulong? bytesUsed)
+        {
             var bytesTotal = directoryInformationProvider.GetPathTotalBytes();
             if (bytesUsed.HasValue && bytesTotal.HasValue)
             {

@@ -25,10 +25,10 @@ public class KubeCtlTool
 
     public Task<KubeCtlCommandResult> ExecuteNamespacedCommand(string command, CancellationToken cancellationToken = default)
     {
-        return Task.Run(() => ExecuteCommand($"{command} --namespace {ns}", cancellationToken), cancellationToken);
+        return ExecuteCommand($"{command} --namespace {ns}", cancellationToken);
     }
 
-    KubeCtlCommandResult ExecuteCommand(string command, CancellationToken cancellationToken = default)
+    async Task<KubeCtlCommandResult> ExecuteCommand(string command, CancellationToken cancellationToken = default)
     {
         var sb = new StringBuilder();
         var sprLogger = new LoggerConfiguration()
@@ -40,7 +40,7 @@ public class KubeCtlTool
         var stdOut = new List<string>();
         var stdErr = new List<string>();
 
-        var exitCode = SilentProcessRunner.ExecuteCommand(
+        var exitCode = await SilentProcessRunner.ExecuteCommandAsync(
             kubeCtlExePath,
             $"{command} --kubeconfig=\"{kubeConfigPath}\"",
             temporaryDirectory.DirectoryPath,
@@ -55,7 +55,7 @@ public class KubeCtlTool
                 sprLogger.Error(y);
                 stdErr.Add(y);
             },
-            cancellationToken);
+            cancel: cancellationToken);
 
         return new (exitCode, stdOut, stdErr);
     }
