@@ -269,9 +269,6 @@ namespace Octopus.Tentacle.Util
                     error($"Failed to kill the launched process: {killProcessException}");
                 }
             }
-            // process.Close() was deliberately removed from this cancel-cleanup path.
-            // Adding it back will cause cancel to hang forever. See PR #1226 review
-            // thread for the full old-sync vs new-async explanation.
         }
 
         // Single place we block waiting for the spawned process to exit.
