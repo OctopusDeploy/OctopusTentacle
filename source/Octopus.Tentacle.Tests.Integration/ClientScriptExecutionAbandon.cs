@@ -21,12 +21,12 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.Version2)]
         public async Task AbandonScript_WhenCancelFailsToKillProcess_ReturnsAbandonedExitCode(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
-            // TentacleDebugDisableProcessKill=1 makes Hitman a no-op, so CancelScript cannot
-            // actually terminate the underlying script process. The script becomes genuinely
-            // "stuck" from Tentacle's perspective. AbandonScript should then return promptly
-            // with AbandonedExitCode without waiting for the process to exit.
+            // TentacleDebugDisableProcessKill_UNSAFE_FOR_PRODUCTION=1 makes Hitman a no-op, so
+            // CancelScript cannot actually terminate the underlying script process. The script
+            // becomes genuinely "stuck" from Tentacle's perspective. AbandonScript should then
+            // return promptly with AbandonedExitCode without waiting for the process to exit.
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
-                .WithTentacle(x => x.WithRunTentacleEnvironmentVariable(EnvironmentVariables.TentacleDebugDisableProcessKill, "1"))
+                .WithTentacle(x => x.WithRunTentacleEnvironmentVariable(EnvironmentVariables.TentacleDebugDisableProcessKill_UNSAFE_FOR_PRODUCTION, "1"))
                 .Build(CancellationToken);
 
             var startFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "start");
@@ -85,11 +85,11 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             // The whole reason Tentacle needs an abandon RPC is to release the isolation mutex
             // when CancelScript can't unstick the script. This test proves that contract: a
-            // FullIsolation script gets stuck (because TentacleDebugDisableProcessKill makes
-            // cancel a no-op), abandon is called, and a second FullIsolation script with the
-            // same mutex name must then be able to acquire the mutex and run.
+            // FullIsolation script gets stuck (because TentacleDebugDisableProcessKill_UNSAFE_FOR_PRODUCTION
+            // makes cancel a no-op), abandon is called, and a second FullIsolation script with
+            // the same mutex name must then be able to acquire the mutex and run.
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
-                .WithTentacle(x => x.WithRunTentacleEnvironmentVariable(EnvironmentVariables.TentacleDebugDisableProcessKill, "1"))
+                .WithTentacle(x => x.WithRunTentacleEnvironmentVariable(EnvironmentVariables.TentacleDebugDisableProcessKill_UNSAFE_FOR_PRODUCTION, "1"))
                 .Build(CancellationToken);
 
             var startFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "start");

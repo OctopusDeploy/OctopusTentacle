@@ -211,10 +211,10 @@ namespace Octopus.Tentacle.Util
             CancellationToken cancel,
             Action<string> debug)
         {
-            // Waits for the OutputDataReceived/ErrorDataReceived handler to signal EOF on the
-            // stream (it sets the reset event when it receives a null DataReceivedEventArgs.Data,
-            // which is .NET's EOF marker). This does NOT close the pipe — it just gives the OS
-            // up to 5 seconds to deliver the EOF.
+            // outputResetEvent.Wait is waiting for the OutputDataReceived/ErrorDataReceived
+            // handlers to signal EOF on the stream (when it receives a null
+            // DataReceivedEventArgs.Data, .NET's EOF marker). This does NOT close the pipe,
+            // it just gives the OS up to 5 seconds to deliver the EOF.
             //
             // If a re-parented grandchild is holding the pipe open, EOF never arrives, the wait
             // times out, and we proceed without the final flush of buffered output. The pipe is
@@ -235,10 +235,11 @@ namespace Octopus.Tentacle.Util
 
         static void SafelyCancelOutputAndErrorRead(Process process, Action<string> debug)
         {
-            // Stops the OutputDataReceived / ErrorDataReceived handlers from firing further.
-            // Called in both the normal completion path and the abandon path; extracted here
-            // so the two callers stay consistent (a missed CancelXxxRead leaves the async
-            // readers firing during dispose, which can throw against the workspace log writer).
+            // Cancel the output/error readers so a late OutputDataReceived/ErrorDataReceived
+            // callback doesn't try to write to a workspace log that's already been disposed by
+            // the using-block above; that write would throw ObjectDisposedException. Called in
+            // both the normal completion path and the abandon path; extracted here so the two
+            // callers stay consistent.
             SafelyCancelRead(process.CancelErrorRead, debug);
             SafelyCancelRead(process.CancelOutputRead, debug);
         }
@@ -273,38 +274,41 @@ namespace Octopus.Tentacle.Util
                     error($"Failed to kill the launched process: {killProcessException}");
                 }
             }
-            // Do NOT add process.Close() here. The pre-async version of this code did, and adding
-            // it back will cause cancel to hang forever. Here's the full picture:
+            // We have removed process.Close() here. The pre-async version of this code did this, and adding
+            // it back will cause cancel to hang forever. Here's why:
             //
-            // OLD SYNC CODE: the calling thread blocked inside process.WaitForExit() (no-timeout
-            // overload), which waits for BOTH the process to exit AND the redirected stream
+            // OLD SYNC CODE: the calling thread blocked inside SilentProcessRunner.Execute() on
+            // process.WaitForExit() (specifically the overload which does not specify a timeout),
+            // which waits for BOTH the process to exit AND the redirected stream
             // readers to reach EOF. If a re-parented grandchild held our stdout/stderr open, the
             // stream readers never reached EOF, so WaitForExit() blocked forever. Calling
             // process.Close() during cancel-cleanup forced the Process object to release its
             // handles to the redirected pipes, which made the readers see EOF, which let
             // WaitForExit() return. That's why Close() was here.
             //
-            // NEW ASYNC CODE: the calling thread awaits a TaskCompletionSource that completes
+            // NEW ASYNC CODE: the calling thread in SilentProcessRunner.Execute
+            // at process.WaitForExitAsync awaits a TaskCompletionSource that completes
             // when the Process.Exited event fires. WaitForExitAsync does NOT wait on the
             // redirected streams (Microsoft confirms in the docs: "output processing will not
-            // have completed when this method returns"). So a grandchild holding pipes open
-            // can't hang the await. The original reason for Close() is gone.
+            // have completed when this method returns" — see
+            // https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.process.waitforexitasync).
+            // So a grandchild holding pipes open can't hang the await. The original reason for
+            // Close() is gone.
             //
-            // WHY ADDING Close() BACK IS WORSE THAN USELESS: process.Close() detaches the Process
-            // object from the underlying OS process, which tears down the wait state that
-            // produces the Exited event. If Close() runs before the kernel has signalled the
-            // exit to .NET (which is asynchronous — Hitman.Kill returns immediately, the OS
-            // delivers the exit notification some time later), the Exited event never fires,
-            // our TCS never completes, and the await hangs forever. Every cancel races.
+            // Why adding Close() back is harmful and maybe why this is a code comment not a
+            // PR comment: process.Close() detaches the Process object from the underlying
+            // OS process, which tears down the wait state that produces the Exited event. If
+            // Close() runs before the kernel has signalled the exit to .NET (which is
+            // asynchronous: when Hitman.Kill returns immediately, the OS delivers the exit
+            // notification some time later), the Exited event never fires, our TaskCompletionSource
+            // never completes, and the await at process.WaitForExitAsync hangs forever.
             //
-            // HOW PIPES ACTUALLY GET RELEASED NOW:
+            // How pipes get released now:
             //   1. After WaitForExitAsync returns, SafelyWaitForAllOutput waits up to 5 seconds
             //      per stream for EOF. If a grandchild holds the pipes, this times out and we
             //      proceed (it bounds cancel latency; it does NOT close anything).
             //   2. The outer `using (var process = new Process())` block calls Process.Dispose
-            //      at end of method, which calls Close internally. Because we're no longer
-            //      awaiting WaitForExitAsync at this point, the Close-vs-Exited race can't
-            //      happen — the wait state is already torn down by our code, not by Close.
+            //      at end of method, which calls Close internally.
             //
             // Worst case cancel latency with grandchild holding pipes: ~10s (5s × 2 streams).
             // Covered by tests in SilentProcessRunnerFixture:
@@ -360,7 +364,7 @@ namespace Octopus.Tentacle.Util
         {
             public static void TryKillProcessAndChildrenRecursively(Process process)
             {
-                if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleDebugDisableProcessKill)))
+                if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleDebugDisableProcessKill_UNSAFE_FOR_PRODUCTION)))
                 {
                     // Test-only no-op: simulate "kill was attempted but didn't terminate the process".
                     // Only activated when the test harness sets this env var on the Tentacle process.
