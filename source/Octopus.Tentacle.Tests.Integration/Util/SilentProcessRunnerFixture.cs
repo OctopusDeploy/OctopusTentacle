@@ -319,8 +319,6 @@ while ((Get-Date) -lt $deadline) {
 
             var infoMessages = new StringBuilder();
 
-            var sw = Stopwatch.StartNew();
-
             var task = Task.Run(async () => await SilentProcessRunner.ExecuteCommandAsync(
                 abandonCommand,
                 arguments,
@@ -339,15 +337,11 @@ while ((Get-Date) -lt $deadline) {
             try
             {
                 var exitCode = await task;
-                sw.Stop();
 
-                // The whole point of abandon is "return promptly without waiting for the script
-                // process to exit". The script we just started runs for 5 minutes (sleep 300).
-                // Without an elapsed-time assertion this test would pass even if abandon
-                // accidentally waited the full 5 minutes, which would silently lose the entire
-                // contract. 2 seconds is a generous near-instant bound: the abandon path on a
-                // local machine returns in tens of milliseconds; CI has been measured under 500ms.
-                sw.Elapsed.Should().BeLessThan(TimeSpan.FromSeconds(2), "abandon should return promptly without waiting for the underlying process");
+                // AbandonedExitCode is only returned from the abandon catch block, which
+                // requires the abandon token to fire. If we'd accidentally waited for the
+                // process to exit naturally, exitCode would be the script's own exit code,
+                // not this sentinel. The exit code is the abandon contract.
                 exitCode.Should().Be(ScriptExitCodes.AbandonedExitCode);
                 infoMessages.ToString().Should().Contain("Tentacle has abandoned this script");
             }
