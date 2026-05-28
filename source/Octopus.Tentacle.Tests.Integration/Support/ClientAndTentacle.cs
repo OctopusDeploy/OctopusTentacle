@@ -33,12 +33,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             return new LegacyTentacleClientBuilder(halibutRuntime, ServiceEndPoint);
         }
 
-        // The integration test for AbandonScript needs to call AbandonScriptAsync directly
-        // over the wire to assert on the RPC response shape and to drive the cancel→abandon
-        // sequence without going through TentacleClient's higher-level ExecuteScript orchestrator.
-        // TentacleClient deliberately doesn't expose AbandonScript at all today; the server is
-        // the only production consumer, and it talks to the Halibut client directly too.
-        // Exposing a direct client here keeps the test focused on the RPC behavior.
+        // Some integration tests need to invoke ScriptServiceV2 RPCs (CancelScript, GetStatus)
+        // directly over the wire, without going through TentacleClient's higher-level
+        // ExecuteScript orchestrator. TentacleClient's CancelScript/GetStatus require a
+        // CommandContext from a prior orchestrated call, which isn't available when the test
+        // is interleaving raw RPCs alongside an in-flight ExecuteScript task. Exposing a direct
+        // client here keeps those tests focused on the RPC behavior they care about.
         public IAsyncClientScriptServiceV2 CreateScriptServiceV2Client()
         {
             return halibutRuntime.CreateAsyncClient<IScriptServiceV2, IAsyncClientScriptServiceV2>(ServiceEndPoint);

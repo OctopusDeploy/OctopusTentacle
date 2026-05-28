@@ -9,6 +9,7 @@ using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.Client.Scripts.Models;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Logging;
+using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods;
 
@@ -54,6 +55,17 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders
                 token).ConfigureAwait(false);
 
             return result;
+        }
+
+        public static async Task<ScriptStatusResponseV2> AbandonScript(
+            this TentacleClient tentacleClient,
+            ScriptTicket scriptTicket,
+            CancellationToken token,
+            ITentacleClientTaskLog? log = null)
+        {
+            return await tentacleClient.AbandonScript(scriptTicket,
+                new SerilogLoggerBuilder().Build().ForContext<TentacleClient>().ToITentacleTaskLog().Chain(log),
+                token).ConfigureAwait(false);
         }
 
         public static async Task<DataStream> DownloadFile(

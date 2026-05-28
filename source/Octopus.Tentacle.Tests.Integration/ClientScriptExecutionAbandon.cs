@@ -57,9 +57,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             // Abandon: fires the abandon token. The RPC returns the current status snapshot
             // immediately, so we poll GetStatus until the script reaches Complete state.
-            await scriptServiceV2.AbandonScriptAsync(
-                new AbandonScriptCommandV2(firstCommand.ScriptTicket, 0),
-                new HalibutProxyRequestOptions(CancellationToken));
+            await tentacleClient.AbandonScript(firstCommand.ScriptTicket, CancellationToken);
 
             ScriptStatusResponseV2 abandonResponse = null!;
             await Wait.For(async () =>
@@ -120,9 +118,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 new HalibutProxyRequestOptions(CancellationToken));
             await Task.Delay(TimeSpan.FromSeconds(1));
 
-            await scriptServiceV2.AbandonScriptAsync(
-                new AbandonScriptCommandV2(firstCommand.ScriptTicket, 0),
-                new HalibutProxyRequestOptions(CancellationToken));
+            await tentacleClient.AbandonScript(firstCommand.ScriptTicket, CancellationToken);
 
             // Second FullIsolation script with the SAME mutex name. If the abandon released
             // the mutex, this script can acquire it and run to completion. Otherwise it would
