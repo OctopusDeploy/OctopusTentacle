@@ -368,9 +368,7 @@ namespace Octopus.Tentacle.Startup
                 arguments,
                 Environment.CurrentDirectory,
                 output => outputBuilder.AppendLine(output),
-                error => outputBuilder.AppendLine("Error: " + error),
-                cancel: CancellationToken.None,
-                abandon: CancellationToken.None);
+                error => outputBuilder.AppendLine("Error: " + error));
             if (exitCode == 0)
                 logFileOnlyLogger.Info(outputBuilder.ToString());
             else

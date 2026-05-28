@@ -46,9 +46,7 @@ public class DockerImageLoader
                 sprLogger.Information(line);
                 tags.Add(line);
             },
-            sprLogger.Error,
-            cancel: CancellationToken.None,
-            abandon: CancellationToken.None
+            sprLogger.Error
         );
 
         if (exitCode != 0)
@@ -76,9 +74,7 @@ public class DockerImageLoader
             temporaryDirectory.DirectoryPath,
             sprLogger.Debug,
             sprLogger.Information,
-            sprLogger.Error,
-            cancel: CancellationToken.None,
-            abandon: CancellationToken.None
+            sprLogger.Error
         );
 
         if (exitCode != 0)

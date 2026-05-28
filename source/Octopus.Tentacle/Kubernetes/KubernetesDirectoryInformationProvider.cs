@@ -71,7 +71,7 @@ namespace Octopus.Tentacle.Kubernetes
         {
             var stdOut = new List<string>();
             var stdErr = new List<string>();
-            var exitCode = await silentProcessRunner.ExecuteCommandAsync("du", $"-s -B 1 {directoryPath}", "/", stdOut.Add, stdErr.Add, abandon: CancellationToken.None);
+            var exitCode = await silentProcessRunner.ExecuteCommandAsync("du", $"-s -B 1 {directoryPath}", "/", stdOut.Add, stdErr.Add);
 
             if (exitCode != 0)
             {

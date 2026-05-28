@@ -55,8 +55,7 @@ public class KubeCtlTool
                 sprLogger.Error(y);
                 stdErr.Add(y);
             },
-            cancel: cancellationToken,
-            abandon: CancellationToken.None);
+            cancel: cancellationToken);
 
         return new (exitCode, stdOut, stdErr);
     }

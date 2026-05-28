@@ -534,8 +534,7 @@ while ((Get-Date) -lt $deadline) {
                     Console.WriteLine($"{DateTime.UtcNow} ERR: {x}");
                     error.Append(x);
                 },
-                cancel: cancel,
-                abandon: CancellationToken.None).GetAwaiter().GetResult();
+                cancel: cancel).GetAwaiter().GetResult();
 
             debugMessages = debug;
             infoMessages = info;

@@ -90,9 +90,7 @@ namespace Octopus.Tentacle.Util
                     Environment.CurrentDirectory,
                     debug,
                     info,
-                    error,
-                    cancel: CancellationToken.None,
-                    abandon: CancellationToken.None);
+                    error);
 
                 if (exitCode != 0)
                 {
