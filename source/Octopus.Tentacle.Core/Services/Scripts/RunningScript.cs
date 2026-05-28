@@ -102,21 +102,19 @@ namespace Octopus.Tentacle.Core.Services.Scripts
                                 : await RunScriptAsync(shellPath, writer, runningScriptToken, abandonToken);
                         }
                     }
+                    // Fires when the caller abandoned the script: leave the OS process running and signal the distinct AbandonedExitCode so the server can tell it apart from a cancel.
                     catch (OperationCanceledException) when (abandonToken.IsCancellationRequested)
                     {
-                        // Distinguish the abandon path from cancel: when the abandon token fires,
-                        // we don't try to kill the underlying script process. Logging it as
-                        // "abandoned" rather than "canceled" makes the deployment log honest about
-                        // what happened, and surfacing AbandonedExitCode (-48) lets the caller
-                        // (the Octopus Server) treat it differently from a normal cancel exit.
                         writer.WriteOutput(ProcessOutputSource.StdOut, "Script execution abandoned.");
                         exitCode = ScriptExitCodes.AbandonedExitCode;
                     }
+                    // Fires when the caller cancelled the script and the underlying process honored the cancellation token.
                     catch (OperationCanceledException)
                     {
                         writer.WriteOutput(ProcessOutputSource.StdOut, "Script execution canceled.");
                         exitCode = ScriptExitCodes.CanceledExitCode;
                     }
+                    // Fires when acquiring the isolation mutex timed out before the script could start.
                     catch (TimeoutException)
                     {
                         writer.WriteOutput(ProcessOutputSource.StdOut, "Script execution timed out.");

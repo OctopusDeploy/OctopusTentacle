@@ -72,8 +72,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             {
                 IScriptWorkspace workspace;
 
-                // If the state already exists then this runningScript is already running/has already run and we should not run it again.
-                // StartScript may be called multiple times for the same ticket (e.g. server retries), so we guard against double-launching.
+                // StartScript may be called multiple times for the same ticket (e.g. if server retries the tentacle command), so we must guard against actually starting the script twice.
                 if (runningScript.ScriptStateStore.Exists())
                 {
                     var state = runningScript.ScriptStateStore.Load();
@@ -144,11 +143,10 @@ namespace Octopus.Tentacle.Core.Services.Scripts
 
         public Task<ScriptStatusResponseV2> AbandonScriptAsync(AbandonScriptCommandV2 command, CancellationToken cancellationToken)
         {
-            // Fires the abandon token (so Execute will return AbandonedExitCode on its next
-            // unwind) and returns the current status snapshot immediately. The caller (the
-            // Octopus Server) polls GetStatus to observe the eventual Complete + AbandonedExitCode,
-            // same as for the cancel flow, so there's no need to block the RPC handler waiting
-            // for the running script to reach Complete state.
+            // Triggers the abandon token so `process.WaitForExitAsync` will return in
+            // SilentProcessRunning.ExecuteAsync which means the call to GetResponse()
+            // below may have the final exit code for the script. Otherwise the sender of
+            // the command (Octopus Server) will get the result on a subsequent call to `GetStatus`
             if (runningScripts.TryGetValue(command.Ticket, out var runningScript))
             {
                 runningScript.Abandon();
@@ -159,9 +157,6 @@ namespace Octopus.Tentacle.Core.Services.Scripts
 
         public async Task CompleteScriptAsync(CompleteScriptCommandV2 command, CancellationToken cancellationToken)
         {
-            // Stop tracking and dispose the running-script bookkeeping. The underlying
-            // OS process may or may not still be running depending on whether this
-            // script completed normally, was cancelled, or was abandoned.
             if (runningScripts.TryRemove(command.Ticket, out var runningScript))
             {
                 runningScript.Dispose();
@@ -169,18 +164,17 @@ namespace Octopus.Tentacle.Core.Services.Scripts
 
             var workspace = workspaceFactory.GetWorkspace(command.Ticket, WorkspaceReadinessCheck.Skip);
 
-            // For abandoned scripts the underlying OS process is, by design, still alive
-            // and may still hold open file handles inside the workspace (logs being written
-            // to, working files, etc.). workspace.Delete() will fail in that case on
-            // Windows (sharing violations) and may partially delete on Linux. Tolerate
-            // the failure: the workspace will be left on disk and reaped by another
-            // mechanism (manual cleanup, instance restart). For all other completion paths
+            // For abandoned scripts (see AbandonScriptCommandV2 and
+            // https://octopus.com/docs/infrastructure/deployment-targets/tentacle/tentacle-script-abandonment)
+            // the underlying OS process is, by design, still alive
+            // and unable to be killed by Tentacle. It may still hold open file handles inside
+            // the workspace (logs being written to, working files, etc.). workspace.Delete()
+            // will fail in that case on Windows due to sharing violations and may partially
+            // delete on Linux. We need to tolerate the failure, which will leave the workspace
+            // on disk to hopefully be cleaned up by another mechanism (manual cleanup,
+            // instance restart) etc. This is the best we can do. For all other completion paths
             // the process has exited and Delete should succeed; surface any failure there.
-            var stateStore = scriptStateStoreFactory.Create(workspace);
-            var wasAbandoned = stateStore.Exists()
-                               && stateStore.Load().ExitCode == ScriptExitCodes.AbandonedExitCode;
-
-            if (wasAbandoned)
+            if (WasAbandoned(workspace))
             {
                 try
                 {
@@ -195,6 +189,13 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             {
                 await workspace.Delete(cancellationToken);
             }
+        }
+
+        bool WasAbandoned(IScriptWorkspace workspace)
+        {
+            var stateStore = scriptStateStoreFactory.Create(workspace);
+            return stateStore.Exists()
+                   && stateStore.Load().ExitCode == ScriptExitCodes.AbandonedExitCode;
         }
 
         RunningScript LaunchShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, IScriptStateStore stateStore, CancellationToken cancellationToken, CancellationToken abandonToken)
