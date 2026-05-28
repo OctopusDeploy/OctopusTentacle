@@ -345,7 +345,8 @@ while ((Get-Date) -lt $deadline) {
                 exitCode.Should().Be(ScriptExitCodes.AbandonedExitCode);
                 infoMessages.ToString().Should().Contain("Tentacle has abandoned this script");
 
-                // Make sure the fixture didn't accidentally kill the script. The exit code matches anyway.
+                // Whether the script keeps running doesn't matter in prod. We check it here so we
+                // know our fixture didn't accidentally kill it (the exit code matches either way).
                 var sleepPid = int.Parse(SafelyReadAllText(pidFile).Trim());
                 Process.GetProcessById(sleepPid).HasExited.Should().BeFalse("abandon should leave the underlying script process running");
             }
