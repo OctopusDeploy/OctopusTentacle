@@ -283,15 +283,18 @@ while ((Get-Date) -lt $deadline) {
                     cts.Cancel();
 
                     // Cancel should return within ~10s worst case (5s SafelyWaitForAllOutput timeout
-                    // per stream). If we hit the 30s test timeout, something is hanging — most likely
-                    // process.Close() got re-added to DoOurBestToCleanUp (see that method for why).
-                    var completed = task.Wait(TimeSpan.FromSeconds(30));
+                    // per stream). The 60s test bound is generous for slow Linux CI agents while
+                    // still flagging a real regression — if process.Close() got re-added to
+                    // DoOurBestToCleanUp (see that method for why) or SafelyWaitForAllOutput's
+                    // per-stream timeout was removed, the wait hangs indefinitely and we trip the
+                    // bound by miles.
+                    var completed = task.Wait(TimeSpan.FromSeconds(60));
                     sw.Stop();
 
                     completed.Should().BeTrue(
                         $"ExecuteCommandAsync should return promptly after cancellation even when a Unix " +
                         $"grandchild (reparented to init/launchd) holds the redirected pipes. Worst case " +
-                        $"is ~10s. If we hit the 30s test timeout, either process.Close() was re-introduced " +
+                        $"is ~10s. If we hit the 60s test timeout, either process.Close() was re-introduced " +
                         $"in DoOurBestToCleanUp (which races with the Exited event WaitForExitAsync depends " +
                         $"on) or SafelyWaitForAllOutput's per-stream timeout has been removed. Elapsed " +
                         $"since cancel: {sw.Elapsed.TotalSeconds:F1}s");

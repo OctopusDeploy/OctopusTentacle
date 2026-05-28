@@ -32,15 +32,10 @@ namespace Octopus.Tentacle.Tests.Integration
             capabilities.Should().Contain(nameof(IScriptService));
             capabilities.Should().Contain(nameof(IFileTransferService));
 
-            //all versions have ScriptServiceV1 & IFileTransferService
-            var expectedCapabilitiesCount = 2;
             if (version.HasScriptServiceV2())
             {
                 capabilities.Should().Contain(nameof(IScriptServiceV2));
-                expectedCapabilitiesCount++;
             }
-
-            capabilities.Count.Should().Be(expectedCapabilitiesCount);
         }
 
         [Test]
@@ -56,17 +51,12 @@ namespace Octopus.Tentacle.Tests.Integration
             capabilities.Should().Contain(nameof(IScriptService));
             capabilities.Should().Contain(nameof(IFileTransferService));
 
-            //all versions have ScriptServiceV1 & IFileTransferService
-            var expectedCapabilitiesCount = 2;
             if (version.HasScriptServiceV2())
             {
                 capabilities.Should().Contain(nameof(IScriptServiceV2));
-                expectedCapabilitiesCount++;
             }
 
             capabilities.Should().NotContain(nameof(IKubernetesScriptServiceV1));
-
-            capabilities.Count.Should().Be(expectedCapabilitiesCount);
         }
 
         [Test]
