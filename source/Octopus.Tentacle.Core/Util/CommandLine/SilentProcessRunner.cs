@@ -114,7 +114,13 @@ namespace Octopus.Tentacle.Util
                     process.StartInfo.CreateNoWindow = true;
                     process.StartInfo.RedirectStandardOutput = true;
                     process.StartInfo.RedirectStandardError = true;
+#if NETFRAMEWORK
+                    // The netframework polyfill of WaitForProcessExitAsync subscribes to
+                    // process.Exited and needs this flag to receive the event. On .NET 8+
+                    // Process.WaitForExitAsync sets EnableRaisingEvents = true itself
+                    // (see https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.process.waitforexitasync).
                     process.EnableRaisingEvents = true;
+#endif
                     if (PlatformDetection.IsRunningOnWindows)
                     {
                         process.StartInfo.StandardOutputEncoding = encoding;
@@ -158,7 +164,7 @@ namespace Octopus.Tentacle.Util
                             // We pass `abandon` (not `cancel`) because cancel is handled via the
                             // cancel.Register callback above which kills the process tree; the
                             // resulting Exited event is what unblocks this await on cancel.
-                            // `abandon` is a separate token used by EFT-3295 to stop waiting
+                            // `abandon` is a separate token used by the abandon feature to stop waiting
                             // WITHOUT killing the process — see the catch block below.
                             await WaitForProcessExitAsync(process, abandon).ConfigureAwait(false);
                         }
@@ -270,47 +276,9 @@ namespace Octopus.Tentacle.Util
                     error($"Failed to kill the launched process: {killProcessException}");
                 }
             }
-            // We have removed process.Close() here. The pre-async version of this code did this, and adding
-            // it back will cause cancel to hang forever. Here's why:
-            //
-            // OLD SYNC CODE: the calling thread blocked inside SilentProcessRunner.Execute() on
-            // process.WaitForExit() (specifically the overload which does not specify a timeout),
-            // which waits for BOTH the process to exit AND the redirected stream
-            // readers to reach EOF. If a re-parented grandchild held our stdout/stderr open, the
-            // stream readers never reached EOF, so WaitForExit() blocked forever. Calling
-            // process.Close() during cancel-cleanup forced the Process object to release its
-            // handles to the redirected pipes, which made the readers see EOF, which let
-            // WaitForExit() return. That's why Close() was here.
-            //
-            // NEW ASYNC CODE: the calling thread in SilentProcessRunner.Execute
-            // at WaitForProcessExitAsync awaits a TaskCompletionSource that completes
-            // when the Process.Exited event fires. WaitForProcessExitAsync does NOT wait on the
-            // redirected streams (Microsoft confirms in the docs: "output processing will not
-            // have completed when this method returns" — see
-            // https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.process.waitforexitasync).
-            // So a grandchild holding pipes open can't hang the await. The original reason for
-            // Close() is gone.
-            //
-            // Why adding Close() back is harmful and maybe why this is a code comment not a
-            // PR comment: process.Close() detaches the Process object from the underlying
-            // OS process, which tears down the wait state that produces the Exited event. If
-            // Close() runs before the kernel has signalled the exit to .NET (which is
-            // asynchronous: when Hitman.Kill returns immediately, the OS delivers the exit
-            // notification some time later), the Exited event never fires, our TaskCompletionSource
-            // never completes, and the await at WaitForProcessExitAsync hangs forever.
-            //
-            // How pipes get released now:
-            //   1. After WaitForProcessExitAsync returns, SafelyWaitForAllOutput waits up to 5 seconds
-            //      per stream for EOF. If a grandchild holds the pipes, this times out and we
-            //      proceed (it bounds cancel latency; it does NOT close anything).
-            //   2. The outer `using (var process = new Process())` block calls Process.Dispose
-            //      at end of method, which calls Close internally.
-            //
-            // Worst case cancel latency with grandchild holding pipes: ~10s (5s × 2 streams).
-            // Covered by tests in SilentProcessRunnerFixture:
-            //   - CancellationToken_WhenGrandchildHoldsRedirectedPipes_ShouldNotHang (Windows)
-            //   - CancellationToken_WhenUnixGrandchildHoldsRedirectedPipes_ShouldNotHang (Unix)
-            // Both assert cancel returns within 30s in this scenario.
+            // process.Close() was deliberately removed from this cancel-cleanup path.
+            // Adding it back will cause cancel to hang forever. See PR #1226 review
+            // thread for the full old-sync vs new-async explanation.
         }
 
         // Single place we block waiting for the spawned process to exit.
@@ -320,6 +288,15 @@ namespace Octopus.Tentacle.Util
         static Task WaitForProcessExitAsync(Process process, CancellationToken cancellationToken)
         {
 #if NETFRAMEWORK
+            return WaitForProcessExitAsyncNetFrameworkPolyfill(process, cancellationToken);
+#else
+            return process.WaitForExitAsync(cancellationToken);
+#endif
+        }
+
+#if NETFRAMEWORK
+        static Task WaitForProcessExitAsyncNetFrameworkPolyfill(Process process, CancellationToken cancellationToken)
+        {
             var tcs = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
             CancellationTokenRegistration registration = default;
 
@@ -347,10 +324,8 @@ namespace Octopus.Tentacle.Util
             }
 
             return tcs.Task;
-#else
-            return process.WaitForExitAsync(cancellationToken);
-#endif
         }
+#endif
 
         [DllImport("kernel32.dll", SetLastError = true)]
 #pragma warning disable PC003 // Native API not available in UWP
