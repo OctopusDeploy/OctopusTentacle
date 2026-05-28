@@ -28,7 +28,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
         readonly ScriptIsolationMutex scriptIsolationMutex;
         readonly TimeSpan powerShellStartupTimeout;
 
-        public RunningScript(IShell shell,
+        RunningScript(IShell shell,
             IScriptWorkspace workspace,
             IScriptStateStore? stateStore,
             IScriptLog scriptLog,
@@ -55,7 +55,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             this.powerShellStartupTimeout = powerShellStartupTimeout;
         }
 
-        public RunningScript(IShell shell,
+        RunningScript(IShell shell,
             IScriptWorkspace workspace,
             IScriptLog scriptLog,
             string taskId,
@@ -66,6 +66,30 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             ILog log) : this(shell, workspace, null, scriptLog, taskId, scriptIsolationMutex, runningScriptToken, CancellationToken.None, environmentVariables, powerShellStartupTimeout, log)
         {
         }
+
+        public static RunningScript Create(IShell shell,
+            IScriptWorkspace workspace,
+            IScriptLog scriptLog,
+            string taskId,
+            ScriptIsolationMutex scriptIsolationMutex,
+            CancellationToken runningScriptToken,
+            IReadOnlyDictionary<string, string> environmentVariables,
+            TimeSpan powerShellStartupTimeout,
+            ILog log)
+            => new RunningScript(shell, workspace, null, scriptLog, taskId, scriptIsolationMutex, runningScriptToken, CancellationToken.None, environmentVariables, powerShellStartupTimeout, log);
+
+        public static RunningScript CreateAbandonable(IShell shell,
+            IScriptWorkspace workspace,
+            IScriptStateStore? stateStore,
+            IScriptLog scriptLog,
+            string taskId,
+            ScriptIsolationMutex scriptIsolationMutex,
+            CancellationToken runningScriptToken,
+            CancellationToken abandonToken,
+            IReadOnlyDictionary<string, string> environmentVariables,
+            TimeSpan powerShellStartupTimeout,
+            ILog log)
+            => new RunningScript(shell, workspace, stateStore, scriptLog, taskId, scriptIsolationMutex, runningScriptToken, abandonToken, environmentVariables, powerShellStartupTimeout, log);
 
         public ProcessState State { get; private set; }
         public int ExitCode { get; private set; }

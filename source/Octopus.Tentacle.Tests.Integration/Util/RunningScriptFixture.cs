@@ -67,7 +67,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
             scriptLog = new TestScriptLog();
             cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
             scriptIsolationMutex = new ScriptIsolationMutex();
-            runningScript = new RunningScript(shell,
+            runningScript = RunningScript.Create(shell,
                 workspace,
                 scriptLog,
                 taskId,
@@ -169,7 +169,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
                     ? (new PowerShell(), "Start-Sleep -seconds")
                     : (new Bash() as IShell, "sleep");
 
-                var script = new RunningScript(shell,
+                var script = RunningScript.Create(shell,
                     workspace,
                     scriptLog,
                     taskId,
@@ -204,7 +204,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
             using var runningCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
             using var abandonCts = new CancellationTokenSource();
 
-            var script = new RunningScript(
+            var script = RunningScript.CreateAbandonable(
                 shell,
                 workspace,
                 stateStore: null,
