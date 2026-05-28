@@ -344,6 +344,16 @@ while ((Get-Date) -lt $deadline) {
                 // not this sentinel. The exit code is the abandon contract.
                 exitCode.Should().Be(ScriptExitCodes.AbandonedExitCode);
                 infoMessages.ToString().Should().Contain("Tentacle has abandoned this script");
+
+                // In production we don't care whether the script keeps running after abandon.
+                // Here we assert it does, as a sanity check that the test fixture genuinely
+                // exercised the abandon path. If we'd accidentally cancelled the process
+                // instead, this assertion would fail (and Process.GetProcessById would throw
+                // ArgumentException if the PID is already gone). The abandon contract is
+                // "stop waiting, leave the OS process alone" — this is our confidence that
+                // distinction held in the test.
+                var sleepPid = int.Parse(SafelyReadAllText(pidFile).Trim());
+                Process.GetProcessById(sleepPid).HasExited.Should().BeFalse("abandon should leave the underlying script process running");
             }
             finally
             {
