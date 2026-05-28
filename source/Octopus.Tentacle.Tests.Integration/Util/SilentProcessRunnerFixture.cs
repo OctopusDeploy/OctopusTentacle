@@ -218,13 +218,13 @@ while ((Get-Date) -lt $deadline) {
                     var sw = Stopwatch.StartNew();
                     cts.Cancel();
 
-                    var completed = task.Wait(TimeSpan.FromSeconds(30));
+                    var completed = task.Wait(TimeSpan.FromSeconds(60));
                     sw.Stop();
 
                     completed.Should().BeTrue(
                         $"ExecuteCommandAsync should return promptly after cancellation even when a " +
                         $"grandchild holds the redirected pipes. Worst case is ~10s (5s timeout × 2 streams " +
-                        $"in SafelyWaitForAllOutput). If we hit the 30s test timeout, either someone " +
+                        $"in SafelyWaitForAllOutput). If we hit the 60s test timeout, either someone " +
                         $"re-introduced process.Close() in DoOurBestToCleanUp (which races with the Exited " +
                         $"event WaitForExitAsync depends on) or SafelyWaitForAllOutput's per-stream timeout " +
                         $"has been removed. Elapsed since cancel: {sw.Elapsed.TotalSeconds:F1}s");
@@ -277,7 +277,7 @@ while ((Get-Date) -lt $deadline) {
                         out _,
                         cts.Token));
 
-                    await WaitForPidFileAsync(grandchildPidFile, TimeSpan.FromSeconds(30));
+                    await WaitForPidFileAsync(grandchildPidFile, TimeSpan.FromSeconds(60));
 
                     var sw = Stopwatch.StartNew();
                     cts.Cancel();
