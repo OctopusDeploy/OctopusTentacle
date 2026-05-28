@@ -69,11 +69,6 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders
                 token).ConfigureAwait(false);
         }
 
-        // Some integration tests need to invoke CancelScript / GetStatus directly against an
-        // already-running ScriptServiceV2 script without going through ExecuteScript. They have
-        // a ScriptTicket but not a CommandContext (which TentacleClient's high-level methods
-        // expect). These helpers synthesize a CommandContext from the ticket so tests can call
-        // through TentacleClient instead of bypassing it with raw Halibut calls.
         public static async Task<ScriptStatus> CancelScript(
             this TentacleClient tentacleClient,
             ScriptTicket scriptTicket,

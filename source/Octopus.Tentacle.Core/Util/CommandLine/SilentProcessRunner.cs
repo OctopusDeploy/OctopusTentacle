@@ -114,13 +114,6 @@ namespace Octopus.Tentacle.Util
                     process.StartInfo.CreateNoWindow = true;
                     process.StartInfo.RedirectStandardOutput = true;
                     process.StartInfo.RedirectStandardError = true;
-#if NETFRAMEWORK
-                    // The netframework polyfill of WaitForProcessExitAsync subscribes to
-                    // process.Exited and needs this flag to receive the event. On .NET 8+
-                    // Process.WaitForExitAsync sets EnableRaisingEvents = true itself
-                    // (see https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.process.waitforexitasync).
-                    process.EnableRaisingEvents = true;
-#endif
                     if (PlatformDetection.IsRunningOnWindows)
                     {
                         process.StartInfo.StandardOutputEncoding = encoding;
@@ -297,6 +290,12 @@ namespace Octopus.Tentacle.Util
 #if NETFRAMEWORK
         static Task WaitForProcessExitAsyncNetFrameworkPolyfill(Process process, CancellationToken cancellationToken)
         {
+            // EnableRaisingEvents must be true for the process.Exited handler below to fire.
+            // On .NET 8+ Process.WaitForExitAsync sets this itself; here on netframework we
+            // have to set it ourselves before subscribing.
+            // https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.process.waitforexitasync
+            process.EnableRaisingEvents = true;
+
             var tcs = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
             CancellationTokenRegistration registration = default;
 
