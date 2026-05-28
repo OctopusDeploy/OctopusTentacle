@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -30,30 +30,12 @@ namespace Octopus.Tentacle.Tests.Integration
     [TestFixture]
     public class ScriptServiceV2Fixture
     {
-        ScriptServiceV2 service = null!;
-        ScriptWorkspaceFactory workspaceFactory = null!;
-        ScriptStateStoreFactory stateStoreFactory = null!;
-
-        [SetUp]
-        public void SetUp()
-        {
-            var homeConfiguration = Substitute.For<IHomeConfiguration>();
-            homeConfiguration.HomeDirectory.Returns(Environment.CurrentDirectory);
-
-            var octopusPhysicalFileSystem = new OctopusPhysicalFileSystem(Substitute.For<ISystemLog>());
-            workspaceFactory = new ScriptWorkspaceFactory(octopusPhysicalFileSystem, homeConfiguration, new SensitiveValueMasker());
-            stateStoreFactory = new ScriptStateStoreFactory(octopusPhysicalFileSystem);
-            service = new ScriptServiceV2(
-                PlatformDetection.IsRunningOnWindows ? (IShell)new PowerShell() : new Bash(),
-                workspaceFactory,
-                stateStoreFactory,
-                new ScriptIsolationMutex(),
-                Substitute.For<ISystemLog>());
-        }
-
         [Test]
         public async Task ShouldExecuteAScriptSuccessfully()
         {
+            var builder = new ScriptServiceV2Builder();
+            var service = builder.Build();
+
             var windowsScript = "& ping.exe localhost -n 1";
             var bashScript = "ping localhost -c 1";
 
@@ -64,7 +46,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .Build();
 
             var startScriptResponse = await service.StartScriptAsync(startScriptCommand, CancellationToken.None);
-            var (logs, finalResponse) = await RunUntilScriptCompletes(startScriptCommand, startScriptResponse);
+            var (logs, finalResponse) = await RunUntilScriptCompletes(service, startScriptCommand, startScriptResponse);
 
             finalResponse.State.Should().Be(ProcessState.Complete);
             finalResponse.ExitCode.Should().Be(0);
@@ -74,6 +56,9 @@ namespace Octopus.Tentacle.Tests.Integration
         [Test]
         public async Task ShouldReturnANonZeroExitCodeForAFailingScript()
         {
+            var builder = new ScriptServiceV2Builder();
+            var service = builder.Build();
+
             var windowsScript = "& ping.exe nope -n 1";
             var bashScript = "ping nope -c 1";
 
@@ -84,7 +69,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .Build();
 
             var startScriptResponse = await service.StartScriptAsync(startScriptCommand, CancellationToken.None);
-            var (logs, finalResponse) = await RunUntilScriptCompletes(startScriptCommand, startScriptResponse);
+            var (logs, finalResponse) = await RunUntilScriptCompletes(service, startScriptCommand, startScriptResponse);
 
             finalResponse.State.Should().Be(ProcessState.Complete);
             finalResponse.ExitCode.Should().NotBe(0);
@@ -94,6 +79,9 @@ namespace Octopus.Tentacle.Tests.Integration
         [Test]
         public async Task ShouldExecuteMultipleScriptsConcurrently()
         {
+            var builder = new ScriptServiceV2Builder();
+            var service = builder.Build();
+
             var bashScript = "sleep 10";
             var windowsScript = "Start-Sleep -Seconds 10";
 
@@ -115,7 +103,7 @@ namespace Octopus.Tentacle.Tests.Integration
             });
 
             await Task.WhenAll(tasks);
-        
+
             var startDuration = started.Elapsed;
             startDuration.Should().BeLessThan(TimeSpan.FromSeconds(5));
 
@@ -123,7 +111,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             foreach (var script in scripts)
             {
-                var (logs, finalResponse) = await RunUntilScriptCompletes(script.Command, script.Response);
+                var (logs, finalResponse) = await RunUntilScriptCompletes(service, script.Command, script.Response);
 
                 finalResponse.State.Should().Be(ProcessState.Complete);
                 finalResponse.ExitCode.Should().Be(0);
@@ -137,6 +125,9 @@ namespace Octopus.Tentacle.Tests.Integration
         [Test]
         public async Task ShouldStartExecuteAScriptQuickly()
         {
+            var builder = new ScriptServiceV2Builder();
+            var service = builder.Build();
+
             var script = "echo \"finished\"";
 
             var startScriptCommand = new StartScriptCommandV2Builder()
@@ -171,6 +162,9 @@ namespace Octopus.Tentacle.Tests.Integration
         [Test]
         public async Task ShouldExecuteALongRunningScriptSuccessfully()
         {
+            var builder = new ScriptServiceV2Builder();
+            var service = builder.Build();
+
             var bashScript = "sleep 10";
             var windowsScript = "Start-Sleep -Seconds 10";
 
@@ -181,7 +175,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .Build();
 
             var startScriptResponse = await service.StartScriptAsync(startScriptCommand, CancellationToken.None);
-            var (_, finalResponse) = await RunUntilScriptCompletes(startScriptCommand, startScriptResponse);
+            var (_, finalResponse) = await RunUntilScriptCompletes(service, startScriptCommand, startScriptResponse);
 
             finalResponse.State.Should().Be(ProcessState.Complete);
             finalResponse.ExitCode.Should().Be(0);
@@ -190,6 +184,9 @@ namespace Octopus.Tentacle.Tests.Integration
         [Test]
         public async Task StartScriptShouldWaitForAShortScriptToFinish()
         {
+            var builder = new ScriptServiceV2Builder();
+            var service = builder.Build();
+
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody("echo \"finished\"")
                 .WithDurationStartScriptCanWaitForScriptToFinish(TimeSpan.FromSeconds(5))
@@ -208,6 +205,9 @@ namespace Octopus.Tentacle.Tests.Integration
         [Test]
         public async Task StartScriptShouldNotWaitForALongScriptToFinish()
         {
+            var builder = new ScriptServiceV2Builder();
+            var service = builder.Build();
+
             var bashScript = "sleep 10";
             var windowsScript = "Start-Sleep -Seconds 10";
 
@@ -218,7 +218,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .Build();
 
             var startScriptResponse = await service.StartScriptAsync(startScriptCommand, CancellationToken.None);
-            await RunUntilScriptCompletes(startScriptCommand, startScriptResponse);
+            await RunUntilScriptCompletes(service, startScriptCommand, startScriptResponse);
 
             startScriptResponse.State.Should().Be(ProcessState.Running);
             startScriptResponse.ExitCode.Should().Be(0);
@@ -228,6 +228,9 @@ namespace Octopus.Tentacle.Tests.Integration
         [Test]
         public async Task StartScriptShouldNotStartTheScriptForTheSameScriptTicketMoreThanOnce_SequentialRequests()
         {
+            var builder = new ScriptServiceV2Builder();
+            var service = builder.Build();
+
             // Arrange
             var scriptTicket = new ScriptTicket(Guid.NewGuid().ToString());
             var script1 = GetStartScriptCommandForScriptThatCreatesAFile(scriptTicket);
@@ -237,7 +240,7 @@ namespace Octopus.Tentacle.Tests.Integration
             await service.StartScriptAsync(script1.StartScriptCommand, CancellationToken.None);
 
             var startScriptResponse = await service.StartScriptAsync(script2.StartScriptCommand, CancellationToken.None);
-            var (_, finalResponse) = await RunUntilScriptCompletes(script2.StartScriptCommand, startScriptResponse);
+            var (_, finalResponse) = await RunUntilScriptCompletes(service, script2.StartScriptCommand, startScriptResponse);
 
             // Assert
             finalResponse.State.Should().Be(ProcessState.Complete);
@@ -250,6 +253,9 @@ namespace Octopus.Tentacle.Tests.Integration
         [Test]
         public async Task StartScriptShouldNotStartTheScriptForTheSameScriptTicketMoreThanOnce_ConcurrentRequests()
         {
+            var builder = new ScriptServiceV2Builder();
+            var service = builder.Build();
+
             // Arrange
             var scriptTicket = new ScriptTicket(Guid.NewGuid().ToString());
 
@@ -272,6 +278,7 @@ namespace Octopus.Tentacle.Tests.Integration
             await Task.WhenAll(tasks);
 
             var (_, finalResponse) = await RunUntilScriptCompletes(
+                service,
                 scripts[0].StartScriptCommand,
                 new ScriptStatusResponseV2(scripts[0].StartScriptCommand.ScriptTicket, ProcessState.Pending, 0, new List<ProcessOutput>(), 0));
 
@@ -293,6 +300,9 @@ namespace Octopus.Tentacle.Tests.Integration
         [Test]
         public async Task CancelScriptShouldCancelAnExecutingScript()
         {
+            var builder = new ScriptServiceV2Builder();
+            var service = builder.Build();
+
             var bashScript = "sleep 60";
             var windowsScript = "Start-Sleep -Seconds 60";
 
@@ -338,6 +348,10 @@ namespace Octopus.Tentacle.Tests.Integration
         [Test]
         public async Task CompleteScriptShouldCleanupTheWorkspace()
         {
+            var builder = new ScriptServiceV2Builder();
+            var service = builder.Build();
+            var workspaceFactory = (ScriptWorkspaceFactory)builder.WorkspaceFactory;
+
             var script = "echo \"finished\"";
 
             var startScriptCommand = new StartScriptCommandV2Builder()
@@ -352,13 +366,14 @@ namespace Octopus.Tentacle.Tests.Integration
             var startScriptResponse = await service.StartScriptAsync(startScriptCommand, CancellationToken.None);
             Directory.Exists(workspaceDirectory).Should().BeTrue();
 
-            await RunUntilScriptCompletes(startScriptCommand, startScriptResponse);
+            await RunUntilScriptCompletes(service, startScriptCommand, startScriptResponse);
             Directory.Exists(workspaceDirectory).Should().BeFalse();
         }
 
         [Test]
         public async Task GetStatusShouldReturnAnExitCodeOf45ForAnUnknownScriptTicket()
         {
+            var service = new ScriptServiceV2Builder().Build();
             var response = await service.GetStatusAsync(new ScriptStatusRequestV2(new ScriptTicket("nope"), 0), CancellationToken.None);
 
             response.ExitCode.Should().Be(-45);
@@ -367,6 +382,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [Test]
         public async Task CancelScriptShouldReturnAnExitCodeOf45ForAnUnknownScriptTicket()
         {
+            var service = new ScriptServiceV2Builder().Build();
             var response = await service.CancelScriptAsync(new CancelScriptCommandV2(new ScriptTicket("nope"), 0), CancellationToken.None);
 
             response.ExitCode.Should().Be(-45);
@@ -375,43 +391,53 @@ namespace Octopus.Tentacle.Tests.Integration
         [Test]
         public async Task CompleteScriptShouldNotErrorForAnUnknownScriptTicket()
         {
+            var service = new ScriptServiceV2Builder().Build();
             await service.CompleteScriptAsync(new CompleteScriptCommandV2(new ScriptTicket("nope")), CancellationToken.None);
         }
 
         [Test]
         public async Task GetStatusShouldReturnAnExitCodeOf46ForAScriptWithAnUnknownResult()
         {
+            var builder = new ScriptServiceV2Builder();
+            var service = builder.Build();
+
             var request = new ScriptStatusRequestV2(new ScriptTicket($"did-not-finish-{Guid.NewGuid()}"), 0);
             var ticket = request.Ticket;
-            SetupScriptState(ticket);
+            SetupScriptState(builder.WorkspaceFactory, builder.StateStoreFactory, ticket);
 
             var response = await service.GetStatusAsync(request, CancellationToken.None);
 
             response.ExitCode.Should().Be(-46);
 
-            await CleanupWorkspace(ticket, CancellationToken.None);
+            await CleanupWorkspace(builder.WorkspaceFactory, ticket, CancellationToken.None);
         }
 
         [Test]
         public async Task CancelScriptShouldReturnAnExitCodeOf46ForAScriptWithAnUnknownResult()
         {
+            var builder = new ScriptServiceV2Builder();
+            var service = builder.Build();
+
             var request = new CancelScriptCommandV2(new ScriptTicket($"did-not-finish-{Guid.NewGuid()}"), 0);
             var ticket = request.Ticket;
-            SetupScriptState(ticket);
+            SetupScriptState(builder.WorkspaceFactory, builder.StateStoreFactory, ticket);
 
             var response = await service.CancelScriptAsync(request, CancellationToken.None);
 
             response.ExitCode.Should().Be(-46);
 
-            await CleanupWorkspace(ticket, CancellationToken.None);
+            await CleanupWorkspace(builder.WorkspaceFactory, ticket, CancellationToken.None);
         }
 
         [Test]
         public async Task CompleteScriptShouldNotErrorForAScriptWithAnUnknownResult()
         {
+            var builder = new ScriptServiceV2Builder();
+            var service = builder.Build();
+
             var request = new CompleteScriptCommandV2(new ScriptTicket($"did-not-finish-{Guid.NewGuid()}"));
             var ticket = request.Ticket;
-            SetupScriptState(ticket);
+            SetupScriptState(builder.WorkspaceFactory, builder.StateStoreFactory, ticket);
 
             await service.CompleteScriptAsync(request, CancellationToken.None);
         }
@@ -419,6 +445,9 @@ namespace Octopus.Tentacle.Tests.Integration
         [Test]
         public async Task ShouldStoreTheStateOfTheScriptInTheScriptStateStore()
         {
+            var builder = new ScriptServiceV2Builder();
+            var service = builder.Build();
+
             var testStarted = DateTimeOffset.UtcNow;
 
             var bashScript = "sleep 10";
@@ -430,13 +459,13 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithDurationStartScriptCanWaitForScriptToFinish(null)
                 .Build();
 
-            var scriptStateStore = SetupScriptStateStore(startScriptCommand.ScriptTicket);
+            var scriptStateStore = SetupScriptStateStore(builder.WorkspaceFactory, builder.StateStoreFactory, startScriptCommand.ScriptTicket);
 
             var startScriptResponse = await service.StartScriptAsync(startScriptCommand, CancellationToken.None);
 
             var runningScriptState = scriptStateStore.Load();
 
-            var (logs, finalResponse) = await RunUntilScriptFinishes(startScriptCommand, startScriptResponse);
+            var (logs, finalResponse) = await RunUntilScriptFinishes(service, startScriptCommand, startScriptResponse);
 
             var testFinished = DateTimeOffset.UtcNow;
             var finishedScriptState = scriptStateStore.Load();
@@ -462,6 +491,8 @@ namespace Octopus.Tentacle.Tests.Integration
         [Test]
         public async Task ScriptTicketCasingShouldNotAffectCommands()
         {
+            var service = new ScriptServiceV2Builder().Build();
+
             // Arrange
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody("echo \"finished\"")
@@ -487,6 +518,8 @@ namespace Octopus.Tentacle.Tests.Integration
         [Test]
         public async Task AbandonScript_OnUnknownTicket_ReturnsCompleteWithUnknownScriptExitCode()
         {
+            var service = new ScriptServiceV2Builder().Build();
+
             var ticket = new ScriptTicket("unknown-ticket-" + Guid.NewGuid().ToString("N"));
             var response = await service.AbandonScriptAsync(new AbandonScriptCommandV2(ticket, 0), CancellationToken.None);
 
@@ -497,6 +530,8 @@ namespace Octopus.Tentacle.Tests.Integration
         [Test]
         public async Task AbandonScript_OnRunningScript_FiresAbandonToken_ReturnsAbandonedExitCode()
         {
+            var service = new ScriptServiceV2Builder().Build();
+
             var startCommand = new StartScriptCommandV2Builder()
                 .WithScriptBodyForCurrentOs("Start-Sleep -Seconds 60", "sleep 60")
                 .WithIsolation(ScriptIsolationLevel.NoIsolation)
@@ -536,6 +571,8 @@ namespace Octopus.Tentacle.Tests.Integration
         [Test]
         public async Task AbandonScript_OnAlreadyCompletedScript_ReturnsRealExitCode()
         {
+            var service = new ScriptServiceV2Builder().Build();
+
             var startCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody("echo \"finished\"")
                 .WithIsolation(ScriptIsolationLevel.NoIsolation)
@@ -563,13 +600,12 @@ namespace Octopus.Tentacle.Tests.Integration
         public async Task CompleteScript_AfterAbandon_WhenWorkspaceDeleteFails_LogsWarnAndReturnsNormally()
         {
             var deleteException = new IOException("file in use");
-            var (throwingFactory, mockLog) = BuildFactoryWithThrowingDelete(deleteException);
-            var serviceUnderTest = new ScriptServiceV2(
-                PlatformDetection.IsRunningOnWindows ? (IShell)new PowerShell() : new Bash(),
-                throwingFactory,
-                stateStoreFactory,
-                new ScriptIsolationMutex(),
-                mockLog);
+            var builder = new ScriptServiceV2Builder();
+            var (throwingFactory, mockLog) = BuildFactoryWithThrowingDelete(builder.WorkspaceFactory, deleteException);
+            var serviceUnderTest = builder
+                .WithWorkspaceFactory(throwingFactory)
+                .WithLog(mockLog)
+                .Build();
 
             var startCommand = new StartScriptCommandV2Builder()
                 .WithScriptBodyForCurrentOs("Start-Sleep -Seconds 60", "sleep 60")
@@ -613,13 +649,12 @@ namespace Octopus.Tentacle.Tests.Integration
         public async Task CompleteScript_AfterNormalCompletion_WhenWorkspaceDeleteFails_PropagatesException()
         {
             var deleteException = new IOException("file in use");
-            var (throwingFactory, mockLog) = BuildFactoryWithThrowingDelete(deleteException);
-            var serviceUnderTest = new ScriptServiceV2(
-                PlatformDetection.IsRunningOnWindows ? (IShell)new PowerShell() : new Bash(),
-                throwingFactory,
-                stateStoreFactory,
-                new ScriptIsolationMutex(),
-                mockLog);
+            var builder = new ScriptServiceV2Builder();
+            var (throwingFactory, mockLog) = BuildFactoryWithThrowingDelete(builder.WorkspaceFactory, deleteException);
+            var serviceUnderTest = builder
+                .WithWorkspaceFactory(throwingFactory)
+                .WithLog(mockLog)
+                .Build();
 
             var startCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody("echo \"finished\"")
@@ -647,15 +682,83 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         /// <summary>
-        /// Builds an IScriptWorkspaceFactory decorator over the real workspaceFactory whose returned
+        /// Builds an IScriptWorkspaceFactory decorator over the supplied workspaceFactory whose returned
         /// workspaces forward every member except Delete(CancellationToken), which throws the supplied
         /// exception. Also returns a mock ISystemLog for assertion.
         /// </summary>
-        (IScriptWorkspaceFactory factory, ISystemLog log) BuildFactoryWithThrowingDelete(Exception deleteException)
+        static (IScriptWorkspaceFactory factory, ISystemLog log) BuildFactoryWithThrowingDelete(IScriptWorkspaceFactory workspaceFactory, Exception deleteException)
         {
             var throwingFactory = new DeleteThrowingScriptWorkspaceFactory(workspaceFactory, deleteException);
             var fakeLog = Substitute.For<ISystemLog>();
             return (throwingFactory, fakeLog);
+        }
+
+        /// <summary>
+        /// Builder for ScriptServiceV2 SUT construction. Defaults match what the previous [SetUp]
+        /// produced; tests opt into mock overrides via the chainable With* methods. The
+        /// WorkspaceFactory and StateStoreFactory properties materialize on first access so tests
+        /// can grab them before Build() (e.g. to wrap the default factory in a decorator).
+        /// </summary>
+        class ScriptServiceV2Builder
+        {
+            IScriptWorkspaceFactory? workspaceFactory;
+            ScriptStateStoreFactory? stateStoreFactory;
+            ISystemLog? log;
+            IShell? shell;
+            ScriptIsolationMutex? mutex;
+            OctopusPhysicalFileSystem? cachedFileSystem;
+
+            public IScriptWorkspaceFactory WorkspaceFactory => workspaceFactory ??= BuildDefaultWorkspaceFactory();
+            public ScriptStateStoreFactory StateStoreFactory => stateStoreFactory ??= new ScriptStateStoreFactory(FileSystem);
+
+            OctopusPhysicalFileSystem FileSystem => cachedFileSystem ??= new OctopusPhysicalFileSystem(Substitute.For<ISystemLog>());
+
+            ScriptWorkspaceFactory BuildDefaultWorkspaceFactory()
+            {
+                var homeConfiguration = Substitute.For<IHomeConfiguration>();
+                homeConfiguration.HomeDirectory.Returns(Environment.CurrentDirectory);
+                return new ScriptWorkspaceFactory(FileSystem, homeConfiguration, new SensitiveValueMasker());
+            }
+
+            public ScriptServiceV2Builder WithWorkspaceFactory(IScriptWorkspaceFactory factory)
+            {
+                workspaceFactory = factory;
+                return this;
+            }
+
+            public ScriptServiceV2Builder WithStateStoreFactory(ScriptStateStoreFactory factory)
+            {
+                stateStoreFactory = factory;
+                return this;
+            }
+
+            public ScriptServiceV2Builder WithLog(ISystemLog log)
+            {
+                this.log = log;
+                return this;
+            }
+
+            public ScriptServiceV2Builder WithShell(IShell shell)
+            {
+                this.shell = shell;
+                return this;
+            }
+
+            public ScriptServiceV2Builder WithMutex(ScriptIsolationMutex mutex)
+            {
+                this.mutex = mutex;
+                return this;
+            }
+
+            public ScriptServiceV2 Build()
+            {
+                return new ScriptServiceV2(
+                    shell ?? (PlatformDetection.IsRunningOnWindows ? (IShell)new PowerShell() : new Bash()),
+                    WorkspaceFactory,
+                    StateStoreFactory,
+                    mutex ?? new ScriptIsolationMutex(),
+                    log ?? Substitute.For<ISystemLog>());
+            }
         }
 
         /// <summary>
@@ -756,20 +859,20 @@ namespace Octopus.Tentacle.Tests.Integration
 
         // TODO - Test the stateStore is updated.
 
-        private void SetupScriptState(ScriptTicket ticket)
+        static void SetupScriptState(IScriptWorkspaceFactory workspaceFactory, ScriptStateStoreFactory stateStoreFactory, ScriptTicket ticket)
         {
-            var stateWorkspace = SetupScriptStateStore(ticket);
+            var stateWorkspace = SetupScriptStateStore(workspaceFactory, stateStoreFactory, ticket);
             stateWorkspace.Create();
         }
 
-        private ScriptStateStore SetupScriptStateStore(ScriptTicket ticket)
+        static ScriptStateStore SetupScriptStateStore(IScriptWorkspaceFactory workspaceFactory, ScriptStateStoreFactory stateStoreFactory, ScriptTicket ticket)
         {
             var workspace = workspaceFactory.GetWorkspace(ticket, WorkspaceReadinessCheck.Perform);
             var stateWorkspace = stateStoreFactory.Create(workspace);
             return stateWorkspace;
         }
 
-        private async Task CleanupWorkspace(ScriptTicket ticket, CancellationToken cancellationToken)
+        static async Task CleanupWorkspace(IScriptWorkspaceFactory workspaceFactory, ScriptTicket ticket, CancellationToken cancellationToken)
         {
             var workspace = workspaceFactory.GetWorkspace(ticket, WorkspaceReadinessCheck.Skip);
             await workspace.Delete(cancellationToken);
@@ -798,9 +901,9 @@ namespace Octopus.Tentacle.Tests.Integration
             return (startScriptCommand, new FileInfo(filePath));
         }
 
-        async Task<(List<ProcessOutput>, ScriptStatusResponseV2)> RunUntilScriptCompletes(StartScriptCommandV2 startScriptCommand, ScriptStatusResponseV2 response)
+        static async Task<(List<ProcessOutput>, ScriptStatusResponseV2)> RunUntilScriptCompletes(ScriptServiceV2 service, StartScriptCommandV2 startScriptCommand, ScriptStatusResponseV2 response)
         {
-            var (logs, lastResponse) = await RunUntilScriptFinishes(startScriptCommand, response);
+            var (logs, lastResponse) = await RunUntilScriptFinishes(service, startScriptCommand, response);
 
             await service.CompleteScriptAsync(new CompleteScriptCommandV2(startScriptCommand.ScriptTicket), CancellationToken.None);
 
@@ -809,7 +912,7 @@ namespace Octopus.Tentacle.Tests.Integration
             return (logs, lastResponse);
         }
 
-        async Task<(List<ProcessOutput> logs, ScriptStatusResponseV2 response)> RunUntilScriptFinishes(StartScriptCommandV2 startScriptCommand, ScriptStatusResponseV2 response)
+        static async Task<(List<ProcessOutput> logs, ScriptStatusResponseV2 response)> RunUntilScriptFinishes(ScriptServiceV2 service, StartScriptCommandV2 startScriptCommand, ScriptStatusResponseV2 response)
         {
             var logs = new List<ProcessOutput>(response.Logs);
 
@@ -828,7 +931,7 @@ namespace Octopus.Tentacle.Tests.Integration
             return (logs, response);
         }
 
-        void WriteLogsToConsole(List<ProcessOutput> logs)
+        static void WriteLogsToConsole(List<ProcessOutput> logs)
         {
             foreach (var log in logs)
             {
