@@ -6,9 +6,6 @@ using Halibut;
 using Octopus.Tentacle.Client;
 using Octopus.Tentacle.Client.Retries;
 using Octopus.Tentacle.CommonTestUtils;
-using Octopus.Tentacle.Contracts.Capabilities;
-using Octopus.Tentacle.Contracts.ClientServices;
-using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Tests.Integration.Support.Legacy;
 using Octopus.TestPortForwarder;
 using Serilog;
@@ -31,17 +28,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public LegacyTentacleClientBuilder LegacyTentacleClientBuilder()
         {
             return new LegacyTentacleClientBuilder(halibutRuntime, ServiceEndPoint);
-        }
-
-        // Some integration tests need to invoke ScriptServiceV2 RPCs (CancelScript, GetStatus)
-        // directly over the wire, without going through TentacleClient's higher-level
-        // ExecuteScript orchestrator. TentacleClient's CancelScript/GetStatus require a
-        // CommandContext from a prior orchestrated call, which isn't available when the test
-        // is interleaving raw RPCs alongside an in-flight ExecuteScript task. Exposing a direct
-        // client here keeps those tests focused on the RPC behavior they care about.
-        public IAsyncClientScriptServiceV2 CreateScriptServiceV2Client()
-        {
-            return halibutRuntime.CreateAsyncClient<IScriptServiceV2, IAsyncClientScriptServiceV2>(ServiceEndPoint);
         }
 
         public ClientAndTentacle(IHalibutRuntime halibutRuntime,

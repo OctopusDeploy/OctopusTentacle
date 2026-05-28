@@ -3,10 +3,8 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Halibut.ServiceModel;
 using NUnit.Framework;
 using Octopus.Tentacle.Contracts;
-using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Core.Util;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util;
@@ -40,7 +38,6 @@ namespace Octopus.Tentacle.Tests.Integration
                 .Build();
 
             var tentacleClient = clientTentacle.TentacleClient;
-            var scriptServiceV2 = clientTentacle.CreateScriptServiceV2Client();
 
             var scriptExecution = Task.Run(async () => await tentacleClient.ExecuteScript(firstCommand, CancellationToken));
 
@@ -50,21 +47,17 @@ namespace Octopus.Tentacle.Tests.Integration
                 CancellationToken);
 
             // Cancel: Hitman is a no-op so the process keeps running.
-            await scriptServiceV2.CancelScriptAsync(
-                new CancelScriptCommandV2(firstCommand.ScriptTicket, 0),
-                new HalibutProxyRequestOptions(CancellationToken));
+            await tentacleClient.CancelScript(firstCommand.ScriptTicket);
             await Task.Delay(TimeSpan.FromSeconds(1));
 
             // Abandon: fires the abandon token. The RPC returns the current status snapshot
             // immediately, so we poll GetStatus until the script reaches Complete state.
             await tentacleClient.AbandonScript(firstCommand.ScriptTicket, CancellationToken);
 
-            ScriptStatusResponseV2 abandonResponse = null!;
+            ScriptStatus abandonResponse = null!;
             await Wait.For(async () =>
                 {
-                    abandonResponse = await scriptServiceV2.GetStatusAsync(
-                        new ScriptStatusRequestV2(firstCommand.ScriptTicket, 0),
-                        new HalibutProxyRequestOptions(CancellationToken));
+                    abandonResponse = await tentacleClient.GetStatus(firstCommand.ScriptTicket, CancellationToken);
                     return abandonResponse.State == ProcessState.Complete;
                 },
                 TimeSpan.FromSeconds(30),
@@ -104,7 +97,6 @@ namespace Octopus.Tentacle.Tests.Integration
                 .Build();
 
             var tentacleClient = clientTentacle.TentacleClient;
-            var scriptServiceV2 = clientTentacle.CreateScriptServiceV2Client();
 
             var firstScriptExecution = Task.Run(async () => await tentacleClient.ExecuteScript(firstCommand, CancellationToken));
 
@@ -113,9 +105,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 () => throw new Exception("First script did not start"),
                 CancellationToken);
 
-            await scriptServiceV2.CancelScriptAsync(
-                new CancelScriptCommandV2(firstCommand.ScriptTicket, 0),
-                new HalibutProxyRequestOptions(CancellationToken));
+            await tentacleClient.CancelScript(firstCommand.ScriptTicket);
             await Task.Delay(TimeSpan.FromSeconds(1));
 
             await tentacleClient.AbandonScript(firstCommand.ScriptTicket, CancellationToken);
