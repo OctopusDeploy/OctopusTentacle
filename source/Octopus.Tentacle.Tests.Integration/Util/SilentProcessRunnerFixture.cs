@@ -213,7 +213,7 @@ while ((Get-Date) -lt $deadline) {
                         cts.Token));
 
                     // Wait for the grandchild to actually be spawned before cancelling
-                    await WaitForGrandchildSpawnAsync(grandchildPidFile, TimeSpan.FromSeconds(60));
+                    await WaitForPidFileAsync(grandchildPidFile, TimeSpan.FromSeconds(60));
 
                     var sw = Stopwatch.StartNew();
                     cts.Cancel();
@@ -277,7 +277,7 @@ while ((Get-Date) -lt $deadline) {
                         out _,
                         cts.Token));
 
-                    await WaitForGrandchildSpawnAsync(grandchildPidFile, TimeSpan.FromSeconds(30));
+                    await WaitForPidFileAsync(grandchildPidFile, TimeSpan.FromSeconds(30));
 
                     var sw = Stopwatch.StartNew();
                     cts.Cancel();
@@ -333,7 +333,7 @@ while ((Get-Date) -lt $deadline) {
                 abandon: abandonCts.Token));
 
             // Wait deterministically for the process to write its PID before we abandon
-            await WaitForGrandchildSpawnAsync(pidFile, TimeSpan.FromSeconds(30));
+            await WaitForPidFileAsync(pidFile, TimeSpan.FromSeconds(30));
             abandonCts.Cancel();
 
             try
@@ -361,7 +361,7 @@ while ((Get-Date) -lt $deadline) {
             }
         }
 
-        static async Task WaitForGrandchildSpawnAsync(string pidFile, TimeSpan timeout)
+        static async Task WaitForPidFileAsync(string pidFile, TimeSpan timeout)
         {
             var deadline = DateTime.UtcNow + timeout;
             while (DateTime.UtcNow < deadline)
@@ -371,8 +371,8 @@ while ((Get-Date) -lt $deadline) {
                 await Task.Delay(50);
             }
             throw new TimeoutException(
-                $"Test setup failed: the grandchild PID was never written to '{pidFile}'. " +
-                $"The grandchild-pipe scenario is not being exercised.");
+                $"Test setup failed: a valid PID was never written to '{pidFile}'. " +
+                $"The scenario under test is not being exercised.");
         }
 
         static string SafelyReadAllText(string path)
