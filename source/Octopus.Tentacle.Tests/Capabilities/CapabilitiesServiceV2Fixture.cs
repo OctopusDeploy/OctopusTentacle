@@ -6,6 +6,7 @@ using NUnit.Framework;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
+using Octopus.Tentacle.Core.Services.Scripts;
 using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Services.Capabilities;
 
@@ -20,8 +21,7 @@ namespace Octopus.Tentacle.Tests.Capabilities
                 .GetCapabilitiesAsync(CancellationToken.None))
                 .SupportedCapabilities;
 
-            capabilities.Should().BeEquivalentTo(nameof(IScriptService), nameof(IFileTransferService), nameof(IScriptServiceV2), "AbandonScriptV2");
-            capabilities.Count.Should().Be(4);
+            capabilities.Should().BeEquivalentTo(nameof(IScriptService), nameof(IFileTransferService), nameof(IScriptServiceV2), nameof(ScriptServiceV2.AbandonScriptAsync));
 
             capabilities.Should().NotContainMatch("IKubernetesScriptService*");
         }
@@ -36,7 +36,6 @@ namespace Octopus.Tentacle.Tests.Capabilities
                 .SupportedCapabilities;
 
             capabilities.Should().BeEquivalentTo(nameof(IFileTransferService), nameof(IKubernetesScriptServiceV1));
-            capabilities.Count.Should().Be(2);
 
             capabilities.Should().NotContainMatch("IScriptService*");
 
@@ -48,7 +47,7 @@ namespace Octopus.Tentacle.Tests.Capabilities
         {
             var service = new CapabilitiesServiceV2();
             var response = await service.GetCapabilitiesAsync(CancellationToken.None);
-            response.SupportedCapabilities.Should().Contain("AbandonScriptV2");
+            response.SupportedCapabilities.Should().Contain(nameof(ScriptServiceV2.AbandonScriptAsync));
         }
 
         [Test]
@@ -58,7 +57,7 @@ namespace Octopus.Tentacle.Tests.Capabilities
 
             var service = new CapabilitiesServiceV2();
             var response = await service.GetCapabilitiesAsync(CancellationToken.None);
-            response.SupportedCapabilities.Should().NotContain("AbandonScriptV2");
+            response.SupportedCapabilities.Should().NotContain(nameof(ScriptServiceV2.AbandonScriptAsync));
 
             Environment.SetEnvironmentVariable(KubernetesConfig.NamespaceVariableName, null);
         }
