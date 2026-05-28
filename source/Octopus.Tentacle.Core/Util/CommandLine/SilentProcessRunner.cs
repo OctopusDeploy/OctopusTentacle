@@ -9,6 +9,7 @@ using System.Runtime.Versioning;
 using System.Text;
 using System.Threading;
 using Octopus.Tentacle.Core.Diagnostics;
+using Octopus.Tentacle.Core.Util;
 
 namespace Octopus.Tentacle.Util
 {
@@ -251,11 +252,18 @@ namespace Octopus.Tentacle.Util
         {
             public static void TryKillProcessAndChildrenRecursively(Process process)
             {
+                if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleDebugDisableProcessKill_UNSAFE_FOR_PRODUCTION)))
+                {
+                    // Test-only no-op: simulate "kill was attempted but didn't terminate the process".
+                    // Only activated when the test harness sets this env var on the Tentacle process.
+                    return;
+                }
+
 #if NETFRAMEWORK
                 TryKillWindowsProcessAndChildrenRecursively(process.Id);
 #endif
 #if !NETFRAMEWORK
-                // Since .NET Core 3.0 there is support for killing a process and it's children 
+                // Since .NET Core 3.0 there is support for killing a process and it's children
                 process.Kill(true);
 #endif
             }

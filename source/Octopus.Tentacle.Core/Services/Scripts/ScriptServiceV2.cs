@@ -140,6 +140,16 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             return GetResponse(command.Ticket, command.LastLogSequence, runningScript?.Process);
         }
 
+        public Task<ScriptStatusResponseV2> AbandonScriptAsync(AbandonScriptCommandV2 command, CancellationToken cancellationToken)
+        {
+            // EFT-3295 stub: this returns a status snapshot without firing any abandon
+            // token. The script process keeps running until it exits naturally or the
+            // cancel kills it, so the mutex is NOT released here. This is the behaviour
+            // gap the abandon integration tests demonstrate.
+            runningScripts.TryGetValue(command.Ticket, out var runningScript);
+            return Task.FromResult(GetResponse(command.Ticket, command.LastLogSequence, runningScript?.Process));
+        }
+
         public async Task CompleteScriptAsync(CompleteScriptCommandV2 command, CancellationToken cancellationToken)
         {
             await Task.CompletedTask;
