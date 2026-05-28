@@ -52,7 +52,7 @@ namespace Octopus.Tentacle.Commands
                 throw new ControlledFailureException($"Liveness heartbeat file not found at {heartbeatPath}; the Tentacle agent may not be running.");
 
             var lastWriteUtc = File.GetLastWriteTimeUtc(heartbeatPath);
-            var age = clock.GetUtcTime().DateTime - lastWriteUtc;
+            var age = clock.GetUtcTime().UtcDateTime - lastWriteUtc;
 
             if (age > TimeSpan.FromSeconds(maxAgeSeconds))
                 throw new ControlledFailureException($"Liveness heartbeat at {heartbeatPath} is stale: last written {(int)age.TotalSeconds}s ago (threshold {maxAgeSeconds}s).");

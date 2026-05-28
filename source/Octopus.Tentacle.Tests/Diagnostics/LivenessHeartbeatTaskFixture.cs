@@ -116,7 +116,7 @@ namespace Octopus.Tentacle.Tests.Diagnostics
             try
             {
                 Thread.Sleep(TimeSpan.FromMilliseconds(200));
-                log.ReceivedWithAnyArgs().Warn(Arg.Any<string>());
+                log.ReceivedWithAnyArgs().Error(Arg.Any<string>());
             }
             finally
             {
