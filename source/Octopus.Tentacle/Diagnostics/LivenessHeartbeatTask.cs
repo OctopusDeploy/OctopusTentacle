@@ -37,7 +37,7 @@ namespace Octopus.Tentacle.Diagnostics
             var heartbeatPath = ResolveHeartbeatPath();
             if (heartbeatPath is null)
             {
-                Log.Warn("Liveness heartbeat task could not resolve a home directory; heartbeat file will not be written.");
+                Log.Error("Liveness heartbeat task could not resolve a home directory; heartbeat file will not be written.");
                 return;
             }
 
