@@ -269,6 +269,21 @@ namespace Octopus.Tentacle.Util
                     error($"Failed to kill the launched process: {killProcessException}");
                 }
             }
+            finally
+            {
+                try
+                {
+                    // Force the pipe handles closed. Process.WaitForExitAsync waits for stream EOF
+                    // after the Exited event, and a re-parented grandchild holding our redirected
+                    // stdout/stderr open will prevent EOF — so the await hangs without this. Close
+                    // releases the handles, the readers see EOF, the await returns.
+                    process.Close();
+                }
+                catch (Exception ex)
+                {
+                    error($"Failed to close process resources: {ex.Message}");
+                }
+            }
         }
 
         // Single place we block waiting for the spawned process to exit.
