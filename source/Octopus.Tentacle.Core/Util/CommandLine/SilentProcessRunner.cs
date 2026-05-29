@@ -17,10 +17,6 @@ namespace Octopus.Tentacle.Util
 {
     public static class SilentProcessRunner
     {
-        // How long we wait for an issued kill to actually reap the process before we
-        // give up and report the script as abandoned.
-        const int CancelKillGraceMilliseconds = 5000;
-
         public static Task<int> ExecuteCommandAsync(
             string executable,
             string arguments,
@@ -175,35 +171,11 @@ namespace Octopus.Tentacle.Util
                         }
                         catch (OperationCanceledException) when (cancel.IsCancellationRequested)
                         {
-                            // Cancel means "kill it". DoOurBestToCleanUp already issued the kill via
-                            // cancel.Register, but Kill() only *requests* termination — the OS reaps the
-                            // process asynchronously, so it is usually still alive at this point. We wait a
-                            // bounded grace period for the reap so the fall-through below can read the real
-                            // exit code (e.g. 137 for SIGKILL, 143 for SIGTERM).
-                            //   Required by CancellationToken_ShouldForceKillTheProcess.
-                            //
-                            // The finite-timeout overload is deliberate: WaitForExit(int) waits only for
-                            // termination, never for redirected-stream EOF (the EOF drain is guarded by
-                            // `milliseconds == Timeout.Infinite`). The no-arg overload WOULD drain EOF and
-                            // hang when a re-parented grandchild holds our pipes open.
-                            //   Required by CancellationToken_WhenGrandchildHoldsRedirectedPipes_ShouldNotHang.
-                            var exitedWithinGracePeriod = process.WaitForExit(CancelKillGraceMilliseconds);
-
-                            if (!exitedWithinGracePeriod)
-                            {
-                                // The kill did not land within the grace period: the process is genuinely
-                                // stuck (or kill was disabled in a test). There is no real exit code to read
-                                // — reading process.ExitCode here would throw "Process must exit before
-                                // requested information can be determined." So we report it as abandoned;
-                                // the process may still be running on this host.
-                                //   Required by AbandonScript_WhenCancelFailsToKillProcess_ReturnsAbandonedExitCode.
-                                info("Tentacle stopped waiting for the cancelled script. The underlying script process may still be running on this host.");
-                                SafelyCancelOutputAndErrorRead(process, debug);
-                                running = false;
-                                return ScriptExitCodes.AbandonedExitCode;
-                            }
-
-                            // Exited within the grace period — fall through to read the real exit code below.
+                            // EXPERIMENT (EFT-3295 spike): instead of a bounded WaitForExit grace period,
+                            // mirror main's old cancel cleanup — close the process here to release our pipe
+                            // handles — then fall through to SafelyGetExitCode below. We are testing whether
+                            // CI stays green with Close() in place of the wait.
+                            process.Close();
                         }
 
                         SafelyCancelOutputAndErrorRead(process, debug);
