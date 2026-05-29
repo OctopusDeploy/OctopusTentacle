@@ -17,6 +17,10 @@ namespace Octopus.Tentacle.Util
 {
     public static class SilentProcessRunner
     {
+        // How long we wait for an issued kill to actually reap the process before we
+        // give up and report the script as abandoned.
+        const int CancelKillGraceMilliseconds = 5000;
+
         public static Task<int> ExecuteCommandAsync(
             string executable,
             string arguments,
@@ -171,25 +175,35 @@ namespace Octopus.Tentacle.Util
                         }
                         catch (OperationCanceledException) when (cancel.IsCancellationRequested)
                         {
-                            // Cancel path. Hitman.Kill ran synchronously via cancel.Register but the
-                            // actual OS termination is async — brief sync wait so the fall-through to
-                            // SafelyGetExitCode below reads the real exit code. WaitForExit(timeout)
-                            // does NOT wait for stream EOF (only the no-timeout overload does), so a
-                            // grandchild holding pipes can't extend this.
-                            try { process.WaitForExit(5000); } catch { /* best effort */ }
-                            if (!process.HasExited)
+                            // Cancel means "kill it". DoOurBestToCleanUp already issued the kill via
+                            // cancel.Register, but Kill() only *requests* termination — the OS reaps the
+                            // process asynchronously, so it is usually still alive at this point. We wait a
+                            // bounded grace period for the reap so the fall-through below can read the real
+                            // exit code (e.g. 137 for SIGKILL, 143 for SIGTERM).
+                            //   Required by CancellationToken_ShouldForceKillTheProcess.
+                            //
+                            // The finite-timeout overload is deliberate: WaitForExit(int) waits only for
+                            // termination, never for redirected-stream EOF (the EOF drain is guarded by
+                            // `milliseconds == Timeout.Infinite`). The no-arg overload WOULD drain EOF and
+                            // hang when a re-parented grandchild holds our pipes open.
+                            //   Required by CancellationToken_WhenGrandchildHoldsRedirectedPipes_ShouldNotHang.
+                            var exitedWithinGracePeriod = process.WaitForExit(CancelKillGraceMilliseconds);
+
+                            if (!exitedWithinGracePeriod)
                             {
-                                // Kill didn't take effect within 5s (e.g., kill disabled in test, or
-                                // process is genuinely stuck). We can't safely read ExitCode from a
-                                // running process, so fall back to AbandonedExitCode — the user has
-                                // committed to stopping and this is the only honest signal we have.
+                                // The kill did not land within the grace period: the process is genuinely
+                                // stuck (or kill was disabled in a test). There is no real exit code to read
+                                // — reading process.ExitCode here would throw "Process must exit before
+                                // requested information can be determined." So we report it as abandoned;
+                                // the process may still be running on this host.
+                                //   Required by AbandonScript_WhenCancelFailsToKillProcess_ReturnsAbandonedExitCode.
                                 info("Tentacle stopped waiting for the cancelled script. The underlying script process may still be running on this host.");
                                 SafelyCancelOutputAndErrorRead(process, debug);
                                 running = false;
                                 return ScriptExitCodes.AbandonedExitCode;
                             }
-                            // Process exited cleanly within the bounded wait — fall through to read
-                            // the real exit code via SafelyGetExitCode below.
+
+                            // Exited within the grace period — fall through to read the real exit code below.
                         }
 
                         SafelyCancelOutputAndErrorRead(process, debug);
