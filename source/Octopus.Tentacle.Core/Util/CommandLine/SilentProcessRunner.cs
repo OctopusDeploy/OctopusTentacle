@@ -158,8 +158,12 @@ namespace Octopus.Tentacle.Util
                         {
                             await WaitForProcessExitAsync(process, stopWaiting.Token).ConfigureAwait(false);
                         }
-                        catch (OperationCanceledException) when (abandon.IsCancellationRequested && !process.HasExited)
+                        catch (OperationCanceledException) when (abandon.IsCancellationRequested)
                         {
+                            // Abandon path. From the user's perspective abandon is a race against
+                            // natural script exit, so returning AbandonedExitCode is acceptable even
+                            // if the process happened to finish at the same moment — that's why we
+                            // don't check process.HasExited here.
                             info("Tentacle has abandoned this script. The underlying script process may still be running on this host.");
                             SafelyCancelOutputAndErrorRead(process, debug);
                             running = false;
@@ -167,13 +171,25 @@ namespace Octopus.Tentacle.Util
                         }
                         catch (OperationCanceledException) when (cancel.IsCancellationRequested)
                         {
-                            // Cancel fired. Hitman.Kill ran synchronously via cancel.Register, sending
-                            // the kill signal. The OS may take a moment to actually terminate the
-                            // process; brief sync wait so SafelyGetExitCode below can read ExitCode
-                            // without throwing. WaitForExit(timeout) does NOT wait for stream EOF
-                            // (only the no-timeout overload does), so a grandchild holding pipes
-                            // can't extend this.
+                            // Cancel path. Hitman.Kill ran synchronously via cancel.Register but the
+                            // actual OS termination is async — brief sync wait so the fall-through to
+                            // SafelyGetExitCode below reads the real exit code. WaitForExit(timeout)
+                            // does NOT wait for stream EOF (only the no-timeout overload does), so a
+                            // grandchild holding pipes can't extend this.
                             try { process.WaitForExit(5000); } catch { /* best effort */ }
+                            if (!process.HasExited)
+                            {
+                                // Kill didn't take effect within 5s (e.g., kill disabled in test, or
+                                // process is genuinely stuck). We can't safely read ExitCode from a
+                                // running process, so fall back to AbandonedExitCode — the user has
+                                // committed to stopping and this is the only honest signal we have.
+                                info("Tentacle stopped waiting for the cancelled script. The underlying script process may still be running on this host.");
+                                SafelyCancelOutputAndErrorRead(process, debug);
+                                running = false;
+                                return ScriptExitCodes.AbandonedExitCode;
+                            }
+                            // Process exited cleanly within the bounded wait — fall through to read
+                            // the real exit code via SafelyGetExitCode below.
                         }
 
                         SafelyCancelOutputAndErrorRead(process, debug);
