@@ -145,21 +145,18 @@ namespace Octopus.Tentacle.Util
                         process.BeginOutputReadLine();
                         process.BeginErrorReadLine();
 
+                        // Process.WaitForExitAsync waits for stream EOF after the Exited event
+                        // fires. A re-parented grandchild that inherits our redirected stdout/stderr
+                        // pipes will hold them open and prevent EOF, hanging the await forever. We
+                        // can't add process.Close() to cancel cleanup (it clears the Process object's
+                        // stream fields and aborts the in-flight await, breaking other tests). So
+                        // instead we pass a linked token combining `abandon` and `cancel`: when
+                        // either fires, the await throws OCE and we route to the matching catch.
+                        using var stopWaiting = CancellationTokenSource.CreateLinkedTokenSource(abandon, cancel);
+
                         try
                         {
-                            // WaitForExitAsync completes when the Process.Exited event fires (or
-                            // when `abandon` cancels). Unlike the sync WaitForExit() no-timeout
-                            // overload, it does NOT wait for the redirected stdout/stderr streams
-                            // to reach EOF — so a re-parented grandchild holding our pipes open
-                            // cannot hang us here. Stream draining is handled separately below by
-                            // SafelyWaitForAllOutput (with a 5s timeout per stream).
-                            //
-                            // We pass `abandon` (not `cancel`) because cancel is handled via the
-                            // cancel.Register callback above which kills the process tree; the
-                            // resulting Exited event is what unblocks this await on cancel.
-                            // `abandon` is a separate token used by the abandon feature to stop waiting
-                            // WITHOUT killing the process — see the catch block below.
-                            await WaitForProcessExitAsync(process, abandon).ConfigureAwait(false);
+                            await WaitForProcessExitAsync(process, stopWaiting.Token).ConfigureAwait(false);
                         }
                         catch (OperationCanceledException) when (abandon.IsCancellationRequested && !process.HasExited)
                         {
@@ -167,6 +164,16 @@ namespace Octopus.Tentacle.Util
                             SafelyCancelOutputAndErrorRead(process, debug);
                             running = false;
                             return ScriptExitCodes.AbandonedExitCode;
+                        }
+                        catch (OperationCanceledException) when (cancel.IsCancellationRequested)
+                        {
+                            // Cancel fired. Hitman.Kill ran synchronously via cancel.Register, sending
+                            // the kill signal. The OS may take a moment to actually terminate the
+                            // process; brief sync wait so SafelyGetExitCode below can read ExitCode
+                            // without throwing. WaitForExit(timeout) does NOT wait for stream EOF
+                            // (only the no-timeout overload does), so a grandchild holding pipes
+                            // can't extend this.
+                            try { process.WaitForExit(5000); } catch { /* best effort */ }
                         }
 
                         SafelyCancelOutputAndErrorRead(process, debug);
