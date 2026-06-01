@@ -1,0 +1,35 @@
+name: Windows-only test (on demand)
+
+# Runs a filtered subset of the integration tests on a real Windows runner, so
+# [WindowsTest] tests (which skip on macOS/Linux) can be exercised quickly.
+# Trigger by pushing this branch, or via workflow_dispatch once on the default branch.
+on:
+  workflow_dispatch:
+    inputs:
+      filter:
+        description: "NUnit/xUnit test filter (dotnet test --filter)"
+        required: true
+        default: "Name~CancelThenAbandon_WhenGrandchild"
+  push:
+    branches: [ "jimpelletier/windows-test-runner" ]
+
+jobs:
+  windows-test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: dotnet test (filtered)
+        shell: pwsh
+        run: |
+          $filter = "${{ github.event.inputs.filter }}"
+          if ([string]::IsNullOrWhiteSpace($filter)) { $filter = "Name~CancelThenAbandon_WhenGrandchild" }
+          Write-Host "Filter: $filter"
+          dotnet test source/Octopus.Tentacle.Tests.Integration/Octopus.Tentacle.Tests.Integration.csproj `
+            --framework net8.0 `
+            --filter "$filter" `
+            --logger "console;verbosity=detailed"
