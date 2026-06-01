@@ -271,14 +271,14 @@ write-output 'This should never be printed'
             var args = shell.FormatCommandArguments(workspace.BootstrapScriptFilePath, null, allowInteractive: false);
 
             var directOutput = new List<string>();
-            var directExitCode = SilentProcessRunner.ExecuteCommand(
+            var directExitCode = await SilentProcessRunner.ExecuteCommandAsync(
                 shell.GetFullPath(),
                 args,
                 workspace.WorkingDirectory,
                 _ => { },
                 line => directOutput.Add(line),
                 line => directOutput.Add(line),
-                CancellationToken.None);
+                cancel: CancellationToken.None);
 
             var directOutputText = string.Join("\n", directOutput);
             Logger.Information("Direct invocation output:\n{Output}", directOutputText);
@@ -338,14 +338,14 @@ write-output 'This should never be printed'
             var args = shell.FormatCommandArguments(bootstrapScriptFilePath, null, allowInteractive: false);
 
             var directOutput = new List<string>();
-            var directExitCode = SilentProcessRunner.ExecuteCommand(
+            var directExitCode = await SilentProcessRunner.ExecuteCommandAsync(
                 shell.GetFullPath(),
                 args,
                 workspace.WorkingDirectory,
                 _ => { },
                 line => directOutput.Add(line),
                 line => directOutput.Add(line),
-                CancellationToken.None);
+                cancel: CancellationToken.None);
 
             var directOutputText = string.Join("\n", directOutput);
             Logger.Information("Direct invocation output:\n{Output}", directOutputText);
@@ -370,15 +370,17 @@ write-output 'This should never be printed'
             // First check if pwsh is available
             try
             {
-                var result = SilentProcessRunner.ExecuteCommand(
+                var result = SilentProcessRunner.ExecuteCommandAsync(
                     "which",
                     "pwsh",
                     Environment.CurrentDirectory,
                     _ => { },
                     _ => { },
                     _ => { },
-                    new Dictionary<string, string>(),
-                    CancellationToken.None);
+                    customEnvironmentVariables: new Dictionary<string, string>(),
+                    cancel: CancellationToken.None)
+                    // Safe: static helper, no synchronisation context.
+                    .GetAwaiter().GetResult();
 
                 if (result == 0)
                 {

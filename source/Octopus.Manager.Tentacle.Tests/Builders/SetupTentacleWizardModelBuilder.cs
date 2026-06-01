@@ -32,6 +32,8 @@ namespace Octopus.Manager.Tentacle.Tests.Builders
             commandLineRunner = Substitute.For<ICommandLineRunner>();
             commandLineRunner.Execute(Arg.Any<CommandLineInvocation>(), Arg.Any<ILog>()).Returns(true);
             commandLineRunner.Execute(Arg.Any<IEnumerable<CommandLineInvocation>>(), Arg.Any<ILog>()).Returns(true);
+            commandLineRunner.ExecuteAsync(Arg.Any<CommandLineInvocation>(), Arg.Any<ILog>()).Returns(true);
+            commandLineRunner.ExecuteAsync(Arg.Any<IEnumerable<CommandLineInvocation>>(), Arg.Any<ILog>()).Returns(true);
         }
 
         public SetupTentacleWizardModelBuilder WithTelemetryService(ITelemetryService telemetryService)

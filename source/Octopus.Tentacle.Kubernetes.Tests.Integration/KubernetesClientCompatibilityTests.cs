@@ -165,7 +165,7 @@ public class KubernetesClientCompatibilityTests
         clusterInstaller = new KubernetesClusterInstaller(testContext.TemporaryDirectory, kindExePath, helmExePath, kubeCtlPath, testContext.Logger);
         await clusterInstaller.Install(clusterVersion);
 
-        testContext.TentacleImageAndTag = SetupHelpers.GetTentacleImageAndTag(kindExePath, clusterInstaller);
+        testContext.TentacleImageAndTag = await SetupHelpers.GetTentacleImageAndTag(kindExePath, clusterInstaller);
         testContext.SetToolExePaths(helmExePath, kubeCtlPath);
         testContext.KubeConfigPath = clusterInstaller.KubeConfigPath;
     }

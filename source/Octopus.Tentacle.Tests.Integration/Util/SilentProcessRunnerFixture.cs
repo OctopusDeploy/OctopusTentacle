@@ -418,7 +418,18 @@ while ((Get-Date) -lt $deadline) {
             var debug = new StringBuilder();
             var info = new StringBuilder();
             var error = new StringBuilder();
-            var exitCode = SilentProcessRunner.ExecuteCommand(
+
+            // Why this is sync: Execute is a test helper that returns int and uses
+            // out parameters — both force the signature to be sync. It's invoked
+            // directly from sync NUnit test methods.
+            //
+            // Why blocking on the async call is safe: NUnit dispatches us on a
+            // worker thread with no SynchronizationContext.
+            //
+            // Why low risk: this is test code. The worst case for a wrong call here
+            // is a hung test, not a production incident.
+            // See https://blog.stephencleary.com/2012/07/dont-block-on-async-code.html
+            var exitCode = SilentProcessRunner.ExecuteCommandAsync(
                 command,
                 arguments,
                 workingDirectory,
@@ -437,7 +448,7 @@ while ((Get-Date) -lt $deadline) {
                     Console.WriteLine($"{DateTime.UtcNow} ERR: {x}");
                     error.Append(x);
                 },
-                cancel);
+                cancel: cancel).GetAwaiter().GetResult();
 
             debugMessages = debug;
             infoMessages = info;

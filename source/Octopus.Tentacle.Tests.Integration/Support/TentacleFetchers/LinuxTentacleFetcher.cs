@@ -44,11 +44,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
 
             var extractionDirectory = new DirectoryInfo(Path.Combine(directoryPath, "extracted"));
 
-            ExtractTarGzip(downloadFilePath, extractionDirectory.FullName, logger);
+            await ExtractTarGzipAsync(downloadFilePath, extractionDirectory.FullName, logger);
             return Path.Combine(extractionDirectory.FullName, "tentacle", "Tentacle");
         }
 
-        public static void ExtractTarGzip(string gzArchiveName, string destFolder, ILogger logger)
+        public static async Task ExtractTarGzipAsync(string gzArchiveName, string destFolder, ILogger logger)
         {
             if (!Directory.Exists(destFolder))
             {
@@ -62,14 +62,14 @@ namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
             using var tmp = new TemporaryDirectory();
 
             Action<string> log = s => logger.Information(s);
-            var exitCode = SilentProcessRunner.ExecuteCommand(
+            var exitCode = await SilentProcessRunner.ExecuteCommandAsync(
                 "tar",
                 $"xzvf \"{gzArchiveName}\" -C \"{destFolder}\"",
                 tmp.DirectoryPath,
                 log,
                 log,
                 log,
-                CancellationToken.None);
+                cancel: CancellationToken.None);
 
             if (exitCode != 0)
             {

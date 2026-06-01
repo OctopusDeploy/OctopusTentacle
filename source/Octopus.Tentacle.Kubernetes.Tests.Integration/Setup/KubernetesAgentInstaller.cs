@@ -56,14 +56,14 @@ public class KubernetesAgentInstaller
             .MinimumLevel.Debug()
             .CreateLogger();
 
-        var exitCode = SilentProcessRunner.ExecuteCommand(
+        var exitCode = await SilentProcessRunner.ExecuteCommandAsync(
             helmExePath,
             arguments,
             temporaryDirectory.DirectoryPath,
             sprLogger.Debug,
             sprLogger.Information,
             sprLogger.Error,
-            CancellationToken.None);
+            cancel: CancellationToken.None);
 
         sw.Stop();
 
@@ -169,7 +169,7 @@ public class KubernetesAgentInstaller
                 .MinimumLevel.Debug()
                 .CreateLogger();
             
-            var exitCode = SilentProcessRunner.ExecuteCommand(
+            var exitCode = await SilentProcessRunner.ExecuteCommandAsync(
                 kubeCtlExePath,
                 //get the generated thumbprint from the config map
                 $"get cm tentacle-config --namespace {Namespace} --kubeconfig=\"{kubeConfigPath}\" -o \"jsonpath={{.data['Tentacle\\.CertificateThumbprint']}}\"",
@@ -181,7 +181,7 @@ public class KubernetesAgentInstaller
                     thumbprint = x;
                 },
                 sprLogger.Error,
-                CancellationToken.None);
+                cancel: CancellationToken.None);
 
             if (exitCode != 0)
             {
@@ -219,14 +219,22 @@ public class KubernetesAgentInstaller
                 NamespaceFlag,
                 AgentName);
 
-            var exitCode = SilentProcessRunner.ExecuteCommand(
+            // Why this is sync: IDisposable.Dispose() must return sync.
+            //
+            // Why blocking on the async call is safe: this only runs under NUnit,
+            // which dispatches us on a worker thread with no SynchronizationContext.
+            //
+            // Why low risk: this is test code. The worst case for a wrong call here
+            // is a hung test, not a production incident.
+            // See https://blog.stephencleary.com/2012/07/dont-block-on-async-code.html
+            var exitCode = SilentProcessRunner.ExecuteCommandAsync(
                 helmExePath,
                 uninstallArgs,
                 temporaryDirectory.DirectoryPath,
                 logger.Debug,
                 logger.Information,
                 logger.Error,
-                CancellationToken.None);
+                cancel: CancellationToken.None).GetAwaiter().GetResult();
 
             if (exitCode != 0)
             {
