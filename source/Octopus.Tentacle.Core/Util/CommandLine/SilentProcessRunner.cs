@@ -17,10 +17,6 @@ namespace Octopus.Tentacle.Util
 {
     public static class SilentProcessRunner
     {
-        // How long we wait for an issued kill to actually reap the process before we
-        // give up and report the script as abandoned.
-        const int CancelKillGraceMilliseconds = 5000;
-
         public static Task<int> ExecuteCommandAsync(
             string executable,
             string arguments,
@@ -149,61 +145,28 @@ namespace Octopus.Tentacle.Util
                         process.BeginOutputReadLine();
                         process.BeginErrorReadLine();
 
-                        // Process.WaitForExitAsync waits for stream EOF after the Exited event
-                        // fires. A re-parented grandchild that inherits our redirected stdout/stderr
-                        // pipes will hold them open and prevent EOF, hanging the await forever. We
-                        // can't add process.Close() to cancel cleanup (it clears the Process object's
-                        // stream fields and aborts the in-flight await, breaking other tests). So
-                        // instead we pass a linked token combining `abandon` and `cancel`: when
-                        // either fires, the await throws OCE and we route to the matching catch.
-                        using var stopWaiting = CancellationTokenSource.CreateLinkedTokenSource(abandon, cancel);
-
+                        // Only `abandon` breaks this wait — cancel does not.
+                        //
+                        // Cancel kills the process via cancel.Register; we then wait here for it to exit
+                        // naturally, so a script that honours the kill returns its real exit code (e.g. 137
+                        // for SIGKILL, 143 for SIGTERM). A script that will NOT exit — genuinely stuck, OR a
+                        // re-parented grandchild holding our redirected stdout/stderr pipes open so stream
+                        // EOF never arrives — keeps waiting here. The only way to stop waiting on such a
+                        // script is for the caller to abandon it: the abandon token cancels this await, and
+                        // we return AbandonedExitCode and leave the OS process running.
                         try
                         {
-                            await WaitForProcessExitAsync(process, stopWaiting.Token).ConfigureAwait(false);
+                            await WaitForProcessExitAsync(process, abandon).ConfigureAwait(false);
                         }
                         catch (OperationCanceledException) when (abandon.IsCancellationRequested)
                         {
-                            // Abandon path. From the user's perspective abandon is a race against
-                            // natural script exit, so returning AbandonedExitCode is acceptable even
-                            // if the process happened to finish at the same moment — that's why we
-                            // don't check process.HasExited here.
+                            // From the caller's perspective abandon is a race against natural exit, so
+                            // returning AbandonedExitCode is acceptable even if the process happened to
+                            // finish at the same moment — that's why we don't check process.HasExited here.
                             info("Tentacle has abandoned this script. The underlying script process may still be running on this host.");
                             SafelyCancelOutputAndErrorRead(process, debug);
                             running = false;
                             return ScriptExitCodes.AbandonedExitCode;
-                        }
-                        catch (OperationCanceledException) when (cancel.IsCancellationRequested)
-                        {
-                            // Cancel means "kill it". DoOurBestToCleanUp already issued the kill via
-                            // cancel.Register, but Kill() only *requests* termination — the OS reaps the
-                            // process asynchronously, so it is usually still alive at this point. We wait a
-                            // bounded grace period for the reap so the fall-through below can read the real
-                            // exit code (e.g. 137 for SIGKILL, 143 for SIGTERM).
-                            //   Required by CancellationToken_ShouldForceKillTheProcess.
-                            //
-                            // The finite-timeout overload is deliberate: WaitForExit(int) waits only for
-                            // termination, never for redirected-stream EOF (the EOF drain is guarded by
-                            // `milliseconds == Timeout.Infinite`). The no-arg overload WOULD drain EOF and
-                            // hang when a re-parented grandchild holds our pipes open.
-                            //   Required by CancellationToken_WhenGrandchildHoldsRedirectedPipes_ShouldNotHang.
-                            var exitedWithinGracePeriod = process.WaitForExit(CancelKillGraceMilliseconds);
-
-                            if (!exitedWithinGracePeriod)
-                            {
-                                // The kill did not land within the grace period: the process is genuinely
-                                // stuck (or kill was disabled in a test). There is no real exit code to read
-                                // — reading process.ExitCode here would throw "Process must exit before
-                                // requested information can be determined." So we report it as abandoned;
-                                // the process may still be running on this host.
-                                //   Required by AbandonScript_WhenCancelFailsToKillProcess_ReturnsAbandonedExitCode.
-                                info("Tentacle stopped waiting for the cancelled script. The underlying script process may still be running on this host.");
-                                SafelyCancelOutputAndErrorRead(process, debug);
-                                running = false;
-                                return ScriptExitCodes.AbandonedExitCode;
-                            }
-
-                            // Exited within the grace period — fall through to read the real exit code below.
                         }
 
                         SafelyCancelOutputAndErrorRead(process, debug);
