@@ -126,25 +126,33 @@ namespace Octopus.Tentacle.Tests.Integration.Util
 
         [Test]
         [WindowsTest]
-        public async Task CancelThenAbandon_WhenGrandchildHoldsRedirectedPipes_StopsWaiting()
+        public async Task CancellationToken_WhenGrandchildHoldsRedirectedPipes_ShouldNotHang()
         {
             using var tempDir = new TemporaryDirectory();
             var grandchildPidFile = Path.Combine(tempDir.DirectoryPath, "grandchild.pid");
 
+            // This test guards the cancel path of ExecuteCommandAsync against a regression
+            // involving re-parented grandchildren that inherit our redirected pipes.
+            //
             // The scenario:
             //   * We launch a process that spawns a child, which spawns a long-running grandchild
             //     and then immediately exits.
             //   * Because the child exited BEFORE our cancel fires, the grandchild has been
             //     re-parented (PPID broken). Process.Kill(entireProcessTree:true) follows PPID
-            //     links, so it does NOT find the grandchild — Kill kills nothing beyond the
-            //     (already-dead) child.
-            //   * The grandchild inherited our redirected stdout/stderr pipes and holds them open,
-            //     so the stream readers never see EOF and WaitForExitAsync never completes on its own.
+            //     links, so it does NOT find the grandchild — Kill returns having killed nothing
+            //     beyond the (already-dead) child.
+            //   * The grandchild inherited our redirected stdout/stderr pipes and holds them
+            //     open. The stream readers therefore never see EOF.
             //
-            // Under this design only `abandon` breaks that wait — cancel does not. So cancel alone
-            // cannot stop such a script; the caller must abandon, which returns AbandonedExitCode and
-            // leaves the grandchild running. This test asserts cancel alone keeps waiting, then abandon
-            // stops it promptly.
+            // How cancel handles this: cancel.Register kills the (already-dead) child and then
+            // calls process.Close(), which releases our pipe handles. That lets the synchronous
+            // process.WaitForExit() return even though the orphaned grandchild still holds the
+            // streams open. (Close is safe here because we wait synchronously; it would race the
+            // Exited event of the async WaitForExitAsync, which this code deliberately does not use.)
+            //
+            // This test asserts cancel alone returns in well under the test timeout in the
+            // grandchild scenario. If it hangs, process.Close() has been removed from
+            // DoOurBestToCleanUp (see that method) or the cancel-kill path has otherwise broken.
             //
             // Two non-obvious bits in the PowerShell script below, both load-bearing:
             //   * $psi.RedirectStandardInput = $true — we don't use stdin, but redirecting
@@ -185,39 +193,33 @@ while ((Get-Date) -lt $deadline) {
 
             try
             {
-                using (var cancelCts = new CancellationTokenSource())
-                using (var abandonCts = new CancellationTokenSource())
+                using (var cts = new CancellationTokenSource())
                 {
-                    var task = Task.Run(async () => await SilentProcessRunner.ExecuteCommandAsync(
+                    var task = Task.Run(() => Execute(
                         "powershell.exe",
                         $"-NoProfile -NonInteractive -EncodedCommand {encoded}",
                         "",
-                        debug: _ => { },
-                        info: _ => { },
-                        error: _ => { },
-                        customEnvironmentVariables: null,
-                        cancel: cancelCts.Token,
-                        abandon: abandonCts.Token));
+                        out _,
+                        out _,
+                        out _,
+                        cts.Token));
 
                     // Wait for the grandchild to actually be spawned before cancelling
                     await WaitForPidFileAsync(grandchildPidFile, TimeSpan.FromSeconds(60));
 
-                    // Cancel alone cannot stop the wait: Kill(entireProcessTree) can't reach the
-                    // re-parented grandchild, and the grandchild holds our redirected pipes open so
-                    // stream EOF never arrives. WaitForExitAsync keeps waiting — until abandon.
-                    cancelCts.Cancel();
-                    var stoppedByCancel = task.Wait(TimeSpan.FromSeconds(5));
-                    stoppedByCancel.Should().BeFalse(
-                        "cancel cannot stop a script whose re-parented grandchild holds the redirected " +
-                        "pipes open; abandon is required to stop waiting");
+                    var sw = Stopwatch.StartNew();
+                    cts.Cancel();
 
-                    // Abandon stops the wait promptly and returns the distinct exit code, leaving the
-                    // grandchild running (pipes released by Process.Dispose at end of method).
-                    abandonCts.Cancel();
-                    var stoppedByAbandon = task.Wait(TimeSpan.FromSeconds(30));
-                    stoppedByAbandon.Should().BeTrue(
-                        "abandon should stop the wait promptly even while the grandchild holds the pipes");
-                    (await task).Should().Be(ScriptExitCodes.AbandonedExitCode);
+                    var completed = task.Wait(TimeSpan.FromSeconds(60));
+                    sw.Stop();
+
+                    completed.Should().BeTrue(
+                        $"ExecuteCommandAsync should return promptly after cancellation even when a " +
+                        $"grandchild holds the redirected pipes. Worst case is ~10s (5s timeout × 2 streams " +
+                        $"in SafelyWaitForAllOutput). If we hit the 60s test timeout, either someone " +
+                        $"re-introduced process.Close() in DoOurBestToCleanUp (which races with the Exited " +
+                        $"event WaitForExitAsync depends on) or SafelyWaitForAllOutput's per-stream timeout " +
+                        $"has been removed. Elapsed since cancel: {sw.Elapsed.TotalSeconds:F1}s");
                 }
             }
             finally
@@ -227,21 +229,25 @@ while ((Get-Date) -lt $deadline) {
         }
 
         [Test]
-        public async Task CancelThenAbandon_WhenUnixGrandchildHoldsRedirectedPipes_StopsWaiting()
+        public async Task CancellationToken_WhenUnixGrandchildHoldsRedirectedPipes_ShouldNotHang()
         {
             if (PlatformDetection.IsRunningOnWindows)
                 Assert.Ignore("Unix-only repro (Mac/Linux). The Windows equivalent is covered by the [WindowsTest] above.");
 
-            //   * We start sh, which backgrounds a long sleep (the grandchild) and exits immediately.
-            //     The grandchild is re-parented to init/launchd and inherits our redirected
-            //     stdout/stderr pipes, holding them open — so stream EOF never arrives.
-            //   * Process.Kill(entireProcessTree:true) follows PPID links, so by cancel time the
-            //     orphaned grandchild is invisible to Kill — it keeps running and keeps the pipes open.
+            // Unix equivalent of CancellationToken_WhenGrandchildHoldsRedirectedPipes_ShouldNotHang
+            // above. See that test's leading comment for the full rationale — the short version is:
             //
-            // Under this design cancel does NOT break the wait — only `abandon` does. So cancelling a
-            // script whose grandchild holds the pipes cannot stop it on its own; the caller must
-            // abandon, which returns AbandonedExitCode and leaves the grandchild running. This test
-            // asserts exactly that: cancel alone keeps waiting, then abandon stops it promptly.
+            //   * We start sh, which backgrounds a long sleep (the grandchild) and exits
+            //     immediately. The grandchild gets re-parented to init/launchd and inherits our
+            //     redirected stdout/stderr pipes, holding them open.
+            //   * Process.Kill(entireProcessTree:true) follows PPID links, so by the time we
+            //     cancel, the now-orphan grandchild is invisible to Kill — it keeps running.
+            //   * On cancel, cancel.Register kills the (already-dead) child and calls
+            //     process.Close(), which releases our pipe handles so the synchronous
+            //     process.WaitForExit() returns despite the orphaned grandchild holding the
+            //     streams open. (Close is safe with the synchronous wait — see DoOurBestToCleanUp.)
+            //
+            // This test asserts cancel alone returns in well under the test timeout in the grandchild scenario.
 
             using var tempDir = new TemporaryDirectory();
             var grandchildPidFile = Path.Combine(tempDir.DirectoryPath, "grandchild.pid");
@@ -249,38 +255,38 @@ while ((Get-Date) -lt $deadline) {
 
             try
             {
-                using (var cancelCts = new CancellationTokenSource())
-                using (var abandonCts = new CancellationTokenSource())
+                using (var cts = new CancellationTokenSource())
                 {
-                    var task = Task.Run(async () => await SilentProcessRunner.ExecuteCommandAsync(
+                    var task = Task.Run(() => Execute(
                         "/bin/sh",
-                        $"-c \"{grandchild}\"", // backgrounds the grandchild; `sh` does not wait for it.
+                        $"-c \"{grandchild}\"", // We run this in background and `sh` does not wait for it.
                         "",
-                        debug: _ => { },
-                        info: _ => { },
-                        error: _ => { },
-                        customEnvironmentVariables: null,
-                        cancel: cancelCts.Token,
-                        abandon: abandonCts.Token));
+                        out _,
+                        out _,
+                        out _,
+                        cts.Token));
 
                     await WaitForPidFileAsync(grandchildPidFile, TimeSpan.FromSeconds(60));
 
-                    // Cancel alone cannot stop the wait: Kill(entireProcessTree) can't reach the
-                    // re-parented grandchild, and the grandchild holds our redirected pipes open so
-                    // stream EOF never arrives. WaitForExitAsync keeps waiting — until abandon.
-                    cancelCts.Cancel();
-                    var stoppedByCancel = task.Wait(TimeSpan.FromSeconds(5));
-                    stoppedByCancel.Should().BeFalse(
-                        "cancel cannot stop a script whose re-parented grandchild holds the redirected " +
-                        "pipes open; abandon is required to stop waiting");
+                    var sw = Stopwatch.StartNew();
+                    cts.Cancel();
 
-                    // Abandon stops the wait promptly and returns the distinct exit code, leaving the
-                    // grandchild running (pipes released by Process.Dispose at end of method).
-                    abandonCts.Cancel();
-                    var stoppedByAbandon = task.Wait(TimeSpan.FromSeconds(30));
-                    stoppedByAbandon.Should().BeTrue(
-                        "abandon should stop the wait promptly even while the grandchild holds the pipes");
-                    (await task).Should().Be(ScriptExitCodes.AbandonedExitCode);
+                    // Cancel should return within ~10s worst case (5s SafelyWaitForAllOutput timeout
+                    // per stream). The 60s test bound is generous for slow Linux CI agents while
+                    // still flagging a real regression — if process.Close() got re-added to
+                    // DoOurBestToCleanUp (see that method for why) or SafelyWaitForAllOutput's
+                    // per-stream timeout was removed, the wait hangs indefinitely and we trip the
+                    // bound by miles.
+                    var completed = task.Wait(TimeSpan.FromSeconds(60));
+                    sw.Stop();
+
+                    completed.Should().BeTrue(
+                        $"ExecuteCommandAsync should return promptly after cancellation even when a Unix " +
+                        $"grandchild (reparented to init/launchd) holds the redirected pipes. Worst case " +
+                        $"is ~10s. If we hit the 60s test timeout, either process.Close() was re-introduced " +
+                        $"in DoOurBestToCleanUp (which races with the Exited event WaitForExitAsync depends " +
+                        $"on) or SafelyWaitForAllOutput's per-stream timeout has been removed. Elapsed " +
+                        $"since cancel: {sw.Elapsed.TotalSeconds:F1}s");
                 }
             }
             finally

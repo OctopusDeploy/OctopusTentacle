@@ -145,28 +145,34 @@ namespace Octopus.Tentacle.Util
                         process.BeginOutputReadLine();
                         process.BeginErrorReadLine();
 
-                        // Only `abandon` breaks this wait — cancel does not.
+                        // Wait synchronously for the process to exit, but let `abandon` break out.
                         //
-                        // Cancel kills the process via cancel.Register; we then wait here for it to exit
-                        // naturally, so a script that honours the kill returns its real exit code (e.g. 137
-                        // for SIGKILL, 143 for SIGTERM). A script that will NOT exit — genuinely stuck, OR a
-                        // re-parented grandchild holding our redirected stdout/stderr pipes open so stream
-                        // EOF never arrives — keeps waiting here. The only way to stop waiting on such a
-                        // script is for the caller to abandon it: the abandon token cancels this await, and
-                        // we return AbandonedExitCode and leave the OS process running.
-                        try
+                        // process.WaitForExit() (no-timeout) waits for the process to exit AND for the
+                        // redirected streams to reach EOF. Cancel kills + Close()s the process via
+                        // cancel.Register; Close releases the pipe handles, which unblocks this wait even
+                        // when a re-parented grandchild holds the streams open. So cancel — including the
+                        // grandchild case — behaves exactly as it does today.
+                        //
+                        // Abandon is the new behaviour: we race the blocking wait against a task that
+                        // completes when the abandon token fires. If abandon wins we return
+                        // AbandonedExitCode and leave the OS process running; the still-blocked
+                        // WaitForExit thread is released when the using (process) disposes on return.
+                        var abandoned = new TaskCompletionSource();
+                        using (abandon.Register(() => abandoned.TrySetResult()))
                         {
-                            await WaitForProcessExitAsync(process, abandon).ConfigureAwait(false);
-                        }
-                        catch (OperationCanceledException) when (abandon.IsCancellationRequested)
-                        {
-                            // From the caller's perspective abandon is a race against natural exit, so
-                            // returning AbandonedExitCode is acceptable even if the process happened to
-                            // finish at the same moment — that's why we don't check process.HasExited here.
-                            info("Tentacle has abandoned this script. The underlying script process may still be running on this host.");
-                            SafelyCancelOutputAndErrorRead(process, debug);
-                            running = false;
-                            return ScriptExitCodes.AbandonedExitCode;
+                            var waitForExit = Task.Run(() =>
+                            {
+                                try { process.WaitForExit(); }
+                                catch { /* released by Process.Dispose on the abandon path */ }
+                            });
+
+                            if (await Task.WhenAny(waitForExit, abandoned.Task).ConfigureAwait(false) == abandoned.Task)
+                            {
+                                info("Tentacle has abandoned this script. The underlying script process may still be running on this host.");
+                                SafelyCancelOutputAndErrorRead(process, debug);
+                                running = false;
+                                return ScriptExitCodes.AbandonedExitCode;
+                            }
                         }
 
                         SafelyCancelOutputAndErrorRead(process, debug);
@@ -269,59 +275,23 @@ namespace Octopus.Tentacle.Util
                     error($"Failed to kill the launched process: {killProcessException}");
                 }
             }
-        }
-
-        // Single place we block waiting for the spawned process to exit.
-        // On .NET Framework we use a TaskCompletionSource polyfill because
-        // Process.WaitForExitAsync doesn't exist there; on .NET 8+ we use the
-        // framework method directly.
-        static Task WaitForProcessExitAsync(Process process, CancellationToken cancellationToken)
-        {
-#if NETFRAMEWORK
-            return WaitForProcessExitAsyncNetFrameworkPolyfill(process, cancellationToken);
-#else
-            return process.WaitForExitAsync(cancellationToken);
-#endif
-        }
-
-#if NETFRAMEWORK
-        static Task WaitForProcessExitAsyncNetFrameworkPolyfill(Process process, CancellationToken cancellationToken)
-        {
-            // EnableRaisingEvents must be true for the process.Exited handler below to fire.
-            // On .NET 8+ Process.WaitForExitAsync sets this itself; here on netframework we
-            // have to set it ourselves before subscribing.
-            // https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.process.waitforexitasync
-            process.EnableRaisingEvents = true;
-
-            var tcs = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
-            CancellationTokenRegistration registration = default;
-
-            void OnExited(object? sender, EventArgs e)
+            finally
             {
-                registration.Dispose();
-                tcs.TrySetResult(null);
-            }
-
-            process.Exited += OnExited;
-
-            // Guard against race: process may have already exited before we subscribed.
-            if (process.HasExited)
-            {
-                tcs.TrySetResult(null);
-            }
-
-            if (cancellationToken.CanBeCanceled)
-            {
-                registration = cancellationToken.Register(() =>
+                try
                 {
-                    process.Exited -= OnExited;
-                    tcs.TrySetCanceled(cancellationToken);
-                });
+                    // Close the handles after killing, on this same thread (after Kill). This releases
+                    // the redirected pipes so the synchronous process.WaitForExit() above can return
+                    // even when a re-parented grandchild holds stdout/stderr open. (Close is safe with
+                    // the synchronous wait — main has relied on exactly this; it only races the Exited
+                    // event of the *async* WaitForExitAsync, which this code does not use.)
+                    process.Close();
+                }
+                catch (Exception closeException)
+                {
+                    error($"Failed to close process resources: {closeException.Message}");
+                }
             }
-
-            return tcs.Task;
         }
-#endif
 
         [DllImport("kernel32.dll", SetLastError = true)]
 #pragma warning disable PC003 // Native API not available in UWP
