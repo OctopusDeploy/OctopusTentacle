@@ -137,8 +137,8 @@ namespace Octopus.Tentacle.Tests.Integration
         public async Task AbandonScript_WithNoPriorCancel_KillsTheProcess(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             // Anti-abuse: a direct AbandonScript with no prior CancelScript must still attempt the
-            // kill. AbandonScriptAsync calls Cancel() then Abandon(), so Hitman.Kill runs. Kill is
-            // NOT disabled here, so the underlying process must actually die (the execution drains).
+            // kill. The runner's abandon branch best-effort-kills (DoOurBestToCleanUp) before returning
+            // -48. Kill is NOT disabled here, so the underlying process must actually die (the execution drains).
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .Build(CancellationToken);
 
@@ -175,7 +175,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             abandonResponse.ExitCode.Should().Be(ScriptExitCodes.AbandonedExitCode);
 
-            // We never wrote releaseFile, so the script only completes because abandon's Cancel()
+            // We never wrote releaseFile, so the script only completes because the abandon branch
             // killed it. Draining the execution confirms the process is gone.
             await scriptExecution;
         }
