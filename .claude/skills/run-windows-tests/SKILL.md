@@ -25,26 +25,26 @@ enumerates USB storage and won't boot the Windows installer. See the project mem
 ## How to run
 
 ```bash
-.claude/skills/run-windows-tests/run.sh "Name~CancelThenAbandon_WhenGrandchild"
+.claude/skills/run-windows-tests/run.sh "Name~WhenGrandchildHoldsRedirectedPipes"
 ```
 
-It dispatches `.github/workflows/windows-test.yml` on the current branch with your filter,
-then `gh run watch`es it to green/red and exits with the run's status.
+The filter is **required** (no default). `run.sh` dispatches
+`.github/workflows/windows-test.yml` against the current branch, then `gh run watch`es it
+and exits with the run's status.
 
 **Two operational facts:**
 - **Run it with the sandbox disabled.** `gh`'s HTTPS to api.github.com fails TLS under the
   command sandbox (proxy), so `gh` calls need the sandbox off.
-- **`workflow_dispatch` needs the workflow on the default branch.** Until
-  `windows-test.yml` is merged to `main`, trigger a run by **pushing this branch** (the
-  workflow's `push:` trigger runs it), and watch with
-  `gh run watch "$(gh run list --workflow windows-test.yml -L1 --json databaseId --jq '.[0].databaseId')"`.
+- **`workflow_dispatch` needs the workflow on the default branch.** It's manual-dispatch
+  only (no `push` trigger), so it can't run until `windows-test.yml` is merged to `main`.
+  Once merged, `--ref <branch>` runs that branch's code (e.g. EFT-3295's renamed test).
 
 ## The workflow
 
-`.github/workflows/windows-test.yml`: `windows-latest`, `actions/setup-dotnet` honoring
-`global.json` (SDK 8.0.413), then `dotnet test` on `Octopus.Tentacle.Tests.Integration`
-(`--framework net8.0 --filter <filter>`). The `filter` is a `workflow_dispatch` input
-(default = the grandchild test); on `push` it falls back to that default.
+`.github/workflows/windows-test.yml`: `workflow_dispatch` only, with a **required** `filter`
+input (passed via `env:` to avoid script injection). `windows-latest`, `actions/setup-dotnet`
+honoring `global.json` (SDK 8.0.413), then `dotnet test` on
+`Octopus.Tentacle.Tests.Integration` (`--framework net8.0 --filter <filter>`).
 
 ## Common mistakes
 
