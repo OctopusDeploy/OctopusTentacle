@@ -32,8 +32,21 @@ namespace Octopus.Tentacle.Kubernetes
             IHomeConfiguration homeConfiguration,
             KubernetesPhysicalFileSystem kubernetesPhysicalFileSystem,
             IScriptPodLogEncryptionKeyProvider scriptPodLogEncryptionKeyProvider,
+            IKubernetesClusterService clusterService,
             ScriptIsolationMutex scriptIsolationMutex)
-            : base(podService, podMonitor, secretService, podTemplateService, containerResolver, appInstanceSelector, log, scriptLogProvider, homeConfiguration, kubernetesPhysicalFileSystem, scriptPodLogEncryptionKeyProvider, scriptIsolationMutex)
+            : base(podService,
+                podMonitor,
+                secretService,
+                podTemplateService,
+                containerResolver,
+                appInstanceSelector,
+                log,
+                scriptLogProvider,
+                homeConfiguration,
+                kubernetesPhysicalFileSystem,
+                scriptPodLogEncryptionKeyProvider,
+                clusterService,
+                scriptIsolationMutex)
         {
             this.containerResolver = containerResolver;
         }
@@ -58,7 +71,7 @@ namespace Octopus.Tentacle.Kubernetes
                 },
                 new V1VolumeMount { MountPath = homeDir, Name = "tentacle-home" }
             });
-            
+
             return new List<V1Container> { container };
         }
 
@@ -70,7 +83,7 @@ namespace Octopus.Tentacle.Kubernetes
             };
         }
 
-        protected override IList<V1Volume> CreateVolumes(StartKubernetesScriptCommandV1 command)
+        protected override IList<V1Volume> CreateVolumes(StartKubernetesScriptCommandV1 command, InMemoryTentacleScriptLog tentacleScriptLog, ClusterVersion clusterVersion)
         {
             return new List<V1Volume>
             {

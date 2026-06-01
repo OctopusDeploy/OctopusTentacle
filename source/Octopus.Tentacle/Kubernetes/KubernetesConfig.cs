@@ -29,6 +29,11 @@ namespace Octopus.Tentacle.Kubernetes
         public static string PendingPodsConsideredStuckAfterTimeSpanVariableName = $"{EnvVarPrefix}__PENDINGPODSSTUCKAFTERMINUTES";
         public static TimeSpan? PendingPodsConsideredStuckAfterTimeSpan => int.TryParse(Environment.GetEnvironmentVariable(PendingPodsConsideredStuckAfterTimeSpanVariableName), out var stuckPodsMinutes) ? TimeSpan.FromMinutes(stuckPodsMinutes) : null;
 
+        public static bool CalamariImageVolumeEnabled => bool.TryParse(Environment.GetEnvironmentVariable($"{EnvVarPrefix}__CALAMARIIMAGEVOLUMEENABLED"), out var enabled) && enabled;
+        
+        public static string CalamariImageVolumeRegistryVariableName => $"{EnvVarPrefix}__CALAMARIIMAGEVOLUMEREGISTRY";
+        public static string? CalamariImageVolumeRegistry => Environment.GetEnvironmentVariable(CalamariImageVolumeRegistryVariableName);
+        
         public static string HelmReleaseNameVariableName => $"{EnvVarPrefix}__HELMRELEASENAME";
         public static string HelmReleaseName => GetRequiredEnvVar(HelmReleaseNameVariableName, "Unable to determine Helm release name.");
 

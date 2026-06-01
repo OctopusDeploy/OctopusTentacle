@@ -40,6 +40,7 @@ namespace Octopus.Tentacle.Kubernetes
         readonly IHomeConfiguration homeConfiguration;
         readonly KubernetesPhysicalFileSystem kubernetesPhysicalFileSystem;
         readonly IScriptPodLogEncryptionKeyProvider scriptPodLogEncryptionKeyProvider;
+        readonly IKubernetesClusterService clusterService;
         readonly ScriptIsolationMutex scriptIsolationMutex;
 
         public KubernetesScriptPodCreator(
@@ -54,6 +55,7 @@ namespace Octopus.Tentacle.Kubernetes
             IHomeConfiguration homeConfiguration,
             KubernetesPhysicalFileSystem kubernetesPhysicalFileSystem,
             IScriptPodLogEncryptionKeyProvider scriptPodLogEncryptionKeyProvider,
+            IKubernetesClusterService clusterService,
             ScriptIsolationMutex scriptIsolationMutex)
         {
             this.podService = podService;
@@ -67,6 +69,7 @@ namespace Octopus.Tentacle.Kubernetes
             this.homeConfiguration = homeConfiguration;
             this.kubernetesPhysicalFileSystem = kubernetesPhysicalFileSystem;
             this.scriptPodLogEncryptionKeyProvider = scriptPodLogEncryptionKeyProvider;
+            this.clusterService = clusterService;
             this.scriptIsolationMutex = scriptIsolationMutex;
         }
 
@@ -177,6 +180,8 @@ namespace Octopus.Tentacle.Kubernetes
 
             var podName = command.ScriptTicket.ToKubernetesScriptPodName();
 
+            var clusterVersion = await clusterService.GetClusterVersion();
+
             LogVerboseToBothLogs($"Creating Kubernetes Pod '{podName}'.", tentacleScriptLog);
 
             foreach (var file in kubernetesPhysicalFileSystem.EnumerateFiles(KubernetesConfig.BootstrapRunnerExecutableDirectory))
@@ -232,7 +237,7 @@ namespace Octopus.Tentacle.Kubernetes
             pod.Spec.Containers = await CreateScriptContainers(command, podName, scriptName, homeDir, workspacePath, workspace.ScriptArguments, tentacleScriptLog, scriptPodTemplate);
             pod.Spec.ImagePullSecrets = Merge(imagePullSecretNames, scriptPodTemplate?.PodSpec?.ImagePullSecrets);
             pod.Spec.ServiceAccountName = serviceAccountName;
-            pod.Spec.Volumes = Merge(pod.Spec.Volumes, CreateVolumes(command));
+            pod.Spec.Volumes = Merge(pod.Spec.Volumes, CreateVolumes(command, tentacleScriptLog, clusterVersion));
 
             var createdPod = await podService.Create(pod, cancellationToken);
             podMonitor.AddPendingPod(command.ScriptTicket, createdPod);
@@ -255,7 +260,7 @@ namespace Octopus.Tentacle.Kubernetes
             return new List<V1Container>();
         }
 
-        protected virtual IList<V1Volume> CreateVolumes(StartKubernetesScriptCommandV1 command)
+        protected virtual IList<V1Volume> CreateVolumes(StartKubernetesScriptCommandV1 command, InMemoryTentacleScriptLog tentacleScriptLog, ClusterVersion clusterVersion)
         {
             var volumes = new List<V1Volume>
             {
@@ -270,17 +275,27 @@ namespace Octopus.Tentacle.Kubernetes
                 CreateAgentUpgradeSecretVolume(),
             };
 
-            if (command.CalamariImageConfiguration is not null)
+            if (KubernetesConfig.CalamariImageVolumeEnabled && command.CalamariImageConfiguration is not null)
             {
-                volumes.Add(new V1Volume
+                // The ImageVolume feature gate was enabled by default on 1.35 and above
+                // https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/
+                if (clusterVersion is { Major: 1, Minor: < 35 })
                 {
-                    Name = "calamari",
-                    Image = new V1ImageVolumeSource
+                    LogWarnToBothLogs($"The ImageVolume feature gate is required to use the Calamari Image Volume feature. This is enabled by default in Kubernetes 1.35 and newer. The current cluster version is {clusterVersion}.", tentacleScriptLog);
+                }
+                else
+                {
+                    var registry = KubernetesConfig.CalamariImageVolumeRegistry ?? "octopusdeploy";
+                    volumes.Add(new V1Volume
                     {
-                        Reference = $"octopusdeploy/{command.CalamariImageConfiguration.Name}:{command.CalamariImageConfiguration.Version}",
-                        PullPolicy = "IfNotPresent"
-                    }
-                });
+                        Name = "calamari",
+                        Image = new V1ImageVolumeSource
+                        {
+                            Reference = $"{registry}/{command.CalamariImageConfiguration.Name.ToLower()}:{command.CalamariImageConfiguration.Version}",
+                            PullPolicy = "IfNotPresent"
+                        }
+                    });
+                }
             }
 
             return volumes;
@@ -311,6 +326,12 @@ namespace Octopus.Tentacle.Kubernetes
         {
             log.Verbose(message);
             tentacleScriptLog.Verbose(message);
+        }
+        
+        void LogWarnToBothLogs(string message, InMemoryTentacleScriptLog tentacleScriptLog)
+        {
+            log.Warn(message);
+            tentacleScriptLog.Warning(message);
         }
 
         protected async Task<V1Container> CreateScriptContainer(StartKubernetesScriptCommandV1 command, string podName, string scriptName, string homeDir, string workspacePath, string[]? scriptArguments, InMemoryTentacleScriptLog tentacleScriptLog, V1Container? containerSpec)
