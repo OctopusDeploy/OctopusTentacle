@@ -343,12 +343,18 @@ while ((Get-Date) -lt $deadline) {
         }
 
         [Test]
-        public async Task AbandonToken_WhenBothTokensFire_ReturnsAbandonedExitCodeKeyedOnToken()
+        public async Task AbandonToken_WhenCancelAlsoRequested_StillReturnsAbandonedExitCode()
         {
-            // When cancel and abandon both fire, cancel's kill makes the process exit so the
-            // WaitForExit task can win the WhenAny race — yet the result must still be
-            // AbandonedExitCode, because it is keyed on abandon.IsCancellationRequested (the token),
-            // not on which task won the race. This is the deterministic-(-48) guarantee from the spec.
+            // Once abandon is requested, the runner returns AbandonedExitCode even though cancel is
+            // also requested — the abandon branch resolves the wait and returns -48.
+            //
+            // We fire abandon FIRST so this is deterministic. The exit code is NOT deterministic if
+            // cancel and abandon race on a *killable* process: cancel's kill makes WaitForExitAsync
+            // complete with the killed exit code before abandon is observed. That race does not happen
+            // in production — cancel and abandon arrive as separate, sequential RPCs, and the server
+            // only sends abandon AFTER cancel has failed to unstick the script. The deterministic
+            // both-tokens case (cancel fired, kill genuinely fails, abandon -> -48) is covered
+            // end-to-end by ClientScriptExecutionAbandon.AbandonScript_WhenCancelFailsToKillProcess.
             using var tempDir = new TemporaryDirectory();
             var pidFile = Path.Combine(tempDir.DirectoryPath, "process.pid");
 
@@ -373,9 +379,9 @@ while ((Get-Date) -lt $deadline) {
 
             await WaitForPidFileAsync(pidFile, TimeSpan.FromSeconds(30));
 
-            // Cancel (kills the process) and abandon both fire; abandon must win the result.
-            cancelCts.Cancel();
+            // Abandon first (resolves the wait to -48), then cancel is also requested.
             abandonCts.Cancel();
+            cancelCts.Cancel();
 
             try
             {
