@@ -157,8 +157,9 @@ namespace Octopus.Tentacle.Util
                         // completes when the abandon token fires. If abandon wins we return
                         // AbandonedExitCode and leave the OS process running; the still-blocked
                         // WaitForExit thread is released when the using (process) disposes on return.
-                        var abandoned = new TaskCompletionSource();
-                        using (abandon.Register(() => abandoned.TrySetResult()))
+                        // TaskCompletionSource<object?> (not the non-generic overload, which doesn't exist on net48).
+                        var abandoned = new TaskCompletionSource<object?>();
+                        using (abandon.Register(() => abandoned.TrySetResult(null)))
                         {
                             var waitForExit = Task.Run(() =>
                             {
