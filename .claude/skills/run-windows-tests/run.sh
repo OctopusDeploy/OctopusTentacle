@@ -12,7 +12,9 @@
 # Exits with the run's status: 0 = tests passed.
 set -euo pipefail
 
-FILTER="${1:-Name~CancelThenAbandon_WhenGrandchild}"
+# Default targets the Windows grandchild test by the substring shared across branches
+# (main: CancellationToken_WhenGrandchild...; EFT-3295: CancelThenAbandon_WhenGrandchild...).
+FILTER="${1:-Name~WhenGrandchildHoldsRedirectedPipes}"
 REF="$(git rev-parse --abbrev-ref HEAD)"
 
 echo "Dispatching windows-test.yml on $REF with filter: $FILTER"

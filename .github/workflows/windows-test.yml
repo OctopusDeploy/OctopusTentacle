@@ -9,7 +9,7 @@ on:
       filter:
         description: "NUnit/xUnit test filter (dotnet test --filter)"
         required: true
-        default: "Name~CancelThenAbandon_WhenGrandchild"
+        default: "Name~WhenGrandchildHoldsRedirectedPipes"
   push:
     branches: [ "jimpelletier/windows-test-runner" ]
 
@@ -27,7 +27,7 @@ jobs:
         shell: pwsh
         run: |
           $filter = "${{ github.event.inputs.filter }}"
-          if ([string]::IsNullOrWhiteSpace($filter)) { $filter = "Name~CancelThenAbandon_WhenGrandchild" }
+          if ([string]::IsNullOrWhiteSpace($filter)) { $filter = "Name~WhenGrandchildHoldsRedirectedPipes" }
           Write-Host "Filter: $filter"
           dotnet test source/Octopus.Tentacle.Tests.Integration/Octopus.Tentacle.Tests.Integration.csproj `
             --framework net8.0 `
