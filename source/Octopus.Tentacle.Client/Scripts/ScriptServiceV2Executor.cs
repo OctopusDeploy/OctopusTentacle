@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
 using Halibut.ServiceModel;
+using Octopus.Tentacle.Client.Capabilities;
 using Octopus.Tentacle.Client.EventDriven;
 using Octopus.Tentacle.Client.Execution;
 using Octopus.Tentacle.Client.Observability;
@@ -18,6 +19,7 @@ namespace Octopus.Tentacle.Client.Scripts
     class ScriptServiceV2Executor : IScriptExecutor
     {
         readonly IAsyncClientScriptServiceV2 clientScriptServiceV2;
+        readonly IAsyncClientCapabilitiesServiceV2 clientCapabilitiesServiceV2;
         readonly RpcCallExecutor rpcCallExecutor;
         readonly ClientOperationMetricsBuilder clientOperationMetricsBuilder;
         readonly TimeSpan onCancellationAbandonCompleteScriptAfter;
@@ -26,6 +28,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
         public ScriptServiceV2Executor(
             IAsyncClientScriptServiceV2 clientScriptServiceV2,
+            IAsyncClientCapabilitiesServiceV2 clientCapabilitiesServiceV2,
             RpcCallExecutor rpcCallExecutor,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
             TimeSpan onCancellationAbandonCompleteScriptAfter,
@@ -33,6 +36,7 @@ namespace Octopus.Tentacle.Client.Scripts
             ITentacleClientTaskLog logger)
         {
             this.clientScriptServiceV2 = clientScriptServiceV2;
+            this.clientCapabilitiesServiceV2 = clientCapabilitiesServiceV2;
             this.rpcCallExecutor = rpcCallExecutor;
             this.clientOperationMetricsBuilder = clientOperationMetricsBuilder;
             this.onCancellationAbandonCompleteScriptAfter = onCancellationAbandonCompleteScriptAfter;
@@ -169,6 +173,42 @@ namespace Octopus.Tentacle.Client.Scripts
                 logger,
                 clientOperationMetricsBuilder,
                 // We don't want to cancel this operation as it is responsible for stopping the script executing on the Tentacle
+                CancellationToken.None).ConfigureAwait(false);
+            return Map(scriptStatusResponseV2);
+        }
+
+        public async Task<ScriptOperationExecutionResult> AbandonScript(CommandContext commandContext)
+        {
+            using var activity = TentacleClient.ActivitySource.StartActivity($"{nameof(ScriptServiceV2Executor)}.{nameof(AbandonScript)}");
+
+            var capabilities = await rpcCallExecutor.Execute(
+                retriesEnabled: clientOptions.RpcRetrySettings.RetriesEnabled,
+                RpcCall.Create<Contracts.Capabilities.ICapabilitiesServiceV2>(nameof(Contracts.Capabilities.ICapabilitiesServiceV2.GetCapabilities)),
+                async ct => await clientCapabilitiesServiceV2.GetCapabilitiesAsync(new HalibutProxyRequestOptions(ct)),
+                logger,
+                clientOperationMetricsBuilder,
+                CancellationToken.None).ConfigureAwait(false);
+
+            // Capability absent → the Tentacle is too old to abandon. Keep cancelling cleanly.
+            if (!capabilities.HasAbandonScriptV2())
+            {
+                logger.Verbose("Tentacle does not advertise AbandonScript; falling back to CancelScript.");
+                return await CancelScript(commandContext).ConfigureAwait(false);
+            }
+
+            async Task<ScriptStatusResponseV2> AbandonScriptAction(CancellationToken ct)
+            {
+                var request = new AbandonScriptCommandV2(commandContext.ScriptTicket, commandContext.NextLogSequence);
+                return await clientScriptServiceV2.AbandonScriptAsync(request, new HalibutProxyRequestOptions(ct));
+            }
+
+            var scriptStatusResponseV2 = await rpcCallExecutor.Execute(
+                retriesEnabled: clientOptions.RpcRetrySettings.RetriesEnabled,
+                RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.AbandonScript)),
+                AbandonScriptAction,
+                logger,
+                clientOperationMetricsBuilder,
+                // Like CancelScript, abandon must not be cancelled — it stops the script on Tentacle.
                 CancellationToken.None).ConfigureAwait(false);
             return Map(scriptStatusResponseV2);
         }

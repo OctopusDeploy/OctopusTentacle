@@ -169,7 +169,8 @@ namespace Octopus.Tentacle.Client
             OnScriptStatusResponseReceived onScriptStatusResponseReceived,
             OnScriptCompleted onScriptCompleted,
             ITentacleClientTaskLog logger,
-            CancellationToken scriptExecutionCancellationToken)
+            CancellationToken scriptExecutionCancellationToken,
+            TimeSpan? abandonAfterCancellationPendingFor = null)
         {
             using var activity = ActivitySource.StartActivity($"{nameof(TentacleClient)}.{nameof(ExecuteScript)}");
             activity?.AddTag("octopus.tentacle.script.files", string.Join(",", executeScriptCommand.Files.Select(f => f.Name)));
@@ -189,7 +190,8 @@ namespace Octopus.Tentacle.Client
                 var orchestrator = new ObservingScriptOrchestrator(scriptObserverBackOffStrategy,
                     onScriptStatusResponseReceived,
                     onScriptCompleted,
-                    scriptExecutor);
+                    scriptExecutor,
+                    abandonAfterCancellationPendingFor);
 
                 var result = await orchestrator.ExecuteScript(executeScriptCommand, scriptExecutionCancellationToken);
 

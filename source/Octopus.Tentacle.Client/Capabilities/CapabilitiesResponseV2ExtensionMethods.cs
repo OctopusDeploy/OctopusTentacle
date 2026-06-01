@@ -15,5 +15,17 @@ namespace Octopus.Tentacle.Client.Capabilities
 
             return capabilities.SupportedCapabilities.Contains(nameof(IScriptServiceV2));
         }
+
+        public static bool HasAbandonScriptV2(this CapabilitiesResponseV2 capabilities)
+        {
+            if (capabilities?.SupportedCapabilities?.Any() != true)
+            {
+                return false;
+            }
+
+            // Tentacle advertises this as nameof(ScriptServiceV2.AbandonScriptAsync). Keep the
+            // literal in sync with CapabilitiesServiceV2.GetCapabilitiesAsync on the Tentacle side.
+            return capabilities.SupportedCapabilities.Contains("AbandonScriptAsync");
+        }
     }
 }

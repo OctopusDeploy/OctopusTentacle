@@ -33,6 +33,14 @@ namespace Octopus.Tentacle.Client.Scripts
         Task<ScriptOperationExecutionResult> CancelScript(CommandContext commandContext);
 
         /// <summary>
+        /// Abandon the script: signal Tentacle to stop waiting and release the isolation mutex.
+        /// Returns the abandoned status when the Tentacle advertises the abandon capability;
+        /// otherwise falls back to cancelling and returns that result.
+        /// </summary>
+        /// <param name="commandContext">The CommandContext from the previous command</param>
+        Task<ScriptOperationExecutionResult> AbandonScript(CommandContext commandContext);
+
+        /// <summary>
         /// Complete the script.
         /// </summary>
         /// <param name="commandContext">The CommandContext from the previous command</param>

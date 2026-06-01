@@ -32,7 +32,8 @@ namespace Octopus.Tentacle.Client
             OnScriptStatusResponseReceived onScriptStatusResponseReceived,
             OnScriptCompleted onScriptCompleted,
             ITentacleClientTaskLog logger,
-            CancellationToken scriptExecutionCancellationToken);
+            CancellationToken scriptExecutionCancellationToken,
+            TimeSpan? abandonAfterCancellationPendingFor = null);
 
         /// <summary>
         /// Start the script.

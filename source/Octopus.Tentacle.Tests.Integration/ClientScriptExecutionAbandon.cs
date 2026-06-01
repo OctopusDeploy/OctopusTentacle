@@ -4,8 +4,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
+using Octopus.Tentacle.Client;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Core.Util;
+using Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators;
+using Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators.Proxies;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
@@ -174,6 +178,61 @@ namespace Octopus.Tentacle.Tests.Integration
             // We never wrote releaseFile, so the script only completes because abandon's Cancel()
             // killed it. Draining the execution confirms the process is gone.
             await scriptExecution;
+        }
+
+        [Test]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.Version2)]
+        public async Task ExecuteScript_WhenCancellationStaysPending_EscalatesToAbandon(TentacleConfigurationTestCase tentacleConfigurationTestCase)
+        {
+            // Kill is disabled, so the script is genuinely stuck and CancelScript can't end it.
+            // With abandonAfterCancellationPendingFor set short, the orchestrator must escalate to
+            // AbandonScript, which returns AbandonedExitCode and releases the script.
+            IRecordedMethodUsages recordedUsages = new MethodUsages();
+            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+                .WithTentacle(x => x.WithRunTentacleEnvironmentVariable(EnvironmentVariables.TentacleDebugDisableProcessKill_UNSAFE_FOR_PRODUCTION, "1"))
+                .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
+                    .RecordMethodUsages<IAsyncClientScriptServiceV2>(out recordedUsages)
+                    .Build())
+                .Build(CancellationToken);
+
+            var startFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "start");
+            var releaseFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "release");
+
+            var command = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(new ScriptBuilder()
+                    .CreateFile(startFile)
+                    .WaitForFileToExist(releaseFile))
+                .WithIsolationLevel(ScriptIsolationLevel.NoIsolation)
+                .Build();
+
+            var tentacleClient = clientTentacle.TentacleClient;
+
+            using var executionCts = new System.Threading.CancellationTokenSource();
+            var logs = new System.Collections.Generic.List<ProcessOutput>();
+
+            var execution = Task.Run(async () => await tentacleClient.ExecuteScript(
+                command,
+                onScriptStatusResponseReceived => logs.AddRange(onScriptStatusResponseReceived.Logs),
+                _ => Task.CompletedTask,
+                new SerilogLoggerBuilder().Build().ForContext<TentacleClient>().ToITentacleTaskLog(),
+                executionCts.Token,
+                abandonAfterCancellationPendingFor: TimeSpan.FromSeconds(2)));
+
+            await Wait.For(() => File.Exists(startFile),
+                TimeSpan.FromSeconds(30),
+                () => throw new Exception("Script did not start"),
+                CancellationToken);
+
+            executionCts.Cancel();
+
+            // ExecuteScript throws OperationCanceledException once the token is cancelled.
+            await FluentActions.Invoking(async () => await execution).Should().ThrowAsync<OperationCanceledException>();
+
+            // The orchestrator must have escalated to AbandonScript after the 2s threshold.
+            recordedUsages.ForAbandonScriptAsync().Started.Should().BeGreaterThan(0);
+
+            // Cleanup: release + reap the still-alive process (kill was disabled).
+            File.WriteAllText(releaseFile, "");
         }
     }
 }
