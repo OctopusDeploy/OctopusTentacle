@@ -296,8 +296,14 @@ while ((Get-Date) -lt $deadline) {
         }
 
         [Test]
-        public async Task AbandonToken_ShouldReturnAbandonedExitCodeWithoutKillingProcess()
+        public async Task AbandonToken_ReturnsAbandonedExitCode()
         {
+            // Abandon stops waiting and returns the distinct AbandonedExitCode. Abandon also
+            // best-effort-kills the process — the kill itself is asserted by
+            // ClientScriptExecutionAbandon.AbandonScript_WithNoPriorCancel_KillsTheProcess, and the
+            // un-killable (survives) case by AbandonScript_WhenCancelFailsToKillProcess. (We do NOT
+            // disable kill here: setting that env var is process-wide and leaks into the Tentacle
+            // subprocesses other integration tests spawn.)
             using var tempDir = new TemporaryDirectory();
             var pidFile = Path.Combine(tempDir.DirectoryPath, "process.pid");
 
@@ -329,22 +335,61 @@ while ((Get-Date) -lt $deadline) {
             try
             {
                 var exitCode = await task;
-
-                // AbandonedExitCode is only returned from the abandon catch block, which
-                // requires the abandon token to fire. If we'd accidentally waited for the
-                // process to exit naturally, exitCode would be the script's own exit code,
-                // not this sentinel. The exit code is the abandon contract.
                 exitCode.Should().Be(ScriptExitCodes.AbandonedExitCode);
                 infoMessages.ToString().Should().Contain("Tentacle has abandoned this script");
-
-                // Whether the script keeps running doesn't matter in prod. We check it here so we
-                // know our fixture successfully prevented it from being killed (the exit code matches either way).
-                var sleepPid = int.Parse(SafelyReadAllText(pidFile).Trim());
-                Process.GetProcessById(sleepPid).HasExited.Should().BeFalse("abandon should leave the underlying script process running");
             }
             finally
             {
-                // Force-kill the sleeping process to avoid leaking it on CI
+                // Force-kill the script process if it's somehow still around, to avoid leaking on CI
+                if (File.Exists(pidFile) && int.TryParse(SafelyReadAllText(pidFile).Trim(), out var pid) && pid > 0)
+                {
+                    try { Process.GetProcessById(pid).Kill(); } catch { /* already gone */ }
+                }
+            }
+        }
+
+        [Test]
+        public async Task AbandonToken_WhenBothTokensFire_ReturnsAbandonedExitCodeKeyedOnToken()
+        {
+            // When cancel and abandon both fire, cancel's kill makes the process exit so the
+            // WaitForExit task can win the WhenAny race — yet the result must still be
+            // AbandonedExitCode, because it is keyed on abandon.IsCancellationRequested (the token),
+            // not on which task won the race. This is the deterministic-(-48) guarantee from the spec.
+            using var tempDir = new TemporaryDirectory();
+            var pidFile = Path.Combine(tempDir.DirectoryPath, "process.pid");
+
+            var executable = PlatformDetection.IsRunningOnWindows ? "powershell.exe" : "/bin/bash";
+            var arguments = PlatformDetection.IsRunningOnWindows
+                ? $"-NoProfile -NonInteractive -Command \"$PID | Out-File -FilePath '{pidFile}' -Encoding ASCII; Start-Sleep -Seconds 300\""
+                : $"-c \"echo $$ > '{pidFile}' && sleep 300\"";
+
+            using var cancelCts = new CancellationTokenSource();
+            using var abandonCts = new CancellationTokenSource();
+
+            var task = Task.Run(async () => await SilentProcessRunner.ExecuteCommandAsync(
+                executable,
+                arguments,
+                Environment.CurrentDirectory,
+                debug: _ => { },
+                info: _ => { },
+                error: _ => { },
+                customEnvironmentVariables: null,
+                cancel: cancelCts.Token,
+                abandon: abandonCts.Token));
+
+            await WaitForPidFileAsync(pidFile, TimeSpan.FromSeconds(30));
+
+            // Cancel (kills the process) and abandon both fire; abandon must win the result.
+            cancelCts.Cancel();
+            abandonCts.Cancel();
+
+            try
+            {
+                var exitCode = await task;
+                exitCode.Should().Be(ScriptExitCodes.AbandonedExitCode);
+            }
+            finally
+            {
                 if (File.Exists(pidFile) && int.TryParse(SafelyReadAllText(pidFile).Trim(), out var pid) && pid > 0)
                 {
                     try { Process.GetProcessById(pid).Kill(); } catch { /* already gone */ }

@@ -143,10 +143,14 @@ namespace Octopus.Tentacle.Core.Services.Scripts
 
         public Task<ScriptStatusResponseV2> AbandonScriptAsync(AbandonScriptCommandV2 command, CancellationToken cancellationToken)
         {
-            // Triggers the abandon token so `process.WaitForExitAsync` will return in
-            // SilentProcessRunning.ExecuteAsync which means the call to GetResponse()
-            // below may have the final exit code for the script. Otherwise the sender of
-            // the command (Octopus Server) will get the result on a subsequent call to `GetStatus`
+            // Fire the abandon token. SilentProcessRunner's abandon branch best-effort-kills the
+            // process (anti-abuse) and then stops waiting + releases the mutex + returns -48, so the
+            // wait returns and GetResponse() below may carry the final exit code (otherwise the server
+            // gets it on a subsequent GetStatus). The kill lives in the runner — done sequentially in
+            // the abandon branch — rather than firing Cancel() here, because firing the cancel token
+            // races the runner's wait resolution (the kill could resolve the wait to the cancel exit
+            // code before the abandon token is observed). A process survives abandon only when the kill
+            // genuinely can't land (stuck / re-parented grandchild).
             if (runningScripts.TryGetValue(command.Ticket, out var runningScript))
             {
                 runningScript.Abandon();

@@ -167,8 +167,25 @@ namespace Octopus.Tentacle.Util
                                 catch { /* released by Process.Dispose on the abandon path */ }
                             });
 
-                            if (await Task.WhenAny(waitForExit, abandoned.Task).ConfigureAwait(false) == abandoned.Task)
+                            await Task.WhenAny(waitForExit, abandoned.Task).ConfigureAwait(false);
+
+                            // Key the abandoned result on the TOKEN, not on which task won the race.
+                            // When both cancel and abandon fire, cancel's Kill may be no-op'd / can't land,
+                            // so waitForExit can win even though we must still return AbandonedExitCode.
+                            // After Cancel()->Close() the Process is detached, so do NOT read
+                            // process.HasExited / process.ExitCode here — just return -48. The
+                            // "abandon was unnecessary" case never reaches here: the script's RunningScript
+                            // is already Complete with its real exit code one layer up.
+                            if (abandon.IsCancellationRequested)
                             {
+                                // Abandon best-effort-kills (anti-abuse): kill it if we can, then stop
+                                // waiting and release. Doing the kill here — sequentially, in the abandon
+                                // branch — is race-free, unlike firing the cancel token from the RPC handler
+                                // (the kill would race the WhenAny resolution / process disposal). The kill
+                                // is idempotent if cancel already ran it. The process survives only if the
+                                // kill genuinely can't land (stuck / re-parented grandchild). Do NOT read
+                                // HasExited/ExitCode here — Close() may have detached the Process.
+                                DoOurBestToCleanUp(process, error);
                                 info("Tentacle has abandoned this script. The underlying script process may still be running on this host.");
                                 SafelyCancelOutputAndErrorRead(process, debug);
                                 running = false;

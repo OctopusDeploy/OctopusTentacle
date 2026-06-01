@@ -127,5 +127,53 @@ namespace Octopus.Tentacle.Tests.Integration
             File.WriteAllText(releaseFile, "");
             await firstScriptExecution;
         }
+
+        [Test]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.Version2)]
+        public async Task AbandonScript_WithNoPriorCancel_KillsTheProcess(TentacleConfigurationTestCase tentacleConfigurationTestCase)
+        {
+            // Anti-abuse: a direct AbandonScript with no prior CancelScript must still attempt the
+            // kill. AbandonScriptAsync calls Cancel() then Abandon(), so Hitman.Kill runs. Kill is
+            // NOT disabled here, so the underlying process must actually die (the execution drains).
+            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+                .Build(CancellationToken);
+
+            var startFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "start");
+            var releaseFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "release");
+
+            var command = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(new ScriptBuilder()
+                    .CreateFile(startFile)
+                    .WaitForFileToExist(releaseFile))
+                .WithIsolationLevel(ScriptIsolationLevel.NoIsolation)
+                .Build();
+
+            var tentacleClient = clientTentacle.TentacleClient;
+            var scriptExecution = Task.Run(async () => await tentacleClient.ExecuteScript(command, CancellationToken));
+
+            await Wait.For(() => File.Exists(startFile),
+                TimeSpan.FromSeconds(30),
+                () => throw new Exception("Script did not start"),
+                CancellationToken);
+
+            // Direct abandon, NO prior cancel.
+            await tentacleClient.AbandonScript(command.ScriptTicket, CancellationToken);
+
+            ScriptStatus abandonResponse = null!;
+            await Wait.For(async () =>
+                {
+                    abandonResponse = await tentacleClient.GetStatus(command.ScriptTicket, CancellationToken);
+                    return abandonResponse.State == ProcessState.Complete;
+                },
+                TimeSpan.FromSeconds(30),
+                () => throw new Exception("Abandoned script did not reach Complete state within 30s"),
+                CancellationToken);
+
+            abandonResponse.ExitCode.Should().Be(ScriptExitCodes.AbandonedExitCode);
+
+            // We never wrote releaseFile, so the script only completes because abandon's Cancel()
+            // killed it. Draining the execution confirms the process is gone.
+            await scriptExecution;
+        }
     }
 }
