@@ -102,7 +102,9 @@ public class AbandonScriptCommandV2
 
 Abandon solves both by completing the wait via the abandon signal regardless of whether the OS process exited.
 
-**Where the kill lives.** `ScriptServiceV2.AbandonScriptAsync` calls `runningScript.Cancel()` **then** `runningScript.Abandon()`. The kill flows through the EXISTING cancel machinery (`cancel.Register → DoOurBestToCleanUp → Hitman.Kill`), and abandon layers "stop waiting + release + return -48" on top. Putting best-effort-kill at the RPC handler means ANY `AbandonScript` call — including a direct RPC with no prior cancel — attempts the kill, which is what closes the abuse vector.
+**Where the kill lives.** `ScriptServiceV2.AbandonScriptAsync` calls only `runningScript.Abandon()`. The kill happens in `SilentProcessRunner`'s **abandon branch**: when the abandon token is observed it calls `DoOurBestToCleanUp` (best-effort `Hitman.Kill`, idempotent if cancel already ran it) and then returns `AbandonedExitCode`. Doing the kill there — in the runner, sequentially in the abandon branch — closes the abuse vector for ANY abandon (including a direct RPC with no prior cancel), and is **race-free**.
+
+> **Why not fire the cancel token from `AbandonScriptAsync` (the originally-proposed shape)?** Firing `Cancel()` then `Abandon()` races: cancel's `Hitman.Kill` makes a killable process exit, which resolves the runner's wait to the *cancel* exit code (`-1`) before the abandon token is observed — the runner returns `-1` instead of `-48`. Reversing the order makes `-48` deterministic but then the kill races the runner disposing the process. Doing the kill sequentially inside the abandon branch avoids both races. (Proven by `AbandonScript_WithNoPriorCancel_KillsTheProcess`.)
 
 **Deterministic -48 when both tokens are set.** In PR1's `Task.WhenAny`, key the abandoned result on `abandon.IsCancellationRequested` rather than on which task won the race. PR2's async abandon-catch is already deterministic on `abandon.IsCancellationRequested`.
 
@@ -145,7 +147,7 @@ Production code:
 - `source/Octopus.Tentacle/Util/ISilentProcessRunner.cs` — interface and in-process wrapper become async.
 - `source/Octopus.Tentacle/Util/CommandLineRunner.cs` — caller migration.
 - `source/Octopus.Tentacle.Core/Services/Scripts/RunningScript.cs` — `RunScript` → `RunScriptAsync`; ctor takes `abandonToken` alongside `runningScriptToken`; `Execute()` awaits the new path.
-- `source/Octopus.Tentacle.Core/Services/Scripts/ScriptServiceV2.cs` — `LaunchShell` passes `abandonToken` from the wrapper. `RunningScriptWrapper` gains `abandonTokenSource`. New `AbandonScriptAsync` that calls `Cancel()` then `Abandon()`.
+- `source/Octopus.Tentacle.Core/Services/Scripts/ScriptServiceV2.cs` — `LaunchShell` passes `abandonToken` from the wrapper. `RunningScriptWrapper` gains `abandonTokenSource`. `AbandonScriptAsync` calls `Abandon()` (the best-effort kill lives in the runner's abandon branch — see above).
 - `source/Octopus.Tentacle.Contracts/ScriptServiceV2/` — new `AbandonScriptCommandV2.cs`, interface method on `IScriptServiceV2.cs` (per Section 1).
 - `source/Octopus.Tentacle.Contracts/ScriptExitCodes.cs` — add `AbandonedExitCode = -48`.
 - Capabilities advertisement (`AbandonScriptV2`).
@@ -236,7 +238,7 @@ Style: matches existing service-layer fixtures using in-memory script shells and
 | Abandon after CompleteScript | Start → Complete → Abandon | Returns `(Complete, UnknownScriptExitCode)` (wrapper already removed; stateStore gone). |
 | Abandon then Cancel | Abandon, then Cancel same ticket | Cancel returns the cached abandoned response unchanged. Asserts via response equality. |
 | **Cancel then Abandon (real flow)** | Long-running script; cancel; `cancel.Register` no-op'd to simulate un-killable; abandon | Final GetStatus returns `(Complete, AbandonedExitCode, logs)`. Log content includes the honest line. Subsequent same-ticket StartScript returns the cached state. |
-| **Abandon best-effort-kills (anti-abuse)** | Long-running but killable script; call AbandonScript directly with no prior cancel | The process is killed (abandon's `Cancel()`-then-`Abandon()` ran `Hitman.Kill`). Final state is `(Complete, AbandonedExitCode, logs)`. Confirms a direct abandon does not leave a killable process running unmanaged. |
+| **Abandon best-effort-kills (anti-abuse)** | Long-running but killable script; call AbandonScript directly with no prior cancel | The process is killed (the runner's abandon branch ran `DoOurBestToCleanUp → Hitman.Kill`). Final state is `(Complete, AbandonedExitCode, logs)`. Confirms a direct abandon does not leave a killable process running unmanaged. |
 | Abandon during StartScript launch | Concurrent: StartScript holding `StartScriptMutex`, AbandonScript called | Abandon serialises behind StartScript via the existing wrapper mutex. Final state is consistent (no half-abandoned wrapper). |
 | Capability advertisement | Tentacle build with the abandon feature; query `CapabilitiesServiceV2.GetCapabilities()` | Response includes `AbandonScriptV2`. Builds without the feature do not advertise it. |
 
