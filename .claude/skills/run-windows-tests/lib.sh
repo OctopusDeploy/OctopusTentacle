@@ -14,6 +14,13 @@ ISO_DIR="${OCTO_WIN_ISO_DIR:-$HOME/UTM-ISOs}"      # where the Windows ARM ISO l
 VIRTIO_ISO="$VM_HOME/virtio-win.iso"
 VIRTIO_URL="https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso"
 
+# UUP dump: build the Windows 11 ARM64 ISO from Microsoft's update servers (fetch-iso.sh).
+UUP_API="${OCTO_WIN_UUP_API:-https://api.uupdump.net}"
+UUP_GET="${OCTO_WIN_UUP_GET:-https://uupdump.net/get.php}"
+WIN_LANG="${OCTO_WIN_LANG:-en-us}"
+WIN_EDITION="${OCTO_WIN_EDITION:-professional}"
+UUP_SEARCH="${OCTO_WIN_UUP_SEARCH:-Windows 11}"
+
 SSH_PORT="${OCTO_WIN_SSH_PORT:-2222}"
 SSH_USER="${OCTO_WIN_SSH_USER:-dev}"
 SSH_PASS="${OCTO_WIN_SSH_PASS:-Octo-pass-1}"        # only used inside the VM for autologon

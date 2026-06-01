@@ -27,6 +27,7 @@ exposes start/stop and hides creation behind a GUI.
 | File | Role |
 |------|------|
 | `lib.sh` | shared config + helpers (paths, QEMU args, SSH waits) |
+| `fetch-iso.sh` | build the Windows 11 ARM64 ISO via UUP dump (from MS update servers) |
 | `setup.sh` | one-time: firmware, disk, TPM, ISOs, unattended install, provisioning |
 | `autounattend.xml` | hands-free Windows install + first-logon provisioning hook |
 | `provision.ps1` | in-guest: virtio-net driver, OpenSSH + key, .NET 8 SDK, rsync |
@@ -57,10 +58,9 @@ digraph vm_state {
 }
 ```
 
-**On exit 3** (VM not built): run `setup.sh`. It's clickless and fine to run yourself
-**if** a Windows 11 ARM64 ISO is already in `$OCTO_WIN_ISO_DIR` (default `~/UTM-ISOs`).
-The install takes ~20–40 min. If no ISO is present, `setup.sh` stops and asks the user to
-drop one in — Microsoft gates that download, so it's the one step that isn't automatable.
+**On exit 3** (VM not built): run `setup.sh`. It's fully self-contained — if no ISO is in
+`$OCTO_WIN_ISO_DIR` (default `~/UTM-ISOs`) it builds one via `fetch-iso.sh` (UUP dump,
+~5 GB) — then does the ~20–40 min unattended install. Clickless; fine to run yourself.
 
 **On exit 4** (booted but no SSH): check `C:\provision.log` in the VM (run `setup.sh` with
 `-display cocoa` in `lib.sh` to watch). Provisioning may have failed.

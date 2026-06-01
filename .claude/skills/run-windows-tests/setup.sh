@@ -30,10 +30,10 @@ step "Locating Windows 11 ARM64 ISO in $ISO_DIR"
 mkdir -p "$ISO_DIR"
 WIN_ISO="$(find_win_iso)"
 if [[ -z "$WIN_ISO" ]]; then
-  note "No ISO found. This is the one step MS won't let us automate cleanly."
-  note "Easiest: brew install --cask crystalfetch  (download an ARM64 ISO into $ISO_DIR),"
-  note "or grab the official ARM64 ISO from microsoft.com. Then re-run setup.sh."
-  exit 1
+  note "No ISO found — building one via UUP dump (fetch-iso.sh)."
+  bash "$HERE/fetch-iso.sh"
+  WIN_ISO="$(find_win_iso)"
+  [[ -n "$WIN_ISO" ]] || die "fetch-iso.sh did not produce an ISO in $ISO_DIR."
 fi
 note "Using $WIN_ISO"
 
