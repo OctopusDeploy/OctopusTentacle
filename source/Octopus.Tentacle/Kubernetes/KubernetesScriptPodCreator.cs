@@ -299,14 +299,14 @@ namespace Octopus.Tentacle.Kubernetes
 
         static IEnumerable<V1Volume> CreateCalamariImageVolume(StartKubernetesScriptCommandV1 command)
         {
-            var registry = string.IsNullOrWhiteSpace(KubernetesConfig.CalamariImageVolumeRepository) ? KubernetesConfig.CalamariImageVolumeRepository : "octopusdeploy";
+            var registry = !string.IsNullOrWhiteSpace(KubernetesConfig.CalamariImageVolumeRepository) ? KubernetesConfig.CalamariImageVolumeRepository : "octopusdeploy";
             yield return new V1Volume
             {
                 Name = "calamari",
                 Image = new V1ImageVolumeSource
                 {
                     Reference = $"{registry}/{command.CalamariImageConfiguration!.Name.ToLower()}:{command.CalamariImageConfiguration.Version}",
-                    PullPolicy = string.IsNullOrWhiteSpace(KubernetesConfig.CalamariImageVolumePullPolicy) ? KubernetesConfig.CalamariImageVolumePullPolicy : "IfNotPresent"
+                    PullPolicy = !string.IsNullOrWhiteSpace(KubernetesConfig.CalamariImageVolumePullPolicy) ? KubernetesConfig.CalamariImageVolumePullPolicy : "IfNotPresent"
                 }
             };
         }
