@@ -165,10 +165,9 @@ namespace Octopus.Tentacle.Client.Scripts
         }
 
         public Task<ScriptOperationExecutionResult> AbandonScript(CommandContext commandContext)
-        {
-            // ScriptServiceV1 has no abandon verb; degrade to cancel.
-            return CancelScript(commandContext);
-        }
+            // ScriptServiceV1 has no abandon verb. The orchestrator checks ScriptServiceVersion.SupportsAbandon
+            // and won't escalate here, so reaching this is a bug — throw rather than quietly cancel.
+            => throw new NotSupportedException("ScriptServiceV1 cannot abandon a script; it has no abandon verb. Cancel the script instead.");
 
         public async Task<ScriptStatus?> CompleteScript(CommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {

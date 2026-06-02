@@ -185,10 +185,10 @@ namespace Octopus.Tentacle.Client.Scripts
         }
 
         public Task<ScriptOperationExecutionResult> AbandonScript(CommandContext commandContext)
-        {
-            // KubernetesScriptServiceV1 has no abandon verb; degrade to cancel.
-            return CancelScript(commandContext);
-        }
+            // KubernetesScriptServiceV1 has no abandon verb. The orchestrator checks
+            // ScriptServiceVersion.SupportsAbandon and won't escalate here, so reaching this is a bug —
+            // throw rather than quietly cancel. Hung pods are recovered by deleting the pod instead.
+            => throw new NotSupportedException("KubernetesScriptServiceV1 cannot abandon a script; it has no abandon verb. Cancel the script instead.");
 
         public async Task<ScriptStatus?> CompleteScript(CommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {

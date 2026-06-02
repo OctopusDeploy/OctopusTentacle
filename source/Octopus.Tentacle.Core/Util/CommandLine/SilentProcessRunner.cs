@@ -145,25 +145,17 @@ namespace Octopus.Tentacle.Util
                         process.BeginOutputReadLine();
                         process.BeginErrorReadLine();
 
-                        // Wait for the process to exit, but let abandon break us out. WaitForExit() also
-                        // drains the redirected streams; cancel kills then Close()s the process (via
-                        // cancel.Register), releasing the pipes so this returns even when a re-parented
-                        // grandchild holds them open. Abandon is the new path: race the wait against the
-                        // abandon token and, if abandon wins, return -48 and leave the process running.
                         var waitForExit = Task.Run(() =>
                         {
-                            // Swallows the exception raised when the abandon path disposes the Process
-                            // out from under this blocking wait.
                             try { process.WaitForExit(); }
                             catch { /* released by Process.Dispose on the abandon path */ }
                         });
 
-                        await Task.WhenAny(waitForExit, WhenCancelled(abandon)).ConfigureAwait(false);
+                        // Wait for the process to exit, but let abandon break us out. Cancel kills then
+                        // Close()s the process (via cancel.Register) so this returns; abandon races the
+                        // wait and, if it wins, we return -48 and leave the process running.
+                        await Task.WhenAny(waitForExit, WaitForAbandon(abandon)).ConfigureAwait(false);
 
-                        // Abandon requested: best-effort-kill (anti-abuse), then stop waiting and return -48.
-                        // Don't read HasExited/ExitCode — Close() may have detached the Process. A non-(-48)
-                        // result when both tokens fire only happens in tests; in production abandon only
-                        // arrives after cancel has failed to unstick the script (see the abandon design doc).
                         if (abandon.IsCancellationRequested)
                         {
                             DoOurBestToCleanUp(process, error);
@@ -206,8 +198,7 @@ namespace Octopus.Tentacle.Util
             }
         }
 
-        // Completes when the token is cancelled. Lets us race a cancellation against a blocking wait.
-        static Task WhenCancelled(CancellationToken token)
+        static Task WaitForAbandon(CancellationToken token)
         {
             var tcs = new TaskCompletionSource<object?>();
             token.Register(() => tcs.TrySetResult(null));
@@ -219,9 +210,8 @@ namespace Octopus.Tentacle.Util
             Action<string> debug)
         {
             // Wait up to 5s for stream EOF (a null DataReceived marks it). The process has already
-            // exited, so EOF is normally immediate. If a re-parented grandchild still holds the pipe
-            // open, EOF never comes; we time out and skip the final flush. Process.Dispose() releases
-            // the pipe at the end of the method.
+            // exited, so EOF is normally immediate. If a re-parented grandchild process is still holding
+            // the pipe open then EOF will never come. This is why we time out and skip the final flush.
             try
             {
                 outputResetEvent.Wait(TimeSpan.FromSeconds(5), cancel);

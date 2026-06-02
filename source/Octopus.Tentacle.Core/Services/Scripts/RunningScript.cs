@@ -122,7 +122,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
                             RecordScriptHasStarted(writer);
 
                             exitCode = workspace.ShouldMonitorPowerShellStartup()
-                                ? await RunPowershellScriptWithMonitoring(shellPath, writer, runningScriptToken)
+                                ? await RunPowershellScriptWithMonitoring(shellPath, writer, runningScriptToken, abandonToken)
                                 : await RunScriptAsync(shellPath, writer, runningScriptToken, abandonToken);
                         }
                     }
@@ -165,7 +165,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             }
         }
 
-        async Task<int> RunPowershellScriptWithMonitoring(string shellPath, IScriptLogWriter writer, CancellationToken runningScriptToken)
+        async Task<int> RunPowershellScriptWithMonitoring(string shellPath, IScriptLogWriter writer, CancellationToken runningScriptToken, CancellationToken abandonToken)
         {
             // We want to be able to make some effort to cancel the running script, if the monitor task detects it as hung.
             // Hence, we make a linked cancellation token with the runningScriptToken 

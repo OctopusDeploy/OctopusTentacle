@@ -95,7 +95,10 @@ namespace Octopus.Tentacle.Client.Scripts
                         stopwatch.Start();
                     }
 
-                    var shouldAbandon = abandonAfterCancellationPendingFor.HasValue
+                    // Only escalate to abandon when the script service can actually abandon. On versions
+                    // that can't (V1, Kubernetes) we keep cancelling rather than calling a verb they don't have.
+                    var shouldAbandon = lastResult.ContextForNextCommand.ScripServiceVersionUsed.SupportsAbandon
+                        && abandonAfterCancellationPendingFor.HasValue
                         && stopwatch.Elapsed >= abandonAfterCancellationPendingFor.Value;
 
                     lastResult = shouldAbandon

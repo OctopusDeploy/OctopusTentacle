@@ -63,7 +63,7 @@ namespace Octopus.Tentacle.Client
 
         /// <summary>
         /// Abandon a running script. This attempts cancellation, but if necessary leaves the script
-        /// running in the OS, no longer watched or managed by Tentacle.
+        /// running in the OS but no longer has Tentacle watching or managing it.
         /// </summary>
         /// <param name="scriptTicket">The ticket of the script to abandon</param>
         /// <param name="logger">Used to output user orientated log messages</param>
