@@ -180,7 +180,7 @@ namespace Octopus.Tentacle.Kubernetes
 
             var podName = command.ScriptTicket.ToKubernetesScriptPodName();
 
-            var clusterVersion = await clusterService.GetClusterVersion();
+            var isCalamariImageVolumeEnabled = await IsCalamariImageVolumeEnabled(command, tentacleScriptLog);
 
             LogVerboseToBothLogs($"Creating Kubernetes Pod '{podName}'.", tentacleScriptLog);
 
@@ -234,10 +234,14 @@ namespace Octopus.Tentacle.Kubernetes
             };
 
             pod.Spec.InitContainers = await CreateInitContainers(command, podName, homeDir, workspacePath, tentacleScriptLog, scriptPodTemplate?.ScriptInitContainerSpec);
-            pod.Spec.Containers = await CreateScriptContainers(command, podName, scriptName, homeDir, workspacePath, workspace.ScriptArguments, tentacleScriptLog, scriptPodTemplate);
+            pod.Spec.Containers = await CreateScriptContainers(command, podName, scriptName, homeDir, workspacePath, workspace.ScriptArguments, isCalamariImageVolumeEnabled, tentacleScriptLog, scriptPodTemplate);
             pod.Spec.ImagePullSecrets = Merge(imagePullSecretNames, scriptPodTemplate?.PodSpec?.ImagePullSecrets);
             pod.Spec.ServiceAccountName = serviceAccountName;
-            pod.Spec.Volumes = Merge(pod.Spec.Volumes, CreateVolumes(command, tentacleScriptLog, clusterVersion));
+
+            pod.Spec.Volumes = Merge(
+                pod.Spec.Volumes,
+                CreateVolumes(),
+                isCalamariImageVolumeEnabled ? CreateCalamariImageVolume(command) : Array.Empty<V1Volume>());
 
             var createdPod = await podService.Create(pod, cancellationToken);
             podMonitor.AddPendingPod(command.ScriptTicket, createdPod);
@@ -246,21 +250,36 @@ namespace Octopus.Tentacle.Kubernetes
             LogVerboseToBothLogs($"Executing script in Kubernetes Pod '{podName}'. Image: '{scriptContainer.Image}'.", tentacleScriptLog);
         }
 
-        protected virtual async Task<IList<V1Container>> CreateScriptContainers(StartKubernetesScriptCommandV1 command, string podName, string scriptName, string homeDir, string workspacePath, string[]? scriptArguments, InMemoryTentacleScriptLog tentacleScriptLog, ScriptPodTemplate? template)
+        protected virtual async Task<IList<V1Container>> CreateScriptContainers(
+            StartKubernetesScriptCommandV1 command,
+            string podName,
+            string scriptName,
+            string homeDir,
+            string workspacePath,
+            string[]? scriptArguments,
+            bool isCalamariImageVolumeEnabled,
+            InMemoryTentacleScriptLog tentacleScriptLog,
+            ScriptPodTemplate? template)
         {
             return new List<V1Container>
             {
-                await CreateScriptContainer(command, podName, scriptName, homeDir, workspacePath, scriptArguments, tentacleScriptLog, template?.ScriptContainerSpec)
+                await CreateScriptContainer(command, podName, scriptName, homeDir, workspacePath, scriptArguments, isCalamariImageVolumeEnabled, tentacleScriptLog, template?.ScriptContainerSpec)
             }.AddIfNotNull(CreateWatchdogContainer(homeDir, template?.WatchdogContainerSpec));
         }
 
-        protected virtual async Task<IList<V1Container>> CreateInitContainers(StartKubernetesScriptCommandV1 command, string podName, string homeDir, string workspacePath, InMemoryTentacleScriptLog tentacleScriptLog, V1Container? containerSpec)
+        protected virtual async Task<IList<V1Container>> CreateInitContainers(
+            StartKubernetesScriptCommandV1 command,
+            string podName,
+            string homeDir,
+            string workspacePath,
+            InMemoryTentacleScriptLog tentacleScriptLog,
+            V1Container? containerSpec)
         {
             await Task.CompletedTask;
             return new List<V1Container>();
         }
 
-        protected virtual IList<V1Volume> CreateVolumes(StartKubernetesScriptCommandV1 command, InMemoryTentacleScriptLog tentacleScriptLog, ClusterVersion clusterVersion)
+        protected virtual IList<V1Volume> CreateVolumes()
         {
             var volumes = new List<V1Volume>
             {
@@ -275,33 +294,24 @@ namespace Octopus.Tentacle.Kubernetes
                 CreateAgentUpgradeSecretVolume(),
             };
 
-            if (KubernetesConfig.CalamariImageVolumeEnabled && command.CalamariImageConfiguration is not null)
-            {
-                // The ImageVolume feature gate was enabled by default on 1.35 and above
-                // https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/
-                if (clusterVersion is { Major: 1, Minor: < 35 })
-                {
-                    LogWarnToBothLogs($"The ImageVolume feature gate is required to use the Calamari Image Volume feature. This is enabled by default in Kubernetes 1.35 and newer. The current cluster version is {clusterVersion}.", tentacleScriptLog);
-                }
-                else
-                {
-                    var registry = KubernetesConfig.CalamariImageVolumeRegistry ?? "octopusdeploy";
-                    volumes.Add(new V1Volume
-                    {
-                        Name = "calamari",
-                        Image = new V1ImageVolumeSource
-                        {
-                            Reference = $"{registry}/{command.CalamariImageConfiguration.Name.ToLower()}:{command.CalamariImageConfiguration.Version}",
-                            PullPolicy = "IfNotPresent"
-                        }
-                    });
-                }
-            }
-
             return volumes;
         }
 
-        protected V1Volume CreateAgentUpgradeSecretVolume()
+        static IEnumerable<V1Volume> CreateCalamariImageVolume(StartKubernetesScriptCommandV1 command)
+        {
+            var registry = string.IsNullOrWhiteSpace(KubernetesConfig.CalamariImageVolumeRepository) ? KubernetesConfig.CalamariImageVolumeRepository : "octopusdeploy";
+            yield return new V1Volume
+            {
+                Name = "calamari",
+                Image = new V1ImageVolumeSource
+                {
+                    Reference = $"{registry}/{command.CalamariImageConfiguration?.Name.ToLower()}:{command.CalamariImageConfiguration?.Version}",
+                    PullPolicy = string.IsNullOrWhiteSpace(KubernetesConfig.CalamariImageVolumePullPolicy) ? KubernetesConfig.CalamariImageVolumePullPolicy : "IfNotPresent"
+                }
+            };
+        }
+
+        protected static V1Volume CreateAgentUpgradeSecretVolume()
         {
             return new()
             {
@@ -322,19 +332,48 @@ namespace Octopus.Tentacle.Kubernetes
             };
         }
 
+        async Task<bool> IsCalamariImageVolumeEnabled(StartKubernetesScriptCommandV1 command, InMemoryTentacleScriptLog tentacleScriptLog)
+        {
+            var isEnabled = KubernetesConfig.CalamariImageVolumeEnabled && command.CalamariImageConfiguration is not null;
+
+            if (isEnabled)
+            {
+                var clusterVersion = await clusterService.GetClusterVersion();
+
+                // The ImageVolume feature gate was enabled by default on 1.35 and above
+                // https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/
+                if (clusterVersion is { Major: 1, Minor: < 35 })
+                {
+                    LogWarnToBothLogs($"The ImageVolume feature gate is required to use the Calamari Image Volume feature. This is enabled by default in Kubernetes 1.35 and newer. The current cluster version is {clusterVersion}.", tentacleScriptLog);
+                    return false;
+                }
+            }
+
+            return isEnabled;
+        }
+
         void LogVerboseToBothLogs(string message, InMemoryTentacleScriptLog tentacleScriptLog)
         {
             log.Verbose(message);
             tentacleScriptLog.Verbose(message);
         }
-        
+
         void LogWarnToBothLogs(string message, InMemoryTentacleScriptLog tentacleScriptLog)
         {
             log.Warn(message);
             tentacleScriptLog.Warning(message);
         }
 
-        protected async Task<V1Container> CreateScriptContainer(StartKubernetesScriptCommandV1 command, string podName, string scriptName, string homeDir, string workspacePath, string[]? scriptArguments, InMemoryTentacleScriptLog tentacleScriptLog, V1Container? containerSpec)
+        protected async Task<V1Container> CreateScriptContainer(
+            StartKubernetesScriptCommandV1 command,
+            string podName,
+            string scriptName,
+            string homeDir,
+            string workspacePath,
+            string[]? scriptArguments,
+            bool isCalamariImageVolumeEnabled,
+            InMemoryTentacleScriptLog tentacleScriptLog,
+            V1Container? containerSpec)
         {
             var spaceInformation = kubernetesPhysicalFileSystem.GetStorageInformation();
 
@@ -421,8 +460,8 @@ namespace Octopus.Tentacle.Kubernetes
                 //We intentionally exclude setting "TentacleJournal" since it doesn't make sense to keep a Deployment Journal for Kubernetes deployments
             });
 
-            //if the image is configured, add that flag
-            if (command.CalamariImageConfiguration is not null)
+            //if the image is configured, add that volume mount
+            if (isCalamariImageVolumeEnabled)
             {
                 container.VolumeMounts.Add(new V1VolumeMount
                 {
@@ -792,17 +831,15 @@ namespace Octopus.Tentacle.Kubernetes
             return dict;
         }
 
-        protected static IList<T> Merge<T>(IEnumerable<T>? a, IEnumerable<T>? b)
+        protected static IList<T> Merge<T>(params IEnumerable<T>?[] values)
         {
             var list = new List<T>();
-            if (a is not null)
+            foreach (var value in values)
             {
-                list.AddRange(a);
-            }
-
-            if (b is not null)
-            {
-                list.AddRange(b);
+                if (value is not null)
+                {
+                    list.AddRange(value);
+                }
             }
 
             return list;

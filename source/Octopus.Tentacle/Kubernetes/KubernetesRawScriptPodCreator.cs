@@ -20,8 +20,7 @@ namespace Octopus.Tentacle.Kubernetes
     {
         readonly IKubernetesPodContainerResolver containerResolver;
 
-        public KubernetesRawScriptPodCreator(
-            IKubernetesPodService podService,
+        public KubernetesRawScriptPodCreator(IKubernetesPodService podService,
             IKubernetesPodMonitor podMonitor,
             IKubernetesSecretService secretService,
             IKubernetesPodTemplateService podTemplateService,
@@ -75,15 +74,15 @@ namespace Octopus.Tentacle.Kubernetes
             return new List<V1Container> { container };
         }
 
-        protected override async Task<IList<V1Container>> CreateScriptContainers(StartKubernetesScriptCommandV1 command, string podName, string scriptName, string homeDir, string workspacePath, string[]? scriptArguments, InMemoryTentacleScriptLog tentacleScriptLog, ScriptPodTemplate? template)
+        protected override async Task<IList<V1Container>> CreateScriptContainers(StartKubernetesScriptCommandV1 command, string podName, string scriptName, string homeDir, string workspacePath, string[]? scriptArguments, bool isCalamariImageVolumeEnabled, InMemoryTentacleScriptLog tentacleScriptLog, ScriptPodTemplate? template)
         {
             return new List<V1Container>
             {
-                await CreateScriptContainer(command, podName, scriptName, homeDir, workspacePath, scriptArguments, tentacleScriptLog, template?.ScriptContainerSpec)
+                await CreateScriptContainer(command, podName, scriptName, homeDir, workspacePath, scriptArguments, isCalamariImageVolumeEnabled, tentacleScriptLog, template?.ScriptContainerSpec)
             };
         }
 
-        protected override IList<V1Volume> CreateVolumes(StartKubernetesScriptCommandV1 command, InMemoryTentacleScriptLog tentacleScriptLog, ClusterVersion clusterVersion)
+        protected override IList<V1Volume> CreateVolumes()
         {
             return new List<V1Volume>
             {
