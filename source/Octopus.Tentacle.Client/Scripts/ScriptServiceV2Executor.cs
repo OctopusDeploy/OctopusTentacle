@@ -19,7 +19,6 @@ namespace Octopus.Tentacle.Client.Scripts
     class ScriptServiceV2Executor : IScriptExecutor
     {
         readonly IAsyncClientScriptServiceV2 clientScriptServiceV2;
-        readonly IAsyncClientCapabilitiesServiceV2 clientCapabilitiesServiceV2;
         readonly RpcCallExecutor rpcCallExecutor;
         readonly ClientOperationMetricsBuilder clientOperationMetricsBuilder;
         readonly TimeSpan onCancellationAbandonCompleteScriptAfter;
@@ -28,7 +27,6 @@ namespace Octopus.Tentacle.Client.Scripts
 
         public ScriptServiceV2Executor(
             IAsyncClientScriptServiceV2 clientScriptServiceV2,
-            IAsyncClientCapabilitiesServiceV2 clientCapabilitiesServiceV2,
             RpcCallExecutor rpcCallExecutor,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
             TimeSpan onCancellationAbandonCompleteScriptAfter,
@@ -36,7 +34,6 @@ namespace Octopus.Tentacle.Client.Scripts
             ITentacleClientTaskLog logger)
         {
             this.clientScriptServiceV2 = clientScriptServiceV2;
-            this.clientCapabilitiesServiceV2 = clientCapabilitiesServiceV2;
             this.rpcCallExecutor = rpcCallExecutor;
             this.clientOperationMetricsBuilder = clientOperationMetricsBuilder;
             this.onCancellationAbandonCompleteScriptAfter = onCancellationAbandonCompleteScriptAfter;
@@ -180,21 +177,6 @@ namespace Octopus.Tentacle.Client.Scripts
         public async Task<ScriptOperationExecutionResult> AbandonScript(CommandContext commandContext)
         {
             using var activity = TentacleClient.ActivitySource.StartActivity($"{nameof(ScriptServiceV2Executor)}.{nameof(AbandonScript)}");
-
-            var capabilities = await rpcCallExecutor.Execute(
-                retriesEnabled: clientOptions.RpcRetrySettings.RetriesEnabled,
-                RpcCall.Create<Contracts.Capabilities.ICapabilitiesServiceV2>(nameof(Contracts.Capabilities.ICapabilitiesServiceV2.GetCapabilities)),
-                async ct => await clientCapabilitiesServiceV2.GetCapabilitiesAsync(new HalibutProxyRequestOptions(ct)),
-                logger,
-                clientOperationMetricsBuilder,
-                CancellationToken.None).ConfigureAwait(false);
-
-            // Capability absent → the Tentacle is too old to abandon. Keep cancelling cleanly.
-            if (!capabilities.HasAbandonScriptV2())
-            {
-                logger.Verbose("Tentacle does not advertise AbandonScript; falling back to CancelScript.");
-                return await CancelScript(commandContext).ConfigureAwait(false);
-            }
 
             async Task<ScriptStatusResponseV2> AbandonScriptAction(CancellationToken ct)
             {

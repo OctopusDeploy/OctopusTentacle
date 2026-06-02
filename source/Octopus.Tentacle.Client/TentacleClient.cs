@@ -268,29 +268,20 @@ namespace Octopus.Tentacle.Client
             using var activity = ActivitySource.StartActivity($"{nameof(TentacleClient)}.{nameof(AbandonScript)}");
             activity?.AddTag("octopus.tentacle.script.ticket", scriptTicket.TaskId);
 
-            var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
-
             async Task<ScriptStatusResponseV2> AbandonScriptAction(CancellationToken ct)
             {
                 var request = new AbandonScriptCommandV2(scriptTicket, lastLogSequence: 0);
                 return await allClients.ScriptServiceV2.AbandonScriptAsync(request, new HalibutProxyRequestOptions(ct));
             }
 
-            try
-            {
-                return await rpcCallExecutor.Execute(
-                    retriesEnabled: clientOptions.RpcRetrySettings.RetriesEnabled,
-                    RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.AbandonScript)),
-                    AbandonScriptAction,
-                    logger,
-                    operationMetricsBuilder,
-                    cancellationToken).ConfigureAwait(false);
-            }
-            catch (Exception e)
-            {
-                operationMetricsBuilder.Failure(e, cancellationToken);
-                throw;
-            }
+            return await rpcCallExecutor.Execute(
+                retriesEnabled: clientOptions.RpcRetrySettings.RetriesEnabled,
+                RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.AbandonScript)),
+                AbandonScriptAction,
+                logger,
+                // Abandon is a one-shot RPC; like CancelScript we don't track operation metrics for it.
+                ClientOperationMetricsBuilder.Start(),
+                cancellationToken).ConfigureAwait(false);
         }
 
         public async Task<ScriptStatus?> CompleteScript(CommandContext commandContext, ITentacleClientTaskLog logger, CancellationToken scriptExecutionCancellationToken)
