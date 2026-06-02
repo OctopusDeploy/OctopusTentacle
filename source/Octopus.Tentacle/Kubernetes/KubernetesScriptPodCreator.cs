@@ -241,7 +241,7 @@ namespace Octopus.Tentacle.Kubernetes
             pod.Spec.Volumes = Merge(
                 pod.Spec.Volumes,
                 CreateVolumes(),
-                isCalamariImageVolumeEnabled ? CreateCalamariImageVolume(command) : Array.Empty<V1Volume>());
+                isCalamariImageVolumeEnabled ? CreateCalamariImageVolume(command, tentacleScriptLog) : Array.Empty<V1Volume>());
 
             var createdPod = await podService.Create(pod, cancellationToken);
             podMonitor.AddPendingPod(command.ScriptTicket, createdPod);
@@ -297,16 +297,24 @@ namespace Octopus.Tentacle.Kubernetes
             return volumes;
         }
 
-        static IEnumerable<V1Volume> CreateCalamariImageVolume(StartKubernetesScriptCommandV1 command)
+        IEnumerable<V1Volume> CreateCalamariImageVolume(StartKubernetesScriptCommandV1 command, InMemoryTentacleScriptLog tentacleScriptLog)
         {
             var registry = !string.IsNullOrWhiteSpace(KubernetesConfig.CalamariImageVolumeRepository) ? KubernetesConfig.CalamariImageVolumeRepository : "octopusdeploy";
-            yield return new V1Volume
+
+            var reference = $"{registry}/{command.CalamariImageConfiguration!.Name.ToLower()}:{command.CalamariImageConfiguration.Version}";
+
+            LogVerboseToBothLogs($"Calamari image volume enabled. Image: '{reference}'", tentacleScriptLog);
+
+            return new[]
             {
-                Name = "calamari",
-                Image = new V1ImageVolumeSource
+                new V1Volume
                 {
-                    Reference = $"{registry}/{command.CalamariImageConfiguration!.Name.ToLower()}:{command.CalamariImageConfiguration.Version}",
-                    PullPolicy = !string.IsNullOrWhiteSpace(KubernetesConfig.CalamariImageVolumePullPolicy) ? KubernetesConfig.CalamariImageVolumePullPolicy : "IfNotPresent"
+                    Name = "calamari",
+                    Image = new V1ImageVolumeSource
+                    {
+                        Reference = $"{registry}/{command.CalamariImageConfiguration!.Name.ToLower()}:{command.CalamariImageConfiguration.Version}",
+                        PullPolicy = !string.IsNullOrWhiteSpace(KubernetesConfig.CalamariImageVolumePullPolicy) ? KubernetesConfig.CalamariImageVolumePullPolicy : "IfNotPresent"
+                    }
                 }
             };
         }
