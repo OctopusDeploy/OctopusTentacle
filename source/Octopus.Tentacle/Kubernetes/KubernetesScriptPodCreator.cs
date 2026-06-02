@@ -312,7 +312,7 @@ namespace Octopus.Tentacle.Kubernetes
                     Name = "calamari",
                     Image = new V1ImageVolumeSource
                     {
-                        Reference = $"{registry}/{command.CalamariImageConfiguration!.Name.ToLower()}:{command.CalamariImageConfiguration.Version}",
+                        Reference = reference,
                         PullPolicy = !string.IsNullOrWhiteSpace(KubernetesConfig.CalamariImageVolumePullPolicy) ? KubernetesConfig.CalamariImageVolumePullPolicy : "IfNotPresent"
                     }
                 }
