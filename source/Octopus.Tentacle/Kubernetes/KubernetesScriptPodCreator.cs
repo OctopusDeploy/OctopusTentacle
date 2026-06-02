@@ -305,7 +305,7 @@ namespace Octopus.Tentacle.Kubernetes
                 Name = "calamari",
                 Image = new V1ImageVolumeSource
                 {
-                    Reference = $"{registry}/{command.CalamariImageConfiguration?.Name.ToLower()}:{command.CalamariImageConfiguration?.Version}",
+                    Reference = $"{registry}/{command.CalamariImageConfiguration!.Name.ToLower()}:{command.CalamariImageConfiguration.Version}",
                     PullPolicy = string.IsNullOrWhiteSpace(KubernetesConfig.CalamariImageVolumePullPolicy) ? KubernetesConfig.CalamariImageVolumePullPolicy : "IfNotPresent"
                 }
             };
@@ -467,7 +467,7 @@ namespace Octopus.Tentacle.Kubernetes
                 {
                     MountPath = "/calamari",
                     Name = "calamari",
-                    SubPath = "Calamari" //Calamari is always at the subpath of the app name
+                    SubPath = command.CalamariImageConfiguration!.Name
                 });
 
                 container.Env.Add(new V1EnvVar { Name = "CalamariImageDirectoryPath", Value = "/calamari" });
