@@ -15,14 +15,6 @@ set -euo pipefail
 FILTER="${1:?usage: run.sh \"<filter>\"  e.g. Name~WhenGrandchildHoldsRedirectedPipes}"
 REF="$(git rev-parse --abbrev-ref HEAD)"
 
-# workflow_dispatch can only see the workflow once it's on the default branch. Fail with an
-# actionable message instead of a confusing gh error if it isn't there yet.
-DEFAULT="$(gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name')"
-if ! gh api "repos/{owner}/{repo}/contents/.github/workflows/windows-test.yml?ref=$DEFAULT" >/dev/null 2>&1; then
-  echo "ERROR: windows-test.yml is not on the default branch ('$DEFAULT') yet, so workflow_dispatch can't see it. Merge this branch to '$DEFAULT' first." >&2
-  exit 1
-fi
-
 echo "Dispatching windows-test.yml on $REF with filter: $FILTER"
 SINCE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 gh workflow run windows-test.yml -f filter="$FILTER" --ref "$REF"
