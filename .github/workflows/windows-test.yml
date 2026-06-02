@@ -1,0 +1,36 @@
+name: Windows-only test (on demand)
+
+# Runs a filtered subset of the integration tests on a real Windows runner, so
+# [WindowsTest] tests (which skip on macOS/Linux) can be exercised quickly.
+# Manual-only: dispatch with a required filter. Requires this file on the default branch.
+on:
+  workflow_dispatch:
+    inputs:
+      filter:
+        description: "Test filter, e.g. Name~WhenGrandchildHoldsRedirectedPipes"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  windows-test:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      - name: dotnet test (filtered)
+        shell: pwsh
+        env:
+          FILTER: ${{ inputs.filter }}   # via env, not inline ${{ }}, to avoid script injection
+        run: |
+          Write-Host "Filter: $env:FILTER"
+          dotnet test source/Octopus.Tentacle.Tests.Integration/Octopus.Tentacle.Tests.Integration.csproj `
+            --framework net8.0 `
+            --filter "$env:FILTER" `
+            --logger "console;verbosity=detailed"
