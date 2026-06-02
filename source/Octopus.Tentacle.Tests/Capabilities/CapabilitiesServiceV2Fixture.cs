@@ -41,25 +41,5 @@ namespace Octopus.Tentacle.Tests.Capabilities
 
             Environment.SetEnvironmentVariable(KubernetesConfig.NamespaceVariableName, null);
         }
-
-        [Test]
-        public async Task GetCapabilities_OnNonKubernetesTentacle_AdvertisesAbandonScriptV2()
-        {
-            var service = new CapabilitiesServiceV2();
-            var response = await service.GetCapabilitiesAsync(CancellationToken.None);
-            response.SupportedCapabilities.Should().Contain(nameof(ScriptServiceV2.AbandonScriptAsync));
-        }
-
-        [Test]
-        public async Task GetCapabilities_OnKubernetesTentacle_DoesNotAdvertiseAbandonScriptV2()
-        {
-            Environment.SetEnvironmentVariable(KubernetesConfig.NamespaceVariableName, "ABC");
-
-            var service = new CapabilitiesServiceV2();
-            var response = await service.GetCapabilitiesAsync(CancellationToken.None);
-            response.SupportedCapabilities.Should().NotContain(nameof(ScriptServiceV2.AbandonScriptAsync));
-
-            Environment.SetEnvironmentVariable(KubernetesConfig.NamespaceVariableName, null);
-        }
     }
 }

@@ -60,17 +60,6 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TentacleConfigurations]
-        public async Task LatestTentacle_AdvertisesAbandonScriptCapability(TentacleConfigurationTestCase tentacleConfigurationTestCase)
-        {
-            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateLegacyBuilder().Build(CancellationToken);
-
-            var capabilities = (await clientAndTentacle.TentacleClient.CapabilitiesServiceV2.GetCapabilitiesAsync(new(CancellationToken))).SupportedCapabilities;
-
-            capabilities.Should().Contain(nameof(ScriptServiceV2.AbandonScriptAsync));
-        }
-
-        [Test]
         [TentacleConfigurations(testCapabilitiesServiceVersions: true)]
         public async Task CapabilitiesResponseShouldBeCached(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {

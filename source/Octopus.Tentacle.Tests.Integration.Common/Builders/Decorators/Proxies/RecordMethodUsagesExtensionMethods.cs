@@ -24,11 +24,6 @@ namespace Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators.Proxies
             return o.For("CancelScriptAsync");
         }
 
-        public static IRecordedMethodUsage ForAbandonScriptAsync(this IRecordedMethodUsages o)
-        {
-            return o.For("AbandonScriptAsync");
-        }
-
         public static IRecordedMethodUsage ForCompleteScriptAsync(this IRecordedMethodUsages o)
         {
             return o.For("CompleteScriptAsync");

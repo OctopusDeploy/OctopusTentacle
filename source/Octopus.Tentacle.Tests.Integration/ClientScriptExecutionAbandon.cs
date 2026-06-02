@@ -6,10 +6,7 @@ using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Tentacle.Client;
 using Octopus.Tentacle.Contracts;
-using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Core.Util;
-using Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators;
-using Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators.Proxies;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
@@ -182,17 +179,75 @@ namespace Octopus.Tentacle.Tests.Integration
 
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.Version2)]
-        public async Task ExecuteScript_WhenCancellationStaysPending_EscalatesToAbandon(TentacleConfigurationTestCase tentacleConfigurationTestCase)
+        public async Task ExecuteScript_WhenCancellationStaysPending_EscalatesToAbandon_AndReleasesMutex(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
-            // Kill is disabled, so the script is genuinely stuck and CancelScript can't end it.
-            // With abandonAfterCancellationPendingFor set short, the orchestrator must escalate to
-            // AbandonScript, which returns AbandonedExitCode and releases the script.
-            IRecordedMethodUsages recordedUsages = new MethodUsages();
+            // Kill is disabled, so the script is genuinely stuck and CancelScript can't end it. With
+            // abandonAfterCancellationPendingFor set short, the orchestrator escalates from cancel to
+            // abandon, which releases the isolation mutex. We prove that by the outcome: a second
+            // FullIsolation script with the same mutex name can only run once the mutex is released.
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacle(x => x.WithRunTentacleEnvironmentVariable(EnvironmentVariables.TentacleDebugDisableProcessKill_UNSAFE_FOR_PRODUCTION, "1"))
-                .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .RecordMethodUsages<IAsyncClientScriptServiceV2>(out recordedUsages)
-                    .Build())
+                .Build(CancellationToken);
+
+            var startFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "start");
+            var releaseFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "release");
+            const string sharedMutex = "escalation-test-mutex";
+
+            var stuckCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(new ScriptBuilder()
+                    .CreateFile(startFile)
+                    .WaitForFileToExist(releaseFile))
+                .WithIsolationLevel(ScriptIsolationLevel.FullIsolation)
+                .WithIsolationMutexName(sharedMutex)
+                .Build();
+
+            var tentacleClient = clientTentacle.TentacleClient;
+
+            using var executionCts = new System.Threading.CancellationTokenSource();
+            var stuckExecution = Task.Run(async () => await tentacleClient.ExecuteScript(
+                stuckCommand,
+                _ => { },
+                _ => Task.CompletedTask,
+                new SerilogLoggerBuilder().Build().ForContext<TentacleClient>().ToITentacleTaskLog(),
+                executionCts.Token,
+                abandonAfterCancellationPendingFor: TimeSpan.FromSeconds(2)));
+
+            await Wait.For(() => File.Exists(startFile),
+                TimeSpan.FromSeconds(30),
+                () => throw new Exception("Script did not start"),
+                CancellationToken);
+
+            // Cancel stays pending (kill disabled), so after the threshold the orchestrator escalates to abandon.
+            executionCts.Cancel();
+            await FluentActions.Invoking(async () => await stuckExecution).Should().ThrowAsync<OperationCanceledException>();
+
+            // Outcome: a second FullIsolation script with the same mutex now runs — only possible if abandon released it.
+            var secondStartFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "second-start");
+            var secondCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(new ScriptBuilder().CreateFile(secondStartFile))
+                .WithIsolationLevel(ScriptIsolationLevel.FullIsolation)
+                .WithIsolationMutexName(sharedMutex)
+                .Build();
+
+            var (secondResult, _) = await tentacleClient.ExecuteScript(secondCommand, CancellationToken);
+            secondResult.ExitCode.Should().Be(0);
+            File.Exists(secondStartFile).Should().BeTrue("escalation to abandon should have released the mutex");
+
+            // Cleanup: release the still-alive first script.
+            File.WriteAllText(releaseFile, "");
+        }
+
+        [Test]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.Version1)]
+        public async Task ExecuteScript_OnV1Tentacle_DoesNotEscalateToAbandon(TentacleConfigurationTestCase tentacleConfigurationTestCase)
+        {
+            // ScriptServiceV1 has no abandon verb, so the orchestrator must keep cancelling and never
+            // escalate. If it wrongly escalated it would call the V1 executor's AbandonScript, which
+            // throws NotSupportedException. We prove the gating by the outcome: even with
+            // abandonAfterCancellationPendingFor set, the run ends in OperationCanceledException (the
+            // cancel path) — never NotSupportedException.
+            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+                .WithTentacle(x => x.WithRunTentacleEnvironmentVariable(EnvironmentVariables.TentacleDebugDisableProcessKill_UNSAFE_FOR_PRODUCTION, "1"))
                 .Build(CancellationToken);
 
             var startFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "start");
@@ -208,15 +263,13 @@ namespace Octopus.Tentacle.Tests.Integration
             var tentacleClient = clientTentacle.TentacleClient;
 
             using var executionCts = new System.Threading.CancellationTokenSource();
-            var logs = new System.Collections.Generic.List<ProcessOutput>();
-
             var execution = Task.Run(async () => await tentacleClient.ExecuteScript(
                 command,
-                onScriptStatusResponseReceived => logs.AddRange(onScriptStatusResponseReceived.Logs),
+                _ => { },
                 _ => Task.CompletedTask,
                 new SerilogLoggerBuilder().Build().ForContext<TentacleClient>().ToITentacleTaskLog(),
                 executionCts.Token,
-                abandonAfterCancellationPendingFor: TimeSpan.FromSeconds(2)));
+                abandonAfterCancellationPendingFor: TimeSpan.FromSeconds(1)));
 
             await Wait.For(() => File.Exists(startFile),
                 TimeSpan.FromSeconds(30),
@@ -225,14 +278,15 @@ namespace Octopus.Tentacle.Tests.Integration
 
             executionCts.Cancel();
 
-            // ExecuteScript throws OperationCanceledException once the token is cancelled.
-            await FluentActions.Invoking(async () => await execution).Should().ThrowAsync<OperationCanceledException>();
+            // Well past the 1s threshold: if the V1 gating were broken the orchestrator would have
+            // escalated to AbandonScript (which throws NotSupportedException) by now.
+            await Task.Delay(TimeSpan.FromSeconds(3));
 
-            // The orchestrator must have escalated to AbandonScript after the 2s threshold.
-            recordedUsages.ForAbandonScriptAsync().Started.Should().BeGreaterThan(0);
-
-            // Cleanup: release + reap the still-alive process (kill was disabled).
+            // Release so the stuck script can finish and the run can unwind.
             File.WriteAllText(releaseFile, "");
+
+            // Cancel path only — never NotSupportedException.
+            await FluentActions.Invoking(async () => await execution).Should().ThrowAsync<OperationCanceledException>();
         }
     }
 }

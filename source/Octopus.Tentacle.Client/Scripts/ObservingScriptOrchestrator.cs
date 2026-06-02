@@ -76,7 +76,7 @@ namespace Octopus.Tentacle.Client.Scripts
             return observingUntilCompleteResult.ScriptStatus;
         }
 
-        internal async Task<ScriptOperationExecutionResult> ObserveUntilComplete(
+        async Task<ScriptOperationExecutionResult> ObserveUntilComplete(
             ScriptOperationExecutionResult startScriptResult,
             CancellationToken scriptExecutionCancellationToken)
         {
