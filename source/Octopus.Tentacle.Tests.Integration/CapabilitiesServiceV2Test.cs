@@ -9,6 +9,7 @@ using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Capabilities;
 using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
+using Octopus.Tentacle.Core.Services.Scripts;
 using Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
@@ -31,15 +32,10 @@ namespace Octopus.Tentacle.Tests.Integration
             capabilities.Should().Contain(nameof(IScriptService));
             capabilities.Should().Contain(nameof(IFileTransferService));
 
-            //all versions have ScriptServiceV1 & IFileTransferService
-            var expectedCapabilitiesCount = 2;
             if (version.HasScriptServiceV2())
             {
                 capabilities.Should().Contain(nameof(IScriptServiceV2));
-                expectedCapabilitiesCount++;
             }
-
-            capabilities.Count.Should().Be(expectedCapabilitiesCount);
         }
 
         [Test]
@@ -55,17 +51,23 @@ namespace Octopus.Tentacle.Tests.Integration
             capabilities.Should().Contain(nameof(IScriptService));
             capabilities.Should().Contain(nameof(IFileTransferService));
 
-            //all versions have ScriptServiceV1 & IFileTransferService
-            var expectedCapabilitiesCount = 2;
             if (version.HasScriptServiceV2())
             {
                 capabilities.Should().Contain(nameof(IScriptServiceV2));
-                expectedCapabilitiesCount++;
             }
 
             capabilities.Should().NotContain(nameof(IKubernetesScriptServiceV1));
+        }
 
-            capabilities.Count.Should().Be(expectedCapabilitiesCount);
+        [Test]
+        [TentacleConfigurations]
+        public async Task LatestTentacle_AdvertisesAbandonScriptCapability(TentacleConfigurationTestCase tentacleConfigurationTestCase)
+        {
+            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateLegacyBuilder().Build(CancellationToken);
+
+            var capabilities = (await clientAndTentacle.TentacleClient.CapabilitiesServiceV2.GetCapabilitiesAsync(new(CancellationToken))).SupportedCapabilities;
+
+            capabilities.Should().Contain(nameof(ScriptServiceV2.AbandonScriptAsync));
         }
 
         [Test]

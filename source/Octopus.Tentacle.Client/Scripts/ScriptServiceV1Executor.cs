@@ -164,6 +164,12 @@ namespace Octopus.Tentacle.Client.Scripts
             return Map(response);
         }
 
+        public Task<ScriptOperationExecutionResult> AbandonScript(CommandContext commandContext)
+        {
+            // ScriptServiceV1 has no abandon verb; degrade to cancel.
+            return CancelScript(commandContext);
+        }
+
         public async Task<ScriptStatus?> CompleteScript(CommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             try

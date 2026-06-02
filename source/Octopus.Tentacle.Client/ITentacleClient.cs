@@ -8,6 +8,7 @@ using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.Client.Scripts.Models;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Logging;
+using Octopus.Tentacle.Contracts.ScriptServiceV2;
 
 namespace Octopus.Tentacle.Client
 {
@@ -31,7 +32,8 @@ namespace Octopus.Tentacle.Client
             OnScriptStatusResponseReceived onScriptStatusResponseReceived,
             OnScriptCompleted onScriptCompleted,
             ITentacleClientTaskLog logger,
-            CancellationToken scriptExecutionCancellationToken);
+            CancellationToken scriptExecutionCancellationToken,
+            TimeSpan? abandonAfterCancellationPendingFor = null);
 
         /// <summary>
         /// Start the script.
@@ -58,6 +60,20 @@ namespace Octopus.Tentacle.Client
         /// <param name="logger"></param>
         /// <returns>The result, which includes the CommandContext for the next command</returns>
         Task<ScriptOperationExecutionResult> CancelScript(CommandContext commandContext, ITentacleClientTaskLog logger);
+
+        /// <summary>
+        /// Abandon a running script: signal Tentacle to best-effort-kill the process, stop waiting,
+        /// and release the script's isolation mutex, returning straight away without waiting for the
+        /// process to exit. This does not delete the workspace. The later CompleteScript call does
+        /// that, and tolerates cleanup failures for an abandoned script whose process is still alive.
+        /// Used as an escape hatch when CancelScript can't terminate a stuck process; a prior
+        /// CancelScript is not required because abandon does its own best-effort kill.
+        /// </summary>
+        /// <param name="scriptTicket">The ticket of the script to abandon</param>
+        /// <param name="logger">Used to output user orientated log messages</param>
+        /// <param name="cancellationToken">Cancels the RPC call</param>
+        /// <returns>The current status snapshot of the script at the time abandon was processed</returns>
+        Task<ScriptStatusResponseV2> AbandonScript(ScriptTicket scriptTicket, ITentacleClientTaskLog logger, CancellationToken cancellationToken);
 
         /// <summary>
         /// Complete the script.

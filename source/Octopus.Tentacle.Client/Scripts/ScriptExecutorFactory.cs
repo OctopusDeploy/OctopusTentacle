@@ -47,6 +47,7 @@ namespace Octopus.Tentacle.Client.Scripts
             {
                 return new ScriptServiceV2Executor(
                     allClients.ScriptServiceV2,
+                    allClients.CapabilitiesServiceV2,
                     rpcCallExecutor,
                     clientOperationMetricsBuilder,
                     onCancellationAbandonCompleteScriptAfter,

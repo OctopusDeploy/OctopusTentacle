@@ -22,18 +22,20 @@ namespace Octopus.Tentacle.Core.Services.Scripts
         readonly IShell shell;
         readonly string taskId;
         readonly CancellationToken runningScriptToken;
+        readonly CancellationToken abandonToken;
         readonly IReadOnlyDictionary<string, string> environmentVariables;
         readonly ILog log;
         readonly ScriptIsolationMutex scriptIsolationMutex;
         readonly TimeSpan powerShellStartupTimeout;
 
-        public RunningScript(IShell shell,
+        RunningScript(IShell shell,
             IScriptWorkspace workspace,
             IScriptStateStore? stateStore,
             IScriptLog scriptLog,
             string taskId,
             ScriptIsolationMutex scriptIsolationMutex,
             CancellationToken runningScriptToken,
+            CancellationToken abandonToken,
             IReadOnlyDictionary<string, string> environmentVariables,
             TimeSpan powerShellStartupTimeout,
             ILog log
@@ -44,6 +46,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             this.stateStore = stateStore;
             this.taskId = taskId;
             this.runningScriptToken = runningScriptToken;
+            this.abandonToken = abandonToken;
             this.environmentVariables = environmentVariables;
             this.log = log;
             this.scriptIsolationMutex = scriptIsolationMutex;
@@ -52,7 +55,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             this.powerShellStartupTimeout = powerShellStartupTimeout;
         }
 
-        public RunningScript(IShell shell,
+        RunningScript(IShell shell,
             IScriptWorkspace workspace,
             IScriptLog scriptLog,
             string taskId,
@@ -60,9 +63,33 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             CancellationToken runningScriptToken,
             IReadOnlyDictionary<string, string> environmentVariables,
             TimeSpan powerShellStartupTimeout,
-            ILog log) : this(shell, workspace, null, scriptLog, taskId, scriptIsolationMutex, runningScriptToken, environmentVariables, powerShellStartupTimeout, log)
+            ILog log) : this(shell, workspace, null, scriptLog, taskId, scriptIsolationMutex, runningScriptToken, CancellationToken.None, environmentVariables, powerShellStartupTimeout, log)
         {
         }
+
+        public static RunningScript Create(IShell shell,
+            IScriptWorkspace workspace,
+            IScriptLog scriptLog,
+            string taskId,
+            ScriptIsolationMutex scriptIsolationMutex,
+            CancellationToken runningScriptToken,
+            IReadOnlyDictionary<string, string> environmentVariables,
+            TimeSpan powerShellStartupTimeout,
+            ILog log)
+            => new RunningScript(shell, workspace, null, scriptLog, taskId, scriptIsolationMutex, runningScriptToken, CancellationToken.None, environmentVariables, powerShellStartupTimeout, log);
+
+        public static RunningScript CreateAbandonable(IShell shell,
+            IScriptWorkspace workspace,
+            IScriptStateStore? stateStore,
+            IScriptLog scriptLog,
+            string taskId,
+            ScriptIsolationMutex scriptIsolationMutex,
+            CancellationToken runningScriptToken,
+            CancellationToken abandonToken,
+            IReadOnlyDictionary<string, string> environmentVariables,
+            TimeSpan powerShellStartupTimeout,
+            ILog log)
+            => new RunningScript(shell, workspace, stateStore, scriptLog, taskId, scriptIsolationMutex, runningScriptToken, abandonToken, environmentVariables, powerShellStartupTimeout, log);
 
         public ProcessState State { get; private set; }
         public int ExitCode { get; private set; }
@@ -96,14 +123,22 @@ namespace Octopus.Tentacle.Core.Services.Scripts
 
                             exitCode = workspace.ShouldMonitorPowerShellStartup()
                                 ? await RunPowershellScriptWithMonitoring(shellPath, writer, runningScriptToken)
-                                : await RunScriptAsync(shellPath, writer, runningScriptToken);
+                                : await RunScriptAsync(shellPath, writer, runningScriptToken, abandonToken);
                         }
                     }
+                    // Fires when the caller abandoned the script: leave the OS process running and signal the distinct AbandonedExitCode so the server can tell it apart from a cancel.
+                    catch (OperationCanceledException) when (abandonToken.IsCancellationRequested)
+                    {
+                        writer.WriteOutput(ProcessOutputSource.StdOut, "Script execution abandoned.");
+                        exitCode = ScriptExitCodes.AbandonedExitCode;
+                    }
+                    // Fires when the caller cancelled the script and the underlying process honored the cancellation token.
                     catch (OperationCanceledException)
                     {
                         writer.WriteOutput(ProcessOutputSource.StdOut, "Script execution canceled.");
                         exitCode = ScriptExitCodes.CanceledExitCode;
                     }
+                    // Fires when acquiring the isolation mutex timed out before the script could start.
                     catch (TimeoutException)
                     {
                         writer.WriteOutput(ProcessOutputSource.StdOut, "Script execution timed out.");
@@ -147,7 +182,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             var monitor = new PowerShellStartupMonitor(workspace.WorkingDirectory, powerShellStartupTimeout, log, taskId);
             
             var monitoringTask = monitor.WaitForStartup(monitoringTaskCts.Token);
-            var scriptTask = Task.Run(async () => await RunScriptAsync(shellPath, writer, scriptTaskCts.Token), scriptTaskCts.Token);
+            var scriptTask = Task.Run(async () => await RunScriptAsync(shellPath, writer, scriptTaskCts.Token, abandonToken), scriptTaskCts.Token);
             
             var completedTask = await Task.WhenAny(monitoringTask, scriptTask);
             
@@ -222,7 +257,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             }
         }
 
-        async Task<int> RunScriptAsync(string shellPath, IScriptLogWriter writer, CancellationToken cancellationToken)
+        async Task<int> RunScriptAsync(string shellPath, IScriptLogWriter writer, CancellationToken cancellationToken, CancellationToken abandon)
         {
             try
             {
@@ -234,7 +269,8 @@ namespace Octopus.Tentacle.Core.Services.Scripts
                     LogScriptOutputTo(writer, ProcessOutputSource.StdOut),
                     LogScriptOutputTo(writer, ProcessOutputSource.StdErr),
                     environmentVariables,
-                    cancel: cancellationToken);
+                    cancellationToken,
+                    abandon);
 
                 return exitCode;
             }

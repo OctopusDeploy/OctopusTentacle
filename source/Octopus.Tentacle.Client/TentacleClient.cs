@@ -16,6 +16,7 @@ using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Capabilities;
 using Octopus.Tentacle.Contracts.Logging;
 using Octopus.Tentacle.Contracts.Observability;
+using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using ITentacleClientObserver = Octopus.Tentacle.Contracts.Observability.ITentacleClientObserver;
 
 namespace Octopus.Tentacle.Client
@@ -168,7 +169,8 @@ namespace Octopus.Tentacle.Client
             OnScriptStatusResponseReceived onScriptStatusResponseReceived,
             OnScriptCompleted onScriptCompleted,
             ITentacleClientTaskLog logger,
-            CancellationToken scriptExecutionCancellationToken)
+            CancellationToken scriptExecutionCancellationToken,
+            TimeSpan? abandonAfterCancellationPendingFor = null)
         {
             using var activity = ActivitySource.StartActivity($"{nameof(TentacleClient)}.{nameof(ExecuteScript)}");
             activity?.AddTag("octopus.tentacle.script.files", string.Join(",", executeScriptCommand.Files.Select(f => f.Name)));
@@ -188,7 +190,8 @@ namespace Octopus.Tentacle.Client
                 var orchestrator = new ObservingScriptOrchestrator(scriptObserverBackOffStrategy,
                     onScriptStatusResponseReceived,
                     onScriptCompleted,
-                    scriptExecutor);
+                    scriptExecutor,
+                    abandonAfterCancellationPendingFor);
 
                 var result = await orchestrator.ExecuteScript(executeScriptCommand, scriptExecutionCancellationToken);
 
@@ -258,6 +261,36 @@ namespace Octopus.Tentacle.Client
                 OnCancellationAbandonCompleteScriptAfter);
 
             return await scriptExecutor.CancelScript(commandContext);
+        }
+
+        public async Task<ScriptStatusResponseV2> AbandonScript(ScriptTicket scriptTicket, ITentacleClientTaskLog logger, CancellationToken cancellationToken)
+        {
+            using var activity = ActivitySource.StartActivity($"{nameof(TentacleClient)}.{nameof(AbandonScript)}");
+            activity?.AddTag("octopus.tentacle.script.ticket", scriptTicket.TaskId);
+
+            var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
+
+            async Task<ScriptStatusResponseV2> AbandonScriptAction(CancellationToken ct)
+            {
+                var request = new AbandonScriptCommandV2(scriptTicket, lastLogSequence: 0);
+                return await allClients.ScriptServiceV2.AbandonScriptAsync(request, new HalibutProxyRequestOptions(ct));
+            }
+
+            try
+            {
+                return await rpcCallExecutor.Execute(
+                    retriesEnabled: clientOptions.RpcRetrySettings.RetriesEnabled,
+                    RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.AbandonScript)),
+                    AbandonScriptAction,
+                    logger,
+                    operationMetricsBuilder,
+                    cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception e)
+            {
+                operationMetricsBuilder.Failure(e, cancellationToken);
+                throw;
+            }
         }
 
         public async Task<ScriptStatus?> CompleteScript(CommandContext commandContext, ITentacleClientTaskLog logger, CancellationToken scriptExecutionCancellationToken)

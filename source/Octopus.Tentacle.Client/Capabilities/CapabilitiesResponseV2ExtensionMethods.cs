@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using Octopus.Tentacle.Contracts.Capabilities;
+using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
 
 namespace Octopus.Tentacle.Client.Capabilities
@@ -14,6 +15,18 @@ namespace Octopus.Tentacle.Client.Capabilities
             }
 
             return capabilities.SupportedCapabilities.Contains(nameof(IScriptServiceV2));
+        }
+
+        public static bool HasAbandonScriptV2(this CapabilitiesResponseV2 capabilities)
+        {
+            if (capabilities?.SupportedCapabilities?.Any() != true)
+            {
+                return false;
+            }
+
+            // Both sides nameof their own AbandonScriptAsync. The strings match, and a rename on
+            // either side can't silently drift the capability check.
+            return capabilities.SupportedCapabilities.Contains(nameof(IAsyncClientScriptServiceV2.AbandonScriptAsync));
         }
     }
 }

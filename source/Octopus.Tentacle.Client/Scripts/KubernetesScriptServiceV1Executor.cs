@@ -184,6 +184,12 @@ namespace Octopus.Tentacle.Client.Scripts
             return Map(kubernetesScriptStatusResponseV1);
         }
 
+        public Task<ScriptOperationExecutionResult> AbandonScript(CommandContext commandContext)
+        {
+            // KubernetesScriptServiceV1 has no abandon verb; degrade to cancel.
+            return CancelScript(commandContext);
+        }
+
         public async Task<ScriptStatus?> CompleteScript(CommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             using var activity = TentacleClient.ActivitySource.StartActivity($"{nameof(KubernetesScriptServiceV1Executor)}.{nameof(CompleteScript)}");

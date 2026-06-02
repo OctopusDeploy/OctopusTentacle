@@ -9,7 +9,9 @@ using System.Runtime.Versioning;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Core.Diagnostics;
+using Octopus.Tentacle.Core.Util;
 
 namespace Octopus.Tentacle.Util
 {
@@ -22,12 +24,13 @@ namespace Octopus.Tentacle.Util
             Action<string> debug,
             Action<string> info,
             Action<string> error,
-            CancellationToken cancel)
+            CancellationToken cancel,
+            CancellationToken abandon)
         {
-            return ExecuteCommandAsync(executable, arguments, workingDirectory, debug, info, error, customEnvironmentVariables: null, cancel: cancel);
+            return ExecuteCommandAsync(executable, arguments, workingDirectory, debug, info, error, customEnvironmentVariables: null, cancel: cancel, abandon: abandon);
         }
 
-        public static Task<int> ExecuteCommandAsync(
+        public static async Task<int> ExecuteCommandAsync(
             string executable,
             string arguments,
             string workingDirectory,
@@ -35,7 +38,8 @@ namespace Octopus.Tentacle.Util
             Action<string> info,
             Action<string> error,
             IReadOnlyDictionary<string, string>? customEnvironmentVariables = null,
-            CancellationToken cancel = default)
+            CancellationToken cancel = default,
+            CancellationToken abandon = default)
         {
             if (executable == null)
                 throw new ArgumentNullException(nameof(executable));
@@ -136,15 +140,60 @@ namespace Octopus.Tentacle.Util
                            }))
                     {
                         if (cancel.IsCancellationRequested)
-                            DoOurBestToCleanUp(process,  error);
+                            DoOurBestToCleanUp(process, error);
 
                         process.BeginOutputReadLine();
                         process.BeginErrorReadLine();
 
-                        process.WaitForExit();
+                        // Wait synchronously for the process to exit, but let `abandon` break out.
+                        //
+                        // process.WaitForExit() (no-timeout) waits for the process to exit AND for the
+                        // redirected streams to reach EOF. Cancel kills + Close()s the process via
+                        // cancel.Register; Close releases the pipe handles, which unblocks this wait even
+                        // when a re-parented grandchild holds the streams open. So cancel — including the
+                        // grandchild case — behaves exactly as it does today.
+                        //
+                        // Abandon is the new behaviour: we race the blocking wait against a task that
+                        // completes when the abandon token fires. If abandon wins we return
+                        // AbandonedExitCode and leave the OS process running; the still-blocked
+                        // WaitForExit thread is released when the using (process) disposes on return.
+                        // TaskCompletionSource<object?> (not the non-generic overload, which doesn't exist on net48).
+                        var abandoned = new TaskCompletionSource<object?>();
+                        using (abandon.Register(() => abandoned.TrySetResult(null)))
+                        {
+                            var waitForExit = Task.Run(() =>
+                            {
+                                try { process.WaitForExit(); }
+                                catch { /* released by Process.Dispose on the abandon path */ }
+                            });
 
-                        SafelyCancelRead(process.CancelErrorRead, debug);
-                        SafelyCancelRead(process.CancelOutputRead, debug);
+                            await Task.WhenAny(waitForExit, abandoned.Task).ConfigureAwait(false);
+
+                            // Key the abandoned result on the TOKEN, not on which task won the race.
+                            // When both cancel and abandon fire, cancel's Kill may be no-op'd / can't land,
+                            // so waitForExit can win even though we must still return AbandonedExitCode.
+                            // After Cancel()->Close() the Process is detached, so do NOT read
+                            // process.HasExited / process.ExitCode here — just return -48. The
+                            // "abandon was unnecessary" case never reaches here: the script's RunningScript
+                            // is already Complete with its real exit code one layer up.
+                            if (abandon.IsCancellationRequested)
+                            {
+                                // Abandon best-effort-kills (anti-abuse): kill it if we can, then stop
+                                // waiting and release. Doing the kill here — sequentially, in the abandon
+                                // branch — is race-free, unlike firing the cancel token from the RPC handler
+                                // (the kill would race the WhenAny resolution / process disposal). The kill
+                                // is idempotent if cancel already ran it. The process survives only if the
+                                // kill genuinely can't land (stuck / re-parented grandchild). Do NOT read
+                                // HasExited/ExitCode here — Close() may have detached the Process.
+                                DoOurBestToCleanUp(process, error);
+                                info("Tentacle has abandoned this script. The underlying script process may still be running on this host.");
+                                SafelyCancelOutputAndErrorRead(process, debug);
+                                running = false;
+                                return ScriptExitCodes.AbandonedExitCode;
+                            }
+                        }
+
+                        SafelyCancelOutputAndErrorRead(process, debug);
 
                         SafelyWaitForAllOutput(outputResetEvent, cancel, debug);
                         SafelyWaitForAllOutput(errorResetEvent, cancel, debug);
@@ -153,7 +202,7 @@ namespace Octopus.Tentacle.Util
                         debug($"Process {exeFileNameOrFullPath} in {workingDirectory} exited with code {exitCode}");
 
                         running = false;
-                        return Task.FromResult(exitCode);
+                        return exitCode;
                     }
                 }
             }
@@ -181,15 +230,37 @@ namespace Octopus.Tentacle.Util
             CancellationToken cancel,
             Action<string> debug)
         {
+            // outputResetEvent.Wait is waiting for the OutputDataReceived/ErrorDataReceived
+            // handlers to signal EOF on the stream (when it receives a null
+            // DataReceivedEventArgs.Data, .NET's EOF marker). This does NOT close the pipe,
+            // it just gives the OS up to 5 seconds to deliver the EOF.
+            //
+            // If a re-parented grandchild is holding the pipe open, EOF never arrives, the wait
+            // times out, and we proceed without the final flush of buffered output. The pipe is
+            // released later by Process.Dispose() at end of ExecuteCommandAsync via the
+            // `using (var process = new Process())` block.
+            //
+            // 5 seconds is somewhat arbitrary — the process has already exited by the time we
+            // reach here, so under normal circumstances EOF arrives within milliseconds.
             try
             {
-                //5 seconds is a bit arbitrary, but the process should have already exited by now, so unwise to wait too long
                 outputResetEvent.Wait(TimeSpan.FromSeconds(5), cancel);
             }
             catch (OperationCanceledException ex)
             {
                 debug($"Swallowing {ex.GetType().Name} while waiting for last of the process output.");
             }
+        }
+
+        static void SafelyCancelOutputAndErrorRead(Process process, Action<string> debug)
+        {
+            // Cancel the output/error readers so a late OutputDataReceived/ErrorDataReceived
+            // callback doesn't try to write to a workspace log that's already been disposed by
+            // the using-block above; that write would throw ObjectDisposedException. Called in
+            // both the normal completion path and the abandon path; extracted here so the two
+            // callers stay consistent.
+            SafelyCancelRead(process.CancelErrorRead, debug);
+            SafelyCancelRead(process.CancelOutputRead, debug);
         }
 
         static void SafelyCancelRead(Action action, Action<string> debug)
@@ -226,15 +297,16 @@ namespace Octopus.Tentacle.Util
             {
                 try
                 {
-                    // When cancelling, close the file handles.
-                    // If the child finishes, but the grandchild holds stdout/stderr and never completes,
-                    // THEN we won't issue a kill to the grandchild but will wait for the grandchild to
-                    // close the handles.
+                    // Close the handles after killing, on this same thread (after Kill). This releases
+                    // the redirected pipes so the synchronous process.WaitForExit() above can return
+                    // even when a re-parented grandchild holds stdout/stderr open. (Close is safe with
+                    // the synchronous wait — main has relied on exactly this; it only races the Exited
+                    // event of the *async* WaitForExitAsync, which this code does not use.)
                     process.Close();
                 }
-                catch (Exception ex)
+                catch (Exception closeException)
                 {
-                    error($"Failed to close process resources: {ex.Message}");
+                    error($"Failed to close process resources: {closeException.Message}");
                 }
             }
         }
@@ -252,11 +324,18 @@ namespace Octopus.Tentacle.Util
         {
             public static void TryKillProcessAndChildrenRecursively(Process process)
             {
+                if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleDebugDisableProcessKill_UNSAFE_FOR_PRODUCTION)))
+                {
+                    // Test-only no-op: simulate "kill was attempted but didn't terminate the process".
+                    // Only activated when the test harness sets this env var on the Tentacle process.
+                    return;
+                }
+
 #if NETFRAMEWORK
                 TryKillWindowsProcessAndChildrenRecursively(process.Id);
 #endif
 #if !NETFRAMEWORK
-                // Since .NET Core 3.0 there is support for killing a process and it's children 
+                // Since .NET Core 3.0 there is support for killing a process and it's children
                 process.Kill(true);
 #endif
             }
