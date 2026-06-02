@@ -62,12 +62,8 @@ namespace Octopus.Tentacle.Client
         Task<ScriptOperationExecutionResult> CancelScript(CommandContext commandContext, ITentacleClientTaskLog logger);
 
         /// <summary>
-        /// Abandon a running script: signal Tentacle to best-effort-kill the process, stop waiting,
-        /// and release the script's isolation mutex, returning straight away without waiting for the
-        /// process to exit. This does not delete the workspace. The later CompleteScript call does
-        /// that, and tolerates cleanup failures for an abandoned script whose process is still alive.
-        /// Used as an escape hatch when CancelScript can't terminate a stuck process; a prior
-        /// CancelScript is not required because abandon does its own best-effort kill.
+        /// Abandon a running script. This attempts cancellation, but if necessary leaves the script
+        /// running in the OS, no longer watched or managed by Tentacle.
         /// </summary>
         /// <param name="scriptTicket">The ticket of the script to abandon</param>
         /// <param name="logger">Used to output user orientated log messages</param>
