@@ -13,9 +13,6 @@ a **GitHub Actions `windows-latest`** runner and streams the result back. `githu
 reachable from the sandbox, so I can trigger and watch the run to completion myself — no
 local VM, no handing it back.
 
-(A local QEMU VM was tried and abandoned: brew's edk2 firmware on Apple Silicon only
-enumerates USB storage and won't boot the Windows installer. See the project memory.)
-
 ## When to use
 
 - A test is `[WindowsTest]` / shows as skipped locally and you need its real result.
@@ -25,12 +22,22 @@ enumerates USB storage and won't boot the Windows installer. See the project mem
 ## How to run
 
 ```bash
-.claude/skills/run-windows-tests/run.sh "Name~WhenGrandchildHoldsRedirectedPipes"
+.claude/skills/run-windows-tests/run.sh "<filter>"
 ```
 
-The filter is **required** (no default). `run.sh` dispatches
-`.github/workflows/windows-test.yml` against the current branch, then `gh run watch`es it
-and exits with the run's status.
+The filter is **required** (no default) and is a standard `dotnet test --filter` expression.
+You (the agent) construct it for the test you actually want — don't copy the example below
+verbatim. Common shapes:
+
+- `Name~<substring>` — method name contains the substring. Prefer a substring stable across
+  branches if the method might be renamed, e.g. `Name~WhenGrandchildHoldsRedirectedPipes`
+  matches both `CancellationToken_WhenGrandchild…` (main) and `CancelThenAbandon_WhenGrandchild…` (a feature branch).
+- `FullyQualifiedName~<Namespace.Class>` — run a whole fixture, e.g.
+  `FullyQualifiedName~SilentProcessRunnerFixture`.
+- Combine with `&` / `|` as `dotnet test --filter` supports.
+
+`run.sh` dispatches `.github/workflows/windows-test.yml` against the current branch, then
+`gh run watch`es it and exits with the run's status.
 
 **Two operational facts:**
 - **Run it with the sandbox disabled.** `gh`'s HTTPS to api.github.com fails TLS under the
