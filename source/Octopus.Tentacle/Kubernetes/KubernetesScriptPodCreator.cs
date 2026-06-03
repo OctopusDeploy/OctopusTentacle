@@ -281,7 +281,7 @@ namespace Octopus.Tentacle.Kubernetes
 
         protected virtual IList<V1Volume> CreateVolumes()
         {
-            var volumes = new List<V1Volume>
+            return new List<V1Volume>
             {
                 new()
                 {
@@ -293,11 +293,9 @@ namespace Octopus.Tentacle.Kubernetes
                 },
                 CreateAgentUpgradeSecretVolume(),
             };
-
-            return volumes;
         }
 
-        IEnumerable<V1Volume> CreateCalamariImageVolume(StartKubernetesScriptCommandV1 command, InMemoryTentacleScriptLog tentacleScriptLog)
+        V1Volume[] CreateCalamariImageVolume(StartKubernetesScriptCommandV1 command, InMemoryTentacleScriptLog tentacleScriptLog)
         {
             var registry = !string.IsNullOrWhiteSpace(KubernetesConfig.CalamariImageVolumeRepository) ? KubernetesConfig.CalamariImageVolumeRepository : "octopusdeploy";
 
@@ -478,6 +476,8 @@ namespace Octopus.Tentacle.Kubernetes
                     SubPath = command.CalamariImageConfiguration!.Name
                 });
 
+                //This is used by Octopus Server to adjust where it's looking for the Calamari executable
+                //See BashBootstrapperScriptGenerator.cs
                 container.Env.Add(new V1EnvVar { Name = "CalamariImageDirectoryPath", Value = "/calamari" });
             }
 
@@ -838,6 +838,7 @@ namespace Octopus.Tentacle.Kubernetes
 
             return dict;
         }
+        
 
         protected static IList<T> Merge<T>(params IEnumerable<T>?[] values)
         {
