@@ -78,7 +78,7 @@ namespace Octopus.Tentacle.Kubernetes
         {
             return new List<V1Container>
             {
-                await CreateScriptContainer(command, podName, scriptName, homeDir, workspacePath, scriptArguments, isCalamariImageVolumeEnabled, tentacleScriptLog, template?.ScriptContainerSpec)
+                await CreateScriptContainer(command, podName, scriptName, homeDir, workspacePath, scriptArguments, false, tentacleScriptLog, template?.ScriptContainerSpec)
             };
         }
 

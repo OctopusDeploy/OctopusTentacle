@@ -340,7 +340,7 @@ namespace Octopus.Tentacle.Kubernetes
 
         async Task<bool> IsCalamariImageVolumeEnabled(StartKubernetesScriptCommandV1 command, InMemoryTentacleScriptLog tentacleScriptLog)
         {
-            var isEnabled = KubernetesConfig.CalamariImageVolumeEnabled && command.CalamariImageConfiguration is not null;
+            var isEnabled = KubernetesConfig.CalamariImageVolumeEnabled && command.CalamariImageConfiguration is not null && !command.IsRawScript;
 
             if (isEnabled)
             {
@@ -469,16 +469,17 @@ namespace Octopus.Tentacle.Kubernetes
             //if the image is configured, add that volume mount
             if (isCalamariImageVolumeEnabled)
             {
+                const string calamariPath = "/calamari";
                 container.VolumeMounts.Add(new V1VolumeMount
                 {
-                    MountPath = "/calamari",
+                    MountPath = calamariPath,
                     Name = "calamari",
                     SubPath = command.CalamariImageConfiguration!.Name
                 });
 
                 //This is used by Octopus Server to adjust where it's looking for the Calamari executable
-                //See BashBootstrapperScriptGenerator.cs
-                container.Env.Add(new V1EnvVar { Name = "CalamariImageDirectoryPath", Value = "/calamari" });
+                //See KubernetesTentacleBashBootstrapperScriptGenerator.cs
+                container.Env.Add(new V1EnvVar { Name = "CalamariImageDirectoryPath", Value = calamariPath });
             }
 
             container.EnvFrom = Merge(container.EnvFrom, envFrom);
