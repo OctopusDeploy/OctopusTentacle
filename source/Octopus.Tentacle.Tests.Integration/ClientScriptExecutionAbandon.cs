@@ -51,24 +51,17 @@ namespace Octopus.Tentacle.Tests.Integration
             await tentacleClient.CancelScript(firstCommand.ScriptTicket);
             await Task.Delay(TimeSpan.FromSeconds(1));
 
-            // Abandon: fires the abandon token. The RPC returns the current status snapshot
-            // immediately, so we poll GetStatus until the script reaches Complete state.
+            // Abandon: fires the abandon token. ExecuteScript observes the abandoned terminal state and
+            // returns it. We assert on its result rather than a separate GetStatus poll — the poll would
+            // race the orchestrator's own CompleteScript cleanup (which removes the script and deletes the
+            // workspace), and on slower transports lands after it, seeing UnknownScriptExitCode.
             await tentacleClient.AbandonScript(firstCommand.ScriptTicket, CancellationToken);
 
-            ScriptStatus abandonResponse = null!;
-            await Wait.For(async () =>
-                {
-                    abandonResponse = await tentacleClient.GetStatus(firstCommand.ScriptTicket, CancellationToken);
-                    return abandonResponse.State == ProcessState.Complete;
-                },
-                TimeSpan.FromSeconds(30),
-                () => throw new Exception("Abandoned script did not reach Complete state within 30s"),
-                CancellationToken);
-            abandonResponse.ExitCode.Should().Be(ScriptExitCodes.AbandonedExitCode);
+            var (result, _) = await scriptExecution;
+            result.ExitCode.Should().Be(ScriptExitCodes.AbandonedExitCode);
 
-            // Release the script process so it exits cleanly and stops leaking.
+            // The process is still alive (kill was disabled); release it so it stops leaking.
             File.WriteAllText(releaseFile, "");
-            await scriptExecution;
         }
 
         [Test]
@@ -157,24 +150,14 @@ namespace Octopus.Tentacle.Tests.Integration
                 () => throw new Exception("Script did not start"),
                 CancellationToken);
 
-            // Direct abandon, NO prior cancel.
+            // Direct abandon, NO prior cancel. Assert on ExecuteScript's own result rather than a separate
+            // GetStatus poll, which would race the orchestrator's CompleteScript cleanup (see
+            // AbandonScript_WhenCancelFailsToKillProcess for the same reasoning).
             await tentacleClient.AbandonScript(command.ScriptTicket, CancellationToken);
 
-            ScriptStatus abandonResponse = null!;
-            await Wait.For(async () =>
-                {
-                    abandonResponse = await tentacleClient.GetStatus(command.ScriptTicket, CancellationToken);
-                    return abandonResponse.State == ProcessState.Complete;
-                },
-                TimeSpan.FromSeconds(30),
-                () => throw new Exception("Abandoned script did not reach Complete state within 30s"),
-                CancellationToken);
-
-            abandonResponse.ExitCode.Should().Be(ScriptExitCodes.AbandonedExitCode);
-
-            // We never wrote releaseFile, so the script only completes because the abandon branch
-            // killed it. Draining the execution confirms the process is gone.
-            await scriptExecution;
+            // We never wrote releaseFile, so the script only completes because the abandon branch killed it.
+            var (result, _) = await scriptExecution;
+            result.ExitCode.Should().Be(ScriptExitCodes.AbandonedExitCode);
         }
 
         [Test]
