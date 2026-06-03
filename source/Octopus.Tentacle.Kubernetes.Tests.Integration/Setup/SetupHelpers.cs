@@ -46,7 +46,7 @@ static class SetupHelpers
             builder.Build());
     }
     
-    public static string? GetTentacleImageAndTag(string kindExePath, KubernetesClusterInstaller clusterInstaller)
+    public static async Task<string?> GetTentacleImageAndTag(string kindExePath, KubernetesClusterInstaller clusterInstaller)
     {
         if (clusterInstaller == null)
         {
@@ -68,9 +68,9 @@ static class SetupHelpers
         {
             //if we should use the latest locally build image, load the tag from docker and load it into kind
             var imageLoader = new DockerImageLoader(KubernetesTestsGlobalContext.Instance.TemporaryDirectory, KubernetesTestsGlobalContext.Instance.Logger, kindExePath);
-            imageAndTag = imageLoader.LoadMostRecentImageIntoKind(clusterInstaller.ClusterName);
+            imageAndTag = await imageLoader.LoadMostRecentImageIntoKind(clusterInstaller.ClusterName);
         }
-        
+
         if(imageAndTag is not null)
             KubernetesTestsGlobalContext.Instance.Logger.Information("Using tentacle image: {ImageAndTag}", imageAndTag);
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Octopus.Client.Extensions;
 using Microsoft.Extensions.Caching.Memory;
 using Octopus.Tentacle.Core.Diagnostics;
@@ -11,15 +12,16 @@ namespace Octopus.Tentacle.Kubernetes
     public interface IKubernetesDirectoryInformationProvider
     {
         public ulong? GetPathUsedBytes(string directoryPath);
+        public Task<ulong?> GetPathUsedBytesAsync(string directoryPath);
         public ulong? GetPathTotalBytes();
     }
-    
+
     public class KubernetesDirectoryInformationProvider : IKubernetesDirectoryInformationProvider
     {
         readonly ISystemLog log;
         readonly ISilentProcessRunner silentProcessRunner;
         readonly IMemoryCache directoryInformationCache;
-        
+
         //30s gives us fairly up to date information, but doesn't impact performance too much.
         //For 50 concurrent Cloud deployments:
         //No cache: 30min ea.
@@ -36,12 +38,25 @@ namespace Octopus.Tentacle.Kubernetes
             this.directoryInformationCache = directoryInformationCache;
         }
 
+        // Why this is sync: the only caller is EnsureDiskHasEnoughFreeSpace, which
+        // overrides a sync method on the IOctopusFileSystem chain. Making that
+        // whole chain async is a wider refactor than this PR. New code should
+        // call GetPathUsedBytesAsync directly instead of going through here.
+        //
+        // Why blocking on the async call is safe: .GetAwaiter().GetResult() can
+        // deadlock when the calling thread has a SynchronizationContext. The
+        // Kubernetes agent is a console app and doesn't set one up, so there's
+        // nothing for the awaited continuation to wait on.
+        // See https://blog.stephencleary.com/2012/07/dont-block-on-async-code.html
         public ulong? GetPathUsedBytes(string directoryPath)
+            => GetPathUsedBytesAsync(directoryPath).GetAwaiter().GetResult();
+
+        public async Task<ulong?> GetPathUsedBytesAsync(string directoryPath)
         {
-            return directoryInformationCache.GetOrCreate(directoryPath, e =>
+            return await directoryInformationCache.GetOrCreateAsync(directoryPath, async e =>
             {
                 e.SetAbsoluteExpiration(CacheExpiry);
-                return GetDriveBytesUsingDu(directoryPath);
+                return await GetDriveBytesUsingDuAsync(directoryPath);
             });
         }
 
@@ -49,13 +64,13 @@ namespace Octopus.Tentacle.Kubernetes
         {
             return KubernetesUtilities.GetResourceBytes(KubernetesConfig.PersistentVolumeSize);
         }
-        
-        
-        ulong? GetDriveBytesUsingDu(string directoryPath)
+
+
+        async Task<ulong?> GetDriveBytesUsingDuAsync(string directoryPath)
         {
             var stdOut = new List<string>();
             var stdErr = new List<string>();
-            var exitCode = silentProcessRunner.ExecuteCommand("du", $"-s -B 1 {directoryPath}", "/", stdOut.Add, stdErr.Add);
+            var exitCode = await silentProcessRunner.ExecuteCommandAsync("du", $"-s -B 1 {directoryPath}", "/", stdOut.Add, stdErr.Add);
 
             if (exitCode != 0)
             {

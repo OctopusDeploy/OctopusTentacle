@@ -1041,7 +1041,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             var workerPools = areWorkersSupported ? await LoadWorkerPools() : new List<WorkerPoolResource>();
 
             var areTenantsSupported = await repository.HasLink("Tenants");
-            var tenantTagSets = areTenantsSupported ? await LoadTagSets() : new List<TagSetResource>();
+            var tenantTagSets = areTenantsSupported ? await LoadTenantTagSets() : new List<TagSetResource>();
             var tenants = areTenantsSupported ? await LoadTenants() : new List<TenantResource>();
 
             var (machinePoliciesAreSupported, machinePolicies) = await GetMachinePolicies();
@@ -1054,10 +1054,10 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 return await repository.WorkerPools.GetAll(CancellationToken.None);
             }
 
-            async Task<List<TagSetResource>> LoadTagSets()
+            async Task<List<TagSetResource>> LoadTenantTagSets()
             {
                 onProgress("Getting available tenant tags...");
-                return await repository.TagSets.GetAll(CancellationToken.None);
+                return await repository.TagSets.FindAll(null, new { scopes = new[] { "Tenant" } }, CancellationToken.None);
             }
 
             async Task<List<TenantResource>> LoadTenants()

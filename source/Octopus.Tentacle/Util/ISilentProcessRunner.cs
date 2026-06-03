@@ -1,13 +1,14 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using Octopus.Tentacle.Startup;
 
 namespace Octopus.Tentacle.Util
 {
     public interface ISilentProcessRunner
     {
-        public int ExecuteCommand(
+        Task<int> ExecuteCommandAsync(
             string executable,
             string arguments,
             string workingDirectory,
@@ -15,7 +16,7 @@ namespace Octopus.Tentacle.Util
             Action<string> error,
             CancellationToken cancel = default);
 
-        public int ExecuteCommand(
+        Task<int> ExecuteCommandAsync(
             string executable,
             string arguments,
             string workingDirectory,
@@ -27,23 +28,23 @@ namespace Octopus.Tentacle.Util
 
     public class SilentProcessRunnerWrapper : ISilentProcessRunner
     {
-        public int ExecuteCommand(string executable, string arguments, string workingDirectory, Action<string> info, Action<string> error, CancellationToken cancel = default)
+        public Task<int> ExecuteCommandAsync(string executable, string arguments, string workingDirectory, Action<string> info, Action<string> error, CancellationToken cancel = default)
         {
-            return SilentProcessRunnerExtended.ExecuteCommand(executable, arguments, workingDirectory, info, error, cancel);
+            return SilentProcessRunnerExtended.ExecuteCommandAsync(executable, arguments, workingDirectory, info, error, cancel);
         }
 
-        public int ExecuteCommand(string executable, string arguments, string workingDirectory, Action<string> debug, Action<string> info, Action<string> error, CancellationToken cancel = default)
+        public Task<int> ExecuteCommandAsync(string executable, string arguments, string workingDirectory, Action<string> debug, Action<string> info, Action<string> error, CancellationToken cancel = default)
         {
-            return SilentProcessRunner.ExecuteCommand(executable, arguments, workingDirectory, debug, info, error, cancel: cancel);
+            return SilentProcessRunner.ExecuteCommandAsync(executable, arguments, workingDirectory, debug, info, error, cancel: cancel);
         }
     }
 
     public static class SilentProcessRunnerExtended
     {
-        public static CmdResult ExecuteCommand(this CommandLineInvocation invocation)
-            => ExecuteCommand(invocation, Environment.CurrentDirectory);
+        public static async Task<CmdResult> ExecuteCommandAsync(this CommandLineInvocation invocation)
+            => await ExecuteCommandAsync(invocation, Environment.CurrentDirectory);
 
-        public static CmdResult ExecuteCommand(this CommandLineInvocation invocation, string workingDirectory)
+        public static async Task<CmdResult> ExecuteCommandAsync(this CommandLineInvocation invocation, string workingDirectory)
         {
             if (workingDirectory == null)
                 throw new ArgumentNullException(nameof(workingDirectory));
@@ -52,7 +53,7 @@ namespace Octopus.Tentacle.Util
             var infos = new List<string>();
             var errors = new List<string>();
 
-            var exitCode = ExecuteCommand(
+            var exitCode = await ExecuteCommandAsync(
                 invocation.Executable,
                 arguments,
                 workingDirectory,
@@ -63,14 +64,14 @@ namespace Octopus.Tentacle.Util
             return new CmdResult(exitCode, infos, errors);
         }
 
-        public static int ExecuteCommand(
+        public static Task<int> ExecuteCommandAsync(
             string executable,
             string arguments,
             string workingDirectory,
             Action<string> info,
             Action<string> error,
             CancellationToken cancel = default)
-            => SilentProcessRunner.ExecuteCommand(executable,
+            => SilentProcessRunner.ExecuteCommandAsync(executable,
                 arguments,
                 workingDirectory,
                 LogFileOnlyLogger.Current.Info,

@@ -8,13 +8,14 @@ using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Octopus.Tentacle.Core.Diagnostics;
 
 namespace Octopus.Tentacle.Util
 {
     public static class SilentProcessRunner
     {
-        public static int ExecuteCommand(
+        public static Task<int> ExecuteCommandAsync(
             string executable,
             string arguments,
             string workingDirectory,
@@ -23,10 +24,10 @@ namespace Octopus.Tentacle.Util
             Action<string> error,
             CancellationToken cancel)
         {
-            return ExecuteCommand(executable, arguments, workingDirectory, debug, info, error, customEnvironmentVariables: null, cancel: cancel);
+            return ExecuteCommandAsync(executable, arguments, workingDirectory, debug, info, error, customEnvironmentVariables: null, cancel: cancel);
         }
 
-        public static int ExecuteCommand(
+        public static Task<int> ExecuteCommandAsync(
             string executable,
             string arguments,
             string workingDirectory,
@@ -152,7 +153,7 @@ namespace Octopus.Tentacle.Util
                         debug($"Process {exeFileNameOrFullPath} in {workingDirectory} exited with code {exitCode}");
 
                         running = false;
-                        return exitCode;
+                        return Task.FromResult(exitCode);
                     }
                 }
             }

@@ -383,8 +383,8 @@ namespace Octopus.Tentacle.Kubernetes
             InMemoryTentacleScriptLog tentacleScriptLog,
             V1Container? containerSpec)
         {
-            var spaceInformation = kubernetesPhysicalFileSystem.GetStorageInformation();
-
+            var spaceInformation = await kubernetesPhysicalFileSystem.GetStorageInformationAsync();
+            
             var commandString = string.Join(" ", new[]
                 {
                     $"{homeDir}/Work/{command.ScriptTicket.TaskId}/execute-bootstrapRunner.sh",
