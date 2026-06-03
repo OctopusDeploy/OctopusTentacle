@@ -20,7 +20,8 @@ namespace Octopus.Tentacle.Contracts.KubernetesScriptServiceV1
             ScriptFile[]? additionalFiles,
             bool isRawScript,
             KubernetesAgentAuthContext? authContext,
-            string? scriptPodPlatform)
+            string? scriptPodPlatform,
+            CalamariImageConfiguration? calamariImageConfiguration)
         {
             Arguments = arguments;
             TaskId = taskId;
@@ -34,6 +35,7 @@ namespace Octopus.Tentacle.Contracts.KubernetesScriptServiceV1
             IsRawScript = isRawScript;
             AuthContext = authContext;
             ScriptPodPlatform = scriptPodPlatform;
+            CalamariImageConfiguration = calamariImageConfiguration;
 
             if (additionalFiles != null)
                 Files.AddRange(additionalFiles);
@@ -66,5 +68,6 @@ namespace Octopus.Tentacle.Contracts.KubernetesScriptServiceV1
         public KubernetesAgentAuthContext? AuthContext { get; }
         
         public string? ScriptPodPlatform { get; }
+        public CalamariImageConfiguration? CalamariImageConfiguration { get; }
     }
 }

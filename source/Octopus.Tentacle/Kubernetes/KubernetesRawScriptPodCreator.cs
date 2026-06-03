@@ -20,8 +20,7 @@ namespace Octopus.Tentacle.Kubernetes
     {
         readonly IKubernetesPodContainerResolver containerResolver;
 
-        public KubernetesRawScriptPodCreator(
-            IKubernetesPodService podService,
+        public KubernetesRawScriptPodCreator(IKubernetesPodService podService,
             IKubernetesPodMonitor podMonitor,
             IKubernetesSecretService secretService,
             IKubernetesPodTemplateService podTemplateService,
@@ -32,8 +31,21 @@ namespace Octopus.Tentacle.Kubernetes
             IHomeConfiguration homeConfiguration,
             KubernetesPhysicalFileSystem kubernetesPhysicalFileSystem,
             IScriptPodLogEncryptionKeyProvider scriptPodLogEncryptionKeyProvider,
+            IKubernetesClusterService clusterService,
             ScriptIsolationMutex scriptIsolationMutex)
-            : base(podService, podMonitor, secretService, podTemplateService, containerResolver, appInstanceSelector, log, scriptLogProvider, homeConfiguration, kubernetesPhysicalFileSystem, scriptPodLogEncryptionKeyProvider, scriptIsolationMutex)
+            : base(podService,
+                podMonitor,
+                secretService,
+                podTemplateService,
+                containerResolver,
+                appInstanceSelector,
+                log,
+                scriptLogProvider,
+                homeConfiguration,
+                kubernetesPhysicalFileSystem,
+                scriptPodLogEncryptionKeyProvider,
+                clusterService,
+                scriptIsolationMutex)
         {
             this.containerResolver = containerResolver;
         }
@@ -58,19 +70,19 @@ namespace Octopus.Tentacle.Kubernetes
                 },
                 new V1VolumeMount { MountPath = homeDir, Name = "tentacle-home" }
             });
-            
+
             return new List<V1Container> { container };
         }
 
-        protected override async Task<IList<V1Container>> CreateScriptContainers(StartKubernetesScriptCommandV1 command, string podName, string scriptName, string homeDir, string workspacePath, string[]? scriptArguments, InMemoryTentacleScriptLog tentacleScriptLog, ScriptPodTemplate? template)
+        protected override async Task<IList<V1Container>> CreateScriptContainers(StartKubernetesScriptCommandV1 command, string podName, string scriptName, string homeDir, string workspacePath, string[]? scriptArguments, bool isCalamariImageVolumeEnabled, InMemoryTentacleScriptLog tentacleScriptLog, ScriptPodTemplate? template)
         {
             return new List<V1Container>
             {
-                await CreateScriptContainer(command, podName, scriptName, homeDir, workspacePath, scriptArguments, tentacleScriptLog, template?.ScriptContainerSpec)
+                await CreateScriptContainer(command, podName, scriptName, homeDir, workspacePath, scriptArguments, false, tentacleScriptLog, template?.ScriptContainerSpec)
             };
         }
 
-        protected override IList<V1Volume> CreateVolumes(StartKubernetesScriptCommandV1 command)
+        protected override IList<V1Volume> CreateVolumes()
         {
             return new List<V1Volume>
             {
