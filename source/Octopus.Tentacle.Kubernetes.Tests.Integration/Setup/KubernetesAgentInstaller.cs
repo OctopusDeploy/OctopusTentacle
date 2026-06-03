@@ -20,15 +20,17 @@ public class KubernetesAgentInstaller
     readonly TemporaryDirectory temporaryDirectory;
     readonly ILogger logger;
     readonly string kubeConfigPath;
+    readonly int agentMajorVersion;
 
     bool isAgentInstalled;
 
-    public KubernetesAgentInstaller(TemporaryDirectory temporaryDirectory, string helmExePath, string kubeCtlExePath, string kubeConfigPath, ILogger logger)
+    public KubernetesAgentInstaller(TemporaryDirectory temporaryDirectory, string helmExePath, string kubeCtlExePath, string kubeConfigPath, int agentMajorVersion, ILogger logger)
     {
         this.temporaryDirectory = temporaryDirectory;
         this.helmExePath = helmExePath;
         this.kubeCtlExePath = kubeCtlExePath;
         this.kubeConfigPath = kubeConfigPath;
+        this.agentMajorVersion = agentMajorVersion;
         this.logger = logger;
 
         AgentName = Guid.NewGuid().ToString("N");
@@ -88,7 +90,7 @@ public class KubernetesAgentInstaller
 
     async Task<string> WriteValuesFile(int listeningPort)
     {
-        using var reader = new StreamReader(Assembly.GetExecutingAssembly().GetManifestResourceStreamFromPartialName("agent-values.yaml"));
+        using var reader = new StreamReader(Assembly.GetExecutingAssembly().GetManifestResourceStreamFromPartialName($"agent-values-v{agentMajorVersion}.yaml"));
 
         var valuesFile = await reader.ReadToEndAsync();
 
@@ -135,11 +137,11 @@ public class KubernetesAgentInstaller
         return string.Join(" ", args.WhereNotNull());
     }
 
-    static string GetChartVersion()
+    string GetChartVersion()
     {
         var customHelmChartVersion = Environment.GetEnvironmentVariable("KubernetesIntegrationTests_HelmChartVersion");
         
-        return !string.IsNullOrWhiteSpace(customHelmChartVersion) ? customHelmChartVersion : "2.*.*";
+        return !string.IsNullOrWhiteSpace(customHelmChartVersion) ? customHelmChartVersion : $"{agentMajorVersion}.*.*";
     }
 
     static string? GetImageAndRepository(string? tentacleImageAndTag)

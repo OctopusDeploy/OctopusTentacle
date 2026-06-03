@@ -21,9 +21,9 @@ public class KubernetesClientCompatibilityTests
 {
     static readonly object[] TestClusterVersions =
     [
-        new object[] {new ClusterVersion(1, 35)},
-        new object[] {new ClusterVersion(1, 34)},
-        new object[] {new ClusterVersion(1, 33)}
+        new object[] { new ClusterVersion(1, 35) },
+        new object[] { new ClusterVersion(1, 34) },
+        new object[] { new ClusterVersion(1, 33) }
     ];
 
     KubernetesTestsGlobalContext? testContext;
@@ -66,6 +66,7 @@ public class KubernetesClientCompatibilityTests
             await cancellationTokenSource.CancelAsync();
             cancellationTokenSource.Dispose();
         }
+
         clusterInstaller?.Dispose();
         testContext?.Dispose();
 
@@ -76,11 +77,11 @@ public class KubernetesClientCompatibilityTests
     }
 
     [Test]
-    [TestCaseSource(nameof(TestClusterVersions))]
-    public async Task RunSimpleScript(ClusterVersion clusterVersion)
+    [Combinatorial]
+    public async Task RunSimpleScript([ValueSource(nameof(TestClusterVersions))] ClusterVersion clusterVersion, [Values(KubernetesAgentMajorVersion.V2, KubernetesAgentMajorVersion.V3)] int agentVersion)
     {
-        await SetUp(clusterVersion);
-        
+        await SetUp(clusterVersion, agentVersion);
+
         // Arrange
         var logs = new List<ProcessOutput>();
         var scriptCompleted = false;
@@ -120,11 +121,11 @@ public class KubernetesClientCompatibilityTests
             return Task.CompletedTask;
         }
     }
-    
-    async Task SetUp(ClusterVersion clusterVersion)
+
+    async Task SetUp(ClusterVersion clusterVersion, int agentMajorVersion)
     {
         testContext = new KubernetesTestsGlobalContext(logger);
-        
+
         await SetupCluster(clusterVersion);
 
         kubernetesAgentInstaller = new KubernetesAgentInstaller(
@@ -132,6 +133,7 @@ public class KubernetesClientCompatibilityTests
             testContext.HelmExePath,
             testContext.KubeCtlExePath,
             testContext.KubeConfigPath,
+            agentMajorVersion,
             testContext.Logger);
 
         //create a new server halibut runtime
@@ -159,7 +161,7 @@ public class KubernetesClientCompatibilityTests
             recordedMethodUsages = recordedUsages;
         });
     }
-    
+
     async Task SetupCluster(ClusterVersion clusterVersion)
     {
         clusterInstaller = new KubernetesClusterInstaller(testContext.TemporaryDirectory, kindExePath, helmExePath, kubeCtlPath, testContext.Logger);
