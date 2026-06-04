@@ -143,8 +143,10 @@ namespace Octopus.Tentacle.Core.Services.Scripts
 
         public Task<ScriptStatusResponseV2> AbandonScriptAsync(AbandonScriptCommandV2 command, CancellationToken cancellationToken)
         {
-            // Fire the abandon token. The runner's abandon branch best-effort-kills the process,
-            // stops waiting, releases the mutex, and returns -48.
+            // runningScript.Abandon() cancels AbandonToken. That token is awaited only in
+            // SilentProcessRunner.ExecuteCommandAsync, via Task.WhenAny(waitForExit, WaitForAbandon(abandon)):
+            // cancelling it resolves that wait, so the runner best-effort-kills the process, returns -48, and
+            // RunningScript's isolation-mutex `using` unwinds to release the mutex.
             if (runningScripts.TryGetValue(command.Ticket, out var runningScript))
             {
                 runningScript.Abandon();

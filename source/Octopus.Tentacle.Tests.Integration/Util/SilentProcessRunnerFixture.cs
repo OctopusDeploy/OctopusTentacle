@@ -213,7 +213,7 @@ while ((Get-Date) -lt $deadline) {
             }
             finally
             {
-                TryKillGrandchild(grandchildPidFile);
+                EnsureProcessKilled(grandchildPidFile);
             }
         }
 
@@ -272,7 +272,7 @@ while ((Get-Date) -lt $deadline) {
             }
             finally
             {
-                TryKillGrandchild(grandchildPidFile);
+                EnsureProcessKilled(grandchildPidFile);
             }
         }
 
@@ -321,66 +321,7 @@ while ((Get-Date) -lt $deadline) {
             }
             finally
             {
-                // Force-kill the script process if it's somehow still around, to avoid leaking on CI
-                if (File.Exists(pidFile) && int.TryParse(SafelyReadAllText(pidFile).Trim(), out var pid) && pid > 0)
-                {
-                    try { Process.GetProcessById(pid).Kill(); } catch { /* already gone */ }
-                }
-            }
-        }
-
-        [Test]
-        public async Task AbandonToken_WhenCancelAlsoRequested_StillReturnsAbandonedExitCode()
-        {
-            // Once abandon is requested, the runner returns AbandonedExitCode even though cancel is
-            // also requested — the abandon branch resolves the wait and returns -48.
-            //
-            // We fire abandon FIRST so this is deterministic. The exit code is NOT deterministic if
-            // cancel and abandon race on a *killable* process: cancel's kill can resolve the wait to
-            // the killed exit code before abandon is observed. That race does not happen in production
-            // — cancel and abandon arrive as separate, sequential RPCs, and the server only sends
-            // abandon AFTER cancel has failed to unstick the script. The deterministic both-tokens
-            // case (cancel fired, kill genuinely fails, abandon -> -48) is covered end-to-end by
-            // ClientScriptExecutionAbandon.AbandonScript_WhenCancelFailsToKillProcess.
-            using var tempDir = new TemporaryDirectory();
-            var pidFile = Path.Combine(tempDir.DirectoryPath, "process.pid");
-
-            var executable = PlatformDetection.IsRunningOnWindows ? "powershell.exe" : "/bin/bash";
-            var arguments = PlatformDetection.IsRunningOnWindows
-                ? $"-NoProfile -NonInteractive -Command \"$PID | Out-File -FilePath '{pidFile}' -Encoding ASCII; Start-Sleep -Seconds 300\""
-                : $"-c \"echo $$ > '{pidFile}' && sleep 300\"";
-
-            using var cancelCts = new CancellationTokenSource();
-            using var abandonCts = new CancellationTokenSource();
-
-            var task = Task.Run(async () => await SilentProcessRunner.ExecuteCommandAsync(
-                executable,
-                arguments,
-                Environment.CurrentDirectory,
-                debug: _ => { },
-                info: _ => { },
-                error: _ => { },
-                customEnvironmentVariables: null,
-                cancel: cancelCts.Token,
-                abandon: abandonCts.Token));
-
-            await WaitForPidFileAsync(pidFile, TimeSpan.FromSeconds(30));
-
-            // Abandon first (resolves the wait to -48), then cancel is also requested.
-            abandonCts.Cancel();
-            cancelCts.Cancel();
-
-            try
-            {
-                var exitCode = await task;
-                exitCode.Should().Be(ScriptExitCodes.AbandonedExitCode);
-            }
-            finally
-            {
-                if (File.Exists(pidFile) && int.TryParse(SafelyReadAllText(pidFile).Trim(), out var pid) && pid > 0)
-                {
-                    try { Process.GetProcessById(pid).Kill(); } catch { /* already gone */ }
-                }
+                EnsureProcessKilled(pidFile);
             }
         }
 
@@ -403,16 +344,25 @@ while ((Get-Date) -lt $deadline) {
             try { return File.ReadAllText(path); } catch { return string.Empty; }
         }
 
-        static void TryKillGrandchild(string pidFile)
+        static void EnsureProcessKilled(string pidFile)
         {
+            // Safety net for tests that spawn a long-lived process. It should already be gone (abandon's
+            // best-effort kill, or the grandchild reaped). If it's somehow still alive, kill it and confirm
+            // it died — we'd rather flake loudly here than leak the process onto a CI agent.
+            if (!File.Exists(pidFile) || !int.TryParse(SafelyReadAllText(pidFile).Trim(), out var pid) || pid <= 0)
+                return;
+
             try
             {
-                if (File.Exists(pidFile) && int.TryParse(SafelyReadAllText(pidFile).Trim(), out var pid))
-                {
-                    try { Process.GetProcessById(pid).Kill(); } catch { /* already gone */ }
-                }
+                using var process = Process.GetProcessById(pid);
+                if (process.HasExited)
+                    return;
+
+                process.Kill();
+                process.WaitForExit(10_000).Should().BeTrue($"cleanup must terminate PID {pid} so it isn't leaked onto the CI agent");
             }
-            catch { /* ignore */ }
+            catch (ArgumentException) { /* not running — already gone */ }
+            catch (InvalidOperationException) { /* exited between lookup and kill */ }
         }
 
         [Test]

@@ -271,5 +271,71 @@ namespace Octopus.Tentacle.Tests.Integration
             // Cancel path only — never NotSupportedException.
             await FluentActions.Invoking(async () => await execution).Should().ThrowAsync<OperationCanceledException>();
         }
+
+        [Test]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.Version2)]
+        public async Task ExecuteScript_WhenAQueuedScriptIsCancelled_ExitsViaCancelNotAbandon(TentacleConfigurationTestCase tentacleConfigurationTestCase)
+        {
+            // End-to-end counterpart to ScriptServiceV2Fixture.AbandonScript_WhileWaitingOnTheIsolationMutex_ExitsCancelled.
+            // A script still waiting on the isolation mutex never started a process, so when its execution is
+            // cancelled (with abandon escalation armed) it ends via the cancel path (OperationCanceledException)
+            // and never runs. Abandon has nothing to act on for a queued script, so it cannot change the outcome.
+            // If we ever want abandon to win for a queued script, RunningScript.Execute can catch
+            // (OperationCanceledException) when (abandonToken.IsCancellationRequested) around the mutex Acquire
+            // and return AbandonedExitCode instead. Deliberately not doing that today.
+            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+                .WithTentacle(x => x.WithRunTentacleEnvironmentVariable(EnvironmentVariables.TentacleDebugDisableProcessKill_UNSAFE_FOR_PRODUCTION, "1"))
+                .Build(CancellationToken);
+
+            var holderStartFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "holder-start");
+            var holderReleaseFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "holder-release");
+            var waiterRanFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "waiter-ran");
+            const string sharedMutex = "queued-cancel-test-mutex";
+
+            // Holder takes the mutex and stays stuck (kill disabled), so the waiter must queue behind it.
+            var holderCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(new ScriptBuilder()
+                    .CreateFile(holderStartFile)
+                    .WaitForFileToExist(holderReleaseFile))
+                .WithIsolationLevel(ScriptIsolationLevel.FullIsolation)
+                .WithIsolationMutexName(sharedMutex)
+                .Build();
+
+            var tentacleClient = clientTentacle.TentacleClient;
+            var holderExecution = Task.Run(async () => await tentacleClient.ExecuteScript(holderCommand, CancellationToken));
+
+            await Wait.For(() => File.Exists(holderStartFile),
+                TimeSpan.FromSeconds(30),
+                () => throw new Exception("Holder script did not start"),
+                CancellationToken);
+
+            // Waiter wants the same mutex, so it blocks acquiring it — its process never starts.
+            var waiterCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(new ScriptBuilder().CreateFile(waiterRanFile))
+                .WithIsolationLevel(ScriptIsolationLevel.FullIsolation)
+                .WithIsolationMutexName(sharedMutex)
+                .Build();
+
+            using var waiterCts = new System.Threading.CancellationTokenSource();
+            var waiterExecution = Task.Run(async () => await tentacleClient.ExecuteScript(
+                waiterCommand,
+                _ => { },
+                _ => Task.CompletedTask,
+                new SerilogLoggerBuilder().Build().ForContext<TentacleClient>().ToITentacleTaskLog(),
+                waiterCts.Token,
+                abandonAfterCancellationPendingFor: TimeSpan.FromSeconds(2)));
+
+            // Let the waiter reach the mutex queue, then cancel it. With escalation armed the orchestrator may
+            // also try to abandon — but abandon can't act on a queued script, so it still ends via cancel.
+            await Task.Delay(TimeSpan.FromSeconds(2));
+            waiterCts.Cancel();
+
+            await FluentActions.Invoking(async () => await waiterExecution).Should().ThrowAsync<OperationCanceledException>();
+            File.Exists(waiterRanFile).Should().BeFalse("a script blocked on the isolation mutex never starts its process");
+
+            // Cleanup: release the holder.
+            File.WriteAllText(holderReleaseFile, "");
+            await holderExecution;
+        }
     }
 }

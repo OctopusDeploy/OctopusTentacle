@@ -29,13 +29,14 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var capabilities = (await clientAndTentacle.TentacleClient.CapabilitiesServiceV2.GetCapabilitiesAsync(new(CancellationToken))).SupportedCapabilities;
 
-            capabilities.Should().Contain(nameof(IScriptService));
-            capabilities.Should().Contain(nameof(IFileTransferService));
-
+            var expected = new List<string> { nameof(IScriptService), nameof(IFileTransferService) };
             if (version.HasScriptServiceV2())
-            {
-                capabilities.Should().Contain(nameof(IScriptServiceV2));
-            }
+                expected.Add(nameof(IScriptServiceV2));
+            if (version.HasAbandonScript())
+                expected.Add(nameof(ScriptServiceV2.AbandonScriptAsync));
+
+            // Exact set, not just Contain: this also guards against over-advertising a capability we didn't intend.
+            capabilities.Should().BeEquivalentTo(expected);
         }
 
         [Test]
@@ -48,14 +49,15 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var capabilities = (await clientAndTentacle.TentacleClient.CapabilitiesServiceV2.GetCapabilitiesAsync(new(CancellationToken))).SupportedCapabilities;
 
-            capabilities.Should().Contain(nameof(IScriptService));
-            capabilities.Should().Contain(nameof(IFileTransferService));
-
+            var expected = new List<string> { nameof(IScriptService), nameof(IFileTransferService) };
             if (version.HasScriptServiceV2())
-            {
-                capabilities.Should().Contain(nameof(IScriptServiceV2));
-            }
+                expected.Add(nameof(IScriptServiceV2));
+            if (version.HasAbandonScript())
+                expected.Add(nameof(ScriptServiceV2.AbandonScriptAsync));
 
+            // Exact set, not just Contain: this also guards against over-advertising. In particular a
+            // non-Kubernetes Tentacle must never surface IKubernetesScriptServiceV1.
+            capabilities.Should().BeEquivalentTo(expected);
             capabilities.Should().NotContain(nameof(IKubernetesScriptServiceV1));
         }
 

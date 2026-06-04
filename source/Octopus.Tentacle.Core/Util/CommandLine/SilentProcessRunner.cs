@@ -211,9 +211,7 @@ namespace Octopus.Tentacle.Util
             CancellationToken cancel,
             Action<string> debug)
         {
-            // Wait up to 5s for stream EOF (a null DataReceived marks it). The process has already
-            // exited, so EOF is normally immediate. If a re-parented grandchild process is still holding
-            // the pipe open then EOF will never come. This is why we time out and skip the final flush.
+            //5 seconds is a bit arbitrary, but the process should have already exited by now, so unwise to wait too long
             try
             {
                 outputResetEvent.Wait(TimeSpan.FromSeconds(5), cancel);

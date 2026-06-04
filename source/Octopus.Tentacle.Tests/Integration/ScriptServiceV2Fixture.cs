@@ -346,6 +346,66 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
+        public async Task AbandonScript_WhileWaitingOnTheIsolationMutex_ExitsCancelled()
+        {
+            var builder = new ScriptServiceV2Builder();
+            var service = builder.Build();
+
+            const string mutexName = "abandon-while-acquiring-mutex";
+
+            // The holder takes the full-isolation mutex and keeps it for the duration of the test.
+            var holderTicket = new ScriptTicket(Guid.NewGuid().ToString());
+            var holderCommand = new StartScriptCommandV2Builder()
+                .WithScriptBodyForCurrentOs("Start-Sleep -Seconds 60", "sleep 60")
+                .WithIsolation(ScriptIsolationLevel.FullIsolation)
+                .WithMutexName(mutexName)
+                .WithScriptTicket(holderTicket)
+                .WithDurationStartScriptCanWaitForScriptToFinish(null)
+                .Build();
+
+            // The waiter wants the same mutex, so it blocks in Acquire and never starts its process.
+            var waiterTicket = new ScriptTicket(Guid.NewGuid().ToString());
+            var waiterCommand = new StartScriptCommandV2Builder()
+                .WithScriptBodyForCurrentOs("Start-Sleep -Seconds 1", "sleep 1")
+                .WithIsolation(ScriptIsolationLevel.FullIsolation)
+                .WithMutexName(mutexName)
+                .WithScriptTicket(waiterTicket)
+                .WithDurationStartScriptCanWaitForScriptToFinish(null)
+                .Build();
+
+            try
+            {
+                var holderResponse = await service.StartScriptAsync(holderCommand, CancellationToken.None);
+                holderResponse = await WaitForState(service, holderTicket, holderResponse, ProcessState.Running);
+
+                var waiterResponse = await service.StartScriptAsync(waiterCommand, CancellationToken.None);
+
+                // Give the waiter time to reach (and block in) the mutex Acquire. It cannot complete while the
+                // holder owns the mutex, so it must still be waiting.
+                await Task.Delay(TimeSpan.FromSeconds(2));
+                waiterResponse = await service.GetStatusAsync(new ScriptStatusRequestV2(waiterTicket, waiterResponse.NextLogSequence), CancellationToken.None);
+                waiterResponse.State.Should().NotBe(ProcessState.Complete, "the waiter should be blocked acquiring the isolation mutex");
+
+                // A script still waiting on the isolation mutex never started a process, so we report it as
+                // cancelled (-43), not abandoned. Abandon is a no-op here (Acquire doesn't observe the abandon
+                // token); cancel unblocks Acquire and wins. If we ever want abandon to win in this case,
+                // RunningScript.Execute can catch (OperationCanceledException) when (abandonToken.IsCancellationRequested)
+                // around the mutex Acquire and return AbandonedExitCode (-48) instead. Deliberately not doing that today.
+                await service.AbandonScriptAsync(new AbandonScriptCommandV2(waiterTicket, waiterResponse.NextLogSequence), CancellationToken.None);
+                var afterCancel = await service.CancelScriptAsync(new CancelScriptCommandV2(waiterTicket, waiterResponse.NextLogSequence), CancellationToken.None);
+
+                var (_, waiterFinal) = await RunUntilScriptCompletes(service, waiterCommand, afterCancel);
+                waiterFinal.ExitCode.Should().Be(ScriptExitCodes.CanceledExitCode);
+            }
+            finally
+            {
+                // Release the holder so we don't sit on the mutex (and its 60s sleep gets killed).
+                await service.CancelScriptAsync(new CancelScriptCommandV2(holderTicket, 0), CancellationToken.None);
+                await service.CompleteScriptAsync(new CompleteScriptCommandV2(holderTicket), CancellationToken.None);
+            }
+        }
+
+        [Test]
         public async Task CompleteScriptShouldCleanupTheWorkspace()
         {
             var builder = new ScriptServiceV2Builder();
@@ -929,6 +989,19 @@ namespace Octopus.Tentacle.Tests.Integration
             }
 
             return (logs, response);
+        }
+
+        static async Task<ScriptStatusResponseV2> WaitForState(ScriptServiceV2 service, ScriptTicket ticket, ScriptStatusResponseV2 response, ProcessState desiredState)
+        {
+            var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(30);
+            while (response.State != desiredState && DateTime.UtcNow < deadline)
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(100));
+                response = await service.GetStatusAsync(new ScriptStatusRequestV2(ticket, response.NextLogSequence), CancellationToken.None);
+            }
+
+            response.State.Should().Be(desiredState, $"the script should reach {desiredState} within the timeout");
+            return response;
         }
 
         static void WriteLogsToConsole(List<ProcessOutput> logs)

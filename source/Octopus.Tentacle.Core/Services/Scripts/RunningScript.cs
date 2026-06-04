@@ -126,16 +126,6 @@ namespace Octopus.Tentacle.Core.Services.Scripts
                                 : await RunScriptAsync(shellPath, writer, runningScriptToken, abandonToken);
                         }
                     }
-                    // Abandon surfaced as a cancellation before/around the process wait — e.g. while still
-                    // acquiring the isolation mutex. SilentProcessRunner handles abandon during the wait itself
-                    // and returns AbandonedExitCode directly; this catch covers abandon arriving as an
-                    // OperationCanceledException instead, mapping it to the same code so the server can tell it
-                    // apart from a cancel.
-                    catch (OperationCanceledException) when (abandonToken.IsCancellationRequested)
-                    {
-                        writer.WriteOutput(ProcessOutputSource.StdOut, "Script execution abandoned.");
-                        exitCode = ScriptExitCodes.AbandonedExitCode;
-                    }
                     // Fires when the caller cancelled the script and the underlying process honored the cancellation token.
                     catch (OperationCanceledException)
                     {
