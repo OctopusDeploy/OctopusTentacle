@@ -148,12 +148,14 @@ namespace Octopus.Tentacle.Util
                         var waitForExit = Task.Run(() =>
                         {
                             try { process.WaitForExit(); }
-                            catch { /* released by Process.Dispose on the abandon path */ }
+                            catch { /* swalloe exceptions thrown when released by Process.Dispose in DoOurBestToCleanUp */ }
                         });
 
-                        // Wait for the process to exit, but let abandon break us out. Cancel kills then
-                        // Close()s the process (via cancel.Register) so this returns; abandon races the
-                        // wait and, if it wins, we return -48 and leave the process running.
+                        // Wait for the process to exit, but break if abandon cancallation token fires.
+                        // Cancel kills then Close()s the process (via cancel.Register) so this returns.
+                        // If the script is not actually stuck when abandon fires, abandoning will be in
+                        // a race with the script to complete, if it wins, we return -48 and leave
+                        // the process running.
                         await Task.WhenAny(waitForExit, WaitForAbandon(abandon)).ConfigureAwait(false);
 
                         if (abandon.IsCancellationRequested)
