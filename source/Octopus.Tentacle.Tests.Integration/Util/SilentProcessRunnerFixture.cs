@@ -213,7 +213,7 @@ while ((Get-Date) -lt $deadline) {
             }
             finally
             {
-                EnsureProcessKilled(grandchildPidFile);
+                TryKillGrandchild(grandchildPidFile);
             }
         }
 
@@ -272,7 +272,7 @@ while ((Get-Date) -lt $deadline) {
             }
             finally
             {
-                EnsureProcessKilled(grandchildPidFile);
+                TryKillGrandchild(grandchildPidFile);
             }
         }
 
@@ -363,6 +363,19 @@ while ((Get-Date) -lt $deadline) {
             }
             catch (ArgumentException) { /* not running — already gone */ }
             catch (InvalidOperationException) { /* exited between lookup and kill */ }
+        }
+
+        static void TryKillGrandchild(string pidFile)
+        {
+            // Best-effort only. The grandchild is reparented to init, so it is NOT our child: Process.WaitForExit
+            // can't reliably observe a non-child exiting (and a CI container's PID 1 may not reap the zombie),
+            // so we can't assert the kill the way EnsureProcessKilled does. The test's real assertion is that
+            // cancellation returns promptly, not that this cleanup succeeded.
+            if (!File.Exists(pidFile) || !int.TryParse(SafelyReadAllText(pidFile).Trim(), out var pid) || pid <= 0)
+                return;
+
+            try { using var process = Process.GetProcessById(pid); process.Kill(); }
+            catch { /* already gone, or can't be reliably killed/observed — best effort */ }
         }
 
         [Test]
