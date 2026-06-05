@@ -101,8 +101,8 @@ namespace Octopus.Tentacle.Tests.Integration
                 () => throw new Exception("Script did not start"),
                 CancellationToken);
 
-            // Direct abandon, NO prior cancel. We never write releaseFile, so the script only completes
-            // because the abandon branch killed it.
+            // Direct abandon, NO prior cancel. We never write releaseFile to allow the script to complete,
+            // so it only completes because the abandon branch killed it.
             await client.AbandonScript(command.ScriptTicket, log, CancellationToken);
 
             var finalResult = await RunStatusUntilComplete(client, startResult.ContextForNextCommand, log);
