@@ -473,8 +473,7 @@ namespace Octopus.Tentacle.Kubernetes
                 container.VolumeMounts.Add(new V1VolumeMount
                 {
                     MountPath = calamariPath,
-                    Name = "calamari",
-                    SubPath = command.CalamariImageConfiguration!.Name
+                    Name = "calamari"
                 });
 
                 //This is used by Octopus Server to adjust where it's looking for the Calamari executable
