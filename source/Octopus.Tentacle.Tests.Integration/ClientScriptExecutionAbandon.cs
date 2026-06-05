@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
@@ -19,6 +20,23 @@ namespace Octopus.Tentacle.Tests.Integration
     [IntegrationTestTimeout]
     public class ClientScriptExecutionAbandon : IntegrationTest
     {
+        // PIDs of script processes a test spawned. Captured during the test (while the Tentacle's temp dir
+        // still exists) and force-killed in TearDown so nothing leaks onto the CI agent — including the
+        // un-killable (kill-disabled) processes, and any process left behind when a test fails early.
+        readonly List<int> spawnedProcessPids = new();
+
+        [TearDown]
+        public void ForceKillSpawnedProcesses()
+        {
+            foreach (var pid in spawnedProcessPids)
+            {
+                try { using var process = Process.GetProcessById(pid); process.Kill(); }
+                catch { /* already gone — best effort */ }
+            }
+
+            spawnedProcessPids.Clear();
+        }
+
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.Version2)]
         public async Task AbandonScript_WhenProcessCannotBeKilled_LeavesItRunningAndReturnsAbandonedExitCode(TentacleConfigurationTestCase tentacleConfigurationTestCase)
@@ -52,6 +70,8 @@ namespace Octopus.Tentacle.Tests.Integration
                 TimeSpan.FromSeconds(30),
                 () => throw new Exception("Script did not start"),
                 CancellationToken);
+
+            TrackSpawnedProcess(pidFile);
 
             // Cancel: Hitman is a no-op, so the process keeps running.
             var afterCancel = await client.CancelScript(startResult.ContextForNextCommand, log);
@@ -101,6 +121,8 @@ namespace Octopus.Tentacle.Tests.Integration
                 () => throw new Exception("Script did not start"),
                 CancellationToken);
 
+            TrackSpawnedProcess(pidFile);
+
             // Direct abandon, NO prior cancel. We never write releaseFile to allow the script to complete,
             // so it only completes because the abandon branch killed it.
             await client.AbandonScript(command.ScriptTicket, log, CancellationToken);
@@ -127,10 +149,12 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var startFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "start");
             var releaseFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "release");
+            var pidFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "pid");
             const string sharedMutex = "abandon-test-mutex";
 
             var firstCommand = new TestExecuteShellScriptCommandBuilder()
                 .SetScriptBody(new ScriptBuilder()
+                    .WritePidToFile(pidFile)
                     .CreateFile(startFile)
                     .WaitForFileToExist(releaseFile))
                 .WithIsolationLevel(ScriptIsolationLevel.FullIsolation)
@@ -146,6 +170,8 @@ namespace Octopus.Tentacle.Tests.Integration
                 TimeSpan.FromSeconds(30),
                 () => throw new Exception("First script did not start"),
                 CancellationToken);
+
+            TrackSpawnedProcess(pidFile);
 
             var afterCancel = await client.CancelScript(startResult.ContextForNextCommand, log);
             await client.AbandonScript(firstCommand.ScriptTicket, log, CancellationToken);
@@ -184,10 +210,12 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var startFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "start");
             var releaseFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "release");
+            var pidFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "pid");
             const string sharedMutex = "escalation-test-mutex";
 
             var stuckCommand = new TestExecuteShellScriptCommandBuilder()
                 .SetScriptBody(new ScriptBuilder()
+                    .WritePidToFile(pidFile)
                     .CreateFile(startFile)
                     .WaitForFileToExist(releaseFile))
                 .WithIsolationLevel(ScriptIsolationLevel.FullIsolation)
@@ -209,6 +237,8 @@ namespace Octopus.Tentacle.Tests.Integration
                 TimeSpan.FromSeconds(30),
                 () => throw new Exception("Script did not start"),
                 CancellationToken);
+
+            TrackSpawnedProcess(pidFile);
 
             // Cancel stays pending (kill disabled), so after the threshold the orchestrator escalates to abandon.
             executionCts.Cancel();
@@ -243,9 +273,11 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var startFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "start");
             var releaseFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "release");
+            var pidFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "pid");
 
             var command = new TestExecuteShellScriptCommandBuilder()
                 .SetScriptBody(new ScriptBuilder()
+                    .WritePidToFile(pidFile)
                     .CreateFile(startFile)
                     .WaitForFileToExist(releaseFile))
                 .WithIsolationLevel(ScriptIsolationLevel.NoIsolation)
@@ -266,6 +298,8 @@ namespace Octopus.Tentacle.Tests.Integration
                 TimeSpan.FromSeconds(30),
                 () => throw new Exception("Script did not start"),
                 CancellationToken);
+
+            TrackSpawnedProcess(pidFile);
 
             executionCts.Cancel();
 
@@ -291,12 +325,14 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var holderStartFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "holder-start");
             var holderReleaseFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "holder-release");
+            var holderPidFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "holder-pid");
             var waiterRanFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "waiter-ran");
             const string sharedMutex = "queued-cancel-test-mutex";
 
             // Holder takes the mutex and holds it (it doesn't need to be stuck), so the waiter must queue behind it.
             var holderCommand = new TestExecuteShellScriptCommandBuilder()
                 .SetScriptBody(new ScriptBuilder()
+                    .WritePidToFile(holderPidFile)
                     .CreateFile(holderStartFile)
                     .WaitForFileToExist(holderReleaseFile))
                 .WithIsolationLevel(ScriptIsolationLevel.FullIsolation)
@@ -312,6 +348,8 @@ namespace Octopus.Tentacle.Tests.Integration
                 TimeSpan.FromSeconds(30),
                 () => throw new Exception("Holder script did not start"),
                 CancellationToken);
+
+            TrackSpawnedProcess(holderPidFile);
 
             // Waiter wants the same mutex, so it blocks acquiring it — its process never starts.
             var waiterCommand = new TestExecuteShellScriptCommandBuilder()
@@ -337,6 +375,12 @@ namespace Octopus.Tentacle.Tests.Integration
             File.WriteAllText(holderReleaseFile, "");
             var holderFinal = await RunStatusUntilComplete(client, holderStart.ContextForNextCommand, log);
             await client.CompleteScript(holderFinal.ContextForNextCommand, log, CancellationToken);
+        }
+
+        void TrackSpawnedProcess(string pidFile)
+        {
+            if (File.Exists(pidFile) && int.TryParse(File.ReadAllText(pidFile).Trim(), out var pid) && pid > 0)
+                spawnedProcessPids.Add(pid);
         }
 
         static ITentacleClientTaskLog Log()

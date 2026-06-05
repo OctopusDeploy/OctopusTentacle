@@ -25,7 +25,7 @@ namespace Octopus.Tentacle.Services.Capabilities
             }
 
             //non-kubernetes agent tentacles only support the standard script services
-            return new CapabilitiesResponseV2(new List<string> { nameof(IScriptService), nameof(IFileTransferService), nameof(IScriptServiceV2), nameof(ScriptServiceV2.AbandonScriptAsync) });
+            return new CapabilitiesResponseV2(new List<string> { nameof(IScriptService), nameof(IFileTransferService), nameof(IScriptServiceV2), nameof(IScriptServiceV2.AbandonScript) });
         }
     }
 }

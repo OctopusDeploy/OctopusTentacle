@@ -34,7 +34,7 @@ namespace Octopus.Tentacle.Client.Scripts
             this.clientOperationMetricsBuilder = clientOperationMetricsBuilder;
         }
 
-        public async Task<(ScriptServiceVersion Version, bool SupportsAbandon)> DetermineScriptServiceVersionToUse(CancellationToken cancellationToken)
+        public async Task<ScriptServiceVersion> DetermineScriptServiceVersionToUse(CancellationToken cancellationToken)
         {
             logger.Verbose("Determining ScriptService version to use");
 
@@ -59,13 +59,10 @@ namespace Octopus.Tentacle.Client.Scripts
             // It's implied (and tested) that GetCapabilities will only return Kubernetes or non-Kubernetes script services, never a mix
             if (tentacleCapabilities.HasAnyKubernetesScriptService())
             {
-                // Kubernetes agents never advertise abandon.
-                return (DetermineKubernetesScriptServiceVersionToUse(), false);
+                return DetermineKubernetesScriptServiceVersionToUse();
             }
 
-            // Abandon support is whether the Tentacle actually advertised the capability, not just that it
-            // is V2 — old V2 Tentacles (pre-abandon) are V2 but have no abandon verb.
-            return (DetermineShellScriptServiceVersionToUse(tentacleCapabilities), tentacleCapabilities.HasAbandonScript());
+            return DetermineShellScriptServiceVersionToUse(tentacleCapabilities);
         }
 
         ScriptServiceVersion DetermineShellScriptServiceVersionToUse(CapabilitiesResponseV2 tentacleCapabilities)
@@ -76,7 +73,11 @@ namespace Octopus.Tentacle.Client.Scripts
                 logger.Verbose(clientOptions.RpcRetrySettings.RetriesEnabled
                     ? $"RPC call retries are enabled. Retry timeout {rpcCallExecutor.RetryTimeout.TotalSeconds} seconds"
                     : "RPC call retries are disabled.");
-                return ScriptServiceVersion.ScriptServiceVersion2;
+                // Old V2 Tentacles are V2 but predate the abandon verb; only pick the abandon-capable
+                // variant when the Tentacle actually advertised AbandonScript.
+                return tentacleCapabilities.HasAbandonScript()
+                    ? ScriptServiceVersion.ScriptServiceVersion2WithAbandon
+                    : ScriptServiceVersion.ScriptServiceVersion2;
             }
 
             logger.Verbose("RPC call retries are enabled but will not be used for Script Execution as a compatible ScriptService was not found. Please upgrade Tentacle to enable this feature.");

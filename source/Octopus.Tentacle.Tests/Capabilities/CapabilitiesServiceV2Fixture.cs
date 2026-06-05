@@ -21,7 +21,7 @@ namespace Octopus.Tentacle.Tests.Capabilities
                 .GetCapabilitiesAsync(CancellationToken.None))
                 .SupportedCapabilities;
 
-            capabilities.Should().BeEquivalentTo(nameof(IScriptService), nameof(IFileTransferService), nameof(IScriptServiceV2), nameof(ScriptServiceV2.AbandonScriptAsync));
+            capabilities.Should().BeEquivalentTo(nameof(IScriptService), nameof(IFileTransferService), nameof(IScriptServiceV2), nameof(IScriptServiceV2.AbandonScript));
 
             capabilities.Should().NotContainMatch("IKubernetesScriptService*");
         }

@@ -24,8 +24,10 @@ namespace Octopus.Tentacle.Client.Scripts
         readonly TimeSpan onCancellationAbandonCompleteScriptAfter;
         readonly ITentacleClientTaskLog logger;
         readonly TentacleClientOptions clientOptions;
+        readonly ScriptServiceVersion scriptServiceVersion;
 
         public ScriptServiceV2Executor(
+            ScriptServiceVersion scriptServiceVersion,
             IAsyncClientScriptServiceV2 clientScriptServiceV2,
             RpcCallExecutor rpcCallExecutor,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
@@ -33,6 +35,7 @@ namespace Octopus.Tentacle.Client.Scripts
             TentacleClientOptions clientOptions,
             ITentacleClientTaskLog logger)
         {
+            this.scriptServiceVersion = scriptServiceVersion;
             this.clientScriptServiceV2 = clientScriptServiceV2;
             this.rpcCallExecutor = rpcCallExecutor;
             this.clientOperationMetricsBuilder = clientOperationMetricsBuilder;
@@ -59,11 +62,11 @@ namespace Octopus.Tentacle.Client.Scripts
                 shellScriptCommand.Files.ToArray());
         }
         
-        static ScriptOperationExecutionResult Map(ScriptStatusResponseV2 scriptStatusResponse)
+        ScriptOperationExecutionResult Map(ScriptStatusResponseV2 scriptStatusResponse)
         {
             return new (
                 new ScriptStatus(scriptStatusResponse.State, scriptStatusResponse.ExitCode, scriptStatusResponse.Logs),
-                new CommandContext(scriptStatusResponse.Ticket, scriptStatusResponse.NextLogSequence, ScriptServiceVersion.ScriptServiceVersion2));
+                new CommandContext(scriptStatusResponse.Ticket, scriptStatusResponse.NextLogSequence, scriptServiceVersion));
         }
         
         public async Task<ScriptOperationExecutionResult> StartScript(ExecuteScriptCommand executeScriptCommand,
@@ -116,7 +119,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 if (!startScriptCallIsConnecting || startScriptCallIsBeingRetried)
                 {
                     // We want to cancel the potentially started script, and wait till it finishes. By returning a result, the outer orchestration will take care of this.
-                    return ScriptOperationExecutionResult.CreateScriptStartedResult(command.ScriptTicket, ScriptServiceVersion.ScriptServiceVersion2);
+                    return ScriptOperationExecutionResult.CreateScriptStartedResult(command.ScriptTicket, scriptServiceVersion);
                 }
 
                 // If the StartScript call was not in-flight or being retries then we know the script has not started executing on Tentacle

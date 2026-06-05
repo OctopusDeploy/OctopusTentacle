@@ -9,7 +9,6 @@ using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Capabilities;
 using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
-using Octopus.Tentacle.Core.Services.Scripts;
 using Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
@@ -31,8 +30,15 @@ namespace Octopus.Tentacle.Tests.Integration
 
             capabilities.Should().Contain(nameof(IScriptService));
             capabilities.Should().Contain(nameof(IFileTransferService));
+            var expectedCount = 2;
             if (version.HasScriptServiceV2())
+            {
                 capabilities.Should().Contain(nameof(IScriptServiceV2));
+                expectedCount++;
+            }
+            if (version.HasAbandonScript())
+                expectedCount++;
+            capabilities.Count.Should().Be(expectedCount);
         }
 
         [Test]
@@ -47,10 +53,17 @@ namespace Octopus.Tentacle.Tests.Integration
 
             capabilities.Should().Contain(nameof(IScriptService));
             capabilities.Should().Contain(nameof(IFileTransferService));
+            var expectedCount = 2;
             if (version.HasScriptServiceV2())
+            {
                 capabilities.Should().Contain(nameof(IScriptServiceV2));
+                expectedCount++;
+            }
+            if (version.HasAbandonScript())
+                expectedCount++;
 
             capabilities.Should().NotContain(nameof(IKubernetesScriptServiceV1));
+            capabilities.Count.Should().Be(expectedCount);
         }
 
         [Test]
@@ -65,9 +78,9 @@ namespace Octopus.Tentacle.Tests.Integration
 
             // Older Tentacles predate abandon and must not advertise it; this build (and later) must.
             if (version.HasAbandonScript())
-                capabilities.Should().Contain(nameof(ScriptServiceV2.AbandonScriptAsync));
+                capabilities.Should().Contain(nameof(IScriptServiceV2.AbandonScript));
             else
-                capabilities.Should().NotContain(nameof(ScriptServiceV2.AbandonScriptAsync));
+                capabilities.Should().NotContain(nameof(IScriptServiceV2.AbandonScript));
         }
 
         [Test]

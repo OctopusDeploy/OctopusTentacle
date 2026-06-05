@@ -309,15 +309,58 @@ while ((Get-Date) -lt $deadline) {
             await WaitForPidFileAsync(pidFile, TimeSpan.FromSeconds(30));
             abandonCts.Cancel();
 
+            var exitCode = await task;
+            exitCode.Should().Be(ScriptExitCodes.AbandonedExitCode);
+            infoMessages.ToString().Should().Contain("Tentacle has abandoned this script");
+        }
+
+        [Test]
+        [NonParallelizable]
+        public async Task AbandonToken_WhenProcessCanNotBeKilled_ReturnsAbandonedExitCode()
+        {
+            // Simulate a stuck process: TentacleDebugDisableProcessKill makes Hitman a no-op, so abandon's
+            // best-effort kill can't terminate it. Abandon still returns AbandonedExitCode without waiting and
+            // the process is left running. That env var is process-wide, so the test is NonParallelizable and
+            // resets it (and force-kills the leftover process) in finally.
+            using var tempDir = new TemporaryDirectory();
+            var pidFile = Path.Combine(tempDir.DirectoryPath, "process.pid");
+
+            var abandonCommand = PlatformDetection.IsRunningOnWindows ? "powershell.exe" : "/bin/bash";
+            var arguments = PlatformDetection.IsRunningOnWindows
+                ? $"-NoProfile -NonInteractive -Command \"$PID | Out-File -FilePath '{pidFile}' -Encoding ASCII; Start-Sleep -Seconds 300\""
+                : $"-c \"echo $$ > '{pidFile}' && sleep 300\"";
+
+            using var cancelCts = new CancellationTokenSource();
+            using var abandonCts = new CancellationTokenSource();
+            var infoMessages = new StringBuilder();
+
+            Environment.SetEnvironmentVariable(Octopus.Tentacle.Core.Util.EnvironmentVariables.TentacleDebugDisableProcessKill_UNSAFE_FOR_PRODUCTION, "1");
             try
             {
+                var task = Task.Run(async () => await SilentProcessRunner.ExecuteCommandAsync(
+                    abandonCommand,
+                    arguments,
+                    Environment.CurrentDirectory,
+                    debug: _ => { },
+                    info: msg => { lock (infoMessages) infoMessages.AppendLine(msg); },
+                    error: _ => { },
+                    customEnvironmentVariables: null,
+                    cancel: cancelCts.Token,
+                    abandon: abandonCts.Token));
+
+                await WaitForPidFileAsync(pidFile, TimeSpan.FromSeconds(30));
+                abandonCts.Cancel();
+
                 var exitCode = await task;
                 exitCode.Should().Be(ScriptExitCodes.AbandonedExitCode);
                 infoMessages.ToString().Should().Contain("Tentacle has abandoned this script");
-                AssertProcessExitsWithin(pidFile, TimeSpan.FromSeconds(10));
+
+                // Kill was a no-op, so abandon left the process running.
+                AssertProcessIsRunning(pidFile);
             }
             finally
             {
+                Environment.SetEnvironmentVariable(Octopus.Tentacle.Core.Util.EnvironmentVariables.TentacleDebugDisableProcessKill_UNSAFE_FOR_PRODUCTION, null);
                 EnsureProcessKilled(pidFile);
             }
         }
@@ -373,6 +416,13 @@ while ((Get-Date) -lt $deadline) {
                 Thread.Sleep(100);
 
             IsProcessRunning(pid).Should().BeFalse($"abandon best-effort-kills a killable process, so PID {pid} should be gone");
+        }
+
+        static void AssertProcessIsRunning(string pidFile)
+        {
+            File.Exists(pidFile).Should().BeTrue($"the test should have written a PID to '{pidFile}'");
+            int.TryParse(SafelyReadAllText(pidFile).Trim(), out var pid).Should().BeTrue("a valid PID should have been written");
+            IsProcessRunning(pid).Should().BeTrue($"abandon leaves an un-killable process running, so PID {pid} should still be alive");
         }
 
         static bool IsProcessRunning(int pid)
