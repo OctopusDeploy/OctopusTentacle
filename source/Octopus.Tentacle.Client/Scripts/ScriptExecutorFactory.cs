@@ -43,10 +43,8 @@ namespace Octopus.Tentacle.Client.Scripts
                     logger);
             }
 
-            if (scriptServiceToUse == ScriptServiceVersion.ScriptServiceVersion2 || scriptServiceToUse == ScriptServiceVersion.ScriptServiceVersion2WithAbandon)
+            if (scriptServiceToUse.IsV2)
             {
-                // Both variants talk to the same V2 service; pass the selected version so it's stamped
-                // onto the CommandContext and the orchestrator can read SupportsAbandon from it.
                 return new ScriptServiceV2Executor(
                     scriptServiceToUse,
                     allClients.ScriptServiceV2,
