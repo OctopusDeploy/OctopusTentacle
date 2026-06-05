@@ -58,6 +58,17 @@ New-Item -type file '{file}'
             return this;
         }
 
+        public ScriptBuilder WritePidToFile(string file)
+        {
+            bashScript.AppendLine($@"
+echo $$ > '{file}'
+");
+            windowsScript.AppendLine($@"
+$PID | Out-File -FilePath '{file}' -Encoding ASCII
+");
+            return this;
+        }
+
         public ScriptBuilder WaitForFileToExist(string fileToWaitFor)
         {
             bashScript.AppendLine($@"

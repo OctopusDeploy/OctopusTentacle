@@ -46,12 +46,18 @@ namespace Octopus.Tentacle.Client
         {
             // Note: This class deliberately does not create OpenTelemetry Trace activities.
             // It is a facade over other ScriptExecutor services, and the facade doesn't do anything interesting
-            var scriptServiceVersionToUse = await DetermineScriptServiceVersionToUse(cancellationToken);
+            var (scriptServiceVersionToUse, supportsAbandon) = await DetermineScriptServiceVersionToUse(cancellationToken);
 
             var scriptExecutorFactory = CreateScriptExecutorFactory();
             var scriptExecutor = scriptExecutorFactory.CreateScriptExecutor(scriptServiceVersionToUse);
 
-            return await scriptExecutor.StartScript(executeScriptCommand, startScriptIsBeingReAttempted, cancellationToken);
+            var result = await scriptExecutor.StartScript(executeScriptCommand, startScriptIsBeingReAttempted, cancellationToken);
+
+            // Carry whether the Tentacle advertised abandon onto the context the orchestrator reads, so it can
+            // gate escalation on the real capability rather than just "is V2".
+            var context = result.ContextForNextCommand;
+            var contextWithAbandon = new CommandContext(context.ScriptTicket, context.NextLogSequence, context.ScripServiceVersionUsed, supportsAbandon);
+            return new ScriptOperationExecutionResult(result.ScriptStatus, contextWithAbandon);
         }
 
         public async Task<ScriptOperationExecutionResult> GetStatus(CommandContext commandContext, CancellationToken cancellationToken)
@@ -96,7 +102,7 @@ namespace Octopus.Tentacle.Client
                 logger);
         }
 
-        async Task<ScriptServiceVersion> DetermineScriptServiceVersionToUse(CancellationToken cancellationToken)
+        async Task<(ScriptServiceVersion Version, bool SupportsAbandon)> DetermineScriptServiceVersionToUse(CancellationToken cancellationToken)
         {
             try
             {

@@ -34,7 +34,7 @@ namespace Octopus.Tentacle.Client.Scripts
             this.clientOperationMetricsBuilder = clientOperationMetricsBuilder;
         }
 
-        public async Task<ScriptServiceVersion> DetermineScriptServiceVersionToUse(CancellationToken cancellationToken)
+        public async Task<(ScriptServiceVersion Version, bool SupportsAbandon)> DetermineScriptServiceVersionToUse(CancellationToken cancellationToken)
         {
             logger.Verbose("Determining ScriptService version to use");
 
@@ -59,10 +59,13 @@ namespace Octopus.Tentacle.Client.Scripts
             // It's implied (and tested) that GetCapabilities will only return Kubernetes or non-Kubernetes script services, never a mix
             if (tentacleCapabilities.HasAnyKubernetesScriptService())
             {
-                return DetermineKubernetesScriptServiceVersionToUse();
+                // Kubernetes agents never advertise abandon.
+                return (DetermineKubernetesScriptServiceVersionToUse(), false);
             }
 
-            return DetermineShellScriptServiceVersionToUse(tentacleCapabilities);
+            // Abandon support is whether the Tentacle actually advertised the capability, not just that it
+            // is V2 — old V2 Tentacles (pre-abandon) are V2 but have no abandon verb.
+            return (DetermineShellScriptServiceVersionToUse(tentacleCapabilities), tentacleCapabilities.HasAbandonScript());
         }
 
         ScriptServiceVersion DetermineShellScriptServiceVersionToUse(CapabilitiesResponseV2 tentacleCapabilities)

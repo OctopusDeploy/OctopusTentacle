@@ -1,11 +1,14 @@
 using System;
+using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Tentacle.Client;
+using Octopus.Tentacle.Client.EventDriven;
+using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Contracts.Logging;
 using Octopus.Tentacle.Core.Util;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util;
@@ -18,68 +21,112 @@ namespace Octopus.Tentacle.Tests.Integration
     {
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.Version2)]
-        public async Task AbandonScript_WhenCancelFailsToKillProcess_ReturnsAbandonedExitCode(TentacleConfigurationTestCase tentacleConfigurationTestCase)
+        public async Task AbandonScript_WhenProcessCannotBeKilled_LeavesItRunningAndReturnsAbandonedExitCode(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
-            // TentacleDebugDisableProcessKill_UNSAFE_FOR_PRODUCTION=1 makes Hitman a no-op, so
-            // CancelScript cannot actually terminate the underlying script process. The script
-            // becomes genuinely "stuck" from Tentacle's perspective. AbandonScript should then
-            // return promptly with AbandonedExitCode without waiting for the process to exit.
+            // TentacleDebugDisableProcessKill_UNSAFE_FOR_PRODUCTION=1 makes Hitman a no-op, so CancelScript
+            // cannot terminate the process — it is genuinely stuck. AbandonScript then returns promptly with
+            // AbandonedExitCode without waiting, and the un-killable process is left running.
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacle(x => x.WithRunTentacleEnvironmentVariable(EnvironmentVariables.TentacleDebugDisableProcessKill_UNSAFE_FOR_PRODUCTION, "1"))
                 .Build(CancellationToken);
 
             var startFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "start");
             var releaseFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "release");
+            var pidFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "pid");
 
-            var firstCommand = new TestExecuteShellScriptCommandBuilder()
+            var command = new TestExecuteShellScriptCommandBuilder()
                 .SetScriptBody(new ScriptBuilder()
+                    .WritePidToFile(pidFile)
                     .CreateFile(startFile)
                     .WaitForFileToExist(releaseFile))
                 .WithIsolationLevel(ScriptIsolationLevel.NoIsolation)
                 .Build();
 
-            var tentacleClient = clientTentacle.TentacleClient;
+            var client = clientTentacle.TentacleClient;
+            var log = Log();
 
-            var scriptExecution = Task.Run(async () => await tentacleClient.ExecuteScript(firstCommand, CancellationToken));
+            // Explicit StartScript (not ExecuteScript) so we drive cancel and abandon ourselves.
+            var startResult = await client.StartScript(command, StartScriptIsBeingReAttempted.FirstAttempt, log, CancellationToken);
 
             await Wait.For(() => File.Exists(startFile),
                 TimeSpan.FromSeconds(30),
                 () => throw new Exception("Script did not start"),
                 CancellationToken);
 
-            // Cancel: Hitman is a no-op so the process keeps running.
-            await tentacleClient.CancelScript(firstCommand.ScriptTicket);
-            await Task.Delay(TimeSpan.FromSeconds(1));
+            // Cancel: Hitman is a no-op, so the process keeps running.
+            var afterCancel = await client.CancelScript(startResult.ContextForNextCommand, log);
 
-            // Abandon: fires the abandon token. ExecuteScript observes the abandoned terminal state and
-            // returns it. We assert on its result rather than a separate GetStatus poll — the poll would
-            // race the orchestrator's own CompleteScript cleanup (which removes the script and deletes the
-            // workspace), and on slower transports lands after it, seeing UnknownScriptExitCode.
-            await tentacleClient.AbandonScript(firstCommand.ScriptTicket, CancellationToken);
+            // Abandon: returns the abandoned terminal state without waiting for the still-running process.
+            await client.AbandonScript(command.ScriptTicket, log, CancellationToken);
 
-            var (result, _) = await scriptExecution;
-            result.ExitCode.Should().Be(ScriptExitCodes.AbandonedExitCode);
+            var finalResult = await RunStatusUntilComplete(client, afterCancel.ContextForNextCommand, log);
+            finalResult.ScriptStatus.ExitCode.Should().Be(ScriptExitCodes.AbandonedExitCode);
 
-            // The process is still alive (kill was disabled); release it so it stops leaking.
+            // The process was never killed (kill disabled), so abandon left it running.
+            AssertProcessIsRunning(pidFile);
+
+            // Release the still-running script, then complete it so the workspace is cleaned up.
             File.WriteAllText(releaseFile, "");
+            await client.CompleteScript(finalResult.ContextForNextCommand, log, CancellationToken);
+        }
+
+        [Test]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.Version2)]
+        public async Task AbandonScript_WithNoPriorCancel_KillsTheProcessAndReturnsAbandonedExitCode(TentacleConfigurationTestCase tentacleConfigurationTestCase)
+        {
+            // Anti-abuse: a direct AbandonScript with no prior CancelScript must still attempt the kill. Kill is
+            // NOT disabled here, so the abandon branch's best-effort kill actually terminates the process.
+            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+                .Build(CancellationToken);
+
+            var startFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "start");
+            var releaseFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "release");
+            var pidFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "pid");
+
+            var command = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(new ScriptBuilder()
+                    .WritePidToFile(pidFile)
+                    .CreateFile(startFile)
+                    .WaitForFileToExist(releaseFile))
+                .WithIsolationLevel(ScriptIsolationLevel.NoIsolation)
+                .Build();
+
+            var client = clientTentacle.TentacleClient;
+            var log = Log();
+
+            var startResult = await client.StartScript(command, StartScriptIsBeingReAttempted.FirstAttempt, log, CancellationToken);
+
+            await Wait.For(() => File.Exists(startFile),
+                TimeSpan.FromSeconds(30),
+                () => throw new Exception("Script did not start"),
+                CancellationToken);
+
+            // Direct abandon, NO prior cancel. We never write releaseFile, so the script only completes
+            // because the abandon branch killed it.
+            await client.AbandonScript(command.ScriptTicket, log, CancellationToken);
+
+            var finalResult = await RunStatusUntilComplete(client, startResult.ContextForNextCommand, log);
+            finalResult.ScriptStatus.ExitCode.Should().Be(ScriptExitCodes.AbandonedExitCode);
+
+            // Kill was enabled, so abandon's best-effort kill landed and the process is gone.
+            AssertProcessExits(pidFile, TimeSpan.FromSeconds(10));
+
+            await client.CompleteScript(finalResult.ContextForNextCommand, log, CancellationToken);
         }
 
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.Version2)]
         public async Task AbandonScript_ReleasesIsolationMutexEvenWhileProcessIsStillRunning(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
-            // The whole reason Tentacle needs an abandon RPC is to release the isolation mutex
-            // when CancelScript can't unstick the script. This test proves that contract: a
-            // FullIsolation script gets stuck (because TentacleDebugDisableProcessKill_UNSAFE_FOR_PRODUCTION
-            // makes cancel a no-op), abandon is called, and a second FullIsolation script with
-            // the same mutex name must then be able to acquire the mutex and run.
+            // The whole reason Tentacle needs an abandon RPC is to release the isolation mutex when CancelScript
+            // can't unstick the script. A FullIsolation script gets stuck (kill disabled), abandon is called, and
+            // a second FullIsolation script with the same mutex name must then be able to acquire the mutex and run.
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacle(x => x.WithRunTentacleEnvironmentVariable(EnvironmentVariables.TentacleDebugDisableProcessKill_UNSAFE_FOR_PRODUCTION, "1"))
                 .Build(CancellationToken);
 
             var startFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "start");
             var releaseFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "release");
-
             const string sharedMutex = "abandon-test-mutex";
 
             var firstCommand = new TestExecuteShellScriptCommandBuilder()
@@ -90,23 +137,21 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithIsolationMutexName(sharedMutex)
                 .Build();
 
-            var tentacleClient = clientTentacle.TentacleClient;
+            var client = clientTentacle.TentacleClient;
+            var log = Log();
 
-            var firstScriptExecution = Task.Run(async () => await tentacleClient.ExecuteScript(firstCommand, CancellationToken));
+            var startResult = await client.StartScript(firstCommand, StartScriptIsBeingReAttempted.FirstAttempt, log, CancellationToken);
 
             await Wait.For(() => File.Exists(startFile),
                 TimeSpan.FromSeconds(30),
                 () => throw new Exception("First script did not start"),
                 CancellationToken);
 
-            await tentacleClient.CancelScript(firstCommand.ScriptTicket);
-            await Task.Delay(TimeSpan.FromSeconds(1));
+            var afterCancel = await client.CancelScript(startResult.ContextForNextCommand, log);
+            await client.AbandonScript(firstCommand.ScriptTicket, log, CancellationToken);
 
-            await tentacleClient.AbandonScript(firstCommand.ScriptTicket, CancellationToken);
-
-            // Second FullIsolation script with the SAME mutex name. If the abandon released
-            // the mutex, this script can acquire it and run to completion. Otherwise it would
-            // block waiting for the (still-alive) first script's mutex hold.
+            // Second FullIsolation script with the SAME mutex name. If abandon released the mutex, this script
+            // can acquire it and run to completion. Otherwise it blocks behind the still-alive first script.
             var secondStartFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "second-start");
             var secondCommand = new TestExecuteShellScriptCommandBuilder()
                 .SetScriptBody(new ScriptBuilder().CreateFile(secondStartFile))
@@ -114,50 +159,14 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithIsolationMutexName(sharedMutex)
                 .Build();
 
-            var (secondResult, _) = await tentacleClient.ExecuteScript(secondCommand, CancellationToken);
+            var (secondResult, _) = await client.ExecuteScript(secondCommand, CancellationToken);
             secondResult.ExitCode.Should().Be(0);
             File.Exists(secondStartFile).Should().BeTrue("second script should have run after the mutex was released");
 
+            // Release the still-running first script, then complete it.
             File.WriteAllText(releaseFile, "");
-            await firstScriptExecution;
-        }
-
-        [Test]
-        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.Version2)]
-        public async Task AbandonScript_WithNoPriorCancel_KillsTheProcess(TentacleConfigurationTestCase tentacleConfigurationTestCase)
-        {
-            // Anti-abuse: a direct AbandonScript with no prior CancelScript must still attempt the
-            // kill. The runner's abandon branch best-effort-kills (DoOurBestToCleanUp) before returning
-            // -48. Kill is NOT disabled here, so the underlying process must actually die (the execution drains).
-            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
-                .Build(CancellationToken);
-
-            var startFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "start");
-            var releaseFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "release");
-
-            var command = new TestExecuteShellScriptCommandBuilder()
-                .SetScriptBody(new ScriptBuilder()
-                    .CreateFile(startFile)
-                    .WaitForFileToExist(releaseFile))
-                .WithIsolationLevel(ScriptIsolationLevel.NoIsolation)
-                .Build();
-
-            var tentacleClient = clientTentacle.TentacleClient;
-            var scriptExecution = Task.Run(async () => await tentacleClient.ExecuteScript(command, CancellationToken));
-
-            await Wait.For(() => File.Exists(startFile),
-                TimeSpan.FromSeconds(30),
-                () => throw new Exception("Script did not start"),
-                CancellationToken);
-
-            // Direct abandon, NO prior cancel. Assert on ExecuteScript's own result rather than a separate
-            // GetStatus poll, which would race the orchestrator's CompleteScript cleanup (see
-            // AbandonScript_WhenCancelFailsToKillProcess for the same reasoning).
-            await tentacleClient.AbandonScript(command.ScriptTicket, CancellationToken);
-
-            // We never wrote releaseFile, so the script only completes because the abandon branch killed it.
-            var (result, _) = await scriptExecution;
-            result.ExitCode.Should().Be(ScriptExitCodes.AbandonedExitCode);
+            var firstFinal = await RunStatusUntilComplete(client, afterCancel.ContextForNextCommand, log);
+            await client.CompleteScript(firstFinal.ContextForNextCommand, log, CancellationToken);
         }
 
         [Test]
@@ -165,9 +174,10 @@ namespace Octopus.Tentacle.Tests.Integration
         public async Task ExecuteScript_WhenCancellationStaysPending_EscalatesToAbandon_AndReleasesMutex(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             // Kill is disabled, so the script is genuinely stuck and CancelScript can't end it. With
-            // abandonAfterCancellationPendingFor set short, the orchestrator escalates from cancel to
-            // abandon, which releases the isolation mutex. We prove that by the outcome: a second
-            // FullIsolation script with the same mutex name can only run once the mutex is released.
+            // abandonAfterCancellationPendingFor set short, the orchestrator escalates from cancel to abandon,
+            // which releases the isolation mutex. We prove that by the outcome: a second FullIsolation script
+            // with the same mutex name can only run once the mutex is released. This is the ExecuteScript
+            // (orchestrator) path; the explicit-AbandonScript path is AbandonScript_ReleasesIsolationMutex... above.
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacle(x => x.WithRunTentacleEnvironmentVariable(EnvironmentVariables.TentacleDebugDisableProcessKill_UNSAFE_FOR_PRODUCTION, "1"))
                 .Build(CancellationToken);
@@ -184,14 +194,14 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithIsolationMutexName(sharedMutex)
                 .Build();
 
-            var tentacleClient = clientTentacle.TentacleClient;
+            var client = clientTentacle.TentacleClient;
 
             using var executionCts = new System.Threading.CancellationTokenSource();
-            var stuckExecution = Task.Run(async () => await tentacleClient.ExecuteScript(
+            var stuckExecution = Task.Run(async () => await client.ExecuteScript(
                 stuckCommand,
                 _ => { },
                 _ => Task.CompletedTask,
-                new SerilogLoggerBuilder().Build().ForContext<TentacleClient>().ToITentacleTaskLog(),
+                Log(),
                 executionCts.Token,
                 abandonAfterCancellationPendingFor: TimeSpan.FromSeconds(2)));
 
@@ -212,7 +222,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithIsolationMutexName(sharedMutex)
                 .Build();
 
-            var (secondResult, _) = await tentacleClient.ExecuteScript(secondCommand, CancellationToken);
+            var (secondResult, _) = await client.ExecuteScript(secondCommand, CancellationToken);
             secondResult.ExitCode.Should().Be(0);
             File.Exists(secondStartFile).Should().BeTrue("escalation to abandon should have released the mutex");
 
@@ -224,11 +234,9 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.Version1)]
         public async Task ExecuteScript_OnV1Tentacle_DoesNotEscalateToAbandon(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
-            // ScriptServiceV1 has no abandon verb, so the orchestrator must keep cancelling and never
-            // escalate. If it wrongly escalated it would call the V1 executor's AbandonScript, which
-            // throws NotSupportedException. We prove the gating by the outcome: even with
-            // abandonAfterCancellationPendingFor set, the run ends in OperationCanceledException (the
-            // cancel path) — never NotSupportedException.
+            // A V1 Tentacle has no abandon verb. If the orchestrator wrongly escalated, the V1 executor's
+            // AbandonScript throws NotSupportedException. Asserting the cancelled run throws OperationCanceledException
+            // (and therefore NOT NotSupportedException) proves the gate held and we never escalated.
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacle(x => x.WithRunTentacleEnvironmentVariable(EnvironmentVariables.TentacleDebugDisableProcessKill_UNSAFE_FOR_PRODUCTION, "1"))
                 .Build(CancellationToken);
@@ -243,14 +251,14 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithIsolationLevel(ScriptIsolationLevel.NoIsolation)
                 .Build();
 
-            var tentacleClient = clientTentacle.TentacleClient;
+            var client = clientTentacle.TentacleClient;
 
             using var executionCts = new System.Threading.CancellationTokenSource();
-            var execution = Task.Run(async () => await tentacleClient.ExecuteScript(
+            var execution = Task.Run(async () => await client.ExecuteScript(
                 command,
                 _ => { },
                 _ => Task.CompletedTask,
-                new SerilogLoggerBuilder().Build().ForContext<TentacleClient>().ToITentacleTaskLog(),
+                Log(),
                 executionCts.Token,
                 abandonAfterCancellationPendingFor: TimeSpan.FromSeconds(1)));
 
@@ -261,30 +269,24 @@ namespace Octopus.Tentacle.Tests.Integration
 
             executionCts.Cancel();
 
-            // Well past the 1s threshold: if the V1 gating were broken the orchestrator would have
-            // escalated to AbandonScript (which throws NotSupportedException) by now.
+            // Well past the 1s threshold: if the V1 gate were broken the orchestrator would have escalated to
+            // AbandonScript (which throws NotSupportedException) by now.
             await Task.Delay(TimeSpan.FromSeconds(3));
 
             // Release so the stuck script can finish and the run can unwind.
             File.WriteAllText(releaseFile, "");
 
-            // Cancel path only — never NotSupportedException.
             await FluentActions.Invoking(async () => await execution).Should().ThrowAsync<OperationCanceledException>();
         }
 
         [Test]
         [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.Version2)]
-        public async Task ExecuteScript_WhenAQueuedScriptIsCancelled_ExitsViaCancelNotAbandon(TentacleConfigurationTestCase tentacleConfigurationTestCase)
+        public async Task AbandonScript_WhenAScriptIsWaitingOnAMutex_AndIsCancelled_ReturnsCancelledNotAbandoned(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             // End-to-end counterpart to ScriptServiceV2Fixture.AbandonScript_WhileWaitingOnTheIsolationMutex_ExitsCancelled.
-            // A script still waiting on the isolation mutex never started a process, so when its execution is
-            // cancelled (with abandon escalation armed) it ends via the cancel path (OperationCanceledException)
-            // and never runs. Abandon has nothing to act on for a queued script, so it cannot change the outcome.
-            // If we ever want abandon to win for a queued script, RunningScript.Execute can catch
-            // (OperationCanceledException) when (abandonToken.IsCancellationRequested) around the mutex Acquire
-            // and return AbandonedExitCode instead. Deliberately not doing that today.
+            // A script still waiting on the isolation mutex never started a process, so when it is cancelled (and
+            // abandoned) it exits cancelled, not abandoned. Abandon has nothing to act on for a queued script.
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
-                .WithTentacle(x => x.WithRunTentacleEnvironmentVariable(EnvironmentVariables.TentacleDebugDisableProcessKill_UNSAFE_FOR_PRODUCTION, "1"))
                 .Build(CancellationToken);
 
             var holderStartFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "holder-start");
@@ -292,7 +294,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var waiterRanFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "waiter-ran");
             const string sharedMutex = "queued-cancel-test-mutex";
 
-            // Holder takes the mutex and stays stuck (kill disabled), so the waiter must queue behind it.
+            // Holder takes the mutex and holds it (it doesn't need to be stuck), so the waiter must queue behind it.
             var holderCommand = new TestExecuteShellScriptCommandBuilder()
                 .SetScriptBody(new ScriptBuilder()
                     .CreateFile(holderStartFile)
@@ -301,8 +303,10 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithIsolationMutexName(sharedMutex)
                 .Build();
 
-            var tentacleClient = clientTentacle.TentacleClient;
-            var holderExecution = Task.Run(async () => await tentacleClient.ExecuteScript(holderCommand, CancellationToken));
+            var client = clientTentacle.TentacleClient;
+            var log = Log();
+
+            var holderStart = await client.StartScript(holderCommand, StartScriptIsBeingReAttempted.FirstAttempt, log, CancellationToken);
 
             await Wait.For(() => File.Exists(holderStartFile),
                 TimeSpan.FromSeconds(30),
@@ -316,26 +320,69 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithIsolationMutexName(sharedMutex)
                 .Build();
 
-            using var waiterCts = new System.Threading.CancellationTokenSource();
-            var waiterExecution = Task.Run(async () => await tentacleClient.ExecuteScript(
-                waiterCommand,
-                _ => { },
-                _ => Task.CompletedTask,
-                new SerilogLoggerBuilder().Build().ForContext<TentacleClient>().ToITentacleTaskLog(),
-                waiterCts.Token,
-                abandonAfterCancellationPendingFor: TimeSpan.FromSeconds(2)));
+            var waiterStart = await client.StartScript(waiterCommand, StartScriptIsBeingReAttempted.FirstAttempt, log, CancellationToken);
 
-            // Let the waiter reach the mutex queue, then cancel it. With escalation armed the orchestrator may
-            // also try to abandon — but abandon can't act on a queued script, so it still ends via cancel.
+            // Give the waiter time to reach the mutex queue, then cancel and abandon it.
             await Task.Delay(TimeSpan.FromSeconds(2));
-            waiterCts.Cancel();
+            var waiterAfterCancel = await client.CancelScript(waiterStart.ContextForNextCommand, log);
+            await client.AbandonScript(waiterCommand.ScriptTicket, log, CancellationToken);
 
-            await FluentActions.Invoking(async () => await waiterExecution).Should().ThrowAsync<OperationCanceledException>();
+            var waiterFinal = await RunStatusUntilComplete(client, waiterAfterCancel.ContextForNextCommand, log);
+            waiterFinal.ScriptStatus.ExitCode.Should().Be(ScriptExitCodes.CanceledExitCode);
             File.Exists(waiterRanFile).Should().BeFalse("a script blocked on the isolation mutex never starts its process");
 
-            // Cleanup: release the holder.
+            await client.CompleteScript(waiterFinal.ContextForNextCommand, log, CancellationToken);
+
+            // Cleanup: release the holder, then complete it.
             File.WriteAllText(holderReleaseFile, "");
-            await holderExecution;
+            var holderFinal = await RunStatusUntilComplete(client, holderStart.ContextForNextCommand, log);
+            await client.CompleteScript(holderFinal.ContextForNextCommand, log, CancellationToken);
+        }
+
+        static ITentacleClientTaskLog Log()
+            => new SerilogLoggerBuilder().Build().ForContext<TentacleClient>().ToITentacleTaskLog();
+
+        async Task<ScriptOperationExecutionResult> RunStatusUntilComplete(ITentacleClient client, CommandContext context, ITentacleClientTaskLog log)
+        {
+            var result = await client.GetStatus(context, log, CancellationToken);
+            while (result.ScriptStatus.State != ProcessState.Complete)
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(200));
+                result = await client.GetStatus(result.ContextForNextCommand, log, CancellationToken);
+            }
+
+            return result;
+        }
+
+        static void AssertProcessIsRunning(string pidFile)
+        {
+            File.Exists(pidFile).Should().BeTrue($"the script should have written its PID to '{pidFile}'");
+            int.TryParse(File.ReadAllText(pidFile).Trim(), out var pid).Should().BeTrue("a valid PID should have been written");
+            IsProcessRunning(pid).Should().BeTrue($"abandon leaves an un-killable process running, so PID {pid} should still be alive");
+        }
+
+        static void AssertProcessExits(string pidFile, TimeSpan timeout)
+        {
+            File.Exists(pidFile).Should().BeTrue($"the script should have written its PID to '{pidFile}'");
+            int.TryParse(File.ReadAllText(pidFile).Trim(), out var pid).Should().BeTrue("a valid PID should have been written");
+
+            // abandon's best-effort kill is asynchronous, so give it a moment to actually terminate.
+            var deadline = DateTime.UtcNow + timeout;
+            while (DateTime.UtcNow < deadline && IsProcessRunning(pid))
+                System.Threading.Thread.Sleep(100);
+
+            IsProcessRunning(pid).Should().BeFalse($"abandon best-effort-kills a killable process, so PID {pid} should be gone");
+        }
+
+        static bool IsProcessRunning(int pid)
+        {
+            try
+            {
+                using var process = Process.GetProcessById(pid);
+                return !process.HasExited;
+            }
+            catch (ArgumentException) { return false; }       // not running
+            catch (InvalidOperationException) { return false; } // exited
         }
     }
 }

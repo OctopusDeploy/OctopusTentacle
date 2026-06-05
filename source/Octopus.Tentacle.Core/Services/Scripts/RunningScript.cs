@@ -126,7 +126,8 @@ namespace Octopus.Tentacle.Core.Services.Scripts
                                 : await RunScriptAsync(shellPath, writer, runningScriptToken, abandonToken);
                         }
                     }
-                    // Fires when the caller cancelled the script and the underlying process honored the cancellation token.
+                    // We get here when cancel fires before the script starts running. scriptIsolationMutex.Acquire
+                    // watches runningScriptToken and throws while we're still waiting for the mutex.
                     catch (OperationCanceledException)
                     {
                         writer.WriteOutput(ProcessOutputSource.StdOut, "Script execution canceled.");

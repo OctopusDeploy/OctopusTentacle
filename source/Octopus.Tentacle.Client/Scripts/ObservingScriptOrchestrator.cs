@@ -83,6 +83,7 @@ namespace Octopus.Tentacle.Client.Scripts
             var iteration = 0;
             var cancellationIteration = 0;
             var lastResult = startScriptResult;
+            var supportsAbandon = startScriptResult.ContextForNextCommand.SupportsAbandon;
             var stopwatch = new Stopwatch();
 
             while (lastResult.ScriptStatus.State != ProcessState.Complete)
@@ -95,9 +96,10 @@ namespace Octopus.Tentacle.Client.Scripts
                         stopwatch.Start();
                     }
 
-                    // Only escalate to abandon when the script service can actually abandon. On versions
-                    // that can't (V1, Kubernetes) we keep cancelling rather than calling a verb they don't have.
-                    var shouldAbandon = lastResult.ContextForNextCommand.ScripServiceVersionUsed.SupportsAbandon
+                    // Only escalate to abandon when the Tentacle advertised the abandon capability. Old V2
+                    // Tentacles (pre-abandon) and V1/Kubernetes don't, so we keep cancelling rather than
+                    // calling a verb they don't have.
+                    var shouldAbandon = supportsAbandon
                         && abandonAfterCancellationPendingFor.HasValue
                         && stopwatch.Elapsed >= abandonAfterCancellationPendingFor.Value;
 

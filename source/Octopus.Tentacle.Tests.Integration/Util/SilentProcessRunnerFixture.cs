@@ -277,14 +277,10 @@ while ((Get-Date) -lt $deadline) {
         }
 
         [Test]
-        public async Task AbandonToken_ReturnsAbandonedExitCode()
+        public async Task AbandonToken_WhenProcessCanBeKilled_KillsTheProcessAndReturnsAbandonedExitCode()
         {
-            // Abandon stops waiting and returns the distinct AbandonedExitCode. Abandon also
-            // best-effort-kills the process — the kill itself is asserted by
-            // ClientScriptExecutionAbandon.AbandonScript_WithNoPriorCancel_KillsTheProcess, and the
-            // un-killable (survives) case by AbandonScript_WhenCancelFailsToKillProcess. (We do NOT
-            // disable kill here: setting that env var is process-wide and leaks into the Tentacle
-            // subprocesses other integration tests spawn.)
+            // Abandon returns AbandonedExitCode and best-effort-kills the process. Here the process is
+            // killable, so the kill lands and the process is gone.
             using var tempDir = new TemporaryDirectory();
             var pidFile = Path.Combine(tempDir.DirectoryPath, "process.pid");
 
@@ -318,6 +314,7 @@ while ((Get-Date) -lt $deadline) {
                 var exitCode = await task;
                 exitCode.Should().Be(ScriptExitCodes.AbandonedExitCode);
                 infoMessages.ToString().Should().Contain("Tentacle has abandoned this script");
+                AssertProcessExitsWithin(pidFile, TimeSpan.FromSeconds(10));
             }
             finally
             {
@@ -363,6 +360,30 @@ while ((Get-Date) -lt $deadline) {
             }
             catch (ArgumentException) { /* not running — already gone */ }
             catch (InvalidOperationException) { /* exited between lookup and kill */ }
+        }
+
+        static void AssertProcessExitsWithin(string pidFile, TimeSpan timeout)
+        {
+            File.Exists(pidFile).Should().BeTrue($"the test should have written a PID to '{pidFile}'");
+            int.TryParse(SafelyReadAllText(pidFile).Trim(), out var pid).Should().BeTrue("a valid PID should have been written");
+
+            // abandon's best-effort kill is asynchronous, so give it a moment to actually terminate.
+            var deadline = DateTime.UtcNow + timeout;
+            while (DateTime.UtcNow < deadline && IsProcessRunning(pid))
+                Thread.Sleep(100);
+
+            IsProcessRunning(pid).Should().BeFalse($"abandon best-effort-kills a killable process, so PID {pid} should be gone");
+        }
+
+        static bool IsProcessRunning(int pid)
+        {
+            try
+            {
+                using var process = Process.GetProcessById(pid);
+                return !process.HasExited;
+            }
+            catch (ArgumentException) { return false; }       // not running
+            catch (InvalidOperationException) { return false; } // exited
         }
 
         static void TryKillGrandchild(string pidFile)

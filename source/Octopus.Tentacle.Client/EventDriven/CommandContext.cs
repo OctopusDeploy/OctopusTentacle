@@ -12,15 +12,22 @@ namespace Octopus.Tentacle.Client.EventDriven
     {
         public CommandContext(ScriptTicket scriptTicket,
             long nextLogSequence,
-            ScriptServiceVersion scripServiceVersionUsed)
+            ScriptServiceVersion scripServiceVersionUsed,
+            bool supportsAbandon = false)
         {
             ScriptTicket = scriptTicket;
             NextLogSequence = nextLogSequence;
             ScripServiceVersionUsed = scripServiceVersionUsed;
+            SupportsAbandon = supportsAbandon;
         }
 
         public ScriptTicket ScriptTicket { get; }
         public long NextLogSequence { get; }
         public ScriptServiceVersion ScripServiceVersionUsed { get; }
+
+        // Whether the Tentacle advertised the AbandonScript capability. Determined once from
+        // capabilities when the script starts and carried on the start result so the orchestrator
+        // can gate abandon escalation on it.
+        public bool SupportsAbandon { get; }
     }
 }

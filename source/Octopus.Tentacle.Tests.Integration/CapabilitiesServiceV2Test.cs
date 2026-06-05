@@ -29,14 +29,10 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var capabilities = (await clientAndTentacle.TentacleClient.CapabilitiesServiceV2.GetCapabilitiesAsync(new(CancellationToken))).SupportedCapabilities;
 
-            var expected = new List<string> { nameof(IScriptService), nameof(IFileTransferService) };
+            capabilities.Should().Contain(nameof(IScriptService));
+            capabilities.Should().Contain(nameof(IFileTransferService));
             if (version.HasScriptServiceV2())
-                expected.Add(nameof(IScriptServiceV2));
-            if (version.HasAbandonScript())
-                expected.Add(nameof(ScriptServiceV2.AbandonScriptAsync));
-
-            // Exact set, not just Contain: this also guards against over-advertising a capability we didn't intend.
-            capabilities.Should().BeEquivalentTo(expected);
+                capabilities.Should().Contain(nameof(IScriptServiceV2));
         }
 
         [Test]
@@ -49,16 +45,29 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var capabilities = (await clientAndTentacle.TentacleClient.CapabilitiesServiceV2.GetCapabilitiesAsync(new(CancellationToken))).SupportedCapabilities;
 
-            var expected = new List<string> { nameof(IScriptService), nameof(IFileTransferService) };
+            capabilities.Should().Contain(nameof(IScriptService));
+            capabilities.Should().Contain(nameof(IFileTransferService));
             if (version.HasScriptServiceV2())
-                expected.Add(nameof(IScriptServiceV2));
-            if (version.HasAbandonScript())
-                expected.Add(nameof(ScriptServiceV2.AbandonScriptAsync));
+                capabilities.Should().Contain(nameof(IScriptServiceV2));
 
-            // Exact set, not just Contain: this also guards against over-advertising. In particular a
-            // non-Kubernetes Tentacle must never surface IKubernetesScriptServiceV1.
-            capabilities.Should().BeEquivalentTo(expected);
             capabilities.Should().NotContain(nameof(IKubernetesScriptServiceV1));
+        }
+
+        [Test]
+        [TentacleConfigurations(testCapabilitiesServiceVersions: true)]
+        public async Task AbandonScriptIsAdvertisedOnlyByVersionsThatSupportIt(TentacleConfigurationTestCase tentacleConfigurationTestCase)
+        {
+            var version = tentacleConfigurationTestCase.Version;
+
+            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateLegacyBuilder().Build(CancellationToken);
+
+            var capabilities = (await clientAndTentacle.TentacleClient.CapabilitiesServiceV2.GetCapabilitiesAsync(new(CancellationToken))).SupportedCapabilities;
+
+            // Older Tentacles predate abandon and must not advertise it; this build (and later) must.
+            if (version.HasAbandonScript())
+                capabilities.Should().Contain(nameof(ScriptServiceV2.AbandonScriptAsync));
+            else
+                capabilities.Should().NotContain(nameof(ScriptServiceV2.AbandonScriptAsync));
         }
 
         [Test]

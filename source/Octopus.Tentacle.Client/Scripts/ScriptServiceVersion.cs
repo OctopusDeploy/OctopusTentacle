@@ -6,8 +6,6 @@ namespace Octopus.Tentacle.Client.Scripts
         public static ScriptServiceVersion ScriptServiceVersion2 = new(nameof(ScriptServiceVersion2));
         public static ScriptServiceVersion KubernetesScriptServiceVersion1 = new(nameof(KubernetesScriptServiceVersion1));
 
-        public bool SupportsAbandon => Value == nameof(ScriptServiceVersion2);
-
         public override string ToString() => Value;
     }
 }
