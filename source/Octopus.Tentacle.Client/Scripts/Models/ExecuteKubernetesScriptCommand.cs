@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Contracts.KubernetesScriptServiceV1;
 
 namespace Octopus.Tentacle.Client.Scripts.Models
 {
@@ -15,6 +16,7 @@ namespace Octopus.Tentacle.Client.Scripts.Models
         public bool IsRawScript { get; }
 
         public KubernetesAgentAuthContext? AuthContext { get; }
+        public CalamariImageConfiguration? CalamariImageConfiguration { get; }
 
         public ExecuteKubernetesScriptCommand(
             ScriptTicket scriptTicket,
@@ -28,7 +30,8 @@ namespace Octopus.Tentacle.Client.Scripts.Models
             string? scriptPodServiceAccountName,
             bool isRawScript,
             KubernetesAgentAuthContext? authContext,
-            string? scriptPodPlatform)
+            string? scriptPodPlatform,
+            CalamariImageConfiguration? calamariImageConfiguration)
             : base(scriptTicket, taskId, scriptBody, arguments, isolationConfiguration, additionalScripts, additionalFiles)
         {
             ImageConfiguration = imageConfiguration;
@@ -36,6 +39,7 @@ namespace Octopus.Tentacle.Client.Scripts.Models
             IsRawScript = isRawScript;
             AuthContext = authContext;
             ScriptPodPlatform = scriptPodPlatform;
+            CalamariImageConfiguration = calamariImageConfiguration;
         }
     }
 }
