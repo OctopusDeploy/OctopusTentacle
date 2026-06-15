@@ -115,7 +115,8 @@ namespace Octopus.Tentacle.Communications
             }
         }
                 
-        const int MaximumPollingConnectionCount = 8;
+        // We don't expect anyone to hit this, but the theoretical cap is the number of allocatable outbound ports
+        const int MaximumPollingConnectionCount = 65535;
                 
         uint GetPollingConnectionCount()
         {
