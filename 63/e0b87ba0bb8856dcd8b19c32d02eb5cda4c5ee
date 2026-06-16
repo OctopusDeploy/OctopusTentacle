@@ -1,0 +1,26 @@
+.github/workflows/update-k8s-agent-dependencies.yml
+  s_a3c9db43776c10::t_76e1901ff3a98a 8,11
+  s_a3c9db43776c10::t_1a64aeb89a4e4b 1-7,9-10,12-34
+docker/kubernetes-agent-tentacle/renovate-config.js
+  s_a3c9db43776c10::t_41b75cc49be7ea 76-80
+  s_a3c9db43776c10::t_c9ba741ffd16ac 81-82,94-100
+  s_a3c9db43776c10::t_87602724371848 1-75,83-93,101-103
+docker/kubernetes-agent-tentacle/bootstrapRunner/go.mod
+  s_a3c9db43776c10::t_1133e252dad3fa 2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "63e0b87ba0bb8856dcd8b19c32d02eb5cda4c5ee",
+  "prompts": {},
+  "sessions": {
+    "s_a3c9db43776c10": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "917a04d0-1969-40ad-bd10-57945a6c6c19",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Noam Gal <noam.gal@octopus.com>"
+    }
+  }
+}
