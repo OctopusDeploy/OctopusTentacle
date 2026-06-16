@@ -1,7 +1,7 @@
 ARG RuntimeDepsTag
 
 
-FROM golang:1.25 as bootstrapRunnerBuilder
+FROM golang:1.25 AS bootstraprunnerbuilder
 
 ARG TARGETARCH
 ARG TARGETOS
@@ -18,7 +18,6 @@ RUN for arch in $architectures; do \
         GOOS=linux GOARCH=$arch go build -ldflags "-s -w" -o "bin/bootstrapRunner-linux-$arch"; \
     done
 
-
 FROM mcr.microsoft.com/dotnet/runtime-deps:$RuntimeDepsTag
 
 ARG BUILD_NUMBER
@@ -34,7 +33,7 @@ EXPOSE 10933
 EXPOSE 7777
 
 COPY docker/kubernetes-agent-tentacle/scripts/* /scripts/
-COPY --from=bootstrapRunnerBuilder bootstrapRunner/bin/* /bootstrapRunner/
+COPY --from=bootstraprunnerbuilder bootstrapRunner/bin/* /bootstrapRunner/
 RUN chmod +x /scripts/*.sh
 
 # Copy the architecture detection script from source and make it executable
