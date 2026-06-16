@@ -115,19 +115,19 @@ namespace Octopus.Tentacle.Communications
             }
         }
                 
-        const int MaximumPollingConnectionCount = 8;
-                
+        const uint MinimumPollingConnectionCount = 2;
+        const uint MaximumPollingConnectionCount = 8;
+
         uint GetPollingConnectionCount()
         {
-            //Open multiple polling connections if the env var is set to a non-zero/negative number
-            var connectionCount = 1u;
+            // Default to one connection per CPU core, clamped to [min, max]
+            var connectionCount = (uint)Math.Clamp(Environment.ProcessorCount, MinimumPollingConnectionCount, MaximumPollingConnectionCount);
             if (uint.TryParse(Environment.GetEnvironmentVariable(EnvironmentVariables.TentaclePollingConnectionCount), out var count))
             {
                 log.InfoFormat("Requested polling connection count: {0}", count);
                 connectionCount = count;
             }
 
-            //Coerce the requested value as it might be outside our max & min
             switch (connectionCount)
             {
                 case > MaximumPollingConnectionCount:
