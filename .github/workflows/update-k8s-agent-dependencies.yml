@@ -16,6 +16,17 @@ on:
         required: false
         default: true
         type: boolean
+      log-level:
+        description: 'Renovate log level'
+        required: false
+        default: 'info'
+        type: choice
+        options:
+          - info
+          - debug
+          - trace
+          - warn
+          - error
 
 jobs:
   renovate-k8s-agent:
@@ -23,12 +34,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
       - name: Self-hosted Renovate
-        uses: renovatebot/github-action@v39.0.1
+        uses: renovatebot/github-action@8217b3fc286df088d7c27f3255fe8414463bc0fd # v46.1.15
         with:
           configurationFile: docker/kubernetes-agent-tentacle/renovate-config.js
           token: ${{ secrets.RENOVATE_GITHUB_TOKEN }}
         env:
-          LOG_LEVEL: debug
+          # On scheduled runs there are no inputs, so fall back to Renovate's
+          # own default log level (info).
+          LOG_LEVEL: ${{ inputs.log-level || 'info' }}
           RENOVATE_DRY_RUN: ${{ inputs.dry-run && 'full' || null }}
