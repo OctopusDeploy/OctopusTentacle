@@ -120,8 +120,10 @@ namespace Octopus.Tentacle.Communications
 
         uint GetPollingConnectionCount()
         {
-            // Default to one connection per CPU core, clamped to [min, max]
-            var connectionCount = (uint)Math.Clamp(Environment.ProcessorCount, MinimumPollingConnectionCount, MaximumPollingConnectionCount);
+            // Default to one connection per CPU core (clamped to [min, max]) for workers; deployment targets stay at 1
+            var connectionCount = configuration.IsWorker
+                ? (uint)Math.Clamp(Environment.ProcessorCount, MinimumPollingConnectionCount, MaximumPollingConnectionCount)
+                : 1u;
             if (uint.TryParse(Environment.GetEnvironmentVariable(EnvironmentVariables.TentaclePollingConnectionCount), out var count))
             {
                 log.InfoFormat("Requested polling connection count: {0}", count);

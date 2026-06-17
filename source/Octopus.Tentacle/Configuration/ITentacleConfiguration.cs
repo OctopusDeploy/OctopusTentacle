@@ -75,6 +75,8 @@ namespace Octopus.Tentacle.Configuration
 
         bool IsRegistered { get; }
 
+        bool IsWorker { get; }
+
         void WriteTo(IWritableKeyValueStore outputStore, IEnumerable<string> excluding);
     }
 
@@ -91,6 +93,8 @@ namespace Octopus.Tentacle.Configuration
         bool SetServicesPortNumber(int port);
 
         bool SetIsRegistered(bool isRegistered = true);
+
+        bool SetIsWorker(bool isWorker = true);
 
         /// <summary>
         /// Sets the IP address to listen on.
