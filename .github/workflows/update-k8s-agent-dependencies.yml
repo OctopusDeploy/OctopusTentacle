@@ -1,0 +1,34 @@
+# Renovate run scoped to the Kubernetes Agent Tentacle container image.
+# Mirrors update-dependencies.yml, but uses the kubernetes-agent-tentacle
+# config and runs on an Israel-morning schedule.
+
+name: Renovate update Kubernetes agent dependencies
+on:
+  schedule:
+    # 05:00 UTC = 8AM Asia/Jerusalem (IDT, UTC+3), Sunday - Tuesday.
+    # GitHub Actions cron is always UTC; the Renovate `timezone` config only
+    # affects Renovate's own scheduling logic, not this trigger.
+    - cron: '0 5 * * 0-2'
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: 'Dry run'
+        required: false
+        default: true
+        type: boolean
+
+jobs:
+  renovate-k8s-agent:
+    name: Self-hosted Renovate (Kubernetes agent)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Self-hosted Renovate
+        uses: renovatebot/github-action@v39.0.1
+        with:
+          configurationFile: docker/kubernetes-agent-tentacle/renovate-config.js
+          token: ${{ secrets.RENOVATE_GITHUB_TOKEN }}
+        env:
+          LOG_LEVEL: debug
+          RENOVATE_DRY_RUN: ${{ inputs.dry-run && 'full' || null }}
