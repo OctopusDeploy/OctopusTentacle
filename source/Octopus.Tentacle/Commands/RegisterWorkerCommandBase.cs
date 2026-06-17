@@ -29,6 +29,8 @@ namespace Octopus.Tentacle.Commands
             Options.Add("workerpool=", "The worker pool name, slug or Id to add the machine to - e.g., 'Windows Pool'; specify this argument multiple times to add to multiple pools", s => workerpools.Add(s));
         }
 
+        protected override bool IsRegisteredAsWorker => true;
+
         protected override void CheckArgs()
         {
             if (workerpools.Count == 0 || string.IsNullOrWhiteSpace(workerpools.First()))

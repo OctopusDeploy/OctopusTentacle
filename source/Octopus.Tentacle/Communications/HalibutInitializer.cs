@@ -120,7 +120,7 @@ namespace Octopus.Tentacle.Communications
 
         uint GetPollingConnectionCount()
         {
-            var connectionCount = DefaultPollingConnectionCount;
+            var connectionCount = configuration.IsWorker ? DefaultPollingConnectionCount : 1u;
             if (uint.TryParse(Environment.GetEnvironmentVariable(EnvironmentVariables.TentaclePollingConnectionCount), out var count))
             {
                 log.InfoFormat("Requested polling connection count: {0}", count);

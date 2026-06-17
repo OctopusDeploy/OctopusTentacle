@@ -177,10 +177,13 @@ namespace Octopus.Tentacle.Commands
             }
 
             configuration.Value.AddOrUpdateTrustedOctopusServer(server);
+            configuration.Value.SetIsWorker(IsRegisteredAsWorker);
             VoteForRestart();
 
             log.Info("Machine registered successfully");
         }
+
+        protected virtual bool IsRegisteredAsWorker => false;
 
         protected abstract void CheckArgs();
 

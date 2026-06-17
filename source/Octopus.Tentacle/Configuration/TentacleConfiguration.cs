@@ -19,6 +19,7 @@ namespace Octopus.Tentacle.Configuration
     internal class TentacleConfiguration : ITentacleConfiguration
     {
         internal const string IsRegisteredSettingName = "Tentacle.Services.IsRegistered";
+        internal const string IsWorkerSettingName = "Tentacle.Services.IsWorker";
         internal const string ServicesPortSettingName = "Tentacle.Services.PortNumber";
         internal const string ServicesListenIPSettingName = "Tentacle.Services.ListenIP";
         internal const string ServicesNoListenSettingName = "Tentacle.Services.NoListen";
@@ -69,6 +70,8 @@ namespace Octopus.Tentacle.Configuration
         public int ServicesPortNumber => settings.Get(ServicesPortSettingName, 10933);
 
         public bool IsRegistered => settings.Get(IsRegisteredSettingName, false);
+
+        public bool IsWorker => settings.Get(IsWorkerSettingName, false);
 
         public void WriteTo(IWritableKeyValueStore outputStore, IEnumerable<string> excluding)
         {
@@ -189,6 +192,11 @@ namespace Octopus.Tentacle.Configuration
         public bool SetIsRegistered(bool isRegistered = true)
         {
             return settings.Set(IsRegisteredSettingName, isRegistered);
+        }
+
+        public bool SetIsWorker(bool isWorker = true)
+        {
+            return settings.Set(IsWorkerSettingName, isWorker);
         }
 
         public bool SetListenIpAddress(string? address)
