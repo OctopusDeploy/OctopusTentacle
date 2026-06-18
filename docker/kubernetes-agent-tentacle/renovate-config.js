@@ -66,6 +66,9 @@ module.exports = {
   labels: ['dependencies', 'Tentacle', 'kubernetes-agent'],
   branchPrefix: 'renovate-k8s-agent/',
 
+  // Commit as our own bot account instead of Renovate's Mend-owned default.
+  gitAuthor: "team-yosemite-bot <teamyosemitebot@octopus.com>",
+
   // Limit the amount of PRs created
   prConcurrentLimit: 2,
   prHourlyLimit: 1,
