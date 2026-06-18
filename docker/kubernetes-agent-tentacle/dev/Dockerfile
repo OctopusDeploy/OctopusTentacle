@@ -1,7 +1,7 @@
 ARG RuntimeDepsTag
 
 
-FROM golang:1.25 AS bootstraprunnerbuilder
+FROM golang:1.25@sha256:00feed335fe561979f2cdcc30a5191231977c5631fe79c40f7d3ab63b4fa222f AS bootstraprunnerbuilder
 
 ARG TARGETARCH
 ARG TARGETOS
