@@ -105,6 +105,11 @@
 		<PackageReference Include="System.Diagnostics.EventLog" Version="8.0.0" />
 		<PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
 	</ItemGroup>
+	<!-- Pin transitive dependencies to fix known CVEs (.NET 8 only; net48 uses the GAC System.Security) -->
+	<ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETCoreApp' ">
+		<!-- CVE-2026-26171 (security bypass + DoS) and CVE-2026-33116 (DoS via infinite recursion). Transitive 8.0.2 is vulnerable. -->
+		<PackageReference Include="System.Security.Cryptography.Xml" Version="8.0.3" />
+	</ItemGroup>
 	<ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
 		<PackageReference Include="System.Runtime" Version="4.3.0" />
 		<Reference Include="System.Security" />
