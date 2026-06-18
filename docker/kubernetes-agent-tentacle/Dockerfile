@@ -1,7 +1,7 @@
 ARG RuntimeDepsTag
 
 
-FROM golang:1.25 AS bootstraprunnerbuilder
+FROM golang:1.25.11 AS bootstraprunnerbuilder
 
 ARG TARGETARCH
 ARG TARGETOS
