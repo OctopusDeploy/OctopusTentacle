@@ -732,9 +732,23 @@ partial class Build
                 .SetPlatform(DockerPlatform)
                 .SetTag(tag)
                 .SetFile(dockerfile)
-                .SetPath(RootDirectory)
-                .SetPush(push)
-                .SetLoad(load);
+                .SetPath(RootDirectory);
+
+            if (push)
+            {
+                // FD-492: Force a single, consistent OCI media type across the whole image
+                // manifest and disable provenance attestations. Without this, buildx can emit
+                // a manifest that mixes Docker and OCI layer media types (and an attestation
+                // index), which strict OCI clients such as Podman reject - in particular when
+                // the image is used as a base image (FROM ...).
+                settings = settings
+                    .SetOutput("type=image,oci-mediatypes=true,push=true")
+                    .AddProcessAdditionalArguments("--provenance=false");
+            }
+            else
+            {
+                settings = settings.SetLoad(load);
+            }
 
             if (includeDebugger)
             {
