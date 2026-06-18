@@ -15,11 +15,12 @@ module.exports = {
   requireConfig: 'optional',
   onboarding: false,
 
-  // dockerfile  -> golang builder image + any literal FROM tags in the Dockerfiles
-  // gomod       -> bootstrapRunner go.mod language version / module deps
+  // dockerfile   -> golang builder image + any literal FROM tags in the Dockerfiles
+  // gomod        -> bootstrapRunner go.mod language version / module deps
+  // custom.regex -> the runtime-deps base image tag (see customManagers below).
   // The runtime-deps base image tag is not a literal FROM (it is a build-arg
   // sourced from Build.Pack.cs), so it is handled by the custom manager below.
-  enabledManagers: ['dockerfile', 'gomod'],
+  enabledManagers: ['dockerfile', 'gomod', 'custom.regex'],
 
   // Limit Renovate to this feature area. build/Build.Pack.cs is included only
   // so the custom manager can reach the runtime-deps base image tag.
@@ -35,7 +36,7 @@ module.exports = {
   customManagers: [
     {
       customType: 'regex',
-      fileMatch: ['^build/Build\\.Pack\\.cs$'],
+      managerFilePatterns: ['/^build/Build\\.Pack\\.cs$/'],
       matchStrings: [
         'KubernetesTentacleContainerRuntimeDepsTag\\s*=\\s*"(?<currentValue>[^"]+)"',
       ],
@@ -46,7 +47,7 @@ module.exports = {
 
   // Full list of built-in presets: https://docs.renovatebot.com/presets-default/
   extends: [
-    'config:base',
+    'config:recommended',
     'group:monorepos',
     'group:recommended',
     ':rebaseStalePrs',
