@@ -43,10 +43,24 @@ namespace Octopus.Tentacle.Tests.Communications
             HalibutInitializer.DeterminePollingConnectionCount(null, 0, Substitute.For<ISystemLog>()).Should().Be(1);
         }
 
+        // The maximum is computed the same way the production code computes it, so the test stays correct on any
+        // machine regardless of Environment.ProcessorCount (the cap scales with core count but is never below 32).
+        static readonly uint ExpectedMaximumPollingConnectionCount = (uint)Math.Max(32, Environment.ProcessorCount * 4);
+
         [Test]
         public void PollingConnectionCountCoercesValuesAboveTheMaximum()
         {
-            HalibutInitializer.DeterminePollingConnectionCount("100000", null, Substitute.For<ISystemLog>()).Should().Be(10000);
+            // 1,000,000 is comfortably above the maximum on any conceivable machine, so it must be coerced to the cap.
+            HalibutInitializer.DeterminePollingConnectionCount("1000000", null, Substitute.For<ISystemLog>())
+                .Should().Be(ExpectedMaximumPollingConnectionCount);
+        }
+
+        [Test]
+        public void PollingConnectionCountAllowsTheConfiguredValueUpToTheMaximum()
+        {
+            // A request exactly at the cap should be honoured, not coerced.
+            HalibutInitializer.DeterminePollingConnectionCount(ExpectedMaximumPollingConnectionCount.ToString(), null, Substitute.For<ISystemLog>())
+                .Should().Be(ExpectedMaximumPollingConnectionCount);
         }
 
         string defaultProxyHost = "127.0.0.1";

@@ -154,10 +154,14 @@ namespace Octopus.Tentacle.Tests.Commands
         // because it runs the same code for Workers and Deployment targets
 
         [Test]
-        public void ShouldDefaultPollingConnectionCountToFiveWhenRegisteringAPollingWorker()
+        public void ShouldDefaultPollingConnectionCountWhenRegisteringAPollingWorker()
         {
+            // Workers default to at least five connections, scaling up with the processor count. Compute the
+            // expected value the same way the production code does so the test is correct on any machine/CI agent.
+            var expectedConnectionCount = Math.Max(5, Environment.ProcessorCount);
+
             AssertPollingWorkerRegistered("https://localhost:10943/");
-            configuration.Received().SetPollingConnectionCount(5);
+            configuration.Received().SetPollingConnectionCount(expectedConnectionCount);
         }
 
         [Test]
