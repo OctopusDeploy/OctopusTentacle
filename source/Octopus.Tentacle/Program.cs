@@ -10,7 +10,6 @@ using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Maintenance;
 using Octopus.Tentacle.Properties;
-using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Services;
 using Octopus.Tentacle.Startup;
 using Octopus.Tentacle.Time;
@@ -72,6 +71,7 @@ namespace Octopus.Tentacle
                 .WithParameter("applicationName", ApplicationName);
             builder.RegisterCommand<RunAgentCommand>("agent", "Starts the Tentacle Agent in debug mode", "", "run");
             builder.RegisterCommand<ConfigureCommand>("configure", "Sets Tentacle settings such as the port number and thumbprints");
+            builder.RegisterCommand<SetPollingConnectionCountCommand>("set-polling-connection-count", "Sets the number of polling connections this Tentacle opens to each Octopus Server it polls");
             builder.RegisterCommand<UpdateTrustCommand>("update-trust", "Replaces the trusted Octopus Server thumbprint of any matching polling or listening registrations with a new thumbprint to trust");
             builder.RegisterCommand<RegisterMachineCommand>("register-with", "Registers this machine as a deployment target with an Octopus Server");
             builder.RegisterCommand<RegisterWorkerCommand>("register-worker", "Registers this machine as a worker with an Octopus Server");

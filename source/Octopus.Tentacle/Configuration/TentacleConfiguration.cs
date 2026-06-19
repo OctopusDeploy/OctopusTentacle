@@ -27,6 +27,7 @@ namespace Octopus.Tentacle.Configuration
         internal const string CertificateSettingName = "Tentacle.Certificate";
         internal const string CertificateThumbprintSettingName = "Tentacle.CertificateThumbprint";
         internal const string LastReceivedHandshakeSettingName = "Tentacle.Communication.LastReceivedHandshake";
+        internal const string PollingConnectionCountSettingName = "Tentacle.Communication.PollingConnectionCount";
 
         readonly IKeyValueStore settings;
         readonly IHomeConfiguration home;
@@ -70,6 +71,8 @@ namespace Octopus.Tentacle.Configuration
 
         public bool IsRegistered => settings.Get(IsRegisteredSettingName, false);
 
+        public int? PollingConnectionCount => settings.Get<int?>(PollingConnectionCountSettingName, null);
+
         public void WriteTo(IWritableKeyValueStore outputStore, IEnumerable<string> excluding)
         {
             excluding = new HashSet<string>(excluding);
@@ -82,6 +85,7 @@ namespace Octopus.Tentacle.Configuration
             SetIfNotExcluded(CertificateSettingName, TentacleCertificate);
             SetIfNotExcluded(CertificateThumbprintSettingName, TentacleCertificate?.Thumbprint ?? string.Empty);
             SetIfNotExcluded(LastReceivedHandshakeSettingName, LastReceivedHandshake);
+            SetIfNotExcluded(PollingConnectionCountSettingName, PollingConnectionCount);
 
             void SetIfNotExcluded<T>(string settingName, T value)
             {
@@ -189,6 +193,11 @@ namespace Octopus.Tentacle.Configuration
         public bool SetIsRegistered(bool isRegistered = true)
         {
             return settings.Set(IsRegisteredSettingName, isRegistered);
+        }
+
+        public bool SetPollingConnectionCount(int count)
+        {
+            return settings.Set(PollingConnectionCountSettingName, count);
         }
 
         public bool SetListenIpAddress(string? address)

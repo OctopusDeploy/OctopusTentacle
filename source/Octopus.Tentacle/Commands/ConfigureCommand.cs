@@ -80,6 +80,15 @@ namespace Octopus.Tentacle.Commands
                 }
                 VoteForRestart();
             }));
+            Options.Add("pollingConnectionCount=", "The number of polling connections this Tentacle should open to each Octopus Server it polls. Only applies to polling Tentacles.", v => QueueOperation(delegate
+            {
+                var pollingConnectionCount = int.Parse(v);
+                if (pollingConnectionCount < 1)
+                    throw new ControlledFailureException("The polling connection count must be greater than 0.");
+                tentacleConfiguration.Value.SetPollingConnectionCount(pollingConnectionCount);
+                log.Info("Polling connection count set to: " + pollingConnectionCount);
+                VoteForRestart();
+            }));
             Options.Add("trust=", "The thumbprint of the Octopus Server to trust", v => octopusToAdd.Add(v));
             Options.Add("remove-trust=", "The thumbprint of the Octopus Server to remove from the trusted list", v => octopusToRemove.Add(v));
             Options.Add("reset-trust", "Removes all trusted Octopus Servers", v => resetTrust = true);

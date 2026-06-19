@@ -4,6 +4,7 @@ using FluentAssertions;
 using Halibut;
 using NSubstitute;
 using NUnit.Framework;
+using Octopus.Tentacle.Communications;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Core.Diagnostics;
 
@@ -12,6 +13,42 @@ namespace Octopus.Tentacle.Tests.Communications
     [TestFixture]
     public class HalibutInitializerFixture
     {
+        [Test]
+        public void PollingConnectionCountDefaultsToOneWhenNeitherEnvVarNorConfigIsSet()
+        {
+            HalibutInitializer.DeterminePollingConnectionCount(null, null, Substitute.For<ISystemLog>()).Should().Be(1);
+        }
+
+        [Test]
+        public void PollingConnectionCountUsesTheConfiguredValueWhenEnvVarIsNotSet()
+        {
+            HalibutInitializer.DeterminePollingConnectionCount(null, 5, Substitute.For<ISystemLog>()).Should().Be(5);
+        }
+
+        [Test]
+        public void PollingConnectionCountEnvVarWinsOverTheConfiguredValue()
+        {
+            HalibutInitializer.DeterminePollingConnectionCount("8", 5, Substitute.For<ISystemLog>()).Should().Be(8);
+        }
+
+        [Test]
+        public void PollingConnectionCountIgnoresAnUnparseableEnvVarAndFallsBackToConfig()
+        {
+            HalibutInitializer.DeterminePollingConnectionCount("not-a-number", 5, Substitute.For<ISystemLog>()).Should().Be(5);
+        }
+
+        [Test]
+        public void PollingConnectionCountCoercesZeroConfiguredValueToOne()
+        {
+            HalibutInitializer.DeterminePollingConnectionCount(null, 0, Substitute.For<ISystemLog>()).Should().Be(1);
+        }
+
+        [Test]
+        public void PollingConnectionCountCoercesValuesAboveTheMaximum()
+        {
+            HalibutInitializer.DeterminePollingConnectionCount("100000", null, Substitute.For<ISystemLog>()).Should().Be(10000);
+        }
+
         string defaultProxyHost = "127.0.0.1";
         int defaultProxyPort = 1111;
         string defaultProxyUsername = "username";

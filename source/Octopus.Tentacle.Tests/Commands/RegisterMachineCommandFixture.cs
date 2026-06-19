@@ -156,6 +156,27 @@ namespace Octopus.Tentacle.Tests.Commands
                 "--server-comms-address=https://polling.localhost/");
         }
 
+        [Test]
+        public void ShouldDefaultPollingConnectionCountToOneWhenRegisteringAPollingTentacle()
+        {
+            AssertPollingTentacleRegistered("https://localhost:10943/");
+            configuration.Received().SetPollingConnectionCount(1);
+        }
+
+        [Test]
+        public void ShouldNotSetPollingConnectionCountWhenRegisteringAListeningTentacle()
+        {
+            Start("--env=Development",
+                "--server=http://localhost",
+                "--name=MyMachine",
+                "--publicHostName=mymachine.test",
+                "--apiKey=ABC123",
+                "--force",
+                "--role=app-server");
+
+            configuration.DidNotReceive().SetPollingConnectionCount(Arg.Any<int>());
+        }
+
         void AssertPollingTentacleRegistered(string expectedServerAddress, params string[] additionalArgs)
         {
             var args = new []
