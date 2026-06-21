@@ -66,6 +66,20 @@ module.exports = {
   labels: ['dependencies', 'Tentacle', 'kubernetes-agent'],
   branchPrefix: 'renovate-k8s-agent/',
 
+  // Work around a Renovate bug: these internal status checks emit a relative
+  // target_url ("key-concepts/minimum-release-age/"), which GitHub rejects with
+  // HTTP 422 and Renovate misreports as "Repository has changed during
+  // renovation - aborting", killing the whole run before any PR opens. Disabling
+  // the checks stops the failing POST; minimumReleaseAge gating is unaffected.
+  // https://docs.renovatebot.com/configuration-options/#statuschecknames
+  statusCheckNames: {
+    minimumReleaseAge: null,
+    mergeConfidence: null,
+  },
+
+  // Commit as our own bot account instead of Renovate's Mend-owned default.
+  gitAuthor: "team-yosemite-bot <teamyosemitebot@octopus.com>",
+
   // Limit the amount of PRs created
   prConcurrentLimit: 2,
   prHourlyLimit: 1,
