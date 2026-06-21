@@ -22,9 +22,9 @@ on:
         default: 'info'
         type: choice
         options:
-          - info
-          - debug
           - trace
+          - debug
+          - info
           - warn
           - error
 
