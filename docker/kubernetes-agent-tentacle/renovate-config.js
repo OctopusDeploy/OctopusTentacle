@@ -66,17 +66,15 @@ module.exports = {
   labels: ['dependencies', 'Tentacle', 'kubernetes-agent'],
   branchPrefix: 'renovate-k8s-agent/',
 
-  // Renovate's default productLinks isn't applied under this self-hosted config,
-  // so productLinks.documentation resolves to an empty string. The stability and
-  // merge-confidence status checks build their target_url as
-  // joinUrlParts(productLinks.documentation, "key-concepts/minimum-release-age/"),
-  // which then becomes a relative path ("key-concepts/...") with no http(s)
-  // scheme. GitHub rejects that commit-status POST with HTTP 422 ("Target url
-  // must use http(s) scheme"), and Renovate misreports it as "Repository has
-  // changed during renovation - aborting", killing the whole run. Set it
-  // explicitly so target_url stays absolute.
-  productLinks: {
-    documentation: "https://docs.renovatebot.com/",
+  // Work around a Renovate bug: these internal status checks emit a relative
+  // target_url ("key-concepts/minimum-release-age/"), which GitHub rejects with
+  // HTTP 422 and Renovate misreports as "Repository has changed during
+  // renovation - aborting", killing the whole run before any PR opens. Disabling
+  // the checks stops the failing POST; minimumReleaseAge gating is unaffected.
+  // https://docs.renovatebot.com/configuration-options/#statuschecknames
+  statusCheckNames: {
+    minimumReleaseAge: null,
+    mergeConfidence: null,
   },
 
   // Commit as our own bot account instead of Renovate's Mend-owned default.
