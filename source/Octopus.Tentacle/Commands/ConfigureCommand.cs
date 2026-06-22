@@ -80,11 +80,9 @@ namespace Octopus.Tentacle.Commands
                 }
                 VoteForRestart();
             }));
-            Options.Add("pollingConnectionCount=", "The number of polling connections this Tentacle should open to each Octopus Server it polls. Only applies to polling Tentacles.", v => QueueOperation(delegate
+            Options.Add(PollingConnectionCountOption.Prototype, PollingConnectionCountOption.Description, v => QueueOperation(delegate
             {
-                var pollingConnectionCount = int.Parse(v);
-                if (pollingConnectionCount < 1)
-                    throw new ControlledFailureException("The polling connection count must be greater than 0.");
+                var pollingConnectionCount = PollingConnectionCountOption.Parse(v);
                 tentacleConfiguration.Value.SetPollingConnectionCount(pollingConnectionCount);
                 log.Info("Polling connection count set to: " + pollingConnectionCount);
                 VoteForRestart();

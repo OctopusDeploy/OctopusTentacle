@@ -56,6 +56,14 @@ namespace Octopus.Tentacle.Tests.Commands
         }
 
         [Test]
+        public void ShouldRejectAPollingConnectionCountThatIsNotANumber()
+        {
+            Action start = () => Start("--pollingConnectionCount=notanumber");
+            start.Should().Throw<ControlledFailureException>().WithMessage("*not a valid whole number*");
+            tentacleConfiguration.PollingConnectionCount.Should().BeNull();
+        }
+
+        [Test]
         public void ShouldSetApplicationDirectory()
         {
             fileSystem.GetFullPath(Arg.Any<string>()).Returns("C:\\Apps");

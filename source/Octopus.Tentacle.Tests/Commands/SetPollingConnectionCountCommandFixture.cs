@@ -34,7 +34,7 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void ShouldSetThePollingConnectionCount()
         {
-            Start("--count=5");
+            Start("--pollingConnectionCount=5");
             tentacleConfiguration.PollingConnectionCount.Should().Be(5);
         }
 
@@ -49,8 +49,16 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void ShouldFailWhenCountIsLessThanOne()
         {
-            Action start = () => Start("--count=0");
+            Action start = () => Start("--pollingConnectionCount=0");
             start.Should().Throw<ControlledFailureException>();
+            tentacleConfiguration.PollingConnectionCount.Should().BeNull();
+        }
+
+        [Test]
+        public void ShouldFailWithAFriendlyErrorWhenCountIsNotANumber()
+        {
+            Action start = () => Start("--pollingConnectionCount=notanumber");
+            start.Should().Throw<ControlledFailureException>().WithMessage("*not a valid whole number*");
             tentacleConfiguration.PollingConnectionCount.Should().BeNull();
         }
     }

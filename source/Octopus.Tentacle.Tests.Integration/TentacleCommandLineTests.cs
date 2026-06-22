@@ -594,6 +594,7 @@ Or one of the common options:
   ""Tentacle"": {{
     ""CertificateThumbprint"": ""{clientAndTentacle.RunningTentacle.Thumbprint}"",
     ""Communication"": {{
+      ""PollingConnectionCount"": null,
       ""TrustedOctopusServers"": [
         {{
           ""Thumbprint"": ""{clientAndTentacle.Server.Thumbprint}"",
@@ -630,6 +631,7 @@ Or one of the common options:
   ""Tentacle"": {{
     ""CertificateThumbprint"": ""{clientAndTentacle.RunningTentacle.Thumbprint}"",
     ""Communication"": {{
+      ""PollingConnectionCount"": null,
       ""TrustedOctopusServers"": [
         {{
           ""Thumbprint"": ""{clientAndTentacle.Server.Thumbprint}"",

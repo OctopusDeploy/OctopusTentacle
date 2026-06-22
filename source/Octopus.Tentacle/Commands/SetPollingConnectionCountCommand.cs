@@ -10,7 +10,7 @@ namespace Octopus.Tentacle.Commands
     {
         readonly Lazy<IWritableTentacleConfiguration> configuration;
         readonly ISystemLog log;
-        int? count;
+        string? countValue;
 
         public SetPollingConnectionCountCommand(
             Lazy<IWritableTentacleConfiguration> configuration,
@@ -22,21 +22,20 @@ namespace Octopus.Tentacle.Commands
             this.configuration = configuration;
             this.log = log;
 
-            Options.Add("count=", "The number of polling connections this Tentacle should open to each Octopus Server it polls. Only applies to polling Tentacles.", s => count = int.Parse(s));
+            Options.Add(PollingConnectionCountOption.Prototype, PollingConnectionCountOption.Description, v => countValue = v);
         }
 
         protected override void Start()
         {
             base.Start();
 
-            if (count is null)
-                throw new ControlledFailureException("Please specify the number of polling connections, e.g. --count=5");
+            if (countValue is null)
+                throw new ControlledFailureException($"Please specify the number of polling connections, e.g. --{PollingConnectionCountOption.Name}=5");
 
-            if (count < 1)
-                throw new ControlledFailureException("The polling connection count must be greater than 0.");
+            var count = PollingConnectionCountOption.Parse(countValue);
 
-            configuration.Value.SetPollingConnectionCount(count.Value);
-            log.Info($"Polling connection count set to: {count.Value}");
+            configuration.Value.SetPollingConnectionCount(count);
+            log.Info($"Polling connection count set to: {count}");
             VoteForRestart();
         }
     }
