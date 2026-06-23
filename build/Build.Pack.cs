@@ -563,7 +563,7 @@ partial class Build
             const string title = "Octopus Tentacle cross platform bundle";
             const string description = "The deployment agent that is installed on each machine you plan to deploy to using Octopus.";
 
-            CreateNugetPackage(workingDirectory, id, description, author, title);
+            CreateNugetPackage(workingDirectory, id, author, title, description);
         });
 
     [PublicAPI]
@@ -621,6 +621,38 @@ partial class Build
             CreateNugetPackage(workingDirectory, id, author, title, description);
         });
 
+    [PublicAPI]
+    Target PackCrossPlatformBundleForDevelopment => _ => _
+        .Description("Packs a slim cross-platform Tentacle bundle (Windows x64, macOS ARM64, Linux x64 archives) for local dev environments and integration/E2E test setup.")
+        .Executes(() =>
+        {
+            (ArtifactsDirectory / "nuget").CreateDirectory();
+
+            var workingDirectory = BuildDirectory / "Octopus.Tentacle.CrossPlatformBundle.Development";
+            workingDirectory.CreateDirectory();
+
+            // Get the archives (binaries) for all required runtimes
+            foreach (var runtimeId in CrossPlatformBundleForDevelopmentRequiredRuntimes)
+            {
+                var fileExtension = runtimeId.StartsWith("win") ? "zip" : "tar.gz";
+                var path = ArtifactsDirectory / "zip" / $"tentacle-{FullSemVer}-{NetCore}-{runtimeId}.{fileExtension}";
+                path.Copy(workingDirectory / $"tentacle-{NetCore}-{runtimeId}.{fileExtension}");
+            }
+
+            // Assert all the expected files have been successfully copied
+            Assert.True((workingDirectory / $"tentacle-{NetCore}-win-x64.zip").FileExists(), $"Missing tentacle-{NetCore}-win-x64.zip");
+            Assert.True((workingDirectory / $"tentacle-{NetCore}-osx-arm64.tar.gz").FileExists(), $"Missing tentacle-{NetCore}-osx-arm64.tar.gz");
+            Assert.True((workingDirectory / $"tentacle-{NetCore}-linux-x64.tar.gz").FileExists(), $"Missing tentacle-{NetCore}-linux-x64.tar.gz");
+
+            const string id = "Octopus.Tentacle.CrossPlatformBundle.Development";
+
+            const string author = "Octopus Deploy";
+            const string title = "Octopus Tentacle cross platform bundle (for local development and testing)";
+            const string description = "The deployment agent that is installed on each machine you plan to deploy to using Octopus.";
+
+            CreateNugetPackage(workingDirectory, id, author, title, description);
+        });
+
     void CreateNugetPackage(
         AbsolutePath workingDirectory,
         string id,
@@ -643,6 +675,7 @@ partial class Build
         .Description("Pack all the artifacts. Notional task - running this on a single host is possible but cumbersome.")
         .DependsOn(PackCrossPlatformBundle)
         .DependsOn(PackCrossPlatformBundleForServer)
+        .DependsOn(PackCrossPlatformBundleForDevelopment)
         .DependsOn(PackContracts)
         .DependsOn(PackCore)
         .DependsOn(PackClient);
