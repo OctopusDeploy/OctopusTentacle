@@ -744,8 +744,30 @@ partial class Build
                 // is used (rather than --provenance=false) so the same switch applies to both
                 // `docker buildx build` here and `docker buildx bake` in the TeamCity Linux
                 // image build (see OctopusDeploy/TeamCity-Configuration).
+                //
+                // We also stamp the OCI image-spec annotations (org.opencontainers.image.*)
+                // onto both the image index and each platform manifest. The Dockerfile LABELs
+                // set the same metadata on the image *config*; annotations are the spec-preferred
+                // location that registries and OCI tooling read from the manifest/index.
+                var annotations = new Dictionary<string, string>
+                {
+                    ["org.opencontainers.image.title"] = "Octopus Deploy Kubernetes Agent Tentacle",
+                    ["org.opencontainers.image.vendor"] = "Octopus Deploy",
+                    ["org.opencontainers.image.url"] = "https://octopus.com",
+                    ["org.opencontainers.image.source"] = "https://github.com/OctopusDeploy/OctopusTentacle",
+                    ["org.opencontainers.image.licenses"] = "Apache-2.0",
+                    ["org.opencontainers.image.description"] = "Octopus Kubernetes Agent Tentacle instance with auto-registration to Octopus Server",
+                    ["org.opencontainers.image.version"] = FullSemVer,
+                    ["org.opencontainers.image.created"] = DateTime.UtcNow.ToString("O"),
+                };
+
+                // annotation-index.* lands on the image index, annotation.* on each platform manifest.
+                var output = "type=image,oci-mediatypes=true,push=true";
+                foreach (var (key, value) in annotations)
+                    output += $",annotation-index.{key}={value},annotation.{key}={value}";
+
                 settings = settings
-                    .SetOutput("type=image,oci-mediatypes=true,push=true")
+                    .SetOutput(output)
                     .AddProcessEnvironmentVariable("BUILDX_NO_DEFAULT_ATTESTATIONS", "1");
             }
             else
