@@ -737,13 +737,16 @@ partial class Build
             if (push)
             {
                 // FD-492: Force a single, consistent OCI media type across the whole image
-                // manifest and disable provenance attestations. Without this, buildx can emit
+                // manifest and disable default attestations. Without this, buildx can emit
                 // a manifest that mixes Docker and OCI layer media types (and an attestation
                 // index), which strict OCI clients such as Podman reject - in particular when
-                // the image is used as a base image (FROM ...).
+                // the image is used as a base image (FROM ...). BUILDX_NO_DEFAULT_ATTESTATIONS
+                // is used (rather than --provenance=false) so the same switch applies to both
+                // `docker buildx build` here and `docker buildx bake` in the TeamCity Linux
+                // image build (see OctopusDeploy/TeamCity-Configuration).
                 settings = settings
                     .SetOutput("type=image,oci-mediatypes=true,push=true")
-                    .AddProcessAdditionalArguments("--provenance=false");
+                    .AddProcessEnvironmentVariable("BUILDX_NO_DEFAULT_ATTESTATIONS", "1");
             }
             else
             {
