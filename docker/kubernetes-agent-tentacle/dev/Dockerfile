@@ -99,6 +99,8 @@ ENV TentaclePollingProxyPassword=""
 
 ENTRYPOINT [ "/dev-scripts/bootstrap.sh" ] 
 
+# org.opencontainers.image.* metadata for the dev/debug kubernetes tentacle image.
+# Keep in sync with docker/kubernetes-agent-tentacle/Dockerfile.
 LABEL \
     org.opencontainers.image.title="Octopus Deploy Kubernetes Tentacle" \
     org.opencontainers.image.vendor="Octopus Deploy" \

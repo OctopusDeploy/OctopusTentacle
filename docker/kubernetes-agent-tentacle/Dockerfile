@@ -115,6 +115,8 @@ ENV TentaclePollingProxyPassword=""
 
 ENTRYPOINT ["/scripts/configure-and-run.sh"]
 
+# org.opencontainers.image.* metadata for the kubernetes-agent-tentacle image.
+# Keep in sync with the OCI annotations set in build/Build.Pack.cs.
 LABEL \
     org.opencontainers.image.title="Octopus Deploy Kubernetes Agent Tentacle" \
     org.opencontainers.image.vendor="Octopus Deploy" \

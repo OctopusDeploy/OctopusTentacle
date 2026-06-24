@@ -82,6 +82,9 @@ VOLUME /var/lib/docker
 
 ENTRYPOINT [ "/scripts/configure-and-run.sh" ]
 
+# org.opencontainers.image.* metadata for the published octopusdeploy/tentacle image.
+# Keep in sync with docker/windows/Dockerfile and the index annotations in the TeamCity
+# "Build: Docker manifest" step (OctopusDeploy/TeamCity-Configuration).
 LABEL \
     org.opencontainers.image.title="Octopus Deploy Tentacle" \
     org.opencontainers.image.vendor="Octopus Deploy" \

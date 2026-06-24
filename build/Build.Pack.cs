@@ -749,6 +749,8 @@ partial class Build
                 // onto both the image index and each platform manifest. The Dockerfile LABELs
                 // set the same metadata on the image *config*; annotations are the spec-preferred
                 // location that registries and OCI tooling read from the manifest/index.
+                // Keep these values in sync with the org.opencontainers.image.* LABELs in
+                // docker/kubernetes-agent-tentacle/Dockerfile.
                 var annotations = new Dictionary<string, string>
                 {
                     ["org.opencontainers.image.title"] = "Octopus Deploy Kubernetes Agent Tentacle",

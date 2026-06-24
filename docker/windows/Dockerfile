@@ -7,6 +7,9 @@ ARG INSTALLATION_FOLDER="C:/Program Files/Octopus Deploy/Tentacle"
 ENV TentacleVersion ${BUILD_NUMBER}
 ENV OCTOPUS_RUNNING_IN_CONTAINER Y
 
+# org.opencontainers.image.* metadata for the published octopusdeploy/tentacle image.
+# Keep in sync with docker/linux/Dockerfile and the index annotations in the TeamCity
+# "Build: Docker manifest" step (OctopusDeploy/TeamCity-Configuration).
 LABEL \
     org.opencontainers.image.title="Octopus Deploy Tentacle" \
     org.opencontainers.image.vendor="Octopus Deploy" \
