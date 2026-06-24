@@ -727,8 +727,13 @@ partial class Build
             if (includeDebugger)
                 tag += "-debug";
 
+            // Capture one timestamp and reuse it for both the BUILD_DATE build arg (which feeds
+            // the Dockerfile's org.opencontainers.image.created LABEL) and the created annotation
+            // below, so the image config and the manifest annotation report the same instant.
+            var buildDate = DateTime.UtcNow.ToString("O");
+
             settings = settings
-                .AddBuildArg($"BUILD_NUMBER={FullSemVer}", $"BUILD_DATE={DateTime.UtcNow:O}", $"RuntimeDepsTag={runtimeDepsImageTag}")
+                .AddBuildArg($"BUILD_NUMBER={FullSemVer}", $"BUILD_DATE={buildDate}", $"RuntimeDepsTag={runtimeDepsImageTag}")
                 .SetPlatform(DockerPlatform)
                 .SetTag(tag)
                 .SetFile(dockerfile)
@@ -760,7 +765,7 @@ partial class Build
                     ["org.opencontainers.image.licenses"] = "Apache-2.0",
                     ["org.opencontainers.image.description"] = "Octopus Kubernetes Agent Tentacle instance with auto-registration to Octopus Server",
                     ["org.opencontainers.image.version"] = FullSemVer,
-                    ["org.opencontainers.image.created"] = DateTime.UtcNow.ToString("O"),
+                    ["org.opencontainers.image.created"] = buildDate,
                 };
 
                 // annotation-index.* lands on the image index, annotation.* on each platform manifest.
