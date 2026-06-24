@@ -106,6 +106,7 @@ namespace Octopus.Tentacle.Communications
                 var serviceEndPoint = new ServiceEndPoint(pollingEndPoint.Address, pollingEndPoint.Thumbprint, halibutProxy, halibutTimeoutsAndLimits);
 
                 var connectionCount = GetPollingConnectionCount();
+                log.InfoFormat("Starting {0} polling connections", connectionCount);
 
                 for (var i = 0; i < connectionCount; i++)
                 {
@@ -115,8 +116,7 @@ namespace Octopus.Tentacle.Communications
         }
                 
         // Limit Polling connections to something within the realm of reasonable.
-        // We allow polling connection count to scale with core count, if someone has a 32-core machine, 128 connections might not be unreasonable. 
-        static readonly int MaximumPollingConnectionCount = Math.Max(32, Environment.ProcessorCount * 4);
+        static readonly int MaximumPollingConnectionCount = 512;
                 
         uint GetPollingConnectionCount()
         {
@@ -152,8 +152,7 @@ namespace Octopus.Tentacle.Communications
                     log.InfoFormat("The requested polling connection count must be greater than 0, setting to 1");
                     connectionCount = 1;
             }
-
-            log.InfoFormat("Starting {0} polling connections", connectionCount);
+            
             return connectionCount;
         }
 
