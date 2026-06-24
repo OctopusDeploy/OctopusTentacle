@@ -43,9 +43,8 @@ namespace Octopus.Tentacle.Tests.Communications
             HalibutInitializer.DeterminePollingConnectionCount(null, 0, Substitute.For<ISystemLog>()).Should().Be(1);
         }
 
-        // The maximum is computed the same way the production code computes it, so the test stays correct on any
-        // machine regardless of Environment.ProcessorCount (the cap scales with core count but is never below 32).
-        static readonly uint ExpectedMaximumPollingConnectionCount = (uint)Math.Max(32, Environment.ProcessorCount * 4);
+        // Mirrors the fixed cap in HalibutInitializer.MaximumPollingConnectionCount.
+        const uint ExpectedMaximumPollingConnectionCount = 512;
 
         [Test]
         public void PollingConnectionCountCoercesValuesAboveTheMaximum()
