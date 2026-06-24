@@ -769,9 +769,17 @@ partial class Build
                 };
 
                 // annotation-index.* lands on the image index, annotation.* on each platform manifest.
+                // Guard: annotation values are folded into the comma-separated buildx --output option
+                // list, so a comma in a value would corrupt it (the keys are fixed and comma-free).
                 var output = "type=image,oci-mediatypes=true,push=true";
                 foreach (var (key, value) in annotations)
+                {
+                    if (value.Contains(','))
+                        throw new InvalidOperationException(
+                            $"OCI annotation '{key}' value must not contain a comma; it would break the buildx --output option list: '{value}'");
+
                     output += $",annotation-index.{key}={value},annotation.{key}={value}";
+                }
 
                 settings = settings
                     .SetOutput(output)
