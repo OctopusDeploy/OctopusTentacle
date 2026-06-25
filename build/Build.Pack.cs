@@ -727,14 +727,68 @@ partial class Build
             if (includeDebugger)
                 tag += "-debug";
 
+            // Capture one timestamp and reuse it for both the BUILD_DATE build arg (which feeds
+            // the Dockerfile's org.opencontainers.image.created LABEL) and the created annotation
+            // below, so the image config and the manifest annotation report the same instant.
+            var buildDate = DateTime.UtcNow.ToString("O");
+
             settings = settings
-                .AddBuildArg($"BUILD_NUMBER={FullSemVer}", $"BUILD_DATE={DateTime.UtcNow:O}", $"RuntimeDepsTag={runtimeDepsImageTag}")
+                .AddBuildArg($"BUILD_NUMBER={FullSemVer}", $"BUILD_DATE={buildDate}", $"RuntimeDepsTag={runtimeDepsImageTag}")
                 .SetPlatform(DockerPlatform)
                 .SetTag(tag)
                 .SetFile(dockerfile)
-                .SetPath(RootDirectory)
-                .SetPush(push)
-                .SetLoad(load);
+                .SetPath(RootDirectory);
+
+            if (push)
+            {
+                // FD-492: Force a single, consistent OCI media type across the whole image
+                // manifest and disable default attestations. Without this, buildx can emit
+                // a manifest that mixes Docker and OCI layer media types (and an attestation
+                // index), which strict OCI clients such as Podman reject - in particular when
+                // the image is used as a base image (FROM ...). BUILDX_NO_DEFAULT_ATTESTATIONS
+                // is used (rather than --provenance=false) so the same switch applies to both
+                // `docker buildx build` here and `docker buildx bake` in the TeamCity Linux
+                // image build (see OctopusDeploy/TeamCity-Configuration).
+                //
+                // We also stamp the OCI image-spec annotations (org.opencontainers.image.*)
+                // onto both the image index and each platform manifest. The Dockerfile LABELs
+                // set the same metadata on the image *config*; annotations are the spec-preferred
+                // location that registries and OCI tooling read from the manifest/index.
+                // Keep these values in sync with the org.opencontainers.image.* LABELs in
+                // docker/kubernetes-agent-tentacle/Dockerfile.
+                var annotations = new Dictionary<string, string>
+                {
+                    ["org.opencontainers.image.title"] = "Octopus Deploy Kubernetes Agent Tentacle",
+                    ["org.opencontainers.image.vendor"] = "Octopus Deploy",
+                    ["org.opencontainers.image.url"] = "https://octopus.com",
+                    ["org.opencontainers.image.source"] = "https://github.com/OctopusDeploy/OctopusTentacle",
+                    ["org.opencontainers.image.licenses"] = "Apache-2.0",
+                    ["org.opencontainers.image.description"] = "Octopus Kubernetes Agent Tentacle instance with auto-registration to Octopus Server",
+                    ["org.opencontainers.image.version"] = FullSemVer,
+                    ["org.opencontainers.image.created"] = buildDate,
+                };
+
+                // annotation-index.* lands on the image index, annotation.* on each platform manifest.
+                // Guard: annotation values are folded into the comma-separated buildx --output option
+                // list, so a comma in a value would corrupt it (the keys are fixed and comma-free).
+                var output = "type=image,oci-mediatypes=true,push=true";
+                foreach (var (key, value) in annotations)
+                {
+                    if (value.Contains(','))
+                        throw new InvalidOperationException(
+                            $"OCI annotation '{key}' value must not contain a comma; it would break the buildx --output option list: '{value}'");
+
+                    output += $",annotation-index.{key}={value},annotation.{key}={value}";
+                }
+
+                settings = settings
+                    .SetOutput(output)
+                    .AddProcessEnvironmentVariable("BUILDX_NO_DEFAULT_ATTESTATIONS", "1");
+            }
+            else
+            {
+                settings = settings.SetLoad(load);
+            }
 
             if (includeDebugger)
             {
