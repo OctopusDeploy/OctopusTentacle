@@ -29,16 +29,11 @@ namespace Octopus.Tentacle.Communications
 
                 var halibutTimeoutsAndLimits = TentacleHalibutTimeoutAndLimitsFactory.CreateHalibutTimeoutsAndLimits();
 
-                ISslConfigurationProvider sslConfigurationProvider = EnvironmentOverrides.UseLegacyExplicitSslConfiguration
-                    ? new LegacySslConfigurationProvider()
-                    : new DefaultSslConfigurationProvider();
-
                 var halibutRuntime = new HalibutRuntimeBuilder()
                     .WithServiceFactory(services)
                     .WithServerCertificate(configuration.TentacleCertificate!)
                     .WithMessageSerializer(serializerBuilder => serializerBuilder.WithLegacyContractSupport())
                     .WithHalibutTimeoutsAndLimits(halibutTimeoutsAndLimits)
-                    .WithSslConfigurationProvider(sslConfigurationProvider)
                     .Build();
 
                 halibutRuntime.SetFriendlyHtmlPageContent(FriendlyHtmlPageContent);
