@@ -20,6 +20,10 @@ Registering with `register-worker` auto-sets the count to `max(5, processor coun
 <set key="Tentacle.Communication.PollingConnectionCount">5</set>
 ```
 
+## Setting it while configuring Tentacle
+
+- `Tentacle configure --instance MyInstance --pollingConnectionCount 5`
+
 ## Limits
 
 The value is coerced to `1 <= count <= 512`.
