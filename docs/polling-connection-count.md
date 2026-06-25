@@ -11,9 +11,8 @@ be given multiple requests to execute at the same time.
 
 Registering with `register-worker` auto-sets the count to `max(5, processor count)` if it hasn't already been set. Deployment targets default to 1. Only applies to polling registrations.
  
-## How to set it
+## How to set it for existing instances.
 
-- `Tentacle configure --instance MyInstance --pollingConnectionCount 5`
 - `Tentacle set-polling-connection-count --instance MyInstance --pollingConnectionCount 5`
 - Directly in the Tentacle configuration XML:
 
