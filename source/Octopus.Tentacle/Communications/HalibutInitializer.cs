@@ -5,7 +5,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using Halibut;
-using Halibut.Diagnostics;
 using Octopus.Client.Model;
 using Octopus.Client.Model.Endpoints;
 using Octopus.Tentacle.Configuration;
@@ -107,6 +106,7 @@ namespace Octopus.Tentacle.Communications
                 var serviceEndPoint = new ServiceEndPoint(pollingEndPoint.Address, pollingEndPoint.Thumbprint, halibutProxy, halibutTimeoutsAndLimits);
 
                 var connectionCount = GetPollingConnectionCount();
+                log.InfoFormat("Starting {0} polling connections", connectionCount);
 
                 for (var i = 0; i < connectionCount; i++)
                 {
@@ -115,33 +115,44 @@ namespace Octopus.Tentacle.Communications
             }
         }
                 
-        // We don't expect anyone to hit this, but the theoretical cap is the number of allocatable outbound ports
-        const int MaximumPollingConnectionCount = 10000;
+        // Limit Polling connections to something within the realm of reasonable.
+        static readonly int MaximumPollingConnectionCount = 512;
                 
         uint GetPollingConnectionCount()
         {
-            //Open multiple polling connections if the env var is set to a non-zero/negative number
+            var envVarValue = Environment.GetEnvironmentVariable(EnvironmentVariables.TentaclePollingConnectionCount);
+            return DeterminePollingConnectionCount(envVarValue, configuration.PollingConnectionCount, log);
+        }
+
+        // The TentaclePollingConnectionCount environment variable wins if set. Otherwise, the value persisted in the
+        // Tentacle configuration is used. If neither is set, we default to a single polling connection.
+        internal static uint DeterminePollingConnectionCount(string? envVarValue, int? configuredCount, ISystemLog log)
+        {
             var connectionCount = 1u;
-            if (uint.TryParse(Environment.GetEnvironmentVariable(EnvironmentVariables.TentaclePollingConnectionCount), out var count))
+            if (uint.TryParse(envVarValue, out var countFromEnvVar))
             {
-                log.InfoFormat("Requested polling connection count: {0}", count);
-                connectionCount = count;
+                log.InfoFormat("Requested polling connection count (from {0} environment variable): {1}", EnvironmentVariables.TentaclePollingConnectionCount, countFromEnvVar);
+                connectionCount = countFromEnvVar;
+            }
+            else if (configuredCount is { } countFromConfig && countFromConfig > 0)
+            {
+                log.InfoFormat("Requested polling connection count (from Tentacle configuration): {0}", countFromConfig);
+                connectionCount = (uint)countFromConfig;
             }
 
             //Coerce the requested value as it might be outside our max & min
-            switch (connectionCount)
+            
+            if (connectionCount > MaximumPollingConnectionCount)
             {
-                case > MaximumPollingConnectionCount:
-                    log.InfoFormat("The requested polling connection count exceeds the maximum of {0}, limiting to {0}", MaximumPollingConnectionCount);
-                    connectionCount = MaximumPollingConnectionCount;
-                    break;
-                case 0:
+                log.InfoFormat("The requested polling connection count exceeds the maximum of {0}, limiting to {0}", MaximumPollingConnectionCount);
+                connectionCount = (uint)MaximumPollingConnectionCount;
+            }
+            
+            if(connectionCount <= 0) {
                     log.InfoFormat("The requested polling connection count must be greater than 0, setting to 1");
                     connectionCount = 1;
-                    break;
             }
-
-            log.InfoFormat("Starting {0} polling connections", connectionCount);
+            
             return connectionCount;
         }
 

@@ -61,6 +61,7 @@ ENV CustomPublicHostName=""
 ENV DISABLE_DIND=N
 ENV ListeningPort=""
 ENV MachinePolicy="Default Machine Policy"
+ENV PollingConnectionCount=""
 ENV PublicHostNameConfiguration="ComputerName"
 ENV ProxyName=""
 ENV ServerApiKey=""

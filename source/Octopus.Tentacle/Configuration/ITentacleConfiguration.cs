@@ -64,6 +64,13 @@ namespace Octopus.Tentacle.Configuration
         OctopusServerConfiguration? LastReceivedHandshake { get; }
 
         /// <summary>
+        /// The number of polling connections this Tentacle should open to each Octopus Server it polls.
+        /// Returns null when no value has been explicitly configured. Only applies to polling (active) Tentacles.
+        /// The <c>TentaclePollingConnectionCount</c> environment variable, when set, takes precedence over this value.
+        /// </summary>
+        int? PollingConnectionCount { get; }
+
+        /// <summary>
         /// Gets the proxy used for communications.
         /// </summary>
         IProxyConfiguration ProxyConfiguration { get; }
@@ -91,6 +98,11 @@ namespace Octopus.Tentacle.Configuration
         bool SetServicesPortNumber(int port);
 
         bool SetIsRegistered(bool isRegistered = true);
+
+        /// <summary>
+        /// Sets the number of polling connections this Tentacle should open to each Octopus Server it polls.
+        /// </summary>
+        bool SetPollingConnectionCount(int count);
 
         /// <summary>
         /// Sets the IP address to listen on.

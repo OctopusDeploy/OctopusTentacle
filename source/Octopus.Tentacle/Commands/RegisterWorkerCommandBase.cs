@@ -29,6 +29,11 @@ namespace Octopus.Tentacle.Commands
             Options.Add("workerpool=", "The worker pool name, slug or Id to add the machine to - e.g., 'Windows Pool'; specify this argument multiple times to add to multiple pools", s => workerpools.Add(s));
         }
 
+        // No less than five connections ensures a few file uploads won't completely block the worker.
+        // We also look to take ProcessorCount for larger workers so that Polling Tentacles somewhat
+        // scale with the number of Processors.
+        protected override int DefaultPollingConnectionCount => Math.Max(5, Environment.ProcessorCount);
+
         protected override void CheckArgs()
         {
             if (workerpools.Count == 0 || string.IsNullOrWhiteSpace(workerpools.First()))

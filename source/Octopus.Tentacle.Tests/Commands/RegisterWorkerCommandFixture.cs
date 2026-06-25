@@ -153,6 +153,40 @@ namespace Octopus.Tentacle.Tests.Commands
         // no need for tests like ShouldReuseSubscriptionIdForPollingTentacleIfReRegistering
         // because it runs the same code for Workers and Deployment targets
 
+        [Test]
+        public void ShouldDefaultPollingConnectionCountWhenRegisteringAPollingWorker()
+        {
+            // Workers default to at least five connections, scaling up with the processor count. Compute the
+            // expected value the same way the production code does so the test is correct on any machine/CI agent.
+            var expectedConnectionCount = Math.Max(5, Environment.ProcessorCount);
+
+            AssertPollingWorkerRegistered("https://localhost:10943/");
+            configuration.Received().SetPollingConnectionCount(expectedConnectionCount);
+        }
+
+        [Test]
+        public void ShouldNotSetPollingConnectionCountWhenRegisteringAListeningWorker()
+        {
+            Start("--workerpool=SomePool",
+                "--server=http://localhost",
+                "--name=MyMachine",
+                "--publicHostName=mymachine.test",
+                "--apiKey=ABC123",
+                "--force");
+
+            configuration.DidNotReceive().SetPollingConnectionCount(Arg.Any<int>());
+        }
+
+        [Test]
+        public void ShouldNotOverridePollingConnectionCountWhenAlreadyConfigured()
+        {
+            configuration.PollingConnectionCount.Returns(3);
+
+            AssertPollingWorkerRegistered("https://localhost:10943/");
+
+            configuration.DidNotReceive().SetPollingConnectionCount(Arg.Any<int>());
+        }
+
         void AssertPollingWorkerRegistered(string expectedServerAddress, params string[] additionalArgs)
         {
             var args = new []

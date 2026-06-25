@@ -4,6 +4,7 @@ using FluentAssertions;
 using Halibut;
 using NSubstitute;
 using NUnit.Framework;
+using Octopus.Tentacle.Communications;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Core.Diagnostics;
 
@@ -12,6 +13,55 @@ namespace Octopus.Tentacle.Tests.Communications
     [TestFixture]
     public class HalibutInitializerFixture
     {
+        [Test]
+        public void PollingConnectionCountDefaultsToOneWhenNeitherEnvVarNorConfigIsSet()
+        {
+            HalibutInitializer.DeterminePollingConnectionCount(null, null, Substitute.For<ISystemLog>()).Should().Be(1);
+        }
+
+        [Test]
+        public void PollingConnectionCountUsesTheConfiguredValueWhenEnvVarIsNotSet()
+        {
+            HalibutInitializer.DeterminePollingConnectionCount(null, 5, Substitute.For<ISystemLog>()).Should().Be(5);
+        }
+
+        [Test]
+        public void PollingConnectionCountEnvVarWinsOverTheConfiguredValue()
+        {
+            HalibutInitializer.DeterminePollingConnectionCount("8", 5, Substitute.For<ISystemLog>()).Should().Be(8);
+        }
+
+        [Test]
+        public void PollingConnectionCountIgnoresAnUnparseableEnvVarAndFallsBackToConfig()
+        {
+            HalibutInitializer.DeterminePollingConnectionCount("not-a-number", 5, Substitute.For<ISystemLog>()).Should().Be(5);
+        }
+
+        [Test]
+        public void PollingConnectionCountCoercesZeroConfiguredValueToOne()
+        {
+            HalibutInitializer.DeterminePollingConnectionCount(null, 0, Substitute.For<ISystemLog>()).Should().Be(1);
+        }
+
+        // Mirrors the fixed cap in HalibutInitializer.MaximumPollingConnectionCount.
+        const uint ExpectedMaximumPollingConnectionCount = 512;
+
+        [Test]
+        public void PollingConnectionCountCoercesValuesAboveTheMaximum()
+        {
+            // 1,000,000 is comfortably above the maximum on any conceivable machine, so it must be coerced to the cap.
+            HalibutInitializer.DeterminePollingConnectionCount("1000000", null, Substitute.For<ISystemLog>())
+                .Should().Be(ExpectedMaximumPollingConnectionCount);
+        }
+
+        [Test]
+        public void PollingConnectionCountAllowsTheConfiguredValueUpToTheMaximum()
+        {
+            // A request exactly at the cap should be honoured, not coerced.
+            HalibutInitializer.DeterminePollingConnectionCount(ExpectedMaximumPollingConnectionCount.ToString(), null, Substitute.For<ISystemLog>())
+                .Should().Be(ExpectedMaximumPollingConnectionCount);
+        }
+
         string defaultProxyHost = "127.0.0.1";
         int defaultProxyPort = 1111;
         string defaultProxyUsername = "username";

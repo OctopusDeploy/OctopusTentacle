@@ -154,6 +154,15 @@ namespace Octopus.Tentacle.Commands
                 var subscriptionId = GetServerSubscriptionId(existingServer);
                 registerMachineOperation.SubscriptionId = subscriptionId;
                 server.SubscriptionId = subscriptionId.ToString();
+
+                // Polling Tentacles benefit from multiple connections to the server. Seed a sensible default
+                // based on whether this is a worker or a deployment target, but never override a value the
+                // operator has already configured explicitly.
+                if (configuration.Value.PollingConnectionCount is null)
+                {
+                    log.Info($"Setting the polling connection count to {DefaultPollingConnectionCount}");
+                    configuration.Value.SetPollingConnectionCount(DefaultPollingConnectionCount);
+                }
             }
 
             registerMachineOperation.MachinePolicy = policy;
@@ -181,6 +190,12 @@ namespace Octopus.Tentacle.Commands
 
             log.Info("Machine registered successfully");
         }
+
+        /// <summary>
+        /// The number of polling connections to configure when registering a polling Tentacle and no value has been
+        /// explicitly configured. Deployment targets default to 1; workers override this to open more connections.
+        /// </summary>
+        protected virtual int DefaultPollingConnectionCount => 1;
 
         protected abstract void CheckArgs();
 

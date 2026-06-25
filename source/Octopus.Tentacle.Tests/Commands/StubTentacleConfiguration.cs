@@ -37,6 +37,7 @@ namespace Octopus.Tentacle.Tests.Commands
         public IProxyConfiguration ProxyConfiguration { get; set; } = null!;
         public IPollingProxyConfiguration PollingProxyConfiguration { get; set; } = null!;
         public bool IsRegistered { get; set; } = false;
+        public int? PollingConnectionCount { get; set; }
         public void WriteTo(IWritableKeyValueStore outputStore, IEnumerable<string> excluding)
         {
             throw new NotImplementedException();
@@ -57,6 +58,12 @@ namespace Octopus.Tentacle.Tests.Commands
         public bool SetIsRegistered(bool isRegistered = true)
         {
             IsRegistered = isRegistered;
+            return true;
+        }
+
+        public bool SetPollingConnectionCount(int count)
+        {
+            PollingConnectionCount = count;
             return true;
         }
 

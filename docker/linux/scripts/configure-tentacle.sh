@@ -134,6 +134,11 @@ function configureTentacle() {
     echo "Updating trust ..."
     tentacle configure --instance "$instanceName" --reset-trust
 
+    if [[ ! -z "$PollingConnectionCount" ]]; then
+        echo "Setting polling connection count ..."
+        tentacle configure --instance "$instanceName" --pollingConnectionCount "$PollingConnectionCount"
+    fi
+
     echo "Creating certificate ..."
     tentacle new-certificate --instance "$instanceName" --if-blank
 }
