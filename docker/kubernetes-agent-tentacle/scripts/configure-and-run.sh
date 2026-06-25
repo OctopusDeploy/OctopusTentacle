@@ -29,7 +29,9 @@ applicationsDirectory=/home/Octopus/Applications
 if [[ -n "$TentacleApplications" ]]; then
   applicationsDirectory="$TentacleApplications"
 fi
-
+echo "Creating config directory"
+echo "Permissions for $configurationDirectory:"
+ls -lan / | grep etc
 mkdir -p $configurationDirectory
 mkdir -p $applicationsDirectory
 
