@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Tentacle.CommonTestUtils;
+using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.TestAttributes;
 using Octopus.Tentacle.Util;
@@ -196,7 +197,7 @@ while ((Get-Date) -lt $deadline) {
                         cts.Token));
 
                     // Wait for the grandchild to actually be spawned before cancelling
-                    await WaitForGrandchildSpawnAsync(grandchildPidFile, TimeSpan.FromSeconds(60));
+                    await WaitForPidFileAsync(grandchildPidFile, TimeSpan.FromSeconds(60));
 
                     var sw = Stopwatch.StartNew();
                     cts.Cancel();
@@ -253,7 +254,7 @@ while ((Get-Date) -lt $deadline) {
                         out _,
                         cts.Token));
 
-                    await WaitForGrandchildSpawnAsync(grandchildPidFile, TimeSpan.FromSeconds(30));
+                    await WaitForPidFileAsync(grandchildPidFile, TimeSpan.FromSeconds(30));
 
                     var sw = Stopwatch.StartNew();
                     cts.Cancel();
@@ -275,7 +276,96 @@ while ((Get-Date) -lt $deadline) {
             }
         }
 
-        static async Task WaitForGrandchildSpawnAsync(string pidFile, TimeSpan timeout)
+        [Test]
+        public async Task AbandonToken_WhenProcessCanBeKilled_KillsTheProcessAndReturnsAbandonedExitCode()
+        {
+            // Abandon returns AbandonedExitCode and best-effort-kills the process. Here the process is
+            // killable, so the kill lands and the process is gone.
+            using var tempDir = new TemporaryDirectory();
+            var pidFile = Path.Combine(tempDir.DirectoryPath, "process.pid");
+
+            var abandonCommand = PlatformDetection.IsRunningOnWindows ? "powershell.exe" : "/bin/bash";
+            var arguments = PlatformDetection.IsRunningOnWindows
+                ? $"-NoProfile -NonInteractive -Command \"$PID | Out-File -FilePath '{pidFile}' -Encoding ASCII; Start-Sleep -Seconds 300\""
+                : $"-c \"echo $$ > '{pidFile}' && sleep 300\"";
+
+            using var cancelCts = new CancellationTokenSource();
+            using var abandonCts = new CancellationTokenSource();
+
+            var infoMessages = new StringBuilder();
+
+            var task = Task.Run(async () => await SilentProcessRunner.ExecuteCommandAsync(
+                abandonCommand,
+                arguments,
+                Environment.CurrentDirectory,
+                debug: _ => { },
+                info: msg => { lock (infoMessages) infoMessages.AppendLine(msg); },
+                error: _ => { },
+                customEnvironmentVariables: null,
+                cancel: cancelCts.Token,
+                abandon: abandonCts.Token));
+
+            // Wait deterministically for the process to write its PID before we abandon
+            await WaitForPidFileAsync(pidFile, TimeSpan.FromSeconds(30));
+            abandonCts.Cancel();
+
+            var exitCode = await task;
+            exitCode.Should().Be(ScriptExitCodes.AbandonedExitCode);
+            infoMessages.ToString().Should().Contain("Tentacle has abandoned this script");
+        }
+
+        [Test]
+        [NonParallelizable]
+        public async Task AbandonToken_WhenProcessCanNotBeKilled_ReturnsAbandonedExitCode()
+        {
+            // Simulate a stuck process: TentacleDebugDisableProcessKill makes Hitman a no-op, so abandon's
+            // best-effort kill can't terminate it. Abandon still returns AbandonedExitCode without waiting and
+            // the process is left running. That env var is process-wide, so the test is NonParallelizable and
+            // resets it (and force-kills the leftover process) in finally.
+            using var tempDir = new TemporaryDirectory();
+            var pidFile = Path.Combine(tempDir.DirectoryPath, "process.pid");
+
+            var abandonCommand = PlatformDetection.IsRunningOnWindows ? "powershell.exe" : "/bin/bash";
+            var arguments = PlatformDetection.IsRunningOnWindows
+                ? $"-NoProfile -NonInteractive -Command \"$PID | Out-File -FilePath '{pidFile}' -Encoding ASCII; Start-Sleep -Seconds 300\""
+                : $"-c \"echo $$ > '{pidFile}' && sleep 300\"";
+
+            using var cancelCts = new CancellationTokenSource();
+            using var abandonCts = new CancellationTokenSource();
+            var infoMessages = new StringBuilder();
+
+            Environment.SetEnvironmentVariable(Octopus.Tentacle.Core.Util.EnvironmentVariables.TentacleDebugDisableProcessKill_UNSAFE_FOR_PRODUCTION, "1");
+            try
+            {
+                var task = Task.Run(async () => await SilentProcessRunner.ExecuteCommandAsync(
+                    abandonCommand,
+                    arguments,
+                    Environment.CurrentDirectory,
+                    debug: _ => { },
+                    info: msg => { lock (infoMessages) infoMessages.AppendLine(msg); },
+                    error: _ => { },
+                    customEnvironmentVariables: null,
+                    cancel: cancelCts.Token,
+                    abandon: abandonCts.Token));
+
+                await WaitForPidFileAsync(pidFile, TimeSpan.FromSeconds(30));
+                abandonCts.Cancel();
+
+                var exitCode = await task;
+                exitCode.Should().Be(ScriptExitCodes.AbandonedExitCode);
+                infoMessages.ToString().Should().Contain("Tentacle has abandoned this script");
+
+                // Kill was a no-op, so abandon left the process running.
+                AssertProcessIsRunning(pidFile);
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable(Octopus.Tentacle.Core.Util.EnvironmentVariables.TentacleDebugDisableProcessKill_UNSAFE_FOR_PRODUCTION, null);
+                EnsureProcessKilled(pidFile);
+            }
+        }
+
+        static async Task WaitForPidFileAsync(string pidFile, TimeSpan timeout)
         {
             var deadline = DateTime.UtcNow + timeout;
             while (DateTime.UtcNow < deadline)
@@ -285,8 +375,8 @@ while ((Get-Date) -lt $deadline) {
                 await Task.Delay(50);
             }
             throw new TimeoutException(
-                $"Test setup failed: the grandchild PID was never written to '{pidFile}'. " +
-                $"The grandchild-pipe scenario is not being exercised.");
+                $"Test setup failed: a valid PID was never written to '{pidFile}'. " +
+                $"The scenario under test is not being exercised.");
         }
 
         static string SafelyReadAllText(string path)
@@ -294,16 +384,69 @@ while ((Get-Date) -lt $deadline) {
             try { return File.ReadAllText(path); } catch { return string.Empty; }
         }
 
-        static void TryKillGrandchild(string pidFile)
+        static void EnsureProcessKilled(string pidFile)
+        {
+            // Safety net for tests that spawn a long-lived process. It should already be gone (abandon's
+            // best-effort kill, or the grandchild reaped). If it's somehow still alive, kill it and confirm
+            // it died — we'd rather flake loudly here than leak the process onto a CI agent.
+            if (!File.Exists(pidFile) || !int.TryParse(SafelyReadAllText(pidFile).Trim(), out var pid) || pid <= 0)
+                return;
+
+            try
+            {
+                using var process = Process.GetProcessById(pid);
+                if (process.HasExited)
+                    return;
+
+                process.Kill();
+                process.WaitForExit(10_000).Should().BeTrue($"cleanup must terminate PID {pid} so it isn't leaked onto the CI agent");
+            }
+            catch (ArgumentException) { /* not running — already gone */ }
+            catch (InvalidOperationException) { /* exited between lookup and kill */ }
+        }
+
+        static void AssertProcessExitsWithin(string pidFile, TimeSpan timeout)
+        {
+            File.Exists(pidFile).Should().BeTrue($"the test should have written a PID to '{pidFile}'");
+            int.TryParse(SafelyReadAllText(pidFile).Trim(), out var pid).Should().BeTrue("a valid PID should have been written");
+
+            // abandon's best-effort kill is asynchronous, so give it a moment to actually terminate.
+            var deadline = DateTime.UtcNow + timeout;
+            while (DateTime.UtcNow < deadline && IsProcessRunning(pid))
+                Thread.Sleep(100);
+
+            IsProcessRunning(pid).Should().BeFalse($"abandon best-effort-kills a killable process, so PID {pid} should be gone");
+        }
+
+        static void AssertProcessIsRunning(string pidFile)
+        {
+            File.Exists(pidFile).Should().BeTrue($"the test should have written a PID to '{pidFile}'");
+            int.TryParse(SafelyReadAllText(pidFile).Trim(), out var pid).Should().BeTrue("a valid PID should have been written");
+            IsProcessRunning(pid).Should().BeTrue($"abandon leaves an un-killable process running, so PID {pid} should still be alive");
+        }
+
+        static bool IsProcessRunning(int pid)
         {
             try
             {
-                if (File.Exists(pidFile) && int.TryParse(SafelyReadAllText(pidFile).Trim(), out var pid))
-                {
-                    try { Process.GetProcessById(pid).Kill(); } catch { /* already gone */ }
-                }
+                using var process = Process.GetProcessById(pid);
+                return !process.HasExited;
             }
-            catch { /* ignore */ }
+            catch (ArgumentException) { return false; }       // not running
+            catch (InvalidOperationException) { return false; } // exited
+        }
+
+        static void TryKillGrandchild(string pidFile)
+        {
+            // Best-effort only. The grandchild is reparented to init, so it is NOT our child: Process.WaitForExit
+            // can't reliably observe a non-child exiting (and a CI container's PID 1 may not reap the zombie),
+            // so we can't assert the kill the way EnsureProcessKilled does. The test's real assertion is that
+            // cancellation returns promptly, not that this cleanup succeeded.
+            if (!File.Exists(pidFile) || !int.TryParse(SafelyReadAllText(pidFile).Trim(), out var pid) || pid <= 0)
+                return;
+
+            try { using var process = Process.GetProcessById(pid); process.Kill(); }
+            catch { /* already gone, or can't be reliably killed/observed — best effort */ }
         }
 
         [Test]
