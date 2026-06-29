@@ -30,7 +30,7 @@ namespace Octopus.Tentacle.Client.Scripts
         /// </summary>
         /// <param name="commandContext">The CommandContext from the previous command</param>
         /// <returns>The result, which includes the CommandContext for the next command</returns>
-        Task<ScriptOperationExecutionResult> CancelScript(CommandContext commandContext);
+        Task<ScriptOperationExecutionResult> CancelScript(CommandContext commandContext, CancellationToken cancellationToken);
 
         /// <summary>
         /// Complete the script.
