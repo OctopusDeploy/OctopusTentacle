@@ -123,15 +123,21 @@ namespace Octopus.Tentacle.Services.Scripts.Kubernetes
 
         public async Task CompleteScriptAsync(CompleteKubernetesScriptCommandV1 command, CancellationToken cancellationToken)
         {
-            var workspace = workspaceFactory.GetWorkspace(command.ScriptTicket, WorkspaceReadinessCheck.Skip);
-            await workspace.Delete(cancellationToken);
+            // Don't delete the workspace if automatic pod cleanup is enabled. This allows for debugging of the bootstrap script
+            if (!KubernetesConfig.DisableAutomaticPodCleanup)
+            {
+                var workspace = workspaceFactory.GetWorkspace(command.ScriptTicket, WorkspaceReadinessCheck.Skip);
+                await workspace.Delete(cancellationToken);
+            }
 
             scriptLogProvider.Delete(command.ScriptTicket);
             scriptPodSinceTimeStore.Delete(command.ScriptTicket);
             scriptPodLogEncryptionKeyProvider.Delete(command.ScriptTicket);
 
             if (!KubernetesConfig.DisableAutomaticPodCleanup)
+            {
                 await podService.DeleteIfExists(command.ScriptTicket, cancellationToken);
+            }
         }
 
         async Task<KubernetesScriptStatusResponseV1> GetResponse(ITrackedScriptPod trackedPod, long lastLogSequence, CancellationToken cancellationToken)
