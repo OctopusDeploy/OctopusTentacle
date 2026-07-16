@@ -50,6 +50,21 @@
 	<ItemGroup Condition="('$(TargetFramework)' == 'net8.0' Or '$(TargetFramework)' == 'net8.0-windows') And '$(EnableTrimming)' == 'true'">
 		<TrimmerRootDescriptor Include="TrimmerRoots.xml" />
 	</ItemGroup>
+	<!-- Full trim mode (-p:TrimMode=full) additionally member-trims app and NuGet assemblies.
+	     These assemblies drive behaviour through reflection (DI, serialization, logging config,
+	     attribute-scanned services), so they are kept whole. EXPERIMENTAL: with these roots the
+	     full-trimmed Tentacle passes command/agent smoke tests but does not yet pass the
+	     integration test suite - use partial mode (the default) for anything real. -->
+	<ItemGroup Condition="('$(TargetFramework)' == 'net8.0' Or '$(TargetFramework)' == 'net8.0-windows') And '$(EnableTrimming)' == 'true' And '$(TrimMode)' == 'full'">
+		<TrimmerRootAssembly Include="Tentacle" />
+		<TrimmerRootAssembly Include="Octopus.Tentacle.Core" />
+		<TrimmerRootAssembly Include="Octopus.Tentacle.Contracts" />
+		<TrimmerRootAssembly Include="Halibut" />
+		<TrimmerRootAssembly Include="Newtonsoft.Json" />
+		<TrimmerRootAssembly Include="NLog" />
+		<TrimmerRootAssembly Include="Autofac" />
+		<TrimmerRootAssembly Include="KubernetesClient" />
+	</ItemGroup>
 
 	<PropertyGroup Condition=" '$(TargetFramework)' == 'net48' ">
 		<NoWarn>8601</NoWarn>
