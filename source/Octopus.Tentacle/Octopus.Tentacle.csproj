@@ -38,6 +38,19 @@
 		<Optimize>True</Optimize>
 	</PropertyGroup>
 
+	<!-- Assembly trimming for self-contained .NET 8 publishes. Partial mode only trims assemblies
+	     that declare themselves trim-compatible (the framework); app and NuGet assemblies are kept
+	     whole, so reflection-based code (Autofac, Newtonsoft.Json, NLog, attribute-scanned Halibut
+	     services) keeps working. Opt in with -p:EnableTrimming=true at publish time. -->
+	<PropertyGroup Condition="('$(TargetFramework)' == 'net8.0' Or '$(TargetFramework)' == 'net8.0-windows') And '$(EnableTrimming)' == 'true'">
+		<PublishTrimmed>true</PublishTrimmed>
+		<TrimMode Condition="'$(TrimMode)' == ''">partial</TrimMode>
+		<SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
+	</PropertyGroup>
+	<ItemGroup Condition="('$(TargetFramework)' == 'net8.0' Or '$(TargetFramework)' == 'net8.0-windows') And '$(EnableTrimming)' == 'true'">
+		<TrimmerRootDescriptor Include="TrimmerRoots.xml" />
+	</ItemGroup>
+
 	<PropertyGroup Condition=" '$(TargetFramework)' == 'net48' ">
 		<NoWarn>8601</NoWarn>
 		<DefineConstants>$(DefineConstants);HAS_SYSTEM_IDENTITYMODEL_TOKENS;NLOG_HAS_EVENT_LOG_TARGET;NETFX;FULL_FRAMEWORK</DefineConstants>
