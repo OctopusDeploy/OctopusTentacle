@@ -23,7 +23,8 @@ namespace Octopus.Tentacle.Kubernetes
         }
 
         const string DefaultKubernetesAgentToolsImage = "octopusdeploy/kubernetes-agent-tools-base";
-        
+
+        // we track a list of known image tags just in case the metadata can't be retrieved 
         static readonly List<Version> KnownLatestContainerTags = new()
         {
             new(1, 26),
@@ -41,27 +42,27 @@ namespace Octopus.Tentacle.Kubernetes
 
         public async Task<string> GetContainerImageForCluster()
         {
-            var imageRepository = KubernetesConfig.ScriptPodContainerImage; 
+            var imageRepository = KubernetesConfig.ScriptPodContainerImage;
             if (imageRepository.IsNullOrEmpty())
             {
                 return await GetAgentToolsContainerImage();
             }
 
-            var imageTag = KubernetesConfig.ScriptPodContainerImageTag; 
+            var imageTag = KubernetesConfig.ScriptPodContainerImageTag;
             return $"{imageRepository}:{imageTag}";
         }
 
         async Task<string> GetAgentToolsContainerImage()
         {
             var clusterVersion = await clusterService.GetClusterVersion();
-            
-            var versionMetadata = await imageVersionMetadataProvider.TryGetVersionMetadata();
-            if (TryGetImageTagFromVersionMetadata(versionMetadata, clusterVersion, out var imageTag))
-            {
-                return $"{DefaultKubernetesAgentToolsImage}:{imageTag}";
-            }
 
-            return GetFallbackAgentToolsImage(clusterVersion);
+            var versionMetadata = await imageVersionMetadataProvider.TryGetVersionMetadata();
+
+            var imageTag = TryGetImageTagFromVersionMetadata(versionMetadata, clusterVersion, out var tag)
+                ? tag
+                : GetFallbackAgentToolsTag(clusterVersion); //if we can't get the image tag from the version metadata, do a lookup of known images
+
+            return $"{DefaultKubernetesAgentToolsImage}:{imageTag}";
         }
 
         static bool TryGetImageTagFromVersionMetadata(KubernetesAgentToolsImageVersionMetadata? versionMetadata, ClusterVersion clusterVersion, out string imageTag)
@@ -71,7 +72,7 @@ namespace Octopus.Tentacle.Kubernetes
             {
                 return false;
             }
-            
+
             //if there is a deprecated image, use that
             var versionDeprecation = versionMetadata.Deprecations.FirstOrDefault(kvp => ClusterVersion.FromVersion(kvp.Key).Equals(clusterVersion));
             if (versionDeprecation.Key is not null)
@@ -80,12 +81,6 @@ namespace Octopus.Tentacle.Kubernetes
                 return true;
             }
 
-            //if the latest version is less than the cluster version, bauk
-            if (ClusterVersion.FromVersion(versionMetadata.Latest).CompareTo(clusterVersion) < 0)
-            {
-                return false;
-            }
-            
             var imageExists = versionMetadata.ToolVersions.Kubectl.Any(v => ClusterVersion.FromVersion(v).Equals(clusterVersion));
             if (imageExists)
             {
@@ -96,13 +91,11 @@ namespace Octopus.Tentacle.Kubernetes
             return false;
         }
 
-        static string GetFallbackAgentToolsImage(ClusterVersion clusterVersion)
+        static string GetFallbackAgentToolsTag(ClusterVersion clusterVersion)
         {
             var tagVersion = KnownLatestContainerTags.FirstOrDefault(tag => tag.Major == clusterVersion.Major && tag.Minor == clusterVersion.Minor);
 
-            var tag = tagVersion?.ToString(2) ?? "latest";
-
-            return $"{DefaultKubernetesAgentToolsImage}:{tag}";
+            return tagVersion?.ToString(2) ?? "latest";
         }
     }
 }

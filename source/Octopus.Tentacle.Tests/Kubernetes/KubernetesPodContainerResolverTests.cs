@@ -69,38 +69,6 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         }
 
         [Test]
-        public async Task GetContainerImageForCluster_VersionMetadataExists_ClusterVersionGreaterThanLatest_ContainerTagIsKnown_ShouldFallbackToKnownContainerTag()
-        {
-            // Arrange
-            var clusterService = Substitute.For<IKubernetesClusterService>();
-            clusterService.GetClusterVersion().Returns(new ClusterVersion(1, 31));
-
-            var podContainerResolver = new KubernetesPodContainerResolver(clusterService, mockToolsImageVersionMetadataProvider);
-
-            // Act
-            var result = await podContainerResolver.GetContainerImageForCluster();
-
-            // Assert
-            result.Should().Be("octopusdeploy/kubernetes-agent-tools-base:1.31");
-        }
-        
-        [Test]
-        public async Task GetContainerImageForCluster_VersionMetadataExists_ClusterVersionGreaterThanLatest_ContainerTagIsUnknown_FallbackToLatest()
-        {
-            // Arrange
-            var clusterService = Substitute.For<IKubernetesClusterService>();
-            clusterService.GetClusterVersion().Returns(new ClusterVersion(1, 50));
-
-            var podContainerResolver = new KubernetesPodContainerResolver(clusterService, mockToolsImageVersionMetadataProvider);
-
-            // Act
-            var result = await podContainerResolver.GetContainerImageForCluster();
-
-            // Assert
-            result.Should().Be("octopusdeploy/kubernetes-agent-tools-base:latest");
-        }
-
-        [Test]
         public async Task GetContainerImageForCluster_VersionMetadataExists_ClusterVersionNotFound_FallbackToLatest()
         {
             // Arrange
@@ -129,7 +97,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         [TestCase(27, "1.27")]
         [TestCase(26, "1.26")]
         [TestCase(25, "latest")]
-        public async Task GetContainerImageForCluster_VersionMetadataNotFound_FallBackToKnownTags(int clusterMinorVersion, string expectedImageTag)
+        public async Task GetContainerImageForCluster_VersionMetadataNotFound_FallbackToKnownTags(int clusterMinorVersion, string expectedImageTag)
         {
             // Arrange
             var clusterService = Substitute.For<IKubernetesClusterService>();
