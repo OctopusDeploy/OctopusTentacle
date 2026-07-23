@@ -23,7 +23,6 @@ namespace Octopus.Tentacle.Kubernetes
         }
 
         const string DefaultKubernetesAgentToolsImage = "octopusdeploy/kubernetes-agent-tools-base";
-        const string FallbackImageTag = "latest";
         
         static readonly List<Version> KnownLatestContainerTags = new()
         {
