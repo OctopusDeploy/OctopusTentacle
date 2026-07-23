@@ -73,6 +73,7 @@ namespace Octopus.Tentacle.Kubernetes
                 return false;
             }
             
+            //if there is a deprecated image, use that
             var versionDeprecation = versionMetadata.Deprecations.FirstOrDefault(kvp => ClusterVersion.FromVersion(kvp.Key).Equals(clusterVersion));
             if (versionDeprecation.Key is not null)
             {
@@ -80,10 +81,10 @@ namespace Octopus.Tentacle.Kubernetes
                 return true;
             }
 
+            //if the latest version is less than the cluster version, bauk
             if (ClusterVersion.FromVersion(versionMetadata.Latest).CompareTo(clusterVersion) < 0)
             {
-                imageTag = FallbackImageTag;
-                return true;
+                return false;
             }
             
             var imageExists = versionMetadata.ToolVersions.Kubectl.Any(v => ClusterVersion.FromVersion(v).Equals(clusterVersion));
@@ -92,9 +93,8 @@ namespace Octopus.Tentacle.Kubernetes
                 imageTag = $"{clusterVersion}-{versionMetadata.RevisionHash}";
                 return true;
             }
-            
-            imageTag = FallbackImageTag;
-            return true;
+
+            return false;
         }
 
         static string GetFallbackAgentToolsImage(ClusterVersion clusterVersion)

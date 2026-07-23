@@ -69,11 +69,27 @@ namespace Octopus.Tentacle.Tests.Kubernetes
         }
 
         [Test]
-        public async Task GetContainerImageForCluster_VersionMetadataExists_ClusterVersionGreaterThanLatest_FallbackToLatest()
+        public async Task GetContainerImageForCluster_VersionMetadataExists_ClusterVersionGreaterThanLatest_ContainerTagIsKnown_ShouldFallbackToKnownContainerTag()
         {
             // Arrange
             var clusterService = Substitute.For<IKubernetesClusterService>();
             clusterService.GetClusterVersion().Returns(new ClusterVersion(1, 31));
+
+            var podContainerResolver = new KubernetesPodContainerResolver(clusterService, mockToolsImageVersionMetadataProvider);
+
+            // Act
+            var result = await podContainerResolver.GetContainerImageForCluster();
+
+            // Assert
+            result.Should().Be("octopusdeploy/kubernetes-agent-tools-base:1.31");
+        }
+        
+        [Test]
+        public async Task GetContainerImageForCluster_VersionMetadataExists_ClusterVersionGreaterThanLatest_ContainerTagIsUnknown_FallbackToLatest()
+        {
+            // Arrange
+            var clusterService = Substitute.For<IKubernetesClusterService>();
+            clusterService.GetClusterVersion().Returns(new ClusterVersion(1, 50));
 
             var podContainerResolver = new KubernetesPodContainerResolver(clusterService, mockToolsImageVersionMetadataProvider);
 
