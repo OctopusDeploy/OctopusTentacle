@@ -34,37 +34,43 @@ namespace Octopus.Tentacle.Client
             CancellationToken scriptExecutionCancellationToken);
 
         /// <summary>
-        /// Start the script.
+        /// 
         /// </summary>
+        /// <param name="command"></param>
+        /// <param name="startScriptIsBeingReAttempted"></param>
+        /// <param name="logger"></param>
+        /// <param name="requestCancellationToken">Cancels the inflight request</param>
         /// <returns>The result, which includes the CommandContext for the next command</returns>
         Task<ScriptOperationExecutionResult> StartScript(ExecuteScriptCommand command,
             StartScriptIsBeingReAttempted startScriptIsBeingReAttempted,
             ITentacleClientTaskLog logger,
-            CancellationToken scriptExecutionCancellationToken);
+            CancellationToken requestCancellationToken);
+        
 
         /// <summary>
         /// Get the status.
         /// </summary>
         /// <param name="commandContext">The CommandContext from the previous command</param>
         /// <param name="logger"></param>
-        /// <param name="scriptExecutionCancellationToken"></param>
+        /// <param name="requestCancellationToken">Cancels the inflight request</param>
         /// <returns>The result, which includes the CommandContext for the next command</returns>
-        Task<ScriptOperationExecutionResult> GetStatus(CommandContext commandContext, ITentacleClientTaskLog logger, CancellationToken scriptExecutionCancellationToken);
+        Task<ScriptOperationExecutionResult> GetStatus(CommandContext commandContext, ITentacleClientTaskLog logger, CancellationToken requestCancellationToken);
 
         /// <summary>
         /// Cancel the script.
         /// </summary>
         /// <param name="commandContext">The CommandContext from the previous command</param>
         /// <param name="logger"></param>
+        /// <param name="requestCancellationToken">Cancels the inflight request</param>
         /// <returns>The result, which includes the CommandContext for the next command</returns>
-        Task<ScriptOperationExecutionResult> CancelScript(CommandContext commandContext, ITentacleClientTaskLog logger);
+        Task<ScriptOperationExecutionResult> CancelScript(CommandContext commandContext, ITentacleClientTaskLog logger, CancellationToken requestCancellationToken);
 
         /// <summary>
         /// Complete the script.
         /// </summary>
         /// <param name="commandContext">The CommandContext from the previous command</param>
         /// <param name="logger"></param>
-        /// <param name="scriptExecutionCancellationToken"></param>
-        Task<ScriptStatus?> CompleteScript(CommandContext commandContext, ITentacleClientTaskLog logger, CancellationToken scriptExecutionCancellationToken);
+        /// <param name="requestCancellationToken">Cancels the inflight request</param>
+        Task<ScriptStatus?> CompleteScript(CommandContext commandContext, ITentacleClientTaskLog logger, CancellationToken requestCancellationToken);
     }
 }
