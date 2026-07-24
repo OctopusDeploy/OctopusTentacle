@@ -62,7 +62,9 @@ namespace Octopus.Tentacle.Startup
 
         protected override void Start()
         {
+            LogFileOnlyLogger.Info($"Inside ProxyConfigurationCommand.Start()");
             base.Start();
+            LogFileOnlyLogger.Info($"After ProxyConfigurationCommand.Start()");
 
             foreach (var operation in operations) operation();
 
