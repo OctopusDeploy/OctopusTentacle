@@ -7,6 +7,7 @@ namespace Octopus.Tentacle.Contracts.ScriptServiceV2
         ScriptStatusResponseV2 StartScript(StartScriptCommandV2 command);
         ScriptStatusResponseV2 GetStatus(ScriptStatusRequestV2 request);
         ScriptStatusResponseV2 CancelScript(CancelScriptCommandV2 command);
+        ScriptStatusResponseV2 AbandonScript(AbandonScriptCommandV2 command);
         void CompleteScript(CompleteScriptCommandV2 command);
     }
 }
