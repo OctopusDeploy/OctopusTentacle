@@ -43,9 +43,10 @@ namespace Octopus.Tentacle.Client.Scripts
                     logger);
             }
 
-            if (scriptServiceToUse == ScriptServiceVersion.ScriptServiceVersion2)
+            if (scriptServiceToUse.IsV2)
             {
                 return new ScriptServiceV2Executor(
+                    scriptServiceToUse,
                     allClients.ScriptServiceV2,
                     rpcCallExecutor,
                     clientOperationMetricsBuilder,

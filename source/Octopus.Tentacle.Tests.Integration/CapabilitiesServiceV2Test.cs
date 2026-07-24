@@ -30,16 +30,15 @@ namespace Octopus.Tentacle.Tests.Integration
 
             capabilities.Should().Contain(nameof(IScriptService));
             capabilities.Should().Contain(nameof(IFileTransferService));
-
-            //all versions have ScriptServiceV1 & IFileTransferService
-            var expectedCapabilitiesCount = 2;
+            var expectedCount = 2;
             if (version.HasScriptServiceV2())
             {
                 capabilities.Should().Contain(nameof(IScriptServiceV2));
-                expectedCapabilitiesCount++;
+                expectedCount++;
             }
-
-            capabilities.Count.Should().Be(expectedCapabilitiesCount);
+            if (version.HasAbandonScript())
+                expectedCount++;
+            capabilities.Count.Should().Be(expectedCount);
         }
 
         [Test]
@@ -54,18 +53,34 @@ namespace Octopus.Tentacle.Tests.Integration
 
             capabilities.Should().Contain(nameof(IScriptService));
             capabilities.Should().Contain(nameof(IFileTransferService));
-
-            //all versions have ScriptServiceV1 & IFileTransferService
-            var expectedCapabilitiesCount = 2;
+            var expectedCount = 2;
             if (version.HasScriptServiceV2())
             {
                 capabilities.Should().Contain(nameof(IScriptServiceV2));
-                expectedCapabilitiesCount++;
+                expectedCount++;
             }
+            if (version.HasAbandonScript())
+                expectedCount++;
 
             capabilities.Should().NotContain(nameof(IKubernetesScriptServiceV1));
+            capabilities.Count.Should().Be(expectedCount);
+        }
 
-            capabilities.Count.Should().Be(expectedCapabilitiesCount);
+        [Test]
+        [TentacleConfigurations(testCapabilitiesServiceVersions: true)]
+        public async Task AbandonScriptIsAdvertisedOnlyByVersionsThatSupportIt(TentacleConfigurationTestCase tentacleConfigurationTestCase)
+        {
+            var version = tentacleConfigurationTestCase.Version;
+
+            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateLegacyBuilder().Build(CancellationToken);
+
+            var capabilities = (await clientAndTentacle.TentacleClient.CapabilitiesServiceV2.GetCapabilitiesAsync(new(CancellationToken))).SupportedCapabilities;
+
+            // Older Tentacles predate abandon and must not advertise it; this build (and later) must.
+            if (version.HasAbandonScript())
+                capabilities.Should().Contain(nameof(IScriptServiceV2.AbandonScript));
+            else
+                capabilities.Should().NotContain(nameof(IScriptServiceV2.AbandonScript));
         }
 
         [Test]

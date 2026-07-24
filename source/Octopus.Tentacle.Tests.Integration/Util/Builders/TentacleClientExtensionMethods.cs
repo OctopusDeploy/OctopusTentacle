@@ -5,10 +5,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
 using Octopus.Tentacle.Client;
+using Octopus.Tentacle.Client.EventDriven;
 using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.Client.Scripts.Models;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Logging;
+using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.ExtensionMethods;
 
@@ -54,6 +56,42 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders
                 token).ConfigureAwait(false);
 
             return result;
+        }
+
+        public static async Task<ScriptStatusResponseV2> AbandonScript(
+            this TentacleClient tentacleClient,
+            ScriptTicket scriptTicket,
+            CancellationToken token,
+            ITentacleClientTaskLog? log = null)
+        {
+            return await tentacleClient.AbandonScript(scriptTicket,
+                new SerilogLoggerBuilder().Build().ForContext<TentacleClient>().ToITentacleTaskLog().Chain(log),
+                token).ConfigureAwait(false);
+        }
+
+        public static async Task<ScriptStatus> CancelScript(
+            this TentacleClient tentacleClient,
+            ScriptTicket scriptTicket,
+            ITentacleClientTaskLog? log = null)
+        {
+            var commandContext = new CommandContext(scriptTicket, 0, ScriptServiceVersion.ScriptServiceVersion2);
+            var result = await tentacleClient.CancelScript(commandContext,
+                new SerilogLoggerBuilder().Build().ForContext<TentacleClient>().ToITentacleTaskLog().Chain(log))
+                .ConfigureAwait(false);
+            return result.ScriptStatus;
+        }
+
+        public static async Task<ScriptStatus> GetStatus(
+            this TentacleClient tentacleClient,
+            ScriptTicket scriptTicket,
+            CancellationToken token,
+            ITentacleClientTaskLog? log = null)
+        {
+            var commandContext = new CommandContext(scriptTicket, 0, ScriptServiceVersion.ScriptServiceVersion2);
+            var result = await tentacleClient.GetStatus(commandContext,
+                new SerilogLoggerBuilder().Build().ForContext<TentacleClient>().ToITentacleTaskLog().Chain(log),
+                token).ConfigureAwait(false);
+            return result.ScriptStatus;
         }
 
         public static async Task<DataStream> DownloadFile(
