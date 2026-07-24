@@ -7,16 +7,18 @@ ARG INSTALLATION_FOLDER="C:/Program Files/Octopus Deploy/Tentacle"
 ENV TentacleVersion ${BUILD_NUMBER}
 ENV OCTOPUS_RUNNING_IN_CONTAINER Y
 
+# org.opencontainers.image.* metadata for the published octopusdeploy/tentacle image.
+# Keep in sync with docker/linux/Dockerfile and the index annotations in the TeamCity
+# "Build: Docker manifest" step (OctopusDeploy/TeamCity-Configuration).
 LABEL \
-    org.label-schema.schema-version="1.0" \
-    org.label-schema.name="Octopus Deploy Tentacle" \
-    org.label-schema.vendor="Octopus Deploy" \
-    org.label-schema.url="https://octopus.com" \
-    org.label-schema.vcs-url="https://github.com/OctopusDeploy/OctopusTentacle" \
-    org.label-schema.license="Apache"  \
-    org.label-schema.description="Octopus Tentacle instance with auto-registration to Octopus Server" \
-    org.label-schema.version=${BUILD_NUMBER} \
-    org.label-schema.build-date=${BUILD_DATE}
+    org.opencontainers.image.title="Octopus Deploy Tentacle" \
+    org.opencontainers.image.vendor="Octopus Deploy" \
+    org.opencontainers.image.url="https://octopus.com" \
+    org.opencontainers.image.source="https://github.com/OctopusDeploy/OctopusTentacle" \
+    org.opencontainers.image.licenses="Apache-2.0" \
+    org.opencontainers.image.description="Octopus Tentacle instance with auto-registration to Octopus Server" \
+    org.opencontainers.image.version=${BUILD_NUMBER} \
+    org.opencontainers.image.created=${BUILD_DATE}
 
 EXPOSE 10933
 
