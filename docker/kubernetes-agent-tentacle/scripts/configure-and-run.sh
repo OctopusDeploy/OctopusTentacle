@@ -444,6 +444,13 @@ else
   echo "Configuration successful"
 fi
 
+echo "==============================================="
+echo "Sanitising Tentacle Environment"
+echo "==============================================="
+
+# Clear sensitive env variables that should not be inherited by the tentacle process or any forked child processes
+unset ServerApiKey BearerToken ServerUsername ServerPassword
+
 markAsInitialised
 
 echo "==============================================="
