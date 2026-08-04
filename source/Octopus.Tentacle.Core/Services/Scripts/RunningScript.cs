@@ -164,6 +164,12 @@ namespace Octopus.Tentacle.Core.Services.Scripts
                     // The script has not started, and the files on disk have been arranged, so it will never meaningfully progress.
                     // We will now abandon the script, as we do we will cancel its cancellation token. Which will result in
                     // the script possibly dying, although from what we have seen, the script will never die.
+
+                    // Whether the script task is still running as we abandon it decides whether its writer outlives the
+                    // block that owns it, which is the window in which the log can be corrupted.
+                    log.Info($"Abandoning script for task {taskId} after PowerShell failed to start. " +
+                        $"Script task completed: {scriptTask.IsCompleted}.");
+
                     return ScriptExitCodes.PowerShellNeverStartedExitCode;
                 }
             }
@@ -240,8 +246,10 @@ namespace Octopus.Tentacle.Core.Services.Scripts
             }
             catch (Exception ex)
             {
-                writer.WriteOutput(ProcessOutputSource.StdErr, "An exception was thrown when invoking " + shellPath + ": " + ex.Message);
-                writer.WriteOutput(ProcessOutputSource.StdErr, ex.ToString());
+                // An abandoned script reaches here after its writer has been closed, so these writes are
+                // attempted on a best-effort basis.
+                TryWriteOutput(writer, "An exception was thrown when invoking " + shellPath + ": " + ex.Message);
+                TryWriteOutput(writer, ex.ToString());
 
                 return ScriptExitCodes.PowershellInvocationErrorExitCode;
             }
@@ -249,15 +257,42 @@ namespace Octopus.Tentacle.Core.Services.Scripts
 
         Action<string> LogScriptOutputTo(IScriptLogWriter logOutput, ProcessOutputSource level)
         {
+            return output =>
+            {
+                try
+                {
+                    logOutput.WriteOutput(level, output);
+                }
+                catch (ObjectDisposedException e)
+                {
+                    // Reached when this script was abandoned and its writer closed while the process kept
+                    // producing output. Left to propagate it would surface inside an un-awaited task, where the
+                    // runtime discards it unobserved and the loss goes unrecorded.
+                    WarnOnceThatScriptOutputCannotBeRecorded(e);
+                }
+            };
+        }
+
+        void TryWriteOutput(IScriptLogWriter logOutput, string message)
+        {
             try
             {
-                return output => logOutput.WriteOutput(level, output);
+                logOutput.WriteOutput(ProcessOutputSource.StdErr, message);
             }
-            catch (Exception e)
+            catch (ObjectDisposedException e)
             {
-                log.Warn(e, $"Could not write script output to log, for task {taskId}");
-                throw;
+                WarnOnceThatScriptOutputCannotBeRecorded(e);
             }
+        }
+
+        int scriptOutputLossWarned;
+
+        void WarnOnceThatScriptOutputCannotBeRecorded(Exception e)
+        {
+            if (Interlocked.Exchange(ref scriptOutputLossWarned, 1) != 0) return;
+
+            log.Warn(e, $"Could not write script output to log, for task {taskId}. This script's log is closed, " +
+                "so any further output it produces will be discarded.");
         }
     }
 }

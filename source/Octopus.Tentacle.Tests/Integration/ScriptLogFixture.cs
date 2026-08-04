@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using FluentAssertions;
 using NSubstitute;
@@ -86,7 +87,57 @@ namespace Octopus.Tentacle.Tests.Integration
             var logs = sut.GetOutput(long.MinValue, out _);
             logs.Count.Should().Be(2);
 
-            logs[1].Text.Should().Be("Corrupt Tentacle log at line 2, no more logs will be read");
+            logs[1].Text.Should().StartWith("Corrupt Tentacle log at line 2, no more logs will be read");
+        }
+
+        [Test]
+        public void ShouldHandleStrayClosingBracket()
+        {
+            using (var appender = sut.CreateWriter())
+            {
+                appender.WriteOutput(ProcessOutputSource.StdOut, "Hello");
+            }
+
+            File.AppendAllText(logFile, "]");
+
+            var logs = sut.GetOutput(long.MinValue, out _);
+
+            logs.Count.Should().Be(2);
+            logs[0].Text.Should().Be("Hello");
+            logs[1].Text.Should().StartWith("Corrupt Tentacle log at line 2, no more logs will be read");
+        }
+
+        [Test]
+        public void ShouldReportCorruptionOnlyOnceAcrossReads()
+        {
+            using (var appender = sut.CreateWriter())
+            {
+                appender.WriteOutput(ProcessOutputSource.StdOut, "Hello");
+            }
+
+            File.AppendAllText(logFile, "]");
+
+            var firstRead = sut.GetOutput(0, out var next);
+            firstRead.Count.Should().Be(2);
+
+            var secondRead = sut.GetOutput(next, out _);
+            secondRead.Should().BeEmpty("a caller that has already been told about the corruption should not be told again");
+        }
+
+        [Test]
+        public void ShouldRefuseWritesAfterDisposalRatherThanCorruptTheLog()
+        {
+            var appender = sut.CreateWriter();
+            appender.WriteOutput(ProcessOutputSource.StdOut, "Before disposal");
+            appender.Dispose();
+
+            Action writeAfterDisposal = () => appender.WriteOutput(ProcessOutputSource.StdOut, "After disposal");
+
+            writeAfterDisposal.Should().Throw<ObjectDisposedException>();
+
+            var logs = sut.GetOutput(long.MinValue, out _);
+            logs.Count.Should().Be(1);
+            logs[0].Text.Should().Be("Before disposal");
         }
 
         [Test]
