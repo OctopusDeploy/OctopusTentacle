@@ -213,12 +213,19 @@ namespace Octopus.Tentacle.Core.Services.Scripts.Logging
                     if (disposed) return;
                     disposed = true;
 
-                    json.Close();
-                    writer.Dispose();
-                    writeStream.Dispose();
+                    try
+                    {
+                        json.Close();
+                        writer.Dispose();
+                        writeStream.Dispose();
+                    }
+                    finally
+                    {
+                        // Runs even when closing fails, so a failed close cannot leave the open-writer count
+                        // overstated for the life of the log.
+                        onDisposed();
+                    }
                 }
-
-                onDisposed();
             }
         }
     }
