@@ -403,6 +403,11 @@ write-output 'This should never be printed'
             finalResponse.State.Should().Be(ProcessState.Complete);
             finalResponse.ExitCode.Should().Be(ScriptExitCodes.PowerShellNeverStartedExitCode);
 
+            // TEMPORARY, for verifying the script log capture reaches the build output. Not a compile-time
+            // constant, so the compiler does not flag the rest of the method as unreachable.
+            if (DateTimeOffset.UtcNow.Year > 2000)
+                throw new InvalidOperationException("Forced failure to verify the script log capture");
+
             // Delete shouldSleep so the script can proceed past the loop when re-invoked directly
             File.Delete(shouldSleep);
 
