@@ -119,9 +119,38 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var firstRead = sut.GetOutput(0, out var next);
             firstRead.Count.Should().Be(2);
+            next.Should().Be(2, "the corruption occupies a sequence number so the caller can advance past it");
 
             var secondRead = sut.GetOutput(next, out _);
             secondRead.Should().BeEmpty("a caller that has already been told about the corruption should not be told again");
+        }
+
+        /// <summary>
+        /// Documents a known limitation rather than desired behaviour. Reading stops at the first malformed
+        /// token, so valid entries written after it are never returned. Recovering them means resynchronising
+        /// past the corruption, which would change the "no more logs will be read" contract.
+        /// </summary>
+        [Test]
+        public void ShouldStopReadingAtFirstCorruptionEvenWhenValidEntriesFollow()
+        {
+            using (var appender = sut.CreateWriter())
+            {
+                appender.WriteOutput(ProcessOutputSource.StdOut, "Before corruption");
+            }
+
+            File.AppendAllText(logFile, "]");
+
+            using (var appender = sut.CreateWriter())
+            {
+                appender.WriteOutput(ProcessOutputSource.StdOut, "After corruption");
+            }
+
+            var firstRead = sut.GetOutput(0, out var next);
+            firstRead[0].Text.Should().Be("Before corruption");
+            next.Should().Be(2);
+
+            var secondRead = sut.GetOutput(next, out _);
+            secondRead.Should().BeEmpty("the entry written after the corruption is unreachable");
         }
 
         [Test]
