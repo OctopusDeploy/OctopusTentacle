@@ -87,7 +87,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var logs = sut.GetOutput(long.MinValue, out _);
             logs.Count.Should().Be(2);
 
-            logs[1].Text.Should().StartWith("Corrupt Tentacle log at line 2, no more logs will be read");
+            logs[1].Text.Should().Be("Corrupt Tentacle log at line 2, no more logs will be read");
         }
 
         [Test]

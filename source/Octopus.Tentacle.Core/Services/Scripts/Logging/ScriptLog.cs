@@ -27,8 +27,11 @@ namespace Octopus.Tentacle.Core.Services.Scripts.Logging
 
         public IScriptLogWriter CreateWriter()
         {
+            // Counted only once the writer exists, so a failure to open the log file cannot leave the count
+            // permanently overstating how many writers are open.
+            var writer = new Writer(logFile, fileSystem, sync, sensitiveValueMasker, () => Interlocked.Decrement(ref openWriters));
             Interlocked.Increment(ref openWriters);
-            return new Writer(logFile, fileSystem, sync, sensitiveValueMasker, () => Interlocked.Decrement(ref openWriters));
+            return writer;
         }
 
         /// <summary>
