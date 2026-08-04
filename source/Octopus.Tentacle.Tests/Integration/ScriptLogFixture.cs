@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using FluentAssertions;
+using Newtonsoft.Json;
 using NSubstitute;
 using NUnit.Framework;
 using Octopus.Tentacle.Contracts;
@@ -104,6 +105,65 @@ namespace Octopus.Tentacle.Tests.Integration
             var logs = sut.GetOutput(long.MinValue, out _);
             logs.Count.Should().Be(1);
             logs[0].Text.Should().Be("Before disposal");
+        }
+
+        [Test]
+        public void ShouldReportTheStateOfTheLogWhenItCannotBeParsed()
+        {
+            using (var appender = sut.CreateWriter())
+            {
+                appender.WriteOutput(ProcessOutputSource.StdOut, "Hello");
+            }
+
+            File.AppendAllText(logFile, "]");
+
+            Action read = () => sut.GetOutput(long.MinValue, out _);
+
+            read.Should().Throw<JsonReaderException>()
+                .WithMessage("Could not parse the script log*bytes*")
+                .WithInnerException<JsonReaderException>("the parser's own detail is preserved");
+        }
+
+        [Test]
+        public void ShouldReportPeakWriterCountWhenTheLogCannotBeParsed()
+        {
+            var first = sut.CreateWriter();
+            var second = sut.CreateWriter();
+            first.WriteOutput(ProcessOutputSource.StdOut, "Hello");
+            second.Dispose();
+            first.Dispose();
+
+            File.AppendAllText(logFile, "]");
+
+            Action read = () => sut.GetOutput(long.MinValue, out _);
+
+            read.Should().Throw<JsonReaderException>()
+                .WithMessage("*peak of 2*", "two writers open at once is how the log gets clobbered, and by read time both are gone");
+        }
+
+        [Test]
+        public void ShouldReportThatAWriteWasRefusedAfterDisposal()
+        {
+            var appender = sut.CreateWriter();
+            appender.WriteOutput(ProcessOutputSource.StdOut, "Hello");
+            appender.Dispose();
+
+            try
+            {
+                appender.WriteOutput(ProcessOutputSource.StdOut, "Arrived after the log closed");
+            }
+            catch (ObjectDisposedException)
+            {
+                // The refusal is the point; handling it is covered by ShouldRefuseWritesAfterDisposal...
+            }
+
+            File.AppendAllText(logFile, "]");
+
+            Action read = () => sut.GetOutput(long.MinValue, out _);
+
+            read.Should().Throw<JsonReaderException>()
+                .WithMessage("*a write was refused after disposal*",
+                    "this ties an orphaned writer to the corruption without correlating two log sources");
         }
 
         [Test]

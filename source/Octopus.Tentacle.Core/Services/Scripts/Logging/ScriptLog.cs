@@ -16,6 +16,14 @@ namespace Octopus.Tentacle.Core.Services.Scripts.Logging
         readonly SensitiveValueMasker sensitiveValueMasker;
         readonly object sync = new object();
 
+        // Reported by DescribeCorruption, and guarded by sync. Deliberately per-instance: a read that happens
+        // after the script leaves the tracker builds a fresh ScriptLog (ScriptServiceV2.GetResponse,
+        // ScriptService.GetResponse), so on those paths these read as defaults. They do describe reads taken
+        // while the script is still tracked, which is where the failure that prompted this occurred.
+        int openWriters;
+        int peakOpenWriters;
+        bool writeRefusedAfterDisposal;
+
         public ScriptLog(string logFile, IOctopusFileSystem fileSystem, SensitiveValueMasker sensitiveValueMasker)
         {
             this.logFile = logFile;
@@ -25,7 +33,34 @@ namespace Octopus.Tentacle.Core.Services.Scripts.Logging
 
         public IScriptLogWriter CreateWriter()
         {
-            return new Writer(this);
+            lock (sync)
+            {
+                // Opened under the lock so a reader cannot observe an uncounted writer, and counted only once the
+                // open has succeeded so a failure cannot leave the count overstated.
+                var writer = new Writer(this);
+                openWriters++;
+                if (openWriters > peakOpenWriters) peakOpenWriters = openWriters;
+                return writer;
+            }
+        }
+
+        /// <summary>
+        /// What is known about the log when it fails to parse, to narrow down which writer produced it. Carries no
+        /// log content: a sensitive value spanning two messages is not fully masked on the way in, so everything
+        /// here goes back through the masker before being reported.
+        /// </summary>
+        /// <remarks>
+        /// The peak count matters more than the current one. Corruption is only noticed during a read, by which
+        /// point the writer responsible has usually been disposed, so the current count is nearly always zero. A
+        /// peak above one means two writers were appending to this log at the same time.
+        /// </remarks>
+        string DescribeCorruption(JsonReaderException ex)
+        {
+            var size = fileSystem.FileExists(logFile) ? $"{fileSystem.GetFileSize(logFile)} bytes" : "missing";
+            var refused = writeRefusedAfterDisposal ? ", a write was refused after disposal" : "";
+            return MaskSensitiveValues(
+                $"Could not parse the script log. It is {size}, with {openWriters} writer(s) open now and a peak " +
+                $"of {peakOpenWriters}{refused}. Parser reported: {ex.Message}");
         }
 
         string MaskSensitiveValues(string rawMessage)
@@ -48,8 +83,20 @@ namespace Octopus.Tentacle.Core.Services.Scripts.Logging
 
                     var sequence = 0L;
                     DateTimeOffset? lastLogLineOccured = null;
-                    while (json.Read())
+                    while (true)
                     {
+                        try
+                        {
+                            if (!json.Read()) break;
+                        }
+                        catch (JsonReaderException ex)
+                        {
+                            // Rethrown rather than handled: the caller failing is existing behaviour, and the same
+                            // type is used so nothing keying on it changes. Only the message improves, from a bare
+                            // parser complaint to something naming the state of the log that produced it.
+                            throw new JsonReaderException(DescribeCorruption(ex), ex);
+                        }
+
                         if (json.TokenType != JsonToken.StartArray)
                             continue;
 
@@ -142,10 +189,14 @@ namespace Octopus.Tentacle.Core.Services.Scripts.Logging
                 lock (owner.sync)
                 {
                     // An abandoned script keeps producing output after its runner has disposed this writer.
-                    // Refusing the write is what keeps a half-written entry out of the log.
+                    // Refusing the write is what keeps a half-written entry out of the log. The refusal is
+                    // recorded because a later parse failure is the only place the two facts can be seen together.
                     if (disposed)
+                    {
+                        owner.writeRefusedAfterDisposal = true;
                         throw new ObjectDisposedException(nameof(IScriptLogWriter),
                             "The script log writer has been disposed. The script it belongs to is no longer being tracked, so its output cannot be recorded.");
+                    }
 
                     json.WriteStartArray();
                     json.WriteValue(SourceToString(source));
@@ -165,9 +216,17 @@ namespace Octopus.Tentacle.Core.Services.Scripts.Logging
                     if (disposed) return;
                     disposed = true;
 
-                    json.Close();
-                    writer.Dispose();
-                    writeStream.Dispose();
+                    try
+                    {
+                        json.Close();
+                        writer.Dispose();
+                        writeStream.Dispose();
+                    }
+                    finally
+                    {
+                        // Runs even when closing fails, so a failed close cannot leave the count overstated.
+                        owner.openWriters--;
+                    }
                 }
             }
         }
