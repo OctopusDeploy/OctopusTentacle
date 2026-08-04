@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
+using NUnit.Framework.Interfaces;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.CommonTestUtils.Diagnostics;
@@ -63,8 +64,103 @@ namespace Octopus.Tentacle.Tests.Integration
                     powerShellStartupTimeout ?? PowerShellStartupDetection.PowerShellStartupTimeout);
             }
 
-            public void Dispose() => _tempDir.Dispose();
+            public void Dispose()
+            {
+                PreserveScriptLogs();
+                _tempDir.Dispose();
+            }
+
+            /// <summary>
+            /// Copies the JSON script logs somewhere that outlives the workspace, unconditionally. Deciding
+            /// whether to keep them belongs in teardown, not here: this runs from the test method body, where an
+            /// unhandled exception has not yet been recorded, so the test still looks Inconclusive. Assertion
+            /// failures are recorded eagerly and would be visible, but the corruption this exists to diagnose
+            /// surfaces as an unhandled exception — exactly the case that would be missed.
+            /// </summary>
+            void PreserveScriptLogs()
+            {
+                try
+                {
+                    var scriptLogs = Directory.GetFiles(_tempDir.DirectoryPath, ScriptLogFileName, SearchOption.AllDirectories);
+                    if (scriptLogs.Length == 0) return;
+
+                    Directory.CreateDirectory(PreservedScriptLogDirectory);
+
+                    foreach (var scriptLog in scriptLogs)
+                    {
+                        var workspace = Path.GetFileName(Path.GetDirectoryName(scriptLog));
+                        File.Copy(scriptLog, Path.Combine(PreservedScriptLogDirectory, $"{workspace}.log"), overwrite: true);
+                    }
+                }
+                catch (Exception e)
+                {
+                    TestContext.Write($"Failed to preserve script logs: {e}{Environment.NewLine}");
+                }
+            }
         }
+
+        const string ScriptLogFileName = "Output.log";
+        const int MaxInlineScriptLogCharacters = 256 * 1024;
+
+        static string PreservedScriptLogDirectory
+            => Path.Combine(TestContext.CurrentContext.WorkDirectory, "script-logs", TestContext.CurrentContext.Test.ID);
+
+        /// <summary>
+        /// Reports the preserved script logs when the test failed, and discards them otherwise. Runs in teardown
+        /// because that is the first point where the outcome is final for an unhandled exception.
+        /// </summary>
+        [TearDown]
+        public void ReportPreservedScriptLogs()
+        {
+            var directory = PreservedScriptLogDirectory;
+            if (!Directory.Exists(directory)) return;
+
+            try
+            {
+                if (TestContext.CurrentContext.Result.Outcome.Status != TestStatus.Failed)
+                {
+                    Directory.Delete(directory, recursive: true);
+                    return;
+                }
+
+                foreach (var preserved in Directory.GetFiles(directory))
+                {
+                    // Inline as well as preserved: the bytes are what identify the corruption. Bounded, and read
+                    // bounded, so a chatty script cannot pull a huge file into memory just to truncate it.
+                    var size = new FileInfo(preserved).Length;
+                    var truncated = size > MaxInlineScriptLogCharacters;
+
+                    TestContext.Write($"### SCRIPT LOG {preserved} ({size} bytes)" +
+                        $"{(truncated ? $", first {MaxInlineScriptLogCharacters} chars only" : "")} ###{Environment.NewLine}");
+                    TestContext.Write(ReadBounded(preserved) + Environment.NewLine);
+                    TestContext.Write($"### END SCRIPT LOG ###{Environment.NewLine}");
+
+                    if (TeamCityDetection.IsRunningInTeamCity())
+                        Console.WriteLine($"##teamcity[publishArtifacts '{EscapeServiceMessageValue(preserved)}']");
+                }
+            }
+            catch (Exception e)
+            {
+                TestContext.Write($"Failed to report preserved script logs: {e}{Environment.NewLine}");
+            }
+        }
+
+        static string ReadBounded(string path)
+        {
+            using var reader = new StreamReader(path);
+            var buffer = new char[MaxInlineScriptLogCharacters];
+            var read = reader.ReadBlock(buffer, 0, buffer.Length);
+            return new string(buffer, 0, read);
+        }
+
+        // https://www.jetbrains.com/help/teamcity/service-messages.html#Escaped+Values
+        static string EscapeServiceMessageValue(string value)
+            => value.Replace("|", "||")
+                .Replace("'", "|'")
+                .Replace("\n", "|n")
+                .Replace("\r", "|r")
+                .Replace("[", "|[")
+                .Replace("]", "|]");
 
         [Test]
         public async Task WhenPowerShellScriptHasDetectionComment_AndRunsSuccessfully_ScriptSucceeds()
