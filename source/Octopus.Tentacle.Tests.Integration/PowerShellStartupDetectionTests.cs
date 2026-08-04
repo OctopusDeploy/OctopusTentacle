@@ -134,9 +134,6 @@ namespace Octopus.Tentacle.Tests.Integration
                         $"{(truncated ? $", first {MaxInlineScriptLogCharacters} chars only" : "")} ###{Environment.NewLine}");
                     TestContext.Write(ReadBounded(preserved) + Environment.NewLine);
                     TestContext.Write($"### END SCRIPT LOG ###{Environment.NewLine}");
-
-                    if (TeamCityDetection.IsRunningInTeamCity())
-                        Console.WriteLine($"##teamcity[publishArtifacts '{EscapeServiceMessageValue(preserved)}']");
                 }
             }
             catch (Exception e)
@@ -153,14 +150,6 @@ namespace Octopus.Tentacle.Tests.Integration
             return new string(buffer, 0, read);
         }
 
-        // https://www.jetbrains.com/help/teamcity/service-messages.html#Escaped+Values
-        static string EscapeServiceMessageValue(string value)
-            => value.Replace("|", "||")
-                .Replace("'", "|'")
-                .Replace("\n", "|n")
-                .Replace("\r", "|r")
-                .Replace("[", "|[")
-                .Replace("]", "|]");
 
         [Test]
         public async Task WhenPowerShellScriptHasDetectionComment_AndRunsSuccessfully_ScriptSucceeds()

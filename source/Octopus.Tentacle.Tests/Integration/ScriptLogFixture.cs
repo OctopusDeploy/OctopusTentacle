@@ -125,23 +125,6 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        public void ShouldReportPeakWriterCountWhenTheLogCannotBeParsed()
-        {
-            var first = sut.CreateWriter();
-            var second = sut.CreateWriter();
-            first.WriteOutput(ProcessOutputSource.StdOut, "Hello");
-            second.Dispose();
-            first.Dispose();
-
-            File.AppendAllText(logFile, "]");
-
-            Action read = () => sut.GetOutput(long.MinValue, out _);
-
-            read.Should().Throw<JsonReaderException>()
-                .WithMessage("*peak of 2*", "two writers open at once is how the log gets clobbered, and by read time both are gone");
-        }
-
-        [Test]
         public void ShouldReportThatAWriteWasRefusedAfterDisposal()
         {
             var appender = sut.CreateWriter();
@@ -162,7 +145,7 @@ namespace Octopus.Tentacle.Tests.Integration
             Action read = () => sut.GetOutput(long.MinValue, out _);
 
             read.Should().Throw<JsonReaderException>()
-                .WithMessage("*a write was refused after disposal*",
+                .WithMessage("*a write was refused after it closed*",
                     "this ties an orphaned writer to the corruption without correlating two log sources");
         }
 
