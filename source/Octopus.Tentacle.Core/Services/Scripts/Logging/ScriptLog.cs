@@ -25,7 +25,14 @@ namespace Octopus.Tentacle.Core.Services.Scripts.Logging
 
         public IScriptLogWriter CreateWriter()
         {
-            return new Writer(logFile, fileSystem, sync, sensitiveValueMasker);
+            return new Writer(this);
+        }
+
+        string MaskSensitiveValues(string rawMessage)
+        {
+            string? maskedMessage = null;
+            sensitiveValueMasker.SafeSanitize(rawMessage, s => maskedMessage = s);
+            return maskedMessage ?? rawMessage;
         }
 
         public List<ProcessOutput> GetOutput(long afterSequenceNumber, out long nextSequenceNumber)
@@ -113,17 +120,16 @@ namespace Octopus.Tentacle.Core.Services.Scripts.Logging
 
         class Writer : IScriptLogWriter
         {
-            readonly object sync;
-            readonly SensitiveValueMasker sensitiveValueMasker;
+            readonly ScriptLog owner;
             readonly JsonTextWriter json;
             readonly StreamWriter writer;
             readonly Stream writeStream;
+            bool disposed;
 
-            public Writer(string logFile, IOctopusFileSystem fileSystem, object sync, SensitiveValueMasker sensitiveValueMasker)
+            public Writer(ScriptLog owner)
             {
-                this.sync = sync;
-                this.sensitiveValueMasker = sensitiveValueMasker;
-                writeStream = fileSystem.OpenFile(logFile, FileMode.Append, FileAccess.Write);
+                this.owner = owner;
+                writeStream = owner.fileSystem.OpenFile(owner.logFile, FileMode.Append, FileAccess.Write);
                 writer = new StreamWriter(writeStream, Encoding.UTF8);
                 json = new JsonTextWriter(writer);
             }
@@ -133,29 +139,36 @@ namespace Octopus.Tentacle.Core.Services.Scripts.Logging
 
             public void WriteOutput(ProcessOutputSource source, string message, DateTimeOffset occurred)
             {
-                lock (sync)
+                lock (owner.sync)
                 {
+                    // An abandoned script keeps producing output after its runner has disposed this writer.
+                    // Refusing the write is what keeps a half-written entry out of the log.
+                    if (disposed)
+                        throw new ObjectDisposedException(nameof(IScriptLogWriter),
+                            "The script log writer has been disposed. The script it belongs to is no longer being tracked, so its output cannot be recorded.");
+
                     json.WriteStartArray();
                     json.WriteValue(SourceToString(source));
-                    json.WriteValue(MaskSensitiveValues(message));
+                    json.WriteValue(owner.MaskSensitiveValues(message));
                     json.WriteValue(occurred);
                     json.WriteEndArray();
                     json.Flush();
                 }
             }
 
-            string MaskSensitiveValues(string rawMessage)
-            {
-                string? maskedMessage = null;
-                sensitiveValueMasker.SafeSanitize(rawMessage, s => maskedMessage = s);
-                return maskedMessage ?? rawMessage;
-            }
-
             public void Dispose()
             {
-                json.Close();
-                writer.Dispose();
-                writeStream.Dispose();
+                // Closing under the lock keeps disposal from interleaving with an in-flight write, which would
+                // otherwise flush a partial entry and leave an unbalanced token in the log.
+                lock (owner.sync)
+                {
+                    if (disposed) return;
+                    disposed = true;
+
+                    json.Close();
+                    writer.Dispose();
+                    writeStream.Dispose();
+                }
             }
         }
     }
