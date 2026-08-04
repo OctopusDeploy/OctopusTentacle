@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using System.Threading;
 using Newtonsoft.Json;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Core.Services.Scripts.Security.Masking;
@@ -16,7 +15,13 @@ namespace Octopus.Tentacle.Core.Services.Scripts.Logging
         readonly IOctopusFileSystem fileSystem;
         readonly SensitiveValueMasker sensitiveValueMasker;
         readonly object sync = new object();
+        // Diagnostic state for DescribeCorruption. Deliberately per-instance: a read that happens after the script
+        // leaves the tracker builds a fresh ScriptLog (ScriptServiceV2.GetResponse, ScriptService.GetResponse), so
+        // these describe only the reading instance's own writers. That covers reads while the script is still
+        // tracked, which is where the failure this was added for occurred, and reports defaults on later reads.
         int openWriters;
+        int peakOpenWriters;
+        bool writeRefusedAfterDisposal;
 
         public ScriptLog(string logFile, IOctopusFileSystem fileSystem, SensitiveValueMasker sensitiveValueMasker)
         {
@@ -27,27 +32,37 @@ namespace Octopus.Tentacle.Core.Services.Scripts.Logging
 
         public IScriptLogWriter CreateWriter()
         {
-            // Counted only once the writer exists, so a failure to open the log file cannot leave the count
-            // permanently overstating how many writers are open.
-            var writer = new Writer(logFile, fileSystem, sync, sensitiveValueMasker, () => Interlocked.Decrement(ref openWriters));
-            Interlocked.Increment(ref openWriters);
-            return writer;
+            lock (sync)
+            {
+                // Opened under the lock so a reader cannot observe an uncounted writer, and counted only once the
+                // open has succeeded so a failure cannot leave the count overstated.
+                var writer = new Writer(this);
+                openWriters++;
+                if (openWriters > peakOpenWriters) peakOpenWriters = openWriters;
+                return writer;
+            }
         }
 
         /// <summary>
-        /// Structural detail about a malformed log, for diagnosing which writer produced it. Deliberately
-        /// excludes surrounding log content: the log can hold unmasked fragments of sensitive values when one
-        /// spans two messages, so everything here is passed through the masker before being emitted.
+        /// Structural detail about a malformed log, to narrow down which writer produced it. Deliberately
+        /// excludes log content: the log can hold unmasked fragments of a sensitive value that spans two
+        /// messages, so everything here is passed through the masker before being emitted.
         /// </summary>
+        /// <remarks>
+        /// The peak count matters more than the current one. Corruption is only noticed during a read, by which
+        /// point the writer that caused it has usually been disposed, so the current count is nearly always
+        /// zero. A peak above one means two writers were appending to this log at the same time.
+        /// </remarks>
         string DescribeCorruption(JsonReaderException ex)
         {
-            var writers = Volatile.Read(ref openWriters);
             var size = fileSystem.FileExists(logFile) ? $"{fileSystem.GetFileSize(logFile)} bytes" : "missing";
-            return MaskSensitiveValues(sensitiveValueMasker,
-                $"Log is {size} with {writers} open writer(s); parser reported: {ex.Message}");
+            var refused = writeRefusedAfterDisposal ? ", a write was refused after disposal" : "";
+            return MaskSensitiveValues(
+                $"Log is {size}, {openWriters} writer(s) open now, peak {peakOpenWriters}{refused}; " +
+                $"parser reported: {ex.Message}");
         }
 
-        static string MaskSensitiveValues(SensitiveValueMasker sensitiveValueMasker, string rawMessage)
+        string MaskSensitiveValues(string rawMessage)
         {
             string? maskedMessage = null;
             sensitiveValueMasker.SafeSanitize(rawMessage, s => maskedMessage = s);
@@ -160,20 +175,16 @@ namespace Octopus.Tentacle.Core.Services.Scripts.Logging
 
         class Writer : IScriptLogWriter
         {
-            readonly object sync;
-            readonly SensitiveValueMasker sensitiveValueMasker;
+            readonly ScriptLog owner;
             readonly JsonTextWriter json;
             readonly StreamWriter writer;
             readonly Stream writeStream;
-            readonly Action onDisposed;
             bool disposed;
 
-            public Writer(string logFile, IOctopusFileSystem fileSystem, object sync, SensitiveValueMasker sensitiveValueMasker, Action onDisposed)
+            public Writer(ScriptLog owner)
             {
-                this.sync = sync;
-                this.sensitiveValueMasker = sensitiveValueMasker;
-                this.onDisposed = onDisposed;
-                writeStream = fileSystem.OpenFile(logFile, FileMode.Append, FileAccess.Write);
+                this.owner = owner;
+                writeStream = owner.fileSystem.OpenFile(owner.logFile, FileMode.Append, FileAccess.Write);
                 writer = new StreamWriter(writeStream, Encoding.UTF8);
                 json = new JsonTextWriter(writer);
             }
@@ -183,32 +194,33 @@ namespace Octopus.Tentacle.Core.Services.Scripts.Logging
 
             public void WriteOutput(ProcessOutputSource source, string message, DateTimeOffset occurred)
             {
-                lock (sync)
+                lock (owner.sync)
                 {
                     // An abandoned script keeps producing output after its runner has disposed this writer.
                     // Refusing the write here is what prevents a half-written entry reaching the log; letting it
-                    // through would corrupt the file for every subsequent reader.
+                    // through would corrupt the file for every subsequent reader. The refusal is recorded because
+                    // a later corruption report is the only place the two facts can be seen together.
                     if (disposed)
+                    {
+                        owner.writeRefusedAfterDisposal = true;
                         throw new ObjectDisposedException(nameof(IScriptLogWriter),
                             "The script log writer has been disposed. The script it belongs to is no longer being tracked, so its output cannot be recorded.");
+                    }
 
                     json.WriteStartArray();
                     json.WriteValue(SourceToString(source));
-                    json.WriteValue(MaskSensitiveValues(message));
+                    json.WriteValue(owner.MaskSensitiveValues(message));
                     json.WriteValue(occurred);
                     json.WriteEndArray();
                     json.Flush();
                 }
             }
 
-            string MaskSensitiveValues(string rawMessage)
-                => ScriptLog.MaskSensitiveValues(sensitiveValueMasker, rawMessage);
-
             public void Dispose()
             {
                 // Closing under the lock keeps disposal from interleaving with an in-flight write, which would
                 // otherwise flush a partial entry and leave an unbalanced token in the log.
-                lock (sync)
+                lock (owner.sync)
                 {
                     if (disposed) return;
                     disposed = true;
@@ -223,7 +235,7 @@ namespace Octopus.Tentacle.Core.Services.Scripts.Logging
                     {
                         // Runs even when closing fails, so a failed close cannot leave the open-writer count
                         // overstated for the life of the log.
-                        onDisposed();
+                        owner.openWriters--;
                     }
                 }
             }

@@ -125,6 +125,47 @@ namespace Octopus.Tentacle.Tests.Integration
             secondRead.Should().BeEmpty("a caller that has already been told about the corruption should not be told again");
         }
 
+        [Test]
+        public void ShouldReportPeakWriterCountWhenReportingCorruption()
+        {
+            var first = sut.CreateWriter();
+            var second = sut.CreateWriter();
+            first.WriteOutput(ProcessOutputSource.StdOut, "Hello");
+            second.Dispose();
+            first.Dispose();
+
+            File.AppendAllText(logFile, "]");
+
+            var logs = sut.GetOutput(long.MinValue, out _);
+
+            logs.Last().Text.Should().Contain("peak 2",
+                "two writers open at once is how the log gets clobbered, and by read time both are gone");
+        }
+
+        [Test]
+        public void ShouldReportThatAWriteWasRefusedAfterDisposal()
+        {
+            var appender = sut.CreateWriter();
+            appender.WriteOutput(ProcessOutputSource.StdOut, "Hello");
+            appender.Dispose();
+
+            try
+            {
+                appender.WriteOutput(ProcessOutputSource.StdOut, "Arrived after the writer closed");
+            }
+            catch (ObjectDisposedException)
+            {
+                // The refusal is the point; the caller handling it is covered elsewhere.
+            }
+
+            File.AppendAllText(logFile, "]");
+
+            var logs = sut.GetOutput(long.MinValue, out _);
+
+            logs.Last().Text.Should().Contain("a write was refused after disposal",
+                "this links an orphaned writer to the corruption without correlating two log sources");
+        }
+
         /// <summary>
         /// Documents a known limitation rather than desired behaviour. Reading stops at the first malformed
         /// token, so valid entries written after it are never returned. Recovering them means resynchronising
