@@ -167,8 +167,10 @@ namespace Octopus.Tentacle.Core.Services.Scripts
 
                     // A task still running here outlives the writer its output goes to, which is the window in which the
                     // log can be corrupted. The monitor has already reported the timeout, so only add what it cannot
-                    // know. Status rather than IsCompleted, so a task that faulted is not reported as simply finished.
-                    log.Warn($"Abandoning the script for task {taskId}; its task was {scriptTask.Status}");
+                    // know. Both, because the status alone reads as never-started when it is really in flight, and
+                    // IsCompleted alone reports a faulted task as simply finished.
+                    log.Warn($"Abandoning the script for task {taskId}; its task had" +
+                        $"{(scriptTask.IsCompleted ? "" : " not")} finished, status {scriptTask.Status}");
 
                     return ScriptExitCodes.PowerShellNeverStartedExitCode;
                 }
