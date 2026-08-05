@@ -100,7 +100,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         const string ScriptLogFileName = "Output.log";
-        const int MaxInlineScriptLogCharacters = 256 * 1024;
+        const int MaxInlineScriptLogBytes = 256 * 1024;
 
         static string PreservedScriptLogDirectory
             => Path.Combine(TestContext.CurrentContext.WorkDirectory, "script-logs", TestContext.CurrentContext.Test.ID);
@@ -125,14 +125,17 @@ namespace Octopus.Tentacle.Tests.Integration
 
                 foreach (var preserved in Directory.GetFiles(directory))
                 {
-                    // Inline as well as preserved: the bytes are what identify the corruption. Bounded, and read
-                    // bounded, so a chatty script cannot pull a huge file into memory just to truncate it.
+                    // The bytes are what identify the corruption, so they go inline. Checked before reading rather
+                    // than truncated after, so a chatty script cannot pull a large file into memory at all.
                     var size = new FileInfo(preserved).Length;
-                    var truncated = size > MaxInlineScriptLogCharacters;
+                    if (size > MaxInlineScriptLogBytes)
+                    {
+                        TestContext.Write($"### SCRIPT LOG {preserved} ({size} bytes), too large to inline ###{Environment.NewLine}");
+                        continue;
+                    }
 
-                    TestContext.Write($"### SCRIPT LOG {preserved} ({size} bytes)" +
-                        $"{(truncated ? $", first {MaxInlineScriptLogCharacters} chars only" : "")} ###{Environment.NewLine}");
-                    TestContext.Write(ReadBounded(preserved) + Environment.NewLine);
+                    TestContext.Write($"### SCRIPT LOG {preserved} ({size} bytes) ###{Environment.NewLine}");
+                    TestContext.Write(File.ReadAllText(preserved) + Environment.NewLine);
                     TestContext.Write($"### END SCRIPT LOG ###{Environment.NewLine}");
                 }
             }
@@ -141,15 +144,6 @@ namespace Octopus.Tentacle.Tests.Integration
                 TestContext.Write($"Failed to report preserved script logs: {e}{Environment.NewLine}");
             }
         }
-
-        static string ReadBounded(string path)
-        {
-            using var reader = new StreamReader(path);
-            var buffer = new char[MaxInlineScriptLogCharacters];
-            var read = reader.ReadBlock(buffer, 0, buffer.Length);
-            return new string(buffer, 0, read);
-        }
-
 
         [Test]
         public async Task WhenPowerShellScriptHasDetectionComment_AndRunsSuccessfully_ScriptSucceeds()
