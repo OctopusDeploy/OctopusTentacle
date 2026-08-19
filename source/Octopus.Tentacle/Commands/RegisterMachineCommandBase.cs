@@ -83,7 +83,9 @@ namespace Octopus.Tentacle.Commands
         protected override void Start()
         {
             base.Start();
+            log.Info("Inside RegisterMachineCommandBase Start().");
             StartAsync().GetAwaiter().GetResult();
+            log.Info("Finished RegisterMachineCommandBase Start().");
         }
 
         async Task StartAsync()
