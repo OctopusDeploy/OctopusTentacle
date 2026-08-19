@@ -188,6 +188,12 @@ namespace Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators
                 return await cancelScriptFunc(inner, command, options);
             }
 
+            public async Task<ScriptStatusResponseV2> AbandonScriptAsync(AbandonScriptCommandV2 command, HalibutProxyRequestOptions options)
+            {
+                // Pass-through: AbandonScript decoration is not parameterised on this branch.
+                return await inner.AbandonScriptAsync(command, options);
+            }
+
             public async Task CompleteScriptAsync(CompleteScriptCommandV2 command, HalibutProxyRequestOptions options)
             {
                 await completeScriptAction(inner, command, options);
