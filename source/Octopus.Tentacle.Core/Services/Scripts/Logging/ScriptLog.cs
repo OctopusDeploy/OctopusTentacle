@@ -153,9 +153,12 @@ namespace Octopus.Tentacle.Core.Services.Scripts.Logging
 
             public void Dispose()
             {
-                json.Close();
-                writer.Dispose();
-                writeStream.Dispose();
+                lock (sync)
+                {
+                    json.Close();
+                    writer.Dispose();
+                    writeStream.Dispose();
+                }
             }
         }
     }
