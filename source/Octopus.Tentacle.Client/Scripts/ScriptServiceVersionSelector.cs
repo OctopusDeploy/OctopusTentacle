@@ -73,7 +73,11 @@ namespace Octopus.Tentacle.Client.Scripts
                 logger.Verbose(clientOptions.RpcRetrySettings.RetriesEnabled
                     ? $"RPC call retries are enabled. Retry timeout {rpcCallExecutor.RetryTimeout.TotalSeconds} seconds"
                     : "RPC call retries are disabled.");
-                return ScriptServiceVersion.ScriptServiceVersion2;
+                // Old V2 Tentacles are V2 but predate the abandon verb; only pick the abandon-capable
+                // variant when the Tentacle actually advertised AbandonScript.
+                return tentacleCapabilities.HasAbandonScript()
+                    ? ScriptServiceVersion.ScriptServiceVersion2WithAbandon
+                    : ScriptServiceVersion.ScriptServiceVersion2;
             }
 
             logger.Verbose("RPC call retries are enabled but will not be used for Script Execution as a compatible ScriptService was not found. Please upgrade Tentacle to enable this feature.");

@@ -14,17 +14,20 @@ namespace Octopus.Tentacle.Client.Scripts
         readonly OnScriptStatusResponseReceived onScriptStatusResponseReceived;
         readonly OnScriptCompleted onScriptCompleted;
         readonly IScriptExecutor scriptExecutor;
+        readonly TimeSpan? abandonAfterCancellationPendingFor;
 
         public ObservingScriptOrchestrator(
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
             OnScriptStatusResponseReceived onScriptStatusResponseReceived,
             OnScriptCompleted onScriptCompleted,
-            IScriptExecutor scriptExecutor)
+            IScriptExecutor scriptExecutor,
+            TimeSpan? abandonAfterCancellationPendingFor = null)
         {
             this.scriptExecutor = scriptExecutor;
             this.scriptObserverBackOffStrategy = scriptObserverBackOffStrategy;
             this.onScriptStatusResponseReceived = onScriptStatusResponseReceived;
             this.onScriptCompleted = onScriptCompleted;
+            this.abandonAfterCancellationPendingFor = abandonAfterCancellationPendingFor;
         }
 
         public async Task<ScriptExecutionResult> ExecuteScript(ExecuteScriptCommand command, CancellationToken scriptExecutionCancellationToken)
@@ -80,12 +83,28 @@ namespace Octopus.Tentacle.Client.Scripts
             var iteration = 0;
             var cancellationIteration = 0;
             var lastResult = startScriptResult;
+            var stopwatch = new Stopwatch();
 
             while (lastResult.ScriptStatus.State != ProcessState.Complete)
             {
                 if (scriptExecutionCancellationToken.IsCancellationRequested)
                 {
-                    lastResult = await scriptExecutor.CancelScript(lastResult.ContextForNextCommand).ConfigureAwait(false);
+                    // Record when cancellation first fired so we can escalate to abandon after the threshold.
+                    if (!stopwatch.IsRunning)
+                    {
+                        stopwatch.Start();
+                    }
+
+                    // Only escalate to abandon when the Tentacle advertised the abandon capability. Old V2
+                    // Tentacles (pre-abandon) and V1/Kubernetes don't, so we keep cancelling rather than
+                    // calling a verb they don't have.
+                    var shouldAbandon = lastResult.ContextForNextCommand.ScripServiceVersionUsed.SupportsAbandon
+                        && abandonAfterCancellationPendingFor.HasValue
+                        && stopwatch.Elapsed >= abandonAfterCancellationPendingFor.Value;
+
+                    lastResult = shouldAbandon
+                        ? await scriptExecutor.AbandonScript(lastResult.ContextForNextCommand).ConfigureAwait(false)
+                        : await scriptExecutor.CancelScript(lastResult.ContextForNextCommand).ConfigureAwait(false);
                 }
                 else
                 {
