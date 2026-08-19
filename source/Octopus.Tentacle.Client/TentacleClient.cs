@@ -210,7 +210,7 @@ namespace Octopus.Tentacle.Client
             ExecuteScriptCommand command,
             StartScriptIsBeingReAttempted startScriptIsBeingReAttempted, 
             ITentacleClientTaskLog logger, 
-            CancellationToken scriptExecutionCancellationToken)
+            CancellationToken requestCancellationToken)
         {
             using var activity = ActivitySource.StartActivity($"{nameof(TentacleClient)}.{nameof(StartScript)}");
             activity?.AddTag("octopus.tentacle.script.files", string.Join(",", command.Files.Select(f => f.Name)));
@@ -225,10 +225,10 @@ namespace Octopus.Tentacle.Client
                 clientOptions,
                 OnCancellationAbandonCompleteScriptAfter);
 
-            return await scriptExecutor.StartScript(command, startScriptIsBeingReAttempted, scriptExecutionCancellationToken);
+            return await scriptExecutor.StartScript(command, startScriptIsBeingReAttempted, requestCancellationToken);
         }
 
-        public async Task<ScriptOperationExecutionResult> GetStatus(CommandContext commandContext, ITentacleClientTaskLog logger, CancellationToken scriptExecutionCancellationToken)
+        public async Task<ScriptOperationExecutionResult> GetStatus(CommandContext commandContext, ITentacleClientTaskLog logger, CancellationToken requestCancellationToken)
         {
             using var activity = ActivitySource.StartActivity($"{nameof(TentacleClient)}.{nameof(GetStatus)}");
             
@@ -241,10 +241,10 @@ namespace Octopus.Tentacle.Client
                 clientOptions,
                 OnCancellationAbandonCompleteScriptAfter);
 
-            return await scriptExecutor.GetStatus(commandContext, scriptExecutionCancellationToken);
+            return await scriptExecutor.GetStatus(commandContext, requestCancellationToken);
         }
 
-        public async Task<ScriptOperationExecutionResult> CancelScript(CommandContext commandContext, ITentacleClientTaskLog logger)
+        public async Task<ScriptOperationExecutionResult> CancelScript(CommandContext commandContext, ITentacleClientTaskLog logger, CancellationToken requestCancellationToken)
         {
             using var activity = ActivitySource.StartActivity($"{nameof(TentacleClient)}.{nameof(CancelScript)}");
             
@@ -257,10 +257,10 @@ namespace Octopus.Tentacle.Client
                 clientOptions,
                 OnCancellationAbandonCompleteScriptAfter);
 
-            return await scriptExecutor.CancelScript(commandContext);
+            return await scriptExecutor.CancelScript(commandContext, requestCancellationToken);
         }
 
-        public async Task<ScriptStatus?> CompleteScript(CommandContext commandContext, ITentacleClientTaskLog logger, CancellationToken scriptExecutionCancellationToken)
+        public async Task<ScriptStatus?> CompleteScript(CommandContext commandContext, ITentacleClientTaskLog logger, CancellationToken requestCancellationToken)
         {
             using var activity = ActivitySource.StartActivity($"{nameof(TentacleClient)}.{nameof(CompleteScript)}");
             
@@ -273,7 +273,7 @@ namespace Octopus.Tentacle.Client
                 clientOptions,
                 OnCancellationAbandonCompleteScriptAfter);
 
-            return await scriptExecutor.CompleteScript(commandContext, scriptExecutionCancellationToken);
+            return await scriptExecutor.CompleteScript(commandContext, requestCancellationToken);
         }
 
         public void Dispose()
