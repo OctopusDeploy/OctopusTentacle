@@ -2,7 +2,6 @@
 
     <PropertyGroup>
         <TargetFrameworks>net48;net8.0;net8.0-windows</TargetFrameworks>
-        <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <LangVersion>9</LangVersion>
