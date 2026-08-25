@@ -1,0 +1,4 @@
+syntax = "proto3";
+package octopus.tentacle.contracts.grpc;
+
+option csharp_namespace = "Octopus.Tentacle.Contracts.Grpc";

@@ -1,5 +1,5 @@
 ﻿syntax = "proto3";
-package octopus.tentacle.contracts;
+package octopus.tentacle.contracts.grpc;
 
 import "start_kubernetes_script_command_v2.proto";
 import "kubernetes_script_status_response_v2.proto";

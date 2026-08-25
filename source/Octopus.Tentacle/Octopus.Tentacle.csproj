@@ -120,6 +120,7 @@
 		<Reference Include="System.Web" />
 	</ItemGroup>
 	<ItemGroup>
+		<ProjectReference Include="..\Octopus.Tentacle.Contracts.Grpc\Octopus.Tentacle.Contracts.Grpc.csproj" />
 		<ProjectReference Include="..\Octopus.Tentacle.Contracts\Octopus.Tentacle.Contracts.csproj" />
 		<ProjectReference Include="..\Octopus.Tentacle.Core\Octopus.Tentacle.Core.csproj" />
 	</ItemGroup>
