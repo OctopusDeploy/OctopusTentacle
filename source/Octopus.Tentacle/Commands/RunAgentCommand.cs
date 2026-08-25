@@ -11,6 +11,7 @@ using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Core.Util;
+using Octopus.Tentacle.Grpc;
 using Octopus.Tentacle.Startup;
 using Octopus.Tentacle.Util;
 using Octopus.Tentacle.Versioning;
@@ -34,6 +35,7 @@ namespace Octopus.Tentacle.Commands
         readonly IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker;
         readonly AppVersion appVersion;
         readonly IEnumerable<Lazy<IBackgroundTask>> backgroundTasks;
+        readonly IEnumerable<Lazy<IGrpcService>> grpcServices;
         int wait;
         bool halibutHasStarted;
 
@@ -51,7 +53,8 @@ namespace Octopus.Tentacle.Commands
             IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker,
             AppVersion appVersion,
             ILogFileOnlyLogger logFileOnlyLogger,
-            IEnumerable<Lazy<IBackgroundTask>> backgroundTasks) : base(selector, log, logFileOnlyLogger)
+            IEnumerable<Lazy<IBackgroundTask>> backgroundTasks,
+            IEnumerable<Lazy<IGrpcService>> grpcServices) : base(selector, log, logFileOnlyLogger)
         {
             this.halibut = halibut;
             this.configuration = configuration;
@@ -64,6 +67,7 @@ namespace Octopus.Tentacle.Commands
             this.windowsLocalAdminRightsChecker = windowsLocalAdminRightsChecker;
             this.appVersion = appVersion;
             this.backgroundTasks = backgroundTasks;
+            this.grpcServices = grpcServices;
 
             Options.Add("wait=", "Delay (ms) before starting", arg => wait = int.Parse(arg));
             Options.Add("console", "Don't attempt to run as a service, even if the user is non-interactive", v =>
@@ -136,6 +140,12 @@ namespace Octopus.Tentacle.Commands
                 backgroundTaskLazy.Value.Start();
             }
 
+            //start all GRPC services
+            foreach (var grpcService in grpcServices)
+            {
+                grpcService.Value.Start();
+            }
+
             Runtime.WaitForUserToExit();
         }
 
@@ -161,6 +171,11 @@ namespace Octopus.Tentacle.Commands
             foreach (var backgroundTaskLazy in backgroundTasks.Where(bt => bt.IsValueCreated))
             {
                 backgroundTaskLazy.Value.Stop();
+            }
+
+            foreach (var grpcService in grpcServices.Where(l => l.IsValueCreated))
+            {
+                grpcService.Value.Stop();
             }
         }
     }

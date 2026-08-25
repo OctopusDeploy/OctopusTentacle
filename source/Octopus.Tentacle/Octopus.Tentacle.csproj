@@ -53,6 +53,7 @@
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="BouncyCastle.Cryptography" Version="2.6.2" />
+		<PackageReference Include="Grpc.Net.Client" Version="2.83.0" />
 		<PackageReference Include="Octopus.Client" Version="22.3.2857" />
 	</ItemGroup>
 	<ItemGroup>

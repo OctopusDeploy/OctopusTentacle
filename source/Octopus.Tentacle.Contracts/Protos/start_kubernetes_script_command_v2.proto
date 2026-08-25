@@ -1,0 +1,8 @@
+﻿syntax = "proto3";
+package octopus.tentacle.contracts;
+
+option csharp_namespace = "Octopus.Tentacle.Contracts.Grpc";
+
+message StartKubernetesScriptCommandV2 {
+  string request_id = 1;
+}

@@ -28,7 +28,16 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Protobuf Include="Protos\**\*.proto" ProtoRoot="Protos"/>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Grpc.Core" Version="2.46.6" />
     <PackageReference Include="Halibut" Version="8.1.2063" />
+    <PackageReference Include="Google.Protobuf" Version="3.36.0" />
+    <PackageReference Include="Grpc.Tools" Version="2.83.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Solution Items\SolutionInfo.cs">
