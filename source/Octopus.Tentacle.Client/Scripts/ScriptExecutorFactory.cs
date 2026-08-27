@@ -9,7 +9,7 @@ namespace Octopus.Tentacle.Client.Scripts
     class ScriptExecutorFactory
     {
         readonly RpcCallExecutor rpcCallExecutor;
-        readonly ClientOperationMetricsBuilder clientOperationMetricsBuilder;
+        readonly IClientOperationMetricsBuilder clientOperationMetricsBuilder;
         readonly TimeSpan onCancellationAbandonCompleteScriptAfter;
         readonly ITentacleClientTaskLog logger;
 
@@ -19,7 +19,7 @@ namespace Octopus.Tentacle.Client.Scripts
         public ScriptExecutorFactory(
             AllClients allClients,
             RpcCallExecutor rpcCallExecutor,
-            ClientOperationMetricsBuilder clientOperationMetricsBuilder,
+            IClientOperationMetricsBuilder clientOperationMetricsBuilder,
             TimeSpan onCancellationAbandonCompleteScriptAfter,
             TentacleClientOptions clientOptions,
             ITentacleClientTaskLog logger)

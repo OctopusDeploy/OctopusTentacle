@@ -16,19 +16,19 @@ namespace Octopus.Tentacle.Client
     /// <summary>
     /// Executes scripts, on the best available script service. 
     /// </summary>
-    class ScriptExecutor : IScriptExecutor
+    class HalibutScriptExecutor : IScriptExecutor
     {
         readonly ITentacleClientTaskLog logger;
-        readonly ClientOperationMetricsBuilder operationMetricsBuilder; 
+        readonly IClientOperationMetricsBuilder operationMetricsBuilder; 
         readonly TentacleClientOptions clientOptions;
         readonly AllClients allClients;
         readonly RpcCallExecutor rpcCallExecutor;
         readonly TimeSpan onCancellationAbandonCompleteScriptAfter;
         
-        internal ScriptExecutor(AllClients allClients,
+        internal HalibutScriptExecutor(AllClients allClients,
             ITentacleClientTaskLog logger,
             ITentacleClientObserver tentacleClientObserver,
-            ClientOperationMetricsBuilder operationMetricsBuilder,
+            IClientOperationMetricsBuilder operationMetricsBuilder,
             TentacleClientOptions clientOptions,
             TimeSpan onCancellationAbandonCompleteScriptAfter)
         {

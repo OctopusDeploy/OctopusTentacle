@@ -29,7 +29,7 @@ namespace Octopus.Tentacle.Client.Execution
             RpcCall rpcCall,
             Func<CancellationToken, Task<T>> action,
             ITentacleClientTaskLog logger,
-            ClientOperationMetricsBuilder clientOperationMetricsBuilder,
+            IClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
         {
             return await Execute(retriesEnabled, rpcCall, action, null, logger, clientOperationMetricsBuilder, cancellationToken);
@@ -41,7 +41,7 @@ namespace Octopus.Tentacle.Client.Execution
             Func<CancellationToken, Task<T>> action,
             Action<Exception>? onErrorAction,
             ITentacleClientTaskLog logger,
-            ClientOperationMetricsBuilder clientOperationMetricsBuilder,
+            IClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
         {
             return retriesEnabled
@@ -54,7 +54,7 @@ namespace Octopus.Tentacle.Client.Execution
             Func<CancellationToken, Task<T>> action,
             Action<Exception>? onErrorAction,
             ITentacleClientTaskLog logger,
-            ClientOperationMetricsBuilder clientOperationMetricsBuilder,
+            IClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
         {
             using var activity = TentacleClient.ActivitySource.StartActivity($"{nameof(RpcCallExecutor)}.{nameof(ExecuteWithRetries)}");
@@ -139,7 +139,7 @@ namespace Octopus.Tentacle.Client.Execution
             RpcCall rpcCall,
             Func<CancellationToken, Task<T>> action,
             ITentacleClientTaskLog logger,
-            ClientOperationMetricsBuilder clientOperationMetricsBuilder,
+            IClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
         {
             using var activity = TentacleClient.ActivitySource.StartActivity($"{nameof(RpcCallExecutor)}.{nameof(ExecuteWithNoRetries)}");
@@ -178,7 +178,7 @@ namespace Octopus.Tentacle.Client.Execution
             RpcCall rpcCall,
             Func<CancellationToken, Task> action,
             ITentacleClientTaskLog logger,
-            ClientOperationMetricsBuilder clientOperationMetricsBuilder,
+            IClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
         {
             using var activity = TentacleClient.ActivitySource.StartActivity($"{nameof(RpcCallExecutor)}.{nameof(ExecuteWithNoRetries)}");

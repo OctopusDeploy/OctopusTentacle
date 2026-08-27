@@ -5,7 +5,14 @@ using Octopus.Tentacle.Contracts.Observability;
 
 namespace Octopus.Tentacle.Client.Observability
 {
-    internal class ClientOperationMetricsBuilder
+    public interface IClientOperationMetricsBuilder
+    {
+        ClientOperationMetrics Build();
+        IClientOperationMetricsBuilder WithRpcCall(RpcCallMetrics rpcCallMetrics);
+        IClientOperationMetricsBuilder Failure(Exception exception, CancellationToken cancellationToken);
+    }
+
+    class ClientOperationMetricsBuilder : IClientOperationMetricsBuilder
     {
         private readonly DateTimeOffset start;
         private readonly List<RpcCallMetrics> rpcCalls = new();
@@ -33,13 +40,13 @@ namespace Octopus.Tentacle.Client.Observability
             return new ClientOperationMetrics(start, end, exception, wasCancelled, rpcCalls);
         }
 
-        public ClientOperationMetricsBuilder WithRpcCall(RpcCallMetrics rpcCallMetrics)
+        public IClientOperationMetricsBuilder WithRpcCall(RpcCallMetrics rpcCallMetrics)
         {
             rpcCalls.Add(rpcCallMetrics);
             return this;
         }
 
-        public ClientOperationMetricsBuilder Failure(Exception exception, CancellationToken cancellationToken)
+        public IClientOperationMetricsBuilder Failure(Exception exception, CancellationToken cancellationToken)
         {
             this.exception = exception;
             wasCancelled = cancellationToken.IsCancellationRequested;

@@ -12,6 +12,7 @@ using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Diagnostics;
+using Octopus.Tentacle.Grpc;
 using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Startup;
 using Octopus.Tentacle.Util;
@@ -29,6 +30,7 @@ namespace Octopus.Tentacle.Tests.Commands
         IHomeConfiguration home = null!;
         IApplicationInstanceSelector selector = null!;
         IBackgroundTask[] backgroundTasks = null!;
+        IGrpcService[] grpcServices = null!;
 
         [SetUp]
         public override void SetUp()
@@ -48,6 +50,12 @@ namespace Octopus.Tentacle.Tests.Commands
                 Substitute.For<IBackgroundTask>()
             };
 
+            grpcServices = new[]
+            {
+                Substitute.For<GrpcService>(),
+                Substitute.For<GrpcService>(),
+            };
+
             Command = new RunAgentCommand(
                 new Lazy<IHalibutInitializer>(() => halibut),
                 new Lazy<IWritableTentacleConfiguration>(() => tentacleConfiguration),
@@ -60,7 +68,8 @@ namespace Octopus.Tentacle.Tests.Commands
                 Substitute.For<IWindowsLocalAdminRightsChecker>(),
                 new AppVersion(GetType().Assembly),
                 Substitute.For<ILogFileOnlyLogger>(),
-                backgroundTasks.Select(bt => new Lazy<IBackgroundTask>(() => bt)).ToList());
+                backgroundTasks.Select(bt => new Lazy<IBackgroundTask>(() => bt)).ToList(),
+                grpcServices.Select(s => new Lazy<IGrpcService>(() => s)).ToList());
 
             selector.Current.Returns(new ApplicationInstanceConfiguration("MyTentacle", null, null, null));
         }

@@ -20,74 +20,34 @@ using ITentacleClientObserver = Octopus.Tentacle.Contracts.Observability.ITentac
 
 namespace Octopus.Tentacle.Client
 {
-    public class TentacleClient : ITentacleClient
+    public abstract class TentacleClient : ITentacleClient
     {
+        readonly IRpcActions rpcActions;
         public static readonly ActivitySource ActivitySource = new("Octopus.TentacleClient");
         
         readonly IScriptObserverBackoffStrategy scriptObserverBackOffStrategy;
         readonly ITentacleClientObserver tentacleClientObserver;
-        readonly RpcCallExecutor rpcCallExecutor;
         
         readonly TentacleClientOptions clientOptions;
-        readonly AllClients allClients;
-
-        public static void CacheServiceWasNotFoundResponseMessages(IHalibutRuntime halibutRuntime)
-        {
-            using var activity = ActivitySource.StartActivity($"{nameof(TentacleClient)}.{nameof(CacheServiceWasNotFoundResponseMessages)}");
-            
-            var innerHandler = halibutRuntime.OverrideErrorResponseMessageCaching;
-            halibutRuntime.OverrideErrorResponseMessageCaching = response =>
-            {
-                if (BackwardsCompatibleCapabilitiesV2Helper.ExceptionTypeLooksLikeTheServiceWasNotFound(response.Error!.HalibutErrorType!) ||
-                    BackwardsCompatibleCapabilitiesV2Helper.ExceptionMessageLooksLikeTheServiceWasNotFound(response.Error.Message))
-                {
-                    return true;
-                }
-
-                return innerHandler?.Invoke(response) ?? false;
-            };
-        }
-
-        public TentacleClient(
-            ServiceEndPoint serviceEndPoint,
-            IHalibutRuntime halibutRuntime,
+        
+        protected TentacleClient(
+            IRpcActions rpcActions,
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
             ITentacleClientObserver tentacleClientObserver,
-            TentacleClientOptions clientOptions
-        ) : this(serviceEndPoint, halibutRuntime, scriptObserverBackOffStrategy, tentacleClientObserver, clientOptions, null)
-        {
-        }
-
-        internal TentacleClient(
-            ServiceEndPoint serviceEndPoint,
-            IHalibutRuntime halibutRuntime,
-            IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
-            ITentacleClientObserver tentacleClientObserver,
-            TentacleClientOptions clientOptions,
-            ITentacleServiceDecoratorFactory? tentacleServicesDecoratorFactory)
+            TentacleClientOptions clientOptions)
         {
             this.scriptObserverBackOffStrategy = scriptObserverBackOffStrategy;
             this.tentacleClientObserver = tentacleClientObserver.DecorateWithNonThrowingTentacleClientObserver();
 
             this.clientOptions = clientOptions;
-            
-            if (halibutRuntime.OverrideErrorResponseMessageCaching == null)
-            {
-                // Best effort to make sure the HalibutRuntime has been configured to Cache ServiceNotFoundExceptions
-                // Do not configure the HalibutRuntime here as it should only be done once and configuring it here will result in it being performed a lot
-                throw new ArgumentException("Ensure that TentacleClient.CacheServiceWasNotFoundResponseMessages has been called for the HalibutRuntime", nameof(halibutRuntime));
-            }
-
-            allClients = new AllClients(halibutRuntime, serviceEndPoint, tentacleServicesDecoratorFactory);
-
-            rpcCallExecutor = RpcCallExecutorFactory.Create(this.clientOptions.RpcRetrySettings.RetryDuration, this.tentacleClientObserver);
+            this.rpcActions = rpcActions;
         }
 
         public TimeSpan OnCancellationAbandonCompleteScriptAfter { get; set; } = TimeSpan.FromMinutes(1);
 
         // Created on the fly since, most of the time we don't need this executor.
         RpcCallExecutor FileTransferRpcCallExecutor => 
-            RpcCallExecutorFactory.Create(this.clientOptions.RpcRetrySettings.RetryDuration, this.tentacleClientObserver, clientOptions.MinimumAttemptsForInterruptedLongRunningCalls);
+            RpcCallExecutorFactory.Create(clientOptions.RpcRetrySettings.RetryDuration, tentacleClientObserver, clientOptions.MinimumAttemptsForInterruptedLongRunningCalls);
 
         public async Task<UploadResult> UploadFile(string fileName, string path, DataStream package, ITentacleClientTaskLog logger, CancellationToken cancellationToken)
         {
@@ -99,7 +59,7 @@ namespace Octopus.Tentacle.Client
             async Task<UploadResult> UploadFileAction(CancellationToken ct)
             {
                 logger.Info($"Beginning upload of {fileName} to Tentacle");
-                var result = await allClients.ClientFileTransferServiceV1.UploadFileAsync(path, package, new HalibutProxyRequestOptions(ct));
+                var result = await rpcActions.UploadFile(path, package, ct);
                 logger.Info("Upload complete");
 
                 return result;
@@ -136,7 +96,7 @@ namespace Octopus.Tentacle.Client
             async Task<DataStream> DownloadFileAction(CancellationToken ct)
             {
                 logger.Info($"Beginning download of {Path.GetFileName(remotePath)} from Tentacle");
-                var result = await allClients.ClientFileTransferServiceV1.DownloadFileAsync(remotePath, new HalibutProxyRequestOptions(ct));
+                var result = await rpcActions.DownloadFile(remotePath, ct);
                 logger.Info("Download complete");
 
                 return result;
@@ -177,13 +137,7 @@ namespace Octopus.Tentacle.Client
 
             try
             {
-                var scriptExecutor = new ScriptExecutor(
-                    allClients,
-                    logger, 
-                    tentacleClientObserver,
-                    operationMetricsBuilder,
-                    clientOptions,
-                    OnCancellationAbandonCompleteScriptAfter);
+                var scriptExecutor = rpcActions.CreateScriptExecutor(logger, tentacleClientObserver, operationMetricsBuilder, clientOptions, OnCancellationAbandonCompleteScriptAfter);
                     
                 var orchestrator = new ObservingScriptOrchestrator(scriptObserverBackOffStrategy,
                     onScriptStatusResponseReceived,
@@ -216,13 +170,12 @@ namespace Octopus.Tentacle.Client
             activity?.AddTag("octopus.tentacle.script.files", string.Join(",", command.Files.Select(f => f.Name)));
             // don't trace the script body, it could be megabytes in size
             
-            var scriptExecutor = new ScriptExecutor(
-                allClients,
+            var scriptExecutor = rpcActions.CreateScriptExecutor(
                 logger,
-                tentacleClientObserver,
+                tentacleClientObserver, 
                 // For now, we do not support metrics for event-based operations.
-                ClientOperationMetricsBuilder.Start(),
-                clientOptions,
+                ClientOperationMetricsBuilder.Start(), 
+                clientOptions, 
                 OnCancellationAbandonCompleteScriptAfter);
 
             return await scriptExecutor.StartScript(command, startScriptIsBeingReAttempted, scriptExecutionCancellationToken);
@@ -232,13 +185,12 @@ namespace Octopus.Tentacle.Client
         {
             using var activity = ActivitySource.StartActivity($"{nameof(TentacleClient)}.{nameof(GetStatus)}");
             
-            var scriptExecutor = new ScriptExecutor(
-            allClients,
+            var scriptExecutor = rpcActions.CreateScriptExecutor(
                 logger,
-                tentacleClientObserver,
+                tentacleClientObserver, 
                 // For now, we do not support metrics for event-based operations.
-                ClientOperationMetricsBuilder.Start(),
-                clientOptions,
+                ClientOperationMetricsBuilder.Start(), 
+                clientOptions, 
                 OnCancellationAbandonCompleteScriptAfter);
 
             return await scriptExecutor.GetStatus(commandContext, scriptExecutionCancellationToken);
@@ -248,13 +200,12 @@ namespace Octopus.Tentacle.Client
         {
             using var activity = ActivitySource.StartActivity($"{nameof(TentacleClient)}.{nameof(CancelScript)}");
             
-            var scriptExecutor = new ScriptExecutor(
-                allClients,
+            var scriptExecutor = rpcActions.CreateScriptExecutor(
                 logger,
-                tentacleClientObserver,
+                tentacleClientObserver, 
                 // For now, we do not support metrics for event-based operations.
-                ClientOperationMetricsBuilder.Start(),
-                clientOptions,
+                ClientOperationMetricsBuilder.Start(), 
+                clientOptions, 
                 OnCancellationAbandonCompleteScriptAfter);
 
             return await scriptExecutor.CancelScript(commandContext);
@@ -264,13 +215,12 @@ namespace Octopus.Tentacle.Client
         {
             using var activity = ActivitySource.StartActivity($"{nameof(TentacleClient)}.{nameof(CompleteScript)}");
             
-            var scriptExecutor = new ScriptExecutor(
-                allClients,
+            var scriptExecutor = rpcActions.CreateScriptExecutor(
                 logger,
-                tentacleClientObserver,
+                tentacleClientObserver, 
                 // For now, we do not support metrics for event-based operations.
-                ClientOperationMetricsBuilder.Start(),
-                clientOptions,
+                ClientOperationMetricsBuilder.Start(), 
+                clientOptions, 
                 OnCancellationAbandonCompleteScriptAfter);
 
             return await scriptExecutor.CompleteScript(commandContext, scriptExecutionCancellationToken);

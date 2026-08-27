@@ -2,7 +2,6 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
-using Halibut.Diagnostics;
 using Octopus.Tentacle.Client.EventDriven;
 using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.Client.Scripts.Models;
