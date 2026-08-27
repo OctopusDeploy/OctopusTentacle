@@ -8,7 +8,7 @@ namespace Octopus.Tentacle.Client
 {
     public class HalibutTentacleClient : TentacleClient
     {
-        internal static void CacheServiceWasNotFoundResponseMessages(IHalibutRuntime halibutRuntime)
+        public static void CacheServiceWasNotFoundResponseMessages(IHalibutRuntime halibutRuntime)
         {
             using var activity = ActivitySource.StartActivity($"{nameof(TentacleClient)}.{nameof(CacheServiceWasNotFoundResponseMessages)}");
 
