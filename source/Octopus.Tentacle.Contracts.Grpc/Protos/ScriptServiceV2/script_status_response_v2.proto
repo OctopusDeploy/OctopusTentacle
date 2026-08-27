@@ -1,0 +1,35 @@
+﻿syntax = "proto3";
+package octopus.tentacle.contracts.grpc.scriptservice.v2;
+
+import "ScriptServiceV2/script_ticket.proto";
+
+import "google/protobuf/timestamp.proto";
+
+option csharp_namespace = "Octopus.Tentacle.Contracts.Grpc";
+
+message ScriptStatusResponseV2 {
+  ScriptTicket script_ticket = 1;
+  repeated ProcessOutput logs = 2;
+  int64 next_log_sequence = 3;
+  ProcessState state = 4;
+  int32 exit_code = 5;
+}
+
+message ProcessOutput {
+  ProcessOutputSource source = 1;
+  google.protobuf.Timestamp occurred = 2;
+  string text = 3;
+}
+
+enum ProcessState {
+  PROCESS_STATE_PENDING = 0;
+  PROCESS_STATE_RUNNING = 1;
+  PROCESS_STATE_COMPLETE = 2;
+}
+
+
+enum ProcessOutputSource {
+  PROCESS_OUTPUT_SOURCE_STDOUT = 0;
+  PROCESS_OUTPUT_SOURCE_STDERR = 1;
+  PROCESS_OUTPUT_SOURCE_DEBUG = 2;
+}

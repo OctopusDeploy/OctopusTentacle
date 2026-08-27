@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Grpc.Core;
 using Octopus.Tentacle.Core.Diagnostics;
 
 namespace Octopus.Tentacle.Grpc
@@ -9,13 +10,13 @@ namespace Octopus.Tentacle.Grpc
     {
         readonly string name;
         readonly object @lock = new();
-        
-        protected  ISystemLog Log { get; }
-        
-        readonly CancellationTokenSource cancellationTokenSource = new ();
+
+        protected ISystemLog Log { get; }
+
+        readonly CancellationTokenSource cancellationTokenSource = new();
 
         Task? grpcServiceExecution;
-        
+
         protected GrpcService(ISystemLog log)
         {
             name = GetType().Name;
@@ -23,7 +24,7 @@ namespace Octopus.Tentacle.Grpc
         }
 
         protected abstract Task Execute(CancellationToken cancellationToken);
-        
+
         public void Start()
         {
             lock (@lock)
@@ -63,12 +64,44 @@ namespace Octopus.Tentacle.Grpc
                 }
             }
         }
-        
+
         public void Dispose()
         {
             Log.Info($"{name}.Dispose(): Disposing");
             Stop();
             cancellationTokenSource.Dispose();
+        }
+
+        protected async Task SubscribeToStream<TRequest, TResponse>(Func<CancellationToken, AsyncDuplexStreamingCall<TRequest, TResponse>> streamFactory,
+            Func<TResponse, CancellationToken, Task<TRequest>> incomingMessageHandler,
+            string streamMethodName,
+            CancellationToken cancellationToken)
+        {
+            //we run this in a background thread so we can have multiple subscribers
+            await Task.Run(async () =>
+            {
+                Log.Verbose($"{nameof(name)}.{streamMethodName}");
+
+                using var stream = streamFactory(cancellationToken);
+
+                //we do want to block on this to keep the stream alive
+                while (await stream.ResponseStream.MoveNext(cancellationToken))
+                {
+                    var incomingMessage = stream.ResponseStream.Current;
+
+                    //handle the incoming message
+                    var outgoingMessage = await incomingMessageHandler(incomingMessage, cancellationToken);
+
+#if NETFRAMEWORK
+                    await stream.RequestStream.WriteAsync(outgoingMessage);
+#else
+                    await stream.RequestStream.WriteAsync(outgoingMessage, cancellationToken);
+#endif
+                }
+
+                //we are done, so stop the request stream
+                await stream.RequestStream.CompleteAsync();
+            }, cancellationToken);
         }
     }
 }

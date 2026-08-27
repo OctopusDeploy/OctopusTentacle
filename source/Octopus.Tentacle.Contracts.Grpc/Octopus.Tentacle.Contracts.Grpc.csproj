@@ -9,15 +9,6 @@
 
     <ItemGroup>
         <Protobuf Include="Protos\**\*.proto" ProtoRoot="Protos"/>
-        <Protobuf Update="Protos\kubernetes_script_service_v2.proto">
-          <Generator>MSBuild:Compile</Generator>
-        </Protobuf>
-        <Protobuf Update="Protos\start_kubernetes_script_command_v2.proto">
-          <Generator>MSBuild:Compile</Generator>
-        </Protobuf>
-        <Protobuf Update="Protos\kubernetes_script_status_response_v2.proto">
-          <Generator>MSBuild:Compile</Generator>
-        </Protobuf>
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="Grpc.Core" Version="2.46.6" />
