@@ -19,7 +19,7 @@ namespace Octopus.Tentacle.Client.Scripts
     class ScriptServiceV1Executor : IScriptExecutor
     {
         readonly RpcCallExecutor rpcCallExecutor;
-        readonly ClientOperationMetricsBuilder clientOperationMetricsBuilder;
+        readonly IClientOperationMetricsBuilder clientOperationMetricsBuilder;
         readonly ITentacleClientTaskLog logger;
 
         readonly IAsyncClientScriptService clientScriptServiceV1;
@@ -27,7 +27,7 @@ namespace Octopus.Tentacle.Client.Scripts
         public ScriptServiceV1Executor(
             IAsyncClientScriptService clientScriptServiceV1,
             RpcCallExecutor rpcCallExecutor,
-            ClientOperationMetricsBuilder clientOperationMetricsBuilder,
+            IClientOperationMetricsBuilder clientOperationMetricsBuilder,
             ITentacleClientTaskLog logger)
         {
             this.clientScriptServiceV1 = clientScriptServiceV1;

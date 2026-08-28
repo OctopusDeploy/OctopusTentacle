@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>net48;net8.0;net8.0-windows</TargetFrameworks>
+        <Nullable>enable</Nullable>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <LangVersion>9</LangVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Protobuf Include="Protos\**\*.proto" ProtoRoot="Protos"/>
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Grpc.Core" Version="2.46.6" />
+        <PackageReference Include="Google.Protobuf" Version="3.36.0" />
+        <PackageReference Include="Grpc.Tools" Version="2.83.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+</Project>

@@ -275,7 +275,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             //make sure we do this after any service endpoint modifiers have run
             tcpConnectionUtilities?.Configure(server.ServerHalibutRuntime, tentacleEndPoint);
 
-            TentacleClient.CacheServiceWasNotFoundResponseMessages(server.ServerHalibutRuntime);
+            HalibutTentacleClient.CacheServiceWasNotFoundResponseMessages(server.ServerHalibutRuntime);
 
             var retrySettings = new RpcRetrySettings(retriesEnabled, retryDuration);
             var clientOptions = new TentacleClientOptions(retrySettings, minimumAttemptsForInterruptedLongRunningCalls);
@@ -284,7 +284,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             //configure the client options
             configureClientOptions?.Invoke(clientOptions);
 
-            var tentacleClient = new TentacleClient(
+            var tentacleClient = new HalibutTentacleClient(
                 tentacleEndPoint,
                 server.ServerHalibutRuntime,
                 scriptObserverBackoffStrategy,

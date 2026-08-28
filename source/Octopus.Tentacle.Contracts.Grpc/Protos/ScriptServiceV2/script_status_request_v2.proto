@@ -1,0 +1,11 @@
+﻿syntax = "proto3";
+package octopus.tentacle.contracts.grpc.scriptservice.v2;
+
+import "ScriptServiceV2/script_ticket.proto";
+
+option csharp_namespace = "Octopus.Tentacle.Contracts.Grpc";
+
+message ScriptStatusRequestV2 {
+  ScriptTicket script_ticket = 1;
+  int64 last_log_sequence = 2;
+}

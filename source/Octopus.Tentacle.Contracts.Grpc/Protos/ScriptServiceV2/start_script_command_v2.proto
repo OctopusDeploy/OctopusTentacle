@@ -1,0 +1,35 @@
+syntax = "proto3";
+package octopus.tentacle.contracts.grpc.scriptservice.v2;
+
+import "ScriptServiceV2/script_ticket.proto";
+
+import "google/protobuf/duration.proto";
+
+option csharp_namespace = "Octopus.Tentacle.Contracts.Grpc";
+
+message StartScriptCommandV2 {  
+  ScriptTicket script_ticket = 1;
+  string script_body = 2;
+  string task_id = 3;
+  
+  optional google.protobuf.Duration duration_to_wait_for_script_finish = 4;
+  ScriptIsolationLevel script_isolation_level = 5;
+  google.protobuf.Duration script_isolation_mutex_timeout = 6;
+  optional string isolation_mutex_name = 7;
+  
+  map<string,string> scripts = 8;
+  
+  repeated ScriptFile files = 9;
+  repeated string arguments = 10;
+}
+
+enum ScriptIsolationLevel {
+  SCRIPT_ISOLATION_LEVEL_NO_ISOLATION = 0;
+  SCRIPT_ISOLATION_LEVEL_FULL_ISOLATION = 1;
+}
+
+message ScriptFile {
+  string name = 1;
+  bytes data_stream = 2;
+  optional string encryption_password = 3;
+}

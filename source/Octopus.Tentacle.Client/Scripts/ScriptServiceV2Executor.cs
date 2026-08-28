@@ -19,7 +19,7 @@ namespace Octopus.Tentacle.Client.Scripts
     {
         readonly IAsyncClientScriptServiceV2 clientScriptServiceV2;
         readonly RpcCallExecutor rpcCallExecutor;
-        readonly ClientOperationMetricsBuilder clientOperationMetricsBuilder;
+        readonly IClientOperationMetricsBuilder clientOperationMetricsBuilder;
         readonly TimeSpan onCancellationAbandonCompleteScriptAfter;
         readonly ITentacleClientTaskLog logger;
         readonly TentacleClientOptions clientOptions;
@@ -27,7 +27,7 @@ namespace Octopus.Tentacle.Client.Scripts
         public ScriptServiceV2Executor(
             IAsyncClientScriptServiceV2 clientScriptServiceV2,
             RpcCallExecutor rpcCallExecutor,
-            ClientOperationMetricsBuilder clientOperationMetricsBuilder,
+            IClientOperationMetricsBuilder clientOperationMetricsBuilder,
             TimeSpan onCancellationAbandonCompleteScriptAfter,
             TentacleClientOptions clientOptions,
             ITentacleClientTaskLog logger)

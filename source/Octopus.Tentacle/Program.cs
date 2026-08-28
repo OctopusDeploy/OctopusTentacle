@@ -7,6 +7,7 @@ using Octopus.Tentacle.Commands.OptionSets;
 using Octopus.Tentacle.Communications;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Diagnostics;
+using Octopus.Tentacle.Grpc;
 using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Maintenance;
 using Octopus.Tentacle.Properties;
@@ -50,6 +51,7 @@ namespace Octopus.Tentacle
             builder.RegisterModule(new TimeModule());
             builder.RegisterModule(new ClientModule());
             builder.RegisterModule(new TentacleCommunicationsModule());
+            builder.RegisterModule<GrpcModule>();
             builder.RegisterModule(new ServicesModule());
             builder.RegisterModule(new VersioningModule(GetType().Assembly));
             builder.RegisterModule(new MaintenanceModule());

@@ -1,0 +1,8 @@
+syntax = "proto3";
+package octopus.tentacle.contracts.grpc.scriptservice.v2;
+
+option csharp_namespace = "Octopus.Tentacle.Contracts.Grpc";
+
+message ScriptTicket {
+  string task_id = 1;
+}

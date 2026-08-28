@@ -32,12 +32,12 @@ static class SetupHelpers
         var retrySettings = new RpcRetrySettings(true, TimeSpan.FromMinutes(2));
         var clientOptions = new TentacleClientOptions(retrySettings);
 
-        TentacleClient.CacheServiceWasNotFoundResponseMessages(halibutRuntime);
+        HalibutTentacleClient.CacheServiceWasNotFoundResponseMessages(halibutRuntime);
 
         var builder = new TentacleServiceDecoratorBuilder();
         tentacleServiceDecoratorBuilderAction(builder);
 
-        return new TentacleClient(
+        return new HalibutTentacleClient(
             endpoint,
             halibutRuntime,
             new PollingTentacleScriptObserverBackoffStrategy(),

@@ -18,14 +18,14 @@ namespace Octopus.Tentacle.Client.Scripts
         readonly IAsyncClientCapabilitiesServiceV2 clientCapabilitiesServiceV2;
         readonly RpcCallExecutor rpcCallExecutor;
         readonly TentacleClientOptions clientOptions;
-        readonly ClientOperationMetricsBuilder clientOperationMetricsBuilder;
+        readonly IClientOperationMetricsBuilder clientOperationMetricsBuilder;
 
         internal ScriptServiceVersionSelector(
             IAsyncClientCapabilitiesServiceV2 clientCapabilitiesServiceV2, 
             ITentacleClientTaskLog logger, 
             RpcCallExecutor rpcCallExecutor,
             TentacleClientOptions clientOptions, 
-            ClientOperationMetricsBuilder clientOperationMetricsBuilder)
+            IClientOperationMetricsBuilder clientOperationMetricsBuilder)
         {
             this.clientCapabilitiesServiceV2 = clientCapabilitiesServiceV2;
             this.logger = logger;

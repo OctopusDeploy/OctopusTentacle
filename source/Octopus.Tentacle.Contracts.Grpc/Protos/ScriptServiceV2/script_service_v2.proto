@@ -1,0 +1,35 @@
+syntax = "proto3";
+package octopus.tentacle.contracts.grpc.scriptservice.v2;
+
+import "ScriptServiceV2/start_script_command_v2.proto";
+import "ScriptServiceV2/script_status_response_v2.proto";
+import "ScriptServiceV2/script_status_request_v2.proto";
+import "ScriptServiceV2/cancel_script_command_v2.proto";
+import "ScriptServiceV2/complete_script_command_v2.proto";
+
+option csharp_namespace = "Octopus.Tentacle.Contracts.Grpc";
+
+service ScriptServiceV2 {
+  rpc SubscribeToUnaryCommands(stream ClientToServerStream) returns (stream ServerToClientStream);
+}
+
+message ClientToServerStream {
+  string request_id = 1;
+  oneof response {
+    ScriptStatusResponseV2 script_status_response_v2 = 2;
+    VoidUnaryResponseV2 void = 3;
+  }
+}
+
+message ServerToClientStream {
+  string request_id = 1;
+  oneof request {
+    StartScriptCommandV2 start_script_command = 2;
+    ScriptStatusRequestV2 script_status_request = 3;
+    CancelScriptCommandV2 cancel_script_command = 4;
+    CompleteScriptCommandV2 complete_script_command = 5;
+  }
+}
+
+message VoidUnaryResponseV2 {
+}
