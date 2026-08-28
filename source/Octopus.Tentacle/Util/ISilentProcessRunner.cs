@@ -14,7 +14,8 @@ namespace Octopus.Tentacle.Util
             string workingDirectory,
             Action<string> info,
             Action<string> error,
-            CancellationToken cancel = default);
+            CancellationToken cancel = default,
+            CancellationToken abandon = default);
 
         Task<int> ExecuteCommandAsync(
             string executable,
@@ -23,19 +24,20 @@ namespace Octopus.Tentacle.Util
             Action<string> debug,
             Action<string> info,
             Action<string> error,
-            CancellationToken cancel = default);
+            CancellationToken cancel = default,
+            CancellationToken abandon = default);
     }
 
     public class SilentProcessRunnerWrapper : ISilentProcessRunner
     {
-        public Task<int> ExecuteCommandAsync(string executable, string arguments, string workingDirectory, Action<string> info, Action<string> error, CancellationToken cancel = default)
+        public Task<int> ExecuteCommandAsync(string executable, string arguments, string workingDirectory, Action<string> info, Action<string> error, CancellationToken cancel = default, CancellationToken abandon = default)
         {
-            return SilentProcessRunnerExtended.ExecuteCommandAsync(executable, arguments, workingDirectory, info, error, cancel);
+            return SilentProcessRunnerExtended.ExecuteCommandAsync(executable, arguments, workingDirectory, info, error, cancel, abandon);
         }
 
-        public Task<int> ExecuteCommandAsync(string executable, string arguments, string workingDirectory, Action<string> debug, Action<string> info, Action<string> error, CancellationToken cancel = default)
+        public Task<int> ExecuteCommandAsync(string executable, string arguments, string workingDirectory, Action<string> debug, Action<string> info, Action<string> error, CancellationToken cancel = default, CancellationToken abandon = default)
         {
-            return SilentProcessRunner.ExecuteCommandAsync(executable, arguments, workingDirectory, debug, info, error, cancel: cancel);
+            return SilentProcessRunner.ExecuteCommandAsync(executable, arguments, workingDirectory, debug, info, error, cancel: cancel, abandon: abandon);
         }
     }
 
@@ -70,7 +72,8 @@ namespace Octopus.Tentacle.Util
             string workingDirectory,
             Action<string> info,
             Action<string> error,
-            CancellationToken cancel = default)
+            CancellationToken cancel = default,
+            CancellationToken abandon = default)
             => SilentProcessRunner.ExecuteCommandAsync(executable,
                 arguments,
                 workingDirectory,
@@ -78,6 +81,7 @@ namespace Octopus.Tentacle.Util
                 info,
                 error,
                 customEnvironmentVariables: null,
-                cancel: cancel);
+                cancel: cancel,
+                abandon: abandon);
     }
 }

@@ -185,6 +185,12 @@ namespace Octopus.Tentacle.Client.Scripts
             return Map(kubernetesScriptStatusResponseV1);
         }
 
+        public Task<ScriptOperationExecutionResult> AbandonScript(CommandContext commandContext)
+            // KubernetesScriptServiceV1 has no abandon verb. The orchestrator only escalates to abandon
+            // when the Tentacle advertised the abandon capability (K8s agents never do), so it won't
+            // escalate here; reaching this is a bug.
+            => throw new NotSupportedException("KubernetesScriptServiceV1 cannot abandon a script; it has no abandon verb. Cancel the script instead.");
+
         public async Task<ScriptStatus?> CompleteScript(CommandContext lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
         {
             using var activity = TentacleClient.ActivitySource.StartActivity($"{nameof(KubernetesScriptServiceV1Executor)}.{nameof(CompleteScript)}");

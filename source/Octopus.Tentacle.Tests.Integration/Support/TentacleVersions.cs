@@ -78,5 +78,13 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         {
             return version == TentacleVersions.Current || version >= TentacleVersions.v7_1_189_SyncHalibutAndScriptServiceV2;
         }
+
+        public static bool HasAbandonScript(this Version? version)
+        {
+            // Abandon ships in this build and no released version has it yet, so only Current advertises it.
+            // When it ships in a release, pin that version in TentacleVersions and make this
+            // `version == Current || version >= v<that release>`, the same shape as HasScriptServiceV2.
+            return version == TentacleVersions.Current;
+        }
     }
 }
