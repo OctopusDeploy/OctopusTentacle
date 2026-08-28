@@ -16,6 +16,18 @@
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 
+	<!-- NuGet security auditing. The .NET 8 SDK default (NuGetAuditMode=direct) only audits
+	     direct PackageReferences; 'all' also audits transitive dependencies, surfacing things
+	     like the transitive System.Security.Cryptography.Xml 8.0.2 CVEs at restore time.
+	     Audit findings (NU1901-NU1904) are kept as warnings so they don't trip the project's
+	     TreatWarningsAsErrors and break the build - this is informational, not a hard gate. -->
+	<PropertyGroup>
+		<NuGetAudit>true</NuGetAudit>
+		<NuGetAuditMode>all</NuGetAuditMode>
+		<NuGetAuditLevel>low</NuGetAuditLevel>
+		<WarningsNotAsErrors>$(WarningsNotAsErrors);NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
+	</PropertyGroup>
+
 	<Choose>
 		<When Condition="'$(TargetFramework)' == 'net48'">
 			<PropertyGroup>
