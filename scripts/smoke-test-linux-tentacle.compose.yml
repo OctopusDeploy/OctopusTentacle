@@ -1,0 +1,69 @@
+# Self-contained docker compose for the Linux Tentacle smoke test (EFT-3311).
+# Brings up MSSQL + Octopus Server + the Tentacle image under test on an
+# internal network so the test does not need a sibling OctopusDeploy checkout.
+#
+# Driven by scripts/smoke-test-linux-tentacle.sh — env vars exported there
+# (TENTACLE_IMAGE, TENTACLE_TAG, OCTOPUS_SERVER_TAG, SA_PASSWORD, ADMIN_PASSWORD,
+# ADMIN_API_KEY, WORKER_TARGET_NAME) are interpolated below.
+# OCTOPUS_SERVER_BASE64_LICENSE is optional: when empty, Octopus Server starts
+# on the free Community Edition license (1 space, 1 worker, 5 projects), which
+# is enough for this test.
+
+name: octopustentacle-smoke
+
+services:
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    platform: linux/amd64
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "${SA_PASSWORD}"
+      MSSQL_PID: "Developer"
+    healthcheck:
+      test:
+        - "CMD-SHELL"
+        - '/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$$MSSQL_SA_PASSWORD" -C -No -Q "SELECT 1" >/dev/null 2>&1 || exit 1'
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 30s
+
+  octopus-server:
+    image: octopusdeploy/octopusdeploy:${OCTOPUS_SERVER_TAG:-latest}
+    platform: linux/amd64
+    depends_on:
+      mssql:
+        condition: service_healthy
+    environment:
+      ACCEPT_EULA: "Y"
+      DB_CONNECTION_STRING: "Server=mssql,1433;Database=Octopus;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;"
+      ADMIN_USERNAME: "admin"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD}"
+      ADMIN_API_KEY: "${ADMIN_API_KEY}"
+      OCTOPUS_SERVER_BASE64_LICENSE: "${OCTOPUS_SERVER_BASE64_LICENSE:-}"
+    ports:
+      - "8065:8080"
+
+  tentacle:
+    image: ${TENTACLE_IMAGE}:${TENTACLE_TAG}
+    # Fail loudly if the local build step was skipped — never silently pull
+    # from a registry. The script tags this image with a local-only name
+    # (no `octopusdeploy/` prefix), so a pull attempt would always be wrong.
+    pull_policy: never
+    platform: linux/amd64
+    depends_on:
+      - octopus-server
+    environment:
+      ACCEPT_EULA: "Y"
+      ServerApiKey: "${ADMIN_API_KEY}"
+      ServerUrl: "http://octopus-server:8080"
+      # Setting ServerPort puts the Tentacle into polling (TentacleActive) mode,
+      # which is what we want for a worker — no inbound listener required.
+      ServerPort: "10943"
+      TargetWorkerPool: "Default Worker Pool"
+      TargetName: "${WORKER_TARGET_NAME}"
+      Space: "Default"
+      # The Tentacle image's default entrypoint launches a dockerd sidecar,
+      # which requires --privileged. We don't need DinD for this smoke test;
+      # skipping it keeps the container running without elevated privileges.
+      DISABLE_DIND: "Y"
