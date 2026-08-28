@@ -8,6 +8,7 @@ using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.Client.Scripts.Models;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Logging;
+using Octopus.Tentacle.Contracts.ScriptServiceV2;
 
 namespace Octopus.Tentacle.Client
 {
@@ -58,6 +59,11 @@ namespace Octopus.Tentacle.Client
         /// <param name="logger"></param>
         /// <returns>The result, which includes the CommandContext for the next command</returns>
         Task<ScriptOperationExecutionResult> CancelScript(CommandContext commandContext, ITentacleClientTaskLog logger);
+
+        /// <summary>
+        /// Abandon the script (V2 only). Stub on this branch — see EFT-3295.
+        /// </summary>
+        Task<ScriptStatusResponseV2> AbandonScript(ScriptTicket scriptTicket, ITentacleClientTaskLog logger, CancellationToken cancellationToken);
 
         /// <summary>
         /// Complete the script.

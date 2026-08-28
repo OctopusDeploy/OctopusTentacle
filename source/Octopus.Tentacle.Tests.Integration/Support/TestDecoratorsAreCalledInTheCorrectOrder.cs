@@ -105,6 +105,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 throw new NotImplementedException();
             }
 
+            public Task<ScriptStatusResponseV2> AbandonScriptAsync(AbandonScriptCommandV2 command, HalibutProxyRequestOptions proxyRequestOptions)
+            {
+                throw new NotImplementedException();
+            }
+
             public async Task CompleteScriptAsync(CompleteScriptCommandV2 command, HalibutProxyRequestOptions proxyRequestOptions)
             {
                 await Task.CompletedTask;
