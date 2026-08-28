@@ -59,7 +59,9 @@ namespace Octopus.Tentacle.Commands
         protected override void Start()
         {
             base.Start();
+            log.Info("Inside PollCommand Start().");
             StartAsync().GetAwaiter().GetResult();
+            log.Info("Finished PollCommand Start().");
         }
 
         async Task StartAsync()
