@@ -645,11 +645,34 @@ both_registered() {
     [[ "$json" == *"\"Name\":\"${E2E_LISTENING}\""* && "$json" == *"\"Name\":\"${E2E_POLLING}\""* ]]
 }
 
+# machine_health <machines-json> <name> - the HealthStatus of the machine
+# registered under <name>, or empty if there is no such machine.
+#
+# The payload is split into one line per machine before matching, so the status
+# read back belongs to that machine. Counting '"HealthStatus"' across the whole
+# payload instead - as this used to - would accept one healthy Tentacle plus any
+# second healthy record while the other Tentacle was still unhealthy.
+#
+# Name and HealthStatus both appear near the top of a machine resource, ahead of
+# the nested Endpoint and Links objects, so splitting on '},{' keeps the two
+# together. awk does the split rather than sed, whose replacement-side '\n' is
+# not portable to the BSD sed on macOS.
+machine_health() {
+    printf '%s' "$1" \
+        | awk '{ gsub(/\},\{/, "}\n{"); print }' \
+        | grep -F "\"Name\":\"$2\"" \
+        | sed -n 's/.*"HealthStatus":"\([A-Za-z]*\)".*/\1/p'
+}
+
 both_healthy() {
-    local json count
+    local json status name
     json=$(machines_json) || return 1
-    count=$(printf '%s' "$json" | grep -o '"HealthStatus":"\(Healthy\|HasWarnings\)"' | wc -l)
-    (( count >= 2 ))
+    for name in "$E2E_LISTENING" "$E2E_POLLING"; do
+        # grep exits non-zero when the machine is not there yet; under pipefail
+        # that fails the substitution, so normalise it to an empty status.
+        status=$(machine_health "$json" "$name") || status=""
+        [[ "$status" == "Healthy" || "$status" == "HasWarnings" ]] || return 1
+    done
 }
 
 if [[ $SKIP_E2E -eq 0 ]]; then

@@ -23,6 +23,7 @@ RUN apt-get update && \
         ca-certificates \
         libicu70 \
         libssl3 && \
+    apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 ARG BUILD_NUMBER
