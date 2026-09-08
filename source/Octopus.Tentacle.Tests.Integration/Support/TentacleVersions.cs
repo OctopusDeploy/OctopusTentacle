@@ -33,35 +33,47 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         // The version compiled from the current source
         public static readonly Version? Current = null;
 
+        static readonly Version[] Version5Releases =
+        {
+            v5_0_4_FirstLinuxRelease,
+            v5_0_12_AutofacServiceFactoryIsInShared,
+            v5_0_15_LastOfVersion5
+        };
+
+        /// <summary>
+        /// Whether the version 5 releases can actually be run on this host.
+        /// <para>
+        /// They were never published for MacOS or linux-arm64. They are also .NET Core 3.1
+        /// builds, which load OpenSSL 1.x at start-up and abort with "No usable version of
+        /// libssl was found" on a host that only has OpenSSL 3 - Ubuntu 22.04 and newer.
+        /// </para>
+        /// This is one predicate rather than two so the download list and the test case
+        /// source cannot disagree: a version present in the case source but absent from
+        /// AllTestedVersionsToDownload makes TentacleFetcher throw.
+        /// </summary>
+        static readonly bool Version5IsRunnableHere = IsVersion5RunnableHere();
+
         public static Version[] AllTestedVersionsToDownload = GetAllTestedVersionsToDownload();
 
         public static readonly Version[] VersionsUnsupportedByCurrentOperatingSystemAndArchitecture = GetVersionsUnsupportedByCurrentOperatingSystemAndArchitecture();
 
-        static Version[] GetVersionsUnsupportedByCurrentOperatingSystemAndArchitecture()
+        static bool IsVersion5RunnableHere()
         {
-            if (!PlatformDetection.IsRunningOnMac && RuntimeInformation.ProcessArchitecture != Architecture.Arm64) return Array.Empty<Version>();
+            if (PlatformDetection.IsRunningOnWindows) return true;
+            if (PlatformDetection.IsRunningOnMac) return false;
+            if (RuntimeInformation.ProcessArchitecture == Architecture.Arm64) return false;
 
-            if (PlatformDetection.IsRunningOnWindows) return Array.Empty<Version>();
-
-            // These versions are not available on MacOS or ARM
-            return new []
-            {
-                v5_0_4_FirstLinuxRelease,
-                v5_0_12_AutofacServiceFactoryIsInShared,
-                v5_0_15_LastOfVersion5
-            };
+            return PlatformDetection.CanLoadOpenSsl1x;
         }
+
+        static Version[] GetVersionsUnsupportedByCurrentOperatingSystemAndArchitecture()
+            => Version5IsRunnableHere ? Array.Empty<Version>() : Version5Releases;
+
         static Version[] GetAllTestedVersionsToDownload()
         {
             var versions = new List<Version>();
 
-            if (PlatformDetection.IsRunningOnWindows || (!PlatformDetection.IsRunningOnMac && RuntimeInformation.ProcessArchitecture != Architecture.Arm64))
-            {
-                // These versions are not available on MacOS or ARM
-                versions.Add(v5_0_4_FirstLinuxRelease);
-                versions.Add(v5_0_12_AutofacServiceFactoryIsInShared);
-                versions.Add(v5_0_15_LastOfVersion5);
-            }
+            if (Version5IsRunnableHere) versions.AddRange(Version5Releases);
 
             versions.Add(v6_3_417_LastWithScriptServiceV1Only);
             versions.Add(v6_3_451_NoCapabilitiesService);
