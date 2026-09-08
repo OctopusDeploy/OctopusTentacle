@@ -1,13 +1,13 @@
-FROM debian:11-slim
+FROM ubuntu:22.04
 ENV ASPNETCORE_URLS=http://+:80 DOTNET_RUNNING_IN_CONTAINER=true
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         ca-certificates \
         libc6 \
-        libgcc1 \
+        libgcc-s1 \
         libgssapi-krb5-2 \
-        libicu67 \
-        libssl1.1 \
+        libicu70 \
+        libssl3 \
         libstdc++6 \
         zlib1g && \
     rm -rf /var/lib/apt/lists/*

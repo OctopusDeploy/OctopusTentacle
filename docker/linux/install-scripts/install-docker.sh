@@ -4,7 +4,7 @@ set -eux
 # This script is adapted from https://github.com/docker-library/docker/blob/master/19.03/dind/Dockerfile
 
 
-# Add the apt sources for Docker (they're not part of the stock Debian distro).
+# Add the apt sources for Docker (they're not part of the stock Ubuntu distro).
 apt-get update
 
 apt-get install -y --no-install-recommends \
@@ -14,9 +14,9 @@ apt-get install -y --no-install-recommends \
     gnupg \
     lsb-release
 
-curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
 
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian \
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
   $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 
 
@@ -56,6 +56,22 @@ dos2unix /usr/local/bin/dind
 chmod +x /usr/local/bin/dockerd-entrypoint.sh
 dos2unix /usr/local/bin/dockerd-entrypoint.sh
 
+# KNOWN BUG: this condition never succeeds, so the legacy branch below is dead
+# code and nft is always selected.
+#
+# The intent is "if `iptables -nL` works, use legacy, else use nft". But `[ ]`
+# is the `test` builtin, not a subshell, so `iptables` is never executed - test
+# just compares the two literal strings `iptables` and `-nL`, and with two
+# arguments it expects the first to be a unary operator. `iptables` is not one,
+# so test errors and returns non-zero. The `> /dev/null 2>&1` is inside the
+# brackets too, so it redirects nothing useful.
+#
+# The fix is to drop the brackets: `if iptables -nL > /dev/null 2>&1; then`.
+# Deliberately not done here: it would flip docker-in-docker's firewall
+# backend from nft to legacy on most hosts, which is a real behavioural change
+# and needs its own testing. Behaviour has been this way since the image was
+# based on Debian, so it is not a regression. Verified on Ubuntu 22.04 that
+# `readlink /etc/alternatives/iptables` is `/usr/sbin/iptables-nft`.
 if [ iptables -nL > /dev/null 2>&1 ]; then
   # https://forums.docker.com/t/failing-to-start-dockerd-failed-to-create-nat-chain-docker/78269
   update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy
