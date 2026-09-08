@@ -154,7 +154,12 @@ docker info >/dev/null 2>&1 || die "the Docker daemon is not running"
 
 find_deb() {
     # Newest tentacle_*_amd64.deb, or empty if there are none.
-    ls -t _artifacts/deb/tentacle_*_amd64.deb 2>/dev/null | head -1
+    #
+    # The trailing `|| true` is what makes "or empty" true: with no match the
+    # glob is passed through literally, `ls` fails, and under `set -o pipefail`
+    # the caller's `DEB_PATH=$(find_deb)` would abort the script before it could
+    # reach the `die` that explains what is missing.
+    ls -t _artifacts/deb/tentacle_*_amd64.deb 2>/dev/null | head -1 || true
 }
 
 if [[ $SKIP_DEB -eq 1 ]]; then
@@ -232,8 +237,13 @@ if [[ $SKIP_SMOKE -eq 0 ]]; then
     step "Stage 3/4: smoke-testing the image"
 
     # --- base image -------------------------------------------------------
-    OS_ID=$(run_in_image '. /etc/os-release && echo "$ID"')
-    OS_VER=$(run_in_image '. /etc/os-release && echo "$VERSION_ID"')
+    # Every capture below is guarded. A failed `docker run` should be recorded
+    # as a failed assertion and still reach the Summary, not abort the script at
+    # the point of capture and lose the tally - the harness relies on fail()
+    # returning 0 so a run always reports. (A dead Docker daemon is caught by the
+    # `docker info` check near the top, so this cannot mass-fail for that.)
+    OS_ID=$(run_in_image '. /etc/os-release && echo "$ID"') || OS_ID=""
+    OS_VER=$(run_in_image '. /etc/os-release && echo "$VERSION_ID"') || OS_VER=""
     assert_equals "base image is Ubuntu"        "$OS_ID"  "ubuntu"
     assert_equals "base image is 22.04 (jammy)" "$OS_VER" "22.04"
 
@@ -243,7 +253,7 @@ if [[ $SKIP_SMOKE -eq 0 ]]; then
     # but a silently-missing one would fail Tentacle at runtime instead.
     for pkg in ca-certificates libc6 libgcc-s1 libgssapi-krb5-2 libicu70 libssl3 libstdc++6 zlib1g; do
         # Captured rather than piped into grep -q: see the note on wait_for_log.
-        PKG_STATUS=$(run_in_image "dpkg-query -W -f='\${Status}' $pkg")
+        PKG_STATUS=$(run_in_image "dpkg-query -W -f='\${Status}' $pkg") || PKG_STATUS=""
         if [[ "$PKG_STATUS" == *"install ok installed"* ]]; then
             pass "runtime dependency installed: $pkg"
         else
@@ -261,15 +271,15 @@ if [[ $SKIP_SMOKE -eq 0 ]]; then
     done
 
     # --- Tentacle --------------------------------------------------------
-    TENTACLE_VERSION=$(run_in_image 'tentacle version')
+    TENTACLE_VERSION=$(run_in_image 'tentacle version') || TENTACLE_VERSION=""
     assert_equals "'tentacle version' reports the built version" \
         "${TENTACLE_VERSION%%+*}" "$EXPECTED_VERSION"
 
-    SYMLINK=$(run_in_image 'readlink -f /usr/bin/tentacle')
+    SYMLINK=$(run_in_image 'readlink -f /usr/bin/tentacle') || SYMLINK=""
     assert_equals "/usr/bin/tentacle symlinks to the install" "$SYMLINK" "/opt/octopus/tentacle/Tentacle"
 
     # OpenSSL 3 is what libssl3 provides; Tentacle's .deb accepts 1.0/1.1/3.
-    OPENSSL_VER=$(run_in_image 'openssl version')
+    OPENSSL_VER=$(run_in_image 'openssl version') || OPENSSL_VER=""
     assert_contains "OpenSSL is 3.x" "$OPENSSL_VER" "OpenSSL 3."
 
     # --- Docker-in-Docker ------------------------------------------------
@@ -277,7 +287,7 @@ if [[ $SKIP_SMOKE -eq 0 ]]; then
     # it has to point at .../linux/ubuntu now, not .../linux/debian. The source
     # is a deb822 .sources file, not a one-line .list, and the key is the
     # ASCII-armoured one under /etc/apt/keyrings.
-    DOCKER_SOURCES=$(run_in_image 'cat /etc/apt/sources.list.d/docker.sources')
+    DOCKER_SOURCES=$(run_in_image 'cat /etc/apt/sources.list.d/docker.sources') || DOCKER_SOURCES=""
     assert_contains "Docker apt source targets the Ubuntu repo" "$DOCKER_SOURCES" "download.docker.com/linux/ubuntu"
     assert_contains "Docker apt source targets jammy"           "$DOCKER_SOURCES" "jammy"
     assert_contains "Docker apt source is signed by the keyring" "$DOCKER_SOURCES" "Signed-By: /etc/apt/keyrings/docker.asc"
@@ -311,7 +321,7 @@ if [[ $SKIP_SMOKE -eq 0 ]]; then
     # skipped, dockerd would fail to create its NAT chain at runtime.
     # Read the link one level only: -f would resolve on through to the shared
     # xtables-*-multi binary, which does not say which mode was selected.
-    IPTABLES_ALT=$(run_in_image 'readlink /etc/alternatives/iptables')
+    IPTABLES_ALT=$(run_in_image 'readlink /etc/alternatives/iptables') || IPTABLES_ALT=""
     if [[ "$IPTABLES_ALT" == *"iptables-legacy" || "$IPTABLES_ALT" == *"iptables-nft" ]]; then
         pass "iptables alternative selected ($(basename "$IPTABLES_ALT"))"
     else
@@ -336,7 +346,7 @@ if [[ $SKIP_SMOKE -eq 0 ]]; then
     done
 
     # --- image metadata ---------------------------------------------------
-    INSPECT=$(docker image inspect "$IMAGE")
+    INSPECT=$(docker image inspect "$IMAGE") || INSPECT=""
     assert_contains "ENTRYPOINT is configure-and-run.sh" "$INSPECT" "/scripts/configure-and-run.sh"
     assert_contains "port 10933 is exposed"              "$INSPECT" "10933/tcp"
     assert_contains "/var/lib/docker is a volume"        "$INSPECT" "/var/lib/docker"
@@ -356,11 +366,20 @@ fi
 # 4. End-to-end registration test
 ###############################################################################
 
-E2E_NET="tentacle-e2e-net"
-E2E_SQL="tentacle-e2e-sql"
-E2E_SERVER="tentacle-e2e-octopus"
-E2E_LISTENING="tentacle-e2e-listening"
-E2E_POLLING="tentacle-e2e-polling"
+# Every Docker name this stage creates carries a per-run suffix, so two runs on
+# the same host cannot collide. Without it, the pre-run cleanup below would
+# force-remove a concurrent run's live containers, and `docker network create`
+# would race - which matters as soon as this runs on a shared build agent where
+# a PR build and a nightly can overlap.
+#
+# $$ is the script's PID: unique among live processes, short, and readable in
+# `docker ps`, which a random hex string would not be.
+E2E_RUN_ID="$$"
+E2E_NET="tentacle-e2e-net-${E2E_RUN_ID}"
+E2E_SQL="tentacle-e2e-sql-${E2E_RUN_ID}"
+E2E_SERVER="tentacle-e2e-octopus-${E2E_RUN_ID}"
+E2E_LISTENING="tentacle-e2e-listening-${E2E_RUN_ID}"
+E2E_POLLING="tentacle-e2e-polling-${E2E_RUN_ID}"
 E2E_CONTAINERS=("$E2E_LISTENING" "$E2E_POLLING" "$E2E_SERVER" "$E2E_SQL")
 
 # random_password - 20 characters of upper case, lower case and digits.
@@ -451,17 +470,44 @@ resolve_license() {
     return 0
 }
 
-# Note: this also runs *before* the stack is started, to clear out anything a
-# previous run left behind, so it must not touch $E2E_HELPER - that is cleaned
-# up by the EXIT trap instead.
+# e2e_remove_stack - force-remove the e2e containers and network, if present.
+#
+# Neither of the two callers below may touch $E2E_HELPER or the env files;
+# those belong to the EXIT trap via e2e_rm_temp.
+e2e_remove_stack() {
+    docker rm -f "${E2E_CONTAINERS[@]}" >/dev/null 2>&1 || true
+    docker network rm "$E2E_NET" >/dev/null 2>&1 || true
+}
+
+# e2e_cleanup_stale - clear out anything already holding this run's names.
+#
+# Deliberately NOT gated on --keep. It used to share a function with the EXIT
+# trap below, which meant that after a --keep run, the next --keep run returned
+# early here and then died on a `docker run --name` conflict. What --keep means
+# is "leave MY containers up when I finish", not "never clean up anyone else's".
+#
+# Now that the names carry a per-run suffix this should never find anything -
+# it would take PID reuse - but it stays as a cheap guard, and it only ever
+# matches this run's own names, so it cannot disturb a concurrent run. Stacks
+# left behind by --keep are no longer in the way, and the message printed then
+# gives the exact command to remove them.
+e2e_cleanup_stale() {
+    local stale
+    stale=$(docker ps -a --filter "name=^/tentacle-e2e-.*-${E2E_RUN_ID}$" --format '{{.Names}}' 2>/dev/null | tr '\n' ' ')
+    if [[ -n "${stale// /}" ]]; then
+        warn "Removing containers already holding this run's names: ${stale% }"
+    fi
+    e2e_remove_stack
+}
+
+# e2e_teardown - EXIT trap cleanup, honouring --keep.
 e2e_teardown() {
     if [[ $KEEP -eq 1 ]]; then
         warn "--keep was given; leaving the e2e containers running."
         warn "Tear down with: docker rm -f ${E2E_CONTAINERS[*]}; docker network rm $E2E_NET"
         return
     fi
-    docker rm -f "${E2E_CONTAINERS[@]}" >/dev/null 2>&1 || true
-    docker network rm "$E2E_NET" >/dev/null 2>&1 || true
+    e2e_remove_stack
 }
 
 # dump_logs <container> - print the tail of a container's logs, for diagnosis.
@@ -480,16 +526,31 @@ dump_logs() {
     echo "    --- end ---"
 }
 
-# wait_for <description> <timeout-seconds> <shell test> - poll until the test
-# passes, or give up. Returns non-zero on timeout.
+# wait_for <description> <timeout-seconds> <shell test> [container...] - poll
+# until the test passes, or give up. Returns non-zero on timeout.
+#
+# Any containers named after the test are watched for having exited, the same
+# way wait_for_log does it. The timeouts here run to 900s, so a container that
+# dies on startup - an SA password the policy rejects, a port clash, an OOM -
+# would otherwise sit out the entire wait and then report a timeout that hides
+# the real cause.
 wait_for() {
     local what="$1" timeout="$2" test_cmd="$3"
-    local waited=0
+    shift 3
+    local waited=0 container
     while (( waited < timeout )); do
         if eval "$test_cmd" >/dev/null 2>&1; then
             info "$what ready after ${waited}s"
             return 0
         fi
+        # Checked after the condition, so a container that satisfies the test
+        # and then exits still counts as ready.
+        for container in "$@"; do
+            if [[ "$(docker inspect -f '{{.State.Status}}' "$container" 2>/dev/null)" == "exited" ]]; then
+                warn "$container has exited; not waiting out the remaining $((timeout - waited))s"
+                return 1
+            fi
+        done
         sleep 5
         waited=$((waited + 5))
         if (( waited % 60 == 0 )); then
@@ -713,7 +774,7 @@ if [[ $SKIP_E2E -eq 0 ]]; then
     # if it fails partway.
     trap 'e2e_teardown; e2e_rm_temp' EXIT
     e2e_prepare
-    e2e_teardown   # clear out anything left over from a previous run
+    e2e_cleanup_stale
 
     # Guard against the helper going missing: Docker would silently mount an
     # empty directory over it and every API call would fail for no clear reason.
@@ -729,7 +790,7 @@ if [[ $SKIP_E2E -eq 0 ]]; then
         -e MSSQL_PID=Express \
         mcr.microsoft.com/mssql/server:2022-latest >/dev/null
 
-    if wait_for "SQL Server" 420 sql_ready; then
+    if wait_for "SQL Server" 420 sql_ready "$E2E_SQL"; then
         pass "SQL Server started"
     else
         fail "SQL Server started"
@@ -747,7 +808,8 @@ if [[ $SKIP_E2E -eq 0 ]]; then
         docker.packages.octopushq.com/octopusdeploy/octopusdeploy:latest >/dev/null
 
     if wait_for "Octopus Server" 900 \
-        "docker run --rm --platform $PLATFORM --network $E2E_NET curlimages/curl:latest -sf http://${E2E_SERVER}:8080/api"; then
+        "docker run --rm --platform $PLATFORM --network $E2E_NET curlimages/curl:latest -sf http://${E2E_SERVER}:8080/api" \
+        "$E2E_SERVER"; then
         pass "Octopus Server started"
     else
         fail "Octopus Server started"
@@ -761,7 +823,9 @@ if [[ $SKIP_E2E -eq 0 ]]; then
     # Roles, by contrast, are free-form and are created on registration.
     info "Creating the Development environment..."
     octopus_post /api/environments '{"Name":"Development"}' >/dev/null 2>&1 || true
-    ENVIRONMENTS=$(octopus_api /api/environments/all | tr -d ' \n\r\t')
+    # Guarded like the smoke captures: a transient API failure here should fail
+    # this assertion, not kill the stage before it can report or dump logs.
+    ENVIRONMENTS=$(octopus_api /api/environments/all | tr -d ' \n\r\t') || ENVIRONMENTS=""
     if [[ "$ENVIRONMENTS" == *'"Name":"Development"'* ]]; then
         pass "Development environment exists"
     else
@@ -846,7 +910,7 @@ if [[ $SKIP_E2E -eq 0 ]]; then
     else
         # Registration is the first thing the entrypoint does, so both machines
         # should appear in the API well before the health check runs.
-        if wait_for "Tentacle registration" 420 both_registered; then
+        if wait_for "Tentacle registration" 420 both_registered "$E2E_LISTENING" "$E2E_POLLING"; then
             pass "both Tentacles registered with the Octopus Server"
         else
             fail "both Tentacles registered with the Octopus Server"
@@ -854,7 +918,7 @@ if [[ $SKIP_E2E -eq 0 ]]; then
             dump_logs "$E2E_POLLING"
         fi
 
-        MACHINES=$(machines_json)
+        MACHINES=$(machines_json) || MACHINES=""
 
         # Assert on each machine individually so a half-working image is obvious.
         for name in "$E2E_LISTENING" "$E2E_POLLING"; do
@@ -874,7 +938,7 @@ if [[ $SKIP_E2E -eq 0 ]]; then
         # check against it, which exercises the Halibut connection in both
         # directions - the real proof the image works.
         info "Waiting for the Octopus Server to health-check both Tentacles..."
-        if wait_for "Tentacle health checks" 600 both_healthy; then
+        if wait_for "Tentacle health checks" 600 both_healthy "$E2E_LISTENING" "$E2E_POLLING"; then
             pass "both Tentacles reported Healthy"
         else
             fail "both Tentacles reported Healthy" \
@@ -885,7 +949,7 @@ if [[ $SKIP_E2E -eq 0 ]]; then
 
         # The version the server sees comes off the wire from the Tentacle itself,
         # so this confirms the .deb inside the image is the one we just built.
-        MACHINES=$(machines_json)
+        MACHINES=$(machines_json) || MACHINES=""
         # EXPECTED_VERSION is the full FullSemVer (timestamp suffix stripped),
         # not just the numeric prefix, so this cannot pass on a coincidental
         # substring match elsewhere in the JSON.
