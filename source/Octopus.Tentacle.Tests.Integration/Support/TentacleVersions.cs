@@ -33,7 +33,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         // The version compiled from the current source
         public static readonly Version? Current = null;
 
-        static readonly Version[] Version5Releases =
+        static readonly IReadOnlyList<Version> Version5Releases = new[]
         {
             v5_0_4_FirstLinuxRelease,
             v5_0_12_AutofacServiceFactoryIsInShared,
@@ -55,7 +55,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         public static Version[] AllTestedVersionsToDownload = GetAllTestedVersionsToDownload();
 
-        public static readonly Version[] VersionsUnsupportedByCurrentOperatingSystemAndArchitecture = GetVersionsUnsupportedByCurrentOperatingSystemAndArchitecture();
+        public static readonly IReadOnlyList<Version> VersionsUnsupportedByCurrentOperatingSystemAndArchitecture = GetVersionsUnsupportedByCurrentOperatingSystemAndArchitecture();
 
         static bool IsVersion5RunnableHere()
         {
@@ -63,10 +63,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             if (PlatformDetection.IsRunningOnMac) return false;
             if (RuntimeInformation.ProcessArchitecture == Architecture.Arm64) return false;
 
-            return PlatformDetection.CanLoadOpenSsl1x;
+            return !PlatformDetection.IsLinuxWithoutOpenSsl1x;
         }
 
-        static Version[] GetVersionsUnsupportedByCurrentOperatingSystemAndArchitecture()
+        static IReadOnlyList<Version> GetVersionsUnsupportedByCurrentOperatingSystemAndArchitecture()
             => Version5IsRunnableHere ? Array.Empty<Version>() : Version5Releases;
 
         static Version[] GetAllTestedVersionsToDownload()
