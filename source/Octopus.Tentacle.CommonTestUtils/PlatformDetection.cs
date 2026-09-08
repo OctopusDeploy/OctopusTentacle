@@ -22,6 +22,7 @@ namespace Octopus.Tentacle.CommonTestUtils
         /// </summary>
         public static bool CanLoadOpenSsl1x { get; } = DetectOpenSsl1x();
 
+#if NET8_0_OR_GREATER
         static bool DetectOpenSsl1x()
         {
             if (!IsRunningOnNix) return true;
@@ -39,5 +40,12 @@ namespace Octopus.Tentacle.CommonTestUtils
 
             return false;
         }
+#else
+        // NativeLibrary was introduced in .NET Core 3.0, so it does not exist on net48.
+        // This project only builds net48 on Windows (see the TargetFrameworks conditions
+        // in the csproj), and Windows never loads libssl by soname, so the answer there
+        // is the same "true" the runtime check above would give.
+        static bool DetectOpenSsl1x() => true;
+#endif
     }
 }
