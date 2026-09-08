@@ -36,7 +36,8 @@
 # .nuke/build.schema.json. Both are tracked, so `git checkout --` them
 # afterwards if you do not want that noise in your working tree.
 #
-# Usage: ./build-and-test-linux-docker-image.sh [options]
+# Usage: ./testing/docker-linux/build-and-test-linux-docker-image.sh [options]
+#        (runs from anywhere; it resolves the repo root itself)
 #   --skip-deb     Reuse the newest existing _artifacts/deb/tentacle_*_amd64.deb
 #   --skip-image   Reuse the already-built image for the resolved BUILD_NUMBER
 #   --skip-smoke   Skip the image smoke tests
@@ -48,8 +49,13 @@
 #
 set -euo pipefail
 
-REPO_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+# This script lives in testing/docker-linux/, but every path below (./build.sh,
+# _artifacts/deb, docker-compose.build.yml, docker/linux/Dockerfile) is relative
+# to the repo root, so resolve that and work from there.
+REPO_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 cd "$REPO_DIR"
+[[ -f "$REPO_DIR/docker-compose.build.yml" ]] \
+    || { echo "ERROR: could not locate the repo root (got '$REPO_DIR')" >&2; exit 1; }
 
 SKIP_DEB=0
 SKIP_IMAGE=0
@@ -179,6 +185,13 @@ BUILD_NUMBER="${DEB_FILE#tentacle_}"
 BUILD_NUMBER="${BUILD_NUMBER%_amd64.deb}"
 [[ -n "$BUILD_NUMBER" ]] || die "could not derive BUILD_NUMBER from $DEB_FILE"
 
+# A local NUKE build appends '-<yyyyMMddHHmmss>' to FullSemVer for the package
+# filename (Build.cs), but the binary itself only carries the plain FullSemVer,
+# followed by '+Branch...Sha...'. Strip the timestamp so both the smoke test and
+# the e2e stage can compare against the version Tentacle actually reports. On
+# TeamCity there is no timestamp suffix and this is a straight comparison.
+EXPECTED_VERSION=$(echo "$BUILD_NUMBER" | sed -E 's/-[0-9]{14}$//')
+
 info "Package:      $DEB_PATH"
 info "BUILD_NUMBER: $BUILD_NUMBER"
 
@@ -248,11 +261,6 @@ if [[ $SKIP_SMOKE -eq 0 ]]; then
     done
 
     # --- Tentacle --------------------------------------------------------
-    # A local NUKE build appends '-<yyyyMMddHHmmss>' to FullSemVer for the package
-    # filename (Build.cs), but the binary itself only carries the plain FullSemVer,
-    # followed by '+Branch...Sha...'. Normalise both ends before comparing. On
-    # TeamCity there is no timestamp suffix and this is a straight comparison.
-    EXPECTED_VERSION=$(echo "$BUILD_NUMBER" | sed -E 's/-[0-9]{14}$//')
     TENTACLE_VERSION=$(run_in_image 'tentacle version')
     assert_equals "'tentacle version' reports the built version" \
         "${TENTACLE_VERSION%%+*}" "$EXPECTED_VERSION"
@@ -298,7 +306,9 @@ if [[ $SKIP_SMOKE -eq 0 ]]; then
         fail "iptables alternative selected" "got '$IPTABLES_ALT'"
     fi
 
-    if run_in_image 'getent passwd dockremap >/dev/null && grep -q "^dockremap:" /etc/subuid /etc/subgid' >/dev/null 2>&1; then
+    # Both files are checked separately: `grep -q a b` exits 0 on the first
+    # match in *either* file, so passing both at once would pass with only one.
+    if run_in_image 'getent passwd dockremap >/dev/null && grep -q "^dockremap:" /etc/subuid && grep -q "^dockremap:" /etc/subgid' >/dev/null 2>&1; then
         pass "dockremap user and subuid/subgid ranges configured"
     else
         fail "dockremap user and subuid/subgid ranges configured"
@@ -371,20 +381,16 @@ random_password() {
     done
 }
 
-# Fresh for every run, and never written anywhere but the containers they are
-# created for, which are torn down at the end.
-SA_PASSWORD=$(random_password)
+# Populated by e2e_prepare, which only runs when stage 4 is actually going to
+# run - there is no reason to mint credentials or touch 1Password under
+# --skip-e2e. Declared here so `set -u` and dump_logs are safe either way.
 OCTOPUS_USER="admin"
-OCTOPUS_PASSWORD=$(random_password)
+SA_PASSWORD=""
+OCTOPUS_PASSWORD=""
+OCTOPUS_LICENSE=""
 
-# An Octopus Server with no licence enforces a limit of 0 targets, so no
-# Tentacle can register against it. Supply a base64-encoded licence in
-# OCTOPUS_SERVER_BASE64_LICENSE to run the full registration and health-check
-# assertions; without one the stage falls back to verifying configuration and
-# connectivity up to the licence check.
-OCTOPUS_LICENSE="${OCTOPUS_SERVER_BASE64_LICENSE:-}"
-
-# Failing that, try 1Password, which is where the Octopus Server repo's own
+# resolve_license prefers OCTOPUS_SERVER_BASE64_LICENSE. Failing that it tries
+# 1Password, which is where the Octopus Server repo's own
 # `./environment.sh setup` gets a local development licence from (see
 # setup-octopus/OctopusInstanceManager.cs). Note the vault is "software
 # licencing", not the "Octopus Server Secrets for Tests" vault the secrets
@@ -398,8 +404,13 @@ OCTOPUS_LICENSE="${OCTOPUS_SERVER_BASE64_LICENSE:-}"
 # background shells and agents without anyone having to remember a flag.
 OCTOPUS_LICENSE_OP_REF="op://software licencing/octopus deploy ultimate license key base64/value"
 
-if [[ -z "$OCTOPUS_LICENSE" && $SKIP_E2E -eq 0 && $NO_1PASSWORD -eq 0 ]] \
-        && [[ -t 0 ]] && command -v op >/dev/null 2>&1; then
+resolve_license() {
+    OCTOPUS_LICENSE="${OCTOPUS_SERVER_BASE64_LICENSE:-}"
+    [[ -n "$OCTOPUS_LICENSE" ]] && return 0
+    [[ $NO_1PASSWORD -eq 0 ]] || return 0
+    [[ -t 0 ]] || return 0
+    command -v op >/dev/null 2>&1 || return 0
+
     info "Looking up a development licence in 1Password (you may be prompted)..."
     if OCTOPUS_LICENSE=$(op read "$OCTOPUS_LICENSE_OP_REF" 2>/dev/null) && [[ -n "$OCTOPUS_LICENSE" ]]; then
         info "Licence retrieved from 1Password (${#OCTOPUS_LICENSE} chars)."
@@ -409,7 +420,7 @@ if [[ -z "$OCTOPUS_LICENSE" && $SKIP_E2E -eq 0 && $NO_1PASSWORD -eq 0 ]] \
         warn "and check you have access to the 'software licencing' vault, or set"
         warn "OCTOPUS_SERVER_BASE64_LICENSE yourself."
     fi
-fi
+}
 
 # Note: this also runs *before* the stack is started, to clear out anything a
 # previous run left behind, so it must not touch $E2E_HELPER - that is cleaned
@@ -459,6 +470,17 @@ wait_for() {
     return 1
 }
 
+# e2e_rm_temp - remove the helper script and every env file holding a secret.
+# Runs from the EXIT trap, possibly before e2e_prepare has created any of them,
+# so it must tolerate every one being unset.
+e2e_rm_temp() {
+    rm -f "${E2E_HELPER:-}" \
+          "${E2E_ENV_SQL:-}" "${E2E_ENV_SERVER:-}" \
+          "${E2E_ENV_AGENT:-}" "${E2E_ENV_API:-}" 2>/dev/null || true
+}
+
+# write_api_helper - write the Octopus API helper this stage shells out to.
+#
 # Octopus authenticates API calls with either an API key or a session cookie.
 # Minting an API key itself needs an authenticated POST, so signing in and
 # reusing the session is simpler. This runs inside a curl container on the e2e
@@ -466,19 +488,13 @@ wait_for() {
 # so the quoting stays readable.
 #
 # /tmp is one of Docker Desktop's default shared paths, so the mount works on
-# macOS as well as Linux.
-# e2e_rm_temp - remove the helper script and every env file holding a secret.
-# Referenced by both EXIT traps, so it must tolerate any of them being unset.
-e2e_rm_temp() {
-    rm -f "${E2E_HELPER:-}" \
-          "${E2E_ENV_SQL:-}" "${E2E_ENV_SERVER:-}" \
-          "${E2E_ENV_AGENT:-}" "${E2E_ENV_API:-}" 2>/dev/null || true
-}
+# macOS as well as Linux. BSD (macOS) mktemp only substitutes Xs at the very
+# end of the template.
+E2E_HELPER=""
 
-# BSD (macOS) mktemp only substitutes Xs at the very end of the template.
-E2E_HELPER=$(mktemp /tmp/octopus-api.XXXXXX)
-trap 'e2e_rm_temp' EXIT
-cat > "$E2E_HELPER" <<'HELPER_SH'
+write_api_helper() {
+    E2E_HELPER=$(mktemp /tmp/octopus-api.XXXXXX)
+    cat > "$E2E_HELPER" <<'HELPER_SH'
 #!/bin/sh
 # usage: octopus-api.sh <server-url> <GET|POST> <path> [body]
 # Credentials come from OCTO_USER / OCTO_PASS in the environment, supplied by
@@ -513,6 +529,7 @@ else
         -d "$BODY" "${SERVER}${API_PATH}"
 fi
 HELPER_SH
+}
 
 # Every secret reaches a container through --env-file rather than `-e`, so
 # none of them appear in `ps` output for the life of the container. Docker
@@ -529,21 +546,43 @@ new_env_file() {
     printf '%s' "$f"
 }
 
-E2E_ENV_SQL=$(new_env_file \
-    "MSSQL_SA_PASSWORD=${SA_PASSWORD}")
+E2E_ENV_SQL=""
+E2E_ENV_SERVER=""
+E2E_ENV_AGENT=""
+E2E_ENV_API=""
 
-E2E_ENV_SERVER=$(new_env_file \
-    "OCTOPUS_SERVER_BASE64_LICENSE=${OCTOPUS_LICENSE}" \
-    "ADMIN_PASSWORD=${OCTOPUS_PASSWORD}" \
-    "DB_CONNECTION_STRING=Server=${E2E_SQL},1433;Initial Catalog=Octopus;Persist Security Info=False;User ID=sa;Password=${SA_PASSWORD};MultipleActiveResultSets=False;Connection Timeout=30;TrustServerCertificate=True")
+# e2e_prepare - mint this run's credentials and write every temp file stage 4
+# needs. Called from stage 4 only, so --skip-e2e neither generates passwords
+# nor prompts 1Password.
+e2e_prepare() {
+    # Fresh for every run, and never written anywhere but the containers they
+    # are created for, which are torn down at the end.
+    SA_PASSWORD=$(random_password)
+    OCTOPUS_PASSWORD=$(random_password)
 
-E2E_ENV_AGENT=$(new_env_file \
-    "ServerUsername=${OCTOPUS_USER}" \
-    "ServerPassword=${OCTOPUS_PASSWORD}")
+    resolve_license
+    write_api_helper
 
-E2E_ENV_API=$(new_env_file \
-    "OCTO_USER=${OCTOPUS_USER}" \
-    "OCTO_PASS=${OCTOPUS_PASSWORD}")
+    E2E_ENV_SQL=$(new_env_file \
+        "MSSQL_SA_PASSWORD=${SA_PASSWORD}")
+
+    # The licence line is omitted entirely when we have no licence, rather than
+    # written as an empty value, so the server image sees it as unset.
+    local server_env=(
+        "ADMIN_PASSWORD=${OCTOPUS_PASSWORD}"
+        "DB_CONNECTION_STRING=Server=${E2E_SQL},1433;Initial Catalog=Octopus;Persist Security Info=False;User ID=sa;Password=${SA_PASSWORD};MultipleActiveResultSets=False;Connection Timeout=30;TrustServerCertificate=True"
+    )
+    [[ -n "$OCTOPUS_LICENSE" ]] && server_env+=("OCTOPUS_SERVER_BASE64_LICENSE=${OCTOPUS_LICENSE}")
+    E2E_ENV_SERVER=$(new_env_file "${server_env[@]}")
+
+    E2E_ENV_AGENT=$(new_env_file \
+        "ServerUsername=${OCTOPUS_USER}" \
+        "ServerPassword=${OCTOPUS_PASSWORD}")
+
+    E2E_ENV_API=$(new_env_file \
+        "OCTO_USER=${OCTOPUS_USER}" \
+        "OCTO_PASS=${OCTOPUS_PASSWORD}")
+}
 
 octopus_call() {
     docker run --rm --platform "$PLATFORM" --network "$E2E_NET" \
@@ -618,7 +657,10 @@ if [[ $SKIP_E2E -eq 0 ]]; then
     info "Spinning up SQL Server + Octopus Server, then registering a listening"
     info "and a polling Tentacle from the image just built."
 
+    # Trap first, so anything e2e_prepare manages to create is still cleaned up
+    # if it fails partway.
     trap 'e2e_teardown; e2e_rm_temp' EXIT
+    e2e_prepare
     e2e_teardown   # clear out anything left over from a previous run
 
     # Guard against the helper going missing: Docker would silently mount an
@@ -650,7 +692,6 @@ if [[ $SKIP_E2E -eq 0 ]]; then
         --env-file "$E2E_ENV_SERVER" \
         -e ACCEPT_EULA=Y \
         -e "ADMIN_USERNAME=${OCTOPUS_USER}" \
-        -e "MASTER_KEY=" \
         docker.packages.octopushq.com/octopusdeploy/octopusdeploy:latest >/dev/null
 
     if wait_for "Octopus Server" 900 \
@@ -705,97 +746,100 @@ if [[ $SKIP_E2E -eq 0 ]]; then
         -e "TargetName=${E2E_POLLING}" \
         "$IMAGE" >/dev/null
 
-if [[ -z "$OCTOPUS_LICENSE" ]]; then
-    # An unlicensed Octopus Server reports a Targets limit of 0, so
-    # `tentacle register-with` is refused before a machine is ever created.
-    # Everything up to that point still exercises the image for real, so
-    # assert on that instead of pretending the stage passed.
-    warn "No licence available, so no Tentacle can register (0-target limit)."
-    warn "Verifying configuration and server connectivity instead. Sign in to"
-    warn "1Password ('op signin') or set OCTOPUS_SERVER_BASE64_LICENSE to run"
-    warn "the full registration test."
+    if [[ -z "$OCTOPUS_LICENSE" ]]; then
+        # An unlicensed Octopus Server reports a Targets limit of 0, so
+        # `tentacle register-with` is refused before a machine is ever created.
+        # Everything up to that point still exercises the image for real, so
+        # assert on that instead of pretending the stage passed.
+        warn "No licence available, so no Tentacle can register (0-target limit)."
+        warn "Verifying configuration and server connectivity instead. Sign in to"
+        warn "1Password ('op signin') or set OCTOPUS_SERVER_BASE64_LICENSE to run"
+        warn "the full registration test."
 
-    # Self-configuration: create-instance, set paths, comms mode, certificate.
-    if wait_for_log "$E2E_LISTENING" 300 "A new certificate has been generated"; then
-        pass "listening Tentacle configured itself and generated a certificate"
-    else
-        fail "listening Tentacle configured itself and generated a certificate"
-        dump_logs "$E2E_LISTENING"
-    fi
-
-    # Reaching this line means the Tentacle resolved the server, opened an HTTP
-    # connection and authenticated with the username/password it was given.
-    if wait_for_log "$E2E_LISTENING" 300 "Registering the tentacle with the server at"; then
-        pass "listening Tentacle reached and authenticated against the server"
-    else
-        fail "listening Tentacle reached and authenticated against the server"
-        dump_logs "$E2E_LISTENING"
-    fi
-
-    # A licence refusal (rather than an auth or connection error) proves the
-    # whole request round-tripped and the only thing left is the licence.
-    if wait_for_log "$E2E_LISTENING" 300 "exceed the limits of your current license"; then
-        pass "listening Tentacle blocked only by the licence target limit"
-    else
-        fail "listening Tentacle blocked only by the licence target limit"
-        dump_logs "$E2E_LISTENING"
-    fi
-
-    # The polling Tentacle additionally opens a raw Halibut connection to the
-    # server communications port, which the listening one never does.
-    if wait_for_log "$E2E_POLLING" 300 "Connected successfully"; then
-        pass "polling Tentacle connected to the server comms port (10943)"
-    else
-        fail "polling Tentacle connected to the server comms port (10943)"
-        dump_logs "$E2E_POLLING"
-    fi
-
-else
-    # Registration is the first thing the entrypoint does, so both machines
-    # should appear in the API well before the health check runs.
-    if wait_for "Tentacle registration" 420 both_registered; then
-        pass "both Tentacles registered with the Octopus Server"
-    else
-        fail "both Tentacles registered with the Octopus Server"
-        dump_logs "$E2E_LISTENING"
-        dump_logs "$E2E_POLLING"
-    fi
-
-    MACHINES=$(machines_json)
-
-    # Assert on each machine individually so a half-working image is obvious.
-    for name in "$E2E_LISTENING" "$E2E_POLLING"; do
-        if [[ "$MACHINES" == *"\"Name\":\"$name\""* ]]; then
-            pass "registered: $name"
+        # Self-configuration: create-instance, set paths, comms mode, certificate.
+        if wait_for_log "$E2E_LISTENING" 300 "A new certificate has been generated"; then
+            pass "listening Tentacle configured itself and generated a certificate"
         else
-            fail "registered: $name"
-            dump_logs "$name"
+            fail "listening Tentacle configured itself and generated a certificate"
+            dump_logs "$E2E_LISTENING"
         fi
-    done
 
-    assert_contains "listening Tentacle registered as TentaclePassive" "$MACHINES" "TentaclePassive"
-    assert_contains "polling Tentacle registered as TentacleActive"    "$MACHINES" "TentacleActive"
+        # Reaching this line means the Tentacle resolved the server, opened an HTTP
+        # connection and authenticated with the username/password it was given.
+        if wait_for_log "$E2E_LISTENING" 300 "Registering the tentacle with the server at"; then
+            pass "listening Tentacle reached and authenticated against the server"
+        else
+            fail "listening Tentacle reached and authenticated against the server"
+            dump_logs "$E2E_LISTENING"
+        fi
 
-    # --- health -----------------------------------------------------------
-    # A machine only reports Healthy once the server has completed a health
-    # check against it, which exercises the Halibut connection in both
-    # directions - the real proof the image works.
-    info "Waiting for the Octopus Server to health-check both Tentacles..."
-    if wait_for "Tentacle health checks" 600 both_healthy; then
-        pass "both Tentacles reported Healthy"
+        # A licence refusal (rather than an auth or connection error) proves the
+        # whole request round-tripped and the only thing left is the licence.
+        if wait_for_log "$E2E_LISTENING" 300 "exceed the limits of your current license"; then
+            pass "listening Tentacle blocked only by the licence target limit"
+        else
+            fail "listening Tentacle blocked only by the licence target limit"
+            dump_logs "$E2E_LISTENING"
+        fi
+
+        # The polling Tentacle additionally opens a raw Halibut connection to the
+        # server communications port, which the listening one never does.
+        if wait_for_log "$E2E_POLLING" 300 "Connected successfully"; then
+            pass "polling Tentacle connected to the server comms port (10943)"
+        else
+            fail "polling Tentacle connected to the server comms port (10943)"
+            dump_logs "$E2E_POLLING"
+        fi
+
     else
-        fail "both Tentacles reported Healthy" \
-             "statuses: $(machines_json | grep -o '"HealthStatus":"[A-Za-z]*"' | tr '\n' ' ')"
-        dump_logs "$E2E_LISTENING"
-        dump_logs "$E2E_POLLING"
-    fi
+        # Registration is the first thing the entrypoint does, so both machines
+        # should appear in the API well before the health check runs.
+        if wait_for "Tentacle registration" 420 both_registered; then
+            pass "both Tentacles registered with the Octopus Server"
+        else
+            fail "both Tentacles registered with the Octopus Server"
+            dump_logs "$E2E_LISTENING"
+            dump_logs "$E2E_POLLING"
+        fi
 
-    # The version the server sees comes off the wire from the Tentacle itself,
-    # so this confirms the .deb inside the image is the one we just built.
-    MACHINES=$(machines_json)
-    SHORT_VERSION="${BUILD_NUMBER%%-*}"
-    assert_contains "server reports the built Tentacle version ($SHORT_VERSION)" "$MACHINES" "$SHORT_VERSION"
-fi
+        MACHINES=$(machines_json)
+
+        # Assert on each machine individually so a half-working image is obvious.
+        for name in "$E2E_LISTENING" "$E2E_POLLING"; do
+            if [[ "$MACHINES" == *"\"Name\":\"$name\""* ]]; then
+                pass "registered: $name"
+            else
+                fail "registered: $name"
+                dump_logs "$name"
+            fi
+        done
+
+        assert_contains "listening Tentacle registered as TentaclePassive" "$MACHINES" "TentaclePassive"
+        assert_contains "polling Tentacle registered as TentacleActive"    "$MACHINES" "TentacleActive"
+
+        # --- health -----------------------------------------------------------
+        # A machine only reports Healthy once the server has completed a health
+        # check against it, which exercises the Halibut connection in both
+        # directions - the real proof the image works.
+        info "Waiting for the Octopus Server to health-check both Tentacles..."
+        if wait_for "Tentacle health checks" 600 both_healthy; then
+            pass "both Tentacles reported Healthy"
+        else
+            fail "both Tentacles reported Healthy" \
+                 "statuses: $(machines_json | grep -o '"HealthStatus":"[A-Za-z]*"' | tr '\n' ' ')"
+            dump_logs "$E2E_LISTENING"
+            dump_logs "$E2E_POLLING"
+        fi
+
+        # The version the server sees comes off the wire from the Tentacle itself,
+        # so this confirms the .deb inside the image is the one we just built.
+        MACHINES=$(machines_json)
+        # EXPECTED_VERSION is the full FullSemVer (timestamp suffix stripped),
+        # not just the numeric prefix, so this cannot pass on a coincidental
+        # substring match elsewhere in the JSON.
+        assert_contains "server reports the built Tentacle version ($EXPECTED_VERSION)" \
+            "$MACHINES" "$EXPECTED_VERSION"
+    fi
 fi
 
 ###############################################################################

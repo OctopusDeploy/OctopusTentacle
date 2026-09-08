@@ -56,32 +56,23 @@ dos2unix /usr/local/bin/dind
 chmod +x /usr/local/bin/dockerd-entrypoint.sh
 dos2unix /usr/local/bin/dockerd-entrypoint.sh
 
-# KNOWN BUG: this condition never succeeds, so the legacy branch below is dead
-# code and nft is always selected.
+# Newer operating systems (RHEL in particular) have moved from iptables to
+# nftables, and dockerd fails to create its NAT chain against the wrong
+# backend. See
+# https://octopusdeploy.slack.com/archives/CNHBHV2BX/p1677028476905509 and
+# https://forums.docker.com/t/failing-to-start-dockerd-failed-to-create-nat-chain-docker/78269
 #
-# The intent is "if `iptables -nL` works, use legacy, else use nft". But `[ ]`
-# is the `test` builtin, not a subshell, so `iptables` is never executed - test
-# just compares the two literal strings `iptables` and `-nL`, and with two
-# arguments it expects the first to be a unary operator. `iptables` is not one,
-# so test errors and returns non-zero. The `> /dev/null 2>&1` is inside the
-# brackets too, so it redirects nothing useful.
+# This selection used to be wrapped in `if [ iptables -nL > /dev/null 2>&1 ]`,
+# intended as "use legacy if iptables works, else nft". That condition was
+# never true: `[` is the `test` builtin rather than a subshell, so `iptables`
+# never ran and test failed with "unary operator expected" (exit 2). nft has
+# therefore always been selected, and the legacy branch was dead code, so
+# removing the conditional and keeping nft is a no-op at runtime.
 #
-# The fix is to drop the brackets: `if iptables -nL > /dev/null 2>&1; then`.
-# Deliberately not done here: it would flip docker-in-docker's firewall
-# backend from nft to legacy on most hosts, which is a real behavioural change
-# and needs its own testing. Behaviour has been this way since the image was
-# based on Debian, so it is not a regression. Verified on Ubuntu 22.04 that
-# `readlink /etc/alternatives/iptables` is `/usr/sbin/iptables-nft`.
-if [ iptables -nL > /dev/null 2>&1 ]; then
-  # https://forums.docker.com/t/failing-to-start-dockerd-failed-to-create-nat-chain-docker/78269
-  update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy
-  update-alternatives --set iptables /usr/sbin/iptables-legacy
-else
-  # There can be issues with some (newer) operating systems are moving away from iptables to nftables, like RHEL.
-  # See https://octopusdeploy.slack.com/archives/CNHBHV2BX/p1677028476905509 for more details
-  update-alternatives --set ip6tables /usr/sbin/ip6tables-nft
-  update-alternatives --set iptables /usr/sbin/iptables-nft
-fi
+# Selecting legacy instead would be a genuine behavioural change for
+# docker-in-docker and needs its own testing - deliberately not done here.
+update-alternatives --set ip6tables /usr/sbin/ip6tables-nft
+update-alternatives --set iptables /usr/sbin/iptables-nft
 
 # Remove the apt cache
 apt-get clean

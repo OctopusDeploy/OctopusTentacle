@@ -1,15 +1,28 @@
 FROM ubuntu:22.04
 ENV ASPNETCORE_URLS=http://+:80 DOTNET_RUNNING_IN_CONTAINER=true
+
+# .NET 8 runtime dependencies.
+#
+# libc6, libgcc-s1, libgssapi-krb5-2, libstdc++6 and zlib1g were dropped from
+# this list: ubuntu:22.04 already ships them at the newest version jammy
+# offers, so naming them installed nothing.
+#
+# The three below are NOT redundant, and the distinction matters:
+#   ca-certificates  not in the base image at all
+#   libicu70         not in the base image at all
+#   libssl3          in the base, but at 3.0.2-0ubuntu1.26 while jammy-security
+#                    has 3.0.2-0ubuntu1.29. Naming it is what pulls that
+#                    security update in, so it has to stay.
+#
+# Beware when trimming this further: a package that is a no-op today stops
+# being one the moment the base image lags behind jammy-security. The smoke
+# tests in testing/docker-linux/build-and-test-linux-docker-image.sh assert all
+# eight are present in the built image regardless of what installed them.
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         ca-certificates \
-        libc6 \
-        libgcc-s1 \
-        libgssapi-krb5-2 \
         libicu70 \
-        libssl3 \
-        libstdc++6 \
-        zlib1g && \
+        libssl3 && \
     rm -rf /var/lib/apt/lists/*
 
 ARG BUILD_NUMBER
@@ -43,7 +56,7 @@ RUN /install-scripts/install-docker.sh
 # Install Tentacle
 COPY _artifacts/deb/tentacle_${BUILD_NUMBER}_amd64.deb /tmp/
 RUN apt-get update && \
-    apt install ./tentacle_${BUILD_NUMBER}_amd64.deb && \
+    apt-get install -y --no-install-recommends ./tentacle_${BUILD_NUMBER}_amd64.deb && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
     ln -s /opt/octopus/tentacle/Tentacle /usr/bin/tentacle
