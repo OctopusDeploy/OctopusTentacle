@@ -273,13 +273,25 @@ if [[ $SKIP_SMOKE -eq 0 ]]; then
     assert_contains "OpenSSL is 3.x" "$OPENSSL_VER" "OpenSSL 3."
 
     # --- Docker-in-Docker ------------------------------------------------
-    # install-docker.sh adds Docker's apt repo. That repo is distro-specific,
-    # so it has to point at .../linux/ubuntu now, not .../linux/debian.
-    DOCKER_LIST=$(run_in_image 'cat /etc/apt/sources.list.d/docker.list')
-    assert_contains "Docker apt source targets the Ubuntu repo" "$DOCKER_LIST" "download.docker.com/linux/ubuntu"
-    assert_contains "Docker apt source targets jammy"           "$DOCKER_LIST" "jammy"
+    # install-docker.sh adds Docker's apt repo. That repo is distro-specific, so
+    # it has to point at .../linux/ubuntu now, not .../linux/debian. The source
+    # is a deb822 .sources file, not a one-line .list, and the key is the
+    # ASCII-armoured one under /etc/apt/keyrings.
+    DOCKER_SOURCES=$(run_in_image 'cat /etc/apt/sources.list.d/docker.sources')
+    assert_contains "Docker apt source targets the Ubuntu repo" "$DOCKER_SOURCES" "download.docker.com/linux/ubuntu"
+    assert_contains "Docker apt source targets jammy"           "$DOCKER_SOURCES" "jammy"
+    assert_contains "Docker apt source is signed by the keyring" "$DOCKER_SOURCES" "Signed-By: /etc/apt/keyrings/docker.asc"
 
-    for bin in docker dockerd containerd; do
+    if run_in_image 'test -r /etc/apt/keyrings/docker.asc && grep -q "BEGIN PGP PUBLIC KEY" /etc/apt/keyrings/docker.asc' >/dev/null 2>&1; then
+        pass "Docker apt keyring is present, readable and armoured"
+    else
+        fail "Docker apt keyring is present, readable and armoured"
+    fi
+
+    # `ip` (iproute2) is part of the dind payload rather than a Docker binary:
+    # dockerd-entrypoint.sh needs it in _tls_san, or a dind TLS certificate is
+    # issued with no IP SANs. See the note in install-docker.sh.
+    for bin in docker dockerd containerd ip; do
         if run_in_image "command -v $bin >/dev/null" >/dev/null 2>&1; then
             pass "docker-in-docker binary present: $bin"
         else
@@ -405,21 +417,38 @@ OCTOPUS_LICENSE=""
 OCTOPUS_LICENSE_OP_REF="op://software licencing/octopus deploy ultimate license key base64/value"
 
 resolve_license() {
+    local from="OCTOPUS_SERVER_BASE64_LICENSE"
     OCTOPUS_LICENSE="${OCTOPUS_SERVER_BASE64_LICENSE:-}"
-    [[ -n "$OCTOPUS_LICENSE" ]] && return 0
-    [[ $NO_1PASSWORD -eq 0 ]] || return 0
-    [[ -t 0 ]] || return 0
-    command -v op >/dev/null 2>&1 || return 0
 
-    info "Looking up a development licence in 1Password (you may be prompted)..."
-    if OCTOPUS_LICENSE=$(op read "$OCTOPUS_LICENSE_OP_REF" 2>/dev/null) && [[ -n "$OCTOPUS_LICENSE" ]]; then
-        info "Licence retrieved from 1Password (${#OCTOPUS_LICENSE} chars)."
-    else
-        OCTOPUS_LICENSE=""
-        warn "Could not read a licence from 1Password. Sign in with 'op signin'"
-        warn "and check you have access to the 'software licencing' vault, or set"
-        warn "OCTOPUS_SERVER_BASE64_LICENSE yourself."
+    if [[ -z "$OCTOPUS_LICENSE" ]] \
+            && [[ $NO_1PASSWORD -eq 0 ]] \
+            && [[ -t 0 ]] \
+            && command -v op >/dev/null 2>&1; then
+        info "Looking up a development licence in 1Password (you may be prompted)..."
+        if OCTOPUS_LICENSE=$(op read "$OCTOPUS_LICENSE_OP_REF" 2>/dev/null) && [[ -n "$OCTOPUS_LICENSE" ]]; then
+            from="1Password"
+        else
+            OCTOPUS_LICENSE=""
+            warn "Could not read a licence from 1Password. Sign in with 'op signin'"
+            warn "and check you have access to the 'software licencing' vault, or set"
+            warn "OCTOPUS_SERVER_BASE64_LICENSE yourself."
+        fi
     fi
+
+    # A licence is single-line base64, so strip any newlines. An embedded one
+    # would split the --env-file entry in two, handing the server a truncated
+    # licence plus a garbage second variable, and would also break the sed in
+    # dump_logs that scrubs the licence out of container logs. Both are painful
+    # to diagnose from the output, so normalise once here rather than defending
+    # against it in two places.
+    OCTOPUS_LICENSE=$(printf '%s' "$OCTOPUS_LICENSE" | tr -d '\n\r')
+
+    [[ -n "$OCTOPUS_LICENSE" ]] \
+        && info "Licence loaded from ${from} (${#OCTOPUS_LICENSE} chars)."
+
+    # Explicit, because the test above is the last command and a missing licence
+    # is not a failure - stage 4 falls back to its unlicensed assertions.
+    return 0
 }
 
 # Note: this also runs *before* the stack is started, to clear out anything a
