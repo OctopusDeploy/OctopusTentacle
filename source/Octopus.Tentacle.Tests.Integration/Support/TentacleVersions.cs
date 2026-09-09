@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
-using Octopus.Tentacle.CommonTestUtils;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
@@ -40,17 +36,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             v5_0_15_LastOfVersion5
         };
 
-        /// <summary>
-        /// Whether the version 5 releases can actually be run on this host.
-        /// <para>
-        /// They were never published for MacOS or linux-arm64. They are also .NET Core 3.1
-        /// builds, which load OpenSSL 1.x at start-up and abort with "No usable version of
-        /// libssl was found" on a host that only has OpenSSL 3 - Ubuntu 22.04 and newer.
-        /// </para>
-        /// This is one predicate rather than two so the download list and the test case
-        /// source cannot disagree: a version present in the case source but absent from
-        /// AllTestedVersionsToDownload makes TentacleFetcher throw.
-        /// </summary>
+        // Tests whether Tentacle version 5 releases can actually be run on this host.
         static readonly bool Version5IsRunnableHere = IsVersion5RunnableHere();
 
         public static Version[] AllTestedVersionsToDownload = GetAllTestedVersionsToDownload();
