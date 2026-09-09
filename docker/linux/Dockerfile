@@ -13,14 +13,26 @@ RUN apt-get update && \
 ARG BUILD_NUMBER
 ARG BUILD_DATE
 
+# CLI tools this image is expected to provide. curl, jq, sudo, xxd and openssl are published
+# surface - customer deployment steps and Kubernetes lifecycle hooks shell out to them - so
+# don't drop one just because nothing in this repo calls it. install-docker.sh reinstalls
+# every one of these except xxd; they stay declared here because that list is Docker's to
+# change, not ours, and dropping them from here saves no image size.
+#   curl     - public-IP lookup in configure-tentacle.sh; customer postStart/preStop hooks.
+#   dos2unix - install-docker.sh strips CRLF from dind and dockerd-entrypoint.sh (build only).
+#   jq       - customer hooks and scripts parsing Octopus API responses (#278).
+#   sudo     - deployment scripts that escalate; also a dind runtime dep for --userns-remap.
+#   xxd      - was Calamari's bash variable-set decoder (#1157); need removed by Calamari#1797.
+#   openssl  - Calamari's bash bootstrap pipes every service message and variable through it,
+#              so declare it rather than inheriting it from install-docker.sh (LEV-1843).
 RUN apt-get update && \
-    apt-get install -y \
+    apt-get install -y --no-install-recommends \
         curl \
         dos2unix \
         jq \
         sudo \
         xxd \
-        && \
+        openssl && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 

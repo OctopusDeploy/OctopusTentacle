@@ -5,7 +5,6 @@ set -eux
 
 # Add the apt sources for Docker (they're not part of the stock Ubuntu distro).
 apt-get update
-
 apt-get install -y --no-install-recommends \
     ca-certificates \
     curl
@@ -27,7 +26,7 @@ EOF
 # Install Docker and its runtime dependencies.
 # https://github.com/docker/docker/blob/master/project/PACKAGERS.md#runtime-dependencies
 apt-get update
-apt-get install -y \
+apt-get install -y --no-install-recommends \
     btrfs-progs \
     containerd.io \
     docker-ce \
