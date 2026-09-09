@@ -16,7 +16,7 @@ namespace Octopus.Tentacle.Commands
 {
     public class RegisterMachineCommand : RegisterMachineCommand<IRegisterMachineOperation>
     {
-        public RegisterMachineCommand(Lazy<IRegisterMachineOperation> lazyRegisterMachineOperation, Lazy<IWritableTentacleConfiguration> configuration, ISystemLog log, IApplicationInstanceSelector selector, Lazy<IOctopusServerChecker> octopusServerChecker, IProxyConfigParser proxyConfig, IOctopusClientInitializer octopusClientInitializer, ISpaceRepositoryFactory spaceRepositoryFactory, ILogFileOnlyLogger logFileOnlyLogger) : base(lazyRegisterMachineOperation, configuration, log, selector, octopusServerChecker, proxyConfig, octopusClientInitializer, spaceRepositoryFactory, logFileOnlyLogger)
+        public RegisterMachineCommand(Lazy<IRegisterMachineOperation> lazyRegisterMachineOperation, Lazy<IWritableTentacleConfiguration> configuration, ISystemLog log, IApplicationInstanceSelector selector, Lazy<IOctopusServerChecker> octopusServerChecker, IProxyConfigParser proxyConfig, IOctopusClientInitializer octopusClientInitializer, ISpaceRepositoryFactory spaceRepositoryFactory, ILogFileOnlyLogger logFileOnlyLogger, IServerCertificateTrustConfirmation serverCertificateTrustConfirmation) : base(lazyRegisterMachineOperation, configuration, log, selector, octopusServerChecker, proxyConfig, octopusClientInitializer, spaceRepositoryFactory, logFileOnlyLogger, serverCertificateTrustConfirmation)
         {
         }
     }
@@ -37,8 +37,9 @@ namespace Octopus.Tentacle.Commands
                                       IProxyConfigParser proxyConfig,
                                       IOctopusClientInitializer octopusClientInitializer,
                                       ISpaceRepositoryFactory spaceRepositoryFactory,
-                                      ILogFileOnlyLogger logFileOnlyLogger)
-            : base(lazyRegisterMachineOperation, configuration, log, selector, octopusServerChecker, proxyConfig, octopusClientInitializer, spaceRepositoryFactory, logFileOnlyLogger)
+                                      ILogFileOnlyLogger logFileOnlyLogger,
+                                      IServerCertificateTrustConfirmation serverCertificateTrustConfirmation)
+            : base(lazyRegisterMachineOperation, configuration, log, selector, octopusServerChecker, proxyConfig, octopusClientInitializer, spaceRepositoryFactory, logFileOnlyLogger, serverCertificateTrustConfirmation)
         {
             Options.Add("env|environment=", "The environment name, slug or Id to add the machine to - e.g., 'Production'; specify this argument multiple times to add multiple environments", s => environments.Add(s));
             Options.Add("r|role=", "The machine role that the machine will assume - e.g., 'web-server'; specify this argument multiple times to add multiple roles", s => roles.Add(s));

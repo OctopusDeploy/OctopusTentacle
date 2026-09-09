@@ -8,7 +8,7 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage("Usage", "DE0003:API is deprecated",
     Justification = "<Pending>",
     Scope = "member",
-    Target = "~M:Octopus.Tentacle.Communications.OctopusServerChecker.CheckServerCommunicationsIsOpen(System.Uri,System.Net.IWebProxy)~System.String")]
+    Target = "~M:Octopus.Tentacle.Communications.OctopusServerChecker.CheckServerCommunicationsIsOpen(System.Uri,System.Net.IWebProxy)~Octopus.Tentacle.Communications.OctopusServerCheckResult")]
 [assembly: SuppressMessage("Usage",
     "DE0003:API is deprecated",
     Justification = "<Pending>",
