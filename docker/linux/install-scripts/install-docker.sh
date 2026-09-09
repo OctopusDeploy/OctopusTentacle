@@ -25,6 +25,7 @@ EOF
 
 # Install Docker and its runtime dependencies.
 # https://github.com/docker/docker/blob/master/project/PACKAGERS.md#runtime-dependencies
+# The trailing five were docker-ce/-cli Recommends, explicit now that --no-install-recommends drops them (LEV-1843).
 apt-get update
 apt-get install -y --no-install-recommends \
     btrfs-progs \
@@ -41,7 +42,12 @@ apt-get install -y --no-install-recommends \
     sudo \
     uidmap \
     xfsprogs \
-    xz-utils
+    xz-utils \
+    docker-buildx-plugin \
+    docker-compose-plugin \
+    docker-ce-rootless-extras \
+    git \
+    openssh-client
 
 # set up subuid/subgid so that "--userns-remap=default" works out-of-the-box
 addgroup --system dockremap
