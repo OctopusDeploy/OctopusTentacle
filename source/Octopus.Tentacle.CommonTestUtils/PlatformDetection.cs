@@ -14,8 +14,8 @@ namespace Octopus.Tentacle.CommonTestUtils
         // OpenSSL, rather than on the first touch of any member of this class.
         static readonly Lazy<bool> LinuxWithoutOpenSsl1x = new(() => IsRunningOnNix && !CanDlopenOpenSsl1x());
 
-// NativeLibrary was introduced in .NET Core 3.0, so it does not exist on net48.
 #if NETFRAMEWORK
+        // NativeLibrary was introduced in .NET Core 3.0, so it does not exist on net48.
         static bool CanDlopenOpenSsl1x() => false;
 #else
         static bool CanDlopenOpenSsl1x()
