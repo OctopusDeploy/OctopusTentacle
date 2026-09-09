@@ -77,3 +77,4 @@ Please contact [Octopus Support](https://octopus.com/support) for support.
 ## Additional Information ##
 
 * These images are based off the [OctopusTentacle](https://github.com/OctopusDeploy/OctopusTentacle) repo on GitHub.
+* Contributors changing the Linux image can build and verify it locally with [`testing/docker-linux/build-and-test-linux-docker-image.sh`](https://github.com/OctopusDeploy/OctopusTentacle/blob/main/testing/docker-linux/build-and-test-linux-docker-image.sh), which reproduces the TeamCity build chain and then smoke- and end-to-end-tests the resulting image.

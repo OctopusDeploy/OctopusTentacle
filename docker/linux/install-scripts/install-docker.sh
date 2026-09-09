@@ -3,26 +3,29 @@ set -eux
 
 # This script is adapted from https://github.com/docker-library/docker/blob/master/19.03/dind/Dockerfile
 
-
-# Add the apt sources for Docker (they're not part of the stock Debian distro).
+# Add the apt sources for Docker (they're not part of the stock Ubuntu distro).
 apt-get update
 
 apt-get install -y --no-install-recommends \
-    apt-transport-https \
     ca-certificates \
-    curl \
-    gnupg \
-    lsb-release
+    curl
 
-curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+# https://docs.docker.com/engine/install/ubuntu/
+install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+chmod a+r /etc/apt/keyrings/docker.asc
 
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian \
-  $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-
+cat > /etc/apt/sources.list.d/docker.sources <<EOF
+Types: deb
+URIs: https://download.docker.com/linux/ubuntu
+Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
+Components: stable
+Architectures: $(dpkg --print-architecture)
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
 
 # Install Docker and its runtime dependencies.
 # https://github.com/docker/docker/blob/master/project/PACKAGERS.md#runtime-dependencies
-
 apt-get update
 apt-get install -y \
     btrfs-progs \
@@ -31,6 +34,7 @@ apt-get install -y \
     docker-ce-cli \
     dos2unix \
     e2fsprogs \
+    iproute2 \
     iptables \
     jq \
     openssl \
@@ -56,16 +60,8 @@ dos2unix /usr/local/bin/dind
 chmod +x /usr/local/bin/dockerd-entrypoint.sh
 dos2unix /usr/local/bin/dockerd-entrypoint.sh
 
-if [ iptables -nL > /dev/null 2>&1 ]; then
-  # https://forums.docker.com/t/failing-to-start-dockerd-failed-to-create-nat-chain-docker/78269
-  update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy
-  update-alternatives --set iptables /usr/sbin/iptables-legacy
-else
-  # There can be issues with some (newer) operating systems are moving away from iptables to nftables, like RHEL.
-  # See https://octopusdeploy.slack.com/archives/CNHBHV2BX/p1677028476905509 for more details
-  update-alternatives --set ip6tables /usr/sbin/ip6tables-nft
-  update-alternatives --set iptables /usr/sbin/iptables-nft
-fi
+update-alternatives --set ip6tables /usr/sbin/ip6tables-nft
+update-alternatives --set iptables /usr/sbin/iptables-nft
 
 # Remove the apt cache
 apt-get clean

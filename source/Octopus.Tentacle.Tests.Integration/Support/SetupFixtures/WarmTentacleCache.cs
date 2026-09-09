@@ -6,17 +6,29 @@ using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers;
 using Octopus.Tentacle.Util;
 using Serilog;
+using System.Runtime.InteropServices;
+using CommonTestUtilsPlatformDetection = Octopus.Tentacle.CommonTestUtils.PlatformDetection;
 using PlatformDetection = Octopus.Tentacle.Util.PlatformDetection;
 
 namespace Octopus.Tentacle.Tests.Integration.Support.SetupFixtures
 {
     public class WarmTentacleCache : ISetupFixture
     {
-        private CancellationTokenSource cts = new();
+        private readonly CancellationTokenSource cts = new();
 
         public void OneTimeSetUp(ILogger logger)
         {
             logger.Fatal("Downloading all tentacles now");
+
+            // Say so out loud when versions drop out of the run.
+            var excludedVersions = TentacleVersions.VersionsUnsupportedByCurrentOperatingSystemAndArchitecture;
+            if (excludedVersions.Count > 0)
+            {
+                logger.Warning("Skipping Tentacle versions {Versions} - they are not runnable on this host ({RuntimeIdentifier}, Linux without OpenSSL 1.x: {IsLinuxWithoutOpenSsl1x})",
+                    string.Join<Version>(", ", excludedVersions),
+                    RuntimeInformation.RuntimeIdentifier,
+                    CommonTestUtilsPlatformDetection.IsLinuxWithoutOpenSsl1x);
+            }
 
             var tasks = new List<Task>();
             var concurrentDownloads = TeamCityDetection.IsRunningInTeamCity() ? 4 : 1;

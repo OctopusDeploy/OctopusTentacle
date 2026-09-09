@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
 using Octopus.Tentacle.CommonTestUtils;
 
@@ -33,35 +32,37 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         // The version compiled from the current source
         public static readonly Version? Current = null;
 
-        public static Version[] AllTestedVersionsToDownload = GetAllTestedVersionsToDownload();
-
-        public static readonly Version[] VersionsUnsupportedByCurrentOperatingSystemAndArchitecture = GetVersionsUnsupportedByCurrentOperatingSystemAndArchitecture();
-
-        static Version[] GetVersionsUnsupportedByCurrentOperatingSystemAndArchitecture()
+        static readonly IReadOnlyList<Version> Version5Releases = new[]
         {
-            if (!PlatformDetection.IsRunningOnMac && RuntimeInformation.ProcessArchitecture != Architecture.Arm64) return Array.Empty<Version>();
+            v5_0_4_FirstLinuxRelease,
+            v5_0_12_AutofacServiceFactoryIsInShared,
+            v5_0_15_LastOfVersion5
+        };
 
-            if (PlatformDetection.IsRunningOnWindows) return Array.Empty<Version>();
+        // Tests whether Tentacle version 5 releases can actually be run on this host.
+        static readonly bool Version5IsRunnableHere = IsVersion5RunnableHere();
 
-            // These versions are not available on MacOS or ARM
-            return new []
-            {
-                v5_0_4_FirstLinuxRelease,
-                v5_0_12_AutofacServiceFactoryIsInShared,
-                v5_0_15_LastOfVersion5
-            };
+        public static readonly Version[] AllTestedVersionsToDownload = GetAllTestedVersionsToDownload();
+
+        public static readonly IReadOnlyList<Version> VersionsUnsupportedByCurrentOperatingSystemAndArchitecture = GetVersionsUnsupportedByCurrentOperatingSystemAndArchitecture();
+
+        static bool IsVersion5RunnableHere()
+        {
+            if (PlatformDetection.IsRunningOnWindows) return true;
+            if (PlatformDetection.IsRunningOnMac) return false;
+            if (RuntimeInformation.ProcessArchitecture == Architecture.Arm64) return false;
+
+            return !PlatformDetection.IsLinuxWithoutOpenSsl1x;
         }
+
+        static IReadOnlyList<Version> GetVersionsUnsupportedByCurrentOperatingSystemAndArchitecture()
+            => Version5IsRunnableHere ? Array.Empty<Version>() : Version5Releases;
+
         static Version[] GetAllTestedVersionsToDownload()
         {
             var versions = new List<Version>();
 
-            if (PlatformDetection.IsRunningOnWindows || (!PlatformDetection.IsRunningOnMac && RuntimeInformation.ProcessArchitecture != Architecture.Arm64))
-            {
-                // These versions are not available on MacOS or ARM
-                versions.Add(v5_0_4_FirstLinuxRelease);
-                versions.Add(v5_0_12_AutofacServiceFactoryIsInShared);
-                versions.Add(v5_0_15_LastOfVersion5);
-            }
+            if (Version5IsRunnableHere) versions.AddRange(Version5Releases);
 
             versions.Add(v6_3_417_LastWithScriptServiceV1Only);
             versions.Add(v6_3_451_NoCapabilitiesService);

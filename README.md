@@ -53,6 +53,16 @@ git commit --allow-empty -m "+semver: major"
 
 For further details refer to [Tentacle Rollout](docs/rollout.md).
 
+#### Testing the Linux Docker image locally
+
+The Linux Tentacle container image (`docker/linux/Dockerfile`) is built in TeamCity rather than by NUKE, and there is no `Test: Linux Docker Image` configuration to match the Windows one - `Build: Linux Docker image` feeds straight into `Build: Docker manifest` without ever starting a container. Build-time regressions go red in CI; runtime ones do not.
+
+[`testing/docker-linux/build-and-test-linux-docker-image.sh`](testing/docker-linux/build-and-test-linux-docker-image.sh) reproduces that chain locally - it builds the `.deb`, builds the image with the same `docker-compose.build.yml` command TeamCity runs, smoke-tests the result, and optionally registers a listening and a polling Tentacle against a real Octopus Server. Run it before changing anything under `docker/linux/`:
+
+```
+./testing/docker-linux/build-and-test-linux-docker-image.sh --help
+```
+
 ### Bundling Tentacle with Octopus Server
 
 We bundle Tentacle inside Octopus Server to make it super duper easy to keep Tentacle updated across entire fleets of customer installations. Choosing the version of Tentacle to bundle inside Octopus Server is currently a manual process.
@@ -133,3 +143,4 @@ NOTE: This script has only been tested on MacOS so far and requires Docker Deskt
 ## Additional Resources
 
 - Scripts to help with manual testing can be found in [./testing](./testing/README.md).
+- To build and verify the Linux Tentacle container image locally, see [./testing/docker-linux](./testing/docker-linux/build-and-test-linux-docker-image.sh).

@@ -1,15 +1,13 @@
-FROM debian:11-slim
+FROM ubuntu:22.04
 ENV ASPNETCORE_URLS=http://+:80 DOTNET_RUNNING_IN_CONTAINER=true
+
+# .NET 8 runtime dependencies.
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         ca-certificates \
-        libc6 \
-        libgcc1 \
-        libgssapi-krb5-2 \
-        libicu67 \
-        libssl1.1 \
-        libstdc++6 \
-        zlib1g && \
+        libicu70 \
+        libssl3 && \
+    apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 ARG BUILD_NUMBER
@@ -43,7 +41,7 @@ RUN /install-scripts/install-docker.sh
 # Install Tentacle
 COPY _artifacts/deb/tentacle_${BUILD_NUMBER}_amd64.deb /tmp/
 RUN apt-get update && \
-    apt install ./tentacle_${BUILD_NUMBER}_amd64.deb && \
+    apt-get install -y --no-install-recommends ./tentacle_${BUILD_NUMBER}_amd64.deb && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
     ln -s /opt/octopus/tentacle/Tentacle /usr/bin/tentacle
