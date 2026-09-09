@@ -1,4 +1,7 @@
+using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using Octopus.Tentacle.CommonTestUtils;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
@@ -39,7 +42,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         // Tests whether Tentacle version 5 releases can actually be run on this host.
         static readonly bool Version5IsRunnableHere = IsVersion5RunnableHere();
 
-        public static Version[] AllTestedVersionsToDownload = GetAllTestedVersionsToDownload();
+        public static readonly Version[] AllTestedVersionsToDownload = GetAllTestedVersionsToDownload();
 
         public static readonly IReadOnlyList<Version> VersionsUnsupportedByCurrentOperatingSystemAndArchitecture = GetVersionsUnsupportedByCurrentOperatingSystemAndArchitecture();
 
