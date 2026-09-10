@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Net;
+using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,12 +21,16 @@ using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Startup;
+using Octopus.Tentacle.Tests.Support.TestAttributes;
 
 namespace Octopus.Tentacle.Tests.Commands
 {
     [TestFixture]
     public class RegisterMachineCommandFixture : CommandFixture<RegisterMachineCommand>
     {
+        const string WebSocketAddress = "wss://polling.localhost/OctopusComms";
+        const string WebSocketSslThumbprint = "76B1C4A6F1E2B3C4D5E6F708192A3B4C5D6E7F80";
+        
         IWritableTentacleConfiguration configuration;
         ISystemLog log;
         X509Certificate2 certificate;
@@ -33,6 +38,7 @@ namespace Octopus.Tentacle.Tests.Commands
         IOctopusServerChecker serverChecker;
         IOctopusAsyncRepository repository;
         string serverThumbprint;
+        IPrompt trustPrompt;
 
         [SetUp]
         public void BeforeEachTest()
@@ -42,6 +48,11 @@ namespace Octopus.Tentacle.Tests.Commands
             operation = Substitute.For<IRegisterMachineOperation>();
             serverChecker = Substitute.For<IOctopusServerChecker>();
             log = Substitute.For<ISystemLog>();
+
+            // Assume an operator is present and says yes, unless an individual test decides otherwise.
+            trustPrompt = Substitute.For<IPrompt>();
+            trustPrompt.CanPrompt.Returns(true);
+            trustPrompt.Confirm(Arg.Any<string>(), Arg.Any<string>()).Returns(true);
             var octopusClientInitializer = Substitute.For<IOctopusClientInitializer>();
             var octopusAsyncClient = Substitute.For<IOctopusAsyncClient>();
 
@@ -68,7 +79,8 @@ namespace Octopus.Tentacle.Tests.Commands
                                                  new ProxyConfigParser(),
                                                  octopusClientInitializer,
                                                  new SpaceRepositoryFactory(),
-                                                 Substitute.For<ILogFileOnlyLogger>());
+                                                 Substitute.For<ILogFileOnlyLogger>(),
+                                                 new ServerCertificateTrustConfirmation(log, trustPrompt));
 
             configuration.ServicesPortNumber.Returns(90210);
             certificate = new CertificateGenerator(new NullLog()).GenerateNew("CN=Hello");
@@ -222,6 +234,80 @@ namespace Octopus.Tentacle.Tests.Commands
         }
 
         [Test]
+        [WindowsTest]
+        public void ShouldTrustAWebSocketServerWhoseCertificateValidates()
+        {
+            StartWebSocketRegistration(SslPolicyErrors.None);
+
+            trustPrompt.DidNotReceiveWithAnyArgs().Confirm(default!, default!);
+
+            configuration.Received().AddOrUpdateTrustedOctopusServer(
+                Arg.Is<OctopusServerConfiguration>(x => x.Thumbprint == WebSocketSslThumbprint &&
+                    x.CommunicationStyle == CommunicationStyle.TentacleActive));
+        }
+
+        [Test]
+        [WindowsTest]
+        public void ShouldNotTrustAWebSocketServerWhoseCertificateFailsValidationWhenTheOperatorDeclines()
+        {
+            trustPrompt.Confirm(Arg.Any<string>(), Arg.Any<string>()).Returns(false);
+
+            Assert.Throws<ControlledFailureException>(() => StartWebSocketRegistration(SslPolicyErrors.RemoteCertificateChainErrors));
+
+            configuration.DidNotReceiveWithAnyArgs().AddOrUpdateTrustedOctopusServer(default!);
+            operation.DidNotReceive().ExecuteAsync(repository);
+        }
+
+        [Test]
+        [WindowsTest]
+        public void ShouldNotTrustAWebSocketServerWhoseCertificateFailsValidationWhenNobodyCanBeAsked()
+        {
+            trustPrompt.CanPrompt.Returns(false);
+
+            Assert.Throws<ControlledFailureException>(() => StartWebSocketRegistration(SslPolicyErrors.RemoteCertificateChainErrors));
+
+            configuration.DidNotReceiveWithAnyArgs().AddOrUpdateTrustedOctopusServer(default!);
+        }
+
+        [Test]
+        [WindowsTest]
+        public void ShouldTrustAWebSocketServerWhoseCertificateFailsValidationWhenItsThumbprintWasSuppliedUpFront()
+        {
+            StartWebSocketRegistration(SslPolicyErrors.RemoteCertificateChainErrors,
+                $"--server-web-socket-thumbprint={WebSocketSslThumbprint}");
+
+            trustPrompt.DidNotReceiveWithAnyArgs().Confirm(default!, default!);
+
+            configuration.Received().AddOrUpdateTrustedOctopusServer(
+                Arg.Is<OctopusServerConfiguration>(x => x.Thumbprint == WebSocketSslThumbprint));
+        }
+
+        [Test]
+        [WindowsTest]
+        public void ShouldNotTrustAWebSocketServerWhoseCertificateDoesNotMatchTheSuppliedThumbprint()
+        {
+            Assert.Throws<ControlledFailureException>(() => StartWebSocketRegistration(SslPolicyErrors.None,
+                "--server-web-socket-thumbprint=0123456789ABCDEF0123456789ABCDEF01234567"));
+
+            configuration.DidNotReceiveWithAnyArgs().AddOrUpdateTrustedOctopusServer(default!);
+        }
+
+        [Test]
+        public void ShouldRejectAServerWebSocketThumbprintWithoutAServerWebSocketAddress()
+        {
+            var ex = Assert.Throws<ControlledFailureException>(() => Start("--env=Development",
+                "--server=http://localhost",
+                "--name=MyMachine",
+                "--apiKey=ABC123",
+                "--force",
+                "--role=app-server",
+                "--comms-style=TentacleActive",
+                $"--server-web-socket-thumbprint={WebSocketSslThumbprint}"));
+
+            ex!.Message.Should().Be("Option --server-web-socket-thumbprint can only be used with --server-web-socket.");
+        }
+
+        [Test]
         public void ShouldReuseSubscriptionIdForPollingTentacleIfReRegistering()
         {
             var subscriptionId = "poll://xz6h25sh28shx52/";
@@ -330,6 +416,26 @@ namespace Octopus.Tentacle.Tests.Commands
                 "--server-subscription-id=https://xz6h25sh28shx52/"
             ));
             ex.Message.Should().Be("The ServerSubscriptionId must start with poll://");
+        }
+        
+        void StartWebSocketRegistration(SslPolicyErrors certificateErrors, params string[] additionalArgs)
+        {
+            serverChecker.CheckServerCommunicationsIsOpen(Arg.Any<Uri>(), Arg.Any<IWebProxy>())
+                .Returns(new OctopusServerCommunicationsCheckResult(WebSocketSslThumbprint, certificateErrors));
+
+            var args = new[]
+            {
+                "--env=Development",
+                "--server=http://localhost",
+                "--name=MyMachine",
+                "--apiKey=ABC123",
+                "--force",
+                "--role=app-server",
+                "--comms-style=TentacleActive",
+                $"--server-web-socket={WebSocketAddress}"
+            };
+
+            Start(args.Concat(additionalArgs).ToArray());
         }
     }
 }

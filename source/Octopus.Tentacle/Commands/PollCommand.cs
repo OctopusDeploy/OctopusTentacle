@@ -24,11 +24,13 @@ namespace Octopus.Tentacle.Commands
         readonly IOctopusClientInitializer octopusClientInitializer;
         readonly ISystemLog log;
         readonly IApplicationInstanceSelector selector;
+        readonly IServerCertificateTrustConfirmation serverCertificateTrustConfirmation;
         readonly ApiEndpointOptions api;
         int? serverCommsPort = null;
         string serverWebSocketAddress = null!;
         string serverCommsAddress = null!;
         bool reuseThumbprint;
+        string? serverWebSocketThumbprint;
 
         public PollCommand(Lazy<IWritableTentacleConfiguration> configuration,
                            ISystemLog log,
@@ -36,7 +38,8 @@ namespace Octopus.Tentacle.Commands
                            Lazy<IOctopusServerChecker> octopusServerChecker,
                            IProxyConfigParser proxyConfig,
                            IOctopusClientInitializer octopusClientInitializer,
-                           ILogFileOnlyLogger logFileOnlyLogger)
+                           ILogFileOnlyLogger logFileOnlyLogger,
+                           IServerCertificateTrustConfirmation serverCertificateTrustConfirmation)
             : base(selector, log, logFileOnlyLogger)
         {
             this.configuration = configuration;
@@ -45,6 +48,7 @@ namespace Octopus.Tentacle.Commands
             this.octopusClientInitializer = octopusClientInitializer;
             this.log = log;
             this.selector = selector;
+            this.serverCertificateTrustConfirmation = serverCertificateTrustConfirmation;
 
             // purposefully not adding this with AddOptionSet because
             // we only want to validate it if reuseThumbprint is false.
@@ -54,6 +58,7 @@ namespace Octopus.Tentacle.Commands
             Options.Add("server-comms-port=", "The comms port on the Octopus Server; the default is " + DefaultServerCommsPort + ". If specified, this will take precedence over any port number in server-comms-address.", s => serverCommsPort = int.Parse(s));
             Options.Add("server-web-socket=", "When using active communication over websockets, the address of the Octopus Server, eg 'wss://example.com/OctopusComms'. Refer to http://g.octopushq.com/WebSocketComms", s => serverWebSocketAddress = s);
             Options.Add("reuse-server-thumbprint", "Reuse the Server Thumbprint from the first trusted server instance currently configured", _ => reuseThumbprint = true);
+            Options.Add("server-web-socket-thumbprint=", "When using active communication over websockets, the thumbprint of your server's websockets certificate, eg 'AB1C2D...'. This is the SSL certificate configured wherever TLS is terminated for the websockets endpoint, not the Octopus Server's Tentacle Communications certificate. When supplied the certificate is trusted only if its thumbprint matches, which allows registering against an endpoint whose certificate cannot otherwise be validated (for example a self-signed certificate) without prompting.", s => serverWebSocketThumbprint = s);
         }
 
         protected override void Start()
@@ -68,9 +73,16 @@ namespace Octopus.Tentacle.Commands
             {
                 api.Validate();
             }
+            else if (!string.IsNullOrWhiteSpace(serverWebSocketThumbprint))
+            {
+                throw new ControlledFailureException("Option --server-web-socket-thumbprint cannot be used with --reuse-server-thumbprint, which takes the thumbprint from an already trusted server instead of checking the one the server presents.");
+            }
 
             if (!string.IsNullOrEmpty(serverWebSocketAddress) && !string.IsNullOrEmpty(serverCommsAddress))
                 throw new ControlledFailureException("Please specify a --server-web-socket, or a --server-comms-address - not both.");
+
+            if (!string.IsNullOrWhiteSpace(serverWebSocketThumbprint) && string.IsNullOrWhiteSpace(serverWebSocketAddress))
+                throw new ControlledFailureException("Option --server-web-socket-thumbprint can only be used with --server-web-socket.");
 
             var serverAddress = GetAddress();
 
@@ -100,7 +112,7 @@ namespace Octopus.Tentacle.Commands
             //if we are on a polling tentacle with a polling proxy set up, use the api through that proxy
             var proxyOverride = proxyConfig.ParseToWebProxy(configuration.Value.PollingProxyConfiguration);
 
-            var sslThumbprint = octopusServerChecker.Value.CheckServerCommunicationsIsOpen(serverAddress, proxyOverride);
+            var serverCheckResult = octopusServerChecker.Value.CheckServerCommunicationsIsOpen(serverAddress, proxyOverride);
 
             log.Info($"Configuring Tentacle to poll the server at {api.ServerUri}");
 
@@ -108,7 +120,7 @@ namespace Octopus.Tentacle.Commands
 
             var repository = new OctopusAsyncRepository(client);
 
-            var serverThumbprint = await GetServerThumbprint(repository, serverAddress, sslThumbprint);
+            var serverThumbprint = await GetServerThumbprint(repository, serverAddress, serverCheckResult);
 
             var alreadyConfiguredServerInCluster = GetAlreadyConfiguredServerInCluster(serverThumbprint);
 
@@ -148,14 +160,17 @@ namespace Octopus.Tentacle.Commands
             return pollingServerConfiguration;
         }
 
-        async Task<string> GetServerThumbprint(IOctopusAsyncRepository repository, Uri serverAddress, string sslThumbprint)
+        async Task<string> GetServerThumbprint(IOctopusAsyncRepository repository, Uri serverAddress, OctopusServerCommunicationsCheckResult serverCheckResult)
         {
             if (serverAddress != null && ServiceEndPoint.IsWebSocketAddress(serverAddress))
             {
-                if (sslThumbprint == null)
-                    throw new ControlledFailureException($"Could not determine thumbprint of the SSL Certificate at {serverAddress}");
-                return sslThumbprint;
+                serverCertificateTrustConfirmation.EnsureCertificateIsTrusted(serverAddress, serverCheckResult, serverWebSocketThumbprint);
+
+                return serverCheckResult.Thumbprint;
             }
+
+            // Every other address takes its thumbprint from the authenticated Octopus API rather than from the probe,
+            // so there is nothing here for the operator to vouch for.
             return (await repository.CertificateConfiguration.GetOctopusCertificate()).Thumbprint;
         }
 

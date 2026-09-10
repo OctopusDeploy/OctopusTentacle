@@ -29,6 +29,7 @@ namespace Octopus.Tentacle.Commands
         readonly IProxyConfigParser proxyConfig;
         readonly IOctopusClientInitializer octopusClientInitializer;
         readonly ISpaceRepositoryFactory spaceRepositoryFactory;
+        readonly IServerCertificateTrustConfirmation serverCertificateTrustConfirmation;
 
         readonly ISystemLog log;
         readonly ApiEndpointOptions api;
@@ -44,6 +45,7 @@ namespace Octopus.Tentacle.Commands
         string serverWebSocketAddress = null!;
         int? tentacleCommsPort = null;
         string? serverSubscriptionId = null!;
+        string? serverWebSocketThumbprint;
 
         public RegisterMachineCommandBase(Lazy<TRegistrationOperationType> lazyRegisterMachineOperation,
             Lazy<IWritableTentacleConfiguration> configuration,
@@ -53,7 +55,8 @@ namespace Octopus.Tentacle.Commands
             IProxyConfigParser proxyConfig,
             IOctopusClientInitializer octopusClientInitializer,
             ISpaceRepositoryFactory spaceRepositoryFactory,
-            ILogFileOnlyLogger logFileOnlyLogger)
+            ILogFileOnlyLogger logFileOnlyLogger,
+            IServerCertificateTrustConfirmation serverCertificateTrustConfirmation)
             : base(selector, log, logFileOnlyLogger)
         {
             this.lazyRegisterMachineOperation = lazyRegisterMachineOperation;
@@ -63,6 +66,7 @@ namespace Octopus.Tentacle.Commands
             this.proxyConfig = proxyConfig;
             this.octopusClientInitializer = octopusClientInitializer;
             this.spaceRepositoryFactory = spaceRepositoryFactory;
+            this.serverCertificateTrustConfirmation = serverCertificateTrustConfirmation;
 
             api = AddOptionSet(new ApiEndpointOptions(Options));
 
@@ -78,6 +82,7 @@ namespace Octopus.Tentacle.Commands
             Options.Add("server-web-socket=", "When using active communication over websockets, the address of the Octopus Server, eg 'wss://example.com/OctopusComms'. Refer to http://g.octopushq.com/WebSocketComms", s => serverWebSocketAddress = s);
             Options.Add("server-subscription-id=", "When using active communication, the subscription id is what Octopus Server uses to identify this Tentacle this must be a valid URI e.g. poll://foobar/. If not specified, a new subscription id will be generated.", s => serverSubscriptionId = s);
             Options.Add("tentacle-comms-port=", "When using passive communication, the comms port that the Octopus Server is instructed to call back on to reach this machine; defaults to the configured listening port", s => tentacleCommsPort = int.Parse(s));
+            Options.Add("server-web-socket-thumbprint=", "When using active communication over websockets, the thumbprint of your server's websockets certificate, eg 'AB1C2D...'. This is the SSL certificate configured wherever TLS is terminated for the websockets endpoint, not the Octopus Server's Tentacle Communications certificate. When supplied the certificate is trusted only if its thumbprint matches, which allows registering against an endpoint whose certificate cannot otherwise be validated (for example a self-signed certificate) without prompting.", s => serverWebSocketThumbprint = s);
         }
 
         protected override void Start()
@@ -103,6 +108,9 @@ namespace Octopus.Tentacle.Commands
             if (!string.IsNullOrEmpty(serverWebSocketAddress) && !string.IsNullOrEmpty(serverCommsAddress))
                 throw new ControlledFailureException("Please specify a --server-web-socket, or a --server-comms-address - not both.");
 
+            if (!string.IsNullOrWhiteSpace(serverWebSocketThumbprint) && string.IsNullOrWhiteSpace(serverWebSocketAddress))
+                throw new ControlledFailureException("Option --server-web-socket-thumbprint can only be used with --server-web-socket.");
+
             Uri? serverAddress = null;
 
             var useDefaultProxy = communicationStyle == CommunicationStyle.TentacleActive
@@ -111,12 +119,12 @@ namespace Octopus.Tentacle.Commands
 
             //if we are on a polling tentacle with a polling proxy set up, use the api through that proxy
             IWebProxy? proxyOverride = null;
-            string? sslThumbprint = null;
+            OctopusServerCommunicationsCheckResult? serverCheckResult = null;
             if (communicationStyle == CommunicationStyle.TentacleActive)
             {
                 serverAddress = GetActiveTentacleAddress();
                 proxyOverride = proxyConfig.ParseToWebProxy(configuration.Value.PollingProxyConfiguration);
-                sslThumbprint = octopusServerChecker.Value.CheckServerCommunicationsIsOpen(serverAddress, proxyOverride);
+                serverCheckResult = octopusServerChecker.Value.CheckServerCommunicationsIsOpen(serverAddress, proxyOverride);
             }
 
             log.Info($"Registering the tentacle with the server at {api.ServerUri}");
@@ -126,14 +134,14 @@ namespace Octopus.Tentacle.Commands
                 : await octopusClientInitializer.CreateClient(api, proxyOverride);
 
             var spaceRepository = await spaceRepositoryFactory.CreateSpaceRepository(client, spaceName);
-            await RegisterMachine(client.ForSystem(), spaceRepository, serverAddress, sslThumbprint, communicationStyle);
+            await RegisterMachine(client.ForSystem(), spaceRepository, serverAddress, serverCheckResult, communicationStyle);
         }
 
-        async Task RegisterMachine(IOctopusSystemAsyncRepository systemRepository, IOctopusSpaceAsyncRepository repository, Uri? serverAddress, string? sslThumbprint, CommunicationStyle communicationStyle)
+        async Task RegisterMachine(IOctopusSystemAsyncRepository systemRepository, IOctopusSpaceAsyncRepository repository, Uri? serverAddress, OctopusServerCommunicationsCheckResult? serverCheckResult, CommunicationStyle communicationStyle)
         {
             await ConfirmTentacleCanRegisterWithServerBasedOnItsVersion(systemRepository);
 
-            var server = new OctopusServerConfiguration(await GetServerThumbprint(systemRepository, serverAddress, sslThumbprint))
+            var server = new OctopusServerConfiguration(await GetServerThumbprint(systemRepository, serverAddress, serverCheckResult))
             {
                 Address = serverAddress!,
                 CommunicationStyle = communicationStyle
@@ -201,15 +209,22 @@ namespace Octopus.Tentacle.Commands
 
         protected abstract void EnhanceOperation(TRegistrationOperationType registerOperation);
 
-        async Task<string> GetServerThumbprint(IOctopusSystemAsyncRepository repository, Uri? serverAddress, string? sslThumbprint)
+        async Task<string> GetServerThumbprint(IOctopusSystemAsyncRepository repository, Uri? serverAddress, OctopusServerCommunicationsCheckResult? serverCheckResult)
         {
             if (serverAddress != null && ServiceEndPoint.IsWebSocketAddress(serverAddress))
             {
-                if (sslThumbprint == null)
+                if (serverCheckResult == null)
+                {
                     throw new Exception($"Could not determine thumbprint of the SSL Certificate at {serverAddress}");
-                return sslThumbprint;
+                }
+
+                serverCertificateTrustConfirmation.EnsureCertificateIsTrusted(serverAddress, serverCheckResult, serverWebSocketThumbprint);
+
+                return serverCheckResult.Thumbprint;
             }
 
+            // Every other address takes its thumbprint from the authenticated Octopus API rather than from the probe,
+            // so there is nothing here for the operator to vouch for.
             var certificate = await repository.CertificateConfiguration.GetOctopusCertificate();
             return certificate.Thumbprint;
         }

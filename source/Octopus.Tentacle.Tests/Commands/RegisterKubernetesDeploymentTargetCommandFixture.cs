@@ -67,7 +67,8 @@ namespace Octopus.Tentacle.Tests.Commands
                                                  new ProxyConfigParser(),
                                                  octopusClientInitializer,
                                                  new SpaceRepositoryFactory(),
-                                                 Substitute.For<ILogFileOnlyLogger>());
+                                                 Substitute.For<ILogFileOnlyLogger>(),
+                                                 Substitute.For<IServerCertificateTrustConfirmation>());
 
             configuration.ServicesPortNumber.Returns(90210);
             certificate = new CertificateGenerator(new NullLog()).GenerateNew("CN=Hello");

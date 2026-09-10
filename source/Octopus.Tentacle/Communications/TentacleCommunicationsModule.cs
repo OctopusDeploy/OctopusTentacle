@@ -41,6 +41,8 @@ namespace Octopus.Tentacle.Communications
                 return halibutRuntime;
             }).As<HalibutRuntime>().SingleInstance();
             builder.RegisterType<OctopusServerChecker>().As<IOctopusServerChecker>();
+            builder.RegisterType<ConsolePrompt>().As<IPrompt>();
+            builder.RegisterType<ServerCertificateTrustConfirmation>().As<IServerCertificateTrustConfirmation>();
         }
 
         static readonly string FriendlyHtmlPageContent = @"

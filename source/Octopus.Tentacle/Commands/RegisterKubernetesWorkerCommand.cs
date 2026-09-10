@@ -14,7 +14,7 @@ namespace Octopus.Tentacle.Commands
         readonly Lazy<IWritableTentacleConfiguration> configuration;
         readonly ISystemLog log;
 
-        public RegisterKubernetesWorkerCommand(Lazy<IRegisterKubernetesWorkerOperation> lazyRegisterMachineOperation, Lazy<IWritableTentacleConfiguration> configuration, ISystemLog log, IApplicationInstanceSelector selector, Lazy<IOctopusServerChecker> octopusServerChecker, IProxyConfigParser proxyConfig, IOctopusClientInitializer octopusClientInitializer, ISpaceRepositoryFactory spaceRepositoryFactory, ILogFileOnlyLogger logFileOnlyLogger) : base(lazyRegisterMachineOperation, configuration, log, selector, octopusServerChecker, proxyConfig, octopusClientInitializer, spaceRepositoryFactory, logFileOnlyLogger)
+        public RegisterKubernetesWorkerCommand(Lazy<IRegisterKubernetesWorkerOperation> lazyRegisterMachineOperation, Lazy<IWritableTentacleConfiguration> configuration, ISystemLog log, IApplicationInstanceSelector selector, Lazy<IOctopusServerChecker> octopusServerChecker, IProxyConfigParser proxyConfig, IOctopusClientInitializer octopusClientInitializer, ISpaceRepositoryFactory spaceRepositoryFactory, ILogFileOnlyLogger logFileOnlyLogger, IServerCertificateTrustConfirmation serverCertificateTrustConfirmation) : base(lazyRegisterMachineOperation, configuration, log, selector, octopusServerChecker, proxyConfig, octopusClientInitializer, spaceRepositoryFactory, logFileOnlyLogger, serverCertificateTrustConfirmation)
         {
             this.configuration = configuration;
             this.log = log;
