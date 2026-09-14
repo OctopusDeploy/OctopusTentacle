@@ -1,12 +1,15 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Tentacle.CommonTestUtils.Builders;
+using Octopus.Tentacle.CommonTestUtils.Diagnostics;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ClientServices;
+using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util;
@@ -209,6 +212,67 @@ namespace Octopus.Tentacle.Tests.Integration
 
 
             calledWithNonCancelledCT.Should().Be(true);
+        }
+
+        [Test]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.Version2)]
+        public async Task WhenALongRunningScriptCannotBeCancelled_TheClientAbandonsObservingAfterTheTimeout(TentacleConfigurationTestCase tentacleConfigurationTestCase)
+        {
+            // Simulate a Tentacle that never acknowledges cancellation - every CancelScript call is intercepted
+            // and answered as if the script is still Running, without ever reaching the real Tentacle.
+            // GetStatus is left untouched so the client can still observe real script output up to that point.
+            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+                .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
+                    .RecordMethodUsages(tentacleConfigurationTestCase, out var recordedUsages)
+                    .DecorateScriptServiceV2With(b => b
+                        .DecorateCancelScriptWith((_, command, _) =>
+                            Task.FromResult(new ScriptStatusResponseV2(command.Ticket, ProcessState.Running, 0, new List<ProcessOutput>(), command.LastLogSequence)))
+                        .Build())
+                    .Build())
+                .Build(CancellationToken);
+
+            var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
+                .SetScriptBody(new ScriptBuilder()
+                    .Print("hello")
+                    .Sleep(TimeSpan.FromSeconds(1))
+                    .Print("waitingtobestopped")
+                    .Sleep(TimeSpan.FromSeconds(100)))
+                .Build();
+
+            var scriptCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
+            var inMemoryLog = new InMemoryLog();
+            var stopWatch = Stopwatch.StartNew();
+            Exception? actualException = null;
+
+            try
+            {
+                await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand,
+                    scriptCancellationTokenSource.Token,
+                    onScriptStatusResponseReceived =>
+                    {
+                        if (onScriptStatusResponseReceived.Logs.JoinLogs().Contains("waitingtobestopped"))
+                        {
+                            scriptCancellationTokenSource.Cancel();
+                        }
+                    },
+                    inMemoryLog,
+                    scriptCancellationTimeoutBeforeAbandoning: TimeSpan.FromSeconds(3));
+            }
+            catch (Exception ex)
+            {
+                actualException = ex;
+            }
+
+            stopWatch.Stop();
+
+            actualException.Should().NotBeNull().And.BeOfType<OperationCanceledException>().And.Match<Exception>(x => x.Message == "Script execution was cancelled");
+
+            // It should give up shortly after the abandon timeout elapses, not hang indefinitely waiting for a cancellation that will never come.
+            stopWatch.Elapsed.Should().BeLessThan(TimeSpan.FromSeconds(30));
+
+            inMemoryLog.AssertContains("Unable to cancel");
+
+            recordedUsages.For(nameof(IAsyncClientScriptServiceV2.CancelScriptAsync)).Started.Should().BeGreaterThanOrEqualTo(1);
         }
     }
 }

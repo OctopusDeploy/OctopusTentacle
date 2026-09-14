@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Halibut.Logging;
 using Octopus.Tentacle.Client.Scripts.Models;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Contracts.Logging;
 
 namespace Octopus.Tentacle.Client.Scripts
 {
@@ -27,13 +28,16 @@ namespace Octopus.Tentacle.Client.Scripts
             this.onScriptCompleted = onScriptCompleted;
         }
 
-        public async Task<ScriptExecutionResult> ExecuteScript(ExecuteScriptCommand command, CancellationToken scriptExecutionCancellationToken)
+        public async Task<ScriptExecutionResult> ExecuteScript(ExecuteScriptCommand command,
+            TimeSpan? scriptCancellationTimeoutBeforeAbandoning,
+            ITentacleClientTaskLog logger,
+            CancellationToken scriptExecutionCancellationToken)
         {
             var startScriptResult = await scriptExecutor.StartScript(command,
                 StartScriptIsBeingReAttempted.FirstAttempt, // This is not re-entrant so this should be true.
                 scriptExecutionCancellationToken).ConfigureAwait(false);
 
-            var scriptStatus = await ObserveUntilCompleteThenFinish(startScriptResult, scriptExecutionCancellationToken).ConfigureAwait(false);
+            var scriptStatus = await ObserveUntilCompleteThenFinish(startScriptResult, scriptCancellationTimeoutBeforeAbandoning, logger, scriptExecutionCancellationToken).ConfigureAwait(false);
 
             if (scriptExecutionCancellationToken.IsCancellationRequested)
             {
@@ -44,8 +48,9 @@ namespace Octopus.Tentacle.Client.Scripts
             return new ScriptExecutionResult(scriptStatus.State, scriptStatus.ExitCode);
         }
 
-        async Task<ScriptStatus> ObserveUntilCompleteThenFinish(
-            ScriptOperationExecutionResult startScriptResult,
+        async Task<ScriptStatus> ObserveUntilCompleteThenFinish(ScriptOperationExecutionResult startScriptResult,
+            TimeSpan? scriptCancellationTimeoutBeforeAbandoning,
+            ITentacleClientTaskLog logger,
             CancellationToken scriptExecutionCancellationToken)
         {
             using var activity = TentacleClient.ActivitySource.StartActivity($"{nameof(ObservingScriptOrchestrator)}.{nameof(ObserveUntilCompleteThenFinish)}");
@@ -54,8 +59,10 @@ namespace Octopus.Tentacle.Client.Scripts
             
             OnScriptStatusResponseReceived(startScriptResult.ScriptStatus);
 
-            var observingUntilCompleteResult =  await ObserveUntilComplete(startScriptResult, scriptExecutionCancellationToken).ConfigureAwait(false);
+            var observingUntilCompleteResult =  await ObserveUntilComplete(startScriptResult, logger, scriptCancellationTimeoutBeforeAbandoning, scriptExecutionCancellationToken).ConfigureAwait(false);
 
+            if(observingUntilCompleteResult.ScriptStatus.State != ProcessState.Complete) return observingUntilCompleteResult.ScriptStatus;
+            
             await onScriptCompleted(scriptExecutionCancellationToken).ConfigureAwait(false);
             
             var completeScriptResponse = await scriptExecutor.CompleteScript(observingUntilCompleteResult.ContextForNextCommand, scriptExecutionCancellationToken).ConfigureAwait(false);
@@ -75,17 +82,22 @@ namespace Octopus.Tentacle.Client.Scripts
 
         async Task<ScriptOperationExecutionResult> ObserveUntilComplete(
             ScriptOperationExecutionResult startScriptResult,
+            ITentacleClientTaskLog logger,
+            TimeSpan? scriptCancellationTimeoutBeforeAbandoning,
             CancellationToken scriptExecutionCancellationToken)
         {
             var iteration = 0;
             var cancellationIteration = 0;
             var lastResult = startScriptResult;
 
+            DateTime? firstCancellationAttemptCompletedTime = null;
+
             while (lastResult.ScriptStatus.State != ProcessState.Complete)
             {
                 if (scriptExecutionCancellationToken.IsCancellationRequested)
                 {
                     lastResult = await scriptExecutor.CancelScript(lastResult.ContextForNextCommand).ConfigureAwait(false);
+                    if(firstCancellationAttemptCompletedTime == null) firstCancellationAttemptCompletedTime = DateTime.UtcNow;
                 }
                 else
                 {
@@ -124,6 +136,12 @@ namespace Octopus.Tentacle.Client.Scripts
                 if (lastResult.ScriptStatus.State == ProcessState.Complete)
                 {
                     continue;
+                }
+                
+                if ( firstCancellationAttemptCompletedTime != null && DateTime.UtcNow - firstCancellationAttemptCompletedTime > scriptCancellationTimeoutBeforeAbandoning)
+                {
+                    logger.Warn("Unable to cancel, the task may be left running on the Tentacle. Upgrading Tentacle will likely allow Octopus to correctly cancel the task.");
+                    break;
                 }
 
                 if (scriptExecutionCancellationToken.IsCancellationRequested)

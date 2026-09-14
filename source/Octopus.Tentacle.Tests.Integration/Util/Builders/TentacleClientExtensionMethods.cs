@@ -21,7 +21,8 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders
             ExecuteScriptCommand executeScriptCommand,
             CancellationToken token,
             OnScriptStatusResponseReceived? onScriptStatusResponseReceivedAction = null,
-            ITentacleClientTaskLog? log = null)
+            ITentacleClientTaskLog? log = null,
+            TimeSpan? scriptCancellationTimeoutBeforeAbandoning = null)
         {
             var logs = new List<ProcessOutput>();
             var finalResponse = await tentacleClient.ExecuteScript(executeScriptCommand,
@@ -36,7 +37,8 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders
                 },
                 cts => Task.CompletedTask,
                 new SerilogLoggerBuilder().Build().ForContext<TentacleClient>().ToITentacleTaskLog().Chain(log),
-                token).ConfigureAwait(false);
+                token,
+                scriptCancellationTimeoutBeforeAbandoning).ConfigureAwait(false);
             return (finalResponse, logs);
         }
 

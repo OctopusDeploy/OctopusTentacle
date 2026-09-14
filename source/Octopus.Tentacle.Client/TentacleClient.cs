@@ -168,7 +168,8 @@ namespace Octopus.Tentacle.Client
             OnScriptStatusResponseReceived onScriptStatusResponseReceived,
             OnScriptCompleted onScriptCompleted,
             ITentacleClientTaskLog logger,
-            CancellationToken scriptExecutionCancellationToken)
+            CancellationToken scriptExecutionCancellationToken,
+            TimeSpan? scriptCancellationTimeoutBeforeAbandoning = null)
         {
             using var activity = ActivitySource.StartActivity($"{nameof(TentacleClient)}.{nameof(ExecuteScript)}");
             activity?.AddTag("octopus.tentacle.script.files", string.Join(",", executeScriptCommand.Files.Select(f => f.Name)));
@@ -190,7 +191,7 @@ namespace Octopus.Tentacle.Client
                     onScriptCompleted,
                     scriptExecutor);
 
-                var result = await orchestrator.ExecuteScript(executeScriptCommand, scriptExecutionCancellationToken);
+                var result = await orchestrator.ExecuteScript(executeScriptCommand, scriptCancellationTimeoutBeforeAbandoning, logger, scriptExecutionCancellationToken);
 
                 return new ScriptExecutionResult(result.State, result.ExitCode);
             }
