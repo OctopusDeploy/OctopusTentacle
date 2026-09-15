@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
-using NSubstitute;
 using NUnit.Framework;
 using Octopus.Tentacle.Client.EventDriven;
 using Octopus.Tentacle.Client.Scripts;
@@ -39,10 +38,10 @@ namespace Octopus.Tentacle.Client.Tests
             // Arrange
             var startContext = new CommandContext(new ScriptTicket("ticket"), 0, ScriptServiceVersion.ScriptServiceVersion1);
 
-            var scriptExecutor = new ScriptExecutorThatNeverCompletesCancellation(startContext);
+            using var cancelOnceRunningIsObserved = new CancellationTokenSource();
+            var scriptExecutor = new ScriptExecutorThatNeverCompletesCancellation(startContext, cancelOnceRunningIsObserved);
 
-            var backoffStrategy = Substitute.For<IScriptObserverBackoffStrategy>();
-            backoffStrategy.GetBackoff(Arg.Any<int>()).Returns(TimeSpan.FromMilliseconds(5));
+            var backoffStrategy = new StaticBackoffStrategy(TimeSpan.FromMilliseconds(5));
 
             var logger = new InMemoryLog();
             var tentacleClientObserver = new TestTentacleClientObserver();
@@ -53,9 +52,6 @@ namespace Octopus.Tentacle.Client.Tests
                 .WithScriptTicket(startContext.ScriptTicket)
                 .Build();
 
-            using var alreadyCancelled = new CancellationTokenSource();
-            alreadyCancelled.Cancel();
-
             var scriptCancellationTimeoutBeforeAbandoning = TimeSpan.FromMilliseconds(50);
 
             // Act
@@ -63,7 +59,7 @@ namespace Octopus.Tentacle.Client.Tests
                 command,
                 scriptCancellationTimeoutBeforeAbandoning,
                 logger,
-                alreadyCancelled.Token);
+                cancelOnceRunningIsObserved.Token);
 
             // Assert
             await act.Should().ThrowAsync<OperationCanceledException>();
@@ -87,11 +83,10 @@ namespace Octopus.Tentacle.Client.Tests
             // Arrange
             var startContext = new CommandContext(new ScriptTicket("ticket"), 0, ScriptServiceVersion.ScriptServiceVersion1);
 
-            // First cancellation attempt is still running, second attempt reports complete.
-            var scriptExecutor = new ScriptExecutorThatCompletesCancellationOnSecondAttempt(startContext);
+            using var cancelOnceRunningIsObserved = new CancellationTokenSource();
+            var scriptExecutor = new ScriptExecutorThatCompletesCancellationOnSecondAttempt(startContext, cancelOnceRunningIsObserved);
 
-            var backoffStrategy = Substitute.For<IScriptObserverBackoffStrategy>();
-            backoffStrategy.GetBackoff(Arg.Any<int>()).Returns(TimeSpan.FromMilliseconds(5));
+            var backoffStrategy = new StaticBackoffStrategy(TimeSpan.FromMilliseconds(5));
 
             var logger = new InMemoryLog();
             var tentacleClientObserver = new TestTentacleClientObserver();
@@ -102,15 +97,12 @@ namespace Octopus.Tentacle.Client.Tests
                 .WithScriptTicket(startContext.ScriptTicket)
                 .Build();
 
-            using var alreadyCancelled = new CancellationTokenSource();
-            alreadyCancelled.Cancel();
-
             // Act
             Func<Task> act = () => orchestrator.ExecuteScript(
                 command,
                 TimeSpan.FromSeconds(30),
                 logger,
-                alreadyCancelled.Token);
+                cancelOnceRunningIsObserved.Token);
 
             // Assert
             await act.Should().ThrowAsync<OperationCanceledException>();
@@ -123,19 +115,26 @@ namespace Octopus.Tentacle.Client.Tests
         class ScriptExecutorThatNeverCompletesCancellation : IScriptExecutor
         {
             readonly ScriptOperationExecutionResult startResult;
+            readonly CancellationTokenSource cancelOnceRunningIsObserved;
 
             public int CancelScriptCallCount { get; private set; }
 
-            public ScriptExecutorThatNeverCompletesCancellation(CommandContext startContext)
+            public ScriptExecutorThatNeverCompletesCancellation(CommandContext startContext, CancellationTokenSource cancelOnceRunningIsObserved)
             {
                 startResult = RunningResult(startContext);
+                this.cancelOnceRunningIsObserved = cancelOnceRunningIsObserved;
             }
 
             public Task<ScriptOperationExecutionResult> StartScript(ExecuteScriptCommand command, StartScriptIsBeingReAttempted startScriptIsBeingReAttempted, CancellationToken scriptExecutionCancellationToken)
                 => Task.FromResult(startResult);
 
             public Task<ScriptOperationExecutionResult> GetStatus(CommandContext commandContext, CancellationToken scriptExecutionCancellationToken)
-                => throw new NotSupportedException("Not expected to be called by this test.");
+            {
+                // Once we've observed the script is actually running, request cancellation.
+                cancelOnceRunningIsObserved.Cancel();
+
+                return Task.FromResult(RunningResult(commandContext));
+            }
 
             public Task<ScriptOperationExecutionResult> CancelScript(CommandContext commandContext)
             {
@@ -152,18 +151,25 @@ namespace Octopus.Tentacle.Client.Tests
         class ScriptExecutorThatCompletesCancellationOnSecondAttempt : IScriptExecutor
         {
             readonly ScriptOperationExecutionResult startResult;
+            readonly CancellationTokenSource cancelOnceRunningIsObserved;
             int cancelScriptCallCount;
 
-            public ScriptExecutorThatCompletesCancellationOnSecondAttempt(CommandContext startContext)
+            public ScriptExecutorThatCompletesCancellationOnSecondAttempt(CommandContext startContext, CancellationTokenSource cancelOnceRunningIsObserved)
             {
                 startResult = RunningResult(startContext);
+                this.cancelOnceRunningIsObserved = cancelOnceRunningIsObserved;
             }
 
             public Task<ScriptOperationExecutionResult> StartScript(ExecuteScriptCommand command, StartScriptIsBeingReAttempted startScriptIsBeingReAttempted, CancellationToken scriptExecutionCancellationToken)
                 => Task.FromResult(startResult);
 
             public Task<ScriptOperationExecutionResult> GetStatus(CommandContext commandContext, CancellationToken scriptExecutionCancellationToken)
-                => throw new NotSupportedException("Not expected to be called by this test.");
+            {
+                // Once we've observed the script is actually running, request cancellation.
+                cancelOnceRunningIsObserved.Cancel();
+
+                return Task.FromResult(RunningResult(commandContext));
+            }
 
             public Task<ScriptOperationExecutionResult> CancelScript(CommandContext commandContext)
             {
@@ -178,6 +184,18 @@ namespace Octopus.Tentacle.Client.Tests
 
             public Task<ScriptStatus?> CompleteScript(CommandContext commandContext, CancellationToken scriptExecutionCancellationToken)
                 => Task.FromResult((ScriptStatus?)null);
+        }
+
+        class StaticBackoffStrategy : IScriptObserverBackoffStrategy
+        {
+            readonly TimeSpan backoff;
+
+            public StaticBackoffStrategy(TimeSpan backoff)
+            {
+                this.backoff = backoff;
+            }
+
+            public TimeSpan GetBackoff(int iteration) => backoff;
         }
     }
 }
