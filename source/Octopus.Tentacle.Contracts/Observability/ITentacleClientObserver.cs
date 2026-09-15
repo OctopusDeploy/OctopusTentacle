@@ -15,16 +15,13 @@ namespace Octopus.Tentacle.Contracts.Observability
         /// the script will be abandoned and this method will be called.
         /// Passed are the specifics of the script that was abandoned during cancellation.
         /// </summary>
-        /// <param name="scriptTicket"></param>
-        /// <param name="taskId"></param>
-        /// <param name="isolationLevel"></param>
-        /// <param name="mutexName"></param>
-        /// <param name="scriptCancellationTimeoutBeforeAbandoning"></param>
-        void ScriptCancellationTimedOut(
-            ScriptTicket scriptTicket,
-            string taskId,
-            ScriptIsolationLevel isolationLevel,
-            string mutexName,
-            TimeSpan scriptCancellationTimeoutBeforeAbandoning);
+        void ScriptCancellationTimedOut(ScriptCancellationTimedOutEvent scriptCancellationTimedOutEvent);
     }
+
+    public record ScriptCancellationTimedOutEvent(
+        ScriptTicket ScriptTicket,
+        string TaskId,
+        ScriptIsolationLevel IsolationLevel,
+        string MutexName,
+        TimeSpan ScriptCancellationTimeoutBeforeAbandoning);
 }

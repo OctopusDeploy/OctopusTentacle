@@ -21,12 +21,7 @@ namespace Octopus.Tentacle.Contracts.Observability
         {
         }
 
-        public void ScriptCancellationTimedOut(
-            ScriptTicket scriptTicket,
-            string taskId,
-            ScriptIsolationLevel isolationLevel,
-            string mutexName,
-            TimeSpan scriptCancellationTimeoutBeforeAbandoning)
+        public void ScriptCancellationTimedOut(ScriptCancellationTimedOutEvent scriptCancellationTimedOutEvent)
         {
         }
     }

@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Logging;
 using Octopus.Tentacle.Contracts.Observability;
 
@@ -40,26 +38,9 @@ namespace Octopus.Tentacle.CommonTestUtils
             executeScriptMetrics.Add(clientOperationMetrics);
         }
 
-        public void ScriptCancellationTimedOut(
-            ScriptTicket scriptTicket,
-            string taskId,
-            ScriptIsolationLevel isolationLevel,
-            string mutexName,
-            TimeSpan scriptCancellationTimeoutBeforeAbandoning)
+        public void ScriptCancellationTimedOut(ScriptCancellationTimedOutEvent scriptCancellationTimedOutEvent)
         {
-            scriptCancellationTimedOutEvents.Add(new ScriptCancellationTimedOutEvent(
-                scriptTicket,
-                taskId,
-                isolationLevel,
-                mutexName,
-                scriptCancellationTimeoutBeforeAbandoning));
+            scriptCancellationTimedOutEvents.Add(scriptCancellationTimedOutEvent);
         }
     }
-
-    public record ScriptCancellationTimedOutEvent(
-        ScriptTicket ScriptTicket,
-        string TaskId,
-        ScriptIsolationLevel IsolationLevel,
-        string MutexName,
-        TimeSpan ScriptCancellationTimeoutBeforeAbandoning);
 }

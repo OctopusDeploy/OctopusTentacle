@@ -165,11 +165,12 @@ namespace Octopus.Tentacle.Client.Scripts
                     && DateTime.UtcNow - firstCancellationAttemptCompletedTime > scriptCancellationTimeoutBeforeAbandoning)
                 {
                     logger.Warn("Unable to cancel task, the task may be left running on the Tentacle. Upgrading Tentacle will likely allow Octopus to correctly cancel the task.");
-                    tentacleClientObserver.ScriptCancellationTimedOut(startScriptResult.ContextForNextCommand.ScriptTicket,
+                    tentacleClientObserver.ScriptCancellationTimedOut(new ScriptCancellationTimedOutEvent(
+                        startScriptResult.ContextForNextCommand.ScriptTicket,
                         taskId,
                         isolationLevel,
                         mutexName,
-                        scriptCancellationTimeoutBeforeAbandoning.Value);
+                        scriptCancellationTimeoutBeforeAbandoning.Value));
                     break;
                 }
 
