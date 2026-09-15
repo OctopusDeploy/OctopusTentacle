@@ -52,7 +52,7 @@ namespace Octopus.Tentacle.Client.Tests
                 .WithScriptTicket(startContext.ScriptTicket)
                 .Build();
 
-            var scriptCancellationTimeoutBeforeAbandoning = TimeSpan.FromMilliseconds(50);
+            var scriptCancellationTimeoutBeforeAbandoning = TimeSpan.FromMilliseconds(100);
 
             // Act
             Func<Task> act = () => orchestrator.ExecuteScript(
@@ -67,7 +67,7 @@ namespace Octopus.Tentacle.Client.Tests
             logger.GetLogsForCategory(LogCategory.Warning).Should().Contain(m => m != null && m.Contains("Unable to cancel"));
 
             // It should have kept retrying cancellation (more than once) rather than giving up immediately.
-            scriptExecutor.CancelScriptCallCount.Should().BeGreaterThan(0);
+            scriptExecutor.CancelScriptCallCount.Should().BeGreaterThan(1);
 
             tentacleClientObserver.ScriptCancellationTimedOutEvents.Should().ContainSingle(e =>
                 e.ScriptTicket == startContext.ScriptTicket &&
