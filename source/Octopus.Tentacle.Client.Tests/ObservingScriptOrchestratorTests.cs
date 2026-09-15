@@ -10,6 +10,7 @@ using Octopus.Tentacle.Client.Scripts.Models;
 using Octopus.Tentacle.Client.Scripts.Models.Builders;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Logging;
+using Octopus.Tentacle.Contracts.Observability;
 
 namespace Octopus.Tentacle.Client.Tests
 {
@@ -22,12 +23,13 @@ namespace Octopus.Tentacle.Client.Tests
         static ScriptOperationExecutionResult CompleteResult(CommandContext context)
             => new(new ScriptStatus(ProcessState.Complete, 0, new()), context);
 
-        ObservingScriptOrchestrator CreateOrchestrator(IScriptExecutor scriptExecutor, IScriptObserverBackoffStrategy backoffStrategy)
+        ObservingScriptOrchestrator CreateOrchestrator(IScriptExecutor scriptExecutor, IScriptObserverBackoffStrategy backoffStrategy, ITentacleClientObserver tentacleClientObserver)
             => new(
                 backoffStrategy,
                 _ => { },
                 _ => Task.CompletedTask,
-                scriptExecutor);
+                scriptExecutor,
+                tentacleClientObserver);
 
         [Test]
         public async Task WhenCancellationCannotBeCompletedWithinTheTimeout_ItLogsAWarningAndAbandonsObserving()
@@ -47,8 +49,9 @@ namespace Octopus.Tentacle.Client.Tests
             backoffStrategy.GetBackoff(Arg.Any<int>()).Returns(TimeSpan.FromMilliseconds(5));
 
             var logger = Substitute.For<ITentacleClientTaskLog>();
+            var tentacleClientObserver = Substitute.For<ITentacleClientObserver>();
 
-            var orchestrator = CreateOrchestrator(scriptExecutor, backoffStrategy);
+            var orchestrator = CreateOrchestrator(scriptExecutor, backoffStrategy, tentacleClientObserver);
 
             var command = new ExecuteShellScriptCommandBuilder("task-1", ScriptIsolationLevel.NoIsolation)
                 .WithScriptTicket(startContext.ScriptTicket)
@@ -57,10 +60,12 @@ namespace Octopus.Tentacle.Client.Tests
             using var alreadyCancelled = new CancellationTokenSource();
             alreadyCancelled.Cancel();
 
+            var scriptCancellationTimeoutBeforeAbandoning = TimeSpan.FromMilliseconds(50);
+
             // Act
             Func<Task> act = () => orchestrator.ExecuteScript(
                 command,
-                TimeSpan.FromMilliseconds(50),
+                scriptCancellationTimeoutBeforeAbandoning,
                 logger,
                 alreadyCancelled.Token);
 
@@ -71,6 +76,13 @@ namespace Octopus.Tentacle.Client.Tests
 
             // It should have kept retrying cancellation (more than once) rather than giving up immediately.
             _ = scriptExecutor.Received().CancelScript(Arg.Any<CommandContext>());
+
+            tentacleClientObserver.Received(1).ScriptCancellationTimedOut(
+                startContext.ScriptTicket,
+                command.TaskId,
+                command.IsolationConfiguration.IsolationLevel,
+                command.IsolationConfiguration.MutexName,
+                scriptCancellationTimeoutBeforeAbandoning);
         }
 
         [Test]
@@ -96,8 +108,9 @@ namespace Octopus.Tentacle.Client.Tests
             backoffStrategy.GetBackoff(Arg.Any<int>()).Returns(TimeSpan.FromMilliseconds(5));
 
             var logger = Substitute.For<ITentacleClientTaskLog>();
+            var tentacleClientObserver = Substitute.For<ITentacleClientObserver>();
 
-            var orchestrator = CreateOrchestrator(scriptExecutor, backoffStrategy);
+            var orchestrator = CreateOrchestrator(scriptExecutor, backoffStrategy, tentacleClientObserver);
 
             var command = new ExecuteShellScriptCommandBuilder("task-1", ScriptIsolationLevel.NoIsolation)
                 .WithScriptTicket(startContext.ScriptTicket)
@@ -117,6 +130,13 @@ namespace Octopus.Tentacle.Client.Tests
             await act.Should().ThrowAsync<OperationCanceledException>();
 
             logger.DidNotReceive().Warn(Arg.Any<string>());
+
+            tentacleClientObserver.DidNotReceive().ScriptCancellationTimedOut(
+                Arg.Any<ScriptTicket>(),
+                Arg.Any<string>(),
+                Arg.Any<ScriptIsolationLevel>(),
+                Arg.Any<string>(),
+                Arg.Any<TimeSpan>());
         }
     }
 }

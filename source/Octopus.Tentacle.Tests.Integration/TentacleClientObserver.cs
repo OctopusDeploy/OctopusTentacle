@@ -5,6 +5,7 @@ using FluentAssertions;
 using Halibut;
 using NUnit.Framework;
 using Octopus.Tentacle.CommonTestUtils.Builders;
+using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.Logging;
 using Octopus.Tentacle.Contracts.Observability;
@@ -154,6 +155,15 @@ namespace Octopus.Tentacle.Tests.Integration
                 {
                     throw new Exception($"ExecuteScriptCompleted {Guid.NewGuid()}");
                 }
+            }
+
+            public void ScriptCancellationTimedOut(
+                ScriptTicket scriptTicket,
+                string taskId,
+                ScriptIsolationLevel isolationLevel,
+                string mutexName,
+                TimeSpan scriptCancellationTimeoutBeforeAbandoning)
+            {
             }
         }
     }
