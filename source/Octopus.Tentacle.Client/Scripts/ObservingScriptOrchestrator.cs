@@ -170,7 +170,7 @@ namespace Octopus.Tentacle.Client.Scripts
                         taskId,
                         isolationLevel,
                         mutexName,
-                        scriptCancellationTimeoutBeforeAbandoning.Value));
+                        scriptCancellationTimeoutBeforeAbandoning.Value), logger);
                     break;
                 }
 

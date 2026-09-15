@@ -15,6 +15,6 @@ namespace Octopus.Tentacle.Contracts.Observability
         /// the script will be abandoned and this method will be called.
         /// The specifics of the script abandoned during cancellation are provided.
         /// </summary>
-        void ScriptCancellationTimedOut(ScriptCancellationTimedOutEvent scriptCancellationTimedOutEvent);
+        void ScriptCancellationTimedOut(ScriptCancellationTimedOutEvent scriptCancellationTimedOutEvent, ITentacleClientTaskLog logger);
     }
 }

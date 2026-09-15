@@ -38,7 +38,7 @@ namespace Octopus.Tentacle.CommonTestUtils
             executeScriptMetrics.Add(clientOperationMetrics);
         }
 
-        public void ScriptCancellationTimedOut(ScriptCancellationTimedOutEvent scriptCancellationTimedOutEvent)
+        public void ScriptCancellationTimedOut(ScriptCancellationTimedOutEvent scriptCancellationTimedOutEvent, ITentacleClientTaskLog logger)
         {
             scriptCancellationTimedOutEvents.Add(scriptCancellationTimedOutEvent);
         }

@@ -21,7 +21,7 @@ namespace Octopus.Tentacle.Contracts.Observability
         {
         }
 
-        public void ScriptCancellationTimedOut(ScriptCancellationTimedOutEvent scriptCancellationTimedOutEvent)
+        public void ScriptCancellationTimedOut(ScriptCancellationTimedOutEvent scriptCancellationTimedOutEvent, ITentacleClientTaskLog logger)
         {
         }
     }

@@ -157,7 +157,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 }
             }
 
-            public void ScriptCancellationTimedOut(ScriptCancellationTimedOutEvent scriptCancellationTimedOutEvent)
+            public void ScriptCancellationTimedOut(ScriptCancellationTimedOutEvent scriptCancellationTimedOutEvent, ITentacleClientTaskLog logger)
             {
             }
         }

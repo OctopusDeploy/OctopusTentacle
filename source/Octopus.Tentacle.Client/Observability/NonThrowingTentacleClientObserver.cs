@@ -62,15 +62,15 @@ namespace Octopus.Tentacle.Client.Observability
             }
         }
 
-        public void ScriptCancellationTimedOut(ScriptCancellationTimedOutEvent scriptCancellationTimedOutEvent)
+        public void ScriptCancellationTimedOut(ScriptCancellationTimedOutEvent scriptCancellationTimedOutEvent, ITentacleClientTaskLog logger)
         {
             try
             {
-                inner.ScriptCancellationTimedOut(scriptCancellationTimedOutEvent);
+                inner.ScriptCancellationTimedOut(scriptCancellationTimedOutEvent, logger);
             }
-            catch
+            catch (Exception e)
             {
-                // Swallow - no logger is available for this notification and the decorator must not throw.
+                logger.Warn(e, "An error occurred while notifying the Tentacle Client Observer of the Script Cancellation Timed Out event.");
             }
         }
     }
