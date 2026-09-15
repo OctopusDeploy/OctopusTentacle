@@ -11,9 +11,9 @@ namespace Octopus.Tentacle.Contracts.Observability
         void ExecuteScriptCompleted(ClientOperationMetrics clientOperationMetrics, ITentacleClientTaskLog logger);
 
         /// <summary>
-        /// When a script is unable to be cancelled for the scriptCancellationTimeoutBeforeAbandoning peroid,
+        /// When a script is unable to be cancelled for the scriptCancellationTimeoutBeforeAbandoning period,
         /// the script will be abandoned and this method will be called.
-        /// Passed are the specifics of the script that was abandoned during cancellation.
+        /// The specifics of the script abandoned during cancellation are provided.
         /// </summary>
         void ScriptCancellationTimedOut(ScriptCancellationTimedOutEvent scriptCancellationTimedOutEvent);
     }
