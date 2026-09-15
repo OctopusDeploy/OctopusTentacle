@@ -206,6 +206,7 @@
 		Column(m =&gt; m.Foo);&#xD;
 	}&#xD;
 }</s:String>
+	<s:Boolean x:Key="/Default/UserDictionary/Words/=amazonlinux/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=azuresigntool/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=octopusdeploy/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=octopushq/@EntryIndexedValue">True</s:Boolean>

@@ -82,25 +82,30 @@ partial class Build
                 });
             }
             
-            List<TestConfigurationOnLinuxDistribution> testOnLinuxDistributions = new()
-            {
-                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "debian", "deb"),
-
-                // Debian dist oldoldstable appears to have been removed on 23/4/2023, maybe temporarily whilst a new stable release is created. 
-                // TODO: Revisit this when/if the dist becomes available again and reinstate if possible.
-                // new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "debian:oldoldstable-slim", "deb"),
-
-                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "debian:oldstable-slim", "deb"),
-                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "debian:stable-slim", "deb"),
-                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "linuxmintd/mint19.3-amd64", "deb"),
-                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:latest", "deb"),
-                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:rolling", "deb"),
-                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:jammy", "deb"), // 22.04
-                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:focal", "deb"), // 20.04
-                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:bionic", "deb"), // 18.04
-                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:xenial", "deb"), // 16.04
-                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "roboxes/rhel8", "rpm"),
-            };
+            List<TestConfigurationOnLinuxDistribution> testOnLinuxDistributions =
+            [
+                new (NetCore, "linux-x64", "amazonlinux:latest", "rpm"), // Always test the latest "stable" release.
+                new (NetCore, "linux-x64", "amazonlinux:2023", "rpm"), // Amazon Linux 2023: EOL June 30, 2029.
+                new (NetCore, "linux-x64", "amazonlinux:2", "rpm"), // Amazon Linux 2: EOL June 30, 2026.
+                
+                new (NetCore, "linux-x64", "debian:latest", "deb"), // Always test the latest "stable" release.
+                new (NetCore, "linux-x64", "debian:13", "deb"), // Trixie: LTS support until June 30, 2030.
+                new (NetCore, "linux-x64", "debian:12", "deb"), // Bookworm: LTS support until June 30, 2028.
+                new (NetCore, "linux-x64", "debian:11", "deb"), // Bullseye: LTS support until August 31, 2026.
+                
+                new (NetCore, "linux-x64", "redhat/ubi10", "rpm"), // RHEL 10.x (latest)
+                new (NetCore, "linux-x64", "redhat/ubi9", "rpm"), // RHEL 9.x (latest)
+                new (NetCore, "linux-x64", "redhat/ubi8", "rpm"), // RHEL 8.x (latest)
+                new (NetCore, "linux-x64", "redhat/ubi7", "rpm"), // RHEL 7.x (latest)
+                
+                new (NetCore, "linux-x64", "ubuntu:latest", "deb"), // Always test the latest release.
+                new (NetCore, "linux-x64", "ubuntu:rolling", "deb"), // Always test the latest LTS release.
+                new (NetCore, "linux-x64", "ubuntu:26.04", "deb"), // Resolute Raccoon: standard support until May 29, 2031.
+                new (NetCore, "linux-x64", "ubuntu:24.04", "deb"), // eol May 2029.
+                new (NetCore, "linux-x64", "ubuntu:22.04", "deb"), // eol May 2027.
+                new (NetCore, "linux-x64", "ubuntu:20.04", "deb"), // eol May 2025.
+                new (NetCore, "linux-x64", "ubuntu:18.04", "deb"), // eol May 2025 (covers linuxmintd/mint19.3-amd64).
+            ];
             
             foreach (var testConfiguration in testOnLinuxDistributions)
             {
