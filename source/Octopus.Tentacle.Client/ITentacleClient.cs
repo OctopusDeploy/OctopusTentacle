@@ -25,8 +25,9 @@ namespace Octopus.Tentacle.Client
         /// This is called regardless of the outcome of the script. It will also be called if the script execution is cancelled.</param>
         /// <param name="logger">Used to output user orientated log messages</param>
         /// <param name="scriptExecutionCancellationToken">When cancelled, will attempt to stop the execution of the script on Tentacle before returning.</param>
-        /// <param name="scriptCancellationTimeoutBeforeAbandoning">If cancellation is requested but cannot be completed within this duration, observing is abandoned
-        /// and the script may be left running on the Tentacle. When this occurs, OnScriptCompleted is NOT called since the script is NOT completed.</param>
+        /// <param name="scriptCancellationTimeoutBeforeAbandoning">If cancellation is requested but cannot be completed within this duration,
+        /// script observation is abandoned and the script may be left running on the Tentacle. When this occurs, OnScriptCompleted is NOT
+        /// called since the script is NOT completed. The stopwatch is started AFTER the first call to CancelScript.</param>
         /// <returns></returns>
         Task<ScriptExecutionResult> ExecuteScript(
             ExecuteScriptCommand executeScriptCommand,
