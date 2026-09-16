@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Octopus.Tentacle.Contracts.Logging;
 using Octopus.Tentacle.Contracts.Observability;
@@ -11,11 +10,13 @@ namespace Octopus.Tentacle.CommonTestUtils
         private readonly List<ClientOperationMetrics> uploadFileMetrics = new();
         private readonly List<ClientOperationMetrics> downloadFileMetrics = new();
         private readonly List<ClientOperationMetrics> executeScriptMetrics = new();
+        private readonly List<ScriptCancellationTimedOutEvent> scriptCancellationTimedOutEvents = new();
 
         public IReadOnlyList<RpcCallMetrics> RpcCallMetrics => rpcCallMetrics;
         public IReadOnlyList<ClientOperationMetrics> UploadFileMetrics => uploadFileMetrics;
         public IReadOnlyList<ClientOperationMetrics> DownloadFileMetrics => downloadFileMetrics;
         public IReadOnlyList<ClientOperationMetrics> ExecuteScriptMetrics => executeScriptMetrics;
+        public IReadOnlyList<ScriptCancellationTimedOutEvent> ScriptCancellationTimedOutEvents => scriptCancellationTimedOutEvents;
 
         public void RpcCallCompleted(RpcCallMetrics rpcCallMetrics, ITentacleClientTaskLog logger)
         {
@@ -35,6 +36,11 @@ namespace Octopus.Tentacle.CommonTestUtils
         public void ExecuteScriptCompleted(ClientOperationMetrics clientOperationMetrics, ITentacleClientTaskLog logger)
         {
             executeScriptMetrics.Add(clientOperationMetrics);
+        }
+
+        public void ScriptCancellationTimedOut(ScriptCancellationTimedOutEvent scriptCancellationTimedOutEvent, ITentacleClientTaskLog logger)
+        {
+            scriptCancellationTimedOutEvents.Add(scriptCancellationTimedOutEvent);
         }
     }
 }

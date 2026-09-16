@@ -1,4 +1,5 @@
 ﻿using System;
+using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Logging;
 using Octopus.Tentacle.Contracts.Observability;
 
@@ -58,6 +59,18 @@ namespace Octopus.Tentacle.Client.Observability
             catch (Exception e)
             {
                 logger.Warn(e, "An error occurred while notifying the Tentacle Client Observer of the Execute Script completion.");
+            }
+        }
+
+        public void ScriptCancellationTimedOut(ScriptCancellationTimedOutEvent scriptCancellationTimedOutEvent, ITentacleClientTaskLog logger)
+        {
+            try
+            {
+                inner.ScriptCancellationTimedOut(scriptCancellationTimedOutEvent, logger);
+            }
+            catch (Exception e)
+            {
+                logger.Warn(e, "An error occurred while notifying the Tentacle Client Observer of the Script Cancellation Timed Out event.");
             }
         }
     }

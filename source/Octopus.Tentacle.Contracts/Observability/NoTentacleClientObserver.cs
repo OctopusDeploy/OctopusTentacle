@@ -1,4 +1,5 @@
-﻿using Octopus.Tentacle.Contracts.Logging;
+﻿using System;
+using Octopus.Tentacle.Contracts.Logging;
 
 namespace Octopus.Tentacle.Contracts.Observability
 {
@@ -17,6 +18,10 @@ namespace Octopus.Tentacle.Contracts.Observability
         }
 
         public void ExecuteScriptCompleted(ClientOperationMetrics clientOperationMetrics, ITentacleClientTaskLog logger)
+        {
+        }
+
+        public void ScriptCancellationTimedOut(ScriptCancellationTimedOutEvent scriptCancellationTimedOutEvent, ITentacleClientTaskLog logger)
         {
         }
     }
