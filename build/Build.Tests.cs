@@ -82,29 +82,41 @@ partial class Build
                 });
             }
             
+            // Test .deb and .rpm installation on ALL Tentacle Linux targets showing >=0.1% of fleet (i.e. be very thourough in our installer testing).
+            // This is based on the spreadsheet that was supplied by (IIRC) Rob Erez and Jarrad Raddon in June 2026.
+            // We should update this as we get new data (i.e. once per year) of Tentacle usage on which Linux targets.
             List<TestConfigurationOnLinuxDistribution> testOnLinuxDistributions =
             [
-                new (NetCore, "linux-x64", "amazonlinux:latest", "rpm"), // Always test the latest "stable" release.
+                // Supported Amazon Linux versions.
+                new (NetCore, "linux-x64", "amazonlinux:latest", "rpm"), // Always test the latest "recommended" Amazon Linux release.
                 new (NetCore, "linux-x64", "amazonlinux:2023", "rpm"), // Amazon Linux 2023: EOL June 30, 2029.
-                new (NetCore, "linux-x64", "amazonlinux:2", "rpm"), // Amazon Linux 2: EOL June 30, 2026.
+                // Out-of-support Amazon Linux versions.
+                new (NetCore, "linux-x64", "amazonlinux:2", "rpm"), // Amazon Linux 2: support ENDED June 30, 2026.
                 
-                new (NetCore, "linux-x64", "debian:latest", "deb"), // Always test the latest "stable" release.
+                // Supported Debian versions.
+                new (NetCore, "linux-x64", "debian:latest", "deb"), // Always test the latest "stable" Debian release (i.e. catch new stable releases).
                 new (NetCore, "linux-x64", "debian:13", "deb"), // Trixie: LTS support until June 30, 2030.
                 new (NetCore, "linux-x64", "debian:12", "deb"), // Bookworm: LTS support until June 30, 2028.
-                new (NetCore, "linux-x64", "debian:11", "deb"), // Bullseye: LTS support until August 31, 2026.
+                // Out-of-support Ubuntu versions.
+                new (NetCore, "linux-x64", "debian:11", "deb"), // Bullseye: LTS support ENDED August 31, 2026.
                 
+                // Supported RedHat (aka RHEL, CentOS, Rocky Linux, etc.) versions.
+                // There is no redhat/ubi or redhat/ubi:latest tag on Red Hat's Docker Hub profile, so we will need to opt-in here as each new version releases.
                 new (NetCore, "linux-x64", "redhat/ubi10", "rpm"), // RHEL 10.x (latest)
                 new (NetCore, "linux-x64", "redhat/ubi9", "rpm"), // RHEL 9.x (latest)
                 new (NetCore, "linux-x64", "redhat/ubi8", "rpm"), // RHEL 8.x (latest)
-                new (NetCore, "linux-x64", "redhat/ubi7", "rpm"), // RHEL 7.x (latest)
+                // new (NetCore, "linux-x64", "redhat/ubi8", "rpm"), // RHEL 7.x (latest) [this has been yanked already by RedHat]
                 
-                new (NetCore, "linux-x64", "ubuntu:latest", "deb"), // Always test the latest release.
-                new (NetCore, "linux-x64", "ubuntu:rolling", "deb"), // Always test the latest LTS release.
-                new (NetCore, "linux-x64", "ubuntu:26.04", "deb"), // Resolute Raccoon: standard support until May 29, 2031.
-                new (NetCore, "linux-x64", "ubuntu:24.04", "deb"), // eol May 2029.
-                new (NetCore, "linux-x64", "ubuntu:22.04", "deb"), // eol May 2027.
-                new (NetCore, "linux-x64", "ubuntu:20.04", "deb"), // eol May 2025.
-                new (NetCore, "linux-x64", "ubuntu:18.04", "deb"), // eol May 2025 (covers linuxmintd/mint19.3-amd64).
+                // Supported Ubuntu versions.
+                new (NetCore, "linux-x64", "ubuntu:latest", "deb"), // Always test the latest Ubuntu release (i.e. catch new releases).
+                new (NetCore, "linux-x64", "ubuntu:rolling", "deb"), // Always test the latest Ubuntu LTS release (i.e. catch new LTS releases)
+                new (NetCore, "linux-x64", "ubuntu:26.04", "deb"), // Resolute Raccoon: standard support until May 2031.
+                new (NetCore, "linux-x64", "ubuntu:24.04", "deb"), // Noble Numbat: standard support until May 2029.
+                new (NetCore, "linux-x64", "ubuntu:22.04", "deb"), // Jammy Jellyfish: standard support until May 2027.
+                // Out-of-support Ubuntu versions.
+                new (NetCore, "linux-x64", "ubuntu:20.04", "deb"), // Focal Fossa: standard support ENDED May 2025.
+                new (NetCore, "linux-x64", "ubuntu:18.04", "deb"), // Bionic Beaver: standard support ENDED May 2023.
+                new (NetCore, "linux-x64", "ubuntu:16.04", "deb"), // Xenial Xerus: standard support ENDED April 2021.
             ];
             
             foreach (var testConfiguration in testOnLinuxDistributions)
