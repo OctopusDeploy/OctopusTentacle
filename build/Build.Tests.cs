@@ -85,6 +85,7 @@ partial class Build
             // Test .deb and .rpm installation on ALL Tentacle Linux targets showing >=0.1% of fleet (i.e. be very thourough in our installer testing).
             // This is based on the spreadsheet that was supplied by (IIRC) Rob Erez and Jarrad Raddon in June 2026.
             // We should update this as we get new data (i.e. once per year) of Tentacle usage on which Linux targets.
+            // Yes, these will be double-ups (e.g. 
             List<TestConfigurationOnLinuxDistribution> testOnLinuxDistributions =
             [
                 // Supported Amazon Linux versions.
@@ -94,12 +95,12 @@ partial class Build
                 new (NetCore, "linux-x64", "amazonlinux:2", "rpm"), // Amazon Linux 2: support ENDED June 30, 2026.
                 
                 // Supported Debian versions.
-                new (NetCore, "linux-x64", "debian:latest", "deb"), // Always test the "latest" Debian release (i.e. catch new releases as they ship).
-                new (NetCore, "linux-x64", "debian:stable", "deb"), // Always test the latest "stable" Debian release.
-                new (NetCore, "linux-x64", "debian:oldstable", "deb"), // Always test the latest "oldstable" Debian release.
-                new (NetCore, "linux-x64", "debian:oldoldstable", "deb"), // Always test the latest "oldoldstable" Debian release.
-                new (NetCore, "linux-x64", "debian:13", "deb"), // Trixie: LTS support until June 30, 2030 (aka "stable" as at 16/9/2026).
-                new (NetCore, "linux-x64", "debian:12", "deb"), // Bookworm: LTS support until June 30, 2028 (aka "oldstable" as at 16/9/2026).
+                new (NetCore, "linux-x64", "debian:stable", "deb"), // Always test the latest rolling "stable" Debian release (fully supported).
+                new (NetCore, "linux-x64", "debian:oldstable", "deb"), // Always test the latest rolling "oldstable" Debian release (fully supported).
+                new (NetCore, "linux-x64", "debian:oldoldstable", "deb"), // Always test the latest rolling "oldoldstable" Debian release (supported by the LTS team).
+                new (NetCore, "linux-x64", "debian:latest", "deb"), // Always test the "latest" Debian release (i.e. catch new releases as they officially ship).
+                new (NetCore, "linux-x64", "debian:13", "deb"), // Trixie: LTS support until June 30, 2030.
+                new (NetCore, "linux-x64", "debian:12", "deb"), // Bookworm: LTS support until June 30, 2028.
                 // Out-of-support Ubuntu versions.
                 new (NetCore, "linux-x64", "debian:11", "deb"), // Bullseye: LTS support ENDED August 31, 2026.
                 
