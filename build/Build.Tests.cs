@@ -95,17 +95,17 @@ partial class Build
                 
                 // Supported Debian versions.
                 new (NetCore, "linux-x64", "debian:latest", "deb"), // Always test the latest "stable" Debian release (i.e. catch new stable releases).
-                new (NetCore, "linux-x64", "debian:13", "deb"), // Trixie: LTS support until June 30, 2030.
-                new (NetCore, "linux-x64", "debian:12", "deb"), // Bookworm: LTS support until June 30, 2028.
+                new (NetCore, "linux-x64", "debian:13", "deb"), // Trixie: LTS support until June 30, 2030 (aka "stable" as at 16/9/2026).
+                new (NetCore, "linux-x64", "debian:12", "deb"), // Bookworm: LTS support until June 30, 2028 (aka "oldstable" as at 16/9/2026).
                 // Out-of-support Ubuntu versions.
                 new (NetCore, "linux-x64", "debian:11", "deb"), // Bullseye: LTS support ENDED August 31, 2026.
                 
                 // Supported RedHat (aka RHEL, CentOS, Rocky Linux, etc.) versions.
                 // There is no redhat/ubi or redhat/ubi:latest tag on Red Hat's Docker Hub profile, so we will need to opt-in here as each new version releases.
-                new (NetCore, "linux-x64", "redhat/ubi10", "rpm"), // RHEL 10.x (latest)
-                new (NetCore, "linux-x64", "redhat/ubi9", "rpm"), // RHEL 9.x (latest)
-                new (NetCore, "linux-x64", "redhat/ubi8", "rpm"), // RHEL 8.x (latest)
-                // new (NetCore, "linux-x64", "redhat/ubi8", "rpm"), // RHEL 7.x (latest) [this has been yanked already by RedHat]
+                new (NetCore, "linux-x64", "redhat/ubi10", "rpm"), // aka RHEL 10.x (latest) standard support until May 31, 2035.
+                new (NetCore, "linux-x64", "redhat/ubi9", "rpm"), // aka RHEL 9.x (latest) standard support until May 31, 2027.
+                new (NetCore, "linux-x64", "redhat/ubi8", "rpm"), // aka RHEL 8.x (latest) standard support until May 31, 2029.
+                // new (NetCore, "linux-x64", "redhat/ubi8", "rpm"), // RHEL 7.x (latest) [this has been yanked already by RedHat, so we can't test this].
                 
                 // Supported Ubuntu versions.
                 new (NetCore, "linux-x64", "ubuntu:latest", "deb"), // Always test the latest Ubuntu release (i.e. catch new releases).
@@ -115,7 +115,7 @@ partial class Build
                 new (NetCore, "linux-x64", "ubuntu:22.04", "deb"), // Jammy Jellyfish: standard support until May 2027.
                 // Out-of-support Ubuntu versions.
                 new (NetCore, "linux-x64", "ubuntu:20.04", "deb"), // Focal Fossa: standard support ENDED May 2025.
-                new (NetCore, "linux-x64", "ubuntu:18.04", "deb"), // Bionic Beaver: standard support ENDED May 2023.
+                new (NetCore, "linux-x64", "ubuntu:18.04", "deb"), // Bionic Beaver: standard support ENDED May 2023 (also covers "linuxmintd/mint19.3-amd64").
                 new (NetCore, "linux-x64", "ubuntu:16.04", "deb"), // Xenial Xerus: standard support ENDED April 2021.
             ];
             
