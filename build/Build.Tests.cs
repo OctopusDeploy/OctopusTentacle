@@ -94,7 +94,10 @@ partial class Build
                 new (NetCore, "linux-x64", "amazonlinux:2", "rpm"), // Amazon Linux 2: support ENDED June 30, 2026.
                 
                 // Supported Debian versions.
-                new (NetCore, "linux-x64", "debian:latest", "deb"), // Always test the latest "stable" Debian release (i.e. catch new stable releases).
+                new (NetCore, "linux-x64", "debian:latest", "deb"), // Always test the "latest" Debian release (i.e. catch new releases as they ship).
+                new (NetCore, "linux-x64", "debian:stable", "deb"), // Always test the latest "stable" Debian release.
+                new (NetCore, "linux-x64", "debian:oldstable", "deb"), // Always test the latest "oldstable" Debian release.
+                new (NetCore, "linux-x64", "debian:oldoldstable", "deb"), // Always test the latest "oldoldstable" Debian release.
                 new (NetCore, "linux-x64", "debian:13", "deb"), // Trixie: LTS support until June 30, 2030 (aka "stable" as at 16/9/2026).
                 new (NetCore, "linux-x64", "debian:12", "deb"), // Bookworm: LTS support until June 30, 2028 (aka "oldstable" as at 16/9/2026).
                 // Out-of-support Ubuntu versions.
