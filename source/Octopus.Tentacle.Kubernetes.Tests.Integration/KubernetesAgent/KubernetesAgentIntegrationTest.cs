@@ -27,7 +27,7 @@ public abstract class KubernetesAgentIntegrationTest
 
     protected readonly IDictionary<string, string> CustomHelmValues = new Dictionary<string, string>();
 
-    HalibutRuntime serverHalibutRuntime;
+    HalibutRuntime serverHalibutRuntime = null!;
 
     string? agentThumbprint;
 

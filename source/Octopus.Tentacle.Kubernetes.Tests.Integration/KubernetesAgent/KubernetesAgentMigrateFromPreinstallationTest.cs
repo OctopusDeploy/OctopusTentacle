@@ -18,11 +18,11 @@ public class KubernetesAgentMigrateFromPreinstallationTest
     const string SourceSecretName = "tentacle-secret-pre";
     const string DestinationConfigMapName = "tentacle-config";
     const string DestinationSecretName = "tentacle-secret";
-    MigratePreInstalledKubernetesDeploymentTargetCommand commandToRun;
-    KubernetesFileWrappedProvider kubernetesConfigClient;
-    string commandNamespace;
-    k8s.Kubernetes client;
-    string[] commandArguments;
+    MigratePreInstalledKubernetesDeploymentTargetCommand commandToRun = null!;
+    KubernetesFileWrappedProvider kubernetesConfigClient = null!;
+    string commandNamespace = null!;
+    k8s.Kubernetes client = null!;
+    string[] commandArguments = null!;
 
     [SetUp]
     public void Init()
