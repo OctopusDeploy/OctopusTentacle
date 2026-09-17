@@ -85,7 +85,7 @@ partial class Build
             // Test .deb and .rpm installation on ALL Tentacle Linux targets showing >=0.1% of fleet (i.e. be very thourough in our installer testing).
             // This is based on the spreadsheet that was supplied by (IIRC) Rob Erez and Jarrad Raddon in June 2026.
             // We should update this as we get new data (i.e. once per year) of Tentacle usage on which Linux targets.
-            // Yes, there will be double-ups (e.g. debian:latest and debian:13 are the same thing), but the container downloads will be cached.
+            // Yes there will be double-ups (e.g. debian:latest and debian:13 are the same thing), but the container downloads will be cached.
             // Every distribution below is grouped the same way: its rolling tags first, then the pinned versions split by support status.
             // Rolling tags move with the distribution, so they deliberately carry no support status of their own - only the pinned rows do.
             List<TestConfigurationOnLinuxDistribution> testOnLinuxDistributions =
