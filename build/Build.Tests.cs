@@ -101,7 +101,7 @@ partial class Build
                 new (NetCore, "linux-x64", "debian:latest", "deb"), // Always test the "latest" Debian release (i.e. catch new releases as they officially ship).
                 new (NetCore, "linux-x64", "debian:13", "deb"), // Trixie: LTS support until June 30, 2030.
                 new (NetCore, "linux-x64", "debian:12", "deb"), // Bookworm: LTS support until June 30, 2028.
-                // Out-of-support Ubuntu versions.
+                // Out-of-support Debian versions.
                 new (NetCore, "linux-x64", "debian:11", "deb"), // Bullseye: LTS support ENDED August 31, 2026.
                 
                 // Supported RedHat (aka RHEL, CentOS, Rocky Linux, etc.) versions.

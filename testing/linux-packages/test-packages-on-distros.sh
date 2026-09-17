@@ -159,9 +159,34 @@ info "Package (rpm): $RPM_PATH"
 if [[ -n "$SINGLE_DISTRO" ]]; then
     step "Testing a single distribution: $SINGLE_DISTRO"
 
+    IMAGE="docker.packages.octopushq.com/$SINGLE_DISTRO"
+
+    # Pulled explicitly so an image that does not resolve is reported as such,
+    # rather than as a failure of the probe below.
+    docker pull "$IMAGE" >/dev/null 2>&1 || die "could not pull $IMAGE"
+
+    # Which package to install is decided by probing the image for apt-get,
+    # exactly as install-package.sh decides which installer to run. Roughly half
+    # the matrix is rpm-based (Amazon Linux, RedHat), and handing one of those
+    # the .deb makes `yum localinstall` fail in a way that reads like a
+    # packaging bug rather than this wrapper picking the wrong artifact.
+    #
+    # Probed rather than matched against a list of distribution names, so it
+    # cannot drift out of step with install-package.sh or with the matrix.
+    if docker run --rm --entrypoint sh "$IMAGE" -c 'command -v apt-get' >/dev/null 2>&1; then
+        PACKAGE_PATH="/artifacts/deb/$(basename "$DEB_PATH")"
+    else
+        PACKAGE_PATH="/artifacts/rpm/$(basename "$RPM_PATH")"
+    fi
+
+    # The version always comes off the .deb, whichever package is installed:
+    # the .rpm's filename has had every '-' replaced with '_', so it no longer
+    # spells the version Tentacle reports. Both come from the same build.
     DEB_FILE=$(basename "$DEB_PATH")
     VERSION="${DEB_FILE#tentacle_}"
     VERSION="${VERSION%_amd64.deb}"
+
+    info "Package:      $PACKAGE_PATH"
     info "BUILD_NUMBER: $VERSION"
 
     if docker run --rm \
@@ -171,8 +196,8 @@ if [[ -n "$SINGLE_DISTRO" ]]; then
             -e OUTPUT_PATH=/output \
             -v "$REPO_DIR/linux-packages/test-scripts:/test-scripts:ro" \
             -v "$REPO_DIR/_artifacts:/artifacts:ro" \
-            "docker.packages.octopushq.com/$SINGLE_DISTRO" \
-            bash /test-scripts/test-linux-package.sh "/artifacts/deb/$DEB_FILE"; then
+            "$IMAGE" \
+            bash /test-scripts/test-linux-package.sh "$PACKAGE_PATH"; then
         echo
         echo "${C_GREEN}${C_BOLD}PASSED: $SINGLE_DISTRO${C_RESET}"
         exit 0
