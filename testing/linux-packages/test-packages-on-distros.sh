@@ -10,9 +10,10 @@
 # expected version. Running it by hand needs three things set up first, and its
 # result needs reading carefully:
 #
-#   1. Artifacts. The target globs _artifacts/{deb,rpm} and calls .Single(), so
-#      it throws on zero packages AND on more than one. Use --pack to build
-#      them, or leave existing ones in place.
+#   1. Artifacts. The target globs _artifacts/{deb,rpm} for the linux-x64
+#      package and calls .Single(), so it throws on zero packages AND on more
+#      than one of that architecture. Use --pack to build them, or leave
+#      existing ones in place.
 #
 #   2. Platform. Every image in the matrix is amd64-only and the target sets no
 #      platform of its own, so on Apple Silicon Docker would default to arm64
@@ -113,14 +114,25 @@ fi
 # 1. Packages
 ###############################################################################
 
-# find_one <deb|rpm> - the sole package of that type, or empty.
+# find_one <deb|rpm> - the sole linux-x64 package of that type, or empty.
 #
-# Deliberately not `ls | head -1`: the target's own .Single() throws when there
-# is more than one, so more than one has to be reported here rather than
-# papered over with a pick.
+# The globs are the target's own: RunLinuxPackageTestsFor (build/Build.Tests.cs)
+# narrows to "*_amd64.deb" / "*.x86_64.rpm" and only then calls .Single().
+# Matching that matters, because an unqualified PackLinux leaves arm64 and armhf
+# packages alongside the amd64 one - a directory the target is perfectly happy
+# with, and an unqualified `*.deb` here would reject.
+#
+# Deliberately not `ls | head -1`: two packages of the one architecture is what
+# makes the target's .Single() throw, so that has to be reported here rather
+# than papered over with a pick.
 find_one() {
-    local ext="$1" matches
-    matches=$(ls -1 "_artifacts/$ext/"*."$ext" 2>/dev/null || true)
+    local ext="$1" pattern matches
+    case "$ext" in
+        deb) pattern="_artifacts/deb/*_amd64.deb" ;;
+        rpm) pattern="_artifacts/rpm/*.x86_64.rpm" ;;
+        *)   return 1 ;;
+    esac
+    matches=$(ls -1 $pattern 2>/dev/null || true)
     [[ $(printf '%s' "$matches" | grep -c .) -eq 1 ]] || return 1
     printf '%s' "$matches"
 }
@@ -130,17 +142,18 @@ if [[ $PACK -eq 1 ]]; then
     info "PackDebianPackage cross-compiles Tentacle and produces both the .deb"
     info "and the .rpm inside the tool-linux-packages container. Takes a few minutes."
 
-    # Stale packages would break the target's .Single(), and this is about to
-    # replace them anyway.
-    rm -f _artifacts/deb/*.deb _artifacts/rpm/*.rpm 2>/dev/null || true
+    # Stale linux-x64 packages would break the target's .Single(), and this is
+    # about to replace them anyway. Other architectures are left alone: neither
+    # the target nor find_one looks at them.
+    rm -f _artifacts/deb/*_amd64.deb _artifacts/rpm/*.x86_64.rpm 2>/dev/null || true
 
     # Only linux-x64 is in the matrix; building every runtime ID would take far
     # longer for no benefit.
     ./build.sh --target PackDebianPackage --runtime-ids linux-x64
 fi
 
-DEB_PATH=$(find_one deb) || die "expected exactly one _artifacts/deb/*.deb (the target calls .Single()). Run with --pack, or clear out the extras."
-RPM_PATH=$(find_one rpm) || die "expected exactly one _artifacts/rpm/*.rpm (the target calls .Single()). Run with --pack, or clear out the extras."
+DEB_PATH=$(find_one deb) || die "expected exactly one _artifacts/deb/*_amd64.deb (the target calls .Single()). Run with --pack, or clear out the extras."
+RPM_PATH=$(find_one rpm) || die "expected exactly one _artifacts/rpm/*.x86_64.rpm (the target calls .Single()). Run with --pack, or clear out the extras."
 
 info "Package (deb): $DEB_PATH"
 info "Package (rpm): $RPM_PATH"

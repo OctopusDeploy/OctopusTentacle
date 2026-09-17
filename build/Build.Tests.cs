@@ -86,35 +86,39 @@ partial class Build
             // This is based on the spreadsheet that was supplied by (IIRC) Rob Erez and Jarrad Raddon in June 2026.
             // We should update this as we get new data (i.e. once per year) of Tentacle usage on which Linux targets.
             // Yes, these will be double-ups (e.g. debian:latest and debian:13 are the same thing), but the container downloads will be cached.
+            // Every distribution below is grouped the same way: its rolling tags first, then the pinned versions split by support status.
+            // Rolling tags move with the distribution, so they deliberately carry no support status of their own - only the pinned rows do.
             List<TestConfigurationOnLinuxDistribution> testOnLinuxDistributions =
             [
+                // Rolling Amazon Linux tags.
+                new (NetCore, "linux-x64", "amazonlinux:latest", "rpm"), // Whichever release Amazon currently "recommends".
                 // Supported Amazon Linux versions.
-                new (NetCore, "linux-x64", "amazonlinux:latest", "rpm"), // Always test the latest "recommended" Amazon Linux release.
                 new (NetCore, "linux-x64", "amazonlinux:2023", "rpm"), // Amazon Linux 2023: EOL June 30, 2029.
                 // Out-of-support Amazon Linux versions.
                 new (NetCore, "linux-x64", "amazonlinux:2", "rpm"), // Amazon Linux 2: support ENDED June 30, 2026.
                 
+                // Rolling Debian tags.
+                new (NetCore, "linux-x64", "debian:latest", "deb"), // Catches each new Debian release as it officially ships.
+                new (NetCore, "linux-x64", "debian:stable", "deb"), // Whichever release is currently "stable".
+                new (NetCore, "linux-x64", "debian:oldstable", "deb"), // The release before that.
+                new (NetCore, "linux-x64", "debian:oldoldstable", "deb"), // The one before that again, so either on LTS or already EOL, depending on where Debian is in its cycle.
                 // Supported Debian versions.
-                new (NetCore, "linux-x64", "debian:stable", "deb"), // Always test the latest rolling "stable" Debian release (fully supported).
-                new (NetCore, "linux-x64", "debian:oldstable", "deb"), // Always test the latest rolling "oldstable" Debian release (fully supported).
-                new (NetCore, "linux-x64", "debian:oldoldstable", "deb"), // Always test the latest rolling "oldoldstable" Debian release (supported by the LTS team).
-                new (NetCore, "linux-x64", "debian:latest", "deb"), // Always test the "latest" Debian release (i.e. catch new releases as they officially ship).
                 new (NetCore, "linux-x64", "debian:13", "deb"), // Trixie: LTS support until June 30, 2030.
                 new (NetCore, "linux-x64", "debian:12", "deb"), // Bookworm: LTS support until June 30, 2028.
                 // Out-of-support Debian versions.
                 new (NetCore, "linux-x64", "debian:11", "deb"), // Bullseye: LTS support ENDED August 31, 2026.
                 
+                // No rolling RedHat tags: there is no redhat/ubi or redhat/ubi:latest tag on Red Hat's Docker Hub profile, so each new version has to be opted into below as it releases.
                 // Supported RedHat (aka RHEL, CentOS, Rocky Linux, etc.) versions.
-                // There is no redhat/ubi or redhat/ubi:latest tag on Red Hat's Docker Hub profile, so we will need to opt-in here as each new version releases.
                 new (NetCore, "linux-x64", "redhat/ubi10", "rpm"), // aka RHEL 10.x (latest) standard support until May 31, 2030.
                 new (NetCore, "linux-x64", "redhat/ubi9", "rpm"), // aka RHEL 9.x (latest) standard support until May 31, 2027.
                 // Out-of-support RedHat versions.
                 new (NetCore, "linux-x64", "redhat/ubi8", "rpm"), // aka RHEL 8.x (latest) standard support until May 31, 2024.
-                // new (NetCore, "linux-x64", "redhat/ubi8", "rpm"), // RHEL 7.x (latest) [this has been yanked already by RedHat, so we can't test this].
                 
+                // Rolling Ubuntu tags.
+                new (NetCore, "linux-x64", "ubuntu:rolling", "deb"), // The most recent release of any kind, i.e. also the interim, non-LTS ones.
+                new (NetCore, "linux-x64", "ubuntu:latest", "deb"), // Whichever release is the current LTS, so this catches each new LTS as it officially ships.
                 // Supported Ubuntu versions.
-                new (NetCore, "linux-x64", "ubuntu:latest", "deb"), // Always test the latest Ubuntu release (i.e. catch new releases).
-                new (NetCore, "linux-x64", "ubuntu:rolling", "deb"), // Always test the latest Ubuntu LTS release (i.e. catch new LTS releases)
                 new (NetCore, "linux-x64", "ubuntu:26.04", "deb"), // Resolute Raccoon: standard support until May 2031.
                 new (NetCore, "linux-x64", "ubuntu:24.04", "deb"), // Noble Numbat: standard support until May 2029.
                 new (NetCore, "linux-x64", "ubuntu:22.04", "deb"), // Jammy Jellyfish: standard support until May 2027.
