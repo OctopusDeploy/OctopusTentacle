@@ -33,8 +33,9 @@
 #
 # Note: stage 1 runs the real NUKE build, which stamps the calculated version
 # into installer/Octopus.Tentacle.Installer/Product.wxs and regenerates
-# .nuke/build.schema.json. Both are tracked, so `git checkout --` them
-# afterwards if you do not want that noise in your working tree.
+# .nuke/build.schema.json. Both are tracked, so expect them to show up as
+# modified afterwards; commit them along with your change rather than
+# reverting them.
 #
 # Usage: ./testing/docker-linux/build-and-test-linux-docker-image.sh [options]
 #        (runs from anywhere; it resolves the repo root itself)
