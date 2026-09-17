@@ -1,4 +1,4 @@
-﻿using Octopus.Tentacle.CommonTestUtils;
+using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Kubernetes.Tests.Integration.Setup.Tooling;
 
 namespace Octopus.Tentacle.Kubernetes.Tests.Integration.Setup;
@@ -19,7 +19,7 @@ public class RequiredToolDownloader
         kubeCtlDownloader = new KubeCtlDownloader(logger);
     }
 
-    public async Task<(string KindExePath, string HelmExePath, string KubeCtlPath)> DownloadRequiredTools(CancellationToken cancellationToken)
+    public async Task<RequiredTools> DownloadRequiredTools(CancellationToken cancellationToken)
     {
         var kindExePathTask = kindDownloader.Download(temporaryDirectory.DirectoryPath, cancellationToken);
         var helmExePathTask = helmDownloader.Download(temporaryDirectory.DirectoryPath, cancellationToken);
@@ -27,6 +27,8 @@ public class RequiredToolDownloader
 
         await Task.WhenAll(kindExePathTask, helmExePathTask, kubeCtlExePathTask);
         
-        return (kindExePathTask.Result, helmExePathTask.Result, kubeCtlExePathTask.Result);
+        return new RequiredTools(kindExePathTask.Result, helmExePathTask.Result, kubeCtlExePathTask.Result);
     }
 }
+
+public record RequiredTools(string KindExePath, string HelmExePath, string KubeCtlPath);

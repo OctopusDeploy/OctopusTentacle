@@ -26,29 +26,26 @@ public class KubernetesClientCompatibilityTests
         new object[] {new ClusterVersion(1, 33)}
     ];
 
+    // The tools are downloaded once for the whole fixture; everything else is per test case and so is
+    // built up (and handed back as locals) by SetUp.
+    readonly TemporaryDirectory toolsTemporaryDirectory = new();
+
+    ILogger logger = new SerilogLoggerBuilder().Build();
+    RequiredTools? requiredTools;
+
+    // Fields only because TearDown has to clean them up after the test case has finished with them.
     KubernetesTestsGlobalContext? testContext;
-    ILogger logger = null!;
-    TemporaryDirectory toolsTemporaryDirectory = null!;
-    string kindExePath = null!;
-    string helmExePath = null!;
-    string kubeCtlPath = null!;
     KubernetesClusterInstaller? clusterInstaller;
-    KubernetesAgentInstaller? kubernetesAgentInstaller;
-    HalibutRuntime serverHalibutRuntime = null!;
-    string? agentThumbprint;
     TraceLogFileLogger? traceLogFileLogger;
-    CancellationToken cancellationToken;
     CancellationTokenSource? cancellationTokenSource;
-    TentacleClient tentacleClient = null!;
-    IRecordedMethodUsages recordedMethodUsages = null!;
+
+    RequiredTools RequiredTools => requiredTools ?? throw new InvalidOperationException("Expected the required tools to have been downloaded by OneTimeSetup");
 
     [OneTimeSetUp]
     public async Task OneTimeSetup()
     {
-        logger = new SerilogLoggerBuilder().Build();
-        toolsTemporaryDirectory = new TemporaryDirectory();
         var toolDownloader = new RequiredToolDownloader(toolsTemporaryDirectory, logger);
-        (kindExePath, helmExePath, kubeCtlPath) = await toolDownloader.DownloadRequiredTools(CancellationToken.None);
+        requiredTools = await toolDownloader.DownloadRequiredTools(CancellationToken.None);
     }
 
     [OneTimeTearDown]
@@ -79,8 +76,8 @@ public class KubernetesClientCompatibilityTests
     [TestCaseSource(nameof(TestClusterVersions))]
     public async Task RunSimpleScript(ClusterVersion clusterVersion)
     {
-        await SetUp(clusterVersion);
-        
+        var (tentacleClient, recordedMethodUsages, cancellationToken) = await SetUp(clusterVersion);
+
         // Arrange
         var logs = new List<ProcessOutput>();
         var scriptCompleted = false;
@@ -121,24 +118,25 @@ public class KubernetesClientCompatibilityTests
         }
     }
     
-    async Task SetUp(ClusterVersion clusterVersion)
+    async Task<TestRun> SetUp(ClusterVersion clusterVersion)
     {
-        testContext = new KubernetesTestsGlobalContext(logger);
-        
-        await SetupCluster(testContext, clusterVersion);
+        var context = new KubernetesTestsGlobalContext(logger);
+        testContext = context;
 
-        kubernetesAgentInstaller = new KubernetesAgentInstaller(
-            testContext.TemporaryDirectory,
-            testContext.HelmExePath,
-            testContext.KubeCtlExePath,
-            testContext.KubeConfigPath,
-            testContext.Logger);
+        await SetupCluster(context, clusterVersion);
+
+        var kubernetesAgentInstaller = new KubernetesAgentInstaller(
+            context.TemporaryDirectory,
+            context.HelmExePath,
+            context.KubeCtlExePath,
+            context.KubeConfigPath,
+            context.Logger);
 
         //create a new server halibut runtime
-        serverHalibutRuntime = SetupHelpers.BuildServerHalibutRuntime();
+        var serverHalibutRuntime = SetupHelpers.BuildServerHalibutRuntime();
         var listeningPort = serverHalibutRuntime.Listen();
 
-        agentThumbprint = await kubernetesAgentInstaller.InstallAgent(listeningPort, testContext.TentacleImageAndTag, new Dictionary<string, string>());
+        var agentThumbprint = await kubernetesAgentInstaller.InstallAgent(listeningPort, context.TentacleImageAndTag, new Dictionary<string, string>());
 
         //trust the generated cert thumbprint
         serverHalibutRuntime.Trust(agentThumbprint);
@@ -149,24 +147,35 @@ public class KubernetesClientCompatibilityTests
             .Build()
             .ForContext(GetType());
 
-        cancellationTokenSource = new CancellationTokenSource();
-        cancellationTokenSource.CancelAfter(TimeSpan.FromMinutes(5));
-        cancellationToken = cancellationTokenSource.Token;
+        var testCancellationTokenSource = new CancellationTokenSource();
+        testCancellationTokenSource.CancelAfter(TimeSpan.FromMinutes(5));
+        cancellationTokenSource = testCancellationTokenSource;
 
-        tentacleClient = SetupHelpers.BuildTentacleClient(kubernetesAgentInstaller.SubscriptionId, agentThumbprint, serverHalibutRuntime, builder =>
+        IRecordedMethodUsages? recordedMethodUsages = null;
+        var tentacleClient = SetupHelpers.BuildTentacleClient(kubernetesAgentInstaller.SubscriptionId, agentThumbprint, serverHalibutRuntime, builder =>
         {
             builder.RecordMethodUsages<IAsyncClientKubernetesScriptServiceV1>(out var recordedUsages);
             recordedMethodUsages = recordedUsages;
         });
+
+        return new TestRun(
+            tentacleClient,
+            recordedMethodUsages ?? throw new InvalidOperationException("Expected the tentacle service decorator builder to have recorded the method usages"),
+            testCancellationTokenSource.Token);
     }
     
     async Task SetupCluster(KubernetesTestsGlobalContext context, ClusterVersion clusterVersion)
     {
-        clusterInstaller = new KubernetesClusterInstaller(context.TemporaryDirectory, kindExePath, helmExePath, kubeCtlPath, context.Logger);
+        var tools = RequiredTools;
+
+        clusterInstaller = new KubernetesClusterInstaller(context.TemporaryDirectory, tools.KindExePath, tools.HelmExePath, tools.KubeCtlPath, context.Logger);
         await clusterInstaller.Install(clusterVersion);
 
-        context.TentacleImageAndTag = await SetupHelpers.GetTentacleImageAndTag(kindExePath, clusterInstaller);
-        context.SetToolExePaths(helmExePath, kubeCtlPath);
+        context.TentacleImageAndTag = await SetupHelpers.GetTentacleImageAndTag(tools.KindExePath, clusterInstaller);
+        context.SetToolExePaths(tools.HelmExePath, tools.KubeCtlPath);
         context.KubeConfigPath = clusterInstaller.KubeConfigPath;
     }
+
+    /// <summary>The per-test-case state that <see cref="SetUp"/> builds, so the test can hold it in locals.</summary>
+    sealed record TestRun(TentacleClient TentacleClient, IRecordedMethodUsages RecordedMethodUsages, CancellationToken CancellationToken);
 }

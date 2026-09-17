@@ -9,6 +9,10 @@ using Octopus.Tentacle.Startup;
 
 namespace Octopus.Tentacle.Kubernetes.Tests.Integration.KubernetesAgent;
 
+// A fresh instance is constructed for each test case, so every test gets its own namespace to migrate
+// into. This lets the per-test state be readonly and assigned in the constructor, rather than being
+// left uninitialised for a [SetUp] to fill in later.
+[FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
 public class KubernetesAgentMigrateFromPreinstallationTest
 {
     
@@ -18,16 +22,14 @@ public class KubernetesAgentMigrateFromPreinstallationTest
     const string SourceSecretName = "tentacle-secret-pre";
     const string DestinationConfigMapName = "tentacle-config";
     const string DestinationSecretName = "tentacle-secret";
-    MigratePreInstalledKubernetesDeploymentTargetCommand commandToRun = null!;
-    KubernetesFileWrappedProvider kubernetesConfigClient = null!;
-    string commandNamespace = null!;
-    k8s.Kubernetes client = null!;
-    string[] commandArguments = null!;
+    readonly MigratePreInstalledKubernetesDeploymentTargetCommand commandToRun;
+    readonly string commandNamespace;
+    readonly k8s.Kubernetes client;
+    readonly string[] commandArguments;
 
-    [SetUp]
-    public void Init()
+    public KubernetesAgentMigrateFromPreinstallationTest()
     {
-        kubernetesConfigClient = new KubernetesFileWrappedProvider(KubernetesTestsGlobalContext.Instance.KubeConfigPath);
+        var kubernetesConfigClient = new KubernetesFileWrappedProvider(KubernetesTestsGlobalContext.Instance.KubeConfigPath);
         commandToRun = new MigratePreInstalledKubernetesDeploymentTargetCommand(new Lazy<IKubernetesClientConfigProvider>(kubernetesConfigClient), systemLog, new LogFileOnlyLogger());
         commandNamespace = Guid.NewGuid().ToString("N");
         Environment.SetEnvironmentVariable(KubernetesConfig.NamespaceVariableName, commandNamespace);
