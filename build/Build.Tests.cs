@@ -85,7 +85,7 @@ partial class Build
             // Test .deb and .rpm installation on ALL Tentacle Linux targets showing >=0.1% of fleet (i.e. be very thourough in our installer testing).
             // This is based on the spreadsheet that was supplied by (IIRC) Rob Erez and Jarrad Raddon in June 2026.
             // We should update this as we get new data (i.e. once per year) of Tentacle usage on which Linux targets.
-            // Yes, these will be double-ups (e.g. 
+            // Yes, these will be double-ups (e.g. debian:latest and debian:13 are the same thing), but the container downloads will be cached.
             List<TestConfigurationOnLinuxDistribution> testOnLinuxDistributions =
             [
                 // Supported Amazon Linux versions.
@@ -106,9 +106,10 @@ partial class Build
                 
                 // Supported RedHat (aka RHEL, CentOS, Rocky Linux, etc.) versions.
                 // There is no redhat/ubi or redhat/ubi:latest tag on Red Hat's Docker Hub profile, so we will need to opt-in here as each new version releases.
-                new (NetCore, "linux-x64", "redhat/ubi10", "rpm"), // aka RHEL 10.x (latest) standard support until May 31, 2035.
+                new (NetCore, "linux-x64", "redhat/ubi10", "rpm"), // aka RHEL 10.x (latest) standard support until May 31, 2030.
                 new (NetCore, "linux-x64", "redhat/ubi9", "rpm"), // aka RHEL 9.x (latest) standard support until May 31, 2027.
-                new (NetCore, "linux-x64", "redhat/ubi8", "rpm"), // aka RHEL 8.x (latest) standard support until May 31, 2029.
+                // Out-of-support RedHat versions.
+                new (NetCore, "linux-x64", "redhat/ubi8", "rpm"), // aka RHEL 8.x (latest) standard support until May 31, 2024.
                 // new (NetCore, "linux-x64", "redhat/ubi8", "rpm"), // RHEL 7.x (latest) [this has been yanked already by RedHat, so we can't test this].
                 
                 // Supported Ubuntu versions.
