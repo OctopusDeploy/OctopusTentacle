@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# test-linux-packages.sh
+# test-packages-on-distros.sh
 #
 # Runs NUKE's TestLinuxPackages target locally and reports what actually
 # happened, which the target itself does not.
@@ -32,7 +32,7 @@
 # individually, and exits non-zero if any of them did not pass.
 #
 # Usage:
-#   ./testing/linux-packages/test-linux-packages.sh [options]
+#   ./testing/linux-packages/test-packages-on-distros.sh [options]
 #        (runs from anywhere; it resolves the repo root itself)
 #   --pack           Build the .deb/.rpm first, via NUKE PackDebianPackage
 #   --distro IMAGE   Test a single distribution directly, skipping NUKE
