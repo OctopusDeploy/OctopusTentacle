@@ -28,10 +28,10 @@ public class KubernetesClientCompatibilityTests
 
     KubernetesTestsGlobalContext? testContext;
     ILogger logger = null!;
-    TemporaryDirectory toolsTemporaryDirectory;
-    string kindExePath;
-    string helmExePath;
-    string kubeCtlPath;
+    TemporaryDirectory toolsTemporaryDirectory = null!;
+    string kindExePath = null!;
+    string helmExePath = null!;
+    string kubeCtlPath = null!;
     KubernetesClusterInstaller? clusterInstaller;
     KubernetesAgentInstaller? kubernetesAgentInstaller;
     HalibutRuntime serverHalibutRuntime = null!;
@@ -125,7 +125,7 @@ public class KubernetesClientCompatibilityTests
     {
         testContext = new KubernetesTestsGlobalContext(logger);
         
-        await SetupCluster(clusterVersion);
+        await SetupCluster(testContext, clusterVersion);
 
         kubernetesAgentInstaller = new KubernetesAgentInstaller(
             testContext.TemporaryDirectory,
@@ -160,13 +160,13 @@ public class KubernetesClientCompatibilityTests
         });
     }
     
-    async Task SetupCluster(ClusterVersion clusterVersion)
+    async Task SetupCluster(KubernetesTestsGlobalContext context, ClusterVersion clusterVersion)
     {
-        clusterInstaller = new KubernetesClusterInstaller(testContext.TemporaryDirectory, kindExePath, helmExePath, kubeCtlPath, testContext.Logger);
+        clusterInstaller = new KubernetesClusterInstaller(context.TemporaryDirectory, kindExePath, helmExePath, kubeCtlPath, context.Logger);
         await clusterInstaller.Install(clusterVersion);
 
-        testContext.TentacleImageAndTag = await SetupHelpers.GetTentacleImageAndTag(kindExePath, clusterInstaller);
-        testContext.SetToolExePaths(helmExePath, kubeCtlPath);
-        testContext.KubeConfigPath = clusterInstaller.KubeConfigPath;
+        context.TentacleImageAndTag = await SetupHelpers.GetTentacleImageAndTag(kindExePath, clusterInstaller);
+        context.SetToolExePaths(helmExePath, kubeCtlPath);
+        context.KubeConfigPath = clusterInstaller.KubeConfigPath;
     }
 }
