@@ -41,3 +41,25 @@ The script runs in four stages, each of which can be skipped:
 ```
 
 The `e2e` stage needs an Octopus Server licence, because an unlicensed server enforces a limit of 0 targets and no Tentacle can register. Set `OCTOPUS_SERVER_BASE64_LICENSE`, or let the script read a development licence from 1Password when run interactively. Without one, the stage still verifies configuration and server connectivity up to the licence refusal. Pass `--no-1password` anywhere `op` must not run.
+
+## Linux Packages
+
+Use [`linux-packages/test-packages-on-distros.sh`](./linux-packages/test-packages-on-distros.sh) to run NUKE's `TestLinuxPackages` target locally. That target installs the built `.deb`/`.rpm` on every distribution in the matrix in `build/Build.Tests.cs` and checks the installed Tentacle reports the expected version.
+
+The wrapper exists because the target needs three things set up before it will run outside TeamCity - exactly one package of each type in `_artifacts` (it calls `.Single()`), `DOCKER_DEFAULT_PLATFORM=linux/amd64` for the amd64-only images, and `OCTOPUS__Tests__SecretManagerEnabled=False` so NUKE's start-up does not block on the 1Password CLI - and because its result cannot be read from its exit code.
+
+`Logging.InTest` catches each per-distribution failure, logs it and carries on. On TeamCity that still fails the build, through the `##teamcity[testFailed]` service message it writes, but locally the target reports `Succeeded` and `build.sh` exits `0` even when a distribution failed; the only trace is the "Errors & Warnings" block at the bottom of the output. The wrapper reads the log back, reports every distribution individually, and exits non-zero if any of them did not pass.
+
+```
+# the whole matrix, against the packages already in _artifacts
+./linux-packages/test-packages-on-distros.sh
+
+# build the packages first
+./linux-packages/test-packages-on-distros.sh --pack
+
+# iterate on one distribution, skipping NUKE entirely
+./linux-packages/test-packages-on-distros.sh --distro ubuntu:24.04
+
+# full options
+./linux-packages/test-packages-on-distros.sh --help
+```

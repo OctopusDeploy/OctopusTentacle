@@ -33,8 +33,9 @@
 #
 # Note: stage 1 runs the real NUKE build, which stamps the calculated version
 # into installer/Octopus.Tentacle.Installer/Product.wxs and regenerates
-# .nuke/build.schema.json. Both are tracked, so `git checkout --` them
-# afterwards if you do not want that noise in your working tree.
+# .nuke/build.schema.json. Both are tracked, so expect them to show up as
+# modified afterwards; commit them along with your change rather than
+# reverting them.
 #
 # Usage: ./testing/docker-linux/build-and-test-linux-docker-image.sh [options]
 #        (runs from anywhere; it resolves the repo root itself)
@@ -245,13 +246,20 @@ if [[ $SKIP_SMOKE -eq 0 ]]; then
     OS_ID=$(run_in_image '. /etc/os-release && echo "$ID"') || OS_ID=""
     OS_VER=$(run_in_image '. /etc/os-release && echo "$VERSION_ID"') || OS_VER=""
     assert_equals "base image is Ubuntu"        "$OS_ID"  "ubuntu"
-    assert_equals "base image is 22.04 (jammy)" "$OS_VER" "22.04"
+    assert_equals "base image is 24.04 (noble)" "$OS_VER" "24.04"
 
     # --- .NET runtime dependencies ---------------------------------------
-    # These are the Ubuntu 22.04 equivalents of the Debian 11 names the
+    # These are the Ubuntu 24.04 equivalents of the Debian 11 names the
     # Dockerfile used to install; getting them wrong fails the image build,
     # but a silently-missing one would fail Tentacle at runtime instead.
-    for pkg in ca-certificates libc6 libgcc-s1 libgssapi-krb5-2 libicu70 libssl3 libstdc++6 zlib1g; do
+    #
+    # Two changed names when the base image moved from 22.04 to 24.04: libicu70
+    # became libicu74 (soname bump), and libssl3 became libssl3t64 under noble's
+    # 64-bit time_t transition. libssl3t64 still declares 'Provides: libssl3',
+    # which is what keeps the .deb's own
+    # 'libssl1.0.0 | libssl1.0.2 | libssl1.1 | libssl3' dependency satisfiable
+    # (see linux-packages/packaging-scripts/package.sh).
+    for pkg in ca-certificates libc6 libgcc-s1 libgssapi-krb5-2 libicu74 libssl3t64 libstdc++6 zlib1g; do
         # Captured rather than piped into grep -q: see the note on wait_for_log.
         PKG_STATUS=$(run_in_image "dpkg-query -W -f='\${Status}' $pkg") || PKG_STATUS=""
         if [[ "$PKG_STATUS" == *"install ok installed"* ]]; then
@@ -278,7 +286,7 @@ if [[ $SKIP_SMOKE -eq 0 ]]; then
     SYMLINK=$(run_in_image 'readlink -f /usr/bin/tentacle') || SYMLINK=""
     assert_equals "/usr/bin/tentacle symlinks to the install" "$SYMLINK" "/opt/octopus/tentacle/Tentacle"
 
-    # OpenSSL 3 is what libssl3 provides; Tentacle's .deb accepts 1.0/1.1/3.
+    # OpenSSL 3 is what libssl3t64 provides; Tentacle's .deb accepts 1.0/1.1/3.
     OPENSSL_VER=$(run_in_image 'openssl version') || OPENSSL_VER=""
     assert_contains "OpenSSL is 3.x" "$OPENSSL_VER" "OpenSSL 3."
 
@@ -289,7 +297,7 @@ if [[ $SKIP_SMOKE -eq 0 ]]; then
     # ASCII-armoured one under /etc/apt/keyrings.
     DOCKER_SOURCES=$(run_in_image 'cat /etc/apt/sources.list.d/docker.sources') || DOCKER_SOURCES=""
     assert_contains "Docker apt source targets the Ubuntu repo" "$DOCKER_SOURCES" "download.docker.com/linux/ubuntu"
-    assert_contains "Docker apt source targets jammy"           "$DOCKER_SOURCES" "jammy"
+    assert_contains "Docker apt source targets noble"           "$DOCKER_SOURCES" "noble"
     assert_contains "Docker apt source is signed by the keyring" "$DOCKER_SOURCES" "Signed-By: /etc/apt/keyrings/docker.asc"
 
     if run_in_image 'test -r /etc/apt/keyrings/docker.asc && grep -q "BEGIN PGP PUBLIC KEY" /etc/apt/keyrings/docker.asc' >/dev/null 2>&1; then
