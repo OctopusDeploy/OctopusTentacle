@@ -270,13 +270,28 @@ if [[ $SKIP_SMOKE -eq 0 ]]; then
     done
 
     # --- tools the Dockerfile installs explicitly ------------------------
-    for tool in curl dos2unix jq sudo xxd; do
+    # Note the binary name, not the package name: lsb_release (underscore) is
+    # shipped by the lsb-release (hyphen) package.
+    for tool in curl dos2unix jq lsb_release sudo xxd; do
         if run_in_image "command -v $tool >/dev/null" >/dev/null 2>&1; then
             pass "tool on PATH: $tool"
         else
             fail "tool on PATH: $tool"
         fi
     done
+
+    # lsb_release stopped being part of the Ubuntu base image after 20.04, so
+    # moving off Debian 11 silently dropped it and anything shelling out to it
+    # (deployment scripts, health checks) started warning 'command not found'
+    # - see https://github.com/OctopusDeploy/OctopusTentacle/issues/1302.
+    # Assert it actually runs, not just that it is on PATH: noble's lsb-release
+    # is a self-contained /bin/sh script with no dependencies, but earlier
+    # versions were Python and would be on PATH yet fail to execute in an image
+    # with no python3.
+    LSB_RELEASE=$(run_in_image 'lsb_release -a') || LSB_RELEASE=""
+    assert_contains "lsb_release -a reports the distributor" "$LSB_RELEASE" "Ubuntu"
+    assert_contains "lsb_release -a reports the release"     "$LSB_RELEASE" "24.04"
+    assert_contains "lsb_release -a reports the codename"    "$LSB_RELEASE" "noble"
 
     # --- Tentacle --------------------------------------------------------
     TENTACLE_VERSION=$(run_in_image 'tentacle version') || TENTACLE_VERSION=""

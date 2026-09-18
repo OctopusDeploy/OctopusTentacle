@@ -18,6 +18,7 @@ RUN apt-get update && \
         curl \
         dos2unix \
         jq \
+        lsb-release \
         sudo \
         xxd \
         && \
