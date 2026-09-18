@@ -1,0 +1,8 @@
+<!-- Types resolved via reflection at runtime that the trimmer cannot see.
+     Autofac materialises Lazy<ICommand, CommandMetadata> registrations by invoking
+     Lazy`2 constructors through reflection, so they must be preserved explicitly. -->
+<linker>
+  <assembly fullname="System.Private.CoreLib">
+    <type fullname="System.Lazy`2" />
+  </assembly>
+</linker>
