@@ -1,5 +1,7 @@
 This image can be used to bring up an [Octopus Tentacle in a container](https://octopus.com/docs/installation/octopus-tentacle-container).
 
+> **Windows images discontinued.** New Windows tags of `octopusdeploy/tentacle` are no longer published; older tags pushed before discontinuation may still exist on Docker Hub and pull fine, but they will not receive further updates. The Windows `Dockerfile` remains in the [OctopusTentacle](https://github.com/OctopusDeploy/OctopusTentacle) repo under `docker/windows` purely as a reference for anyone wanting to build their own. The sections below covering Windows containers apply only to those old tags or to an image you build yourself.
+
 # Pre-Requisites
 
 Docker containers are supported on Windows Server 2016 and Windows 10. 
