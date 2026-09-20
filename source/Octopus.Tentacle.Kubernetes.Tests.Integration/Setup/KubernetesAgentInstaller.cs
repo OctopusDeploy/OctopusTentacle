@@ -31,7 +31,7 @@ public class KubernetesAgentInstaller
         this.kubeConfigPath = kubeConfigPath;
         this.logger = logger;
 
-        AgentName = Guid.NewGuid().ToString("N");
+        AgentName = Guid.NewGuid().ToString("N") + "f823g789fwgh39dfsadfarh239r8923fh8923fh389whrf8923hf89239h8";
     }
 
     public string AgentName { get; }
