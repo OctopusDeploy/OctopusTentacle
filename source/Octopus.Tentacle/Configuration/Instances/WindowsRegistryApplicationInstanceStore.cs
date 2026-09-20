@@ -71,25 +71,39 @@ namespace Octopus.Tentacle.Configuration.Instances
 
         public void DeleteFromRegistry(string instanceName)
         {
+            log.Info($"Entering DeleteFromRegistry");
+
             if (!PlatformDetection.IsRunningOnWindows)
+            {
+                log.Info($"Inside DeleteFromRegistry: Is running on Windows");
                 return;
+            }
 
             var registryInstance = GetInstanceFromRegistry(instanceName);
             if (registryInstance == null)
+            {
+                log.Info($"Inside DeleteFromRegistry: registryInstance looks like is null");
                 return;
+            }
 
             try
             {
 #pragma warning disable CA1416
+                log.Info($"Inside DeleteFromRegistry: trying to delete from actual registry");
                 using var rootKey = RegistryKey.OpenBaseKey(Hive, View);
                 using var subKey = rootKey.OpenSubKey(KeyName, true);
 
                 using var applicationNameKey = subKey?.OpenSubKey(applicationName.ToString(), true);
                 if (applicationNameKey == null)
+                {
+                    log.Info($"Inside DeleteFromRegistry: No applicationNameKey found: {applicationNameKey}");
                     return;
+                }
 
                 applicationNameKey.DeleteSubKey(instanceName);
+                log.Info($"Inside DeleteFromRegistry: could delete from actual registry");
                 applicationNameKey.Flush();
+                log.Info($"Inside DeleteFromRegistry: flushed");
 #pragma warning restore CA1416
             }
             catch (UnauthorizedAccessException ex)

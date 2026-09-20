@@ -34,7 +34,7 @@ namespace Octopus.Tentacle.Tests.Integration
         public async Task WhenRpcRetriesTimeOut_DuringUploadFile_TheRpcCallIsCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase, bool stopPortForwarderAfterFirstCall)
         {
             PortForwarder portForwarder = null!;
-            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+            var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 // Set a short retry duration so we cancel fairly quickly
                 .WithRetryDuration(TimeSpan.FromSeconds(15))
                 .WithPortForwarderDataLogging()
@@ -103,7 +103,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             var retryDuration = TimeSpan.FromSeconds(15);
 
-            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+            var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 // Set a short retry duration so we cancel fairly quickly
                 .WithRetryDuration(retryDuration)
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
@@ -145,7 +145,7 @@ namespace Octopus.Tentacle.Tests.Integration
         public async Task WhenRpcRetriesTimeOut_DuringDownloadFile_TheRpcCallIsCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase, bool stopPortForwarderAfterFirstCall)
         {
             PortForwarder portForwarder = null!;
-            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+            var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 // Set a short retry duration so we cancel fairly quickly
                 .WithRetryDuration(TimeSpan.FromSeconds(15))
                 .WithPortForwarderDataLogging()
@@ -215,7 +215,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             var retryDuration = TimeSpan.FromSeconds(15);
 
-            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+            var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 // Set a short retry duration so we cancel fairly quickly
                 .WithRetryDuration(retryDuration)
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
