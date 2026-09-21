@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using CliWrap;
 using CliWrap.Exceptions;
 using FluentAssertions;
@@ -14,6 +15,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using Octopus.Tentacle.CommonTestUtils;
+using Octopus.Tentacle.Configuration.Crypto;
 using Octopus.Tentacle.Core.Util;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.TestAttributes;
@@ -563,6 +565,39 @@ Or one of the common options:
             // Actually parse and query the document just like our consumer will
             dynamic? settings = JsonConvert.DeserializeObject(stdout);
             ((string)settings.Octopus.Home).Should().Be(temporaryDirectory.DirectoryPath, "the home directory should match");
+        }
+
+        [Test]
+        [TentacleConfigurations(scriptServiceToTest: ScriptServiceVersionToTest.None)]
+        [LinuxTest]
+        // Run these tests in serial to avoid conflicts
+        [NonParallelizable]
+        public async Task NewCertificateOnLinuxIsProtectedWithTheGeneratedMachineKeyNotTheMachineId(TentacleConfigurationTestCase tc)
+        {
+            // TentacleMachineConfigurationHomeDirectory relocates the instance registry and, from this version, the
+            // generated machine key as well, so nothing here touches /etc/octopus or needs root.
+            using var homeDirectory = new TemporaryDirectory();
+            var environmentVariables = new Dictionary<string, string?> { { EnvironmentVariables.TentacleMachineConfigurationHomeDirectory, homeDirectory.DirectoryPath } };
+
+            var instanceId = Guid.NewGuid().ToString();
+            using var temporaryDirectory = new TemporaryDirectory();
+            var configurationFile = Path.Combine(temporaryDirectory.DirectoryPath, instanceId + ".cfg");
+            await RunCommandAndAssertExitsWithSuccessExitCode(tc, environmentVariables, "create-instance", $"--instance={instanceId}", "--config", configurationFile);
+            await RunCommandAndAssertExitsWithSuccessExitCode(tc, environmentVariables, "new-certificate", $"--instance={instanceId}");
+
+            var settings = XDocument.Load(configurationFile).Root!.Elements("set").ToDictionary(e => (string)e.Attribute("key")!, e => e.Value);
+            settings["Tentacle.Certificate"].Should().StartWith(LinuxMachineKeyEncryptor.ProtectedValuePrefix,
+                "the certificate must be encrypted with the versioned scheme and the key generated for this machine, never with a key derived from /etc/machine-id");
+
+            var keyFile = Path.Combine(homeDirectory.DirectoryPath, "machinekey");
+            File.Exists(keyFile).Should().BeTrue("the generated key lives in the machine configuration home");
+            if (!OperatingSystem.IsWindows())
+                File.GetUnixFileMode(keyFile).Should().Be(UnixFileMode.UserRead | UnixFileMode.UserWrite, "only the owner may read the key");
+
+            // A second process reads the certificate back with the same key.
+            var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, environmentVariables, "show-thumbprint", $"--instance={instanceId}");
+            stderr.Should().BeNullOrEmpty();
+            stdout.Should().Be(settings["Tentacle.CertificateThumbprint"], "the thumbprint should be written directly to stdout");
         }
 
         [Test]

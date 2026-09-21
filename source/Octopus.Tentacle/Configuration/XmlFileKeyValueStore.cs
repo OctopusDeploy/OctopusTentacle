@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Octopus.Tentacle.Configuration.Crypto;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Configuration
@@ -13,7 +14,8 @@ namespace Octopus.Tentacle.Configuration
         public XmlFileKeyValueStore(IOctopusFileSystem fileSystem,
             string configurationFile,
             bool autoSaveOnSet = true,
-            bool isWriteOnly = false) : base(autoSaveOnSet, isWriteOnly)
+            bool isWriteOnly = false,
+            IMachineKeyEncryptor? encryptor = null) : base(autoSaveOnSet, isWriteOnly, encryptor)
         {
             this.fileSystem = fileSystem;
             this.configurationFile = fileSystem.GetFullPath(configurationFile);
