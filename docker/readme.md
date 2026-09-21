@@ -23,6 +23,16 @@ You will also need [Docker for Windows](https://www.docker.com/community-edition
 # Notes #
 On Linux containers, prior to version `6.1.1271` the internal listening port was set by the `ListeningPort` environment variable. Any containers which previously exposed Tentacle on a port other than `10933` will need to have their port configuration updated if updating to a version `>=6.1.1271`. For example if the container was run with `-p 10934:10934` this should be updated to `-p 10934:10933`.
 
+## Configuration encryption and persistence ##
+
+Tentacle stores its configuration, including its certificate, in `/etc/octopus`. Sensitive values in `tentacle.config` are encrypted with a key derived from `/etc/machine-id`. Earlier Linux images used the machine-id baked into the image, which every container started from that image shared. The entrypoint now gives each container its own machine-id on first start, kept in `/etc/octopus/machine-id` next to the configuration it protects, and applies it to `/etc/machine-id` on every start.
+
+To keep a Tentacle's identity across container re-creation, persist `/etc/octopus` on a volume (for example `-v tentacle-config:/etc/octopus`). The machine-id travels with the configuration, so the same volume works with any newer image. Without a persisted volume every new container is a new Tentacle that registers itself again.
+
+A volume configured by an earlier image has no persisted machine-id. On its first start with this image the entrypoint keeps the image's machine-id for it, which matches the one the configuration was encrypted with whenever the Ubuntu base layer has not changed between the two images. If it has changed, Tentacle cannot decrypt the old certificate and will not start; recover by running `tentacle new-certificate --instance Tentacle` in the container and re-establishing trust on the Octopus Server, or by removing the volume and letting the container register itself afresh.
+
+If you override the entrypoint, run `/scripts/ensure-machine-id.sh` before starting Tentacle to get the same behaviour.
+
 # Usage #
 
 On a Windows Server 2016 server, or on Windows 10, run:
