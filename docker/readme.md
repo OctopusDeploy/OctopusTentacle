@@ -23,6 +23,14 @@ You will also need [Docker for Windows](https://www.docker.com/community-edition
 # Notes #
 On Linux containers, prior to version `6.1.1271` the internal listening port was set by the `ListeningPort` environment variable. Any containers which previously exposed Tentacle on a port other than `10933` will need to have their port configuration updated if updating to a version `>=6.1.1271`. For example if the container was run with `-p 10934:10934` this should be updated to `-p 10934:10933`.
 
+## Configuration encryption and persistence ##
+
+Tentacle stores its configuration, including its certificate, in `/etc/octopus`. Sensitive values in `tentacle.config` are encrypted with a key that Tentacle generates the first time it needs one and keeps in `/etc/octopus/machinekey`, readable only by its owner. Earlier Linux images derived that key from `/etc/machine-id` instead, which is identical in every container started from the same image; the image now ships with an empty `/etc/machine-id` and values written by earlier versions are re-encrypted with the generated key the next time the container starts.
+
+To keep a Tentacle's identity across container re-creation, persist `/etc/octopus` on a volume (for example `-v tentacle-config:/etc/octopus`). The key travels with the configuration, so the same volume works with any newer image. Without a persisted volume every new container is a new Tentacle that registers itself again.
+
+If `/etc/octopus` was persisted from an image that still used the machine-id derived key, and that container was never started with a version that re-encrypts, the new image cannot decrypt the old certificate and Tentacle will not start. Recover by running `tentacle new-certificate --instance Tentacle` in the container and re-establishing trust on the Octopus Server, or by removing the volume and letting the container register itself afresh.
+
 # Usage #
 
 On a Windows Server 2016 server, or on Windows 10, run:
