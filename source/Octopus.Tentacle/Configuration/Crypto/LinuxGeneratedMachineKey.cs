@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Security.Cryptography;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Core.Util;
@@ -26,7 +25,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
         /// Where the key lives on a standard install, and where every version before the machine configuration home
         /// was honoured kept it regardless of that setting.
         /// </summary>
-        public static readonly string StandardKeyFilePath = Path.Combine(StandardMachineConfigurationHome, KeyFileName);
+        public const string StandardKeyFilePath = StandardMachineConfigurationHome + "/" + KeyFileName;
 
         readonly ISystemLog log;
         readonly IOctopusFileSystem fileSystem;
@@ -58,12 +57,12 @@ namespace Octopus.Tentacle.Configuration.Crypto
             {
                 if (KubernetesSupportDetection.IsRunningAsKubernetesAgent)
                     //if we are running in K8S, we want to save the machine key to the home directory, which is likely on a network drive
-                    return Path.Combine(Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleHome)!, KeyFileName);
+                    return JoinLinuxPath(Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleHome)!, KeyFileName);
 
                 // The same override ApplicationInstanceStore honours for the instance registry, so a Tentacle that is not
                 // allowed to write to /etc/octopus can still keep its key somewhere it can write.
                 var machineConfigurationHome = Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleMachineConfigurationHomeDirectory);
-                return Path.Combine(string.IsNullOrWhiteSpace(machineConfigurationHome) ? StandardMachineConfigurationHome : machineConfigurationHome!, KeyFileName);
+                return JoinLinuxPath(string.IsNullOrWhiteSpace(machineConfigurationHome) ? StandardMachineConfigurationHome : machineConfigurationHome!, KeyFileName);
             }
         }
 
@@ -94,7 +93,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
             aes.GenerateKey();
             var raw = Convert.ToBase64String(aes.Key) + "." + Convert.ToBase64String(aes.IV);
 
-            fileSystem.EnsureDirectoryExists(Path.GetDirectoryName(path)!);
+            fileSystem.EnsureDirectoryExists(LinuxDirectoryOf(path));
 
             // Created with owner-only permissions from the outset rather than written and then chmod-ed, so there
             // is never a moment when the key is readable by everyone on the machine.
@@ -121,6 +120,17 @@ namespace Octopus.Tentacle.Configuration.Crypto
             {
                 log.Verbose(e, $"Unable to restrict the permissions on the machine key file `{path}`. The key is still usable.");
             }
+        }
+
+        // These are always Linux paths, whatever the host: this class only runs on Linux in production, but its unit
+        // tests also run on Windows, where Path.Combine and Path.GetDirectoryName would switch to backslashes.
+        static string JoinLinuxPath(string directory, string fileName)
+            => directory.EndsWith("/", StringComparison.Ordinal) ? directory + fileName : directory + "/" + fileName;
+
+        static string LinuxDirectoryOf(string path)
+        {
+            var lastSeparator = path.LastIndexOf('/');
+            return lastSeparator <= 0 ? "/" : path.Substring(0, lastSeparator);
         }
 
         (byte[] Key, byte[] IV) LoadFromFile(string path)

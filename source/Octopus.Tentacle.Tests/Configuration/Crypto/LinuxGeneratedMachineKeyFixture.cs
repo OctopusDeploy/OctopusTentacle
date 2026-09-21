@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using FluentAssertions;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -175,7 +174,17 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
             using (new TemporaryEnvironmentVariable(KubernetesConfig.NamespaceVariableName, null))
             using (new TemporaryEnvironmentVariable(EnvironmentVariables.TentacleMachineConfigurationHomeDirectory, "/home/octopus/.octopus"))
             {
-                new LinuxGeneratedMachineKey(log, fileSystem).KeyFilePath.Should().Be(Path.Combine("/home/octopus/.octopus", "machinekey"));
+                new LinuxGeneratedMachineKey(log, fileSystem).KeyFilePath.Should().Be("/home/octopus/.octopus/machinekey");
+            }
+        }
+
+        [Test]
+        public void AHomeGivenWithATrailingSlashIsNotDoubled()
+        {
+            using (new TemporaryEnvironmentVariable(KubernetesConfig.NamespaceVariableName, null))
+            using (new TemporaryEnvironmentVariable(EnvironmentVariables.TentacleMachineConfigurationHomeDirectory, "/home/octopus/.octopus/"))
+            {
+                new LinuxGeneratedMachineKey(log, fileSystem).KeyFilePath.Should().Be("/home/octopus/.octopus/machinekey");
             }
         }
 
@@ -186,7 +195,7 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
             using (new TemporaryEnvironmentVariable(EnvironmentVariables.TentacleHome, "/octopus"))
             using (new TemporaryEnvironmentVariable(EnvironmentVariables.TentacleMachineConfigurationHomeDirectory, "/somewhere/else"))
             {
-                new LinuxGeneratedMachineKey(log, fileSystem).KeyFilePath.Should().Be(Path.Combine("/octopus", "machinekey"), "the Kubernetes agent's home is what is on the persistent volume");
+                new LinuxGeneratedMachineKey(log, fileSystem).KeyFilePath.Should().Be("/octopus/machinekey", "the Kubernetes agent's home is what is on the persistent volume");
             }
         }
 
