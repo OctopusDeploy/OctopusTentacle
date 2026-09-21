@@ -36,6 +36,21 @@ namespace Octopus.Tentacle.Util
 
         void WriteAllBytes(string filePath, byte[] data);
         void WriteAllText(string filePath, string contents);
+
+        /// <summary>
+        /// Creates or replaces a file that only its owner can read or write (mode 0600 on Unix). The permissions are
+        /// applied as the file is created, so it is never briefly readable by others. On Windows this is the same as
+        /// <see cref="WriteAllText"/>.
+        /// </summary>
+        void WriteAllTextOwnerOnly(string filePath, string contents);
+
+        /// <summary>
+        /// Changes the permissions of an existing file so that only its owner can read or write it (mode 0600 on Unix).
+        /// Returns true if the permissions were changed, false if they were already that restrictive. Does nothing and
+        /// returns false on Windows. Throws if the permissions cannot be changed, for example on a read-only volume
+        /// or when the caller does not own the file.
+        /// </summary>
+        bool RestrictFilePermissionsToOwner(string filePath);
         string ReadAllText(string scriptFile);
         string[] ReadAllLines(string scriptFile);
     }

@@ -250,6 +250,56 @@ namespace Octopus.Tentacle.Core.Util
             File.WriteAllText(path, contents);
         }
 
+#if NETFRAMEWORK
+        // .NET Framework only runs on Windows, where there are no Unix permissions to set.
+        public void WriteAllTextOwnerOnly(string path, string contents)
+            => File.WriteAllText(path, contents);
+
+        public bool RestrictFilePermissionsToOwner(string path)
+            => false;
+#else
+        const UnixFileMode OwnerReadWrite = UnixFileMode.UserRead | UnixFileMode.UserWrite;
+
+        public void WriteAllTextOwnerOnly(string path, string contents)
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                File.WriteAllText(path, contents);
+                return;
+            }
+
+            // UnixCreateMode is only honoured when the file is created, so an existing file (which we may be replacing)
+            // is tightened explicitly as well. Its old contents are truncated away by FileMode.Create.
+            var options = new FileStreamOptions
+            {
+                Mode = FileMode.Create,
+                Access = FileAccess.Write,
+                Share = FileShare.None,
+                UnixCreateMode = OwnerReadWrite
+            };
+            using (var stream = new FileStream(path, options))
+            using (var writer = new StreamWriter(stream, new UTF8Encoding(false)))
+            {
+                writer.Write(contents);
+            }
+
+            File.SetUnixFileMode(path, OwnerReadWrite);
+        }
+
+        public bool RestrictFilePermissionsToOwner(string path)
+        {
+            if (OperatingSystem.IsWindows())
+                return false;
+
+            var current = File.GetUnixFileMode(path);
+            if ((current & ~OwnerReadWrite) == UnixFileMode.None)
+                return false;
+
+            File.SetUnixFileMode(path, OwnerReadWrite);
+            return true;
+        }
+#endif
+
         public void EnsureDirectoryExists(string directoryPath)
         {
             if (!DirectoryExists(directoryPath))
