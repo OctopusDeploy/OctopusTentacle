@@ -44,6 +44,10 @@ namespace Octopus.Tentacle.Kubernetes.Crypto
             return Encoding.UTF8.GetString(asd);
         }
 
+        // The key lives in a Kubernetes Secret that is unique to the agent, and there has only ever been one scheme.
+        public bool RequiresReEncryption(string encrypted)
+            => false;
+
         [MemberNotNull(nameof(key), nameof(iv))]
         void EnsureMachineKeyAndIvLoaded()
         {
