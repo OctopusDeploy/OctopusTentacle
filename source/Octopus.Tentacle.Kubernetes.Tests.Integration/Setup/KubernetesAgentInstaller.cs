@@ -9,7 +9,7 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Kubernetes.Tests.Integration.Setup;
 
-public class KubernetesAgentInstaller
+public class KubernetesAgentInstaller : IDisposable
 {
     //This is the DNS of the localhost Kubernetes Server we add to the cluster in the KubernetesClusterInstaller.SetLocalhostRouting()
     const string LocalhostKubernetesServiceDns = "dockerhost.default.svc.cluster.local";

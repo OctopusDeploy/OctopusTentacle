@@ -36,6 +36,8 @@ public class KubernetesClientCompatibilityTests
     // Fields only because TearDown has to clean them up after the test case has finished with them.
     KubernetesTestsGlobalContext? testContext;
     KubernetesClusterInstaller? clusterInstaller;
+    KubernetesAgentInstaller? kubernetesAgentInstaller;
+    HalibutRuntime? serverHalibutRuntime;
     TraceLogFileLogger? traceLogFileLogger;
     CancellationTokenSource? cancellationTokenSource;
 
@@ -63,11 +65,18 @@ public class KubernetesClientCompatibilityTests
             await cancellationTokenSource.CancelAsync();
             cancellationTokenSource.Dispose();
         }
+
+        // Order matters: the agent is uninstalled with helm against the cluster, so it has to go before
+        // the cluster installer deletes the cluster out from under it.
+        if (serverHalibutRuntime is not null) await serverHalibutRuntime.DisposeAsync();
+        kubernetesAgentInstaller?.Dispose();
         clusterInstaller?.Dispose();
         testContext?.Dispose();
 
         traceLogFileLogger = null;
         cancellationTokenSource = null;
+        serverHalibutRuntime = null;
+        kubernetesAgentInstaller = null;
         clusterInstaller = null;
         testContext = null;
     }
@@ -125,21 +134,24 @@ public class KubernetesClientCompatibilityTests
 
         await SetupCluster(context, clusterVersion);
 
-        var kubernetesAgentInstaller = new KubernetesAgentInstaller(
+        var agentInstaller = new KubernetesAgentInstaller(
             context.TemporaryDirectory,
             context.HelmExePath,
             context.KubeCtlExePath,
             context.KubeConfigPath,
             context.Logger);
+        kubernetesAgentInstaller = agentInstaller;
 
         //create a new server halibut runtime
-        var serverHalibutRuntime = SetupHelpers.BuildServerHalibutRuntime();
-        var listeningPort = serverHalibutRuntime.Listen();
+        var halibutRuntime = SetupHelpers.BuildServerHalibutRuntime();
+        serverHalibutRuntime = halibutRuntime;
 
-        var agentThumbprint = await kubernetesAgentInstaller.InstallAgent(listeningPort, context.TentacleImageAndTag, new Dictionary<string, string>());
+        var listeningPort = halibutRuntime.Listen();
+
+        var agentThumbprint = await agentInstaller.InstallAgent(listeningPort, context.TentacleImageAndTag, new Dictionary<string, string>());
 
         //trust the generated cert thumbprint
-        serverHalibutRuntime.Trust(agentThumbprint);
+        halibutRuntime.Trust(agentThumbprint);
 
         traceLogFileLogger = new TraceLogFileLogger(LoggingUtils.CurrentTestHash());
         logger = new SerilogLoggerBuilder()
@@ -152,7 +164,7 @@ public class KubernetesClientCompatibilityTests
         cancellationTokenSource = testCancellationTokenSource;
 
         IRecordedMethodUsages? recordedMethodUsages = null;
-        var tentacleClient = SetupHelpers.BuildTentacleClient(kubernetesAgentInstaller.SubscriptionId, agentThumbprint, serverHalibutRuntime, builder =>
+        var tentacleClient = SetupHelpers.BuildTentacleClient(agentInstaller.SubscriptionId, agentThumbprint, halibutRuntime, builder =>
         {
             builder.RecordMethodUsages<IAsyncClientKubernetesScriptServiceV1>(out var recordedUsages);
             recordedMethodUsages = recordedUsages;
