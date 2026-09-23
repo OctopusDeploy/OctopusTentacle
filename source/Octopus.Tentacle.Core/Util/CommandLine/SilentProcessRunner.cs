@@ -128,20 +128,20 @@ namespace Octopus.Tentacle.Util
 
                     process.Start();
 
+                    // Begin reading before registering for cancellation. Cleanup closes the process,
+                    // after which the reads can no longer be started and any output would be lost.
+                    process.BeginOutputReadLine();
+                    process.BeginErrorReadLine();
+
                     var running = true;
 
+                    // If the token is already cancelled, Register invokes the callback synchronously.
                     using (cancel.Register(() =>
                            {
                                if (running) DoOurBestToCleanUp(process, error);
                            }))
                     {
-                        if (cancel.IsCancellationRequested)
-                            DoOurBestToCleanUp(process,  error);
-
-                        process.BeginOutputReadLine();
-                        process.BeginErrorReadLine();
-
-                        process.WaitForExit();
+                        SafelyWaitForExit(process, cancel, debug);
 
                         SafelyCancelRead(process.CancelErrorRead, debug);
                         SafelyCancelRead(process.CancelOutputRead, debug);
@@ -174,6 +174,19 @@ namespace Octopus.Tentacle.Util
                       ex.Message == "Process was not started by this object, so requested information cannot be determined.")
             {
                 return -1;
+            }
+        }
+
+        static void SafelyWaitForExit(Process process, CancellationToken cancel, Action<string> debug)
+        {
+            try
+            {
+                process.WaitForExit();
+            }
+            catch (InvalidOperationException ex) when (cancel.IsCancellationRequested)
+            {
+                // Cancellation cleanup closes the process, which can happen before we start waiting
+                debug($"Swallowing {ex.GetType().Name} while waiting for the cancelled process to exit.");
             }
         }
 
