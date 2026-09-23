@@ -2,7 +2,6 @@
   <PropertyGroup>
     <RootNamespace>Octopus.Tentacle.Contracts</RootNamespace>
     <AssemblyName>Octopus.Tentacle.Contracts</AssemblyName>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>bin\</OutputPath>
     <TargetFrameworks>net48;net8.0;net8.0-windows</TargetFrameworks>

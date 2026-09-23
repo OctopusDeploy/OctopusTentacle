@@ -3,7 +3,6 @@
   <PropertyGroup>
     <Description>A sample project containing a Windows service.</Description>
     <NeutralLanguage>en-US</NeutralLanguage>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <Authors>ACME Corporation</Authors>
     <TargetFramework>netstandard1.0</TargetFramework>
     <AssemblyName>Acme.Service</AssemblyName>

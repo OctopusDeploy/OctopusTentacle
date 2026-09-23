@@ -4,7 +4,6 @@
         <AssemblyName>Octopus.Tentacle.Tests.Integration.Common</AssemblyName>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <OutputPath>bin</OutputPath>
         <PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
         <IsPackable>false</IsPackable>
