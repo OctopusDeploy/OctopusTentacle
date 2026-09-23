@@ -30,7 +30,7 @@ public class KubernetesClientCompatibilityTests
     // built up by SetUp and owned (and disposed) by the TestRun it hands back.
     readonly TemporaryDirectory toolsTemporaryDirectory = new();
 
-    ILogger logger = new SerilogLoggerBuilder().Build();
+    readonly ILogger logger = new SerilogLoggerBuilder().Build();
     RequiredTools? requiredTools;
 
     RequiredTools RequiredTools => requiredTools ?? throw new InvalidOperationException("Expected the required tools to have been downloaded by OneTimeSetup");
@@ -104,7 +104,16 @@ public class KubernetesClientCompatibilityTests
         var testRun = new TestRun();
         try
         {
-            var context = new KubernetesTestsGlobalContext(logger);
+            // Built first, and handed to this test case's context, so the cluster and agent setup and
+            // teardown for this test case land in its own trace log.
+            var traceLogFileLogger = new TraceLogFileLogger(LoggingUtils.CurrentTestHash());
+            testRun.TraceLogFileLogger = traceLogFileLogger;
+            var testLogger = new SerilogLoggerBuilder()
+                .SetTraceLogFileLogger(traceLogFileLogger)
+                .Build()
+                .ForContext(GetType());
+
+            var context = new KubernetesTestsGlobalContext(testLogger);
             testRun.Context = context;
 
             await SetupCluster(testRun, context, clusterVersion);
@@ -127,13 +136,6 @@ public class KubernetesClientCompatibilityTests
 
             //trust the generated cert thumbprint
             halibutRuntime.Trust(agentThumbprint);
-
-            var traceLogFileLogger = new TraceLogFileLogger(LoggingUtils.CurrentTestHash());
-            testRun.TraceLogFileLogger = traceLogFileLogger;
-            logger = new SerilogLoggerBuilder()
-                .SetTraceLogFileLogger(traceLogFileLogger)
-                .Build()
-                .ForContext(GetType());
 
             var cancellationTokenSource = new CancellationTokenSource();
             cancellationTokenSource.CancelAfter(TimeSpan.FromMinutes(5));
@@ -203,7 +205,6 @@ public class KubernetesClientCompatibilityTests
         {
             try
             {
-                if (TraceLogFileLogger is not null) await TraceLogFileLogger.DisposeAsync();
                 if (CancellationTokenSource is not null)
                 {
                     await CancellationTokenSource.CancelAsync();
@@ -224,7 +225,15 @@ public class KubernetesClientCompatibilityTests
                 }
                 finally
                 {
-                    Context?.Dispose();
+                    try
+                    {
+                        Context?.Dispose();
+                    }
+                    finally
+                    {
+                        // Last, so everything above still gets written to the test case's trace log.
+                        if (TraceLogFileLogger is not null) await TraceLogFileLogger.DisposeAsync();
+                    }
                 }
             }
         }
