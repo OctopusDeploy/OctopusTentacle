@@ -101,7 +101,7 @@ public class KubernetesClientCompatibilityTests
     {
         // Each resource goes onto the TestRun as soon as it's created, so if SetUp fails part way through,
         // disposing the TestRun cleans up whatever did get created.
-        var testRun = new TestRun();
+        var testRun = new TestRun(logger);
         try
         {
             // Built first, and handed to this test case's context, so the cluster and agent setup and
@@ -175,7 +175,7 @@ public class KubernetesClientCompatibilityTests
     /// The per-test-case state that <see cref="SetUp"/> builds. The test holds it with <c>await using</c>,
     /// so everything it owns is cleaned up when the test case finishes.
     /// </summary>
-    sealed class TestRun : IAsyncDisposable
+    sealed class TestRun(ILogger fallbackLogger) : IAsyncDisposable
     {
         TentacleClient? tentacleClient;
         IRecordedMethodUsages? recordedMethodUsages;
@@ -199,42 +199,58 @@ public class KubernetesClientCompatibilityTests
             set => recordedMethodUsages = value;
         }
 
+        // The test case's own logger once SetUp has made it, so cleanup failures land in its trace log.
+        ILogger Logger => Context?.Logger ?? fallbackLogger;
+
         public CancellationToken CancellationToken => CancellationTokenSource?.Token ?? throw new InvalidOperationException("Expected SetUp to have created the cancellation token source");
 
+        // Never throws: the test disposes this with `await using`, so an exception from here would replace the
+        // test's own failure. Instead every step runs, even if an earlier one failed, and failures are logged.
         public async ValueTask DisposeAsync()
+        {
+            await RunCleanupStep("cancel the test's cancellation token", async () =>
+            {
+                if (CancellationTokenSource is null) return;
+                await CancellationTokenSource.CancelAsync();
+                CancellationTokenSource.Dispose();
+            });
+
+            // Order matters: the agent is uninstalled with helm against the cluster, so it has to go before
+            // the cluster installer deletes the cluster out from under it.
+            await RunCleanupStep("dispose the server Halibut runtime", async () =>
+            {
+                if (ServerHalibutRuntime is not null) await ServerHalibutRuntime.DisposeAsync();
+            });
+            await RunCleanupStep("uninstall the agent", () => AgentInstaller?.Dispose());
+            await RunCleanupStep("delete the kind cluster", () => ClusterInstaller?.Dispose());
+            await RunCleanupStep("dispose the test context", () => Context?.Dispose());
+
+            // Last, so everything above still gets written to the test case's trace log.
+            try
+            {
+                if (TraceLogFileLogger is not null) await TraceLogFileLogger.DisposeAsync();
+            }
+            catch (Exception e)
+            {
+                fallbackLogger.Error(e, "Failed to dispose the trace log file logger while cleaning up the test run");
+            }
+        }
+
+        Task RunCleanupStep(string description, Action step) => RunCleanupStep(description, () =>
+        {
+            step();
+            return Task.CompletedTask;
+        });
+
+        async Task RunCleanupStep(string description, Func<Task> step)
         {
             try
             {
-                if (CancellationTokenSource is not null)
-                {
-                    await CancellationTokenSource.CancelAsync();
-                    CancellationTokenSource.Dispose();
-                }
-
-                // Order matters: the agent is uninstalled with helm against the cluster, so it has to go before
-                // the cluster installer deletes the cluster out from under it.
-                if (ServerHalibutRuntime is not null) await ServerHalibutRuntime.DisposeAsync();
-                AgentInstaller?.Dispose();
+                await step();
             }
-            finally
+            catch (Exception e)
             {
-                // Always delete the kind cluster, even if the earlier cleanup threw, so it isn't left behind.
-                try
-                {
-                    ClusterInstaller?.Dispose();
-                }
-                finally
-                {
-                    try
-                    {
-                        Context?.Dispose();
-                    }
-                    finally
-                    {
-                        // Last, so everything above still gets written to the test case's trace log.
-                        if (TraceLogFileLogger is not null) await TraceLogFileLogger.DisposeAsync();
-                    }
-                }
+                Logger.Error(e, "Failed to {CleanupStep} while cleaning up the test run", description);
             }
         }
     }
