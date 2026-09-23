@@ -124,6 +124,31 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         }
 
         [Test]
+        public void CancellationToken_WhenAlreadyCancelled_ShouldKillTheProcessWithoutErrors()
+        {
+            // Simulates cancellation arriving between the process starting and output being read
+            using (var cts = new CancellationTokenSource())
+            {
+                cts.Cancel();
+
+                var exitCode = Execute(command,
+                    "",
+                    "",
+                    out _,
+                    out _,
+                    out var errorMessages,
+                    cts.Token);
+
+                if (PlatformDetection.IsRunningOnWindows)
+                    exitCode.Should().BeLessOrEqualTo(0, "the process should have been terminated");
+                else
+                    exitCode.Should().BeOneOf(SIG_KILL, SIG_TERM, 0, -1);
+
+                errorMessages.ToString().Should().BeEmpty("cleanup should only run once and output reading should already have begun");
+            }
+        }
+
+        [Test]
         [WindowsTest]
         public async Task CancellationToken_WhenGrandchildHoldsRedirectedPipes_ShouldNotHang()
         {
