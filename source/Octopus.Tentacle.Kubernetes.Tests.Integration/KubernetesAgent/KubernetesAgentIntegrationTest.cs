@@ -96,11 +96,17 @@ public abstract class KubernetesAgentIntegrationTest
     [OneTimeTearDown]
     public async Task OneTimeTearDown()
     {
-        if (serverHalibutRuntime is not null)
+        try
         {
-            await serverHalibutRuntime.DisposeAsync();
+            if (serverHalibutRuntime is not null)
+            {
+                await serverHalibutRuntime.DisposeAsync();
+            }
         }
-
-        kubernetesAgentInstaller?.Dispose();
+        finally
+        {
+            // Always uninstall the agent, even if disposing the Halibut runtime threw, so it isn't left behind.
+            kubernetesAgentInstaller?.Dispose();
+        }
     }
 }
