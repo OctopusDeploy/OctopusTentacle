@@ -59,26 +59,44 @@ public class KubernetesClientCompatibilityTests
     [TearDown]
     public async Task TearDown()
     {
-        if (traceLogFileLogger is not null) await traceLogFileLogger.DisposeAsync();
-        if (cancellationTokenSource is not null)
+        try
         {
-            await cancellationTokenSource.CancelAsync();
-            cancellationTokenSource.Dispose();
+            try
+            {
+                if (traceLogFileLogger is not null) await traceLogFileLogger.DisposeAsync();
+                if (cancellationTokenSource is not null)
+                {
+                    await cancellationTokenSource.CancelAsync();
+                    cancellationTokenSource.Dispose();
+                }
+
+                // Order matters: the agent is uninstalled with helm against the cluster, so it has to go before
+                // the cluster installer deletes the cluster out from under it.
+                if (serverHalibutRuntime is not null) await serverHalibutRuntime.DisposeAsync();
+                kubernetesAgentInstaller?.Dispose();
+            }
+            finally
+            {
+                // Always delete the kind cluster, even if the earlier cleanup threw, so it isn't left behind.
+                try
+                {
+                    clusterInstaller?.Dispose();
+                }
+                finally
+                {
+                    testContext?.Dispose();
+                }
+            }
         }
-
-        // Order matters: the agent is uninstalled with helm against the cluster, so it has to go before
-        // the cluster installer deletes the cluster out from under it.
-        if (serverHalibutRuntime is not null) await serverHalibutRuntime.DisposeAsync();
-        kubernetesAgentInstaller?.Dispose();
-        clusterInstaller?.Dispose();
-        testContext?.Dispose();
-
-        traceLogFileLogger = null;
-        cancellationTokenSource = null;
-        serverHalibutRuntime = null;
-        kubernetesAgentInstaller = null;
-        clusterInstaller = null;
-        testContext = null;
+        finally
+        {
+            traceLogFileLogger = null;
+            cancellationTokenSource = null;
+            serverHalibutRuntime = null;
+            kubernetesAgentInstaller = null;
+            clusterInstaller = null;
+            testContext = null;
+        }
     }
 
     [Test]
