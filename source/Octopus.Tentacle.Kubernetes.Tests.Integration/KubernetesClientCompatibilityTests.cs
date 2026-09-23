@@ -27,19 +27,11 @@ public class KubernetesClientCompatibilityTests
     ];
 
     // The tools are downloaded once for the whole fixture; everything else is per test case and so is
-    // built up (and handed back as locals) by SetUp.
+    // built up by SetUp and owned (and disposed) by the TestRun it hands back.
     readonly TemporaryDirectory toolsTemporaryDirectory = new();
 
     ILogger logger = new SerilogLoggerBuilder().Build();
     RequiredTools? requiredTools;
-
-    // Fields only because TearDown has to clean them up after the test case has finished with them.
-    KubernetesTestsGlobalContext? testContext;
-    KubernetesClusterInstaller? clusterInstaller;
-    KubernetesAgentInstaller? kubernetesAgentInstaller;
-    HalibutRuntime? serverHalibutRuntime;
-    TraceLogFileLogger? traceLogFileLogger;
-    CancellationTokenSource? cancellationTokenSource;
 
     RequiredTools RequiredTools => requiredTools ?? throw new InvalidOperationException("Expected the required tools to have been downloaded by OneTimeSetup");
 
@@ -56,54 +48,14 @@ public class KubernetesClientCompatibilityTests
         toolsTemporaryDirectory.Dispose();
     }
 
-    [TearDown]
-    public async Task TearDown()
-    {
-        try
-        {
-            try
-            {
-                if (traceLogFileLogger is not null) await traceLogFileLogger.DisposeAsync();
-                if (cancellationTokenSource is not null)
-                {
-                    await cancellationTokenSource.CancelAsync();
-                    cancellationTokenSource.Dispose();
-                }
-
-                // Order matters: the agent is uninstalled with helm against the cluster, so it has to go before
-                // the cluster installer deletes the cluster out from under it.
-                if (serverHalibutRuntime is not null) await serverHalibutRuntime.DisposeAsync();
-                kubernetesAgentInstaller?.Dispose();
-            }
-            finally
-            {
-                // Always delete the kind cluster, even if the earlier cleanup threw, so it isn't left behind.
-                try
-                {
-                    clusterInstaller?.Dispose();
-                }
-                finally
-                {
-                    testContext?.Dispose();
-                }
-            }
-        }
-        finally
-        {
-            traceLogFileLogger = null;
-            cancellationTokenSource = null;
-            serverHalibutRuntime = null;
-            kubernetesAgentInstaller = null;
-            clusterInstaller = null;
-            testContext = null;
-        }
-    }
-
     [Test]
     [TestCaseSource(nameof(TestClusterVersions))]
     public async Task RunSimpleScript(ClusterVersion clusterVersion)
     {
-        var (tentacleClient, recordedMethodUsages, cancellationToken) = await SetUp(clusterVersion);
+        await using var testRun = await SetUp(clusterVersion);
+        var tentacleClient = testRun.TentacleClient;
+        var recordedMethodUsages = testRun.RecordedMethodUsages;
+        var cancellationToken = testRun.CancellationToken;
 
         // Arrange
         var logs = new List<ProcessOutput>();
@@ -147,58 +99,69 @@ public class KubernetesClientCompatibilityTests
     
     async Task<TestRun> SetUp(ClusterVersion clusterVersion)
     {
-        var context = new KubernetesTestsGlobalContext(logger);
-        testContext = context;
-
-        await SetupCluster(context, clusterVersion);
-
-        var agentInstaller = new KubernetesAgentInstaller(
-            context.TemporaryDirectory,
-            context.HelmExePath,
-            context.KubeCtlExePath,
-            context.KubeConfigPath,
-            context.Logger);
-        kubernetesAgentInstaller = agentInstaller;
-
-        //create a new server halibut runtime
-        var halibutRuntime = SetupHelpers.BuildServerHalibutRuntime();
-        serverHalibutRuntime = halibutRuntime;
-
-        var listeningPort = halibutRuntime.Listen();
-
-        var agentThumbprint = await agentInstaller.InstallAgent(listeningPort, context.TentacleImageAndTag, new Dictionary<string, string>());
-
-        //trust the generated cert thumbprint
-        halibutRuntime.Trust(agentThumbprint);
-
-        traceLogFileLogger = new TraceLogFileLogger(LoggingUtils.CurrentTestHash());
-        logger = new SerilogLoggerBuilder()
-            .SetTraceLogFileLogger(traceLogFileLogger)
-            .Build()
-            .ForContext(GetType());
-
-        var testCancellationTokenSource = new CancellationTokenSource();
-        testCancellationTokenSource.CancelAfter(TimeSpan.FromMinutes(5));
-        cancellationTokenSource = testCancellationTokenSource;
-
-        IRecordedMethodUsages? recordedMethodUsages = null;
-        var tentacleClient = SetupHelpers.BuildTentacleClient(agentInstaller.SubscriptionId, agentThumbprint, halibutRuntime, builder =>
+        // Each resource goes onto the TestRun as soon as it's created, so if SetUp fails part way through,
+        // disposing the TestRun cleans up whatever did get created.
+        var testRun = new TestRun();
+        try
         {
-            builder.RecordMethodUsages<IAsyncClientKubernetesScriptServiceV1>(out var recordedUsages);
-            recordedMethodUsages = recordedUsages;
-        });
+            var context = new KubernetesTestsGlobalContext(logger);
+            testRun.Context = context;
 
-        return new TestRun(
-            tentacleClient,
-            recordedMethodUsages ?? throw new InvalidOperationException("Expected the tentacle service decorator builder to have recorded the method usages"),
-            testCancellationTokenSource.Token);
+            await SetupCluster(testRun, context, clusterVersion);
+
+            var agentInstaller = new KubernetesAgentInstaller(
+                context.TemporaryDirectory,
+                context.HelmExePath,
+                context.KubeCtlExePath,
+                context.KubeConfigPath,
+                context.Logger);
+            testRun.AgentInstaller = agentInstaller;
+
+            //create a new server halibut runtime
+            var halibutRuntime = SetupHelpers.BuildServerHalibutRuntime();
+            testRun.ServerHalibutRuntime = halibutRuntime;
+
+            var listeningPort = halibutRuntime.Listen();
+
+            var agentThumbprint = await agentInstaller.InstallAgent(listeningPort, context.TentacleImageAndTag, new Dictionary<string, string>());
+
+            //trust the generated cert thumbprint
+            halibutRuntime.Trust(agentThumbprint);
+
+            var traceLogFileLogger = new TraceLogFileLogger(LoggingUtils.CurrentTestHash());
+            testRun.TraceLogFileLogger = traceLogFileLogger;
+            logger = new SerilogLoggerBuilder()
+                .SetTraceLogFileLogger(traceLogFileLogger)
+                .Build()
+                .ForContext(GetType());
+
+            var cancellationTokenSource = new CancellationTokenSource();
+            cancellationTokenSource.CancelAfter(TimeSpan.FromMinutes(5));
+            testRun.CancellationTokenSource = cancellationTokenSource;
+
+            IRecordedMethodUsages? recordedMethodUsages = null;
+            testRun.TentacleClient = SetupHelpers.BuildTentacleClient(agentInstaller.SubscriptionId, agentThumbprint, halibutRuntime, builder =>
+            {
+                builder.RecordMethodUsages<IAsyncClientKubernetesScriptServiceV1>(out var recordedUsages);
+                recordedMethodUsages = recordedUsages;
+            });
+            testRun.RecordedMethodUsages = recordedMethodUsages ?? throw new InvalidOperationException("Expected the tentacle service decorator builder to have recorded the method usages");
+
+            return testRun;
+        }
+        catch
+        {
+            await testRun.DisposeAsync();
+            throw;
+        }
     }
-    
-    async Task SetupCluster(KubernetesTestsGlobalContext context, ClusterVersion clusterVersion)
+
+    async Task SetupCluster(TestRun testRun, KubernetesTestsGlobalContext context, ClusterVersion clusterVersion)
     {
         var tools = RequiredTools;
 
-        clusterInstaller = new KubernetesClusterInstaller(context.TemporaryDirectory, tools.KindExePath, tools.HelmExePath, tools.KubeCtlPath, context.Logger);
+        var clusterInstaller = new KubernetesClusterInstaller(context.TemporaryDirectory, tools.KindExePath, tools.HelmExePath, tools.KubeCtlPath, context.Logger);
+        testRun.ClusterInstaller = clusterInstaller;
         await clusterInstaller.Install(clusterVersion);
 
         context.TentacleImageAndTag = await SetupHelpers.GetTentacleImageAndTag(tools.KindExePath, clusterInstaller);
@@ -206,6 +169,64 @@ public class KubernetesClientCompatibilityTests
         context.KubeConfigPath = clusterInstaller.KubeConfigPath;
     }
 
-    /// <summary>The per-test-case state that <see cref="SetUp"/> builds, so the test can hold it in locals.</summary>
-    sealed record TestRun(TentacleClient TentacleClient, IRecordedMethodUsages RecordedMethodUsages, CancellationToken CancellationToken);
+    /// <summary>
+    /// The per-test-case state that <see cref="SetUp"/> builds. The test holds it with <c>await using</c>,
+    /// so everything it owns is cleaned up when the test case finishes.
+    /// </summary>
+    sealed class TestRun : IAsyncDisposable
+    {
+        TentacleClient? tentacleClient;
+        IRecordedMethodUsages? recordedMethodUsages;
+
+        public KubernetesTestsGlobalContext? Context { get; set; }
+        public KubernetesClusterInstaller? ClusterInstaller { get; set; }
+        public KubernetesAgentInstaller? AgentInstaller { get; set; }
+        public HalibutRuntime? ServerHalibutRuntime { get; set; }
+        public TraceLogFileLogger? TraceLogFileLogger { get; set; }
+        public CancellationTokenSource? CancellationTokenSource { get; set; }
+
+        public TentacleClient TentacleClient
+        {
+            get => tentacleClient ?? throw new InvalidOperationException("Expected SetUp to have built the tentacle client");
+            set => tentacleClient = value;
+        }
+
+        public IRecordedMethodUsages RecordedMethodUsages
+        {
+            get => recordedMethodUsages ?? throw new InvalidOperationException("Expected SetUp to have recorded the method usages");
+            set => recordedMethodUsages = value;
+        }
+
+        public CancellationToken CancellationToken => CancellationTokenSource?.Token ?? throw new InvalidOperationException("Expected SetUp to have created the cancellation token source");
+
+        public async ValueTask DisposeAsync()
+        {
+            try
+            {
+                if (TraceLogFileLogger is not null) await TraceLogFileLogger.DisposeAsync();
+                if (CancellationTokenSource is not null)
+                {
+                    await CancellationTokenSource.CancelAsync();
+                    CancellationTokenSource.Dispose();
+                }
+
+                // Order matters: the agent is uninstalled with helm against the cluster, so it has to go before
+                // the cluster installer deletes the cluster out from under it.
+                if (ServerHalibutRuntime is not null) await ServerHalibutRuntime.DisposeAsync();
+                AgentInstaller?.Dispose();
+            }
+            finally
+            {
+                // Always delete the kind cluster, even if the earlier cleanup threw, so it isn't left behind.
+                try
+                {
+                    ClusterInstaller?.Dispose();
+                }
+                finally
+                {
+                    Context?.Dispose();
+                }
+            }
+        }
+    }
 }
