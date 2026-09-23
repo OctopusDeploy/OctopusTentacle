@@ -305,6 +305,48 @@ if [[ $SKIP_SMOKE -eq 0 ]]; then
     OPENSSL_VER=$(run_in_image 'openssl version') || OPENSSL_VER=""
     assert_contains "OpenSSL is 3.x" "$OPENSSL_VER" "OpenSSL 3."
 
+    # --- per-container machine-id ------------------------------------------
+    # Tentacle derives the key protecting tentacle.config from /etc/machine-id,
+    # and the base image bakes one in, so /scripts/ensure-machine-id.sh gives
+    # each container its own on first start and persists it in /etc/octopus
+    # (LEV-1171). Each case below runs in a fresh container; the id is never
+    # printed in a failure message beyond its length.
+    IMAGE_MACHINE_ID=$(run_in_image 'cat /etc/machine-id') || IMAGE_MACHINE_ID=""
+    ENSURED_A=$(run_in_image '/scripts/ensure-machine-id.sh >/dev/null && cat /etc/machine-id') || ENSURED_A=""
+    ENSURED_B=$(run_in_image '/scripts/ensure-machine-id.sh >/dev/null && cat /etc/machine-id') || ENSURED_B=""
+
+    if [[ "$ENSURED_A" =~ ^[0-9a-f]{32}$ ]]; then
+        pass "ensure-machine-id.sh writes a valid machine-id to /etc/machine-id"
+    else
+        fail "ensure-machine-id.sh writes a valid machine-id to /etc/machine-id" "got ${#ENSURED_A} characters"
+    fi
+    if [[ -n "$ENSURED_A" && "$ENSURED_A" != "$IMAGE_MACHINE_ID" ]]; then
+        pass "a fresh container does not keep the image's machine-id"
+    else
+        fail "a fresh container does not keep the image's machine-id"
+    fi
+    if [[ -n "$ENSURED_A" && -n "$ENSURED_B" && "$ENSURED_A" != "$ENSURED_B" ]]; then
+        pass "two fresh containers get different machine-ids"
+    else
+        fail "two fresh containers get different machine-ids"
+    fi
+
+    PERSISTED_RUN=$(run_in_image 'set -e; /scripts/ensure-machine-id.sh >/dev/null; first=$(cat /etc/octopus/machine-id); /scripts/ensure-machine-id.sh >/dev/null; second=$(cat /etc/octopus/machine-id); [[ "$first" == "$second" && "$(cat /etc/machine-id)" == "$first" ]] && echo same; stat -c %a /etc/octopus/machine-id') || PERSISTED_RUN=""
+    assert_contains "running ensure-machine-id.sh again keeps the same id" "$PERSISTED_RUN" "same"
+    assert_contains "/etc/octopus/machine-id is readable only by its owner" "$PERSISTED_RUN" "600"
+
+    HONOURED=$(run_in_image 'mkdir -p /etc/octopus && echo 0123456789abcdef0123456789abcdef > /etc/octopus/machine-id && /scripts/ensure-machine-id.sh >/dev/null && cat /etc/machine-id') || HONOURED=""
+    assert_equals "a persisted machine-id (e.g. from a volume) is applied to /etc/machine-id" "$HONOURED" "0123456789abcdef0123456789abcdef"
+
+    # A volume configured by an older image has tentacle.config but no persisted
+    # id; the image's own id is kept for it, since that is what the config may
+    # have been encrypted with.
+    UPGRADED=$(run_in_image 'mkdir -p /etc/octopus && touch /etc/octopus/tentacle.config && before=$(cat /etc/machine-id) && /scripts/ensure-machine-id.sh >/dev/null && [[ "$(cat /etc/octopus/machine-id)" == "$before" && "$(cat /etc/machine-id)" == "$before" ]] && echo kept') || UPGRADED=""
+    assert_equals "a volume configured by an older image keeps the image's machine-id" "$UPGRADED" "kept"
+
+    ENTRYPOINT_CALLS=$(run_in_image 'grep -c "ensure-machine-id.sh" /scripts/configure-and-run.sh') || ENTRYPOINT_CALLS=""
+    assert_equals "the entrypoint runs ensure-machine-id.sh" "$ENTRYPOINT_CALLS" "1"
+
     # --- Docker-in-Docker ------------------------------------------------
     # install-docker.sh adds Docker's apt repo. That repo is distro-specific, so
     # it has to point at .../linux/ubuntu now, not .../linux/debian. The source
@@ -360,7 +402,7 @@ if [[ $SKIP_SMOKE -eq 0 ]]; then
     fi
 
     # --- entrypoint scripts ----------------------------------------------
-    for s in configure-and-run.sh configure-tentacle.sh run-tentacle.sh dockerd-entrypoint.sh; do
+    for s in configure-and-run.sh ensure-machine-id.sh configure-tentacle.sh run-tentacle.sh dockerd-entrypoint.sh; do
         if run_in_image "test -x /scripts/$s" >/dev/null 2>&1; then
             pass "executable: /scripts/$s"
         else
@@ -404,6 +446,10 @@ E2E_SERVER="tentacle-e2e-octopus-${E2E_RUN_ID}"
 E2E_LISTENING="tentacle-e2e-listening-${E2E_RUN_ID}"
 E2E_POLLING="tentacle-e2e-polling-${E2E_RUN_ID}"
 E2E_CONTAINERS=("$E2E_LISTENING" "$E2E_POLLING" "$E2E_SERVER" "$E2E_SQL")
+# The listening Tentacle keeps /etc/octopus on a named volume so the stage can
+# destroy and re-create the container and prove the Tentacle's identity (and
+# the machine-id its configuration is encrypted with) survives. See LEV-1171.
+E2E_VOLUME="tentacle-e2e-config-${E2E_RUN_ID}"
 
 # random_password - 20 characters of upper case, lower case and digits.
 #
@@ -500,6 +546,7 @@ resolve_license() {
 e2e_remove_stack() {
     docker rm -f "${E2E_CONTAINERS[@]}" >/dev/null 2>&1 || true
     docker network rm "$E2E_NET" >/dev/null 2>&1 || true
+    docker volume rm "$E2E_VOLUME" >/dev/null 2>&1 || true
 }
 
 # e2e_cleanup_stale - clear out anything already holding this run's names.
@@ -527,7 +574,7 @@ e2e_cleanup_stale() {
 e2e_teardown() {
     if [[ $KEEP -eq 1 ]]; then
         warn "--keep was given; leaving the e2e containers running."
-        warn "Tear down with: docker rm -f ${E2E_CONTAINERS[*]}; docker network rm $E2E_NET"
+        warn "Tear down with: docker rm -f ${E2E_CONTAINERS[*]}; docker network rm $E2E_NET; docker volume rm $E2E_VOLUME"
         return
     fi
     e2e_remove_stack
@@ -862,16 +909,38 @@ if [[ $SKIP_E2E -eq 0 ]]; then
     # --hostname matters for the listening Tentacle: it registers itself under
     # PublicHostNameConfiguration=ComputerName, i.e. whatever `hostname` returns,
     # and the server has to be able to resolve that name to call back to it.
+    # start_listening_tentacle - run the listening Tentacle container. A function
+    # because the lifecycle tests below destroy the container and run exactly
+    # the same command again, against the same volume.
+    start_listening_tentacle() {
+        docker run -d --name "$E2E_LISTENING" --hostname "$E2E_LISTENING" --platform "$PLATFORM" --network "$E2E_NET" \
+            --env-file "$E2E_ENV_AGENT" \
+            -v "${E2E_VOLUME}:/etc/octopus" \
+            -e ACCEPT_EULA=Y \
+            -e DISABLE_DIND=Y \
+            -e "ServerUrl=http://${E2E_SERVER}:8080" \
+            -e "TargetEnvironment=Development" \
+            -e "TargetRole=app-server" \
+            -e "TargetName=${E2E_LISTENING}" \
+            "$IMAGE" >/dev/null
+    }
+
+    # listening_thumbprint - the thumbprint the listening Tentacle reads back out
+    # of its own configuration, i.e. proof it can still decrypt its certificate.
+    listening_thumbprint() {
+        docker exec "$E2E_LISTENING" tentacle show-thumbprint --instance Tentacle 2>/dev/null
+    }
+
+    # listening_healthy - the server's view of the listening Tentacle alone.
+    listening_healthy() {
+        local json status
+        json=$(machines_json) || return 1
+        status=$(machine_health "$json" "$E2E_LISTENING") || status=""
+        [[ "$status" == "Healthy" || "$status" == "HasWarnings" ]]
+    }
+
     info "Starting the listening Tentacle..."
-    docker run -d --name "$E2E_LISTENING" --hostname "$E2E_LISTENING" --platform "$PLATFORM" --network "$E2E_NET" \
-        --env-file "$E2E_ENV_AGENT" \
-        -e ACCEPT_EULA=Y \
-        -e DISABLE_DIND=Y \
-        -e "ServerUrl=http://${E2E_SERVER}:8080" \
-        -e "TargetEnvironment=Development" \
-        -e "TargetRole=app-server" \
-        -e "TargetName=${E2E_LISTENING}" \
-        "$IMAGE" >/dev/null
+    start_listening_tentacle
 
     info "Starting the polling Tentacle..."
     docker run -d --name "$E2E_POLLING" --hostname "$E2E_POLLING" --platform "$PLATFORM" --network "$E2E_NET" \
@@ -978,6 +1047,68 @@ if [[ $SKIP_E2E -eq 0 ]]; then
         # substring match elsewhere in the JSON.
         assert_contains "server reports the built Tentacle version ($EXPECTED_VERSION)" \
             "$MACHINES" "$EXPECTED_VERSION"
+
+        # --- lifecycle --------------------------------------------------------
+        # The certificate in tentacle.config is encrypted with a key derived from
+        # the machine-id the entrypoint persisted into /etc/octopus. Both live on
+        # the volume, so the Tentacle has to come back with the same identity
+        # after a restart and after the container is destroyed and re-created
+        # (LEV-1171). Before this the key came from the image's /etc/machine-id,
+        # so a re-created container on a rebuilt image could not read its own
+        # certificate.
+        THUMBPRINT_INITIAL=$(listening_thumbprint) || THUMBPRINT_INITIAL=""
+        if [[ -n "$THUMBPRINT_INITIAL" ]]; then
+            pass "listening Tentacle can read its own certificate"
+        else
+            fail "listening Tentacle can read its own certificate"
+            dump_logs "$E2E_LISTENING"
+        fi
+
+        PERSISTED_ID=$(docker exec "$E2E_LISTENING" cat /etc/octopus/machine-id 2>/dev/null) || PERSISTED_ID=""
+        APPLIED_ID=$(docker exec "$E2E_LISTENING" cat /etc/machine-id 2>/dev/null) || APPLIED_ID=""
+        if [[ "$PERSISTED_ID" =~ ^[0-9a-f]{32}$ && "$PERSISTED_ID" == "$APPLIED_ID" ]]; then
+            pass "the container runs with the machine-id persisted on its volume"
+        else
+            fail "the container runs with the machine-id persisted on its volume"
+        fi
+
+        info "Restarting the listening Tentacle container..."
+        docker stop "$E2E_LISTENING" >/dev/null
+        docker start "$E2E_LISTENING" >/dev/null
+        THUMBPRINT_AFTER_RESTART=$(listening_thumbprint) || THUMBPRINT_AFTER_RESTART=""
+        assert_equals "thumbprint unchanged after stop/start" "$THUMBPRINT_AFTER_RESTART" "$THUMBPRINT_INITIAL"
+        if wait_for "listening Tentacle health after restart" 300 listening_healthy "$E2E_LISTENING"; then
+            pass "listening Tentacle healthy after stop/start"
+        else
+            fail "listening Tentacle healthy after stop/start"
+            dump_logs "$E2E_LISTENING"
+        fi
+
+        info "Destroying and re-creating the listening Tentacle container on the same volume..."
+        docker rm -f "$E2E_LISTENING" >/dev/null
+        start_listening_tentacle
+        # The entrypoint finds the semaphore on the volume and skips configuration
+        # and registration; the agent then starts with the persisted identity.
+        if wait_for_log "$E2E_LISTENING" 120 "already configured"; then
+            pass "re-created container reuses the persisted configuration"
+        else
+            fail "re-created container reuses the persisted configuration"
+            dump_logs "$E2E_LISTENING"
+        fi
+        THUMBPRINT_AFTER_RECREATE=$(listening_thumbprint) || THUMBPRINT_AFTER_RECREATE=""
+        assert_equals "thumbprint unchanged after re-creating the container" "$THUMBPRINT_AFTER_RECREATE" "$THUMBPRINT_INITIAL"
+        if wait_for "listening Tentacle health after re-creation" 300 listening_healthy "$E2E_LISTENING"; then
+            pass "listening Tentacle healthy after re-creation, without re-registering"
+        else
+            fail "listening Tentacle healthy after re-creation, without re-registering"
+            dump_logs "$E2E_LISTENING"
+        fi
+
+        # Still exactly one registration: re-creation must not have produced a
+        # second machine record.
+        MACHINES=$(machines_json) || MACHINES=""
+        REGISTRATIONS=$(printf '%s' "$MACHINES" | grep -o "\"Name\":\"${E2E_LISTENING}\"" | wc -l | tr -d ' ')
+        assert_equals "re-created container did not register a second time" "$REGISTRATIONS" "1"
     fi
 fi
 
