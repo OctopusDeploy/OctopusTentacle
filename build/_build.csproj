@@ -18,6 +18,18 @@
     <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" />
   </ItemGroup>
 
+  <!-- Pin transitive dependencies of Nuke.Common 9.0.4 to fix known CVEs -->
+  <ItemGroup>
+    <!-- CVE-2025-55247 (all three), CVE-2025-26646 (Tasks.Core). -->
+    <PackageReference Include="Microsoft.Build" Version="17.11.48" />
+    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="17.11.48" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="17.11.48" />
+    <!-- GHSA-g4vj-cjjj-v7hg (defence-in-depth, no CVE). -->
+    <PackageReference Include="NuGet.Packaging" Version="6.12.5" />
+    <!-- CVE-2026-26171, CVE-2026-33116, CVE-2026-32203, CVE-2026-47302, CVE-2026-47304, CVE-2026-50525, CVE-2026-50527, CVE-2026-50648. -->
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="8.0.4" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageDownload Include="AzureSignTool" Version="[5.0.0]" />
     <PackageDownload Include="Chocolatey" Version="[0.10.14]" />

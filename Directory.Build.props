@@ -7,5 +7,10 @@
   -->
   <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!--
+      Audit transitive packages too, not just direct ones (the .NET 8 SDK defaults to 'direct').
+      With TreatWarningsAsErrors, a newly disclosed CVE anywhere in the graph fails restore.
+    -->
+    <NuGetAuditMode>all</NuGetAuditMode>
   </PropertyGroup>
 </Project>

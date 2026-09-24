@@ -108,6 +108,13 @@
 	<ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETCoreApp' ">
 		<!-- CVE-2026-26171 (security bypass + DoS) and CVE-2026-33116 (DoS via infinite recursion). 8.0.3 is also vulnerable (CVE-2026-50648, CVE-2026-47304); fixed in 8.0.4. -->
 		<PackageReference Include="System.Security.Cryptography.Xml" Version="8.0.4" />
+		<!-- The pins below replace old netstandard1.x packages pulled in by Autofac, NuGet.Packaging and TaskScheduler (via NETStandard.Library 1.6.0 / System.Xml.*). -->
+		<!-- CVE-2019-0820 (ReDoS). -->
+		<PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
+		<!-- CVE-2018-8292 (information disclosure). -->
+		<PackageReference Include="System.Net.Http" Version="4.3.4" />
+		<!-- CVE-2017-11770 (improper certificate validation). -->
+		<PackageReference Include="System.Security.Cryptography.X509Certificates" Version="4.3.2" />
 	</ItemGroup>
 	<ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
 		<PackageReference Include="System.Runtime" Version="4.3.0" />
