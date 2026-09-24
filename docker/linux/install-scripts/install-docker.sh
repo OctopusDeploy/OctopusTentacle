@@ -27,7 +27,8 @@ apt-get update
 # Install Docker and its runtime dependencies.
 # https://github.com/docker/docker/blob/master/project/PACKAGERS.md#runtime-dependencies
 # We use --no-install-recommends to avoid unexpectedly taking on new implied dependencies.
-# We keep: `xz-utils`` to `patch`` in place (that used to come in via --no-install-recommends) in case someone is depending on them.
+# We keep: `xz-utils` through to `patch`` in place (that used to come in via --no-install-recommends) in case someone is depending on them.
+# See: https://github.com/OctopusDeploy/OctopusTentacle/pull/1312 for more details.
 apt-get install -y --no-install-recommends \
     btrfs-progs \
     containerd.io \

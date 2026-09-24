@@ -13,25 +13,9 @@ RUN apt-get update && \
 ARG BUILD_NUMBER
 ARG BUILD_DATE
 
-# CLI tools this image is expected to provide. curl, jq, lsb-release, sudo, xxd and openssl are
-# published surface - customer deployment steps and Kubernetes lifecycle hooks shell out to
-# them - so don't drop one just because nothing in this repo calls it. install-docker.sh
-# reinstalls every one of these except lsb-release and xxd; they stay declared here because
-# that list is Docker's to change, not ours, and dropping them from here saves no image size.
-# testing/docker-linux/build-and-test-linux-docker-image.sh asserts each one is on PATH.
-#   curl        - public-IP lookup in configure-tentacle.sh; customer postStart/preStop hooks.
-#   dos2unix    - install-docker.sh strips CRLF from dind and dockerd-entrypoint.sh.
-#   jq          - customer hooks and scripts parsing Octopus API responses (#278).
-#   lsb-release - customer scripts and health checks call lsb_release; not in the base image
-#                 since Ubuntu 20.04 (#1302).
-#   sudo        - deployment scripts that escalate; also a dind runtime dep for --userns-remap.
-#   xxd         - was Calamari's bash variable-set decoder (#1157); need removed by
-#                 Calamari#1797, but kept because it has been published surface since.
-#   openssl     - Calamari's bash bootstrap pipes every service message and variable through
-#                 it. ca-certificates (above) already Depends on it, so this is a declaration
-#                 of intent rather than a new package (LEV-1843).
-# dos2unix is the one build-time-only dep here: it is used while assembling the image and
-# nothing at runtime calls it, so unlike the others it is not published surface.
+# The CLI tools this image is expected to provide; curl, jq, lsb-release, sudo, xxd and openssl are expected in the published surface.
+# Customer deployment steps and Kubernetes lifecycle hooks shell out to them, so don't drop one just because nothing in this repo calls it.
+# See: https://github.com/OctopusDeploy/OctopusTentacle/pull/1312.
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         curl \
