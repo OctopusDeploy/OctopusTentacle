@@ -9,7 +9,7 @@ using PlatformDetection = Octopus.Tentacle.CommonTestUtils.PlatformDetection;
 
 namespace Octopus.Tentacle.Kubernetes.Tests.Integration.Setup;
 
-public class KubernetesClusterInstaller
+public class KubernetesClusterInstaller : IDisposable
 {
     readonly string clusterName;
     readonly string kubeConfigName;

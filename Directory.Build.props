@@ -1,0 +1,11 @@
+<Project>
+  <!--
+    Repo-wide defaults. MSBuild imports this automatically for every project beneath
+    this directory, so new projects inherit these settings without having to remember them.
+
+    Scoped to .csproj so we don't change the behaviour of installer/*.wixproj.
+  -->
+  <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+</Project>
