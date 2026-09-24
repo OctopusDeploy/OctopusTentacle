@@ -19,25 +19,38 @@ namespace Octopus.Tentacle.Kubernetes
             {
                 return GetTelepresenceConfig(telepresenceRoot);
             }
-            var kubeConfigEnvVar = Environment.GetEnvironmentVariable("KUBECONFIG");
-            if (kubeConfigEnvVar != null && !Path.IsPathRooted(kubeConfigEnvVar))
+           
+            var kubeConfigEnvVar = GetKubeConfigPath();
+            
+            var contextEnvVar = Environment.GetEnvironmentVariable(KubernetesConfig.KubeContextVariableName);
+            var config = KubernetesClientConfiguration.BuildConfigFromConfigFile(kubeConfigEnvVar, contextEnvVar);
+
+            var namespaceEnvVar = Environment.GetEnvironmentVariable(KubernetesConfig.NamespaceVariableName);
+            if (!string.IsNullOrEmpty(namespaceEnvVar))
             {
-                // Path.GetFullPath doesn't work with ~, so we need to expand it manually
-                if (kubeConfigEnvVar.StartsWith("~"))
-                {
-                    kubeConfigEnvVar = kubeConfigEnvVar
-                        .Replace("~", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile))
-                        .Replace("//", "/");
-                }
-                else
-                {
-                    kubeConfigEnvVar = Path.GetFullPath(kubeConfigEnvVar);
-                }
+                config.Namespace = namespaceEnvVar;
             }
-            return KubernetesClientConfiguration.BuildConfigFromConfigFile(kubeConfigEnvVar);
+
+            return config;
 #else
             throw new NotSupportedException("Local machine configuration is only supported when debugging.");
 #endif
+        }
+
+        static string? GetKubeConfigPath()
+        {
+            var kubeConfigEnvVar = Environment.GetEnvironmentVariable("KUBECONFIG");
+            if (string.IsNullOrEmpty(kubeConfigEnvVar) || Path.IsPathRooted(kubeConfigEnvVar)) return kubeConfigEnvVar;
+
+            // Path.GetFullPath doesn't work with ~, so we need to expand it manually
+            if (kubeConfigEnvVar.StartsWith("~"))
+            {
+                return kubeConfigEnvVar
+                    .Replace("~", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile))
+                    .Replace("//", "/");
+            }
+
+            return Path.GetFullPath(kubeConfigEnvVar);
         }
 
         KubernetesClientConfiguration GetTelepresenceConfig(string telepresenceRoot)
@@ -70,7 +83,7 @@ namespace Octopus.Tentacle.Kubernetes
                 SslCaCerts = certificates,
             };
             
-            var namespaceVar = Environment.GetEnvironmentVariable("OCTOPUS__K8STENTACLE__NAMESPACE");
+            var namespaceVar = Environment.GetEnvironmentVariable(KubernetesConfig.NamespaceVariableName);
 
             if (!string.IsNullOrEmpty(namespaceVar))
             {
