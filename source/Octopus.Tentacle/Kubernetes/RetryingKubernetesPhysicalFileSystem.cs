@@ -139,6 +139,16 @@ namespace Octopus.Tentacle.Kubernetes
             syncRetryPolicy.Execute(() => inner.WriteAllText(filePath, contents));
         }
 
+        public void WriteAllTextOwnerOnly(string filePath, string contents)
+        {
+            syncRetryPolicy.Execute(() => inner.WriteAllTextOwnerOnly(filePath, contents));
+        }
+
+        public bool RestrictFilePermissionsToOwner(string filePath)
+        {
+            return syncRetryPolicy.Execute(() => inner.RestrictFilePermissionsToOwner(filePath));
+        }
+
         public string ReadAllText(string scriptFile)
         {
             return syncRetryPolicy.Execute(() => inner.ReadAllText(scriptFile));

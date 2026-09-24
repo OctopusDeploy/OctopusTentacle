@@ -27,6 +27,7 @@ namespace Octopus.Tentacle.Commands
         readonly Lazy<IHomeConfiguration> home;
         readonly Lazy<IProxyConfiguration> proxyConfiguration;
         readonly Lazy<IProxyInitializer> proxyInitializer;
+        readonly Lazy<IProtectedSettingsMigrator> protectedSettingsMigrator;
 
         readonly ISleep sleep;
         readonly ISystemLog log;
@@ -51,12 +52,14 @@ namespace Octopus.Tentacle.Commands
             IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker,
             AppVersion appVersion,
             ILogFileOnlyLogger logFileOnlyLogger,
-            IEnumerable<Lazy<IBackgroundTask>> backgroundTasks) : base(selector, log, logFileOnlyLogger)
+            IEnumerable<Lazy<IBackgroundTask>> backgroundTasks,
+            Lazy<IProtectedSettingsMigrator> protectedSettingsMigrator) : base(selector, log, logFileOnlyLogger)
         {
             this.halibut = halibut;
             this.configuration = configuration;
             this.home = home;
             this.proxyConfiguration = proxyConfiguration;
+            this.protectedSettingsMigrator = protectedSettingsMigrator;
             this.sleep = sleep;
             this.log = log;
             this.selector = selector;
@@ -98,6 +101,8 @@ namespace Octopus.Tentacle.Commands
                 return;
             }
 
+            ReEncryptLegacyProtectedSettings();
+
             var currentPath = typeof(RunAgentCommand).Assembly.FullLocalPath();
             var exePath = PlatformDetection.IsRunningOnWindows
                 ? Path.ChangeExtension(currentPath, "exe")
@@ -137,6 +142,23 @@ namespace Octopus.Tentacle.Commands
             }
 
             Runtime.WaitForUserToExit();
+        }
+
+        /// <summary>
+        /// The agent is the one command every upgraded install runs, so this is where values protected by an earlier
+        /// version's encryption scheme get rewritten with the current one. It must never stop the agent from starting:
+        /// the values stay readable through the old scheme until it succeeds.
+        /// </summary>
+        void ReEncryptLegacyProtectedSettings()
+        {
+            try
+            {
+                protectedSettingsMigrator.Value.ReEncryptLegacyProtectedSettings();
+            }
+            catch (Exception e)
+            {
+                log.Warn(e, "Unable to check whether any protected settings need re-encrypting. Tentacle will start anyway and try again next time.");
+            }
         }
 
         void LogWarningIfNotRunningAsAdministrator()

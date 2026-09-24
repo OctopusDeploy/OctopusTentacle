@@ -5,13 +5,16 @@ using Octopus.Tentacle.Configuration.Instances;
 
 namespace Octopus.Tentacle.Configuration
 {
-    public abstract class FlatDictionaryKeyValueStore : DictionaryKeyValueStore, IAggregatableKeyValueStore
+    public abstract class FlatDictionaryKeyValueStore : DictionaryKeyValueStore, IAggregatableKeyValueStore, IReEncryptingKeyValueStore
     {
         protected readonly JsonSerializerSettings JsonSerializerSettings;
+        protected readonly IMachineKeyEncryptor Encryptor;
 
-        protected FlatDictionaryKeyValueStore(JsonSerializerSettings jsonSerializerSettings, bool autoSaveOnSet = true, bool isWriteOnly = false) : base(autoSaveOnSet, isWriteOnly)
+        /// <param name="encryptor">Protects <see cref="ProtectionLevel.MachineKey"/> values. Null means the encryptor for this machine, <see cref="MachineKeyEncryptor.Current"/>; tests pass their own.</param>
+        protected FlatDictionaryKeyValueStore(JsonSerializerSettings jsonSerializerSettings, bool autoSaveOnSet = true, bool isWriteOnly = false, IMachineKeyEncryptor? encryptor = null) : base(autoSaveOnSet, isWriteOnly)
         {
             JsonSerializerSettings = jsonSerializerSettings;
+            Encryptor = encryptor ?? MachineKeyEncryptor.Current;
         }
 
         public override TData? Get<TData>(string name, TData? defaultValue = default, ProtectionLevel protectionLevel = ProtectionLevel.None) where TData : default
@@ -29,7 +32,7 @@ namespace Octopus.Tentacle.Configuration
                     return defaultValue;
 
                 if (protectionLevel == ProtectionLevel.MachineKey)
-                    data = MachineKeyEncryptor.Current.Decrypt(valueAsString);
+                    data = Encryptor.Decrypt(valueAsString);
 
                 if (typeof(TData) == typeof(string))
                     return (TData)data;
@@ -63,7 +66,7 @@ namespace Octopus.Tentacle.Configuration
                     return (false, default!);
 
                 if (protectionLevel == ProtectionLevel.MachineKey)
-                    data = MachineKeyEncryptor.Current.Decrypt(valueAsString);
+                    data = Encryptor.Decrypt(valueAsString);
 
                 if (typeof(TData) == typeof(string))
                     return (true, (TData)data);
@@ -100,11 +103,30 @@ namespace Octopus.Tentacle.Configuration
                 valueAsObject = JsonConvert.SerializeObject(value, JsonSerializerSettings);
 
             if (protectionLevel == ProtectionLevel.MachineKey && valueAsObject != null)
-                valueAsObject = MachineKeyEncryptor.Current.Encrypt((string)valueAsObject);
+                valueAsObject = Encryptor.Encrypt((string)valueAsObject);
 
             Write(name, valueAsObject);
             if (AutoSaveOnSet)
                 return Save();
+
+            return true;
+        }
+
+        public bool ReEncryptIfLegacy(string name)
+        {
+            if (name == null) throw new ArgumentNullException(nameof(name));
+
+            var stored = Read(name) as string;
+            if (stored == null || string.IsNullOrWhiteSpace(stored) || !Encryptor.RequiresReEncryption(stored))
+                return false;
+
+            // The stored form is the (possibly JSON-serialised) string that Set encrypted, so re-encrypting it as-is
+            // preserves exactly what Get will deserialise afterwards.
+            var reEncrypted = Encryptor.Encrypt(Encryptor.Decrypt(stored));
+
+            Write(name, reEncrypted);
+            if (AutoSaveOnSet)
+                Save();
 
             return true;
         }
