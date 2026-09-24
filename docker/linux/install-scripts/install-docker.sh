@@ -25,7 +25,20 @@ EOF
 
 # Install Docker and its runtime dependencies.
 # https://github.com/docker/docker/blob/master/project/PACKAGERS.md#runtime-dependencies
-# The trailing five were docker-ce/-cli Recommends, explicit now that --no-install-recommends drops them (LEV-1843).
+#
+# Everything after xz-utils used to arrive only as a Recommends, and is explicit now that
+# --no-install-recommends drops them (LEV-1843). They are the image's published tool surface:
+# customer deployment scripts call them, and nothing fails at build time if one goes missing.
+#   docker-buildx-plugin, docker-compose-plugin - docker-ce-cli Recommends; without them
+#       'docker buildx' / 'docker compose' fail with 'unknown command'.
+#   docker-ce-rootless-extras, git, apparmor    - docker-ce Recommends. apparmor gives nested
+#       containers the docker-default profile; keeping it avoids a silent confinement downgrade.
+#   openssh-client, less, patch                 - git Recommends; ssh/scp and patch are
+#       commonly called directly by deployment scripts.
+# The Recommends deliberately left out are daemons and desktop leftovers with no job in a
+# container: systemd-timesyncd, systemd-resolved, networkd-dispatcher, xauth, dmsetup and
+# their GLib/X11/Python libraries. systemd itself stays: it is a hard Depends via
+# docker-ce-rootless-extras -> dbus-user-session -> libpam-systemd.
 apt-get update
 apt-get install -y --no-install-recommends \
     btrfs-progs \
@@ -47,7 +60,10 @@ apt-get install -y --no-install-recommends \
     docker-compose-plugin \
     docker-ce-rootless-extras \
     git \
-    openssh-client
+    apparmor \
+    openssh-client \
+    less \
+    patch
 
 # set up subuid/subgid so that "--userns-remap=default" works out-of-the-box
 addgroup --system dockremap
