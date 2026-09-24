@@ -2,7 +2,6 @@ FROM ubuntu:24.04
 ENV ASPNETCORE_URLS=http://+:80 DOTNET_RUNNING_IN_CONTAINER=true
 
 # .NET 8 runtime dependencies.
-# We use --no-install-recommends to avoid unexpectedly taking on new implied dependencies.
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         ca-certificates \
