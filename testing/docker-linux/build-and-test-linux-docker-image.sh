@@ -302,8 +302,35 @@ if [[ $SKIP_SMOKE -eq 0 ]]; then
     assert_equals "/usr/bin/tentacle symlinks to the install" "$SYMLINK" "/opt/octopus/tentacle/Tentacle"
 
     # OpenSSL 3 is what libssl3t64 provides; Tentacle's .deb accepts 1.0/1.1/3.
+    # The openssl CLI is also published surface: Calamari's bash bootstrap pipes
+    # every service message and sensitive variable through it.
     OPENSSL_VER=$(run_in_image 'openssl version') || OPENSSL_VER=""
     assert_contains "OpenSSL is 3.x" "$OPENSSL_VER" "OpenSSL 3."
+
+    # --- published tool surface --------------------------------------------
+    # Customer deployment scripts rely on these. Most used to arrive only as
+    # docker-ce/docker-ce-cli Recommends, so a --no-install-recommends tidy-up
+    # dropped them without failing the build; the first sign was
+    # 'unknown command: docker compose' in a customer's deployment (LEV-1843).
+    # Assert the capability - does the command run - rather than a package name,
+    # so this survives Docker renaming or re-splitting its packages.
+    # Each entry is "<name>|<command>|<expected output>".
+    for check in \
+        "docker compose|docker compose version|Docker Compose version" \
+        "docker buildx|docker buildx version|github.com/docker/buildx" \
+        "git|git --version|git version" \
+        "ssh|ssh -V|OpenSSH_" \
+        "scp|command -v scp|/scp" \
+        "rootlesskit|rootlesskit --version|rootlesskit version" \
+        "patch|patch --version|GNU patch" \
+        "less|less --version|less " \
+        "apparmor_parser|apparmor_parser --version|AppArmor parser version"
+    do
+        IFS='|' read -r name cmd expected <<< "$check"
+        # ssh -V prints to stderr; run_in_image already folds stderr into stdout.
+        OUT=$(run_in_image "$cmd") || OUT=""
+        assert_contains "published tool works: $name" "$OUT" "$expected"
+    done
 
     # --- Docker-in-Docker ------------------------------------------------
     # install-docker.sh adds Docker's apt repo. That repo is distro-specific, so
