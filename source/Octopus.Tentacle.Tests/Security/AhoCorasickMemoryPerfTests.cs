@@ -63,11 +63,11 @@ namespace Octopus.Tentacle.Tests.Security
             var after = GC.GetTotalMemory(true);
 
             // On 64-bit Linux this measures ~24MiB. Fail if it exceeds 30MiB (15MiB on 32bit).
-            //
-            // On macOS GC.GetTotalMemory reports ~2x for the same heap (net8.0: ~50MiB on
-            // arm64 and ~49MiB on x64, vs ~24MiB on Linux on the same hardware, while
-            // GC.GetGCMemoryInfo().HeapSizeBytes matches), so allow double there.
             var allowedMb = Environment.Is64BitProcess ? 30 : 15;
+            
+            // On macOS GC.GetTotalMemory reports ~2x for the same heap.
+            // net8.0: ~50MiB on arm64 and ~49MiB on x64, vs ~24MiB on Linux on the same hardware,
+            // while GC.GetGCMemoryInfo().HeapSizeBytes matches, so allow double there.
             if (PlatformDetection.IsRunningOnMac)
                 allowedMb *= 2;
 
