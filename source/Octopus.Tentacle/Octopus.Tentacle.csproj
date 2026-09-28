@@ -21,7 +21,7 @@
 				<RuntimeIdentifiers>win</RuntimeIdentifiers><!-- This is AnyCPU -->
 			</PropertyGroup>
 		</When>
-		<When Condition="'$(TargetFramework)' == 'net8.0-windows'">
+		<When Condition="$(TargetFramework.StartsWith('net8.0-windows'))">
 			<PropertyGroup>
 				<RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
 			</PropertyGroup>
@@ -41,13 +41,13 @@
 		<NoWarn>8601</NoWarn>
 		<DefineConstants>$(DefineConstants);HAS_SYSTEM_IDENTITYMODEL_TOKENS;NLOG_HAS_EVENT_LOG_TARGET;NETFX;FULL_FRAMEWORK</DefineConstants>
 	</PropertyGroup>
-	<PropertyGroup Condition=" '$(TargetFramework)' == 'net8.0' Or '$(TargetFramework)' == 'net8.0-windows'">
+	<PropertyGroup Condition=" $(TargetFramework.StartsWith('net8.0'))">
 		<DefineConstants>$(DefineConstants);HTTP_CLIENT_SUPPORTS_SSL_OPTIONS;REQUIRES_EXPLICIT_LOG_CONFIG;REQUIRES_CODE_PAGE_PROVIDER;USER_INTERACTIVE_DOES_NOT_WORK;DEFAULT_PROXY_IS_NOT_AVAILABLE;HAS_NULLABLE_REF_TYPES</DefineConstants>
 	</PropertyGroup>
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
 		<PackageReference Include="KubernetesClient.Classic" Version="19.0.2" />
 	</ItemGroup>
-	<ItemGroup Condition="'$(TargetFramework)' == 'net8.0' Or '$(TargetFramework)' == 'net8.0-windows'">
+	<ItemGroup Condition="$(TargetFramework.StartsWith('net8.0'))">
 		<PackageReference Include="KubernetesClient" Version="19.0.2" />
 	</ItemGroup>
 	<ItemGroup>
@@ -63,11 +63,11 @@
 		<PackageReference Include="NLog" Version="5.0.4" />
 		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.1" />
 	</ItemGroup>
-	<ItemGroup Condition="'$(TargetFramework)' != 'net8.0' And '$(TargetFramework)' != 'net8.0-windows'">
+	<ItemGroup Condition="!$(TargetFramework.StartsWith('net8.0'))">
 		<PackageReference Include="System.Net.Primitives" Version="4.3.1" />
 		<PackageReference Include="System.ValueTuple" Version="4.5.0" />
 	</ItemGroup>
-	<ItemGroup Condition="'$(TargetFramework)' == 'net8.0' Or '$(TargetFramework)' == 'net8.0-windows'">
+	<ItemGroup Condition="$(TargetFramework.StartsWith('net8.0'))">
 		<PackageReference Include="System.Net.Primitives" Version="4.3.1" />
 	</ItemGroup>
 	<ItemGroup>
@@ -94,7 +94,7 @@
 	<ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
 		<Reference Include="System.IdentityModel" />
 	</ItemGroup>
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net8.0' Or '$(TargetFramework)' == 'net8.0-windows' ">
+	<ItemGroup Condition=" $(TargetFramework.StartsWith('net8.0')) ">
 		<PackageReference Include="System.ServiceModel.Primitives" Version="8.1.2" />
 		<PackageReference Include="System.ServiceProcess.ServiceController" Version="8.0.0" />
 		<PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
