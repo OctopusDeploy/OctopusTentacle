@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using NUnit.Framework;
+using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Core.Services.Scripts.Security.Masking;
 
 namespace Octopus.Tentacle.Tests.Security
@@ -61,10 +62,20 @@ namespace Octopus.Tentacle.Tests.Security
 
             var after = GC.GetTotalMemory(true);
 
-            // Currently this code uses ~12Mb of memory. Fail if it exceeds 15Mb (on 32bit).
+            // On 64-bit Linux this measures ~24MiB. Fail if it exceeds 30MiB (15MiB on 32bit).
             var allowedMb = Environment.Is64BitProcess ? 30 : 15;
-            Console.WriteLine($"Allowing up to {allowedMb}MB");
-            Assert.That(after - before, Is.LessThan(allowedMb * 1024 * 1024));
+            
+            // On macOS GC.GetTotalMemory reports ~2x for the same heap (~50MiB vs ~24MiB on Linux), while GC.GetGCMemoryInfo().HeapSizeBytes matches.
+            // It's a runtime bug, not extra memory: macOS still uses the older "segments" GC (regions only arrive in .NET 11, dotnet/runtime#125416), and
+            // since .NET 7 GetTotalMemory on segments counts gen1/gen2 twice, once inside the gen0 figure and again on their own (dotnet/runtime#134755).
+            // So we allow for double there.
+            // We should remove this special case once we're on a .NET 10 servicing release that fixes #134755, or on .NET 11 or newer.
+            if (PlatformDetection.IsRunningOnMac)
+                allowedMb *= 2;
+
+            var usedBytes = after - before;
+            Console.WriteLine($"Used {usedBytes / 1024.0 / 1024.0:F1}MB, allowing up to {allowedMb}MB");
+            Assert.That(usedBytes, Is.LessThan(allowedMb * 1024 * 1024));
         }
     }
 }

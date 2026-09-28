@@ -29,6 +29,11 @@
   <ItemGroup>
     <PackageReference Include="Halibut" Version="8.1.2163" />
   </ItemGroup>
+  <!-- Pin transitive dependencies to fix known CVEs (.NET 8 only; net48 doesn't pull these in). Flows to every project referencing Contracts. -->
+  <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETCoreApp' ">
+    <!-- CVE-2019-0657, CVE-2019-0980, CVE-2019-0981. 4.3.0 arrives via Halibut -> System.Runtime 4.3.0 in the RID-specific graphs. -->
+    <PackageReference Include="System.Private.Uri" Version="4.3.2" />
+  </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Solution Items\SolutionInfo.cs">
       <Link>SolutionInfo.cs</Link>

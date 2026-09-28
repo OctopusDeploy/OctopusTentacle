@@ -1,11 +1,29 @@
 <Project>
   <!--
-    Repo-wide defaults. MSBuild imports this automatically for every project beneath
-    this directory, so new projects inherit these settings without having to remember them.
-
-    Scoped to .csproj so we don't change the behaviour of installer/*.wixproj.
+    Repo-wide defaults. MSBuild imports this automatically for every project beneath this directory, so new projects
+    inherit these settings without having to remember them. Scoped to .csproj so we don't change the behaviour of
+    installer/*.wixproj.
   -->
   <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!--
+      Audit transitive packages too, not just direct ones (the .NET 8 SDK defaults to 'direct'). With
+      TreatWarningsAsErrors, a newly disclosed CVE anywhere in the graph fails restore.
+    -->
+    <NuGetAuditMode>all</NuGetAuditMode>
+    <!--
+      NU1900 means the vulnerability data couldn't be fetched (e.g. nuget.org or feedz.io unreachable). Keep that a
+      warning so a feed outage doesn't fail restore when the packages themselves are already cached.
+    -->
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1900</WarningsNotAsErrors>
   </PropertyGroup>
+  <!--
+  In the unlikely event that an affected package has no fixed version, you can temporarily ignore the CVE like so.
+  We should only ever do this where there is a Linear issue tracking this, as there is no notification otherwise.
+  <ItemGroup>
+    <!- GHSA-xxxx-xxxx-xxxx: <package> <version>, no patched release yet (as of 2026-09-25).
+        Tracked in LEV-NNNN. Remove once a fix ships and we've upgraded. ->
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-xxxx-xxxx-xxxx" />
+  </ItemGroup>
+  -->
 </Project>
