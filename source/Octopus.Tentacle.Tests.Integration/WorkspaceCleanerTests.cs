@@ -30,7 +30,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var startScriptCommand = new TestExecuteShellScriptCommandBuilder().SetScriptBody(b => b.WaitForFileToExist(waitBeforeCompletingScriptFile)).Build();
             var startScriptWorkspaceDirectory = GetWorkspaceDirectoryPath(existingHomeDirectory.DirectoryPath, startScriptCommand.ScriptTicket.TaskId);
 
-            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+            var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacle(b =>
                 {
                     b.WithHomeDirectory(existingHomeDirectory)
@@ -72,7 +72,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var startScriptCommand = new TestExecuteShellScriptCommandBuilder().SetScriptBody(b => b.WaitForFileToExist(waitBeforeCompletingScriptFile)).Build();
             var startScriptWorkspaceDirectory = GetWorkspaceDirectoryPath(existingHomeDirectory.DirectoryPath, startScriptCommand.ScriptTicket.TaskId);
 
-            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+            var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacle(b =>
                 {
                     b.WithHomeDirectory(existingHomeDirectory)
@@ -110,7 +110,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var startScriptCommand = new TestExecuteShellScriptCommandBuilder().SetScriptBody(b => b.Print("Hello")).Build();
 
-            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+            var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacle(b =>
                 {
                     b.WithWorkspaceCleaningSettings(cleanerDelay, deleteWorkspacesOlderThan);
@@ -163,7 +163,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var existingWorkspaceDirectoryWithLogFile = GivenExistingWorkspaceExists(existingHomeDirectory);
             await File.WriteAllTextAsync(ScriptWorkspace.GetLogFilePath(existingWorkspaceDirectoryWithLogFile), "Existing log file");
 
-            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+            var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacle(b =>
                 {
                     b.WithHomeDirectory(existingHomeDirectory)
@@ -191,7 +191,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var existingWorkspaceDirectoryWithLogFile = GivenExistingWorkspaceExists(existingHomeDirectory);
             await File.WriteAllTextAsync(GetBootstrapScriptFilePath(existingWorkspaceDirectoryWithLogFile), "Existing bootstrap file");
 
-            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+            var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacle(b =>
                 {
                     b.WithHomeDirectory(existingHomeDirectory)
@@ -218,7 +218,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var existingWorkspaceDirectory = GivenExistingWorkspaceExists(existingHomeDirectory);
             await File.WriteAllTextAsync(ScriptWorkspace.GetLogFilePath(existingWorkspaceDirectory), "Existing log file");
 
-            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+            var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacle(b =>
                 {
                     b.WithHomeDirectory(existingHomeDirectory)

@@ -20,7 +20,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(testCommonVersions: true, scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task FailedUploadsAreNotRetriedAndFail(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
-            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+            var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithRetriesDisabled()
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
@@ -58,7 +58,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(testCommonVersions: true, scriptServiceToTest: ScriptServiceVersionToTest.None)]
         public async Task FailedDownloadsAreNotRetriedAndFail(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
-            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+            var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithRetriesDisabled()
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)

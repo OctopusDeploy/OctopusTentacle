@@ -26,7 +26,7 @@ namespace Octopus.Tentacle.Tests.Integration
             // Arrange
             var tentacleClientObserver = new BrokenTentacleClientObserver(errorOnExecuteScriptCompleted: true);
 
-            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+            var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages(tentacleConfigurationTestCase, out var recordedUsages)
@@ -52,7 +52,7 @@ namespace Octopus.Tentacle.Tests.Integration
             // Arrange
             var tentacleClientObserver = new BrokenTentacleClientObserver(errorOnRpcCallCompleted: true);
 
-            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+            var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages(tentacleConfigurationTestCase, out var recordedUsages)
@@ -78,7 +78,7 @@ namespace Octopus.Tentacle.Tests.Integration
             // Arrange
             var tentacleClientObserver = new BrokenTentacleClientObserver(errorOnUploadFileCompleted: true);
 
-            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+            var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .Build(CancellationToken);
 
@@ -95,7 +95,7 @@ namespace Octopus.Tentacle.Tests.Integration
             // Arrange
             var tentacleClientObserver = new BrokenTentacleClientObserver(errorOnDownloadFileCompleted: true);
 
-            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+            var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .Build(CancellationToken);
 

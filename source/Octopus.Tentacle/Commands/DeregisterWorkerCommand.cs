@@ -50,7 +50,9 @@ namespace Octopus.Tentacle.Commands
         protected override void Start()
         {
             base.Start();
+            log.Info("Inside DeregisterWorkerCommand Start().");
             StartAsync().GetAwaiter().GetResult();
+            log.Info("Finished DeregisterWorkerCommand Start().");
         }
 
         async Task StartAsync()

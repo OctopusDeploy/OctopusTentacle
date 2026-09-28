@@ -17,7 +17,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(testCommonVersions: true)]
         public async Task CanRunScript(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
-            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder().Build(CancellationToken);
+            var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder().Build(CancellationToken);
 
             var startScriptCommand = new TestExecuteShellScriptCommandBuilder()
                 .SetScriptBody(new ScriptBuilder()

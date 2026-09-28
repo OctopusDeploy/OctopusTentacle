@@ -24,7 +24,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations]
         public async Task WhenNetworkFailureOccurs_DuringGetCapabilities_TheCallIsNotRetried(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
-            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+            var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithRetriesDisabled()
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
@@ -80,7 +80,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations]
         public async Task WhenANetworkFailureOccurs_DuringStartScript_TheCallIsNotRetried(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
-            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+            var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithRetriesDisabled()
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
@@ -132,7 +132,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations]
         public async Task WhenANetworkFailureOccurs_DuringGetStatus_TheCallIsNotRetried(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
-            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+            var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithRetriesDisabled()
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
@@ -189,7 +189,7 @@ namespace Octopus.Tentacle.Tests.Integration
         public async Task WhenANetworkFailureOccurs_DuringCancelScript_TheCallIsNotRetried(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
             CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
-            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+            var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithRetriesDisabled()
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
@@ -251,7 +251,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations]
         public async Task WhenANetworkFailureOccurs_DuringCompleteScript_TheCallIsNotRetried(TentacleConfigurationTestCase tentacleConfigurationTestCase)
         {
-            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+            var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithRetriesDisabled()
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)

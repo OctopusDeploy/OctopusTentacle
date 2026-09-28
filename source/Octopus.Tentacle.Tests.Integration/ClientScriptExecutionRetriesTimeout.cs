@@ -29,7 +29,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(additionalParameterTypes: new object[] {typeof(RpcCallStage)})]
         public async Task WhenRpcRetriesTimeOut_DuringGetCapabilities_TheRpcCallIsCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase, RpcCallStage rpcCallStage)
         {
-            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+            var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 // Set a short retry duration so we cancel fairly quickly
                 .WithRetryDuration(TimeSpan.FromSeconds(15))
                 .WithPortForwarderDataLogging()
@@ -101,7 +101,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             var retryDuration = TimeSpan.FromSeconds(15);
 
-            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+            var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 // Set a short retry duration so we cancel fairly quickly
                 .WithRetryDuration(retryDuration)
                 .WithPortForwarderDataLogging()
@@ -146,7 +146,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(additionalParameterTypes: new object[] { typeof(RpcCallStage)})]
         public async Task WhenRpcRetriesTimeOut_DuringStartScript_TheRpcCallIsCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase, RpcCallStage rpcCallStage)
         {
-            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+            var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 // Set a short retry duration so we cancel fairly quickly
                 .WithRetryDuration(TimeSpan.FromSeconds(15))
                 .WithPortForwarderDataLogging()
@@ -221,7 +221,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             var retryDuration = TimeSpan.FromSeconds(15);
 
-            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+            var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 // Set a short retry duration so we cancel fairly quickly
                 .WithRetryDuration(retryDuration)
                 .WithPortForwarderDataLogging()
@@ -266,7 +266,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(additionalParameterTypes: new object[] { typeof(RpcCallStage)})]
         public async Task WhenRpcRetriesTimeOut_DuringGetStatus_TheRpcCallIsCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase, RpcCallStage rpcCallStage)
         {
-            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+            var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 // Set a short retry duration so we cancel fairly quickly
                 .WithRetryDuration(TimeSpan.FromSeconds(15))
                 .WithPortForwarderDataLogging()
@@ -344,7 +344,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             var retryDuration = TimeSpan.FromSeconds(15);
 
-            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+            var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 // Set a short retry duration so we cancel fairly quickly
                 .WithRetryDuration(retryDuration)
                 .WithPortForwarderDataLogging()
@@ -391,7 +391,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(additionalParameterTypes: new object[] {typeof(RpcCallStage)})]
         public async Task WhenRpcRetriesTimeOut_DuringCancelScript_TheRpcCallIsCancelled(TentacleConfigurationTestCase tentacleConfigurationTestCase, RpcCallStage rpcCallStage)
         {
-            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+            var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 // Set a short retry duration so we cancel fairly quickly
                 .WithRetryDuration(TimeSpan.FromSeconds(15))
                 .WithPortForwarderDataLogging()
@@ -483,7 +483,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             var retryDuration = TimeSpan.FromSeconds(15);
 
-            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+            var clientAndTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 // Set a short retry duration so we cancel fairly quickly
                 .WithRetryDuration(retryDuration)
                 .WithPortForwarderDataLogging()

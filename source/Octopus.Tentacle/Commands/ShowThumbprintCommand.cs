@@ -37,6 +37,8 @@ namespace Octopus.Tentacle.Commands
 
         protected override void Start()
         {
+            log.Info("Inside ShowThumbPrintCommand Start().");
+
             base.Start();
 
             if (!SupportedFormats.Contains(Format, StringComparer.OrdinalIgnoreCase))
@@ -57,6 +59,7 @@ namespace Octopus.Tentacle.Commands
             {
                 Console.Write(content);
             }
+            log.Info("Finished ShowThumbPrintCommand Start().");
         }
     }
 }
