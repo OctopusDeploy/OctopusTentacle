@@ -65,9 +65,11 @@ namespace Octopus.Tentacle.Tests.Security
             // On 64-bit Linux this measures ~24MiB. Fail if it exceeds 30MiB (15MiB on 32bit).
             var allowedMb = Environment.Is64BitProcess ? 30 : 15;
             
-            // On macOS GC.GetTotalMemory reports ~2x for the same heap.
-            // net8.0: ~50MiB on arm64 and ~49MiB on x64, vs ~24MiB on Linux on the same hardware,
-            // while GC.GetGCMemoryInfo().HeapSizeBytes matches, so allow double there.
+            // On macOS GC.GetTotalMemory reports ~2x for the same heap (~50MiB vs ~24MiB on Linux), while GC.GetGCMemoryInfo().HeapSizeBytes matches.
+            // It's a runtime bug, not extra memory: macOS still uses the older "segments" GC (regions only arrive in .NET 11, dotnet/runtime#125416), and
+            // since .NET 7 GetTotalMemory on segments counts gen1/gen2 twice, once inside the gen0 figure and again on their own (dotnet/runtime#134755).
+            // So we allow for double there.
+            // We should remove this special case once we're on a .NET 10 servicing release that fixes #134755, or on .NET 11 or newer.
             if (PlatformDetection.IsRunningOnMac)
                 allowedMb *= 2;
 
