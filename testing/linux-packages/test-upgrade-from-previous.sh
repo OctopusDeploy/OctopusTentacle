@@ -18,9 +18,14 @@
 #      version still decrypts what the old one wrote, without rewriting it.
 #   6. Run `tentacle agent` for a few seconds. On start it re-encrypts the three
 #      settings and logs one line per setting. Afterwards every value carries
-#      the prefix, the thumbprint is unchanged, and /etc/octopus/machinekey is
-#      readable only by its owner.
+#      the prefix, the thumbprint is unchanged, the key beside the configuration
+#      (/etc/octopus/<instance>/machinekey) is readable only by its owner, and
+#      tentacle.config.before-reencryption holds the configuration exactly as the
+#      released version left it, also owner-only.
 #   7. Run the agent again: nothing left to re-encrypt, so it logs nothing.
+#   8. Downgrade: reinstall the released version, confirm it cannot read the
+#      re-encrypted configuration, restore the backup, and confirm it reads that
+#      with the original thumbprint.
 #
 # The released version must predate the versioned scheme for step 3 to hold;
 # once a release with LEV-1171 is out, this test needs a pinned older package
@@ -139,7 +144,10 @@ PACKAGE="$1"
 PREFIX='$OctopusMachineKeyV1$'
 INSTANCE="upgrade-test"
 CONFIG="/etc/octopus/$INSTANCE/tentacle.config"
-MACHINE_KEY_FILE="/etc/octopus/machinekey"
+# The key is kept beside the configuration it protects; earlier versions kept theirs at /etc/octopus/machinekey.
+MACHINE_KEY_FILE="/etc/octopus/$INSTANCE/machinekey"
+LEGACY_MACHINE_KEY_FILE="/etc/octopus/machinekey"
+BACKUP="$CONFIG.before-reencryption"
 PROTECTED_SETTINGS=(Tentacle.Certificate Octopus.Proxy.ProxyPassword Octopus.Server.Proxy.ProxyPassword)
 
 log()  { echo; echo "==> $*"; }
@@ -197,9 +205,11 @@ done
 if [[ -s /etc/machine-id ]]; then
     echo "This host has a machine-id, so the released version encrypted the settings with the key derived from it."
 else
-    echo "This host has no machine-id, so the released version encrypted the settings with the key it generated at $MACHINE_KEY_FILE."
+    echo "This host has no machine-id, so the released version encrypted the settings with the key it generated at $LEGACY_MACHINE_KEY_FILE."
 fi
 echo "All protected settings are in the released version's format."
+
+cp "$CONFIG" /tmp/as-released.config
 
 log "Upgrading to the package under test: $PACKAGE"
 bash /test-scripts/install-package.sh "$PACKAGE"
@@ -230,13 +240,32 @@ THUMBPRINT_AFTER_MIGRATION=$(Tentacle show-thumbprint --instance "$INSTANCE")
     || fail "show-thumbprint reported '$THUMBPRINT_AFTER_MIGRATION' after re-encryption, but '$THUMBPRINT_BEFORE' before it"
 MACHINE_KEY_MODE=$(stat -c %a "$MACHINE_KEY_FILE")
 [[ "$MACHINE_KEY_MODE" == "600" ]] || fail "$MACHINE_KEY_FILE has permissions $MACHINE_KEY_MODE, expected 600"
-echo "All ${#PROTECTED_SETTINGS[@]} protected settings were re-encrypted, the thumbprint is unchanged, and the key file is owner-only."
+[[ -f "$BACKUP" ]] || fail "no copy of the configuration was kept at $BACKUP before re-encrypting it"
+cmp -s "$BACKUP" /tmp/as-released.config || fail "$BACKUP is not the configuration exactly as $PREVIOUS_VERSION left it"
+[[ "$(stat -c %a "$BACKUP")" == "600" ]] || fail "$BACKUP has permissions $(stat -c %a "$BACKUP"), expected 600"
+echo "All ${#PROTECTED_SETTINGS[@]} protected settings were re-encrypted, the thumbprint is unchanged, the key file is owner-only, and the pre-upgrade configuration was kept."
 
 log "Starting the agent again, which has nothing left to re-encrypt"
 AGENT_LOG=$(run_agent_briefly 30)
 RE_ENCRYPTED=$(grep -c "Re-encrypted the protected setting" <<< "$AGENT_LOG" || true)
 [[ "$RE_ENCRYPTED" == "0" ]] || fail "the second start re-encrypted $RE_ENCRYPTED settings; it should have been a no-op"
 echo "The second start was a no-op."
+
+log "Downgrading to the released version, which needs the backup"
+if command -v apt-get >/dev/null 2>&1; then
+    apt-get install -y --allow-downgrades "tentacle=$PREVIOUS_VERSION"
+else
+    yum downgrade -y "tentacle-$PREVIOUS_VERSION" || yum install -y "tentacle-$PREVIOUS_VERSION"
+fi
+[[ "$(Tentacle version)" == "$PREVIOUS_VERSION" ]] || fail "the downgrade did not take; Tentacle reports $(Tentacle version)"
+if Tentacle show-thumbprint --instance "$INSTANCE" >/dev/null 2>&1; then
+    fail "$PREVIOUS_VERSION read the re-encrypted configuration, which it should not be able to"
+fi
+cp "$BACKUP" "$CONFIG"
+THUMBPRINT_AFTER_DOWNGRADE=$(Tentacle show-thumbprint --instance "$INSTANCE")
+[[ "$THUMBPRINT_AFTER_DOWNGRADE" == "$THUMBPRINT_BEFORE" ]] \
+    || fail "after restoring $BACKUP, $PREVIOUS_VERSION reported '$THUMBPRINT_AFTER_DOWNGRADE', but '$THUMBPRINT_BEFORE' before the upgrade"
+echo "$PREVIOUS_VERSION reads the restored backup with the original thumbprint: the downgrade path works."
 
 echo
 echo "UPGRADE TEST PASSED: $PREVIOUS_VERSION -> $NEW_VERSION"

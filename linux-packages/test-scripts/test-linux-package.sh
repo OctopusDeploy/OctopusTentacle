@@ -67,7 +67,8 @@ echo ""
 # grep -F throughout: the prefix contains '$', which a regular expression would treat as an anchor.
 INSTANCE_NAME="package-test"
 CONFIGURATION_FILE="/etc/octopus/$INSTANCE_NAME/tentacle.config"
-MACHINE_KEY_FILE="/etc/octopus/machinekey"
+# The key is kept beside the configuration file it protects.
+MACHINE_KEY_FILE="/etc/octopus/$INSTANCE_NAME/machinekey"
 
 mkdir -p "$(dirname "$CONFIGURATION_FILE")"
 Tentacle create-instance --instance "$INSTANCE_NAME" --config "$CONFIGURATION_FILE"
@@ -80,7 +81,12 @@ fi
 echo "The Tentacle certificate is encrypted with the key generated for this machine."
 
 if [[ ! -f "$MACHINE_KEY_FILE" ]]; then
-  echo "Expected the generated machine key at $MACHINE_KEY_FILE."
+  echo "Expected the generated machine key beside the configuration, at $MACHINE_KEY_FILE."
+  exit 1
+fi
+
+if [[ -e /etc/octopus/machinekey ]]; then
+  echo "A key was created at /etc/octopus/machinekey, where only earlier versions kept theirs."
   exit 1
 fi
 
