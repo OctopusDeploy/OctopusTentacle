@@ -14,129 +14,203 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
     [TestFixture]
     public class LinuxGeneratedMachineKeyFixture
     {
+        const string ConfigurationFile = "/some/where/tentacle.config";
         const string KeyFilePath = "/some/where/machinekey";
         const string ValidKeyFileContents = "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=.ZmVkY2JhOTg3NjU0MzIxMA==";
 
         IOctopusFileSystem fileSystem;
         ISystemLog log;
         LinuxGeneratedMachineKey keySource;
+        string written;
 
         [SetUp]
         public void SetUp()
         {
             fileSystem = Substitute.For<IOctopusFileSystem>();
             log = Substitute.For<ISystemLog>();
-            keySource = new LinuxGeneratedMachineKey(log, fileSystem, KeyFilePath);
+            keySource = new LinuxGeneratedMachineKey(log, fileSystem, KeyFilePath, ownerReferencePath: ConfigurationFile);
+
+            // A file system where the key file does not exist until something creates it.
+            written = null;
+            fileSystem.FileExists(KeyFilePath).Returns(_ => written != null);
+            fileSystem.TryCreateFileOwnerOnly(KeyFilePath, Arg.Any<string>()).Returns(ci =>
+            {
+                if (written != null)
+                    return false;
+                written = ci.ArgAt<string>(1);
+                return true;
+            });
+            fileSystem.ReadAllText(KeyFilePath).Returns(_ => written);
         }
 
         [Test]
-        public void GivenNoKeyFile_ThenGeneratesOneThatOnlyTheOwnerCanRead()
+        public void TheKeyForAConfigurationFileIsBesideIt()
         {
-            string written = null;
-            fileSystem.FileExists(KeyFilePath).Returns(false);
-            fileSystem.When(x => x.WriteAllTextOwnerOnly(KeyFilePath, Arg.Any<string>())).Do(ci => written = ci.ArgAt<string>(1));
-            fileSystem.ReadAllText(KeyFilePath).Returns(_ => written);
+            LinuxGeneratedMachineKey.KeyFilePathFor("/etc/octopus/Tentacle/tentacle-Tentacle.config").Should().Be("/etc/octopus/Tentacle/machinekey");
+            LinuxGeneratedMachineKey.KeyFilePathFor("/etc/octopus/tentacle.config").Should().Be("/etc/octopus/machinekey", "the official Docker image's configuration, whose key is where it always was");
+            LinuxGeneratedMachineKey.KeyFilePathFor("/tentacle.config").Should().Be("/machinekey");
+        }
 
+        [Test]
+        public void GivenNoKeyFile_ThenGeneratesOneAtomicallyThatOnlyTheOwnerCanRead()
+        {
             var (key, iv) = keySource.Load();
 
             fileSystem.Received(1).EnsureDirectoryExists("/some/where");
-            fileSystem.Received(1).WriteAllTextOwnerOnly(KeyFilePath, Arg.Any<string>());
+            fileSystem.Received(1).TryCreateFileOwnerOnly(KeyFilePath, Arg.Any<string>());
             fileSystem.DidNotReceive().WriteAllText(Arg.Any<string>(), Arg.Any<string>());
+            fileSystem.DidNotReceive().WriteAllTextOwnerOnly(Arg.Any<string>(), Arg.Any<string>());
             fileSystem.DidNotReceive().RestrictFilePermissionsToOwner(Arg.Any<string>());
 
             key.Should().HaveCount(32, "AES-256");
             iv.Should().HaveCount(16);
             written.Should().Be(Convert.ToBase64String(key) + "." + Convert.ToBase64String(iv), "the format earlier versions wrote and still read");
+            log.Received(1).Info(Arg.Is<string>(m => m.Contains(KeyFilePath) && m.Contains("Keep it with the configuration file")));
         }
 
         [Test]
         public void GivenNoKeyFile_ThenEachMachineGetsADifferentKey()
         {
-            fileSystem.FileExists(KeyFilePath).Returns(false);
-            string written = null;
-            fileSystem.When(x => x.WriteAllTextOwnerOnly(KeyFilePath, Arg.Any<string>())).Do(ci => written = ci.ArgAt<string>(1));
-            fileSystem.ReadAllText(KeyFilePath).Returns(_ => written);
-
             var first = keySource.Load().Key;
+            written = null;
             var second = new LinuxGeneratedMachineKey(log, fileSystem, KeyFilePath).Load().Key;
 
             first.Should().NotBeEquivalentTo(second);
         }
 
         [Test]
-        public void GivenAnExistingKeyFile_ThenLoadsItWithoutWritingAnything()
+        public void GivenAnotherProcessCreatesTheKeyFirst_ThenItsKeyIsUsed()
         {
-            fileSystem.FileExists(KeyFilePath).Returns(true);
+            // Nothing there when we look, but another process moves its key into place before we can.
+            var exists = false;
+            fileSystem.FileExists(KeyFilePath).Returns(_ => exists);
+            fileSystem.TryCreateFileOwnerOnly(KeyFilePath, Arg.Any<string>()).Returns(_ =>
+            {
+                exists = true;
+                return false;
+            });
             fileSystem.ReadAllText(KeyFilePath).Returns(ValidKeyFileContents);
+
+            var (key, _) = keySource.Load();
+
+            Convert.ToBase64String(key).Should().Be("MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=", "whichever key reached the file is the one every process must use");
+            log.DidNotReceive().Info(Arg.Any<string>());
+            fileSystem.DidNotReceive().TryChangeOwnerToMatch(Arg.Any<string>(), Arg.Any<string>());
+        }
+
+        [Test]
+        public void GivenNoKeyFile_ThenTheNewKeyIsGivenTheConfigurationFilesOwner()
+        {
+            // So `sudo tentacle new-certificate` on a configuration that belongs to the service user leaves a key that user can read.
+            fileSystem.FileExists(ConfigurationFile).Returns(true);
+
+            keySource.Load();
+
+            fileSystem.Received(1).TryChangeOwnerToMatch(KeyFilePath, ConfigurationFile);
+        }
+
+        [Test]
+        public void GivenNoConfigurationFileYet_ThenOwnershipIsLeftAlone()
+        {
+            fileSystem.FileExists(ConfigurationFile).Returns(false);
+
+            keySource.Load();
+
+            fileSystem.DidNotReceive().TryChangeOwnerToMatch(Arg.Any<string>(), Arg.Any<string>());
+        }
+
+        [Test]
+        public void GivenAnExistingKeyFile_ThenLoadsItWithoutWritingOrChangingAnything()
+        {
+            written = ValidKeyFileContents;
 
             var (key, iv) = keySource.Load();
 
             Convert.ToBase64String(key).Should().Be("MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=");
             Convert.ToBase64String(iv).Should().Be("ZmVkY2JhOTg3NjU0MzIxMA==");
-            fileSystem.DidNotReceive().WriteAllTextOwnerOnly(Arg.Any<string>(), Arg.Any<string>());
+            fileSystem.DidNotReceive().TryCreateFileOwnerOnly(Arg.Any<string>(), Arg.Any<string>());
             fileSystem.DidNotReceive().WriteAllText(Arg.Any<string>(), Arg.Any<string>());
+            fileSystem.DidNotReceive().RestrictFilePermissionsToOwner(Arg.Any<string>());
+            fileSystem.DidNotReceive().TryChangeOwnerToMatch(Arg.Any<string>(), Arg.Any<string>());
         }
 
         [Test]
-        public void GivenAnExistingKeyFileOthersCanRead_ThenTightensItsPermissionsAndSaysSo()
+        public void TheKeyIsReadOncePerInstance()
         {
-            fileSystem.FileExists(KeyFilePath).Returns(true);
-            fileSystem.ReadAllText(KeyFilePath).Returns(ValidKeyFileContents);
-            fileSystem.RestrictFilePermissionsToOwner(KeyFilePath).Returns(true);
+            written = ValidKeyFileContents;
 
             keySource.Load();
+            keySource.Load();
+            keySource.Load();
+
+            fileSystem.Received(1).ReadAllText(KeyFilePath);
+        }
+
+        [Test]
+        public void GivenAKeyFileTheCurrentUserCannotRead_ThenTheErrorSaysHowToFixIt()
+        {
+            written = ValidKeyFileContents;
+            fileSystem.ReadAllText(KeyFilePath).Throws(new UnauthorizedAccessException("Access to the path is denied."));
+
+            keySource.Invoking(x => x.Load())
+                .Should().Throw<InvalidOperationException>()
+                .WithMessage($"The machine key file `{KeyFilePath}` exists but the user Tentacle is running as ({Environment.UserName}) cannot read it.*chown*service --install --username*")
+                .WithInnerException<UnauthorizedAccessException>();
+        }
+
+        [Test]
+        public void RestrictingPermissions_TightensAnExistingKeyFileAndSaysSo()
+        {
+            written = ValidKeyFileContents;
+            fileSystem.RestrictFilePermissionsToOwner(KeyFilePath).Returns(true);
+
+            keySource.RestrictPermissionsToOwner();
 
             fileSystem.Received(1).RestrictFilePermissionsToOwner(KeyFilePath);
             log.Received(1).Info(Arg.Is<string>(m => m.Contains(KeyFilePath) && m.Contains("only its owner")));
         }
 
         [Test]
-        public void GivenAnExistingKeyFileAlreadyRestricted_ThenSaysNothing()
+        public void RestrictingPermissions_OnAnAlreadyRestrictedFileSaysNothing()
         {
-            fileSystem.FileExists(KeyFilePath).Returns(true);
-            fileSystem.ReadAllText(KeyFilePath).Returns(ValidKeyFileContents);
+            written = ValidKeyFileContents;
             fileSystem.RestrictFilePermissionsToOwner(KeyFilePath).Returns(false);
 
-            keySource.Load();
+            keySource.RestrictPermissionsToOwner();
 
             log.DidNotReceive().Info(Arg.Any<string>());
         }
 
         [Test]
-        public void GivenThePermissionsCannotBeChanged_ThenTheKeyStillLoads()
+        public void RestrictingPermissions_WhenTheyCannotBeChanged_IsLoggedQuietlyAndTheKeyStillLoads()
         {
-            fileSystem.FileExists(KeyFilePath).Returns(true);
-            fileSystem.ReadAllText(KeyFilePath).Returns(ValidKeyFileContents);
+            written = ValidKeyFileContents;
             fileSystem.RestrictFilePermissionsToOwner(KeyFilePath).Throws(new UnauthorizedAccessException("read-only file system"));
 
-            var (key, _) = keySource.Load();
+            keySource.Invoking(x => x.RestrictPermissionsToOwner()).Should().NotThrow();
 
-            key.Should().NotBeEmpty();
+            keySource.Load().Key.Should().NotBeEmpty();
             log.Received(1).Verbose(Arg.Any<UnauthorizedAccessException>(), Arg.Is<string>(m => m.Contains(KeyFilePath)));
             log.DidNotReceive().Warn(Arg.Any<string>());
             log.DidNotReceive().Warn(Arg.Any<Exception>(), Arg.Any<string>());
         }
 
         [Test]
-        public void ThePermissionsAreOnlyCheckedOncePerInstance()
+        public void RestrictingPermissions_WithNoKeyFile_DoesNothing()
         {
-            fileSystem.FileExists(KeyFilePath).Returns(true);
-            fileSystem.ReadAllText(KeyFilePath).Returns(ValidKeyFileContents);
+            keySource.RestrictPermissionsToOwner();
 
-            keySource.Load();
-            keySource.Load();
-            keySource.Load();
-
-            fileSystem.Received(1).RestrictFilePermissionsToOwner(KeyFilePath);
+            fileSystem.DidNotReceive().RestrictFilePermissionsToOwner(Arg.Any<string>());
+            written.Should().BeNull("restricting permissions must not create a key");
         }
 
         [TestCase("not base64 at all.nor this")]
         [TestCase("no-separator")]
         [TestCase("")]
+        [TestCase(".ZmVkY2JhOTg3NjU0MzIxMA==")]
         public void GivenACorruptKeyFile_ThenThrowsNamingTheFile(string contents)
         {
-            fileSystem.FileExists(KeyFilePath).Returns(true);
-            fileSystem.ReadAllText(KeyFilePath).Returns(contents);
+            written = contents;
 
             keySource.Invoking(x => x.Load())
                 .Should().Throw<InvalidOperationException>()
@@ -146,67 +220,57 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         [Test]
         public void GivenNoKeyFileAndToldNotToCreateOne_ThenThrowsWithoutWriting()
         {
-            fileSystem.FileExists(KeyFilePath).Returns(false);
             var legacyLocation = new LinuxGeneratedMachineKey(log, fileSystem, KeyFilePath, createIfMissing: false);
 
             legacyLocation.Invoking(x => x.Load())
                 .Should().Throw<InvalidOperationException>()
                 .WithMessage($"There is no machine key file at `{KeyFilePath}`.");
-            fileSystem.DidNotReceive().WriteAllTextOwnerOnly(Arg.Any<string>(), Arg.Any<string>());
+            fileSystem.DidNotReceive().TryCreateFileOwnerOnly(Arg.Any<string>(), Arg.Any<string>());
             fileSystem.DidNotReceive().EnsureDirectoryExists(Arg.Any<string>());
         }
 
         [Test]
-        public void DefaultsToEtcOctopus()
+        public void TheLegacyKeyWasAtEtcOctopus()
         {
-            using (new TemporaryEnvironmentVariable(KubernetesConfig.NamespaceVariableName, null))
-            using (new TemporaryEnvironmentVariable(EnvironmentVariables.TentacleMachineConfigurationHomeDirectory, null))
-            {
-                new LinuxGeneratedMachineKey(log, fileSystem).KeyFilePath.Should().Be("/etc/octopus/machinekey");
-                LinuxGeneratedMachineKey.StandardKeyFilePath.Should().Be("/etc/octopus/machinekey");
-            }
-        }
-
-        [Test]
-        public void FollowsARelocatedMachineConfigurationHome()
-        {
-            // The same override a non-root install uses to move the instance registry out of /etc/octopus.
             using (new TemporaryEnvironmentVariable(KubernetesConfig.NamespaceVariableName, null))
             using (new TemporaryEnvironmentVariable(EnvironmentVariables.TentacleMachineConfigurationHomeDirectory, "/home/octopus/.octopus"))
             {
-                new LinuxGeneratedMachineKey(log, fileSystem).KeyFilePath.Should().Be("/home/octopus/.octopus/machinekey");
+                LinuxGeneratedMachineKey.LegacyKeyFilePathForThisHost.Should().Be("/etc/octopus/machinekey", "earlier versions ignored the machine configuration home for the key");
+                LinuxGeneratedMachineKey.LegacyKeyFilePath.Should().Be("/etc/octopus/machinekey");
             }
         }
 
         [Test]
-        public void AHomeGivenWithATrailingSlashIsNotDoubled()
-        {
-            using (new TemporaryEnvironmentVariable(KubernetesConfig.NamespaceVariableName, null))
-            using (new TemporaryEnvironmentVariable(EnvironmentVariables.TentacleMachineConfigurationHomeDirectory, "/home/octopus/.octopus/"))
-            {
-                new LinuxGeneratedMachineKey(log, fileSystem).KeyFilePath.Should().Be("/home/octopus/.octopus/machinekey");
-            }
-        }
-
-        [Test]
-        public void UsesTentacleHomeWhenRunningAsTheKubernetesAgent()
+        public void TheKubernetesAgentsLegacyKeyWasInTentacleHome()
         {
             using (new TemporaryEnvironmentVariable(KubernetesConfig.NamespaceVariableName, "octopus-agent"))
-            using (new TemporaryEnvironmentVariable(EnvironmentVariables.TentacleHome, "/octopus"))
-            using (new TemporaryEnvironmentVariable(EnvironmentVariables.TentacleMachineConfigurationHomeDirectory, "/somewhere/else"))
+            using (new TemporaryEnvironmentVariable(EnvironmentVariables.TentacleHome, "/octopus/"))
             {
-                new LinuxGeneratedMachineKey(log, fileSystem).KeyFilePath.Should().Be("/octopus/machinekey", "the Kubernetes agent's home is what is on the persistent volume");
+                LinuxGeneratedMachineKey.LegacyKeyFilePathForThisHost.Should().Be("/octopus/machinekey");
             }
         }
 
         [Test]
-        public void AnExplicitPathWinsOverTheEnvironment()
+        public void GivingTheKeyToTheServiceUser_CreatesItIfNeededAndChangesItsOwner()
         {
-            using (new TemporaryEnvironmentVariable(KubernetesConfig.NamespaceVariableName, "octopus-agent"))
-            using (new TemporaryEnvironmentVariable(EnvironmentVariables.TentacleHome, "/octopus"))
-            {
-                keySource.KeyFilePath.Should().Be(KeyFilePath);
-            }
+            fileSystem.TryChangeOwner(KeyFilePath, "tentacle").Returns(true);
+
+            LinuxGeneratedMachineKey.GiveKeyToServiceUser(log, fileSystem, ConfigurationFile, "tentacle").Should().BeTrue();
+
+            written.Should().NotBeNull("a service user that cannot create the key must be given one");
+            fileSystem.Received(1).TryChangeOwner(KeyFilePath, "tentacle");
+            log.Received(1).Info(Arg.Is<string>(m => m.Contains(KeyFilePath) && m.Contains("tentacle")));
+        }
+
+        [Test]
+        public void GivingTheKeyToTheServiceUser_WhenTheOwnerCannotBeChanged_WarnsWithTheFix()
+        {
+            written = ValidKeyFileContents;
+            fileSystem.TryChangeOwner(KeyFilePath, "tentacle").Returns(false);
+
+            LinuxGeneratedMachineKey.GiveKeyToServiceUser(log, fileSystem, ConfigurationFile, "tentacle").Should().BeFalse();
+
+            log.Received(1).Warn(Arg.Is<string>(m => m.Contains($"sudo chown tentacle {KeyFilePath}")));
         }
 
         class TemporaryEnvironmentVariable : IDisposable

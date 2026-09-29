@@ -1,3 +1,4 @@
+#if !NETFRAMEWORK
 using System;
 using System.IO;
 using System.Linq;
@@ -52,6 +53,7 @@ namespace Octopus.Tentacle.Tests.Configuration
         public void TearDown()
         {
             File.Delete(configurationFile);
+            File.Delete(configurationFile + XmlFileKeyValueStore.PreReEncryptionBackupSuffix);
         }
 
         ProtectedSettingsMigrator CreateMigrator()
@@ -83,6 +85,18 @@ namespace Octopus.Tentacle.Tests.Configuration
 
             log.Received(3).Info(Arg.Is<string>(m => m.StartsWith("Re-encrypted the protected setting")));
             log.DidNotReceive().Warn(Arg.Any<Exception>(), Arg.Any<string>());
+            File.Exists(configurationFile + XmlFileKeyValueStore.PreReEncryptionBackupSuffix).Should().BeTrue("a downgrade needs the configuration as it was");
+        }
+
+        [Test]
+        public void TheKeyFilesPermissionsAreTightenedByTheAgentEvenWhenThereIsNothingToMigrate()
+        {
+            var reEncryptingStore = Substitute.For<IWritableKeyValueStore, IReEncryptingKeyValueStore>();
+            selector.Current.Returns(new ApplicationInstanceConfiguration("Tentacle", configurationFile, reEncryptingStore, reEncryptingStore));
+
+            CreateMigrator().ReEncryptLegacyProtectedSettings();
+
+            ((IReEncryptingKeyValueStore)reEncryptingStore).Received(1).RestrictKeyStorageToOwner();
         }
 
         [Test]
@@ -148,6 +162,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             log.Received(1).Warn(Arg.Any<IOException>(), Arg.Is<string>(m => m.Contains("'Tentacle.Certificate'") && m.Contains("still readable")));
             log.Received(1).Info(Arg.Is<string>(m => m.Contains("'Octopus.Proxy.ProxyPassword'")));
             ((IReEncryptingKeyValueStore)failingStore).Received(1).ReEncryptIfLegacy("Octopus.Server.Proxy.ProxyPassword");
+            ((IReEncryptingKeyValueStore)failingStore).Received(1).RestrictKeyStorageToOwner();
         }
 
         [Test]
@@ -175,3 +190,4 @@ namespace Octopus.Tentacle.Tests.Configuration
             => XDocument.Load(configurationFile).Root!.Elements("set").Single(e => (string)e.Attribute("key") == name).Value;
     }
 }
+#endif

@@ -13,5 +13,10 @@ namespace Octopus.Tentacle.Configuration
         /// in which case the stored value is left untouched.
         /// </summary>
         bool ReEncryptIfLegacy(string name);
+
+        /// <summary>
+        /// See <see cref="Crypto.IMachineKeyEncryptor.RestrictKeyStorageToOwner"/>. Never throws.
+        /// </summary>
+        void RestrictKeyStorageToOwner();
     }
 }

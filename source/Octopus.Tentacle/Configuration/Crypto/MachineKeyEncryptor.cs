@@ -9,41 +9,50 @@ namespace Octopus.Tentacle.Configuration.Crypto
 {
     public class MachineKeyEncryptor : IMachineKeyEncryptor
     {
+        static readonly ISystemLog Log = new SystemLog();
+
+        /// <summary>
+        /// The encryptor for values that are not kept in a configuration file of their own. On Linux its key is where
+        /// earlier versions kept theirs. Configuration files use <see cref="ForConfigurationFile"/> instead.
+        /// </summary>
         public static readonly IMachineKeyEncryptor Current;
 
         static MachineKeyEncryptor()
         {
-            if (PlatformDetection.IsRunningOnWindows)
-            {
-                Current = new WindowsMachineKeyEncryptor();
-            }
-            else
-            {
-                var log = new SystemLog();
-                Current = CreateLinuxEncryptor(log, new OctopusPhysicalFileSystem(log));
-            }
+            Current = PlatformDetection.IsRunningOnWindows
+                ? new WindowsMachineKeyEncryptor()
+                : CreateLinuxEncryptor(Log, new OctopusPhysicalFileSystem(Log), LinuxGeneratedMachineKey.LegacyKeyFilePathForThisHost, configurationFile: null);
         }
+
+        /// <summary>
+        /// The encryptor for the values in the configuration file at <paramref name="configurationFile"/>. On Linux its
+        /// key is <c>machinekey</c> beside that file (see <see cref="LinuxGeneratedMachineKey.KeyFilePathFor"/>);
+        /// on Windows it is DPAPI, as it always was.
+        /// </summary>
+        public static IMachineKeyEncryptor ForConfigurationFile(string configurationFile)
+            => PlatformDetection.IsRunningOnWindows
+                ? Current
+                : CreateLinuxEncryptor(Log, new OctopusPhysicalFileSystem(Log), LinuxGeneratedMachineKey.KeyFilePathFor(configurationFile), configurationFile);
 
         /// <summary>
         /// How the Linux encryptor is put together. Public so tests can prove the composition, not just the parts.
         /// </summary>
-        public static IMachineKeyEncryptor CreateLinuxEncryptor(ISystemLog log, IOctopusFileSystem fileSystem)
+        /// <param name="keyFilePath">Where the key for new values is kept, and created if need be.</param>
+        /// <param name="configurationFile">The configuration file the key protects, if any; a key root creates is given its owner.</param>
+        public static IMachineKeyEncryptor CreateLinuxEncryptor(ISystemLog log, IOctopusFileSystem fileSystem, string keyFilePath, string? configurationFile)
         {
-            // Everything is encrypted with the key Tentacle generates for this machine. Earlier versions preferred a
-            // key taken straight from /etc/machine-id, which is neither secret nor unique inside container images,
-            // and only fell back to the generated key when there was no machine-id; both are kept, in that order,
-            // purely to decrypt what those versions wrote.
-            var generatedKey = new LinuxGeneratedMachineKey(log, fileSystem);
+            var generatedKey = new LinuxGeneratedMachineKey(log, fileSystem, keyFilePath, createIfMissing: true, ownerReferencePath: configurationFile);
+
+            // Earlier versions preferred a key taken straight from /etc/machine-id, which is neither secret nor unique
+            // inside container images, and fell back to a key they generated at /etc/octopus/machinekey (whatever the
+            // configuration file's location) when there was no machine-id. Both are kept, in that order, purely to
+            // decrypt what those versions wrote. Neither is ever created or changed: a missing legacy key cannot decrypt
+            // anything, and leaving the old key file alone keeps a pre-upgrade backup of the configuration readable.
             var legacyKeySources = new List<ICryptoKeyNixSource>
             {
                 new LinuxMachineIdKey(fileSystem),
-                generatedKey
+                new LinuxGeneratedMachineKey(log, fileSystem, LinuxGeneratedMachineKey.LegacyKeyFilePathForThisHost, createIfMissing: false)
             };
-
-            // Those versions also kept the generated key at /etc/octopus/machinekey whatever the machine configuration
-            // home was, so an install that relocated its home may have values written with a key that is still there.
-            if (generatedKey.KeyFilePath != LinuxGeneratedMachineKey.StandardKeyFilePath)
-                legacyKeySources.Add(new LinuxGeneratedMachineKey(log, fileSystem, LinuxGeneratedMachineKey.StandardKeyFilePath, createIfMissing: false));
 
             return new LinuxMachineKeyEncryptor(log, generatedKey, legacyKeySources);
         }
@@ -60,5 +69,8 @@ namespace Octopus.Tentacle.Configuration.Crypto
 
         public bool RequiresReEncryption(string encrypted)
             => Current.RequiresReEncryption(encrypted);
+
+        public void RestrictKeyStorageToOwner()
+            => Current.RestrictKeyStorageToOwner();
     }
 }
