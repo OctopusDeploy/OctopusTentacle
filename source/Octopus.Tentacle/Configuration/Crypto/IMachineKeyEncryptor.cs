@@ -13,5 +13,11 @@ namespace Octopus.Tentacle.Configuration.Crypto
         /// next opportunity and the old scheme retired.
         /// </summary>
         bool RequiresReEncryption(string encrypted);
+
+        /// <summary>
+        /// Makes sure the stored key, if this encryptor has one on disk, is readable only by its owner. Called only by
+        /// the agent, as the user the service runs as; see <see cref="LinuxGeneratedMachineKey.RestrictPermissionsToOwner"/>.
+        /// </summary>
+        void RestrictKeyStorageToOwner();
     }
 }

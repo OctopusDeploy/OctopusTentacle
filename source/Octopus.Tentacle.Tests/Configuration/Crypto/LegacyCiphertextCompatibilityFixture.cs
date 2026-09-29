@@ -1,3 +1,4 @@
+#if !NETFRAMEWORK
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -56,32 +57,45 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
                 .SetName("{m}(generated, certificate-sized)");
         }
 
-        /// <summary>
-        /// The encryptor exactly as <see cref="MachineKeyEncryptor"/> composes it on Linux, over a fake file system
-        /// holding a machine-id (or not) and a key file where a standard install keeps it.
-        /// </summary>
-        static IMachineKeyEncryptor CreateEncryptorAsComposedInProduction(bool machineIdPresent, string machineId = MachineId, string generatedKeyFileContents = GeneratedKeyFileContents)
-        {
-            var fileSystem = Substitute.For<IOctopusFileSystem>();
-            fileSystem.FileExists(LinuxMachineIdKey.FileName).Returns(machineIdPresent);
-            fileSystem.ReadAllLines(LinuxMachineIdKey.FileName).Returns(new[] { machineId });
-            fileSystem.FileExists(LinuxGeneratedMachineKey.StandardKeyFilePath).Returns(true);
-            fileSystem.ReadAllText(LinuxGeneratedMachineKey.StandardKeyFilePath).Returns(generatedKeyFileContents);
+        const string ConfigurationFile = "/etc/octopus/Tentacle/tentacle-Tentacle.config";
+        const string NewKeyFile = "/etc/octopus/Tentacle/machinekey";
 
-            return MachineKeyEncryptor.CreateLinuxEncryptor(Substitute.For<ISystemLog>(), fileSystem);
-        }
+        FakeKeyFiles files;
 
         [SetUp]
         public void SetUp()
         {
-            // So the composition under test resolves the key file to /etc/octopus/machinekey whatever the host looks like.
+            // So the composition under test resolves the legacy key file to /etc/octopus/machinekey whatever the host looks like.
             Environment.SetEnvironmentVariable(KubernetesConfig.NamespaceVariableName, null);
-            Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleMachineConfigurationHomeDirectory, null);
+            files = new FakeKeyFiles();
+            files.Contents[LinuxGeneratedMachineKey.LegacyKeyFilePath] = GeneratedKeyFileContents;
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            Environment.SetEnvironmentVariable(KubernetesConfig.NamespaceVariableName, null);
+            Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleHome, null);
+        }
+
+        /// <summary>
+        /// The encryptor exactly as <see cref="MachineKeyEncryptor.ForConfigurationFile"/> composes it on Linux, over a
+        /// fake file system holding a machine-id (or not) and whatever key files <see cref="files"/> holds.
+        /// </summary>
+        IMachineKeyEncryptor CreateEncryptorAsComposedInProduction(bool machineIdPresent, string machineId = MachineId, string configurationFile = ConfigurationFile)
+        {
+            var fileSystem = files.CreateFileSystem();
+            fileSystem.FileExists(LinuxMachineIdKey.FileName).Returns(machineIdPresent);
+            fileSystem.ReadAllLines(LinuxMachineIdKey.FileName).Returns(new[] { machineId });
+
+            return MachineKeyEncryptor.CreateLinuxEncryptor(Substitute.For<ISystemLog>(), fileSystem, LinuxGeneratedMachineKey.KeyFilePathFor(configurationFile), configurationFile);
         }
 
         [TestCaseSource(nameof(WrittenWithTheMachineIdKey))]
         public void ValuesWrittenByEarlierVersionsWithTheMachineIdKeyStillDecrypt(string plaintext, string legacyCiphertext)
         {
+            files.Contents.Remove(LinuxGeneratedMachineKey.LegacyKeyFilePath);
+
             CreateEncryptorAsComposedInProduction(machineIdPresent: true).Decrypt(legacyCiphertext).Should().Be(plaintext);
         }
 
@@ -98,6 +112,26 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
             CreateEncryptorAsComposedInProduction(machineIdPresent: true).Decrypt(legacyCiphertext).Should().Be(plaintext);
         }
 
+        [TestCaseSource(nameof(WrittenWithTheGeneratedKey))]
+        public void ValuesWrittenWithTheLegacyKeyStillDecryptWhenTheConfigurationIsOutsideEtcOctopus(string plaintext, string legacyCiphertext)
+        {
+            // Earlier versions kept the key at /etc/octopus/machinekey wherever --config pointed.
+            CreateEncryptorAsComposedInProduction(machineIdPresent: false, configurationFile: "/opt/tentacle/data/tentacle.config")
+                .Decrypt(legacyCiphertext).Should().Be(plaintext);
+        }
+
+        [TestCaseSource(nameof(WrittenWithTheGeneratedKey))]
+        public void TheKubernetesAgentsLegacyKeyInTentacleHomeIsStillRead(string plaintext, string legacyCiphertext)
+        {
+            Environment.SetEnvironmentVariable(KubernetesConfig.NamespaceVariableName, "octopus-agent");
+            Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleHome, "/octopus");
+            files.Contents.Clear();
+            files.Contents["/octopus/machinekey"] = GeneratedKeyFileContents;
+
+            CreateEncryptorAsComposedInProduction(machineIdPresent: false, configurationFile: "/octopus/tentacle.config")
+                .Decrypt(legacyCiphertext).Should().Be(plaintext);
+        }
+
         [TestCaseSource(nameof(WrittenWithTheMachineIdKey))]
         [TestCaseSource(nameof(WrittenWithTheGeneratedKey))]
         public void ValuesWrittenByEarlierVersionsAreReportedAsNeedingReEncryption(string plaintext, string legacyCiphertext)
@@ -106,7 +140,7 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         }
 
         [TestCaseSource(nameof(WrittenWithTheMachineIdKey))]
-        public void OnceReEncrypted_ValuesNoLongerDependOnTheMachineId(string plaintext, string legacyCiphertext)
+        public void OnceReEncrypted_ValuesNoLongerDependOnTheMachineIdOrTheLegacyKey(string plaintext, string legacyCiphertext)
         {
             var upgraded = CreateEncryptorAsComposedInProduction(machineIdPresent: true);
             var reEncrypted = upgraded.Encrypt(upgraded.Decrypt(legacyCiphertext));
@@ -114,44 +148,37 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
             reEncrypted.Should().StartWith(LinuxMachineKeyEncryptor.ProtectedValuePrefix);
             upgraded.RequiresReEncryption(reEncrypted).Should().BeFalse();
 
-            // The same generated key but no machine-id at all, and a different machine-id: both must still read it,
-            // because the machine-id plays no part in the current scheme.
+            // No machine-id at all, a different machine-id, and no legacy key file: all must still read it, because
+            // only the key beside the configuration plays any part in the current scheme.
+            files.Contents.Remove(LinuxGeneratedMachineKey.LegacyKeyFilePath);
             CreateEncryptorAsComposedInProduction(machineIdPresent: false).Decrypt(reEncrypted).Should().Be(plaintext);
             CreateEncryptorAsComposedInProduction(machineIdPresent: true, machineId: "00000000000000000000000000000000").Decrypt(reEncrypted).Should().Be(plaintext);
         }
 
-        [TestCaseSource(nameof(WrittenWithTheGeneratedKey))]
-        public void AnInstallThatRelocatedItsConfigurationHomeStillReadsValuesWrittenWithTheKeyAtTheStandardPath(string plaintext, string legacyCiphertext)
+        [TestCaseSource(nameof(WrittenWithTheMachineIdKey))]
+        public void TheNewKeyIsCreatedBesideTheConfigurationAndTheLegacyKeyFileIsNeverCreatedOrChanged(string plaintext, string legacyCiphertext)
         {
-            // Earlier versions ignored TentacleMachineConfigurationHomeDirectory for the key file, so it is at
-            // /etc/octopus/machinekey; the current version keeps its key in the relocated home but must still read this.
-            Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleMachineConfigurationHomeDirectory, "/home/octopus/.octopus");
-            try
-            {
-                var fileSystem = Substitute.For<IOctopusFileSystem>();
-                fileSystem.FileExists(LinuxMachineIdKey.FileName).Returns(false);
-                fileSystem.FileExists(LinuxGeneratedMachineKey.StandardKeyFilePath).Returns(true);
-                fileSystem.ReadAllText(LinuxGeneratedMachineKey.StandardKeyFilePath).Returns(GeneratedKeyFileContents);
-                var relocatedKeyFile = "/home/octopus/.octopus/machinekey";
-                string relocatedKey = null;
-                fileSystem.FileExists(relocatedKeyFile).Returns(_ => relocatedKey != null);
-                fileSystem.When(x => x.WriteAllTextOwnerOnly(relocatedKeyFile, Arg.Any<string>())).Do(ci => relocatedKey = ci.ArgAt<string>(1));
-                fileSystem.ReadAllText(relocatedKeyFile).Returns(_ => relocatedKey);
+            // A machine-id host: earlier versions never created /etc/octopus/machinekey, and nothing now should either.
+            files.Contents.Remove(LinuxGeneratedMachineKey.LegacyKeyFilePath);
+            var upgraded = CreateEncryptorAsComposedInProduction(machineIdPresent: true);
 
-                var encryptor = MachineKeyEncryptor.CreateLinuxEncryptor(Substitute.For<ISystemLog>(), fileSystem);
+            upgraded.Encrypt(upgraded.Decrypt(legacyCiphertext));
 
-                encryptor.Decrypt(legacyCiphertext).Should().Be(plaintext);
+            files.Contents.Keys.Should().BeEquivalentTo(new[] { NewKeyFile });
+        }
 
-                // And what it writes from now on uses a key of its own, in the relocated home.
-                var reEncrypted = encryptor.Encrypt(plaintext);
-                relocatedKey.Should().NotBeNull();
-                fileSystem.DidNotReceive().WriteAllTextOwnerOnly(LinuxGeneratedMachineKey.StandardKeyFilePath, Arg.Any<string>());
-                encryptor.Decrypt(reEncrypted).Should().Be(plaintext);
-            }
-            finally
-            {
-                Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleMachineConfigurationHomeDirectory, null);
-            }
+        [TestCaseSource(nameof(WrittenWithTheGeneratedKey))]
+        public void OnTheOfficialDockerImageTheConfigurationsKeyIsTheOneEarlierVersionsGenerated(string plaintext, string legacyCiphertext)
+        {
+            // /etc/octopus/tentacle.config puts the new key at /etc/octopus/machinekey, where an image without a
+            // machine-id already had one: it is reused as it is rather than replaced.
+            var upgraded = CreateEncryptorAsComposedInProduction(machineIdPresent: false, configurationFile: "/etc/octopus/tentacle.config");
+
+            var reEncrypted = upgraded.Encrypt(upgraded.Decrypt(legacyCiphertext));
+
+            files.Contents[LinuxGeneratedMachineKey.LegacyKeyFilePath].Should().Be(GeneratedKeyFileContents);
+            files.Contents.Keys.Should().BeEquivalentTo(new[] { LinuxGeneratedMachineKey.LegacyKeyFilePath });
+            CreateEncryptorAsComposedInProduction(machineIdPresent: true, configurationFile: "/etc/octopus/tentacle.config").Decrypt(reEncrypted).Should().Be(plaintext);
         }
 
         [Test]
@@ -161,10 +188,28 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
             var thisMachine = CreateEncryptorAsComposedInProduction(machineIdPresent: true);
             var encrypted = thisMachine.Encrypt("the certificate");
 
-            var attackerWithTheSameImage = CreateEncryptorAsComposedInProduction(machineIdPresent: true,
-                generatedKeyFileContents: "YW55IG90aGVyIGtleSBvZiB0aGlydHktdHdvIGJ5dGVz.b3RoZXIgaXY=");
+            files.Contents[NewKeyFile] = "YW55IG90aGVyIGtleSBvZiB0aGlydHktdHdvIGJ5dGU=.b3RoZXIgaXYgb2YgMTYgYg==";
+            var attackerWithTheSameImage = CreateEncryptorAsComposedInProduction(machineIdPresent: true);
 
             attackerWithTheSameImage.Invoking(x => x.Decrypt(encrypted)).Should().Throw<Exception>();
         }
+
+        /// <summary>
+        /// Key files held in memory, so the composition can be exercised end to end without touching /etc/octopus.
+        /// </summary>
+        class FakeKeyFiles
+        {
+            public System.Collections.Generic.Dictionary<string, string> Contents { get; } = new();
+
+            public IOctopusFileSystem CreateFileSystem()
+            {
+                var fileSystem = Substitute.For<IOctopusFileSystem>();
+                fileSystem.FileExists(Arg.Any<string>()).Returns(ci => Contents.ContainsKey(ci.ArgAt<string>(0)));
+                fileSystem.ReadAllText(Arg.Any<string>()).Returns(ci => Contents[ci.ArgAt<string>(0)]);
+                fileSystem.TryCreateFileOwnerOnly(Arg.Any<string>(), Arg.Any<string>()).Returns(ci => Contents.TryAdd(ci.ArgAt<string>(0), ci.ArgAt<string>(1)));
+                return fileSystem;
+            }
+        }
     }
 }
+#endif

@@ -1,3 +1,4 @@
+#if !NETFRAMEWORK
 using System;
 using System.IO;
 using System.Linq;
@@ -48,6 +49,68 @@ namespace Octopus.Tentacle.Tests.Configuration
         public void TearDown()
         {
             File.Delete(configurationFile);
+            var backup = configurationFile + XmlFileKeyValueStore.PreReEncryptionBackupSuffix;
+            if (Directory.Exists(backup))
+                Directory.Delete(backup);
+            File.Delete(backup);
+        }
+
+        string BackupFile => configurationFile + XmlFileKeyValueStore.PreReEncryptionBackupSuffix;
+
+        [Test]
+        public void TheFirstReEncryptionKeepsACopyOfTheFileExactlyAsTheEarlierVersionLeftIt()
+        {
+            legacyStore.Set<string>("Tentacle.Certificate", "the certificate", ProtectionLevel.MachineKey);
+            legacyStore.Set<string>("Octopus.Proxy.ProxyPassword", "the password", ProtectionLevel.MachineKey);
+            var asTheEarlierVersionLeftIt = File.ReadAllBytes(configurationFile);
+
+            store.ReEncryptIfLegacy("Tentacle.Certificate").Should().BeTrue();
+            store.ReEncryptIfLegacy("Octopus.Proxy.ProxyPassword").Should().BeTrue();
+
+            store.PreReEncryptionBackupFile.Should().Be(BackupFile);
+            File.ReadAllBytes(BackupFile).Should().Equal(asTheEarlierVersionLeftIt, "the copy is byte for byte what was there before anything was rewritten, byte-order mark included");
+            if (!OperatingSystem.IsWindows())
+                File.GetUnixFileMode(BackupFile).Should().Be(UnixFileMode.UserRead | UnixFileMode.UserWrite, "it still holds the certificate, under the old, weaker scheme");
+            new XmlFileKeyValueStore(fileSystem, BackupFile, encryptor: new LegacySchemeEncryptor(legacyKey))
+                .Get<string>("Tentacle.Certificate", protectionLevel: ProtectionLevel.MachineKey)
+                .Should().Be("the certificate", "an earlier version can read the copy");
+        }
+
+        [Test]
+        public void TheBackupIsNeverReplaced()
+        {
+            legacyStore.Set<string>("Tentacle.Certificate", "the certificate", ProtectionLevel.MachineKey);
+            store.ReEncryptIfLegacy("Tentacle.Certificate");
+            var firstBackup = File.ReadAllText(BackupFile);
+
+            // e.g. a downgrade that re-entered a proxy password in the old format, then another upgrade.
+            legacyStore.Set<string>("Octopus.Proxy.ProxyPassword", "the password", ProtectionLevel.MachineKey);
+            new XmlFileKeyValueStore(fileSystem, configurationFile, encryptor: encryptor).ReEncryptIfLegacy("Octopus.Proxy.ProxyPassword").Should().BeTrue();
+
+            File.ReadAllText(BackupFile).Should().Be(firstBackup, "the oldest copy is the one a downgrade needs");
+        }
+
+        [Test]
+        public void NothingToReEncryptMeansNoBackup()
+        {
+            store.Set<string>("Tentacle.Certificate", "the certificate", ProtectionLevel.MachineKey);
+
+            store.ReEncryptIfLegacy("Tentacle.Certificate").Should().BeFalse();
+            store.ReEncryptIfLegacy("missing").Should().BeFalse();
+
+            File.Exists(BackupFile).Should().BeFalse();
+        }
+
+        [Test]
+        public void WhenTheBackupCannotBeWritten_ThenNothingIsReEncrypted()
+        {
+            legacyStore.Set<string>("Tentacle.Certificate", "the certificate", ProtectionLevel.MachineKey);
+            var before = File.ReadAllText(configurationFile);
+            Directory.CreateDirectory(BackupFile); // something in the way that cannot be written over
+
+            store.Invoking(x => x.ReEncryptIfLegacy("Tentacle.Certificate")).Should().Throw<Exception>();
+
+            File.ReadAllText(configurationFile).Should().Be(before, "without a copy to go back to, the value stays readable by the earlier version");
         }
 
         [Test]
@@ -130,12 +193,25 @@ namespace Octopus.Tentacle.Tests.Configuration
             someOtherMachine.Set<string>("Tentacle.Certificate", "the certificate", ProtectionLevel.MachineKey);
             var before = File.ReadAllText(configurationFile);
 
-            store.Invoking(x => x.ReEncryptIfLegacy("Tentacle.Certificate")).Should().Throw<AggregateException>();
+            store.Invoking(x => x.ReEncryptIfLegacy("Tentacle.Certificate")).Should().Throw<System.Security.Cryptography.CryptographicException>();
 
             File.ReadAllText(configurationFile).Should().Be(before);
+        }
+
+        [Test]
+        public void WhenAProtectedValueCannotBeDecrypted_ThenTheErrorCarriesTheReasonInItsOwnMessage()
+        {
+            // The console prints the top message; the recovery steps must not be buried in an inner exception.
+            var someOtherMachine = new XmlFileKeyValueStore(fileSystem, configurationFile, encryptor: new LegacySchemeEncryptor(new InMemoryCryptoKeyNixSource()));
+            someOtherMachine.Set<string>("Tentacle.Certificate", "the certificate", ProtectionLevel.MachineKey);
+
+            store.Invoking(x => x.Get<string>("Tentacle.Certificate", protectionLevel: ProtectionLevel.MachineKey))
+                .Should().Throw<FormatException>()
+                .WithMessage("Unable to decrypt the protected configuration setting 'Tentacle.Certificate'. Unable to decrypt a value that was protected by an earlier version of Tentacle*");
         }
 
         string RawValue(string name)
             => XDocument.Load(configurationFile).Root!.Elements("set").Single(e => (string)e.Attribute("key") == name).Value;
     }
 }
+#endif

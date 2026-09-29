@@ -48,6 +48,11 @@ namespace Octopus.Tentacle.Kubernetes.Crypto
         public bool RequiresReEncryption(string encrypted)
             => false;
 
+        // The key is in a Kubernetes Secret, protected by RBAC rather than file permissions.
+        public void RestrictKeyStorageToOwner()
+        {
+        }
+
         [MemberNotNull(nameof(key), nameof(iv))]
         void EnsureMachineKeyAndIvLoaded()
         {

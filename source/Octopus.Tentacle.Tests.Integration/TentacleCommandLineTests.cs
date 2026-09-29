@@ -574,8 +574,8 @@ Or one of the common options:
         [NonParallelizable]
         public async Task NewCertificateOnLinuxIsProtectedWithTheGeneratedMachineKeyNotTheMachineId(TentacleConfigurationTestCase tc)
         {
-            // TentacleMachineConfigurationHomeDirectory relocates the instance registry and, from this version, the
-            // generated machine key as well, so nothing here touches /etc/octopus or needs root.
+            // TentacleMachineConfigurationHomeDirectory relocates the instance registry, and the machine key is kept
+            // beside the configuration file, so nothing here touches /etc/octopus or needs root.
             using var homeDirectory = new TemporaryDirectory();
             var environmentVariables = new Dictionary<string, string?> { { EnvironmentVariables.TentacleMachineConfigurationHomeDirectory, homeDirectory.DirectoryPath } };
 
@@ -589,8 +589,9 @@ Or one of the common options:
             settings["Tentacle.Certificate"].Should().StartWith(LinuxMachineKeyEncryptor.ProtectedValuePrefix,
                 "the certificate must be encrypted with the versioned scheme and the key generated for this machine, never with a key derived from /etc/machine-id");
 
-            var keyFile = Path.Combine(homeDirectory.DirectoryPath, "machinekey");
-            File.Exists(keyFile).Should().BeTrue("the generated key lives in the machine configuration home");
+            var keyFile = Path.Combine(temporaryDirectory.DirectoryPath, "machinekey");
+            File.Exists(keyFile).Should().BeTrue("the generated key lives beside the configuration file it protects");
+            File.Exists(Path.Combine(homeDirectory.DirectoryPath, "machinekey")).Should().BeFalse("the machine configuration home only holds the instance registry");
             if (!OperatingSystem.IsWindows())
                 File.GetUnixFileMode(keyFile).Should().Be(UnixFileMode.UserRead | UnixFileMode.UserWrite, "only the owner may read the key");
 

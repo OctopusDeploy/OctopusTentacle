@@ -1,3 +1,4 @@
+#if !NETFRAMEWORK
 using System;
 using System.Linq;
 using System.Security.Cryptography;
@@ -74,7 +75,7 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
             var first = lme.Encrypt("FooBar");
             var second = lme.Encrypt("FooBar");
 
-            first.Should().NotBe(second, "every value gets its own IV");
+            first.Should().NotBe(second, "every value gets its own nonce");
             lme.Decrypt(first).Should().Be("FooBar");
             lme.Decrypt(second).Should().Be("FooBar");
         }
@@ -121,16 +122,75 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         }
 
         [Test]
-        public void TamperedCurrentValueThrows()
+        public void ChangingAnyByteOfACurrentValueIsDetected()
         {
+            // AES-GCM authenticates the nonce, the ciphertext and the tag; CBC would only have noticed a broken padding block.
             var lme = CreateEncryptor();
             var encrypted = lme.Encrypt("FooBar, but long enough to span more than one block of AES");
-
             var payload = Convert.FromBase64String(encrypted.Substring(LinuxMachineKeyEncryptor.ProtectedValuePrefix.Length));
-            payload[payload.Length - 1] ^= 0xFF;
-            var tampered = LinuxMachineKeyEncryptor.ProtectedValuePrefix + Convert.ToBase64String(payload);
 
-            lme.Invoking(x => x.Decrypt(tampered)).Should().Throw<CryptographicException>();
+            for (var i = 0; i < payload.Length; i++)
+            {
+                var tampered = payload.ToArray();
+                tampered[i] ^= 0x01;
+                var value = LinuxMachineKeyEncryptor.ProtectedValuePrefix + Convert.ToBase64String(tampered);
+
+                lme.Invoking(x => x.Decrypt(value)).Should().Throw<CryptographicException>($"byte {i} was changed");
+            }
+        }
+
+        [Test]
+        public void ACurrentValueIsAes256GcmWithARandomNonceAndThePrefixAsAssociatedData()
+        {
+            // Pins the stored format, so anything else that ever needs to read it (a support tool, a later version) can.
+            var encrypted = CreateEncryptor().Encrypt("FooBar");
+            var payload = Convert.FromBase64String(encrypted.Substring(LinuxMachineKeyEncryptor.ProtectedValuePrefix.Length));
+
+            payload.Should().HaveCount(LinuxMachineKeyEncryptor.NonceSizeInBytes + "FooBar".Length + LinuxMachineKeyEncryptor.TagSizeInBytes);
+            var plaintext = new byte["FooBar".Length];
+            using (var gcm = new AesGcm(generatedKey.Key, LinuxMachineKeyEncryptor.TagSizeInBytes))
+            {
+                gcm.Decrypt(payload.AsSpan(0, 12), payload.AsSpan(12, plaintext.Length), payload.AsSpan(12 + plaintext.Length), plaintext,
+                    System.Text.Encoding.ASCII.GetBytes(LinuxMachineKeyEncryptor.ProtectedValuePrefix));
+            }
+
+            System.Text.Encoding.UTF8.GetString(plaintext).Should().Be("FooBar");
+        }
+
+        [Test]
+        public void ACurrentValueCannotBeDecryptedWithoutThePrefixBoundIn()
+        {
+            var encrypted = CreateEncryptor().Encrypt("FooBar");
+            var payload = Convert.FromBase64String(encrypted.Substring(LinuxMachineKeyEncryptor.ProtectedValuePrefix.Length));
+
+            using var gcm = new AesGcm(generatedKey.Key, LinuxMachineKeyEncryptor.TagSizeInBytes);
+            var plaintext = new byte[payload.Length - 28];
+            gcm.Invoking(x => x.Decrypt(payload.AsSpan(0, 12), payload.AsSpan(12, plaintext.Length), payload.AsSpan(12 + plaintext.Length), plaintext))
+                .Should().Throw<CryptographicException>("a value cannot be relabelled as another version's");
+        }
+
+        [Test]
+        public void AKeyOfTheWrongSizeIsRejected()
+        {
+            var shortKey = Substitute.For<ICryptoKeyNixSource>();
+            shortKey.Load().Returns(_ => (new byte[16], new byte[16]));
+
+            new LinuxMachineKeyEncryptor(systemLog, shortKey, Array.Empty<ICryptoKeyNixSource>())
+                .Invoking(x => x.Encrypt("FooBar"))
+                .Should().Throw<CryptographicException>()
+                .WithMessage("*must be 256 bits*");
+        }
+
+        [Test]
+        public void RestrictingKeyStorageAsksTheGeneratedKeyToTightenItsFile()
+        {
+            var fileSystem = Substitute.For<Octopus.Tentacle.Util.IOctopusFileSystem>();
+            fileSystem.FileExists("/k/machinekey").Returns(true);
+            var lme = new LinuxMachineKeyEncryptor(systemLog, new LinuxGeneratedMachineKey(systemLog, fileSystem, "/k/machinekey"), Array.Empty<ICryptoKeyNixSource>());
+
+            lme.RestrictKeyStorageToOwner();
+
+            fileSystem.Received(1).RestrictFilePermissionsToOwner("/k/machinekey");
         }
 
         [Test]
@@ -202,7 +262,10 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
 
             CreateEncryptor(DodgyKey(), new InMemoryCryptoKeyNixSource())
                 .Invoking(x => x.Decrypt(legacy))
-                .Should().Throw<AggregateException>();
+                .Should().Throw<CryptographicException>()
+                .WithMessage("Unable to decrypt a value that was protected by an earlier version of Tentacle*/etc/machine-id for one start*tentacle new-certificate*")
+                .WithInnerException<AggregateException>()
+                .Which.InnerExceptions.Should().HaveCount(2, "each legacy key's failure is kept");
         }
 
         [Test]
@@ -211,7 +274,7 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
             // Production puts the generated key in the legacy list as well; that is the composition's job, not the encryptor's.
             var legacyWrittenWithGeneratedKey = LegacySchemeEncryption.Encrypt(generatedKey, "FooBar");
 
-            CreateEncryptor(DodgyKey()).Invoking(x => x.Decrypt(legacyWrittenWithGeneratedKey)).Should().Throw<AggregateException>();
+            CreateEncryptor(DodgyKey()).Invoking(x => x.Decrypt(legacyWrittenWithGeneratedKey)).Should().Throw<CryptographicException>();
             CreateEncryptor(DodgyKey(), generatedKey).Decrypt(legacyWrittenWithGeneratedKey).Should().Be("FooBar");
         }
 
@@ -223,7 +286,7 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
             var notUtf8 = new byte[] { 0xFF, 0xFE, 0xC0, 0xC1, 0xF5, 0x80, 0x80, 0x80, 0xFF, 0xFE, 0xC0, 0xC1, 0xF5, 0x80, 0x80, 0x80 };
             var wrongKeyOutput = LegacySchemeEncryption.Encrypt(legacyKey, notUtf8);
 
-            CreateEncryptor(legacyKey).Invoking(x => x.Decrypt(wrongKeyOutput)).Should().Throw<AggregateException>();
+            CreateEncryptor(legacyKey).Invoking(x => x.Decrypt(wrongKeyOutput)).Should().Throw<CryptographicException>();
         }
 
         static ICryptoKeyNixSource DodgyKey()
@@ -241,3 +304,4 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         }
     }
 }
+#endif

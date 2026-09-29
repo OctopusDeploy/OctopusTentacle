@@ -51,5 +51,9 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
 
         public bool RequiresReEncryption(string encrypted)
             => false;
+
+        public void RestrictKeyStorageToOwner()
+        {
+        }
     }
 }

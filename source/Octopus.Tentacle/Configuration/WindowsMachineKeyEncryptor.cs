@@ -18,5 +18,10 @@ namespace Octopus.Tentacle.Configuration
         // DPAPI has only ever had the one scheme here.
         public bool RequiresReEncryption(string encrypted)
             => false;
+
+        // DPAPI keeps the key; there is no file of ours to protect.
+        public void RestrictKeyStorageToOwner()
+        {
+        }
     }
 }
