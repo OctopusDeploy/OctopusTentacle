@@ -51,11 +51,13 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* && \
     ln -s /opt/octopus/tentacle/Tentacle /usr/bin/tentacle
 
-# The Ubuntu base image ships a populated /etc/machine-id, so every container started from this image would share
-# one "unique" machine identifier. Tentacle no longer derives its configuration encryption key from it, but leaving
-# it empty makes sure nothing can, and is what systemd's machine-id(5) requires of an image that runs on many
-# machines. Both files have to go: dbus-uuidgen and systemd-machine-id-setup each copy the other's if only one is
-# present. Nothing regenerates it at start-up on purpose: a fresh id on every start would be useless as a key.
+# The ubuntu:24.04 base image ships an EMPTY /etc/machine-id. It is populated by the dbus and systemd packages that
+# install-docker.sh pulls in as dependencies: their postinst scripts generate a fresh id on every image build, so
+# every container started from one tag shares it and every tag has a different one. That is why this step must stay
+# after the Docker install. Tentacle no longer derives its configuration encryption key from the machine-id, but
+# leaving it empty makes sure nothing can, and is what systemd's machine-id(5) requires of an image that runs on
+# many machines. Both files have to go: dbus-uuidgen and systemd-machine-id-setup each copy the other's if only one
+# is present. Nothing regenerates it at start-up on purpose: a fresh id on every start would be useless as a key.
 RUN truncate -s 0 /etc/machine-id && rm -f /var/lib/dbus/machine-id
 
 WORKDIR /
