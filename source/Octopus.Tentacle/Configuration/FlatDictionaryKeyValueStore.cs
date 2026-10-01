@@ -10,11 +10,12 @@ namespace Octopus.Tentacle.Configuration
         protected readonly JsonSerializerSettings JsonSerializerSettings;
         protected readonly IMachineKeyEncryptor Encryptor;
 
-        // A null encryptor means MachineKeyEncryptor.Current; file-backed stores pass the encryptor for their file.
-        protected FlatDictionaryKeyValueStore(JsonSerializerSettings jsonSerializerSettings, bool autoSaveOnSet = true, bool isWriteOnly = false, IMachineKeyEncryptor? encryptor = null) : base(autoSaveOnSet, isWriteOnly)
+        // The encryptor is always the one for the store's own file (MachineKeyEncryptor.ForConfigurationFile). There is
+        // deliberately no default, so a store can never be built with a key other than the one its file is read back with.
+        protected FlatDictionaryKeyValueStore(JsonSerializerSettings jsonSerializerSettings, IMachineKeyEncryptor encryptor, bool autoSaveOnSet = true, bool isWriteOnly = false) : base(autoSaveOnSet, isWriteOnly)
         {
             JsonSerializerSettings = jsonSerializerSettings;
-            Encryptor = encryptor ?? MachineKeyEncryptor.Current;
+            Encryptor = encryptor ?? throw new ArgumentNullException(nameof(encryptor));
         }
 
         public override TData? Get<TData>(string name, TData? defaultValue = default, ProtectionLevel protectionLevel = ProtectionLevel.None) where TData : default

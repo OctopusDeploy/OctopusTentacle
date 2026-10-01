@@ -1,30 +1,19 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Diagnostics;
-using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Configuration.Crypto
 {
-    public class MachineKeyEncryptor : IMachineKeyEncryptor
+    public static class MachineKeyEncryptor
     {
         static readonly ISystemLog Log = new SystemLog();
 
-        // For values not kept in a configuration file of their own. On Linux its key lives in the directory earlier
-        // versions kept theirs in, under the current name. Configuration files use ForConfigurationFile instead.
-        public static readonly IMachineKeyEncryptor Current;
-
-        static MachineKeyEncryptor()
-        {
-            Current = PlatformDetection.IsRunningOnWindows
-                ? new WindowsMachineKeyEncryptor()
-                : CreateLinuxEncryptor(Log, new OctopusPhysicalFileSystem(Log), LinuxGeneratedMachineKey.CurrentKeyFilePathForThisHost, configurationFile: null);
-        }
-
+        // There is deliberately no host-wide key: every protected value belongs to a configuration file.
         public static IMachineKeyEncryptor ForConfigurationFile(string configurationFile)
             => PlatformDetection.IsRunningOnWindows
-                ? Current
+                ? new WindowsMachineKeyEncryptor()
                 : CreateLinuxEncryptor(Log, new OctopusPhysicalFileSystem(Log), LinuxGeneratedMachineKey.KeyFilePathFor(configurationFile), configurationFile);
 
         // Public so tests can prove the composition, not just the parts. A key that root creates is given the owner of
@@ -46,21 +35,5 @@ namespace Octopus.Tentacle.Configuration.Crypto
 
             return new LinuxMachineKeyEncryptor(log, generatedKey, legacyKeySources);
         }
-
-        MachineKeyEncryptor()
-        {
-        }
-
-        public string Encrypt(string raw)
-            => Current.Encrypt(raw);
-
-        public string Decrypt(string encrypted)
-            => Current.Decrypt(encrypted);
-
-        public bool RequiresReEncryption(string encrypted)
-            => Current.RequiresReEncryption(encrypted);
-
-        public void RestrictKeyStorageToOwner()
-            => Current.RestrictKeyStorageToOwner();
     }
 }
