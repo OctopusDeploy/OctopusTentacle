@@ -12,8 +12,8 @@ namespace Octopus.Tentacle.Configuration.Crypto
         static readonly ISystemLog Log = new SystemLog();
 
         /// <summary>
-        /// The encryptor for values that are not kept in a configuration file of their own. On Linux its key is where
-        /// earlier versions kept theirs. Configuration files use <see cref="ForConfigurationFile"/> instead.
+        /// The encryptor for values that are not kept in a configuration file of their own. On Linux its key lives in
+        /// the directory earlier versions kept theirs in, under the current name. Configuration files use <see cref="ForConfigurationFile"/> instead.
         /// </summary>
         public static readonly IMachineKeyEncryptor Current;
 
@@ -21,12 +21,12 @@ namespace Octopus.Tentacle.Configuration.Crypto
         {
             Current = PlatformDetection.IsRunningOnWindows
                 ? new WindowsMachineKeyEncryptor()
-                : CreateLinuxEncryptor(Log, new OctopusPhysicalFileSystem(Log), LinuxGeneratedMachineKey.LegacyKeyFilePathForThisHost, configurationFile: null);
+                : CreateLinuxEncryptor(Log, new OctopusPhysicalFileSystem(Log), LinuxGeneratedMachineKey.CurrentKeyFilePathForThisHost, configurationFile: null);
         }
 
         /// <summary>
         /// The encryptor for the values in the configuration file at <paramref name="configurationFile"/>. On Linux its
-        /// key is <c>machinekey</c> beside that file (see <see cref="LinuxGeneratedMachineKey.KeyFilePathFor"/>);
+        /// key is <c>machinekey.v1</c> beside that file (see <see cref="LinuxGeneratedMachineKey.KeyFilePathFor"/>);
         /// on Windows it is DPAPI, as it always was.
         /// </summary>
         public static IMachineKeyEncryptor ForConfigurationFile(string configurationFile)
