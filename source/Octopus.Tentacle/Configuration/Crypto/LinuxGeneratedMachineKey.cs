@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Security.Cryptography;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Core.Util;
@@ -71,13 +71,6 @@ namespace Octopus.Tentacle.Configuration.Crypto
             => KubernetesSupportDetection.IsRunningAsKubernetesAgent
                 ? JoinLinuxPath(Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleHome)!, LegacyKeyFileName)
                 : LegacyKeyFilePath;
-
-        /// <summary>
-        /// The current key for values that have no configuration file of their own: <see cref="KeyFileName"/> in the
-        /// directory earlier versions kept their key in.
-        /// </summary>
-        public static string CurrentKeyFilePathForThisHost
-            => JoinLinuxPath(LinuxDirectoryOf(LegacyKeyFilePathForThisHost), KeyFileName);
 
         public (byte[] Key, byte[] IV) Load()
         {

@@ -26,7 +26,7 @@ namespace Octopus.Tentacle.Configuration
             string configurationFile,
             bool autoSaveOnSet = true,
             bool isWriteOnly = false,
-            IMachineKeyEncryptor? encryptor = null) : base(autoSaveOnSet, isWriteOnly, encryptor ?? MachineKeyEncryptor.ForConfigurationFile(fileSystem.GetFullPath(configurationFile)))
+            IMachineKeyEncryptor? encryptor = null) : base(encryptor ?? MachineKeyEncryptor.ForConfigurationFile(fileSystem.GetFullPath(configurationFile)), autoSaveOnSet, isWriteOnly)
         {
             this.fileSystem = fileSystem;
             this.configurationFile = fileSystem.GetFullPath(configurationFile);

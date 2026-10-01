@@ -1,6 +1,7 @@
-using System;
+﻿using System;
 using System.Security.Cryptography;
 using NSubstitute;
+using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Crypto;
 using Octopus.Tentacle.Core.Diagnostics;
 using PlatformDetection = Octopus.Tentacle.Util.PlatformDetection;
@@ -11,13 +12,13 @@ namespace Octopus.Tentacle.Tests.Support
     /// The encryptor tests hand to key-value stores that hold <see cref="Octopus.Tentacle.Configuration.ProtectionLevel.MachineKey"/> values.
     ///
     /// On Windows it is the real DPAPI encryptor, exactly as production uses it. Elsewhere production generates a key
-    /// into /etc/octopus/machinekey, which tests must neither depend on nor create, so an otherwise identical Linux
+    /// beside the configuration file, which tests must neither depend on nor create, so an otherwise identical Linux
     /// encryptor backed by an in-memory key is used instead.
     /// </summary>
     public static class TestMachineKeyEncryptor
     {
         public static readonly IMachineKeyEncryptor Current = PlatformDetection.IsRunningOnWindows
-            ? MachineKeyEncryptor.Current
+            ? new WindowsMachineKeyEncryptor()
             : new LinuxMachineKeyEncryptor(Substitute.For<ISystemLog>(), new InMemoryCryptoKeyNixSource(), Array.Empty<ICryptoKeyNixSource>());
     }
 
