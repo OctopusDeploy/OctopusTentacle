@@ -6,13 +6,19 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Configuration.Crypto
 {
-    // The file format is base64(key).base64(iv), as earlier versions wrote to /etc/octopus/machinekey. The IV is only used
-    // to decrypt values those versions wrote, which encrypted everything with that one IV.
+    // The file is named differently from the machinekey earlier versions generated so that a current key is always
+    // freshly generated, owner-only from the start: a legacy key file was world-readable for as long as it existed, so it
+    // is never adopted as the current key, only read to decrypt what earlier versions wrote. The format is
+    // base64(key).base64(iv), the same as the legacy file so one reader serves both; the IV is only used to decrypt
+    // values those versions wrote, which encrypted everything with that one IV.
     public class LinuxGeneratedMachineKey : ICryptoKeyNixSource
     {
-        public const string KeyFileName = "machinekey";
+        public const string KeyFileName = "machinekey.v1";
 
-        public const string LegacyKeyFilePath = "/etc/octopus/" + KeyFileName;
+        /// <summary>The name earlier versions gave their generated key. Only ever read, never written.</summary>
+        public const string LegacyKeyFileName = "machinekey";
+
+        public const string LegacyKeyFilePath = "/etc/octopus/" + LegacyKeyFileName;
 
         readonly ISystemLog log;
         readonly IOctopusFileSystem fileSystem;
@@ -37,8 +43,15 @@ namespace Octopus.Tentacle.Configuration.Crypto
         // Evaluated on every call because it depends on the environment, which tests change.
         public static string LegacyKeyFilePathForThisHost
             => KubernetesSupportDetection.IsRunningAsKubernetesAgent
-                ? JoinLinuxPath(Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleHome)!, KeyFileName)
+                ? JoinLinuxPath(Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleHome)!, LegacyKeyFileName)
                 : LegacyKeyFilePath;
+
+        /// <summary>
+        /// The current key for values that have no configuration file of their own: <see cref="KeyFileName"/> in the
+        /// directory earlier versions kept their key in.
+        /// </summary>
+        public static string CurrentKeyFilePathForThisHost
+            => JoinLinuxPath(LinuxDirectoryOf(LegacyKeyFilePathForThisHost), KeyFileName);
 
         public (byte[] Key, byte[] IV) Load()
         {

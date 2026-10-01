@@ -11,15 +11,15 @@ namespace Octopus.Tentacle.Configuration.Crypto
     {
         static readonly ISystemLog Log = new SystemLog();
 
-        // For values not kept in a configuration file of their own. On Linux its key is where earlier versions kept theirs;
-        // configuration files use ForConfigurationFile instead.
+        // For values not kept in a configuration file of their own. On Linux its key lives in the directory earlier
+        // versions kept theirs in, under the current name. Configuration files use ForConfigurationFile instead.
         public static readonly IMachineKeyEncryptor Current;
 
         static MachineKeyEncryptor()
         {
             Current = PlatformDetection.IsRunningOnWindows
                 ? new WindowsMachineKeyEncryptor()
-                : CreateLinuxEncryptor(Log, new OctopusPhysicalFileSystem(Log), LinuxGeneratedMachineKey.LegacyKeyFilePathForThisHost, configurationFile: null);
+                : CreateLinuxEncryptor(Log, new OctopusPhysicalFileSystem(Log), LinuxGeneratedMachineKey.CurrentKeyFilePathForThisHost, configurationFile: null);
         }
 
         public static IMachineKeyEncryptor ForConfigurationFile(string configurationFile)
