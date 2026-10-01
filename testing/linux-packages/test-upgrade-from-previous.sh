@@ -290,7 +290,8 @@ THUMBPRINT_AFTER_MIGRATION=$(Tentacle show-thumbprint --instance "$INSTANCE")
 MACHINE_KEY_MODE=$(stat -c %a "$MACHINE_KEY_FILE")
 [[ "$MACHINE_KEY_MODE" == "600" ]] || fail "$MACHINE_KEY_FILE has permissions $MACHINE_KEY_MODE, expected 600"
 [[ -f "$BACKUP" ]] || fail "no copy of the configuration was kept at $BACKUP before re-encrypting it"
-cmp -s "$BACKUP" /tmp/as-released.config || fail "$BACKUP is not the configuration exactly as $PREVIOUS_VERSION left it"
+# sha256sum rather than cmp: redhat/ubi9 has no diffutils.
+[[ "$(sha256sum < "$BACKUP")" == "$(sha256sum < /tmp/as-released.config)" ]] || fail "$BACKUP is not the configuration exactly as $PREVIOUS_VERSION left it"
 [[ "$(stat -c %a "$BACKUP")" == "600" ]] || fail "$BACKUP has permissions $(stat -c %a "$BACKUP"), expected 600"
 echo "All ${#PROTECTED_SETTINGS[@]} protected settings were re-encrypted, the thumbprint is unchanged, the key file is owner-only, and the pre-upgrade configuration was kept."
 
