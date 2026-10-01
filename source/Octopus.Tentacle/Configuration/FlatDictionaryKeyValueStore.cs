@@ -158,7 +158,7 @@ namespace Octopus.Tentacle.Configuration
             return true;
         }
 
-        public void RestrictKeyStorageToOwner()
+        public virtual void RestrictKeyStorageToOwner()
             => Encryptor.RestrictKeyStorageToOwner();
 
         // Throwing here leaves the stored value as it was.
