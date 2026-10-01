@@ -64,8 +64,8 @@ namespace Octopus.Tentacle.Configuration
                 }
             }
 
-            // Here rather than wherever the key is loaded: the agent runs as the service user, so tightening a key file
-            // it owns can never lock out the process that needs to read it.
+            // Here rather than wherever the key is loaded: the agent runs as the service user, so tightening the key
+            // file and the configuration file it owns can never lock out the process that needs to read them.
             store.RestrictKeyStorageToOwner();
         }
     }
