@@ -376,20 +376,50 @@ namespace Octopus.Tentacle.Core.Util
         }
 
         public bool TryChangeOwnerToMatch(string path, string referencePath)
-            => RunChownAsRoot("--reference=" + referencePath, "--", path);
+        {
+            // GNU coreutils has --reference; BSD (macOS) and BusyBox (musl images) do not, so fall back to reading the
+            // owner with POSIX `ls -n` and passing it to chown as uid:gid, which every chown understands.
+            if (RunChownAsRoot("--reference=" + referencePath, "--", path))
+                return true;
+
+            var owner = ReadNumericOwner(referencePath);
+            return owner != null && RunChownAsRoot("--", owner, path);
+        }
 
         public bool TryChangeOwner(string path, string userName)
             => RunChownAsRoot("--", userName, path);
 
+        /// <summary>
+        /// The owner of <paramref name="path"/> as <c>uid:gid</c>, from <c>ls -ldn</c>, which is POSIX and so the same on
+        /// GNU, BSD and BusyBox. Null if it could not be read.
+        /// </summary>
+        string? ReadNumericOwner(string path)
+        {
+            var (exitCode, output, _) = RunAsRoot("ls", "-ldn", "--", path);
+            return exitCode == 0 ? ParseNumericOwnerFromLs(output) : null;
+        }
+
         bool RunChownAsRoot(params string[] arguments)
         {
-            // Only root can give a file away, so there is nothing to try otherwise.
+            var (exitCode, _, error) = RunAsRoot("chown", arguments);
+            if (exitCode != 0 && exitCode != int.MinValue)
+                Log.Verbose($"chown {string.Join(" ", arguments)} exited with {exitCode}: {error}");
+            return exitCode == 0;
+        }
+
+        /// <summary>
+        /// Runs <paramref name="program"/> as root and returns its exit code and output. Only root can give a file away,
+        /// so if we are not root nothing is run and the exit code is <see cref="int.MinValue"/>, as it is for any failure
+        /// to run the program at all.
+        /// </summary>
+        (int ExitCode, string Output, string Error) RunAsRoot(string program, params string[] arguments)
+        {
             if (OperatingSystem.IsWindows() || Environment.UserName != "root")
-                return false;
+                return (int.MinValue, "", "");
 
             try
             {
-                var startInfo = new System.Diagnostics.ProcessStartInfo("chown")
+                var startInfo = new System.Diagnostics.ProcessStartInfo(program)
                 {
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
@@ -400,25 +430,36 @@ namespace Octopus.Tentacle.Core.Util
 
                 using var process = System.Diagnostics.Process.Start(startInfo);
                 if (process == null)
-                    return false;
+                    return (int.MinValue, "", "");
+                var output = process.StandardOutput.ReadToEndAsync();
                 var error = process.StandardError.ReadToEnd();
                 if (!process.WaitForExit(10_000))
                 {
                     process.Kill();
-                    return false;
+                    return (int.MinValue, "", "");
                 }
 
-                if (process.ExitCode != 0)
-                    Log.Verbose($"chown {string.Join(" ", arguments)} exited with {process.ExitCode}: {error}");
-                return process.ExitCode == 0;
+                return (process.ExitCode, output.GetAwaiter().GetResult(), error);
             }
             catch (Exception e)
             {
-                Log.Verbose(e, $"Unable to run chown {string.Join(" ", arguments)}");
-                return false;
+                Log.Verbose(e, $"Unable to run {program} {string.Join(" ", arguments)}");
+                return (int.MinValue, "", "");
             }
         }
 #endif
+
+        /// <summary>
+        /// Parses the uid and gid out of one line of <c>ls -ln</c> output (<c>-rw-r--r-- 1 1000 1000 42 Jan 1 00:00 file</c>)
+        /// as <c>uid:gid</c>, or null if the line is not in that shape.
+        /// </summary>
+        public static string? ParseNumericOwnerFromLs(string lsOutput)
+        {
+            var fields = (lsOutput ?? "").Trim().Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
+            if (fields.Length < 5 || !uint.TryParse(fields[2], out var uid) || !uint.TryParse(fields[3], out var gid))
+                return null;
+            return $"{uid}:{gid}";
+        }
 
         // In the same directory, so it is on the same file system and can be moved into place atomically.
         static string TemporaryPathBeside(string path)
