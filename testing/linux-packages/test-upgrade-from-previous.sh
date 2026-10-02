@@ -305,7 +305,10 @@ log "Downgrading to the released version, which needs the backup"
 if command -v apt-get >/dev/null 2>&1; then
     apt-get install -y --allow-downgrades "tentacle=$PREVIOUS_VERSION"
 else
-    yum downgrade -y "tentacle-$PREVIOUS_VERSION" || yum install -y "tentacle-$PREVIOUS_VERSION"
+    # `yum downgrade` exits 0 with "Nothing to do" when the released version is *higher* than the package under test,
+    # as it is for a local build whose version number trails the feed, so check the result rather than the exit code.
+    yum downgrade -y "tentacle-$PREVIOUS_VERSION"
+    [[ "$(Tentacle version)" == "$PREVIOUS_VERSION" ]] || yum install -y "tentacle-$PREVIOUS_VERSION"
 fi
 [[ "$(Tentacle version)" == "$PREVIOUS_VERSION" ]] || fail "the downgrade did not take; Tentacle reports $(Tentacle version)"
 if Tentacle show-thumbprint --instance "$INSTANCE" >/dev/null 2>&1; then
