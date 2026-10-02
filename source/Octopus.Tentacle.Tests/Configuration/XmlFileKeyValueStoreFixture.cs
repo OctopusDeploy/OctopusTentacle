@@ -14,6 +14,7 @@ using NUnit.Framework;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Crypto;
 using Octopus.Tentacle.Core.Diagnostics;
+using Octopus.Tentacle.Tests.Support;
 using Octopus.Tentacle.Util;
 using Formatting = System.Xml.Formatting;
 
@@ -48,7 +49,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             var fileSystem = new OctopusPhysicalFileSystem(Substitute.For<ISystemLog>());
             fileSystem.OverwriteFile(configurationFile, @"<?xml version='1.0' encoding='UTF-8' ?><octopus-settings></octopus-settings>");
 
-            var settings = new XmlFileKeyValueStore(fileSystem, configurationFile);
+            var settings = new XmlFileKeyValueStore(fileSystem, configurationFile, encryptor: TestMachineKeyEncryptor.Current);
             settings.Set("group1.setting2", 123);
             settings.Set("group1.setting1", true);
             settings.Set<string>("group2.setting3", "a string");
@@ -76,7 +77,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             var fileSystem = new OctopusPhysicalFileSystem(Substitute.For<ISystemLog>());
             fileSystem.OverwriteFile(configurationFile, @"<?xml version='1.0' encoding='UTF-8' ?><octopus-settings></octopus-settings>");
 
-            var settings = new XmlFileKeyValueStore(fileSystem, configurationFile);
+            var settings = new XmlFileKeyValueStore(fileSystem, configurationFile, encryptor: TestMachineKeyEncryptor.Current);
             settings.Set<string>("Int.Setting", "NotAnInt");
             settings.Set<string>("Bool.Setting", "NotABool");
             settings.Set<string>("Encrypted.Int.Setting", "NotAnInt", ProtectionLevel.MachineKey);
@@ -84,7 +85,7 @@ namespace Octopus.Tentacle.Tests.Configuration
 
             settings.Save();
 
-            var reloadedSettings = new XmlFileKeyValueStore(fileSystem, configurationFile);
+            var reloadedSettings = new XmlFileKeyValueStore(fileSystem, configurationFile, encryptor: TestMachineKeyEncryptor.Current);
 
             reloadedSettings.Invoking(x => x.Get("Int.Setting", 1))
                 .Should()
@@ -145,7 +146,7 @@ namespace Octopus.Tentacle.Tests.Configuration
                 settings.Set<MyObject>("group5.setting6", null, ProtectionLevel.MachineKey);
                 settings.Save();
 
-                return new XmlFileKeyValueStore(fileSystem, configurationFile);
+                return new XmlFileKeyValueStore(fileSystem, configurationFile, encryptor: TestMachineKeyEncryptor.Current);
             }
 
             /// <summary>
@@ -175,7 +176,7 @@ namespace Octopus.Tentacle.Tests.Configuration
                     }
 
                     if (protectionLevel == ProtectionLevel.MachineKey)
-                        value = MachineKeyEncryptor.Current.Encrypt(value);
+                        value = TestMachineKeyEncryptor.Current.Encrypt(value);
 
                     Write(name, value);
                     Save();
@@ -243,7 +244,7 @@ namespace Octopus.Tentacle.Tests.Configuration
 
                 EncryptedValue = GenerateValue();
 
-                var settings = new XmlFileKeyValueStore(FileSystem, ConfigurationFile);
+                var settings = new XmlFileKeyValueStore(FileSystem, ConfigurationFile, encryptor: TestMachineKeyEncryptor.Current);
                 settings.Set("group1.setting2", 123);
                 settings.Set("group1.setting1", true);
                 settings.Set<string>("group2.setting3", "a string");
@@ -290,7 +291,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             protected override IKeyValueStore SetupKeyValueStore()
             {
                 SetupData();
-                return new XmlFileKeyValueStore(FileSystem, ConfigurationFile);
+                return new XmlFileKeyValueStore(FileSystem, ConfigurationFile, encryptor: TestMachineKeyEncryptor.Current);
             }
         }
     }

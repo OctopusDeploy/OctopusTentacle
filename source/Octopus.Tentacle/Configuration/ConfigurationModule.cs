@@ -97,7 +97,8 @@ namespace Octopus.Tentacle.Configuration
             builder.RegisterType<ProxyConfiguration>().As<IProxyConfiguration>();
             builder.RegisterType<WritableProxyConfiguration>().As<IWritableProxyConfiguration>();
             builder.RegisterType<ProxyInitializer>().As<IProxyInitializer>().SingleInstance();
-            
+            builder.RegisterType<ProtectedSettingsMigrator>().As<IProtectedSettingsMigrator>().SingleInstance();
+
             //Even though these are Kubernetes types, we need to include them in this module as they are used lazily in the base types
             builder.RegisterType<ConfigMapKeyValueStore>().SingleInstance();
             builder.RegisterType<KubernetesMachineEncryptionKeyProvider>().As<IKubernetesMachineEncryptionKeyProvider>().SingleInstance();
