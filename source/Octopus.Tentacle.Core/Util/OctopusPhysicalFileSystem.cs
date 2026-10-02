@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -354,12 +355,22 @@ namespace Octopus.Tentacle.Core.Util
                     stream.Flush(flushToDisk: true);
                 }
 
+                if (!OperatingSystem.IsWindows())
+                {
+                    // link(2) cannot replace an existing file, so whichever process links first wins and every other one
+                    // sees the complete winning file. File.Move(overwrite: false) is not atomic on Unix: .NET 8 checks
+                    // that the destination is absent and then calls rename(2), which replaces whatever appeared in
+                    // between, so two processes could each keep a different key. Only a file system without hard links
+                    // falls through to that check-then-rename, as does anything else in the way (a directory, say),
+                    // so that it fails the same way it always did.
+                    if (link(temporaryPath, path) == 0)
+                        return true;
+                    if (Marshal.GetLastWin32Error() == EEXIST && File.Exists(path))
+                        return false;
+                }
+
                 try
                 {
-                    // Without overwrite, .NET moves by hard-linking the new name and then removing the old one, and a
-                    // hard link cannot replace an existing file, so whichever process links first wins and every other
-                    // one sees the complete winning file. (On file systems without hard links .NET checks and renames
-                    // instead, which is only as good as the check.)
                     File.Move(temporaryPath, path, overwrite: false);
                     return true;
                 }
@@ -374,6 +385,11 @@ namespace Octopus.Tentacle.Core.Util
                     File.Delete(temporaryPath);
             }
         }
+
+        const int EEXIST = 17;
+
+        [DllImport("libc", SetLastError = true)]
+        static extern int link(string oldpath, string newpath);
 
         public bool TryChangeOwnerToMatch(string path, string referencePath)
         {
