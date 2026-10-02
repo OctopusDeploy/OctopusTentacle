@@ -62,7 +62,9 @@ namespace Octopus.Tentacle.Tests.Security
             var after = MeasureLiveHeapBytes();
             GC.KeepAlive(trie);
 
-            // On 64-bit this measures ~24MiB. Fail if it exceeds 30MiB (15MiB on 32bit).
+            // The trie is almost entirely nodes: these inputs produce 399,823 of them, and a node is 5 references
+            // plus 2 chars, so 32 bytes on 32-bit (~12MiB) and 64 bytes on 64-bit (~24MiB). Fail if we exceed
+            // 15MiB / 30MiB, i.e. if a node grows by a field or the trie stops sharing prefixes.
             var allowedMb = Environment.Is64BitProcess ? 30 : 15;
 
             var usedBytes = after - before;
@@ -73,6 +75,7 @@ namespace Octopus.Tentacle.Tests.Security
         // Live bytes on the managed heap after a full GC.
         // Not GC.GetTotalMemory: on the older "segments" GC (32-bit processes, e.g. win-x86, and macOS) it counts gen1/gen2 twice (dotnet/runtime#134755),
         // so it over-reports by an amount that depends on whatever else is on the heap. On win-x86 that put the reading anywhere from ~11MiB to ~16MiB.
+        // Remove once we're on a runtime with #134755 fixed, or nothing we test on uses segments.
         static long MeasureLiveHeapBytes()
         {
 #if NETFRAMEWORK
@@ -81,7 +84,7 @@ namespace Octopus.Tentacle.Tests.Security
             GC.Collect();
             GC.WaitForPendingFinalizers();
             GC.Collect();
-            var info = GC.GetGCMemoryInfo();
+            var info = GC.GetGCMemoryInfo(GCKind.FullBlocking);
             return info.HeapSizeBytes - info.FragmentedBytes;
 #endif
         }
