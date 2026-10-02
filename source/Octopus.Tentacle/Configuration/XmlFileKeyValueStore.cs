@@ -26,7 +26,7 @@ namespace Octopus.Tentacle.Configuration
             string configurationFile,
             bool autoSaveOnSet = true,
             bool isWriteOnly = false,
-            IMachineKeyEncryptor? encryptor = null) : base(autoSaveOnSet, isWriteOnly, encryptor ?? MachineKeyEncryptor.ForConfigurationFile(fileSystem.GetFullPath(configurationFile)))
+            IMachineKeyEncryptor? encryptor = null) : base(encryptor ?? MachineKeyEncryptor.ForConfigurationFile(fileSystem.GetFullPath(configurationFile)), autoSaveOnSet, isWriteOnly)
         {
             this.fileSystem = fileSystem;
             this.configurationFile = fileSystem.GetFullPath(configurationFile);
@@ -53,6 +53,26 @@ namespace Octopus.Tentacle.Configuration
             }
 
             backedUpBeforeReEncrypting = true;
+        }
+
+        /// <summary>
+        /// Tightens the key file (via the encryptor) and the configuration file itself. The configuration was usually
+        /// created 0644; nothing in it is meant for other local users, and the key beside it is already owner-only, so
+        /// leaving the file it protects world-readable would be odd. Only the agent calls this, as the service user, so
+        /// a file it owns can never be tightened away from the process that reads it. Failures are logged and ignored.
+        /// </summary>
+        public override void RestrictKeyStorageToOwner()
+        {
+            base.RestrictKeyStorageToOwner();
+            try
+            {
+                if (fileSystem.FileExists(configurationFile) && fileSystem.RestrictFilePermissionsToOwner(configurationFile))
+                    Log.Info($"Restricted the permissions on `{configurationFile}` so that only its owner can read it.");
+            }
+            catch (Exception e)
+            {
+                Log.Verbose(e, $"Unable to restrict the permissions on `{configurationFile}`. It is still usable.");
+            }
         }
 
         byte[] ReadConfigurationFileBytes()

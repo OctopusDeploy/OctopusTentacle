@@ -58,7 +58,7 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         }
 
         const string ConfigurationFile = "/etc/octopus/Tentacle/tentacle-Tentacle.config";
-        const string NewKeyFile = "/etc/octopus/Tentacle/machinekey";
+        const string NewKeyFile = "/etc/octopus/Tentacle/machinekey.v1";
 
         FakeKeyFiles files;
 
@@ -168,16 +168,18 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         }
 
         [TestCaseSource(nameof(WrittenWithTheGeneratedKey))]
-        public void OnTheOfficialDockerImageTheConfigurationsKeyIsTheOneEarlierVersionsGenerated(string plaintext, string legacyCiphertext)
+        public void OnTheOfficialDockerImageALegacyKeyIsNeverAdoptedAsTheCurrentOne(string plaintext, string legacyCiphertext)
         {
-            // /etc/octopus/tentacle.config puts the new key at /etc/octopus/machinekey, where an image without a
-            // machine-id already had one: it is reused as it is rather than replaced.
+            // /etc/octopus/tentacle.config puts the new key in /etc/octopus, where an image without a machine-id
+            // already had a world-readable legacy key. That key is only used to decrypt; a fresh, owner-only one is
+            // generated beside it, and the legacy file is left alone so a pre-upgrade backup stays readable.
             var upgraded = CreateEncryptorAsComposedInProduction(machineIdPresent: false, configurationFile: "/etc/octopus/tentacle.config");
 
             var reEncrypted = upgraded.Encrypt(upgraded.Decrypt(legacyCiphertext));
 
             files.Contents[LinuxGeneratedMachineKey.LegacyKeyFilePath].Should().Be(GeneratedKeyFileContents);
-            files.Contents.Keys.Should().BeEquivalentTo(new[] { LinuxGeneratedMachineKey.LegacyKeyFilePath });
+            files.Contents.Keys.Should().BeEquivalentTo(new[] { LinuxGeneratedMachineKey.LegacyKeyFilePath, "/etc/octopus/machinekey.v1" });
+            files.Contents["/etc/octopus/machinekey.v1"].Should().NotBe(GeneratedKeyFileContents);
             CreateEncryptorAsComposedInProduction(machineIdPresent: true, configurationFile: "/etc/octopus/tentacle.config").Decrypt(reEncrypted).Should().Be(plaintext);
         }
 

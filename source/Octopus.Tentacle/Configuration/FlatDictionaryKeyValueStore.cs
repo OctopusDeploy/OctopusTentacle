@@ -10,11 +10,15 @@ namespace Octopus.Tentacle.Configuration
         protected readonly JsonSerializerSettings JsonSerializerSettings;
         protected readonly IMachineKeyEncryptor Encryptor;
 
-        /// <param name="encryptor">Protects <see cref="ProtectionLevel.MachineKey"/> values. Null means <see cref="MachineKeyEncryptor.Current"/>; file-backed stores pass the encryptor for their file, and tests pass their own.</param>
-        protected FlatDictionaryKeyValueStore(JsonSerializerSettings jsonSerializerSettings, bool autoSaveOnSet = true, bool isWriteOnly = false, IMachineKeyEncryptor? encryptor = null) : base(autoSaveOnSet, isWriteOnly)
+        /// <param name="encryptor">
+        /// Protects <see cref="ProtectionLevel.MachineKey"/> values. Always the encryptor for the store's own file (see
+        /// <see cref="MachineKeyEncryptor.ForConfigurationFile"/>): there is deliberately no default, so a store can never
+        /// be built with a key other than the one its file is read back with.
+        /// </param>
+        protected FlatDictionaryKeyValueStore(JsonSerializerSettings jsonSerializerSettings, IMachineKeyEncryptor encryptor, bool autoSaveOnSet = true, bool isWriteOnly = false) : base(autoSaveOnSet, isWriteOnly)
         {
             JsonSerializerSettings = jsonSerializerSettings;
-            Encryptor = encryptor ?? MachineKeyEncryptor.Current;
+            Encryptor = encryptor ?? throw new ArgumentNullException(nameof(encryptor));
         }
 
         public override TData? Get<TData>(string name, TData? defaultValue = default, ProtectionLevel protectionLevel = ProtectionLevel.None) where TData : default
@@ -150,7 +154,7 @@ namespace Octopus.Tentacle.Configuration
             return true;
         }
 
-        public void RestrictKeyStorageToOwner()
+        public virtual void RestrictKeyStorageToOwner()
             => Encryptor.RestrictKeyStorageToOwner();
 
         /// <summary>

@@ -589,9 +589,9 @@ Or one of the common options:
             settings["Tentacle.Certificate"].Should().StartWith(LinuxMachineKeyEncryptor.ProtectedValuePrefix,
                 "the certificate must be encrypted with the versioned scheme and the key generated for this machine, never with a key derived from /etc/machine-id");
 
-            var keyFile = Path.Combine(temporaryDirectory.DirectoryPath, "machinekey");
+            var keyFile = Path.Combine(temporaryDirectory.DirectoryPath, "machinekey.v1");
             File.Exists(keyFile).Should().BeTrue("the generated key lives beside the configuration file it protects");
-            File.Exists(Path.Combine(homeDirectory.DirectoryPath, "machinekey")).Should().BeFalse("the machine configuration home only holds the instance registry");
+            File.Exists(Path.Combine(homeDirectory.DirectoryPath, "machinekey.v1")).Should().BeFalse("the machine configuration home only holds the instance registry");
             if (!OperatingSystem.IsWindows())
                 File.GetUnixFileMode(keyFile).Should().Be(UnixFileMode.UserRead | UnixFileMode.UserWrite, "only the owner may read the key");
 

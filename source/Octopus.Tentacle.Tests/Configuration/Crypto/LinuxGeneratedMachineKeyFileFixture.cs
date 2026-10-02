@@ -1,4 +1,4 @@
-#if !NETFRAMEWORK
+﻿#if !NETFRAMEWORK
 using System;
 using System.IO;
 using System.Linq;
@@ -148,7 +148,10 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
 
             new XmlFileKeyValueStore(fileSystem, configurationFile).Set<string>("Tentacle.Certificate", "the certificate", ProtectionLevel.MachineKey);
 
-            File.GetUnixFileMode(keyFilePath).Should().Be(OwnerReadWrite, "the key is created beside the configuration it protects");
+            var currentKeyFilePath = LinuxGeneratedMachineKey.KeyFilePathFor(configurationFile);
+            currentKeyFilePath.Should().Be(Path.Combine(directory, LinuxGeneratedMachineKey.KeyFileName));
+            File.GetUnixFileMode(currentKeyFilePath).Should().Be(OwnerReadWrite, "the key is created beside the configuration it protects");
+            File.Exists(keyFilePath).Should().BeFalse("a legacy-named key is never created");
             var stored = XDocument.Load(configurationFile).Root!.Elements("set").Single(e => (string)e.Attribute("key") == "Tentacle.Certificate").Value;
             stored.Should().StartWith(LinuxMachineKeyEncryptor.ProtectedValuePrefix);
             new XmlFileKeyValueStore(fileSystem, configurationFile).Get<string>("Tentacle.Certificate", protectionLevel: ProtectionLevel.MachineKey)
