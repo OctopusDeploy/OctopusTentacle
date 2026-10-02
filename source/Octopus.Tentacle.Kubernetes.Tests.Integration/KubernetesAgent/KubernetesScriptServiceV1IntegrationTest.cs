@@ -16,7 +16,8 @@ namespace Octopus.Tentacle.Kubernetes.Tests.Integration.KubernetesAgent;
 [TestFixture]
 public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrationTest
 {
-    IRecordedMethodUsages recordedMethodUsages = null!;
+    IRecordedMethodUsages? recordedMethodUsages;
+    IRecordedMethodUsages RecordedMethodUsages => recordedMethodUsages ?? throw new InvalidOperationException("Expected recordedMethodUsages to be set");
 
     protected override void ConfigureTentacleServiceDecoratorBuilder(TentacleServiceDecoratorBuilder builder)
     {
@@ -58,11 +59,11 @@ public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrati
 
         // We occasionally see that communication with Tentacle gets interrupted, causing Tentacle to reconnect and restart the script.
         // This could therefore happen more than once, which this assertion supports.
-        recordedMethodUsages.For(nameof(IAsyncClientKubernetesScriptServiceV1.StartScriptAsync)).Started.Should().BeGreaterThanOrEqualTo(1);
+        RecordedMethodUsages.For(nameof(IAsyncClientKubernetesScriptServiceV1.StartScriptAsync)).Started.Should().BeGreaterThanOrEqualTo(1);
         
-        recordedMethodUsages.For(nameof(IAsyncClientKubernetesScriptServiceV1.GetStatusAsync)).Started.Should().BeGreaterThan(1);
-        recordedMethodUsages.For(nameof(IAsyncClientKubernetesScriptServiceV1.CompleteScriptAsync)).Started.Should().Be(1);
-        recordedMethodUsages.For(nameof(IAsyncClientKubernetesScriptServiceV1.CancelScriptAsync)).Started.Should().Be(0);
+        RecordedMethodUsages.For(nameof(IAsyncClientKubernetesScriptServiceV1.GetStatusAsync)).Started.Should().BeGreaterThan(1);
+        RecordedMethodUsages.For(nameof(IAsyncClientKubernetesScriptServiceV1.CompleteScriptAsync)).Started.Should().Be(1);
+        RecordedMethodUsages.For(nameof(IAsyncClientKubernetesScriptServiceV1.CancelScriptAsync)).Started.Should().Be(0);
 
         return;
 
@@ -316,10 +317,10 @@ public class KubernetesScriptServiceV1IntegrationTest : KubernetesAgentIntegrati
         logs.Should().NotContain(po => po.Source == ProcessOutputSource.StdOut && po.Text == "i did not stop");
         scriptCompleted.Should().BeTrue();
 
-        recordedMethodUsages.For(nameof(IAsyncClientKubernetesScriptServiceV1.StartScriptAsync)).Started.Should().Be(1);
-        recordedMethodUsages.For(nameof(IAsyncClientKubernetesScriptServiceV1.GetStatusAsync)).Started.Should().BeGreaterThan(1);
-        recordedMethodUsages.For(nameof(IAsyncClientKubernetesScriptServiceV1.CompleteScriptAsync)).Started.Should().Be(1);
-        recordedMethodUsages.For(nameof(IAsyncClientKubernetesScriptServiceV1.CancelScriptAsync)).Started.Should().BeGreaterOrEqualTo(1);
+        RecordedMethodUsages.For(nameof(IAsyncClientKubernetesScriptServiceV1.StartScriptAsync)).Started.Should().Be(1);
+        RecordedMethodUsages.For(nameof(IAsyncClientKubernetesScriptServiceV1.GetStatusAsync)).Started.Should().BeGreaterThan(1);
+        RecordedMethodUsages.For(nameof(IAsyncClientKubernetesScriptServiceV1.CompleteScriptAsync)).Started.Should().Be(1);
+        RecordedMethodUsages.For(nameof(IAsyncClientKubernetesScriptServiceV1.CancelScriptAsync)).Started.Should().BeGreaterOrEqualTo(1);
 
         return;
 

@@ -45,7 +45,7 @@ namespace Octopus.Tentacle.Tests.Security
         [Test]
         public void EnsureTreeMemorySizeRemainsSmall()
         {
-            var before = GC.GetTotalMemory(true);
+            var before = MeasureLiveHeapBytes();
 
             var trie = new AhoCorasick();
             for (var i = 0; i < words.Length; i++)
@@ -59,12 +59,34 @@ namespace Octopus.Tentacle.Tests.Security
                     throw new Exception("Find mistake");
             }
 
-            var after = GC.GetTotalMemory(true);
+            var after = MeasureLiveHeapBytes();
+            GC.KeepAlive(trie);
 
-            // Currently this code uses ~12Mb of memory. Fail if it exceeds 15Mb (on 32bit).
+            // The trie is almost entirely nodes: these inputs produce 399,823 of them, and a node is 5 references
+            // plus 2 chars, so 32 bytes on 32-bit (~12MiB) and 64 bytes on 64-bit (~24MiB). Fail if we exceed
+            // 15MiB / 30MiB, i.e. if a node grows by a field or the trie stops sharing prefixes.
             var allowedMb = Environment.Is64BitProcess ? 30 : 15;
-            Console.WriteLine($"Allowing up to {allowedMb}MB");
-            Assert.That(after - before, Is.LessThan(allowedMb * 1024 * 1024));
+
+            var usedBytes = after - before;
+            Console.WriteLine($"Used {usedBytes / 1024.0 / 1024.0:F1}MB, allowing up to {allowedMb}MB");
+            Assert.That(usedBytes, Is.LessThan(allowedMb * 1024 * 1024));
+        }
+
+        // Live bytes on the managed heap after a full GC.
+        // Not GC.GetTotalMemory: on the older "segments" GC (32-bit processes, e.g. win-x86, and macOS) it counts gen1/gen2 twice (dotnet/runtime#134755),
+        // so it over-reports by an amount that depends on whatever else is on the heap. On win-x86 that put the reading anywhere from ~11MiB to ~16MiB.
+        // Remove once we're on a runtime with #134755 fixed, or nothing we test on uses segments.
+        static long MeasureLiveHeapBytes()
+        {
+#if NETFRAMEWORK
+            return GC.GetTotalMemory(true);
+#else
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+            var info = GC.GetGCMemoryInfo(GCKind.FullBlocking);
+            return info.HeapSizeBytes - info.FragmentedBytes;
+#endif
         }
     }
 }

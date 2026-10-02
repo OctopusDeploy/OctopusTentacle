@@ -13,15 +13,19 @@ RUN apt-get update && \
 ARG BUILD_NUMBER
 ARG BUILD_DATE
 
+# The CLI tools this image is expected to provide; curl, jq, lsb-release, sudo, xxd and openssl are expected in the published surface.
+# Customer deployment steps and Kubernetes lifecycle hooks shell out to them, so don't drop one just because nothing in this repo calls it.
+# We use --no-install-recommends to avoid unexpectedly taking on new implied dependencies.
+# See: https://github.com/OctopusDeploy/OctopusTentacle/pull/1312.
 RUN apt-get update && \
-    apt-get install -y \
+    apt-get install -y --no-install-recommends \
         curl \
         dos2unix \
         jq \
         lsb-release \
         sudo \
         xxd \
-        && \
+        openssl && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 

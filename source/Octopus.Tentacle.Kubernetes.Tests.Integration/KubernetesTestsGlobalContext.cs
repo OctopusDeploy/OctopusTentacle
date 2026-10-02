@@ -1,4 +1,4 @@
-﻿using Octopus.Tentacle.CommonTestUtils;
+using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Tests.Integration.Common.Logging;
 
 namespace Octopus.Tentacle.Kubernetes.Tests.Integration;
@@ -13,8 +13,11 @@ public class KubernetesTestsGlobalContext : IDisposable
 
     public string KubeConfigPath { get; set; } = "<unset>";
 
-    public string HelmExePath { get; private set; } = null!;
-    public string KubeCtlExePath { get; private set; }= null!;
+    string? helmExePath;
+    string? kubeCtlExePath;
+
+    public string HelmExePath => helmExePath ?? throw new InvalidOperationException($"{nameof(HelmExePath)} has not been set. {nameof(SetToolExePaths)} must be called first.");
+    public string KubeCtlExePath => kubeCtlExePath ?? throw new InvalidOperationException($"{nameof(KubeCtlExePath)} has not been set. {nameof(SetToolExePaths)} must be called first.");
     public string? TentacleImageAndTag { get; set; }
     
     internal KubernetesTestsGlobalContext(ILogger logger)
@@ -38,7 +41,7 @@ public class KubernetesTestsGlobalContext : IDisposable
 
     public void SetToolExePaths(string helmExePath, string kubeCtlPath)
     {
-        HelmExePath = helmExePath;
-        KubeCtlExePath = kubeCtlPath;
+        this.helmExePath = helmExePath;
+        kubeCtlExePath = kubeCtlPath;
     }
 }

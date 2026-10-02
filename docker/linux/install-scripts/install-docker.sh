@@ -5,7 +5,6 @@ set -eux
 
 # Add the apt sources for Docker (they're not part of the stock Ubuntu distro).
 apt-get update
-
 apt-get install -y --no-install-recommends \
     ca-certificates \
     curl
@@ -24,10 +23,13 @@ Architectures: $(dpkg --print-architecture)
 Signed-By: /etc/apt/keyrings/docker.asc
 EOF
 
+apt-get update
 # Install Docker and its runtime dependencies.
 # https://github.com/docker/docker/blob/master/project/PACKAGERS.md#runtime-dependencies
-apt-get update
-apt-get install -y \
+# We use --no-install-recommends to avoid unexpectedly taking on new implied dependencies.
+# We keep: `xz-utils` through to `patch`` in place (that used to come in via --no-install-recommends) in case someone is depending on them.
+# See: https://github.com/OctopusDeploy/OctopusTentacle/pull/1312 for more details.
+apt-get install -y --no-install-recommends \
     btrfs-progs \
     containerd.io \
     docker-ce \
@@ -42,7 +44,15 @@ apt-get install -y \
     sudo \
     uidmap \
     xfsprogs \
-    xz-utils
+    xz-utils \
+    docker-buildx-plugin \
+    docker-compose-plugin \
+    docker-ce-rootless-extras \
+    git \
+    apparmor \
+    openssh-client \
+    less \
+    patch
 
 # set up subuid/subgid so that "--userns-remap=default" works out-of-the-box
 addgroup --system dockremap

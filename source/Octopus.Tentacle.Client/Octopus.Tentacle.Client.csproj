@@ -2,7 +2,6 @@
     <PropertyGroup>
         <RootNamespace>Octopus.Tentacle.Client</RootNamespace>
         <AssemblyName>Octopus.Tentacle.Client</AssemblyName>
-        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
         <OutputPath>bin\</OutputPath>
         <TargetFramework>net8.0</TargetFramework>

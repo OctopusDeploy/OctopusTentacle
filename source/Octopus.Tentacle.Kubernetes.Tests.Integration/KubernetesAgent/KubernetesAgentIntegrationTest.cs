@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Halibut;
 using Octopus.Tentacle.Client;
 using Octopus.Tentacle.CommonTestUtils;
@@ -19,7 +19,8 @@ public abstract class KubernetesAgentIntegrationTest
     
     protected KubernetesAgentInstaller KubernetesAgentInstaller => kubernetesAgentInstaller ?? throw new InvalidOperationException("Expected kubernetesAgentInstaller to be set");
     
-    protected TentacleClient TentacleClient { get; private set; } = null!;
+    TentacleClient? tentacleClient;
+    protected TentacleClient TentacleClient => tentacleClient ?? throw new InvalidOperationException("Expected tentacleClient to be set");
 
     protected CancellationToken CancellationToken { get; private set; }
     
@@ -27,7 +28,8 @@ public abstract class KubernetesAgentIntegrationTest
 
     protected readonly IDictionary<string, string> CustomHelmValues = new Dictionary<string, string>();
 
-    HalibutRuntime serverHalibutRuntime;
+    HalibutRuntime? serverHalibutRuntime;
+    HalibutRuntime ServerHalibutRuntime => serverHalibutRuntime ?? throw new InvalidOperationException("Expected serverHalibutRuntime to be set");
 
     string? agentThumbprint;
 
@@ -72,7 +74,7 @@ public abstract class KubernetesAgentIntegrationTest
         CancellationToken = cancellationTokenSource.Token;
 
         //each test should get its own tentacle client, so it gets its own builders
-        TentacleClient = SetupHelpers.BuildTentacleClient(KubernetesAgentInstaller.SubscriptionId, agentThumbprint, serverHalibutRuntime, ConfigureTentacleServiceDecoratorBuilder);
+        tentacleClient = SetupHelpers.BuildTentacleClient(KubernetesAgentInstaller.SubscriptionId, agentThumbprint, ServerHalibutRuntime, ConfigureTentacleServiceDecoratorBuilder);
     }
 
     [TearDown]
@@ -94,7 +96,17 @@ public abstract class KubernetesAgentIntegrationTest
     [OneTimeTearDown]
     public async Task OneTimeTearDown()
     {
-        await serverHalibutRuntime.DisposeAsync();
-        kubernetesAgentInstaller?.Dispose();
+        try
+        {
+            if (serverHalibutRuntime is not null)
+            {
+                await serverHalibutRuntime.DisposeAsync();
+            }
+        }
+        finally
+        {
+            // Always uninstall the agent, even if disposing the Halibut runtime threw, so it isn't left behind.
+            kubernetesAgentInstaller?.Dispose();
+        }
     }
 }

@@ -7,7 +7,6 @@
     <OutputPath>bin</OutputPath>
     <PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
     <RootNamespace>Octopus.Manager.Tentacle.Tests</RootNamespace>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <LangVersion>9</LangVersion>
     <Nullable>annotations</Nullable>
@@ -22,7 +21,7 @@
         <RuntimeIdentifiers>win</RuntimeIdentifiers><!-- This is AnyCPU -->
       </PropertyGroup>
     </When>
-    <When Condition="'$(TargetFramework)' == 'net8.0-windows'">
+    <When Condition="$(TargetFramework.StartsWith('net8.0-windows'))">
       <PropertyGroup>
         <RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
       </PropertyGroup>

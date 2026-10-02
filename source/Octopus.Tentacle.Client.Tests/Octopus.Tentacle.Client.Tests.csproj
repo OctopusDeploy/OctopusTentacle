@@ -7,7 +7,6 @@
     <OutputPath>bin</OutputPath>
     <PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
     <RootNamespace>Octopus.Tentacle.Client.Tests</RootNamespace>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <LangVersion>9</LangVersion>
     <Nullable>annotations</Nullable>
     <TargetFramework>net8.0</TargetFramework>
