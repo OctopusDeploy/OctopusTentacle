@@ -84,7 +84,8 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             result.Should().Be("octopusdeploy/kubernetes-agent-tools-base:latest");
         }
 
-        [TestCase(37, "latest")]
+        [TestCase(38, "latest")]
+        [TestCase(37, "1.37")]
         [TestCase(36, "1.36")]
         [TestCase(35, "1.35")]
         [TestCase(34, "1.34")]
