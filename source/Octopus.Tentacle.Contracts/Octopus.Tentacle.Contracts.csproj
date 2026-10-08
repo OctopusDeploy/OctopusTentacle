@@ -27,7 +27,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <PackageReference Include="Halibut" Version="8.1.2163" />
+    <PackageReference Include="Halibut" Version="8.1.2200" />
   </ItemGroup>
   <!-- Pin transitive dependencies to fix known CVEs (.NET 8 only; net48 doesn't pull these in). Flows to every project referencing Contracts. -->
   <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETCoreApp' ">
