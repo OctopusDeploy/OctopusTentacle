@@ -1,37 +1,24 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Diagnostics;
-using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Configuration.Crypto
 {
-    public class MachineKeyEncryptor : IMachineKeyEncryptor
+    public static class MachineKeyEncryptor
     {
         static readonly ISystemLog Log = new SystemLog();
 
         /// <summary>
-        /// The encryptor for values that are not kept in a configuration file of their own. On Linux its key is where
-        /// earlier versions kept theirs. Configuration files use <see cref="ForConfigurationFile"/> instead.
-        /// </summary>
-        public static readonly IMachineKeyEncryptor Current;
-
-        static MachineKeyEncryptor()
-        {
-            Current = PlatformDetection.IsRunningOnWindows
-                ? new WindowsMachineKeyEncryptor()
-                : CreateLinuxEncryptor(Log, new OctopusPhysicalFileSystem(Log), LinuxGeneratedMachineKey.LegacyKeyFilePathForThisHost, configurationFile: null);
-        }
-
-        /// <summary>
         /// The encryptor for the values in the configuration file at <paramref name="configurationFile"/>. On Linux its
-        /// key is <c>machinekey</c> beside that file (see <see cref="LinuxGeneratedMachineKey.KeyFilePathFor"/>);
-        /// on Windows it is DPAPI, as it always was.
+        /// key is <c>config-encryption.key</c> beside that file (see <see cref="LinuxGeneratedMachineKey.KeyFilePathFor"/>),
+        /// so there is no host-wide key: every protected value belongs to a configuration file. On Windows it is DPAPI,
+        /// as it always was.
         /// </summary>
         public static IMachineKeyEncryptor ForConfigurationFile(string configurationFile)
             => PlatformDetection.IsRunningOnWindows
-                ? Current
+                ? new WindowsMachineKeyEncryptor()
                 : CreateLinuxEncryptor(Log, new OctopusPhysicalFileSystem(Log), LinuxGeneratedMachineKey.KeyFilePathFor(configurationFile), configurationFile);
 
         /// <summary>
@@ -56,21 +43,5 @@ namespace Octopus.Tentacle.Configuration.Crypto
 
             return new LinuxMachineKeyEncryptor(log, generatedKey, legacyKeySources);
         }
-
-        MachineKeyEncryptor()
-        {
-        }
-
-        public string Encrypt(string raw)
-            => Current.Encrypt(raw);
-
-        public string Decrypt(string encrypted)
-            => Current.Decrypt(encrypted);
-
-        public bool RequiresReEncryption(string encrypted)
-            => Current.RequiresReEncryption(encrypted);
-
-        public void RestrictKeyStorageToOwner()
-            => Current.RestrictKeyStorageToOwner();
     }
 }

@@ -15,7 +15,8 @@ namespace Octopus.Tentacle.Configuration
         bool ReEncryptIfLegacy(string name);
 
         /// <summary>
-        /// See <see cref="Crypto.IMachineKeyEncryptor.RestrictKeyStorageToOwner"/>. Never throws.
+        /// See <see cref="Crypto.IMachineKeyEncryptor.RestrictKeyStorageToOwner"/>; a file-backed store also tightens
+        /// the file it keeps the protected values in. Never throws.
         /// </summary>
         void RestrictKeyStorageToOwner();
     }

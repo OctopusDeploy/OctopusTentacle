@@ -58,6 +58,23 @@ namespace Octopus.Tentacle.Tests.Configuration
         string BackupFile => configurationFile + XmlFileKeyValueStore.PreReEncryptionBackupSuffix;
 
         [Test]
+        public void RestrictingStorageToTheOwnerAlsoTightensTheConfigurationFile()
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                Assert.Ignore("Unix file modes only.");
+                return; // so the platform analyzer knows the calls below never run on Windows
+            }
+            File.SetUnixFileMode(configurationFile, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.GroupRead | UnixFileMode.OtherRead);
+
+            store.RestrictKeyStorageToOwner();
+
+            File.GetUnixFileMode(configurationFile).Should().Be(UnixFileMode.UserRead | UnixFileMode.UserWrite,
+                "the key beside the configuration is owner-only, so the file it protects should be too");
+            store.Invoking(s => s.RestrictKeyStorageToOwner()).Should().NotThrow("it is idempotent");
+        }
+
+        [Test]
         public void TheFirstReEncryptionKeepsACopyOfTheFileExactlyAsTheEarlierVersionLeftIt()
         {
             legacyStore.Set<string>("Tentacle.Certificate", "the certificate", ProtectionLevel.MachineKey);
