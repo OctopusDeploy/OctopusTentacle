@@ -349,7 +349,7 @@ if [[ $SKIP_SMOKE -eq 0 ]]; then
     # Configure a throwaway instance the way the entrypoint does, then report
     # how the certificate was protected. Sensitive values in tentacle.config
     # must be encrypted with the key Tentacle generates into
-    # /etc/octopus/machinekey.v1 (marked by a version prefix, which is
+    # /etc/octopus/config-encryption.key (marked by a version prefix, which is
     # LinuxMachineKeyEncryptor.ProtectedValuePrefix and never changes), that
     # file must be readable only by its owner, and every container must
     # generate its own key. The key itself is never printed; only a hash of
@@ -358,8 +358,8 @@ if [[ $SKIP_SMOKE -eq 0 ]]; then
 tentacle create-instance --instance Tentacle --config /etc/octopus/tentacle.config >/dev/null 2>&1 \
     && tentacle new-certificate --instance Tentacle >/dev/null 2>&1 \
     && echo "prefixed=$(grep -cF 'key="Tentacle.Certificate">$OctopusMachineKeyV1$' /etc/octopus/tentacle.config)" \
-    && echo "mode=$(stat -c %a /etc/octopus/machinekey.v1)" \
-    && echo "keyhash=$(sha256sum /etc/octopus/machinekey.v1 | cut -c1-16)" \
+    && echo "mode=$(stat -c %a /etc/octopus/config-encryption.key)" \
+    && echo "keyhash=$(sha256sum /etc/octopus/config-encryption.key | cut -c1-16)" \
     && echo "thumbprint=$(tentacle show-thumbprint --instance Tentacle 2>/dev/null)" \
     && echo "recorded=$(sed -n 's/.*key="Tentacle.CertificateThumbprint">\([^<]*\)<.*/\1/p' /etc/octopus/tentacle.config)"
 SNIPPET
@@ -370,7 +370,7 @@ SNIPPET
     field() { printf '%s\n' "$1" | sed -n "s/^$2=//p" | head -1; }
 
     assert_equals "certificate is encrypted with the generated machine key" "$(field "$CONFIGURE_A" prefixed)" "1"
-    assert_equals "/etc/octopus/machinekey.v1 is readable only by its owner" "$(field "$CONFIGURE_A" mode)" "600"
+    assert_equals "/etc/octopus/config-encryption.key is readable only by its owner" "$(field "$CONFIGURE_A" mode)" "600"
     if [[ -n "$(field "$CONFIGURE_A" thumbprint)" && "$(field "$CONFIGURE_A" thumbprint)" == "$(field "$CONFIGURE_A" recorded)" ]]; then
         pass "certificate decrypts in a new process and matches the recorded thumbprint"
     else
@@ -1087,7 +1087,7 @@ if [[ $SKIP_E2E -eq 0 ]]; then
 
         # --- lifecycle --------------------------------------------------------
         # The certificate in tentacle.config is encrypted with a key Tentacle
-        # generated into /etc/octopus/machinekey.v1. Both live on the volume, so the
+        # generated into /etc/octopus/config-encryption.key. Both live on the volume, so the
         # Tentacle has to come back with the same identity after a restart and
         # after the container is destroyed and re-created (LEV-1171). Before this
         # the key came from the image's /etc/machine-id, so a re-created

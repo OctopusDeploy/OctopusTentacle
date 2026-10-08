@@ -20,7 +20,7 @@
 #   6. Run `tentacle agent` for a few seconds. On start it re-encrypts the three
 #      settings and logs one line per setting. Afterwards every value carries
 #      the prefix, the thumbprint is unchanged, the key beside the configuration
-#      (/etc/octopus/<instance>/machinekey.v1) is readable only by its owner, and
+#      (/etc/octopus/<instance>/config-encryption.key) is readable only by its owner, and
 #      tentacle.config.before-reencryption holds the configuration exactly as the
 #      released version left it, also owner-only.
 #   7. Run the agent again: nothing left to re-encrypt, so it logs nothing.
@@ -169,7 +169,7 @@ PREFIX='$OctopusMachineKeyV1$'
 INSTANCE="upgrade-test"
 CONFIG="/etc/octopus/$INSTANCE/tentacle.config"
 # The key is kept beside the configuration it protects; earlier versions kept theirs at /etc/octopus/machinekey.
-MACHINE_KEY_FILE="/etc/octopus/$INSTANCE/machinekey.v1"
+MACHINE_KEY_FILE="/etc/octopus/$INSTANCE/config-encryption.key"
 LEGACY_MACHINE_KEY_FILE="/etc/octopus/machinekey"
 BACKUP="$CONFIG.before-reencryption"
 PROTECTED_SETTINGS=(Tentacle.Certificate Octopus.Proxy.ProxyPassword Octopus.Server.Proxy.ProxyPassword)

@@ -13,7 +13,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
     // values those versions wrote, which encrypted everything with that one IV.
     public class LinuxGeneratedMachineKey : ICryptoKeyNixSource
     {
-        public const string KeyFileName = "machinekey.v1";
+        public const string KeyFileName = "config-encryption.key";
 
         /// <summary>The name earlier versions gave their generated key. Only ever read, never written.</summary>
         public const string LegacyKeyFileName = "machinekey";
