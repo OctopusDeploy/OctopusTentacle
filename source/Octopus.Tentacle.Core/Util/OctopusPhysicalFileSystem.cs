@@ -447,15 +447,18 @@ namespace Octopus.Tentacle.Core.Util
                 using var process = System.Diagnostics.Process.Start(startInfo);
                 if (process == null)
                     return (null, "", "");
+                // Both streams are read in the background: reading either to the end here would block until the program
+                // exits, so a hung program would never reach the timeout below.
                 var output = process.StandardOutput.ReadToEndAsync();
-                var error = process.StandardError.ReadToEnd();
+                var error = process.StandardError.ReadToEndAsync();
                 if (!process.WaitForExit(10_000))
                 {
-                    process.Kill();
+                    process.Kill(entireProcessTree: true);
+                    Log.Verbose($"{program} {string.Join(" ", arguments)} did not finish within 10 seconds and was stopped");
                     return (null, "", "");
                 }
 
-                return (process.ExitCode, output.GetAwaiter().GetResult(), error);
+                return (process.ExitCode, output.GetAwaiter().GetResult(), error.GetAwaiter().GetResult());
             }
             catch (Exception e)
             {
