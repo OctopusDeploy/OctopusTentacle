@@ -91,7 +91,10 @@ namespace Octopus.Tentacle.Configuration.Crypto
             }
         }
 
-        public static bool GiveKeyToServiceUser(ISystemLog log, IOctopusFileSystem fileSystem, string configurationFile, string userName)
+        // The configuration has to move too: the agent restricts it to its owner when it starts (see
+        // XmlFileKeyValueStore.RestrictKeyStorageToOwner), so after the service user changes, the new user could not
+        // otherwise read a configuration the previous one owned. Must run as root.
+        public static bool GiveKeyAndConfigurationToServiceUser(ISystemLog log, IOctopusFileSystem fileSystem, string configurationFile, string userName)
         {
             var key = new LinuxGeneratedMachineKey(log, fileSystem, KeyFilePathFor(configurationFile), createIfMissing: true, ownerReferencePath: configurationFile);
             try
@@ -104,15 +107,22 @@ namespace Octopus.Tentacle.Configuration.Crypto
                 return false;
             }
 
-            if (fileSystem.TryChangeOwner(key.KeyFilePath, userName))
-            {
-                log.Info($"The machine key file `{key.KeyFilePath}` now belongs to {userName}, the user the service runs as.");
-                return true;
-            }
+            var gaveKey = Give(key.KeyFilePath, "machine key file");
+            var gaveConfiguration = !fileSystem.FileExists(configurationFile) || Give(configurationFile, "configuration file");
+            return gaveKey && gaveConfiguration;
 
-            log.Warn($"Unable to give the machine key file `{key.KeyFilePath}` to {userName}, the user the service runs as. "
-                + $"If Tentacle cannot read it when it starts, run `sudo chown {userName} {key.KeyFilePath}`.");
-            return false;
+            bool Give(string path, string description)
+            {
+                if (fileSystem.TryChangeOwner(path, userName))
+                {
+                    log.Info($"The {description} `{path}` now belongs to {userName}, the user the service runs as.");
+                    return true;
+                }
+
+                log.Warn($"Unable to give the {description} `{path}` to {userName}, the user the service runs as. "
+                    + $"If Tentacle cannot read it when it starts, run `sudo chown {userName} {path}`.");
+                return false;
+            }
         }
 
         void Create(string path)

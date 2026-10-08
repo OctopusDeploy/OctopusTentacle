@@ -122,13 +122,14 @@ namespace Octopus.Tentacle.Startup
                         serviceConfigurationState);
                 }
 
-                GiveTheMachineKeyToTheServiceUser(instanceSelector.Current.ConfigurationPath);
+                GiveTheKeyAndConfigurationToTheServiceUser(instanceSelector.Current.ConfigurationPath);
             }
         }
 
-        // The key file is usually created by root (configure-tentacle.sh, sudo tentacle new-certificate), so a service that
-        // runs as another user could not read it; installing the service is the one moment Tentacle knows who that user is.
-        void GiveTheMachineKeyToTheServiceUser(string? configurationPath)
+        // The key file and the configuration are usually created by root (configure-tentacle.sh, sudo tentacle
+        // new-certificate), or by whichever user the service ran as before, so a service that runs as another user could
+        // not read them; installing the service is the one moment Tentacle knows who that user is.
+        void GiveTheKeyAndConfigurationToTheServiceUser(string? configurationPath)
         {
             if (!(serviceConfigurationState.Install || serviceConfigurationState.Reconfigure)
                 || PlatformDetection.IsRunningOnWindows
@@ -144,7 +145,7 @@ namespace Octopus.Tentacle.Startup
                 return;
             }
 
-            LinuxGeneratedMachineKey.GiveKeyToServiceUser(log, new OctopusPhysicalFileSystem(log), configurationPath!, userName!);
+            LinuxGeneratedMachineKey.GiveKeyAndConfigurationToServiceUser(log, new OctopusPhysicalFileSystem(log), configurationPath!, userName!);
         }
     }
 }
