@@ -58,7 +58,7 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         }
 
         const string ConfigurationFile = "/etc/octopus/Tentacle/tentacle-Tentacle.config";
-        const string NewKeyFile = "/etc/octopus/Tentacle/machinekey.v1";
+        const string NewKeyFile = "/etc/octopus/Tentacle/config-encryption.key";
 
         FakeKeyFiles files;
 
@@ -178,8 +178,8 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
             var reEncrypted = upgraded.Encrypt(upgraded.Decrypt(legacyCiphertext));
 
             files.Contents[LinuxGeneratedMachineKey.LegacyKeyFilePath].Should().Be(GeneratedKeyFileContents);
-            files.Contents.Keys.Should().BeEquivalentTo(new[] { LinuxGeneratedMachineKey.LegacyKeyFilePath, "/etc/octopus/machinekey.v1" });
-            files.Contents["/etc/octopus/machinekey.v1"].Should().NotBe(GeneratedKeyFileContents);
+            files.Contents.Keys.Should().BeEquivalentTo(new[] { LinuxGeneratedMachineKey.LegacyKeyFilePath, "/etc/octopus/config-encryption.key" });
+            files.Contents["/etc/octopus/config-encryption.key"].Should().NotBe(GeneratedKeyFileContents);
             CreateEncryptorAsComposedInProduction(machineIdPresent: true, configurationFile: "/etc/octopus/tentacle.config").Decrypt(reEncrypted).Should().Be(plaintext);
         }
 

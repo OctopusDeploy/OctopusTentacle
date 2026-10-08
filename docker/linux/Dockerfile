@@ -52,7 +52,7 @@ RUN apt-get update && \
     ln -s /opt/octopus/tentacle/Tentacle /usr/bin/tentacle
 
 # The ubuntu:24.04 base image ships an EMPTY /etc/machine-id. It is populated by the dbus and systemd packages that
-# install-docker.sh pulls in as dependencies: their postinst scripts generate a fresh id on every image build, so
+# install-docker.sh pulls in as dependencies: their postinstall scripts generate a fresh id on every image build, so
 # every container started from one tag shares it and every tag has a different one. That is why this step must stay
 # after the Docker install. Tentacle no longer derives its configuration encryption key from the machine-id, but
 # leaving it empty makes sure nothing can, and is what systemd's machine-id(5) requires of an image that runs on

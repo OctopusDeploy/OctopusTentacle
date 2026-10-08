@@ -418,20 +418,20 @@ namespace Octopus.Tentacle.Core.Util
         bool RunChownAsRoot(params string[] arguments)
         {
             var (exitCode, _, error) = RunAsRoot("chown", arguments);
-            if (exitCode != 0 && exitCode != int.MinValue)
+            if (exitCode is not null and not 0)
                 Log.Verbose($"chown {string.Join(" ", arguments)} exited with {exitCode}: {error}");
             return exitCode == 0;
         }
 
         /// <summary>
         /// Runs <paramref name="program"/> as root and returns its exit code and output. Only root can give a file away,
-        /// so if we are not root nothing is run and the exit code is <see cref="int.MinValue"/>, as it is for any failure
-        /// to run the program at all.
+        /// so if we are not root nothing is run. The exit code is null whenever the program did not run to completion: not
+        /// root, it could not be started, it timed out, or it threw.
         /// </summary>
-        (int ExitCode, string Output, string Error) RunAsRoot(string program, params string[] arguments)
+        (int? ExitCode, string Output, string Error) RunAsRoot(string program, params string[] arguments)
         {
             if (OperatingSystem.IsWindows() || Environment.UserName != "root")
-                return (int.MinValue, "", "");
+                return (null, "", "");
 
             try
             {
@@ -446,13 +446,13 @@ namespace Octopus.Tentacle.Core.Util
 
                 using var process = System.Diagnostics.Process.Start(startInfo);
                 if (process == null)
-                    return (int.MinValue, "", "");
+                    return (null, "", "");
                 var output = process.StandardOutput.ReadToEndAsync();
                 var error = process.StandardError.ReadToEnd();
                 if (!process.WaitForExit(10_000))
                 {
                     process.Kill();
-                    return (int.MinValue, "", "");
+                    return (null, "", "");
                 }
 
                 return (process.ExitCode, output.GetAwaiter().GetResult(), error);
@@ -460,7 +460,7 @@ namespace Octopus.Tentacle.Core.Util
             catch (Exception e)
             {
                 Log.Verbose(e, $"Unable to run {program} {string.Join(" ", arguments)}");
-                return (int.MinValue, "", "");
+                return (null, "", "");
             }
         }
 #endif

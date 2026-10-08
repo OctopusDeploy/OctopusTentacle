@@ -12,7 +12,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
 
         /// <summary>
         /// The encryptor for the values in the configuration file at <paramref name="configurationFile"/>. On Linux its
-        /// key is <c>machinekey.v1</c> beside that file (see <see cref="LinuxGeneratedMachineKey.KeyFilePathFor"/>),
+        /// key is <c>config-encryption.key</c> beside that file (see <see cref="LinuxGeneratedMachineKey.KeyFilePathFor"/>),
         /// so there is no host-wide key: every protected value belongs to a configuration file. On Windows it is DPAPI,
         /// as it always was.
         /// </summary>

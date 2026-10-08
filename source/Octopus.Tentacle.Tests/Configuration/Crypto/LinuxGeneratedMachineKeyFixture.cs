@@ -15,7 +15,7 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
     public class LinuxGeneratedMachineKeyFixture
     {
         const string ConfigurationFile = "/some/where/tentacle.config";
-        const string KeyFilePath = "/some/where/machinekey.v1";
+        const string KeyFilePath = "/some/where/config-encryption.key";
         const string ValidKeyFileContents = "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=.ZmVkY2JhOTg3NjU0MzIxMA==";
 
         IOctopusFileSystem fileSystem;
@@ -46,9 +46,9 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         [Test]
         public void TheKeyForAConfigurationFileIsBesideIt()
         {
-            LinuxGeneratedMachineKey.KeyFilePathFor("/etc/octopus/Tentacle/tentacle-Tentacle.config").Should().Be("/etc/octopus/Tentacle/machinekey.v1");
-            LinuxGeneratedMachineKey.KeyFilePathFor("/etc/octopus/tentacle.config").Should().Be("/etc/octopus/machinekey.v1", "the official Docker image's configuration: beside the legacy /etc/octopus/machinekey, never the same file");
-            LinuxGeneratedMachineKey.KeyFilePathFor("/tentacle.config").Should().Be("/machinekey.v1");
+            LinuxGeneratedMachineKey.KeyFilePathFor("/etc/octopus/Tentacle/tentacle-Tentacle.config").Should().Be("/etc/octopus/Tentacle/config-encryption.key");
+            LinuxGeneratedMachineKey.KeyFilePathFor("/etc/octopus/tentacle.config").Should().Be("/etc/octopus/config-encryption.key", "the official Docker image's configuration: beside the legacy /etc/octopus/machinekey, never the same file");
+            LinuxGeneratedMachineKey.KeyFilePathFor("/tentacle.config").Should().Be("/config-encryption.key");
         }
 
         [Test]
