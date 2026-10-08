@@ -113,11 +113,14 @@ namespace Octopus.Tentacle.Configuration.Crypto
         }
 
         /// <summary>
-        /// Makes sure the key for <paramref name="configurationFile"/> exists and belongs to <paramref name="userName"/>,
-        /// the user its service runs as, so a Tentacle installed as root but run as another user can read its key.
-        /// Must run as root. Returns false, having logged why, if it could not.
+        /// Makes sure the key for <paramref name="configurationFile"/> exists, and gives both it and the configuration file
+        /// to <paramref name="userName"/>, the user its service runs as, so a Tentacle installed as root but run as
+        /// another user can read them. The configuration has to move too: the agent restricts it to its owner when it
+        /// starts (see <see cref="XmlFileKeyValueStore.RestrictKeyStorageToOwner"/>), so after the service user changes,
+        /// the new user could not otherwise read a configuration the previous one owned. Must run as root. Returns false,
+        /// having logged why, if either could not be given away.
         /// </summary>
-        public static bool GiveKeyToServiceUser(ISystemLog log, IOctopusFileSystem fileSystem, string configurationFile, string userName)
+        public static bool GiveKeyAndConfigurationToServiceUser(ISystemLog log, IOctopusFileSystem fileSystem, string configurationFile, string userName)
         {
             var key = new LinuxGeneratedMachineKey(log, fileSystem, KeyFilePathFor(configurationFile), createIfMissing: true, ownerReferencePath: configurationFile);
             try
@@ -130,15 +133,22 @@ namespace Octopus.Tentacle.Configuration.Crypto
                 return false;
             }
 
-            if (fileSystem.TryChangeOwner(key.KeyFilePath, userName))
-            {
-                log.Info($"The machine key file `{key.KeyFilePath}` now belongs to {userName}, the user the service runs as.");
-                return true;
-            }
+            var gaveKey = Give(key.KeyFilePath, "machine key file");
+            var gaveConfiguration = !fileSystem.FileExists(configurationFile) || Give(configurationFile, "configuration file");
+            return gaveKey && gaveConfiguration;
 
-            log.Warn($"Unable to give the machine key file `{key.KeyFilePath}` to {userName}, the user the service runs as. "
-                + $"If Tentacle cannot read it when it starts, run `sudo chown {userName} {key.KeyFilePath}`.");
-            return false;
+            bool Give(string path, string description)
+            {
+                if (fileSystem.TryChangeOwner(path, userName))
+                {
+                    log.Info($"The {description} `{path}` now belongs to {userName}, the user the service runs as.");
+                    return true;
+                }
+
+                log.Warn($"Unable to give the {description} `{path}` to {userName}, the user the service runs as. "
+                    + $"If Tentacle cannot read it when it starts, run `sudo chown {userName} {path}`.");
+                return false;
+            }
         }
 
         void Create(string path)

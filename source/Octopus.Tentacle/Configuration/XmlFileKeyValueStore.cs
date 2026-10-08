@@ -59,7 +59,9 @@ namespace Octopus.Tentacle.Configuration
         /// Tightens the key file (via the encryptor) and the configuration file itself. The configuration was usually
         /// created 0644; nothing in it is meant for other local users, and the key beside it is already owner-only, so
         /// leaving the file it protects world-readable would be odd. Only the agent calls this, as the service user, so
-        /// a file it owns can never be tightened away from the process that reads it. Failures are logged and ignored.
+        /// a file it owns can never be tightened away from the process that reads it, and installing the service under a
+        /// different user hands the configuration to that user (see
+        /// <see cref="Crypto.LinuxGeneratedMachineKey.GiveKeyAndConfigurationToServiceUser"/>). Failures are logged and ignored.
         /// </summary>
         public override void RestrictKeyStorageToOwner()
         {

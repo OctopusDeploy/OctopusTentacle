@@ -255,7 +255,7 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         {
             fileSystem.TryChangeOwner(KeyFilePath, "tentacle").Returns(true);
 
-            LinuxGeneratedMachineKey.GiveKeyToServiceUser(log, fileSystem, ConfigurationFile, "tentacle").Should().BeTrue();
+            LinuxGeneratedMachineKey.GiveKeyAndConfigurationToServiceUser(log, fileSystem, ConfigurationFile, "tentacle").Should().BeTrue();
 
             written.Should().NotBeNull("a service user that cannot create the key must be given one");
             fileSystem.Received(1).TryChangeOwner(KeyFilePath, "tentacle");
@@ -268,9 +268,35 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
             written = ValidKeyFileContents;
             fileSystem.TryChangeOwner(KeyFilePath, "tentacle").Returns(false);
 
-            LinuxGeneratedMachineKey.GiveKeyToServiceUser(log, fileSystem, ConfigurationFile, "tentacle").Should().BeFalse();
+            LinuxGeneratedMachineKey.GiveKeyAndConfigurationToServiceUser(log, fileSystem, ConfigurationFile, "tentacle").Should().BeFalse();
 
             log.Received(1).Warn(Arg.Is<string>(m => m.Contains($"sudo chown tentacle {KeyFilePath}")));
+        }
+
+        [Test]
+        public void GivingTheKeyToTheServiceUser_AlsoGivesItTheConfiguration()
+        {
+            // The agent restricts the configuration to its owner, so a new service user must own it to read it.
+            fileSystem.FileExists(ConfigurationFile).Returns(true);
+            fileSystem.TryChangeOwner(KeyFilePath, "tentacle").Returns(true);
+            fileSystem.TryChangeOwner(ConfigurationFile, "tentacle").Returns(true);
+
+            LinuxGeneratedMachineKey.GiveKeyAndConfigurationToServiceUser(log, fileSystem, ConfigurationFile, "tentacle").Should().BeTrue();
+
+            fileSystem.Received(1).TryChangeOwner(ConfigurationFile, "tentacle");
+            log.Received(1).Info(Arg.Is<string>(m => m.Contains(ConfigurationFile) && m.Contains("tentacle")));
+        }
+
+        [Test]
+        public void GivingTheKeyToTheServiceUser_WhenTheConfigurationCannotBeGivenAway_WarnsWithTheFix()
+        {
+            fileSystem.FileExists(ConfigurationFile).Returns(true);
+            fileSystem.TryChangeOwner(KeyFilePath, "tentacle").Returns(true);
+            fileSystem.TryChangeOwner(ConfigurationFile, "tentacle").Returns(false);
+
+            LinuxGeneratedMachineKey.GiveKeyAndConfigurationToServiceUser(log, fileSystem, ConfigurationFile, "tentacle").Should().BeFalse();
+
+            log.Received(1).Warn(Arg.Is<string>(m => m.Contains($"sudo chown tentacle {ConfigurationFile}")));
         }
 
         class TemporaryEnvironmentVariable : IDisposable
