@@ -73,9 +73,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
 
         public string[] TentacleArtifactNames(Version version, TentacleRuntime runtime)
         {
-            // Tentacle 8.2 is/was built on .NET8, previous versions were built on .NET6
+            // Tentacle 8.2 is/was built on .NET8, previous versions were built on .NET6.
+            // Previously released versions keep their net8.0 artifact names even though the current source targets .NET 10.
             string runtimeForVersion = version.Major >= 8 && version.Minor >= 2
-                ? RuntimeDetection.DotNet10
+                ? RuntimeDetection.DotNet8
                 : RuntimeDetection.DotNet6;
             if (PlatformDetection.IsRunningOnWindows)
             {
