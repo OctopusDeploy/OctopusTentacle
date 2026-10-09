@@ -23,22 +23,22 @@
     </PropertyGroup>
 
   <ItemGroup>
-        <PackageReference Include="CliWrap" Version="3.8.2" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.2" />                       
+        <PackageReference Include="CliWrap" Version="3.10.5" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />                       
         <PackageReference Include="NetCoreStack.DispatchProxyAsync" Version="2.2.0" />
-        <PackageReference Include="NSubstitute" Version="4.4.0" />
-        <PackageReference Include="FluentAssertions" Version="7.0.0" />
-        <PackageReference Include="Assent" Version="1.8.2" />
-        <PackageReference Include="NUnit" Version="3.13.3" />
-        <PackageReference Include="Octopus.TestPortForwarder" Version="7.0.682" />
-        <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
+        <PackageReference Include="NSubstitute" Version="6.2.0" />
+        <PackageReference Include="FluentAssertions" Version="7.2.2" />
+        <PackageReference Include="Assent" Version="3.0.1" />
+        <PackageReference Include="NUnit" Version="3.14.0" />
+        <PackageReference Include="Octopus.TestPortForwarder" Version="7.0.790" />
+        <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
         <PackageReference Include="Serilog.Sinks.NUnit" Version="1.0.3" />
-        <PackageReference Include="TeamCity.VSTest.TestAdapter" Version="1.0.36" />
+        <PackageReference Include="TeamCity.VSTest.TestAdapter" Version="1.0.42" />
         <PackageReference Include="Serilog" Version="2.12.0" />
     </ItemGroup>
     <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
-        <PackageReference Include="System.DirectoryServices.AccountManagement" Version="8.0.0" />
-        <PackageReference Include="System.Security.Permissions" Version="8.0.0" />
+        <PackageReference Include="System.DirectoryServices.AccountManagement" Version="10.0.12" />
+        <PackageReference Include="System.Security.Permissions" Version="10.0.12" />
     </ItemGroup>
     <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
         <Reference Include="System.DirectoryServices.AccountManagement" />
