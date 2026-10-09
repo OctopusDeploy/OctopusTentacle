@@ -32,7 +32,7 @@ module.exports = {
   // The .NET runtime-deps base image tag lives in a C# constant and is passed
   // to the Dockerfile as the RuntimeDepsTag build-arg, so the built-in docker
   // manager cannot see it. Track the constant directly so base-image CVEs
-  // (e.g. gnutls in bookworm-slim) get update PRs.
+  // (e.g. openssl in the noble base) get update PRs.
   customManagers: [
     {
       customType: 'regex',
@@ -91,7 +91,7 @@ module.exports = {
   // Pin base/builder images to a digest so Renovate raises a PR every time an
   // image is republished under the same tag - this is what surfaces OS-layer
   // CVE fixes that a floating tag alone would never trigger a PR for. Applies
-  // to both the .NET runtime-deps base image (gnutls etc. in bookworm-slim)
+  // to both the .NET runtime-deps base image (OS packages in the noble base)
   // and the golang:<ver>-alpine builder image used to compile bootstrapRunner.
   pinDigests: true,
 
@@ -107,12 +107,12 @@ module.exports = {
         'Bumps the .NET runtime-deps base image tag in build/Build.Pack.cs.',
       ],
     },
-    // We must stay on the .NET 8.0 bookworm-slim line. Allow digest bumps and
-    // 8.0 patch tags, but never let Renovate move us to 9.0/10.0 or another
-    // Debian release. Moving major .NET versions is a deliberate, separate task.
+    // We must stay on the .NET 10.0 noble line. Allow digest bumps, but never
+    // let Renovate move us to another .NET major version or another OS release.
+    // Moving major .NET versions is a deliberate, separate task.
     {
       matchDepNames: ['mcr.microsoft.com/dotnet/runtime-deps'],
-      allowedVersions: '/^8\\.0-bookworm-slim$/',
+      allowedVersions: '/^10\\.0-noble$/',
     },
   ],
 }

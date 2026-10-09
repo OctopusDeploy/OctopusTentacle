@@ -21,7 +21,8 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
 
 partial class Build
 {
-    const string KubernetesTentacleContainerRuntimeDepsTag = "10.0-trixie-slim";
+    // .NET 10 GA images are not published for Debian; noble (Ubuntu 24.04) matches the docker/linux image base.
+    const string KubernetesTentacleContainerRuntimeDepsTag = "10.0-noble";
 
     //We don't sign linux packages when building locally
     readonly bool SignLinuxPackages = !IsLocalBuild;
