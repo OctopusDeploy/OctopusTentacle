@@ -75,7 +75,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
         {
             // Tentacle 8.2 is/was built on .NET8, previous versions were built on .NET6
             string runtimeForVersion = version.Major >= 8 && version.Minor >= 2
-                ? RuntimeDetection.DotNet8
+                ? RuntimeDetection.DotNet10
                 : RuntimeDetection.DotNet6;
             if (PlatformDetection.IsRunningOnWindows)
             {
@@ -86,7 +86,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
 
                 var names = runtime switch
                 {
-                    TentacleRuntime.DotNet8 => dotnetArtifactNames,
+                    TentacleRuntime.DotNet10 => dotnetArtifactNames,
                     TentacleRuntime.Framework48 => net48ArtifactNames,
                     _ => throw new ArgumentOutOfRangeException(nameof(runtime), runtime, null)
                 };
