@@ -51,7 +51,7 @@ verbatim. Common shapes:
 `.github/workflows/windows-test.yml`: `workflow_dispatch` only, with a **required** `filter`
 input (passed via `env:` to avoid script injection). `windows-latest`, `actions/setup-dotnet`
 honoring `global.json` (SDK 8.0.413), then `dotnet test` on
-`Octopus.Tentacle.Tests.Integration` (`--framework net8.0 --filter <filter>`).
+`Octopus.Tentacle.Tests.Integration` (`--framework net10.0 --filter <filter>`).
 
 ## Common mistakes
 

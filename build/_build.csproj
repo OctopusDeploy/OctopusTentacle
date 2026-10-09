@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
-    <NoWarn>CS0649;CS0169</NoWarn>
+    <TargetFramework>net10.0</TargetFramework>
+    <NoWarn>$(NoWarn);CS0649;CS0169</NoWarn>
     <NukeRootDirectory>..</NukeRootDirectory>
     <NukeScriptDirectory>..</NukeScriptDirectory>
     <NukeTelemetryVersion>1</NukeTelemetryVersion>
@@ -12,22 +12,22 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Nuke.Common" Version="9.0.4" />
+    <PackageReference Include="Nuke.Common" Version="10.1.0" />
     <PackageReference Include="Octopus.1Password.Sdk" Version="0.0.261" />
     <PackageReference Include="System.IO.FileSystem.AccessControl" Version="5.0.0" />
     <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" />
   </ItemGroup>
 
-  <!-- Pin transitive dependencies of Nuke.Common 9.0.4 to fix known CVEs -->
+  <!-- Pin transitive dependencies of Nuke.Common 10.1.0 to fix known CVEs -->
   <ItemGroup>
     <!-- CVE-2025-55247 (all three), CVE-2025-26646 (Tasks.Core). -->
-    <PackageReference Include="Microsoft.Build" Version="17.11.48" />
-    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="17.11.48" />
-    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="17.11.48" />
+    <PackageReference Include="Microsoft.Build" Version="18.0.2" />
+    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="18.0.2" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="18.0.2" />
     <!-- GHSA-g4vj-cjjj-v7hg (defence-in-depth, no CVE). -->
     <PackageReference Include="NuGet.Packaging" Version="6.12.5" />
-    <!-- CVE-2026-26171, CVE-2026-33116, CVE-2026-32203, CVE-2026-47302, CVE-2026-47304, CVE-2026-50525, CVE-2026-50527, CVE-2026-50648. -->
-    <PackageReference Include="System.Security.Cryptography.Xml" Version="8.0.4" />
+    <!-- CVE-2026-26171, CVE-2026-33116, CVE-2026-32203, CVE-2026-47302, CVE-2026-47304, CVE-2026-50525, CVE-2026-50527, CVE-2026-50648. Microsoft.Build.Tasks.Core 18.0.2 needs >= 9.0.0; 10.0.12 is the latest stable. -->
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.12" />
   </ItemGroup>
 
   <ItemGroup>

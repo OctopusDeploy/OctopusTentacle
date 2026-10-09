@@ -100,7 +100,7 @@ Currently we can only debug netcore apps running in WSL from VSCode, Visual Stud
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/source/Octopus.Tentacle/bin/net8.0/Tentacle.dll",
+            "program": "${workspaceFolder}/source/Octopus.Tentacle/bin/net10.0/Tentacle.dll",
             "args": ["run"],
             "cwd": "${workspaceFolder}/source/Octopus.Tentacle",
             "console": "internalConsole",
@@ -116,7 +116,7 @@ Currently we can only debug netcore apps running in WSL from VSCode, Visual Stud
 }
 ```
 
-- Make sure the build task (in `.vscode/tasks.json`) specifies the target framework, by including `--framework=net8.0` as a build arg, otherwise VSCode will attempt to build for all frameworks in the csproj and fail on full .Net framework. the build task should look similar to:
+- Make sure the build task (in `.vscode/tasks.json`) specifies the target framework, by including `--framework=net10.0` as a build arg, otherwise VSCode will attempt to build for all frameworks in the csproj and fail on full .Net framework. the build task should look similar to:
 
 ```
 {
@@ -125,7 +125,7 @@ Currently we can only debug netcore apps running in WSL from VSCode, Visual Stud
     "type": "process",
     "args": [
         "build",
-        "--framework=net8.0",
+        "--framework=net10.0",
         "${workspaceFolder}/source/Octopus.Tentacle/Octopus.Tentacle.csproj",
         "/property:GenerateFullPaths=true",
         "/consoleloggerparameters:NoSummary"

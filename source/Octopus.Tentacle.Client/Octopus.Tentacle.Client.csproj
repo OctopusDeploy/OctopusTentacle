@@ -4,7 +4,7 @@
         <AssemblyName>Octopus.Tentacle.Client</AssemblyName>
         <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
         <OutputPath>bin\</OutputPath>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <DisableImplicitPackageTargetFallback>true</DisableImplicitPackageTargetFallback>
         <Optimize Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">True</Optimize>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>

@@ -74,13 +74,14 @@ namespace Octopus.Tentacle.Security
 
         static byte[] GetEncryptionKey(string encryptionPassword)
         {
-// NET8 requires explicit encryption algorithm specified as the other overload method has been marked as obsolete. The default encryption value is SHA1.
+// NET8+ marks the Rfc2898DeriveBytes constructors as obsolete, so use the static Pbkdf2 method, which produces the same key.
+// The legacy constructor's default hash is SHA1.
 #if NET8_0_OR_GREATER
-            using var passwordGenerator = new Rfc2898DeriveBytes(encryptionPassword, PasswordPaddingSalt, PasswordSaltIterations, HashAlgorithmName.SHA1);
+            return Rfc2898DeriveBytes.Pbkdf2(encryptionPassword, PasswordPaddingSalt, PasswordSaltIterations, HashAlgorithmName.SHA1, 16);
 #else
             using var passwordGenerator = new Rfc2898DeriveBytes(encryptionPassword, PasswordPaddingSalt, PasswordSaltIterations);
-#endif
             return passwordGenerator.GetBytes(16);
+#endif
         }
     }
 }

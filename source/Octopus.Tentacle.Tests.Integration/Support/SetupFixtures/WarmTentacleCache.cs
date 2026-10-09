@@ -51,7 +51,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.SetupFixtures
         {
             if (PlatformDetection.IsRunningOnWindows && RuntimeDetection.IsDotNet)
             {
-                await GetTentacleVersionWithRuntime(logger, tentacleVersion, TentacleRuntime.DotNet8);
+                await GetTentacleVersionWithRuntime(logger, tentacleVersion, TentacleRuntime.DotNet10);
                 await GetTentacleVersionWithRuntime(logger, tentacleVersion, TentacleRuntime.Framework48);
             }
             else
