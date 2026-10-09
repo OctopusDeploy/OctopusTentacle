@@ -76,8 +76,10 @@ namespace Octopus.Tentacle.Security
         {
 // NET8+ marks the Rfc2898DeriveBytes constructors as obsolete, so use the static Pbkdf2 method, which produces the same key.
 // The legacy constructor's default hash is SHA1.
+// Encode the password with Encoding.UTF8 (as the legacy constructor did) rather than using the string overload of Pbkdf2,
+// which throws on invalid UTF-16 (e.g. unpaired surrogates) where the constructor substituted U+FFFD.
 #if NET8_0_OR_GREATER
-            return Rfc2898DeriveBytes.Pbkdf2(encryptionPassword, PasswordPaddingSalt, PasswordSaltIterations, HashAlgorithmName.SHA1, 16);
+            return Rfc2898DeriveBytes.Pbkdf2(Encoding.UTF8.GetBytes(encryptionPassword), PasswordPaddingSalt, PasswordSaltIterations, HashAlgorithmName.SHA1, 16);
 #else
             using var passwordGenerator = new Rfc2898DeriveBytes(encryptionPassword, PasswordPaddingSalt, PasswordSaltIterations);
             return passwordGenerator.GetBytes(16);
