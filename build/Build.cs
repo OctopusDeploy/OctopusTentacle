@@ -40,7 +40,7 @@ partial class Build : NukeBuild
     [Parameter("Whether to auto-detect the branch name - this is okay for a local build, but should not be used under CI.")] readonly bool AutoDetectBranch = IsLocalBuild;
 
     [OctoVersion(UpdateBuildNumber = true, BranchMember = nameof(BranchName),
-        AutoDetectBranchMember = nameof(AutoDetectBranch), Framework = "net8.0")]
+        AutoDetectBranchMember = nameof(AutoDetectBranch), Framework = "net10.0")]
     readonly OctoVersionInfo OctoVersionInfo = null!;
 
     [Parameter] string TestFramework = "";
@@ -70,8 +70,8 @@ partial class Build : NukeBuild
     readonly AbsolutePath TestDirectory = RootDirectory / "_test";
 
     const string NetFramework = "net48";
-    const string NetCore = "net8.0";
-    const string NetCoreWindows = "net8.0-windows";
+    const string NetCore = "net10.0";
+    const string NetCoreWindows = "net10.0-windows";
 
     IEnumerable<string> RuntimeIds => !SpecificRuntimeIds.IsEmpty()
         ? SpecificRuntimeIds

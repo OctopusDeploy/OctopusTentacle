@@ -31,6 +31,6 @@ jobs:
         run: |
           Write-Host "Filter: $env:FILTER"
           dotnet test source/Octopus.Tentacle.Tests.Integration/Octopus.Tentacle.Tests.Integration.csproj `
-            --framework net8.0 `
+            --framework net10.0 `
             --filter "$env:FILTER" `
             --logger "console;verbosity=detailed"

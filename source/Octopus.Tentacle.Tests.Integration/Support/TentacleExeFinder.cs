@@ -19,18 +19,18 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             if (TeamCityDetection.IsRunningInTeamCity())
             {
                 // Example current directory of assembly.
-                // /opt/TeamCity/BuildAgent/work/639265b01610d682/build/outputs/integrationtests/net8.0/linux-x64
+                // /opt/TeamCity/BuildAgent/work/639265b01610d682/build/outputs/integrationtests/net10.0/linux-x64
                 // Desired path to tentacle.
                 // /opt/TeamCity/BuildAgent/work/639265b01610d682/build/outputs/tentaclereal/tentacle/Tentacle
 
                 const string net48ArtifactDir = "tentaclereal-net48";
-                const string net80ArtifactDir = "tentaclereal-net8.0";
+                const string net10ArtifactDir = "tentaclereal-net10.0";
                 
                 string artifactDir =
                     version switch
                     {
                         TentacleRuntime.Framework48 => net48ArtifactDir,
-                        TentacleRuntime.DotNet8 => net80ArtifactDir,
+                        TentacleRuntime.DotNet10 => net10ArtifactDir,
                         _ => throw new ArgumentOutOfRangeException(nameof(version), version, null)
                     };
 
@@ -42,7 +42,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 version switch
                 {
                     TentacleRuntime.Framework48 => "net48",
-                    TentacleRuntime.DotNet8 => "net8.0",
+                    TentacleRuntime.DotNet10 => "net10.0",
                     _ => throw new ArgumentOutOfRangeException(nameof(version), version, null)
                 };
 

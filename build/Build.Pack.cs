@@ -21,7 +21,8 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
 
 partial class Build
 {
-    const string KubernetesTentacleContainerRuntimeDepsTag = "8.0-bookworm-slim";
+    // .NET 10 GA images are not published for Debian; noble (Ubuntu 24.04) matches the docker/linux image base.
+    const string KubernetesTentacleContainerRuntimeDepsTag = "10.0-noble";
 
     //We don't sign linux packages when building locally
     readonly bool SignLinuxPackages = !IsLocalBuild;
@@ -382,7 +383,7 @@ partial class Build
 
             var chocolateySelfContainedSourceDirectory = SourceDirectory / "Chocolatey-Self-Contained";
             const string chocolateySelfContainedNuspecFileName = "OctopusDeploy.Tentacle.SelfContained.nuspec";
-            PackChocolateyPackageToArtifactsDirectory("-net8.0-windows-win-x86", "-net8.0-windows-win-x64", chocolateySelfContainedSourceDirectory, chocolateySelfContainedNuspecFileName);
+            PackChocolateyPackageToArtifactsDirectory("-net10.0-windows-win-x86", "-net10.0-windows-win-x64", chocolateySelfContainedSourceDirectory, chocolateySelfContainedNuspecFileName);
         });
 
     void PackChocolateyPackageToArtifactsDirectory(string x86FileSuffix, string x64FileSuffix, AbsolutePath chocolateySourceDirectory, string pathToChocolateyNuspec)
@@ -489,16 +490,16 @@ partial class Build
             (ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-x64.msi").Copy(workingDirectory / "Octopus.Tentacle-x64.msi");
 
             // Get .NET 8.0 installers for Tentacle (w/o Tentacle Manager)
-            (ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net8.0-win-x86.msi").Copy(workingDirectory / "Octopus.Tentacle-net8.0-win-x86.msi");
-            (ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net8.0-win-x64.msi").Copy(workingDirectory / "Octopus.Tentacle-net8.0-win-x64.msi");
+            (ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net10.0-win-x86.msi").Copy(workingDirectory / "Octopus.Tentacle-net10.0-win-x86.msi");
+            (ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net10.0-win-x64.msi").Copy(workingDirectory / "Octopus.Tentacle-net10.0-win-x64.msi");
 
             // Get .NET 8.0 installers for Tentacle (w/ Tentacle Manager)
-            (ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net8.0-windows-win-x86.msi").Copy(workingDirectory / "Octopus.Tentacle-net8.0-windows-win-x86.msi");
-            (ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net8.0-windows-win-x64.msi").Copy(workingDirectory / "Octopus.Tentacle-net8.0-windows-win-x64.msi");
+            (ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net10.0-windows-win-x86.msi").Copy(workingDirectory / "Octopus.Tentacle-net10.0-windows-win-x86.msi");
+            (ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net10.0-windows-win-x64.msi").Copy(workingDirectory / "Octopus.Tentacle-net10.0-windows-win-x64.msi");
 
             // Get .NET 8.0 installers for Tentacle Upgrader
-            (BuildDirectory / "Octopus.Tentacle.Upgrader" / NetCore / "win-x86" / "Octopus.Tentacle.Upgrader.exe").Copy(workingDirectory / "Octopus.Tentacle.Upgrader-net8.0-win-x86.exe");
-            (BuildDirectory / "Octopus.Tentacle.Upgrader" / NetCore / "win-x64" / "Octopus.Tentacle.Upgrader.exe").Copy(workingDirectory / "Octopus.Tentacle.Upgrader-net8.0-win-x64.exe");
+            (BuildDirectory / "Octopus.Tentacle.Upgrader" / NetCore / "win-x86" / "Octopus.Tentacle.Upgrader.exe").Copy(workingDirectory / "Octopus.Tentacle.Upgrader-net10.0-win-x86.exe");
+            (BuildDirectory / "Octopus.Tentacle.Upgrader" / NetCore / "win-x64" / "Octopus.Tentacle.Upgrader.exe").Copy(workingDirectory / "Octopus.Tentacle.Upgrader-net10.0-win-x64.exe");
 
             // Get all .NET Framework 4.8 files (installers and archives) for Tentacle Upgrader
             var octopusTentacleUpgraderDirectory = BuildDirectory / "Octopus.Tentacle.Upgrader" / NetFramework / "win";
@@ -581,12 +582,12 @@ partial class Build
             (ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-x64.msi").Copy(workingDirectory / "Octopus.Tentacle-x64.msi");
 
             // Get the .NET 8.0 installers for Tentacle
-            (ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net8.0-win-x86.msi").Copy(workingDirectory / "Octopus.Tentacle-net8.0-win-x86.msi");
-            (ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net8.0-win-x64.msi").Copy(workingDirectory / "Octopus.Tentacle-net8.0-win-x64.msi");
+            (ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net10.0-win-x86.msi").Copy(workingDirectory / "Octopus.Tentacle-net10.0-win-x86.msi");
+            (ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{FullSemVer}-net10.0-win-x64.msi").Copy(workingDirectory / "Octopus.Tentacle-net10.0-win-x64.msi");
 
             // Get the .NET 8.0 installers for the Tentacle Upgrader
-            (BuildDirectory / "Octopus.Tentacle.Upgrader" / NetCore / "win-x86" / "Octopus.Tentacle.Upgrader.exe").Copy(workingDirectory / "Octopus.Tentacle.Upgrader-net8.0-win-x86.exe");
-            (BuildDirectory / "Octopus.Tentacle.Upgrader" / NetCore / "win-x64" / "Octopus.Tentacle.Upgrader.exe").Copy(workingDirectory / "Octopus.Tentacle.Upgrader-net8.0-win-x64.exe");
+            (BuildDirectory / "Octopus.Tentacle.Upgrader" / NetCore / "win-x86" / "Octopus.Tentacle.Upgrader.exe").Copy(workingDirectory / "Octopus.Tentacle.Upgrader-net10.0-win-x86.exe");
+            (BuildDirectory / "Octopus.Tentacle.Upgrader" / NetCore / "win-x64" / "Octopus.Tentacle.Upgrader.exe").Copy(workingDirectory / "Octopus.Tentacle.Upgrader-net10.0-win-x64.exe");
 
             // Get the .NET Framework 4.8 installers for the Tentacle Upgrader
             var octopusTentacleUpgraderDirectory = BuildDirectory / "Octopus.Tentacle.Upgrader" / NetFramework / "win";
