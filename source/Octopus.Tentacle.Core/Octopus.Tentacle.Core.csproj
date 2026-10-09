@@ -4,7 +4,7 @@
         <AssemblyName>Octopus.Tentacle.Core</AssemblyName>
         <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
         <OutputPath>bin\</OutputPath>
-        <TargetFrameworks>net48;net8.0;net8.0-windows</TargetFrameworks>
+        <TargetFrameworks>net48;net10.0;net10.0-windows</TargetFrameworks>
         <DisableImplicitPackageTargetFallback>true</DisableImplicitPackageTargetFallback>
         <Optimize Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">True</Optimize>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -31,10 +31,10 @@
         <Compile Include="..\Solution Items\VersionInfo.cs" Link="VersionInfo.cs" />
         <Compile Include="..\Solution Items\SolutionInfo.cs" Link="SolutionInfo.cs" />
     </ItemGroup>
-    <ItemGroup Condition="!$(TargetFramework.StartsWith('net8.0'))">
+    <ItemGroup Condition="!$(TargetFramework.StartsWith('net10.0'))">
         <PackageReference Include="System.Management" Version="4.7.0" />
     </ItemGroup>
-    <ItemGroup Condition="$(TargetFramework.StartsWith('net8.0'))">
+    <ItemGroup Condition="$(TargetFramework.StartsWith('net10.0'))">
         <PackageReference Include="System.Management" Version="8.0.0" />
     </ItemGroup>
 </Project>

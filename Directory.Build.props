@@ -16,6 +16,8 @@
       warning so a feed outage doesn't fail restore when the packages themselves are already cached.
     -->
     <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1900</WarningsNotAsErrors>
+    <!-- .NET 10 obsoletions. SYSLIB0057: X509Certificate2 constructors/Import -> X509CertificateLoader. SYSLIB0014: ServicePointManager/WebRequest. Migrating these changes behaviour and is tracked separately. -->
+    <NoWarn>$(NoWarn);SYSLIB0057;SYSLIB0014</NoWarn>
   </PropertyGroup>
   <!--
   In the unlikely event that an affected package has no fixed version, you can temporarily ignore the CVE like so.

@@ -25,7 +25,7 @@ namespace Octopus.Tentacle.Tests.Kubernetes
             
             var directoryInformationProvider = Substitute.For<IKubernetesDirectoryInformationProvider>();
             directoryInformationProvider.GetPathTotalBytes().Returns(totalDiskSpace);
-            directoryInformationProvider.GetPathUsedBytes("/octopus").Returns(diskSpaceUsed);
+            directoryInformationProvider.GetPathUsedBytes(Arg.Any<string>()).Returns(diskSpaceUsed);
             
             var homeConfiguration = Substitute.For<IHomeConfiguration>();
             homeConfiguration.HomeDirectory.Returns("/octopus");
