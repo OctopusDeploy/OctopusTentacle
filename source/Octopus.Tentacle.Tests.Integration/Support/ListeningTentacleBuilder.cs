@@ -26,6 +26,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
             ConfigureTentacleMachineConfigurationHomeDirectory();
 
+            using (await AcquireStartupGate(instanceName, logger, cancellationToken))
             using (await GetConfigureAndStartTentacleLockIfRequired(logger, cancellationToken))
             {
                 await CreateInstance(tentacleExe, configFilePath, instanceName, HomeDirectory, logger, cancellationToken);
