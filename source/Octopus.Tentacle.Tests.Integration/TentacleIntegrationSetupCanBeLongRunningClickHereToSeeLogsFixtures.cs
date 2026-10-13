@@ -21,6 +21,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             new TurnOnTraceLoggingForLogFileForLatestTentacle(),
             new BumpThreadPoolForAllTests(),
+            new InitializeSharedTentacleCryptoState(),
             new WarmTentacleCache()
         };
 
