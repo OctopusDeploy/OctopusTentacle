@@ -72,7 +72,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         }
 
         /// <summary>
-        /// Serializes the startup of this Tentacle against every other Tentacle starting in this test host.
+        /// Serializes the startup of this Tentacle against every other Tentacle starting in this test process.
         /// Hold this from create-instance until the Tentacle is ready, then release it so the test body can run
         /// in parallel with everything else. See <see cref="TentacleStartupGate"/>.
         /// </summary>
@@ -202,8 +202,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             CancellationToken startupCancellationToken)
         {
             // The Tentacle process is stopped either by the caller cancelling, or by us when it fails to become
-            // ready. A Tentacle that never signalled readiness is still running, and must be stopped before the
-            // next queued startup begins, otherwise it races with it over machine wide state.
+            // ready. A Tentacle that never signalled readiness may still be running, so stop it before returning:
+            // otherwise it keeps running alongside the next queued startup, which is what the gate avoids.
             var tentacleCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(startupCancellationToken);
             var cancellationToken = tentacleCancellationTokenSource.Token;
 

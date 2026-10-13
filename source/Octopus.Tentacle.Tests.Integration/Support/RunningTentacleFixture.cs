@@ -15,8 +15,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         [Test]
         public async Task WhenTheTentacleFailsToStart_AnythingItLeftRunningIsCancelled()
         {
-            // The builder serializes startup, so a Tentacle that failed to become ready has to be stopped before
-            // the next queued startup begins, rather than being left running alongside it.
+            // The builder serializes startup, so a Tentacle that failed to become ready should be stopped rather
+            // than left running alongside the next queued startup.
             using var temporaryDirectory = new TemporaryDirectory();
             var tokenGivenToStart = CancellationToken.None;
 

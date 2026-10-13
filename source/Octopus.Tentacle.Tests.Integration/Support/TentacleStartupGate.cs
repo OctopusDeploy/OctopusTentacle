@@ -8,21 +8,25 @@ using Serilog;
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
     /// <summary>
-    /// Serializes Tentacle startup within this test host, while leaving test bodies running in parallel.
+    /// Serializes Tentacle startup within this test process, while leaving test bodies running in parallel.
     ///
-    /// Parallel tests isolate their configuration directories, but on Linux they still share machine wide state that
-    /// is initialised on first use: the fallback machine key (/etc/octopus/machinekey, used when /etc/machine-id is
-    /// unusable) and the CurrentUser/My certificate store. Starting several Tentacles at once can have one process
-    /// replace the key another process just encrypted its configuration with, or have two processes import the same
-    /// certificate into the store at the same time.
+    /// Parallel tests isolate their configuration directories, but the Tentacles they start share state that is
+    /// initialised on first use and is not per instance: on Linux, the fallback machine key
+    /// (/etc/octopus/machinekey, used when /etc/machine-id is unusable) and the CurrentUser/My certificate store.
+    /// Starting several Tentacles at once can have one process replace the key another process just encrypted its
+    /// configuration with, or have two processes import the same certificate into the store at the same time.
     ///
     /// This gate is held from create-instance through certificate import, configuration and readiness, and is
     /// released before the Tentacle is handed back to the test. It is deliberately not taken on the deletion path:
     /// a failed start disposes its RunningTentacle while the gate is still held, so making it reentrant-free keeps
     /// cleanup from deadlocking against the build that owns the gate.
     ///
-    /// This is a mitigation, not a fix. It only coordinates startups within a single test process - separate test
-    /// hosts (or builds) sharing the same machine still race over the same files and certificate store.
+    /// This is a mitigation for the test suite, not a fix for the underlying production behaviour: the key and
+    /// certificate initialisation paths themselves are unchanged.
+    ///
+    /// The gate coordinates builder startup within one test process. Independent processes would need additional
+    /// coordination only if they share the same mutable key/store namespace; whether they do depends on how the
+    /// tests are hosted, so it is worth checking before assuming either way.
     /// </summary>
     public class TentacleStartupGate
     {
@@ -32,7 +36,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         /// </summary>
         public const string DisableEnvironmentVariableName = "OCTOPUS_TEST_DISABLE_TENTACLE_STARTUP_SERIALIZATION";
 
-        public static TentacleStartupGate Instance { get; } = new(IsRequiredOnThisMachine());
+        public static TentacleStartupGate Instance { get; } = new(IsRequiredOnThisPlatform());
 
         readonly SemaphoreSlim gate = new(1, 1);
         readonly bool isEnabled;
@@ -47,7 +51,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         /// </summary>
         internal bool IsHeld => isEnabled && gate.CurrentCount == 0;
 
-        static bool IsRequiredOnThisMachine()
+        static bool IsRequiredOnThisPlatform()
         {
             if (!PlatformDetection.IsRunningOnNix) return false;
 
