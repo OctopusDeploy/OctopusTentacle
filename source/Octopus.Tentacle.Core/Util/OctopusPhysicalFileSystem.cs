@@ -250,6 +250,180 @@ namespace Octopus.Tentacle.Core.Util
             File.WriteAllText(path, contents);
         }
 
+#if NETFRAMEWORK
+        // .NET Framework only runs on Windows, where there are no Unix permissions or owners to set.
+        public void WriteAllTextOwnerOnly(string path, string contents)
+            => File.WriteAllText(path, contents);
+
+        public bool RestrictFilePermissionsToOwner(string path)
+            => false;
+
+        public bool TryCreateFileOwnerOnly(string path, string contents)
+            => TryCreateFileOwnerOnly(path, new UTF8Encoding(false).GetBytes(contents));
+
+        public bool TryCreateFileOwnerOnly(string path, byte[] contents)
+        {
+            var temporaryPath = TemporaryPathBeside(path);
+            try
+            {
+                File.WriteAllBytes(temporaryPath, contents);
+                try
+                {
+                    // MoveFile never replaces an existing file.
+                    File.Move(temporaryPath, path);
+                    return true;
+                }
+                catch (IOException) when (File.Exists(path))
+                {
+                    return false;
+                }
+            }
+            finally
+            {
+                if (File.Exists(temporaryPath))
+                    File.Delete(temporaryPath);
+            }
+        }
+
+        public bool TryChangeOwnerToMatch(string path, string referencePath)
+            => false;
+
+        public bool TryChangeOwner(string path, string userName)
+            => false;
+#else
+        const UnixFileMode OwnerReadWrite = UnixFileMode.UserRead | UnixFileMode.UserWrite;
+
+        public void WriteAllTextOwnerOnly(string path, string contents)
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                File.WriteAllText(path, contents);
+                return;
+            }
+
+            // UnixCreateMode is only honoured when the file is created, so an existing file (which we may be replacing)
+            // is tightened explicitly as well. Its old contents are truncated away by FileMode.Create.
+            var options = new FileStreamOptions
+            {
+                Mode = FileMode.Create,
+                Access = FileAccess.Write,
+                Share = FileShare.None,
+                UnixCreateMode = OwnerReadWrite
+            };
+            using (var stream = new FileStream(path, options))
+            using (var writer = new StreamWriter(stream, new UTF8Encoding(false)))
+            {
+                writer.Write(contents);
+            }
+
+            File.SetUnixFileMode(path, OwnerReadWrite);
+        }
+
+        public bool RestrictFilePermissionsToOwner(string path)
+        {
+            if (OperatingSystem.IsWindows())
+                return false;
+
+            var current = File.GetUnixFileMode(path);
+            if ((current & ~OwnerReadWrite) == UnixFileMode.None)
+                return false;
+
+            File.SetUnixFileMode(path, OwnerReadWrite);
+            return true;
+        }
+
+        public bool TryCreateFileOwnerOnly(string path, string contents)
+            => TryCreateFileOwnerOnly(path, new UTF8Encoding(false).GetBytes(contents));
+
+        public bool TryCreateFileOwnerOnly(string path, byte[] contents)
+        {
+            var temporaryPath = TemporaryPathBeside(path);
+            try
+            {
+                var options = new FileStreamOptions
+                {
+                    Mode = FileMode.CreateNew,
+                    Access = FileAccess.Write,
+                    Share = FileShare.None
+                };
+                if (!OperatingSystem.IsWindows())
+                    options.UnixCreateMode = OwnerReadWrite;
+                using (var stream = new FileStream(temporaryPath, options))
+                {
+                    stream.Write(contents, 0, contents.Length);
+                    stream.Flush(flushToDisk: true);
+                }
+
+                try
+                {
+                    // Without overwrite, .NET moves by hard-linking the new name and then removing the old one, and a
+                    // hard link cannot replace an existing file, so whichever process links first wins and every other
+                    // one sees the complete winning file. (On file systems without hard links .NET checks and renames
+                    // instead, which is only as good as the check.)
+                    File.Move(temporaryPath, path, overwrite: false);
+                    return true;
+                }
+                catch (IOException) when (File.Exists(path))
+                {
+                    return false;
+                }
+            }
+            finally
+            {
+                if (File.Exists(temporaryPath))
+                    File.Delete(temporaryPath);
+            }
+        }
+
+        public bool TryChangeOwnerToMatch(string path, string referencePath)
+            => RunChownAsRoot("--reference=" + referencePath, "--", path);
+
+        public bool TryChangeOwner(string path, string userName)
+            => RunChownAsRoot("--", userName, path);
+
+        bool RunChownAsRoot(params string[] arguments)
+        {
+            // Only root can give a file away, so there is nothing to try otherwise.
+            if (OperatingSystem.IsWindows() || Environment.UserName != "root")
+                return false;
+
+            try
+            {
+                var startInfo = new System.Diagnostics.ProcessStartInfo("chown")
+                {
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
+                };
+                foreach (var argument in arguments)
+                    startInfo.ArgumentList.Add(argument);
+
+                using var process = System.Diagnostics.Process.Start(startInfo);
+                if (process == null)
+                    return false;
+                var error = process.StandardError.ReadToEnd();
+                if (!process.WaitForExit(10_000))
+                {
+                    process.Kill();
+                    return false;
+                }
+
+                if (process.ExitCode != 0)
+                    Log.Verbose($"chown {string.Join(" ", arguments)} exited with {process.ExitCode}: {error}");
+                return process.ExitCode == 0;
+            }
+            catch (Exception e)
+            {
+                Log.Verbose(e, $"Unable to run chown {string.Join(" ", arguments)}");
+                return false;
+            }
+        }
+#endif
+
+        // In the same directory, so it is on the same file system and can be moved into place atomically.
+        static string TemporaryPathBeside(string path)
+            => path + "." + Guid.NewGuid().ToString("N") + ".tmp";
+
         public void EnsureDirectoryExists(string directoryPath)
         {
             if (!DirectoryExists(directoryPath))

@@ -23,6 +23,24 @@ You will also need [Docker for Windows](https://www.docker.com/community-edition
 # Notes #
 On Linux containers, prior to version `6.1.1271` the internal listening port was set by the `ListeningPort` environment variable. Any containers which previously exposed Tentacle on a port other than `10933` will need to have their port configuration updated if updating to a version `>=6.1.1271`. For example if the container was run with `-p 10934:10934` this should be updated to `-p 10934:10933`.
 
+## Configuration encryption and persistence ##
+
+Tentacle stores its configuration, including its certificate, in `/etc/octopus`. Sensitive values in `tentacle.config` are encrypted with AES-256-GCM using a key that Tentacle generates the first time it needs one and keeps beside the configuration, in `/etc/octopus/machinekey`, readable only by its owner. Earlier Linux images derived that key from `/etc/machine-id` instead, which is identical in every container started from the same image. The image now ships with an empty `/etc/machine-id`, and values written by earlier versions are re-encrypted with the generated key the next time the container starts. Before re-encrypting, Tentacle saves the configuration as it was to `/etc/octopus/tentacle.config.before-reencryption`, readable only by its owner, so an earlier image can still be used with that copy if you need to go back.
+
+To keep a Tentacle's identity across container re-creation, persist the whole of `/etc/octopus` on a volume (for example `-v tentacle-config:/etc/octopus`), not just `tentacle.config`: the configuration cannot be decrypted without the key beside it. The key travels with the configuration, so the same volume works with any newer image. Without a persisted volume every new container is a new Tentacle that registers itself again.
+
+### Upgrading a container whose configuration was written by an earlier image ###
+
+If `/etc/octopus` was persisted from an image that still used the machine-id derived key, and that container was never started with a version that re-encrypts, the new image cannot decrypt the old certificate and Tentacle will not start. The earlier image's machine-id is published with the image, so you can give it to the new container for one start, after which Tentacle re-encrypts its configuration with its own key and no longer needs it:
+
+```bash
+docker run --rm --entrypoint cat octopusdeploy/tentacle:<previous tag> /etc/machine-id > previous-machine-id
+docker run ... -v tentacle-config:/etc/octopus -v "$PWD/previous-machine-id:/etc/machine-id:ro" octopusdeploy/tentacle:<new tag>
+# Once the log shows "Re-encrypted the protected setting", re-create the container without the machine-id mount.
+```
+
+Alternatively, upgrade Tentacle inside the existing container and restart it once before moving to the new image, or run `tentacle new-certificate --instance Tentacle` in the container and re-establish trust on the Octopus Server, or remove the volume and let the container register itself afresh.
+
 # Usage #
 
 On a Windows Server 2016 server, or on Windows 10, run:
