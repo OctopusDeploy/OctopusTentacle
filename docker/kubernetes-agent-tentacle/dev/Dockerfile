@@ -1,7 +1,7 @@
 ARG RuntimeDepsTag
 
 
-FROM --platform=$BUILDPLATFORM golang:1.26@sha256:3aff6657219a4d9c14e27fb1d8976c49c29fddb70ba835014f477e1c70636647 AS bootstraprunnerbuilder
+FROM --platform=$BUILDPLATFORM golang:1.27@sha256:820153096fda4de6ac1b7194d12e416b7dd8f4e9a33d17e0345b111b945162d8 AS bootstraprunnerbuilder
 
 ARG TARGETARCH
 ARG TARGETOS
