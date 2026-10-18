@@ -26,8 +26,8 @@
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="17.11.48" />
     <!-- GHSA-g4vj-cjjj-v7hg (defence-in-depth, no CVE). -->
     <PackageReference Include="NuGet.Packaging" Version="6.12.5" />
-    <!-- CVE-2026-26171, CVE-2026-33116, CVE-2026-32203, CVE-2026-47302, CVE-2026-47304, CVE-2026-50525, CVE-2026-50527, CVE-2026-50648. -->
-    <PackageReference Include="System.Security.Cryptography.Xml" Version="8.0.4" />
+    <!-- CVE-2026-26171, CVE-2026-33116, CVE-2026-32203, CVE-2026-47302, CVE-2026-47304, CVE-2026-50525, CVE-2026-50527, CVE-2026-50648, CVE-2026-96222, CVE-2026-96958, CVE-2026-96959, CVE-2026-96960; 8.0.5 also pulls in Pkcs 8.0.2 (CVE-2026-70162, CVE-2026-84008). -->
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="8.0.5" />
   </ItemGroup>
 
   <ItemGroup>
