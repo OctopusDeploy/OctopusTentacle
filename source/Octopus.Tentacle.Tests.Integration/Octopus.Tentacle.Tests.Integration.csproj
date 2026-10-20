@@ -28,7 +28,7 @@
         <PackageReference Include="NetCoreStack.DispatchProxyAsync" Version="2.2.0" />
         <PackageReference Include="NSubstitute" Version="6.2.0" />
         <PackageReference Include="FluentAssertions" Version="7.2.2" />
-        <PackageReference Include="Assent" Version="3.0.1" />
+        <PackageReference Include="Assent" Version="1.8.2" />
         <PackageReference Include="NUnit" Version="3.14.0" />
         <PackageReference Include="Octopus.TestPortForwarder" Version="7.0.790" />
         <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
