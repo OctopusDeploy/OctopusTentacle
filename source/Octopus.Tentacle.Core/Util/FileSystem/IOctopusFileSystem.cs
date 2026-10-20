@@ -75,10 +75,11 @@ namespace Octopus.Tentacle.Util
         bool TryGrantFullControl(string filePath, string userName);
 
         /// <summary>
-        /// Changes the permissions of an existing file so that only its owner can read or write it (mode 0600 on Unix).
-        /// Returns true if the permissions were changed, false if they were already that restrictive. Does nothing and
-        /// returns false on Windows. Throws if the permissions cannot be changed, for example on a read-only volume
-        /// or when the caller does not own the file.
+        /// Changes the permissions of an existing file so that only its owner can read or write it: mode 0600 on Unix, and
+        /// on Windows no inherited access, only SYSTEM, Administrators and the current user. Returns true if the
+        /// permissions were changed, false if they were already that restrictive (on Windows, if inheritance was already
+        /// turned off). Throws if the permissions cannot be changed, for example on a read-only volume or when the caller
+        /// does not own the file.
         /// </summary>
         bool RestrictFilePermissionsToOwner(string filePath);
         string ReadAllText(string scriptFile);

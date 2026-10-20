@@ -123,6 +123,7 @@ namespace Octopus.Tentacle.Startup
                 }
 
                 GiveTheKeyAndConfigurationToTheServiceUser(instanceSelector.Current.ConfigurationPath);
+                GiveTheConfigurationToTheWindowsServiceAccount(instanceSelector.Current.ConfigurationPath);
             }
         }
 
@@ -145,6 +146,34 @@ namespace Octopus.Tentacle.Startup
                 return;
 
             LinuxGeneratedMachineKey.GiveKeyAndConfigurationToServiceUser(log, new OctopusPhysicalFileSystem(log), configurationPath!, userName!);
+        }
+
+        void GiveTheConfigurationToTheWindowsServiceAccount(string? configurationPath)
+        {
+            var userName = serviceConfigurationState.Username;
+            if (!(serviceConfigurationState.Install || serviceConfigurationState.Reconfigure)
+                || !PlatformDetection.IsRunningOnWindows
+                || string.IsNullOrWhiteSpace(configurationPath)
+                || string.IsNullOrWhiteSpace(userName))
+            {
+                return;
+            }
+
+            var fileSystem = new OctopusPhysicalFileSystem(log);
+            if (!fileSystem.FileExists(configurationPath!))
+            {
+                return;
+            }
+
+            if (fileSystem.TryGrantFullControl(configurationPath!, userName!))
+            {
+                log.Info($"{userName}, the account the service runs as, now has full control of the configuration file `{configurationPath}`.");
+            }
+            else
+            {
+                log.Warn($"Unable to give {userName}, the account the service runs as, full control of the configuration file `{configurationPath}`. "
+                    + "If Tentacle cannot read it when it starts, give that account full control of the file.");
+            }
         }
     }
 }

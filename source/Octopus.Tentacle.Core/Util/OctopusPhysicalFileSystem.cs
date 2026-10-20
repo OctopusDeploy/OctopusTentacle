@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Security.AccessControl;
+using System.Security.Principal;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -257,7 +259,7 @@ namespace Octopus.Tentacle.Core.Util
             => File.WriteAllText(path, contents);
 
         public bool RestrictFilePermissionsToOwner(string path)
-            => false;
+            => RestrictWindowsFilePermissionsToOwner(path);
 
         public bool TryCreateFileOwnerOnly(string path, string contents)
             => TryCreateFileOwnerOnly(path, new UTF8Encoding(false).GetBytes(contents));
@@ -293,7 +295,7 @@ namespace Octopus.Tentacle.Core.Util
             => false;
 
         public bool TryGrantFullControl(string path, string userName)
-            => false;
+            => TryGrantWindowsFullControl(path, userName);
 #else
         const UnixFileMode OwnerReadWrite = UnixFileMode.UserRead | UnixFileMode.UserWrite;
 
@@ -326,7 +328,9 @@ namespace Octopus.Tentacle.Core.Util
         public bool RestrictFilePermissionsToOwner(string path)
         {
             if (OperatingSystem.IsWindows())
-                return false;
+            {
+                return RestrictWindowsFilePermissionsToOwner(path);
+            }
 
             var current = File.GetUnixFileMode(path);
             if ((current & ~OwnerReadWrite) == UnixFileMode.None)
@@ -409,7 +413,7 @@ namespace Octopus.Tentacle.Core.Util
             => RunChownAsRoot("--", userName, path);
 
         public bool TryGrantFullControl(string path, string userName)
-            => false;
+            => OperatingSystem.IsWindows() && TryGrantWindowsFullControl(path, userName);
 
         /// <summary>
         /// The owner of <paramref name="path"/> as <c>uid:gid</c>, from <c>ls -ldn</c>, which is POSIX and so the same on
@@ -473,6 +477,47 @@ namespace Octopus.Tentacle.Core.Util
             }
         }
 #endif
+
+#pragma warning disable CA1416
+        bool RestrictWindowsFilePermissionsToOwner(string path)
+        {
+            var file = new FileInfo(path);
+            var security = file.GetAccessControl();
+            if (security.AreAccessRulesProtected)
+            {
+                return false;
+            }
+
+            var currentUser = WindowsIdentity.GetCurrent().User ?? throw new InvalidOperationException("There is no current windows identity.");
+            security.SetAccessRuleProtection(true, false);
+            foreach (var identity in new[] { new SecurityIdentifier(WellKnownSidType.LocalSystemSid, null), new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null), currentUser })
+            {
+                security.AddAccessRule(new FileSystemAccessRule(identity, FileSystemRights.FullControl, AccessControlType.Allow));
+            }
+
+            file.SetAccessControl(security);
+            return true;
+        }
+
+        bool TryGrantWindowsFullControl(string path, string userName)
+        {
+            try
+            {
+                var accountName = userName.StartsWith(@".") ? Environment.MachineName + userName.Substring(1) : userName;
+                var account = new NTAccount(accountName).Translate(typeof(SecurityIdentifier));
+                var file = new FileInfo(path);
+                var security = file.GetAccessControl();
+                security.AddAccessRule(new FileSystemAccessRule(account, FileSystemRights.FullControl, AccessControlType.Allow));
+                file.SetAccessControl(security);
+                return true;
+            }
+            catch (Exception e)
+            {
+                Log.Verbose(e, $"Unable to give {userName} full control of {path}");
+                return false;
+            }
+        }
+#pragma warning restore CA1416
 
         /// <summary>
         /// Parses the uid and gid out of one line of <c>ls -ln</c> output (<c>-rw-r--r-- 1 1000 1000 42 Jan 1 00:00 file</c>)
