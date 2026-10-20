@@ -26,8 +26,8 @@
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="18.9.6" />
     <!-- GHSA-g4vj-cjjj-v7hg (defence-in-depth, no CVE). -->
     <PackageReference Include="NuGet.Packaging" Version="7.9.0" />
-    <!-- CVE-2026-26171, CVE-2026-33116, CVE-2026-32203, CVE-2026-47302, CVE-2026-47304, CVE-2026-50525, CVE-2026-50527, CVE-2026-50648, CVE-2026-96222, CVE-2026-96958, CVE-2026-96959, CVE-2026-96960. Microsoft.Build.Tasks.Core 18.0.2 needs >= 9.0.0; 10.0.12 is the latest stable. -->
-    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.12" />
+    <!-- CVE-2026-26171, CVE-2026-33116, CVE-2026-32203, CVE-2026-47302, CVE-2026-47304, CVE-2026-50525, CVE-2026-50527, CVE-2026-50648, CVE-2026-96222, CVE-2026-96958, CVE-2026-96959, CVE-2026-96960; 10.0.13 also pulls in a fixed Pkcs (CVE-2026-70162, CVE-2026-84008). Microsoft.Build.Tasks.Core 18.x needs >= 9.0.0. -->
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.13" />
   </ItemGroup>
 
   <ItemGroup>
