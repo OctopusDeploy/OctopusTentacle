@@ -94,9 +94,8 @@ partial class Build
                 new (NetCore, "linux-x64", "amazonlinux:latest", "rpm"), // Whichever release Amazon currently "recommends".
                 // Supported Amazon Linux versions.
                 new (NetCore, "linux-x64", "amazonlinux:2023", "rpm"), // Amazon Linux 2023: EOL June 30, 2029.
-                // Out-of-support Amazon Linux versions.
-                new (NetCore, "linux-x64", "amazonlinux:2", "rpm"), // Amazon Linux 2: support ENDED June 30, 2026.
-                
+                // Amazon Linux 2 (glibc 2.26) is not tested: .NET 10 requires glibc 2.27+, so Tentacle can't run there.
+
                 // Rolling Debian tags.
                 new (NetCore, "linux-x64", "debian:latest", "deb"), // Catches each new Debian release as it officially ships.
                 new (NetCore, "linux-x64", "debian:stable", "deb"), // Whichever release is currently "stable".
@@ -125,7 +124,7 @@ partial class Build
                 // Out-of-support Ubuntu versions.
                 new (NetCore, "linux-x64", "ubuntu:20.04", "deb"), // Focal Fossa: standard support ENDED May 2025.
                 new (NetCore, "linux-x64", "ubuntu:18.04", "deb"), // Bionic Beaver: standard support ENDED May 2023 (also covers "linuxmintd/mint19.3-amd64").
-                new (NetCore, "linux-x64", "ubuntu:16.04", "deb"), // Xenial Xerus: standard support ENDED April 2021.
+                // Ubuntu 16.04 (glibc 2.23) is not tested: .NET 10 requires glibc 2.27+, so Tentacle can't run there.
             ];
             
             foreach (var testConfiguration in testOnLinuxDistributions)
