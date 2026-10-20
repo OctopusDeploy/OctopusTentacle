@@ -169,6 +169,11 @@ namespace Octopus.Tentacle.Kubernetes
             return inner.TryChangeOwner(filePath, userName);
         }
 
+        public bool TryGrantFullControl(string filePath, string userName)
+        {
+            return inner.TryGrantFullControl(filePath, userName);
+        }
+
         public string ReadAllText(string scriptFile)
         {
             return syncRetryPolicy.Execute(() => inner.ReadAllText(scriptFile));

@@ -69,6 +69,12 @@ namespace Octopus.Tentacle.Util
         bool TryChangeOwner(string filePath, string userName);
 
         /// <summary>
+        /// Gives the named account full control of <paramref name="filePath"/>. Only attempted on Windows; returns false
+        /// without trying otherwise, and false if the account could not be found or the permissions could not be changed.
+        /// </summary>
+        bool TryGrantFullControl(string filePath, string userName);
+
+        /// <summary>
         /// Changes the permissions of an existing file so that only its owner can read or write it (mode 0600 on Unix).
         /// Returns true if the permissions were changed, false if they were already that restrictive. Does nothing and
         /// returns false on Windows. Throws if the permissions cannot be changed, for example on a read-only volume

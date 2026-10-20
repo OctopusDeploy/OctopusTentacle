@@ -291,6 +291,9 @@ namespace Octopus.Tentacle.Core.Util
 
         public bool TryChangeOwner(string path, string userName)
             => false;
+
+        public bool TryGrantFullControl(string path, string userName)
+            => false;
 #else
         const UnixFileMode OwnerReadWrite = UnixFileMode.UserRead | UnixFileMode.UserWrite;
 
@@ -404,6 +407,9 @@ namespace Octopus.Tentacle.Core.Util
 
         public bool TryChangeOwner(string path, string userName)
             => RunChownAsRoot("--", userName, path);
+
+        public bool TryGrantFullControl(string path, string userName)
+            => false;
 
         /// <summary>
         /// The owner of <paramref name="path"/> as <c>uid:gid</c>, from <c>ls -ldn</c>, which is POSIX and so the same on
