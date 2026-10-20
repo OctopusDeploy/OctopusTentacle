@@ -119,6 +119,9 @@ public static class Signing
                         .SetFileDigest(AzureSignToolDigestAlgorithm.sha256)
                         .SetTimestampRfc3161Url(timestampUrl)
                         .SetFiles(files.Select(f => f.ToString()))
+                        // AzureSignTool targets net8.0 but the build only installs the .NET 10 runtime
+                        .SetProcessEnvironmentVariables(EnvironmentInfo.Variables)
+                        .SetProcessEnvironmentVariable("DOTNET_ROLL_FORWARD", "Major")
                     );
 
                     Log.Information($"Finished signing {files.Length} files.");
