@@ -33,6 +33,8 @@ namespace Octopus.Tentacle.Communications
             string? thumbprint = null;
             var policyErrors = SslPolicyErrors.None;
 
+            // SYSLIB0014: ServicePointManager is obsolete; moving to HttpClient is a separate change.
+#pragma warning disable SYSLIB0014
             var previousValidationCallbackToRestore = ServicePointManager.ServerCertificateValidationCallback;
             ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, errors) =>
             {
@@ -42,6 +44,7 @@ namespace Octopus.Tentacle.Communications
                 // We have to accept the certificate to complete the handshake, otherwise we never get to read its thumbprint. 
                 return true;
             };
+#pragma warning restore SYSLIB0014
 
             try
             {
@@ -87,7 +90,9 @@ namespace Octopus.Tentacle.Communications
             }
             finally
             {
+#pragma warning disable SYSLIB0014
                 ServicePointManager.ServerCertificateValidationCallback = previousValidationCallbackToRestore;
+#pragma warning restore SYSLIB0014
             }
 
             log.Info("Connected successfully");
