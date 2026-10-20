@@ -24,17 +24,22 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 // /opt/TeamCity/BuildAgent/work/639265b01610d682/build/outputs/tentaclereal/tentacle/Tentacle
 
                 const string net48ArtifactDir = "tentaclereal-net48";
+                // TeamCity extracts the .NET Tentacle to a version-free directory so the same build configuration
+                // works for branches that target different versions of .NET. Fall back to the TFM-specific
+                // directory for build configurations that haven't been updated yet.
+                const string netCoreArtifactDir = "tentaclereal-netcore";
                 const string net80ArtifactDir = "tentaclereal-net8.0";
-                
+
+                var outputsDir = assemblyDir.Parent.Parent.Parent.FullName;
                 string artifactDir =
                     version switch
                     {
                         TentacleRuntime.Framework48 => net48ArtifactDir,
-                        TentacleRuntime.DotNet8 => net80ArtifactDir,
+                        TentacleRuntime.DotNet8 => Directory.Exists(Path.Combine(outputsDir, netCoreArtifactDir)) ? netCoreArtifactDir : net80ArtifactDir,
                         _ => throw new ArgumentOutOfRangeException(nameof(version), version, null)
                     };
 
-                var tentacleArtifactPath = Path.Combine(assemblyDir.Parent.Parent.Parent.FullName, artifactDir, "tentacle");
+                var tentacleArtifactPath = Path.Combine(outputsDir, artifactDir, "tentacle");
                 return GetExecutablePath(tentacleArtifactPath);
             }
 

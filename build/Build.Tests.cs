@@ -286,8 +286,19 @@ partial class Build
             .Any(r => rights.Any(right => r.FileSystemRights.HasFlag(right)));
     }
     
+    // TeamCity passes "netcore" / "netcore-windows" rather than a specific TFM so the same build
+    // configuration works for branches that target different versions of .NET
+    string ResolveTestFramework(string testFramework) =>
+        testFramework switch
+        {
+            "" or "netcore" => NetCore,
+            "netcore-windows" => NetCoreWindows,
+            _ => testFramework
+        };
+
     void RunTests(string testFramework, string testRuntime)
     {
+        testFramework = ResolveTestFramework(testFramework);
         Log.Information("Running test for Framework: {TestFramework} and Runtime: {TestRuntime}", testFramework, testRuntime);
 
         (ArtifactsDirectory / "teamcity").CreateDirectory();
@@ -323,6 +334,7 @@ partial class Build
 
     void RunIntegrationTests(string testFramework, string testRuntime, string filter)
     {
+        testFramework = ResolveTestFramework(testFramework);
         Log.Information("Running test for Framework: {TestFramework} and Runtime: {TestRuntime}", testFramework, testRuntime);
 
         (ArtifactsDirectory / "teamcity").CreateDirectory();
