@@ -40,7 +40,7 @@ namespace Octopus.Manager.Tentacle
                 Environment.Exit(0);
             }
 
-            // SYSLIB0014: ServicePointManager is obsolete; moving to HttpClient is a separate change.
+            // SYSLIB0014: moving off ServicePointManager might change behaviour, so that is a separate change.
 #pragma warning disable SYSLIB0014
             ServicePointManager.SecurityProtocol =
                 SecurityProtocolType.Tls
