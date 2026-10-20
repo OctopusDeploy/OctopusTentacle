@@ -33,7 +33,7 @@ namespace Octopus.Tentacle.Communications
             string? thumbprint = null;
             var policyErrors = SslPolicyErrors.None;
 
-            // SYSLIB0014: ServicePointManager is obsolete; moving to HttpClient is a separate change.
+            // SYSLIB0014: moving off ServicePointManager might change behaviour, so that is a separate change.
 #pragma warning disable SYSLIB0014
             var previousValidationCallbackToRestore = ServicePointManager.ServerCertificateValidationCallback;
             ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, errors) =>
@@ -90,6 +90,7 @@ namespace Octopus.Tentacle.Communications
             }
             finally
             {
+                // SYSLIB0014: moving off ServicePointManager might change behaviour, so that is a separate change.
 #pragma warning disable SYSLIB0014
                 ServicePointManager.ServerCertificateValidationCallback = previousValidationCallbackToRestore;
 #pragma warning restore SYSLIB0014

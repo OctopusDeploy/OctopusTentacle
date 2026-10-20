@@ -57,7 +57,7 @@ public static class Signing
         // source: https://blogs.msdn.microsoft.com/windowsmobile/2006/05/17/programmatically-checking-the-authenticode-signature-on-a-file/
         try
         {
-            // SYSLIB0057: X509CertificateLoader has no equivalent for reading the Authenticode signer from a signed file.
+            // SYSLIB0057: X509CertificateLoader has no equivalent for reading the Authenticode signer, and migrating might change behaviour.
 #pragma warning disable SYSLIB0057
             X509Certificate.CreateFromSignedFile(fileInfo);
 #pragma warning restore SYSLIB0057
