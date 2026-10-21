@@ -97,11 +97,12 @@ namespace Octopus.Tentacle.Certificates
             {
                 store.Save(ms, exportpw.ToCharArray(), random);
                 var platformSpecificX509KeyStorageFlags = PlatformDetection.IsRunningOnNix ? X509KeyStorageFlags.EphemeralKeySet : X509KeyStorageFlags.DefaultKeySet;
+                // SYSLIB0057: X509CertificateLoader is stricter about formats than these APIs, so migrating changes behaviour.
                 certificate = exportable
-#pragma warning disable PC001 // API not supported on all platforms
+#pragma warning disable PC001, SYSLIB0057 // API not supported on all platforms
                     ? new X509Certificate2(ms.ToArray(), exportpw, X509KeyStorageFlags.Exportable | platformSpecificX509KeyStorageFlags)
                     : new X509Certificate2(ms.ToArray(), exportpw, platformSpecificX509KeyStorageFlags);
-#pragma warning restore PC001 // API not supported on all platforms
+#pragma warning restore PC001, SYSLIB0057 // API not supported on all platforms
             }
 
             return certificate;

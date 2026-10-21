@@ -164,7 +164,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                             parms = new TestCaseParameters(args);
                         }
 
-                        // If the test is trying to test .net8.0 TentacleClient against .net48 Tentacle,
+                        // If the test is trying to test .net10.0 TentacleClient against .net48 Tentacle,
                         // then add the 'Net80ClientNet48Tentacle' category so we can potentially run these tests in a different test run
                         #if !NETFRAMEWORK
                         if (item is TentacleConfigurationTestCase {TentacleRuntime: TentacleRuntime.Framework48} testCase)

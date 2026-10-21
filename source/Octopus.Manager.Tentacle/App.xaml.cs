@@ -40,10 +40,13 @@ namespace Octopus.Manager.Tentacle
                 Environment.Exit(0);
             }
 
+            // SYSLIB0014: moving off ServicePointManager might change behaviour, so that is a separate change.
+#pragma warning disable SYSLIB0014
             ServicePointManager.SecurityProtocol =
                 SecurityProtocolType.Tls
                 | SecurityProtocolType.Tls11
                 | SecurityProtocolType.Tls12;
+#pragma warning restore SYSLIB0014
 
             commonOptions.Add("reconfigure", "Reconfigure the targeted services", v => reconfigure = true);
 

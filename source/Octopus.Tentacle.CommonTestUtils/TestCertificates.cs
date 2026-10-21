@@ -21,10 +21,13 @@ namespace Octopus.Tentacle.CommonTestUtils
 #pragma warning restore CS8604 // Possible null reference argument.
 
             TentaclePfxPath = Path.Combine(directory, "Tentacle.pfx");
+            // SYSLIB0057: X509CertificateLoader is stricter about formats than these APIs, so migrating changes behaviour.
+#pragma warning disable SYSLIB0057
             Tentacle = new X509Certificate2(TentaclePfxPath);
             TentaclePublicThumbprint = Tentacle.Thumbprint;
 
             Server = new X509Certificate2(Path.Combine(directory, "Server.pfx"));
+#pragma warning restore SYSLIB0057
             ServerPublicThumbprint = Server.Thumbprint;
         }
     }

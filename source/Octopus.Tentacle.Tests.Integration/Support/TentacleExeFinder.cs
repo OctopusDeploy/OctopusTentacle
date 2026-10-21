@@ -19,7 +19,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             if (TeamCityDetection.IsRunningInTeamCity())
             {
                 // Example current directory of assembly.
-                // /opt/TeamCity/BuildAgent/work/639265b01610d682/build/outputs/integrationtests/net8.0/linux-x64
+                // /opt/TeamCity/BuildAgent/work/639265b01610d682/build/outputs/integrationtests/net10.0/linux-x64
                 // Desired path to tentacle.
                 // /opt/TeamCity/BuildAgent/work/639265b01610d682/build/outputs/tentaclereal/tentacle/Tentacle
 
@@ -28,14 +28,14 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 // works for branches that target different versions of .NET. Fall back to the TFM-specific
                 // directory for build configurations that haven't been updated yet.
                 const string netCoreArtifactDir = "tentaclereal-netcore";
-                const string net80ArtifactDir = "tentaclereal-net8.0";
+                const string net10ArtifactDir = "tentaclereal-net10.0";
 
                 var outputsDir = assemblyDir.Parent.Parent.Parent.FullName;
                 string artifactDir =
                     version switch
                     {
                         TentacleRuntime.Framework48 => net48ArtifactDir,
-                        TentacleRuntime.DotNet8 => Directory.Exists(Path.Combine(outputsDir, netCoreArtifactDir)) ? netCoreArtifactDir : net80ArtifactDir,
+                        TentacleRuntime.DotNet10 => Directory.Exists(Path.Combine(outputsDir, netCoreArtifactDir)) ? netCoreArtifactDir : net10ArtifactDir,
                         _ => throw new ArgumentOutOfRangeException(nameof(version), version, null)
                     };
 
@@ -52,7 +52,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 version switch
                 {
                     TentacleRuntime.Framework48 => "net48",
-                    TentacleRuntime.DotNet8 => "net8.0",
+                    TentacleRuntime.DotNet10 => "net10.0",
                     _ => throw new ArgumentOutOfRangeException(nameof(version), version, null)
                 };
 
