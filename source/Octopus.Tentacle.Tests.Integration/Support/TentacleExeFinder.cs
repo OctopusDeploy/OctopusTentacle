@@ -39,6 +39,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                         _ => throw new ArgumentOutOfRangeException(nameof(version), version, null)
                     };
 
+                if (!Directory.Exists(Path.Combine(outputsDir, artifactDir)))
+                {
+                    throw new DirectoryNotFoundException($"Could not find the Tentacle artifact directory '{artifactDir}' in {outputsDir}. Check the TeamCity artifact dependency extracts the Tentacle under test there.");
+                }
+
                 var tentacleArtifactPath = Path.Combine(outputsDir, artifactDir, "tentacle");
                 return GetExecutablePath(tentacleArtifactPath);
             }
