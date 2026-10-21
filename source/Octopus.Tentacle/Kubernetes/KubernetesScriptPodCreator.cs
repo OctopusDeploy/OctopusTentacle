@@ -382,7 +382,7 @@ namespace Octopus.Tentacle.Kubernetes
             V1Container? containerSpec)
         {
             var spaceInformation = await kubernetesPhysicalFileSystem.GetStorageInformationAsync();
-            
+
             var commandString = string.Join(" ", new[]
                 {
                     $"{homeDir}/Work/{command.ScriptTicket.TaskId}/execute-bootstrapRunner.sh",
@@ -454,6 +454,7 @@ namespace Octopus.Tentacle.Kubernetes
                 new() { Name = KubernetesConfig.HelmReleaseNameVariableName, Value = KubernetesConfig.HelmReleaseName },
                 new() { Name = KubernetesConfig.HelmChartVersionVariableName, Value = KubernetesConfig.HelmChartVersion },
                 new() { Name = KubernetesConfig.KubernetesMonitorEnabledVariableName, Value = KubernetesConfig.KubernetesMonitorEnabled },
+                new() { Name = KubernetesConfig.NfsEnabledVariableName, Value = KubernetesConfig.NfsEnabled.ToString() },
                 new() { Name = KubernetesConfig.ServerCommsAddressesVariableName, Value = string.Join(",", KubernetesConfig.ServerCommsAddresses) },
                 new() { Name = KubernetesConfig.PersistentVolumeFreeBytesVariableName, Value = spaceInformation?.freeSpaceBytes.ToString() },
                 new() { Name = KubernetesConfig.PersistentVolumeSizeBytesVariableName, Value = spaceInformation?.totalSpaceBytes.ToString() },
@@ -838,7 +839,6 @@ namespace Octopus.Tentacle.Kubernetes
 
             return dict;
         }
-        
 
         protected static IList<T> Merge<T>(params IEnumerable<T>?[] values)
         {
