@@ -19,8 +19,8 @@ namespace Octopus.Tentacle.Kubernetes
         public static string NfsWatchdogImageVariableName => $"{EnvVarPrefix}__NFSWATCHDOGIMAGE";
         public static string? NfsWatchdogImage => Environment.GetEnvironmentVariable(NfsWatchdogImageVariableName);
 
-        public static string NfsEnabledVariableName => $"{EnvVarPrefix}__NFSENABLED";
-        public static bool NfsEnabled => bool.TryParse(Environment.GetEnvironmentVariable(NfsEnabledVariableName), out var enabled) && enabled;
+        public static string PersistenceStorageClassVariableName = $"{EnvVarPrefix}__STORAGECLASS";
+        public static string? PersistenceStorageClass = Environment.GetEnvironmentVariable(PersistenceStorageClassVariableName);
 
         public static readonly string PersistenceAccessModesJsonVariableName = $"{EnvVarPrefix}__ACCESSMODESJSON";
         public static string? PersistenceAccessModesJson => Environment.GetEnvironmentVariable(PersistenceAccessModesJsonVariableName);
@@ -33,13 +33,13 @@ namespace Octopus.Tentacle.Kubernetes
         public static TimeSpan? PendingPodsConsideredStuckAfterTimeSpan => int.TryParse(Environment.GetEnvironmentVariable(PendingPodsConsideredStuckAfterTimeSpanVariableName), out var stuckPodsMinutes) ? TimeSpan.FromMinutes(stuckPodsMinutes) : null;
 
         public static bool CalamariImageVolumeEnabled => bool.TryParse(Environment.GetEnvironmentVariable($"{EnvVarPrefix}__CALAMARIIMAGEVOLUMEENABLED"), out var enabled) && enabled;
-        
+
         public static string CalamariImageVolumeRepositoryVariableName => $"{EnvVarPrefix}__CALAMARIIMAGEVOLUMEREPOSITORY";
         public static string? CalamariImageVolumeRepository => Environment.GetEnvironmentVariable(CalamariImageVolumeRepositoryVariableName);
-        
+
         public static string CalamariImageVolumePullPolicyVariableName => $"{EnvVarPrefix}__CALAMARIIMAGEVOLUMEPULLPOLICY";
         public static string? CalamariImageVolumePullPolicy => Environment.GetEnvironmentVariable(CalamariImageVolumePullPolicyVariableName);
-        
+
         public static string HelmReleaseNameVariableName => $"{EnvVarPrefix}__HELMRELEASENAME";
         public static string HelmReleaseName => GetRequiredEnvVar(HelmReleaseNameVariableName, "Unable to determine Helm release name.");
 
@@ -87,7 +87,7 @@ namespace Octopus.Tentacle.Kubernetes
 
         public static readonly string PodLabelsJsonVariableName = $"{EnvVarPrefix}__PODLABELSJSON";
         public static string? PodLabelsJson => Environment.GetEnvironmentVariable(PodLabelsJsonVariableName);
-        
+
         public static readonly string TentacleConfigMapNameVariableName = $"{EnvVarPrefix}__TENTACLECONFIGMAPNAME";
         public static string TentacleConfigMapName => GetEnvironmentVariableOrDefault(TentacleConfigMapNameVariableName, "tentacle-config");
 
