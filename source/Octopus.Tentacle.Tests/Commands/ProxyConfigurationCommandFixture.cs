@@ -7,6 +7,7 @@ using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Startup;
+using Octopus.Tentacle.Tests.Support;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Commands
@@ -48,7 +49,7 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void ToggleTheProxy()
         {
-            var config = new Lazy<IWritableProxyConfiguration>(() => new WritableProxyConfiguration(new XmlFileKeyValueStore(octopusFileSystem, configFile)));
+            var config = new Lazy<IWritableProxyConfiguration>(() => new WritableProxyConfiguration(new XmlFileKeyValueStore(octopusFileSystem, configFile, encryptor: TestMachineKeyEncryptor.Current)));
             const string expectedProxyHost = "127.0.0.1";
             const string expectedUsername = "yoda";
             const string expectedPassword = "do or do not, there is no try";
@@ -85,7 +86,7 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void TurnOnDefaultProxy()
         {
-            var config = new Lazy<IWritableProxyConfiguration>(() => new WritableProxyConfiguration(new XmlFileKeyValueStore(octopusFileSystem, configFile)));
+            var config = new Lazy<IWritableProxyConfiguration>(() => new WritableProxyConfiguration(new XmlFileKeyValueStore(octopusFileSystem, configFile, encryptor: TestMachineKeyEncryptor.Current)));
             Command = new ProxyConfigurationCommand(config, applicationInstanceSelector, Substitute.For<ISystemLog>(), Substitute.For<ILogFileOnlyLogger>());
 
             EnableTheDefaultProxy();
@@ -98,7 +99,7 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void UseACustomHostAndIgnoreHttpAndPort()
         {
-            var config = new Lazy<IWritableProxyConfiguration>(() => new WritableProxyConfiguration(new XmlFileKeyValueStore(octopusFileSystem, configFile)));
+            var config = new Lazy<IWritableProxyConfiguration>(() => new WritableProxyConfiguration(new XmlFileKeyValueStore(octopusFileSystem, configFile, encryptor: TestMachineKeyEncryptor.Current)));
             Command = new ProxyConfigurationCommand(config, applicationInstanceSelector, Substitute.For<ISystemLog>(), Substitute.For<ILogFileOnlyLogger>());
 
             EnableAnIncorrectlySuppliedProxyHost();

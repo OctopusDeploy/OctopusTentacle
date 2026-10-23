@@ -44,6 +44,15 @@ namespace Octopus.Tentacle.Kubernetes.Crypto
             return Encoding.UTF8.GetString(asd);
         }
 
+        // The key lives in a Kubernetes Secret that is unique to the agent, and there has only ever been one scheme.
+        public bool RequiresReEncryption(string encrypted)
+            => false;
+
+        // The key is in a Kubernetes Secret, protected by RBAC rather than file permissions.
+        public void RestrictKeyStorageToOwner()
+        {
+        }
+
         [MemberNotNull(nameof(key), nameof(iv))]
         void EnsureMachineKeyAndIvLoaded()
         {
