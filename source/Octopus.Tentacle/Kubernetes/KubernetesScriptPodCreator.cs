@@ -454,7 +454,7 @@ namespace Octopus.Tentacle.Kubernetes
                 new() { Name = KubernetesConfig.HelmReleaseNameVariableName, Value = KubernetesConfig.HelmReleaseName },
                 new() { Name = KubernetesConfig.HelmChartVersionVariableName, Value = KubernetesConfig.HelmChartVersion },
                 new() { Name = KubernetesConfig.KubernetesMonitorEnabledVariableName, Value = KubernetesConfig.KubernetesMonitorEnabled },
-                new() { Name = KubernetesConfig.PersistenceStorageClassVariableName, Value = KubernetesConfig.PersistenceStorageClassVariableName },
+                new() { Name = KubernetesConfig.PersistenceStorageClassNameVariableName, Value = KubernetesConfig.PersistenceStorageClassName },
                 new() { Name = KubernetesConfig.ServerCommsAddressesVariableName, Value = string.Join(",", KubernetesConfig.ServerCommsAddresses) },
                 new() { Name = KubernetesConfig.PersistentVolumeFreeBytesVariableName, Value = spaceInformation?.freeSpaceBytes.ToString() },
                 new() { Name = KubernetesConfig.PersistentVolumeSizeBytesVariableName, Value = spaceInformation?.totalSpaceBytes.ToString() },

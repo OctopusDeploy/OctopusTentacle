@@ -19,8 +19,8 @@ namespace Octopus.Tentacle.Kubernetes
         public static string NfsWatchdogImageVariableName => $"{EnvVarPrefix}__NFSWATCHDOGIMAGE";
         public static string? NfsWatchdogImage => Environment.GetEnvironmentVariable(NfsWatchdogImageVariableName);
 
-        public static string PersistenceStorageClassVariableName = $"{EnvVarPrefix}__STORAGECLASS";
-        public static string? PersistenceStorageClass = Environment.GetEnvironmentVariable(PersistenceStorageClassVariableName);
+        public static string PersistenceStorageClassNameVariableName = $"{EnvVarPrefix}__STORAGECLASSNAME";
+        public static string? PersistenceStorageClassName = Environment.GetEnvironmentVariable(PersistenceStorageClassNameVariableName);
 
         public static readonly string PersistenceAccessModesJsonVariableName = $"{EnvVarPrefix}__ACCESSMODESJSON";
         public static string? PersistenceAccessModesJson => Environment.GetEnvironmentVariable(PersistenceAccessModesJsonVariableName);
