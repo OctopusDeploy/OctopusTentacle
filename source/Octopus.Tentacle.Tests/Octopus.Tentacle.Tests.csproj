@@ -50,8 +50,8 @@
     <PackageReference Include="TeamCity.VSTest.TestAdapter" Version="1.0.42" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
-    <PackageReference Include="System.DirectoryServices.AccountManagement" Version="10.0.12" />
-    <PackageReference Include="System.Security.Permissions" Version="10.0.12" />
+    <PackageReference Include="System.DirectoryServices.AccountManagement" Version="10.0.14" />
+    <PackageReference Include="System.Security.Permissions" Version="10.0.14" />
   </ItemGroup>
   <Target Name="ChangeAliasesOfStrongNameAssemblies" BeforeTargets="FindReferenceAssembliesForReferences;ResolveReferences">
     <!--
