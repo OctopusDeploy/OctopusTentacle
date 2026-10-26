@@ -78,9 +78,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
                 ? RuntimeDetection.DotNet8
                 : RuntimeDetection.DotNet6;
 
-            // Older bundles include the .NET version in the artifact names, newer bundles leave it out
+            // Older bundles include the .NET version in the artifact names, newer bundles say "self-contained" instead
             string[] ArtifactNamesFor(string os, string fileExtension) => Architectures()
-                .SelectMany(a => new[] { $"tentacle-{runtimeForVersion}-{os}-{a}.{fileExtension}", $"tentacle-{os}-{a}.{fileExtension}" })
+                .SelectMany(a => new[] { $"tentacle-{runtimeForVersion}-{os}-{a}.{fileExtension}", $"tentacle-self-contained-{os}-{a}.{fileExtension}" })
                 .ToArray();
 
             if (PlatformDetection.IsRunningOnWindows)

@@ -36,32 +36,30 @@ partial class Build
 
     [PathVariable] readonly Tool Multipass = null!;
 
-    // Artifact names deliberately leave out the .NET version, so they don't change with every .NET upgrade.
-    // The .NET builds are all self-contained, so only the build flavour and runtime/platform appear in the name.
-    static string ArchiveFlavourPrefix(string framework) => framework switch
+    // Artifact names use "self-contained" in place of the .NET version (e.g. net8.0-windows becomes self-contained-windows),
+    // so they don't change with every .NET upgrade. The .NET builds bundle their runtime, so the version isn't a prerequisite.
+    static string FrameworkLabel(string framework) => framework switch
     {
-        NetFramework => "net48-",
-        NetCoreWindows => "windows-",
-        _ => ""
+        NetFramework => framework,
+        NetCoreWindows => "self-contained-windows",
+        _ => "self-contained"
     };
 
-    string ArchiveFileName(string framework, string runtimeId, string fileExtension) => $"tentacle-{FullSemVer}-{BundledArchiveFileName(framework, runtimeId, fileExtension)}";
+    string ArchiveFileName(string framework, string runtimeId, string fileExtension) => $"tentacle-{FullSemVer}-{FrameworkLabel(framework)}-{runtimeId}.{fileExtension}";
 
-    static string BundledArchiveFileName(string framework, string runtimeId, string fileExtension) => $"tentacle-{ArchiveFlavourPrefix(framework)}{runtimeId}.{fileExtension}";
+    static string BundledArchiveFileName(string framework, string runtimeId, string fileExtension) => $"tentacle-{FrameworkLabel(framework)}-{runtimeId}.{fileExtension}";
 
     static string MsiFileSuffix(string framework, MSBuildTargetPlatform platform) => framework switch
     {
-        // The .NET Framework names predate the .NET builds and customers depend on them, so they stay as they are
         NetFramework => platform == MSBuildTargetPlatform.x64 ? "-x64" : "",
-        NetCoreWindows => $"-self-contained-{platform}",
-        _ => $"-self-contained-headless-{platform}"
+        _ => $"-{FrameworkLabel(framework)}-win-{platform}"
     };
 
     string MsiFileName(string framework, MSBuildTargetPlatform platform) => $"Octopus.Tentacle.{FullSemVer}{MsiFileSuffix(framework, platform)}.msi";
 
     static string BundledMsiFileName(string framework, MSBuildTargetPlatform platform) => $"Octopus.Tentacle{MsiFileSuffix(framework, platform)}.msi";
 
-    static string BundledUpgraderFileName(string runtimeId) => $"Octopus.Tentacle.Upgrader-{runtimeId}.exe";
+    static string BundledUpgraderFileName(string runtimeId) => $"Octopus.Tentacle.Upgrader-{FrameworkLabel(NetCore)}-{runtimeId}.exe";
 
     [PublicAPI]
     Target PackOsxTarballs => _ => _
@@ -506,7 +504,7 @@ partial class Build
             var workingDirectory = BuildDirectory / "Octopus.Tentacle.CrossPlatformBundle";
             workingDirectory.CreateDirectory();
 
-            // Get the installers for Tentacle: .NET Framework 4.8, self-contained w/o Tentacle Manager (headless), and self-contained w/ Tentacle Manager
+            // Get the installers for Tentacle: .NET Framework 4.8, self-contained w/o Tentacle Manager, and self-contained w/ Tentacle Manager
             var msiFiles = CopyMsis(workingDirectory, NetFramework, NetCore, NetCoreWindows);
 
             // Get the self-contained Tentacle Upgrader
@@ -584,7 +582,7 @@ partial class Build
             var workingDirectory = BuildDirectory / "Octopus.Tentacle.CrossPlatformBundle.Server";
             workingDirectory.CreateDirectory();
 
-            // Get the installers for Tentacle: .NET Framework 4.8, and self-contained w/o Tentacle Manager (headless)
+            // Get the installers for Tentacle: .NET Framework 4.8, and self-contained w/o Tentacle Manager
             var msiFiles = CopyMsis(workingDirectory, NetFramework, NetCore);
 
             // Get the self-contained Tentacle Upgrader
