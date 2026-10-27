@@ -77,12 +77,16 @@ namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
             string runtimeForVersion = version.Major >= 8 && version.Minor >= 2
                 ? RuntimeDetection.DotNet8
                 : RuntimeDetection.DotNet6;
+
+            // Older bundles include the .NET version in the artifact names, newer bundles say "self-contained" instead
+            string[] ArtifactNamesFor(string os, string fileExtension) => Architectures()
+                .SelectMany(a => new[] { $"tentacle-{runtimeForVersion}-{os}-{a}.{fileExtension}", $"tentacle-self-contained-{os}-{a}.{fileExtension}" })
+                .ToArray();
+
             if (PlatformDetection.IsRunningOnWindows)
             {
                 var net48ArtifactNames = new[] {"tentacle-net48-win.zip"};
-                var dotnetArtifactNames = Architectures()
-                    .Select(a => $"tentacle-{runtimeForVersion}-win-{a}.zip")
-                    .ToArray();
+                var dotnetArtifactNames = ArtifactNamesFor("win", "zip");
 
                 var names = runtime switch
                 {
@@ -96,16 +100,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers
 
             if (PlatformDetection.IsRunningOnMac)
             {
-                return Architectures()
-                    .Select(a => $"tentacle-{runtimeForVersion}-osx-{a}.tar.gz")
-                    .ToArray();
+                return ArtifactNamesFor("osx", "tar.gz");
             }
 
             if (PlatformDetection.IsRunningOnNix)
             {
-                return Architectures()
-                    .Select(a => $"tentacle-{runtimeForVersion}-linux-{a}.tar.gz")
-                    .ToArray();
+                return ArtifactNamesFor("linux", "tar.gz");
             }
 
             throw new Exception("Wow this is one fancy OS that tentacle probably can't run on");
