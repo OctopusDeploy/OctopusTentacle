@@ -9,7 +9,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 #if NETFRAMEWORK
             TentacleRuntime.Framework48;
 #else
-            TentacleRuntime.DotNet8;
+            TentacleRuntime.DotNet10;
 #endif
     }
 
@@ -18,7 +18,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         [Description(RuntimeDetection.Framework48)]
         Framework48,
         
-        [Description(RuntimeDetection.DotNet8)]
-        DotNet8,
+        [Description(RuntimeDetection.DotNet10)]
+        DotNet10,
     }
 }

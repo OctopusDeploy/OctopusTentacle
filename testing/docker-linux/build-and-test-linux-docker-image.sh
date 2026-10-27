@@ -5,7 +5,7 @@
 # Builds and verifies the Linux Tentacle container image (docker/linux/Dockerfile)
 # end to end, the same way TeamCity does:
 #
-#   TeamFireAndMotion_OctopusTentacle_TentacleVLatest_net80
+#   TeamFireAndMotion_OctopusTentacle_TentacleVLatest
 #     -> Build: Tentacle (Linux)      (produces _artifacts/deb/tentacle_<ver>_amd64.deb)
 #     -> Build: Linux Docker image    (docker-compose -f docker-compose.build.yml build ...)
 #

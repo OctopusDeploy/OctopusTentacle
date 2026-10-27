@@ -57,7 +57,10 @@ public static class Signing
         // source: https://blogs.msdn.microsoft.com/windowsmobile/2006/05/17/programmatically-checking-the-authenticode-signature-on-a-file/
         try
         {
+            // SYSLIB0057: X509CertificateLoader has no equivalent for reading the Authenticode signer, and migrating might change behaviour.
+#pragma warning disable SYSLIB0057
             X509Certificate.CreateFromSignedFile(fileInfo);
+#pragma warning restore SYSLIB0057
             return true;
         }
         catch
@@ -116,6 +119,9 @@ public static class Signing
                         .SetFileDigest(AzureSignToolDigestAlgorithm.sha256)
                         .SetTimestampRfc3161Url(timestampUrl)
                         .SetFiles(files.Select(f => f.ToString()))
+                        // AzureSignTool targets net8.0 but the build only installs the .NET 10 runtime
+                        .SetProcessEnvironmentVariables(EnvironmentInfo.Variables)
+                        .SetProcessEnvironmentVariable("DOTNET_ROLL_FORWARD", "Major")
                     );
 
                     Log.Information($"Finished signing {files.Length} files.");
