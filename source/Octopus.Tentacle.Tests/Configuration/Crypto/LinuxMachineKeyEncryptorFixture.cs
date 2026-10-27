@@ -1,86 +1,307 @@
-﻿using System;
+#if !NETFRAMEWORK
+using System;
+using System.Linq;
 using System.Security.Cryptography;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
 using Octopus.Tentacle.Configuration.Crypto;
 using Octopus.Tentacle.Core.Diagnostics;
+using Octopus.Tentacle.Tests.Support;
 
 namespace Octopus.Tentacle.Tests.Configuration.Crypto
 {
     [TestFixture]
     public class LinuxMachineKeyEncryptorFixture
     {
-        readonly InMemoryCryptoKeyNixSource validKey = new InMemoryCryptoKeyNixSource();
         readonly ISystemLog systemLog = Substitute.For<ISystemLog>();
-    
+        InMemoryCryptoKeyNixSource generatedKey;
+        InMemoryCryptoKeyNixSource legacyKey;
+
+        [SetUp]
+        public void SetUp()
+        {
+            generatedKey = new InMemoryCryptoKeyNixSource();
+            legacyKey = new InMemoryCryptoKeyNixSource();
+        }
+
+        LinuxMachineKeyEncryptor CreateEncryptor(params ICryptoKeyNixSource[] legacyKeySources)
+            => new LinuxMachineKeyEncryptor(systemLog, generatedKey, legacyKeySources);
+
         [Test]
         public void GivenValidKeysAvailable_ThenEncryptsAndDecrypts()
         {
-            var lme = new LinuxMachineKeyEncryptor(systemLog,new[] { validKey });
+            var lme = CreateEncryptor();
 
             var encrypted = lme.Encrypt("FooBar");
             var decrypted = lme.Decrypt(encrypted);
 
-            Assert.AreNotEqual(encrypted, "FooBar");
-            Assert.AreEqual(decrypted, "FooBar");
+            encrypted.Should().NotBe("FooBar");
+            decrypted.Should().Be("FooBar");
         }
 
         [Test]
-        public void GivenCorruptKeyProvided_ThenThrowsException()
+        public void EmptyStringRoundTrips()
         {
-            var lme = new LinuxMachineKeyEncryptor(systemLog, new []{DodgyKey()});
-            
-            Assert.Throws<AggregateException>(() => lme.Encrypt("FooBar"));
+            var lme = CreateEncryptor();
+
+            lme.Decrypt(lme.Encrypt(string.Empty)).Should().BeEmpty();
         }
-        
+
         [Test]
-        public void GivenCorruptKeyProvided_WhenFallbackKeyAvailable_ThenEncrypts()
+        public void EncryptedValuesCarryTheVersionPrefix()
         {
-            var lme = new LinuxMachineKeyEncryptor(systemLog, new []{DodgyKey(), validKey});
+            var encrypted = CreateEncryptor().Encrypt("FooBar");
 
-            var roundTrip = lme.Decrypt(lme.Encrypt("FooBar"));
-
-            roundTrip.Should().Be("FooBar");
+            encrypted.Should().StartWith(LinuxMachineKeyEncryptor.ProtectedValuePrefix);
+            LinuxMachineKeyEncryptor.IsLegacyCiphertext(encrypted).Should().BeFalse();
+            CreateEncryptor().RequiresReEncryption(encrypted).Should().BeFalse();
         }
 
         [Test]
-        public void GenMultipleKeys_FirstSuccessfulKeyIsUsed()
+        public void ValuesWithoutThePrefixAreLegacyAndNeedReEncrypting()
+        {
+            var legacy = LegacySchemeEncryption.Encrypt(legacyKey, "FooBar");
+
+            LinuxMachineKeyEncryptor.IsLegacyCiphertext(legacy).Should().BeTrue();
+            CreateEncryptor(legacyKey).RequiresReEncryption(legacy).Should().BeTrue();
+        }
+
+        [Test]
+        public void EncryptingTheSameValueTwiceProducesDifferentCiphertext()
+        {
+            var lme = CreateEncryptor();
+
+            var first = lme.Encrypt("FooBar");
+            var second = lme.Encrypt("FooBar");
+
+            first.Should().NotBe(second, "every value gets its own nonce");
+            lme.Decrypt(first).Should().Be("FooBar");
+            lme.Decrypt(second).Should().Be("FooBar");
+        }
+
+        [Test]
+        public void EncryptingNeverTouchesTheLegacyKeys()
+        {
+            var firstLegacy = MockKey(legacyKey);
+            var secondLegacy = MockKey(legacyKey);
+
+            CreateEncryptor(firstLegacy, secondLegacy).Encrypt("FooBar");
+
+            firstLegacy.Received(0).Load();
+            secondLegacy.Received(0).Load();
+        }
+
+        [Test]
+        public void DecryptingACurrentValueNeverTouchesTheLegacyKeys()
+        {
+            var firstLegacy = MockKey(legacyKey);
+            var secondLegacy = MockKey(legacyKey);
+            var lme = CreateEncryptor(firstLegacy, secondLegacy);
+
+            lme.Decrypt(lme.Encrypt("FooBar")).Should().Be("FooBar");
+
+            firstLegacy.Received(0).Load();
+            secondLegacy.Received(0).Load();
+        }
+
+        [Test]
+        public void DecryptingACurrentValueWithTheWrongKeyThrows_AndDoesNotFallBackToALegacyKeyThatCouldDecryptIt()
+        {
+            var otherKey = new InMemoryCryptoKeyNixSource();
+            var encryptedWithOtherKey = new LinuxMachineKeyEncryptor(systemLog, otherKey, Array.Empty<ICryptoKeyNixSource>()).Encrypt("FooBar");
+
+            // The legacy list happens to contain the key that would decrypt it. A prefixed value must never take that path.
+            var legacyThatWouldWork = MockKey(otherKey);
+            var lme = CreateEncryptor(legacyThatWouldWork);
+
+            lme.Invoking(x => x.Decrypt(encryptedWithOtherKey))
+                .Should().Throw<CryptographicException>()
+                .WithMessage("Unable to decrypt a value protected with the Tentacle machine key.*");
+            legacyThatWouldWork.Received(0).Load();
+        }
+
+        [Test]
+        public void ChangingAnyByteOfACurrentValueIsDetected()
+        {
+            // AES-GCM authenticates the nonce, the ciphertext and the tag; CBC would only have noticed a broken padding block.
+            var lme = CreateEncryptor();
+            var encrypted = lme.Encrypt("FooBar, but long enough to span more than one block of AES");
+            var payload = Convert.FromBase64String(encrypted.Substring(LinuxMachineKeyEncryptor.ProtectedValuePrefix.Length));
+
+            for (var i = 0; i < payload.Length; i++)
+            {
+                var tampered = payload.ToArray();
+                tampered[i] ^= 0x01;
+                var value = LinuxMachineKeyEncryptor.ProtectedValuePrefix + Convert.ToBase64String(tampered);
+
+                lme.Invoking(x => x.Decrypt(value)).Should().Throw<CryptographicException>($"byte {i} was changed");
+            }
+        }
+
+        [Test]
+        public void ACurrentValueIsAes256GcmWithARandomNonceAndThePrefixAsAssociatedData()
+        {
+            // Pins the stored format, so anything else that ever needs to read it (a support tool, a later version) can.
+            var encrypted = CreateEncryptor().Encrypt("FooBar");
+            var payload = Convert.FromBase64String(encrypted.Substring(LinuxMachineKeyEncryptor.ProtectedValuePrefix.Length));
+
+            payload.Should().HaveCount(LinuxMachineKeyEncryptor.NonceSizeInBytes + "FooBar".Length + LinuxMachineKeyEncryptor.TagSizeInBytes);
+            var plaintext = new byte["FooBar".Length];
+            using (var gcm = new AesGcm(generatedKey.Key, LinuxMachineKeyEncryptor.TagSizeInBytes))
+            {
+                gcm.Decrypt(payload.AsSpan(0, 12), payload.AsSpan(12, plaintext.Length), payload.AsSpan(12 + plaintext.Length), plaintext,
+                    System.Text.Encoding.ASCII.GetBytes(LinuxMachineKeyEncryptor.ProtectedValuePrefix));
+            }
+
+            System.Text.Encoding.UTF8.GetString(plaintext).Should().Be("FooBar");
+        }
+
+        [Test]
+        public void ACurrentValueCannotBeDecryptedWithoutThePrefixBoundIn()
+        {
+            var encrypted = CreateEncryptor().Encrypt("FooBar");
+            var payload = Convert.FromBase64String(encrypted.Substring(LinuxMachineKeyEncryptor.ProtectedValuePrefix.Length));
+
+            using var gcm = new AesGcm(generatedKey.Key, LinuxMachineKeyEncryptor.TagSizeInBytes);
+            var plaintext = new byte[payload.Length - 28];
+            gcm.Invoking(x => x.Decrypt(payload.AsSpan(0, 12), payload.AsSpan(12, plaintext.Length), payload.AsSpan(12 + plaintext.Length), plaintext))
+                .Should().Throw<CryptographicException>("a value cannot be relabelled as another version's");
+        }
+
+        [Test]
+        public void AKeyOfTheWrongSizeIsRejected()
+        {
+            var shortKey = Substitute.For<ICryptoKeyNixSource>();
+            shortKey.Load().Returns(_ => (new byte[16], new byte[16]));
+
+            new LinuxMachineKeyEncryptor(systemLog, shortKey, Array.Empty<ICryptoKeyNixSource>())
+                .Invoking(x => x.Encrypt("FooBar"))
+                .Should().Throw<CryptographicException>()
+                .WithMessage("*must be 256 bits*");
+        }
+
+        [Test]
+        public void RestrictingKeyStorageAsksTheGeneratedKeyToTightenItsFile()
+        {
+            var fileSystem = Substitute.For<Octopus.Tentacle.Util.IOctopusFileSystem>();
+            fileSystem.FileExists("/k/machinekey").Returns(true);
+            var lme = new LinuxMachineKeyEncryptor(systemLog, new LinuxGeneratedMachineKey(systemLog, fileSystem, "/k/machinekey"), Array.Empty<ICryptoKeyNixSource>());
+
+            lme.RestrictKeyStorageToOwner();
+
+            fileSystem.Received(1).RestrictFilePermissionsToOwner("/k/machinekey");
+        }
+
+        [Test]
+        public void TruncatedCurrentValueThrows()
+        {
+            var lme = CreateEncryptor();
+
+            lme.Invoking(x => x.Decrypt(LinuxMachineKeyEncryptor.ProtectedValuePrefix)).Should().Throw<CryptographicException>();
+            lme.Invoking(x => x.Decrypt(LinuxMachineKeyEncryptor.ProtectedValuePrefix + "AAAA")).Should().Throw<CryptographicException>();
+            lme.Invoking(x => x.Decrypt(LinuxMachineKeyEncryptor.ProtectedValuePrefix + "not base64!")).Should().Throw<CryptographicException>();
+        }
+
+        [Test]
+        public void GivenCorruptKeyProvided_ThenEncryptThrows()
+        {
+            var lme = new LinuxMachineKeyEncryptor(systemLog, DodgyKey(), Array.Empty<ICryptoKeyNixSource>());
+
+            lme.Invoking(x => x.Encrypt("FooBar"))
+                .Should().Throw<CryptographicException>()
+                .WithMessage("Unable to encrypt a value with the Tentacle machine key*");
+        }
+
+        [Test]
+        public void GivenTheKeyFileCannotBeLoaded_ThenEncryptThrowsWithTheUnderlyingReason()
+        {
+            var brokenKey = Substitute.For<ICryptoKeyNixSource>();
+            brokenKey.Load().Returns(_ => throw new InvalidOperationException("Machine key file at `/etc/octopus/machinekey` is corrupt"));
+            var lme = new LinuxMachineKeyEncryptor(systemLog, brokenKey, Array.Empty<ICryptoKeyNixSource>());
+
+            lme.Invoking(x => x.Encrypt("FooBar"))
+                .Should().Throw<CryptographicException>()
+                .WithMessage("*Machine key file at `/etc/octopus/machinekey` is corrupt*")
+                .WithInnerException<InvalidOperationException>();
+        }
+
+        [Test]
+        public void LegacyValueIsDecryptedWithTheLegacyKeys()
+        {
+            var legacy = LegacySchemeEncryption.Encrypt(legacyKey, "FooBar");
+
+            CreateEncryptor(legacyKey).Decrypt(legacy).Should().Be("FooBar");
+        }
+
+        [Test]
+        public void LegacyValue_WhenTheFirstLegacyKeyFails_ThenTheNextIsTried()
+        {
+            var legacy = LegacySchemeEncryption.Encrypt(legacyKey, "FooBar");
+
+            CreateEncryptor(DodgyKey(), legacyKey).Decrypt(legacy).Should().Be("FooBar");
+        }
+
+        [Test]
+        public void LegacyValue_TheLegacyKeysAreTriedInOrderAndTheFirstThatWorksWins()
         {
             var firstDodgyKey = DodgyKey();
-            var lastDodgyKey = DodgyKey();
-            
-            var lme = new LinuxMachineKeyEncryptor(systemLog, new []{firstDodgyKey, validKey, lastDodgyKey});
-            
-            lme.Encrypt("FooBar").Should().NotBeEmpty();
+            var lastKey = MockKey(legacyKey);
+            var legacy = LegacySchemeEncryption.Encrypt(legacyKey, "FooBar");
+
+            CreateEncryptor(firstDodgyKey, legacyKey, lastKey).Decrypt(legacy).Should().Be("FooBar");
+
             firstDodgyKey.Received(1).Load();
-            lastDodgyKey.Received(0).Load();
+            lastKey.Received(0).Load();
+        }
+
+        [Test]
+        public void LegacyValue_WhenNoLegacyKeyCanDecryptIt_ThenThrows()
+        {
+            var legacy = LegacySchemeEncryption.Encrypt(legacyKey, "FooBar");
+
+            CreateEncryptor(DodgyKey(), new InMemoryCryptoKeyNixSource())
+                .Invoking(x => x.Decrypt(legacy))
+                .Should().Throw<CryptographicException>()
+                .WithMessage("Unable to decrypt a value that was protected by an earlier version of Tentacle*/etc/machine-id for one start*tentacle new-certificate*")
+                .WithInnerException<AggregateException>()
+                .Which.InnerExceptions.Should().HaveCount(2, "each legacy key's failure is kept");
+        }
+
+        [Test]
+        public void LegacyValue_IsOnlyDecryptedWithTheLegacyKeys_NotTheCurrentOne()
+        {
+            // Production puts the generated key in the legacy list as well; that is the composition's job, not the encryptor's.
+            var legacyWrittenWithGeneratedKey = LegacySchemeEncryption.Encrypt(generatedKey, "FooBar");
+
+            CreateEncryptor(DodgyKey()).Invoking(x => x.Decrypt(legacyWrittenWithGeneratedKey)).Should().Throw<CryptographicException>();
+            CreateEncryptor(DodgyKey(), generatedKey).Decrypt(legacyWrittenWithGeneratedKey).Should().Be("FooBar");
+        }
+
+        [Test]
+        public void LegacyValue_WhenAWrongKeyHappensToProduceValidPadding_ThenTheGarbageIsRejected()
+        {
+            // Any plaintext Tentacle ever encrypted was UTF-8 text. Decrypting with a wrong key yields random bytes,
+            // which are rejected as invalid UTF-8 rather than handed back as a "successfully" decrypted value.
+            var notUtf8 = new byte[] { 0xFF, 0xFE, 0xC0, 0xC1, 0xF5, 0x80, 0x80, 0x80, 0xFF, 0xFE, 0xC0, 0xC1, 0xF5, 0x80, 0x80, 0x80 };
+            var wrongKeyOutput = LegacySchemeEncryption.Encrypt(legacyKey, notUtf8);
+
+            CreateEncryptor(legacyKey).Invoking(x => x.Decrypt(wrongKeyOutput)).Should().Throw<CryptographicException>();
         }
 
         static ICryptoKeyNixSource DodgyKey()
         {
             var dodgyKey = Substitute.For<ICryptoKeyNixSource>();
-            dodgyKey.Load().Returns(callInfo => (new byte[] {77}, new byte[]{43, 11}));
+            dodgyKey.Load().Returns(callInfo => (new byte[] { 77 }, new byte[] { 43, 11 }));
             return dodgyKey;
         }
 
-        class InMemoryCryptoKeyNixSource : ICryptoKeyNixSource
+        static ICryptoKeyNixSource MockKey(InMemoryCryptoKeyNixSource key)
         {
-            readonly byte[] key;
-            readonly byte[] iv;
-            public InMemoryCryptoKeyNixSource()
-            {
-                var d = Aes.Create();
-                d.GenerateIV();
-                d.GenerateKey();
-                key = d.Key;
-                iv = d.IV;
-            }
-            
-            public (byte[] Key, byte[] IV) Load()
-            {
-                return (key, iv);
-            }
+            var mock = Substitute.For<ICryptoKeyNixSource>();
+            mock.Load().Returns(callInfo => (key.Key.ToArray(), key.IV.ToArray()));
+            return mock;
         }
     }
 }
+#endif
