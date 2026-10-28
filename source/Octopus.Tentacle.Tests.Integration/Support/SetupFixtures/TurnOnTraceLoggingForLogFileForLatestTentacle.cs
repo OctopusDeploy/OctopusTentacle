@@ -12,7 +12,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.SetupFixtures
 
         public void OneTimeSetUp(ILogger logger)
         {
-            TryTurnOnTraceLoggingForTentacleRuntime(TentacleRuntime.DotNet8, logger);
+            TryTurnOnTraceLoggingForTentacleRuntime(TentacleRuntime.DotNet10, logger);
             TryTurnOnTraceLoggingForTentacleRuntime(TentacleRuntime.Framework48, logger);
         }
 

@@ -94,8 +94,6 @@ partial class Build
                 new (NetCore, "linux-x64", "amazonlinux:latest", "rpm"), // Whichever release Amazon currently "recommends".
                 // Supported Amazon Linux versions.
                 new (NetCore, "linux-x64", "amazonlinux:2023", "rpm"), // Amazon Linux 2023: EOL June 30, 2029.
-                // Out-of-support Amazon Linux versions.
-                new (NetCore, "linux-x64", "amazonlinux:2", "rpm"), // Amazon Linux 2: support ENDED June 30, 2026.
                 
                 // Rolling Debian tags.
                 new (NetCore, "linux-x64", "debian:latest", "deb"), // Catches each new Debian release as it officially ships.
@@ -125,7 +123,6 @@ partial class Build
                 // Out-of-support Ubuntu versions.
                 new (NetCore, "linux-x64", "ubuntu:20.04", "deb"), // Focal Fossa: standard support ENDED May 2025.
                 new (NetCore, "linux-x64", "ubuntu:18.04", "deb"), // Bionic Beaver: standard support ENDED May 2023 (also covers "linuxmintd/mint19.3-amd64").
-                new (NetCore, "linux-x64", "ubuntu:16.04", "deb"), // Xenial Xerus: standard support ENDED April 2021.
             ];
             
             foreach (var testConfiguration in testOnLinuxDistributions)
@@ -286,8 +283,19 @@ partial class Build
             .Any(r => rights.Any(right => r.FileSystemRights.HasFlag(right)));
     }
     
+    // TeamCity passes "netcore" / "netcore-windows" rather than a specific TFM so the same build
+    // configuration works for branches that target different versions of .NET
+    string ResolveTestFramework(string testFramework) =>
+        testFramework switch
+        {
+            "" or "netcore" => NetCore,
+            "netcore-windows" => NetCoreWindows,
+            _ => testFramework
+        };
+
     void RunTests(string testFramework, string testRuntime)
     {
+        testFramework = ResolveTestFramework(testFramework);
         Log.Information("Running test for Framework: {TestFramework} and Runtime: {TestRuntime}", testFramework, testRuntime);
 
         (ArtifactsDirectory / "teamcity").CreateDirectory();
@@ -323,6 +331,7 @@ partial class Build
 
     void RunIntegrationTests(string testFramework, string testRuntime, string filter)
     {
+        testFramework = ResolveTestFramework(testFramework);
         Log.Information("Running test for Framework: {TestFramework} and Runtime: {TestRuntime}", testFramework, testRuntime);
 
         (ArtifactsDirectory / "teamcity").CreateDirectory();

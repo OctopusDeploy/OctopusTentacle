@@ -61,7 +61,10 @@ namespace Octopus.Tentacle.Kubernetes
             }
 
             X509Certificate2Collection certificates = new X509Certificate2Collection();
+            // SYSLIB0057: X509CertificateLoader is stricter about formats than these APIs, so migrating changes behaviour.
+#pragma warning disable SYSLIB0057
             certificates.Import(rootCAFile);
+#pragma warning restore SYSLIB0057
             
             var result = new KubernetesClientConfiguration
             {

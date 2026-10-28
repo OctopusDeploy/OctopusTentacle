@@ -20,6 +20,8 @@ namespace Octopus.Tentacle.Security.Certificates
         public static X509Certificate2 FromPfxFile(string pfxFilePath, string password, ILog log)
         {
             X509Certificate2Collection certificates = new X509Certificate2Collection();
+            // SYSLIB0057: X509CertificateLoader is stricter about formats than these APIs, so migrating changes behaviour.
+#pragma warning disable SYSLIB0057
             if (string.IsNullOrEmpty(password))
             {
                 log.Info($"Importing the certificate stored in PFX file in {pfxFilePath}...");
@@ -30,6 +32,7 @@ namespace Octopus.Tentacle.Security.Certificates
                 log.Info($"Importing the certificate stored in PFX file in {pfxFilePath} using the provided password...");
                 certificates.Import(pfxFilePath, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
             }
+#pragma warning restore SYSLIB0057
 
             if (certificates.Count == 0)
                 throw new Exception($"The PFX file ({pfxFilePath}) does not contain any certificates.");
@@ -219,6 +222,8 @@ namespace Octopus.Tentacle.Security.Certificates
         /// <param name="password"></param>
         /// <param name="flags"></param>
         /// <returns></returns>
+        // SYSLIB0057: X509CertificateLoader is stricter about formats than these APIs, so migrating changes behaviour.
+#pragma warning disable SYSLIB0057
         static X509Certificate2 newX509Certificate2(byte[] rawData, string? password, X509KeyStorageFlags flags)
         {
             if (HasFlagEphemeralKeySet(flags) && !flags.HasFlag(X509KeyStorageFlags.PersistKeySet))
@@ -238,6 +243,7 @@ namespace Octopus.Tentacle.Security.Certificates
                 File.Delete(file);
             }
         }
+#pragma warning restore SYSLIB0057
 
         static void GrantCurrentUserAccessToPrivateKeyDirectory(string privateKeyPath)
         {

@@ -164,8 +164,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                             parms = new TestCaseParameters(args);
                         }
 
-                        // If the test is trying to test .net8.0 TentacleClient against .net48 Tentacle,
-                        // then add the 'Net80ClientNet48Tentacle' category so we can potentially run these tests in a different test run
+                        // If the test is trying to test .net10.0 TentacleClient against .net48 Tentacle,
+                        // then add the 'Net80ClientNet48Service' category so we can potentially run these tests in a different test run.
+                        // The category name is historical (from when the client was net8.0); it's kept as-is because TeamCity filters on it.
                         #if !NETFRAMEWORK
                         if (item is TentacleConfigurationTestCase {TentacleRuntime: TentacleRuntime.Framework48} testCase)
                         {
