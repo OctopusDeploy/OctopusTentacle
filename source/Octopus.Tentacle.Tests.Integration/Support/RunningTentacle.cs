@@ -62,23 +62,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
             cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-            try
-            {
-                var (rtt, serviceUri) = await startTentacleFunction(cancellationTokenSource.Token);
+            var (rtt, serviceUri) = await startTentacleFunction(cancellationTokenSource.Token);
 
-                runningTentacleTask = rtt;
-                ServiceUri = serviceUri;
-            }
-            catch (Exception)
-            {
-                // Nothing was handed back to us to stop, so cancel anything the start may have left running
-                // rather than leaving it behind to interfere with the rest of the run.
-                cancellationTokenSource.Cancel();
-                cancellationTokenSource.Dispose();
-                cancellationTokenSource = null;
-
-                throw;
-            }
+            runningTentacleTask = rtt;
+            ServiceUri = serviceUri;
         }
 
         public async Task<bool> Stop(CancellationToken cancellationToken)

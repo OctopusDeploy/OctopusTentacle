@@ -14,6 +14,9 @@ namespace Octopus.Tentacle.Security.Certificates
 {
     public static class CertificateEncoder
     {
+        internal static string CertificateStoreName
+            => PlatformDetection.IsRunningOnWindows ? "Octopus" : "My";
+
         public static X509Certificate2 FromPfxFile(string pfxFilePath, string password, ILog log)
         {
             X509Certificate2Collection certificates = new X509Certificate2Collection();
@@ -66,7 +69,7 @@ namespace Octopus.Tentacle.Security.Certificates
         static X509Certificate2 FromBase64String(string? thumbprint, string certificateString, string? password, ILog log, bool storeInKeyStore)
         {
             if (certificateString == null) throw new ArgumentNullException(nameof(certificateString));
-            var store = new X509Store(PlatformDetection.IsRunningOnWindows ? "Octopus" : "My", StoreLocation.CurrentUser);
+            var store = new X509Store(CertificateStoreName, StoreLocation.CurrentUser);
             store.Open(OpenFlags.ReadWrite);
 
             try

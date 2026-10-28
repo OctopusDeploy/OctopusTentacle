@@ -15,7 +15,6 @@ using Microsoft.Win32;
 using Nito.AsyncEx;
 using Nito.AsyncEx.Interop;
 using NUnit.Framework;
-using Octopus.Tentacle.Client.Retries;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Core.Util;
@@ -191,14 +190,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             string instanceName,
             TemporaryDirectory tempDirectory, 
             ILogger logger,
-            CancellationToken startupCancellationToken)
+            CancellationToken cancellationToken)
         {
-            // The Tentacle process is stopped either by the caller cancelling, or by us when it fails to become
-            // ready. A Tentacle that never signalled readiness may still be running, so stop it before returning
-            // rather than leaving it running alongside the rest of the tests.
-            var tentacleCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(startupCancellationToken);
-            var cancellationToken = tentacleCancellationTokenSource.Token;
-
             var hasTentacleStarted = new ManualResetEventSlim();
             hasTentacleStarted.Reset();
             int? listeningPort = null;
@@ -300,29 +293,18 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 }
             }, cancellationToken);
 
-            try
-            {
-                await Task.WhenAny(runningTentacle, WaitHandleAsyncFactory.FromWaitHandle(hasTentacleStarted.WaitHandle, TimeSpan.FromMinutes(1), cancellationToken));
+            await Task.WhenAny(runningTentacle, WaitHandleAsyncFactory.FromWaitHandle(hasTentacleStarted.WaitHandle, TimeSpan.FromMinutes(1), cancellationToken));
 
-                // Will throw.
-                if (runningTentacle.IsCompleted)
-                {
-                    await runningTentacle;
-                }
-
-                if (!hasTentacleStarted.IsSet)
-                {
-                    throw new Exception("Tentacle did not appear to start correctly");
-                }
-            }
-            catch (Exception)
+            // Will throw.
+            if (runningTentacle.IsCompleted)
             {
-                await StopTentacleThatFailedToStart(runningTentacle, tentacleCancellationTokenSource, logger);
-                throw;
+                await runningTentacle;
             }
 
-            // The Tentacle is running, so the linked source has to outlive this method. Clean it up when it stops.
-            _ = runningTentacle.ContinueWith(_ => tentacleCancellationTokenSource.Dispose(), TaskScheduler.Default);
+            if (!hasTentacleStarted.IsSet)
+            {
+                throw new Exception("Tentacle did not appear to start correctly");
+            }
 
             if (serviceUri == null && listeningPort != null)
             {
@@ -330,30 +312,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             }
 
             return (runningTentacle, serviceUri);
-        }
-
-        static async Task StopTentacleThatFailedToStart(Task runningTentacle, CancellationTokenSource tentacleCancellationTokenSource, ILogger logger)
-        {
-            try
-            {
-                tentacleCancellationTokenSource.Cancel();
-
-                using var stopTimeoutCancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-                var stopped = await runningTentacle.WaitTillCompletedOrCancelled(stopTimeoutCancellationTokenSource.Token);
-
-                if (!stopped)
-                {
-                    logger.Warning("The Tentacle that failed to start did not stop in time and may still be running");
-                }
-            }
-            catch (Exception e)
-            {
-                logger.Information(e, "Error stopping the Tentacle that failed to start.");
-            }
-            finally
-            {
-                tentacleCancellationTokenSource.Dispose();
-            }
         }
 
         protected void ConfigureTentacleMachineConfigurationHomeDirectory()
