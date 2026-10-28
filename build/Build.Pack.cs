@@ -834,11 +834,25 @@ partial class Build
 
         var archiveDestination = unversionedCliFolder / $"octopus-cli-archive.{cliVersion}.{archiveExtension}";
 
-        // If the archive already exists, we will download it again
-        archiveDestination.DeleteFile();
+        ControlFlow.ExecuteWithRetry(
+            () =>
+            {
+                // If the archive already exists, we will download it again
+                archiveDestination.DeleteFile();
 
-        Log.Information("Downloading Octopus CLI from {downloadUri}", downloadUri);
-        HttpTasks.HttpDownloadFile(downloadUri, archiveDestination);
+                Log.Information("Downloading Octopus CLI from {downloadUri}", downloadUri);
+                HttpTasks.HttpDownloadFile(
+                    downloadUri,
+                    archiveDestination,
+                    clientConfigurator: client =>
+                    {
+                        client.Timeout = TimeSpan.FromMinutes(2);
+                        return client;
+                    });
+            },
+            retryAttempts: 3,
+            delay: TimeSpan.FromSeconds(2),
+            logAction: message => Log.Warning("{Message}", message));
 
         archiveDestination.UncompressTo(cliFolder);
         Assert.FileExists(cliPath, "The Octopus CLI executable was not found after extracting the archive");
