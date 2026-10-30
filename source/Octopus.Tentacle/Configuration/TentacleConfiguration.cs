@@ -139,9 +139,17 @@ namespace Octopus.Tentacle.Configuration
                 }
 
                 var encoded = settings.Get(CertificateSettingName, protectionLevel: ProtectionLevel.MachineKey);
-                return encoded is null || string.IsNullOrWhiteSpace(encoded) ? null : CertificateEncoder.FromBase64String(thumbprint!, encoded, log);
+                return encoded is null || string.IsNullOrWhiteSpace(encoded) ? null : LoadTentacleCertificate(thumbprint!, encoded, log);
             }
         }
+
+        // The integration tests call this to create the certificate store state Tentacles share
+        // before starting them in parallel, so startup and the tests must load it the same way.
+        internal static X509Certificate2 LoadTentacleCertificate(
+            string thumbprint,
+            string encoded,
+            ILog log)
+            => CertificateEncoder.FromBase64String(thumbprint, encoded, log);
 
         public string? ListenIpAddress => settings.Get(ServicesListenIPSettingName, string.Empty);
 
