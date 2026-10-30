@@ -157,11 +157,13 @@ namespace Octopus.Tentacle.Client.Retries
                 started.Start();
                 return await retryPolicy.ExecuteAsync(ExecuteAction, cancellationToken);
             }
-            catch (Exception ex) when (ex is TimeoutRejectedException or TaskCanceledException || 
+            catch (Exception ex) when (ex is TimeoutRejectedException or OperationCanceledException ||
                                        ex.IsConnectingOrTransferringRequestCancelledException())
             {
-                // If the timeout policy timed out or the cancellation token caused a generic task cancellation 
+                // If the timeout policy timed out or the cancellation token caused a generic task cancellation
                 // and we have captured an exception from a previous retry, then throw the more meaningful previous exception.
+                // OperationCanceledException (not just TaskCanceledException) must be handled here, as Polly throws it
+                // when cancellation is observed between retries, rather than during the sleep between retries.
                 if (lastException != null)
                 {
                     throw lastException;
