@@ -488,7 +488,48 @@ namespace Octopus.Tentacle.Client.Tests
             stopWatch.Elapsed.Should().BeGreaterOrEqualTo(TimeSpan.FromSeconds(8)).And.BeLessThan(TimeSpan.FromSeconds(20));
             callCount.Should().Be(1);
         }
-        
+
+        [Test]
+        public async Task ThrowsTheLastExceptionWhenCancelledWithAnOperationCanceledExceptionDuringARetry()
+        {
+            // Polly throws an OperationCanceledException (rather than a TaskCanceledException) when cancellation is observed
+            // between retries. The last real exception should still be thrown, so callers can tell the request never connected.
+            var callCount = 0;
+            Exception? actualException = null;
+            var connectingException = new HalibutClientException("Connecting", new Exception(), ConnectionState.Connecting);
+
+            var handler = new RpcCallRetryHandler(TimeSpan.FromSeconds(60));
+            using var cancellationTokenSource = new CancellationTokenSource();
+
+            try
+            {
+                await handler.ExecuteWithRetries<Guid>(
+                    async ct =>
+                    {
+                        await Task.CompletedTask;
+                        callCount++;
+
+                        if (callCount == 1)
+                        {
+                            throw connectingException;
+                        }
+
+                        cancellationTokenSource.Cancel();
+                        throw new OperationCanceledException(cancellationTokenSource.Token);
+                    },
+                    onRetryAction: null,
+                    onTimeoutAction: null,
+                    cancellationTokenSource.Token);
+            }
+            catch (Exception ex)
+            {
+                actualException = ex;
+            }
+
+            callCount.Should().Be(2);
+            actualException.Should().BeSameAs(connectingException);
+        }
+
         [Test]
         public async Task CanPerformAnActionBeforeARetry()
         {
