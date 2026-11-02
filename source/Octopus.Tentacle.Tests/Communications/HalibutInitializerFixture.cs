@@ -44,7 +44,7 @@ namespace Octopus.Tentacle.Tests.Communications
         }
 
         // Mirrors the fixed cap in HalibutInitializer.MaximumPollingConnectionCount.
-        const uint ExpectedMaximumPollingConnectionCount = 512;
+        const uint ExpectedMaximumPollingConnectionCount = 256;
 
         [Test]
         public void PollingConnectionCountCoercesValuesAboveTheMaximum()

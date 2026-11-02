@@ -33,7 +33,14 @@ namespace Octopus.Tentacle.Commands
         // No less than five connections ensures a few file uploads won't completely block the worker.
         // We also look to take ProcessorCount for larger workers so that Polling Tentacles somewhat
         // scale with the number of Processors.
-        protected override int DefaultPollingConnectionCount => Math.Max(5, Environment.ProcessorCount);
+        // Higher counts, up to the runtime maximum, must be configured explicitly.
+        internal const int MinimumDefaultPollingConnectionCount = 5;
+        internal const int MaximumDefaultPollingConnectionCount = 128;
+
+        protected override int DefaultPollingConnectionCount => DefaultPollingConnectionCountFor(Environment.ProcessorCount);
+
+        internal static int DefaultPollingConnectionCountFor(int processorCount)
+            => Math.Min(MaximumDefaultPollingConnectionCount, Math.Max(MinimumDefaultPollingConnectionCount, processorCount));
 
         protected override void CheckArgs()
         {

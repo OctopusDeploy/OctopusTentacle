@@ -116,7 +116,7 @@ namespace Octopus.Tentacle.Communications
         }
                 
         // Limit Polling connections to something within the realm of reasonable.
-        static readonly int MaximumPollingConnectionCount = 512;
+        static readonly int MaximumPollingConnectionCount = 256;
                 
         uint GetPollingConnectionCount()
         {
