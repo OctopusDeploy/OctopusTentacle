@@ -161,12 +161,12 @@ namespace Octopus.Tentacle.Kubernetes
 
         public bool TryChangeOwnerToMatch(string filePath, string referencePath)
         {
-            return inner.TryChangeOwnerToMatch(filePath, referencePath);
+            return syncRetryPolicy.Execute(() => inner.TryChangeOwnerToMatch(filePath, referencePath));
         }
 
         public bool TryChangeOwner(string filePath, string userName)
         {
-            return inner.TryChangeOwner(filePath, userName);
+            return syncRetryPolicy.Execute(() => inner.TryChangeOwner(filePath, userName));
         }
 
         public string ReadAllText(string scriptFile)
