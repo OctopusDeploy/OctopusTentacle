@@ -35,14 +35,18 @@ namespace Octopus.Tentacle.Configuration
             // The Kubernetes agent keeps its configuration in a ConfigMap with its own per-agent key, and other
             // stores have no notion of a legacy scheme; only the file-backed store has anything to migrate.
             if (!(instanceSelector.Current.WritableConfiguration is IReEncryptingKeyValueStore store))
+            {
                 return;
+            }
 
             foreach (var name in ProtectedSettingNames)
             {
                 try
                 {
                     if (store.ReEncryptIfLegacy(name))
+                    {
                         log.Info($"Re-encrypted the protected setting '{name}' with the machine key generated for this machine.");
+                    }
                 }
                 catch (Exception e)
                 {

@@ -36,7 +36,9 @@ namespace Octopus.Tentacle.Configuration
         protected override void BeforeReEncrypting()
         {
             if (backedUpBeforeReEncrypting)
+            {
                 return;
+            }
 
             var backup = PreReEncryptionBackupFile;
             if (!fileSystem.FileExists(backup) && fileSystem.TryCreateFileOwnerOnly(backup, ReadConfigurationFileBytes()))

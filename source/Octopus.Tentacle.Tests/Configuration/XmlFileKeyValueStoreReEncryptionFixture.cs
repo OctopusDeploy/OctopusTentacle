@@ -47,7 +47,9 @@ namespace Octopus.Tentacle.Tests.Configuration
             File.Delete(configurationFile);
             var backup = configurationFile + XmlFileKeyValueStore.PreReEncryptionBackupSuffix;
             if (Directory.Exists(backup))
+            {
                 Directory.Delete(backup);
+            }
             File.Delete(backup);
         }
 
@@ -66,7 +68,9 @@ namespace Octopus.Tentacle.Tests.Configuration
             store.PreReEncryptionBackupFile.Should().Be(BackupFile);
             File.ReadAllBytes(BackupFile).Should().Equal(asTheEarlierVersionLeftIt, "the copy is byte for byte what was there before anything was rewritten, byte-order mark included");
             if (!OperatingSystem.IsWindows())
+            {
                 File.GetUnixFileMode(BackupFile).Should().Be(UnixFileMode.UserRead | UnixFileMode.UserWrite, "it still holds the certificate, under the old, weaker scheme");
+            }
             new XmlFileKeyValueStore(fileSystem, BackupFile, encryptor: new LegacySchemeEncryptor(legacyKey))
                 .Get<string>("Tentacle.Certificate", protectionLevel: ProtectionLevel.MachineKey)
                 .Should().Be("the certificate", "an earlier version can read the copy");
@@ -132,7 +136,9 @@ namespace Octopus.Tentacle.Tests.Configuration
             legacyStore.Set("an.object", configurationObject, ProtectionLevel.MachineKey);
 
             foreach (var name in new[] { "a.bool", "an.int", "an.enum", "an.object" })
+            {
                 store.ReEncryptIfLegacy(name).Should().BeTrue(name);
+            }
 
             var reloaded = new XmlFileKeyValueStore(fileSystem, configurationFile, encryptor: encryptor);
             reloaded.Get("a.bool", false, ProtectionLevel.MachineKey).Should().BeTrue();

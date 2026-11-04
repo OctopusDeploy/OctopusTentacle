@@ -593,7 +593,9 @@ Or one of the common options:
             File.Exists(keyFile).Should().BeTrue("the generated key lives beside the configuration file it protects");
             File.Exists(Path.Combine(homeDirectory.DirectoryPath, "machinekey")).Should().BeFalse("the machine configuration home only holds the instance registry");
             if (!OperatingSystem.IsWindows())
+            {
                 File.GetUnixFileMode(keyFile).Should().Be(UnixFileMode.UserRead | UnixFileMode.UserWrite, "only the owner may read the key");
+            }
 
             // A second process reads the certificate back with the same key.
             var (_, stdout, stderr) = await RunCommandAndAssertExitsWithSuccessExitCode(tc, environmentVariables, "show-thumbprint", $"--instance={instanceId}");

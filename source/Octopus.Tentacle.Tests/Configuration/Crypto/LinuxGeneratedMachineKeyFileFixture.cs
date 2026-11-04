@@ -43,7 +43,9 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         public void TearDown()
         {
             if (Directory.Exists(directory))
+            {
                 Directory.Delete(directory, recursive: true);
+            }
         }
 
         [Test]

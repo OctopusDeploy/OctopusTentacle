@@ -281,7 +281,9 @@ namespace Octopus.Tentacle.Core.Util
             finally
             {
                 if (File.Exists(temporaryPath))
+                {
                     File.Delete(temporaryPath);
+                }
             }
         }
 
@@ -322,11 +324,15 @@ namespace Octopus.Tentacle.Core.Util
         public bool RestrictFilePermissionsToOwner(string path)
         {
             if (OperatingSystem.IsWindows())
+            {
                 return false;
+            }
 
             var current = File.GetUnixFileMode(path);
             if ((current & ~OwnerReadWrite) == UnixFileMode.None)
+            {
                 return false;
+            }
 
             File.SetUnixFileMode(path, OwnerReadWrite);
             return true;
@@ -347,7 +353,9 @@ namespace Octopus.Tentacle.Core.Util
                     Share = FileShare.None
                 };
                 if (!OperatingSystem.IsWindows())
+                {
                     options.UnixCreateMode = OwnerReadWrite;
+                }
                 using (var stream = new FileStream(temporaryPath, options))
                 {
                     stream.Write(contents, 0, contents.Length);
@@ -371,7 +379,9 @@ namespace Octopus.Tentacle.Core.Util
             finally
             {
                 if (File.Exists(temporaryPath))
+                {
                     File.Delete(temporaryPath);
+                }
             }
         }
 
@@ -385,7 +395,9 @@ namespace Octopus.Tentacle.Core.Util
         {
             // Only root can give a file away, so there is nothing to try otherwise.
             if (OperatingSystem.IsWindows() || Environment.UserName != "root")
+            {
                 return false;
+            }
 
             try
             {
@@ -396,11 +408,15 @@ namespace Octopus.Tentacle.Core.Util
                     RedirectStandardError = true
                 };
                 foreach (var argument in arguments)
+                {
                     startInfo.ArgumentList.Add(argument);
+                }
 
                 using var process = System.Diagnostics.Process.Start(startInfo);
                 if (process == null)
+                {
                     return false;
+                }
                 var error = process.StandardError.ReadToEnd();
                 if (!process.WaitForExit(10_000))
                 {
@@ -409,7 +425,9 @@ namespace Octopus.Tentacle.Core.Util
                 }
 
                 if (process.ExitCode != 0)
+                {
                     Log.Verbose($"chown {string.Join(" ", arguments)} exited with {process.ExitCode}: {error}");
+                }
                 return process.ExitCode == 0;
             }
             catch (Exception e)

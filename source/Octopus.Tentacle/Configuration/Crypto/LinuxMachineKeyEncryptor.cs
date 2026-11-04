@@ -48,7 +48,9 @@ namespace Octopus.Tentacle.Configuration.Crypto
         public void RestrictKeyStorageToOwner()
         {
             if (keySource is LinuxGeneratedMachineKey generatedKey)
+            {
                 generatedKey.RestrictPermissionsToOwner();
+            }
         }
 
         public string Encrypt(string raw)
@@ -86,7 +88,9 @@ namespace Octopus.Tentacle.Configuration.Crypto
             {
                 var payload = Convert.FromBase64String(encrypted.Substring(ProtectedValuePrefix.Length));
                 if (payload.Length < NonceSizeInBytes + TagSizeInBytes)
+                {
                     throw new FormatException("The encrypted value is too short to contain a nonce and an authentication tag.");
+                }
 
                 var plaintext = Gcm.Decrypt(LoadCurrentKey(), payload, AssociatedData);
                 return StrictUtf8.GetString(plaintext);
@@ -105,7 +109,9 @@ namespace Octopus.Tentacle.Configuration.Crypto
         {
             var (key, _) = keySource.Load();
             if (key.Length != KeySizeInBytes)
+            {
                 throw new CryptographicException($"The machine key must be {KeySizeInBytes * 8} bits, but is {key.Length * 8}.");
+            }
             return key;
         }
 
@@ -182,7 +188,9 @@ namespace Octopus.Tentacle.Configuration.Crypto
             static void EnsureSupported()
             {
                 if (!AesGcm.IsSupported)
+                {
                     throw new PlatformNotSupportedException("AES-GCM is not available on this platform.");
+                }
             }
 #endif
         }

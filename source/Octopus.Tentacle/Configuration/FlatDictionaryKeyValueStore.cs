@@ -53,7 +53,9 @@ namespace Octopus.Tentacle.Configuration
                 // The reason is in the message itself, not just the inner exception, because it is what tells an
                 // operator how to recover and the console does not always print inner messages.
                 if (decrypting)
+                {
                     throw new FormatException($"Unable to decrypt the protected configuration setting '{name}'. {e.Message}", e);
+                }
                 if (protectionLevel == ProtectionLevel.None)
                     throw new FormatException($"Unable to parse configuration key '{name}' as a '{typeof(TData).Name}'. Value was '{valueAsString}'.", e);
                 throw new FormatException($"Unable to parse configuration key '{name}' as a '{typeof(TData).Name}'.", e);
@@ -96,7 +98,9 @@ namespace Octopus.Tentacle.Configuration
                 // The reason is in the message itself, not just the inner exception, because it is what tells an
                 // operator how to recover and the console does not always print inner messages.
                 if (decrypting)
+                {
                     throw new FormatException($"Unable to decrypt the protected configuration setting '{name}'. {e.Message}", e);
+                }
                 if (protectionLevel == ProtectionLevel.None)
                     throw new FormatException($"Unable to parse configuration key '{name}' as a '{typeof(TData).Name}'. Value was '{valueAsString}'.", e);
                 throw new FormatException($"Unable to parse configuration key '{name}' as a '{typeof(TData).Name}'.", e);
@@ -136,7 +140,9 @@ namespace Octopus.Tentacle.Configuration
 
             var stored = Read(name) as string;
             if (stored == null || string.IsNullOrWhiteSpace(stored) || !Encryptor.RequiresReEncryption(stored))
+            {
                 return false;
+            }
 
             // The stored form is the (possibly JSON-serialised) string that Set encrypted, so re-encrypting it as-is
             // preserves exactly what Get will deserialise afterwards.
@@ -145,7 +151,9 @@ namespace Octopus.Tentacle.Configuration
             BeforeReEncrypting();
             Write(name, reEncrypted);
             if (AutoSaveOnSet)
+            {
                 Save();
+            }
 
             return true;
         }

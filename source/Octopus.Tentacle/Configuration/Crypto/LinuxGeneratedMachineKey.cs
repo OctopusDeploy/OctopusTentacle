@@ -43,13 +43,17 @@ namespace Octopus.Tentacle.Configuration.Crypto
         public (byte[] Key, byte[] IV) Load()
         {
             if (loaded.HasValue)
+            {
                 return loaded.Value;
+            }
 
             var path = KeyFilePath;
             if (!fileSystem.FileExists(path))
             {
                 if (!createIfMissing)
+                {
                     throw new InvalidOperationException($"There is no machine key file at `{path}`.");
+                }
                 Create(path);
             }
 
@@ -67,9 +71,13 @@ namespace Octopus.Tentacle.Configuration.Crypto
             try
             {
                 if (!fileSystem.FileExists(path))
+                {
                     return;
+                }
                 if (fileSystem.RestrictFilePermissionsToOwner(path))
+                {
                     log.Info($"Restricted the permissions on the machine key file `{path}` so that only its owner can read it.");
+                }
             }
             catch (Exception e)
             {
@@ -123,7 +131,9 @@ namespace Octopus.Tentacle.Configuration.Crypto
             log.Info($"Generated a new machine key at `{path}`. Keep it with the configuration file it protects: the configuration cannot be decrypted without it.");
 
             if (ownerReferencePath != null && fileSystem.FileExists(ownerReferencePath) && fileSystem.TryChangeOwnerToMatch(path, ownerReferencePath))
+            {
                 log.Verbose($"Gave the machine key file `{path}` the same owner as `{ownerReferencePath}`.");
+            }
         }
 
         (byte[] Key, byte[] IV) LoadFromFile(string path)
@@ -146,7 +156,9 @@ namespace Octopus.Tentacle.Configuration.Crypto
                 var key = Convert.FromBase64String(content[0]);
                 var iv = Convert.FromBase64String(content[1]);
                 if (key.Length == 0)
+                {
                     throw new FormatException("The key is empty.");
+                }
                 return (key, iv);
             }
             catch (Exception ex) when (ex is FormatException || ex is IndexOutOfRangeException)

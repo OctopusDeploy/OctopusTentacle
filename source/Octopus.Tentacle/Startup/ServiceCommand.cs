@@ -134,11 +134,15 @@ namespace Octopus.Tentacle.Startup
                 || PlatformDetection.IsRunningOnWindows
                 || KubernetesSupportDetection.IsRunningAsKubernetesAgent
                 || string.IsNullOrWhiteSpace(configurationPath))
+            {
                 return;
+            }
 
             var userName = serviceConfigurationState.Username;
             if (string.IsNullOrWhiteSpace(userName) || userName == "root")
+            {
                 return;
+            }
 
             LinuxGeneratedMachineKey.GiveKeyToServiceUser(log, new OctopusPhysicalFileSystem(log), configurationPath!, userName!);
         }

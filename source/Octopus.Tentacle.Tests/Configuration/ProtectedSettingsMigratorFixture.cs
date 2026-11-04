@@ -78,7 +78,9 @@ namespace Octopus.Tentacle.Tests.Configuration
 
             var reloaded = new XmlFileKeyValueStore(fileSystem, configurationFile, encryptor: encryptor);
             foreach (var name in ProtectedSettingsMigrator.ProtectedSettingNames)
+            {
                 RawValue(name).Should().StartWith(LinuxMachineKeyEncryptor.ProtectedValuePrefix, name);
+            }
             reloaded.Get<string>("Tentacle.Certificate", protectionLevel: ProtectionLevel.MachineKey).Should().Be(Certificate);
             reloaded.Get<string>("Octopus.Proxy.ProxyPassword", protectionLevel: ProtectionLevel.MachineKey).Should().Be(ProxyPassword);
             reloaded.Get<string>("Octopus.Server.Proxy.ProxyPassword", protectionLevel: ProtectionLevel.MachineKey).Should().Be(PollingProxyPassword);

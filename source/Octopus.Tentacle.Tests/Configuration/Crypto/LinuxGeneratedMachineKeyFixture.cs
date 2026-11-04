@@ -36,7 +36,9 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
             fileSystem.TryCreateFileOwnerOnly(KeyFilePath, Arg.Any<string>()).Returns(ci =>
             {
                 if (written != null)
+                {
                     return false;
+                }
                 written = ci.ArgAt<string>(1);
                 return true;
             });
