@@ -3,7 +3,6 @@ using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Configuration;
-using Octopus.Tentacle.Configuration.Crypto;
 using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Security.Certificates;
 using Serilog;
@@ -13,11 +12,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     /// <summary>
     /// Creates the crypto state every Tentacle in the run shares, before any test starts one.
     ///
-    /// Each test Tentacle has its own configuration directory, but on Linux they all share the
-    /// fallback machine key (used when /etc/machine-id is unusable) and the user's certificate
-    /// store. Both are created on first use, and creating them from several Tentacles at once
-    /// races: one can replace the key another just encrypted with, or two can write the same
-    /// certificate file into the store. Once both exist, Tentacles only read them.
+    /// Each test Tentacle has its own configuration directory and its own config encryption key,
+    /// but on Linux they all share the user's certificate store. It is filled on first use, and
+    /// filling it from several Tentacles at once races: two can write the same certificate file
+    /// into the store. Once it holds the certificate, Tentacles only read it.
     ///
     /// This goes through the same code a Tentacle uses at startup, so it only covers Tentacles
     /// running as this user.
@@ -30,18 +28,14 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         {
             var log = new SystemLog();
 
-            // Stored the way import-certificate stores it: encrypted with the machine key, which
-            // creates the fallback key if it is needed and does not exist yet.
+            // Encoded the way import-certificate stores it, then loaded the way a Tentacle loads it
+            // at startup, which adds it to the store.
             var pfxPath = TestCertificates.TentaclePfxPath;
             var certificate = CertificateEncoder.FromPfxFile(pfxPath, string.Empty, log);
             var encoded = CertificateEncoder.ToBase64String(certificate);
-            var encrypted = MachineKeyEncryptor.Current.Encrypt(encoded);
-
-            // Loaded the way a Tentacle loads it at startup, which adds it to the store.
-            var decrypted = MachineKeyEncryptor.Current.Decrypt(encrypted);
             var loaded = TentacleConfiguration.LoadTentacleCertificate(
                 TestThumbprint,
-                decrypted,
+                encoded,
                 log);
 
             var comparison = StringComparison.OrdinalIgnoreCase;
