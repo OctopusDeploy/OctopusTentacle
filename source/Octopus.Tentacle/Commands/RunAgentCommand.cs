@@ -144,11 +144,7 @@ namespace Octopus.Tentacle.Commands
             Runtime.WaitForUserToExit();
         }
 
-        /// <summary>
-        /// The agent is the one command every upgraded install runs, so this is where values protected by an earlier
-        /// version's encryption scheme get rewritten with the current one. It must never stop the agent from starting:
-        /// the values stay readable through the old scheme until it succeeds.
-        /// </summary>
+        // Must never stop the agent from starting: the values stay readable through the old scheme until it succeeds.
         void ReEncryptLegacyProtectedSettings()
         {
             try

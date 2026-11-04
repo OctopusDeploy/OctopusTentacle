@@ -7,26 +7,13 @@ using Octopus.Tentacle.Core.Diagnostics;
 
 namespace Octopus.Tentacle.Configuration.Crypto
 {
-    /// <summary>
-    /// Protects <see cref="ProtectionLevel.MachineKey"/> values on Linux.
-    ///
-    /// Values are encrypted with AES-256-GCM using the key from <see cref="LinuxGeneratedMachineKey"/>, a fresh random
-    /// 96-bit nonce for every value and a 128-bit authentication tag, and stored as
-    /// <c>$OctopusMachineKeyV1$base64(nonce || ciphertext || tag)</c>. The prefix is bound into the tag as associated
-    /// data, so a value cannot be altered, truncated or relabelled without decryption failing.
-    ///
-    /// Values without that prefix were written by earlier versions of Tentacle, which used unauthenticated AES-CBC with
-    /// a key derived from <c>/etc/machine-id</c> (falling back to a generated key) and a fixed IV. They are still
-    /// decrypted the way those versions decrypted them so that existing configuration keeps working after an upgrade,
-    /// and <see cref="ProtectedSettingsMigrator"/> re-encrypts them with the current scheme when the agent starts.
-    /// Nothing is ever encrypted with a legacy key any more.
-    /// </summary>
+    // Stored as $OctopusMachineKeyV1$base64(nonce || ciphertext || tag), AES-256-GCM with the prefix as associated data.
+    // Values without the prefix were written by earlier versions (unauthenticated AES-CBC, machine-id or generated key,
+    // fixed IV); they are still decrypted that way, and ProtectedSettingsMigrator rewrites them on agent start.
     public class LinuxMachineKeyEncryptor : IMachineKeyEncryptor
     {
-        /// <summary>
-        /// Marks a value encrypted with the current scheme. <c>$</c> is not a base64 character, so a value without
-        /// this prefix is unambiguously a legacy one. Must never change; bump the version number instead.
-        /// </summary>
+        // $ is not a base64 character, so a value without this prefix is unambiguously a legacy one. Never change this;
+        // bump the version number instead.
         public const string ProtectedValuePrefix = "$OctopusMachineKeyV1$";
 
         public const int KeySizeInBytes = 32;
@@ -44,8 +31,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
         readonly ICryptoKeyNixSource keySource;
         readonly IReadOnlyList<ICryptoKeyNixSource> legacyKeySources;
 
-        /// <param name="keySource">The key used to encrypt every new value and to decrypt values carrying <see cref="ProtectedValuePrefix"/>.</param>
-        /// <param name="legacyKeySources">The keys, in the order earlier versions tried them, used only to decrypt values without the prefix.</param>
+        // legacyKeySources are tried in the order earlier versions tried them, and only for values without the prefix.
         public LinuxMachineKeyEncryptor(ISystemLog log, ICryptoKeyNixSource keySource, IEnumerable<ICryptoKeyNixSource> legacyKeySources)
         {
             this.log = log;
@@ -123,10 +109,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
             return key;
         }
 
-        /// <remarks>
-        /// This is exactly what earlier versions did on read, and it must stay that way so that configuration written
-        /// by those versions keeps decrypting after an upgrade.
-        /// </remarks>
+        // Exactly what earlier versions did on read; it must stay that way so their configuration keeps decrypting after an upgrade.
         string DecryptLegacy(string encrypted)
         {
             var errors = new List<Exception>();
@@ -159,13 +142,9 @@ namespace Octopus.Tentacle.Configuration.Crypto
                 new AggregateException(errors));
         }
 
-        /// <summary>
-        /// AES-GCM from the platform. Only reachable on .NET (Core): the .NET Framework build only runs on Windows,
-        /// which protects values with DPAPI instead.
-        /// </summary>
+        // Only reachable on .NET (Core): the .NET Framework build only runs on Windows, which uses DPAPI instead.
         static class Gcm
         {
-            /// <summary>Encrypts <paramref name="plaintext"/> into <paramref name="payload"/>, whose first bytes already hold the nonce.</summary>
             public static void Encrypt(byte[] key, byte[] plaintext, byte[] payload, byte[] associatedData)
             {
 #if NETFRAMEWORK
@@ -181,7 +160,6 @@ namespace Octopus.Tentacle.Configuration.Crypto
 #endif
             }
 
-            /// <summary>Decrypts and authenticates <c>nonce || ciphertext || tag</c>.</summary>
             public static byte[] Decrypt(byte[] key, byte[] payload, byte[] associatedData)
             {
 #if NETFRAMEWORK

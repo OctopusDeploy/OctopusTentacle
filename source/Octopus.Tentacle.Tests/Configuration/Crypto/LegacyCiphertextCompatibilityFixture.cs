@@ -13,16 +13,9 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Configuration.Crypto
 {
-    /// <summary>
-    /// Proves that configuration written by Linux Tentacles before the versioned ciphertext format still decrypts,
-    /// which is what makes upgrading an existing install safe.
-    ///
-    /// The ciphertext below was captured by running the encryptor exactly as it was before this change (commit
-    /// 7b1504e, <c>LinuxMachineKeyEncryptor</c> iterating <c>LinuxMachineIdKey</c> then <c>LinuxGeneratedMachineKey</c>)
-    /// against the fixed machine-id and key file here. That scheme used a fixed IV, so the output is deterministic
-    /// and these values are pinned for good. Do not regenerate them with the current code: that would only prove the
-    /// current code agrees with itself.
-    /// </summary>
+    // The ciphertext below was captured from the encryptor as it was before the versioned format (commit 7b1504e), which
+    // used a fixed IV and so is deterministic. Do not regenerate it with the current code: that would only prove the
+    // current code agrees with itself.
     [TestFixture]
     public class LegacyCiphertextCompatibilityFixture
     {
@@ -78,10 +71,6 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
             Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleHome, null);
         }
 
-        /// <summary>
-        /// The encryptor exactly as <see cref="MachineKeyEncryptor.ForConfigurationFile"/> composes it on Linux, over a
-        /// fake file system holding a machine-id (or not) and whatever key files <see cref="files"/> holds.
-        /// </summary>
         IMachineKeyEncryptor CreateEncryptorAsComposedInProduction(bool machineIdPresent, string machineId = MachineId, string configurationFile = ConfigurationFile)
         {
             var fileSystem = files.CreateFileSystem();
@@ -194,9 +183,6 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
             attackerWithTheSameImage.Invoking(x => x.Decrypt(encrypted)).Should().Throw<Exception>();
         }
 
-        /// <summary>
-        /// Key files held in memory, so the composition can be exercised end to end without touching /etc/octopus.
-        /// </summary>
         class FakeKeyFiles
         {
             public System.Collections.Generic.Dictionary<string, string> Contents { get; } = new();

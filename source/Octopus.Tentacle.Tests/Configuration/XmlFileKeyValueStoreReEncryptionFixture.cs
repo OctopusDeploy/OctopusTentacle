@@ -15,10 +15,6 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Configuration
 {
-    /// <summary>
-    /// <see cref="IReEncryptingKeyValueStore.ReEncryptIfLegacy"/> on the store behind tentacle.config. The encryptor is
-    /// built from in-memory keys so this runs the same way on every platform.
-    /// </summary>
     [TestFixture]
     public class XmlFileKeyValueStoreReEncryptionFixture
     {

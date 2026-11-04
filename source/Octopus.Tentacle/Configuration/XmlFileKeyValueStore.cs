@@ -10,9 +10,6 @@ namespace Octopus.Tentacle.Configuration
 {
     public class XmlFileKeyValueStore : XmlKeyValueStore
     {
-        /// <summary>
-        /// Appended to the configuration file's name for the copy kept before the first re-encryption.
-        /// </summary>
         public const string PreReEncryptionBackupSuffix = ".before-reencryption";
 
         static readonly ISystemLog Log = new SystemLog();
@@ -21,7 +18,7 @@ namespace Octopus.Tentacle.Configuration
         readonly string configurationFile;
         bool backedUpBeforeReEncrypting;
 
-        /// <param name="encryptor">Protects <see cref="ProtectionLevel.MachineKey"/> values. Null means the encryptor for this configuration file, <see cref="MachineKeyEncryptor.ForConfigurationFile"/>; tests pass their own.</param>
+        // A null encryptor means the one for this configuration file; tests pass their own.
         public XmlFileKeyValueStore(IOctopusFileSystem fileSystem,
             string configurationFile,
             bool autoSaveOnSet = true,
@@ -34,12 +31,8 @@ namespace Octopus.Tentacle.Configuration
 
         public string PreReEncryptionBackupFile => configurationFile + PreReEncryptionBackupSuffix;
 
-        /// <summary>
-        /// Before the first value is rewritten, keeps a copy of the file exactly as the earlier version left it, so that
-        /// version can be reinstalled and pointed at it. The copy is readable only by its owner and is never replaced,
-        /// so it stays the oldest copy. If it cannot be written the re-encryption does not happen, because a downgrade
-        /// would then have nothing to go back to.
-        /// </summary>
+        // The copy is never replaced, so it stays the file exactly as the earlier version left it. If it cannot be written
+        // the re-encryption does not happen, because a downgrade would then have nothing to go back to.
         protected override void BeforeReEncrypting()
         {
             if (backedUpBeforeReEncrypting)

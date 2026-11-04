@@ -17,10 +17,6 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Configuration.Crypto
 {
-    /// <summary>
-    /// <see cref="LinuxGeneratedMachineKey"/> and the store that uses it against the real file system, in a temporary
-    /// directory, to prove what they ask <see cref="OctopusPhysicalFileSystem"/> for actually lands on disk.
-    /// </summary>
     [TestFixture]
     [LinuxTest]
     [SupportedOSPlatform("linux")]

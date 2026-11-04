@@ -126,11 +126,8 @@ namespace Octopus.Tentacle.Startup
             }
         }
 
-        /// <summary>
-        /// On Linux the configuration is encrypted with a key file readable only by its owner. It is usually created by
-        /// root (configure-tentacle.sh, <c>sudo tentacle new-certificate</c>), so a service that runs as another user
-        /// could not read it; installing the service is the one moment Tentacle knows who that user is.
-        /// </summary>
+        // The key file is usually created by root (configure-tentacle.sh, sudo tentacle new-certificate), so a service that
+        // runs as another user could not read it; installing the service is the one moment Tentacle knows who that user is.
         void GiveTheMachineKeyToTheServiceUser(string? configurationPath)
         {
             if (!(serviceConfigurationState.Install || serviceConfigurationState.Reconfigure)

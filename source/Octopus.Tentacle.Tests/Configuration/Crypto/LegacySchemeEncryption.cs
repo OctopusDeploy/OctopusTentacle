@@ -5,11 +5,6 @@ using Octopus.Tentacle.Configuration.Crypto;
 
 namespace Octopus.Tentacle.Tests.Configuration.Crypto
 {
-    /// <summary>
-    /// Produces ciphertext the way Linux Tentacles did before <see cref="LinuxMachineKeyEncryptor.ProtectedValuePrefix"/>
-    /// was introduced: AES-CBC with the key source's fixed IV, base64, no prefix. Tests use it to fabricate the
-    /// configuration an upgraded install brings with it.
-    /// </summary>
     public static class LegacySchemeEncryption
     {
         public static string Encrypt(ICryptoKeyNixSource keySource, string plaintext)
@@ -24,10 +19,6 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         }
     }
 
-    /// <summary>
-    /// An <see cref="IMachineKeyEncryptor"/> that writes values in the pre-prefix format, for seeding a key-value
-    /// store with what an earlier version of Tentacle would have written.
-    /// </summary>
     public class LegacySchemeEncryptor : IMachineKeyEncryptor
     {
         readonly ICryptoKeyNixSource keySource;

@@ -10,7 +10,7 @@ namespace Octopus.Tentacle.Configuration
         protected readonly JsonSerializerSettings JsonSerializerSettings;
         protected readonly IMachineKeyEncryptor Encryptor;
 
-        /// <param name="encryptor">Protects <see cref="ProtectionLevel.MachineKey"/> values. Null means <see cref="MachineKeyEncryptor.Current"/>; file-backed stores pass the encryptor for their file, and tests pass their own.</param>
+        // A null encryptor means MachineKeyEncryptor.Current; file-backed stores pass the encryptor for their file.
         protected FlatDictionaryKeyValueStore(JsonSerializerSettings jsonSerializerSettings, bool autoSaveOnSet = true, bool isWriteOnly = false, IMachineKeyEncryptor? encryptor = null) : base(autoSaveOnSet, isWriteOnly)
         {
             JsonSerializerSettings = jsonSerializerSettings;
@@ -153,10 +153,7 @@ namespace Octopus.Tentacle.Configuration
         public void RestrictKeyStorageToOwner()
             => Encryptor.RestrictKeyStorageToOwner();
 
-        /// <summary>
-        /// Called before <see cref="ReEncryptIfLegacy"/> rewrites a value, once the new value has been worked out. A
-        /// store can use it to keep what an earlier version wrote; throwing leaves the stored value as it was.
-        /// </summary>
+        // Throwing here leaves the stored value as it was.
         protected virtual void BeforeReEncrypting()
         {
         }

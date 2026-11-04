@@ -11,10 +11,8 @@ namespace Octopus.Tentacle.Configuration.Crypto
     {
         static readonly ISystemLog Log = new SystemLog();
 
-        /// <summary>
-        /// The encryptor for values that are not kept in a configuration file of their own. On Linux its key is where
-        /// earlier versions kept theirs. Configuration files use <see cref="ForConfigurationFile"/> instead.
-        /// </summary>
+        // For values not kept in a configuration file of their own. On Linux its key is where earlier versions kept theirs;
+        // configuration files use ForConfigurationFile instead.
         public static readonly IMachineKeyEncryptor Current;
 
         static MachineKeyEncryptor()
@@ -24,21 +22,13 @@ namespace Octopus.Tentacle.Configuration.Crypto
                 : CreateLinuxEncryptor(Log, new OctopusPhysicalFileSystem(Log), LinuxGeneratedMachineKey.LegacyKeyFilePathForThisHost, configurationFile: null);
         }
 
-        /// <summary>
-        /// The encryptor for the values in the configuration file at <paramref name="configurationFile"/>. On Linux its
-        /// key is <c>machinekey</c> beside that file (see <see cref="LinuxGeneratedMachineKey.KeyFilePathFor"/>);
-        /// on Windows it is DPAPI, as it always was.
-        /// </summary>
         public static IMachineKeyEncryptor ForConfigurationFile(string configurationFile)
             => PlatformDetection.IsRunningOnWindows
                 ? Current
                 : CreateLinuxEncryptor(Log, new OctopusPhysicalFileSystem(Log), LinuxGeneratedMachineKey.KeyFilePathFor(configurationFile), configurationFile);
 
-        /// <summary>
-        /// How the Linux encryptor is put together. Public so tests can prove the composition, not just the parts.
-        /// </summary>
-        /// <param name="keyFilePath">Where the key for new values is kept, and created if need be.</param>
-        /// <param name="configurationFile">The configuration file the key protects, if any; a key root creates is given its owner.</param>
+        // Public so tests can prove the composition, not just the parts. A key that root creates is given the owner of
+        // configurationFile, when there is one.
         public static IMachineKeyEncryptor CreateLinuxEncryptor(ISystemLog log, IOctopusFileSystem fileSystem, string keyFilePath, string? configurationFile)
         {
             var generatedKey = new LinuxGeneratedMachineKey(log, fileSystem, keyFilePath, createIfMissing: true, ownerReferencePath: configurationFile);
