@@ -100,6 +100,14 @@ namespace Octopus.Tentacle.Startup
             {
                 var currentName = instanceSelector.Current.InstanceName;
                 var thisServiceName = ServiceName.GetWindowsServiceName(applicationName, currentName);
+
+                var grantServiceAccountAccess = PlatformDetection.IsRunningOnWindows
+                    && (serviceConfigurationState.Install || serviceConfigurationState.Reconfigure)
+                    && !string.IsNullOrWhiteSpace(serviceConfigurationState.Username)
+                    && !string.Equals(serviceConfigurationState.Username, "LocalSystem", StringComparison.OrdinalIgnoreCase);
+                if (grantServiceAccountAccess)
+                    GrantServiceAccountAccessToConfiguration(instanceSelector.Current.ConfigurationPath!, serviceConfigurationState.Username!);
+
                 if (currentName == null)
                 {
                     if (serviceConfigurationState.Install || serviceConfigurationState.Reconfigure)
@@ -120,6 +128,19 @@ namespace Octopus.Tentacle.Startup
                         serviceDescription,
                         serviceConfigurationState);
                 }
+            }
+        }
+
+        void GrantServiceAccountAccessToConfiguration(string configurationPath, string username)
+        {
+            try
+            {
+                ConfigurationFileAccess.GrantModify(configurationPath, username);
+                log.Info($"Granted {username} access to {configurationPath}");
+            }
+            catch (Exception ex)
+            {
+                log.Warn($"Could not grant {username} access to {configurationPath}: {ex.Message}. Grant the service account read and write access to that file if the service fails to start.");
             }
         }
     }
