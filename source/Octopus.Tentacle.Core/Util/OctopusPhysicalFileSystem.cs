@@ -372,9 +372,13 @@ namespace Octopus.Tentacle.Core.Util
                     // falls through to that check-then-rename, as does anything else in the way (a directory, say),
                     // so that it fails the same way it always did.
                     if (link(temporaryPath, path) == 0)
+                    {
                         return true;
+                    }
                     if (Marshal.GetLastWin32Error() == EEXIST && File.Exists(path))
+                    {
                         return false;
+                    }
                 }
 
                 try
@@ -406,7 +410,9 @@ namespace Octopus.Tentacle.Core.Util
             // GNU coreutils has --reference; BSD (macOS) and BusyBox (musl images) do not, so fall back to reading the
             // owner with POSIX `ls -n` and passing it to chown as uid:gid, which every chown understands.
             if (RunChownAsRoot("--reference=" + referencePath, "--", path))
+            {
                 return true;
+            }
 
             var owner = ReadNumericOwner(referencePath);
             return owner != null && RunChownAsRoot("--", owner, path);
@@ -415,10 +421,7 @@ namespace Octopus.Tentacle.Core.Util
         public bool TryChangeOwner(string path, string userName)
             => RunChownAsRoot("--", userName, path);
 
-        /// <summary>
-        /// The owner of <paramref name="path"/> as <c>uid:gid</c>, from <c>ls -ldn</c>, which is POSIX and so the same on
-        /// GNU, BSD and BusyBox. Null if it could not be read.
-        /// </summary>
+        // ls -ldn is POSIX, so its output is the same on GNU, BSD and BusyBox.
         string? ReadNumericOwner(string path)
         {
             var (exitCode, output, _) = RunAsRoot("ls", "-ldn", "--", path);
@@ -429,15 +432,14 @@ namespace Octopus.Tentacle.Core.Util
         {
             var (exitCode, _, error) = RunAsRoot("chown", arguments);
             if (exitCode is not null and not 0)
+            {
                 Log.Verbose($"chown {string.Join(" ", arguments)} exited with {exitCode}: {error}");
+            }
             return exitCode == 0;
         }
 
-        /// <summary>
-        /// Runs <paramref name="program"/> as root and returns its exit code and output. Only root can give a file away,
-        /// so if we are not root nothing is run. The exit code is null whenever the program did not run to completion: not
-        /// root, it could not be started, it timed out, or it threw.
-        /// </summary>
+        // Only root can give a file away, so nothing is run unless we are root. The exit code is null whenever the program
+        // did not run to completion: not root, it could not be started, it timed out, or it threw.
         (int? ExitCode, string Output, string Error) RunAsRoot(string program, params string[] arguments)
         {
             if (OperatingSystem.IsWindows() || Environment.UserName != "root")
@@ -484,15 +486,13 @@ namespace Octopus.Tentacle.Core.Util
         }
 #endif
 
-        /// <summary>
-        /// Parses the uid and gid out of one line of <c>ls -ln</c> output (<c>-rw-r--r-- 1 1000 1000 42 Jan 1 00:00 file</c>)
-        /// as <c>uid:gid</c>, or null if the line is not in that shape.
-        /// </summary>
         public static string? ParseNumericOwnerFromLs(string lsOutput)
         {
             var fields = (lsOutput ?? "").Trim().Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
             if (fields.Length < 5 || !uint.TryParse(fields[2], out var uid) || !uint.TryParse(fields[3], out var gid))
+            {
                 return null;
+            }
             return $"{uid}:{gid}";
         }
 

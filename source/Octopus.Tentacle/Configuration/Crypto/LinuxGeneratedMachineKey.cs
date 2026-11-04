@@ -15,7 +15,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
     {
         public const string KeyFileName = "config-encryption.key";
 
-        /// <summary>The name earlier versions gave their generated key. Only ever read, never written.</summary>
+        // Only ever read, never written.
         public const string LegacyKeyFileName = "machinekey";
 
         public const string LegacyKeyFilePath = "/etc/octopus/" + LegacyKeyFileName;
