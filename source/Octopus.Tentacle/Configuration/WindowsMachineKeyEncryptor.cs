@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Security.Cryptography;
 using System.Text;
 using Octopus.Tentacle.Configuration.Crypto;
@@ -14,5 +14,14 @@ namespace Octopus.Tentacle.Configuration
         public string Decrypt(string encrypted)
             => Encoding.UTF8.GetString(ProtectedData.Unprotect(Convert.FromBase64String(encrypted), null, DataProtectionScope.LocalMachine));
 #pragma warning restore CA1416
+
+        // DPAPI has only ever had the one scheme here.
+        public bool RequiresReEncryption(string encrypted)
+            => false;
+
+        // DPAPI keeps the key; there is no file of ours to protect.
+        public void RestrictKeyStorageToOwner()
+        {
+        }
     }
 }

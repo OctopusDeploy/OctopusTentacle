@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Security.Cryptography;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Core.Util;
@@ -7,59 +6,178 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Configuration.Crypto
 {
-    public class LinuxGeneratedMachineKey: ICryptoKeyNixSource
+    // The file format is base64(key).base64(iv), as earlier versions wrote to /etc/octopus/machinekey. The IV is only used
+    // to decrypt values those versions wrote, which encrypted everything with that one IV.
+    public class LinuxGeneratedMachineKey : ICryptoKeyNixSource
     {
+        public const string KeyFileName = "machinekey";
+
+        public const string LegacyKeyFilePath = "/etc/octopus/" + KeyFileName;
+
         readonly ISystemLog log;
         readonly IOctopusFileSystem fileSystem;
+        readonly bool createIfMissing;
+        readonly string? ownerReferencePath;
+        (byte[] Key, byte[] IV)? loaded;
 
-        static string FileName =>
-            KubernetesSupportDetection.IsRunningAsKubernetesAgent
-                //if we are running in K8S, we want to save the machine key to the home directory, which is likely on a network drives
-                ? Path.Combine(Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleHome)!, "machinekey")
-                : "/etc/octopus/machinekey";
-
-        public LinuxGeneratedMachineKey(ISystemLog log, IOctopusFileSystem fileSystem)
+        public LinuxGeneratedMachineKey(ISystemLog log, IOctopusFileSystem fileSystem, string keyFilePath, bool createIfMissing = true, string? ownerReferencePath = null)
         {
             this.log = log;
             this.fileSystem = fileSystem;
+            KeyFilePath = keyFilePath;
+            this.createIfMissing = createIfMissing;
+            this.ownerReferencePath = ownerReferencePath;
         }
 
-        void Generate()
+        public string KeyFilePath { get; }
+
+        public static string KeyFilePathFor(string configurationFile)
+            => JoinLinuxPath(LinuxDirectoryOf(configurationFile), KeyFileName);
+
+        // Evaluated on every call because it depends on the environment, which tests change.
+        public static string LegacyKeyFilePathForThisHost
+            => KubernetesSupportDetection.IsRunningAsKubernetesAgent
+                ? JoinLinuxPath(Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleHome)!, KeyFileName)
+                : LegacyKeyFilePath;
+
+        public (byte[] Key, byte[] IV) Load()
         {
-            log.Verbose("Machine key file does not yet exist. Generating key file that will be used to encrypt data on this machine");
-            var aes = Aes.Create();
+            if (loaded.HasValue)
+            {
+                return loaded.Value;
+            }
+
+            var path = KeyFilePath;
+            if (!fileSystem.FileExists(path))
+            {
+                if (!createIfMissing)
+                {
+                    throw new InvalidOperationException($"There is no machine key file at `{path}`.");
+                }
+                Create(path);
+            }
+
+            var key = LoadFromFile(path);
+            loaded = key;
+            return key;
+        }
+
+        // Earlier versions created the key file with whatever the umask allowed. Only the agent calls this, as the user it
+        // runs as: tightening from a command run as root (sudo tentacle show-thumbprint, say) could lock out a service user
+        // that relies on reading a file it does not own.
+        public void RestrictPermissionsToOwner()
+        {
+            var path = KeyFilePath;
+            try
+            {
+                if (!fileSystem.FileExists(path))
+                {
+                    return;
+                }
+                if (fileSystem.RestrictFilePermissionsToOwner(path))
+                {
+                    log.Info($"Restricted the permissions on the machine key file `{path}` so that only its owner can read it.");
+                }
+            }
+            catch (Exception e)
+            {
+                log.Verbose(e, $"Unable to restrict the permissions on the machine key file `{path}`. The key is still usable.");
+            }
+        }
+
+        public static bool GiveKeyToServiceUser(ISystemLog log, IOctopusFileSystem fileSystem, string configurationFile, string userName)
+        {
+            var key = new LinuxGeneratedMachineKey(log, fileSystem, KeyFilePathFor(configurationFile), createIfMissing: true, ownerReferencePath: configurationFile);
+            try
+            {
+                key.Load();
+            }
+            catch (Exception e)
+            {
+                log.Warn(e, $"Unable to create the machine key file `{key.KeyFilePath}` for the service user {userName}.");
+                return false;
+            }
+
+            if (fileSystem.TryChangeOwner(key.KeyFilePath, userName))
+            {
+                log.Info($"The machine key file `{key.KeyFilePath}` now belongs to {userName}, the user the service runs as.");
+                return true;
+            }
+
+            log.Warn($"Unable to give the machine key file `{key.KeyFilePath}` to {userName}, the user the service runs as. "
+                + $"If Tentacle cannot read it when it starts, run `sudo chown {userName} {key.KeyFilePath}`.");
+            return false;
+        }
+
+        void Create(string path)
+        {
+            using var aes = Aes.Create();
+            aes.KeySize = 256;
             aes.GenerateIV();
             aes.GenerateKey();
             var raw = Convert.ToBase64String(aes.Key) + "." + Convert.ToBase64String(aes.IV);
 
-            if (!fileSystem.FileExists(Path.GetDirectoryName(FileName)!))
-                fileSystem.CreateDirectory(Path.GetDirectoryName(FileName)!);
+            fileSystem.EnsureDirectoryExists(LinuxDirectoryOf(path));
 
-            fileSystem.WriteAllText(FileName, raw);
+            // Written complete under another name and moved into place without replacing anything, so two processes
+            // generating a key at once (several instances starting after an upgrade, say) cannot each keep a different
+            // one: the loser loads the winner's key from the file below.
+            if (!fileSystem.TryCreateFileOwnerOnly(path, raw))
+            {
+                log.Verbose($"Another process created the machine key file `{path}` first; using its key.");
+                return;
+            }
+
+            log.Info($"Generated a new machine key at `{path}`. Keep it with the configuration file it protects: the configuration cannot be decrypted without it.");
+
+            if (ownerReferencePath != null && fileSystem.FileExists(ownerReferencePath) && fileSystem.TryChangeOwnerToMatch(path, ownerReferencePath))
+            {
+                log.Verbose($"Gave the machine key file `{path}` the same owner as `{ownerReferencePath}`.");
+            }
         }
 
-        (byte[] Key, byte[] IV) LoadFromFile()
+        (byte[] Key, byte[] IV) LoadFromFile(string path)
         {
+            string contents;
             try
             {
-                var content = fileSystem.ReadAllText(FileName).Split('.');
+                contents = fileSystem.ReadAllText(path);
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                var user = Environment.UserName;
+                throw new InvalidOperationException($"The machine key file `{path}` exists but the user Tentacle is running as ({user}) cannot read it. "
+                    + $"It must be readable by that user, for example: `sudo chown {user} {path}`, or install the service with `tentacle service --install --username {user}` as root.", e);
+            }
+
+            try
+            {
+                var content = contents.Split('.');
                 var key = Convert.FromBase64String(content[0]);
                 var iv = Convert.FromBase64String(content[1]);
+                if (key.Length == 0)
+                {
+                    throw new FormatException("The key is empty.");
+                }
                 return (key, iv);
             }
             catch (Exception ex) when (ex is FormatException || ex is IndexOutOfRangeException)
             {
-                throw new InvalidOperationException($"Machine key file at `{FileName}` is corrupt and cannot be loaded. "
-                    + $"If this file previously contained a valid key to encrypt data, that data may no longer be retrievable."
-                    + $"Remove the file `{FileName}` and allow Octopus to regenerate the key.");
+                throw new InvalidOperationException($"Machine key file at `{path}` is corrupt and cannot be loaded. "
+                    + "If this file previously contained a valid key to encrypt data, that data may no longer be retrievable. "
+                    + $"Remove the file `{path}` and allow Octopus to regenerate the key.");
             }
         }
 
-        public (byte[] Key, byte[] IV) Load()
+        // These are always Linux paths, whatever the host: this class only runs on Linux in production, but its unit
+        // tests also run on Windows, where Path.Combine and Path.GetDirectoryName would switch to backslashes.
+        static string JoinLinuxPath(string directory, string fileName)
+            => directory.EndsWith("/", StringComparison.Ordinal) ? directory + fileName : directory + "/" + fileName;
+
+        static string LinuxDirectoryOf(string path)
         {
-            if (!fileSystem.FileExists(FileName))
-                Generate();
-            return LoadFromFile();
+            var lastSeparator = path.LastIndexOf('/');
+            return lastSeparator <= 0 ? "/" : path.Substring(0, lastSeparator);
         }
     }
 }
