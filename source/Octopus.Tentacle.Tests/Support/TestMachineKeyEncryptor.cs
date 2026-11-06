@@ -35,5 +35,10 @@ namespace Octopus.Tentacle.Tests.Support
         {
             return (Key, IV);
         }
+
+        public (byte[] Key, byte[] IV)? TryLoad()
+        {
+            return Load();
+        }
     }
 }

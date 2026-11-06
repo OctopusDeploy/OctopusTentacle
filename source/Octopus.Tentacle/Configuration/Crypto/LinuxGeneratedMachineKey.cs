@@ -48,24 +48,37 @@ namespace Octopus.Tentacle.Configuration.Crypto
 
         public (byte[] Key, byte[] IV) Load()
         {
-            if (loaded.HasValue)
+            var existing = TryLoad();
+            if (existing.HasValue)
             {
-                return loaded.Value;
+                return existing.Value;
             }
 
-            var path = KeyFilePath;
-            if (!fileSystem.FileExists(path))
+            if (!createIfMissing)
             {
-                if (!createIfMissing)
-                {
-                    throw new InvalidOperationException($"There is no machine key file at `{path}`.");
-                }
-                Create(path);
+                throw new InvalidOperationException($"There is no machine key file at `{KeyFilePath}`.");
             }
 
-            var key = LoadFromFile(path);
+            Create(KeyFilePath);
+            var key = LoadFromFile(KeyFilePath);
             loaded = key;
             return key;
+        }
+
+        public (byte[] Key, byte[] IV)? TryLoad()
+        {
+            if (loaded.HasValue)
+            {
+                return loaded;
+            }
+
+            if (!fileSystem.FileExists(KeyFilePath))
+            {
+                return null;
+            }
+
+            loaded = LoadFromFile(KeyFilePath);
+            return loaded;
         }
 
         // Earlier versions created the key file with whatever the umask allowed. Only the agent calls this, as the user it
