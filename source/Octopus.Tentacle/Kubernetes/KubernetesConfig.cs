@@ -10,6 +10,8 @@ namespace Octopus.Tentacle.Kubernetes
         const string ServerCommsAddressVariableName = "ServerCommsAddress";
         const string EnvVarPrefix = "OCTOPUS__K8STENTACLE";
 
+        public static string KubeContextVariableName = $"{EnvVarPrefix}__KUBECONTEXT";
+        
         public static string NamespaceVariableName => $"{EnvVarPrefix}__NAMESPACE";
         public static string Namespace => GetRequiredEnvVar(NamespaceVariableName, "Unable to determine Kubernetes namespace.");
         public static string PodServiceAccountName => GetRequiredEnvVar($"{EnvVarPrefix}__PODSERVICEACCOUNTNAME", "Unable to determine Kubernetes Pod service account name.");
