@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -362,12 +363,26 @@ namespace Octopus.Tentacle.Core.Util
                     stream.Flush(flushToDisk: true);
                 }
 
+                if (!OperatingSystem.IsWindows())
+                {
+                    // link(2) cannot replace an existing file, so whichever process links first wins and every other one
+                    // sees the complete winning file. File.Move(overwrite: false) is not atomic on Unix: .NET 8 checks
+                    // that the destination is absent and then calls rename(2), which replaces whatever appeared in
+                    // between, so two processes could each keep a different key. Only a file system without hard links
+                    // falls through to that check-then-rename, as does anything else in the way (a directory, say),
+                    // so that it fails the same way it always did.
+                    if (link(temporaryPath, path) == 0)
+                    {
+                        return true;
+                    }
+                    if (Marshal.GetLastWin32Error() == EEXIST && File.Exists(path))
+                    {
+                        return false;
+                    }
+                }
+
                 try
                 {
-                    // Without overwrite, .NET moves by hard-linking the new name and then removing the old one, and a
-                    // hard link cannot replace an existing file, so whichever process links first wins and every other
-                    // one sees the complete winning file. (On file systems without hard links .NET checks and renames
-                    // instead, which is only as good as the check.)
                     File.Move(temporaryPath, path, overwrite: false);
                     return true;
                 }
@@ -385,23 +400,66 @@ namespace Octopus.Tentacle.Core.Util
             }
         }
 
+        const int EEXIST = 17;
+
+        [DllImport("libc", SetLastError = true)]
+        static extern int link(string oldpath, string newpath);
+
         public bool TryChangeOwnerToMatch(string path, string referencePath)
-            => RunChownAsRoot("--reference=" + referencePath, "--", path);
-
-        public bool TryChangeOwner(string path, string userName)
-            => RunChownAsRoot("--", userName, path);
-
-        bool RunChownAsRoot(params string[] arguments)
         {
-            // Only root can give a file away, so there is nothing to try otherwise.
+            // GNU coreutils has --reference; BSD (macOS) and BusyBox (musl images) do not, so fall back to reading the
+            // owner with POSIX `ls -n` and passing it to chown as uid:gid, which every chown understands.
+            if (RunChownAsRoot("--reference=" + referencePath, "--", path).Succeeded)
+            {
+                return true;
+            }
+
+            var owner = ReadNumericOwner(referencePath);
+            return owner != null && RunChownAsRoot("--", owner, path).Succeeded;
+        }
+
+        public bool TryChangeOwner(string path, string userName, out string reason)
+        {
+            var result = RunChownAsRoot("--", userName, path);
+            reason = result.Reason;
+            return result.Succeeded;
+        }
+
+        // ls -ldn is POSIX, so its output is the same on GNU, BSD and BusyBox.
+        string? ReadNumericOwner(string path)
+        {
+            var (exitCode, output, _) = RunAsRoot("ls", "-ldn", "--", path);
+            return exitCode == 0 ? ParseNumericOwnerFromLs(output) : null;
+        }
+
+        (bool Succeeded, string Reason) RunChownAsRoot(params string[] arguments)
+        {
+            var (exitCode, _, error) = RunAsRoot("chown", arguments);
+            if (exitCode == 0)
+            {
+                return (true, "");
+            }
+
+            var reason = exitCode is null ? error : $"chown exited with {exitCode}: {error.Trim()}";
+            Log.Verbose($"chown {string.Join(" ", arguments)} failed: {reason}");
+            return (false, reason);
+        }
+
+        // Only root can give a file away, so nothing is run unless we are root. The exit code is null whenever the program
+        // did not run to completion: not root, it could not be started, it timed out, or it threw; Error then says which.
+        //
+        // Not SilentProcessRunner: it takes one argument string, so paths and user names would need shell escaping, and its
+        // line callbacks are the wrong shape for output that is parsed whole. ArgumentList passes each value as it is.
+        (int? ExitCode, string Output, string Error) RunAsRoot(string program, params string[] arguments)
+        {
             if (OperatingSystem.IsWindows() || Environment.UserName != "root")
             {
-                return false;
+                return (null, "", $"not running as root (running as {Environment.UserName})");
             }
 
             try
             {
-                var startInfo = new System.Diagnostics.ProcessStartInfo("chown")
+                var startInfo = new System.Diagnostics.ProcessStartInfo(program)
                 {
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
@@ -415,28 +473,36 @@ namespace Octopus.Tentacle.Core.Util
                 using var process = System.Diagnostics.Process.Start(startInfo);
                 if (process == null)
                 {
-                    return false;
+                    return (null, "", $"{program} could not be started");
                 }
-                var error = process.StandardError.ReadToEnd();
+                // Both streams are read in the background: reading either to the end here would block until the program
+                // exits, so a hung program would never reach the timeout below.
+                var output = process.StandardOutput.ReadToEndAsync();
+                var error = process.StandardError.ReadToEndAsync();
                 if (!process.WaitForExit(10_000))
                 {
-                    process.Kill();
-                    return false;
+                    process.Kill(entireProcessTree: true);
+                    return (null, "", $"{program} did not finish within 10 seconds and was stopped");
                 }
 
-                if (process.ExitCode != 0)
-                {
-                    Log.Verbose($"chown {string.Join(" ", arguments)} exited with {process.ExitCode}: {error}");
-                }
-                return process.ExitCode == 0;
+                return (process.ExitCode, output.GetAwaiter().GetResult(), error.GetAwaiter().GetResult());
             }
             catch (Exception e)
             {
-                Log.Verbose(e, $"Unable to run chown {string.Join(" ", arguments)}");
-                return false;
+                return (null, "", $"{program} could not be run: {e.Message}");
             }
         }
 #endif
+
+        public static string? ParseNumericOwnerFromLs(string lsOutput)
+        {
+            var fields = (lsOutput ?? "").Trim().Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
+            if (fields.Length < 5 || !uint.TryParse(fields[2], out var uid) || !uint.TryParse(fields[3], out var gid))
+            {
+                return null;
+            }
+            return $"{uid}:{gid}";
+        }
 
         // In the same directory, so it is on the same file system and can be moved into place atomically.
         static string TemporaryPathBeside(string path)

@@ -68,7 +68,7 @@ echo ""
 INSTANCE_NAME="package-test"
 CONFIGURATION_FILE="/etc/octopus/$INSTANCE_NAME/tentacle.config"
 # The key is kept beside the configuration file it protects.
-MACHINE_KEY_FILE="/etc/octopus/$INSTANCE_NAME/machinekey"
+MACHINE_KEY_FILE="/etc/octopus/$INSTANCE_NAME/config-encryption.key"
 
 mkdir -p "$(dirname "$CONFIGURATION_FILE")"
 Tentacle create-instance --instance "$INSTANCE_NAME" --config "$CONFIGURATION_FILE"

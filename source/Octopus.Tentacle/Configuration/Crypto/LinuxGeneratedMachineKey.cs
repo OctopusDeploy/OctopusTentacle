@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Security.Cryptography;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Core.Util;
@@ -6,13 +6,19 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Configuration.Crypto
 {
-    // The file format is base64(key).base64(iv), as earlier versions wrote to /etc/octopus/machinekey. The IV is only used
-    // to decrypt values those versions wrote, which encrypted everything with that one IV.
+    // The file is named differently from the machinekey earlier versions generated so that a current key is always
+    // freshly generated, owner-only from the start: a legacy key file was world-readable for as long as it existed, so it
+    // is never adopted as the current key, only read to decrypt what earlier versions wrote. The format is
+    // base64(key).base64(iv), the same as the legacy file so one reader serves both; the IV is only used to decrypt
+    // values those versions wrote, which encrypted everything with that one IV.
     public class LinuxGeneratedMachineKey : ICryptoKeyNixSource
     {
-        public const string KeyFileName = "machinekey";
+        public const string KeyFileName = "config-encryption.key";
 
-        public const string LegacyKeyFilePath = "/etc/octopus/" + KeyFileName;
+        // Only ever read, never written.
+        public const string LegacyKeyFileName = "machinekey";
+
+        public const string LegacyKeyFilePath = "/etc/octopus/" + LegacyKeyFileName;
 
         readonly ISystemLog log;
         readonly IOctopusFileSystem fileSystem;
@@ -37,29 +43,42 @@ namespace Octopus.Tentacle.Configuration.Crypto
         // Evaluated on every call because it depends on the environment, which tests change.
         public static string LegacyKeyFilePathForThisHost
             => KubernetesSupportDetection.IsRunningAsKubernetesAgent
-                ? JoinLinuxPath(Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleHome)!, KeyFileName)
+                ? JoinLinuxPath(Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleHome)!, LegacyKeyFileName)
                 : LegacyKeyFilePath;
 
         public (byte[] Key, byte[] IV) Load()
         {
-            if (loaded.HasValue)
+            var existing = TryLoad();
+            if (existing.HasValue)
             {
-                return loaded.Value;
+                return existing.Value;
             }
 
-            var path = KeyFilePath;
-            if (!fileSystem.FileExists(path))
+            if (!createIfMissing)
             {
-                if (!createIfMissing)
-                {
-                    throw new InvalidOperationException($"There is no machine key file at `{path}`.");
-                }
-                Create(path);
+                throw new InvalidOperationException($"There is no machine key file at `{KeyFilePath}`.");
             }
 
-            var key = LoadFromFile(path);
+            Create(KeyFilePath);
+            var key = LoadFromFile(KeyFilePath);
             loaded = key;
             return key;
+        }
+
+        public (byte[] Key, byte[] IV)? TryLoad()
+        {
+            if (loaded.HasValue)
+            {
+                return loaded;
+            }
+
+            if (!fileSystem.FileExists(KeyFilePath))
+            {
+                return null;
+            }
+
+            loaded = LoadFromFile(KeyFilePath);
+            return loaded;
         }
 
         // Earlier versions created the key file with whatever the umask allowed. Only the agent calls this, as the user it
@@ -81,11 +100,14 @@ namespace Octopus.Tentacle.Configuration.Crypto
             }
             catch (Exception e)
             {
-                log.Verbose(e, $"Unable to restrict the permissions on the machine key file `{path}`. The key is still usable.");
+                log.Warn(e, $"Unable to restrict the permissions on the machine key file `{path}`. The key is still usable.");
             }
         }
 
-        public static bool GiveKeyToServiceUser(ISystemLog log, IOctopusFileSystem fileSystem, string configurationFile, string userName)
+        // The configuration has to move too: the agent restricts it to its owner when it starts (see
+        // XmlFileKeyValueStore.RestrictKeyStorageToOwner), so after the service user changes, the new user could not
+        // otherwise read a configuration the previous one owned. Must run as root.
+        public static bool GiveKeyAndConfigurationToServiceUser(ISystemLog log, IOctopusFileSystem fileSystem, string configurationFile, string userName)
         {
             var key = new LinuxGeneratedMachineKey(log, fileSystem, KeyFilePathFor(configurationFile), createIfMissing: true, ownerReferencePath: configurationFile);
             try
@@ -98,15 +120,22 @@ namespace Octopus.Tentacle.Configuration.Crypto
                 return false;
             }
 
-            if (fileSystem.TryChangeOwner(key.KeyFilePath, userName))
-            {
-                log.Info($"The machine key file `{key.KeyFilePath}` now belongs to {userName}, the user the service runs as.");
-                return true;
-            }
+            var gaveKey = Give(key.KeyFilePath, "machine key file");
+            var gaveConfiguration = !fileSystem.FileExists(configurationFile) || Give(configurationFile, "configuration file");
+            return gaveKey && gaveConfiguration;
 
-            log.Warn($"Unable to give the machine key file `{key.KeyFilePath}` to {userName}, the user the service runs as. "
-                + $"If Tentacle cannot read it when it starts, run `sudo chown {userName} {key.KeyFilePath}`.");
-            return false;
+            bool Give(string path, string description)
+            {
+                if (fileSystem.TryChangeOwner(path, userName, out var reason))
+                {
+                    log.Info($"The {description} `{path}` now belongs to {userName}, the user the service runs as.");
+                    return true;
+                }
+
+                log.Warn($"Unable to give the {description} `{path}` to {userName}, the user the service runs as: {reason}. "
+                    + $"If Tentacle cannot read it when it starts, run `sudo chown {userName} {path}`.");
+                return false;
+            }
         }
 
         void Create(string path)
@@ -128,12 +157,9 @@ namespace Octopus.Tentacle.Configuration.Crypto
                 return;
             }
 
-            log.Info($"Generated a new machine key at `{path}`. Keep it with the configuration file it protects: the configuration cannot be decrypted without it.");
-
-            if (ownerReferencePath != null && fileSystem.FileExists(ownerReferencePath) && fileSystem.TryChangeOwnerToMatch(path, ownerReferencePath))
-            {
-                log.Verbose($"Gave the machine key file `{path}` the same owner as `{ownerReferencePath}`.");
-            }
+            var givenConfigurationsOwner = ownerReferencePath != null && fileSystem.FileExists(ownerReferencePath) && fileSystem.TryChangeOwnerToMatch(path, ownerReferencePath);
+            var owner = givenConfigurationsOwner ? $", owned by the owner of `{ownerReferencePath}`" : "";
+            log.Info($"Generated a new machine key at `{path}`{owner}. Keep it with the configuration file it protects: the configuration cannot be decrypted without it.");
         }
 
         (byte[] Key, byte[] IV) LoadFromFile(string path)

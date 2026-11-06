@@ -92,7 +92,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
                     throw new FormatException("The encrypted value is too short to contain a nonce and an authentication tag.");
                 }
 
-                var plaintext = Gcm.Decrypt(LoadCurrentKey(), payload, AssociatedData);
+                var plaintext = Gcm.Decrypt(LoadCurrentKeyForDecrypting(), payload, AssociatedData);
                 return StrictUtf8.GetString(plaintext);
             }
             catch (Exception e)
@@ -106,8 +106,17 @@ namespace Octopus.Tentacle.Configuration.Crypto
         }
 
         byte[] LoadCurrentKey()
+            => CheckSize(keySource.Load().Key);
+
+        byte[] LoadCurrentKeyForDecrypting()
         {
-            var (key, _) = keySource.Load();
+            var existing = keySource.TryLoad()
+                ?? throw new InvalidOperationException("The machine key file does not exist. Decrypting never creates one, as the value could not have been encrypted with it.");
+            return CheckSize(existing.Key);
+        }
+
+        static byte[] CheckSize(byte[] key)
+        {
             if (key.Length != KeySizeInBytes)
             {
                 throw new CryptographicException($"The machine key must be {KeySizeInBytes * 8} bits, but is {key.Length * 8}.");

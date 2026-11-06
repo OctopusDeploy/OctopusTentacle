@@ -6,7 +6,7 @@ namespace Octopus.Tentacle.Configuration
         // stored value is left untouched.
         bool ReEncryptIfLegacy(string name);
 
-        // Never throws.
+        // A file-backed store also tightens the file it keeps the protected values in. Never throws.
         void RestrictKeyStorageToOwner();
     }
 }

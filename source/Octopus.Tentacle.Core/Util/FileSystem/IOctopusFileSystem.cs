@@ -48,7 +48,8 @@ namespace Octopus.Tentacle.Util
         // Only root can give a file away: these return false without trying when not root on Unix.
         bool TryChangeOwnerToMatch(string filePath, string referencePath);
 
-        bool TryChangeOwner(string filePath, string userName);
+        // reason says why when this returns false, in words fit for a Warn.
+        bool TryChangeOwner(string filePath, string userName, out string reason);
 
         bool RestrictFilePermissionsToOwner(string filePath);
         string ReadAllText(string scriptFile);

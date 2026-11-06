@@ -52,13 +52,20 @@ namespace Octopus.Tentacle.Configuration
                 {
                     log.Warn(e, $"Unable to re-encrypt the protected setting '{name}' with the machine key generated for this machine. "
                         + "The existing value is still readable and Tentacle will try again the next time it starts. "
-                        + "This is expected when the configuration directory is read-only, or is not writable by the user Tentacle runs as.");
+                        + $"This is expected when the configuration directory is read-only, or is not writable by {Environment.UserName}, the user Tentacle runs as. "
+                        + $"To let Tentacle finish, run `sudo chown {Environment.UserName} {ConfigurationDirectory()}` so it can create the key and the backup there.");
                 }
             }
 
-            // Here rather than wherever the key is loaded: the agent runs as the service user, so tightening a key file
-            // it owns can never lock out the process that needs to read it.
+            // Here rather than wherever the key is loaded: the agent runs as the service user, so tightening the key
+            // file and the configuration file it owns can never lock out the process that needs to read them.
             store.RestrictKeyStorageToOwner();
+        }
+
+        string ConfigurationDirectory()
+        {
+            var path = instanceSelector.Current.ConfigurationPath;
+            return path is null ? "<configuration directory>" : System.IO.Path.GetDirectoryName(path)!;
         }
     }
 }

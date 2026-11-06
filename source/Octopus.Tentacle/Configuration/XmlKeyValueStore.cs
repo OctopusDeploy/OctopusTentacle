@@ -11,7 +11,7 @@ namespace Octopus.Tentacle.Configuration
 {
     public abstract class XmlKeyValueStore : FlatDictionaryKeyValueStore
     {
-        protected XmlKeyValueStore(bool autoSaveOnSet, bool isWriteOnly = false, IMachineKeyEncryptor? encryptor = null) : base(JsonSerialization.GetDefaultSerializerSettings(), autoSaveOnSet, isWriteOnly, encryptor)
+        protected XmlKeyValueStore(IMachineKeyEncryptor encryptor, bool autoSaveOnSet, bool isWriteOnly = false) : base(JsonSerialization.GetDefaultSerializerSettings(), encryptor, autoSaveOnSet, isWriteOnly)
         {
         }
 

@@ -194,6 +194,21 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         }
 
         [Test]
+        public void DecryptingACurrentValueWhenTheKeyFileIsMissing_ThrowsWithoutCreatingOne()
+        {
+            var encrypted = CreateEncryptor().Encrypt("FooBar");
+            var fileSystem = Substitute.For<Octopus.Tentacle.Util.IOctopusFileSystem>();
+            fileSystem.FileExists("/k/config-encryption.key").Returns(false);
+            var lme = new LinuxMachineKeyEncryptor(systemLog, new LinuxGeneratedMachineKey(systemLog, fileSystem, "/k/config-encryption.key"), Array.Empty<ICryptoKeyNixSource>());
+
+            lme.Invoking(x => x.Decrypt(encrypted))
+                .Should().Throw<CryptographicException>()
+                .WithMessage("*machine key file does not exist*");
+
+            fileSystem.DidNotReceive().TryCreateFileOwnerOnly(Arg.Any<string>(), Arg.Any<string>());
+        }
+
+        [Test]
         public void TruncatedCurrentValueThrows()
         {
             var lme = CreateEncryptor();
