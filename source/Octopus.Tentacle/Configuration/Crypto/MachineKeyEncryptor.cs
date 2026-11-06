@@ -11,10 +11,10 @@ namespace Octopus.Tentacle.Configuration.Crypto
         static readonly ISystemLog Log = new SystemLog();
 
         // There is deliberately no host-wide key: every protected value belongs to a configuration file.
-        public static IMachineKeyEncryptor ForConfigurationFile(string configurationFile)
+        public static IMachineKeyEncryptor ForConfigurationFile(IOctopusFileSystem fileSystem, string configurationFile)
             => PlatformDetection.IsRunningOnWindows
                 ? new WindowsMachineKeyEncryptor()
-                : CreateLinuxEncryptor(Log, new OctopusPhysicalFileSystem(Log), LinuxGeneratedMachineKey.KeyFilePathFor(configurationFile), configurationFile);
+                : CreateLinuxEncryptor(Log, fileSystem, LinuxGeneratedMachineKey.KeyFilePathFor(configurationFile), configurationFile);
 
         // Public so tests can prove the composition, not just the parts. A key that root creates is given the owner of
         // configurationFile, when there is one.
