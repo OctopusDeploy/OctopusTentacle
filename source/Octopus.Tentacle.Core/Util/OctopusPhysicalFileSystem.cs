@@ -440,6 +440,9 @@ namespace Octopus.Tentacle.Core.Util
 
         // Only root can give a file away, so nothing is run unless we are root. The exit code is null whenever the program
         // did not run to completion: not root, it could not be started, it timed out, or it threw.
+        //
+        // Not SilentProcessRunner: it takes one argument string, so paths and user names would need shell escaping, and its
+        // line callbacks are the wrong shape for output that is parsed whole. ArgumentList passes each value as it is.
         (int? ExitCode, string Output, string Error) RunAsRoot(string program, params string[] arguments)
         {
             if (OperatingSystem.IsWindows() || Environment.UserName != "root")
