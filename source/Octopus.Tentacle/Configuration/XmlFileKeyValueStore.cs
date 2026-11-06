@@ -66,7 +66,7 @@ namespace Octopus.Tentacle.Configuration
             }
             catch (Exception e)
             {
-                Log.Verbose(e, $"Unable to restrict the permissions on `{configurationFile}`. It is still usable.");
+                Log.Warn(e, $"Unable to restrict the permissions on `{configurationFile}`. It is still usable.");
             }
         }
 

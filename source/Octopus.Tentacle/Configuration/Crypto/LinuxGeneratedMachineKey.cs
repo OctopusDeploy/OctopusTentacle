@@ -100,7 +100,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
             }
             catch (Exception e)
             {
-                log.Verbose(e, $"Unable to restrict the permissions on the machine key file `{path}`. The key is still usable.");
+                log.Warn(e, $"Unable to restrict the permissions on the machine key file `{path}`. The key is still usable.");
             }
         }
 
@@ -126,13 +126,13 @@ namespace Octopus.Tentacle.Configuration.Crypto
 
             bool Give(string path, string description)
             {
-                if (fileSystem.TryChangeOwner(path, userName))
+                if (fileSystem.TryChangeOwner(path, userName, out var reason))
                 {
                     log.Info($"The {description} `{path}` now belongs to {userName}, the user the service runs as.");
                     return true;
                 }
 
-                log.Warn($"Unable to give the {description} `{path}` to {userName}, the user the service runs as. "
+                log.Warn($"Unable to give the {description} `{path}` to {userName}, the user the service runs as: {reason}. "
                     + $"If Tentacle cannot read it when it starts, run `sudo chown {userName} {path}`.");
                 return false;
             }
@@ -157,12 +157,9 @@ namespace Octopus.Tentacle.Configuration.Crypto
                 return;
             }
 
-            log.Info($"Generated a new machine key at `{path}`. Keep it with the configuration file it protects: the configuration cannot be decrypted without it.");
-
-            if (ownerReferencePath != null && fileSystem.FileExists(ownerReferencePath) && fileSystem.TryChangeOwnerToMatch(path, ownerReferencePath))
-            {
-                log.Verbose($"Gave the machine key file `{path}` the same owner as `{ownerReferencePath}`.");
-            }
+            var givenConfigurationsOwner = ownerReferencePath != null && fileSystem.FileExists(ownerReferencePath) && fileSystem.TryChangeOwnerToMatch(path, ownerReferencePath);
+            var owner = givenConfigurationsOwner ? $", owned by the owner of `{ownerReferencePath}`" : "";
+            log.Info($"Generated a new machine key at `{path}`{owner}. Keep it with the configuration file it protects: the configuration cannot be decrypted without it.");
         }
 
         (byte[] Key, byte[] IV) LoadFromFile(string path)

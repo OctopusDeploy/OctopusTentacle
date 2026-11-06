@@ -184,7 +184,7 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         }
 
         [Test]
-        public void RestrictingPermissions_WhenTheyCannotBeChanged_IsLoggedQuietlyAndTheKeyStillLoads()
+        public void RestrictingPermissions_WhenTheyCannotBeChanged_WarnsAndTheKeyStillLoads()
         {
             written = ValidKeyFileContents;
             fileSystem.RestrictFilePermissionsToOwner(KeyFilePath).Throws(new UnauthorizedAccessException("read-only file system"));
@@ -192,9 +192,7 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
             keySource.Invoking(x => x.RestrictPermissionsToOwner()).Should().NotThrow();
 
             keySource.Load().Key.Should().NotBeEmpty();
-            log.Received(1).Verbose(Arg.Any<UnauthorizedAccessException>(), Arg.Is<string>(m => m.Contains(KeyFilePath)));
-            log.DidNotReceive().Warn(Arg.Any<string>());
-            log.DidNotReceive().Warn(Arg.Any<Exception>(), Arg.Any<string>());
+            log.Received(1).Warn(Arg.Any<UnauthorizedAccessException>(), Arg.Is<string>(m => m.Contains(KeyFilePath)));
         }
 
         [Test]
@@ -255,12 +253,12 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         [Test]
         public void GivingTheKeyToTheServiceUser_CreatesItIfNeededAndChangesItsOwner()
         {
-            fileSystem.TryChangeOwner(KeyFilePath, "tentacle").Returns(true);
+            fileSystem.TryChangeOwner(KeyFilePath, "tentacle", out Arg.Any<string>()).Returns(true);
 
             LinuxGeneratedMachineKey.GiveKeyAndConfigurationToServiceUser(log, fileSystem, ConfigurationFile, "tentacle").Should().BeTrue();
 
             written.Should().NotBeNull("a service user that cannot create the key must be given one");
-            fileSystem.Received(1).TryChangeOwner(KeyFilePath, "tentacle");
+            fileSystem.Received(1).TryChangeOwner(KeyFilePath, "tentacle", out Arg.Any<string>());
             log.Received(1).Info(Arg.Is<string>(m => m.Contains(KeyFilePath) && m.Contains("tentacle")));
         }
 
@@ -268,7 +266,7 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         public void GivingTheKeyToTheServiceUser_WhenTheOwnerCannotBeChanged_WarnsWithTheFix()
         {
             written = ValidKeyFileContents;
-            fileSystem.TryChangeOwner(KeyFilePath, "tentacle").Returns(false);
+            fileSystem.TryChangeOwner(KeyFilePath, "tentacle", out Arg.Any<string>()).Returns(false);
 
             LinuxGeneratedMachineKey.GiveKeyAndConfigurationToServiceUser(log, fileSystem, ConfigurationFile, "tentacle").Should().BeFalse();
 
@@ -280,12 +278,12 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         {
             // The agent restricts the configuration to its owner, so a new service user must own it to read it.
             fileSystem.FileExists(ConfigurationFile).Returns(true);
-            fileSystem.TryChangeOwner(KeyFilePath, "tentacle").Returns(true);
-            fileSystem.TryChangeOwner(ConfigurationFile, "tentacle").Returns(true);
+            fileSystem.TryChangeOwner(KeyFilePath, "tentacle", out Arg.Any<string>()).Returns(true);
+            fileSystem.TryChangeOwner(ConfigurationFile, "tentacle", out Arg.Any<string>()).Returns(true);
 
             LinuxGeneratedMachineKey.GiveKeyAndConfigurationToServiceUser(log, fileSystem, ConfigurationFile, "tentacle").Should().BeTrue();
 
-            fileSystem.Received(1).TryChangeOwner(ConfigurationFile, "tentacle");
+            fileSystem.Received(1).TryChangeOwner(ConfigurationFile, "tentacle", out Arg.Any<string>());
             log.Received(1).Info(Arg.Is<string>(m => m.Contains(ConfigurationFile) && m.Contains("tentacle")));
         }
 
@@ -293,8 +291,8 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         public void GivingTheKeyToTheServiceUser_WhenTheConfigurationCannotBeGivenAway_WarnsWithTheFix()
         {
             fileSystem.FileExists(ConfigurationFile).Returns(true);
-            fileSystem.TryChangeOwner(KeyFilePath, "tentacle").Returns(true);
-            fileSystem.TryChangeOwner(ConfigurationFile, "tentacle").Returns(false);
+            fileSystem.TryChangeOwner(KeyFilePath, "tentacle", out Arg.Any<string>()).Returns(true);
+            fileSystem.TryChangeOwner(ConfigurationFile, "tentacle", out Arg.Any<string>()).Returns(false);
 
             LinuxGeneratedMachineKey.GiveKeyAndConfigurationToServiceUser(log, fileSystem, ConfigurationFile, "tentacle").Should().BeFalse();
 
