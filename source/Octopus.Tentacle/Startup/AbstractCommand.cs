@@ -75,9 +75,15 @@ namespace Octopus.Tentacle.Startup
 
             LogFileOnlyLogger.Info($"==== {GetType().Name} ====");
             LogFileOnlyLogger.Info($"CommandLine: {string.Join(" ", Environment.GetCommandLineArgs())}");
+            
+            LogFileOnlyLogger.Info($"Inside AbstractCommand, going to call Start().");
 
             Start();
+            
+            LogFileOnlyLogger.Info($"Inside AbstractCommand going to call Completed().");
+            
             Completed();
+            LogFileOnlyLogger.Info($"Inside AbstractCommand finished Completed().");
         }
 
         void EnsureSensitiveParametersAreNotLoggedToLogFileOnlyLogger()

@@ -81,11 +81,15 @@ namespace Octopus.Tentacle.Configuration.Instances
 
         public void DeleteInstance(string instanceName)
         {
+            log.Info($"Inside Delete instance: {instanceName}");
+
             var instanceConfiguration = InstanceFileName(instanceName);
 
             try
             {
+                log.Info($"Try Delete instance file: {instanceConfiguration}");
                 fileSystem.DeleteFile(instanceConfiguration);
+                log.Info($"Finished Deleting instance file: {instanceConfiguration}");
             }
             catch (UnauthorizedAccessException ex)
             {
@@ -93,6 +97,8 @@ namespace Octopus.Tentacle.Configuration.Instances
                 throw new ControlledFailureException($"Unable to delete file '{instanceConfiguration}' as user '{Environment.UserName}'. Please check file permissions.");
             }
 
+            log.Info($"Deleting instance from registry: {instanceName}");
+            
             registryApplicationInstanceStore.DeleteFromRegistry(instanceName);
 
             log.Info($"Deleted instance: {instanceName}");

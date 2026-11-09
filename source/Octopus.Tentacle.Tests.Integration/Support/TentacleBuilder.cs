@@ -160,7 +160,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 instanceName,
                 HomeDirectory.DirectoryPath,
                 applicationDirectory,
-                deleteInstanceFunction: ct => DeleteInstanceIgnoringFailure(installAsService, tentacleExe, instanceName, tempDirectory, logger, ct),
+                deleteInstanceFunction: async ct =>
+                {
+                    log.Information("This is the deleteInstanceFunction");
+                    await DeleteInstanceIgnoringFailure(installAsService, tentacleExe, instanceName, tempDirectory, logger, ct);
+                    log.Information("This is the deleteInstanceFunction after it has finished");
+                },
                 runTentacleEnvironmentVariables,
                 logger);
 
@@ -173,7 +178,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             {
                 try
                 {
+                    log.Information("disposing tentacle after tentacle failed to start.");
                     await runningTentacle.DisposeAsync();
+                    log.Information("finished disposing tentacle after tentacle failed to start.");
                 }
                 catch (Exception e)
                 {
@@ -406,12 +413,16 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         internal async Task DeleteInstanceIgnoringFailure(bool runningAsService, string tentacleExe, string instanceName, TemporaryDirectory tmp, ILogger logger, CancellationToken cancellationToken)
         {
+            logger.Information($"Deleting instance in DeleteInstanceIgnoringFailure: {instanceName}");
+
             using (await GetConfigureAndStartTentacleLockIfRequired(logger, cancellationToken))
             {
                 if (runningAsService)
                 {
                     try
                     {
+                        logger.Information($"Deleting instance in DeleteInstanceIgnoringFailure: {instanceName}, trying to stop");
+
                         await RunCommandOutOfProcess(
                             tentacleExe,
                             new[] { "service", $"--instance={instanceName}", "--stop" },
@@ -424,6 +435,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                             logger,
                             cancellationToken);
 
+                        logger.Information($"Deleting instance in DeleteInstanceIgnoringFailure: {instanceName}, trying to uninstall");
                         await RunCommandOutOfProcess(
                             tentacleExe,
                             new[] { "service", "--uninstall", $"--instance={instanceName}" },
@@ -457,7 +469,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         internal async Task DeleteInstanceAsync(string tentacleExe, string instanceName, TemporaryDirectory tmp, ILogger logger, CancellationToken cancellationToken)
         {
+            logger.Information($"Deleting instance in DeleteInstanceAsync: {instanceName}");
             await RunTentacleCommand(tentacleExe, new[] {"delete-instance", $"--instance={instanceName}"}, tmp, logger, cancellationToken);
+            logger.Information($"Deleted instance in DeleteInstanceAsync: {instanceName}");
         }
 
         internal string InstanceNameGenerator()
@@ -489,8 +503,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             ILogger logger,
             CancellationToken cancellationToken)
         {
+            logger.Information("Inside RunCommandOutOfProcess");
+
             async Task ProcessLogs(string s, CancellationToken ct)
             {
+                logger.Information($"In ProcessLogs(): {s}");
                 await Task.CompletedTask;
                 logger.Information($"[{commandName}] " + s);
                 commandOutput(s);
@@ -498,24 +515,52 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
             try
             {
-                var commandResult = await RetryHelper.RetryAsync<CommandResult, CommandExecutionException>(
-                    () => Cli.Wrap(targetFilePath)
-                        .WithArguments(args)
-                        .WithEnvironmentVariables(environmentVariables)
-                        .WithWorkingDirectory(tmp.DirectoryPath)
-                        .WithStandardOutputPipe(PipeTarget.ToDelegate(ProcessLogs))
-                        .WithStandardErrorPipe(PipeTarget.ToDelegate(ProcessLogs))
-                        .ExecuteAsync(cancellationToken));
+                logger.Information("Going to try to run Cli.Wrap(targetFilePath) with retries...");
+                var commandResult = await RetryHelper.RetryAsync<CommandResult, CommandExecutionException>(async () =>
+                    {
+                        logger.Information("Going to try to run Cli.Wrap(targetFilePath)");
+                        foreach (var a in args)
+                        {
+                            logger.Information($"with arg: {a}");
+                        }
+                        
+                        var command = Cli.Wrap(targetFilePath)
+                            .WithArguments(args)
+                            .WithEnvironmentVariables(environmentVariables)
+                            .WithWorkingDirectory(tmp.DirectoryPath)
+                            .WithStandardOutputPipe(PipeTarget.ToDelegate(ProcessLogs))
+                            .WithStandardErrorPipe(PipeTarget.ToDelegate(ProcessLogs));
+                            
+                        logger.Information("ok, calling now)");
+                        var res = await command.ExecuteAsync(cancellationToken);
+                        logger.Information("Cli.Wrap(targetFilePath) returned");
+                        
+                        logger.Information($"Exit code: {res.ExitCode}");
+                        return res;
+                    });
 
-                if (cancellationToken.IsCancellationRequested) return;
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    logger.Information("Cancelled RunCommandOutOfProcess");                    
+                    return;
+                }
 
                 if (commandResult.ExitCode != 0)
                 {
                     throw new Exception($"{commandName} returns non zero exit code: " + commandResult.ExitCode);
                 }
+                
+                logger.Information("End of RunCommandOutOfProcess");
             }
             catch (OperationCanceledException)
             {
+                logger.Information("We have an OperationCanceledException");
+            }
+            catch (Exception ex)
+            {
+                logger.Information($"We have an Exception: {ex.Message}: {ex.StackTrace}");
+                logger.Information($"We have an Inner Exception?: {ex.InnerException?.Message}: {ex.InnerException?.StackTrace}");
+                throw;
             }
         }
     }

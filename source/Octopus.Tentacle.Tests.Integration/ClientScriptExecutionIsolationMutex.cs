@@ -21,7 +21,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(testScriptIsolationLevelVersions: true, additionalParameterTypes: new object[] { typeof(ScriptIsolationLevel)})]
         public async Task ScriptIsolationMutexFull_EnsuresTwoDifferentScriptsDontRunAtTheSameTime(TentacleConfigurationTestCase tentacleConfigurationTestCase, ScriptIsolationLevel levelOfSecondScript)
         {
-            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
+            var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordMethodUsages(tentacleConfigurationTestCase, out var recordedUsages)
                     .Build())
@@ -85,7 +85,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TentacleConfigurations(testScriptIsolationLevelVersions: true, additionalParameterTypes: new object[] {typeof(ScriptsInParallelTestCases)})]
         public async Task ScriptIsolationMutexFull_IsOnlyExclusiveWhenFullAndWhenTheMutexNameIsTheSame(TentacleConfigurationTestCase tentacleConfigurationTestCase, ScriptsInParallelTestCase scriptsInParallelTestCase)
         {
-            await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder().Build(CancellationToken);
+            var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder().Build(CancellationToken);
 
             var firstScriptStartFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "firstScriptStartFile");
             var firstScriptWaitFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "firstScriptWaitFile");

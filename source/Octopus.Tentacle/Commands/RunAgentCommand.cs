@@ -76,6 +76,7 @@ namespace Octopus.Tentacle.Commands
         protected override void Start()
         {
             base.Start();
+            log.Info("Inside RunAgentCommand Start().");
 
             if (wait >= 20)
             {
