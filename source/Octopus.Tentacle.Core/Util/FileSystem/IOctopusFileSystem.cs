@@ -36,6 +36,21 @@ namespace Octopus.Tentacle.Util
 
         void WriteAllBytes(string filePath, byte[] data);
         void WriteAllText(string filePath, string contents);
+
+        void WriteAllTextOwnerOnly(string filePath, string contents);
+
+        // Written under a temporary name and moved into place without replacing anything. Returns false, leaving the
+        // existing file untouched, if another process created it first.
+        bool TryCreateFileOwnerOnly(string filePath, string contents);
+
+        bool TryCreateFileOwnerOnly(string filePath, byte[] contents);
+
+        // Only root can give a file away: these return false without trying when not root on Unix.
+        bool TryChangeOwnerToMatch(string filePath, string referencePath);
+
+        bool TryChangeOwner(string filePath, string userName);
+
+        bool RestrictFilePermissionsToOwner(string filePath);
         string ReadAllText(string scriptFile);
         string[] ReadAllLines(string scriptFile);
     }
