@@ -163,12 +163,20 @@ namespace Octopus.Tentacle.Core.Services.Scripts
         ScriptStatusResponseV2 GetResponse(ScriptTicket ticket, long lastLogSequence, RunningScript? runningScript)
         {
             var workspace = workspaceFactory.GetWorkspace(ticket, WorkspaceReadinessCheck.Skip);
+            var (state, exitCode) = GetStateAndExitCode(workspace, runningScript);
+
+            // Logs are flushed before the state is recorded, so read them after the state to avoid returning Complete with a partial log
             var scriptLog = runningScript?.ScriptLog ?? workspace.CreateLog();
             var logs = scriptLog.GetOutput(lastLogSequence, out var next);
 
+            return new ScriptStatusResponseV2(ticket, state, exitCode, logs, next);
+        }
+
+        (ProcessState State, int ExitCode) GetStateAndExitCode(IScriptWorkspace workspace, RunningScript? runningScript)
+        {
             if (runningScript != null)
             {
-                return new ScriptStatusResponseV2(ticket, runningScript.State, runningScript.ExitCode, logs, next);
+                return (runningScript.State, runningScript.ExitCode);
             }
 
             // If we don't have a RunningProcess we check the ScriptStateStore to see if we have persisted a script result
@@ -183,10 +191,10 @@ namespace Octopus.Tentacle.Core.Services.Scripts
                     scriptStateStore.Save(scriptState);
                 }
 
-                return new ScriptStatusResponseV2(ticket, scriptState.State, scriptState.ExitCode ?? ScriptExitCodes.UnknownResultExitCode, logs, next);
+                return (scriptState.State, scriptState.ExitCode ?? ScriptExitCodes.UnknownResultExitCode);
             }
 
-            return new ScriptStatusResponseV2(ticket, ProcessState.Complete, ScriptExitCodes.UnknownScriptExitCode, logs, next);
+            return (ProcessState.Complete, ScriptExitCodes.UnknownScriptExitCode);
         }
 
         public bool IsRunningScript(ScriptTicket ticket)
