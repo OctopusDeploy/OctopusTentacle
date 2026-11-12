@@ -52,7 +52,6 @@ namespace Octopus.Tentacle.Tests.Configuration
         public void TearDown()
         {
             File.Delete(configurationFile);
-            File.Delete(configurationFile + XmlFileKeyValueStore.PreReEncryptionBackupSuffix);
         }
 
         ProtectedSettingsMigrator CreateMigrator()
@@ -87,7 +86,6 @@ namespace Octopus.Tentacle.Tests.Configuration
 
             log.Received(3).Info(Arg.Is<string>(m => m.StartsWith("Re-encrypted the protected setting")));
             log.DidNotReceive().Error(Arg.Any<Exception>(), Arg.Any<string>());
-            File.Exists(configurationFile + XmlFileKeyValueStore.PreReEncryptionBackupSuffix).Should().BeTrue("a downgrade needs the configuration as it was");
         }
 
         string RawValue(string name)

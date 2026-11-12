@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using Octopus.Tentacle.Configuration.Crypto;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Diagnostics;
@@ -11,13 +10,10 @@ namespace Octopus.Tentacle.Configuration
 {
     public class XmlFileKeyValueStore : XmlKeyValueStore
     {
-        public const string PreReEncryptionBackupSuffix = ".before-reencryption";
-
         static readonly ISystemLog Log = new SystemLog();
 
         readonly IOctopusFileSystem fileSystem;
         readonly string configurationFile;
-        bool backedUpBeforeReEncrypting;
 
         public XmlFileKeyValueStore(IOctopusFileSystem fileSystem,
             string configurationFile,
@@ -28,42 +24,6 @@ namespace Octopus.Tentacle.Configuration
             this.fileSystem = fileSystem;
             this.configurationFile = fileSystem.GetFullPath(configurationFile);
         }
-
-        string PreReEncryptionBackupFile => configurationFile + PreReEncryptionBackupSuffix;
-
-        // A copy of the configuration as an earlier version wrote it, so it can still be used after a downgrade. It is only
-        // replaced by a configuration that holds no current-format values (after a downgrade and another upgrade, say), so
-        // a configuration that was only partly re-encrypted never overwrites the copy taken before that started.
-        protected override void BeforeReEncrypting()
-        {
-            if (backedUpBeforeReEncrypting)
-            {
-                return;
-            }
-
-            var backup = PreReEncryptionBackupFile;
-            var current = ReadConfigurationFileBytes();
-            if (fileSystem.FileExists(backup))
-            {
-                if (!WrittenByAnEarlierVersion(current))
-                {
-                    backedUpBeforeReEncrypting = true;
-                    return;
-                }
-                fileSystem.DeleteFile(backup);
-            }
-
-            if (fileSystem.TryCreateFileOwnerOnly(backup, current))
-            {
-                Log.Info($"Saved a copy of `{configurationFile}` as it was before re-encryption to `{backup}`. "
-                    + "An earlier version of Tentacle can read that copy if you need to downgrade; delete it once you no longer need to.");
-            }
-
-            backedUpBeforeReEncrypting = true;
-        }
-
-        static bool WrittenByAnEarlierVersion(byte[] configuration)
-            => !Encoding.UTF8.GetString(configuration).Contains(LinuxMachineKeyEncryptor.ProtectedValuePrefix);
 
         public override void RestrictKeyStorageToOwner()
         {
@@ -79,14 +39,6 @@ namespace Octopus.Tentacle.Configuration
             {
                 Log.Warn(e, $"Unable to restrict the permissions on `{configurationFile}`. It is still usable.");
             }
-        }
-
-        byte[] ReadConfigurationFileBytes()
-        {
-            using var stream = OpenForReading();
-            using var buffer = new MemoryStream();
-            stream.CopyTo(buffer);
-            return buffer.ToArray();
         }
 
         protected override void LoadSettings(IDictionary<string, object?> settingsToFill)

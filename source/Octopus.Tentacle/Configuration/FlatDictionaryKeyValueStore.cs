@@ -142,7 +142,6 @@ namespace Octopus.Tentacle.Configuration
 
             var reEncrypted = Encryptor.Encrypt(Encryptor.Decrypt(stored));
 
-            BeforeReEncrypting();
             Write(name, reEncrypted);
             if (AutoSaveOnSet)
             {
@@ -154,11 +153,6 @@ namespace Octopus.Tentacle.Configuration
 
         public virtual void RestrictKeyStorageToOwner()
             => Encryptor.RestrictKeyStorageToOwner();
-
-        // Throwing here leaves the stored value as it was.
-        protected virtual void BeforeReEncrypting()
-        {
-        }
 
         protected virtual bool ValueNeedsToBeSerialized(ProtectionLevel protectionLevel, object valueAsObject)
         {

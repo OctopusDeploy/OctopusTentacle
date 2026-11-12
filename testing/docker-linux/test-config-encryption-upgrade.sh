@@ -39,7 +39,6 @@ check "the agent re-encrypts with the previous machine-id mounted" \
 check "the certificate carries the versioned prefix" \
     "$(in_container "$NEW_IMAGE" 'grep -cF "key=\"Tentacle.Certificate\">\$OctopusMachineKeyV1\$" /etc/octopus/tentacle.config')" "1"
 check "the key is owner-only" "$(in_container "$NEW_IMAGE" 'stat -c %a /etc/octopus/config-encryption.key')" "600"
-check "a backup of the previous configuration is kept" "$(in_container "$NEW_IMAGE" 'test -f /etc/octopus/tentacle.config.before-reencryption && echo yes')" "yes"
 check "the thumbprint is unchanged without the previous machine-id" "$(in_container "$NEW_IMAGE" 'tentacle show-thumbprint --instance Tentacle')" "$THUMBPRINT"
 
 OUTPUT=$(in_container "$NEW_IMAGE" 'timeout 30 tentacle run --instance Tentacle' || true)
