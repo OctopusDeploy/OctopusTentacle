@@ -1,65 +1,198 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using Octopus.Tentacle.Core.Diagnostics;
 
 namespace Octopus.Tentacle.Configuration.Crypto
 {
+    // Stored as $OctopusMachineKeyV1$base64(nonce || ciphertext || tag), AES-256-GCM with the prefix as associated data.
+    // Values without the prefix were written by earlier versions with AES-CBC and a fixed IV.
     public class LinuxMachineKeyEncryptor : IMachineKeyEncryptor
     {
-        readonly ISystemLog log;
-        readonly IEnumerable<ICryptoKeyNixSource> keySources;
+        // $ is not a base64 character, so a value without this prefix is unambiguously a legacy one.
+        public const string ProtectedValuePrefix = "$OctopusMachineKeyV1$";
 
-        public LinuxMachineKeyEncryptor(ISystemLog log, IEnumerable<ICryptoKeyNixSource> keySources)
+        const int KeySizeInBytes = 32;
+        const int NonceSizeInBytes = 12;
+        const int TagSizeInBytes = 16;
+
+        static readonly byte[] AssociatedData = Encoding.ASCII.GetBytes(ProtectedValuePrefix);
+
+        // A wrong legacy key passes the AES-CBC padding check about 1 time in 256; the garbage it yields is rarely valid UTF-8.
+        static readonly Encoding StrictUtf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
+
+        readonly ISystemLog log;
+        readonly ICryptoKeyNixSource keySource;
+        readonly IReadOnlyList<ICryptoKeyNixSource> legacyKeySources;
+
+        public LinuxMachineKeyEncryptor(ISystemLog log, ICryptoKeyNixSource keySource, IEnumerable<ICryptoKeyNixSource> legacyKeySources)
         {
             this.log = log;
-            this.keySources = keySources;
+            this.keySource = keySource;
+            this.legacyKeySources = legacyKeySources.ToArray();
+        }
+
+        static bool IsLegacyCiphertext(string encrypted)
+            => !encrypted.StartsWith(ProtectedValuePrefix, StringComparison.Ordinal);
+
+        public bool RequiresReEncryption(string encrypted)
+            => IsLegacyCiphertext(encrypted);
+
+        public void RestrictKeyStorageToOwner()
+        {
+            if (keySource is LinuxGeneratedMachineKey generatedKey)
+            {
+                generatedKey.RestrictPermissionsToOwner();
+            }
         }
 
         public string Encrypt(string raw)
         {
-            return IterateKeySourcesUntilCryptoSuccess(cipherKeys =>
+            try
             {
-                var (key, iv) = cipherKeys;
-                using var aes = Aes.Create();
-                using var enc = aes.CreateEncryptor(key, iv);
-                var inBlock = Encoding.UTF8.GetBytes(raw);
-                var trans = enc.TransformFinalBlock(inBlock, 0, inBlock.Length);
-                return Convert.ToBase64String(trans);
-            });
+                var key = LoadCurrentKey();
+                var plaintext = Encoding.UTF8.GetBytes(raw);
+                var payload = new byte[NonceSizeInBytes + plaintext.Length + TagSizeInBytes];
+                using (var random = RandomNumberGenerator.Create())
+                {
+                    var nonce = new byte[NonceSizeInBytes];
+                    random.GetBytes(nonce);
+                    Buffer.BlockCopy(nonce, 0, payload, 0, NonceSizeInBytes);
+                }
+
+                Gcm.Encrypt(key, plaintext, payload, AssociatedData);
+
+                return ProtectedValuePrefix + Convert.ToBase64String(payload);
+            }
+            catch (Exception e)
+            {
+                throw new CryptographicException($"Unable to encrypt a value with the Tentacle machine key: {e.Message}", e);
+            }
         }
 
         public string Decrypt(string encrypted)
+            => IsLegacyCiphertext(encrypted)
+                ? DecryptLegacy(encrypted)
+                : DecryptCurrent(encrypted);
+
+        string DecryptCurrent(string encrypted)
         {
-            return IterateKeySourcesUntilCryptoSuccess(cipherKeys =>
+            try
             {
-                var (key, iv) = cipherKeys;
-                using var aes = Aes.Create();
-                using var dec = aes.CreateDecryptor(key, iv);
-                var fromBase = Convert.FromBase64String(encrypted);
-                var asd = dec.TransformFinalBlock(fromBase, 0, fromBase.Length);
-                return Encoding.UTF8.GetString(asd);
-            });
+                var payload = Convert.FromBase64String(encrypted.Substring(ProtectedValuePrefix.Length));
+                if (payload.Length < NonceSizeInBytes + TagSizeInBytes)
+                {
+                    throw new FormatException("The encrypted value is too short to contain a nonce and an authentication tag.");
+                }
+
+                var plaintext = Gcm.Decrypt(LoadCurrentKeyForDecrypting(), payload, AssociatedData);
+                return StrictUtf8.GetString(plaintext);
+            }
+            catch (Exception e)
+            {
+                // No fallback to the legacy keys: they could never have written a value with the prefix.
+                throw new CryptographicException("Unable to decrypt a value protected with the Tentacle machine key. "
+                    + "Either the value has been altered, or the machine key file it was encrypted with has been replaced or removed. "
+                    + $"Details: {e.Message}", e);
+            }
         }
 
-        string IterateKeySourcesUntilCryptoSuccess(Func<(byte[] Key, byte[] IV), string> cipherOp)
+        byte[] LoadCurrentKey()
+            => CheckSize(keySource.Load().Key);
+
+        byte[] LoadCurrentKeyForDecrypting()
         {
-            var ex = new List<Exception>();
-            foreach (var source in keySources)
+            var existing = keySource.TryLoad()
+                ?? throw new InvalidOperationException("The machine key file does not exist. Decrypting never creates one, as the value could not have been encrypted with it.");
+            return CheckSize(existing.Key);
+        }
+
+        static byte[] CheckSize(byte[] key)
+        {
+            if (key.Length != KeySizeInBytes)
+            {
+                throw new CryptographicException($"The machine key must be {KeySizeInBytes * 8} bits, but is {key.Length * 8}.");
+            }
+            return key;
+        }
+
+        string DecryptLegacy(string encrypted)
+        {
+            var errors = new List<Exception>();
+            foreach (var source in legacyKeySources)
             {
                 try
                 {
-                    return cipherOp(source.Load());
+                    var (key, iv) = source.Load();
+                    using var aes = Aes.Create();
+                    using var decryptor = aes.CreateDecryptor(key, iv);
+                    var payload = Convert.FromBase64String(encrypted);
+                    var plaintext = decryptor.TransformFinalBlock(payload, 0, payload.Length);
+                    return StrictUtf8.GetString(plaintext);
                 }
                 catch (Exception e)
                 {
                     log.Verbose(e.Message);
-                    ex.Add(e);
+                    errors.Add(e);
                 }
             }
 
-            throw new AggregateException(ex);
+            throw new CryptographicException("Unable to decrypt a value that was protected by an earlier version of Tentacle with any of the keys it could have used. "
+                + "Earlier versions derived the key from /etc/machine-id, so this happens when the configuration was moved from another machine, "
+                + "or is on a volume mounted into a container whose image has since changed. "
+                + "If the machine-id it was written with is still available (for a container, `docker run --rm --entrypoint cat <previous image> /etc/machine-id`), "
+                + "make it available read-only at /etc/machine-id for one start and Tentacle will re-encrypt the configuration with its own key. "
+                + "Otherwise run 'tentacle new-certificate' and re-establish trust with the Octopus Server, or restore the configuration file from a backup taken on the original machine.",
+                new AggregateException(errors));
+        }
+
+        // Only reachable on .NET (Core): the .NET Framework build only runs on Windows, which uses DPAPI instead.
+        static class Gcm
+        {
+            public static void Encrypt(byte[] key, byte[] plaintext, byte[] payload, byte[] associatedData)
+            {
+#if NETFRAMEWORK
+                throw new PlatformNotSupportedException("The Linux machine key scheme is not available on .NET Framework.");
+#else
+                EnsureSupported();
+                using var aes = new AesGcm(key, TagSizeInBytes);
+                aes.Encrypt(payload.AsSpan(0, NonceSizeInBytes),
+                    plaintext,
+                    payload.AsSpan(NonceSizeInBytes, plaintext.Length),
+                    payload.AsSpan(NonceSizeInBytes + plaintext.Length, TagSizeInBytes),
+                    associatedData);
+#endif
+            }
+
+            public static byte[] Decrypt(byte[] key, byte[] payload, byte[] associatedData)
+            {
+#if NETFRAMEWORK
+                throw new PlatformNotSupportedException("The Linux machine key scheme is not available on .NET Framework.");
+#else
+                EnsureSupported();
+                var ciphertextLength = payload.Length - NonceSizeInBytes - TagSizeInBytes;
+                var plaintext = new byte[ciphertextLength];
+                using var aes = new AesGcm(key, TagSizeInBytes);
+                aes.Decrypt(payload.AsSpan(0, NonceSizeInBytes),
+                    payload.AsSpan(NonceSizeInBytes, ciphertextLength),
+                    payload.AsSpan(NonceSizeInBytes + ciphertextLength, TagSizeInBytes),
+                    plaintext,
+                    associatedData);
+                return plaintext;
+#endif
+            }
+
+#if !NETFRAMEWORK
+            static void EnsureSupported()
+            {
+                if (!AesGcm.IsSupported)
+                {
+                    throw new PlatformNotSupportedException("AES-GCM is not available on this platform.");
+                }
+            }
+#endif
         }
     }
 }

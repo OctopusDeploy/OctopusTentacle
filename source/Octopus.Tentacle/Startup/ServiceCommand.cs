@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Configuration.Crypto;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Util;
@@ -17,6 +18,7 @@ namespace Octopus.Tentacle.Startup
         readonly IApplicationInstanceSelector instanceSelector;
         readonly ServiceConfigurationState serviceConfigurationState;
         readonly IServiceConfigurator serviceConfigurator;
+        readonly Lazy<IProtectedSettingsMigrator> protectedSettingsMigrator;
         private readonly ISystemLog log;
         readonly string ServicePasswordEnvVar = "OCTOPUS_SERVICE_PASSWORD";
         readonly string ServiceUsernameEnvVar = "OCTOPUS_SERVICE_USERNAME";
@@ -30,7 +32,8 @@ namespace Octopus.Tentacle.Startup
             Assembly assemblyContainingService,
             IServiceConfigurator serviceConfigurator,
             ISystemLog log,
-            ILogFileOnlyLogger logFileOnlyLogger)
+            ILogFileOnlyLogger logFileOnlyLogger,
+            Lazy<IProtectedSettingsMigrator> protectedSettingsMigrator)
             : base(logFileOnlyLogger)
         {
             this.applicationName = applicationName;
@@ -40,6 +43,7 @@ namespace Octopus.Tentacle.Startup
             this.assemblyContainingService = assemblyContainingService;
             this.serviceConfigurator = serviceConfigurator;
             this.log = log;
+            this.protectedSettingsMigrator = protectedSettingsMigrator;
 
             serviceConfigurationState = new ServiceConfigurationState
             {
@@ -120,7 +124,32 @@ namespace Octopus.Tentacle.Startup
                         serviceDescription,
                         serviceConfigurationState);
                 }
+
+                PrepareConfigurationForTheServiceUser(instanceSelector.Current.ConfigurationPath);
             }
+        }
+
+        // Run as root, so this can migrate a configuration in a directory the service user cannot write to, and hand the
+        // owner-only key and configuration to that user.
+        void PrepareConfigurationForTheServiceUser(string? configurationPath)
+        {
+            if (!(serviceConfigurationState.Install || serviceConfigurationState.Reconfigure)
+                || PlatformDetection.IsRunningOnWindows
+                || KubernetesSupportDetection.IsRunningAsKubernetesAgent
+                || string.IsNullOrWhiteSpace(configurationPath))
+            {
+                return;
+            }
+
+            protectedSettingsMigrator.Value.ReEncryptLegacyProtectedSettings();
+
+            var userName = serviceConfigurationState.Username;
+            if (string.IsNullOrWhiteSpace(userName) || userName == "root")
+            {
+                return;
+            }
+
+            LinuxGeneratedMachineKey.GiveKeyAndConfigurationToServiceUser(log, new OctopusPhysicalFileSystem(log), configurationPath!, userName!);
         }
     }
 }

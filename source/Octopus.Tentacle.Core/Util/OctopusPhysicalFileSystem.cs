@@ -250,6 +250,199 @@ namespace Octopus.Tentacle.Core.Util
             File.WriteAllText(path, contents);
         }
 
+#if NETFRAMEWORK
+        // .NET Framework only runs on Windows, where there are no Unix permissions or owners to set.
+        public bool RestrictFilePermissionsToOwner(string path)
+            => false;
+
+        public bool TryCreateFileOwnerOnly(string path, byte[] contents)
+        {
+            var temporaryPath = TemporaryPathBeside(path);
+            try
+            {
+                File.WriteAllBytes(temporaryPath, contents);
+                try
+                {
+                    // MoveFile never replaces an existing file.
+                    File.Move(temporaryPath, path);
+                    return true;
+                }
+                catch (IOException) when (File.Exists(path))
+                {
+                    return false;
+                }
+            }
+            finally
+            {
+                if (File.Exists(temporaryPath))
+                {
+                    File.Delete(temporaryPath);
+                }
+            }
+        }
+
+        public bool TryChangeOwnerToMatch(string path, string referencePath)
+            => false;
+
+        public bool TryChangeOwner(string path, string userName, out string reason)
+        {
+            reason = "file owners cannot be changed on Windows";
+            return false;
+        }
+#else
+        const UnixFileMode OwnerReadWrite = UnixFileMode.UserRead | UnixFileMode.UserWrite;
+
+        public bool RestrictFilePermissionsToOwner(string path)
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                return false;
+            }
+
+            using var handle = UnixFile.OpenWithoutFollowingSymlinks(path);
+            if ((File.GetUnixFileMode(handle) & ~OwnerReadWrite) == UnixFileMode.None)
+            {
+                return false;
+            }
+
+            File.SetUnixFileMode(handle, OwnerReadWrite);
+            return true;
+        }
+
+        public bool TryCreateFileOwnerOnly(string path, byte[] contents)
+        {
+            var temporaryPath = TemporaryPathBeside(path);
+            try
+            {
+                var options = new FileStreamOptions
+                {
+                    Mode = FileMode.CreateNew,
+                    Access = FileAccess.Write,
+                    Share = FileShare.None
+                };
+                if (!OperatingSystem.IsWindows())
+                {
+                    options.UnixCreateMode = OwnerReadWrite;
+                }
+                using (var stream = new FileStream(temporaryPath, options))
+                {
+                    stream.Write(contents, 0, contents.Length);
+                    stream.Flush(flushToDisk: true);
+                }
+
+                if (!OperatingSystem.IsWindows())
+                {
+                    // File.Move(overwrite: false) checks then renames, so on Unix two racing processes could each keep their own file.
+                    if (UnixFile.TryLinkWithoutReplacing(temporaryPath, path, out var alreadyExists))
+                    {
+                        return true;
+                    }
+                    if (alreadyExists && File.Exists(path))
+                    {
+                        return false;
+                    }
+                }
+
+                try
+                {
+                    File.Move(temporaryPath, path, overwrite: false);
+                    return true;
+                }
+                catch (IOException) when (File.Exists(path))
+                {
+                    return false;
+                }
+            }
+            finally
+            {
+                if (File.Exists(temporaryPath))
+                {
+                    File.Delete(temporaryPath);
+                }
+            }
+        }
+
+        public bool TryChangeOwnerToMatch(string path, string referencePath)
+        {
+            if (OperatingSystem.IsWindows() || !UnixFile.IsRoot)
+            {
+                return false;
+            }
+
+            var owner = ReadNumericOwner(referencePath);
+            return owner != null && TryChangeOwner(path, owner.Value.UserId, owner.Value.GroupId, out _);
+        }
+
+        public bool TryChangeOwner(string path, string userName, out string reason)
+        {
+            if (OperatingSystem.IsWindows() || !UnixFile.IsRoot)
+            {
+                reason = $"not running as root (running as {Environment.UserName})";
+                return false;
+            }
+
+            var userId = UnixFile.UserId(userName);
+            if (userId == null)
+            {
+                reason = $"there is no user named {userName}";
+                return false;
+            }
+
+            return TryChangeOwner(path, userId.Value, UnixFile.UnchangedId, out reason);
+        }
+
+        bool TryChangeOwner(string path, uint userId, uint groupId, out string reason)
+        {
+            try
+            {
+                using var handle = UnixFile.OpenWithoutFollowingSymlinks(path);
+                UnixFile.ChangeOwner(handle, path, userId, groupId);
+                reason = "";
+                return true;
+            }
+            catch (IOException e)
+            {
+                reason = e.Message;
+                Log.Verbose(reason);
+                return false;
+            }
+        }
+
+        // Only reads: `ls -ln` is POSIX, so it is parsed the same on GNU, BSD and BusyBox.
+        static (uint UserId, uint GroupId)? ReadNumericOwner(string path)
+        {
+            try
+            {
+                var startInfo = new System.Diagnostics.ProcessStartInfo("ls")
+                {
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    ArgumentList = { "-ldn", "--", path }
+                };
+                using var process = System.Diagnostics.Process.Start(startInfo);
+                if (process == null)
+                {
+                    return null;
+                }
+                var output = process.StandardOutput.ReadToEnd();
+                process.WaitForExit();
+                var fields = output.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
+                return process.ExitCode == 0 && fields.Length >= 5 && uint.TryParse(fields[2], out var userId) && uint.TryParse(fields[3], out var groupId)
+                    ? (userId, groupId)
+                    : null;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+#endif
+
+        // In the same directory, so it is on the same file system and can be moved into place atomically.
+        static string TemporaryPathBeside(string path)
+            => path + "." + Guid.NewGuid().ToString("N") + ".tmp";
+
         public void EnsureDirectoryExists(string directoryPath)
         {
             if (!DirectoryExists(directoryPath))

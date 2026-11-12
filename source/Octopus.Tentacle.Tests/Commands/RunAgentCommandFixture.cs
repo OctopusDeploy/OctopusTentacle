@@ -29,6 +29,7 @@ namespace Octopus.Tentacle.Tests.Commands
         IHomeConfiguration home = null!;
         IApplicationInstanceSelector selector = null!;
         IBackgroundTask[] backgroundTasks = null!;
+        IProtectedSettingsMigrator protectedSettingsMigrator = null!;
 
         [SetUp]
         public override void SetUp()
@@ -41,6 +42,7 @@ namespace Octopus.Tentacle.Tests.Commands
             tentacleConfiguration.TentacleCertificate.Returns(certificate);
             home = Substitute.For<IHomeConfiguration>();
             sleep = Substitute.For<ISleep>();
+            protectedSettingsMigrator = Substitute.For<IProtectedSettingsMigrator>();
 
             backgroundTasks = new[]
             {
@@ -60,9 +62,22 @@ namespace Octopus.Tentacle.Tests.Commands
                 Substitute.For<IWindowsLocalAdminRightsChecker>(),
                 new AppVersion(GetType().Assembly),
                 Substitute.For<ILogFileOnlyLogger>(),
-                backgroundTasks.Select(bt => new Lazy<IBackgroundTask>(() => bt)).ToList());
+                backgroundTasks.Select(bt => new Lazy<IBackgroundTask>(() => bt)).ToList(),
+                new Lazy<IProtectedSettingsMigrator>(() => protectedSettingsMigrator));
 
             selector.Current.Returns(new ApplicationInstanceConfiguration("MyTentacle", null, null, null));
+        }
+
+        [Test]
+        public void WhenCommandIsStartedThenLegacyProtectedSettingsAreReEncryptedBeforeHalibutStarts()
+        {
+            Start();
+
+            Received.InOrder(() =>
+            {
+                protectedSettingsMigrator.ReEncryptLegacyProtectedSettings();
+                halibut.Start();
+            });
         }
 
         [Test]
