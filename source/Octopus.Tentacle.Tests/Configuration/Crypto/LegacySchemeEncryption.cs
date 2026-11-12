@@ -5,18 +5,6 @@ using Octopus.Tentacle.Configuration.Crypto;
 
 namespace Octopus.Tentacle.Tests.Configuration.Crypto
 {
-    public static class LegacySchemeEncryption
-    {
-        public static string Encrypt(ICryptoKeyNixSource keySource, string raw)
-        {
-            var plaintext = Encoding.UTF8.GetBytes(raw);
-            var (key, iv) = keySource.Load();
-            using var aes = Aes.Create();
-            using var encryptor = aes.CreateEncryptor(key, iv);
-            return Convert.ToBase64String(encryptor.TransformFinalBlock(plaintext, 0, plaintext.Length));
-        }
-    }
-
     public class LegacySchemeEncryptor : IMachineKeyEncryptor
     {
         readonly ICryptoKeyNixSource keySource;
@@ -27,7 +15,13 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         }
 
         public string Encrypt(string raw)
-            => LegacySchemeEncryption.Encrypt(keySource, raw);
+        {
+            var plaintext = Encoding.UTF8.GetBytes(raw);
+            var (key, iv) = keySource.Load();
+            using var aes = Aes.Create();
+            using var encryptor = aes.CreateEncryptor(key, iv);
+            return Convert.ToBase64String(encryptor.TransformFinalBlock(plaintext, 0, plaintext.Length));
+        }
 
         public string Decrypt(string encrypted)
         {

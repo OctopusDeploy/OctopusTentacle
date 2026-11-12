@@ -50,15 +50,20 @@ namespace Octopus.Tentacle.Tests.Configuration
         string BackupFile => configurationFile + XmlFileKeyValueStore.PreReEncryptionBackupSuffix;
 
         [Test]
-        public void TheFirstReEncryptionKeepsACopyOfTheFileExactlyAsTheEarlierVersionLeftIt()
+        public void WhenFirstReEncryptingThenTheFileIsBackedUpAsTheEarlierVersionLeftIt()
         {
+            // Arrange
             legacyStore.Set<string>("Tentacle.Certificate", "the certificate", ProtectionLevel.MachineKey);
             legacyStore.Set<string>("Octopus.Proxy.ProxyPassword", "the password", ProtectionLevel.MachineKey);
             var asTheEarlierVersionLeftIt = File.ReadAllBytes(configurationFile);
 
-            store.ReEncryptIfLegacy("Tentacle.Certificate").Should().BeTrue();
-            store.ReEncryptIfLegacy("Octopus.Proxy.ProxyPassword").Should().BeTrue();
+            // Act
+            var certificateReEncrypted = store.ReEncryptIfLegacy("Tentacle.Certificate");
+            var passwordReEncrypted = store.ReEncryptIfLegacy("Octopus.Proxy.ProxyPassword");
 
+            // Assert
+            certificateReEncrypted.Should().BeTrue();
+            passwordReEncrypted.Should().BeTrue();
             File.ReadAllBytes(BackupFile).Should().Equal(asTheEarlierVersionLeftIt, "the copy is byte for byte what was there before anything was rewritten, byte-order mark included");
             if (!OperatingSystem.IsWindows())
             {
@@ -70,8 +75,9 @@ namespace Octopus.Tentacle.Tests.Configuration
         }
 
         [Test]
-        public void AfterADowngradeAndAnotherUpgradeTheBackupIsReplaced()
+        public void WhenReEncryptingAfterADowngradeThenTheBackupIsReplaced()
         {
+            // Arrange
             legacyStore.Set<string>("Tentacle.Certificate", "the first certificate", ProtectionLevel.MachineKey);
             store.ReEncryptIfLegacy("Tentacle.Certificate");
 
@@ -80,39 +86,50 @@ namespace Octopus.Tentacle.Tests.Configuration
             var downgraded = new XmlFileKeyValueStore(fileSystem, configurationFile, encryptor: new LegacySchemeEncryptor(legacyKey));
             downgraded.Set<string>("Tentacle.Certificate", "the second certificate", ProtectionLevel.MachineKey);
             var asTheDowngradedVersionLeftIt = File.ReadAllBytes(configurationFile);
+            var upgraded = new XmlFileKeyValueStore(fileSystem, configurationFile, encryptor: encryptor);
 
-            new XmlFileKeyValueStore(fileSystem, configurationFile, encryptor: encryptor).ReEncryptIfLegacy("Tentacle.Certificate").Should().BeTrue();
+            // Act
+            var reEncrypted = upgraded.ReEncryptIfLegacy("Tentacle.Certificate");
 
+            // Assert
+            reEncrypted.Should().BeTrue();
             File.ReadAllBytes(BackupFile).Should().Equal(asTheDowngradedVersionLeftIt);
         }
 
         [Test]
-        public void APartlyReEncryptedConfigurationNeverReplacesTheBackup()
+        public void WhenReEncryptingAPartlyReEncryptedConfigurationThenTheBackupIsKept()
         {
+            // Arrange
             legacyStore.Set<string>("Tentacle.Certificate", "the certificate", ProtectionLevel.MachineKey);
             legacyStore.Set<string>("Octopus.Proxy.ProxyPassword", "the password", ProtectionLevel.MachineKey);
             store.ReEncryptIfLegacy("Tentacle.Certificate");
             var firstBackup = File.ReadAllBytes(BackupFile);
+            var restarted = new XmlFileKeyValueStore(fileSystem, configurationFile, encryptor: encryptor);
 
-            new XmlFileKeyValueStore(fileSystem, configurationFile, encryptor: encryptor).ReEncryptIfLegacy("Octopus.Proxy.ProxyPassword").Should().BeTrue();
+            // Act
+            var reEncrypted = restarted.ReEncryptIfLegacy("Octopus.Proxy.ProxyPassword");
 
+            // Assert
+            reEncrypted.Should().BeTrue();
             File.ReadAllBytes(BackupFile).Should().Equal(firstBackup);
         }
 
         [Test]
-        public void SerialisedValuesKeepTheirSerialisedFormSoTypedReadsStillWork()
+        public void WhenSerialisedValuesAreReEncryptedThenTypedReadsStillWork()
         {
+            // Arrange
+            var names = new[] { "a.bool", "an.int", "an.enum", "an.object" };
             var configurationObject = new MyObject { IntField = 10, BooleanField = true, EnumField = SomeEnum.SomeOtherEnumValue, ArrayField = new[] { new MyNestedObject { Id = 1 } } };
             legacyStore.Set("a.bool", true, ProtectionLevel.MachineKey);
             legacyStore.Set("an.int", 123, ProtectionLevel.MachineKey);
             legacyStore.Set("an.enum", SomeEnum.SomeOtherEnumValue, ProtectionLevel.MachineKey);
             legacyStore.Set("an.object", configurationObject, ProtectionLevel.MachineKey);
 
-            foreach (var name in new[] { "a.bool", "an.int", "an.enum", "an.object" })
-            {
-                store.ReEncryptIfLegacy(name).Should().BeTrue(name);
-            }
+            // Act
+            var reEncrypted = names.Select(store.ReEncryptIfLegacy).ToArray();
 
+            // Assert
+            reEncrypted.Should().AllBeEquivalentTo(true);
             var reloaded = new XmlFileKeyValueStore(fileSystem, configurationFile, encryptor: encryptor);
             reloaded.Get("a.bool", false, ProtectionLevel.MachineKey).Should().BeTrue();
             reloaded.Get("an.int", 0, ProtectionLevel.MachineKey).Should().Be(123);

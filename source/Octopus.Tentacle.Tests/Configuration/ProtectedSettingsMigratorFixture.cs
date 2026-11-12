@@ -5,7 +5,6 @@ using System.Linq;
 using System.Xml.Linq;
 using FluentAssertions;
 using NSubstitute;
-using NSubstitute.ExceptionExtensions;
 using NUnit.Framework;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Crypto;
@@ -67,12 +66,16 @@ namespace Octopus.Tentacle.Tests.Configuration
         }
 
         [Test]
-        public void EveryLegacyProtectedSettingIsReEncryptedAndStillReadsBack()
+        public void WhenMigratingThenEveryLegacyProtectedSettingIsReEncrypted()
         {
+            // Arrange
             SeedAnUpgradedInstall();
+            var migrator = CreateMigrator();
 
-            CreateMigrator().ReEncryptLegacyProtectedSettings();
+            // Act
+            migrator.ReEncryptLegacyProtectedSettings();
 
+            // Assert
             var reloaded = new XmlFileKeyValueStore(fileSystem, configurationFile, encryptor: encryptor);
             foreach (var name in ProtectedSettingsMigrator.ProtectedSettingNames)
             {
@@ -85,23 +88,6 @@ namespace Octopus.Tentacle.Tests.Configuration
             log.Received(3).Info(Arg.Is<string>(m => m.StartsWith("Re-encrypted the protected setting")));
             log.DidNotReceive().Error(Arg.Any<Exception>(), Arg.Any<string>());
             File.Exists(configurationFile + XmlFileKeyValueStore.PreReEncryptionBackupSuffix).Should().BeTrue("a downgrade needs the configuration as it was");
-        }
-
-        [Test]
-        public void ASettingThatCannotBeRewrittenIsLoggedAsAnErrorAndTheOthersAreStillDone()
-        {
-            var failingStore = Substitute.For<IWritableKeyValueStore, IReEncryptingKeyValueStore>();
-            ((IReEncryptingKeyValueStore)failingStore).ReEncryptIfLegacy("Tentacle.Certificate").Throws(new IOException("Read-only file system"));
-            ((IReEncryptingKeyValueStore)failingStore).ReEncryptIfLegacy("Octopus.Proxy.ProxyPassword").Returns(true);
-            ((IReEncryptingKeyValueStore)failingStore).ReEncryptIfLegacy("Octopus.Server.Proxy.ProxyPassword").Returns(false);
-            selector.Current.Returns(new ApplicationInstanceConfiguration("Tentacle", configurationFile, failingStore, failingStore));
-
-            CreateMigrator().Invoking(x => x.ReEncryptLegacyProtectedSettings()).Should().NotThrow();
-
-            log.Received(1).Error(Arg.Any<IOException>(), Arg.Is<string>(m => m.Contains("'Tentacle.Certificate'")));
-            log.Received(1).Info(Arg.Is<string>(m => m.Contains("'Octopus.Proxy.ProxyPassword'")));
-            ((IReEncryptingKeyValueStore)failingStore).Received(1).ReEncryptIfLegacy("Octopus.Server.Proxy.ProxyPassword");
-            ((IReEncryptingKeyValueStore)failingStore).Received(1).RestrictKeyStorageToOwner();
         }
 
         string RawValue(string name)

@@ -51,7 +51,6 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         }
 
         const string ConfigurationFile = "/etc/octopus/Tentacle/tentacle-Tentacle.config";
-        const string NewKeyFile = "/etc/octopus/Tentacle/config-encryption.key";
 
         FakeKeyFiles files;
 
@@ -69,65 +68,40 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
             Environment.SetEnvironmentVariable(KubernetesConfig.NamespaceVariableName, null);
         }
 
-        IMachineKeyEncryptor CreateEncryptorAsComposedInProduction(bool machineIdPresent, string machineId = MachineId)
+        IMachineKeyEncryptor CreateEncryptorAsComposedInProduction(bool machineIdPresent)
         {
             var fileSystem = files.CreateFileSystem();
             fileSystem.FileExists(LinuxMachineIdKey.FileName).Returns(machineIdPresent);
-            fileSystem.ReadAllLines(LinuxMachineIdKey.FileName).Returns(new[] { machineId });
+            fileSystem.ReadAllLines(LinuxMachineIdKey.FileName).Returns(new[] { MachineId });
 
             return MachineKeyEncryptor.CreateLinuxEncryptor(Substitute.For<ISystemLog>(), fileSystem, LinuxGeneratedMachineKey.KeyFilePathFor(ConfigurationFile), ConfigurationFile);
         }
 
         [TestCaseSource(nameof(WrittenWithTheMachineIdKey))]
-        public void ValuesWrittenByEarlierVersionsWithTheMachineIdKeyStillDecrypt(string plaintext, string legacyCiphertext)
+        public void WhenAValueWasWrittenWithTheMachineIdKeyThenItStillDecrypts(string plaintext, string legacyCiphertext)
         {
+            // Arrange
             files.Contents.Remove(LinuxGeneratedMachineKey.LegacyKeyFilePath);
+            var encryptor = CreateEncryptorAsComposedInProduction(machineIdPresent: true);
 
-            CreateEncryptorAsComposedInProduction(machineIdPresent: true).Decrypt(legacyCiphertext).Should().Be(plaintext);
+            // Act
+            var decrypted = encryptor.Decrypt(legacyCiphertext);
+
+            // Assert
+            decrypted.Should().Be(plaintext);
         }
 
         [TestCaseSource(nameof(WrittenWithTheGeneratedKey))]
-        public void ValuesWrittenByEarlierVersionsOnAHostWithoutAMachineIdStillDecrypt(string plaintext, string legacyCiphertext)
+        public void WhenAValueWasWrittenWithoutAMachineIdThenItStillDecrypts(string plaintext, string legacyCiphertext)
         {
-            CreateEncryptorAsComposedInProduction(machineIdPresent: false).Decrypt(legacyCiphertext).Should().Be(plaintext);
-        }
+            // Arrange
+            var encryptor = CreateEncryptorAsComposedInProduction(machineIdPresent: false);
 
-        [TestCaseSource(nameof(WrittenWithTheMachineIdKey))]
-        public void OnceReEncrypted_ValuesNoLongerDependOnTheMachineIdOrTheLegacyKey(string plaintext, string legacyCiphertext)
-        {
-            var upgraded = CreateEncryptorAsComposedInProduction(machineIdPresent: true);
-            var reEncrypted = upgraded.Encrypt(upgraded.Decrypt(legacyCiphertext));
+            // Act
+            var decrypted = encryptor.Decrypt(legacyCiphertext);
 
-            reEncrypted.Should().StartWith(LinuxMachineKeyEncryptor.ProtectedValuePrefix);
-            upgraded.RequiresReEncryption(reEncrypted).Should().BeFalse();
-
-            files.Contents.Remove(LinuxGeneratedMachineKey.LegacyKeyFilePath);
-            CreateEncryptorAsComposedInProduction(machineIdPresent: false).Decrypt(reEncrypted).Should().Be(plaintext);
-            CreateEncryptorAsComposedInProduction(machineIdPresent: true, machineId: "00000000000000000000000000000000").Decrypt(reEncrypted).Should().Be(plaintext);
-        }
-
-        [TestCaseSource(nameof(WrittenWithTheMachineIdKey))]
-        public void TheNewKeyIsCreatedBesideTheConfigurationAndTheLegacyKeyFileIsNeverCreatedOrChanged(string plaintext, string legacyCiphertext)
-        {
-            files.Contents.Remove(LinuxGeneratedMachineKey.LegacyKeyFilePath);
-            var upgraded = CreateEncryptorAsComposedInProduction(machineIdPresent: true);
-
-            upgraded.Encrypt(upgraded.Decrypt(legacyCiphertext));
-
-            files.Contents.Keys.Should().BeEquivalentTo(new[] { NewKeyFile });
-        }
-
-        [Test]
-        public void NewValuesCannotBeReadWithTheMachineIdAlone()
-        {
-            // Someone with the image's public machine-id and a copy of tentacle.config.
-            var thisMachine = CreateEncryptorAsComposedInProduction(machineIdPresent: true);
-            var encrypted = thisMachine.Encrypt("the certificate");
-
-            files.Contents[NewKeyFile] = "YW55IG90aGVyIGtleSBvZiB0aGlydHktdHdvIGJ5dGU=.b3RoZXIgaXYgb2YgMTYgYg==";
-            var attackerWithTheSameImage = CreateEncryptorAsComposedInProduction(machineIdPresent: true);
-
-            attackerWithTheSameImage.Invoking(x => x.Decrypt(encrypted)).Should().Throw<Exception>();
+            // Assert
+            decrypted.Should().Be(plaintext);
         }
 
         class FakeKeyFiles

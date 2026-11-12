@@ -71,8 +71,10 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void WhenCommandIsStartedThenLegacyProtectedSettingsAreReEncryptedBeforeHalibutStarts()
         {
+            // Act
             Start();
 
+            // Assert
             Received.InOrder(() =>
             {
                 protectedSettingsMigrator.ReEncryptLegacyProtectedSettings();

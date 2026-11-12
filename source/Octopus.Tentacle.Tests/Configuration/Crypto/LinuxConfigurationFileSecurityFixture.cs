@@ -49,10 +49,15 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         }
 
         [Test]
-        public void ANewKeyFileIsCreatedReadableOnlyByItsOwner()
+        public void WhenTheKeyIsCreatedThenOnlyItsOwnerCanReadIt()
         {
-            var (key, iv) = new LinuxGeneratedMachineKey(log, fileSystem, keyFilePath).Load();
+            // Arrange
+            var keySource = new LinuxGeneratedMachineKey(log, fileSystem, keyFilePath);
 
+            // Act
+            var (key, iv) = keySource.Load();
+
+            // Assert
             File.Exists(keyFilePath).Should().BeTrue("the directory is created on demand, as it always was");
             File.GetUnixFileMode(keyFilePath).Should().Be(OwnerReadWrite);
             File.ReadAllText(keyFilePath).Should().Be(Convert.ToBase64String(key) + "." + Convert.ToBase64String(iv));
@@ -60,9 +65,9 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         }
 
         [Test]
-        public async Task ManyProcessesCreatingTheKeyAtOnceAllEndUpWithTheSameKey()
+        public async Task WhenManyProcessesCreateTheKeyAtOnceThenTheyAllGetTheSameKey()
         {
-            // Several instances starting together after an upgrade.
+            // Arrange
             const int racers = 32;
             using var start = new ManualResetEventSlim(false);
             var loads = Enumerable.Range(0, racers)
@@ -72,40 +77,36 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
                     return new LinuxGeneratedMachineKey(log, new OctopusPhysicalFileSystem(log), keyFilePath).Load().Key;
                 }))
                 .ToArray();
-            start.Set();
 
+            // Act
+            start.Set();
             var keys = await Task.WhenAll(loads);
 
+            // Assert
             var onDisk = Convert.FromBase64String(File.ReadAllText(keyFilePath).Split('.')[0]);
             keys.Should().AllSatisfy(k => k.Should().Equal(onDisk));
             Directory.GetFiles(directory).Should().ContainSingle("no racer's temporary file is left behind");
         }
 
         [Test]
-        public void AsRootPermissionsAndOwnershipAreNeverChangedThroughASymlink()
+        public void WhenRunningAsRootThenASymlinkTargetIsNeverWrittenRestrictedOrChowned()
         {
-            IgnoreUnlessRoot();
-            var target = CreateWorldReadableFile("not-tentacles", "");
-            var link = Path.Combine(directory, "config-encryption.key");
-            File.CreateSymbolicLink(link, target);
-
-            fileSystem.Invoking(f => f.RestrictFilePermissionsToOwner(link)).Should().Throw<IOException>();
-            fileSystem.TryChangeOwner(link, "nobody", out _).Should().BeFalse();
-
-            File.GetUnixFileMode(target).Should().Be(WorldReadable);
-        }
-
-        [Test]
-        public void AsRootASymlinkedConfigurationIsReplacedRatherThanWrittenThrough()
-        {
+            // Arrange
             IgnoreUnlessRoot();
             const string emptyConfiguration = "<?xml version='1.0' encoding='UTF-8' ?><octopus-settings></octopus-settings>";
             var target = CreateWorldReadableFile("not-tentacles", emptyConfiguration);
             var configurationFile = Path.Combine(directory, "tentacle.config");
             File.CreateSymbolicLink(configurationFile, target);
+            var store = new XmlFileKeyValueStore(fileSystem, configurationFile, encryptor: TestMachineKeyEncryptor.Current);
 
-            new XmlFileKeyValueStore(fileSystem, configurationFile, encryptor: TestMachineKeyEncryptor.Current).Set<string>("a", "b");
+            // Act
+            var restrictError = CaptureException(() => fileSystem.RestrictFilePermissionsToOwner(configurationFile));
+            var ownerChanged = fileSystem.TryChangeOwner(configurationFile, "nobody", out _);
+            store.Set<string>("a", "b");
 
+            // Assert
+            restrictError.Should().BeOfType<IOException>();
+            ownerChanged.Should().BeFalse();
             File.ReadAllText(target).Should().Be(emptyConfiguration);
             File.GetUnixFileMode(target).Should().Be(WorldReadable);
             new FileInfo(configurationFile).LinkTarget.Should().BeNull();
@@ -117,6 +118,19 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
             if (!Environment.IsPrivilegedProcess)
             {
                 Assert.Ignore("Only root has to guard against a path another user swapped for a symlink.");
+            }
+        }
+
+        static Exception? CaptureException(Action action)
+        {
+            try
+            {
+                action();
+                return null;
+            }
+            catch (Exception e)
+            {
+                return e;
             }
         }
 
