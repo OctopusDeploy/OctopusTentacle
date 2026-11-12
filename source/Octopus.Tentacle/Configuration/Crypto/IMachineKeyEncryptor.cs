@@ -8,7 +8,5 @@ namespace Octopus.Tentacle.Configuration.Crypto
         string Decrypt(string encrypted);
 
         bool RequiresReEncryption(string encrypted);
-
-        void RestrictKeyStorageToOwner();
     }
 }

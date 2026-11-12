@@ -40,14 +40,6 @@ namespace Octopus.Tentacle.Configuration.Crypto
         public bool RequiresReEncryption(string encrypted)
             => IsLegacyCiphertext(encrypted);
 
-        public void RestrictKeyStorageToOwner()
-        {
-            if (keySource is LinuxGeneratedMachineKey generatedKey)
-            {
-                generatedKey.RestrictPermissionsToOwner();
-            }
-        }
-
         public string Encrypt(string raw)
         {
             try

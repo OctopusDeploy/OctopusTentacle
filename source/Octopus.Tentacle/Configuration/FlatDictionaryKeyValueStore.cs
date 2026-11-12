@@ -5,7 +5,7 @@ using Octopus.Tentacle.Configuration.Instances;
 
 namespace Octopus.Tentacle.Configuration
 {
-    public abstract class FlatDictionaryKeyValueStore : DictionaryKeyValueStore, IAggregatableKeyValueStore, IReEncryptingKeyValueStore
+    public abstract class FlatDictionaryKeyValueStore : DictionaryKeyValueStore, IAggregatableKeyValueStore
     {
         protected readonly JsonSerializerSettings JsonSerializerSettings;
         protected readonly IMachineKeyEncryptor Encryptor;
@@ -129,30 +129,6 @@ namespace Octopus.Tentacle.Configuration
 
             return true;
         }
-
-        public bool ReEncryptIfLegacy(string name)
-        {
-            if (name == null) throw new ArgumentNullException(nameof(name));
-
-            var stored = Read(name) as string;
-            if (stored == null || string.IsNullOrWhiteSpace(stored) || !Encryptor.RequiresReEncryption(stored))
-            {
-                return false;
-            }
-
-            var reEncrypted = Encryptor.Encrypt(Encryptor.Decrypt(stored));
-
-            Write(name, reEncrypted);
-            if (AutoSaveOnSet)
-            {
-                Save();
-            }
-
-            return true;
-        }
-
-        public virtual void RestrictKeyStorageToOwner()
-            => Encryptor.RestrictKeyStorageToOwner();
 
         protected virtual bool ValueNeedsToBeSerialized(ProtectionLevel protectionLevel, object valueAsObject)
         {

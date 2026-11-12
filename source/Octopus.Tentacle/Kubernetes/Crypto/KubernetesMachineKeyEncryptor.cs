@@ -47,10 +47,6 @@ namespace Octopus.Tentacle.Kubernetes.Crypto
         public bool RequiresReEncryption(string encrypted)
             => false;
 
-        public void RestrictKeyStorageToOwner()
-        {
-        }
-
         [MemberNotNull(nameof(key), nameof(iv))]
         void EnsureMachineKeyAndIvLoaded()
         {

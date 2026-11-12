@@ -17,9 +17,5 @@ namespace Octopus.Tentacle.Configuration
 
         public bool RequiresReEncryption(string encrypted)
             => false;
-
-        public void RestrictKeyStorageToOwner()
-        {
-        }
     }
 }

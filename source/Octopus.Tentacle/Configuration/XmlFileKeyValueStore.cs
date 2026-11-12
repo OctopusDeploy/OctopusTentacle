@@ -25,9 +25,29 @@ namespace Octopus.Tentacle.Configuration
             this.configurationFile = fileSystem.GetFullPath(configurationFile);
         }
 
-        public override void RestrictKeyStorageToOwner()
+        public bool ReEncryptIfLegacy(string name)
         {
-            base.RestrictKeyStorageToOwner();
+            if (name == null) throw new ArgumentNullException(nameof(name));
+
+            var stored = Read(name) as string;
+            if (stored == null || string.IsNullOrWhiteSpace(stored) || !Encryptor.RequiresReEncryption(stored))
+            {
+                return false;
+            }
+
+            var reEncrypted = Encryptor.Encrypt(Encryptor.Decrypt(stored));
+
+            Write(name, reEncrypted);
+            if (AutoSaveOnSet)
+            {
+                Save();
+            }
+
+            return true;
+        }
+
+        public void RestrictPermissionsToOwner()
+        {
             try
             {
                 if (fileSystem.FileExists(configurationFile) && fileSystem.RestrictFilePermissionsToOwner(configurationFile))

@@ -32,7 +32,7 @@ namespace Octopus.Tentacle.Configuration
         public void ReEncryptLegacyProtectedSettings()
         {
             // Only the file-backed store has a legacy scheme; the Kubernetes agent's ConfigMap store does not.
-            if (!(instanceSelector.Current.WritableConfiguration is IReEncryptingKeyValueStore store))
+            if (!(instanceSelector.Current.WritableConfiguration is XmlFileKeyValueStore store))
             {
                 return;
             }
@@ -54,7 +54,7 @@ namespace Octopus.Tentacle.Configuration
                 }
             }
 
-            store.RestrictKeyStorageToOwner();
+            store.RestrictPermissionsToOwner();
         }
 
         string ConfigurationDirectory()

@@ -76,27 +76,6 @@ namespace Octopus.Tentacle.Configuration.Crypto
             return loaded;
         }
 
-        // Earlier versions created the key file with whatever the umask allowed.
-        public void RestrictPermissionsToOwner()
-        {
-            var path = KeyFilePath;
-            try
-            {
-                if (!fileSystem.FileExists(path))
-                {
-                    return;
-                }
-                if (fileSystem.RestrictFilePermissionsToOwner(path))
-                {
-                    log.Info($"Restricted the permissions on the machine key file `{path}` so that only its owner can read it.");
-                }
-            }
-            catch (Exception e)
-            {
-                log.Warn(e, $"Unable to restrict the permissions on the machine key file `{path}`. The key is still usable.");
-            }
-        }
-
         // Both files are owner-only, so the service user must own them to read them. Must run as root.
         public static bool GiveKeyAndConfigurationToServiceUser(ISystemLog log, IOctopusFileSystem fileSystem, string configurationFile, string userName)
         {
