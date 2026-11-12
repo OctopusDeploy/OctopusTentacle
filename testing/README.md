@@ -26,7 +26,7 @@ The script runs in four stages, each of which can be skipped:
 |---|---|
 | `deb` | Builds the linux-x64 `.deb` via NUKE (`--target PackDebianPackage`) |
 | `image` | Builds the image with the same `docker-compose.build.yml` command TeamCity runs |
-| `smoke` | Asserts the image's contents and behaviour - base image, .NET runtime dependencies, docker-in-docker, entrypoint guards, labels |
+| `smoke` | Asserts the image's contents and behaviour - base image, .NET runtime dependencies, docker-in-docker, entrypoint guards, labels - and upgrades a configuration written by the previous image ([`test-config-encryption-upgrade.sh`](./docker-linux/test-config-encryption-upgrade.sh)) |
 | `e2e` | Stands up SQL Server and an Octopus Server, then registers a listening and a polling Tentacle built from the fresh image |
 
 ```
@@ -41,6 +41,14 @@ The script runs in four stages, each of which can be skipped:
 ```
 
 The `e2e` stage needs an Octopus Server licence, because an unlicensed server enforces a limit of 0 targets and no Tentacle can register. Set `OCTOPUS_SERVER_BASE64_LICENSE`, or let the script read a development licence from 1Password when run interactively. Without one, the stage still verifies configuration and server connectivity up to the licence refusal. Pass `--no-1password` anywhere `op` must not run.
+
+## Linux-only unit tests
+
+Tests marked `[LinuxTest]` are skipped on macOS and Windows. [`run-linux-unit-tests-in-docker.sh`](./run-linux-unit-tests-in-docker.sh) runs them in a .NET SDK container for the host's architecture, as root and then as a non-root user:
+
+```
+./testing/run-linux-unit-tests-in-docker.sh [dotnet test filter]
+```
 
 ## Linux Packages
 

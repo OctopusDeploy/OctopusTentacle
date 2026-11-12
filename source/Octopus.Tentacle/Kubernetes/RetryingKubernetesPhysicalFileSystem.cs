@@ -139,6 +139,29 @@ namespace Octopus.Tentacle.Kubernetes
             syncRetryPolicy.Execute(() => inner.WriteAllText(filePath, contents));
         }
 
+        public bool RestrictFilePermissionsToOwner(string filePath)
+        {
+            return syncRetryPolicy.Execute(() => inner.RestrictFilePermissionsToOwner(filePath));
+        }
+
+        public bool TryCreateFileOwnerOnly(string filePath, byte[] contents, string? ownerReferencePath = null)
+        {
+            return syncRetryPolicy.Execute(() => inner.TryCreateFileOwnerOnly(filePath, contents, ownerReferencePath));
+        }
+
+        public void ReplaceFile(string filePath, byte[] contents)
+        {
+            syncRetryPolicy.Execute(() => inner.ReplaceFile(filePath, contents));
+        }
+
+        public bool TryChangeOwner(string filePath, string userName, out string reason)
+        {
+            var why = "";
+            var changed = syncRetryPolicy.Execute(() => inner.TryChangeOwner(filePath, userName, out why));
+            reason = why;
+            return changed;
+        }
+
         public string ReadAllText(string scriptFile)
         {
             return syncRetryPolicy.Execute(() => inner.ReadAllText(scriptFile));

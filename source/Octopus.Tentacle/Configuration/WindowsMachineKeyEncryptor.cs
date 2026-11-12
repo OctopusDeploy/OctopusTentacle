@@ -14,5 +14,8 @@ namespace Octopus.Tentacle.Configuration
         public string Decrypt(string encrypted)
             => Encoding.UTF8.GetString(ProtectedData.Unprotect(Convert.FromBase64String(encrypted), null, DataProtectionScope.LocalMachine));
 #pragma warning restore CA1416
+
+        public bool RequiresReEncryption(string encrypted)
+            => false;
     }
 }

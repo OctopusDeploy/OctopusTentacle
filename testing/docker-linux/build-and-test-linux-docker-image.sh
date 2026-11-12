@@ -410,6 +410,13 @@ if [[ $SKIP_SMOKE -eq 0 ]]; then
 
     NOSERVER_OUT=$(docker run --rm --platform "$PLATFORM" -e ACCEPT_EULA=Y -e ServerApiKey=API-FAKE "$IMAGE" 2>&1 || true)
     assert_contains "container refuses to start without ServerUrl" "$NOSERVER_OUT" "Please specify an Octopus Server"
+
+    # --- configuration encryption upgrade ------------------------------------
+    if UPGRADE_OUT=$("$REPO_DIR/testing/docker-linux/test-config-encryption-upgrade.sh" "$IMAGE" 2>&1); then
+        pass "configuration from the previous image upgrades to the generated key"
+    else
+        fail "configuration from the previous image upgrades to the generated key" "$UPGRADE_OUT"
+    fi
 fi
 
 ###############################################################################

@@ -8,10 +8,12 @@ namespace Octopus.Tentacle.Configuration
     public abstract class FlatDictionaryKeyValueStore : DictionaryKeyValueStore, IAggregatableKeyValueStore
     {
         protected readonly JsonSerializerSettings JsonSerializerSettings;
+        protected readonly IMachineKeyEncryptor Encryptor;
 
-        protected FlatDictionaryKeyValueStore(JsonSerializerSettings jsonSerializerSettings, bool autoSaveOnSet = true, bool isWriteOnly = false) : base(autoSaveOnSet, isWriteOnly)
+        protected FlatDictionaryKeyValueStore(JsonSerializerSettings jsonSerializerSettings, IMachineKeyEncryptor encryptor, bool autoSaveOnSet = true, bool isWriteOnly = false) : base(autoSaveOnSet, isWriteOnly)
         {
             JsonSerializerSettings = jsonSerializerSettings;
+            Encryptor = encryptor ?? throw new ArgumentNullException(nameof(encryptor));
         }
 
         public override TData? Get<TData>(string name, TData? defaultValue = default, ProtectionLevel protectionLevel = ProtectionLevel.None) where TData : default
@@ -19,6 +21,7 @@ namespace Octopus.Tentacle.Configuration
             if (name == null) throw new ArgumentNullException(nameof(name));
 
             string? valueAsString = null;
+            var decrypting = false;
             try
             {
                 var data = Read(name);
@@ -29,7 +32,11 @@ namespace Octopus.Tentacle.Configuration
                     return defaultValue;
 
                 if (protectionLevel == ProtectionLevel.MachineKey)
-                    data = MachineKeyEncryptor.Current.Decrypt(valueAsString);
+                {
+                    decrypting = true;
+                    data = Encryptor.Decrypt(valueAsString);
+                    decrypting = false;
+                }
 
                 if (typeof(TData) == typeof(string))
                     return (TData)data;
@@ -42,6 +49,11 @@ namespace Octopus.Tentacle.Configuration
             }
             catch (Exception e)
             {
+                // The console does not always print inner messages, and this one says how to recover.
+                if (decrypting)
+                {
+                    throw new FormatException($"Unable to decrypt the protected configuration setting '{name}'. {e.Message}", e);
+                }
                 if (protectionLevel == ProtectionLevel.None)
                     throw new FormatException($"Unable to parse configuration key '{name}' as a '{typeof(TData).Name}'. Value was '{valueAsString}'.", e);
                 throw new FormatException($"Unable to parse configuration key '{name}' as a '{typeof(TData).Name}'.", e);
@@ -53,6 +65,7 @@ namespace Octopus.Tentacle.Configuration
             if (name == null) throw new ArgumentNullException(nameof(name));
 
             string? valueAsString = null;
+            var decrypting = false;
             try
             {
                 var data = Read(name);
@@ -63,7 +76,11 @@ namespace Octopus.Tentacle.Configuration
                     return (false, default!);
 
                 if (protectionLevel == ProtectionLevel.MachineKey)
-                    data = MachineKeyEncryptor.Current.Decrypt(valueAsString);
+                {
+                    decrypting = true;
+                    data = Encryptor.Decrypt(valueAsString);
+                    decrypting = false;
+                }
 
                 if (typeof(TData) == typeof(string))
                     return (true, (TData)data);
@@ -76,6 +93,10 @@ namespace Octopus.Tentacle.Configuration
             }
             catch (Exception e)
             {
+                if (decrypting)
+                {
+                    throw new FormatException($"Unable to decrypt the protected configuration setting '{name}'. {e.Message}", e);
+                }
                 if (protectionLevel == ProtectionLevel.None)
                     throw new FormatException($"Unable to parse configuration key '{name}' as a '{typeof(TData).Name}'. Value was '{valueAsString}'.", e);
                 throw new FormatException($"Unable to parse configuration key '{name}' as a '{typeof(TData).Name}'.", e);
@@ -100,7 +121,7 @@ namespace Octopus.Tentacle.Configuration
                 valueAsObject = JsonConvert.SerializeObject(value, JsonSerializerSettings);
 
             if (protectionLevel == ProtectionLevel.MachineKey && valueAsObject != null)
-                valueAsObject = MachineKeyEncryptor.Current.Encrypt((string)valueAsObject);
+                valueAsObject = Encryptor.Encrypt((string)valueAsObject);
 
             Write(name, valueAsObject);
             if (AutoSaveOnSet)
