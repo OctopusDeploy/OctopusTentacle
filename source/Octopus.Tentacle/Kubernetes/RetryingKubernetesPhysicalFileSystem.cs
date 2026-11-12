@@ -144,14 +144,14 @@ namespace Octopus.Tentacle.Kubernetes
             return syncRetryPolicy.Execute(() => inner.RestrictFilePermissionsToOwner(filePath));
         }
 
-        public bool TryCreateFileOwnerOnly(string filePath, byte[] contents)
+        public bool TryCreateFileOwnerOnly(string filePath, byte[] contents, string? ownerReferencePath = null)
         {
-            return syncRetryPolicy.Execute(() => inner.TryCreateFileOwnerOnly(filePath, contents));
+            return syncRetryPolicy.Execute(() => inner.TryCreateFileOwnerOnly(filePath, contents, ownerReferencePath));
         }
 
-        public bool TryChangeOwnerToMatch(string filePath, string referencePath)
+        public void ReplaceFile(string filePath, byte[] contents)
         {
-            return syncRetryPolicy.Execute(() => inner.TryChangeOwnerToMatch(filePath, referencePath));
+            syncRetryPolicy.Execute(() => inner.ReplaceFile(filePath, contents));
         }
 
         public bool TryChangeOwner(string filePath, string userName, out string reason)

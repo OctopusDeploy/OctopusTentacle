@@ -255,7 +255,10 @@ namespace Octopus.Tentacle.Core.Util
         public bool RestrictFilePermissionsToOwner(string path)
             => false;
 
-        public bool TryCreateFileOwnerOnly(string path, byte[] contents)
+        public void ReplaceFile(string path, byte[] contents)
+            => File.WriteAllBytes(path, contents);
+
+        public bool TryCreateFileOwnerOnly(string path, byte[] contents, string? ownerReferencePath = null)
         {
             var temporaryPath = TemporaryPathBeside(path);
             try
@@ -274,15 +277,9 @@ namespace Octopus.Tentacle.Core.Util
             }
             finally
             {
-                if (File.Exists(temporaryPath))
-                {
-                    File.Delete(temporaryPath);
-                }
+                DeleteIfExists(temporaryPath);
             }
         }
-
-        public bool TryChangeOwnerToMatch(string path, string referencePath)
-            => false;
 
         public bool TryChangeOwner(string path, string userName, out string reason)
         {
@@ -292,115 +289,89 @@ namespace Octopus.Tentacle.Core.Util
 #else
         const UnixFileMode OwnerReadWrite = UnixFileMode.UserRead | UnixFileMode.UserWrite;
 
+        // Root must never write through a path that a non-root user could have swapped for a symlink.
+        static bool IsUnixRoot => !OperatingSystem.IsWindows() && Environment.IsPrivilegedProcess;
+
         public bool RestrictFilePermissionsToOwner(string path)
         {
-            if (OperatingSystem.IsWindows())
+            if (OperatingSystem.IsWindows() || (File.GetUnixFileMode(path) & ~OwnerReadWrite) == UnixFileMode.None)
             {
                 return false;
             }
 
-            using var handle = UnixFile.OpenWithoutFollowingSymlinks(path);
-            if ((File.GetUnixFileMode(handle) & ~OwnerReadWrite) == UnixFileMode.None)
+            if (IsUnixRoot)
             {
-                return false;
+                ReplaceOwnerOnly(path, ReadWithoutFollowingLinks(path), UnixFile.Owner(path));
             }
-
-            File.SetUnixFileMode(handle, OwnerReadWrite);
+            else
+            {
+                // Without root only files this user owns can change, so following a symlink gains nothing.
+                File.SetUnixFileMode(path, OwnerReadWrite);
+            }
             return true;
         }
 
-        public bool TryCreateFileOwnerOnly(string path, byte[] contents)
+        public void ReplaceFile(string path, byte[] contents)
         {
-            var temporaryPath = TemporaryPathBeside(path);
-            try
+            if (IsUnixRoot)
             {
-                var options = new FileStreamOptions
-                {
-                    Mode = FileMode.CreateNew,
-                    Access = FileAccess.Write,
-                    Share = FileShare.None
-                };
-                if (!OperatingSystem.IsWindows())
-                {
-                    options.UnixCreateMode = OwnerReadWrite;
-                }
-                using (var stream = new FileStream(temporaryPath, options))
-                {
-                    stream.Write(contents, 0, contents.Length);
-                    stream.Flush(flushToDisk: true);
-                }
-
-                if (!OperatingSystem.IsWindows())
-                {
-                    // File.Move(overwrite: false) checks then renames, so on Unix two racing processes could each keep their own file.
-                    if (UnixFile.TryLinkWithoutReplacing(temporaryPath, path, out var alreadyExists))
-                    {
-                        return true;
-                    }
-                    if (alreadyExists && File.Exists(path))
-                    {
-                        return false;
-                    }
-                }
-
-                try
-                {
-                    File.Move(temporaryPath, path, overwrite: false);
-                    return true;
-                }
-                catch (IOException) when (File.Exists(path))
-                {
-                    return false;
-                }
+                ReplaceOwnerOnly(path, contents, File.Exists(path) ? UnixFile.Owner(path) : ((uint, uint)?)null);
             }
-            finally
+            else
             {
-                if (File.Exists(temporaryPath))
-                {
-                    File.Delete(temporaryPath);
-                }
+                File.WriteAllBytes(path, contents);
             }
         }
 
-        public bool TryChangeOwnerToMatch(string path, string referencePath)
+        public bool TryCreateFileOwnerOnly(string path, byte[] contents, string? ownerReferencePath = null)
         {
-            if (OperatingSystem.IsWindows() || !UnixFile.IsRoot)
+            (uint UserId, uint GroupId)? owner = IsUnixRoot && ownerReferencePath != null && File.Exists(ownerReferencePath) ? UnixFile.Owner(ownerReferencePath) : null;
+            var temporaryPath = TemporaryPathBeside(path);
+            try
+            {
+                CreateOwnerOnly(temporaryPath, contents, owner);
+
+                // File.Move(overwrite: false) checks then renames, so on Unix two racing processes could each keep their own file.
+                if (!OperatingSystem.IsWindows() && UnixFile.TryLinkWithoutReplacing(temporaryPath, path))
+                {
+                    return true;
+                }
+                if (File.Exists(path))
+                {
+                    return false;
+                }
+
+                File.Move(temporaryPath, path, overwrite: false);
+                return true;
+            }
+            catch (IOException) when (File.Exists(path))
             {
                 return false;
             }
-
-            var owner = ReadNumericOwner(referencePath);
-            return owner != null && TryChangeOwner(path, owner.Value.UserId, owner.Value.GroupId, out _);
+            finally
+            {
+                DeleteIfExists(temporaryPath);
+            }
         }
 
         public bool TryChangeOwner(string path, string userName, out string reason)
         {
-            if (OperatingSystem.IsWindows() || !UnixFile.IsRoot)
+            if (!IsUnixRoot)
             {
                 reason = $"not running as root (running as {Environment.UserName})";
                 return false;
             }
 
-            var userId = UnixFile.UserId(userName);
-            if (userId == null)
-            {
-                reason = $"there is no user named {userName}";
-                return false;
-            }
-
-            return TryChangeOwner(path, userId.Value, UnixFile.UnchangedId, out reason);
-        }
-
-        bool TryChangeOwner(string path, uint userId, uint groupId, out string reason)
-        {
             try
             {
-                using var handle = UnixFile.OpenWithoutFollowingSymlinks(path);
-                UnixFile.ChangeOwner(handle, path, userId, groupId);
+                var userId = UnixFile.UserId(userName) ?? throw new IOException($"there is no user named {userName}");
+                var contents = ReadWithoutFollowingLinks(path);
+                var groupId = UnixFile.Owner(path).GroupId;
+                ReplaceOwnerOnly(path, contents, (userId, groupId));
                 reason = "";
                 return true;
             }
-            catch (IOException e)
+            catch (Exception e) when (e is IOException || e is UnauthorizedAccessException)
             {
                 reason = e.Message;
                 Log.Verbose(reason);
@@ -408,36 +379,58 @@ namespace Octopus.Tentacle.Core.Util
             }
         }
 
-        // Only reads: `ls -ln` is POSIX, so it is parsed the same on GNU, BSD and BusyBox.
-        static (uint UserId, uint GroupId)? ReadNumericOwner(string path)
+        // There is no managed O_NOFOLLOW, so a symlink swapped in between this check and the read is not caught. Writing
+        // never follows one: see ReplaceOwnerOnly.
+        static byte[] ReadWithoutFollowingLinks(string path)
         {
+            if (new FileInfo(path).LinkTarget != null)
+            {
+                throw new IOException($"`{path}` is a symbolic link, so it was left alone.");
+            }
+            return File.ReadAllBytes(path);
+        }
+
+        // rename(2) replaces a symlink at path rather than writing through it.
+        static void ReplaceOwnerOnly(string path, byte[] contents, (uint UserId, uint GroupId)? owner)
+        {
+            var temporaryPath = TemporaryPathBeside(path);
             try
             {
-                var startInfo = new System.Diagnostics.ProcessStartInfo("ls")
-                {
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    ArgumentList = { "-ldn", "--", path }
-                };
-                using var process = System.Diagnostics.Process.Start(startInfo);
-                if (process == null)
-                {
-                    return null;
-                }
-                var output = process.StandardOutput.ReadToEnd();
-                process.WaitForExit();
-                var fields = output.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
-                return process.ExitCode == 0 && fields.Length >= 5 && uint.TryParse(fields[2], out var userId) && uint.TryParse(fields[3], out var groupId)
-                    ? (userId, groupId)
-                    : null;
+                CreateOwnerOnly(temporaryPath, contents, owner);
+                File.Move(temporaryPath, path, overwrite: true);
             }
-            catch (Exception)
+            finally
             {
-                return null;
+                DeleteIfExists(temporaryPath);
             }
         }
+
+        // CreateNew is O_CREAT|O_EXCL, which never follows a symlink.
+        static void CreateOwnerOnly(string path, byte[] contents, (uint UserId, uint GroupId)? owner)
+        {
+            var options = new FileStreamOptions { Mode = FileMode.CreateNew, Access = FileAccess.Write, Share = FileShare.None };
+            if (!OperatingSystem.IsWindows())
+            {
+                options.UnixCreateMode = OwnerReadWrite;
+            }
+
+            using var stream = new FileStream(path, options);
+            if (owner != null)
+            {
+                UnixFile.ChangeOwner(stream.SafeFileHandle, path, owner.Value.UserId, owner.Value.GroupId);
+            }
+            stream.Write(contents, 0, contents.Length);
+            stream.Flush(flushToDisk: true);
+        }
 #endif
+
+        static void DeleteIfExists(string path)
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
 
         // In the same directory, so it is on the same file system and can be moved into place atomically.
         static string TemporaryPathBeside(string path)

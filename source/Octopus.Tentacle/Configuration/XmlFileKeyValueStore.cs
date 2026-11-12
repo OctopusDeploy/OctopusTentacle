@@ -108,7 +108,28 @@ namespace Octopus.Tentacle.Configuration
         protected override Stream OpenForWriting()
         {
             fileSystem.EnsureDiskHasEnoughFreeSpace(configurationFile, 1024 * 1024);
-            return new FileStream(configurationFile, FileMode.OpenOrCreate, FileAccess.Write);
+            return new WrittenOnDisposeStream(contents => fileSystem.ReplaceFile(configurationFile, contents));
+        }
+
+        class WrittenOnDisposeStream : MemoryStream
+        {
+            readonly Action<byte[]> write;
+            bool written;
+
+            public WrittenOnDisposeStream(Action<byte[]> write)
+            {
+                this.write = write;
+            }
+
+            protected override void Dispose(bool disposing)
+            {
+                if (disposing && !written)
+                {
+                    written = true;
+                    write(ToArray());
+                }
+                base.Dispose(disposing);
+            }
         }
 
         protected override bool ValueNeedsToBeSerialized(ProtectionLevel protectionLevel, object valueAsObject)

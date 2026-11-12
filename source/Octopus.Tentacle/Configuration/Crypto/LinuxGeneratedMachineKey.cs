@@ -140,15 +140,13 @@ namespace Octopus.Tentacle.Configuration.Crypto
             fileSystem.EnsureDirectoryExists(LinuxDirectoryOf(path));
 
             // Several instances starting at once after an upgrade must all end up with the same key.
-            if (!fileSystem.TryCreateFileOwnerOnly(path, Encoding.ASCII.GetBytes(raw)))
+            if (!fileSystem.TryCreateFileOwnerOnly(path, Encoding.ASCII.GetBytes(raw), ownerReferencePath))
             {
                 log.Verbose($"Another process created the machine key file `{path}` first; using its key.");
                 return;
             }
 
-            var givenConfigurationsOwner = ownerReferencePath != null && fileSystem.FileExists(ownerReferencePath) && fileSystem.TryChangeOwnerToMatch(path, ownerReferencePath);
-            var owner = givenConfigurationsOwner ? $", owned by the owner of `{ownerReferencePath}`" : "";
-            log.Info($"Generated a new machine key at `{path}`{owner}. Keep it with the configuration file it protects: the configuration cannot be decrypted without it.");
+            log.Info($"Generated a new machine key at `{path}`. Keep it with the configuration file it protects: the configuration cannot be decrypted without it.");
         }
 
         (byte[] Key, byte[] IV) LoadFromFile(string path)

@@ -1,28 +1,16 @@
 #if !NETFRAMEWORK
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 
 namespace Octopus.Tentacle.Core.Util
 {
+    // .NET has no managed API for file owners, so owners are read with POSIX tools and set on an open handle.
     static class UnixFile
     {
         public const uint UnchangedId = uint.MaxValue;
-        const int EEXIST = 17;
-
-        public static bool IsRoot => geteuid() == 0;
-
-        // A symlink in the final path component is refused rather than followed, so root never changes the file it points to.
-        public static SafeFileHandle OpenWithoutFollowingSymlinks(string path)
-        {
-            var fd = open(path, OpenFlags);
-            if (fd < 0)
-            {
-                throw new IOException($"Unable to open `{path}` without following symbolic links: {Marshal.GetLastPInvokeErrorMessage()}");
-            }
-            return new SafeFileHandle((IntPtr)fd, ownsHandle: true);
-        }
 
         public static void ChangeOwner(SafeFileHandle handle, string path, uint userId, uint groupId)
         {
@@ -32,52 +20,51 @@ namespace Octopus.Tentacle.Core.Util
             }
         }
 
-        public static uint? UserId(string userName)
+        // `ls -ln` reports a symlink's own owner, and its output is POSIX, so it is parsed the same on GNU, BSD and BusyBox.
+        public static (uint UserId, uint GroupId) Owner(string path)
         {
-            var entry = getpwnam(userName);
-            if (entry == IntPtr.Zero)
+            var fields = Run("ls", "-ldn", "--", path)?.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
+            if (fields == null || fields.Length < 5 || !uint.TryParse(fields[2], out var userId) || !uint.TryParse(fields[3], out var groupId))
             {
-                return uint.TryParse(userName, out var numericId) ? numericId : null;
+                throw new IOException($"Unable to read the owner of `{path}`.");
             }
-            // pw_uid follows the pw_name and pw_passwd pointers in struct passwd on glibc, musl and macOS.
-            return (uint)Marshal.ReadInt32(entry, 2 * IntPtr.Size);
+            return (userId, groupId);
         }
+
+        public static uint? UserId(string userName)
+            => !userName.StartsWith("-", StringComparison.Ordinal) && uint.TryParse(Run("id", "-u", userName)?.Trim(), out var userId) ? userId : null;
 
         // Unlike rename(2), link(2) never replaces an existing file.
-        public static bool TryLinkWithoutReplacing(string existingPath, string newPath, out bool newPathExists)
-        {
-            var linked = link(existingPath, newPath) == 0;
-            newPathExists = !linked && Marshal.GetLastPInvokeError() == EEXIST;
-            return linked;
-        }
+        public static bool TryLinkWithoutReplacing(string existingPath, string newPath)
+            => link(existingPath, newPath) == 0;
 
-        static int OpenFlags
+        static string? Run(string program, params string[] arguments)
         {
-            get
+            var startInfo = new ProcessStartInfo(program)
             {
-                if (OperatingSystem.IsMacOS())
-                {
-                    const int noFollow = 0x100, nonBlock = 0x4, closeOnExec = 0x1000000;
-                    return noFollow | nonBlock | closeOnExec;
-                }
-
-                const int linuxNonBlock = 0x800, linuxCloseOnExec = 0x80000;
-                var linuxNoFollow = RuntimeInformation.ProcessArchitecture is Architecture.Arm or Architecture.Arm64 ? 0x8000 : 0x20000;
-                return linuxNoFollow | linuxNonBlock | linuxCloseOnExec;
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
+            };
+            foreach (var argument in arguments)
+            {
+                startInfo.ArgumentList.Add(argument);
             }
-        }
 
-        [DllImport("libc", SetLastError = true)]
-        static extern int open(string path, int flags);
+            using var process = Process.Start(startInfo);
+            if (process == null)
+            {
+                return null;
+            }
+            var errors = process.StandardError.ReadToEndAsync();
+            var output = process.StandardOutput.ReadToEnd();
+            process.WaitForExit();
+            errors.Wait();
+            return process.ExitCode == 0 ? output : null;
+        }
 
         [DllImport("libc", SetLastError = true)]
         static extern int fchown(int fd, uint owner, uint group);
-
-        [DllImport("libc", SetLastError = true)]
-        static extern IntPtr getpwnam(string name);
-
-        [DllImport("libc")]
-        static extern uint geteuid();
 
         [DllImport("libc", SetLastError = true)]
         static extern int link(string oldpath, string newpath);

@@ -8,8 +8,10 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
+using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Crypto;
 using Octopus.Tentacle.Core.Diagnostics;
+using Octopus.Tentacle.Tests.Support;
 using Octopus.Tentacle.Tests.Support.TestAttributes;
 using Octopus.Tentacle.Util;
 
@@ -18,9 +20,10 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
     [TestFixture]
     [LinuxTest]
     [SupportedOSPlatform("linux")]
-    public class LinuxGeneratedMachineKeyFileFixture
+    public class LinuxConfigurationFileSecurityFixture
     {
         const UnixFileMode OwnerReadWrite = UnixFileMode.UserRead | UnixFileMode.UserWrite;
+        const UnixFileMode WorldReadable = OwnerReadWrite | UnixFileMode.GroupRead | UnixFileMode.OtherRead;
 
         string directory;
         string keyFilePath;
@@ -79,20 +82,51 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         }
 
         [Test]
-        public void OwnershipAndPermissionsAreNeverChangedThroughASymlink()
+        public void AsRootPermissionsAndOwnershipAreNeverChangedThroughASymlink()
         {
-            Directory.CreateDirectory(directory);
-            var target = Path.Combine(directory, "not-tentacles");
-            File.WriteAllText(target, "");
-            var worldReadable = OwnerReadWrite | UnixFileMode.GroupRead | UnixFileMode.OtherRead;
-            File.SetUnixFileMode(target, worldReadable);
-            var link = Path.Combine(directory, "tentacle.config");
+            IgnoreUnlessRoot();
+            var target = CreateWorldReadableFile("not-tentacles", "");
+            var link = Path.Combine(directory, "config-encryption.key");
             File.CreateSymbolicLink(link, target);
 
             fileSystem.Invoking(f => f.RestrictFilePermissionsToOwner(link)).Should().Throw<IOException>();
             fileSystem.TryChangeOwner(link, "nobody", out _).Should().BeFalse();
 
-            File.GetUnixFileMode(target).Should().Be(worldReadable);
+            File.GetUnixFileMode(target).Should().Be(WorldReadable);
+        }
+
+        [Test]
+        public void AsRootASymlinkedConfigurationIsReplacedRatherThanWrittenThrough()
+        {
+            IgnoreUnlessRoot();
+            const string emptyConfiguration = "<?xml version='1.0' encoding='UTF-8' ?><octopus-settings></octopus-settings>";
+            var target = CreateWorldReadableFile("not-tentacles", emptyConfiguration);
+            var configurationFile = Path.Combine(directory, "tentacle.config");
+            File.CreateSymbolicLink(configurationFile, target);
+
+            new XmlFileKeyValueStore(fileSystem, configurationFile, encryptor: TestMachineKeyEncryptor.Current).Set<string>("a", "b");
+
+            File.ReadAllText(target).Should().Be(emptyConfiguration);
+            File.GetUnixFileMode(target).Should().Be(WorldReadable);
+            new FileInfo(configurationFile).LinkTarget.Should().BeNull();
+            File.GetUnixFileMode(configurationFile).Should().Be(OwnerReadWrite);
+        }
+
+        static void IgnoreUnlessRoot()
+        {
+            if (!Environment.IsPrivilegedProcess)
+            {
+                Assert.Ignore("Only root has to guard against a path another user swapped for a symlink.");
+            }
+        }
+
+        string CreateWorldReadableFile(string name, string contents)
+        {
+            Directory.CreateDirectory(directory);
+            var path = Path.Combine(directory, name);
+            File.WriteAllText(path, contents);
+            File.SetUnixFileMode(path, WorldReadable);
+            return path;
         }
     }
 }

@@ -37,11 +37,12 @@ namespace Octopus.Tentacle.Util
         void WriteAllBytes(string filePath, byte[] data);
         void WriteAllText(string filePath, string contents);
 
-        // Returns false, leaving the existing file untouched, if another process created it first.
-        bool TryCreateFileOwnerOnly(string filePath, byte[] contents);
+        // Returns false, leaving the existing file untouched, if another process created it first. When root, the new file is
+        // given the owner of ownerReferencePath.
+        bool TryCreateFileOwnerOnly(string filePath, byte[] contents, string? ownerReferencePath = null);
 
-        // These never follow a symlink, and only root can give a file away.
-        bool TryChangeOwnerToMatch(string filePath, string referencePath);
+        // As root these replace the file, keeping or setting its owner, rather than write through a symlink.
+        void ReplaceFile(string filePath, byte[] contents);
         bool TryChangeOwner(string filePath, string userName, out string reason);
         bool RestrictFilePermissionsToOwner(string filePath);
 

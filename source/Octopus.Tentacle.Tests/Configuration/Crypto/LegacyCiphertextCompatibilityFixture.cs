@@ -139,7 +139,7 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
                 var fileSystem = Substitute.For<IOctopusFileSystem>();
                 fileSystem.FileExists(Arg.Any<string>()).Returns(ci => Contents.ContainsKey(ci.ArgAt<string>(0)));
                 fileSystem.ReadAllText(Arg.Any<string>()).Returns(ci => Contents[ci.ArgAt<string>(0)]);
-                fileSystem.TryCreateFileOwnerOnly(Arg.Any<string>(), Arg.Any<byte[]>()).Returns(ci => Contents.TryAdd(ci.ArgAt<string>(0), Encoding.ASCII.GetString(ci.ArgAt<byte[]>(1))));
+                fileSystem.TryCreateFileOwnerOnly(Arg.Any<string>(), Arg.Any<byte[]>(), Arg.Any<string?>()).Returns(ci => Contents.TryAdd(ci.ArgAt<string>(0), Encoding.ASCII.GetString(ci.ArgAt<byte[]>(1))));
                 return fileSystem;
             }
         }
