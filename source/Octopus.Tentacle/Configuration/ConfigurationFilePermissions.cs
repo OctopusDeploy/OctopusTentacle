@@ -17,16 +17,26 @@ namespace Octopus.Tentacle.Configuration
         public static void RestrictToOwner(string configurationPath)
             => File.SetUnixFileMode(configurationPath, UnixFileMode.UserRead | UnixFileMode.UserWrite);
 
-        public static void GiveTo(string configurationPath, string userName)
+        public static string? TryGiveTo(string configurationPath, string userName)
         {
-            if (new FileInfo(configurationPath).LinkTarget != null)
-                throw new IOException($"Refusing to change the owner of `{configurationPath}` because it is a symbolic link.");
+            try
+            {
+                if (new FileInfo(configurationPath).LinkTarget != null)
+                    return $"`{configurationPath}` is a symbolic link.";
 
-            var userId = UserId(userName) ?? throw new ArgumentException($"Unable to find the user `{userName}`.");
+                var userId = UserId(userName);
+                if (userId == null)
+                    return $"Unable to find the user `{userName}`.";
 
-            using var stream = new FileStream(configurationPath, FileMode.Open, FileAccess.Read);
-            if (fchown((int)stream.SafeFileHandle.DangerousGetHandle(), userId, UnchangedGroup) != 0)
-                throw new IOException($"Unable to change the owner of `{configurationPath}`: {Marshal.GetLastPInvokeErrorMessage()}");
+                using var stream = new FileStream(configurationPath, FileMode.Open, FileAccess.Read);
+                return fchown((int)stream.SafeFileHandle.DangerousGetHandle(), userId.Value, UnchangedGroup) == 0
+                    ? null
+                    : Marshal.GetLastPInvokeErrorMessage();
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
         }
 
         static uint? UserId(string userName)

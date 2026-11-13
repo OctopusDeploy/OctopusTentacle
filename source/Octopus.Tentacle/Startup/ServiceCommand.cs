@@ -136,7 +136,9 @@ namespace Octopus.Tentacle.Startup
                 || userName == "root")
                 return;
 
-            ConfigurationFilePermissions.GiveTo(configurationPath, userName);
+            var error = ConfigurationFilePermissions.TryGiveTo(configurationPath, userName);
+            if (error != null)
+                log.Warn($"Unable to give `{configurationPath}` to `{userName}`, so the service may be unable to read it: {error}");
 #endif
         }
     }

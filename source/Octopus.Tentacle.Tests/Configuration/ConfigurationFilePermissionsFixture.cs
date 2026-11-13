@@ -47,10 +47,10 @@ namespace Octopus.Tentacle.Tests.Configuration
             File.CreateSymbolicLink(configurationFile, target);
 
             // Act
-            Action giveToServiceUser = () => ConfigurationFilePermissions.GiveTo(configurationFile, Environment.UserName);
+            var error = ConfigurationFilePermissions.TryGiveTo(configurationFile, Environment.UserName);
 
             // Assert
-            giveToServiceUser.Should().Throw<IOException>().WithMessage("*symbolic link*");
+            error.Should().Contain("symbolic link");
         }
     }
 }
