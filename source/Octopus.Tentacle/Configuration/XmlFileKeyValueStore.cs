@@ -38,7 +38,18 @@ namespace Octopus.Tentacle.Configuration
         protected override Stream OpenForWriting()
         {
             fileSystem.EnsureDiskHasEnoughFreeSpace(configurationFile, 1024 * 1024);
-            return new FileStream(configurationFile, FileMode.OpenOrCreate, FileAccess.Write);
+            var stream = new FileStream(configurationFile, FileMode.OpenOrCreate, FileAccess.Write);
+            RestrictToOwner();
+            return stream;
+        }
+
+        // The config holds protected settings, so it must not be readable by other users.
+        void RestrictToOwner()
+        {
+#if NET
+            if (!OperatingSystem.IsWindows())
+                File.SetUnixFileMode(configurationFile, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+#endif
         }
 
         protected override bool ValueNeedsToBeSerialized(ProtectionLevel protectionLevel, object valueAsObject)
