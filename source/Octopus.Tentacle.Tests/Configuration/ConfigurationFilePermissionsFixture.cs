@@ -47,7 +47,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             File.CreateSymbolicLink(configurationFile, target);
 
             // Act
-            var error = ConfigurationFilePermissions.TryGiveTo(configurationFile, Environment.UserName);
+            var error = ConfigurationFilePermissions.TryRestrictToServiceUser(configurationFile, Environment.UserName);
 
             // Assert
             error.Should().Contain("symbolic link");

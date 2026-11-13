@@ -121,11 +121,11 @@ namespace Octopus.Tentacle.Startup
                         serviceConfigurationState);
                 }
 
-                GiveConfigurationToServiceUser(instanceSelector.Current.ConfigurationPath);
+                RestrictConfigurationToServiceUser(instanceSelector.Current.ConfigurationPath);
             }
         }
 
-        void GiveConfigurationToServiceUser(string? configurationPath)
+        void RestrictConfigurationToServiceUser(string? configurationPath)
         {
 #if NET
             var userName = serviceConfigurationState.Username;
@@ -136,9 +136,9 @@ namespace Octopus.Tentacle.Startup
                 || userName == "root")
                 return;
 
-            var error = ConfigurationFilePermissions.TryGiveTo(configurationPath, userName);
+            var error = ConfigurationFilePermissions.TryRestrictToServiceUser(configurationPath, userName);
             if (error != null)
-                log.Warn($"Unable to give `{configurationPath}` to `{userName}`, so the service may be unable to read it: {error}");
+                log.Warn($"Unable to restrict `{configurationPath}` to `{userName}`: {error} Only the service user should be able to read and write the configuration file, so check its owner and permissions.");
 #endif
         }
     }

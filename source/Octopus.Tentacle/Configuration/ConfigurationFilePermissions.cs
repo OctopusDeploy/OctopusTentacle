@@ -11,13 +11,14 @@ namespace Octopus.Tentacle.Configuration
     [UnsupportedOSPlatform("windows")]
     static class ConfigurationFilePermissions
     {
+        public const UnixFileMode OwnerOnly = UnixFileMode.UserRead | UnixFileMode.UserWrite;
         const uint UnchangedGroup = uint.MaxValue;
 
         // Only the agent calls this, as the service user, so it can never lock that user out of the config.
         public static void RestrictToOwner(string configurationPath)
-            => File.SetUnixFileMode(configurationPath, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+            => File.SetUnixFileMode(configurationPath, OwnerOnly);
 
-        public static string? TryGiveTo(string configurationPath, string userName)
+        public static string? TryRestrictToServiceUser(string configurationPath, string userName)
         {
             try
             {
@@ -29,6 +30,7 @@ namespace Octopus.Tentacle.Configuration
                     return $"Unable to find the user `{userName}`.";
 
                 using var stream = new FileStream(configurationPath, FileMode.Open, FileAccess.Read);
+                File.SetUnixFileMode(stream.SafeFileHandle, OwnerOnly);
                 return fchown((int)stream.SafeFileHandle.DangerousGetHandle(), userId.Value, UnchangedGroup) == 0
                     ? null
                     : Marshal.GetLastPInvokeErrorMessage();
