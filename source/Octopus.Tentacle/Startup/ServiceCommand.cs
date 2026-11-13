@@ -120,7 +120,24 @@ namespace Octopus.Tentacle.Startup
                         serviceDescription,
                         serviceConfigurationState);
                 }
+
+                GiveConfigurationToServiceUser(instanceSelector.Current.ConfigurationPath);
             }
+        }
+
+        void GiveConfigurationToServiceUser(string? configurationPath)
+        {
+#if NET
+            var userName = serviceConfigurationState.Username;
+            if (!(serviceConfigurationState.Install || serviceConfigurationState.Reconfigure)
+                || OperatingSystem.IsWindows()
+                || string.IsNullOrWhiteSpace(configurationPath)
+                || string.IsNullOrWhiteSpace(userName)
+                || userName == "root")
+                return;
+
+            ConfigurationFilePermissions.GiveTo(configurationPath, userName);
+#endif
         }
     }
 }

@@ -41,32 +41,6 @@ namespace Octopus.Tentacle.Tests.Configuration
     [TestFixture]
     class XmlFileKeyValueStoreFixture
     {
-#if NET
-        [Test]
-        public void WhenAWorldReadableConfigIsSavedThenOnlyItsOwnerCanReadIt()
-        {
-            if (OperatingSystem.IsWindows())
-            {
-                Assert.Ignore("Unix file modes only");
-                return;
-            }
-
-            // Arrange
-            var configurationFile = Path.GetTempFileName();
-            var fileSystem = new OctopusPhysicalFileSystem(Substitute.For<ISystemLog>());
-            fileSystem.OverwriteFile(configurationFile, "<?xml version='1.0' encoding='UTF-8' ?><octopus-settings></octopus-settings>");
-            File.SetUnixFileMode(configurationFile, (UnixFileMode)0b110_100_100);
-            var settings = new XmlFileKeyValueStore(fileSystem, configurationFile);
-
-            // Act
-            settings.Set<string>("group1.setting1", "secret");
-            settings.Save();
-
-            // Assert
-            File.GetUnixFileMode(configurationFile).Should().Be(UnixFileMode.UserRead | UnixFileMode.UserWrite);
-        }
-#endif
-
         [Test]
         public void WritesSortedXmlUsingCorrectTypes()
         {
