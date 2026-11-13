@@ -120,7 +120,26 @@ namespace Octopus.Tentacle.Startup
                         serviceDescription,
                         serviceConfigurationState);
                 }
+
+                RestrictConfigurationToServiceUser(instanceSelector.Current.ConfigurationPath);
             }
+        }
+
+        void RestrictConfigurationToServiceUser(string? configurationPath)
+        {
+#if NET
+            var userName = serviceConfigurationState.Username;
+            if (!(serviceConfigurationState.Install || serviceConfigurationState.Reconfigure)
+                || OperatingSystem.IsWindows()
+                || string.IsNullOrWhiteSpace(configurationPath)
+                || string.IsNullOrWhiteSpace(userName)
+                || userName == "root")
+                return;
+
+            var error = ConfigurationFilePermissions.TryRestrictToServiceUser(configurationPath, userName);
+            if (error != null)
+                log.Warn($"Unable to restrict `{configurationPath}` to `{userName}`: {error} Only the service user should be able to read and write the configuration file, so check its owner and permissions.");
+#endif
         }
     }
 }
