@@ -250,6 +250,86 @@ namespace Octopus.Tentacle.Core.Util
             File.WriteAllText(path, contents);
         }
 
+#if NETFRAMEWORK
+        public bool AtomicCreateFileWithUserReadWriteAccessOnly(string path, byte[] contents)
+        {
+            var temporaryPath = TemporaryPathBeside(path);
+            try
+            {
+                File.WriteAllBytes(temporaryPath, contents);
+                try
+                {
+                    // MoveFile never replaces an existing file.
+                    File.Move(temporaryPath, path);
+                    return true;
+                }
+                catch (IOException) when (File.Exists(path))
+                {
+                    return false;
+                }
+            }
+            finally
+            {
+                DeleteIfExists(temporaryPath);
+            }
+        }
+#else
+        public bool AtomicCreateFileWithUserReadWriteAccessOnly(string path, byte[] contents)
+        {
+            var temporaryPath = TemporaryPathBeside(path);
+            try
+            {
+                CreateFileWithUserReadWriteAccessOnly(temporaryPath, contents);
+
+                // File.Move(overwrite: false) checks then renames, so on Unix two racing processes could each keep their own file.
+                if (!OperatingSystem.IsWindows() && UnixFile.TryLinkWithoutReplacing(temporaryPath, path))
+                {
+                    return true;
+                }
+                if (File.Exists(path))
+                {
+                    return false;
+                }
+
+                File.Move(temporaryPath, path, overwrite: false);
+                return true;
+            }
+            catch (IOException) when (File.Exists(path))
+            {
+                return false;
+            }
+            finally
+            {
+                DeleteIfExists(temporaryPath);
+            }
+        }
+
+        static void CreateFileWithUserReadWriteAccessOnly(string path, byte[] contents)
+        {
+            var options = new FileStreamOptions { Mode = FileMode.CreateNew, Access = FileAccess.Write, Share = FileShare.None };
+            if (!OperatingSystem.IsWindows())
+            {
+                options.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
+            }
+
+            using var stream = new FileStream(path, options);
+            stream.Write(contents, 0, contents.Length);
+            stream.Flush(flushToDisk: true);
+        }
+#endif
+
+        static void DeleteIfExists(string path)
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
+
+        // In the same directory, so it is on the same file system and can be moved into place atomically.
+        static string TemporaryPathBeside(string path)
+            => path + "." + Guid.NewGuid().ToString("N") + ".tmp";
+
         public void EnsureDirectoryExists(string directoryPath)
         {
             if (!DirectoryExists(directoryPath))

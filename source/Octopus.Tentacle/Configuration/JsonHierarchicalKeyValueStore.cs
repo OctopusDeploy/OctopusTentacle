@@ -8,7 +8,7 @@ namespace Octopus.Tentacle.Configuration
     {
         protected readonly JsonSerializerSettings JsonSerializerSettings;
 
-        protected JsonHierarchicalKeyValueStore(bool autoSaveOnSet, JsonSerializerSettings settings, bool isWriteOnly = false) : base(settings, autoSaveOnSet, isWriteOnly)
+        protected JsonHierarchicalKeyValueStore(bool autoSaveOnSet, JsonSerializerSettings settings, bool isWriteOnly = false) : base(autoSaveOnSet, isWriteOnly)
         {
             JsonSerializerSettings = settings;
         }

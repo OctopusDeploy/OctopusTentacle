@@ -36,6 +36,10 @@ namespace Octopus.Tentacle.Util
 
         void WriteAllBytes(string filePath, byte[] data);
         void WriteAllText(string filePath, string contents);
+
+        // Returns false, leaving the existing file untouched, if another process created it first.
+        bool AtomicCreateFileWithUserReadWriteAccessOnly(string filePath, byte[] contents);
+
         string ReadAllText(string scriptFile);
         string[] ReadAllLines(string scriptFile);
     }

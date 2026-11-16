@@ -1,49 +1,43 @@
 ﻿using System;
+using System.Collections.Generic;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Diagnostics;
-using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Configuration.Crypto
 {
-    public class MachineKeyEncryptor : IMachineKeyEncryptor
+    public static class MachineKeyEncryptor
     {
-        public static readonly IMachineKeyEncryptor Current;
+        static readonly ISystemLog Log = new SystemLog();
 
-        static MachineKeyEncryptor()
-        {
-            if (PlatformDetection.IsRunningOnWindows)
-            {
-                Current = new WindowsMachineKeyEncryptor();
-            }
-            else
-            {
-                Current = LinuxEncryptor();
-            }
-        }
+        public static IMachineKeyEncryptor ForKeyFile(IOctopusFileSystem fileSystem, string? keyFilePath)
+            => PlatformDetection.IsRunningOnWindows
+                ? new WindowsMachineKeyEncryptor()
+                : keyFilePath == null
+                    ? CreateLinuxEncryptor(Log, fileSystem, new NoConfigurationEncryptionKey())
+                    : CreateLinuxEncryptor(Log, fileSystem, keyFilePath);
 
-        static IMachineKeyEncryptor LinuxEncryptor()
+        internal static IMachineKeyEncryptor CreateLinuxEncryptor(ISystemLog log, IOctopusFileSystem fileSystem, string keyFilePath)
+            => CreateLinuxEncryptor(log, fileSystem, new LinuxGeneratedMachineKey(log, fileSystem, keyFilePath));
+
+        static IMachineKeyEncryptor CreateLinuxEncryptor(ISystemLog log, IOctopusFileSystem fileSystem, ICryptoKeyNixSource generatedKey)
         {
-            var log = new SystemLog();
-            var filesystem = new OctopusPhysicalFileSystem(log);
-            // Sources to find the crypto IV+Key. We want to enforce trying to use the machine-key
-            // first but still fallback to the existing Octopus generated one if that doesnt work.
-            var keySources = new ICryptoKeyNixSource[]
+            // The keys earlier versions used, in the order they tried them. Only read, never created or changed.
+            var legacyKeySources = new List<ICryptoKeyNixSource>
             {
-                new LinuxMachineIdKey(filesystem),
-                new LinuxGeneratedMachineKey(log, filesystem)
+                new LinuxMachineIdKey(fileSystem),
+                new LinuxGeneratedMachineKey(log, fileSystem, LinuxGeneratedMachineKey.LegacyKeyFilePathForThisHost)
             };
 
-            return new LinuxMachineKeyEncryptor(log, keySources);
+            return new LinuxMachineKeyEncryptor(log, generatedKey, legacyKeySources);
         }
 
-        MachineKeyEncryptor()
+        class NoConfigurationEncryptionKey : ICryptoKeyNixSource
         {
+            public (byte[] Key, byte[] IV) Load()
+                => throw new InvalidOperationException("The configuration encryption key for this configuration is not available. Register the configuration with `create-instance --instance <name>`.");
+
+            public (byte[] Key, byte[] IV)? TryLoad() => null;
         }
-
-        public string Encrypt(string raw)
-            => Current.Encrypt(raw);
-
-        public string Decrypt(string encrypted)
-            => Current.Decrypt(encrypted);
     }
 }

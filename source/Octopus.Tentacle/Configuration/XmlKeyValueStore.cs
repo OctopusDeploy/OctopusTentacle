@@ -5,12 +5,13 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
+using Octopus.Tentacle.Configuration.Crypto;
 
 namespace Octopus.Tentacle.Configuration
 {
     public abstract class XmlKeyValueStore : FlatDictionaryKeyValueStore
     {
-        protected XmlKeyValueStore(bool autoSaveOnSet, bool isWriteOnly = false) : base(JsonSerialization.GetDefaultSerializerSettings(), autoSaveOnSet, isWriteOnly)
+        protected XmlKeyValueStore(IMachineKeyEncryptor encryptor, bool autoSaveOnSet, bool isWriteOnly = false) : base(JsonSerialization.GetDefaultSerializerSettings(), encryptor, autoSaveOnSet, isWriteOnly)
         {
         }
 
