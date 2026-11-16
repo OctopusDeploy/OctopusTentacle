@@ -1,24 +1,89 @@
-#if NET
 using System;
-using System.Diagnostics;
 using System.IO;
+using Octopus.Tentacle.Core.Diagnostics;
+using Octopus.Tentacle.Util;
+#if NET
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using Microsoft.Win32.SafeHandles;
+#endif
 
 namespace Octopus.Tentacle.Configuration
 {
     // The config holds protected settings, so only its owner may read it. The service user must therefore own it.
-    [UnsupportedOSPlatform("windows")]
     static class ConfigurationFilePermissions
     {
+#if NET
         public const UnixFileMode OwnerOnly = UnixFileMode.UserRead | UnixFileMode.UserWrite;
         const uint UnchangedGroup = uint.MaxValue;
+#endif
 
-        public static void RestrictToOwner(string configurationPath)
-            => File.SetUnixFileMode(configurationPath, OwnerOnly);
+        public static void CreateEmpty(IOctopusFileSystem fileSystem, string configurationPath, string contents)
+        {
+#if NET
+            if (!OperatingSystem.IsWindows())
+            {
+                using var stream = new FileStream(configurationPath, new FileStreamOptions
+                {
+                    Mode = FileMode.CreateNew,
+                    Access = FileAccess.Write,
+                    UnixCreateMode = OwnerOnly
+                });
+                using var writer = new StreamWriter(stream);
+                writer.Write(contents);
+                return;
+            }
+#endif
+            fileSystem.OverwriteFile(configurationPath, contents);
+        }
 
-        public static string? TryRestrictToServiceUser(string configurationPath, string userName)
+        public static void RestrictToOwner(string? configurationPath, ISystemLog log)
+        {
+#if NET
+            if (OperatingSystem.IsWindows() || string.IsNullOrWhiteSpace(configurationPath) || !File.Exists(configurationPath))
+            {
+                return;
+            }
+
+            try
+            {
+                var previousMode = File.GetUnixFileMode(configurationPath);
+                if (previousMode != OwnerOnly)
+                {
+                    File.SetUnixFileMode(configurationPath, OwnerOnly);
+                    log.Info($"Restricted `{configurationPath}` from {Convert.ToString((int)previousMode, 8).PadLeft(4, '0')} to 0600");
+                }
+            }
+            catch (Exception ex) when (ex is UnauthorizedAccessException or IOException)
+            {
+                log.Warn($"Unable to restrict `{configurationPath}` to its owner, so other users may be able to read it: {ex.Message}");
+            }
+#endif
+        }
+
+        public static void RestrictToServiceUser(string? configurationPath, string? userName, ISystemLog log)
+        {
+#if NET
+            if (OperatingSystem.IsWindows()
+                || string.IsNullOrWhiteSpace(configurationPath)
+                || string.IsNullOrWhiteSpace(userName)
+                || userName == "root")
+            {
+                return;
+            }
+
+            var error = TryRestrictToServiceUser(configurationPath, userName);
+            if (error != null)
+            {
+                log.Warn($"Unable to restrict `{configurationPath}` to `{userName}`: {error.TrimEnd('.')}. Only the service user should be able to read and write the configuration file, so check its owner and permissions.");
+            }
+#endif
+        }
+
+#if NET
+        [UnsupportedOSPlatform("windows")]
+        static string? TryRestrictToServiceUser(string configurationPath, string userName)
         {
             try
             {
@@ -70,6 +135,6 @@ namespace Octopus.Tentacle.Configuration
 
         [DllImport("libc", SetLastError = true)]
         static extern int fchown(SafeFileHandle fd, uint owner, uint group);
+#endif
     }
 }
-#endif

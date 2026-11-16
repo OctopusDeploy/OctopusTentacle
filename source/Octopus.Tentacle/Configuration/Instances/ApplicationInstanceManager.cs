@@ -76,32 +76,12 @@ namespace Octopus.Tentacle.Configuration.Instances
             if (!fileSystem.FileExists(configurationFile))
             {
                 log.Info("Creating empty configuration file: " + configurationFile);
-                CreateEmptyConfigurationFile(configurationFile);
+                ConfigurationFilePermissions.CreateEmpty(fileSystem, configurationFile, @"<?xml version='1.0' encoding='UTF-8' ?><octopus-settings></octopus-settings>");
             }
             else
             {
                 log.Info($"Configuration file at {configurationFile} already exists.");
             }
-        }
-
-        void CreateEmptyConfigurationFile(string configurationFile)
-        {
-            const string emptyConfiguration = @"<?xml version='1.0' encoding='UTF-8' ?><octopus-settings></octopus-settings>";
-#if NET
-            if (!OperatingSystem.IsWindows())
-            {
-                using var stream = new FileStream(configurationFile, new FileStreamOptions
-                {
-                    Mode = FileMode.CreateNew,
-                    Access = FileAccess.Write,
-                    UnixCreateMode = ConfigurationFilePermissions.OwnerOnly
-                });
-                using var writer = new StreamWriter(stream);
-                writer.Write(emptyConfiguration);
-                return;
-            }
-#endif
-            fileSystem.OverwriteFile(configurationFile, emptyConfiguration);
         }
 
         (string ConfigurationFilePath, string HomeDirectory) ValidateConfigDirectory(string? configurationFile, string? homeDirectory)

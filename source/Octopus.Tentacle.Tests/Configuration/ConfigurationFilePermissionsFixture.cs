@@ -5,6 +5,8 @@ using System.Runtime.Versioning;
 using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Tests.Support;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Configuration
 {
@@ -12,45 +14,47 @@ namespace Octopus.Tentacle.Tests.Configuration
     [UnsupportedOSPlatform("windows")]
     public class ConfigurationFilePermissionsFixture
     {
-        [Test]
-        public void WhenAWorldReadableConfigIsRestrictedThenOnlyItsOwnerCanReadIt()
+        [SetUp]
+        public void SkipOnWindows()
         {
             if (OperatingSystem.IsWindows())
             {
                 Assert.Ignore("Unix file modes only");
-                return;
             }
+        }
 
-            // Arrange
+        [Test]
+        public void WhenAWorldReadableConfigIsRestrictedThenOnlyItsOwnerCanReadIt()
+        {
             var configurationFile = Path.GetTempFileName();
             File.SetUnixFileMode(configurationFile, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.GroupRead | UnixFileMode.OtherRead);
 
-            // Act
-            ConfigurationFilePermissions.RestrictToOwner(configurationFile);
+            ConfigurationFilePermissions.RestrictToOwner(configurationFile, new InMemoryLog());
 
-            // Assert
-            File.GetUnixFileMode(configurationFile).Should().Be(UnixFileMode.UserRead | UnixFileMode.UserWrite);
+            File.GetUnixFileMode(configurationFile).Should().Be(ConfigurationFilePermissions.OwnerOnly);
+        }
+
+        [Test]
+        public void WhenAnEmptyConfigIsCreatedThenOnlyItsOwnerCanReadIt()
+        {
+            var configurationFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+
+            ConfigurationFilePermissions.CreateEmpty(new OctopusPhysicalFileSystem(new InMemoryLog()), configurationFile, "<octopus-settings />");
+
+            File.GetUnixFileMode(configurationFile).Should().Be(ConfigurationFilePermissions.OwnerOnly);
         }
 
         [Test]
         public void WhenTheConfigIsASymlinkThenItIsNotGivenToTheServiceUser()
         {
-            if (OperatingSystem.IsWindows())
-            {
-                Assert.Ignore("Unix only");
-                return;
-            }
-
-            // Arrange
             var target = Path.GetTempFileName();
             var configurationFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
             File.CreateSymbolicLink(configurationFile, target);
+            var log = new InMemoryLog();
 
-            // Act
-            var error = ConfigurationFilePermissions.TryRestrictToServiceUser(configurationFile, Environment.UserName);
+            ConfigurationFilePermissions.RestrictToServiceUser(configurationFile, Environment.UserName, log);
 
-            // Assert
-            error.Should().Contain("symbolic link");
+            log.GetLog().Should().Contain("symbolic link");
         }
     }
 }
