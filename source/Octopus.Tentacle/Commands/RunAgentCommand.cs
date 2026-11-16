@@ -125,6 +125,7 @@ namespace Octopus.Tentacle.Commands
             Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleProxyPort, proxyConfiguration.Value.CustomProxyPort.ToString());
 
             LogWarningIfNotRunningAsAdministrator();
+            RestrictConfigurationToOwner();
 
             proxyInitializer.Value.InitializeProxy();
 
@@ -137,6 +138,31 @@ namespace Octopus.Tentacle.Commands
             }
 
             Runtime.WaitForUserToExit();
+        }
+
+        void RestrictConfigurationToOwner()
+        {
+#if NET
+            var configurationPath = selector.Current.ConfigurationPath;
+            if (OperatingSystem.IsWindows() || string.IsNullOrWhiteSpace(configurationPath) || !File.Exists(configurationPath))
+            {
+                return;
+            }
+
+            try
+            {
+                var previousMode = File.GetUnixFileMode(configurationPath);
+                if (previousMode != ConfigurationFilePermissions.OwnerOnly)
+                {
+                    ConfigurationFilePermissions.RestrictToOwner(configurationPath);
+                    log.Info($"Restricted `{configurationPath}` from {Convert.ToString((int)previousMode, 8).PadLeft(4, '0')} to 0600");
+                }
+            }
+            catch (Exception ex) when (ex is UnauthorizedAccessException or IOException)
+            {
+                log.Warn($"Unable to restrict `{configurationPath}` to its owner, so other users may be able to read it: {ex.Message}");
+            }
+#endif
         }
 
         void LogWarningIfNotRunningAsAdministrator()
