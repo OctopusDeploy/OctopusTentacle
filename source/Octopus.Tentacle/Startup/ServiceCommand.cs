@@ -120,6 +120,11 @@ namespace Octopus.Tentacle.Startup
                         serviceDescription,
                         serviceConfigurationState);
                 }
+
+                if (serviceConfigurationState.Install || serviceConfigurationState.Reconfigure)
+                {
+                    ConfigurationFilePermissions.RestrictToServiceUser(instanceSelector.Current.ConfigurationPath, serviceConfigurationState.Username, log);
+                }
             }
         }
     }

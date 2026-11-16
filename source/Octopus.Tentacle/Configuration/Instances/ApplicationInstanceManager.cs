@@ -76,7 +76,7 @@ namespace Octopus.Tentacle.Configuration.Instances
             if (!fileSystem.FileExists(configurationFile))
             {
                 log.Info("Creating empty configuration file: " + configurationFile);
-                fileSystem.OverwriteFile(configurationFile, @"<?xml version='1.0' encoding='UTF-8' ?><octopus-settings></octopus-settings>");
+                ConfigurationFilePermissions.CreateEmpty(fileSystem, configurationFile, @"<?xml version='1.0' encoding='UTF-8' ?><octopus-settings></octopus-settings>");
             }
             else
             {

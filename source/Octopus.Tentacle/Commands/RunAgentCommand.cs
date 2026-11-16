@@ -125,6 +125,7 @@ namespace Octopus.Tentacle.Commands
             Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleProxyPort, proxyConfiguration.Value.CustomProxyPort.ToString());
 
             LogWarningIfNotRunningAsAdministrator();
+            ConfigurationFilePermissions.RestrictToOwner(selector.Current.ConfigurationPath, log);
 
             proxyInitializer.Value.InitializeProxy();
 
