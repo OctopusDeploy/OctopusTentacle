@@ -52,7 +52,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             File.CreateSymbolicLink(configurationFile, target);
             var log = new InMemoryLog();
 
-            ConfigurationFilePermissions.RestrictToServiceUser(configurationFile, Environment.UserName, log);
+            ConfigurationFilePermissions.RestrictToServiceUser(configurationFile, "nobody", log);
 
             log.GetLog().Should().Contain("symbolic link");
         }
