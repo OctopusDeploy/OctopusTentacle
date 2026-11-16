@@ -93,6 +93,25 @@ namespace Octopus.Tentacle.Tests.Configuration
         }
         
         [Test]
+        public void GivenARegisteredInstanceUsesTheConfiguration_WhenRequestingConfigurationInstance_ThenItUsesThatInstancesKey()
+        {
+            if (PlatformDetection.IsRunningOnWindows)
+                Assert.Ignore("Configuration encryption keys are Linux only");
+
+            var filePath = "/etc/octopus/tentacle.config";
+            var mock = CreateApplicationInstanceSelector(new StartUpConfigFileInstanceRequest(filePath));
+            octopusFileSystem.FileExists(filePath).Returns(true);
+            octopusFileSystem.GetFullPath(Arg.Any<string>()).Returns(c => c.Arg<string>());
+            applicationInstanceStore.ListInstances().Returns(new[]
+            {
+                new ApplicationInstanceRecord("Other", "/etc/octopus/other.config"),
+                new ApplicationInstanceRecord("Registered", filePath)
+            });
+
+            mock.Current.KeyFilePath.Should().Be(LinuxGeneratedMachineKey.KeyFilePathFor("Registered"));
+        }
+
+        [Test]
         public void GivenConfigurationInstanceDoesNotExists_WhenRequestingConfigurationInstance_ThenThrows()
         {
             var filePath = "FILE.txt";

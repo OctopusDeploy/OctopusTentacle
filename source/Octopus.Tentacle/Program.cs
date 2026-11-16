@@ -93,6 +93,7 @@ namespace Octopus.Tentacle
             builder.RegisterCommand<VersionCommand>("version", "Show the Tentacle version information");
             builder.RegisterCommand<LivezCommand>("livez", "Checks that the Tentacle agent process is alive (suitable for a Kubernetes liveness probe).");
             builder.RegisterCommand<ShowConfigurationCommand>("show-configuration", "Outputs the Tentacle configuration");
+            builder.RegisterCommand<UpgradeConfigurationEncryptionCommand>("upgrade-configuration-encryption", "Creates this instance's configuration encryption key, gives it to the configuration's owner, and re-encrypts protected settings with it");
 
             return builder.Build();
         }

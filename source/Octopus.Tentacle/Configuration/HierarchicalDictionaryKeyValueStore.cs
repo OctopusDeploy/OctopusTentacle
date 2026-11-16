@@ -1,16 +1,11 @@
 ﻿using System;
-using Newtonsoft.Json;
-using Octopus.Tentacle.Configuration.Crypto;
 
 namespace Octopus.Tentacle.Configuration
 {
     public abstract class HierarchicalDictionaryKeyValueStore : DictionaryKeyValueStore
     {
-        readonly JsonSerializerSettings jsonSerializerSettings;
-
-        protected HierarchicalDictionaryKeyValueStore(JsonSerializerSettings jsonSerializerSettings, bool autoSaveOnSet = true, bool isWriteOnly = false) : base(autoSaveOnSet, isWriteOnly)
+        protected HierarchicalDictionaryKeyValueStore(bool autoSaveOnSet = true, bool isWriteOnly = false) : base(autoSaveOnSet, isWriteOnly)
         {
-            this.jsonSerializerSettings = jsonSerializerSettings;
         }
 
         public override TData? Get<TData>(string name, TData? defaultValue, ProtectionLevel protectionLevel = ProtectionLevel.None) where TData : default
@@ -30,12 +25,10 @@ namespace Octopus.Tentacle.Configuration
 
             var valueAsObject = (object)value;
 
+            // This store only ever backs `show-configuration` output, which is never read back by Tentacle, so there is
+            // no key it could sensibly be encrypted with. Refuse rather than write a secret somewhere nothing can decrypt.
             if (protectionLevel == ProtectionLevel.MachineKey)
-            {
-                if (!(valueAsObject is string))
-                    valueAsObject = JsonConvert.SerializeObject(value, jsonSerializerSettings);
-                valueAsObject = MachineKeyEncryptor.Current.Encrypt((string)valueAsObject);
-            }
+                throw new NotSupportedException($"{GetType().Name} cannot store {nameof(ProtectionLevel.MachineKey)} values; it is only used to display configuration.");
 
             Write(name, valueAsObject);
             if (AutoSaveOnSet)
