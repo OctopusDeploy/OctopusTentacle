@@ -13,6 +13,9 @@ namespace Octopus.Tentacle.Core.Util
         public static bool TryLinkWithoutReplacing(string existingPath, string newPath)
             => link(existingPath, newPath) == 0;
 
+        public static string LastErrorMessage()
+            => Marshal.GetLastPInvokeErrorMessage();
+
         public static uint OwnerOf(string path)
         {
             return SystemNative_Stat(path, out var status) == 0
