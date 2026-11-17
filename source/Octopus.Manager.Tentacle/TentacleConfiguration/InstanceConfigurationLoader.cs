@@ -3,6 +3,7 @@ using System.Linq;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Configuration.Crypto;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Util;
@@ -52,7 +53,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration
 
         public InstanceConfiguration LoadConfiguration(ApplicationInstanceRecord applicationInstanceRecord)
         {
-            var keyStore = new XmlFileKeyValueStore(fileSystem, applicationInstanceRecord.ConfigurationFilePath);
+            var keyStore = new XmlFileKeyValueStore(fileSystem, applicationInstanceRecord.ConfigurationFilePath, MachineKeyEncryptor.ForKeyFile(fileSystem, null));
 
             var selector = new SimpleApplicationInstanceSelectorForTentacleManager(
                 instanceStrategies,
@@ -120,7 +121,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration
                 EnsureConfigurationExists(configurationPath);
 
                 log.Verbose($"Loading configuration from {configurationPath}");
-                var writable = new XmlFileKeyValueStore(fileSystem, configurationPath);
+                var writable = new XmlFileKeyValueStore(fileSystem, configurationPath, MachineKeyEncryptor.ForKeyFile(fileSystem, null));
                 return (ContributeAdditionalConfiguration(writable), writable);
             }
 

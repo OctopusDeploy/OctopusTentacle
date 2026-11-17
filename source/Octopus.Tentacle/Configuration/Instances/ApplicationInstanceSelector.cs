@@ -124,7 +124,7 @@ namespace Octopus.Tentacle.Configuration.Instances
             EnsureConfigurationExists(appInstance.instanceName, appInstance.configurationpath);
 
             log.Verbose($"Loading configuration from {appInstance.configurationpath}");
-            var writable = new XmlFileKeyValueStore(fileSystem, appInstance.configurationpath!, keyFilePath: keyFilePath);
+            var writable = new XmlFileKeyValueStore(fileSystem, appInstance.configurationpath!, MachineKeyEncryptor.ForKeyFile(fileSystem, keyFilePath));
             return (ContributeAdditionalConfiguration(writable), writable);
         }
 
