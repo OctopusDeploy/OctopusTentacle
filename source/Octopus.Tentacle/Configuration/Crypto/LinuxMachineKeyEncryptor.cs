@@ -14,7 +14,6 @@ namespace Octopus.Tentacle.Configuration.Crypto
         // $ is not a base64 character, so a value without this prefix is unambiguously a legacy one.
         public const string ProtectedValuePrefix = "$OctopusMachineKeyV1$";
 
-        const int KeySizeInBytes = 32;
         const int NonceSizeInBytes = 12;
         const int TagSizeInBytes = 16;
 
@@ -24,13 +23,13 @@ namespace Octopus.Tentacle.Configuration.Crypto
         static readonly Encoding StrictUtf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
 
         readonly ISystemLog log;
-        readonly ICryptoKeyNixSource keySource;
+        readonly ConfigurationEncryptionKey configurationKey;
         readonly IReadOnlyList<ICryptoKeyNixSource> legacyKeySources;
 
-        public LinuxMachineKeyEncryptor(ISystemLog log, ICryptoKeyNixSource keySource, IEnumerable<ICryptoKeyNixSource> legacyKeySources)
+        public LinuxMachineKeyEncryptor(ISystemLog log, ConfigurationEncryptionKey configurationKey, IEnumerable<ICryptoKeyNixSource> legacyKeySources)
         {
             this.log = log;
-            this.keySource = keySource;
+            this.configurationKey = configurationKey;
             this.legacyKeySources = legacyKeySources.ToArray();
         }
 
@@ -45,7 +44,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
         {
             try
             {
-                var currentKey = TryLoadCurrentKey();
+                var currentKey = configurationKey.TryLoad();
                 return currentKey == null ? EncryptLegacy(raw) : EncryptCurrent(currentKey, raw);
             }
             catch (Exception e)
@@ -72,16 +71,25 @@ namespace Octopus.Tentacle.Configuration.Crypto
 
         string EncryptLegacy(string raw)
         {
+            var (encrypted, errors) = TryEachLegacyKey(legacy =>
+            {
+                using var aes = Aes.Create();
+                using var encryptor = aes.CreateEncryptor(legacy.Key, legacy.IV);
+                var plaintext = Encoding.UTF8.GetBytes(raw);
+                return Convert.ToBase64String(encryptor.TransformFinalBlock(plaintext, 0, plaintext.Length));
+            });
+
+            return encrypted ?? throw new AggregateException("There is no configuration encryption key yet, and none of the keys earlier versions used is available.", errors);
+        }
+
+        (string? Result, List<Exception> Errors) TryEachLegacyKey(Func<(byte[] Key, byte[] IV), string> use)
+        {
             var errors = new List<Exception>();
             foreach (var source in legacyKeySources)
             {
                 try
                 {
-                    var (key, iv) = source.Load();
-                    using var aes = Aes.Create();
-                    using var encryptor = aes.CreateEncryptor(key, iv);
-                    var plaintext = Encoding.UTF8.GetBytes(raw);
-                    return Convert.ToBase64String(encryptor.TransformFinalBlock(plaintext, 0, plaintext.Length));
+                    return (use(source.Load()), errors);
                 }
                 catch (Exception e)
                 {
@@ -90,21 +98,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
                 }
             }
 
-            throw new AggregateException("There is no configuration encryption key yet, and none of the keys earlier versions used is available.", errors);
-        }
-
-        byte[]? TryLoadCurrentKey()
-        {
-            try
-            {
-                var existing = keySource.TryLoad();
-                return existing == null ? null : CheckSize(existing.Value.Key);
-            }
-            catch (Exception e)
-            {
-                log.Verbose($"Unable to use the configuration encryption key, so using the key earlier versions used: {e.Message}");
-                return null;
-            }
+            return (null, errors);
         }
 
         public string Decrypt(string encrypted)
@@ -114,6 +108,16 @@ namespace Octopus.Tentacle.Configuration.Crypto
 
         string DecryptCurrent(string encrypted)
         {
+            byte[] key;
+            try
+            {
+                key = configurationKey.Load();
+            }
+            catch (Exception e)
+            {
+                throw new CryptographicException(e.Message, e);
+            }
+
             try
             {
                 var payload = Convert.FromBase64String(encrypted.Substring(ProtectedValuePrefix.Length));
@@ -122,12 +126,8 @@ namespace Octopus.Tentacle.Configuration.Crypto
                     throw new FormatException("The encrypted value is too short to contain a nonce and an authentication tag.");
                 }
 
-                var plaintext = Gcm.Decrypt(LoadCurrentKey(), payload, AssociatedData);
+                var plaintext = Gcm.Decrypt(key, payload, AssociatedData);
                 return StrictUtf8.GetString(plaintext);
-            }
-            catch (InvalidOperationException e) when (e.InnerException is UnauthorizedAccessException)
-            {
-                throw new CryptographicException(e.Message, e);
             }
             catch (Exception e)
             {
@@ -138,37 +138,20 @@ namespace Octopus.Tentacle.Configuration.Crypto
             }
         }
 
-        byte[] LoadCurrentKey()
-            => CheckSize(keySource.Load().Key);
-
-        static byte[] CheckSize(byte[] key)
-        {
-            if (key.Length != KeySizeInBytes)
-            {
-                throw new CryptographicException($"The machine key must be {KeySizeInBytes * 8} bits, but is {key.Length * 8}.");
-            }
-            return key;
-        }
-
         string DecryptLegacy(string encrypted)
         {
-            var errors = new List<Exception>();
-            foreach (var source in legacyKeySources)
+            var (decrypted, errors) = TryEachLegacyKey(legacy =>
             {
-                try
-                {
-                    var (key, iv) = source.Load();
-                    using var aes = Aes.Create();
-                    using var decryptor = aes.CreateDecryptor(key, iv);
-                    var payload = Convert.FromBase64String(encrypted);
-                    var plaintext = decryptor.TransformFinalBlock(payload, 0, payload.Length);
-                    return StrictUtf8.GetString(plaintext);
-                }
-                catch (Exception e)
-                {
-                    log.Verbose(e.Message);
-                    errors.Add(e);
-                }
+                using var aes = Aes.Create();
+                using var decryptor = aes.CreateDecryptor(legacy.Key, legacy.IV);
+                var payload = Convert.FromBase64String(encrypted);
+                var plaintext = decryptor.TransformFinalBlock(payload, 0, payload.Length);
+                return StrictUtf8.GetString(plaintext);
+            });
+
+            if (decrypted != null)
+            {
+                return decrypted;
             }
 
             throw new CryptographicException("Unable to decrypt a value that was protected by an earlier version of Tentacle with any of the keys it could have used. "

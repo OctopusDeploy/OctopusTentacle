@@ -129,7 +129,7 @@ namespace Octopus.Tentacle.Startup
                     ConfigurationFilePermissions.RestrictToServiceUser(instanceSelector.Current.ConfigurationPath, serviceConfigurationState.Username, log);
 
                     // A non-root service cannot create its key under /var/octopus, so it is created here while running as root.
-                    configurationUpgrade.Value.PrepareKey();
+                    configurationUpgrade.Value.TryPrepareKey();
                 }
             }
         }

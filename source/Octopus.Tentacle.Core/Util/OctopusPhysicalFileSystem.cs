@@ -250,53 +250,13 @@ namespace Octopus.Tentacle.Core.Util
             File.WriteAllText(path, contents);
         }
 
-#if NETFRAMEWORK
-        public bool AtomicCreateFileWithUserReadWriteAccessOnly(string path, byte[] contents)
-        {
-            var temporaryPath = TemporaryPathBeside(path);
-            try
-            {
-                File.WriteAllBytes(temporaryPath, contents);
-                try
-                {
-                    // MoveFile never replaces an existing file.
-                    File.Move(temporaryPath, path);
-                    return true;
-                }
-                catch (IOException) when (File.Exists(path))
-                {
-                    return false;
-                }
-            }
-            finally
-            {
-                DeleteIfExists(temporaryPath);
-            }
-        }
-#else
         public bool AtomicCreateFileWithUserReadWriteAccessOnly(string path, byte[] contents)
         {
             var temporaryPath = TemporaryPathBeside(path);
             try
             {
                 CreateFileWithUserReadWriteAccessOnly(temporaryPath, contents);
-
-                // File.Move(overwrite: false) checks then renames, so on Unix two racing processes could each keep their own file.
-                if (!OperatingSystem.IsWindows() && UnixFile.TryLinkWithoutReplacing(temporaryPath, path))
-                {
-                    return true;
-                }
-                if (File.Exists(path))
-                {
-                    return false;
-                }
-
-                File.Move(temporaryPath, path, overwrite: false);
-                return true;
-            }
-            catch (IOException) when (File.Exists(path))
-            {
-                return false;
+                return PublishWithoutReplacing(temporaryPath, path);
             }
             finally
             {
@@ -306,6 +266,9 @@ namespace Octopus.Tentacle.Core.Util
 
         static void CreateFileWithUserReadWriteAccessOnly(string path, byte[] contents)
         {
+#if NETFRAMEWORK
+            using var stream = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+#else
             var options = new FileStreamOptions { Mode = FileMode.CreateNew, Access = FileAccess.Write, Share = FileShare.None };
             if (!OperatingSystem.IsWindows())
             {
@@ -313,10 +276,31 @@ namespace Octopus.Tentacle.Core.Util
             }
 
             using var stream = new FileStream(path, options);
+#endif
             stream.Write(contents, 0, contents.Length);
             stream.Flush(flushToDisk: true);
         }
+
+        static bool PublishWithoutReplacing(string temporaryPath, string path)
+        {
+#if !NETFRAMEWORK
+            if (!PlatformDetection.IsRunningOnWindows)
+            {
+                // Unlike File.Move, link(2) is atomic about not replacing: two racing processes cannot each keep their own file.
+                return UnixFile.TryLinkWithoutReplacing(temporaryPath, path);
+            }
 #endif
+            try
+            {
+                // MoveFile never replaces an existing file.
+                File.Move(temporaryPath, path);
+                return true;
+            }
+            catch (IOException) when (File.Exists(path))
+            {
+                return false;
+            }
+        }
 
         static void DeleteIfExists(string path)
         {

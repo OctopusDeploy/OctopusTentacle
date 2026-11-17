@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.InteropServices;
 using Octopus.Tentacle.Configuration.Crypto;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Core.Diagnostics;
+using Octopus.Tentacle.Core.Util;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Configuration
@@ -14,17 +14,15 @@ namespace Octopus.Tentacle.Configuration
         // Creates the configuration encryption key if it is missing, and gives it to the configuration's owner when running as root.
         void PrepareKey();
 
-        // As PrepareKey, but fails when the key cannot be created.
-        void CreateKey();
-
         // Prepares the key, then re-encrypts protected settings written with the keys earlier versions used.
-        void Run();
+        void Upgrade();
 
-        // As Run, but fails when the key cannot be created or a setting cannot be re-encrypted.
-        void RunOrThrow();
+        // As PrepareKey and Upgrade, but a failure is logged as a warning and Tentacle carries on with the keys earlier versions used.
+        void TryPrepareKey();
+        void TryUpgrade();
     }
 
-    // Until Run succeeds, Tentacle keeps working on the keys earlier versions used.
+    // Until Upgrade succeeds, Tentacle keeps working on the keys earlier versions used.
     public class TentacleConfigurationUpgrade : ITentacleConfigurationUpgrade
     {
         public static readonly IReadOnlyList<string> ProtectedSettingNames = new[]
@@ -48,36 +46,29 @@ namespace Octopus.Tentacle.Configuration
         }
 
         public void PrepareKey()
+            => PrepareInstanceKey();
+
+        public void TryPrepareKey()
+            => WarnOnFailure(PrepareKey, "Unable to prepare the configuration encryption key");
+
+        public void TryUpgrade()
+            => WarnOnFailure(Upgrade, "Unable to move the configuration to its own encryption key");
+
+        void WarnOnFailure(Action action, string failure)
         {
             try
             {
-                TryPrepareKey();
+                action();
             }
             catch (Exception e)
             {
-                log.Warn(e, "Unable to prepare the configuration encryption key, " + StillOnLegacyKeys);
+                log.Warn(e, $"{failure}, {StillOnLegacyKeys}");
             }
         }
 
-        public void CreateKey()
-            => TryPrepareKey();
-
-        public void Run()
+        public void Upgrade()
         {
-            try
-            {
-                RunOrThrow();
-            }
-            catch (Exception e)
-            {
-                log.Warn(e, "Unable to move the configuration to its own encryption key, " + StillOnLegacyKeys);
-            }
-        }
-
-        public void RunOrThrow()
-        {
-#if NET
-            var prepared = TryPrepareKey();
+            var prepared = PrepareInstanceKey();
             if (prepared == null)
             {
                 return;
@@ -92,13 +83,12 @@ namespace Octopus.Tentacle.Configuration
                     log.Info($"Re-encrypted the protected setting '{name}' with the configuration encryption key.");
                 }
             }
-#endif
         }
 
-#if NET
-        (LinuxGeneratedMachineKey Key, XmlFileKeyValueStore Store)? TryPrepareKey()
+        // Null when the instance has no key to prepare.
+        (ConfigurationEncryptionKey Key, XmlFileKeyValueStore Store)? PrepareInstanceKey()
         {
-            if (OperatingSystem.IsWindows())
+            if (PlatformDetection.IsRunningOnWindows)
             {
                 return null;
             }
@@ -117,78 +107,16 @@ namespace Octopus.Tentacle.Configuration
                 return null;
             }
 
-            var key = new LinuxGeneratedMachineKey(log, fileSystem, instance.KeyFilePath);
+            var key = new ConfigurationEncryptionKey(log, fileSystem, instance.KeyFilePath);
             key.CreateIfMissing();
 
-            var configurationOwner = UnixOwnership.OwnerOf(instance.ConfigurationPath);
-            UnixOwnership.GiveToIfRoot(configurationOwner, key.KeyDirectory);
-            UnixOwnership.GiveToIfRoot(configurationOwner, key.KeyFilePath);
+#if NET
+            var configurationOwner = UnixFile.OwnerOf(instance.ConfigurationPath);
+            UnixFile.SetOwnerIfRunningAsRoot(configurationOwner, key.KeyDirectory!);
+            UnixFile.SetOwnerIfRunningAsRoot(configurationOwner, key.KeyFilePath!);
+#endif
 
             return (key, store);
         }
-#else
-        void TryPrepareKey()
-        {
-        }
-#endif
-
-#if NET
-        static class UnixOwnership
-        {
-            const uint UnchangedGroup = uint.MaxValue;
-
-            public static uint OwnerOf(string path)
-            {
-                return SystemNative_Stat(path, out var status) == 0
-                    ? status.Uid
-                    : throw new IOException($"Unable to find the owner of `{path}`: {Marshal.GetLastPInvokeErrorMessage()}");
-            }
-
-            public static void GiveToIfRoot(uint owner, string path)
-            {
-                if (geteuid() != 0 || OwnerOf(path) == owner)
-                {
-                    return;
-                }
-
-                if (lchown(path, owner, UnchangedGroup) != 0)
-                {
-                    throw new IOException($"Unable to change the owner of `{path}`: {Marshal.GetLastPInvokeErrorMessage()}");
-                }
-            }
-
-            [DllImport("libc")]
-            static extern uint geteuid();
-
-            [DllImport("libc", SetLastError = true)]
-            static extern int lchown(string path, uint owner, uint group);
-
-            // The .NET runtime's own stat shim: one struct layout on every libc and architecture.
-            [DllImport("libSystem.Native", SetLastError = true)]
-            static extern int SystemNative_Stat(string path, out FileStatus output);
-
-            [StructLayout(LayoutKind.Sequential)]
-            struct FileStatus
-            {
-                public int Flags;
-                public int Mode;
-                public uint Uid;
-                public uint Gid;
-                public long Size;
-                public long ATime;
-                public long ATimeNsec;
-                public long MTime;
-                public long MTimeNsec;
-                public long CTime;
-                public long CTimeNsec;
-                public long BirthTime;
-                public long BirthTimeNsec;
-                public long Dev;
-                public long RDev;
-                public long Ino;
-                public uint UserFlags;
-            }
-        }
-#endif
     }
 }

@@ -1,6 +1,9 @@
 using System;
+using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Crypto;
@@ -74,8 +77,23 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             }
             catch (InvalidOperationException)
             {
-                new LinuxGeneratedMachineKey(log, fileSystem, LinuxGeneratedMachineKey.LegacyKeyFilePathForThisHost).CreateIfMissing();
+                CreateLegacyMachineKeyIfMissing(fileSystem, LinuxGeneratedMachineKey.LegacyKeyFilePathForThisHost);
             }
+        }
+
+        static void CreateLegacyMachineKeyIfMissing(OctopusPhysicalFileSystem fileSystem, string path)
+        {
+            if (fileSystem.FileExists(path))
+            {
+                return;
+            }
+
+            using var aes = Aes.Create();
+            aes.GenerateIV();
+            aes.GenerateKey();
+            var contents = Convert.ToBase64String(aes.Key) + "." + Convert.ToBase64String(aes.IV);
+            fileSystem.EnsureDirectoryExists(Path.GetDirectoryName(path)!);
+            fileSystem.AtomicCreateFileWithUserReadWriteAccessOnly(path, Encoding.ASCII.GetBytes(contents));
         }
 
         // A Tentacle only reuses the stored certificate when it comes back with its private key.
