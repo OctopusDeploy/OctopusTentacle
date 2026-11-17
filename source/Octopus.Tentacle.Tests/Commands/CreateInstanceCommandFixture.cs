@@ -27,7 +27,7 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void ANamedInstanceFailsWhenItsKeyCannotBeCreated()
         {
-            configurationUpgrade.When(u => u.CreateKey()).Do(_ => throw new IOException("Permission denied"));
+            configurationUpgrade.When(u => u.PrepareKey()).Do(_ => throw new IOException("Permission denied"));
 
             Action start = () => Start("--instance=Tentacle", "--config=/etc/octopus/tentacle.config");
 

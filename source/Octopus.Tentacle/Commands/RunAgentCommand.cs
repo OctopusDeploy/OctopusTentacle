@@ -101,7 +101,14 @@ namespace Octopus.Tentacle.Commands
                 return;
             }
 
-            configurationUpgrade.Value.Run();
+            try
+            {
+                configurationUpgrade.Value.Run();
+            }
+            catch (Exception e)
+            {
+                log.Warn(e, "Unable to move the configuration to its own encryption key, " + TentacleConfigurationUpgrade.StillOnLegacyKeys);
+            }
 
             var currentPath = typeof(RunAgentCommand).Assembly.FullLocalPath();
             var exePath = PlatformDetection.IsRunningOnWindows

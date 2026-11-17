@@ -14,14 +14,8 @@ namespace Octopus.Tentacle.Configuration
         // Creates the configuration encryption key if it is missing, and gives it to the configuration's owner when running as root.
         void PrepareKey();
 
-        // As PrepareKey, but fails when the key cannot be created.
-        void CreateKey();
-
         // Prepares the key, then re-encrypts protected settings written with the keys earlier versions used.
         void Run();
-
-        // As Run, but fails when the key cannot be created or a setting cannot be re-encrypted.
-        void RunOrThrow();
     }
 
     // Until Run succeeds, Tentacle keeps working on the keys earlier versions used.
@@ -34,7 +28,7 @@ namespace Octopus.Tentacle.Configuration
             PollingProxyConfiguration.ProxyPasswordSettingName
         };
 
-        const string StillOnLegacyKeys = "so the configuration is still protected by the key earlier versions used. Tentacle will keep working and try again the next time it starts.";
+        public const string StillOnLegacyKeys = "so the configuration is still protected by the key earlier versions used. Tentacle will keep working and try again the next time it starts.";
 
         readonly IApplicationInstanceSelector instanceSelector;
         readonly IOctopusFileSystem fileSystem;
@@ -48,36 +42,11 @@ namespace Octopus.Tentacle.Configuration
         }
 
         public void PrepareKey()
-        {
-            try
-            {
-                TryPrepareKey();
-            }
-            catch (Exception e)
-            {
-                log.Warn(e, "Unable to prepare the configuration encryption key, " + StillOnLegacyKeys);
-            }
-        }
-
-        public void CreateKey()
-            => TryPrepareKey();
+            => PrepareInstanceKey();
 
         public void Run()
         {
-            try
-            {
-                RunOrThrow();
-            }
-            catch (Exception e)
-            {
-                log.Warn(e, "Unable to move the configuration to its own encryption key, " + StillOnLegacyKeys);
-            }
-        }
-
-        public void RunOrThrow()
-        {
-#if NET
-            var prepared = TryPrepareKey();
+            var prepared = PrepareInstanceKey();
             if (prepared == null)
             {
                 return;
@@ -92,13 +61,12 @@ namespace Octopus.Tentacle.Configuration
                     log.Info($"Re-encrypted the protected setting '{name}' with the configuration encryption key.");
                 }
             }
-#endif
         }
 
-#if NET
-        (ConfigurationEncryptionKey Key, XmlFileKeyValueStore Store)? TryPrepareKey()
+        // Null when the instance has no key to prepare.
+        (ConfigurationEncryptionKey Key, XmlFileKeyValueStore Store)? PrepareInstanceKey()
         {
-            if (OperatingSystem.IsWindows())
+            if (PlatformDetection.IsRunningOnWindows)
             {
                 return null;
             }
@@ -120,17 +88,14 @@ namespace Octopus.Tentacle.Configuration
             var key = new ConfigurationEncryptionKey(log, fileSystem, instance.KeyFilePath);
             key.CreateIfMissing();
 
+#if NET
             var configurationOwner = UnixOwnership.OwnerOf(instance.ConfigurationPath);
             UnixOwnership.GiveToIfRoot(configurationOwner, key.KeyDirectory!);
             UnixOwnership.GiveToIfRoot(configurationOwner, key.KeyFilePath!);
+#endif
 
             return (key, store);
         }
-#else
-        void TryPrepareKey()
-        {
-        }
-#endif
 
 #if NET
         static class UnixOwnership

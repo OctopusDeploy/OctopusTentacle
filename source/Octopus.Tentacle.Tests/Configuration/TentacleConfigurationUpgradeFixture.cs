@@ -86,7 +86,7 @@ namespace Octopus.Tentacle.Tests.Configuration
         }
 
         [Test]
-        public void WhenTheKeyCannotBeCreatedThenTentacleKeepsWorkingOnTheLegacyKey()
+        public void WhenTheKeyCannotBeCreatedThenRunFailsAndValuesStayLegacy()
         {
             // Arrange
             var keyFilePath = Path.Combine(configurationFile, "not-a-directory", ConfigurationEncryptionKey.KeyFileName);
@@ -95,15 +95,11 @@ namespace Octopus.Tentacle.Tests.Configuration
             var legacyValue = RawCertificate();
 
             // Act
-            CreateUpgrade(store, keyFilePath).Run();
-            store.Set<string>(ProxyConfiguration.ProxyPasswordSettingName, "secret", ProtectionLevel.MachineKey);
+            Action run = () => CreateUpgrade(store, keyFilePath).Run();
 
             // Assert
-            log.Received().Warn(Arg.Any<Exception>(), Arg.Any<string>());
+            run.Should().Throw<Exception>();
             RawCertificate().Should().Be(legacyValue);
-            var reloaded = CreateStore(keyFilePath);
-            reloaded.Get<string>(TentacleConfiguration.CertificateSettingName, protectionLevel: ProtectionLevel.MachineKey).Should().Be(Certificate);
-            reloaded.Get<string>(ProxyConfiguration.ProxyPasswordSettingName, protectionLevel: ProtectionLevel.MachineKey).Should().Be("secret");
         }
 
         [Test]
