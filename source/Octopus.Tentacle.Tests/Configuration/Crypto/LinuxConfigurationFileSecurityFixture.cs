@@ -31,7 +31,7 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         public void SetUp()
         {
             directory = Path.Combine(Path.GetTempPath(), "octopus-config-encryption-key-" + Guid.NewGuid());
-            keyFilePath = Path.Combine(directory, LinuxGeneratedMachineKey.KeyFileName);
+            keyFilePath = Path.Combine(directory, ConfigurationEncryptionKey.KeyFileName);
             log = Substitute.For<ISystemLog>();
             fileSystem = new OctopusPhysicalFileSystem(log);
         }
@@ -49,16 +49,16 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         public void WhenTheKeyIsCreatedThenOnlyItsOwnerCanReadIt()
         {
             // Arrange
-            var keySource = new LinuxGeneratedMachineKey(log, fileSystem, keyFilePath);
+            var keySource = new ConfigurationEncryptionKey(log, fileSystem, keyFilePath);
 
             // Act
             keySource.CreateIfMissing();
-            var (key, iv) = keySource.Load();
+            var key = keySource.Load();
 
             // Assert
             File.Exists(keyFilePath).Should().BeTrue("the directory is created on demand, as it always was");
             File.GetUnixFileMode(keyFilePath).Should().Be(OwnerReadWrite);
-            File.ReadAllText(keyFilePath).Should().Be(Convert.ToBase64String(key) + "." + Convert.ToBase64String(iv));
+            File.ReadAllText(keyFilePath).Should().Be(Convert.ToBase64String(key));
             Directory.GetFiles(directory).Should().ContainSingle("the temporary file the key is written to first is not left behind");
         }
 
@@ -72,9 +72,9 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
                 .Select(_ => Task.Run(() =>
                 {
                     start.Wait();
-                    var keySource = new LinuxGeneratedMachineKey(log, new OctopusPhysicalFileSystem(log), keyFilePath);
+                    var keySource = new ConfigurationEncryptionKey(log, new OctopusPhysicalFileSystem(log), keyFilePath);
                     keySource.CreateIfMissing();
-                    return keySource.Load().Key;
+                    return keySource.Load();
                 }))
                 .ToArray();
 
@@ -83,7 +83,7 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
             var keys = await Task.WhenAll(loads);
 
             // Assert
-            var onDisk = Convert.FromBase64String(File.ReadAllText(keyFilePath).Split('.')[0]);
+            var onDisk = Convert.FromBase64String(File.ReadAllText(keyFilePath));
             keys.Should().AllSatisfy(k => k.Should().Equal(onDisk));
             Directory.GetFiles(directory).Should().ContainSingle("no racer's temporary file is left behind");
         }

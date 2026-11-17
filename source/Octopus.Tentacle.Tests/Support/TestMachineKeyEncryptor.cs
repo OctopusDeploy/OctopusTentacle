@@ -4,6 +4,7 @@ using NSubstitute;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Crypto;
 using Octopus.Tentacle.Core.Diagnostics;
+using Octopus.Tentacle.Util;
 using PlatformDetection = Octopus.Tentacle.Util.PlatformDetection;
 
 namespace Octopus.Tentacle.Tests.Support
@@ -14,7 +15,7 @@ namespace Octopus.Tentacle.Tests.Support
     {
         public static readonly IMachineKeyEncryptor Current = PlatformDetection.IsRunningOnWindows
             ? new WindowsMachineKeyEncryptor()
-            : new LinuxMachineKeyEncryptor(Substitute.For<ISystemLog>(), new InMemoryCryptoKeyNixSource(), Array.Empty<ICryptoKeyNixSource>());
+            : new LinuxMachineKeyEncryptor(Substitute.For<ISystemLog>(), InMemoryConfigurationEncryptionKey.Create(), Array.Empty<ICryptoKeyNixSource>());
     }
 
     public class InMemoryCryptoKeyNixSource : ICryptoKeyNixSource
@@ -35,10 +36,17 @@ namespace Octopus.Tentacle.Tests.Support
         {
             return (Key, IV);
         }
+    }
 
-        public (byte[] Key, byte[] IV)? TryLoad()
+    public static class InMemoryConfigurationEncryptionKey
+    {
+        public static ConfigurationEncryptionKey Create()
         {
-            return Load();
+            const string path = "/in-memory/config-encryption.key";
+            var fileSystem = Substitute.For<IOctopusFileSystem>();
+            fileSystem.FileExists(path).Returns(true);
+            fileSystem.ReadAllText(path).Returns(Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)));
+            return new ConfigurationEncryptionKey(Substitute.For<ISystemLog>(), fileSystem, path);
         }
     }
 }

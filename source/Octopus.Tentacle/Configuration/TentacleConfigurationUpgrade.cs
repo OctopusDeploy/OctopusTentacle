@@ -96,7 +96,7 @@ namespace Octopus.Tentacle.Configuration
         }
 
 #if NET
-        (LinuxGeneratedMachineKey Key, XmlFileKeyValueStore Store)? TryPrepareKey()
+        (ConfigurationEncryptionKey Key, XmlFileKeyValueStore Store)? TryPrepareKey()
         {
             if (OperatingSystem.IsWindows())
             {
@@ -117,12 +117,12 @@ namespace Octopus.Tentacle.Configuration
                 return null;
             }
 
-            var key = new LinuxGeneratedMachineKey(log, fileSystem, instance.KeyFilePath);
+            var key = new ConfigurationEncryptionKey(log, fileSystem, instance.KeyFilePath);
             key.CreateIfMissing();
 
             var configurationOwner = UnixOwnership.OwnerOf(instance.ConfigurationPath);
-            UnixOwnership.GiveToIfRoot(configurationOwner, key.KeyDirectory);
-            UnixOwnership.GiveToIfRoot(configurationOwner, key.KeyFilePath);
+            UnixOwnership.GiveToIfRoot(configurationOwner, key.KeyDirectory!);
+            UnixOwnership.GiveToIfRoot(configurationOwner, key.KeyFilePath!);
 
             return (key, store);
         }

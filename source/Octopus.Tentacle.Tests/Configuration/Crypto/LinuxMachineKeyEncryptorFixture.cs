@@ -14,7 +14,7 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
     public class LinuxMachineKeyEncryptorFixture
     {
         readonly ISystemLog systemLog = Substitute.For<ISystemLog>();
-        readonly InMemoryCryptoKeyNixSource generatedKey = new();
+        readonly ConfigurationEncryptionKey generatedKey = InMemoryConfigurationEncryptionKey.Create();
 
         LinuxMachineKeyEncryptor CreateEncryptor(params ICryptoKeyNixSource[] legacyKeySources)
             => new(systemLog, generatedKey, legacyKeySources);
@@ -38,9 +38,9 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         public void WhenACurrentValueWasEncryptedWithAnotherKeyThenALegacyKeyIsNotTried()
         {
             // Arrange
-            var otherKey = new InMemoryCryptoKeyNixSource();
+            var otherKey = InMemoryConfigurationEncryptionKey.Create();
             var encryptedWithOtherKey = new LinuxMachineKeyEncryptor(systemLog, otherKey, Array.Empty<ICryptoKeyNixSource>()).Encrypt("FooBar");
-            var encryptor = CreateEncryptor(otherKey);
+            var encryptor = CreateEncryptor(new InMemoryCryptoKeyNixSource());
 
             // Act
             Action decrypt = () => encryptor.Decrypt(encryptedWithOtherKey);

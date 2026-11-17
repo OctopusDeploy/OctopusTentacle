@@ -14,7 +14,6 @@ namespace Octopus.Tentacle.Configuration.Crypto
         // $ is not a base64 character, so a value without this prefix is unambiguously a legacy one.
         public const string ProtectedValuePrefix = "$OctopusMachineKeyV1$";
 
-        const int KeySizeInBytes = 32;
         const int NonceSizeInBytes = 12;
         const int TagSizeInBytes = 16;
 
@@ -24,13 +23,13 @@ namespace Octopus.Tentacle.Configuration.Crypto
         static readonly Encoding StrictUtf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
 
         readonly ISystemLog log;
-        readonly ICryptoKeyNixSource keySource;
+        readonly ConfigurationEncryptionKey configurationKey;
         readonly IReadOnlyList<ICryptoKeyNixSource> legacyKeySources;
 
-        public LinuxMachineKeyEncryptor(ISystemLog log, ICryptoKeyNixSource keySource, IEnumerable<ICryptoKeyNixSource> legacyKeySources)
+        public LinuxMachineKeyEncryptor(ISystemLog log, ConfigurationEncryptionKey configurationKey, IEnumerable<ICryptoKeyNixSource> legacyKeySources)
         {
             this.log = log;
-            this.keySource = keySource;
+            this.configurationKey = configurationKey;
             this.legacyKeySources = legacyKeySources.ToArray();
         }
 
@@ -97,8 +96,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
         {
             try
             {
-                var existing = keySource.TryLoad();
-                return existing == null ? null : CheckSize(existing.Value.Key);
+                return configurationKey.TryLoad();
             }
             catch (Exception e)
             {
@@ -122,7 +120,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
                     throw new FormatException("The encrypted value is too short to contain a nonce and an authentication tag.");
                 }
 
-                var plaintext = Gcm.Decrypt(LoadCurrentKey(), payload, AssociatedData);
+                var plaintext = Gcm.Decrypt(configurationKey.Load(), payload, AssociatedData);
                 return StrictUtf8.GetString(plaintext);
             }
             catch (InvalidOperationException e) when (e.InnerException is UnauthorizedAccessException)
@@ -136,18 +134,6 @@ namespace Octopus.Tentacle.Configuration.Crypto
                     + "Either the value has been altered, or the machine key file it was encrypted with has been replaced or removed. "
                     + $"Details: {e.Message}", e);
             }
-        }
-
-        byte[] LoadCurrentKey()
-            => CheckSize(keySource.Load().Key);
-
-        static byte[] CheckSize(byte[] key)
-        {
-            if (key.Length != KeySizeInBytes)
-            {
-                throw new CryptographicException($"The machine key must be {KeySizeInBytes * 8} bits, but is {key.Length * 8}.");
-            }
-            return key;
         }
 
         string DecryptLegacy(string encrypted)

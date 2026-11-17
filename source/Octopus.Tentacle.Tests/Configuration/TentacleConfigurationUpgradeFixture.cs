@@ -52,7 +52,7 @@ namespace Octopus.Tentacle.Tests.Configuration
         public void WhenTheKeyIsMissingThenItIsCreatedAndLegacyValuesAreReEncrypted()
         {
             // Arrange
-            var keyFilePath = Path.Combine(directory, "keys", "Tentacle", LinuxGeneratedMachineKey.KeyFileName);
+            var keyFilePath = Path.Combine(directory, "keys", "Tentacle", ConfigurationEncryptionKey.KeyFileName);
             var store = CreateStore(keyFilePath);
             store.Set<string>(TentacleConfiguration.CertificateSettingName, Certificate, ProtectionLevel.MachineKey);
             RawCertificate().Should().NotStartWith(LinuxMachineKeyEncryptor.ProtectedValuePrefix, "without a key, values are written the way earlier versions wrote them");
@@ -71,7 +71,7 @@ namespace Octopus.Tentacle.Tests.Configuration
         public void WhenOnlyTheKeyIsPreparedThenItIsCreatedAndValuesStayLegacy()
         {
             // Arrange
-            var keyFilePath = Path.Combine(directory, "keys", "Tentacle", LinuxGeneratedMachineKey.KeyFileName);
+            var keyFilePath = Path.Combine(directory, "keys", "Tentacle", ConfigurationEncryptionKey.KeyFileName);
             var store = CreateStore(keyFilePath);
             store.Set<string>(TentacleConfiguration.CertificateSettingName, Certificate, ProtectionLevel.MachineKey);
             var legacyValue = RawCertificate();
@@ -89,7 +89,7 @@ namespace Octopus.Tentacle.Tests.Configuration
         public void WhenTheKeyCannotBeCreatedThenTentacleKeepsWorkingOnTheLegacyKey()
         {
             // Arrange
-            var keyFilePath = Path.Combine(configurationFile, "not-a-directory", LinuxGeneratedMachineKey.KeyFileName);
+            var keyFilePath = Path.Combine(configurationFile, "not-a-directory", ConfigurationEncryptionKey.KeyFileName);
             var store = CreateStore(keyFilePath);
             store.Set<string>(TentacleConfiguration.CertificateSettingName, Certificate, ProtectionLevel.MachineKey);
             var legacyValue = RawCertificate();
@@ -110,7 +110,7 @@ namespace Octopus.Tentacle.Tests.Configuration
         public void WhenTheConfigurationIsNotInTheRegistryThenNoKeyIsCreatedAndValuesStayLegacy()
         {
             // Arrange
-            var keyFilePath = Path.Combine(directory, "keys", "Tentacle", LinuxGeneratedMachineKey.KeyFileName);
+            var keyFilePath = Path.Combine(directory, "keys", "Tentacle", ConfigurationEncryptionKey.KeyFileName);
             var store = CreateStore(keyFilePath);
             store.Set<string>(TentacleConfiguration.CertificateSettingName, Certificate, ProtectionLevel.MachineKey);
             var legacyValue = RawCertificate();
@@ -128,7 +128,7 @@ namespace Octopus.Tentacle.Tests.Configuration
         public void UpgradeConfigurationEncryptionCreatesTheKeyAndReEncryptsLegacyValues()
         {
             // Arrange
-            var keyFilePath = Path.Combine(directory, "keys", "Tentacle", LinuxGeneratedMachineKey.KeyFileName);
+            var keyFilePath = Path.Combine(directory, "keys", "Tentacle", ConfigurationEncryptionKey.KeyFileName);
             var store = CreateStore(keyFilePath);
             store.Set<string>(TentacleConfiguration.CertificateSettingName, Certificate, ProtectionLevel.MachineKey);
 
@@ -145,7 +145,7 @@ namespace Octopus.Tentacle.Tests.Configuration
         public void UpgradeConfigurationEncryptionFailsForAConfigurationNotInTheRegistry()
         {
             // Arrange
-            var store = CreateStore(Path.Combine(directory, "keys", "Tentacle", LinuxGeneratedMachineKey.KeyFileName));
+            var store = CreateStore(Path.Combine(directory, "keys", "Tentacle", ConfigurationEncryptionKey.KeyFileName));
             store.Set<string>(TentacleConfiguration.CertificateSettingName, Certificate, ProtectionLevel.MachineKey);
             var legacyValue = RawCertificate();
 
@@ -161,11 +161,11 @@ namespace Octopus.Tentacle.Tests.Configuration
         public void AValueProtectedWithTheKeyIsNeverRewrittenWithALegacyKey()
         {
             // Arrange
-            var keyFilePath = Path.Combine(directory, "my-key", LinuxGeneratedMachineKey.KeyFileName);
-            new LinuxGeneratedMachineKey(log, fileSystem, keyFilePath).CreateIfMissing();
+            var keyFilePath = Path.Combine(directory, "my-key", ConfigurationEncryptionKey.KeyFileName);
+            new ConfigurationEncryptionKey(log, fileSystem, keyFilePath).CreateIfMissing();
             CreateStore(keyFilePath).Set<string>(TentacleConfiguration.CertificateSettingName, Certificate, ProtectionLevel.MachineKey);
             var protectedValue = RawCertificate();
-            var storeWithoutKey = CreateStore(Path.Combine(directory, "missing", LinuxGeneratedMachineKey.KeyFileName));
+            var storeWithoutKey = CreateStore(Path.Combine(directory, "missing", ConfigurationEncryptionKey.KeyFileName));
 
             // Act
             Action set = () => storeWithoutKey.Set<string>(TentacleConfiguration.CertificateSettingName, "another certificate", ProtectionLevel.MachineKey);
@@ -178,7 +178,7 @@ namespace Octopus.Tentacle.Tests.Configuration
         readonly InMemoryCryptoKeyNixSource legacyKey = new();
 
         XmlFileKeyValueStore CreateStore(string keyFilePath)
-            => new(fileSystem, configurationFile, encryptor: new LinuxMachineKeyEncryptor(log, new LinuxGeneratedMachineKey(log, fileSystem, keyFilePath), new[] { legacyKey }));
+            => new(fileSystem, configurationFile, encryptor: new LinuxMachineKeyEncryptor(log, new ConfigurationEncryptionKey(log, fileSystem, keyFilePath), new[] { legacyKey }));
 
         TentacleConfigurationUpgrade CreateUpgrade(XmlFileKeyValueStore store, string? keyFilePath, string? instanceName = "Tentacle")
             => new(CreateSelector(store, keyFilePath, instanceName), fileSystem, log);

@@ -108,7 +108,7 @@ namespace Octopus.Tentacle.Tests.Configuration
                 new ApplicationInstanceRecord("Registered", filePath)
             });
 
-            mock.Current.KeyFilePath.Should().Be(LinuxGeneratedMachineKey.KeyFilePathFor("Registered"));
+            mock.Current.KeyFilePath.Should().Be(ConfigurationEncryptionKey.KeyFilePathFor("Registered"));
         }
 
         [Test]

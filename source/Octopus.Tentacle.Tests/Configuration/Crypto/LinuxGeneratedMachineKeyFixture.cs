@@ -53,7 +53,7 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         [Test]
         public void KeyFileIsKeptPerInstanceOutsideTheConfigurationDirectory()
         {
-            LinuxGeneratedMachineKey.KeyFilePathFor("Tentacle").Should().Be("/var/octopus/tentacle/keys/Tentacle/config-encryption.key");
+            ConfigurationEncryptionKey.KeyFilePathFor("Tentacle").Should().Be("/var/octopus/tentacle/keys/Tentacle/config-encryption.key");
         }
 
         [TestCase("")]
@@ -62,7 +62,7 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         [TestCase("a\\b")]
         public void InstanceNamesThatAreNotASingleDirectoryNameAreRejected(string instanceName)
         {
-            Assert.Throws<ArgumentException>(() => LinuxGeneratedMachineKey.KeyFilePathFor(instanceName));
+            Assert.Throws<ArgumentException>(() => ConfigurationEncryptionKey.KeyFilePathFor(instanceName));
         }
     }
 }
