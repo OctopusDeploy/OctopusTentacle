@@ -90,8 +90,8 @@ namespace Octopus.Tentacle.Configuration
 
 #if NET
             var configurationOwner = UnixFile.OwnerOf(instance.ConfigurationPath);
-            UnixFile.GiveToIfRoot(configurationOwner, key.KeyDirectory!);
-            UnixFile.GiveToIfRoot(configurationOwner, key.KeyFilePath!);
+            UnixFile.SetOwnerIfRunningAsRoot(configurationOwner, key.KeyDirectory!);
+            UnixFile.SetOwnerIfRunningAsRoot(configurationOwner, key.KeyFilePath!);
 #endif
 
             return (key, store);

@@ -8,13 +8,20 @@ namespace Octopus.Tentacle.Core.Util
     public static class UnixFile
     {
         const uint UnchangedGroup = uint.MaxValue;
+        const int FileExistsError = 17;
 
         // Unlike rename(2), link(2) never replaces an existing file.
         public static bool TryLinkWithoutReplacing(string existingPath, string newPath)
-            => link(existingPath, newPath) == 0;
+        {
+            if (link(existingPath, newPath) == 0)
+            {
+                return true;
+            }
 
-        public static string LastErrorMessage()
-            => Marshal.GetLastPInvokeErrorMessage();
+            return Marshal.GetLastPInvokeError() == FileExistsError
+                ? false
+                : throw new IOException($"Unable to create `{newPath}`: {Marshal.GetLastPInvokeErrorMessage()}");
+        }
 
         public static uint OwnerOf(string path)
         {
@@ -23,7 +30,7 @@ namespace Octopus.Tentacle.Core.Util
                 : throw new IOException($"Unable to find the owner of `{path}`: {Marshal.GetLastPInvokeErrorMessage()}");
         }
 
-        public static void GiveToIfRoot(uint owner, string path)
+        public static void SetOwnerIfRunningAsRoot(uint owner, string path)
         {
             if (geteuid() != 0 || OwnerOf(path) == owner)
             {

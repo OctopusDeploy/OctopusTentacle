@@ -255,7 +255,7 @@ namespace Octopus.Tentacle.Core.Util
             var temporaryPath = TemporaryPathBeside(path);
             try
             {
-                CreateOwnerOnlyFile(temporaryPath, contents);
+                CreateFileWithUserReadWriteAccessOnly(temporaryPath, contents);
                 return PublishWithoutReplacing(temporaryPath, path);
             }
             finally
@@ -264,7 +264,7 @@ namespace Octopus.Tentacle.Core.Util
             }
         }
 
-        static void CreateOwnerOnlyFile(string path, byte[] contents)
+        static void CreateFileWithUserReadWriteAccessOnly(string path, byte[] contents)
         {
 #if NETFRAMEWORK
             using var stream = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None);
@@ -287,14 +287,7 @@ namespace Octopus.Tentacle.Core.Util
             if (!PlatformDetection.IsRunningOnWindows)
             {
                 // Unlike File.Move, link(2) is atomic about not replacing: two racing processes cannot each keep their own file.
-                if (UnixFile.TryLinkWithoutReplacing(temporaryPath, path))
-                {
-                    return true;
-                }
-
-                return File.Exists(path)
-                    ? false
-                    : throw new IOException($"Unable to create `{path}`: {UnixFile.LastErrorMessage()}");
+                return UnixFile.TryLinkWithoutReplacing(temporaryPath, path);
             }
 #endif
             try
