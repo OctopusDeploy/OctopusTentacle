@@ -44,7 +44,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
         {
             try
             {
-                var currentKey = TryLoadCurrentKey();
+                var currentKey = configurationKey.TryLoad();
                 return currentKey == null ? EncryptLegacy(raw) : EncryptCurrent(currentKey, raw);
             }
             catch (Exception e)
@@ -92,19 +92,6 @@ namespace Octopus.Tentacle.Configuration.Crypto
             throw new AggregateException("There is no configuration encryption key yet, and none of the keys earlier versions used is available.", errors);
         }
 
-        byte[]? TryLoadCurrentKey()
-        {
-            try
-            {
-                return configurationKey.TryLoad();
-            }
-            catch (Exception e)
-            {
-                log.Verbose($"Unable to use the configuration encryption key, so using the key earlier versions used: {e.Message}");
-                return null;
-            }
-        }
-
         public string Decrypt(string encrypted)
             => IsLegacyCiphertext(encrypted)
                 ? DecryptLegacy(encrypted)
@@ -112,6 +99,16 @@ namespace Octopus.Tentacle.Configuration.Crypto
 
         string DecryptCurrent(string encrypted)
         {
+            byte[] key;
+            try
+            {
+                key = configurationKey.Load();
+            }
+            catch (Exception e)
+            {
+                throw new CryptographicException(e.Message, e);
+            }
+
             try
             {
                 var payload = Convert.FromBase64String(encrypted.Substring(ProtectedValuePrefix.Length));
@@ -120,12 +117,8 @@ namespace Octopus.Tentacle.Configuration.Crypto
                     throw new FormatException("The encrypted value is too short to contain a nonce and an authentication tag.");
                 }
 
-                var plaintext = Gcm.Decrypt(configurationKey.Load(), payload, AssociatedData);
+                var plaintext = Gcm.Decrypt(key, payload, AssociatedData);
                 return StrictUtf8.GetString(plaintext);
-            }
-            catch (InvalidOperationException e) when (e.InnerException is UnauthorizedAccessException)
-            {
-                throw new CryptographicException(e.Message, e);
             }
             catch (Exception e)
             {

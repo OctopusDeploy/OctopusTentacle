@@ -134,7 +134,7 @@ namespace Octopus.Tentacle.Configuration
         string EncryptWithoutDowngrading(string name, string raw)
         {
             var encrypted = Encryptor.Encrypt(raw);
-            if (Encryptor.RequiresReEncryption(encrypted) && Read(name) is string previous && !string.IsNullOrWhiteSpace(previous) && !Encryptor.RequiresReEncryption(previous))
+            if (Encryptor.RequiresReEncryption(encrypted) && Read(name) is string previous && !Encryptor.RequiresReEncryption(previous))
             {
                 throw new CryptographicException($"Unable to update the protected setting '{name}': it is protected with the configuration encryption key, which is not available. Make sure the key file exists and is readable.");
             }
