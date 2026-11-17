@@ -16,6 +16,10 @@ namespace Octopus.Tentacle.Configuration
 
         // Prepares the key, then re-encrypts protected settings written with the keys earlier versions used.
         void Run();
+
+        // As PrepareKey and Run, but a failure is logged as a warning and Tentacle carries on with the keys earlier versions used.
+        void TryPrepareKey();
+        void TryRun();
     }
 
     // Until Run succeeds, Tentacle keeps working on the keys earlier versions used.
@@ -28,7 +32,7 @@ namespace Octopus.Tentacle.Configuration
             PollingProxyConfiguration.ProxyPasswordSettingName
         };
 
-        public const string StillOnLegacyKeys = "so the configuration is still protected by the key earlier versions used. Tentacle will keep working and try again the next time it starts.";
+        const string StillOnLegacyKeys = "so the configuration is still protected by the key earlier versions used. Tentacle will keep working and try again the next time it starts.";
 
         readonly IApplicationInstanceSelector instanceSelector;
         readonly IOctopusFileSystem fileSystem;
@@ -43,6 +47,24 @@ namespace Octopus.Tentacle.Configuration
 
         public void PrepareKey()
             => PrepareInstanceKey();
+
+        public void TryPrepareKey()
+            => WarnOnFailure(PrepareKey, "Unable to prepare the configuration encryption key");
+
+        public void TryRun()
+            => WarnOnFailure(Run, "Unable to move the configuration to its own encryption key");
+
+        void WarnOnFailure(Action action, string failure)
+        {
+            try
+            {
+                action();
+            }
+            catch (Exception e)
+            {
+                log.Warn(e, $"{failure}, {StillOnLegacyKeys}");
+            }
+        }
 
         public void Run()
         {
