@@ -15,14 +15,14 @@ namespace Octopus.Tentacle.Configuration
         void PrepareKey();
 
         // Prepares the key, then re-encrypts protected settings written with the keys earlier versions used.
-        void Run();
+        void Upgrade();
 
-        // As PrepareKey and Run, but a failure is logged as a warning and Tentacle carries on with the keys earlier versions used.
+        // As PrepareKey and Upgrade, but a failure is logged as a warning and Tentacle carries on with the keys earlier versions used.
         void TryPrepareKey();
-        void TryRun();
+        void TryUpgrade();
     }
 
-    // Until Run succeeds, Tentacle keeps working on the keys earlier versions used.
+    // Until Upgrade succeeds, Tentacle keeps working on the keys earlier versions used.
     public class TentacleConfigurationUpgrade : ITentacleConfigurationUpgrade
     {
         public static readonly IReadOnlyList<string> ProtectedSettingNames = new[]
@@ -51,8 +51,8 @@ namespace Octopus.Tentacle.Configuration
         public void TryPrepareKey()
             => WarnOnFailure(PrepareKey, "Unable to prepare the configuration encryption key");
 
-        public void TryRun()
-            => WarnOnFailure(Run, "Unable to move the configuration to its own encryption key");
+        public void TryUpgrade()
+            => WarnOnFailure(Upgrade, "Unable to move the configuration to its own encryption key");
 
         void WarnOnFailure(Action action, string failure)
         {
@@ -66,7 +66,7 @@ namespace Octopus.Tentacle.Configuration
             }
         }
 
-        public void Run()
+        public void Upgrade()
         {
             var prepared = PrepareInstanceKey();
             if (prepared == null)

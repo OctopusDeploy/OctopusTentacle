@@ -58,7 +58,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             RawCertificate().Should().NotStartWith(LinuxMachineKeyEncryptor.ProtectedValuePrefix, "without a key, values are written the way earlier versions wrote them");
 
             // Act
-            CreateUpgrade(store, keyFilePath).Run();
+            CreateUpgrade(store, keyFilePath).Upgrade();
 
             // Assert
             File.Exists(keyFilePath).Should().BeTrue();
@@ -95,7 +95,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             var legacyValue = RawCertificate();
 
             // Act
-            Action run = () => CreateUpgrade(store, keyFilePath).Run();
+            Action run = () => CreateUpgrade(store, keyFilePath).Upgrade();
 
             // Assert
             run.Should().Throw<Exception>();
@@ -112,7 +112,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             var legacyValue = RawCertificate();
 
             // Act
-            CreateUpgrade(store, keyFilePath: null, instanceName: null).Run();
+            CreateUpgrade(store, keyFilePath: null, instanceName: null).Upgrade();
 
             // Assert
             File.Exists(keyFilePath).Should().BeFalse();

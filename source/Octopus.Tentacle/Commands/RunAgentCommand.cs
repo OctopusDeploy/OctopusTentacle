@@ -101,7 +101,7 @@ namespace Octopus.Tentacle.Commands
                 return;
             }
 
-            configurationUpgrade.Value.TryRun();
+            configurationUpgrade.Value.TryUpgrade();
 
             var currentPath = typeof(RunAgentCommand).Assembly.FullLocalPath();
             var exePath = PlatformDetection.IsRunningOnWindows

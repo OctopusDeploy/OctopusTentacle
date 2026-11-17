@@ -77,7 +77,7 @@ namespace Octopus.Tentacle.Tests.Commands
             // Assert
             Received.InOrder(() =>
             {
-                configurationUpgrade.TryRun();
+                configurationUpgrade.TryUpgrade();
                 halibut.Start();
             });
         }
