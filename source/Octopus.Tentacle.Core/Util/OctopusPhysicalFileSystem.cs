@@ -255,7 +255,7 @@ namespace Octopus.Tentacle.Core.Util
             var temporaryPath = TemporaryPathBeside(path);
             try
             {
-                WriteUserReadWriteOnly(temporaryPath, contents);
+                CreateOwnerOnlyFile(temporaryPath, contents);
                 return PublishWithoutReplacing(temporaryPath, path);
             }
             finally
@@ -264,7 +264,7 @@ namespace Octopus.Tentacle.Core.Util
             }
         }
 
-        static void WriteUserReadWriteOnly(string path, byte[] contents)
+        static void CreateOwnerOnlyFile(string path, byte[] contents)
         {
 #if NETFRAMEWORK
             using var stream = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None);
