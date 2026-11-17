@@ -22,7 +22,6 @@ namespace Octopus.Tentacle.Configuration
             if (name == null) throw new ArgumentNullException(nameof(name));
 
             string? valueAsString = null;
-            var decrypting = false;
             try
             {
                 var data = Read(name);
@@ -33,11 +32,7 @@ namespace Octopus.Tentacle.Configuration
                     return defaultValue;
 
                 if (protectionLevel == ProtectionLevel.MachineKey)
-                {
-                    decrypting = true;
-                    data = Encryptor.Decrypt(valueAsString);
-                    decrypting = false;
-                }
+                    data = Decrypt(name, valueAsString);
 
                 if (typeof(TData) == typeof(string))
                     return (TData)data;
@@ -48,13 +43,8 @@ namespace Octopus.Tentacle.Configuration
 
                 return JsonConvert.DeserializeObject<TData>((string)data, JsonSerializerSettings);
             }
-            catch (Exception e)
+            catch (Exception e) when (e is not DecryptionFailedException)
             {
-                // The console does not always print inner messages, and this one says how to recover.
-                if (decrypting)
-                {
-                    throw new FormatException($"Unable to decrypt the protected configuration setting '{name}'. {e.Message}", e);
-                }
                 if (protectionLevel == ProtectionLevel.None)
                     throw new FormatException($"Unable to parse configuration key '{name}' as a '{typeof(TData).Name}'. Value was '{valueAsString}'.", e);
                 throw new FormatException($"Unable to parse configuration key '{name}' as a '{typeof(TData).Name}'.", e);
@@ -66,7 +56,6 @@ namespace Octopus.Tentacle.Configuration
             if (name == null) throw new ArgumentNullException(nameof(name));
 
             string? valueAsString = null;
-            var decrypting = false;
             try
             {
                 var data = Read(name);
@@ -77,11 +66,7 @@ namespace Octopus.Tentacle.Configuration
                     return (false, default!);
 
                 if (protectionLevel == ProtectionLevel.MachineKey)
-                {
-                    decrypting = true;
-                    data = Encryptor.Decrypt(valueAsString);
-                    decrypting = false;
-                }
+                    data = Decrypt(name, valueAsString);
 
                 if (typeof(TData) == typeof(string))
                     return (true, (TData)data);
@@ -92,15 +77,31 @@ namespace Octopus.Tentacle.Configuration
 
                 return (true, JsonConvert.DeserializeObject<TData>((string)data, JsonSerializerSettings));
             }
-            catch (Exception e)
+            catch (Exception e) when (e is not DecryptionFailedException)
             {
-                if (decrypting)
-                {
-                    throw new FormatException($"Unable to decrypt the protected configuration setting '{name}'. {e.Message}", e);
-                }
                 if (protectionLevel == ProtectionLevel.None)
                     throw new FormatException($"Unable to parse configuration key '{name}' as a '{typeof(TData).Name}'. Value was '{valueAsString}'.", e);
                 throw new FormatException($"Unable to parse configuration key '{name}' as a '{typeof(TData).Name}'.", e);
+            }
+        }
+
+        string Decrypt(string name, string value)
+        {
+            try
+            {
+                return Encryptor.Decrypt(value);
+            }
+            catch (Exception e)
+            {
+                // The console does not always print inner messages, and this one says how to recover.
+                throw new DecryptionFailedException($"Unable to decrypt the protected configuration setting '{name}'. {e.Message}", e);
+            }
+        }
+
+        class DecryptionFailedException : FormatException
+        {
+            public DecryptionFailedException(string message, Exception inner) : base(message, inner)
+            {
             }
         }
 

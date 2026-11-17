@@ -71,16 +71,25 @@ namespace Octopus.Tentacle.Configuration.Crypto
 
         string EncryptLegacy(string raw)
         {
+            var (encrypted, errors) = TryEachLegacyKey(legacy =>
+            {
+                using var aes = Aes.Create();
+                using var encryptor = aes.CreateEncryptor(legacy.Key, legacy.IV);
+                var plaintext = Encoding.UTF8.GetBytes(raw);
+                return Convert.ToBase64String(encryptor.TransformFinalBlock(plaintext, 0, plaintext.Length));
+            });
+
+            return encrypted ?? throw new AggregateException("There is no configuration encryption key yet, and none of the keys earlier versions used is available.", errors);
+        }
+
+        (string? Result, List<Exception> Errors) TryEachLegacyKey(Func<(byte[] Key, byte[] IV), string> use)
+        {
             var errors = new List<Exception>();
             foreach (var source in legacyKeySources)
             {
                 try
                 {
-                    var (key, iv) = source.Load();
-                    using var aes = Aes.Create();
-                    using var encryptor = aes.CreateEncryptor(key, iv);
-                    var plaintext = Encoding.UTF8.GetBytes(raw);
-                    return Convert.ToBase64String(encryptor.TransformFinalBlock(plaintext, 0, plaintext.Length));
+                    return (use(source.Load()), errors);
                 }
                 catch (Exception e)
                 {
@@ -89,7 +98,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
                 }
             }
 
-            throw new AggregateException("There is no configuration encryption key yet, and none of the keys earlier versions used is available.", errors);
+            return (null, errors);
         }
 
         public string Decrypt(string encrypted)
@@ -131,23 +140,18 @@ namespace Octopus.Tentacle.Configuration.Crypto
 
         string DecryptLegacy(string encrypted)
         {
-            var errors = new List<Exception>();
-            foreach (var source in legacyKeySources)
+            var (decrypted, errors) = TryEachLegacyKey(legacy =>
             {
-                try
-                {
-                    var (key, iv) = source.Load();
-                    using var aes = Aes.Create();
-                    using var decryptor = aes.CreateDecryptor(key, iv);
-                    var payload = Convert.FromBase64String(encrypted);
-                    var plaintext = decryptor.TransformFinalBlock(payload, 0, payload.Length);
-                    return StrictUtf8.GetString(plaintext);
-                }
-                catch (Exception e)
-                {
-                    log.Verbose(e.Message);
-                    errors.Add(e);
-                }
+                using var aes = Aes.Create();
+                using var decryptor = aes.CreateDecryptor(legacy.Key, legacy.IV);
+                var payload = Convert.FromBase64String(encrypted);
+                var plaintext = decryptor.TransformFinalBlock(payload, 0, payload.Length);
+                return StrictUtf8.GetString(plaintext);
+            });
+
+            if (decrypted != null)
+            {
+                return decrypted;
             }
 
             throw new CryptographicException("Unable to decrypt a value that was protected by an earlier version of Tentacle with any of the keys it could have used. "
