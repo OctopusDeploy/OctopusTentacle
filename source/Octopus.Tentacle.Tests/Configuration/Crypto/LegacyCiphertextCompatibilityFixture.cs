@@ -73,7 +73,7 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
             fileSystem.FileExists(LinuxMachineIdKey.FileName).Returns(machineIdPresent);
             fileSystem.ReadAllLines(LinuxMachineIdKey.FileName).Returns(new[] { MachineId });
 
-            return MachineKeyEncryptor.CreateLinuxEncryptor(Substitute.For<ISystemLog>(), fileSystem, LinuxGeneratedMachineKey.KeyFilePathFor("Tentacle"));
+            return MachineKeyEncryptor.CreateLinuxEncryptor(Substitute.For<ISystemLog>(), fileSystem, ConfigurationEncryptionKey.KeyFilePathFor("Tentacle"));
         }
 
         [TestCaseSource(nameof(WrittenWithTheMachineIdKey))]

@@ -13,10 +13,9 @@ namespace Octopus.Tentacle.Configuration
 
         public XmlFileKeyValueStore(IOctopusFileSystem fileSystem,
             string configurationFile,
+            IMachineKeyEncryptor encryptor,
             bool autoSaveOnSet = true,
-            bool isWriteOnly = false,
-            IMachineKeyEncryptor? encryptor = null,
-            string? keyFilePath = null) : base(encryptor ?? MachineKeyEncryptor.ForKeyFile(fileSystem, keyFilePath), autoSaveOnSet, isWriteOnly)
+            bool isWriteOnly = false) : base(encryptor, autoSaveOnSet, isWriteOnly)
         {
             this.fileSystem = fileSystem;
             this.configurationFile = fileSystem.GetFullPath(configurationFile);

@@ -42,7 +42,7 @@ namespace Octopus.Tentacle.Commands
                     + $"Register it with `create-instance --instance <name> --config {instance.ConfigurationPath}`, then run this command again.");
             }
 
-            configurationUpgrade.Value.RunOrThrow();
+            configurationUpgrade.Value.Upgrade();
             log.Info($"The configuration is protected with the encryption key `{instance.KeyFilePath}`.");
         }
     }

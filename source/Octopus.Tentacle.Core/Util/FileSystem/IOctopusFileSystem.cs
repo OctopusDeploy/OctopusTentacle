@@ -37,7 +37,12 @@ namespace Octopus.Tentacle.Util
         void WriteAllBytes(string filePath, byte[] data);
         void WriteAllText(string filePath, string contents);
 
-        // Returns false, leaving the existing file untouched, if another process created it first.
+        /// <summary>
+        /// Creates a file at filePath with contents IF it doesn't exist.
+        /// The operation is as atomic as it can be for the FileSystem.
+        /// The resulting file has permissions 0600 for linux.
+        /// </summary>
+        /// <returns>True if this call created the file, false if it already existed, in which case the existing file is left untouched.</returns>
         bool AtomicCreateFileWithUserReadWriteAccessOnly(string filePath, byte[] contents);
 
         string ReadAllText(string scriptFile);

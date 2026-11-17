@@ -33,7 +33,7 @@ namespace Octopus.Tentacle.Commands
                 instanceManager.CreateInstance(instanceName, config, home);
             }
 
-            configurationUpgrade.Value.CreateKey();
+            configurationUpgrade.Value.PrepareKey();
         }
     }
 }

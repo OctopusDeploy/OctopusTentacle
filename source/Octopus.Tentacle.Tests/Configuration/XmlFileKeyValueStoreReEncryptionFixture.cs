@@ -32,7 +32,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             fileSystem.OverwriteFile(configurationFile, @"<?xml version='1.0' encoding='UTF-8' ?><octopus-settings></octopus-settings>");
 
             legacyKey = new InMemoryCryptoKeyNixSource();
-            encryptor = new LinuxMachineKeyEncryptor(Substitute.For<ISystemLog>(), new InMemoryCryptoKeyNixSource(), new[] { legacyKey });
+            encryptor = new LinuxMachineKeyEncryptor(Substitute.For<ISystemLog>(), InMemoryConfigurationEncryptionKey.Create(), new[] { legacyKey });
 
             // Writes what an earlier version would have left in the file...
             legacyStore = new XmlFileKeyValueStore(fileSystem, configurationFile, encryptor: new LegacySchemeEncryptor(legacyKey));
