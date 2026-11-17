@@ -53,13 +53,15 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration
 
         public InstanceConfiguration LoadConfiguration(ApplicationInstanceRecord applicationInstanceRecord)
         {
-            var keyStore = new XmlFileKeyValueStore(fileSystem, applicationInstanceRecord.ConfigurationFilePath, MachineKeyEncryptor.ForKeyFile(fileSystem, null));
+            var encryptor = MachineKeyEncryptor.ForKeyFile(fileSystem, ConfigurationEncryptionKey.KeyFilePathFor(applicationInstanceRecord.InstanceName));
+            var keyStore = new XmlFileKeyValueStore(fileSystem, applicationInstanceRecord.ConfigurationFilePath, encryptor);
 
             var selector = new SimpleApplicationInstanceSelectorForTentacleManager(
                 instanceStrategies,
                 fileSystem,
                 systemLog,
-                applicationInstanceRecord.ConfigurationFilePath);
+                applicationInstanceRecord.ConfigurationFilePath,
+                encryptor);
 
             var homeConfig = new HomeConfiguration(selector);
             var loggingConfig = new LoggingConfiguration(homeConfig);
@@ -81,18 +83,21 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration
             readonly ISystemLog log;
             
             readonly string configFilePath;
+            readonly IMachineKeyEncryptor encryptor;
             readonly bool canLoadCurrentInstance;
 
             public SimpleApplicationInstanceSelectorForTentacleManager(
                 IApplicationConfigurationContributor[] instanceStrategies,
                 IOctopusFileSystem fileSystem,
                 ISystemLog log,
-                string configFilePath)
+                string configFilePath,
+                IMachineKeyEncryptor encryptor)
             {
                 this.instanceStrategies = instanceStrategies;
                 this.fileSystem = fileSystem;
                 this.log = log;
                 this.configFilePath = configFilePath;
+                this.encryptor = encryptor;
 
                 try
                 {
@@ -121,7 +126,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration
                 EnsureConfigurationExists(configurationPath);
 
                 log.Verbose($"Loading configuration from {configurationPath}");
-                var writable = new XmlFileKeyValueStore(fileSystem, configurationPath, MachineKeyEncryptor.ForKeyFile(fileSystem, null));
+                var writable = new XmlFileKeyValueStore(fileSystem, configurationPath, encryptor);
                 return (ContributeAdditionalConfiguration(writable), writable);
             }
 
