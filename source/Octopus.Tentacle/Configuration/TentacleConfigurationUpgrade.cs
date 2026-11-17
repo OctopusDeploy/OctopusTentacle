@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.InteropServices;
 using Octopus.Tentacle.Configuration.Crypto;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Core.Diagnostics;
+using Octopus.Tentacle.Core.Util;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Configuration
@@ -89,71 +89,12 @@ namespace Octopus.Tentacle.Configuration
             key.CreateIfMissing();
 
 #if NET
-            var configurationOwner = UnixOwnership.OwnerOf(instance.ConfigurationPath);
-            UnixOwnership.GiveToIfRoot(configurationOwner, key.KeyDirectory!);
-            UnixOwnership.GiveToIfRoot(configurationOwner, key.KeyFilePath!);
+            var configurationOwner = UnixFile.OwnerOf(instance.ConfigurationPath);
+            UnixFile.GiveToIfRoot(configurationOwner, key.KeyDirectory!);
+            UnixFile.GiveToIfRoot(configurationOwner, key.KeyFilePath!);
 #endif
 
             return (key, store);
         }
-
-#if NET
-        static class UnixOwnership
-        {
-            const uint UnchangedGroup = uint.MaxValue;
-
-            public static uint OwnerOf(string path)
-            {
-                return SystemNative_Stat(path, out var status) == 0
-                    ? status.Uid
-                    : throw new IOException($"Unable to find the owner of `{path}`: {Marshal.GetLastPInvokeErrorMessage()}");
-            }
-
-            public static void GiveToIfRoot(uint owner, string path)
-            {
-                if (geteuid() != 0 || OwnerOf(path) == owner)
-                {
-                    return;
-                }
-
-                if (lchown(path, owner, UnchangedGroup) != 0)
-                {
-                    throw new IOException($"Unable to change the owner of `{path}`: {Marshal.GetLastPInvokeErrorMessage()}");
-                }
-            }
-
-            [DllImport("libc")]
-            static extern uint geteuid();
-
-            [DllImport("libc", SetLastError = true)]
-            static extern int lchown(string path, uint owner, uint group);
-
-            // The .NET runtime's own stat shim: one struct layout on every libc and architecture.
-            [DllImport("libSystem.Native", SetLastError = true)]
-            static extern int SystemNative_Stat(string path, out FileStatus output);
-
-            [StructLayout(LayoutKind.Sequential)]
-            struct FileStatus
-            {
-                public int Flags;
-                public int Mode;
-                public uint Uid;
-                public uint Gid;
-                public long Size;
-                public long ATime;
-                public long ATimeNsec;
-                public long MTime;
-                public long MTimeNsec;
-                public long CTime;
-                public long CTimeNsec;
-                public long BirthTime;
-                public long BirthTimeNsec;
-                public long Dev;
-                public long RDev;
-                public long Ino;
-                public uint UserFlags;
-            }
-        }
-#endif
     }
 }
