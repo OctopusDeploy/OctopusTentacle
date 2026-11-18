@@ -154,12 +154,10 @@ namespace Octopus.Tentacle.Configuration.Crypto
                 return decrypted;
             }
 
-            throw new CryptographicException("Unable to decrypt a value that was protected by an earlier version of Tentacle with any of the keys it could have used. "
-                + "Earlier versions derived the key from /etc/machine-id, so this happens when the configuration was moved from another machine, "
-                + "or is on a volume mounted into a container whose image has since changed. "
-                + "If the machine-id it was written with is still available (for a container, `docker run --rm --entrypoint cat <previous image> /etc/machine-id`), "
-                + "make it available read-only at /etc/machine-id for one start and Tentacle will re-encrypt the configuration with its own key. "
-                + "Otherwise run 'tentacle new-certificate' and re-establish trust with the Octopus Server, or restore the configuration file from a backup taken on the original machine.",
+            throw new CryptographicException("Unable to decrypt a value protected by an earlier version of Tentacle. "
+                + "Earlier versions derived the key from /etc/machine-id, so this happens when the configuration came from another machine or the machine-id has changed. "
+                + "If the /etc/machine-id it was written with is still available, put it back at /etc/machine-id for one start and Tentacle will re-encrypt the configuration with its own key. "
+                + "Otherwise restore the configuration file from a backup taken on the original machine, or run 'tentacle replace-certificate' to create a new certificate and update the thumbprint Octopus Server trusts.",
                 new AggregateException(errors));
         }
 
