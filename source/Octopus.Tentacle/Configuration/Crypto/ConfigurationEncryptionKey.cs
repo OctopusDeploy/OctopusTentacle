@@ -74,7 +74,6 @@ namespace Octopus.Tentacle.Configuration.Crypto
             return loaded;
         }
 
-        // Only the configuration upgrade creates the key, so that it can then give the key to the configuration's owner.
         public void CreateIfMissing()
         {
             var path = KeyFilePath ?? throw new InvalidOperationException("There is no key file path to create the configuration encryption key at.");
