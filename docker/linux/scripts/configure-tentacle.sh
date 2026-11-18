@@ -30,7 +30,7 @@ function getPublicHostName() {
     elif [[ "$PublicHostNameConfiguration" == "ComputerName" ]]; then
         hostname
     else
-        echo $CustomPublicHostName
+        echo "$CustomPublicHostName"
     fi
 }
 
@@ -128,7 +128,7 @@ function configureTentacle() {
     if [[ ! -z "$ServerCommsAddress" || ! -z "$ServerPort" ]]; then
         tentacle configure --instance "$instanceName" --noListen "True"
     else
-        tentacle configure --instance "$instanceName" --port $internalListeningPort --noListen "False"
+        tentacle configure --instance "$instanceName" --port "$internalListeningPort" --noListen "False"
     fi
 
     echo "Updating trust ..."
@@ -205,19 +205,19 @@ function registerTentacle() {
         ARGS+=('--comms-style' 'TentacleActive')
 
         if [[ ! -z "$ServerCommsAddress" ]]; then
-            ARGS+=('--server-comms-address' $ServerCommsAddress)
+            ARGS+=('--server-comms-address' "$ServerCommsAddress")
         fi
 
         if [[ ! -z "$ServerPort" ]]; then
-            ARGS+=('--server-comms-port' $ServerPort)
+            ARGS+=('--server-comms-port' "$ServerPort")
         fi
     else
         ARGS+=(
             '--comms-style' 'TentaclePassive'
-            '--publicHostName' $(getPublicHostName))
+            '--publicHostName' "$(getPublicHostName)")
 
         if [[ ! -z "$ListeningPort" && "$ListeningPort" != "$internalListeningPort" ]]; then
-            ARGS+=('--tentacle-comms-port' $ListeningPort)
+            ARGS+=('--tentacle-comms-port' "$ListeningPort")
         fi
         if [[ ! -z "$ProxyName" ]]; then
             ARGS+=('--proxy' "$ProxyName")
@@ -226,7 +226,7 @@ function registerTentacle() {
 
     if [[ ! -z "$ServerApiKey" ]]; then
         echo "Registering Tentacle with API key"
-        ARGS+=('--apiKey' $ServerApiKey)
+        ARGS+=('--apiKey' "$ServerApiKey")
     elif [[ ! -z "$BearerToken" ]]; then
         echo "Registering Tentacle with Bearer Token"
         ARGS+=('--bearerToken' "$BearerToken")
