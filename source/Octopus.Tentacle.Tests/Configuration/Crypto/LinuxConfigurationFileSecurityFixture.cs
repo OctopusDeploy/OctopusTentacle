@@ -100,8 +100,8 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
             }
 
             // Arrange
-            // Present on every distribution, unlike useradd, which Alpine does not have.
-            const string user = "nobody";
+            var user = "octo-key-" + Guid.NewGuid().ToString("N").Substring(0, 8);
+            CreateUser(user).Should().Be(0);
             var instanceKeyFilePath = Path.Combine(directory, "keys", "Tentacle", ConfigurationEncryptionKey.KeyFileName);
             var keySource = new ConfigurationEncryptionKey(log, fileSystem, instanceKeyFilePath);
             var previousUmask = umask(Convert.ToUInt32("027", 8));
@@ -120,8 +120,18 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
             finally
             {
                 umask(previousUmask);
+                DeleteUser(user);
             }
         }
+
+        // Alpine has BusyBox's adduser and deluser rather than useradd and userdel.
+        static bool IsAlpine => File.Exists("/etc/alpine-release");
+
+        static int CreateUser(string user)
+            => IsAlpine ? Run("adduser", $"-D -H {user}") : Run("useradd", $"--no-create-home {user}");
+
+        static int DeleteUser(string user)
+            => IsAlpine ? Run("deluser", user) : Run("userdel", user);
 
         static int Run(string fileName, string arguments)
         {
