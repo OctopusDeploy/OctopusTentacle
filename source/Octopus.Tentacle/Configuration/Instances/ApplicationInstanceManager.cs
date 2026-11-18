@@ -61,14 +61,17 @@ namespace Octopus.Tentacle.Configuration.Instances
             }
 
             var keyFilePath = ConfigurationEncryptionKey.KeyFilePathFor(instanceName);
+            var key = new ConfigurationEncryptionKey(log, fileSystem, keyFilePath);
             try
             {
-                new ConfigurationEncryptionKey(log, fileSystem, keyFilePath).CreateIfMissing();
+                key.CreateIfMissing();
             }
             catch (Exception e)
             {
+                var user = Environment.UserName;
+                var directory = key.KeyDirectory;
                 throw new ControlledFailureException($"Unable to create the configuration encryption key `{keyFilePath}` for the instance `{instanceName}`, so the instance was not created: {e.Message} "
-                    + $"Run this command as a user that can write to that directory, such as root, or set the environment variable `{EnvironmentVariables.TentacleConfigurationKeysDirectory}` to a directory this user can write to.", e);
+                    + $"Run this command as root, or give the user ({user}) access to the directory, for example: `sudo mkdir -p {directory} && sudo chown -R {user} {directory} && sudo chmod 700 {directory}`.", e);
             }
         }
 
