@@ -17,10 +17,9 @@ namespace Octopus.Tentacle.Configuration.Crypto
 
         const int KeySizeInBytes = 32;
 
-        const string RecoveryWithoutBackup = "If there is no backup, the Tentacle's certificate is lost and it needs a new identity: "
-            + "recreate the instance with `delete-instance` and `create-instance`, run `new-certificate`, "
-            + "then re-register it using an API key with `register-with` (or `register-worker`), passing `--force` and `--name` set to its existing name in Octopus "
-            + "so that the existing machine is updated rather than a new one added.";
+        const string RecoveryWithoutBackup = "If there is no backup, the Tentacle's certificate is lost and it needs a new one: "
+            + "run `replace-certificate` with an API key and the `--name` or `--id` of its existing deployment target or worker in Octopus. "
+            + "This creates a new key and certificate, and updates only the certificate thumbprint Octopus trusts.";
 
         static string KeysDirectory
             => Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleConfigurationKeysDirectory) is { Length: > 0 } directory ? directory : DefaultKeysDirectory;
