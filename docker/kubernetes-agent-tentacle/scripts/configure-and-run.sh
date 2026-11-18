@@ -45,7 +45,7 @@ function getPublicHostName() {
   elif [[ "$PublicHostNameConfiguration" == "ComputerName" ]]; then
     hostname
   else
-    echo $CustomPublicHostName
+    echo "$CustomPublicHostName"
   fi
 }
 
@@ -177,7 +177,7 @@ function configureTentacle() {
   if [[ -n "$ServerCommsAddress" || -n "$ServerCommsAddresses" || -n "$ServerPort" ]]; then
     tentacle configure --instance "$instanceName" --noListen "True"
   else
-    tentacle configure --instance "$instanceName" --port $internalListeningPort --noListen "False"
+    tentacle configure --instance "$instanceName" --port "$internalListeningPort" --noListen "False"
   fi
 
   if [[ -n "$TentacleCertificateBase64" ]]; then
@@ -284,25 +284,25 @@ function registerTentacle() {
     fi
 
     if [[ -n "$ServerPort" ]]; then
-      ARGS+=('--server-comms-port' $ServerPort)
+      ARGS+=('--server-comms-port' "$ServerPort")
     fi
 
     if [[ -n "$ServerSubscriptionId" ]]; then
-      ARGS+=('--server-subscription-id' $ServerSubscriptionId)
+      ARGS+=('--server-subscription-id' "$ServerSubscriptionId")
     fi
   else
     ARGS+=(
       '--comms-style' 'TentaclePassive'
-      '--publicHostName' $(getPublicHostName))
+      '--publicHostName' "$(getPublicHostName)")
 
     if [[ -n "$ListeningPort" && "$ListeningPort" != "$internalListeningPort" ]]; then
-      ARGS+=('--tentacle-comms-port' $ListeningPort)
+      ARGS+=('--tentacle-comms-port' "$ListeningPort")
     fi
   fi
 
   if [[ -n "$ServerApiKey" ]]; then
     echo "Registering Tentacle with API key"
-    ARGS+=('--apiKey' $ServerApiKey)
+    ARGS+=('--apiKey' "$ServerApiKey")
   elif [[ -n "$BearerToken" ]]; then
     echo "Registering Tentacle with Bearer Token"
     ARGS+=('--bearerToken' "$BearerToken")
@@ -375,7 +375,7 @@ function registerAdditionalServer() {
 
   if [[ -n "$ServerApiKey" ]]; then
     echo "Registering Tentacle with API key"
-    ARGS+=('--apiKey' $ServerApiKey)
+    ARGS+=('--apiKey' "$ServerApiKey")
   elif [[ -n "$BearerToken" ]]; then
     echo "Registering Tentacle with Bearer Token"
     ARGS+=('--bearerToken' "$BearerToken")
