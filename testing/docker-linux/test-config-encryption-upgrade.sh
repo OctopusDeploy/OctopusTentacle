@@ -31,7 +31,7 @@ in_container "$PREVIOUS_IMAGE" 'cat /etc/machine-id' > "$WORK_DIR/machine-id"
 
 OUTPUT=$(in_container "$NEW_IMAGE" 'tentacle show-thumbprint --instance Tentacle' || true)
 check "the new image cannot decrypt without the previous machine-id" \
-    "$(grep -c 'docker run --rm --entrypoint cat <previous image> /etc/machine-id' <<<"$OUTPUT")" "1"
+    "$(grep -c 'If the /etc/machine-id it was written with is still available' <<<"$OUTPUT")" "1"
 
 OUTPUT=$(in_container "$NEW_IMAGE" 'timeout 30 tentacle run --instance Tentacle' -v "$WORK_DIR/machine-id:/etc/machine-id:ro" || true)
 check "the agent re-encrypts with the previous machine-id mounted" \
