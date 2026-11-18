@@ -45,8 +45,16 @@ namespace Octopus.Tentacle.Tests.Support
             const string path = "/in-memory/config-encryption.key";
             var fileSystem = Substitute.For<IOctopusFileSystem>();
             fileSystem.FileExists(path).Returns(true);
-            fileSystem.ReadAllText(path).Returns(Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)));
+            fileSystem.ReadAllText(path).Returns(Convert.ToBase64String(RandomKey()));
             return new ConfigurationEncryptionKey(Substitute.For<ISystemLog>(), fileSystem, path);
+        }
+
+        static byte[] RandomKey()
+        {
+            var key = new byte[32];
+            using var random = RandomNumberGenerator.Create();
+            random.GetBytes(key);
+            return key;
         }
     }
 }
