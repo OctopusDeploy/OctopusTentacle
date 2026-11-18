@@ -19,7 +19,8 @@ namespace Octopus.Tentacle.Configuration.Crypto
 
         const string RecoveryWithoutBackup = "If there is no backup, the Tentacle's certificate is lost and it needs a new identity: "
             + "recreate the instance with `delete-instance` and `create-instance`, run `new-certificate`, "
-            + "then re-register it with `register-with --force` (or `register-worker --force`) using an API key.";
+            + "then re-register it using an API key with `register-with` (or `register-worker`), passing `--force` and `--name` set to its existing name in Octopus "
+            + "so that the existing machine is updated rather than a new one added.";
 
         static string KeysDirectory
             => Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleConfigurationKeysDirectory) is { Length: > 0 } directory ? directory : DefaultKeysDirectory;
