@@ -100,8 +100,8 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
             }
 
             // Arrange
-            var user = "octo-key-" + Guid.NewGuid().ToString("N").Substring(0, 8);
-            Run("useradd", $"--no-create-home {user}").Should().Be(0);
+            // Present on every distribution, unlike useradd, which Alpine does not have.
+            const string user = "nobody";
             var instanceKeyFilePath = Path.Combine(directory, "keys", "Tentacle", ConfigurationEncryptionKey.KeyFileName);
             var keySource = new ConfigurationEncryptionKey(log, fileSystem, instanceKeyFilePath);
             var previousUmask = umask(Convert.ToUInt32("027", 8));
@@ -120,7 +120,6 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
             finally
             {
                 umask(previousUmask);
-                Run("userdel", user);
             }
         }
 
