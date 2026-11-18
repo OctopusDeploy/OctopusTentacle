@@ -100,6 +100,7 @@ namespace Octopus.Tentacle.Tests.Commands
             => new ReplaceCertificateCommand(
                     new Lazy<IWritableTentacleConfiguration>(() => tentacle.Configuration),
                     new Lazy<ICertificateGenerator>(() => new CertificateGenerator(new NullLog())),
+                    new Lazy<ITentacleConfigurationUpgrade>(() => Substitute.For<ITentacleConfigurationUpgrade>()),
                     octopus.ClientInitializer,
                     Substitute.For<IProxyConfigParser>(),
                     Substitute.For<ISystemLog>(),
