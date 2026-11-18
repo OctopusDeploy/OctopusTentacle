@@ -17,6 +17,10 @@ namespace Octopus.Tentacle.Configuration.Crypto
 
         const int KeySizeInBytes = 32;
 
+        const string RecoveryWithoutBackup = "If there is no backup, the Tentacle's certificate is lost and it needs a new identity: "
+            + "recreate the instance with `delete-instance` and `create-instance`, run `new-certificate`, "
+            + "then re-register it with `register-with --force` (or `register-worker --force`) using an API key.";
+
         static string KeysDirectory
             => Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleConfigurationKeysDirectory) is { Length: > 0 } directory ? directory : DefaultKeysDirectory;
 
@@ -52,7 +56,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
         public byte[] Load()
             => TryLoad() ?? throw new InvalidOperationException(KeyFilePath == null
                 ? "The configuration encryption key for this configuration is not available. Register the configuration with `create-instance --instance <name>`."
-                : $"The configuration encryption key file `{KeyFilePath}` does not exist, so the values it protected cannot be decrypted. Restore it from a backup.");
+                : $"The configuration encryption key file `{KeyFilePath}` does not exist, so the values it protected cannot be decrypted. Restore it from a backup. " + RecoveryWithoutBackup);
 
         public byte[]? TryLoad()
         {
@@ -129,7 +133,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
             }
 
             throw new InvalidOperationException($"The configuration encryption key file `{path}` is corrupt: it must hold a base64-encoded {KeySizeInBytes * 8}-bit key. "
-                + "Restore it from a backup; values encrypted with a lost key cannot be recovered.");
+                + "Restore it from a backup; values encrypted with a lost key cannot be recovered. " + RecoveryWithoutBackup);
         }
 
         // Always Linux paths, even when unit tests run on Windows.
