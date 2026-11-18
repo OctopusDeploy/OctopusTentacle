@@ -33,6 +33,7 @@ namespace Octopus.Tentacle.Commands
                 instanceManager.CreateInstance(instanceName, config, home);
             }
 
+            // The key already exists; this gives it to the owner of a configuration file that was already there.
             configurationUpgrade.Value.PrepareKey();
         }
     }
