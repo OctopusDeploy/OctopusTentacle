@@ -25,7 +25,7 @@ namespace Octopus.Tentacle.Tests.Commands
         const string ServerThumbprint = "SERVERTHUMBPRINT";
 
         [Test]
-        public void ShouldOnlyChangeTheThumbprintOfAPollingWorkerAndTrustTheServer()
+        public void ShouldGiveAPollingWorkerANewThumbprintAndKeepItsSubscription()
         {
             // Arrange
             using var tentacle = new TentacleConfigurationBuilder().Build();
