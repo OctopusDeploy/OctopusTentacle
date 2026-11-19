@@ -39,7 +39,7 @@
         <ProjectReference Include="..\Octopus.Tentacle.Client\Octopus.Tentacle.Client.csproj" />
         <ProjectReference Include="..\Octopus.Tentacle.CommonTestUtils\Octopus.Tentacle.CommonTestUtils.csproj" />
         <ProjectReference Include="..\Octopus.Tentacle.Tests.Integration.Common\Octopus.Tentacle.Tests.Integration.Common.csproj" />
-        <!-- Referenced so the fake server's contract test can run the real `tentacle register-with` without Docker. -->
+        <!-- Referenced for SpaceRepositoryFactory, which the fake server's contract test uses alongside Octopus.Client. -->
         <ProjectReference Include="..\Octopus.Tentacle\Octopus.Tentacle.csproj" />
     </ItemGroup>
 

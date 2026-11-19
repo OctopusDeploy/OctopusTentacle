@@ -35,7 +35,7 @@ partial class Build
     Target TestIntegration => _ => _
         .Executes(() => RunIntegrationTests(TestFramework, TestRuntime, TestFilter));
 
-    [Parameter("The Linux Tentacle image for TestLinuxDockerImage to test. Defaults to the tag docker-compose.build.yml gives the image for this version.")]
+    [Parameter("The Linux Tentacle image for TestLinuxDockerImage to test. If not given, the tests use the TentacleDockerTests_ImageAndTag or TentacleDockerTests_ImageTag environment variable.")]
     readonly string? TentacleLinuxDockerImage;
 
     [PublicAPI]
@@ -45,11 +45,9 @@ partial class Build
         {
             var testFramework = ResolveTestFramework(TestFramework);
             var testRuntime = string.IsNullOrEmpty(TestRuntime) ? "linux-x64" : TestRuntime;
-            var image = string.IsNullOrEmpty(TentacleLinuxDockerImage)
-                ? $"docker.packages.octopushq.com/octopusdeploy/tentacle:{FullSemVer}-linux"
-                : TentacleLinuxDockerImage;
 
-            Log.Information("Testing Linux Tentacle image {Image} with Framework: {TestFramework} and Runtime: {TestRuntime}", image, testFramework, testRuntime);
+            Log.Information("Testing Linux Tentacle image {Image} with Framework: {TestFramework} and Runtime: {TestRuntime}",
+                string.IsNullOrEmpty(TentacleLinuxDockerImage) ? "from the environment" : TentacleLinuxDockerImage, testFramework, testRuntime);
 
             (ArtifactsDirectory / "teamcity").CreateDirectory();
 
@@ -63,19 +61,24 @@ partial class Build
                 throw new InvalidOperationException($"Octopus.Tentacle.Docker.Tests.Integration has not been published for {testFramework}/{testRuntime}. Run BuildLinux first.");
             }
 
-            // Set on this process so the test runner inherits it alongside the rest of the environment.
-            Environment.SetEnvironmentVariable("TentacleDockerTests_ImageAndTag", image);
-
             try
             {
-                DotNetTasks.DotNetTest(settings => settings
-                    .SetProjectFile(testAssembly)
-                    .SetFramework(testFramework)
-                    .SetFilter(TestFilter)
-                    // The TeamCity agent supplies the teamcity logger; it is not in the published output.
-                    .SetLoggers(Host is TeamCity
-                        ? new[] { "console;verbosity=normal", "teamcity" }
-                        : new[] { "console;verbosity=normal" }));
+                DotNetTasks.DotNetTest(settings =>
+                {
+                    settings = settings
+                        .SetProjectFile(testAssembly)
+                        .SetFramework(testFramework)
+                        .SetFilter(TestFilter)
+                        // The TeamCity agent supplies the teamcity logger; it is not in the published output.
+                        .SetLoggers(Host is TeamCity
+                            ? new[] { "console;verbosity=normal", "teamcity" }
+                            : new[] { "console;verbosity=normal" });
+
+                    // Without an image, leave it to the tests: they read the environment and say how to build one.
+                    return string.IsNullOrEmpty(TentacleLinuxDockerImage)
+                        ? settings
+                        : settings.SetProcessEnvironmentVariable("TentacleDockerTests_ImageAndTag", TentacleLinuxDockerImage);
+                });
             }
             catch (Exception e)
             {

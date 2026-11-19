@@ -49,6 +49,11 @@ public static class DockerCli
         }
     }
 
+    static readonly string[] SecretVariables = { "ServerApiKey", "BearerToken", "ServerPassword" };
+
     static string Redact(string argument)
-        => argument.StartsWith("ServerApiKey=", StringComparison.Ordinal) ? "ServerApiKey=<redacted>" : argument;
+    {
+        var secret = SecretVariables.FirstOrDefault(v => argument.StartsWith(v + "=", StringComparison.Ordinal));
+        return secret is null ? argument : $"{secret}=<redacted>";
+    }
 }

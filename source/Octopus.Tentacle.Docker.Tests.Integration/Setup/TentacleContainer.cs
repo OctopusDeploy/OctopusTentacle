@@ -77,12 +77,53 @@ public sealed class TentacleContainer : IAsyncDisposable
     /// <summary>Null while the container is running, otherwise a description of how it stopped.</summary>
     public async Task<string?> GetExitDescription(CancellationToken cancellationToken)
     {
-        var state = await DockerCli.Run(new[] { "inspect", "--format", "{{.State.Status}} {{.State.ExitCode}}", Id }, cancellationToken);
-        var parts = state.Split(' ');
-        return parts[0] == "running" ? null : $"status '{parts[0]}', exit code {parts.ElementAtOrDefault(1)}";
+        // Error is last because it is free text and may contain spaces.
+        var state = await DockerCli.Run(new[] { "inspect", "--format", "{{.State.Status}}|{{.State.ExitCode}}|{{.State.OOMKilled}}|{{.State.Error}}", Id }, cancellationToken);
+        var parts = state.Split('|', 4);
+        if (parts[0] == "running")
+        {
+            return null;
+        }
+
+        var description = $"status '{parts[0]}', exit code {parts.ElementAtOrDefault(1)}";
+        if (parts.ElementAtOrDefault(2) == "true")
+        {
+            description += ", killed for running out of memory";
+        }
+
+        if (!string.IsNullOrWhiteSpace(parts.ElementAtOrDefault(3)))
+        {
+            description += $", error '{parts[3]}'";
+        }
+
+        return description;
+    }
+
+    /// <summary>"running" or how the container stopped. Never throws: this is called while reporting other failures.</summary>
+    public async Task<string> DescribeState()
+    {
+        try
+        {
+            return await GetExitDescription(CancellationToken.None) ?? "running";
+        }
+        catch (Exception e)
+        {
+            return $"unknown ({e.Message})";
+        }
     }
 
     public Task<string> GetLogs() => DockerCli.Logs(Id);
+
+    /// <summary>Restarts the container as `docker restart` does: SIGTERM, then SIGKILL after the grace period.</summary>
+    public Task Restart(TimeSpan gracePeriod, CancellationToken cancellationToken)
+        => DockerCli.Run(new[] { "restart", "--time", ((int)gracePeriod.TotalSeconds).ToString(), Id }, cancellationToken);
+
+    /// <summary>Stops the container as `docker stop` does: SIGTERM, then SIGKILL after the grace period.</summary>
+    public Task Stop(TimeSpan gracePeriod, CancellationToken cancellationToken)
+        => DockerCli.Run(new[] { "stop", "--time", ((int)gracePeriod.TotalSeconds).ToString(), Id }, cancellationToken);
+
+    public async Task<int> GetExitCode(CancellationToken cancellationToken)
+        => int.Parse(await DockerCli.Run(new[] { "inspect", "--format", "{{.State.ExitCode}}", Id }, cancellationToken));
 
     public async ValueTask DisposeAsync()
     {
