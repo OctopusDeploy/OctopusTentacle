@@ -29,7 +29,7 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
             var encrypted = encryptor.Encrypt("FooBar");
 
             // Assert
-            encrypted.Should().StartWith(LinuxMachineKeyEncryptor.ProtectedValuePrefix);
+            encrypted.Should().MatchRegex(@"^AES256-GCM\$[A-Za-z0-9+/=]+\$[A-Za-z0-9+/=]+$");
             encryptor.RequiresReEncryption(encrypted).Should().BeFalse();
             encryptor.Decrypt(encrypted).Should().Be("FooBar");
         }
@@ -47,6 +47,22 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
 
             // Assert
             decrypt.Should().Throw<CryptographicException>();
+        }
+
+        [TestCase("AES128-GCM")]
+        [TestCase("aes256-gcm")]
+        public void WhenTheSpecifierIsAlteredThenDecryptionFails(string alteredSpecifier)
+        {
+            // Arrange
+            var encryptor = CreateEncryptor();
+            var encrypted = encryptor.Encrypt("FooBar");
+            var tampered = alteredSpecifier + encrypted.Substring(LinuxMachineKeyEncryptor.Specifier.Length);
+
+            // Act
+            Action decrypt = () => encryptor.Decrypt(tampered);
+
+            // Assert
+            decrypt.Should().Throw<CryptographicException>().WithMessage("*Unknown encryption specifier*");
         }
     }
 }

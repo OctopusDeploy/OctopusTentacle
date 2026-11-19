@@ -55,14 +55,14 @@ namespace Octopus.Tentacle.Tests.Configuration
             var keyFilePath = Path.Combine(directory, "keys", "Tentacle", ConfigurationEncryptionKey.KeyFileName);
             var store = CreateStore(keyFilePath);
             store.Set<string>(TentacleConfiguration.CertificateSettingName, Certificate, ProtectionLevel.MachineKey);
-            RawCertificate().Should().NotStartWith(LinuxMachineKeyEncryptor.ProtectedValuePrefix, "without a key, values are written the way earlier versions wrote them");
+            RawCertificate().Should().NotStartWith(LinuxMachineKeyEncryptor.Specifier + "$", "without a key, values are written the way earlier versions wrote them");
 
             // Act
             CreateUpgrade(store, keyFilePath).Upgrade();
 
             // Assert
             File.Exists(keyFilePath).Should().BeTrue();
-            RawCertificate().Should().StartWith(LinuxMachineKeyEncryptor.ProtectedValuePrefix);
+            RawCertificate().Should().StartWith(LinuxMachineKeyEncryptor.Specifier + "$");
             CreateStore(keyFilePath).Get<string>(TentacleConfiguration.CertificateSettingName, protectionLevel: ProtectionLevel.MachineKey).Should().Be(Certificate);
             log.DidNotReceive().Warn(Arg.Any<Exception>(), Arg.Any<string>());
         }
@@ -133,7 +133,7 @@ namespace Octopus.Tentacle.Tests.Configuration
 
             // Assert
             File.Exists(keyFilePath).Should().BeTrue();
-            RawCertificate().Should().StartWith(LinuxMachineKeyEncryptor.ProtectedValuePrefix);
+            RawCertificate().Should().StartWith(LinuxMachineKeyEncryptor.Specifier + "$");
             CreateStore(keyFilePath).Get<string>(TentacleConfiguration.CertificateSettingName, protectionLevel: ProtectionLevel.MachineKey).Should().Be(Certificate);
         }
 

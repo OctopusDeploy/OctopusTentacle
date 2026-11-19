@@ -7,17 +7,18 @@ using Octopus.Tentacle.Core.Diagnostics;
 
 namespace Octopus.Tentacle.Configuration.Crypto
 {
-    // Stored as $OctopusMachineKeyV1$base64(nonce || ciphertext || tag), AES-256-GCM with the prefix as associated data.
-    // Values without the prefix were written by earlier versions with AES-CBC and a fixed IV.
+    // Stored as AES256-GCM$base64(nonce)$base64(ciphertext || tag), with the specifier as associated data.
+    // Values without a $ were written by earlier versions with AES-CBC and a fixed IV.
     public class LinuxMachineKeyEncryptor : IMachineKeyEncryptor
     {
-        // $ is not a base64 character, so a value without this prefix is unambiguously a legacy one.
-        public const string ProtectedValuePrefix = "$OctopusMachineKeyV1$";
+        public const string Specifier = "AES256-GCM";
+        // $ is not a base64 character, so a value without one is unambiguously a legacy one.
+        const char FieldSeparator = '$';
 
         const int NonceSizeInBytes = 12;
         const int TagSizeInBytes = 16;
 
-        static readonly byte[] AssociatedData = Encoding.ASCII.GetBytes(ProtectedValuePrefix);
+        static readonly byte[] AssociatedData = Encoding.ASCII.GetBytes(Specifier);
 
         // A wrong legacy key passes the AES-CBC padding check about 1 time in 256; the garbage it yields is rarely valid UTF-8.
         static readonly Encoding StrictUtf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
@@ -34,7 +35,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
         }
 
         static bool IsLegacyCiphertext(string encrypted)
-            => !encrypted.StartsWith(ProtectedValuePrefix, StringComparison.Ordinal);
+            => encrypted.IndexOf(FieldSeparator) < 0;
 
         public bool RequiresReEncryption(string encrypted)
             => IsLegacyCiphertext(encrypted);
@@ -66,7 +67,9 @@ namespace Octopus.Tentacle.Configuration.Crypto
 
             Gcm.Encrypt(key, plaintext, payload, AssociatedData);
 
-            return ProtectedValuePrefix + Convert.ToBase64String(payload);
+            var nonceBase64 = Convert.ToBase64String(payload, 0, NonceSizeInBytes);
+            var ciphertextBase64 = Convert.ToBase64String(payload, NonceSizeInBytes, payload.Length - NonceSizeInBytes);
+            return string.Join(FieldSeparator.ToString(), Specifier, nonceBase64, ciphertextBase64);
         }
 
         string EncryptLegacy(string raw)
@@ -120,22 +123,41 @@ namespace Octopus.Tentacle.Configuration.Crypto
 
             try
             {
-                var payload = Convert.FromBase64String(encrypted.Substring(ProtectedValuePrefix.Length));
-                if (payload.Length < NonceSizeInBytes + TagSizeInBytes)
-                {
-                    throw new FormatException("The encrypted value is too short to contain a nonce and an authentication tag.");
-                }
+                var payload = ParsePayload(encrypted);
 
                 var plaintext = Gcm.Decrypt(key, payload, AssociatedData);
                 return StrictUtf8.GetString(plaintext);
             }
             catch (Exception e)
             {
-                // No fallback to the legacy keys: they could never have written a value with the prefix.
+                // No fallback to the legacy keys: they could never have written a value in this format.
                 throw new CryptographicException("Unable to decrypt a value protected with the Tentacle machine key. "
                     + "Either the value has been altered, or the machine key file it was encrypted with has been replaced or removed. "
                     + $"Details: {e.Message}", e);
             }
+        }
+
+        static byte[] ParsePayload(string encrypted)
+        {
+            var fields = encrypted.Split(FieldSeparator);
+            if (fields.Length != 3)
+            {
+                throw new FormatException($"Expected 3 '{FieldSeparator}'-separated fields but found {fields.Length}.");
+            }
+
+            if (fields[0] != Specifier)
+            {
+                throw new FormatException($"Unknown encryption specifier '{fields[0]}'; expected '{Specifier}'.");
+            }
+
+            var nonce = Convert.FromBase64String(fields[1]);
+            var ciphertextAndTag = Convert.FromBase64String(fields[2]);
+            if (nonce.Length != NonceSizeInBytes || ciphertextAndTag.Length < TagSizeInBytes)
+            {
+                throw new FormatException("The nonce or authentication tag has the wrong length.");
+            }
+
+            return nonce.Concat(ciphertextAndTag).ToArray();
         }
 
         string DecryptLegacy(string encrypted)
