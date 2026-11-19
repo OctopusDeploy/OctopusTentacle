@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -16,6 +17,8 @@ using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Startup;
+using Octopus.Tentacle.Tests.Support;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Commands
 {
@@ -24,16 +27,29 @@ namespace Octopus.Tentacle.Tests.Commands
     {
         const string ServerThumbprint = "SERVERTHUMBPRINT";
 
-        IWritableTentacleConfiguration configuration;
+        TemporaryDirectory temporaryDirectory;
+        WritableTentacleConfiguration configuration;
         IOctopusAsyncRepository repository;
-        System.Security.Cryptography.X509Certificates.X509Certificate2 certificate;
 
         [SetUp]
         public void BeforeEachTest()
         {
-            configuration = Substitute.For<IWritableTentacleConfiguration>();
-            certificate = new CertificateGenerator(new NullLog()).GenerateNew("CN=Hello");
-            configuration.GenerateNewCertificate().Returns(certificate);
+            var fileSystem = new OctopusPhysicalFileSystem(Substitute.For<ISystemLog>());
+            temporaryDirectory = new TemporaryDirectory(fileSystem);
+            var configFile = Path.Combine(temporaryDirectory.DirectoryPath, "Tentacle.config");
+            File.WriteAllText(configFile, "<?xml version=\"1.0\" encoding=\"utf-8\"?><octopus-settings></octopus-settings>");
+            var store = new XmlFileKeyValueStore(fileSystem, configFile);
+
+            var selector = Substitute.For<IApplicationInstanceSelector>();
+            selector.Current.Returns(_ => new ApplicationInstanceConfiguration(null, configFile, store, store));
+
+            configuration = new WritableTentacleConfiguration(
+                selector,
+                Substitute.For<IHomeConfiguration>(),
+                new CertificateGenerator(new NullLog()),
+                Substitute.For<IProxyConfiguration>(),
+                Substitute.For<IPollingProxyConfiguration>(),
+                Substitute.For<ISystemLog>());
 
             repository = Substitute.For<IOctopusAsyncRepository>();
             var certificateConfiguration = Substitute.For<ICertificateConfigurationRepository>();
@@ -46,9 +62,6 @@ namespace Octopus.Tentacle.Tests.Commands
             var clientInitializer = Substitute.For<IOctopusClientInitializer>();
             clientInitializer.CreateClient(Arg.Any<ApiEndpointOptions>(), Arg.Any<bool>()).Returns(Task.FromResult(client));
 
-            var selector = Substitute.For<IApplicationInstanceSelector>();
-            selector.Current.Returns(_ => new ApplicationInstanceConfiguration(null, null!, null!, null!));
-
             Command = new ReplaceCertificateCommand(
                 new Lazy<IWritableTentacleConfiguration>(() => configuration),
                 clientInitializer,
@@ -57,6 +70,9 @@ namespace Octopus.Tentacle.Tests.Commands
                 selector,
                 Substitute.For<ILogFileOnlyLogger>());
         }
+
+        [TearDown]
+        public void AfterEachTest() => temporaryDirectory.Dispose();
 
         [Test]
         public void ShouldOnlyChangeTheThumbprintOfAPollingWorkerAndTrustTheServer()
@@ -67,15 +83,17 @@ namespace Octopus.Tentacle.Tests.Commands
 
             Start("--server=http://octopus.test", "--apiKey=API-KEY", "--name=MyWorker");
 
-            repository.Workers.Received().Modify(Arg.Is<WorkerResource>(w => w == worker
-                && ((PollingTentacleEndpointResource)w.Endpoint).Thumbprint == certificate.Thumbprint
-                && ((PollingTentacleEndpointResource)w.Endpoint).Uri == "poll://abc123/"
-                && w.WorkerPoolIds.Contains("WorkerPools-1")), Arg.Any<CancellationToken>());
-            configuration.Received().AddOrUpdateTrustedOctopusServer(Arg.Is<OctopusServerConfiguration>(s =>
-                s.Thumbprint == ServerThumbprint
-                && s.CommunicationStyle == CommunicationStyle.TentacleActive
-                && s.Address == new Uri("https://octopus.test:10943")
-                && s.SubscriptionId == "poll://abc123/"));
+            var newThumbprint = configuration.TentacleCertificate!.Thumbprint;
+            newThumbprint.Should().NotBe("OLD");
+            endpoint.Thumbprint.Should().Be(newThumbprint);
+            endpoint.Uri.Should().Be("poll://abc123/");
+            worker.WorkerPoolIds.Should().Contain("WorkerPools-1");
+
+            var server = configuration.TrustedOctopusServers.Should().ContainSingle().Subject;
+            server.Thumbprint.Should().Be(ServerThumbprint);
+            server.CommunicationStyle.Should().Be(CommunicationStyle.TentacleActive);
+            server.Address.Should().Be(new Uri("https://octopus.test:10943"));
+            server.SubscriptionId.Should().Be("poll://abc123/");
         }
 
         [Test]
@@ -87,7 +105,7 @@ namespace Octopus.Tentacle.Tests.Commands
             Action start = () => Start("--server=http://octopus.test", "--apiKey=API-KEY", "--name=Shared");
 
             start.Should().Throw<ControlledFailureException>().WithMessage("*--id*");
-            configuration.DidNotReceive().GenerateNewCertificate();
+            configuration.TentacleCertificate.Should().BeNull();
         }
     }
 }
