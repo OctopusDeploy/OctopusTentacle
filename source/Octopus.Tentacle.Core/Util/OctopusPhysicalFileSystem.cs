@@ -250,6 +250,70 @@ namespace Octopus.Tentacle.Core.Util
             File.WriteAllText(path, contents);
         }
 
+        public bool AtomicCreateFileWithUserReadWriteAccessOnly(string path, byte[] contents)
+        {
+            var temporaryPath = TemporaryPathBeside(path);
+            try
+            {
+                CreateFileWithUserReadWriteAccessOnly(temporaryPath, contents);
+                return PublishWithoutReplacing(temporaryPath, path);
+            }
+            finally
+            {
+                DeleteIfExists(temporaryPath);
+            }
+        }
+
+        static void CreateFileWithUserReadWriteAccessOnly(string path, byte[] contents)
+        {
+#if NETFRAMEWORK
+            using var stream = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+#else
+            var options = new FileStreamOptions { Mode = FileMode.CreateNew, Access = FileAccess.Write, Share = FileShare.None };
+            if (!OperatingSystem.IsWindows())
+            {
+                options.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
+            }
+
+            using var stream = new FileStream(path, options);
+#endif
+            stream.Write(contents, 0, contents.Length);
+            stream.Flush(flushToDisk: true);
+        }
+
+        static bool PublishWithoutReplacing(string temporaryPath, string path)
+        {
+#if !NETFRAMEWORK
+            if (!PlatformDetection.IsRunningOnWindows)
+            {
+                // Unlike File.Move, link(2) is atomic about not replacing: two racing processes cannot each keep their own file.
+                return UnixFile.TryLinkWithoutReplacing(temporaryPath, path);
+            }
+#endif
+            try
+            {
+                // MoveFile never replaces an existing file.
+                File.Move(temporaryPath, path);
+                return true;
+            }
+            catch (IOException) when (File.Exists(path))
+            {
+                return false;
+            }
+        }
+
+        static void DeleteIfExists(string path)
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
+
+        // In the same directory, so it is on the same file system and can be moved into place atomically.
+        static string TemporaryPathBeside(string path)
+            => path + "." + Guid.NewGuid().ToString("N") + ".tmp";
+
         public void EnsureDirectoryExists(string directoryPath)
         {
             if (!DirectoryExists(directoryPath))

@@ -1,4 +1,5 @@
 using System;
+using System.Security.Cryptography;
 using Newtonsoft.Json;
 using Octopus.Tentacle.Configuration.Crypto;
 using Octopus.Tentacle.Configuration.Instances;
@@ -8,10 +9,12 @@ namespace Octopus.Tentacle.Configuration
     public abstract class FlatDictionaryKeyValueStore : DictionaryKeyValueStore, IAggregatableKeyValueStore
     {
         protected readonly JsonSerializerSettings JsonSerializerSettings;
+        protected readonly IMachineKeyEncryptor Encryptor;
 
-        protected FlatDictionaryKeyValueStore(JsonSerializerSettings jsonSerializerSettings, bool autoSaveOnSet = true, bool isWriteOnly = false) : base(autoSaveOnSet, isWriteOnly)
+        protected FlatDictionaryKeyValueStore(JsonSerializerSettings jsonSerializerSettings, IMachineKeyEncryptor encryptor, bool autoSaveOnSet = true, bool isWriteOnly = false) : base(autoSaveOnSet, isWriteOnly)
         {
             JsonSerializerSettings = jsonSerializerSettings;
+            Encryptor = encryptor ?? throw new ArgumentNullException(nameof(encryptor));
         }
 
         public override TData? Get<TData>(string name, TData? defaultValue = default, ProtectionLevel protectionLevel = ProtectionLevel.None) where TData : default
@@ -29,7 +32,7 @@ namespace Octopus.Tentacle.Configuration
                     return defaultValue;
 
                 if (protectionLevel == ProtectionLevel.MachineKey)
-                    data = MachineKeyEncryptor.Current.Decrypt(valueAsString);
+                    data = Decrypt(name, valueAsString);
 
                 if (typeof(TData) == typeof(string))
                     return (TData)data;
@@ -40,7 +43,7 @@ namespace Octopus.Tentacle.Configuration
 
                 return JsonConvert.DeserializeObject<TData>((string)data, JsonSerializerSettings);
             }
-            catch (Exception e)
+            catch (Exception e) when (e is not DecryptionFailedException)
             {
                 if (protectionLevel == ProtectionLevel.None)
                     throw new FormatException($"Unable to parse configuration key '{name}' as a '{typeof(TData).Name}'. Value was '{valueAsString}'.", e);
@@ -63,7 +66,7 @@ namespace Octopus.Tentacle.Configuration
                     return (false, default!);
 
                 if (protectionLevel == ProtectionLevel.MachineKey)
-                    data = MachineKeyEncryptor.Current.Decrypt(valueAsString);
+                    data = Decrypt(name, valueAsString);
 
                 if (typeof(TData) == typeof(string))
                     return (true, (TData)data);
@@ -74,11 +77,31 @@ namespace Octopus.Tentacle.Configuration
 
                 return (true, JsonConvert.DeserializeObject<TData>((string)data, JsonSerializerSettings));
             }
-            catch (Exception e)
+            catch (Exception e) when (e is not DecryptionFailedException)
             {
                 if (protectionLevel == ProtectionLevel.None)
                     throw new FormatException($"Unable to parse configuration key '{name}' as a '{typeof(TData).Name}'. Value was '{valueAsString}'.", e);
                 throw new FormatException($"Unable to parse configuration key '{name}' as a '{typeof(TData).Name}'.", e);
+            }
+        }
+
+        string Decrypt(string name, string value)
+        {
+            try
+            {
+                return Encryptor.Decrypt(value);
+            }
+            catch (Exception e)
+            {
+                // The console does not always print inner messages, and this one says how to recover.
+                throw new DecryptionFailedException($"Unable to decrypt the protected configuration setting '{name}'. {e.Message}", e);
+            }
+        }
+
+        class DecryptionFailedException : FormatException
+        {
+            public DecryptionFailedException(string message, Exception inner) : base(message, inner)
+            {
             }
         }
 
@@ -100,13 +123,23 @@ namespace Octopus.Tentacle.Configuration
                 valueAsObject = JsonConvert.SerializeObject(value, JsonSerializerSettings);
 
             if (protectionLevel == ProtectionLevel.MachineKey && valueAsObject != null)
-                valueAsObject = MachineKeyEncryptor.Current.Encrypt((string)valueAsObject);
+                valueAsObject = EncryptWithoutDowngrading(name, (string)valueAsObject);
 
             Write(name, valueAsObject);
             if (AutoSaveOnSet)
                 return Save();
 
             return true;
+        }
+
+        string EncryptWithoutDowngrading(string name, string raw)
+        {
+            var encrypted = Encryptor.Encrypt(raw);
+            if (Encryptor.RequiresReEncryption(encrypted) && Read(name) is string previous && !Encryptor.RequiresReEncryption(previous))
+            {
+                throw new CryptographicException($"Unable to update the protected setting '{name}': it is protected with the configuration encryption key, which is not available. Make sure the key file exists and is readable.");
+            }
+            return encrypted;
         }
 
         protected virtual bool ValueNeedsToBeSerialized(ProtectionLevel protectionLevel, object valueAsObject)

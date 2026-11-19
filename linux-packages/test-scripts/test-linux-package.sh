@@ -56,5 +56,49 @@ fi
 echo "The installed Tentacle version matches the expected one."
 echo ""
 
+# A new certificate must be encrypted with the instance's generated key, not one derived from /etc/machine-id.
+INSTANCE_NAME="package-test"
+CONFIGURATION_FILE="/etc/octopus/$INSTANCE_NAME/tentacle.config"
+MACHINE_KEY_FILE="/var/octopus/tentacle/keys/$INSTANCE_NAME/config-encryption.key"
+
+mkdir -p "$(dirname "$CONFIGURATION_FILE")"
+Tentacle create-instance --instance "$INSTANCE_NAME" --config "$CONFIGURATION_FILE"
+Tentacle new-certificate --instance "$INSTANCE_NAME"
+
+if ! grep -qF 'key="Tentacle.Certificate">AES256-GCM$' "$CONFIGURATION_FILE"; then
+  echo "The Tentacle certificate in $CONFIGURATION_FILE was not encrypted with the versioned machine key scheme."
+  exit 1
+fi
+echo "The Tentacle certificate is encrypted with the key generated for this machine."
+
+MACHINE_KEY_MODE=$(stat -c %a "$MACHINE_KEY_FILE")
+if [[ "$MACHINE_KEY_MODE" != "600" ]]; then
+  echo "$MACHINE_KEY_FILE has permissions $MACHINE_KEY_MODE but only its owner should be able to read or write it (600)."
+  exit 1
+fi
+echo "The machine key file can only be read by its owner."
+
+# A numeric uid stands in for the service user, as minimal images may not have useradd.
+SERVICE_USER_ID=4321
+chown "$SERVICE_USER_ID" "$CONFIGURATION_FILE"
+Tentacle upgrade-configuration-encryption --instance "$INSTANCE_NAME"
+
+for KEY_PATH in "$MACHINE_KEY_FILE" "$(dirname "$MACHINE_KEY_FILE")"; do
+  KEY_PATH_OWNER=$(stat -c %u "$KEY_PATH")
+  if [[ "$KEY_PATH_OWNER" != "$SERVICE_USER_ID" ]]; then
+    echo "$KEY_PATH is owned by uid $KEY_PATH_OWNER but the configuration is owned by uid $SERVICE_USER_ID, so the service could not read its key."
+    exit 1
+  fi
+done
+echo "The machine key was given to the owner of the configuration."
+
+THUMBPRINT=$(Tentacle show-thumbprint --instance "$INSTANCE_NAME")
+if [[ -z "$THUMBPRINT" ]] || ! grep -qF "key=\"Tentacle.CertificateThumbprint\">$THUMBPRINT<" "$CONFIGURATION_FILE"; then
+  echo "'Tentacle show-thumbprint' reported '$THUMBPRINT', which is not the thumbprint recorded in $CONFIGURATION_FILE."
+  exit 1
+fi
+echo "The certificate decrypts in a new process and matches the recorded thumbprint."
+echo ""
+
 echo "All tests passed."
 echo ""

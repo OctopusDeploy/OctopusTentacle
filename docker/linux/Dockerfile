@@ -50,7 +50,11 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
     ln -s /opt/octopus/tentacle/Tentacle /usr/bin/tentacle
-    
+
+# dbus and systemd, pulled in by install-docker.sh, generate a machine-id at build time that every container from this
+# image would share. Both copies must be emptied, as each tool restores the other's.
+RUN truncate -s 0 /etc/machine-id && rm -f /var/lib/dbus/machine-id
+
 WORKDIR /
 
 # We know this won't reduce the image size at all. It's just to make the filesystem a little tidier.

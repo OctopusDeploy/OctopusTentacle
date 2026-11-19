@@ -68,6 +68,17 @@ It is recommended that you run this using something like docker compose, so that
 - **CustomPublicHostName**: If `PublicHostNameConfiguration` is set to `Custom`, the host name that the Octopus Server should use to communicate with the Tentacle.
 
 
+### Volumes
+
+Mount these to keep the Tentacle's identity when the container is re-created:
+
+| Path | Contains |
+| --- | --- |
+| `/etc/octopus` | Configuration, including the certificate |
+| `/var/octopus/tentacle/keys` | Key that encrypts the configuration |
+
+Mount both or neither: the configuration can't be decrypted without its key. Configuration persisted by an earlier image can't be upgraded; start on new volumes.
+
 ### Ports
 
 - **10933**: Port Tentacle will be listening on.

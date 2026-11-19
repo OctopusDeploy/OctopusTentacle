@@ -1,11 +1,15 @@
 using System;
+using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Crypto;
 using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Security.Certificates;
+using Octopus.Tentacle.Util;
 using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
@@ -30,18 +34,16 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         {
             var log = new SystemLog();
 
-            // Stored the way import-certificate stores it: encrypted with the machine key, which
-            // creates the fallback key if it is needed and does not exist yet.
+            CreateTheFallbackKeyEarlierVersionsShare(log);
+
+            // Encoded the way import-certificate stores it, then loaded the way a Tentacle loads it
+            // at startup, which adds it to the store.
             var pfxPath = TestCertificates.TentaclePfxPath;
             var certificate = CertificateEncoder.FromPfxFile(pfxPath, string.Empty, log);
             var encoded = CertificateEncoder.ToBase64String(certificate);
-            var encrypted = MachineKeyEncryptor.Current.Encrypt(encoded);
-
-            // Loaded the way a Tentacle loads it at startup, which adds it to the store.
-            var decrypted = MachineKeyEncryptor.Current.Decrypt(encrypted);
             var loaded = TentacleConfiguration.LoadTentacleCertificate(
                 TestThumbprint,
-                decrypted,
+                encoded,
                 log);
 
             var comparison = StringComparison.OrdinalIgnoreCase;
@@ -57,6 +59,41 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             logger.Information(
                 "Initialized the shared Tentacle crypto state for {UserName}",
                 Environment.UserName);
+        }
+
+        // Earlier versions create it on first use when /etc/machine-id is unusable, and the
+        // compatibility tests start several of them at once.
+        static void CreateTheFallbackKeyEarlierVersionsShare(SystemLog log)
+        {
+            if (CommonTestUtils.PlatformDetection.IsRunningOnWindows)
+            {
+                return;
+            }
+
+            var fileSystem = new OctopusPhysicalFileSystem(log);
+            try
+            {
+                new LinuxMachineIdKey(fileSystem).Load();
+            }
+            catch (InvalidOperationException)
+            {
+                CreateLegacyMachineKeyIfMissing(fileSystem, LinuxGeneratedMachineKey.LegacyKeyFilePathForThisHost);
+            }
+        }
+
+        static void CreateLegacyMachineKeyIfMissing(OctopusPhysicalFileSystem fileSystem, string path)
+        {
+            if (fileSystem.FileExists(path))
+            {
+                return;
+            }
+
+            using var aes = Aes.Create();
+            aes.GenerateIV();
+            aes.GenerateKey();
+            var contents = Convert.ToBase64String(aes.Key) + "." + Convert.ToBase64String(aes.IV);
+            fileSystem.EnsureDirectoryExists(Path.GetDirectoryName(path)!);
+            fileSystem.AtomicCreateFileWithUserReadWriteAccessOnly(path, Encoding.ASCII.GetBytes(contents));
         }
 
         // A Tentacle only reuses the stored certificate when it comes back with its private key.
