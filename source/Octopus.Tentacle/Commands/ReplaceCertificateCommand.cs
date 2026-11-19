@@ -15,8 +15,6 @@ namespace Octopus.Tentacle.Commands
 {
     public class ReplaceCertificateCommand : AbstractStandardCommand
     {
-        const int DefaultServerCommsPort = 10943;
-
         readonly Lazy<IWritableTentacleConfiguration> configuration;
         readonly IOctopusClientInitializer octopusClientInitializer;
         readonly ISpaceRepositoryFactory spaceRepositoryFactory;
@@ -25,8 +23,6 @@ namespace Octopus.Tentacle.Commands
         string name = null!;
         string id = null!;
         string spaceName = null!;
-        string serverCommsAddress = null!;
-        int? serverCommsPort;
 
         public ReplaceCertificateCommand(
             Lazy<IWritableTentacleConfiguration> configuration,
@@ -46,8 +42,6 @@ namespace Octopus.Tentacle.Commands
             Options.Add("name=", "The name of the existing deployment target or worker in Octopus", s => name = s);
             Options.Add("id=", "The ID of the existing deployment target or worker in Octopus, e.g. Machines-1 or Workers-1", s => id = s);
             Options.Add("space=", "The name of the space the deployment target or worker is in. The default space will be used if omitted.", s => spaceName = s);
-            Options.Add("server-comms-address=", "For a polling Tentacle, the comms address on the Octopus Server; the address of the Octopus Server will be used if omitted.", s => serverCommsAddress = s);
-            Options.Add("server-comms-port=", "For a polling Tentacle, the comms port on the Octopus Server; the default is " + DefaultServerCommsPort + ". If specified, this will take precedence over any port number in server-comms-address.", s => serverCommsPort = int.Parse(s));
         }
 
         protected override void Start()
@@ -65,20 +59,8 @@ namespace Octopus.Tentacle.Commands
             var repository = await spaceRepositoryFactory.CreateSpaceRepository(client, spaceName);
 
             var machine = await FindMachine(repository);
-            var server = new OctopusServerConfiguration((await client.ForSystem().CertificateConfiguration.GetOctopusCertificate()).Thumbprint);
-            switch (machine.Endpoint)
-            {
-                case ListeningTentacleEndpointResource:
-                    server.CommunicationStyle = CommunicationStyle.TentaclePassive;
-                    break;
-                case PollingTentacleEndpointResource polling:
-                    server.CommunicationStyle = CommunicationStyle.TentacleActive;
-                    server.Address = GetPollingServerAddress();
-                    server.SubscriptionId = polling.Uri;
-                    break;
-                default:
-                    throw new ControlledFailureException($"'{machine.Name}' uses a {machine.Endpoint.CommunicationStyle} endpoint. Only listening and polling Tentacles can have their certificate replaced.");
-            }
+            if (machine.Endpoint is not (ListeningTentacleEndpointResource or PollingTentacleEndpointResource))
+                throw new ControlledFailureException($"'{machine.Name}' uses a {machine.Endpoint.CommunicationStyle} endpoint. Only listening and polling Tentacles can have their certificate replaced.");
 
             var certificate = configuration.Value.GenerateNewCertificate();
             log.Info($"Generated a new certificate with thumbprint {certificate.Thumbprint}");
@@ -86,8 +68,6 @@ namespace Octopus.Tentacle.Commands
             ((TentacleEndpointResource)machine.Endpoint).Thumbprint = certificate.Thumbprint;
             await Modify(repository, machine);
             log.Info($"Updated '{machine.Name}' ({machine.Id}) in Octopus to trust the new certificate");
-
-            configuration.Value.AddOrUpdateTrustedOctopusServer(server);
             VoteForRestart();
         }
 
@@ -114,12 +94,5 @@ namespace Octopus.Tentacle.Commands
             => machine is WorkerResource worker
                 ? repository.Workers.Modify(worker, CancellationToken.None)
                 : repository.Machines.Modify((MachineResource)machine, CancellationToken.None);
-
-        Uri GetPollingServerAddress()
-        {
-            var address = string.IsNullOrEmpty(serverCommsAddress) ? api.ServerUri : new Uri(serverCommsAddress);
-            var port = serverCommsPort ?? (string.IsNullOrEmpty(serverCommsAddress) ? DefaultServerCommsPort : address.Port);
-            return new Uri($"https://{address.Host}:{port}");
-        }
     }
 }

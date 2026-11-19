@@ -22,15 +22,13 @@ namespace Octopus.Tentacle.Tests.Commands
     [TestFixture]
     public class ReplaceCertificateCommandFixture
     {
-        const string ServerThumbprint = "SERVERTHUMBPRINT";
-
         [Test]
         public void ShouldSaveTheNewThumbprintOnTheWorkerFoundByName()
         {
             // Arrange
             using var tentacle = new TentacleConfigurationBuilder().Build();
             var worker = PollingWorker("MyWorker", "poll://abc123/");
-            var octopus = new FakeOctopus(ServerThumbprint).WithWorker(worker);
+            var octopus = new FakeOctopus().WithWorker(worker);
 
             // Act
             ReplaceCertificate(tentacle, octopus, "MyWorker");
@@ -48,31 +46,13 @@ namespace Octopus.Tentacle.Tests.Commands
             // Arrange
             using var tentacle = new TentacleConfigurationBuilder().Build();
             var worker = PollingWorker("MyWorker", "poll://abc123/");
-            var octopus = new FakeOctopus(ServerThumbprint).WithWorker(worker);
+            var octopus = new FakeOctopus().WithWorker(worker);
 
             // Act
             ReplaceCertificate(tentacle, octopus, "MyWorker");
 
             // Assert
             ((PollingTentacleEndpointResource)worker.Endpoint).Uri.Should().Be("poll://abc123/");
-            tentacle.Configuration.TrustedOctopusServers.Should().ContainSingle().Which.SubscriptionId.Should().Be("poll://abc123/");
-        }
-
-        [Test]
-        public void WhenPollingTheServerIsTrustedAtItsCommsAddress()
-        {
-            // Arrange
-            using var tentacle = new TentacleConfigurationBuilder().Build();
-            var octopus = new FakeOctopus(ServerThumbprint).WithWorker(PollingWorker("MyWorker", "poll://abc123/"));
-
-            // Act
-            ReplaceCertificate(tentacle, octopus, "MyWorker");
-
-            // Assert
-            var server = tentacle.Configuration.TrustedOctopusServers.Should().ContainSingle().Subject;
-            server.Thumbprint.Should().Be(ServerThumbprint);
-            server.CommunicationStyle.Should().Be(CommunicationStyle.TentacleActive);
-            server.Address.Should().Be(new Uri("https://octopus.test:10943"));
         }
 
         [Test]
@@ -80,7 +60,7 @@ namespace Octopus.Tentacle.Tests.Commands
         {
             // Arrange
             using var tentacle = new TentacleConfigurationBuilder().Build();
-            var octopus = new FakeOctopus(ServerThumbprint)
+            var octopus = new FakeOctopus()
                 .WithMachine(new MachineResource { Name = "Shared", Endpoint = new ListeningTentacleEndpointResource() })
                 .WithWorker(new WorkerResource { Name = "Shared", Endpoint = new ListeningTentacleEndpointResource() });
 
@@ -119,15 +99,10 @@ namespace Octopus.Tentacle.Tests.Commands
         {
             readonly IOctopusAsyncRepository repository = Substitute.For<IOctopusAsyncRepository>();
 
-            public FakeOctopus(string serverThumbprint)
+            public FakeOctopus()
             {
-                var certificateConfiguration = Substitute.For<ICertificateConfigurationRepository>();
-                certificateConfiguration.GetOctopusCertificate().Returns(Task.FromResult(new CertificateConfigurationResource { Thumbprint = serverThumbprint }));
-                repository.CertificateConfiguration.Returns(certificateConfiguration);
-
                 var client = Substitute.For<IOctopusAsyncClient>();
                 client.Repository.Returns(repository);
-                client.ForSystem().Returns(repository);
                 ClientInitializer.CreateClient(Arg.Any<ApiEndpointOptions>(), Arg.Any<bool>()).Returns(Task.FromResult(client));
             }
 
