@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Client;
+using Octopus.Client.Exceptions;
 using Octopus.Client.Model;
 using Octopus.Client.Model.Endpoints;
 using Octopus.Tentacle.Commands.OptionSets;
@@ -73,21 +74,30 @@ namespace Octopus.Tentacle.Commands
 
         async Task<MachineBasedResource> FindMachine(IOctopusSpaceAsyncRepository repository)
         {
-            if (!string.IsNullOrWhiteSpace(id))
-                return id.StartsWith("Workers-", StringComparison.OrdinalIgnoreCase)
-                    ? await repository.Workers.Get(id, CancellationToken.None)
-                    : await repository.Machines.Get(id, CancellationToken.None);
-
-            var matches = new MachineBasedResource?[] { await repository.Machines.FindByName(name, CancellationToken.None), await repository.Workers.FindByName(name, CancellationToken.None) }
+            var matches = (string.IsNullOrWhiteSpace(id)
+                    ? new MachineBasedResource?[] { await repository.Machines.FindByName(name, CancellationToken.None), await repository.Workers.FindByName(name, CancellationToken.None) }
+                    : new MachineBasedResource?[] { await GetOrNull(() => repository.Machines.Get(id, CancellationToken.None)), await GetOrNull(() => repository.Workers.Get(id, CancellationToken.None)) })
                 .OfType<MachineBasedResource>()
                 .ToArray();
 
             return matches.Length switch
             {
-                0 => throw new ControlledFailureException($"No deployment target or worker named '{name}' was found."),
+                0 => throw new ControlledFailureException($"No deployment target or worker '{name ?? id}' was found."),
                 1 => matches[0],
-                _ => throw new ControlledFailureException($"Both a deployment target and a worker are named '{name}'. Please specify which one with --id.")
+                _ => throw new ControlledFailureException($"Both a deployment target and a worker match '{name ?? id}'. Please specify which one with --id.")
             };
+        }
+
+        static async Task<T?> GetOrNull<T>(Func<Task<T>> get) where T : class
+        {
+            try
+            {
+                return await get();
+            }
+            catch (OctopusResourceNotFoundException)
+            {
+                return null;
+            }
         }
 
         static Task Modify(IOctopusSpaceAsyncRepository repository, MachineBasedResource machine)
