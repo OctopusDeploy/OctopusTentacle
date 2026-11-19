@@ -12,21 +12,28 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     public class PollingTentacleBuilder : TentacleBuilder<PollingTentacleBuilder>
     {
         readonly int pollingPort;
+        Uri? subscriptionId;
 
         public PollingTentacleBuilder(int pollingPort, string serverThumbprint, Version? tentacleVersion) : base(tentacleVersion)
-        
+
         {
             this.pollingPort = pollingPort;
 
             ServerThumbprint = serverThumbprint;
         }
-        
+
+        public PollingTentacleBuilder WithSubscriptionId(Uri subscriptionId)
+        {
+            this.subscriptionId = subscriptionId;
+            return this;
+        }
+
         internal async Task<RunningTentacle> Build(ILogger log, CancellationToken cancellationToken)
         {
             var instanceName = InstanceNameGenerator();
             var configFilePath = Path.Combine(HomeDirectory.DirectoryPath, instanceName + ".cfg");
             var tentacleExe = TentacleExePath ?? TentacleExeFinder.FindTentacleExe();
-            var subscriptionId = PollingSubscriptionId.Generate();
+            var subscriptionId = this.subscriptionId ?? PollingSubscriptionId.Generate();
             
             var logger = log.ForContext<PollingTentacleBuilder>();
             logger.Information($"Tentacle.exe location: {tentacleExe}");

@@ -10,6 +10,7 @@ using Octopus.Tentacle.Contracts.Legacy;
 using Octopus.Tentacle.Tests.Integration.Support.Logging;
 using Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers;
 using Octopus.Tentacle.Tests.Integration.Util;
+using Octopus.Tentacle.Util;
 using Octopus.TestPortForwarder;
 
 namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
@@ -47,9 +48,13 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
         public async Task<LegacyClientAndTentacle> Build(CancellationToken cancellationToken)
         {
             var logger = new SerilogLoggerBuilder().Build().ForContext<LegacyTentacleClientBuilder>();
+            // Chosen up front so the server can verify the polling Tentacle from its first connection.
+            var pollingSubscriptionId = PollingSubscriptionId.Generate();
+
             // Server
             var serverHalibutRuntimeBuilder = new HalibutRuntimeBuilder()
                 .WithServerCertificate(TestCertificates.Server)
+                .WithPollingSubscriptionVerifier(new ExpectedPollingClientVerifier(pollingSubscriptionId, TestCertificates.TentaclePublicThumbprint))
                 .WithLegacyContractSupport()
                 .WithHalibutTimeoutsAndLimits(new HalibutTimeoutsAndLimitsForTestBuilder().Build())
                 .WithLogFactory(BuildClientLogger());
@@ -80,6 +85,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
 
                 runningTentacle = await new PollingTentacleBuilder(portForwarder.ListeningPort, TestCertificates.ServerPublicThumbprint, tentacleVersion)
                     .WithTentacleExe(tentacleExe)
+                    .WithSubscriptionId(pollingSubscriptionId)
                     .Build(logger, cancellationToken);
 
                 tentacleEndPoint = new ServiceEndPoint(runningTentacle.ServiceUri, runningTentacle.Thumbprint, serverHalibutRuntime.TimeoutsAndLimits);
