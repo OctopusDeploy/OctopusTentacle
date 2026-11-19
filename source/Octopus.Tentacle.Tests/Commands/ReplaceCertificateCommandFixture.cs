@@ -27,19 +27,21 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void ShouldOnlyChangeTheThumbprintOfAPollingWorkerAndTrustTheServer()
         {
+            // Arrange
             using var tentacle = new TentacleConfigurationBuilder().Build();
             var worker = PollingWorker("MyWorker", "poll://abc123/", "WorkerPools-1");
             var octopus = new FakeOctopus(ServerThumbprint).WithWorker(worker);
 
+            // Act
             Run(CreateCommand(tentacle, octopus), "--server=http://octopus.test", "--apiKey=API-KEY", "--name=MyWorker");
 
+            // Assert
             var endpoint = (PollingTentacleEndpointResource)worker.Endpoint;
             var newThumbprint = tentacle.Configuration.TentacleCertificate!.Thumbprint;
             newThumbprint.Should().NotBe("OLD");
             endpoint.Thumbprint.Should().Be(newThumbprint);
             endpoint.Uri.Should().Be("poll://abc123/");
             worker.WorkerPoolIds.Should().Contain("WorkerPools-1");
-
             var server = tentacle.Configuration.TrustedOctopusServers.Should().ContainSingle().Subject;
             server.Thumbprint.Should().Be(ServerThumbprint);
             server.CommunicationStyle.Should().Be(CommunicationStyle.TentacleActive);
@@ -50,13 +52,16 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void ShouldRefuseAnAmbiguousNameRatherThanGuessBetweenATargetAndAWorker()
         {
+            // Arrange
             using var tentacle = new TentacleConfigurationBuilder().Build();
             var octopus = new FakeOctopus(ServerThumbprint)
                 .WithMachine(new MachineResource { Name = "Shared", Endpoint = new ListeningTentacleEndpointResource() })
                 .WithWorker(new WorkerResource { Name = "Shared", Endpoint = new ListeningTentacleEndpointResource() });
 
+            // Act
             Action run = () => Run(CreateCommand(tentacle, octopus), "--server=http://octopus.test", "--apiKey=API-KEY", "--name=Shared");
 
+            // Assert
             run.Should().Throw<ControlledFailureException>().WithMessage("*--id*");
             tentacle.Configuration.TentacleCertificate.Should().BeNull();
         }
