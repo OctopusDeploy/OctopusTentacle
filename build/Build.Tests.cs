@@ -9,6 +9,7 @@ using System.Security.AccessControl;
 using System.Security.Principal;
 using JetBrains.Annotations;
 using Nuke.Common;
+using Nuke.Common.CI.TeamCity;
 using Nuke.Common.IO;
 using Nuke.Common.Tooling;
 using Nuke.Common.Tools.Docker;
@@ -33,6 +34,55 @@ partial class Build
     [PublicAPI]
     Target TestIntegration => _ => _
         .Executes(() => RunIntegrationTests(TestFramework, TestRuntime, TestFilter));
+
+    [Parameter("The Linux Tentacle image for TestLinuxDockerImage to test. Defaults to the tag docker-compose.build.yml gives the image for this version.")]
+    readonly string? TentacleLinuxDockerImage;
+
+    [PublicAPI]
+    Target TestLinuxDockerImage => _ => _
+        .Description("Runs the Linux Tentacle Docker image against a fake Octopus Server: registers a listening and a polling Tentacle, then runs scripts on them. Needs Docker, and the test assembly published by BuildLinux.")
+        .Executes(() =>
+        {
+            var testFramework = ResolveTestFramework(TestFramework);
+            var testRuntime = string.IsNullOrEmpty(TestRuntime) ? "linux-x64" : TestRuntime;
+            var image = string.IsNullOrEmpty(TentacleLinuxDockerImage)
+                ? $"docker.packages.octopushq.com/octopusdeploy/tentacle:{FullSemVer}-linux"
+                : TentacleLinuxDockerImage;
+
+            Log.Information("Testing Linux Tentacle image {Image} with Framework: {TestFramework} and Runtime: {TestRuntime}", image, testFramework, testRuntime);
+
+            (ArtifactsDirectory / "teamcity").CreateDirectory();
+
+            // As in RunIntegrationTests, run the published assembly rather than the project.
+            var testAssembly = (BuildDirectory / "Octopus.Tentacle.Docker.Tests.Integration" / testFramework / testRuntime)
+                .GlobFiles("Octopus.Tentacle.Docker.Tests.Integration.dll")
+                .SingleOrDefault();
+
+            if (testAssembly is null)
+            {
+                throw new InvalidOperationException($"Octopus.Tentacle.Docker.Tests.Integration has not been published for {testFramework}/{testRuntime}. Run BuildLinux first.");
+            }
+
+            // Set on this process so the test runner inherits it alongside the rest of the environment.
+            Environment.SetEnvironmentVariable("TentacleDockerTests_ImageAndTag", image);
+
+            try
+            {
+                DotNetTasks.DotNetTest(settings => settings
+                    .SetProjectFile(testAssembly)
+                    .SetFramework(testFramework)
+                    .SetFilter(TestFilter)
+                    // The TeamCity agent supplies the teamcity logger; it is not in the published output.
+                    .SetLoggers(Host is TeamCity
+                        ? new[] { "console;verbosity=normal", "teamcity" }
+                        : new[] { "console;verbosity=normal" }));
+            }
+            catch (Exception e)
+            {
+                // Like the other test targets, leave failing the build to TeamCity's test reporting.
+                Log.Warning("{Message}: {Exception}", e.Message, e.ToString());
+            }
+        });
 
     [PublicAPI]
     Target TestLinuxPackages => _ => _
