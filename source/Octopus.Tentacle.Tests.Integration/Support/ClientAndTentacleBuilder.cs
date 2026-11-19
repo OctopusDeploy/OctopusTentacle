@@ -14,6 +14,7 @@ using Octopus.Tentacle.Contracts.Legacy;
 using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers;
 using Octopus.Tentacle.Tests.Integration.Util;
+using Octopus.Tentacle.Util;
 using Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers;
 using Octopus.TestPortForwarder;
 using Serilog;
@@ -187,12 +188,16 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public async Task<ClientAndTentacle> Build(CancellationToken cancellationToken)
         {
             var logger = new SerilogLoggerBuilder().Build().ForContext<ClientAndTentacleBuilder>();
+            // Chosen up front so the server can verify the polling Tentacle from its first connection.
+            var pollingSubscriptionId = PollingSubscriptionId.Generate();
+
             // Server
             var serverHalibutRuntimeBuilder = new HalibutRuntimeBuilder()
                 .WithServerCertificate(TestCertificates.Server)
                 .WithHalibutTimeoutsAndLimits(halibutTimeoutsAndLimits ?? new HalibutTimeoutsAndLimitsForTestBuilder().Build())
+                .WithPollingSubscriptionVerifier(new ExpectedPollingClientVerifier(pollingSubscriptionId, TestCertificates.TentaclePublicThumbprint))
                 .WithLegacyContractSupport();
-            
+
             if (queueFactory != null)
             {
                 serverHalibutRuntimeBuilder.WithPendingRequestQueueFactory(queueFactory);
@@ -220,7 +225,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 portForwarder = BuildPortForwarder(serverListeningPort, null);
 
                 var pollingTentacleBuilder = new PollingTentacleBuilder(portForwarder?.ListeningPort ?? serverListeningPort, TestCertificates.ServerPublicThumbprint, tentacleVersion)
-                    .WithTentacleExe(tentacleExe);
+                    .WithTentacleExe(tentacleExe)
+                    .WithSubscriptionId(pollingSubscriptionId);
 
                 if (useDefaultMachineConfigurationHomeDirectory)
                 {
