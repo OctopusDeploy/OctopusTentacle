@@ -31,12 +31,28 @@ namespace Octopus.Tentacle.Tests.Commands
             var octopus = new FakeOctopus().WithWorker(worker);
 
             // Act
-            ReplaceCertificate(tentacle, octopus, "MyWorker");
+            ReplaceCertificate(tentacle, octopus, "--name=MyWorker");
 
             // Assert
             var newThumbprint = tentacle.Configuration.TentacleCertificate!.Thumbprint;
             newThumbprint.Should().NotBe("OLD");
             worker.Endpoint.Should().BeOfType<PollingTentacleEndpointResource>().Which.Thumbprint.Should().Be(newThumbprint);
+            octopus.Workers.Received().Modify(worker, Arg.Any<CancellationToken>());
+        }
+
+        [Test]
+        public void ShouldSaveTheNewThumbprintOnTheWorkerFoundById()
+        {
+            // Arrange
+            using var tentacle = new TentacleConfigurationBuilder().Build();
+            var worker = PollingWorker("MyWorker", "poll://abc123/");
+            var octopus = new FakeOctopus().WithWorker(worker);
+
+            // Act
+            ReplaceCertificate(tentacle, octopus, "--id=Workers-1");
+
+            // Assert
+            ((PollingTentacleEndpointResource)worker.Endpoint).Thumbprint.Should().Be(tentacle.Configuration.TentacleCertificate!.Thumbprint);
             octopus.Workers.Received().Modify(worker, Arg.Any<CancellationToken>());
         }
 
@@ -49,7 +65,7 @@ namespace Octopus.Tentacle.Tests.Commands
             var octopus = new FakeOctopus().WithWorker(worker);
 
             // Act
-            ReplaceCertificate(tentacle, octopus, "MyWorker");
+            ReplaceCertificate(tentacle, octopus, "--name=MyWorker");
 
             // Assert
             ((PollingTentacleEndpointResource)worker.Endpoint).Uri.Should().Be("poll://abc123/");
@@ -65,7 +81,7 @@ namespace Octopus.Tentacle.Tests.Commands
                 .WithWorker(new WorkerResource { Name = "Shared", Endpoint = new ListeningTentacleEndpointResource() });
 
             // Act
-            Action run = () => ReplaceCertificate(tentacle, octopus, "Shared");
+            Action run = () => ReplaceCertificate(tentacle, octopus, "--name=Shared");
 
             // Assert
             run.Should().Throw<ControlledFailureException>().WithMessage("*--id*");
@@ -89,9 +105,9 @@ namespace Octopus.Tentacle.Tests.Commands
                 tentacle.Selector,
                 Substitute.For<ILogFileOnlyLogger>());
 
-        static void ReplaceCertificate(TemporaryTentacleConfiguration tentacle, FakeOctopus octopus, string name)
+        static void ReplaceCertificate(TemporaryTentacleConfiguration tentacle, FakeOctopus octopus, string machineSelector)
             => CreateCommand(tentacle, octopus).Start(
-                new[] { "--server=http://octopus.test", "--apiKey=API-KEY", $"--name={name}" },
+                new[] { "--server=http://octopus.test", "--apiKey=API-KEY", machineSelector },
                 Substitute.For<ICommandRuntime>(),
                 new OptionSet());
 
@@ -113,6 +129,7 @@ namespace Octopus.Tentacle.Tests.Commands
             public FakeOctopus WithWorker(WorkerResource worker)
             {
                 repository.Workers.FindByName(worker.Name, Arg.Any<CancellationToken>()).Returns(Task.FromResult(worker));
+                repository.Workers.Get(worker.Id, Arg.Any<CancellationToken>()).Returns(Task.FromResult(worker));
                 return this;
             }
 
