@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -9,87 +8,39 @@ using Octopus.Client;
 using Octopus.Client.Model;
 using Octopus.Client.Model.Endpoints;
 using Octopus.Client.Repositories.Async;
-using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Commands;
 using Octopus.Tentacle.Commands.OptionSets;
 using Octopus.Tentacle.Configuration;
-using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Diagnostics;
+using Octopus.Tentacle.Internals.Options;
 using Octopus.Tentacle.Startup;
 using Octopus.Tentacle.Tests.Support;
-using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Commands
 {
     [TestFixture]
-    public class ReplaceCertificateCommandFixture : CommandFixture<ReplaceCertificateCommand>
+    public class ReplaceCertificateCommandFixture
     {
         const string ServerThumbprint = "SERVERTHUMBPRINT";
-
-        TemporaryDirectory temporaryDirectory;
-        WritableTentacleConfiguration configuration;
-        IOctopusAsyncRepository repository;
-
-        [SetUp]
-        public void BeforeEachTest()
-        {
-            var fileSystem = new OctopusPhysicalFileSystem(Substitute.For<ISystemLog>());
-            temporaryDirectory = new TemporaryDirectory(fileSystem);
-            var configFile = Path.Combine(temporaryDirectory.DirectoryPath, "Tentacle.config");
-            File.WriteAllText(configFile, "<?xml version=\"1.0\" encoding=\"utf-8\"?><octopus-settings></octopus-settings>");
-            var store = new XmlFileKeyValueStore(fileSystem, configFile);
-
-            var selector = Substitute.For<IApplicationInstanceSelector>();
-            selector.Current.Returns(_ => new ApplicationInstanceConfiguration(null, configFile, store, store));
-
-            configuration = new WritableTentacleConfiguration(
-                selector,
-                Substitute.For<IHomeConfiguration>(),
-                new CertificateGenerator(new NullLog()),
-                Substitute.For<IProxyConfiguration>(),
-                Substitute.For<IPollingProxyConfiguration>(),
-                Substitute.For<ISystemLog>());
-
-            repository = Substitute.For<IOctopusAsyncRepository>();
-            var certificateConfiguration = Substitute.For<ICertificateConfigurationRepository>();
-            certificateConfiguration.GetOctopusCertificate().Returns(Task.FromResult(new CertificateConfigurationResource { Thumbprint = ServerThumbprint }));
-            repository.CertificateConfiguration.Returns(certificateConfiguration);
-
-            var client = Substitute.For<IOctopusAsyncClient>();
-            client.Repository.Returns(repository);
-            client.ForSystem().Returns(repository);
-            var clientInitializer = Substitute.For<IOctopusClientInitializer>();
-            clientInitializer.CreateClient(Arg.Any<ApiEndpointOptions>(), Arg.Any<bool>()).Returns(Task.FromResult(client));
-
-            Command = new ReplaceCertificateCommand(
-                new Lazy<IWritableTentacleConfiguration>(() => configuration),
-                clientInitializer,
-                new SpaceRepositoryFactory(),
-                Substitute.For<ISystemLog>(),
-                selector,
-                Substitute.For<ILogFileOnlyLogger>());
-        }
-
-        [TearDown]
-        public void AfterEachTest() => temporaryDirectory.Dispose();
 
         [Test]
         public void ShouldOnlyChangeTheThumbprintOfAPollingWorkerAndTrustTheServer()
         {
-            var endpoint = new PollingTentacleEndpointResource { Uri = "poll://abc123/", Thumbprint = "OLD" };
-            var worker = new WorkerResource { Id = "Workers-1", Name = "MyWorker", Endpoint = endpoint, WorkerPoolIds = new ReferenceCollection("WorkerPools-1") };
-            repository.Workers.FindByName("MyWorker", Arg.Any<CancellationToken>()).Returns(Task.FromResult(worker));
+            using var tentacle = new TentacleConfigurationBuilder().Build();
+            var worker = PollingWorker("MyWorker", "poll://abc123/", "WorkerPools-1");
+            var octopus = new FakeOctopus(ServerThumbprint).WithWorker(worker);
 
-            Start("--server=http://octopus.test", "--apiKey=API-KEY", "--name=MyWorker");
+            Run(CreateCommand(tentacle, octopus), "--server=http://octopus.test", "--apiKey=API-KEY", "--name=MyWorker");
 
-            var newThumbprint = configuration.TentacleCertificate!.Thumbprint;
+            var endpoint = (PollingTentacleEndpointResource)worker.Endpoint;
+            var newThumbprint = tentacle.Configuration.TentacleCertificate!.Thumbprint;
             newThumbprint.Should().NotBe("OLD");
             endpoint.Thumbprint.Should().Be(newThumbprint);
             endpoint.Uri.Should().Be("poll://abc123/");
             worker.WorkerPoolIds.Should().Contain("WorkerPools-1");
 
-            var server = configuration.TrustedOctopusServers.Should().ContainSingle().Subject;
+            var server = tentacle.Configuration.TrustedOctopusServers.Should().ContainSingle().Subject;
             server.Thumbprint.Should().Be(ServerThumbprint);
             server.CommunicationStyle.Should().Be(CommunicationStyle.TentacleActive);
             server.Address.Should().Be(new Uri("https://octopus.test:10943"));
@@ -99,13 +50,67 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void ShouldRefuseAnAmbiguousNameRatherThanGuessBetweenATargetAndAWorker()
         {
-            repository.Machines.FindByName("Shared", Arg.Any<CancellationToken>()).Returns(Task.FromResult(new MachineResource { Name = "Shared", Endpoint = new ListeningTentacleEndpointResource() }));
-            repository.Workers.FindByName("Shared", Arg.Any<CancellationToken>()).Returns(Task.FromResult(new WorkerResource { Name = "Shared", Endpoint = new ListeningTentacleEndpointResource() }));
+            using var tentacle = new TentacleConfigurationBuilder().Build();
+            var octopus = new FakeOctopus(ServerThumbprint)
+                .WithMachine(new MachineResource { Name = "Shared", Endpoint = new ListeningTentacleEndpointResource() })
+                .WithWorker(new WorkerResource { Name = "Shared", Endpoint = new ListeningTentacleEndpointResource() });
 
-            Action start = () => Start("--server=http://octopus.test", "--apiKey=API-KEY", "--name=Shared");
+            Action run = () => Run(CreateCommand(tentacle, octopus), "--server=http://octopus.test", "--apiKey=API-KEY", "--name=Shared");
 
-            start.Should().Throw<ControlledFailureException>().WithMessage("*--id*");
-            configuration.TentacleCertificate.Should().BeNull();
+            run.Should().Throw<ControlledFailureException>().WithMessage("*--id*");
+            tentacle.Configuration.TentacleCertificate.Should().BeNull();
+        }
+
+        static WorkerResource PollingWorker(string name, string subscription, string pool)
+            => new()
+            {
+                Id = "Workers-1",
+                Name = name,
+                Endpoint = new PollingTentacleEndpointResource { Uri = subscription, Thumbprint = "OLD" },
+                WorkerPoolIds = new ReferenceCollection(pool)
+            };
+
+        static ReplaceCertificateCommand CreateCommand(TemporaryTentacleConfiguration tentacle, FakeOctopus octopus)
+            => new(
+                new Lazy<IWritableTentacleConfiguration>(() => tentacle.Configuration),
+                octopus.ClientInitializer,
+                new SpaceRepositoryFactory(),
+                Substitute.For<ISystemLog>(),
+                tentacle.Selector,
+                Substitute.For<ILogFileOnlyLogger>());
+
+        static void Run(ReplaceCertificateCommand command, params string[] args)
+            => command.Start(args, Substitute.For<ICommandRuntime>(), new OptionSet());
+
+        class FakeOctopus
+        {
+            readonly IOctopusAsyncRepository repository = Substitute.For<IOctopusAsyncRepository>();
+
+            public FakeOctopus(string serverThumbprint)
+            {
+                var certificateConfiguration = Substitute.For<ICertificateConfigurationRepository>();
+                certificateConfiguration.GetOctopusCertificate().Returns(Task.FromResult(new CertificateConfigurationResource { Thumbprint = serverThumbprint }));
+                repository.CertificateConfiguration.Returns(certificateConfiguration);
+
+                var client = Substitute.For<IOctopusAsyncClient>();
+                client.Repository.Returns(repository);
+                client.ForSystem().Returns(repository);
+                ClientInitializer.CreateClient(Arg.Any<ApiEndpointOptions>(), Arg.Any<bool>()).Returns(Task.FromResult(client));
+            }
+
+            public IOctopusClientInitializer ClientInitializer { get; } = Substitute.For<IOctopusClientInitializer>();
+
+            public FakeOctopus WithWorker(WorkerResource worker)
+            {
+                repository.Workers.FindByName(worker.Name, Arg.Any<CancellationToken>()).Returns(Task.FromResult(worker));
+                return this;
+            }
+
+            public FakeOctopus WithMachine(MachineResource machine)
+            {
+                repository.Machines.FindByName(machine.Name, Arg.Any<CancellationToken>()).Returns(Task.FromResult(machine));
+                return this;
+            }
         }
     }
 }
