@@ -25,28 +25,54 @@ namespace Octopus.Tentacle.Tests.Commands
         const string ServerThumbprint = "SERVERTHUMBPRINT";
 
         [Test]
-        public void ShouldGiveAPollingWorkerANewThumbprintAndKeepItsSubscription()
+        public void ShouldSaveTheNewThumbprintOnTheWorkerFoundByName()
         {
             // Arrange
             using var tentacle = new TentacleConfigurationBuilder().Build();
-            var worker = PollingWorker("MyWorker", "poll://abc123/", "WorkerPools-1");
+            var worker = PollingWorker("MyWorker", "poll://abc123/");
             var octopus = new FakeOctopus(ServerThumbprint).WithWorker(worker);
 
             // Act
-            Run(CreateCommand(tentacle, octopus), "--server=http://octopus.test", "--apiKey=API-KEY", "--name=MyWorker");
+            ReplaceCertificate(tentacle, octopus, "MyWorker");
 
             // Assert
-            var endpoint = (PollingTentacleEndpointResource)worker.Endpoint;
             var newThumbprint = tentacle.Configuration.TentacleCertificate!.Thumbprint;
             newThumbprint.Should().NotBe("OLD");
-            endpoint.Thumbprint.Should().Be(newThumbprint);
-            endpoint.Uri.Should().Be("poll://abc123/");
-            worker.WorkerPoolIds.Should().Contain("WorkerPools-1");
+            worker.Endpoint.Should().BeOfType<PollingTentacleEndpointResource>().Which.Thumbprint.Should().Be(newThumbprint);
+            octopus.Workers.Received().Modify(worker, Arg.Any<CancellationToken>());
+        }
+
+        [Test]
+        public void WhenPollingTheSubscriptionIdDoesNotChange()
+        {
+            // Arrange
+            using var tentacle = new TentacleConfigurationBuilder().Build();
+            var worker = PollingWorker("MyWorker", "poll://abc123/");
+            var octopus = new FakeOctopus(ServerThumbprint).WithWorker(worker);
+
+            // Act
+            ReplaceCertificate(tentacle, octopus, "MyWorker");
+
+            // Assert
+            ((PollingTentacleEndpointResource)worker.Endpoint).Uri.Should().Be("poll://abc123/");
+            tentacle.Configuration.TrustedOctopusServers.Should().ContainSingle().Which.SubscriptionId.Should().Be("poll://abc123/");
+        }
+
+        [Test]
+        public void WhenPollingTheServerIsTrustedAtItsCommsAddress()
+        {
+            // Arrange
+            using var tentacle = new TentacleConfigurationBuilder().Build();
+            var octopus = new FakeOctopus(ServerThumbprint).WithWorker(PollingWorker("MyWorker", "poll://abc123/"));
+
+            // Act
+            ReplaceCertificate(tentacle, octopus, "MyWorker");
+
+            // Assert
             var server = tentacle.Configuration.TrustedOctopusServers.Should().ContainSingle().Subject;
             server.Thumbprint.Should().Be(ServerThumbprint);
             server.CommunicationStyle.Should().Be(CommunicationStyle.TentacleActive);
             server.Address.Should().Be(new Uri("https://octopus.test:10943"));
-            server.SubscriptionId.Should().Be("poll://abc123/");
         }
 
         [Test]
@@ -59,20 +85,19 @@ namespace Octopus.Tentacle.Tests.Commands
                 .WithWorker(new WorkerResource { Name = "Shared", Endpoint = new ListeningTentacleEndpointResource() });
 
             // Act
-            Action run = () => Run(CreateCommand(tentacle, octopus), "--server=http://octopus.test", "--apiKey=API-KEY", "--name=Shared");
+            Action run = () => ReplaceCertificate(tentacle, octopus, "Shared");
 
             // Assert
             run.Should().Throw<ControlledFailureException>().WithMessage("*--id*");
             tentacle.Configuration.TentacleCertificate.Should().BeNull();
         }
 
-        static WorkerResource PollingWorker(string name, string subscription, string pool)
+        static WorkerResource PollingWorker(string name, string subscription)
             => new()
             {
                 Id = "Workers-1",
                 Name = name,
-                Endpoint = new PollingTentacleEndpointResource { Uri = subscription, Thumbprint = "OLD" },
-                WorkerPoolIds = new ReferenceCollection(pool)
+                Endpoint = new PollingTentacleEndpointResource { Uri = subscription, Thumbprint = "OLD" }
             };
 
         static ReplaceCertificateCommand CreateCommand(TemporaryTentacleConfiguration tentacle, FakeOctopus octopus)
@@ -84,8 +109,11 @@ namespace Octopus.Tentacle.Tests.Commands
                 tentacle.Selector,
                 Substitute.For<ILogFileOnlyLogger>());
 
-        static void Run(ReplaceCertificateCommand command, params string[] args)
-            => command.Start(args, Substitute.For<ICommandRuntime>(), new OptionSet());
+        static void ReplaceCertificate(TemporaryTentacleConfiguration tentacle, FakeOctopus octopus, string name)
+            => CreateCommand(tentacle, octopus).Start(
+                new[] { "--server=http://octopus.test", "--apiKey=API-KEY", $"--name={name}" },
+                Substitute.For<ICommandRuntime>(),
+                new OptionSet());
 
         class FakeOctopus
         {
@@ -104,6 +132,8 @@ namespace Octopus.Tentacle.Tests.Commands
             }
 
             public IOctopusClientInitializer ClientInitializer { get; } = Substitute.For<IOctopusClientInitializer>();
+
+            public IWorkerRepository Workers => repository.Workers;
 
             public FakeOctopus WithWorker(WorkerResource worker)
             {
