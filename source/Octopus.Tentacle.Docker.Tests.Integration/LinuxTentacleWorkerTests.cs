@@ -9,9 +9,7 @@ namespace Octopus.Tentacle.Docker.Tests.Integration;
 /// register-with, with its own validation and arguments. Once registered, a worker's agent is the same as a
 /// deployment target's, so running scripts is left to LinuxTentacleImageTests.
 /// </summary>
-[TestFixture(TentacleCommunicationStyle.Listening)]
-[TestFixture(TentacleCommunicationStyle.Polling)]
-public class LinuxTentacleWorkerTests : TentacleContainerFixture
+public class LinuxTentacleWorkerTests
 {
     // RegisterWorkerCommandBase opens at least this many polling connections for workers, where targets open one.
     const int MinimumWorkerPollingConnections = 5;
@@ -20,40 +18,37 @@ public class LinuxTentacleWorkerTests : TentacleContainerFixture
     static readonly Regex PollingConnectionsStarted = new(@"Starting (\d+) polling connections");
     static readonly TimeSpan AgentStartTimeout = TimeSpan.FromSeconds(60);
 
-    public LinuxTentacleWorkerTests(TentacleCommunicationStyle communicationStyle) : base(communicationStyle, "Workers")
-    {
-    }
-
-    protected override void ConfigureContainer(IDictionary<string, string> environment)
-    {
-        // configure-tentacle.sh rejects environments and roles alongside a worker pool.
-        environment.Remove("TargetEnvironment");
-        environment.Remove("TargetRole");
-        // Has spaces, so this also checks the pool name survives the script's argument handling.
-        environment["TargetWorkerPool"] = FakeOctopusServer.DefaultWorkerPoolName;
-    }
-
     [Test]
-    public async Task TentacleRegistersAsAWorkerInTheGivenPool()
+    [TestCase(TentacleCommunicationStyle.Listening)]
+    [TestCase(TentacleCommunicationStyle.Polling)]
+    public async Task TentacleRegistersAsAWorkerInTheGivenPool(TentacleCommunicationStyle communicationStyle)
     {
-        RegisteredMachine.IsWorker.Should().BeTrue();
-        RegisteredMachine.Name.Should().Be(MachineName);
-        RegisteredMachine.WorkerPoolIds.Should().Equal(FakeOctopusServer.DefaultWorkerPoolId);
-        RegisteredMachine.Roles.Should().BeEmpty();
-        RegisteredMachine.EnvironmentIds.Should().BeEmpty();
+        await using var server = await new FakeOctopusServerBuilder().Build();
+        await using var tentacle = await new TentacleContainerBuilder(server)
+            .WithCommunicationStyle(communicationStyle)
+            // Has spaces, so this also checks the pool name survives the script's argument handling.
+            .AsWorker(FakeOctopusServer.DefaultWorkerPoolName)
+            .Build();
 
-        if (CommunicationStyle == TentacleCommunicationStyle.Listening)
+        var worker = tentacle.RegisteredMachine;
+        worker.IsWorker.Should().BeTrue();
+        worker.Name.Should().Be(tentacle.MachineName);
+        worker.WorkerPoolIds.Should().Equal(FakeOctopusServer.DefaultWorkerPoolId);
+        worker.Roles.Should().BeEmpty();
+        worker.EnvironmentIds.Should().BeEmpty();
+
+        if (communicationStyle == TentacleCommunicationStyle.Listening)
         {
-            RegisteredMachine.CommunicationStyle.Should().Be("TentaclePassive");
-            RegisteredMachine.Uri.Should().Be($"https://{MachineName}:{TentacleContainer.ListeningPort}/");
+            worker.CommunicationStyle.Should().Be("TentaclePassive");
+            worker.Uri.Should().Be($"https://{tentacle.MachineName}:{TentacleContainer.ListeningPort}/");
         }
         else
         {
-            RegisteredMachine.CommunicationStyle.Should().Be("TentacleActive");
-            RegisteredMachine.Uri.Should().StartWith("poll://");
+            worker.CommunicationStyle.Should().Be("TentacleActive");
+            worker.Uri.Should().StartWith("poll://");
 
             // The agent logs how many connections it opens, which shows the worker default was saved and used.
-            var match = await WaitForLogMatch(PollingConnectionsStarted, AgentStartTimeout);
+            var match = await tentacle.WaitForLogMatch(PollingConnectionsStarted, AgentStartTimeout);
             int.Parse(match.Groups[1].Value).Should().BeGreaterThanOrEqualTo(MinimumWorkerPollingConnections);
         }
     }

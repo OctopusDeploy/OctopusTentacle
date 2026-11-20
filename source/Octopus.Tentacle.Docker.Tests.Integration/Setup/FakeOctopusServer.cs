@@ -3,6 +3,7 @@ using System.Net;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using Halibut;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server;
@@ -12,16 +13,19 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Octopus.Client.Extensibility;
 using Octopus.Client.Model;
+using Octopus.Tentacle.CommonTestUtils;
+using Octopus.Tentacle.Tests.Integration.Common;
 using ILogger = Serilog.ILogger;
 
 namespace Octopus.Tentacle.Docker.Tests.Integration.Setup;
 
 /// <summary>
-/// Just enough of the Octopus Server REST API for `tentacle register-with` (via Octopus.Client) to register a
-/// deployment target. It never talks Halibut; the tests do that with their own server HalibutRuntime.
+/// A stand-in Octopus Server for one test, built with <see cref="FakeOctopusServerBuilder"/>. It has two parts:
+/// just enough of the REST API for `tentacle register-with` (via Octopus.Client) to register a deployment target or
+/// worker, and a server HalibutRuntime that polling Tentacles connect to and that tests use to call any Tentacle.
 ///
-/// Spaces stand in for separate servers: each test fixture registers into its own space so fixtures can share one
-/// fake server without seeing each other's machines.
+/// It is cheap to start, so every test gets its own: nothing is shared between tests, and Halibut's and the fake's
+/// logs end up in the output of the test that caused them.
 ///
 /// Anything the fake does not know about is answered with a 404 and recorded in <see cref="UnhandledRequests"/>,
 /// so a change in what Octopus.Client asks for shows up as a clear failure rather than a mystery.
@@ -74,6 +78,7 @@ public sealed class FakeOctopusServer : IAsyncDisposable
     };
 
     readonly WebApplication app;
+    readonly HalibutRuntime halibut;
     readonly string serverThumbprint;
     readonly ConcurrentDictionary<string, FakeSpace> spacesById = new(StringComparer.OrdinalIgnoreCase);
     readonly ConcurrentDictionary<(string SpaceName, string MachineName), TaskCompletionSource<RegisteredMachine>> registrations = new();
@@ -85,63 +90,70 @@ public sealed class FakeOctopusServer : IAsyncDisposable
     int nextSpaceNumber;
     int nextResourceNumber;
 
-    FakeOctopusServer(WebApplication app, string serverThumbprint)
+    FakeOctopusServer(WebApplication app, HalibutRuntime halibut, string serverThumbprint)
     {
         this.app = app;
+        this.halibut = halibut;
         this.serverThumbprint = serverThumbprint;
     }
 
+    /// <summary>The port the REST API listens on.</summary>
     public int Port { get; private set; }
 
-    /// <summary>
-    /// Raised when a Tentacle registers, before anyone awaiting <see cref="WaitForRegistration"/> sees it. Polling
-    /// Tentacles need their thumbprint trusted by the server HalibutRuntime as soon as possible.
-    /// </summary>
-    public event Action<RegisteredMachine>? MachineRegistered;
+    /// <summary>The port polling Tentacles connect to, i.e. what a real server exposes as 10943.</summary>
+    public int PollingPort { get; private set; }
+
+    /// <summary>The server side of Halibut, for building TentacleClients that talk to registered Tentacles.</summary>
+    public HalibutRuntime Halibut => halibut;
 
     public IReadOnlyCollection<string> UnhandledRequests => unhandledRequests.ToArray();
 
     /// <summary>
-    /// The requests and registrations relevant to one space since <paramref name="since"/>, in order. Requests are
-    /// served on Kestrel threads, which have no NUnit test context to log to, so tests write this out themselves.
-    ///
-    /// Requests outside any space (the root document, the current user, the space list, the certificate) are
-    /// included too, since every registration makes them. Fixtures run one at a time, so limiting by time keeps
-    /// those to the ones this space's Tentacle made.
+    /// The requests and registrations the server has seen, in order. Requests are served on Kestrel threads, which
+    /// have no NUnit test context to log to, so this is written to the test's output when the server is disposed.
     /// </summary>
-    public IReadOnlyList<string> RequestLogFor(string spaceName, DateTimeOffset since)
+    public IReadOnlyList<string> RequestLog => requestLog.Select(r => $"{r.Timestamp:HH:mm:ss.fff} {r.Text}").ToList();
+
+    internal static async Task<FakeOctopusServer> Start(IReadOnlyDictionary<string, string[]> spaces, ILogger logger)
     {
-        var spaceId = spacesById.Values.FirstOrDefault(s => string.Equals(s.Name, spaceName, StringComparison.OrdinalIgnoreCase))?.Id;
-        return requestLog
-            .Where(r => r.Timestamp >= since && (r.SpaceId is null || r.SpaceId == spaceId))
-            .Select(r => $"{r.Timestamp:HH:mm:ss.fff} {r.Text}")
-            .ToList();
-    }
+        var halibut = TestServerHalibut.BuildServerHalibutRuntime();
+        try
+        {
+            var builder = WebApplication.CreateBuilder();
+            builder.Logging.ClearProviders();
+            // Any rather than Loopback: Tentacle containers reach us through the Docker host gateway.
+            builder.WebHost.UseKestrel(o => o.Listen(IPAddress.Any, 0));
 
-    /// <param name="serverThumbprint">The thumbprint registering Tentacles will trust, i.e. the certificate the
-    /// tests' server HalibutRuntime presents.</param>
-    public static async Task<FakeOctopusServer> Start(string serverThumbprint, ILogger logger)
-    {
-        var builder = WebApplication.CreateBuilder();
-        builder.Logging.ClearProviders();
-        // Any rather than Loopback: Tentacle containers reach us through the Docker host gateway.
-        builder.WebHost.UseKestrel(o => o.Listen(IPAddress.Any, 0));
+            var app = builder.Build();
+            // Registering Tentacles trust the certificate the server HalibutRuntime presents.
+            var server = new FakeOctopusServer(app, halibut, TestCertificates.ServerPublicThumbprint);
+            server.MapRoutes();
 
-        var app = builder.Build();
-        var server = new FakeOctopusServer(app, serverThumbprint);
-        server.MapRoutes();
+            foreach (var (name, environmentNames) in spaces)
+            {
+                server.AddSpace(name, environmentNames);
+            }
 
-        await app.StartAsync();
+            // Any rather than Loopback, for the same reason as the REST API.
+            server.PollingPort = halibut.Listen(new IPEndPoint(IPAddress.Any, 0));
 
-        var address = app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()!.Addresses.Single();
-        server.Port = new Uri(address).Port;
-        logger.ForContext<FakeOctopusServer>().Information("Fake Octopus Server listening on {Address}", address);
+            await app.StartAsync();
 
-        return server;
+            var address = app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()!.Addresses.Single();
+            server.Port = new Uri(address).Port;
+            logger.ForContext<FakeOctopusServer>().Information("Fake Octopus Server listening on {Address}, polling port {PollingPort}", address, server.PollingPort);
+
+            return server;
+        }
+        catch
+        {
+            await halibut.DisposeAsync();
+            throw;
+        }
     }
 
     /// <summary>Adds a space with the given environments, plus the default machine policy every Tentacle asks for.</summary>
-    public void AddSpace(string name, params string[] environmentNames)
+    void AddSpace(string name, string[] environmentNames)
     {
         lock (spacesLock)
         {
@@ -219,7 +231,6 @@ public sealed class FakeOctopusServer : IAsyncDisposable
             var unhandled = context.Items.ContainsKey(UnhandledItemKey) ? " (unhandled)" : "";
             requestLog.Enqueue(new LoggedRequest(
                 timestamp,
-                SpaceIdFromPath(context.Request.Path),
                 $"{context.Request.Method} {context.Request.Path}{context.Request.QueryString} -> {context.Response.StatusCode}{unhandled}"));
         });
 
@@ -314,20 +325,19 @@ public sealed class FakeOctopusServer : IAsyncDisposable
         }
 
         var machine = RegisteredMachine.From(space, collection, body, DescribeAuthentication(request));
-        requestLog.Enqueue(new LoggedRequest(DateTimeOffset.UtcNow, space.Id, $"Registered {machine.Name} in {space.Name}: {machine.CommunicationStyle} {machine.Uri} {machine.Thumbprint}"));
+        requestLog.Enqueue(new LoggedRequest(DateTimeOffset.UtcNow, $"Registered {machine.Name} in {space.Name}: {machine.CommunicationStyle} {machine.Uri} {machine.Thumbprint}"));
 
-        MachineRegistered?.Invoke(machine);
+        // A real server trusts a Tentacle once it is registered. Polling Tentacles start connecting straight after
+        // registration, so trust them before anyone waiting for the registration hears about it.
+        if (machine.Thumbprint is not null)
+        {
+            halibut.Trust(machine.Thumbprint);
+        }
+
         registrationCounts.AddOrUpdate((space.Name.ToLowerInvariant(), machine.Name.ToLowerInvariant()), 1, (_, count) => count + 1);
         RegistrationFor(space.Name, machine.Name).TrySetResult(machine);
 
         return Json(body.DeepClone(), existingId is null ? StatusCodes.Status201Created : StatusCodes.Status200OK);
-    }
-
-    /// <summary>The space a request is for, when its path is /api/Spaces-N/...</summary>
-    string? SpaceIdFromPath(PathString path)
-    {
-        var segments = (path.Value ?? "").Split('/', StringSplitOptions.RemoveEmptyEntries);
-        return segments.Length >= 2 && segments[0] == "api" && spacesById.ContainsKey(segments[1]) ? spacesById[segments[1]].Id : null;
     }
 
     // An unknown space or collection is almost always a path the fake does not implement (e.g. the generic
@@ -486,8 +496,21 @@ public sealed class FakeOctopusServer : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        await app.StopAsync();
-        await app.DisposeAsync();
+        TestContext.Out.WriteLine("---- fake Octopus Server requests ----");
+        foreach (var request in RequestLog)
+        {
+            TestContext.Out.WriteLine(request);
+        }
+
+        try
+        {
+            await halibut.DisposeAsync();
+        }
+        finally
+        {
+            await app.StopAsync();
+            await app.DisposeAsync();
+        }
     }
 
     /// <summary>Octopus.Client's links are <see cref="Href"/>s, which it writes as plain strings.</summary>
@@ -521,7 +544,7 @@ public sealed class FakeOctopusServer : IAsyncDisposable
         }
     }
 
-    sealed record LoggedRequest(DateTimeOffset Timestamp, string? SpaceId, string Text);
+    sealed record LoggedRequest(DateTimeOffset Timestamp, string Text);
 
     public sealed class FakeSpace
     {

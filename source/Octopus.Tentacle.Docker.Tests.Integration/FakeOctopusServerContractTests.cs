@@ -5,7 +5,6 @@ using Octopus.Client.Operations;
 using Octopus.Tentacle.Commands;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Docker.Tests.Integration.Setup;
-using Octopus.Tentacle.Tests.Integration.Common.Logging;
 
 namespace Octopus.Tentacle.Docker.Tests.Integration;
 
@@ -18,51 +17,9 @@ namespace Octopus.Tentacle.Docker.Tests.Integration;
 /// It copies RegisterMachineCommandBase's sequence rather than running the command (which needs root on Linux), so a
 /// change to the command itself is only caught by the Docker tests.
 /// </summary>
-[TestFixture]
 public class FakeOctopusServerContractTests
 {
-    FakeOctopusServer? server;
-    FakeOctopusServer Server => server ?? throw new InvalidOperationException("Expected server to be set");
-
-    DateTimeOffset testStarted;
-    string? currentSpaceName;
-
-    [OneTimeSetUp]
-    public async Task OneTimeSetUp()
-    {
-        server = await FakeOctopusServer.Start(TestCertificates.ServerPublicThumbprint, new SerilogLoggerBuilder().Build());
-    }
-
-    [SetUp]
-    public void SetUp()
-    {
-        testStarted = DateTimeOffset.UtcNow;
-        currentSpaceName = null;
-    }
-
-    [TearDown]
-    public void TearDown()
-    {
-        if (currentSpaceName is null)
-        {
-            return;
-        }
-
-        TestContext.Out.WriteLine($"Fake Octopus Server requests for {currentSpaceName}:");
-        foreach (var request in Server.RequestLogFor(currentSpaceName, testStarted))
-        {
-            TestContext.Out.WriteLine("  " + request);
-        }
-    }
-
-    [OneTimeTearDown]
-    public async Task OneTimeTearDown()
-    {
-        if (server is not null)
-        {
-            await server.DisposeAsync();
-        }
-    }
+    const string MachineName = "contract-test-machine";
 
     public enum Authentication
     {
@@ -81,14 +38,15 @@ public class FakeOctopusServerContractTests
     [TestCase(CommunicationStyle.TentacleActive)]
     public async Task OctopusClientCanRegisterATentacle(CommunicationStyle communicationStyle)
     {
-        var (spaceName, machineName, thumbprint) = NewSpace($"Contract-{communicationStyle}");
-        using var client = await Connect(Authentication.ApiKey);
-        var spaceRepository = await PrepareToRegister(client, spaceName);
+        await using var server = await new FakeOctopusServerBuilder().Build();
+        var thumbprint = NewThumbprint();
+        using var client = await Connect(server, Authentication.ApiKey);
+        var spaceRepository = await PrepareToRegister(client);
 
         var operation = new RegisterMachineOperation
         {
-            MachineName = machineName,
-            Environments = new[] { "Development" },
+            MachineName = MachineName,
+            Environments = new[] { FakeOctopusServerBuilder.EnvironmentName },
             Roles = new[] { "docker-test" },
             Tenants = Array.Empty<string>(),
             TenantTags = Array.Empty<string>(),
@@ -100,7 +58,7 @@ public class FakeOctopusServerContractTests
         };
         SetEndpoint(operation, communicationStyle);
 
-        var machine = await RegisterTwice(spaceName, machineName, () => operation.ExecuteAsync(spaceRepository));
+        var machine = await RegisterTwice(server, () => operation.ExecuteAsync(spaceRepository));
 
         machine.IsWorker.Should().BeFalse();
         machine.Authentication.Should().Be("api key " + ApiKey);
@@ -116,14 +74,15 @@ public class FakeOctopusServerContractTests
     [TestCase(CommunicationStyle.TentacleActive)]
     public async Task OctopusClientCanRegisterAWorker(CommunicationStyle communicationStyle)
     {
-        var (spaceName, machineName, thumbprint) = NewSpace($"ContractWorker-{communicationStyle}");
-        using var client = await Connect(Authentication.ApiKey);
-        var spaceRepository = await PrepareToRegister(client, spaceName);
+        await using var server = await new FakeOctopusServerBuilder().Build();
+        var thumbprint = NewThumbprint();
+        using var client = await Connect(server, Authentication.ApiKey);
+        var spaceRepository = await PrepareToRegister(client);
 
         // RegisterWorkerCommandBase passes the pools; the rest comes from RegisterMachineCommandBase.
         var operation = new RegisterWorkerOperation
         {
-            MachineName = machineName,
+            MachineName = MachineName,
             WorkerPools = new[] { FakeOctopusServer.DefaultWorkerPoolName },
             MachinePolicy = "Default Machine Policy",
             AllowOverwrite = true,
@@ -132,7 +91,7 @@ public class FakeOctopusServerContractTests
         };
         SetEndpoint(operation, communicationStyle);
 
-        var worker = await RegisterTwice(spaceName, machineName, () => operation.ExecuteAsync(spaceRepository));
+        var worker = await RegisterTwice(server, () => operation.ExecuteAsync(spaceRepository));
 
         worker.IsWorker.Should().BeTrue();
         worker.WorkerPoolIds.Should().Equal(FakeOctopusServer.DefaultWorkerPoolId);
@@ -146,14 +105,15 @@ public class FakeOctopusServerContractTests
     [TestCase(Authentication.UsernamePassword, "user " + Username + " with password " + Password)]
     public async Task OctopusClientAuthenticatesWithTheOtherKindsOfCredential(Authentication authentication, string expected)
     {
-        var (spaceName, machineName, thumbprint) = NewSpace($"ContractAuth-{authentication}");
-        using var client = await Connect(authentication);
-        var spaceRepository = await PrepareToRegister(client, spaceName);
+        await using var server = await new FakeOctopusServerBuilder().Build();
+        var thumbprint = NewThumbprint();
+        using var client = await Connect(server, authentication);
+        var spaceRepository = await PrepareToRegister(client);
 
         var operation = new RegisterMachineOperation
         {
-            MachineName = machineName,
-            Environments = new[] { "Development" },
+            MachineName = MachineName,
+            Environments = new[] { FakeOctopusServerBuilder.EnvironmentName },
             Roles = new[] { "docker-test" },
             Tenants = Array.Empty<string>(),
             TenantTags = Array.Empty<string>(),
@@ -165,22 +125,17 @@ public class FakeOctopusServerContractTests
         };
         SetEndpoint(operation, CommunicationStyle.TentaclePassive);
 
-        var machine = await RegisterTwice(spaceName, machineName, () => operation.ExecuteAsync(spaceRepository));
+        var machine = await RegisterTwice(server, () => operation.ExecuteAsync(spaceRepository));
 
         machine.Authentication.Should().Be(expected);
     }
 
-    (string SpaceName, string MachineName, string Thumbprint) NewSpace(string spaceName)
-    {
-        currentSpaceName = spaceName;
-        Server.AddSpace(spaceName, "Development");
-        return (spaceName, spaceName.ToLowerInvariant(), Guid.NewGuid().ToString("N").ToUpperInvariant());
-    }
+    static string NewThumbprint() => Guid.NewGuid().ToString("N").ToUpperInvariant();
 
     /// <summary>As OctopusClientInitializer does: an API key or bearer token on every request, or a sign-in.</summary>
-    async Task<IOctopusAsyncClient> Connect(Authentication authentication)
+    static async Task<IOctopusAsyncClient> Connect(FakeOctopusServer server, Authentication authentication)
     {
-        var url = $"http://localhost:{Server.Port}";
+        var url = $"http://localhost:{server.Port}";
         switch (authentication)
         {
             case Authentication.ApiKey:
@@ -195,7 +150,7 @@ public class FakeOctopusServerContractTests
     }
 
     /// <summary>The calls RegisterMachineCommandBase makes before registering, in the same order.</summary>
-    async Task<IOctopusSpaceAsyncRepository> PrepareToRegister(IOctopusAsyncClient client, string spaceName)
+    static async Task<IOctopusSpaceAsyncRepository> PrepareToRegister(IOctopusAsyncClient client)
     {
         var rootDocument = await client.ForSystem().LoadRootDocument(CancellationToken.None);
         rootDocument.Version.Should().Be(FakeOctopusServer.ServerVersion);
@@ -203,7 +158,7 @@ public class FakeOctopusServerContractTests
         var certificate = await client.ForSystem().CertificateConfiguration.GetOctopusCertificate();
         certificate.Thumbprint.Should().Be(TestCertificates.ServerPublicThumbprint);
 
-        return await new SpaceRepositoryFactory().CreateSpaceRepository(client, spaceName);
+        return await new SpaceRepositoryFactory().CreateSpaceRepository(client, FakeOctopusServerBuilder.SpaceName);
     }
 
     static void SetEndpoint(RegisterMachineOperationBase operation, CommunicationStyle communicationStyle)
@@ -226,17 +181,17 @@ public class FakeOctopusServerContractTests
     /// Registers, then registers again: the second must find the existing machine and update it, as a container
     /// re-run with the same configuration would.
     /// </summary>
-    async Task<RegisteredMachine> RegisterTwice(string spaceName, string machineName, Func<Task> register)
+    static async Task<RegisteredMachine> RegisterTwice(FakeOctopusServer server, Func<Task> register)
     {
-        var registered = Server.WaitForRegistration(spaceName, machineName);
+        var registered = server.WaitForRegistration(FakeOctopusServerBuilder.SpaceName, MachineName);
 
         await register();
         var machine = await registered.WaitAsync(TimeSpan.FromSeconds(10));
-        Server.UnhandledRequests.Should().BeEmpty();
+        server.UnhandledRequests.Should().BeEmpty();
 
         await register();
-        Server.UnhandledRequests.Should().BeEmpty();
-        Server.RegistrationCount(spaceName, machineName).Should().Be(2);
+        server.UnhandledRequests.Should().BeEmpty();
+        server.RegistrationCount(FakeOctopusServerBuilder.SpaceName, MachineName).Should().Be(2);
 
         return machine;
     }

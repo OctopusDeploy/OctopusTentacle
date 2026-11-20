@@ -11,66 +11,56 @@ namespace Octopus.Tentacle.Docker.Tests.Integration;
 /// Runs the Linux Tentacle image the way customers do, registers it with a fake Octopus Server, then runs scripts on
 /// it over Halibut.
 /// </summary>
-[TestFixture(TentacleCommunicationStyle.Listening)]
-[TestFixture(TentacleCommunicationStyle.Polling)]
-public class LinuxTentacleImageTests : TentacleContainerFixture
+public class LinuxTentacleImageTests
 {
-    public LinuxTentacleImageTests(TentacleCommunicationStyle communicationStyle) : base(communicationStyle, "Docker")
-    {
-    }
-
     [Test]
-    public void TentacleRegistersItselfFromTheEnvironmentVariables()
+    [TestCase(TentacleCommunicationStyle.Listening)]
+    [TestCase(TentacleCommunicationStyle.Polling)]
+    public async Task TentacleRegistersItselfFromTheEnvironmentVariables(TentacleCommunicationStyle communicationStyle)
     {
-        RegisteredMachine.Name.Should().Be(MachineName);
-        RegisteredMachine.Roles.Should().Equal(Role);
-        RegisteredMachine.EnvironmentIds.Should().HaveCount(1);
-        RegisteredMachine.Thumbprint.Should().NotBeNullOrWhiteSpace();
-        RegisteredMachine.IsWorker.Should().BeFalse();
-        RegisteredMachine.Authentication.Should().Be($"api key {ApiKey}");
+        await using var server = await new FakeOctopusServerBuilder().Build();
+        await using var tentacle = await new TentacleContainerBuilder(server).WithCommunicationStyle(communicationStyle).Build();
 
-        if (CommunicationStyle == TentacleCommunicationStyle.Listening)
+        var machine = tentacle.RegisteredMachine;
+        machine.Name.Should().Be(tentacle.MachineName);
+        machine.Roles.Should().Equal(TentacleContainerBuilder.Role);
+        machine.EnvironmentIds.Should().HaveCount(1);
+        machine.Thumbprint.Should().NotBeNullOrWhiteSpace();
+        machine.IsWorker.Should().BeFalse();
+        machine.Authentication.Should().Be($"api key {TentacleContainerBuilder.ApiKey}");
+
+        if (communicationStyle == TentacleCommunicationStyle.Listening)
         {
-            RegisteredMachine.CommunicationStyle.Should().Be("TentaclePassive");
+            machine.CommunicationStyle.Should().Be("TentaclePassive");
             // The image defaults PublicHostNameConfiguration to ComputerName, and the container's hostname is its name.
-            RegisteredMachine.Uri.Should().Be($"https://{MachineName}:{TentacleContainer.ListeningPort}/");
+            machine.Uri.Should().Be($"https://{tentacle.MachineName}:{TentacleContainer.ListeningPort}/");
         }
         else
         {
-            RegisteredMachine.CommunicationStyle.Should().Be("TentacleActive");
-            RegisteredMachine.Uri.Should().StartWith("poll://");
+            machine.CommunicationStyle.Should().Be("TentacleActive");
+            machine.Uri.Should().StartWith("poll://");
         }
     }
 
     [Test]
-    public async Task ScriptsRunAndTheirOutputIsReturned()
+    [TestCase(TentacleCommunicationStyle.Listening)]
+    [TestCase(TentacleCommunicationStyle.Polling)]
+    public async Task ScriptsRunAndTheirOutputIsReturned(TentacleCommunicationStyle communicationStyle)
     {
+        await using var server = await new FakeOctopusServerBuilder().Build();
+        await using var tentacle = await new TentacleContainerBuilder(server).WithCommunicationStyle(communicationStyle).Build();
+
         var command = new ExecuteShellScriptCommandBuilder(LoggingUtils.CurrentTestHash(), ScriptIsolationLevel.NoIsolation)
             .WithScriptBody(new ScriptBuilder()
                 .Print("Hello from the Tentacle container")
                 .BuildBashScript() + "\necho \"Running on $(. /etc/os-release && echo \"$ID $VERSION_ID\")\"\n")
             .Build();
 
-        var (result, output) = await ExecuteScript(command);
+        var (result, output) = await tentacle.ExecuteScript(command);
 
         result.State.Should().Be(ProcessState.Complete);
         result.ExitCode.Should().Be(0);
         output.Should().Contain("Hello from the Tentacle container");
         output.Should().Contain("Running on ubuntu");
-    }
-
-    /// <summary>
-    /// The container is started with ServerApiKey; LinuxTentacleAuthenticationTests covers the others. The entrypoint
-    /// unsets credentials the same way however Tentacle communicates, so checking one style is enough.
-    /// </summary>
-    [Test]
-    public async Task RegistrationCredentialsAreNotVisibleToScripts()
-    {
-        if (CommunicationStyle != TentacleCommunicationStyle.Listening)
-        {
-            Assert.Ignore("Unsetting credentials does not depend on the communication style; the listening fixture checks it.");
-        }
-
-        await AssertRegistrationCredentialsAreNotVisibleToScripts();
     }
 }
