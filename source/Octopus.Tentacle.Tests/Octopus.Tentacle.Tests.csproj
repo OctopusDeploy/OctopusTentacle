@@ -35,7 +35,7 @@
     <DefineConstants>$(DefineConstants);DEFAULT_PROXY_IS_AVAILABLE;HAS_SYSTEM_IDENTITYMODEL_TOKENS;FULL_FRAMEWORK</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net10.0' ">
-    <DefineConstants>$(DefineConstants);DEFAULT_PROXY_IS_NOT_AVAILABLE</DefineConstants>
+    <DefineConstants>$(DefineConstants);DEFAULT_PROXY_IS_NOT_AVAILABLE;PIPELINES_RUNNER</DefineConstants>
     <!-- Following the recommended action from https://learn.microsoft.com/en-us/dotnet/core/compatibility/sdk/6.0/duplicate-files-in-output -->
     <ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
   </PropertyGroup>
