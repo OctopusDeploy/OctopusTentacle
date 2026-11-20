@@ -126,6 +126,8 @@ namespace Octopus.Tentacle.Configuration
             get { return Path.Combine(ApplicationDirectory, "Packages"); }
         }
 
+        public string? TentacleCertificateThumbprint => settings.Get(CertificateThumbprintSettingName);
+
         public X509Certificate2? TentacleCertificate
         {
             get

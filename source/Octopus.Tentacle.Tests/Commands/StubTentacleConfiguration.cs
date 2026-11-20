@@ -31,6 +31,7 @@ namespace Octopus.Tentacle.Tests.Commands
         public string PackagesDirectory { get; private set; } = null!;
         public string LogsDirectory { get; private set; } = null!;
         public X509Certificate2 TentacleCertificate { get; set; } = null!;
+        public string? TentacleCertificateThumbprint => TentacleCertificate?.Thumbprint;
         public string? ListenIpAddress { get; set; } = null!;
         public bool NoListen { get; set; }
         public OctopusServerConfiguration LastReceivedHandshake { get; set; } = null!;

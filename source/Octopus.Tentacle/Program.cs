@@ -86,6 +86,7 @@ namespace Octopus.Tentacle
             builder.RegisterCommand<ProxyConfigurationCommand>("proxy", "Configure the HTTP proxy used by Octopus");
             builder.RegisterCommand<PollingProxyConfigurationCommand>("polling-proxy", "Configure the HTTP proxy used by polling Tentacles to reach the Octopus Server");
             builder.RegisterCommand<ServerCommsCommand>("server-comms", "Configure how the Tentacle communicates with an Octopus Server");
+            builder.RegisterCommand<ReplaceCertificateCommand>("replace-certificate", "Creates and installs a new certificate for this Tentacle and updates every deployment target and worker in Octopus registered with the old certificate to trust it");
             builder.RegisterCommand<ImportCertificateCommand>("import-certificate", "Replace the certificate that Tentacle uses to authenticate itself");
             builder.RegisterCommand<PollCommand>("poll-server", "Configures an Octopus Server that this Tentacle will poll");
             builder.RegisterCommand<ClearTrustedServersCommand>("clear-trusted-servers", "Clears trusted servers in the Tentacle Configuration");
