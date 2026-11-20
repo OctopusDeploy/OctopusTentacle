@@ -24,7 +24,7 @@ namespace Octopus.Tentacle.Commands
         readonly IProxyConfigParser proxyConfig;
         readonly ISystemLog log;
         readonly ApiEndpointOptions api;
-        string keepCertificateAndUpdateThumbprint = null!;
+        string applyCurrentCertToTentaclesWithThumbprint = null!;
 
         public ReplaceCertificateCommand(
             Lazy<IWritableTentacleConfiguration> configuration,
@@ -43,7 +43,7 @@ namespace Octopus.Tentacle.Commands
             this.log = log;
 
             api = AddOptionSet(new ApiEndpointOptions(Options));
-            Options.Add("keep-certificate-and-update-thumbprint=", "Does not create a new certificate. Instead, updates every deployment target and worker in Octopus that has this thumbprint to trust this Tentacle's current certificate. Only needed if a previous run did not complete; that run prints the exact thumbprint to pass.", s => keepCertificateAndUpdateThumbprint = s);
+            Options.Add("apply-current-cert-to-tentacles-with-thumbprint=", "Does not create a new certificate. Instead, updates every deployment target and worker in Octopus that has this thumbprint to trust this Tentacle's current certificate.", s => applyCurrentCertToTentaclesWithThumbprint = s);
         }
 
         protected override void Start()
@@ -55,8 +55,8 @@ namespace Octopus.Tentacle.Commands
         async Task StartAsync()
         {
             var config = configuration.Value;
-            var keepCurrentCertificate = !string.IsNullOrWhiteSpace(keepCertificateAndUpdateThumbprint);
-            var oldThumbprint = keepCurrentCertificate ? keepCertificateAndUpdateThumbprint : config.TentacleCertificateThumbprint;
+            var keepCurrentCertificate = !string.IsNullOrWhiteSpace(applyCurrentCertToTentaclesWithThumbprint);
+            var oldThumbprint = keepCurrentCertificate ? applyCurrentCertToTentaclesWithThumbprint : config.TentacleCertificateThumbprint;
             if (string.IsNullOrWhiteSpace(oldThumbprint) || string.IsNullOrWhiteSpace(config.TentacleCertificateThumbprint))
             {
                 throw new ControlledFailureException("This Tentacle has no certificate thumbprint in its configuration, so its registrations in Octopus cannot be found.");
@@ -73,7 +73,7 @@ namespace Octopus.Tentacle.Commands
             {
                 var certificate = certificateGenerator.Value.GenerateNew(CertificateExpectations.TentacleCertificateFullName);
                 config.ImportCertificate(certificate);
-                log.Info($"Replaced certificate {oldThumbprint} with {certificate.Thumbprint}. If this does not complete, re-run this command with --keep-certificate-and-update-thumbprint {oldThumbprint}");
+                log.Info($"Replaced certificate {oldThumbprint} with {certificate.Thumbprint}. If this does not complete, re-run this command with --apply-current-cert-to-tentacles-with-thumbprint {oldThumbprint}");
             }
 
             foreach (var (repository, machine) in registrations)
