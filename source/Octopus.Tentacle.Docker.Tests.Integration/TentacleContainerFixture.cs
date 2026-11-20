@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using FluentAssertions;
 using NUnit.Framework.Interfaces;
 using Octopus.Tentacle.Client;
@@ -134,6 +135,31 @@ public abstract class TentacleContainerFixture
         }
 
         return await registration;
+    }
+
+    /// <summary>
+    /// Waits for the container to log something. Registration completes before the agent starts, so anything the
+    /// agent logs may not be there yet when a test begins.
+    /// </summary>
+    protected async Task<Match> WaitForLogMatch(Regex pattern, TimeSpan timeout)
+    {
+        var deadline = DateTimeOffset.UtcNow + timeout;
+        while (true)
+        {
+            var match = pattern.Match(await Container.GetLogs());
+            if (match.Success)
+            {
+                return match;
+            }
+
+            await ThrowIfContainerStopped($"while waiting for it to log '{pattern}'");
+            if (DateTimeOffset.UtcNow >= deadline)
+            {
+                throw new TimeoutException($"The Tentacle container did not log '{pattern}' within {timeout.TotalSeconds:0} seconds.");
+            }
+
+            await Task.Delay(ContainerCheckInterval);
+        }
     }
 
     protected async Task ThrowIfContainerStopped(string when)

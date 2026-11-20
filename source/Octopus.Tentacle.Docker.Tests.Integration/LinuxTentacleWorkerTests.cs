@@ -16,6 +16,10 @@ public class LinuxTentacleWorkerTests : TentacleContainerFixture
     // RegisterWorkerCommandBase opens at least this many polling connections for workers, where targets open one.
     const int MinimumWorkerPollingConnections = 5;
 
+    // The agent logs this once it starts; the test can begin before then, as registration happens first.
+    static readonly Regex PollingConnectionsStarted = new(@"Starting (\d+) polling connections");
+    static readonly TimeSpan AgentStartTimeout = TimeSpan.FromSeconds(60);
+
     public LinuxTentacleWorkerTests(TentacleCommunicationStyle communicationStyle) : base(communicationStyle, "Workers")
     {
     }
@@ -49,9 +53,7 @@ public class LinuxTentacleWorkerTests : TentacleContainerFixture
             RegisteredMachine.Uri.Should().StartWith("poll://");
 
             // The agent logs how many connections it opens, which shows the worker default was saved and used.
-            var logs = await Container.GetLogs();
-            var match = Regex.Match(logs, @"Starting (\d+) polling connections");
-            match.Success.Should().BeTrue("the agent logs how many polling connections it starts");
+            var match = await WaitForLogMatch(PollingConnectionsStarted, AgentStartTimeout);
             int.Parse(match.Groups[1].Value).Should().BeGreaterThanOrEqualTo(MinimumWorkerPollingConnections);
         }
     }
