@@ -19,6 +19,9 @@ static class GatewayHttpHandler
         if (options.ClientCertificate is { } clientCertificate)
         {
             handler.SslOptions.ClientCertificates = [clientCertificate];
+            // Without this, .NET drops a certificate whose issuer isn't in the server's accepted CA list, and a
+            // self-signed one never is. Always offer ours, as Halibut does.
+            handler.SslOptions.LocalCertificateSelectionCallback = (_, _, _, _, _) => clientCertificate;
         }
 
         if (options.ServerCertificateValidator is { } validator)
