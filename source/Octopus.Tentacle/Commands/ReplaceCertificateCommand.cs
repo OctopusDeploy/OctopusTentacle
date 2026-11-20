@@ -1,15 +1,17 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Client;
-using Octopus.Client.Exceptions;
 using Octopus.Client.Model;
 using Octopus.Client.Model.Endpoints;
+using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Commands.OptionSets;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Core.Diagnostics;
+using Octopus.Tentacle.Security;
 using Octopus.Tentacle.Startup;
 
 namespace Octopus.Tentacle.Commands
@@ -17,32 +19,31 @@ namespace Octopus.Tentacle.Commands
     public class ReplaceCertificateCommand : AbstractStandardCommand
     {
         readonly Lazy<IWritableTentacleConfiguration> configuration;
+        readonly Lazy<ICertificateGenerator> certificateGenerator;
         readonly IOctopusClientInitializer octopusClientInitializer;
-        readonly ISpaceRepositoryFactory spaceRepositoryFactory;
+        readonly IProxyConfigParser proxyConfig;
         readonly ISystemLog log;
         readonly ApiEndpointOptions api;
-        string name = null!;
-        string id = null!;
-        string spaceName = null!;
+        string oldThumbprintOption = null!;
 
         public ReplaceCertificateCommand(
             Lazy<IWritableTentacleConfiguration> configuration,
+            Lazy<ICertificateGenerator> certificateGenerator,
             IOctopusClientInitializer octopusClientInitializer,
-            ISpaceRepositoryFactory spaceRepositoryFactory,
+            IProxyConfigParser proxyConfig,
             ISystemLog log,
             IApplicationInstanceSelector selector,
             ILogFileOnlyLogger logFileOnlyLogger)
             : base(selector, log, logFileOnlyLogger)
         {
             this.configuration = configuration;
+            this.certificateGenerator = certificateGenerator;
             this.octopusClientInitializer = octopusClientInitializer;
-            this.spaceRepositoryFactory = spaceRepositoryFactory;
+            this.proxyConfig = proxyConfig;
             this.log = log;
 
             api = AddOptionSet(new ApiEndpointOptions(Options));
-            Options.Add("name=", "The name of the existing deployment target or worker in Octopus", s => name = s);
-            Options.Add("id=", "The ID of the existing deployment target or worker in Octopus, e.g. Machines-1 or Workers-1", s => id = s);
-            Options.Add("space=", "The name of the space the deployment target or worker is in. The default space will be used if omitted.", s => spaceName = s);
+            Options.Add("old-thumbprint=", "Finish a replacement that failed part way through: updates the deployment targets and workers still using this thumbprint to trust the certificate already saved, without creating another.", s => oldThumbprintOption = s);
         }
 
         protected override void Start()
@@ -53,51 +54,54 @@ namespace Octopus.Tentacle.Commands
 
         async Task StartAsync()
         {
-            if (string.IsNullOrWhiteSpace(name) == string.IsNullOrWhiteSpace(id))
-                throw new ControlledFailureException("Please specify either --name or --id of the existing deployment target or worker.");
+            var config = configuration.Value;
+            var resuming = !string.IsNullOrWhiteSpace(oldThumbprintOption);
+            var oldThumbprint = resuming ? oldThumbprintOption : config.TentacleCertificateThumbprint;
+            if (string.IsNullOrWhiteSpace(oldThumbprint))
+            {
+                throw new ControlledFailureException("This Tentacle has no certificate thumbprint in its configuration. Please pass the thumbprint Octopus has for it with --old-thumbprint.");
+            }
 
-            using var client = await octopusClientInitializer.CreateClient(api, configuration.Value.ProxyConfiguration.UseDefaultProxy);
-            var repository = await spaceRepositoryFactory.CreateSpaceRepository(client, spaceName);
+            using var client = await octopusClientInitializer.CreateClient(api, proxyConfig.ParseToWebProxy(config.PollingProxyConfiguration));
+            var registrations = await FindRegistrations(client, oldThumbprint!);
+            if (registrations.Count == 0)
+            {
+                throw new ControlledFailureException($"No deployment target or worker with thumbprint {oldThumbprint} was found in any space this API key can access.");
+            }
 
-            var machine = await FindMachine(repository);
-            if (machine.Endpoint is not (ListeningTentacleEndpointResource or PollingTentacleEndpointResource))
-                throw new ControlledFailureException($"'{machine.Name}' uses a {machine.Endpoint.CommunicationStyle} endpoint. Only listening and polling Tentacles can have their certificate replaced.");
+            if (!resuming)
+            {
+                var certificate = certificateGenerator.Value.GenerateNew(CertificateExpectations.TentacleCertificateFullName);
+                config.ImportCertificate(certificate);
+                log.Info($"Replaced certificate {oldThumbprint} with {certificate.Thumbprint}. If updating Octopus fails, re-run this command with --old-thumbprint {oldThumbprint}");
+            }
 
-            var certificate = configuration.Value.GenerateNewCertificate();
-            log.Info($"Generated a new certificate with thumbprint {certificate.Thumbprint}");
+            foreach (var (repository, machine) in registrations)
+            {
+                ((TentacleEndpointResource)machine.Endpoint).Thumbprint = config.TentacleCertificateThumbprint;
+                await Modify(repository, machine);
+                log.Info($"Updated '{machine.Name}' ({machine.Id}) in Octopus to trust the new certificate");
+            }
 
-            ((TentacleEndpointResource)machine.Endpoint).Thumbprint = certificate.Thumbprint;
-            await Modify(repository, machine);
-            log.Info($"Updated '{machine.Name}' ({machine.Id}) in Octopus to trust the new certificate");
             VoteForRestart();
         }
 
-        async Task<MachineBasedResource> FindMachine(IOctopusSpaceAsyncRepository repository)
+        static async Task<List<(IOctopusSpaceAsyncRepository Repository, MachineBasedResource Machine)>> FindRegistrations(IOctopusAsyncClient client, string thumbprint)
         {
-            var matches = (string.IsNullOrWhiteSpace(id)
-                    ? new MachineBasedResource?[] { await repository.Machines.FindByName(name, CancellationToken.None), await repository.Workers.FindByName(name, CancellationToken.None) }
-                    : new MachineBasedResource?[] { await GetOrNull(() => repository.Machines.Get(id, CancellationToken.None)), await GetOrNull(() => repository.Workers.Get(id, CancellationToken.None)) })
-                .OfType<MachineBasedResource>()
-                .ToArray();
+            var users = client.ForSystem().Users;
+            var spaces = await users.GetSpaces(await users.GetCurrent());
 
-            return matches.Length switch
+            var registrations = new List<(IOctopusSpaceAsyncRepository, MachineBasedResource)>();
+            foreach (var space in spaces)
             {
-                0 => throw new ControlledFailureException($"No deployment target or worker '{name ?? id}' was found."),
-                1 => matches[0],
-                _ => throw new ControlledFailureException($"Both a deployment target and a worker match '{name ?? id}'. Please specify which one with --id.")
-            };
-        }
+                var repository = client.ForSpace(space);
+                var machines = (await repository.Machines.FindByThumbprint(thumbprint)).Cast<MachineBasedResource>()
+                    .Concat(await repository.Workers.FindByThumbprint(thumbprint))
+                    .Where(m => m.Endpoint is ListeningTentacleEndpointResource or PollingTentacleEndpointResource);
+                registrations.AddRange(machines.Select(m => (repository, m)));
+            }
 
-        static async Task<T?> GetOrNull<T>(Func<Task<T>> get) where T : class
-        {
-            try
-            {
-                return await get();
-            }
-            catch (OctopusResourceNotFoundException)
-            {
-                return null;
-            }
+            return registrations;
         }
 
         static Task Modify(IOctopusSpaceAsyncRepository repository, MachineBasedResource machine)

@@ -48,6 +48,11 @@ namespace Octopus.Tentacle.Configuration
         X509Certificate2? TentacleCertificate { get; }
 
         /// <summary>
+        /// The thumbprint of the Tentacle certificate. Stored unencrypted, so it can be read even when the certificate cannot.
+        /// </summary>
+        string? TentacleCertificateThumbprint { get; }
+
+        /// <summary>
         /// Gets the IP address to listen on.
         /// </summary>
         string? ListenIpAddress { get; }

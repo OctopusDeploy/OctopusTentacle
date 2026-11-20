@@ -12,12 +12,20 @@ namespace Octopus.Tentacle.Tests.Support
 {
     class TentacleConfigurationBuilder
     {
+        string settings = "";
+
+        public TentacleConfigurationBuilder WithCertificateThumbprint(string thumbprint)
+        {
+            settings += $"<set key=\"Tentacle.CertificateThumbprint\">{thumbprint}</set>";
+            return this;
+        }
+
         public TemporaryTentacleConfiguration Build()
         {
             var fileSystem = new OctopusPhysicalFileSystem(Substitute.For<ISystemLog>());
             var directory = new TemporaryDirectory(fileSystem);
             var configFile = Path.Combine(directory.DirectoryPath, "Tentacle.config");
-            File.WriteAllText(configFile, "<?xml version=\"1.0\" encoding=\"utf-8\"?><octopus-settings></octopus-settings>");
+            File.WriteAllText(configFile, $"<?xml version=\"1.0\" encoding=\"utf-8\"?><octopus-settings>{settings}</octopus-settings>");
             var store = new XmlFileKeyValueStore(fileSystem, configFile);
 
             var selector = Substitute.For<IApplicationInstanceSelector>();

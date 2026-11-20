@@ -1,13 +1,16 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using NUnit.Framework;
 using Octopus.Client;
 using Octopus.Client.Model;
 using Octopus.Client.Model.Endpoints;
-using Octopus.Client.Repositories.Async;
+using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Commands;
 using Octopus.Tentacle.Commands.OptionSets;
 using Octopus.Tentacle.Configuration;
@@ -23,119 +26,137 @@ namespace Octopus.Tentacle.Tests.Commands
     public class ReplaceCertificateCommandFixture
     {
         [Test]
-        public void ShouldSaveTheNewThumbprintOnTheWorkerFoundByName()
+        public void ShouldUpdateEveryRegistrationWithTheOldThumbprintInEverySpace()
         {
             // Arrange
-            using var tentacle = new TentacleConfigurationBuilder().Build();
-            var worker = PollingWorker("MyWorker", "poll://abc123/");
-            var octopus = new FakeOctopus().WithWorker(worker);
+            using var tentacle = new TentacleConfigurationBuilder().WithCertificateThumbprint("OLD").Build();
+            var target = new MachineResource { Id = "Machines-1", Endpoint = new ListeningTentacleEndpointResource { Thumbprint = "OLD" } };
+            var worker = new WorkerResource { Id = "Workers-1", Endpoint = new PollingTentacleEndpointResource { Uri = "poll://abc123/", Thumbprint = "OLD" } };
+            var octopus = new FakeOctopus();
+            var spaceA = octopus.Space("Spaces-1").WithMachine(target);
+            var spaceB = octopus.Space("Spaces-2").WithWorker(worker);
 
             // Act
-            ReplaceCertificate(tentacle, octopus, "--name=MyWorker");
+            ReplaceCertificate(tentacle, octopus);
 
             // Assert
             var newThumbprint = tentacle.Configuration.TentacleCertificate!.Thumbprint;
             newThumbprint.Should().NotBe("OLD");
-            worker.Endpoint.Should().BeOfType<PollingTentacleEndpointResource>().Which.Thumbprint.Should().Be(newThumbprint);
-            octopus.Workers.Received().Modify(worker, Arg.Any<CancellationToken>());
-        }
-
-        [Test]
-        public void ShouldSaveTheNewThumbprintOnTheWorkerFoundById()
-        {
-            // Arrange
-            using var tentacle = new TentacleConfigurationBuilder().Build();
-            var worker = PollingWorker("MyWorker", "poll://abc123/");
-            var octopus = new FakeOctopus().WithWorker(worker);
-
-            // Act
-            ReplaceCertificate(tentacle, octopus, "--id=Workers-1");
-
-            // Assert
-            ((PollingTentacleEndpointResource)worker.Endpoint).Thumbprint.Should().Be(tentacle.Configuration.TentacleCertificate!.Thumbprint);
-            octopus.Workers.Received().Modify(worker, Arg.Any<CancellationToken>());
-        }
-
-        [Test]
-        public void WhenPollingTheSubscriptionIdDoesNotChange()
-        {
-            // Arrange
-            using var tentacle = new TentacleConfigurationBuilder().Build();
-            var worker = PollingWorker("MyWorker", "poll://abc123/");
-            var octopus = new FakeOctopus().WithWorker(worker);
-
-            // Act
-            ReplaceCertificate(tentacle, octopus, "--name=MyWorker");
-
-            // Assert
+            ((TentacleEndpointResource)target.Endpoint).Thumbprint.Should().Be(newThumbprint);
+            ((PollingTentacleEndpointResource)worker.Endpoint).Thumbprint.Should().Be(newThumbprint);
             ((PollingTentacleEndpointResource)worker.Endpoint).Uri.Should().Be("poll://abc123/");
+            spaceA.Machines.Received().Modify(target, Arg.Any<CancellationToken>());
+            spaceB.Workers.Received().Modify(worker, Arg.Any<CancellationToken>());
         }
 
         [Test]
-        public void ShouldRefuseAnAmbiguousNameRatherThanGuessBetweenATargetAndAWorker()
+        public void WhenAnUpdateFailsRerunningWithTheOldThumbprintFinishesWithTheSameCertificate()
         {
             // Arrange
-            using var tentacle = new TentacleConfigurationBuilder().Build();
-            var octopus = new FakeOctopus()
-                .WithMachine(new MachineResource { Name = "Shared", Endpoint = new ListeningTentacleEndpointResource() })
-                .WithWorker(new WorkerResource { Name = "Shared", Endpoint = new ListeningTentacleEndpointResource() });
+            using var tentacle = new TentacleConfigurationBuilder().WithCertificateThumbprint("OLD").Build();
+            var first = new MachineResource { Id = "Machines-1", Endpoint = new ListeningTentacleEndpointResource { Thumbprint = "OLD" } };
+            var second = new MachineResource { Id = "Machines-2", Endpoint = new ListeningTentacleEndpointResource { Thumbprint = "OLD" } };
+            var octopus = new FakeOctopus();
+            var space = octopus.Space("Spaces-1").WithMachine(first).WithMachine(second);
+            var octopusIsDown = true;
+            space.Machines.Modify(second, Arg.Any<CancellationToken>()).Returns(_ =>
+            {
+                if (!octopusIsDown)
+                    return Task.FromResult(second);
+                octopusIsDown = false;
+                ((TentacleEndpointResource)second.Endpoint).Thumbprint = "OLD";
+                throw new Exception("Octopus is down");
+            });
+            Action run = () => ReplaceCertificate(tentacle, octopus);
+            run.Should().Throw<Exception>().WithMessage("Octopus is down");
+            var savedThumbprint = tentacle.Configuration.TentacleCertificate!.Thumbprint;
 
             // Act
-            Action run = () => ReplaceCertificate(tentacle, octopus, "--name=Shared");
+            ReplaceCertificate(tentacle, octopus, "--old-thumbprint=OLD");
 
             // Assert
-            run.Should().Throw<ControlledFailureException>().WithMessage("*--id*");
-            tentacle.Configuration.TentacleCertificate.Should().BeNull();
+            tentacle.Configuration.TentacleCertificate!.Thumbprint.Should().Be(savedThumbprint);
+            ((TentacleEndpointResource)first.Endpoint).Thumbprint.Should().Be(savedThumbprint);
+            ((TentacleEndpointResource)second.Endpoint).Thumbprint.Should().Be(savedThumbprint);
         }
 
-        static WorkerResource PollingWorker(string name, string subscription)
-            => new()
-            {
-                Id = "Workers-1",
-                Name = name,
-                Endpoint = new PollingTentacleEndpointResource { Uri = subscription, Thumbprint = "OLD" }
-            };
+        [Test]
+        public void WhenNothingMatchesTheCertificateIsNotReplaced()
+        {
+            // Arrange
+            using var tentacle = new TentacleConfigurationBuilder().WithCertificateThumbprint("OLD").Build();
+            var octopus = new FakeOctopus();
+            octopus.Space("Spaces-1");
 
-        static ReplaceCertificateCommand CreateCommand(TemporaryTentacleConfiguration tentacle, FakeOctopus octopus)
-            => new(
-                new Lazy<IWritableTentacleConfiguration>(() => tentacle.Configuration),
-                octopus.ClientInitializer,
-                new SpaceRepositoryFactory(),
-                Substitute.For<ISystemLog>(),
-                tentacle.Selector,
-                Substitute.For<ILogFileOnlyLogger>());
+            // Act
+            Action run = () => ReplaceCertificate(tentacle, octopus);
 
-        static void ReplaceCertificate(TemporaryTentacleConfiguration tentacle, FakeOctopus octopus, string machineSelector)
-            => CreateCommand(tentacle, octopus).Start(
-                new[] { "--server=http://octopus.test", "--apiKey=API-KEY", machineSelector },
-                Substitute.For<ICommandRuntime>(),
-                new OptionSet());
+            // Assert
+            run.Should().Throw<ControlledFailureException>().WithMessage("*OLD*");
+            tentacle.Configuration.TentacleCertificateThumbprint.Should().Be("OLD");
+        }
+
+        static void ReplaceCertificate(TemporaryTentacleConfiguration tentacle, FakeOctopus octopus, params string[] args)
+            => new ReplaceCertificateCommand(
+                    new Lazy<IWritableTentacleConfiguration>(() => tentacle.Configuration),
+                    new Lazy<ICertificateGenerator>(() => new CertificateGenerator(new NullLog())),
+                    octopus.ClientInitializer,
+                    Substitute.For<IProxyConfigParser>(),
+                    Substitute.For<ISystemLog>(),
+                    tentacle.Selector,
+                    Substitute.For<ILogFileOnlyLogger>())
+                .Start(new[] { "--server=http://octopus.test", "--apiKey=API-KEY" }.Concat(args).ToArray(), Substitute.For<ICommandRuntime>(), new OptionSet());
 
         class FakeOctopus
         {
-            readonly IOctopusAsyncRepository repository = Substitute.For<IOctopusAsyncRepository>();
+            readonly IOctopusAsyncClient client = Substitute.For<IOctopusAsyncClient>();
+            readonly List<SpaceResource> spaces = new();
 
             public FakeOctopus()
             {
-                var client = Substitute.For<IOctopusAsyncClient>();
-                client.Repository.Returns(repository);
-                ClientInitializer.CreateClient(Arg.Any<ApiEndpointOptions>(), Arg.Any<bool>()).Returns(Task.FromResult(client));
+                var user = new UserResource();
+                client.ForSystem().Users.GetCurrent().Returns(user);
+                client.ForSystem().Users.GetSpaces(user).Returns(_ => spaces.ToArray());
+                ClientInitializer.CreateClient(Arg.Any<ApiEndpointOptions>(), Arg.Any<System.Net.IWebProxy?>()).Returns(client);
             }
 
             public IOctopusClientInitializer ClientInitializer { get; } = Substitute.For<IOctopusClientInitializer>();
 
-            public IWorkerRepository Workers => repository.Workers;
-
-            public FakeOctopus WithWorker(WorkerResource worker)
+            public FakeSpace Space(string id)
             {
-                repository.Workers.FindByName(worker.Name, Arg.Any<CancellationToken>()).Returns(Task.FromResult(worker));
-                repository.Workers.Get(worker.Id, Arg.Any<CancellationToken>()).Returns(Task.FromResult(worker));
+                var space = new SpaceResource { Id = id };
+                spaces.Add(space);
+                var repository = Substitute.For<IOctopusSpaceAsyncRepository>();
+                client.ForSpace(space).Returns(repository);
+                return new FakeSpace(repository);
+            }
+        }
+
+        class FakeSpace
+        {
+            readonly IOctopusSpaceAsyncRepository repository;
+            readonly List<MachineResource> machines = new();
+            readonly List<WorkerResource> workers = new();
+
+            public FakeSpace(IOctopusSpaceAsyncRepository repository)
+            {
+                this.repository = repository;
+                repository.Machines.FindByThumbprint(Arg.Any<string>()).Returns(c => machines.FindAll(m => ((TentacleEndpointResource)m.Endpoint).Thumbprint == c.Arg<string>()));
+                repository.Workers.FindByThumbprint(Arg.Any<string>()).Returns(c => workers.FindAll(w => ((TentacleEndpointResource)w.Endpoint).Thumbprint == c.Arg<string>()));
+            }
+
+            public Octopus.Client.Repositories.Async.IMachineRepository Machines => repository.Machines;
+            public Octopus.Client.Repositories.Async.IWorkerRepository Workers => repository.Workers;
+
+            public FakeSpace WithMachine(MachineResource machine)
+            {
+                machines.Add(machine);
                 return this;
             }
 
-            public FakeOctopus WithMachine(MachineResource machine)
+            public FakeSpace WithWorker(WorkerResource worker)
             {
-                repository.Machines.FindByName(machine.Name, Arg.Any<CancellationToken>()).Returns(Task.FromResult(machine));
+                workers.Add(worker);
                 return this;
             }
         }
