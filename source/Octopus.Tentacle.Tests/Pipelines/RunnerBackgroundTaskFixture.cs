@@ -3,9 +3,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
@@ -148,6 +150,38 @@ namespace Octopus.Tentacle.Tests.Pipelines
         }
 
         [Test]
+        public async Task RunsJobsInDockerContainersByDefault()
+        {
+            if (!File.Exists("/var/run/docker.sock"))
+                Assert.Ignore("Needs a local Docker daemon at /var/run/docker.sock.");
+
+            var logStore = new InMemoryLogStore();
+            var task = NewTask(PollingConfiguration(), Substitute.For<ISystemLog>(), logStore: logStore);
+
+            task.Start();
+            try
+            {
+                task.Executor.Should().NotBeNull();
+                task.Executor!.Start(new ExecuteJobCommand
+                {
+                    JobId = "job-docker",
+                    RunId = "run-1",
+                    // /.dockerenv exists only inside a Docker container.
+                    Command = "echo from-the-job; [ -f /.dockerenv ] && echo inside-a-container",
+                    Storage = new JobStorage { DirectoryUri = "https://example.invalid/c-customer/runs/run-1/job-docker" }
+                });
+                var completed = task.Executor.WhenAllCompleted();
+                (await Task.WhenAny(completed, Task.Delay(TimeSpan.FromSeconds(120)))).Should().Be(completed, "the job should finish (the first run may pull the image)");
+
+                logStore.Text.Should().Contain("from-the-job").And.Contain("inside-a-container");
+            }
+            finally
+            {
+                task.Stop();
+            }
+        }
+
+        [Test]
         public void ModuleRegistersTheTaskAsABackgroundTask()
         {
             var builder = new ContainerBuilder();
@@ -177,15 +211,38 @@ namespace Octopus.Tentacle.Tests.Pipelines
 
         sealed class InMemoryLogStore : ILogStore
         {
+            readonly MemoryStream written = new();
+
+            /// <summary>Everything appended to any log, as UTF-8 text.</summary>
+            public string Text
+            {
+                get
+                {
+                    lock (written)
+                    {
+                        return Encoding.UTF8.GetString(written.ToArray());
+                    }
+                }
+            }
+
             public Task<ILogAppender> CreateAsync(Uri jobDirectory, string fileName, CancellationToken ct)
-                => Task.FromResult<ILogAppender>(new Appender());
+                => Task.FromResult<ILogAppender>(new Appender(written));
 
             sealed class Appender : ILogAppender
             {
+                readonly MemoryStream written;
+
+                public Appender(MemoryStream written) => this.written = written;
+
                 public long Length { get; private set; }
 
                 public Task AppendAsync(ReadOnlyMemory<byte> data, CancellationToken ct)
                 {
+                    lock (written)
+                    {
+                        written.Write(data.Span);
+                    }
+
                     Length += data.Length;
                     return Task.CompletedTask;
                 }

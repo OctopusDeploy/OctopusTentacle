@@ -50,6 +50,7 @@
 	</PropertyGroup>
 	<ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
 		<ProjectReference Include="..\Octopus.Pipelines.Runner.Core\Octopus.Pipelines.Runner.Core.csproj" />
+		<ProjectReference Include="..\Octopus.Pipelines.Runner.Docker\Octopus.Pipelines.Runner.Docker.csproj" />
 		<ProjectReference Include="..\Octopus.Pipelines.Runner.Gateway\Octopus.Pipelines.Runner.Gateway.csproj" />
 		<ProjectReference Include="..\Octopus.Pipelines.Runner.Logs.AzureBlob\Octopus.Pipelines.Runner.Logs.AzureBlob.csproj" />
 	</ItemGroup>

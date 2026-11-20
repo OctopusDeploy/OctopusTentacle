@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Octopus.Pipelines.Runner.Core;
 using Octopus.Pipelines.Runner.Core.Logs;
+using Octopus.Pipelines.Runner.Docker;
 using Octopus.Pipelines.Runner.Gateway;
 using Octopus.Pipelines.Runner.Logs.AzureBlob;
 using Octopus.Tentacle.Background;
@@ -19,9 +20,9 @@ using Octopus.Tentacle.Util;
 namespace Octopus.Tentacle.Pipelines
 {
     /// <summary>
-    /// Runs the pipelines runner inside Tentacle: it polls the Tentacle's polling Server for jobs and runs them as
-    /// local processes. It never stops Tentacle from starting: a misconfiguration or failure is logged and the
-    /// runner stays off.
+    /// Runs the pipelines runner inside Tentacle: it polls the Tentacle's polling Server for jobs and runs each in a
+    /// container on the local Docker daemon (Docker is assumed to be installed). It never stops Tentacle from
+    /// starting: a misconfiguration or failure is logged and the runner stays off.
     /// </summary>
     public sealed class RunnerBackgroundTask : IBackgroundTask
     {
@@ -84,6 +85,7 @@ namespace Octopus.Tentacle.Pipelines
                     return;
 
                 LoggerFactory? loggerFactory = null;
+                DockerJobBackend? ownedBackend = null;
                 try
                 {
                     var settings = TentacleRunnerSettings.From(configuration, isKubernetesAgent(), isWindows(), out var skipReason);
@@ -107,8 +109,11 @@ namespace Octopus.Tentacle.Pipelines
                     configureGateway?.Invoke(gatewayOptions);
                     var options = Options.Create(gatewayOptions);
 
+                    if (backend is null)
+                        ownedBackend = CreateDefaultBackend(clock, loggerFactory);
+
                     var jobRunner = new JobRunner(
-                        backend ?? new ProcessJobBackend(clock),
+                        backend ?? ownedBackend!,
                         logStore ?? new LogStores(new Dictionary<string, ILogStore> { ["https"] = new AzureBlobLogStore() }),
                         new JobRunnerOptions(),
                         clock,
@@ -134,12 +139,13 @@ namespace Octopus.Tentacle.Pipelines
                         TaskContinuationOptions.OnlyOnFaulted,
                         TaskScheduler.Default);
 
-                    running = new Running(client, executor, lifetime, loggerFactory);
+                    running = new Running(client, executor, lifetime, loggerFactory, ownedBackend);
                     log.Info($"Pipelines runner {settings.RunnerId} started, polling {settings.ServerAddress}");
                 }
                 catch (Exception ex)
                 {
                     log.Error(ex, "The pipelines runner could not start. Tentacle will keep running without it.");
+                    ownedBackend?.Dispose();
                     loggerFactory?.Dispose();
                     running = null;
                 }
@@ -184,6 +190,7 @@ namespace Octopus.Tentacle.Pipelines
                     try
                     {
                         stopping.Client.Dispose();
+                        stopping.OwnedBackend?.Dispose();
                         stopping.LoggerFactory.Dispose();
                     }
                     catch (Exception ex)
@@ -194,20 +201,28 @@ namespace Octopus.Tentacle.Pipelines
             }
         }
 
+        /// <summary>Jobs run in containers on the local Docker daemon, with the backend's default image and limits.</summary>
+        internal static DockerJobBackend CreateDefaultBackend(TimeProvider clock, ILoggerFactory loggerFactory)
+            => new DockerJobBackend(new DockerBackendOptions(), clock, logger: loggerFactory.CreateLogger<DockerJobBackend>());
+
         sealed class Running
         {
-            public Running(GatewayClient client, GatewayJobExecutor executor, RunnerLifetime lifetime, LoggerFactory loggerFactory)
+            public Running(GatewayClient client, GatewayJobExecutor executor, RunnerLifetime lifetime, LoggerFactory loggerFactory, DockerJobBackend? ownedBackend)
             {
                 Client = client;
                 Executor = executor;
                 Lifetime = lifetime;
                 LoggerFactory = loggerFactory;
+                OwnedBackend = ownedBackend;
             }
 
             public GatewayClient Client { get; }
             public GatewayJobExecutor Executor { get; }
             public RunnerLifetime Lifetime { get; }
             public LoggerFactory LoggerFactory { get; }
+
+            /// <summary>The backend this task created (not one a test passed in), disposed when the runner stops.</summary>
+            public DockerJobBackend? OwnedBackend { get; }
         }
     }
 }
