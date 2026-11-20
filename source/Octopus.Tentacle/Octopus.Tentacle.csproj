@@ -51,7 +51,7 @@
 		<PackageReference Include="KubernetesClient" Version="19.0.2" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="BouncyCastle.Cryptography" Version="2.6.2" />
+		<PackageReference Include="BouncyCastle.Cryptography" Version="2.7.0" />
 		<PackageReference Include="Octopus.Client" Version="22.3.2857" />
 	</ItemGroup>
 	<ItemGroup>
