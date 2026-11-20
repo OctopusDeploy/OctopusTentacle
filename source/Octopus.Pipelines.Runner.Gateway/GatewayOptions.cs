@@ -5,7 +5,11 @@ namespace Octopus.Pipelines.Runner.Gateway;
 /// <summary>The runner's connection to the Server cell and how much work it pulls. Bound from the <c>Runner</c> section.</summary>
 public sealed class GatewayOptions
 {
-    /// <summary>gRPC endpoint of the Server cell, e.g. http://20.1.2.3:8081 (h2c).</summary>
+    /// <summary>
+    /// gRPC endpoint of the Server cell. Use an <c>https://</c> address for <see cref="ClientCertificate"/> and
+    /// <see cref="ServerCertificateValidator"/> to apply. An <c>http://</c> address (e.g. http://20.1.2.3:8081) is
+    /// unencrypted h2c, for the Kubernetes host or local development only.
+    /// </summary>
     public string ServerAddress { get; set; } = "http://localhost:8081";
 
     public string Token { get; set; } = "";
@@ -42,6 +46,11 @@ public sealed class GatewayOptions
 
     /// <summary>How often the runner re-checks its capacity when nothing has finished, in case the provider's view changed.</summary>
     public TimeSpan CapacityCheckInterval { get; set; } = TimeSpan.FromSeconds(1);
+
+    /// <summary>
+    /// Longest wait between reconnect attempts. The wait starts at a second and doubles after each failure up to this.
+    /// </summary>
+    public TimeSpan MaxReconnectBackoff { get; set; } = TimeSpan.FromSeconds(30);
 
     /// <summary>Reconnect if the Server sends nothing (not even a heartbeat) for this long.</summary>
     public TimeSpan ServerSilenceTimeout { get; set; } = TimeSpan.FromSeconds(90);

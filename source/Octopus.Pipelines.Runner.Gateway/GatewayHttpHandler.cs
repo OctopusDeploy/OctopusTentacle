@@ -28,7 +28,21 @@ static class GatewayHttpHandler
         {
             // Chain and name errors are ignored on purpose: the certificate's thumbprint is what's trusted, as with Halibut.
             handler.SslOptions.RemoteCertificateValidationCallback = (_, certificate, _, _) =>
-                certificate is not null && validator(new X509Certificate2(certificate));
+            {
+                if (certificate is null)
+                {
+                    return false;
+                }
+
+                // The server's certificate is usually already an X509Certificate2; only copy (and dispose) when it isn't.
+                if (certificate is X509Certificate2 certificate2)
+                {
+                    return validator(certificate2);
+                }
+
+                using var copy = new X509Certificate2(certificate);
+                return validator(copy);
+            };
         }
 
         return handler;

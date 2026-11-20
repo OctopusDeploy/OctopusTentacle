@@ -32,6 +32,9 @@ public sealed class GatewayClient(
 
     internal TimeSpan MaxJitter { get; init; } = TimeSpan.FromSeconds(1);
 
+    // How the loop waits between attempts. Internal so tests can record the delays instead of waiting them out.
+    internal Func<TimeSpan, CancellationToken, Task> Delay { get; init; } = Task.Delay;
+
     static LogLevel FailureLevel(int consecutiveFailures) => consecutiveFailures <= 1 ? LogLevel.Warning : LogLevel.Debug;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -72,8 +75,8 @@ public sealed class GatewayClient(
             }
 
             var delay = backoff + (MaxJitter > TimeSpan.Zero ? Random.Shared.NextDouble() * MaxJitter : TimeSpan.Zero);
-            backoff = TimeSpan.FromSeconds(Math.Min(30, backoff.TotalSeconds * 2));
-            await Task.Delay(delay, stoppingToken);
+            backoff = TimeSpan.FromTicks(Math.Min(runner.MaxReconnectBackoff.Ticks, backoff.Ticks * 2));
+            await Delay(delay, stoppingToken);
         }
     }
 

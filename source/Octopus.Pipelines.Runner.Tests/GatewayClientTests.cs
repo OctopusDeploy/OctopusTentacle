@@ -55,6 +55,74 @@ public sealed class GatewayClientTests
         Assert.All(failures.Skip(1), e => Assert.Equal(LogLevel.Debug, e.Level));
     }
 
+    [Fact]
+    public async Task Reconnect_backoff_doubles_up_to_MaxReconnectBackoff()
+    {
+        var port = GetClosedPort();
+        var outbox = new Outbox();
+        var signal = new CapacitySignal();
+        var root = Path.Combine(Path.GetTempPath(), "tspoc-gateway-client-tests", Guid.NewGuid().ToString("N"));
+        var executor = new GatewayJobExecutor(
+            new JobRunner(new ProcessJobBackend(TimeProvider.System), new FileLogStore(root), new JobRunnerOptions()),
+            outbox,
+            signal,
+            TimeProvider.System,
+            new StubLifetime(),
+            NullLogger<GatewayJobExecutor>.Instance);
+        var options = Options.Create(new GatewayOptions
+        {
+            ServerAddress = $"http://127.0.0.1:{port}",
+            MaxReconnectBackoff = TimeSpan.FromMilliseconds(40),
+        });
+        var delays = new List<TimeSpan>();
+        var enoughDelays = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var client = new GatewayClient(executor, outbox, new FixedCapacityProvider(executor, options), signal, options, NullLogger<GatewayClient>.Instance)
+        {
+            InitialBackoff = TimeSpan.FromMilliseconds(10),
+            MaxJitter = TimeSpan.Zero,
+            // Records what the loop asks for and waits only a moment, so the sequence is deterministic and quick.
+            Delay = (delay, ct) =>
+            {
+                lock (delays)
+                {
+                    delays.Add(delay);
+                    if (delays.Count >= 6)
+                    {
+                        enoughDelays.TrySetResult();
+                    }
+                }
+
+                return Task.Delay(TimeSpan.FromMilliseconds(1), ct);
+            },
+        };
+
+        await client.StartAsync(TestContext.Current.CancellationToken);
+        try
+        {
+            await enoughDelays.Task.WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
+        }
+        finally
+        {
+            await client.StopAsync(CancellationToken.None);
+        }
+
+        TimeSpan[] recorded;
+        lock (delays)
+        {
+            recorded = [.. delays.Take(6)];
+        }
+
+        Assert.Equal(
+            new[] { 10, 20, 40, 40, 40, 40 }.Select(ms => TimeSpan.FromMilliseconds(ms)),
+            recorded);
+    }
+
+    [Fact]
+    public void MaxReconnectBackoff_defaults_to_30_seconds()
+    {
+        Assert.Equal(TimeSpan.FromSeconds(30), new GatewayOptions().MaxReconnectBackoff);
+    }
+
     static int GetClosedPort()
     {
         var listener = new TcpListener(IPAddress.Loopback, 0);
