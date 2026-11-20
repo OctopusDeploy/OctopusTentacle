@@ -27,20 +27,19 @@ public sealed class GatewayClient(
     // so this goes back to zero on every reconnect.
     int requested;
 
+    // Reconnect timing. Internal so tests can shrink it; not configuration.
+    internal TimeSpan InitialBackoff { get; init; } = TimeSpan.FromSeconds(1);
+
+    internal TimeSpan MaxJitter { get; init; } = TimeSpan.FromSeconds(1);
+
+    static LogLevel FailureLevel(int consecutiveFailures) => consecutiveFailures <= 1 ? LogLevel.Warning : LogLevel.Debug;
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var runner = options.Value;
         using var channel = GrpcChannel.ForAddress(runner.ServerAddress, new GrpcChannelOptions
         {
-            HttpHandler = new SocketsHttpHandler
-            {
-                // Keep the stream alive through Azure Load Balancer's idle timeout (4 minutes by default).
-                KeepAlivePingDelay = TimeSpan.FromSeconds(30),
-                KeepAlivePingTimeout = TimeSpan.FromSeconds(20),
-                KeepAlivePingPolicy = HttpKeepAlivePingPolicy.Always,
-                PooledConnectionIdleTimeout = Timeout.InfiniteTimeSpan,
-                EnableMultipleHttp2Connections = true,
-            },
+            HttpHandler = GatewayHttpHandler.Create(runner),
         });
         var client = new RunnerGateway.RunnerGatewayClient(channel);
         var headers = new Metadata();
@@ -49,13 +48,19 @@ public sealed class GatewayClient(
             headers.Add("authorization", $"Bearer {runner.Token}");
         }
 
-        var backoff = TimeSpan.FromSeconds(1);
+        var backoff = InitialBackoff;
+        // Failures in a row since the last Welcome. Only the first is a Warning, so an unreachable Server doesn't flood the log.
+        var consecutiveFailures = 0;
         while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
-                await RunSessionAsync(client, headers, runner, stoppingToken, onWelcome: () => backoff = TimeSpan.FromSeconds(1));
-                logger.LogWarning("Server closed the stream");
+                await RunSessionAsync(client, headers, runner, stoppingToken, onWelcome: () =>
+                {
+                    backoff = InitialBackoff;
+                    consecutiveFailures = 0;
+                });
+                logger.Log(FailureLevel(++consecutiveFailures), "Server closed the stream");
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
@@ -63,10 +68,10 @@ public sealed class GatewayClient(
             }
             catch (Exception ex)
             {
-                logger.LogWarning("Gateway connection to {Server} failed: {Error}", runner.ServerAddress, ex.Message);
+                logger.Log(FailureLevel(++consecutiveFailures), "Gateway connection to {Server} failed: {Error}", runner.ServerAddress, ex.Message);
             }
 
-            var delay = backoff + TimeSpan.FromMilliseconds(Random.Shared.Next(0, 1000));
+            var delay = backoff + (MaxJitter > TimeSpan.Zero ? Random.Shared.NextDouble() * MaxJitter : TimeSpan.Zero);
             backoff = TimeSpan.FromSeconds(Math.Min(30, backoff.TotalSeconds * 2));
             await Task.Delay(delay, stoppingToken);
         }

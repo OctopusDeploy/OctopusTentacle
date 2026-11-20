@@ -1,3 +1,5 @@
+using System.Security.Cryptography.X509Certificates;
+
 namespace Octopus.Pipelines.Runner.Gateway;
 
 /// <summary>The runner's connection to the Server cell and how much work it pulls. Bound from the <c>Runner</c> section.</summary>
@@ -7,6 +9,15 @@ public sealed class GatewayOptions
     public string ServerAddress { get; set; } = "http://localhost:8081";
 
     public string Token { get; set; } = "";
+
+    /// <summary>Certificate presented to the Server for mutual TLS. Set in code, not configuration.</summary>
+    public X509Certificate2? ClientCertificate { get; set; }
+
+    /// <summary>
+    /// Decides whether to trust the Server's certificate, replacing chain validation (for example a thumbprint
+    /// comparison, so the certificate is pinned). Returning false refuses the connection. Set in code, not configuration.
+    /// </summary>
+    public Func<X509Certificate2, bool>? ServerCertificateValidator { get; set; }
 
     public string CellId { get; set; } = "local";
 

@@ -11,6 +11,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Octopus.Pipelines.Runner.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Octopus.Pipelines.Runner.Contracts\Octopus.Pipelines.Runner.Contracts.csproj" />
     <ProjectReference Include="..\Octopus.Pipelines.Runner.Core\Octopus.Pipelines.Runner.Core.csproj" />
   </ItemGroup>
