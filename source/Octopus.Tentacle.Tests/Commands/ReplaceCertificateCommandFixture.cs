@@ -50,7 +50,7 @@ namespace Octopus.Tentacle.Tests.Commands
         }
 
         [Test]
-        public void WhenAnUpdateFailsRerunningWithTheOldThumbprintFinishesWithTheSameCertificate()
+        public void WhenAnUpdateFailsRerunningWithKeepCertificateFinishesWithTheSameCertificate()
         {
             // Arrange
             using var tentacle = new TentacleConfigurationBuilder().WithCertificateThumbprint("OLD").Build();
@@ -72,7 +72,7 @@ namespace Octopus.Tentacle.Tests.Commands
             var savedThumbprint = tentacle.Configuration.TentacleCertificate!.Thumbprint;
 
             // Act
-            ReplaceCertificate(tentacle, octopus, "--old-thumbprint=OLD");
+            ReplaceCertificate(tentacle, octopus, "--keep-certificate-and-update-thumbprint=OLD");
 
             // Assert
             tentacle.Configuration.TentacleCertificate!.Thumbprint.Should().Be(savedThumbprint);
