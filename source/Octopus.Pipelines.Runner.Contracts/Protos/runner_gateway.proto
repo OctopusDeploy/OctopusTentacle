@@ -1,0 +1,120 @@
+// Copied from OctopusDeploy/infravnext@e7c2112 TargetScalePoC/src/Poc.Contracts/Protos/runner_gateway.proto.
+// The Server side's copy lives there. Keep the two in step until the contract has a single home.
+syntax = "proto3";
+
+package targetscalepoc.v1;
+
+option csharp_namespace = "Octopus.Pipelines.Runner.Contracts";
+
+import "google/protobuf/timestamp.proto";
+
+// Runners dial OUT to the Server cell and hold one bidirectional stream open.
+// The Server never connects to a runner, so runner cells need no inbound
+// networking (matching the Tentacle-polling style).
+//
+// Runners pull work: a runner sends AllocateNextJobCommand when it decides it can take
+// more, and the Server sends at most that many ExecuteJobCommand messages. The Server
+// never decides how much a runner can handle, so the runner can base requests
+// on anything it can observe (today a fixed limit, later how busy its cluster is).
+service RunnerGateway {
+  rpc Connect(stream RunnerMessage) returns (stream ServerMessage);
+}
+
+message RunnerMessage {
+  oneof body {
+    Hello hello = 1;
+    JobStartedEvent job_started = 2;
+    MarkJobAsFinishedCommand mark_job_as_finished = 3;
+    Heartbeat heartbeat = 4;
+    AllocateNextJobCommand allocate_next_job = 5;
+  }
+}
+
+message ServerMessage {
+  oneof body {
+    Welcome welcome = 1;
+    ExecuteJobCommand execute_job = 2;
+    Heartbeat heartbeat = 3;
+  }
+  reserved 4;
+}
+
+// Sent by the Server on an interval and echoed back by the runner. Keeps both directions of the
+// stream busy so idle-timeout proxies (App Service's front end drops requests idle for about 230s,
+// Azure Load Balancer after 4 minutes) don't cut it, and lets the runner notice a dead Server.
+message Heartbeat {
+  google.protobuf.Timestamp sent_at = 1;
+}
+
+message Hello {
+  string cell_id = 1;
+  string runner_id = 2;
+  // Was max_concurrent_jobs. Runners now say how much they can take with AllocateNextJobCommand.
+  reserved 3;
+  reserved "max_concurrent_jobs";
+  // Jobs this runner is still executing from a previous (dropped) stream, so
+  // the Server can re-adopt them instead of marking them lost.
+  repeated string in_flight_job_ids = 4;
+}
+
+// Asks for up to `count` more jobs on this stream. Requests add up and stay open until the
+// Server has sent that many jobs: while the queue is empty the Server holds them, like a long
+// poll. They belong to the stream, so after a reconnect the runner starts again from zero.
+message AllocateNextJobCommand {
+  int32 count = 1;
+}
+
+message Welcome {
+  string server_id = 1;
+}
+
+message ExecuteJobCommand {
+  string job_id = 1;
+  string run_id = 2;
+  // Shell command executed with `sh -c` inside the job container.
+  string command = 3;
+  reserved 4;
+  JobIsolation isolation = 5;
+  JobStorage storage = 6;
+}
+
+// How strongly a job is separated from other jobs on the same node. Every job gets the cell's
+// baseline hardening (no network, non-root, user namespaces, resource limits); SANDBOXED also
+// runs it in its own lightweight VM with its own kernel (AKS Pod Sandboxing, Kata).
+// UNSPECIFIED is treated as STANDARD so older Servers keep working.
+enum JobIsolation {
+  JOB_ISOLATION_UNSPECIFIED = 0;
+  JOB_ISOLATION_STANDARD = 1;
+  JOB_ISOLATION_SANDBOXED = 2;
+}
+
+// Where the job's files go: its own directory in the customer's container, chosen by the Server
+// (customer placement is a Server concern); file content never flows through the Server cell.
+message JobStorage {
+  string storage_cell_id = 1;
+  // https://<account>.blob.core.windows.net/c-<customer>/runs/<run>/<job>?<sas> in Azure: a user
+  // delegation SAS that can create and append blobs under this directory and nothing else, valid
+  // for longer than the longest job. file:///<root>/c-<customer>/runs/<run>/<job> for local
+  // disk, with no query. Runners have no storage role of their own.
+  string directory_uri = 2;
+}
+
+message JobStartedEvent {
+  string job_id = 1;
+  google.protobuf.Timestamp started_at = 2;
+}
+
+enum JobOutcome {
+  JOB_OUTCOME_UNSPECIFIED = 0;
+  JOB_OUTCOME_SUCCEEDED = 1;
+  JOB_OUTCOME_FAILED = 2;
+}
+
+message MarkJobAsFinishedCommand {
+  string job_id = 1;
+  JobOutcome outcome = 2;
+  int32 exit_code = 3;
+  google.protobuf.Timestamp completed_at = 4;
+  int64 log_bytes = 5;
+  string error = 6;
+}

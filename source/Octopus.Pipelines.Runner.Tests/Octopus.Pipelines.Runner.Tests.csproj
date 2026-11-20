@@ -21,6 +21,10 @@
   <ItemGroup>
     <ProjectReference Include="..\Octopus.Pipelines.Runner.Core\Octopus.Pipelines.Runner.Core.csproj" />
     <ProjectReference Include="..\Octopus.Pipelines.Runner.Docker\Octopus.Pipelines.Runner.Docker.csproj" />
+    <ProjectReference Include="..\Octopus.Pipelines.Runner.Contracts\Octopus.Pipelines.Runner.Contracts.csproj" />
+    <ProjectReference Include="..\Octopus.Pipelines.Runner.Gateway\Octopus.Pipelines.Runner.Gateway.csproj" />
+    <ProjectReference Include="..\Octopus.Pipelines.Runner.Kubernetes\Octopus.Pipelines.Runner.Kubernetes.csproj" />
+    <ProjectReference Include="..\Octopus.Pipelines.Runner.Logs.AzureBlob\Octopus.Pipelines.Runner.Logs.AzureBlob.csproj" />
   </ItemGroup>
 
 </Project>
