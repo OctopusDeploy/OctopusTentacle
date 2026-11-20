@@ -15,7 +15,7 @@ This is still a PoC. Fewer code paths beat configurability.
 ## Goals
 
 1. The runner's libraries, the Kubernetes host and the CLI sample live in `source/` and build in `Tentacle.sln`, under the `Octopus.Pipelines.Runner` namespace.
-2. The `net10.0` (and `net10.0-windows`) Tentacle runs the runner, **enabled by default**, reusing Tentacle's existing configuration: the polling server it already trusts, and its own certificate to authenticate.
+2. The `net10.0` Tentacle runs the runner, **enabled by default**, reusing Tentacle's existing configuration: the polling server it already trusts, and its own certificate to authenticate.
 3. `Octopus.Pipelines.Runner.Core` and `Octopus.Pipelines.Runner.Docker` can be packed as NuGet packages for the CLI team.
 4. Runner tests run in this repo's build, and the CLI sample's Native AOT publish stays at zero warnings.
 
@@ -78,7 +78,7 @@ Each project:
 - Keeps the PoC's settings that the repo doesn't already set: `Nullable=enable`, `ImplicitUsings=enable`, `LangVersion=latest`. Put these in a `source/Octopus.Pipelines.Runner.Directory.Build.props`-style shared props file *or* in each `.csproj`; builder's call, but it must not change any existing project. (A `Directory.Build.props` in `source/` would; don't.)
 - Pins its package versions at the PoC's versions (from its `Directory.Packages.props`), except where Tentacle already pins a newer one.
 - Namespaces become `Octopus.Pipelines.Runner.<Project>` (PoC: `TargetScalePoC.Runner.<Project>`). `InternalsVisibleTo` names follow.
-- Is mapped into `Debug`, `Release` and every `Release-net10.0-*` configuration in `Tentacle.sln`, and **not built** in `Release-net48-win`.
+- Is mapped into `Debug` and `Release` in `Tentacle.sln`. Only the libraries Tentacle references (`Core`, `Contracts`, `Gateway`, `Logs.AzureBlob`) are also built in the `Release-net10.0-<rid>` configurations; none is built in `Release-net48-win` or `Release-net10.0-windows-*`.
 
 `Kubernetes.Host` and `CliSample` are executables. They must not produce output in `_build/` that Tentacle's packaging picks up. Builder to check: if publishing the solution for `Release-net10.0-<rid>` would publish them into Tentacle's artifacts, exclude them from those configurations too (they're built via their own targets, below).
 
@@ -86,7 +86,7 @@ Each project:
 
 In `source/Octopus.Tentacle`, everything under `#if` / MSBuild conditions for non-`net48` targets:
 
-- `ProjectReference` to `Octopus.Pipelines.Runner.Core`, `Octopus.Pipelines.Runner.Gateway` and `Octopus.Pipelines.Runner.Logs.AzureBlob`, conditioned on `'$(TargetFramework)' != 'net48'`.
+- `ProjectReference` to `Octopus.Pipelines.Runner.Core`, `Octopus.Pipelines.Runner.Gateway` and `Octopus.Pipelines.Runner.Logs.AzureBlob`, conditioned on `'$(TargetFramework)' == 'net10.0'`. The `net10.0-windows` Tentacle doesn't reference it: it wouldn't start the runner (below), and the runner libraries only target `net10.0`.
 - A `Pipelines/` folder with:
   - **`RunnerBackgroundTask : IBackgroundTask`**, registered in Autofac on net10.0* only (a small Autofac module). `Start()`:
     0. Returns without starting (logging once at Info why) when Tentacle is running as the Kubernetes agent (`KubernetesSupportDetection.IsRunningAsKubernetesAgent`; the Kubernetes runner is its own host, and jobs must not run as `sh -c` inside the agent pod), or on Windows (`ProcessJobBackend` runs `sh -c`, which a normal Windows machine doesn't have; a Windows shell is a later step). *Designer's call.*
