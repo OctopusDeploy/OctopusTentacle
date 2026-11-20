@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\Octopus.Pipelines.Runner.props" />
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <!-- xunit.v3 opts into Microsoft.Testing.Platform, which the .NET 10 SDK refuses to drive via VSTest; opt back out. -->
+    <IsTestingPlatformApplication>false</IsTestingPlatformApplication>
+    <RootNamespace>Octopus.Pipelines.Runner.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" Version="4.0.2" />
+    <!-- VSTest adapter and host: Build.Tests.cs drives `dotnet test` with the VSTest teamcity logger. -->
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Octopus.Pipelines.Runner.Core\Octopus.Pipelines.Runner.Core.csproj" />
+    <ProjectReference Include="..\Octopus.Pipelines.Runner.Docker\Octopus.Pipelines.Runner.Docker.csproj" />
+  </ItemGroup>
+
+</Project>

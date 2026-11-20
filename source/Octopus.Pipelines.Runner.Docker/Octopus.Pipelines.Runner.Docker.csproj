@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\Octopus.Pipelines.Runner.props" />
+
+  <PropertyGroup>
+    <RootNamespace>Octopus.Pipelines.Runner.Docker</RootNamespace>
+    <IsAotCompatible>true</IsAotCompatible>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Octopus.Pipelines.Runner.Core\Octopus.Pipelines.Runner.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Octopus.Pipelines.Runner.Tests" />
+  </ItemGroup>
+
+</Project>

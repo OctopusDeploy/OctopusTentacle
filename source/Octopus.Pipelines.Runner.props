@@ -1,0 +1,12 @@
+<Project>
+  <!--
+    Shared settings for the Octopus.Pipelines.Runner.* projects. Each runner .csproj imports this explicitly rather
+    than relying on a Directory.Build.props, so the rest of the solution's build settings are untouched.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+</Project>
