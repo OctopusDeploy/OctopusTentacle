@@ -1,7 +1,5 @@
 #if PIPELINES_RUNNER
 using System;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
@@ -28,22 +26,10 @@ namespace Octopus.Tentacle.Tests.Pipelines
                 Address = address == null ? null! : new Uri(address)
             };
 
-        static X509Certificate2 NewCertificate()
-        {
-            using var key = RSA.Create(2048);
-            var request = new CertificateRequest("CN=test", key, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
-            return request.CreateSelfSigned(DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddDays(1));
-        }
-
-        static ITentacleConfiguration Configuration(
-            OctopusServerConfiguration[] servers,
-            X509Certificate2? certificate = null,
-            string? squid = "SQ-ABC",
-            bool noCertificate = false)
+        static ITentacleConfiguration Configuration(OctopusServerConfiguration[] servers, string? squid = "SQ-ABC")
         {
             var configuration = Substitute.For<ITentacleConfiguration>();
             configuration.TrustedOctopusServers.Returns(servers);
-            configuration.TentacleCertificate.Returns(noCertificate ? null : certificate ?? NewCertificate());
 #pragma warning disable CS0618
             configuration.TentacleSquid.Returns(squid);
 #pragma warning restore CS0618
@@ -60,7 +46,6 @@ namespace Octopus.Tentacle.Tests.Pipelines
             skipReason.Should().BeNull();
             settings.Should().NotBeNull();
             settings!.ServerAddress.Should().Be(new Uri("https://b:10943"));
-            settings.ServerThumbprint.Should().Be("B");
         }
 
         [Test]
@@ -81,53 +66,23 @@ namespace Octopus.Tentacle.Tests.Pipelines
             skipReason.Should().Contain("address");
         }
 
+        [TestCase("https://b:10943")]
         [TestCase("http://b:10943")]
-        [TestCase("wss://b:10943")]
-        public void SkipsWhenThePollingAddressIsNotHttps(string address)
+        public void AcceptsHttpAndHttpsPollingAddresses(string address)
         {
             var settings = TentacleRunnerSettings.From(Configuration(new[] { Polling("B", address) }), false, false, out var skipReason);
 
-            settings.Should().BeNull();
-            skipReason.Should().Contain("https");
+            skipReason.Should().BeNull();
+            settings!.ServerAddress.Should().Be(new Uri(address));
         }
 
         [Test]
-        public void TrustsTheConfiguredServerCertificate()
+        public void SkipsWhenThePollingAddressCannotCarryGrpc()
         {
-            using var server = NewCertificate();
-
-            Settings(server.Thumbprint).TrustsServerCertificate(server).Should().BeTrue();
-        }
-
-        [Test]
-        public void RefusesADifferentServerCertificate()
-        {
-            using var server = NewCertificate();
-            using var other = NewCertificate();
-
-            Settings(server.Thumbprint).TrustsServerCertificate(other).Should().BeFalse();
-        }
-
-        [Test]
-        public void ComparesThumbprintsCaseInsensitively()
-        {
-            using var server = NewCertificate();
-
-            Settings(server.Thumbprint.ToLowerInvariant()).TrustsServerCertificate(server).Should().BeTrue();
-        }
-
-        static TentacleRunnerSettings Settings(string serverThumbprint)
-            => TentacleRunnerSettings.From(Configuration(new[] { Polling(serverThumbprint, "https://b:10943") }), false, false, out _)!;
-
-        [Test]
-        public void SkipsWhenTentacleHasNoCertificate()
-        {
-            var configuration = Configuration(new[] { Polling("B", "https://b:10943") }, noCertificate: true);
-
-            var settings = TentacleRunnerSettings.From(configuration, false, false, out var skipReason);
+            var settings = TentacleRunnerSettings.From(Configuration(new[] { Polling("B", "wss://b:10943") }), false, false, out var skipReason);
 
             settings.Should().BeNull();
-            skipReason.Should().Contain("certificate");
+            skipReason.Should().Contain("wss");
         }
 
         [Test]

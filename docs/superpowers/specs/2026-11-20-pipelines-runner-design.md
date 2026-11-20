@@ -15,7 +15,7 @@ This is still a PoC. Fewer code paths beat configurability.
 ## Goals
 
 1. The runner's libraries, the Kubernetes host and the CLI sample live in `source/` and build in `Tentacle.sln`, under the `Octopus.Pipelines.Runner` namespace.
-2. The `net10.0` Tentacle runs the runner, **enabled by default**, reusing Tentacle's existing configuration: the polling server it already trusts, and its own certificate to authenticate.
+2. The `net10.0` Tentacle runs the runner, **enabled by default**, reusing Tentacle's existing configuration: the polling server it already trusts. The gateway connection is unauthenticated for now (see Authentication).
 3. `Octopus.Pipelines.Runner.Core` and `Octopus.Pipelines.Runner.Docker` can be packed as NuGet packages for the CLI team.
 4. Runner tests run in this repo's build, and the CLI sample's Native AOT publish stays at zero warnings.
 
@@ -64,7 +64,7 @@ All under `source/`, in a `Pipelines.Runner` solution folder in `Tentacle.sln`. 
 |---|---|---|---|
 | `Poc.Runner.Core` | `Octopus.Pipelines.Runner.Core` | net10.0 | `IsAotCompatible`, packable |
 | `Poc.Runner.Docker` | `Octopus.Pipelines.Runner.Docker` | net10.0 | `IsAotCompatible`, packable |
-| `Poc.Runner.Gateway` | `Octopus.Pipelines.Runner.Gateway` | net10.0 | Gains client-certificate auth (below) |
+| `Poc.Runner.Gateway` | `Octopus.Pipelines.Runner.Gateway` | net10.0 | Gains a configurable reconnect backoff cap |
 | `Poc.Runner.Kubernetes` | `Octopus.Pipelines.Runner.Kubernetes` | net10.0 | |
 | `Poc.Runner.Logs.AzureBlob` | `Octopus.Pipelines.Runner.Logs.AzureBlob` | net10.0 | |
 | `Poc.Contracts` (runner_gateway.proto only) | `Octopus.Pipelines.Runner.Contracts` | net10.0 | Proto copied verbatim; C# namespace option changed |
@@ -96,12 +96,12 @@ In `source/Octopus.Tentacle`, everything under `#if` / MSBuild conditions for no
   - Logging bridged from `Microsoft.Extensions.Logging.ILogger` to Tentacle's `ISystemLog`, so runner logs land in the Tentacle log.
 - **Settings, all derived from what Tentacle already has; no new configuration:**
   - Server address: the polling server's `Address`, used as-is as the gateway address. (Assumption: the Server serves the gateway there. Which port and path the real self-hosted Server uses is decided with the Server.)
-  - Authentication: TLS client certificate `TentacleCertificate`, replacing the PoC's bearer token for this host. The server certificate is accepted if its thumbprint equals the trusted server's `Thumbprint` (pinning, as Halibut does), otherwise refused.
+  - Authentication: **none for now** (decided 2026-11-20, after the first build had mutual TLS with thumbprint pinning). The Tentacle sends no client certificate or token, and an `https://` address uses the platform's normal server-certificate validation. Both `http://` and `https://` polling addresses start the runner; any other scheme (e.g. `wss://`) is skipped with an Info line, because gRPC can't run over it. How the runner authenticates to a self-hosted Server is decided with the Server side.
   - Runner id: the Tentacle's `TentacleSquid`, falling back to the machine name.
   - Cell id: a constant `"self-hosted"`.
   - Capacity: `FixedCapacityProvider` with the PoC's default `MaxConcurrentJobs` (100). Adaptive starts off.
   - Job logs: the Server sends each job's storage location as an `https://` Azure Blob directory URI with its SAS (`JobStorage.directory_uri`), exactly as it does for the Kubernetes runner, and the Tentacle writes `job.log` there with the Azure Blob appender. No `file://` store is registered in Tentacle: a polling Tentacle isn't on the Server's machine, so a local file would be unreadable by the Server. A job given any other scheme fails with the existing unknown-scheme error. Other targets (a log collection endpoint, S3, …) are a later decision; for now it's Azure Blob only.
-- **Gateway library change** to support the above: `GatewayOptions` accepts an optional client certificate and an optional server-certificate validation callback, used when creating the `SocketsHttpHandler`. The bearer token stays for the Kubernetes host.
+- **Gateway library change** to support the above: `GatewayOptions.MaxReconnectBackoff` (default 30s, which the Kubernetes host keeps); Tentacle sets 5 minutes so an unreachable Server isn't retried every 30s by every Tentacle. The PoC's optional bearer token stays for the Kubernetes host.
 - Sandboxed jobs are refused, as `ProcessJobBackend` does in the PoC.
 
 Every `net10.0*` Tentacle that polls a Server starts the runner and tries to connect. Against a Server without a gateway, it fails and retries with the PoC's backoff, logging each failure. That's accepted for the PoC; the builder should make sure retries are capped so they don't flood the log (e.g. log the first failure at Warn and later ones at Debug/Verbose until a connection succeeds).
@@ -119,7 +119,7 @@ In `build/` (Nuke):
 - `CheckPipelinesRunnerAot`: `dotnet publish source/Octopus.Pipelines.Runner.CliSample -c Release -r linux-x64 -p:PublishAot=true`, failing on any warning (port of the PoC's `scripts/check-aot.sh`).
 - Wiring these targets into TeamCity is out of scope; say in the PR which targets exist.
 
-The existing Tentacle unit tests gain tests for the Tentacle glue (picking the server, skipping when there's no polling server, certificate pinning). They run in the existing `Octopus.Tentacle.Tests` (NUnit), on its net10.0 runs only.
+The existing Tentacle unit tests gain tests for the Tentacle glue (picking the server, skipping when there's no polling server or its address can't carry gRPC). They run in the existing `Octopus.Tentacle.Tests` (NUnit), on its net10.0 runs only.
 
 ## Tests
 
@@ -134,7 +134,7 @@ The existing Tentacle unit tests gain tests for the Tentacle glue (picking the s
 
 1. Libraries, contract, tests: copied, renamed, building and green in `Tentacle.sln`, with `Release-net48-win` and the existing publish flow unchanged.
 2. Kubernetes host and CLI sample, with the AOT gate and pack target.
-3. Gateway client-certificate support.
+3. Gateway reconnect backoff cap.
 4. Tentacle integration (references, background task, logging bridge, tests).
 
 Each step leaves the solution building and every existing test passing. Check after step 1 and step 4 that `Release-net48-win` and one `Release-net10.0-<rid>` publish still produce the same Tentacle output apart from the new runner assemblies in the net10 one.

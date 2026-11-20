@@ -42,7 +42,7 @@ public sealed class GatewayClient(
         var runner = options.Value;
         using var channel = GrpcChannel.ForAddress(runner.ServerAddress, new GrpcChannelOptions
         {
-            HttpHandler = GatewayHttpHandler.Create(runner),
+            HttpHandler = GatewayHttpHandler.Create(),
         });
         var client = new RunnerGateway.RunnerGatewayClient(channel);
         var headers = new Metadata();

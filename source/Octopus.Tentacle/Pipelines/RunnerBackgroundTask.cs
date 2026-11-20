@@ -102,8 +102,6 @@ namespace Octopus.Tentacle.Pipelines
                         CellId = TentacleRunnerSettings.CellId,
                         RunnerId = settings.RunnerId,
                         MaxConcurrentJobs = TentacleRunnerSettings.MaxConcurrentJobs,
-                        ClientCertificate = settings.ClientCertificate,
-                        ServerCertificateValidator = settings.TrustsServerCertificate,
                         MaxReconnectBackoff = TentacleRunnerSettings.MaxReconnectBackoff
                     };
                     configureGateway?.Invoke(gatewayOptions);

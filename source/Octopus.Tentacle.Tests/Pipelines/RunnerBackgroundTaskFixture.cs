@@ -6,8 +6,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
@@ -28,13 +26,6 @@ namespace Octopus.Tentacle.Tests.Pipelines
     [TestFixture]
     public class RunnerBackgroundTaskFixture
     {
-        static X509Certificate2 NewCertificate()
-        {
-            using var key = RSA.Create(2048);
-            var request = new CertificateRequest("CN=test", key, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
-            return request.CreateSelfSigned(DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddDays(1));
-        }
-
         static int ClosedPort()
         {
             var listener = new TcpListener(IPAddress.Loopback, 0);
@@ -48,7 +39,6 @@ namespace Octopus.Tentacle.Tests.Pipelines
         {
             var configuration = Substitute.For<ITentacleConfiguration>();
             configuration.TrustedOctopusServers.Returns(servers);
-            configuration.TentacleCertificate.Returns(NewCertificate());
 #pragma warning disable CS0618
             configuration.TentacleSquid.Returns("SQ-TEST");
 #pragma warning restore CS0618
@@ -88,7 +78,6 @@ namespace Octopus.Tentacle.Tests.Pipelines
         {
             var log = Substitute.For<ISystemLog>();
             var configuration = Substitute.For<ITentacleConfiguration>();
-            configuration.TentacleCertificate.Returns(NewCertificate());
             configuration.TrustedOctopusServers.Returns(_ => throw new InvalidOperationException("boom"));
             var task = NewTask(configuration, log);
 
