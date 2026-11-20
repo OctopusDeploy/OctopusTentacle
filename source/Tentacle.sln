@@ -75,6 +75,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Octopus.Pipelines.Runner.Lo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Octopus.Pipelines.Runner.Kubernetes", "Octopus.Pipelines.Runner.Kubernetes\Octopus.Pipelines.Runner.Kubernetes.csproj", "{D15EF5C9-4E5B-448F-A99B-B9C053F84EDC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Octopus.Pipelines.Runner.Kubernetes.Host", "Octopus.Pipelines.Runner.Kubernetes.Host\Octopus.Pipelines.Runner.Kubernetes.Host.csproj", "{E46EEAC6-E3C0-4C43-8477-EB742353A1A0}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Octopus.Pipelines.Runner.Tests", "Octopus.Pipelines.Runner.Tests\Octopus.Pipelines.Runner.Tests.csproj", "{7833FE8F-D0C2-4017-8D11-E22DE712898A}"
 EndProject
 Global
@@ -524,6 +526,21 @@ Global
 		{D15EF5C9-4E5B-448F-A99B-B9C053F84EDC}.Release-net10.0-win-x86|Any CPU.ActiveCfg = Release|Any CPU
 		{D15EF5C9-4E5B-448F-A99B-B9C053F84EDC}.Release-net10.0-windows-win-x64|Any CPU.ActiveCfg = Release|Any CPU
 		{D15EF5C9-4E5B-448F-A99B-B9C053F84EDC}.Release-net10.0-windows-win-x86|Any CPU.ActiveCfg = Release|Any CPU
+		{E46EEAC6-E3C0-4C43-8477-EB742353A1A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E46EEAC6-E3C0-4C43-8477-EB742353A1A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E46EEAC6-E3C0-4C43-8477-EB742353A1A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E46EEAC6-E3C0-4C43-8477-EB742353A1A0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E46EEAC6-E3C0-4C43-8477-EB742353A1A0}.Release-net48-win|Any CPU.ActiveCfg = Release|Any CPU
+		{E46EEAC6-E3C0-4C43-8477-EB742353A1A0}.Release-net10.0-linux-arm|Any CPU.ActiveCfg = Release|Any CPU
+		{E46EEAC6-E3C0-4C43-8477-EB742353A1A0}.Release-net10.0-linux-arm64|Any CPU.ActiveCfg = Release|Any CPU
+		{E46EEAC6-E3C0-4C43-8477-EB742353A1A0}.Release-net10.0-linux-musl-x64|Any CPU.ActiveCfg = Release|Any CPU
+		{E46EEAC6-E3C0-4C43-8477-EB742353A1A0}.Release-net10.0-linux-x64|Any CPU.ActiveCfg = Release|Any CPU
+		{E46EEAC6-E3C0-4C43-8477-EB742353A1A0}.Release-net10.0-osx-arm64|Any CPU.ActiveCfg = Release|Any CPU
+		{E46EEAC6-E3C0-4C43-8477-EB742353A1A0}.Release-net10.0-osx-x64|Any CPU.ActiveCfg = Release|Any CPU
+		{E46EEAC6-E3C0-4C43-8477-EB742353A1A0}.Release-net10.0-win-x64|Any CPU.ActiveCfg = Release|Any CPU
+		{E46EEAC6-E3C0-4C43-8477-EB742353A1A0}.Release-net10.0-win-x86|Any CPU.ActiveCfg = Release|Any CPU
+		{E46EEAC6-E3C0-4C43-8477-EB742353A1A0}.Release-net10.0-windows-win-x64|Any CPU.ActiveCfg = Release|Any CPU
+		{E46EEAC6-E3C0-4C43-8477-EB742353A1A0}.Release-net10.0-windows-win-x86|Any CPU.ActiveCfg = Release|Any CPU
 		{7833FE8F-D0C2-4017-8D11-E22DE712898A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7833FE8F-D0C2-4017-8D11-E22DE712898A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7833FE8F-D0C2-4017-8D11-E22DE712898A}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -553,6 +570,7 @@ Global
 		{02FC3226-3835-4784-B4CC-74F5572E84FC} = {5A3C2E47-8008-9C3F-454C-3DC17AD7DBA3}
 		{219C567A-A778-467A-836D-F0D4695946B0} = {5A3C2E47-8008-9C3F-454C-3DC17AD7DBA3}
 		{D15EF5C9-4E5B-448F-A99B-B9C053F84EDC} = {5A3C2E47-8008-9C3F-454C-3DC17AD7DBA3}
+		{E46EEAC6-E3C0-4C43-8477-EB742353A1A0} = {5A3C2E47-8008-9C3F-454C-3DC17AD7DBA3}
 		{7833FE8F-D0C2-4017-8D11-E22DE712898A} = {5A3C2E47-8008-9C3F-454C-3DC17AD7DBA3}
 	EndGlobalSection
 EndGlobal

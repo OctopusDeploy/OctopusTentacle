@@ -1,0 +1,14 @@
+# Used instead of the repo root .dockerignore (which excludes all of source/) when building this Dockerfile.
+**
+!global.json
+!Directory.Build.props
+!NuGet.Config
+!source/Octopus.Pipelines.Runner.props
+!source/Octopus.Pipelines.Runner.Contracts/**
+!source/Octopus.Pipelines.Runner.Logs.AzureBlob/**
+!source/Octopus.Pipelines.Runner.Core/**
+!source/Octopus.Pipelines.Runner.Gateway/**
+!source/Octopus.Pipelines.Runner.Kubernetes/**
+!source/Octopus.Pipelines.Runner.Kubernetes.Host/**
+**/bin
+**/obj
