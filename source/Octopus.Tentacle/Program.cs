@@ -9,6 +9,9 @@ using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Maintenance;
+#if PIPELINES_RUNNER
+using Octopus.Tentacle.Pipelines;
+#endif
 using Octopus.Tentacle.Properties;
 using Octopus.Tentacle.Services;
 using Octopus.Tentacle.Startup;
@@ -53,6 +56,9 @@ namespace Octopus.Tentacle
             builder.RegisterModule(new ServicesModule());
             builder.RegisterModule(new VersioningModule(GetType().Assembly));
             builder.RegisterModule(new MaintenanceModule());
+#if PIPELINES_RUNNER
+            builder.RegisterModule(new PipelinesRunnerModule());
+#endif
             builder.RegisterModule(new KubernetesModule());
             builder.RegisterModule(new ScriptsModule());
 
