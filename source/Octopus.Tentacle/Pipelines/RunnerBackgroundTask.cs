@@ -11,7 +11,7 @@ using Octopus.Pipelines.Runner.Core;
 using Octopus.Pipelines.Runner.Core.Logs;
 using Octopus.Pipelines.Runner.Docker;
 using Octopus.Pipelines.Runner.Gateway;
-using Octopus.Pipelines.Runner.Logs.AzureBlob;
+using Octopus.Pipelines.Runner.Logs.Http;
 using Octopus.Tentacle.Background;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Core.Diagnostics;
@@ -86,6 +86,7 @@ namespace Octopus.Tentacle.Pipelines
 
                 LoggerFactory? loggerFactory = null;
                 DockerJobBackend? ownedBackend = null;
+                HttpLogStore? ownedLogStore = null;
                 try
                 {
                     var settings = TentacleRunnerSettings.From(configuration, isKubernetesAgent(), isWindows(), out var skipReason);
@@ -114,7 +115,7 @@ namespace Octopus.Tentacle.Pipelines
 
                     var jobRunner = new JobRunner(
                         backend ?? ownedBackend!,
-                        logStore ?? new LogStores(new Dictionary<string, ILogStore> { ["https"] = new AzureBlobLogStore() }),
+                        logStore ?? new LogStores(new Dictionary<string, ILogStore> { ["https"] = ownedLogStore = new HttpLogStore() }),
                         new JobRunnerOptions(),
                         clock,
                         loggerFactory.CreateLogger<JobRunner>());
@@ -139,13 +140,14 @@ namespace Octopus.Tentacle.Pipelines
                         TaskContinuationOptions.OnlyOnFaulted,
                         TaskScheduler.Default);
 
-                    running = new Running(client, executor, lifetime, loggerFactory, ownedBackend);
+                    running = new Running(client, executor, lifetime, loggerFactory, ownedBackend, ownedLogStore);
                     log.Info($"Pipelines runner {settings.RunnerId} started, polling {settings.ServerAddress}");
                 }
                 catch (Exception ex)
                 {
                     log.Error(ex, "The pipelines runner could not start. Tentacle will keep running without it.");
                     ownedBackend?.Dispose();
+                    ownedLogStore?.Dispose();
                     loggerFactory?.Dispose();
                     running = null;
                 }
@@ -191,6 +193,7 @@ namespace Octopus.Tentacle.Pipelines
                     {
                         stopping.Client.Dispose();
                         stopping.OwnedBackend?.Dispose();
+                        stopping.OwnedLogStore?.Dispose();
                         stopping.LoggerFactory.Dispose();
                     }
                     catch (Exception ex)
@@ -207,13 +210,14 @@ namespace Octopus.Tentacle.Pipelines
 
         sealed class Running
         {
-            public Running(GatewayClient client, GatewayJobExecutor executor, RunnerLifetime lifetime, LoggerFactory loggerFactory, DockerJobBackend? ownedBackend)
+            public Running(GatewayClient client, GatewayJobExecutor executor, RunnerLifetime lifetime, LoggerFactory loggerFactory, DockerJobBackend? ownedBackend, HttpLogStore? ownedLogStore)
             {
                 Client = client;
                 Executor = executor;
                 Lifetime = lifetime;
                 LoggerFactory = loggerFactory;
                 OwnedBackend = ownedBackend;
+                OwnedLogStore = ownedLogStore;
             }
 
             public GatewayClient Client { get; }
@@ -223,6 +227,9 @@ namespace Octopus.Tentacle.Pipelines
 
             /// <summary>The backend this task created (not one a test passed in), disposed when the runner stops.</summary>
             public DockerJobBackend? OwnedBackend { get; }
+
+            /// <summary>The HTTPS log store this task created (not one a test passed in), disposed when the runner stops.</summary>
+            public HttpLogStore? OwnedLogStore { get; }
         }
     }
 }

@@ -44,7 +44,7 @@ This is still a PoC. Fewer code paths beat configurability.
 - `Build.cs` publishes the **whole solution** once per `Release-<framework>-<runtime>` configuration (`dotnet publish source/Tentacle.sln -c Release-net48-win -f net48 ...`). Runner projects target `net10.0` only, so they must be excluded from `Release-net48-win` in the solution's configuration mapping.
 - Tentacle (`source/Octopus.Tentacle`) uses Autofac 4.6, NLog, and its own command host; there is no .NET Generic Host. `RunAgentCommand` starts every Autofac-registered `IBackgroundTask` after Halibut and stops them on shutdown. That is where the runner plugs in.
 - Tentacle authenticates to its Server with its own certificate (`ITentacleConfiguration.TentacleCertificate`) and trusts a Server by thumbprint (`TrustedOctopusServers[].Thumbprint`). A polling Tentacle also has the Server's `Address`; a listening Tentacle doesn't.
-- Referencing `Logs.AzureBlob` brings `Azure.Storage.Blobs` (no `Azure.Identity`) into the net10 Tentacle's dependencies; that's accepted.
+- Tentacle references `Logs.Http` (HttpClient only, AOT-compatible), not `Logs.AzureBlob`, so the net10 Tentacle ships no Azure SDK.
 - `Octopus.Tentacle` already uses `KubernetesClient` 19.0.2 for the Kubernetes agent; the runner's Kubernetes library uses 21.0.8. The Tentacle glue doesn't reference the runner's Kubernetes library, so they don't meet.
 
 ## Approaches considered
@@ -66,7 +66,8 @@ All under `source/`, in a `Pipelines.Runner` solution folder in `Tentacle.sln`. 
 | `Poc.Runner.Docker` | `Octopus.Pipelines.Runner.Docker` | net10.0 | `IsAotCompatible`, packable |
 | `Poc.Runner.Gateway` | `Octopus.Pipelines.Runner.Gateway` | net10.0 | Gains a configurable reconnect backoff cap |
 | `Poc.Runner.Kubernetes` | `Octopus.Pipelines.Runner.Kubernetes` | net10.0 | |
-| `Poc.Runner.Logs.AzureBlob` | `Octopus.Pipelines.Runner.Logs.AzureBlob` | net10.0 | |
+| `Poc.Runner.Logs.AzureBlob` | `Octopus.Pipelines.Runner.Logs.AzureBlob` | net10.0 | Kubernetes host only |
+| — (new) | `Octopus.Pipelines.Runner.Logs.Http` | net10.0 | Generic HTTPS log endpoint, `IsAotCompatible`; used by Tentacle |
 | `Poc.Contracts` (runner_gateway.proto only) | `Octopus.Pipelines.Runner.Contracts` | net10.0 | Proto copied verbatim; C# namespace option changed |
 | `Poc.Runner` (AKS host exe) + its `Dockerfile` | `Octopus.Pipelines.Runner.Kubernetes.Host` | net10.0 | Same config keys as the PoC so infravnext's `deploy/runner/` keeps working |
 | `Poc.Runner.CliSample` | `Octopus.Pipelines.Runner.CliSample` | net10.0 | `PublishAot=true`; the AOT gate |
@@ -78,7 +79,7 @@ Each project:
 - Keeps the PoC's settings that the repo doesn't already set: `Nullable=enable`, `ImplicitUsings=enable`, `LangVersion=latest`. Put these in a `source/Octopus.Pipelines.Runner.Directory.Build.props`-style shared props file *or* in each `.csproj`; builder's call, but it must not change any existing project. (A `Directory.Build.props` in `source/` would; don't.)
 - Pins its package versions at the PoC's versions (from its `Directory.Packages.props`), except where Tentacle already pins a newer one.
 - Namespaces become `Octopus.Pipelines.Runner.<Project>` (PoC: `TargetScalePoC.Runner.<Project>`). `InternalsVisibleTo` names follow.
-- Is mapped into `Debug` and `Release` in `Tentacle.sln`. Only the libraries Tentacle references (`Core`, `Contracts`, `Gateway`, `Logs.AzureBlob`) are also built in the `Release-net10.0-<rid>` configurations; none is built in `Release-net48-win` or `Release-net10.0-windows-*`.
+- Is mapped into `Debug` and `Release` in `Tentacle.sln`. Only the libraries Tentacle references (`Core`, `Contracts`, `Gateway`, `Docker`, `Logs.Http`) are also built in the `Release-net10.0-<rid>` configurations; none is built in `Release-net48-win` or `Release-net10.0-windows-*`.
 
 `Kubernetes.Host` and `CliSample` are executables. They must not produce output in `_build/` that Tentacle's packaging picks up. Builder to check: if publishing the solution for `Release-net10.0-<rid>` would publish them into Tentacle's artifacts, exclude them from those configurations too (they're built via their own targets, below).
 
@@ -86,12 +87,12 @@ Each project:
 
 In `source/Octopus.Tentacle`, everything under `#if` / MSBuild conditions for non-`net48` targets:
 
-- `ProjectReference` to `Octopus.Pipelines.Runner.Core`, `Octopus.Pipelines.Runner.Gateway` and `Octopus.Pipelines.Runner.Logs.AzureBlob`, conditioned on `'$(TargetFramework)' == 'net10.0'`. The `net10.0-windows` Tentacle doesn't reference it: it wouldn't start the runner (below), and the runner libraries only target `net10.0`.
+- `ProjectReference` to `Octopus.Pipelines.Runner.Core`, `Octopus.Pipelines.Runner.Gateway`, `Octopus.Pipelines.Runner.Docker` and `Octopus.Pipelines.Runner.Logs.Http`, conditioned on `'$(TargetFramework)' == 'net10.0'`. The `net10.0-windows` Tentacle doesn't reference it: it wouldn't start the runner (below), and the runner libraries only target `net10.0`.
 - A `Pipelines/` folder with:
   - **`RunnerBackgroundTask : IBackgroundTask`**, registered in Autofac on net10.0* only (a small Autofac module). `Start()`:
     0. Returns without starting (logging once at Info why) when Tentacle is running as the Kubernetes agent (`KubernetesSupportDetection.IsRunningAsKubernetesAgent`; the Kubernetes runner is its own host, and jobs must not run as `sh -c` inside the agent pod), or on Windows (`ProcessJobBackend` runs `sh -c`, which a normal Windows machine doesn't have; a Windows shell is a later step). *Designer's call.*
     1. Picks the first entry in `TrustedOctopusServers` with `CommunicationStyle == TentacleActive` (polling) and an `Address`. If there's none (e.g. a listening Tentacle), logs once at Info that the runner isn't started and why, and returns.
-    2. Builds the runner by hand, without a Generic Host: `DockerJobBackend` (each job in a container on the local Docker daemon, which is assumed to be installed; the backend's default image `busybox:1.37`, limits and non-root user), a `LogStores` with only the Azure Blob (`https`) store, `JobRunner`, the gateway's capacity provider, `GatewayJobExecutor` and `GatewayClient`.
+    2. Builds the runner by hand, without a Generic Host: `DockerJobBackend` (each job in a container on the local Docker daemon, which is assumed to be installed; the backend's default image `busybox:1.37`, limits and non-root user), a `LogStores` with only the HTTPS log endpoint (`https`) store, `JobRunner`, the gateway's capacity provider, `GatewayJobExecutor` and `GatewayClient`.
     3. Starts `GatewayClient` (`StartAsync`). `Stop()` calls `StopAsync` with a bounded timeout. If `GatewayClient` as a `BackgroundService` can't be driven cleanly this way, give the Gateway library a small host-agnostic start/stop API instead; builder's call.
   - Logging bridged from `Microsoft.Extensions.Logging.ILogger` to Tentacle's `ISystemLog`, so runner logs land in the Tentacle log.
 - **Settings, all derived from what Tentacle already has; no new configuration:**
@@ -100,7 +101,11 @@ In `source/Octopus.Tentacle`, everything under `#if` / MSBuild conditions for no
   - Runner id: the Tentacle's `TentacleSquid`, falling back to the machine name.
   - Cell id: a constant `"self-hosted"`.
   - Capacity: `FixedCapacityProvider` with the PoC's default `MaxConcurrentJobs` (100). Adaptive starts off.
-  - Job logs: the Server sends each job's storage location as an `https://` Azure Blob directory URI with its SAS (`JobStorage.directory_uri`), exactly as it does for the Kubernetes runner, and the Tentacle writes `job.log` there with the Azure Blob appender. No `file://` store is registered in Tentacle: a polling Tentacle isn't on the Server's machine, so a local file would be unreadable by the Server. A job given any other scheme fails with the existing unknown-scheme error. Other targets (a log collection endpoint, S3, …) are a later decision; for now it's Azure Blob only.
+  - Job logs (decided 2026-11-20, replacing Azure Blob for this host): the Server sends each job's directory as an `https://` URI (`JobStorage.directory_uri`) on a **generic HTTPS log endpoint**, and the Tentacle writes `job.log` there with `Octopus.Pipelines.Runner.Logs.Http` (`HttpLogStore`). The query string, if any (e.g. a token), is sent as given; there is no other auth. The protocol:
+    - Create: `PUT <dir>/job.log`, empty body, `If-None-Match: *`. 2xx creates it; `412` means it already exists, which fails the job (a log is never overwritten). Transient failures are retried up to 3 attempts.
+    - Append: `POST <dir>/job.log`, the bytes as `application/octet-stream` (at most 4 MiB a request), `Octopus-Append-Offset: <bytes already written>`. The endpoint appends only when its length equals the offset and answers 2xx with `Octopus-Log-Length: <new length>`. On a mismatch it answers `412` with `Octopus-Log-Length: <its length>`: a length between the offset (exclusive) and offset + chunk means a retried append already landed and the runner carries on from there; anything else (or no header) fails the job.
+    - `401`, `403` and `404` are permanent and fail the job with `Log storage: …`; `5xx` and timeouts are transient and retried on the next flush.
+    No `file://` store is registered in Tentacle: a polling Tentacle isn't on the Server's machine. A job given any other scheme fails with the existing unknown-scheme error. The Kubernetes host keeps Azure Blob.
 - **Gateway library change** to support the above: `GatewayOptions.MaxReconnectBackoff` (default 30s, which the Kubernetes host keeps); Tentacle sets 5 minutes so an unreachable Server isn't retried every 30s by every Tentacle. The PoC's optional bearer token stays for the Kubernetes host.
 - Sandboxed jobs are refused, as the Docker backend does in the PoC. (Decided 2026-11-20: the self-hosted runner runs jobs in Docker containers, replacing the earlier local `sh -c` processes. Tentacle therefore also references `Octopus.Pipelines.Runner.Docker`, and `Docker` builds in the non-windows `Release-net10.0-<rid>` configurations.)
 

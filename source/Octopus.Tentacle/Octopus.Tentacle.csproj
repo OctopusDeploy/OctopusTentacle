@@ -52,7 +52,7 @@
 		<ProjectReference Include="..\Octopus.Pipelines.Runner.Core\Octopus.Pipelines.Runner.Core.csproj" />
 		<ProjectReference Include="..\Octopus.Pipelines.Runner.Docker\Octopus.Pipelines.Runner.Docker.csproj" />
 		<ProjectReference Include="..\Octopus.Pipelines.Runner.Gateway\Octopus.Pipelines.Runner.Gateway.csproj" />
-		<ProjectReference Include="..\Octopus.Pipelines.Runner.Logs.AzureBlob\Octopus.Pipelines.Runner.Logs.AzureBlob.csproj" />
+		<ProjectReference Include="..\Octopus.Pipelines.Runner.Logs.Http\Octopus.Pipelines.Runner.Logs.Http.csproj" />
 	</ItemGroup>
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
 		<PackageReference Include="KubernetesClient.Classic" Version="19.0.2" />

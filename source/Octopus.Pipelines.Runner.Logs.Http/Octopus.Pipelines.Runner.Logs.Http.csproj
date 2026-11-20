@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\Octopus.Pipelines.Runner.props" />
+
+  <PropertyGroup>
+    <RootNamespace>Octopus.Pipelines.Runner.Logs.Http</RootNamespace>
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Octopus.Pipelines.Runner.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Octopus.Pipelines.Runner.Core\Octopus.Pipelines.Runner.Core.csproj" />
+  </ItemGroup>
+
+</Project>
