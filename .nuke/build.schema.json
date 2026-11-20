@@ -61,6 +61,7 @@
         "Restore",
         "TestIntegration",
         "TestLinux",
+        "TestLinuxDockerImage",
         "TestLinuxPackages",
         "TestOsx",
         "TestWindows",
@@ -193,6 +194,10 @@
         "Solution": {
           "type": "string",
           "description": "Path to a solution file that is automatically loaded"
+        },
+        "TentacleLinuxDockerImage": {
+          "type": "string",
+          "description": "The Linux Tentacle image for TestLinuxDockerImage to test. Defaults to the tag docker-compose.build.yml gives the image for this version"
         },
         "TestFilter": {
           "type": "string"
