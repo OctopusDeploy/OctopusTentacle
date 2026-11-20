@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Octopus.Pipelines.Runner.Core;
@@ -33,6 +34,7 @@ namespace Octopus.Tentacle.Pipelines
         readonly TimeSpan stopTimeout;
         readonly IJobBackend? backend;
         readonly ILogStore? logStore;
+        readonly Action<GatewayOptions>? configureGateway;
         readonly object gate = new();
 
         Running? running;
@@ -49,7 +51,8 @@ namespace Octopus.Tentacle.Pipelines
             Func<bool> isWindows,
             TimeSpan? stopTimeout = null,
             IJobBackend? backend = null,
-            ILogStore? logStore = null)
+            ILogStore? logStore = null,
+            Action<GatewayOptions>? configureGateway = null)
         {
             this.configuration = configuration;
             this.log = log;
@@ -58,6 +61,7 @@ namespace Octopus.Tentacle.Pipelines
             this.stopTimeout = stopTimeout ?? DefaultStopTimeout;
             this.backend = backend;
             this.logStore = logStore;
+            this.configureGateway = configureGateway;
         }
 
         /// <summary>The running runner's job executor, so tests can hand it a job. Null when not running.</summary>
@@ -92,15 +96,18 @@ namespace Octopus.Tentacle.Pipelines
                     loggerFactory = new LoggerFactory(new[] { new SystemLogLoggerProvider(log) });
 
                     var clock = TimeProvider.System;
-                    var options = Options.Create(new GatewayOptions
+                    var gatewayOptions = new GatewayOptions
                     {
                         ServerAddress = settings.ServerAddress.ToString(),
                         CellId = TentacleRunnerSettings.CellId,
                         RunnerId = settings.RunnerId,
                         MaxConcurrentJobs = TentacleRunnerSettings.MaxConcurrentJobs,
                         ClientCertificate = settings.ClientCertificate,
-                        ServerCertificateValidator = c => string.Equals(c.Thumbprint, settings.ServerThumbprint, StringComparison.OrdinalIgnoreCase)
-                    });
+                        ServerCertificateValidator = settings.TrustsServerCertificate,
+                        MaxReconnectBackoff = TentacleRunnerSettings.MaxReconnectBackoff
+                    };
+                    configureGateway?.Invoke(gatewayOptions);
+                    var options = Options.Create(gatewayOptions);
 
                     var jobRunner = new JobRunner(
                         backend ?? new ProcessJobBackend(clock),
@@ -121,6 +128,13 @@ namespace Octopus.Tentacle.Pipelines
                         loggerFactory.CreateLogger<GatewayClient>());
 
                     client.StartAsync(CancellationToken.None).GetAwaiter().GetResult();
+
+                    // The gateway loop retries connection failures itself, so a fault means it has stopped for good.
+                    client.ExecuteTask?.ContinueWith(
+                        t => log.Error(t.Exception!.GetBaseException(), "Pipelines runner stopped unexpectedly"),
+                        CancellationToken.None,
+                        TaskContinuationOptions.OnlyOnFaulted,
+                        TaskScheduler.Default);
 
                     running = new Running(client, executor, lifetime, loggerFactory);
                     log.Info($"Pipelines runner {settings.RunnerId} started, polling {settings.ServerAddress}");

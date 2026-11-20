@@ -81,6 +81,44 @@ namespace Octopus.Tentacle.Tests.Pipelines
             skipReason.Should().Contain("address");
         }
 
+        [TestCase("http://b:10943")]
+        [TestCase("wss://b:10943")]
+        public void SkipsWhenThePollingAddressIsNotHttps(string address)
+        {
+            var settings = TentacleRunnerSettings.From(Configuration(new[] { Polling("B", address) }), false, false, out var skipReason);
+
+            settings.Should().BeNull();
+            skipReason.Should().Contain("https");
+        }
+
+        [Test]
+        public void TrustsTheConfiguredServerCertificate()
+        {
+            using var server = NewCertificate();
+
+            Settings(server.Thumbprint).TrustsServerCertificate(server).Should().BeTrue();
+        }
+
+        [Test]
+        public void RefusesADifferentServerCertificate()
+        {
+            using var server = NewCertificate();
+            using var other = NewCertificate();
+
+            Settings(server.Thumbprint).TrustsServerCertificate(other).Should().BeFalse();
+        }
+
+        [Test]
+        public void ComparesThumbprintsCaseInsensitively()
+        {
+            using var server = NewCertificate();
+
+            Settings(server.Thumbprint.ToLowerInvariant()).TrustsServerCertificate(server).Should().BeTrue();
+        }
+
+        static TentacleRunnerSettings Settings(string serverThumbprint)
+            => TentacleRunnerSettings.From(Configuration(new[] { Polling(serverThumbprint, "https://b:10943") }), false, false, out _)!;
+
         [Test]
         public void SkipsWhenTentacleHasNoCertificate()
         {

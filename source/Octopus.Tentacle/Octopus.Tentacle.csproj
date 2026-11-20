@@ -44,6 +44,7 @@
 	<PropertyGroup Condition=" $(TargetFramework.StartsWith('net10.0'))">
 		<DefineConstants>$(DefineConstants);HTTP_CLIENT_SUPPORTS_SSL_OPTIONS;REQUIRES_EXPLICIT_LOG_CONFIG;REQUIRES_CODE_PAGE_PROVIDER;USER_INTERACTIVE_DOES_NOT_WORK;DEFAULT_PROXY_IS_NOT_AVAILABLE;HAS_NULLABLE_REF_TYPES</DefineConstants>
 	</PropertyGroup>
+	<!-- Exactly net10.0, deliberately narrower than the StartsWith('net10.0') groups: the runner isn't built for net10.0-windows -->
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net10.0'">
 		<DefineConstants>$(DefineConstants);PIPELINES_RUNNER</DefineConstants>
 	</PropertyGroup>

@@ -115,6 +115,27 @@ namespace Octopus.Tentacle.Tests.Pipelines
         }
 
         [Test]
+        public async Task LogsAnErrorWhenTheGatewayLoopFaults()
+        {
+            var log = Substitute.For<ISystemLog>();
+            var loggedFault = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            log.When(l => l.Error(Arg.Any<Exception>(), "Pipelines runner stopped unexpectedly")).Do(_ => loggedFault.TrySetResult(true));
+            // A wss:// address makes GrpcChannel.ForAddress throw inside the gateway loop, after Start has returned.
+            var task = new RunnerBackgroundTask(PollingConfiguration(), log, () => false, () => false,
+                configureGateway: o => o.ServerAddress = "wss://127.0.0.1:1");
+
+            task.Start();
+            try
+            {
+                (await Task.WhenAny(loggedFault.Task, Task.Delay(TimeSpan.FromSeconds(10)))).Should().Be(loggedFault.Task, "the faulted gateway loop should be logged");
+            }
+            finally
+            {
+                task.Stop();
+            }
+        }
+
+        [Test]
         public async Task StopReturnsWithinTheTimeoutWhileAJobIsStillRunning()
         {
             var log = Substitute.For<ISystemLog>();
