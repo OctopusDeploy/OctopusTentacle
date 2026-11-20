@@ -34,6 +34,7 @@
         "BuildSoftwareBillOfMaterials",
         "BuildWindows",
         "CalculateVersion",
+        "CheckPipelinesRunnerAot",
         "Clean",
         "CleanUpSoftwareBillOfMaterials",
         "CopyClientAndContractsToLocalPackages",
@@ -54,6 +55,7 @@
         "PackLinuxUnsigned",
         "PackOsx",
         "PackOsxTarballs",
+        "PackPipelinesRunner",
         "PackRedHatPackage",
         "PackWindows",
         "PackWindowsInstallers",
@@ -63,6 +65,7 @@
         "TestLinux",
         "TestLinuxPackages",
         "TestOsx",
+        "TestPipelinesRunner",
         "TestWindows",
         "TestWindowsInstallers"
       ]

@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\Octopus.Pipelines.Runner.props" />
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Octopus.Pipelines.Runner.CliSample</RootNamespace>
+    <PublishAot>true</PublishAot>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Octopus.Pipelines.Runner.Core\Octopus.Pipelines.Runner.Core.csproj" />
+    <ProjectReference Include="..\Octopus.Pipelines.Runner.Docker\Octopus.Pipelines.Runner.Docker.csproj" />
+  </ItemGroup>
+
+</Project>
