@@ -1,4 +1,5 @@
 # Build context: repo root. docker build -f source/Octopus.Pipelines.Runner.Kubernetes.Host/Dockerfile .
+# The project folders copied below must match the allow-list in Dockerfile.dockerignore; add a project to both or the build can't see it.
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 COPY global.json Directory.Build.props NuGet.Config ./

@@ -31,9 +31,9 @@ internal static class RunnerHost
             case JobBackendKind.Process:
                 services.AddSingleton<IJobBackend, ProcessJobBackend>();
                 // Only the Process backend (local development) writes job logs to local disk.
-                // Falls back to the root scripts/run-local.sh gives the local Server's storage cell.
+                // Runner:LogRoot should point at the local Server's storage cell; without it, logs go to a temp folder.
                 var logRoot = runnerSection["LogRoot"]
-                    ?? Path.Combine(Path.GetTempPath(), "targetscalepoc-local", "storage-cell");
+                    ?? Path.Combine(Path.GetTempPath(), "octopus-pipelines-runner-local", "storage-cell");
                 logStores["file"] = new FileLogStore(logRoot);
                 break;
         }
