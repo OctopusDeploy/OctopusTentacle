@@ -21,7 +21,7 @@ using Octopus.Tentacle.Util;
 namespace Octopus.Tentacle.Tests.Configuration
 {
     [TestFixture]
-    [LinuxTest]
+    [LinuxOrMacTest]
     public class TentacleConfigurationUpgradeFixture
     {
         const string Certificate = "MIIC...the certificate...";
@@ -169,6 +169,25 @@ namespace Octopus.Tentacle.Tests.Configuration
             // Assert
             set.Should().Throw<CryptographicException>();
             RawCertificate().Should().Be(protectedValue);
+        }
+
+        [Test]
+        public void WhenTheKeyIsLostAfterMigrationThenStartLeavesProtectedValuesUntouched()
+        {
+            // Arrange
+            var keyFilePath = Path.Combine(directory, "keys", "Tentacle", ConfigurationEncryptionKey.KeyFileName);
+            var store = CreateStore(keyFilePath);
+            store.Set<string>(TentacleConfiguration.CertificateSettingName, Certificate, ProtectionLevel.MachineKey);
+            CreateUpgrade(store, keyFilePath).Upgrade();
+            var protectedValue = RawCertificate();
+            File.Delete(keyFilePath);
+
+            // Act
+            CreateUpgrade(CreateStore(keyFilePath), keyFilePath).Upgrade();
+
+            // Assert
+            RawCertificate().Should().Be(protectedValue);
+            RawCertificate().Should().StartWith(LinuxMachineKeyEncryptor.Specifier + "$");
         }
 
         readonly InMemoryCryptoKeyNixSource legacyKey = new();
