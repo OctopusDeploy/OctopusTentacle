@@ -75,7 +75,7 @@ Mount these to keep the Tentacle's identity when the container is re-created:
 | Path | Contains |
 | --- | --- |
 | `/etc/octopus` | Configuration, including the certificate |
-| `/var/octopus/tentacle/keys` | Key that encrypts the configuration |
+| `/var/lib/octopus/tentacle` | Keys that encrypt the configuration of every instance |
 
 Mount both or neither: the configuration can't be decrypted without its key. Configuration persisted by an earlier image can't be upgraded; start on new volumes.
 

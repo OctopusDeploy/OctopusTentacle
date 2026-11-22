@@ -15,7 +15,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
         public const string KeyFileName = "config-encryption.key";
 
         // Kept apart from /etc/octopus so that a copy of the configuration does not also carry the key that decrypts it.
-        public const string DefaultKeysDirectory = "/var/octopus/tentacle/keys";
+        public const string DefaultInstancesDataDirectory = "/var/lib/octopus/tentacle";
 
         const int KeySizeInBytes = 32;
 
@@ -28,8 +28,8 @@ namespace Octopus.Tentacle.Configuration.Crypto
             + "run `replace-certificate` with an API key. "
             + "This creates a new key and certificate, and updates every deployment target and worker registered with the old certificate to trust it.";
 
-        static string KeysDirectory
-            => Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleConfigurationKeysDirectory) is { Length: > 0 } directory ? directory : DefaultKeysDirectory;
+        static string InstancesDataDirectory
+            => Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleInstancesDataDirectory) is { Length: > 0 } directory ? directory : DefaultInstancesDataDirectory;
 
         readonly ISystemLog log;
         readonly IOctopusFileSystem fileSystem;
@@ -57,7 +57,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
                 throw new ArgumentException($"The instance name `{instanceName}` cannot be used as a key directory name.", nameof(instanceName));
             }
 
-            return JoinLinuxPath(JoinLinuxPath(KeysDirectory, instanceName), KeyFileName);
+            return JoinLinuxPath(JoinLinuxPath(JoinLinuxPath(InstancesDataDirectory, instanceName), "keys"), KeyFileName);
         }
 
         public byte[] Load()

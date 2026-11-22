@@ -725,9 +725,9 @@ Or one of the common options:
                 environmentVariablesToRunTentacleWith.Add(EnvironmentVariables.TentacleMachineConfigurationHomeDirectory, tempDirectory.DirectoryPath);
             }
 
-            if (!environmentVariablesToRunTentacleWith.ContainsKey(EnvironmentVariables.TentacleConfigurationKeysDirectory))
+            if (!environmentVariablesToRunTentacleWith.ContainsKey(EnvironmentVariables.TentacleInstancesDataDirectory))
             {
-                environmentVariablesToRunTentacleWith.Add(EnvironmentVariables.TentacleConfigurationKeysDirectory, Path.Combine(tempDirectory.DirectoryPath, "keys"));
+                environmentVariablesToRunTentacleWith.Add(EnvironmentVariables.TentacleInstancesDataDirectory, Path.Combine(tempDirectory.DirectoryPath, "data"));
             }
 
             var tentacleExe = TentacleExeFinder.FindTentacleExe(tentacleConfigurationTestCase.TentacleRuntime);

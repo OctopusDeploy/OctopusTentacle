@@ -323,7 +323,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 WithRunTentacleEnvironmentVariable(EnvironmentVariables.TentacleMachineConfigurationHomeDirectory, directory);
             }
 
-            WithRunTentacleEnvironmentVariable(EnvironmentVariables.TentacleConfigurationKeysDirectory, Path.Combine(HomeDirectory.DirectoryPath, "keys"));
+            WithRunTentacleEnvironmentVariable(EnvironmentVariables.TentacleInstancesDataDirectory, Path.Combine(HomeDirectory.DirectoryPath, "data"));
         }
 
         async Task SetEnvironmentVariablesForService(string instanceName, TemporaryDirectory tempDirectory, ILogger logger, CancellationToken cancellationToken)

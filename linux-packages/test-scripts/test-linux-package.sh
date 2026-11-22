@@ -59,7 +59,7 @@ echo ""
 # A new certificate must be encrypted with the instance's generated key, not one derived from /etc/machine-id.
 INSTANCE_NAME="package-test"
 CONFIGURATION_FILE="/etc/octopus/$INSTANCE_NAME/tentacle.config"
-MACHINE_KEY_FILE="/var/octopus/tentacle/keys/$INSTANCE_NAME/config-encryption.key"
+MACHINE_KEY_FILE="/var/lib/octopus/tentacle/$INSTANCE_NAME/keys/config-encryption.key"
 
 mkdir -p "$(dirname "$CONFIGURATION_FILE")"
 Tentacle create-instance --instance "$INSTANCE_NAME" --config "$CONFIGURATION_FILE"

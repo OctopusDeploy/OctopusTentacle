@@ -10,9 +10,9 @@ set -euo pipefail
 NEW_IMAGE=$1
 PREVIOUS_IMAGE=${2:-octopusdeploy/tentacle:latest}
 VOLUME="tentacle-config-upgrade-$$"
-KEYS_VOLUME="tentacle-keys-upgrade-$$"
+DATA_VOLUME="tentacle-data-upgrade-$$"
 WORK_DIR=$(mktemp -d)
-trap 'docker volume rm -f "$VOLUME" "$KEYS_VOLUME" >/dev/null; rm -rf "$WORK_DIR"' EXIT
+trap 'docker volume rm -f "$VOLUME" "$DATA_VOLUME" >/dev/null; rm -rf "$WORK_DIR"' EXIT
 
 FAILURES=0
 check() {
@@ -22,7 +22,7 @@ check() {
 in_container() {
     local image=$1 command=$2
     shift 2
-    docker run --rm -v "$VOLUME:/etc/octopus" -v "$KEYS_VOLUME:/var/octopus/tentacle/keys" "$@" --entrypoint bash "$image" -c "$command" 2>&1
+    docker run --rm -v "$VOLUME:/etc/octopus" -v "$DATA_VOLUME:/var/lib/octopus/tentacle" "$@" --entrypoint bash "$image" -c "$command" 2>&1
 }
 
 in_container "$PREVIOUS_IMAGE" 'tentacle create-instance --instance Tentacle --config /etc/octopus/tentacle.config >/dev/null && tentacle new-certificate --instance Tentacle >/dev/null'
@@ -39,7 +39,7 @@ check "the agent re-encrypts with the previous machine-id mounted" \
 
 check "the certificate carries the versioned prefix" \
     "$(in_container "$NEW_IMAGE" 'grep -cF "key=\"Tentacle.Certificate\">AESGCM-V1\$" /etc/octopus/tentacle.config')" "1"
-check "the key is owner-only" "$(in_container "$NEW_IMAGE" 'stat -c %a /var/octopus/tentacle/keys/Tentacle/config-encryption.key')" "600"
+check "the key is owner-only" "$(in_container "$NEW_IMAGE" 'stat -c %a /var/lib/octopus/tentacle/Tentacle/keys/config-encryption.key')" "600"
 check "the key is not beside the configuration" "$(in_container "$NEW_IMAGE" 'test -e /etc/octopus/config-encryption.key && echo present || echo absent')" "absent"
 check "the thumbprint is unchanged without the previous machine-id" "$(in_container "$NEW_IMAGE" 'tentacle show-thumbprint --instance Tentacle')" "$THUMBPRINT"
 

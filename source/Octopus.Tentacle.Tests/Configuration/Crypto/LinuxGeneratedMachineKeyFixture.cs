@@ -53,7 +53,7 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         [Test]
         public void KeyFileIsKeptPerInstanceOutsideTheConfigurationDirectory()
         {
-            ConfigurationEncryptionKey.KeyFilePathFor("Tentacle").Should().Be("/var/octopus/tentacle/keys/Tentacle/config-encryption.key");
+            ConfigurationEncryptionKey.KeyFilePathFor("Tentacle").Should().Be("/var/lib/octopus/tentacle/Tentacle/keys/config-encryption.key");
         }
 
         [TestCase("")]
