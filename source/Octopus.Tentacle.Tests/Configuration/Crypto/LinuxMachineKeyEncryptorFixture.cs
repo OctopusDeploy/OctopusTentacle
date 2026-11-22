@@ -29,7 +29,7 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
             var encrypted = encryptor.Encrypt("FooBar");
 
             // Assert
-            encrypted.Should().MatchRegex(@"^AES256-GCM\$[A-Za-z0-9+/=]+\$[A-Za-z0-9+/=]+$");
+            encrypted.Should().MatchRegex(@"^AESGCM-V1\$[A-Za-z0-9+/=]{16}\$[A-Za-z0-9+/=]{24}\$[A-Za-z0-9+/=]+$");
             encryptor.RequiresReEncryption(encrypted).Should().BeFalse();
             encryptor.Decrypt(encrypted).Should().Be("FooBar");
         }
@@ -49,8 +49,8 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
             decrypt.Should().Throw<CryptographicException>();
         }
 
-        [TestCase("AES128-GCM")]
-        [TestCase("aes256-gcm")]
+        [TestCase("AESGCM-V2")]
+        [TestCase("aesgcm-v1")]
         public void WhenTheSpecifierIsAlteredThenDecryptionFails(string alteredSpecifier)
         {
             // Arrange

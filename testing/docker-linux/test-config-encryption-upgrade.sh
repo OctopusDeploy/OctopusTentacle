@@ -38,7 +38,7 @@ check "the agent re-encrypts with the previous machine-id mounted" \
     "$(grep -c "Re-encrypted the protected setting 'Tentacle.Certificate'" <<<"$OUTPUT")" "1"
 
 check "the certificate carries the versioned prefix" \
-    "$(in_container "$NEW_IMAGE" 'grep -cF "key=\"Tentacle.Certificate\">AES256-GCM\$" /etc/octopus/tentacle.config')" "1"
+    "$(in_container "$NEW_IMAGE" 'grep -cF "key=\"Tentacle.Certificate\">AESGCM-V1\$" /etc/octopus/tentacle.config')" "1"
 check "the key is owner-only" "$(in_container "$NEW_IMAGE" 'stat -c %a /var/octopus/tentacle/keys/Tentacle/config-encryption.key')" "600"
 check "the key is not beside the configuration" "$(in_container "$NEW_IMAGE" 'test -e /etc/octopus/config-encryption.key && echo present || echo absent')" "absent"
 check "the thumbprint is unchanged without the previous machine-id" "$(in_container "$NEW_IMAGE" 'tentacle show-thumbprint --instance Tentacle')" "$THUMBPRINT"

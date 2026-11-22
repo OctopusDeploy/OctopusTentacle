@@ -7,11 +7,11 @@ using Octopus.Tentacle.Core.Diagnostics;
 
 namespace Octopus.Tentacle.Configuration.Crypto
 {
-    // Stored as AES256-GCM$base64(nonce)$base64(ciphertext || tag), with the specifier as associated data.
+    // Stored as AESGCM-V1$base64(nonce)$base64(tag)$base64(ciphertext), with the specifier as associated data.
     // Values without a $ were written by earlier versions with AES-CBC and a fixed IV.
     public class LinuxMachineKeyEncryptor : IMachineKeyEncryptor
     {
-        public const string Specifier = "AES256-GCM";
+        public const string Specifier = "AESGCM-V1";
         // $ is not a base64 character, so a value without one is unambiguously a legacy one.
         const char FieldSeparator = '$';
 
@@ -56,20 +56,18 @@ namespace Octopus.Tentacle.Configuration.Crypto
 
         static string EncryptCurrent(byte[] key, string raw)
         {
-            var plaintext = Encoding.UTF8.GetBytes(raw);
-            var payload = new byte[NonceSizeInBytes + plaintext.Length + TagSizeInBytes];
+            var nonce = new byte[NonceSizeInBytes];
             using (var random = RandomNumberGenerator.Create())
             {
-                var nonce = new byte[NonceSizeInBytes];
                 random.GetBytes(nonce);
-                Buffer.BlockCopy(nonce, 0, payload, 0, NonceSizeInBytes);
             }
 
-            Gcm.Encrypt(key, plaintext, payload, AssociatedData);
+            var plaintext = Encoding.UTF8.GetBytes(raw);
+            var ciphertext = new byte[plaintext.Length];
+            var tag = new byte[TagSizeInBytes];
+            Gcm.Encrypt(key, nonce, plaintext, ciphertext, tag, AssociatedData);
 
-            var nonceBase64 = Convert.ToBase64String(payload, 0, NonceSizeInBytes);
-            var ciphertextBase64 = Convert.ToBase64String(payload, NonceSizeInBytes, payload.Length - NonceSizeInBytes);
-            return string.Join(FieldSeparator.ToString(), Specifier, nonceBase64, ciphertextBase64);
+            return string.Join(FieldSeparator.ToString(), Specifier, Convert.ToBase64String(nonce), Convert.ToBase64String(tag), Convert.ToBase64String(ciphertext));
         }
 
         string EncryptLegacy(string raw)
@@ -123,9 +121,8 @@ namespace Octopus.Tentacle.Configuration.Crypto
 
             try
             {
-                var payload = ParsePayload(encrypted);
-
-                var plaintext = Gcm.Decrypt(key, payload, AssociatedData);
+                var (nonce, tag, ciphertext) = ParsePayload(encrypted);
+                var plaintext = Gcm.Decrypt(key, nonce, ciphertext, tag, AssociatedData);
                 return StrictUtf8.GetString(plaintext);
             }
             catch (Exception e)
@@ -137,12 +134,12 @@ namespace Octopus.Tentacle.Configuration.Crypto
             }
         }
 
-        static byte[] ParsePayload(string encrypted)
+        static (byte[] Nonce, byte[] Tag, byte[] Ciphertext) ParsePayload(string encrypted)
         {
             var fields = encrypted.Split(FieldSeparator);
-            if (fields.Length != 3)
+            if (fields.Length != 4)
             {
-                throw new FormatException($"Expected 3 '{FieldSeparator}'-separated fields but found {fields.Length}.");
+                throw new FormatException($"Expected 4 '{FieldSeparator}'-separated fields but found {fields.Length}.");
             }
 
             if (fields[0] != Specifier)
@@ -151,13 +148,13 @@ namespace Octopus.Tentacle.Configuration.Crypto
             }
 
             var nonce = Convert.FromBase64String(fields[1]);
-            var ciphertextAndTag = Convert.FromBase64String(fields[2]);
-            if (nonce.Length != NonceSizeInBytes || ciphertextAndTag.Length < TagSizeInBytes)
+            var tag = Convert.FromBase64String(fields[2]);
+            if (nonce.Length != NonceSizeInBytes || tag.Length != TagSizeInBytes)
             {
                 throw new FormatException("The nonce or authentication tag has the wrong length.");
             }
 
-            return nonce.Concat(ciphertextAndTag).ToArray();
+            return (nonce, tag, Convert.FromBase64String(fields[3]));
         }
 
         string DecryptLegacy(string encrypted)
@@ -186,35 +183,26 @@ namespace Octopus.Tentacle.Configuration.Crypto
         // Only reachable on .NET (Core): the .NET Framework build only runs on Windows, which uses DPAPI instead.
         static class Gcm
         {
-            public static void Encrypt(byte[] key, byte[] plaintext, byte[] payload, byte[] associatedData)
+            public static void Encrypt(byte[] key, byte[] nonce, byte[] plaintext, byte[] ciphertext, byte[] tag, byte[] associatedData)
             {
 #if NETFRAMEWORK
                 throw new PlatformNotSupportedException("The Linux machine key scheme is not available on .NET Framework.");
 #else
                 EnsureSupported();
                 using var aes = new AesGcm(key, TagSizeInBytes);
-                aes.Encrypt(payload.AsSpan(0, NonceSizeInBytes),
-                    plaintext,
-                    payload.AsSpan(NonceSizeInBytes, plaintext.Length),
-                    payload.AsSpan(NonceSizeInBytes + plaintext.Length, TagSizeInBytes),
-                    associatedData);
+                aes.Encrypt(nonce, plaintext, ciphertext, tag, associatedData);
 #endif
             }
 
-            public static byte[] Decrypt(byte[] key, byte[] payload, byte[] associatedData)
+            public static byte[] Decrypt(byte[] key, byte[] nonce, byte[] ciphertext, byte[] tag, byte[] associatedData)
             {
 #if NETFRAMEWORK
                 throw new PlatformNotSupportedException("The Linux machine key scheme is not available on .NET Framework.");
 #else
                 EnsureSupported();
-                var ciphertextLength = payload.Length - NonceSizeInBytes - TagSizeInBytes;
-                var plaintext = new byte[ciphertextLength];
+                var plaintext = new byte[ciphertext.Length];
                 using var aes = new AesGcm(key, TagSizeInBytes);
-                aes.Decrypt(payload.AsSpan(0, NonceSizeInBytes),
-                    payload.AsSpan(NonceSizeInBytes, ciphertextLength),
-                    payload.AsSpan(NonceSizeInBytes + ciphertextLength, TagSizeInBytes),
-                    plaintext,
-                    associatedData);
+                aes.Decrypt(nonce, ciphertext, tag, plaintext, associatedData);
                 return plaintext;
 #endif
             }

@@ -65,7 +65,7 @@ mkdir -p "$(dirname "$CONFIGURATION_FILE")"
 Tentacle create-instance --instance "$INSTANCE_NAME" --config "$CONFIGURATION_FILE"
 Tentacle new-certificate --instance "$INSTANCE_NAME"
 
-if ! grep -qF 'key="Tentacle.Certificate">AES256-GCM$' "$CONFIGURATION_FILE"; then
+if ! grep -qF 'key="Tentacle.Certificate">AESGCM-V1$' "$CONFIGURATION_FILE"; then
   echo "The Tentacle certificate in $CONFIGURATION_FILE was not encrypted with the versioned machine key scheme."
   exit 1
 fi
