@@ -1,51 +1,18 @@
 using Halibut;
-using Halibut.Diagnostics;
-using Halibut.Diagnostics.LogCreators;
-using Halibut.Logging;
 using Octopus.Tentacle.Client;
-using Octopus.Tentacle.Client.Retries;
-using Octopus.Tentacle.Client.Scripts;
-using Octopus.Tentacle.CommonTestUtils;
-using Octopus.Tentacle.Contracts.Observability;
+using Octopus.Tentacle.Tests.Integration.Common;
 using Octopus.Tentacle.Tests.Integration.Common.Builders.Decorators;
-using Octopus.Tentacle.Tests.Integration.Common.Logging;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Kubernetes.Tests.Integration.Setup;
 
 static class SetupHelpers
 {
-    public static HalibutRuntime BuildServerHalibutRuntime()
-    {
-        var serverHalibutRuntimeBuilder = new HalibutRuntimeBuilder()
-            .WithServerCertificate(TestCertificates.Server)
-            .WithHalibutTimeoutsAndLimits(HalibutTimeoutsAndLimits.RecommendedValues())
-            .WithLogFactory(new TestContextLogCreator("Server", LogLevel.Trace).ToCachingLogFactory());
+    public static HalibutRuntime BuildServerHalibutRuntime() => TestServerHalibut.BuildServerHalibutRuntime();
 
-        return serverHalibutRuntimeBuilder.Build();
-    }
-    
     public static TentacleClient BuildTentacleClient(Uri uri, string? thumbprint, HalibutRuntime halibutRuntime, Action<TentacleServiceDecoratorBuilder> tentacleServiceDecoratorBuilderAction)
-    {
-        var endpoint = new ServiceEndPoint(uri, thumbprint, halibutRuntime.TimeoutsAndLimits);
+        => TestServerHalibut.BuildTentacleClient(uri, thumbprint, halibutRuntime, tentacleServiceDecoratorBuilderAction);
 
-        var retrySettings = new RpcRetrySettings(true, TimeSpan.FromMinutes(2));
-        var clientOptions = new TentacleClientOptions(retrySettings);
-
-        TentacleClient.CacheServiceWasNotFoundResponseMessages(halibutRuntime);
-
-        var builder = new TentacleServiceDecoratorBuilder();
-        tentacleServiceDecoratorBuilderAction(builder);
-
-        return new TentacleClient(
-            endpoint,
-            halibutRuntime,
-            new PollingTentacleScriptObserverBackoffStrategy(),
-            new NoTentacleClientObserver(),
-            clientOptions,
-            builder.Build());
-    }
-    
     public static async Task<string?> GetTentacleImageAndTag(string kindExePath, KubernetesClusterInstaller clusterInstaller)
     {
         if (clusterInstaller == null)
