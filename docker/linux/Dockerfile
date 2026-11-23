@@ -75,6 +75,7 @@ ENV ServerApiKey=""
 ENV ServerPassword=""
 ENV ServerCommsAddress=""
 ENV ServerPort=""
+ENV ServerThumbprint=""
 ENV ServerUrl=""
 ENV ServerUsername=""
 ENV Space="Default"
@@ -85,6 +86,7 @@ ENV TargetTenant=""
 ENV TargetTenantTag=""
 ENV TargetTenantedDeploymentParticipation=""
 ENV TargetWorkerPool=""
+ENV TentacleCertificateBase64=""
 
 VOLUME /var/lib/docker
 

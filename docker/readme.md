@@ -66,6 +66,56 @@ It is recommended that you run this using something like docker compose, so that
 - **PollingConnectionCount**: The number of polling connections this Tentacle should open to each Octopus Server it polls. Only applies to polling Tentacles. If not set, workers default to at least 5 (scaling with processor count) and deployment targets default to 1.
 - **PublicHostNameConfiguration**: How the url that the Octopus server will use to communicate with the Tentacle is determined. Can be `PublicIp`, `FQDN`, `ComputerName` or `Custom`. Defaults to `PublicIp`.
 - **CustomPublicHostName**: If `PublicHostNameConfiguration` is set to `Custom`, the host name that the Octopus Server should use to communicate with the Tentacle.
+- **ServerThumbprint**: The thumbprint of the Octopus Server's certificate. Setting it configures a listening Tentacle that trusts that server and does not register with it. See [Running without registering](#running-without-registering) (Linux only).
+- **TentacleCertificateBase64**: A base64-encoded PFX certificate, without a password, for the Tentacle to use instead of generating its own. This keeps the Tentacle's thumbprint the same if the container is recreated (Linux only).
+
+### Running without registering
+
+By default the container registers itself with the Octopus Server on first start, which needs network access to the server. If the Tentacle can't reach the server, for example because the server doesn't accept inbound connections, set `ServerThumbprint` instead of `ServerUrl` and the registration settings:
+
+```
+docker run --publish 10933:10933 \
+           --env ServerThumbprint="<thumbprint of the Octopus Server's certificate>" \
+           --env ACCEPT_EULA="Y" \
+           octopusdeploy/tentacle
+```
+
+The container sets up a listening Tentacle that trusts that server, and logs the Tentacle's own thumbprint:
+
+```
+Add it in Octopus as a listening Tentacle with thumbprint <thumbprint>
+```
+
+Add the Tentacle in Octopus as a listening deployment target or worker, using that thumbprint and an address the Octopus Server can reach. To know the thumbprint before the container starts, supply the Tentacle's certificate with `TentacleCertificateBase64`.
+
+#### Generating a certificate
+
+`TentacleCertificateBase64` takes a PFX file, including its private key and without a password, encoded as base64. Use an RSA key of at least 2048 bits. The image can generate one:
+
+```
+mkdir -p tentacle-cert
+docker run --rm -v "$PWD/tentacle-cert:/out" --entrypoint bash octopusdeploy/tentacle -c \
+  'tentacle create-instance --instance Tentacle --config /tmp/tentacle.config &&
+   tentacle new-certificate --instance Tentacle --export-pfx=/out/tentacle.pfx'
+base64 -w0 tentacle-cert/tentacle.pfx > tentacle-cert/tentacle.pfx.b64
+```
+
+On macOS, use `base64 -i tentacle-cert/tentacle.pfx` instead. `new-certificate` prints the certificate's thumbprint, which is the thumbprint to add in Octopus.
+
+Alternatively, generate one with OpenSSL:
+
+```
+openssl req -x509 -newkey rsa:2048 -nodes -keyout tentacle.key -out tentacle.crt -days 36500 -subj "/CN=Octopus Tentacle"
+openssl pkcs12 -export -inkey tentacle.key -in tentacle.crt -out tentacle.pfx -passout pass:
+openssl x509 -in tentacle.crt -noout -fingerprint -sha1 | cut -d= -f2 | tr -d ':'
+base64 -w0 tentacle.pfx > tentacle.pfx.b64
+```
+
+The third command prints the thumbprint to add in Octopus. Delete `tentacle.key` once the PFX is created.
+
+The certificate includes its private key, so treat it as a secret. Pass it with `--env-file`, or from a Kubernetes Secret, rather than typing it on the command line.
+
+`ServerThumbprint` can't be combined with settings that only apply to registering or polling, such as `ServerUrl`, the credentials, `ServerCommsAddress`, `ServerPort` or the `Target*` variables; the container exits with an error if any are set.
 
 
 ### Volumes
