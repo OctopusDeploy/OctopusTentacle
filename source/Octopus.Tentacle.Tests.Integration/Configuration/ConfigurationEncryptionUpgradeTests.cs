@@ -115,7 +115,7 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
             runningTentacle.Instance.CertificateAsStoredInTheConfigurationFile().Should().NotStartWith(EncryptedWithItsOwnKey, "version 14 encrypts with a key derived from the machine id");
 
             // Act
-            await runningTentacle.RestartWithCurrentTentacle(CancellationToken);
+            await runningTentacle.StopAndStartWithCurrentVersionOfTentacle(CancellationToken);
 
             // Assert
             runningTentacle.Instance.CertificateAsStoredInTheConfigurationFile().Should().StartWith(EncryptedWithItsOwnKey);

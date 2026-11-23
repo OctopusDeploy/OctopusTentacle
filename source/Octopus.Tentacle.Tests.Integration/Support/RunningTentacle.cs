@@ -90,7 +90,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         }
 
         // As if the current Tentacle had been installed over the running one.
-        public async Task RestartWithCurrentTentacle(CancellationToken cancellationToken)
+        public async Task StopAndStartWithCurrentVersionOfTentacle(CancellationToken cancellationToken)
         {
             await Stop(cancellationToken);
             Instance = Instance.WithCurrentTentacleExe();
