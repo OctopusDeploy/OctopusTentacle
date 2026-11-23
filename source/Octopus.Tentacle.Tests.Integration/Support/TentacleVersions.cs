@@ -29,6 +29,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         // Contains ScriptServiceV1 and ScriptServiceV2
         public static readonly Version v8_0_81_AsyncHalibutAndLastWithoutScriptServiceV3Alpha = new("8.0.81");
 
+        // Last release before configuration encryption moved off the machine-id derived key
+        public static readonly Version v14_0_4849_LastWithMachineIdConfigurationEncryption = new("14.0.4849");
+
         // The version compiled from the current source
         public static readonly Version? Current = null;
 
@@ -68,6 +71,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             versions.Add(v6_3_451_NoCapabilitiesService);
             versions.Add(v7_1_189_SyncHalibutAndScriptServiceV2);
             versions.Add(v8_0_81_AsyncHalibutAndLastWithoutScriptServiceV3Alpha);
+            versions.Add(v14_0_4849_LastWithMachineIdConfigurationEncryption);
 
             return versions.ToArray();
         }
