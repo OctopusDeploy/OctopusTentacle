@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.Versioning;
 using System.Security.Cryptography;
 using System.Text;
 using Octopus.Tentacle.Core.Diagnostics;
@@ -81,6 +82,9 @@ namespace Octopus.Tentacle.Configuration.Crypto
             return loaded;
         }
 
+#if NET
+        [UnsupportedOSPlatform("windows")]
+#endif
         public void CreateIfMissing()
         {
             var path = KeyFilePath ?? throw new InvalidOperationException("There is no key file path to create the configuration encryption key at.");
@@ -94,7 +98,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
             CreateKeyDirectory(KeyDirectory!);
 
             // Several instances starting at once after an upgrade must all end up with the same key.
-            if (!fileSystem.AtomicCreateFileWithUserReadWriteAccessOnly(path, Encoding.ASCII.GetBytes(raw)))
+            if (!fileSystem.AtomicCreateFileWithOnlyUserReadWritePermissions(path, Encoding.ASCII.GetBytes(raw)))
             {
                 log.Verbose($"Another process created the configuration encryption key `{path}` first; using its key.");
                 return;

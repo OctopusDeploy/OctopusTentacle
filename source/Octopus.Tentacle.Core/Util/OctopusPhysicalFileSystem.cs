@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Versioning;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,6 +16,7 @@ namespace Octopus.Tentacle.Core.Util
     public class CorePhysicalFileSystem : IOctopusFileSystem
     {
         const long FiveHundredMegabytes = 500 * 1024 * 1024;
+        const string UserOnlyFilesAreUnixOnly = "Creating a file that only its owner can read and write is only supported on Linux and macOS.";
 
         public CorePhysicalFileSystem(ISystemLog log, bool isRunningAsKubernetesAgent)
         {
@@ -250,13 +252,21 @@ namespace Octopus.Tentacle.Core.Util
             File.WriteAllText(path, contents);
         }
 
-        public bool AtomicCreateFileWithUserReadWriteAccessOnly(string path, byte[] contents)
+#if NET
+        [UnsupportedOSPlatform("windows")]
+        public bool AtomicCreateFileWithOnlyUserReadWritePermissions(string path, byte[] contents)
         {
+            if (OperatingSystem.IsWindows())
+            {
+                throw new PlatformNotSupportedException(UserOnlyFilesAreUnixOnly);
+            }
+
             var temporaryPath = TemporaryPathBeside(path);
             try
             {
                 CreateFileWithUserReadWriteAccessOnly(temporaryPath, contents);
-                return PublishWithoutReplacing(temporaryPath, path);
+                // Unlike File.Move, link(2) is atomic about not replacing: two racing processes cannot each keep their own file.
+                return UnixFile.TryLinkWithoutReplacing(temporaryPath, path);
             }
             finally
             {
@@ -264,42 +274,20 @@ namespace Octopus.Tentacle.Core.Util
             }
         }
 
+        [UnsupportedOSPlatform("windows")]
         static void CreateFileWithUserReadWriteAccessOnly(string path, byte[] contents)
         {
-#if NETFRAMEWORK
-            using var stream = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None);
-#else
-            var options = new FileStreamOptions { Mode = FileMode.CreateNew, Access = FileAccess.Write, Share = FileShare.None };
-            if (!OperatingSystem.IsWindows())
+            var options = new FileStreamOptions
             {
-                options.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
-            }
+                Mode = FileMode.CreateNew,
+                Access = FileAccess.Write,
+                Share = FileShare.None,
+                UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite
+            };
 
             using var stream = new FileStream(path, options);
-#endif
             stream.Write(contents, 0, contents.Length);
             stream.Flush(flushToDisk: true);
-        }
-
-        static bool PublishWithoutReplacing(string temporaryPath, string path)
-        {
-#if !NETFRAMEWORK
-            if (!PlatformDetection.IsRunningOnWindows)
-            {
-                // Unlike File.Move, link(2) is atomic about not replacing: two racing processes cannot each keep their own file.
-                return UnixFile.TryLinkWithoutReplacing(temporaryPath, path);
-            }
-#endif
-            try
-            {
-                // MoveFile never replaces an existing file.
-                File.Move(temporaryPath, path);
-                return true;
-            }
-            catch (IOException) when (File.Exists(path))
-            {
-                return false;
-            }
         }
 
         static void DeleteIfExists(string path)
@@ -310,9 +298,13 @@ namespace Octopus.Tentacle.Core.Util
             }
         }
 
-        // In the same directory, so it is on the same file system and can be moved into place atomically.
+        // In the same directory, so it is on the same file system and can be linked into place atomically.
         static string TemporaryPathBeside(string path)
             => path + "." + Guid.NewGuid().ToString("N") + ".tmp";
+#else
+        public bool AtomicCreateFileWithOnlyUserReadWritePermissions(string path, byte[] contents)
+            => throw new PlatformNotSupportedException(UserOnlyFilesAreUnixOnly);
+#endif
 
         public void EnsureDirectoryExists(string directoryPath)
         {

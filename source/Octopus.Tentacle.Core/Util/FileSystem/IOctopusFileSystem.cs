@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.Versioning;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -40,10 +41,14 @@ namespace Octopus.Tentacle.Util
         /// <summary>
         /// Creates a file at filePath with contents IF it doesn't exist.
         /// The operation is as atomic as it can be for the FileSystem.
-        /// The resulting file has permissions 0600 for linux.
+        /// The resulting file has permissions 0600.
+        /// Unix only: throws <see cref="PlatformNotSupportedException"/> on Windows.
         /// </summary>
         /// <returns>True if this call created the file, false if it already existed, in which case the existing file is left untouched.</returns>
-        bool AtomicCreateFileWithUserReadWriteAccessOnly(string filePath, byte[] contents);
+#if NET
+        [UnsupportedOSPlatform("windows")]
+#endif
+        bool AtomicCreateFileWithOnlyUserReadWritePermissions(string filePath, byte[] contents);
 
         string ReadAllText(string scriptFile);
         string[] ReadAllLines(string scriptFile);

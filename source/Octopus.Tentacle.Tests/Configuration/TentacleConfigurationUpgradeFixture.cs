@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.Versioning;
 using System.Security.Cryptography;
 using System.Xml.Linq;
 using FluentAssertions;
@@ -22,6 +23,7 @@ namespace Octopus.Tentacle.Tests.Configuration
 {
     [TestFixture]
     [LinuxOrMacTest]
+    [UnsupportedOSPlatform("windows")]
     public class TentacleConfigurationUpgradeFixture
     {
         const string Certificate = "MIIC...the certificate...";
