@@ -23,78 +23,97 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
     [UnsupportedOSPlatform("windows")]
     public class ConfigurationEncryptionUpgradeTests : IntegrationTest
     {
-        const string InstanceName = "Tentacle";
+        static readonly string EncryptedWithItsOwnKey = LinuxMachineKeyEncryptor.Specifier + "$";
 
         [Test]
         public async Task AVersion14ConfigurationEncryptedWithTheMachineIdIsUpgradedToItsOwnKey()
         {
             // Arrange
-            using var root = new TemporaryDirectory();
-            var dataDirectory = Path.Combine(root.DirectoryPath, "data");
-            var configurationFile = Path.Combine(root.DirectoryPath, "tentacle.config");
-            var tentacleDirectories = TentacleDirectoriesIn(root, dataDirectory);
-            var version14Tentacle = await GetVersion14Tentacle();
-            await Run(version14Tentacle, tentacleDirectories, "create-instance", "--instance", InstanceName, "--config", configurationFile);
-            await Run(version14Tentacle, tentacleDirectories, "new-certificate", "--instance", InstanceName);
-            var thumbprint = (await Run(version14Tentacle, tentacleDirectories, "show-thumbprint", "--instance", InstanceName)).StandardOutput.Trim();
-            EncryptedCertificateIn(configurationFile).Should().NotStartWith(LinuxMachineKeyEncryptor.Specifier + "$");
+            using var instance = new IsolatedTentacleInstance();
+            var version14 = await GetVersion14Tentacle();
+            await instance.CreateWithACertificate(version14);
+            var thumbprintBeforeUpgrade = await instance.Thumbprint(version14);
+            instance.EncryptedCertificate.Should().NotStartWith(EncryptedWithItsOwnKey, "version 14 encrypts with a key derived from the machine id");
 
             // Act
-            await Run(TentacleExeFinder.FindTentacleExe(), tentacleDirectories, "upgrade-configuration-encryption", "--instance", InstanceName);
+            await instance.UpgradeConfigurationEncryption(TentacleExeFinder.FindTentacleExe());
 
             // Assert
-            EncryptedCertificateIn(configurationFile).Should().StartWith(LinuxMachineKeyEncryptor.Specifier + "$");
-            File.Exists(Path.Combine(dataDirectory, InstanceName, "keys", ConfigurationEncryptionKey.KeyFileName)).Should().BeTrue();
-            var upgradedThumbprint = await Run(TentacleExeFinder.FindTentacleExe(), tentacleDirectories, "show-thumbprint", "--instance", InstanceName);
-            upgradedThumbprint.StandardOutput.Trim().Should().Be(thumbprint);
+            instance.EncryptedCertificate.Should().StartWith(EncryptedWithItsOwnKey);
+            File.Exists(instance.KeyFile).Should().BeTrue();
+            (await instance.Thumbprint(TentacleExeFinder.FindTentacleExe())).Should().Be(thumbprintBeforeUpgrade, "the upgraded certificate must still decrypt to the same certificate");
         }
 
         [Test]
         public async Task WhenItsOwnKeyCannotBeCreatedThenTheUpgradeFailsAndAVersion14ConfigurationStaysEncryptedWithTheMachineId()
         {
             // Arrange
-            using var root = new TemporaryDirectory();
-            var dataDirectoryThatIsAFile = Path.Combine(root.DirectoryPath, "data");
-            await File.WriteAllTextAsync(dataDirectoryThatIsAFile, "not a directory");
-            var configurationFile = Path.Combine(root.DirectoryPath, "tentacle.config");
-            var tentacleDirectories = TentacleDirectoriesIn(root, dataDirectoryThatIsAFile);
-            var version14Tentacle = await GetVersion14Tentacle();
-            await Run(version14Tentacle, tentacleDirectories, "create-instance", "--instance", InstanceName, "--config", configurationFile);
-            await Run(version14Tentacle, tentacleDirectories, "new-certificate", "--instance", InstanceName);
-            var encryptedByVersion14 = EncryptedCertificateIn(configurationFile);
+            using var instance = new IsolatedTentacleInstance();
+            var version14 = await GetVersion14Tentacle();
+            await instance.CreateWithACertificate(version14);
+            var certificateEncryptedByVersion14 = instance.EncryptedCertificate;
+            instance.PreventTheKeyDirectoryFromBeingCreated();
 
             // Act
-            var upgrade = await Run(TentacleExeFinder.FindTentacleExe(), tentacleDirectories, CommandResultValidation.None, "upgrade-configuration-encryption", "--instance", InstanceName);
+            var upgrade = await instance.TryUpgradeConfigurationEncryption(TentacleExeFinder.FindTentacleExe());
 
             // Assert
-            var output = upgrade.StandardOutput + upgrade.StandardError;
-            upgrade.ExitCode.Should().NotBe(0, output);
-            output.Should().Contain(dataDirectoryThatIsAFile);
-            EncryptedCertificateIn(configurationFile).Should().Be(encryptedByVersion14);
+            upgrade.ExitCode.Should().NotBe(0, upgrade.Output);
+            upgrade.Output.Should().Contain(instance.DataDirectory, "the failure should be about creating the key, not something else");
+            instance.EncryptedCertificate.Should().Be(certificateEncryptedByVersion14);
         }
 
         Task<string> GetVersion14Tentacle()
             => TentacleFetcher.GetTentacleVersion(Path.GetTempPath(), TentacleVersions.v14_0_4849_LastWithMachineIdConfigurationEncryption, DefaultTentacleRuntime.Value, Logger, CancellationToken);
 
-        static (string Name, string Value)[] TentacleDirectoriesIn(TemporaryDirectory root, string dataDirectory)
-            => new[]
+        // A Tentacle instance whose registry, configuration and key all live in a temporary directory, so it can be driven by any Tentacle version.
+        sealed class IsolatedTentacleInstance : IDisposable
+        {
+            const string Name = "Tentacle";
+            readonly TemporaryDirectory root = new();
+
+            public string DataDirectory => Path.Combine(root.DirectoryPath, "data");
+            public string KeyFile => Path.Combine(DataDirectory, Name, "keys", ConfigurationEncryptionKey.KeyFileName);
+            string ConfigurationFile => Path.Combine(root.DirectoryPath, "tentacle.config");
+
+            public string EncryptedCertificate
+                => XDocument.Load(ConfigurationFile).Root!.Elements("set").Single(e => (string?)e.Attribute("key") == "Tentacle.Certificate").Value;
+
+            public async Task CreateWithACertificate(string tentacle)
             {
-                (EnvironmentVariables.TentacleMachineConfigurationHomeDirectory, Path.Combine(root.DirectoryPath, "home")),
-                (EnvironmentVariables.TentacleInstancesDataDirectory, dataDirectory)
-            };
+                await Run(tentacle, "create-instance", "--instance", Name, "--config", ConfigurationFile);
+                await Run(tentacle, "new-certificate", "--instance", Name);
+            }
 
-        static string EncryptedCertificateIn(string configurationFile)
-            => XDocument.Load(configurationFile).Root!.Elements("set").Single(e => (string?)e.Attribute("key") == "Tentacle.Certificate").Value;
+            public async Task<string> Thumbprint(string tentacle)
+                => (await Run(tentacle, "show-thumbprint", "--instance", Name)).StandardOutput.Trim();
 
-        static Task<BufferedCommandResult> Run(string tentacleExe, (string Name, string Value)[] tentacleDirectories, params string[] arguments)
-            => Run(tentacleExe, tentacleDirectories, CommandResultValidation.ZeroExitCode, arguments);
+            public Task UpgradeConfigurationEncryption(string tentacle)
+                => Run(tentacle, "upgrade-configuration-encryption", "--instance", Name);
 
-        static Task<BufferedCommandResult> Run(string tentacleExe, (string Name, string Value)[] tentacleDirectories, CommandResultValidation validation, params string[] arguments)
-            => Cli.Wrap(tentacleExe)
-                .WithArguments(arguments)
-                .WithValidation(validation)
-                .WithEnvironmentVariables(tentacleDirectories.ToDictionary(x => x.Name, x => (string?)x.Value))
-                .ExecuteBufferedAsync();
+            public async Task<(int ExitCode, string Output)> TryUpgradeConfigurationEncryption(string tentacle)
+            {
+                var result = await Run(tentacle, CommandResultValidation.None, "upgrade-configuration-encryption", "--instance", Name);
+                return (result.ExitCode, result.StandardOutput + result.StandardError);
+            }
+
+            public void PreventTheKeyDirectoryFromBeingCreated()
+                => File.WriteAllText(DataDirectory, "a file where the data directory should be");
+
+            Task<BufferedCommandResult> Run(string tentacle, params string[] arguments)
+                => Run(tentacle, CommandResultValidation.ZeroExitCode, arguments);
+
+            Task<BufferedCommandResult> Run(string tentacle, CommandResultValidation validation, params string[] arguments)
+                => Cli.Wrap(tentacle)
+                    .WithArguments(arguments)
+                    .WithValidation(validation)
+                    .WithEnvironmentVariables(e => e
+                        .Set(EnvironmentVariables.TentacleMachineConfigurationHomeDirectory, Path.Combine(root.DirectoryPath, "home"))
+                        .Set(EnvironmentVariables.TentacleInstancesDataDirectory, DataDirectory))
+                    .ExecuteBufferedAsync();
+
+            public void Dispose() => root.Dispose();
+        }
     }
 }
 #endif
