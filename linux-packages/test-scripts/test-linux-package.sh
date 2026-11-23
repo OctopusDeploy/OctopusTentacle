@@ -100,5 +100,48 @@ fi
 echo "The certificate decrypts in a new process and matches the recorded thumbprint."
 echo ""
 
+# A non-root user that cannot create its key must be told the exact commands that fix it, and those commands must work.
+NON_ROOT_USER="tentacle-test"
+NON_ROOT_INSTANCE="non-root-test"
+NON_ROOT_CONFIGURATION_FILE="/etc/octopus/$NON_ROOT_INSTANCE/tentacle.config"
+# Minimal images may not have useradd.
+echo "$NON_ROOT_USER:x:4322:4322::/tmp:/bin/sh" >> /etc/passwd
+mkdir -p "$(dirname "$NON_ROOT_CONFIGURATION_FILE")" /etc/octopus/Tentacle/Instances
+chown "$NON_ROOT_USER" "$(dirname "$NON_ROOT_CONFIGURATION_FILE")" /etc/octopus/Tentacle/Instances
+TENTACLE=$(command -v Tentacle)
+
+# Amazon Linux's minimal image has neither setpriv nor su.
+if ! command -v setpriv > /dev/null && ! command -v su > /dev/null; then
+  yum --quiet --assumeyes install util-linux
+fi
+
+run_as_non_root() {
+  if command -v setpriv > /dev/null; then
+    HOME=/tmp setpriv --reuid=4322 --regid=4322 --clear-groups "$TENTACLE" "$@"
+  else
+    su -s /bin/sh "$NON_ROOT_USER" -c "$TENTACLE $*"
+  fi
+}
+
+if CREATE_OUTPUT=$(run_as_non_root create-instance --instance "$NON_ROOT_INSTANCE" --config "$NON_ROOT_CONFIGURATION_FILE" 2>&1); then
+  echo "create-instance succeeded for a user that cannot create the key under /var/lib/octopus/tentacle."
+  exit 1
+fi
+echo "$CREATE_OUTPUT"
+
+FIX_COMMAND=$(echo "$CREATE_OUTPUT" | grep -o 'sudo mkdir[^`]*' | head -n 1)
+if [[ -z "$FIX_COMMAND" ]]; then
+  echo "The create-instance error did not tell the user which command fixes it."
+  exit 1
+fi
+
+# This script already runs as root, and minimal images may not have sudo.
+sudo() { "$@"; }
+eval "$FIX_COMMAND"
+
+run_as_non_root create-instance --instance "$NON_ROOT_INSTANCE" --config "$NON_ROOT_CONFIGURATION_FILE"
+echo "Running the command from the error message let the non-root user create its instance."
+echo ""
+
 echo "All tests passed."
 echo ""
