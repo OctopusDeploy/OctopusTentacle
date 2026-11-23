@@ -1,6 +1,5 @@
 #if !NETFRAMEWORK
 using System;
-using System.Collections.Generic;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
@@ -30,7 +29,7 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         public void WhenAValueWasWrittenWithTheMachineIdKeyThenItStillDecrypts(string plaintext, string legacyCiphertext)
         {
             // Arrange
-            var encryptor = CreateEncryptor(machineIdPresent: true, generatedKeyPresent: false);
+            var encryptor = CreateEncryptor(machineId: MachineId, generatedKeyFileContents: null);
 
             // Act
             var decrypted = encryptor.Decrypt(legacyCiphertext);
@@ -47,7 +46,7 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         public void WhenAValueWasWrittenWithoutAMachineIdThenItStillDecrypts(string plaintext, string legacyCiphertext)
         {
             // Arrange
-            var encryptor = CreateEncryptor(machineIdPresent: false, generatedKeyPresent: true);
+            var encryptor = CreateEncryptor(machineId: null, generatedKeyFileContents: GeneratedKeyFileContents);
 
             // Act
             var decrypted = encryptor.Decrypt(legacyCiphertext);
@@ -56,17 +55,20 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
             decrypted.Should().Be(plaintext);
         }
 
-        static IMachineKeyEncryptor CreateEncryptor(bool machineIdPresent, bool generatedKeyPresent)
+        static IMachineKeyEncryptor CreateEncryptor(string? machineId, string? generatedKeyFileContents)
         {
-            var files = new Dictionary<string, string>();
-            if (generatedKeyPresent)
-                files[GeneratedKeyPath] = GeneratedKeyFileContents;
-
             var fileSystem = Substitute.For<IOctopusFileSystem>();
-            fileSystem.FileExists(Arg.Any<string>()).Returns(ci => files.ContainsKey(ci.ArgAt<string>(0)));
-            fileSystem.ReadAllText(Arg.Any<string>()).Returns(ci => files[ci.ArgAt<string>(0)]);
-            fileSystem.FileExists(LinuxMachineIdKey.FileName).Returns(machineIdPresent);
-            fileSystem.ReadAllLines(LinuxMachineIdKey.FileName).Returns(new[] { MachineId });
+            if (machineId != null)
+            {
+                fileSystem.FileExists(LinuxMachineIdKey.FileName).Returns(true);
+                fileSystem.ReadAllLines(LinuxMachineIdKey.FileName).Returns(new[] { machineId });
+            }
+
+            if (generatedKeyFileContents != null)
+            {
+                fileSystem.FileExists(GeneratedKeyPath).Returns(true);
+                fileSystem.ReadAllText(GeneratedKeyPath).Returns(generatedKeyFileContents);
+            }
 
             return MachineKeyEncryptor.CreateLinuxEncryptor(Substitute.For<ISystemLog>(), fileSystem, ConfigurationEncryptionKey.KeyFilePathFor("Tentacle"), GeneratedKeyPath);
         }
