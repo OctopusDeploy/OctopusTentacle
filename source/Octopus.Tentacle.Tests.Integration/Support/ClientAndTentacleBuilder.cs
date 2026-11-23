@@ -36,7 +36,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         IPendingRequestQueueFactory? queueFactory = null;
         Reference<PortForwarder>? portForwarderReference;
         ITentacleClientObserver tentacleClientObserver = new NoTentacleClientObserver();
-        Action<ITentacleBuilder>? tentacleBuilderAction;
+        Action<IRunningTentacleBuilder>? tentacleBuilderAction;
         Action<TentacleClientOptions>? configureClientOptions;
         TcpConnectionUtilities? tcpConnectionUtilities;
         bool installAsAService = false;
@@ -141,7 +141,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             return this;
         }
 
-        public ClientAndTentacleBuilder WithTentacle(Action<ITentacleBuilder> tentacleBuilderAction)
+        public ClientAndTentacleBuilder WithTentacle(Action<IRunningTentacleBuilder> tentacleBuilderAction)
         {
             this.tentacleBuilderAction = tentacleBuilderAction;
             return this;
@@ -224,8 +224,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             {
                 portForwarder = BuildPortForwarder(serverListeningPort, null);
 
-                var pollingTentacleBuilder = new PollingTentacleBuilder(portForwarder?.ListeningPort ?? serverListeningPort, TestCertificates.ServerPublicThumbprint, tentacleVersion)
+                var pollingTentacleBuilder = new TentacleInstanceBuilder()
+                    .WithTentacleVersion(tentacleVersion)
                     .WithTentacleExe(tentacleExe)
+                    .RunAsPollingTentacle(portForwarder?.ListeningPort ?? serverListeningPort, TestCertificates.ServerPublicThumbprint)
                     .WithSubscriptionId(pollingSubscriptionId);
 
                 if (useDefaultMachineConfigurationHomeDirectory)
@@ -246,8 +248,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             }
             else
             {
-                var listeningTentacleBuilder = new ListeningTentacleBuilder(TestCertificates.ServerPublicThumbprint, tentacleVersion)
-                    .WithTentacleExe(tentacleExe);
+                var listeningTentacleBuilder = new TentacleInstanceBuilder()
+                    .WithTentacleVersion(tentacleVersion)
+                    .WithTentacleExe(tentacleExe)
+                    .RunAsListeningTentacle(TestCertificates.ServerPublicThumbprint);
 
                 if (useDefaultMachineConfigurationHomeDirectory)
                 {

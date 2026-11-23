@@ -83,8 +83,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
             {
                 portForwarder = PortForwarderBuilder.ForwardingToLocalPort(serverListeningPort, new SerilogLoggerBuilder().Build()).Build();
 
-                runningTentacle = await new PollingTentacleBuilder(portForwarder.ListeningPort, TestCertificates.ServerPublicThumbprint, tentacleVersion)
+                runningTentacle = await new TentacleInstanceBuilder()
+                    .WithTentacleVersion(tentacleVersion)
                     .WithTentacleExe(tentacleExe)
+                    .RunAsPollingTentacle(portForwarder.ListeningPort, TestCertificates.ServerPublicThumbprint)
                     .WithSubscriptionId(pollingSubscriptionId)
                     .Build(logger, cancellationToken);
 
@@ -92,8 +94,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
             }
             else
             {
-                runningTentacle = await new ListeningTentacleBuilder(TestCertificates.ServerPublicThumbprint, tentacleVersion)
+                runningTentacle = await new TentacleInstanceBuilder()
+                    .WithTentacleVersion(tentacleVersion)
                     .WithTentacleExe(tentacleExe)
+                    .RunAsListeningTentacle(TestCertificates.ServerPublicThumbprint)
                     .Build(logger, cancellationToken);
 
                 portForwarder = new PortForwarderBuilder(runningTentacle.ServiceUri, new SerilogLoggerBuilder().Build()).Build();

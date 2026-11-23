@@ -9,20 +9,24 @@ using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
-    public class PollingTentacleBuilder : TentacleBuilder<PollingTentacleBuilder>
+    public class PollingRunningTentacleBuilder : RunningTentacleBuilder<PollingRunningTentacleBuilder>
     {
         readonly int pollingPort;
         Uri? subscriptionId;
 
-        public PollingTentacleBuilder(int pollingPort, string serverThumbprint, Version? tentacleVersion) : base(tentacleVersion)
-
+        internal PollingRunningTentacleBuilder(int pollingPort, string serverThumbprint, TentacleInstanceBuilder instanceBuilder) : base(instanceBuilder)
         {
             this.pollingPort = pollingPort;
-
             ServerThumbprint = serverThumbprint;
         }
 
-        public PollingTentacleBuilder WithSubscriptionId(Uri subscriptionId)
+        public PollingRunningTentacleBuilder(int pollingPort, string serverThumbprint, TentacleInstance instance) : base(instance)
+        {
+            this.pollingPort = pollingPort;
+            ServerThumbprint = serverThumbprint;
+        }
+
+        public PollingRunningTentacleBuilder WithSubscriptionId(Uri subscriptionId)
         {
             this.subscriptionId = subscriptionId;
             return this;
@@ -30,32 +34,18 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         internal async Task<RunningTentacle> Build(ILogger log, CancellationToken cancellationToken)
         {
-            var instanceName = InstanceNameGenerator();
-            var configFilePath = Path.Combine(HomeDirectory.DirectoryPath, instanceName + ".cfg");
-            var tentacleExe = TentacleExePath ?? TentacleExeFinder.FindTentacleExe();
             var subscriptionId = this.subscriptionId ?? PollingSubscriptionId.Generate();
-            
-            var logger = log.ForContext<PollingTentacleBuilder>();
-            logger.Information($"Tentacle.exe location: {tentacleExe}");
-
-            ConfigureTentacleMachineConfigurationHomeDirectory();
+            var logger = log.ForContext<PollingRunningTentacleBuilder>();
 
             using (await GetConfigureAndStartTentacleLockIfRequired(logger, cancellationToken))
             {
-                await CreateInstance(tentacleExe, configFilePath, instanceName, HomeDirectory, logger, cancellationToken);
-                var applicationDirectory = Path.Combine(HomeDirectory.DirectoryPath, "appdir");
-                ConfigureTentacleToPollOctopusServer(configFilePath, subscriptionId, applicationDirectory);
-                await AddCertificateToTentacle(tentacleExe, instanceName, CertificatePfxPath, HomeDirectory, logger, cancellationToken);
+                var instance = await BuildInstance(logger, cancellationToken);
+                logger.Information($"Tentacle.exe location: {instance.TentacleExe}");
 
-                return await StartTentacle(
-                    subscriptionId,
-                    tentacleExe,
-                    instanceName,
-                    HomeDirectory,
-                    applicationDirectory,
-                    TentacleThumbprint,
-                    logger,
-                    cancellationToken);
+                var applicationDirectory = Path.Combine(instance.Home.DirectoryPath, "appdir");
+                ConfigureTentacleToPollOctopusServer(instance.ConfigurationFile, subscriptionId, applicationDirectory);
+
+                return await StartTentacle(subscriptionId, instance, applicationDirectory, logger, cancellationToken);
             }
         }
 

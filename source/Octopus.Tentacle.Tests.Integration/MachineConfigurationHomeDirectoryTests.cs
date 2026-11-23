@@ -42,7 +42,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .UseDefaultMachineConfigurationHomeDirectory()
                 .WithTentacle(x =>
                 {
-                    x.WithRunTentacleEnvironmentVariable(EnvironmentVariables.TentacleMachineConfigurationHomeDirectory, tempDirectory.DirectoryPath);
+                    x.WithEnvironmentVariable(EnvironmentVariables.TentacleMachineConfigurationHomeDirectory, tempDirectory.DirectoryPath);
                 })
                 .Build(CancellationToken);
 
