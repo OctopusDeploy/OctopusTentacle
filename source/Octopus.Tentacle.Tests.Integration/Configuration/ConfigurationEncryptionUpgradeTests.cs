@@ -37,13 +37,13 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
             await Run(version14Tentacle, environment, "create-instance", "--instance", InstanceName, "--config", configurationFile);
             await Run(version14Tentacle, environment, "new-certificate", "--instance", InstanceName);
             var thumbprint = (await Run(version14Tentacle, environment, "show-thumbprint", "--instance", InstanceName)).StandardOutput.Trim();
-            RawCertificate(configurationFile).Should().NotStartWith(LinuxMachineKeyEncryptor.Specifier + "$");
+            EncryptedCertificateIn(configurationFile).Should().NotStartWith(LinuxMachineKeyEncryptor.Specifier + "$");
 
             // Act
             await Run(TentacleExeFinder.FindTentacleExe(), environment, "upgrade-configuration-encryption", "--instance", InstanceName);
 
             // Assert
-            RawCertificate(configurationFile).Should().StartWith(LinuxMachineKeyEncryptor.Specifier + "$");
+            EncryptedCertificateIn(configurationFile).Should().StartWith(LinuxMachineKeyEncryptor.Specifier + "$");
             File.Exists(Path.Combine(dataDirectory, InstanceName, "keys", ConfigurationEncryptionKey.KeyFileName)).Should().BeTrue();
             var upgradedThumbprint = await Run(TentacleExeFinder.FindTentacleExe(), environment, "show-thumbprint", "--instance", InstanceName);
             upgradedThumbprint.StandardOutput.Trim().Should().Be(thumbprint);
@@ -61,7 +61,7 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
             var version14Tentacle = await GetVersion14Tentacle();
             await Run(version14Tentacle, environment, "create-instance", "--instance", InstanceName, "--config", configurationFile);
             await Run(version14Tentacle, environment, "new-certificate", "--instance", InstanceName);
-            var version14Certificate = RawCertificate(configurationFile);
+            var encryptedByVersion14 = EncryptedCertificateIn(configurationFile);
 
             // Act
             var upgrade = await Run(TentacleExeFinder.FindTentacleExe(), environment, CommandResultValidation.None, "upgrade-configuration-encryption", "--instance", InstanceName);
@@ -70,7 +70,7 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
             var output = upgrade.StandardOutput + upgrade.StandardError;
             upgrade.ExitCode.Should().NotBe(0, output);
             output.Should().Contain(dataDirectoryThatIsAFile);
-            RawCertificate(configurationFile).Should().Be(version14Certificate);
+            EncryptedCertificateIn(configurationFile).Should().Be(encryptedByVersion14);
         }
 
         Task<string> GetVersion14Tentacle()
@@ -83,7 +83,7 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
                 (EnvironmentVariables.TentacleInstancesDataDirectory, dataDirectory)
             };
 
-        static string RawCertificate(string configurationFile)
+        static string EncryptedCertificateIn(string configurationFile)
             => XDocument.Load(configurationFile).Root!.Elements("set").Single(e => (string?)e.Attribute("key") == "Tentacle.Certificate").Value;
 
         static Task<BufferedCommandResult> Run(string tentacleExe, (string Name, string Value)[] environment, params string[] arguments)
