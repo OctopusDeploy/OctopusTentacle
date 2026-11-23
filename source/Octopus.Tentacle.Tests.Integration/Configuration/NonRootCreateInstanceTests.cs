@@ -8,17 +8,20 @@ using CliWrap;
 using CliWrap.Buffered;
 using FluentAssertions;
 using NUnit.Framework;
+using Octopus.Tentacle.CommonTestUtils;
+using Octopus.Tentacle.CommonTestUtils.Diagnostics;
 using Octopus.Tentacle.Core.Util;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.TestAttributes;
 using Octopus.Tentacle.Tests.Integration.Util;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Integration.Configuration
 {
     [LinuxTest]
     [NonParallelizable]
     [UnsupportedOSPlatform("windows")]
-    public class NonRootCreateInstanceTests
+    public class NonRootCreateInstanceTests : IntegrationTest
     {
         [Test]
         [RequiresSudoOnLinux]
@@ -26,7 +29,9 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
         {
             // Arrange
             var user = new LinuxTestUserPrincipal("octo-key-test");
-            var root = Directory.CreateTempSubdirectory().FullName;
+            // Under /tmp rather than the default location, which is in the runner's home and not traversable by the test user.
+            using var temporaryDirectory = new TemporaryDirectory(new OctopusPhysicalFileSystem(new InMemoryLog()), Directory.CreateTempSubdirectory().FullName);
+            var root = temporaryDirectory.DirectoryPath;
             File.SetUnixFileMode(root, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute | UnixFileMode.GroupRead | UnixFileMode.GroupExecute | UnixFileMode.OtherRead | UnixFileMode.OtherExecute);
             var dataDirectory = Path.Combine(root, "data");
             Directory.CreateDirectory(dataDirectory);
@@ -46,7 +51,9 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
             {
                 // Act
                 var refused = await CreateInstanceAsUser();
+                Logger.Information("StdOut: {StdOut}, StdErr: {StdErr}", refused.StandardOutput, refused.StandardError);
                 var fix = Regex.Match(refused.StandardOutput + refused.StandardError, "sudo mkdir[^`]*").Value;
+                Logger.Information("Running Fix: {Fix}", fix);
                 await Cli.Wrap("/bin/bash").WithArguments(new[] { "-c", fix }).ExecuteBufferedAsync();
                 var created = await CreateInstanceAsUser();
 
@@ -58,7 +65,6 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
             }
             finally
             {
-                Directory.Delete(root, recursive: true);
                 await Sudo("userdel", "-r", user.UserName);
             }
         }
