@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using CliWrap;
 using FluentAssertions;
 using NUnit.Framework;
+using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Configuration.Crypto;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.TestAttributes;
@@ -100,6 +101,46 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
             // Assert
             var output = newCertificate.StandardOutput + newCertificate.StandardError;
             newCertificate.ExitCode.Should().NotBe(0, output);
+            instance.CertificateAsStoredInTheConfigurationFile().Should().Be(certificateEncryptedWithTheKey);
+        }
+
+        [Test]
+        public async Task WhenTentacleKeyIsEncryptedWithEtcMachineId_AndTheCurrentTentacleStarts_ThenTheCertificateIsReEncrypted()
+        {
+            // Arrange
+            using var instance = await new TentacleInstanceBuilder()
+                .WithTentacleVersion(TentacleVersions.v14_0_4849_LastWithMachineIdConfigurationEncryption)
+                .WithNewCertificate()
+                .Build(Logger, CancellationToken);
+
+            // Act
+            await using var runningTentacle = await new ListeningRunningTentacleBuilder(TestCertificates.ServerPublicThumbprint, instance.WithCurrentTentacleExe())
+                .Build(Logger, CancellationToken);
+
+            // Assert
+            instance.CertificateAsStoredInTheConfigurationFile().Should().StartWith(EncryptedWithItsOwnKey);
+            (await instance.WithCurrentTentacleExe().ShowThumbprint()).Should().Be(instance.Thumbprint, "the upgraded certificate must still decrypt to the same certificate");
+        }
+
+        [Test]
+        public async Task WhenTentacleKeyFileIsDeleted_AndTheCurrentTentacleStarts_ThenTheCertificateIsLeftUntouched()
+        {
+            // Arrange
+            using var instance = await new TentacleInstanceBuilder()
+                .WithNewCertificate()
+                .Build(Logger, CancellationToken);
+            var certificateEncryptedWithTheKey = instance.CertificateAsStoredInTheConfigurationFile();
+            File.Delete(instance.ConfigurationEncryptionKeyFile);
+
+            // Act
+            Func<Task> start = async () =>
+            {
+                await using var runningTentacle = await new ListeningRunningTentacleBuilder(TestCertificates.ServerPublicThumbprint, instance)
+                    .Build(Logger, CancellationToken);
+            };
+
+            // Assert
+            await start.Should().ThrowAsync<Exception>("the certificate cannot be decrypted without its key");
             instance.CertificateAsStoredInTheConfigurationFile().Should().Be(certificateEncryptedWithTheKey);
         }
     }

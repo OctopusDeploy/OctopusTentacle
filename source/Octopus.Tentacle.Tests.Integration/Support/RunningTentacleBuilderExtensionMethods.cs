@@ -3,9 +3,9 @@ using Octopus.Tentacle.Maintenance;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
-    public static class TentacleBuilderExtensionMethods
+    public static class RunningTentacleBuilderExtensionMethods
     {
-        public static ITentacleBuilder WithWorkspaceCleaningSettings(this ITentacleBuilder builder, TimeSpan cleanerDelay, TimeSpan deleteWorkspacesOlderThan)
+        public static IRunningTentacleBuilder WithWorkspaceCleaningSettings(this IRunningTentacleBuilder builder, TimeSpan cleanerDelay, TimeSpan deleteWorkspacesOlderThan)
         {
             return builder
                 .WithEnvironmentVariable(WorkspaceCleanerConfiguration.CleanerDelayEnvironmentVariableName, cleanerDelay)
