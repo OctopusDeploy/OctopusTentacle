@@ -8,6 +8,7 @@ using NUnit.Framework;
 using Octopus.Tentacle.Configuration.Crypto;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Kubernetes;
+using Octopus.Tentacle.Tests.Support.TestAttributes;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Configuration.Crypto
@@ -15,8 +16,8 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
     // The ciphertext below was captured from the encryptor as it was before the versioned format (commit 7b1504e), which
     // used a fixed IV and so is deterministic. Do not regenerate it with the current code: that would only prove the
     // current code agrees with itself.
-    [TestFixture]
-    public class LegacyCiphertextCompatibilityFixture
+    [LinuxOrMacTest]
+    public class LegacyCiphertextCompatibilityTests
     {
         const string MachineId = "816490f117f14c7a8fa2697781ed795b";
         const string GeneratedKeyFileContents = "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=.ZmVkY2JhOTg3NjU0MzIxMA==";
@@ -49,26 +50,17 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
                 .SetName("{m}(generated, certificate-sized)");
         }
 
-
-        FakeKeyFiles files;
-
-        [SetUp]
-        public void SetUp()
+        static IMachineKeyEncryptor CreateEncryptorAsComposedInProduction(bool machineIdPresent, bool generatedKeyPresent)
         {
             Environment.SetEnvironmentVariable(KubernetesConfig.NamespaceVariableName, null);
-            files = new FakeKeyFiles();
-            files.Contents[LinuxGeneratedMachineKey.LegacyKeyFilePath] = GeneratedKeyFileContents;
-        }
 
-        [TearDown]
-        public void TearDown()
-        {
-            Environment.SetEnvironmentVariable(KubernetesConfig.NamespaceVariableName, null);
-        }
+            var files = new Dictionary<string, string>();
+            if (generatedKeyPresent)
+                files[LinuxGeneratedMachineKey.LegacyKeyFilePath] = GeneratedKeyFileContents;
 
-        IMachineKeyEncryptor CreateEncryptorAsComposedInProduction(bool machineIdPresent)
-        {
-            var fileSystem = files.CreateFileSystem();
+            var fileSystem = Substitute.For<IOctopusFileSystem>();
+            fileSystem.FileExists(Arg.Any<string>()).Returns(ci => files.ContainsKey(ci.ArgAt<string>(0)));
+            fileSystem.ReadAllText(Arg.Any<string>()).Returns(ci => files[ci.ArgAt<string>(0)]);
             fileSystem.FileExists(LinuxMachineIdKey.FileName).Returns(machineIdPresent);
             fileSystem.ReadAllLines(LinuxMachineIdKey.FileName).Returns(new[] { MachineId });
 
@@ -79,8 +71,7 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         public void WhenAValueWasWrittenWithTheMachineIdKeyThenItStillDecrypts(string plaintext, string legacyCiphertext)
         {
             // Arrange
-            files.Contents.Remove(LinuxGeneratedMachineKey.LegacyKeyFilePath);
-            var encryptor = CreateEncryptorAsComposedInProduction(machineIdPresent: true);
+            var encryptor = CreateEncryptorAsComposedInProduction(machineIdPresent: true, generatedKeyPresent: false);
 
             // Act
             var decrypted = encryptor.Decrypt(legacyCiphertext);
@@ -93,26 +84,13 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         public void WhenAValueWasWrittenWithoutAMachineIdThenItStillDecrypts(string plaintext, string legacyCiphertext)
         {
             // Arrange
-            var encryptor = CreateEncryptorAsComposedInProduction(machineIdPresent: false);
+            var encryptor = CreateEncryptorAsComposedInProduction(machineIdPresent: false, generatedKeyPresent: true);
 
             // Act
             var decrypted = encryptor.Decrypt(legacyCiphertext);
 
             // Assert
             decrypted.Should().Be(plaintext);
-        }
-
-        class FakeKeyFiles
-        {
-            public Dictionary<string, string> Contents { get; } = new();
-
-            public IOctopusFileSystem CreateFileSystem()
-            {
-                var fileSystem = Substitute.For<IOctopusFileSystem>();
-                fileSystem.FileExists(Arg.Any<string>()).Returns(ci => Contents.ContainsKey(ci.ArgAt<string>(0)));
-                fileSystem.ReadAllText(Arg.Any<string>()).Returns(ci => Contents[ci.ArgAt<string>(0)]);
-                return fileSystem;
-            }
         }
     }
 }
