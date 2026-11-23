@@ -95,21 +95,10 @@ namespace Octopus.Tentacle.Configuration.Crypto
 
             var raw = Convert.ToBase64String(RandomKey());
 
-            bool created;
-            try
-            {
-                CreateKeyDirectory(KeyDirectory!);
+            CreateKeyDirectory(KeyDirectory!);
 
-                // Several instances starting at once after an upgrade must all end up with the same key.
-                created = fileSystem.AtomicCreateFileWithOnlyUserReadWritePermissions(path, Encoding.ASCII.GetBytes(raw));
-            }
-            catch (UnauthorizedAccessException e)
-            {
-                throw new InvalidOperationException($"The user Tentacle is running as ({Environment.UserName}) cannot create the configuration encryption key file `{path}`. "
-                    + "Run this command again as root, for example with `sudo`.", e);
-            }
-
-            if (!created)
+            // Several instances starting at once after an upgrade must all end up with the same key.
+            if (!fileSystem.AtomicCreateFileWithOnlyUserReadWritePermissions(path, Encoding.ASCII.GetBytes(raw)))
             {
                 log.Verbose($"Another process created the configuration encryption key `{path}` first; using its key.");
                 return;
