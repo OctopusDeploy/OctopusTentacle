@@ -9,12 +9,6 @@ namespace Octopus.Tentacle.Docker.Tests.Integration;
 /// </summary>
 public class LinuxTentacleConfigEncryptionTests
 {
-    const string ConfigDirectory = "/etc/octopus";
-    const string DataDirectory = "/var/lib/octopus/tentacle";
-    const string KeyFile = DataDirectory + "/Tentacle/keys/config-encryption.key";
-
-    static readonly TimeSpan DockerCommandTimeout = TimeSpan.FromMinutes(10);
-
     [Test]
     public async Task ARecreatedContainerDecryptsTheConfigurationWithThePersistedKey()
     {
@@ -24,53 +18,50 @@ public class LinuxTentacleConfigEncryptionTests
 
         string? thumbprint;
         await using (var tentacle = await new TentacleContainerBuilder(server)
-                         .WithVolume(config, ConfigDirectory)
-                         .WithVolume(data, DataDirectory)
+                         .WithVolume(config, "/etc/octopus")
+                         .WithVolume(data, "/var/lib/octopus/tentacle")
                          .Build())
         {
             thumbprint = tentacle.RegisteredMachine.Thumbprint;
         }
 
-        var image = TentacleImage.Resolve();
-        (await RunInImage(image, $"stat -c %a {KeyFile}", config, data)).Should().Be("600");
-        (await RunInImage(image, $"grep -cF 'key=\"Tentacle.Certificate\">AESGCM-V1$' {ConfigDirectory}/tentacle.config", config, data)).Should().Be("1");
-        (await RunInImage(image, "tentacle show-thumbprint --instance Tentacle", config, data)).Should().Be(thumbprint);
+        (await RunInImage("stat -c %a /var/lib/octopus/tentacle/Tentacle/keys/config-encryption.key", config, data)).Should().Be("600");
+        (await RunInImage("grep -cF 'key=\"Tentacle.Certificate\">AESGCM-V1$' /etc/octopus/tentacle.config", config, data)).Should().Be("1");
+        (await RunInImage("tentacle show-thumbprint --instance Tentacle", config, data)).Should().Be(thumbprint);
     }
 
     [Test]
     public async Task TheContainerRefusesToStartWhenOnlyTheConfigurationIsPersisted()
     {
         await using var config = await DockerVolume.Create(CancellationToken.None);
-        using var cancellationTokenSource = new CancellationTokenSource(DockerCommandTimeout);
+        using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(10));
 
         var (exitCode, output) = await DockerCli.RunUnchecked(new[]
         {
             "run", "--rm", "--label", DockerCli.ContainerLabel,
-            "--volume", config.MountAt(ConfigDirectory),
+            "--volume", config.MountAt("/etc/octopus"),
             "--env", "ACCEPT_EULA=Y",
             TentacleImage.Resolve()
         }, cancellationTokenSource.Token);
 
         exitCode.Should().NotBe(0);
-        output.Should().Contain($"{DataDirectory} is not");
+        output.Should().Contain("/var/lib/octopus/tentacle is not");
     }
 
-    static async Task<string> RunInImage(string image, string command, DockerVolume config, DockerVolume data)
+    static async Task<string> RunInImage(string command, DockerVolume config, DockerVolume data)
     {
-        using var cancellationTokenSource = new CancellationTokenSource(DockerCommandTimeout);
-        var arguments = new List<string>
+        using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(10));
+        var (exitCode, output) = await DockerCli.RunUnchecked(new[]
         {
             "run", "--rm", "--label", DockerCli.ContainerLabel,
-            "--volume", config.MountAt(ConfigDirectory),
-            "--volume", data.MountAt(DataDirectory),
-            "--entrypoint", "bash"
-        };
-        arguments.AddRange(new[] { image, "-c", command });
+            "--volume", config.MountAt("/etc/octopus"),
+            "--volume", data.MountAt("/var/lib/octopus/tentacle"),
+            "--entrypoint", "bash",
+            TentacleImage.Resolve(), "-c", command
+        }, cancellationTokenSource.Token);
 
-        var (exitCode, output) = await DockerCli.RunUnchecked(arguments, cancellationTokenSource.Token);
         TestContext.Out.WriteLine($"$ {command} (exit code {exitCode})\n{output}");
         exitCode.Should().Be(0, output);
-
         return output.Trim();
     }
 }
