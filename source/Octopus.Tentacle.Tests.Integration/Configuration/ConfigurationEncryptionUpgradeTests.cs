@@ -1,5 +1,4 @@
 #if NET
-using System;
 using System.IO;
 using System.Runtime.Versioning;
 using System.Threading.Tasks;
@@ -101,6 +100,7 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
             // Assert
             var output = newCertificate.StandardOutput + newCertificate.StandardError;
             newCertificate.ExitCode.Should().NotBe(0, output);
+            output.Should().Contain("configuration encryption key, which is not available", "the failure should be about the missing key, not something else");
             instance.CertificateAsStoredInTheConfigurationFile().Should().Be(certificateEncryptedWithTheKey);
         }
 
@@ -133,14 +133,12 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
             File.Delete(instance.ConfigurationEncryptionKeyFile);
 
             // Act
-            Func<Task> start = async () =>
-            {
-                await using var runningTentacle = await new ListeningRunningTentacleBuilder(TestCertificates.ServerPublicThumbprint, instance)
-                    .Build(Logger, CancellationToken);
-            };
+            var agent = await instance.ExecuteTentacleCommandOnTheInstance(CommandResultValidation.None, "agent");
 
             // Assert
-            await start.Should().ThrowAsync<Exception>("the certificate cannot be decrypted without its key");
+            var output = agent.StandardOutput + agent.StandardError;
+            agent.ExitCode.Should().NotBe(0, output);
+            output.Should().Contain(instance.ConfigurationEncryptionKeyFile, "the certificate cannot be decrypted without its key");
             instance.CertificateAsStoredInTheConfigurationFile().Should().Be(certificateEncryptedWithTheKey);
         }
     }
