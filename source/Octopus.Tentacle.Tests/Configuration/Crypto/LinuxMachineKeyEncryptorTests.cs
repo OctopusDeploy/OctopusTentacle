@@ -10,20 +10,13 @@ using Octopus.Tentacle.Tests.Support;
 
 namespace Octopus.Tentacle.Tests.Configuration.Crypto
 {
-    [TestFixture]
-    public class LinuxMachineKeyEncryptorFixture
+    public class LinuxMachineKeyEncryptorTests
     {
-        readonly ISystemLog systemLog = Substitute.For<ISystemLog>();
-        readonly ConfigurationEncryptionKey generatedKey = InMemoryConfigurationEncryptionKey.Create();
-
-        LinuxMachineKeyEncryptor CreateEncryptor(params ICryptoKeyNixSource[] legacyKeySources)
-            => new(systemLog, generatedKey, legacyKeySources);
-
         [Test]
         public void WhenAValueIsEncryptedThenItIsVersionedAndDecrypts()
         {
             // Arrange
-            var encryptor = CreateEncryptor();
+            var encryptor = new LinuxMachineKeyEncryptor(Substitute.For<ISystemLog>(), InMemoryConfigurationEncryptionKey.Create(), Array.Empty<ICryptoKeyNixSource>());
 
             // Act
             var encrypted = encryptor.Encrypt("FooBar");
@@ -38,9 +31,8 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         public void WhenACurrentValueWasEncryptedWithAnotherKeyThenALegacyKeyIsNotTried()
         {
             // Arrange
-            var otherKey = InMemoryConfigurationEncryptionKey.Create();
-            var encryptedWithOtherKey = new LinuxMachineKeyEncryptor(systemLog, otherKey, Array.Empty<ICryptoKeyNixSource>()).Encrypt("FooBar");
-            var encryptor = CreateEncryptor(new InMemoryCryptoKeyNixSource());
+            var encryptedWithOtherKey = new LinuxMachineKeyEncryptor(Substitute.For<ISystemLog>(), InMemoryConfigurationEncryptionKey.Create(), Array.Empty<ICryptoKeyNixSource>()).Encrypt("FooBar");
+            var encryptor = new LinuxMachineKeyEncryptor(Substitute.For<ISystemLog>(), InMemoryConfigurationEncryptionKey.Create(), new ICryptoKeyNixSource[] { new InMemoryCryptoKeyNixSource() });
 
             // Act
             Action decrypt = () => encryptor.Decrypt(encryptedWithOtherKey);
@@ -54,9 +46,8 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         public void WhenTheSpecifierIsAlteredThenDecryptionFails(string alteredSpecifier)
         {
             // Arrange
-            var encryptor = CreateEncryptor();
-            var encrypted = encryptor.Encrypt("FooBar");
-            var tampered = alteredSpecifier + encrypted.Substring(LinuxMachineKeyEncryptor.Specifier.Length);
+            var encryptor = new LinuxMachineKeyEncryptor(Substitute.For<ISystemLog>(), InMemoryConfigurationEncryptionKey.Create(), Array.Empty<ICryptoKeyNixSource>());
+            var tampered = alteredSpecifier + encryptor.Encrypt("FooBar").Substring(LinuxMachineKeyEncryptor.Specifier.Length);
 
             // Act
             Action decrypt = () => encryptor.Decrypt(tampered);
