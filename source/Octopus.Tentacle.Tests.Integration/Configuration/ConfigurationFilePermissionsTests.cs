@@ -14,11 +14,10 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Integration.Configuration
 {
-    [TestFixture]
     [LinuxTest]
     [NonParallelizable]
     [UnsupportedOSPlatform("windows")]
-    public class ConfigurationFilePermissionsFixture
+    public class ConfigurationFilePermissionsTests
     {
         [Test]
         [RequiresSudoOnLinux]

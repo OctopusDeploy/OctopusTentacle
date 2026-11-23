@@ -6,23 +6,15 @@ using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Tests.Support;
+using Octopus.Tentacle.Tests.Support.TestAttributes;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Configuration
 {
-    [TestFixture]
+    [LinuxOrMacTest]
     [UnsupportedOSPlatform("windows")]
-    public class ConfigurationFilePermissionsFixture
+    public class ConfigurationFilePermissionsTests
     {
-        [SetUp]
-        public void SkipOnWindows()
-        {
-            if (OperatingSystem.IsWindows())
-            {
-                Assert.Ignore("Unix file modes only");
-            }
-        }
-
         [Test]
         public void WhenAWorldReadableConfigIsRestrictedThenOnlyItsOwnerCanReadIt()
         {

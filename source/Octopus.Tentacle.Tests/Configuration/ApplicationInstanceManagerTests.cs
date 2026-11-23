@@ -10,9 +10,8 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Configuration
 {
-    [TestFixture]
     [LinuxTest]
-    public class ApplicationInstanceManagerFixture
+    public class ApplicationInstanceManagerTests
     {
         [Test]
         public void WhenTheConfigurationEncryptionKeyCannotBeCreatedThenNoInstanceIsCreated()

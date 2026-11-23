@@ -22,8 +22,7 @@ using Octopus.Tentacle.Tests.Support;
 
 namespace Octopus.Tentacle.Tests.Commands
 {
-    [TestFixture]
-    public class ReplaceCertificateCommandFixture
+    public class ReplaceCertificateCommandTests
     {
         [Test]
         public void ShouldUpdateEveryRegistrationWithTheOldThumbprintInEverySpace()
