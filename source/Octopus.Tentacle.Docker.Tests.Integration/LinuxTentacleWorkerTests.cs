@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using FluentAssertions;
 using Octopus.Tentacle.Docker.Tests.Integration.Setup;
+using Octopus.Tentacle.Tests.Integration.Common.FakeOctopus;
 
 namespace Octopus.Tentacle.Docker.Tests.Integration;
 

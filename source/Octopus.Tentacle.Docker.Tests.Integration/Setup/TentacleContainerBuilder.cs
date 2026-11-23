@@ -1,3 +1,5 @@
+using Octopus.Tentacle.Tests.Integration.Common.FakeOctopus;
+
 namespace Octopus.Tentacle.Docker.Tests.Integration.Setup;
 
 /// <summary>

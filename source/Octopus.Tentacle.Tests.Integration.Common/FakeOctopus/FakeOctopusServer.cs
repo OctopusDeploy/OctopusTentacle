@@ -11,13 +11,13 @@ using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using NUnit.Framework;
 using Octopus.Client.Extensibility;
 using Octopus.Client.Model;
 using Octopus.Tentacle.CommonTestUtils;
-using Octopus.Tentacle.Tests.Integration.Common;
 using ILogger = Serilog.ILogger;
 
-namespace Octopus.Tentacle.Docker.Tests.Integration.Setup;
+namespace Octopus.Tentacle.Tests.Integration.Common.FakeOctopus;
 
 /// <summary>
 /// A stand-in Octopus Server for one test, built with <see cref="FakeOctopusServerBuilder"/>. It has two parts:
@@ -84,6 +84,7 @@ public sealed class FakeOctopusServer : IAsyncDisposable
     readonly ConcurrentDictionary<(string SpaceName, string MachineName), TaskCompletionSource<RegisteredMachine>> registrations = new();
     readonly ConcurrentQueue<string> unhandledRequests = new();
     readonly ConcurrentDictionary<(string SpaceName, string MachineName), int> registrationCounts = new();
+    readonly ConcurrentDictionary<(string SpaceName, string MachineName), RegisteredMachine> latestRegistrations = new();
     readonly ConcurrentDictionary<string, string> sessions = new();
     readonly ConcurrentQueue<LoggedRequest> requestLog = new();
     readonly object spacesLock = new();
@@ -216,6 +217,10 @@ public sealed class FakeOctopusServer : IAsyncDisposable
     public int RegistrationCount(string spaceName, string machineName)
         => registrationCounts.TryGetValue((spaceName.ToLowerInvariant(), machineName.ToLowerInvariant()), out var count) ? count : 0;
 
+    /// <summary>The machine as last created or updated, e.g. after `replace-certificate` changed its thumbprint.</summary>
+    public RegisteredMachine? LatestRegistration(string spaceName, string machineName)
+        => latestRegistrations.TryGetValue((spaceName.ToLowerInvariant(), machineName.ToLowerInvariant()), out var machine) ? machine : null;
+
     public Task<RegisteredMachine> WaitForRegistration(string spaceName, string machineName)
         => RegistrationFor(spaceName, machineName).Task;
 
@@ -334,6 +339,7 @@ public sealed class FakeOctopusServer : IAsyncDisposable
             halibut.Trust(machine.Thumbprint);
         }
 
+        latestRegistrations[(space.Name.ToLowerInvariant(), machine.Name.ToLowerInvariant())] = machine;
         registrationCounts.AddOrUpdate((space.Name.ToLowerInvariant(), machine.Name.ToLowerInvariant()), 1, (_, count) => count + 1);
         RegistrationFor(space.Name, machine.Name).TrySetResult(machine);
 

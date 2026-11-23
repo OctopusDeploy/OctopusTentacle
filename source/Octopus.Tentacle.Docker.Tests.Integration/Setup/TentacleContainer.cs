@@ -7,6 +7,7 @@ using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.CommonTestUtils.Diagnostics;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Tests.Integration.Common;
+using Octopus.Tentacle.Tests.Integration.Common.FakeOctopus;
 
 namespace Octopus.Tentacle.Docker.Tests.Integration.Setup;
 
