@@ -15,6 +15,7 @@ public class LinuxTentacleConfigEncryptionTests
     [Test]
     public async Task ARecreatedContainerDecryptsTheConfigurationWithThePersistedKey()
     {
+        // Arrange
         await using var config = await DockerVolume.Create(CancellationToken.None);
         await using var data = await DockerVolume.Create(CancellationToken.None);
         await using var server = await new FakeOctopusServerBuilder().Build();
@@ -35,6 +36,7 @@ public class LinuxTentacleConfigEncryptionTests
                             """)
             .Build();
 
+        // Act
         await using var recreatedTentacle = await new TentacleContainerBuilder(server)
             .WithVolume(config, "/etc/octopus")
             .WithVolume(data, "/var/lib/octopus/tentacle")
@@ -42,6 +44,7 @@ public class LinuxTentacleConfigEncryptionTests
             .Build();
         var (result, output) = await recreatedTentacle.ExecuteScript(inspectEncryption);
 
+        // Assert
         result.ExitCode.Should().Be(0, output);
         output.Should().Contain("key permissions 600");
         output.Should().Contain("encrypted certificates 1");
@@ -50,14 +53,17 @@ public class LinuxTentacleConfigEncryptionTests
     [Test]
     public async Task TheContainerRefusesToStartWhenOnlyTheConfigurationIsPersisted()
     {
+        // Arrange
         await using var config = await DockerVolume.Create(CancellationToken.None);
         await using var server = await new FakeOctopusServerBuilder().Build();
 
+        // Act
         await using var tentacle = await new TentacleContainerBuilder(server)
             .WithVolume(config, "/etc/octopus")
             .WithTentacleThatRefusesToStart()
             .Build();
 
+        // Assert
         (await tentacle.Docker.GetLogs()).Should().Contain("/var/lib/octopus/tentacle is not");
     }
 }
