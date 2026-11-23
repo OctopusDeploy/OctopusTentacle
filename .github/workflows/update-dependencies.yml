@@ -16,6 +16,7 @@ on:
 jobs:
   renovate-backend:
     name: Self-hosted Renovate
+    if: github.repository == 'OctopusDeploy/OctopusTentacle'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
