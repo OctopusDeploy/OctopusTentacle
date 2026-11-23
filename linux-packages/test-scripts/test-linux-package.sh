@@ -56,7 +56,8 @@ fi
 echo "The installed Tentacle version matches the expected one."
 echo ""
 
-# A new certificate must be encrypted with the instance's generated key, not one derived from /etc/machine-id.
+# Creating, protecting and re-owning the configuration encryption key calls libc and OpenSSL directly,
+# so it is exercised here on every distribution we package for.
 INSTANCE_NAME="package-test"
 CONFIGURATION_FILE="/etc/octopus/$INSTANCE_NAME/tentacle.config"
 MACHINE_KEY_FILE="/var/lib/octopus/tentacle/$INSTANCE_NAME/keys/config-encryption.key"
