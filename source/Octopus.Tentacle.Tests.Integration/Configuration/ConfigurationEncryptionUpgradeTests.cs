@@ -6,9 +6,12 @@ using CliWrap;
 using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Tentacle.CommonTestUtils;
+using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Configuration.Crypto;
+using Octopus.Tentacle.Tests.Integration.Common;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.TestAttributes;
+using Octopus.Tentacle.Tests.Integration.Util.Builders;
 
 namespace Octopus.Tentacle.Tests.Integration.Configuration
 {
@@ -137,6 +140,12 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
             await runningTentacle.StopAndStartWithCurrentVersionOfTentacle(CancellationToken);
 
             // Assert
+            await using var serverHalibut = TestServerHalibut.BuildServerHalibutRuntime();
+            var tentacleClient = TestServerHalibut.BuildTentacleClient(runningTentacle.ServiceUri, runningTentacle.Thumbprint, serverHalibut, _ => { });
+            var (scriptResult, _) = await tentacleClient.ExecuteScript(new TestExecuteShellScriptCommandBuilder().SetScriptBody(b => b.Print("Hello")).Build(), CancellationToken);
+            scriptResult.State.Should().Be(ProcessState.Complete);
+            scriptResult.ExitCode.Should().Be(0);
+
             runningTentacle.Instance.CertificateAsStoredInTheConfigurationFile().Should().Be(certificateEncryptedByVersion14);
         }
 
