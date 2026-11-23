@@ -123,6 +123,24 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
         }
 
         [Test]
+        public async Task WhenTentacleKeyIsEncryptedWithEtcMachineId_AndTheNewKeyCannotBeCreated_ThenTheCurrentTentacleStillStartsAndTheCertificateIsUnchanged()
+        {
+            // Arrange
+            await using var runningTentacle = await new TentacleInstanceBuilder()
+                .WithTentacleVersion(TentacleVersions.v14_0_4849_LastWithMachineIdConfigurationEncryption)
+                .RunAsListeningTentacle(TestCertificates.ServerPublicThumbprint)
+                .Build(Logger, CancellationToken);
+            var certificateEncryptedByVersion14 = runningTentacle.Instance.CertificateAsStoredInTheConfigurationFile();
+            await File.WriteAllTextAsync(runningTentacle.Instance.DataDirectory, "a file where the data directory should be, so the key directory cannot be created");
+
+            // Act
+            await runningTentacle.StopAndStartWithCurrentVersionOfTentacle(CancellationToken);
+
+            // Assert
+            runningTentacle.Instance.CertificateAsStoredInTheConfigurationFile().Should().Be(certificateEncryptedByVersion14);
+        }
+
+        [Test]
         public async Task WhenTentacleKeyFileIsDeleted_AndTheCurrentTentacleStarts_ThenTheCertificateIsLeftUntouched()
         {
             // Arrange
