@@ -23,6 +23,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         Version? tentacleVersion = TentacleVersions.Current;
         string? tentacleExe;
         string? name = "Tentacle";
+        bool nameChosen;
         TemporaryDirectory? home;
         bool useDefaultMachineConfigurationHomeDirectory;
         readonly Dictionary<string, string> environmentVariables = new();
@@ -46,6 +47,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public TentacleInstanceBuilder WithName(string name)
         {
             this.name = name;
+            nameChosen = true;
             return this;
         }
 
@@ -53,6 +55,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public TentacleInstanceBuilder UnnamedInstanceAddressedOnlyByConfig()
         {
             name = null;
+            nameChosen = true;
             return this;
         }
 
@@ -84,6 +87,26 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public TentacleInstanceBuilder WithNewCertificate()
         {
             withNewCertificate = true;
+            return this;
+        }
+
+        // Fills in what a running Tentacle needs, keeping anything the caller chose.
+        internal TentacleInstanceBuilder WithDefaultsForRunning(string defaultName, string pfxPath, string thumbprint)
+        {
+            if (!nameChosen)
+            {
+                name = defaultName;
+            }
+            else if (name == null)
+            {
+                throw new InvalidOperationException("An unnamed instance cannot be run, the agent is started with --instance");
+            }
+
+            if (certificate == null && !withNewCertificate)
+            {
+                certificate = (pfxPath, thumbprint);
+            }
+
             return this;
         }
 
