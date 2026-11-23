@@ -12,15 +12,15 @@ namespace Octopus.Tentacle.Configuration.Crypto
         public static IMachineKeyEncryptor ForKeyFile(IOctopusFileSystem fileSystem, string? keyFilePath)
             => PlatformDetection.IsRunningOnWindows
                 ? new WindowsMachineKeyEncryptor()
-                : CreateLinuxEncryptor(Log, fileSystem, keyFilePath);
+                : CreateLinuxEncryptor(Log, fileSystem, keyFilePath, LinuxGeneratedMachineKey.LegacyKeyFilePathForThisHost);
 
-        internal static IMachineKeyEncryptor CreateLinuxEncryptor(ISystemLog log, IOctopusFileSystem fileSystem, string? keyFilePath)
+        internal static IMachineKeyEncryptor CreateLinuxEncryptor(ISystemLog log, IOctopusFileSystem fileSystem, string? keyFilePath, string legacyGeneratedKeyFilePath)
         {
             // The keys earlier versions used, in the order they tried them. Only read, never created or changed.
             var legacyKeySources = new List<ICryptoKeyNixSource>
             {
                 new LinuxMachineIdKey(fileSystem),
-                new LinuxGeneratedMachineKey(fileSystem)
+                new LinuxGeneratedMachineKey(fileSystem, legacyGeneratedKeyFilePath)
             };
 
             return new LinuxMachineKeyEncryptor(log, new ConfigurationEncryptionKey(log, fileSystem, keyFilePath), legacyKeySources);

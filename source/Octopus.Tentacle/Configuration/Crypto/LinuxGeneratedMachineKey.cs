@@ -13,10 +13,12 @@ namespace Octopus.Tentacle.Configuration.Crypto
         public const string LegacyKeyFilePath = "/etc/octopus/" + LegacyKeyFileName;
 
         readonly IOctopusFileSystem fileSystem;
+        readonly string path;
 
-        public LinuxGeneratedMachineKey(IOctopusFileSystem fileSystem)
+        public LinuxGeneratedMachineKey(IOctopusFileSystem fileSystem, string path)
         {
             this.fileSystem = fileSystem;
+            this.path = path;
         }
 
         public static string LegacyKeyFilePathForThisHost
@@ -27,7 +29,6 @@ namespace Octopus.Tentacle.Configuration.Crypto
 
         public (byte[] Key, byte[] IV) Load()
         {
-            var path = LegacyKeyFilePathForThisHost;
             if (!fileSystem.FileExists(path))
             {
                 throw new InvalidOperationException($"There is no machine key file at `{path}`.");
