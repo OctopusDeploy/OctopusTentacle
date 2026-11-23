@@ -68,6 +68,15 @@ public sealed class TentacleContainer : IAsyncDisposable
         tentacleClient = await BuildTentacleClient(cancellationToken);
     }
 
+    internal async Task WaitForRefusalToStart()
+    {
+        using var timeout = new CancellationTokenSource(RegistrationTimeout);
+        if (await WaitForContainerToStop(timeout.Token) is null)
+        {
+            throw new TimeoutException($"The Tentacle container was expected to refuse to start, but is still {await Docker.DescribeState()} after {RegistrationTimeout.TotalSeconds:0} seconds.");
+        }
+    }
+
     async Task<RegisteredMachine> WaitForRegistration(Task<RegisteredMachine> registration)
     {
         var timeout = Task.Delay(RegistrationTimeout);

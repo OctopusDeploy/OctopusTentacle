@@ -1,4 +1,7 @@
 using FluentAssertions;
+using Octopus.Tentacle.Client.Scripts.Models.Builders;
+using Octopus.Tentacle.CommonTestUtils;
+using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Docker.Tests.Integration.Setup;
 
 namespace Octopus.Tentacle.Docker.Tests.Integration;
@@ -16,52 +19,45 @@ public class LinuxTentacleConfigEncryptionTests
         await using var data = await DockerVolume.Create(CancellationToken.None);
         await using var server = await new FakeOctopusServerBuilder().Build();
 
-        string? thumbprint;
+        RegisteredMachine registeredMachine;
         await using (var tentacle = await new TentacleContainerBuilder(server)
                          .WithVolume(config, "/etc/octopus")
                          .WithVolume(data, "/var/lib/octopus/tentacle")
                          .Build())
         {
-            thumbprint = tentacle.RegisteredMachine.Thumbprint;
+            registeredMachine = tentacle.RegisteredMachine;
         }
 
-        (await RunInImage("stat -c %a /var/lib/octopus/tentacle/Tentacle/keys/config-encryption.key", config, data)).Should().Be("600");
-        (await RunInImage("grep -cF 'key=\"Tentacle.Certificate\">AESGCM-V1$' /etc/octopus/tentacle.config", config, data)).Should().Be("1");
-        (await RunInImage("tentacle show-thumbprint --instance Tentacle", config, data)).Should().Be(thumbprint);
+        var inspectEncryption = new ExecuteShellScriptCommandBuilder(LoggingUtils.CurrentTestHash(), ScriptIsolationLevel.NoIsolation)
+            .WithScriptBody("""
+                            echo "key permissions $(stat -c %a /var/lib/octopus/tentacle/Tentacle/keys/config-encryption.key)"
+                            echo "encrypted certificates $(grep -cF 'key="Tentacle.Certificate">AESGCM-V1$' /etc/octopus/tentacle.config)"
+                            """)
+            .Build();
+
+        await using var recreatedTentacle = await new TentacleContainerBuilder(server)
+            .WithVolume(config, "/etc/octopus")
+            .WithVolume(data, "/var/lib/octopus/tentacle")
+            .WithStartingAlreadyConfiguredTentacle(registeredMachine)
+            .Build();
+        var (result, output) = await recreatedTentacle.ExecuteScript(inspectEncryption);
+
+        result.ExitCode.Should().Be(0, output);
+        output.Should().Contain("key permissions 600");
+        output.Should().Contain("encrypted certificates 1");
     }
 
     [Test]
     public async Task TheContainerRefusesToStartWhenOnlyTheConfigurationIsPersisted()
     {
         await using var config = await DockerVolume.Create(CancellationToken.None);
-        using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(10));
+        await using var server = await new FakeOctopusServerBuilder().Build();
 
-        var (exitCode, output) = await DockerCli.RunUnchecked(new[]
-        {
-            "run", "--rm", "--label", DockerCli.ContainerLabel,
-            "--volume", config.MountAt("/etc/octopus"),
-            "--env", "ACCEPT_EULA=Y",
-            TentacleImage.Resolve()
-        }, cancellationTokenSource.Token);
+        await using var tentacle = await new TentacleContainerBuilder(server)
+            .WithVolume(config, "/etc/octopus")
+            .WithTentacleThatRefusesToStart()
+            .Build();
 
-        exitCode.Should().NotBe(0);
-        output.Should().Contain("/var/lib/octopus/tentacle is not");
-    }
-
-    static async Task<string> RunInImage(string command, DockerVolume config, DockerVolume data)
-    {
-        using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(10));
-        var (exitCode, output) = await DockerCli.RunUnchecked(new[]
-        {
-            "run", "--rm", "--label", DockerCli.ContainerLabel,
-            "--volume", config.MountAt("/etc/octopus"),
-            "--volume", data.MountAt("/var/lib/octopus/tentacle"),
-            "--entrypoint", "bash",
-            TentacleImage.Resolve(), "-c", command
-        }, cancellationTokenSource.Token);
-
-        TestContext.Out.WriteLine($"$ {command} (exit code {exitCode})\n{output}");
-        exitCode.Should().Be(0, output);
-        return output.Trim();
+        (await tentacle.Docker.GetLogs()).Should().Contain("/var/lib/octopus/tentacle is not");
     }
 }

@@ -21,6 +21,8 @@ public class TentacleContainerBuilder
     string? workerPoolName;
     Dictionary<string, string> credentials = new() { ["ServerApiKey"] = ApiKey };
     readonly List<string> volumeMounts = new();
+    RegisteredMachine? alreadyRegistered;
+    bool refusesToStart;
 
     public TentacleContainerBuilder(FakeOctopusServer server)
     {
@@ -58,6 +60,23 @@ public class TentacleContainerBuilder
         return this;
     }
 
+    /// <summary>
+    /// Starts on volumes a previous container configured, so it skips registration. The TentacleClient trusts the
+    /// previous registration's thumbprint.
+    /// </summary>
+    public TentacleContainerBuilder WithStartingAlreadyConfiguredTentacle(RegisteredMachine registeredMachine)
+    {
+        alreadyRegistered = registeredMachine;
+        return this;
+    }
+
+    /// <summary>Expects the entrypoint to exit before configuring, so <see cref="Build"/> waits for it to stop.</summary>
+    public TentacleContainerBuilder WithTentacleThatRefusesToStart()
+    {
+        refusesToStart = true;
+        return this;
+    }
+
     public async Task<TentacleContainer> Build()
     {
         using var cancellationTokenSource = new CancellationTokenSource(DockerCommandTimeout);
@@ -67,13 +86,23 @@ public class TentacleContainerBuilder
         var image = TentacleImage.Resolve();
         TestContext.Out.WriteLine($"Testing {image} as a {communicationStyle} Tentacle named {machineName}");
 
-        var registration = server.WaitForRegistration(FakeOctopusServerBuilder.SpaceName, machineName);
+        var registration = alreadyRegistered is null
+            ? server.WaitForRegistration(FakeOctopusServerBuilder.SpaceName, machineName)
+            : Task.FromResult(alreadyRegistered);
 
         var docker = await DockerContainer.Run(image, machineName, RunOptions(machineName), cancellationToken);
         var tentacle = new TentacleContainer(docker, server, machineName, communicationStyle);
         try
         {
-            await tentacle.Start(registration, cancellationToken);
+            if (refusesToStart)
+            {
+                await tentacle.WaitForRefusalToStart();
+            }
+            else
+            {
+                await tentacle.Start(registration, cancellationToken);
+            }
+
             return tentacle;
         }
         catch

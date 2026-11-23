@@ -29,16 +29,6 @@ public static class DockerCli
         return result.StandardOutput.Trim();
     }
 
-    /// <summary>Runs a docker command that may fail, returning its exit code and combined output.</summary>
-    public static async Task<(int ExitCode, string Output)> RunUnchecked(IEnumerable<string> arguments, CancellationToken cancellationToken)
-    {
-        var result = await Cli.Wrap("docker")
-            .WithArguments(arguments.ToArray())
-            .WithValidation(CommandResultValidation.None)
-            .ExecuteBufferedAsync(Encoding.UTF8, cancellationToken);
-        return (result.ExitCode, result.StandardOutput + result.StandardError);
-    }
-
     /// <summary>
     /// `docker logs` writes the container's stdout and stderr to its own stdout and stderr, so ask for both and
     /// return them together. Never throws: this is called while reporting other failures.
