@@ -8,8 +8,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public static ITentacleBuilder WithWorkspaceCleaningSettings(this ITentacleBuilder builder, TimeSpan cleanerDelay, TimeSpan deleteWorkspacesOlderThan)
         {
             return builder
-                .WithRunTentacleEnvironmentVariable(WorkspaceCleanerConfiguration.CleanerDelayEnvironmentVariableName, cleanerDelay)
-                .WithRunTentacleEnvironmentVariable(WorkspaceCleanerConfiguration.DeleteWorkspacesOlderThanTimeSpanEnvironmentVariableName, deleteWorkspacesOlderThan);
+                .WithEnvironmentVariable(WorkspaceCleanerConfiguration.CleanerDelayEnvironmentVariableName, cleanerDelay)
+                .WithEnvironmentVariable(WorkspaceCleanerConfiguration.DeleteWorkspacesOlderThanTimeSpanEnvironmentVariableName, deleteWorkspacesOlderThan);
         }
     }
 }

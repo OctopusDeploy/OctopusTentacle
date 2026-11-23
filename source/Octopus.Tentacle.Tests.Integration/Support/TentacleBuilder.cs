@@ -25,7 +25,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 {
     public interface ITentacleBuilder
     {
-        ITentacleBuilder WithRunTentacleEnvironmentVariable<TValue>(string environmentVariable, TValue value);
+        ITentacleBuilder WithEnvironmentVariable<TValue>(string environmentVariable, TValue value);
         ITentacleBuilder WithHomeDirectory(TemporaryDirectory homeDirectory);
     }
 
@@ -110,7 +110,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             return (T)this;
         }
 
-        public ITentacleBuilder WithRunTentacleEnvironmentVariable<TValue>(string environmentVariable, TValue value)
+        public ITentacleBuilder WithEnvironmentVariable<TValue>(string environmentVariable, TValue value)
         {
             runTentacleEnvironmentVariables[environmentVariable] = value?.ToString();
 
@@ -320,10 +320,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             {
                 var directory = Path.Combine(HomeDirectory.DirectoryPath, "Octopus", "Tentacle", "Instances");
 
-                WithRunTentacleEnvironmentVariable(EnvironmentVariables.TentacleMachineConfigurationHomeDirectory, directory);
+                WithEnvironmentVariable(EnvironmentVariables.TentacleMachineConfigurationHomeDirectory, directory);
             }
 
-            WithRunTentacleEnvironmentVariable(EnvironmentVariables.TentacleInstancesDataDirectory, Path.Combine(HomeDirectory.DirectoryPath, "data"));
+            WithEnvironmentVariable(EnvironmentVariables.TentacleInstancesDataDirectory, Path.Combine(HomeDirectory.DirectoryPath, "data"));
         }
 
         async Task SetEnvironmentVariablesForService(string instanceName, TemporaryDirectory tempDirectory, ILogger logger, CancellationToken cancellationToken)
