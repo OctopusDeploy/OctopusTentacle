@@ -154,22 +154,16 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             CancellationToken cancellationToken)
         {
             var log = new SerilogLoggerBuilder().Build().ForContext<IRunningTentacleBuilder>();
-            var tentacleExe = instance.TentacleExe;
-            var instanceName = instance.Name!;
-            var tempDirectory = instance.Home;
             var ownsInstance = givenInstance == null;
 
             var runningTentacle = new RunningTentacle(
-                new FileInfo(tentacleExe),
-                ownsInstance ? tempDirectory : null,
-                startTentacleFunction: ct => RunTentacle(serviceUri, tentacleExe, instanceName, tempDirectory, log, ct),
-                instance.Thumbprint!,
-                instanceName,
-                tempDirectory.DirectoryPath,
+                instance,
+                ownsInstance ? instance.Home : null,
+                startTentacleFunction: (i, ct) => RunTentacle(serviceUri, i.TentacleExe, i.Name!, i.Home, log, ct),
                 applicationDirectory,
                 deleteInstanceFunction: ownsInstance
-                    ? ct => DeleteInstanceIgnoringFailure(installAsService, tentacleExe, instanceName, tempDirectory, logger, ct)
-                    : _ => Task.CompletedTask,
+                    ? (i, ct) => DeleteInstanceIgnoringFailure(installAsService, i.TentacleExe, i.Name!, i.Home, logger, ct)
+                    : (_, _) => Task.CompletedTask,
                 runTentacleEnvironmentVariables,
                 logger);
 

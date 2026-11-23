@@ -15,18 +15,15 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         private readonly TemporaryDirectory? temporaryDirectoryToDelete;
         private CancellationTokenSource? cancellationTokenSource;
         private Task? runningTentacleTask;
-        private readonly Func<CancellationToken, Task<(Task runningTentacleTask, Uri serviceUri)>> startTentacleFunction;
-        private readonly Func<CancellationToken, Task> deleteInstanceFunction;
+        private readonly Func<TentacleInstance, CancellationToken, Task<(Task runningTentacleTask, Uri serviceUri)>> startTentacleFunction;
+        private readonly Func<TentacleInstance, CancellationToken, Task> deleteInstanceFunction;
         private ILogger logger;
 
-        public RunningTentacle(FileInfo tentacleExe,
+        public RunningTentacle(TentacleInstance instance,
             TemporaryDirectory? temporaryDirectoryToDelete,
-            Func<CancellationToken, Task<(Task, Uri)>> startTentacleFunction,
-            string thumbprint,
-            string instanceName,
-            string homeDirectory,
+            Func<TentacleInstance, CancellationToken, Task<(Task, Uri)>> startTentacleFunction,
             string applicationDirectory,
-            Func<CancellationToken, Task> deleteInstanceFunction,
+            Func<TentacleInstance, CancellationToken, Task> deleteInstanceFunction,
             IReadOnlyDictionary<string, string> runTentacleEnvironmentVariables,
             ILogger logger)
         {
@@ -34,10 +31,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             this.temporaryDirectoryToDelete = temporaryDirectoryToDelete;
             this.deleteInstanceFunction = deleteInstanceFunction;
 
-            TentacleExe = tentacleExe;
-            Thumbprint = thumbprint;
-            InstanceName = instanceName;
-            HomeDirectory = homeDirectory;
+            Instance = instance;
             ApplicationDirectory = applicationDirectory;
             RunTentacleEnvironmentVariables = runTentacleEnvironmentVariables;
 
@@ -45,12 +39,13 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         }
 
         public Uri ServiceUri { get; private set; }
-        public string InstanceName { get; }
-        public string Thumbprint { get; }
-        public string HomeDirectory { get; }
+        public TentacleInstance Instance { get; private set; }
+        public string InstanceName => Instance.Name!;
+        public string Thumbprint => Instance.Thumbprint!;
+        public string HomeDirectory => Instance.Home.DirectoryPath;
         public string ApplicationDirectory { get; }
         public IReadOnlyDictionary<string, string> RunTentacleEnvironmentVariables { get; }
-        public FileInfo TentacleExe { get; }
+        public FileInfo TentacleExe => new(Instance.TentacleExe);
         public string LogFilePath => Path.Combine(HomeDirectory, "Logs", "OctopusTentacle.txt");
 
         public async Task Start(CancellationToken cancellationToken)
@@ -62,7 +57,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
             cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-            var (rtt, serviceUri) = await startTentacleFunction(cancellationTokenSource.Token);
+            var (rtt, serviceUri) = await startTentacleFunction(Instance, cancellationTokenSource.Token);
 
             runningTentacleTask = rtt;
             ServiceUri = serviceUri;
@@ -94,6 +89,14 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             await Start(cancellationToken);
         }
 
+        // As if the current Tentacle had been installed over the running one.
+        public async Task StopAndStartWithCurrentVersionOfTentacle(CancellationToken cancellationToken)
+        {
+            await Stop(cancellationToken);
+            Instance = Instance.WithCurrentTentacleExe();
+            await Start(cancellationToken);
+        }
+
         public async ValueTask DisposeAsync()
         {
             using var disposeCancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
@@ -108,7 +111,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             }
 
             logger.Information("Starting deleteInstanceFunction");
-            await deleteInstanceFunction(cancellationToken);
+            await deleteInstanceFunction(Instance, cancellationToken);
 
             logger.Information("Starting temporaryDirectory.Dispose");
             temporaryDirectoryToDelete?.Dispose();
