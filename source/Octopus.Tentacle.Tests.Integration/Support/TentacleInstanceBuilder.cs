@@ -52,12 +52,17 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     // Everything the instance owns - its registry entry, configuration and data - lives in a temporary home directory.
     public class TentacleInstance : IDisposable
     {
-        readonly TemporaryDirectory home = new();
+        readonly TemporaryDirectory home;
+        readonly string tentacleExe;
         readonly CancellationToken cancellationToken;
-        string tentacleExe;
 
-        internal TentacleInstance(string tentacleExe, CancellationToken cancellationToken)
+        internal TentacleInstance(string tentacleExe, CancellationToken cancellationToken) : this(new TemporaryDirectory(), tentacleExe, cancellationToken)
         {
+        }
+
+        TentacleInstance(TemporaryDirectory home, string tentacleExe, CancellationToken cancellationToken)
+        {
+            this.home = home;
             this.tentacleExe = tentacleExe;
             this.cancellationToken = cancellationToken;
         }
@@ -66,9 +71,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public string ConfigurationFile => Path.Combine(home.DirectoryPath, "tentacle.config");
         public string DataDirectory => Path.Combine(home.DirectoryPath, "data");
 
-        // As installing the latest Tentacle over this instance would.
-        public void UpgradeToLatestTentacle()
-            => tentacleExe = TentacleExeFinder.FindTentacleExe();
+        // The same instance, as if the current Tentacle had been installed over it.
+        public TentacleInstance WithCurrentTentacleExe()
+            => new(home, TentacleExeFinder.FindTentacleExe(), cancellationToken);
 
         public string CertificateAsStoredInTheConfigurationFile()
             => XDocument.Load(ConfigurationFile).Root!.Elements("set").Single(e => (string?)e.Attribute("key") == TentacleConfiguration.CertificateSettingName).Value;

@@ -30,13 +30,13 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
             instance.CertificateAsStoredInTheConfigurationFile().Should().NotStartWith(EncryptedWithItsOwnKey, "version 14 encrypts with a key derived from the machine id");
 
             // Act
-            instance.UpgradeToLatestTentacle();
-            await instance.ExecuteTentacleCommand(CommandResultValidation.ZeroExitCode, "upgrade-configuration-encryption", "--instance", instance.Name);
+            var upgradedInstance = instance.WithCurrentTentacleExe();
+            await upgradedInstance.ExecuteTentacleCommand(CommandResultValidation.ZeroExitCode, "upgrade-configuration-encryption", "--instance", instance.Name);
 
             // Assert
             instance.CertificateAsStoredInTheConfigurationFile().Should().StartWith(EncryptedWithItsOwnKey);
             File.Exists(Path.Combine(instance.DataDirectory, instance.Name, "keys", ConfigurationEncryptionKey.KeyFileName)).Should().BeTrue();
-            (await instance.ShowThumbprint()).Should().Be(thumbprintBeforeUpgrade, "the upgraded certificate must still decrypt to the same certificate");
+            (await upgradedInstance.ShowThumbprint()).Should().Be(thumbprintBeforeUpgrade, "the upgraded certificate must still decrypt to the same certificate");
         }
 
         [Test]
@@ -51,8 +51,8 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
             await File.WriteAllTextAsync(instance.DataDirectory, "a file where the data directory should be, so the key directory cannot be created");
 
             // Act
-            instance.UpgradeToLatestTentacle();
-            var upgrade = await instance.ExecuteTentacleCommand(CommandResultValidation.None, "upgrade-configuration-encryption", "--instance", instance.Name);
+            var upgradedInstance = instance.WithCurrentTentacleExe();
+            var upgrade = await upgradedInstance.ExecuteTentacleCommand(CommandResultValidation.None, "upgrade-configuration-encryption", "--instance", instance.Name);
 
             // Assert
             var output = upgrade.StandardOutput + upgrade.StandardError;
