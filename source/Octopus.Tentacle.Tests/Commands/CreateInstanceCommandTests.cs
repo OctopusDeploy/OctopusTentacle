@@ -10,6 +10,8 @@ using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Core.Util;
 using Octopus.Tentacle.Internals.Options;
+using Octopus.Tentacle.Kubernetes.Configuration;
+using Octopus.Tentacle.Tests.Support;
 using Octopus.Tentacle.Startup;
 using Octopus.Tentacle.Tests.Support.TestAttributes;
 using Octopus.Tentacle.Tests.Util;
@@ -29,19 +31,16 @@ namespace Octopus.Tentacle.Tests.Commands
             Directory.CreateDirectory(directory);
             var blockingFile = Path.Combine(directory, "not-a-directory");
             File.WriteAllText(blockingFile, "");
-            using var _ = new TemporaryEnvironmentVariable(EnvironmentVariables.TentacleInstancesDataDirectory, blockingFile);
+            using var dataDirectory = new TemporaryEnvironmentVariable(EnvironmentVariables.TentacleInstancesDataDirectory, blockingFile);
+            using var homeDirectory = new TemporaryEnvironmentVariable(EnvironmentVariables.TentacleMachineConfigurationHomeDirectory, directory);
             var configurationFile = Path.Combine(directory, "Tentacle", "tentacle.config");
-            var log = Substitute.For<ISystemLog>();
+            var log = new InMemoryLog();
             var fileSystem = new OctopusPhysicalFileSystem(log);
-            var instanceStore = Substitute.For<IApplicationInstanceStore>();
-            var manager = new ApplicationInstanceManager(
-                ApplicationName.Tentacle,
-                new StartUpRegistryInstanceRequest("Tentacle"),
-                fileSystem,
-                log,
-                instanceStore,
-                new Lazy<IWritableHomeConfiguration>(() => Substitute.For<IWritableHomeConfiguration>()));
-            var command = new CreateInstanceCommand(manager, Substitute.For<ILogFileOnlyLogger>(), new Lazy<ITentacleConfigurationUpgrade>(() => Substitute.For<ITentacleConfigurationUpgrade>()));
+            var request = new StartUpRegistryInstanceRequest("Tentacle");
+            var instanceStore = new ApplicationInstanceStore(ApplicationName.Tentacle, log, fileSystem, Substitute.For<IRegistryApplicationInstanceStore>());
+            var selector = new ApplicationInstanceSelector(ApplicationName.Tentacle, instanceStore, request, Array.Empty<IApplicationConfigurationContributor>(), new Lazy<ConfigMapKeyValueStore>(() => throw new NotSupportedException()), fileSystem, log);
+            var manager = new ApplicationInstanceManager(ApplicationName.Tentacle, request, fileSystem, log, instanceStore, new Lazy<IWritableHomeConfiguration>(() => throw new NotSupportedException()));
+            var command = new CreateInstanceCommand(manager, Substitute.For<ILogFileOnlyLogger>(), new Lazy<ITentacleConfigurationUpgrade>(() => new TentacleConfigurationUpgrade(selector, fileSystem, log)));
 
             try
             {
@@ -51,7 +50,7 @@ namespace Octopus.Tentacle.Tests.Commands
                 // Assert
                 create.Should().Throw<ControlledFailureException>().WithMessage("*so the instance was not created*");
                 File.Exists(configurationFile).Should().BeFalse();
-                instanceStore.DidNotReceiveWithAnyArgs().RegisterInstance(default!);
+                instanceStore.ListInstances().Should().BeEmpty();
             }
             finally
             {

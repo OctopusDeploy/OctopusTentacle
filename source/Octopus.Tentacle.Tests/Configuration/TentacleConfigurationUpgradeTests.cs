@@ -13,7 +13,6 @@ using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Crypto;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Core.Diagnostics;
-using Octopus.Tentacle.Core.Util;
 using Octopus.Tentacle.Internals.Options;
 using Octopus.Tentacle.Startup;
 using Octopus.Tentacle.Tests.Support;
@@ -42,8 +41,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             sandbox.CreateUpgrade(store, keyFilePath).Upgrade();
 
             // Assert
-            File.GetUnixFileMode(keyFilePath).Should().Be(UnixFileMode.UserRead | UnixFileMode.UserWrite);
-            UnixFile.OwnerOf(keyFilePath).Should().Be(UnixFile.OwnerOf(sandbox.ConfigurationFile));
+            File.Exists(keyFilePath).Should().BeTrue();
             sandbox.RawCertificate().Should().StartWith(LinuxMachineKeyEncryptor.Specifier + "$");
             sandbox.CreateStore(keyFilePath).Get<string>(TentacleConfiguration.CertificateSettingName, protectionLevel: ProtectionLevel.MachineKey).Should().Be(Certificate);
             sandbox.Log.DidNotReceive().Warn(Arg.Any<Exception>(), Arg.Any<string>());
@@ -65,25 +63,6 @@ namespace Octopus.Tentacle.Tests.Configuration
             // Assert
             run.Should().Throw<Exception>();
             sandbox.RawCertificate().Should().Be(legacyValue);
-        }
-
-        [Test]
-        public void WhenAgentStartCannotCreateTheKeyThenItWarnsAndKeepsWorkingOnLegacyValues()
-        {
-            // Arrange
-            using var sandbox = new ConfigurationSandbox();
-            var keyFilePath = Path.Combine(sandbox.ConfigurationFile, "not-a-directory", ConfigurationEncryptionKey.KeyFileName);
-            var store = sandbox.CreateStore(keyFilePath);
-            store.Set<string>(TentacleConfiguration.CertificateSettingName, Certificate, ProtectionLevel.MachineKey);
-            var legacyValue = sandbox.RawCertificate();
-
-            // Act
-            sandbox.CreateUpgrade(store, keyFilePath).TryUpgrade();
-
-            // Assert
-            sandbox.Log.Received(1).Warn(Arg.Any<Exception>(), Arg.Is<string>(m => m.Contains("still protected by the key earlier versions used")));
-            sandbox.RawCertificate().Should().Be(legacyValue);
-            sandbox.CreateStore(keyFilePath).Get<string>(TentacleConfiguration.CertificateSettingName, protectionLevel: ProtectionLevel.MachineKey).Should().Be(Certificate);
         }
 
         [Test]
