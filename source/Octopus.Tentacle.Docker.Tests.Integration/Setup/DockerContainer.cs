@@ -81,6 +81,10 @@ public sealed class DockerContainer : IAsyncDisposable
 
     public Task<string> GetLogs() => DockerCli.Logs(Id);
 
+    /// <summary>Runs a command in the running container, as `docker exec` does, and returns its output.</summary>
+    public Task<string> Exec(IEnumerable<string> command, CancellationToken cancellationToken)
+        => DockerCli.Run(new[] { "exec", Id }.Concat(command), cancellationToken);
+
     /// <summary>Restarts the container as `docker restart` does: SIGTERM, then SIGKILL after the grace period.</summary>
     public Task Restart(TimeSpan gracePeriod, CancellationToken cancellationToken)
         => DockerCli.Run(new[] { "restart", "--time", ((int)gracePeriod.TotalSeconds).ToString(), Id }, cancellationToken);
