@@ -98,6 +98,10 @@ if [[ -z "$THUMBPRINT" ]] || ! grep -qF "key=\"Tentacle.CertificateThumbprint\">
   exit 1
 fi
 echo "The certificate decrypts in a new process and matches the recorded thumbprint."
+
+# Selecting the instance by --config must still find the registered instance's key.
+[[ "$(Tentacle show-thumbprint --config "$CONFIGURATION_FILE")" == "$THUMBPRINT" ]] || { echo "'Tentacle show-thumbprint --config' did not decrypt with the registered instance's key."; exit 1; }
+echo "Selecting the instance by its configuration file uses that instance's key."
 echo ""
 
 echo "All tests passed."
