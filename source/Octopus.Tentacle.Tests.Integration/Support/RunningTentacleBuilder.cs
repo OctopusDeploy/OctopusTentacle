@@ -23,24 +23,21 @@ using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
-    public interface ITentacleBuilder
+    public interface IRunningTentacleBuilder
     {
-        ITentacleBuilder WithRunTentacleEnvironmentVariable<TValue>(string environmentVariable, TValue value);
-        ITentacleBuilder WithHomeDirectory(TemporaryDirectory homeDirectory);
+        IRunningTentacleBuilder WithEnvironmentVariable<TValue>(string environmentVariable, TValue value);
+        IRunningTentacleBuilder WithHomeDirectory(TemporaryDirectory homeDirectory);
     }
 
-    public abstract class TentacleBuilder<T> : ITentacleBuilder
-        where T : TentacleBuilder<T>
+    public abstract class RunningTentacleBuilder<T> : IRunningTentacleBuilder
+        where T : RunningTentacleBuilder<T>
     {
         private readonly AsyncLock configureAndStartTentacleLock = new ();
 
-        protected readonly Version? TentacleVersion;
+        readonly TentacleInstanceBuilder? instanceBuilder;
+        readonly TentacleInstance? givenInstance;
         protected string? ServerThumbprint;
-        protected string? TentacleExePath;
-        protected string CertificatePfxPath = TestCertificates.TentaclePfxPath;
-        protected string TentacleThumbprint = TestCertificates.TentaclePublicThumbprint;
         bool installAsService = false;
-        bool useDefaultMachineConfigurationHomeDirectory = false;
 
         static readonly Regex ListeningPortRegex = new (@"listen:\/\/.+:(\d+)\/");
         readonly Dictionary<string, string> runTentacleEnvironmentVariables = BuildDefaultTentacleEnvironmentVariables();
@@ -54,29 +51,50 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             return env;
         }
 
-        TemporaryDirectory? homeDirectory;
-
-        public TentacleBuilder(Version? tentacleVersion)
+        // Builds the instance, so the running Tentacle owns it and deletes it when disposed.
+        protected RunningTentacleBuilder(TentacleInstanceBuilder instanceBuilder)
         {
-            this.TentacleVersion = tentacleVersion;
+            this.instanceBuilder = instanceBuilder.WithDefaultsForRunning(InstanceNameGenerator(), TestCertificates.TentaclePfxPath, TestCertificates.TentaclePublicThumbprint);
         }
 
-        protected TemporaryDirectory HomeDirectory
+        // Runs an instance the caller built, so the caller owns it.
+        protected RunningTentacleBuilder(TentacleInstance instance)
         {
-            get
+            if (instance.Name == null)
             {
-                homeDirectory ??= new TemporaryDirectory();
-                return homeDirectory;
+                throw new ArgumentException("An unnamed instance cannot be run, the agent is started with --instance", nameof(instance));
             }
+
+            givenInstance = instance;
+        }
+
+        TentacleInstanceBuilder InstanceBuilder
+            => instanceBuilder ?? throw new InvalidOperationException("The instance was given already built, so it cannot be changed");
+
+        protected async Task<TentacleInstance> BuildInstance(ILogger logger, CancellationToken cancellationToken)
+        {
+            var instance = givenInstance ?? await InstanceBuilder.Build(logger, cancellationToken);
+            if (instance.Thumbprint == null)
+            {
+                throw new InvalidOperationException("The instance needs a certificate to be run");
+            }
+
+            foreach (var environmentVariable in instance.EnvironmentVariables)
+            {
+                runTentacleEnvironmentVariables.TryAdd(environmentVariable.Key, environmentVariable.Value);
+            }
+
+            return instance;
         }
 
         protected AwaitableDisposable<IDisposable> GetConfigureAndStartTentacleLockIfRequired(ILogger logger, CancellationToken cancellationToken)
         {
             // If we are using a Tentacle version prior to 8.1.284 then there is no way to isolate the tentacle instances
             // so we take an exclusive lock around configuration, startup and deletion of the tentacle instance
-            if (TentacleVersion != null && TentacleVersion < new Version(8, 1, 284))
+            var tentacleVersion = instanceBuilder?.TentacleVersion;
+            if (tentacleVersion != null && tentacleVersion < new Version(8, 1, 284))
             {
-                logger.Information($"Acquiring an exclusive lock to perform configuration / startup or deletion of Tentacle {TentacleVersion}");
+                logger.Information($"Acquiring an exclusive lock to perform configuration / startup or deletion of Tentacle {tentacleVersion}");
                 return configureAndStartTentacleLock.LockAsync(cancellationToken);
             }
 
@@ -89,30 +107,16 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             }
         }
 
-        public ITentacleBuilder WithHomeDirectory(TemporaryDirectory homeDirectory)
+        public IRunningTentacleBuilder WithHomeDirectory(TemporaryDirectory homeDirectory)
         {
-            this.homeDirectory = homeDirectory;
+            InstanceBuilder.WithHomeDirectory(homeDirectory);
             return this;
         }
 
-        public T WithCertificate(string certificatePfxPath, string tentacleThumbprint)
-        {
-            CertificatePfxPath = certificatePfxPath;
-            TentacleThumbprint = tentacleThumbprint;
-
-            return (T)this;
-        }
-
-        public T WithTentacleExe(string tentacleExe)
-        {
-            TentacleExePath = tentacleExe;
-
-            return (T)this;
-        }
-
-        public ITentacleBuilder WithRunTentacleEnvironmentVariable<TValue>(string environmentVariable, TValue value)
+        public IRunningTentacleBuilder WithEnvironmentVariable<TValue>(string environmentVariable, TValue value)
         {
             runTentacleEnvironmentVariables[environmentVariable] = value?.ToString();
+            instanceBuilder?.WithEnvironmentVariable(environmentVariable, value?.ToString());
 
             return this;
         }
@@ -126,41 +130,43 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             action(writableTentacleConfiguration);
         }
 
-        public ITentacleBuilder InstallAsAService()
+        public IRunningTentacleBuilder InstallAsAService()
         {
+            if (givenInstance != null)
+            {
+                throw new NotSupportedException("Running an instance the caller built as a service is not yet supported.");
+            }
+
             installAsService = true;
 
             return this;
         }
 
-        public ITentacleBuilder UseDefaultMachineConfigurationHomeDirectory()
+        public IRunningTentacleBuilder UseDefaultMachineConfigurationHomeDirectory()
         {
-            useDefaultMachineConfigurationHomeDirectory = true;
+            InstanceBuilder.UseDefaultMachineConfigurationHomeDirectory();
 
             return this;
         }
 
         protected async Task<RunningTentacle> StartTentacle(
             Uri? serviceUri,
-            string tentacleExe,
-            string instanceName,
-            TemporaryDirectory tempDirectory,
+            TentacleInstance instance,
             string applicationDirectory,
-            string tentacleThumbprint,
             ILogger logger,
             CancellationToken cancellationToken)
         {
-            var log = new SerilogLoggerBuilder().Build().ForContext<ITentacleBuilder>();
+            var log = new SerilogLoggerBuilder().Build().ForContext<IRunningTentacleBuilder>();
+            var ownsInstance = givenInstance == null;
 
             var runningTentacle = new RunningTentacle(
-                new FileInfo(tentacleExe),
-                tempDirectory,
-                startTentacleFunction: ct => RunTentacle(serviceUri, tentacleExe, instanceName, tempDirectory, log, ct),
-                tentacleThumbprint,
-                instanceName,
-                HomeDirectory.DirectoryPath,
+                instance,
+                ownsInstance ? instance.Home : null,
+                startTentacleFunction: (i, ct) => RunTentacle(serviceUri, i.TentacleExe, i.Name!, i.Home, log, ct),
                 applicationDirectory,
-                deleteInstanceFunction: ct => DeleteInstanceIgnoringFailure(installAsService, tentacleExe, instanceName, tempDirectory, logger, ct),
+                deleteInstanceFunction: ownsInstance
+                    ? (i, ct) => DeleteInstanceIgnoringFailure(installAsService, i.TentacleExe, i.Name!, i.Home, logger, ct)
+                    : (_, _) => Task.CompletedTask,
                 runTentacleEnvironmentVariables,
                 logger);
 
@@ -314,16 +320,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             return (runningTentacle, serviceUri);
         }
 
-        protected void ConfigureTentacleMachineConfigurationHomeDirectory()
-        {
-            if (!useDefaultMachineConfigurationHomeDirectory)
-            {
-                var directory = Path.Combine(HomeDirectory.DirectoryPath, "Octopus", "Tentacle", "Instances");
-
-                WithRunTentacleEnvironmentVariable(EnvironmentVariables.TentacleMachineConfigurationHomeDirectory, directory);
-            }
-        }
-
         async Task SetEnvironmentVariablesForService(string instanceName, TemporaryDirectory tempDirectory, ILogger logger, CancellationToken cancellationToken)
         {
             if (PlatformDetection.IsRunningOnWindows)
@@ -390,18 +386,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             }
 
             return (false, null, lastLogFileContents);
-        }
-
-        protected async Task AddCertificateToTentacle(string tentacleExe, string instanceName, string tentaclePfxPath, TemporaryDirectory tmp, ILogger logger, CancellationToken cancellationToken)
-        {
-            await RunTentacleCommand(tentacleExe, new[] {"import-certificate", $"--from-file={tentaclePfxPath}", $"--instance={instanceName}"}, tmp, logger, cancellationToken);
-            cancellationToken.ThrowIfCancellationRequested();
-        }
-
-        protected async Task CreateInstance(string tentacleExe, string configFilePath, string instanceName, TemporaryDirectory tmp, ILogger logger, CancellationToken cancellationToken)
-        {
-            await RunTentacleCommand(tentacleExe, new[] {"create-instance", "--config", configFilePath, $"--instance={instanceName}"}, tmp, logger,cancellationToken);
-            cancellationToken.ThrowIfCancellationRequested();
         }
 
         internal async Task DeleteInstanceIgnoringFailure(bool runningAsService, string tentacleExe, string instanceName, TemporaryDirectory tmp, ILogger logger, CancellationToken cancellationToken)
