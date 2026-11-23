@@ -1,13 +1,15 @@
 using System;
 using System.IO;
+using System.Linq;
+using System.Xml.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using CliWrap;
 using CliWrap.Buffered;
 using Octopus.Tentacle.CommonTestUtils;
+using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Core.Util;
 using Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers;
-using Octopus.Tentacle.Tests.Integration.Util;
 using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
@@ -37,10 +39,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 : await TentacleFetcher.GetTentacleVersion(Path.GetTempPath(), tentacleVersion, DefaultTentacleRuntime.Value, logger, cancellationToken);
 
             var instance = new TentacleInstance(tentacleExe, cancellationToken);
-            await instance.Run("create-instance", "--instance", instance.Name, "--config", instance.ConfigurationFile);
+            await instance.ExecuteTentacleCommand(instance.TentacleExe, CommandResultValidation.ZeroExitCode, "create-instance", "--instance", instance.Name, "--config", instance.ConfigurationFile);
             if (withNewCertificate)
             {
-                await instance.Run("new-certificate", "--instance", instance.Name);
+                await instance.ExecuteTentacleCommand(instance.TentacleExe, CommandResultValidation.ZeroExitCode, "new-certificate", "--instance", instance.Name);
             }
 
             return instance;
@@ -64,17 +66,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public string ConfigurationFile => Path.Combine(home.DirectoryPath, "tentacle.config");
         public string DataDirectory => Path.Combine(home.DirectoryPath, "data");
 
-        public Task<BufferedCommandResult> Run(params string[] arguments)
-            => RunWith(TentacleExe, CommandResultValidation.ZeroExitCode, arguments);
+        public string CertificateAsStoredInTheConfigurationFile()
+            => XDocument.Load(ConfigurationFile).Root!.Elements("set").Single(e => (string?)e.Attribute("key") == TentacleConfiguration.CertificateSettingName).Value;
 
-        public Task<BufferedCommandResult> RunWith(string tentacleExe, params string[] arguments)
-            => RunWith(tentacleExe, CommandResultValidation.ZeroExitCode, arguments);
-
-        public Task<BufferedCommandResult> TryRunWith(string tentacleExe, params string[] arguments)
-            => RunWith(tentacleExe, CommandResultValidation.None, arguments);
-
-        Task<BufferedCommandResult> RunWith(string tentacleExe, CommandResultValidation validation, string[] arguments)
-            => Cli.Wrap(tentacleExe)
+        public async Task<BufferedCommandResult> ExecuteTentacleCommand(string tentacleExe, CommandResultValidation validation, params string[] arguments)
+            => await Cli.Wrap(tentacleExe)
                 .WithArguments(arguments)
                 .WithValidation(validation)
                 .WithEnvironmentVariables(e => e

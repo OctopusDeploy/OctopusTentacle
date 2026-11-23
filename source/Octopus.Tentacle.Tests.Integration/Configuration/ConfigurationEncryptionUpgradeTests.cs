@@ -1,10 +1,9 @@
 #if NET
 using System;
 using System.IO;
-using System.Linq;
 using System.Runtime.Versioning;
 using System.Threading.Tasks;
-using System.Xml.Linq;
+using CliWrap;
 using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Tentacle.Configuration.Crypto;
@@ -28,16 +27,16 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
                 .WithTentacleVersion(TentacleVersions.v14_0_4849_LastWithMachineIdConfigurationEncryption)
                 .WithNewCertificate()
                 .Build(Logger, CancellationToken);
-            var thumbprintBeforeUpgrade = await Thumbprint(instance, instance.TentacleExe);
-            EncryptedCertificateIn(instance).Should().NotStartWith(EncryptedWithItsOwnKey, "version 14 encrypts with a key derived from the machine id");
+            var thumbprintBeforeUpgrade = await ExecuteShowThumbprintCommand(instance, instance.TentacleExe);
+            instance.CertificateAsStoredInTheConfigurationFile().Should().NotStartWith(EncryptedWithItsOwnKey, "version 14 encrypts with a key derived from the machine id");
 
             // Act
-            await instance.RunWith(TentacleExeFinder.FindTentacleExe(), "upgrade-configuration-encryption", "--instance", instance.Name);
+            await instance.ExecuteTentacleCommand(TentacleExeFinder.FindTentacleExe(), CommandResultValidation.ZeroExitCode, "upgrade-configuration-encryption", "--instance", instance.Name);
 
             // Assert
-            EncryptedCertificateIn(instance).Should().StartWith(EncryptedWithItsOwnKey);
+            instance.CertificateAsStoredInTheConfigurationFile().Should().StartWith(EncryptedWithItsOwnKey);
             File.Exists(Path.Combine(instance.DataDirectory, instance.Name, "keys", ConfigurationEncryptionKey.KeyFileName)).Should().BeTrue();
-            (await Thumbprint(instance, TentacleExeFinder.FindTentacleExe())).Should().Be(thumbprintBeforeUpgrade, "the upgraded certificate must still decrypt to the same certificate");
+            (await ExecuteShowThumbprintCommand(instance, TentacleExeFinder.FindTentacleExe())).Should().Be(thumbprintBeforeUpgrade, "the upgraded certificate must still decrypt to the same certificate");
         }
 
         [Test]
@@ -48,24 +47,21 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
                 .WithTentacleVersion(TentacleVersions.v14_0_4849_LastWithMachineIdConfigurationEncryption)
                 .WithNewCertificate()
                 .Build(Logger, CancellationToken);
-            var certificateEncryptedByVersion14 = EncryptedCertificateIn(instance);
+            var certificateEncryptedByVersion14 = instance.CertificateAsStoredInTheConfigurationFile();
             await File.WriteAllTextAsync(instance.DataDirectory, "a file where the data directory should be, so the key directory cannot be created");
 
             // Act
-            var upgrade = await instance.TryRunWith(TentacleExeFinder.FindTentacleExe(), "upgrade-configuration-encryption", "--instance", instance.Name);
+            var upgrade = await instance.ExecuteTentacleCommand(TentacleExeFinder.FindTentacleExe(), CommandResultValidation.None, "upgrade-configuration-encryption", "--instance", instance.Name);
 
             // Assert
             var output = upgrade.StandardOutput + upgrade.StandardError;
             upgrade.ExitCode.Should().NotBe(0, output);
             output.Should().Contain(instance.DataDirectory, "the failure should be about creating the key, not something else");
-            EncryptedCertificateIn(instance).Should().Be(certificateEncryptedByVersion14);
+            instance.CertificateAsStoredInTheConfigurationFile().Should().Be(certificateEncryptedByVersion14);
         }
 
-        static async Task<string> Thumbprint(TentacleInstance instance, string tentacleExe)
-            => (await instance.RunWith(tentacleExe, "show-thumbprint", "--instance", instance.Name)).StandardOutput.Trim();
-
-        static string EncryptedCertificateIn(TentacleInstance instance)
-            => XDocument.Load(instance.ConfigurationFile).Root!.Elements("set").Single(e => (string?)e.Attribute("key") == "Tentacle.Certificate").Value;
+        static async Task<string> ExecuteShowThumbprintCommand(TentacleInstance instance, string tentacleExe)
+            => (await instance.ExecuteTentacleCommand(tentacleExe, CommandResultValidation.ZeroExitCode, "show-thumbprint", "--instance", instance.Name)).StandardOutput.Trim();
     }
 }
 #endif
