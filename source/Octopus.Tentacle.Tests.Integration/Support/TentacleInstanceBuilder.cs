@@ -17,10 +17,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     // Builds a Tentacle instance that is configured but not running, for tests that drive Tentacle through its commands.
     public class TentacleInstanceBuilder
     {
-        Version? tentacleVersion;
+        Version? tentacleVersion = TentacleVersions.Current;
         bool withNewCertificate;
 
-        public TentacleInstanceBuilder WithTentacleVersion(Version tentacleVersion)
+        public TentacleInstanceBuilder WithTentacleVersion(Version? tentacleVersion)
         {
             this.tentacleVersion = tentacleVersion;
             return this;
@@ -34,15 +34,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         public async Task<TentacleInstance> Build(ILogger logger, CancellationToken cancellationToken)
         {
-            var tentacleExe = tentacleVersion == null
-                ? TentacleExeFinder.FindTentacleExe()
-                : await TentacleFetcher.GetTentacleVersion(Path.GetTempPath(), tentacleVersion, DefaultTentacleRuntime.Value, logger, cancellationToken);
-
-            var instance = new TentacleInstance(tentacleExe, cancellationToken);
-            await instance.ExecuteTentacleCommand(instance.TentacleExe, CommandResultValidation.ZeroExitCode, "create-instance", "--instance", instance.Name, "--config", instance.ConfigurationFile);
+            var instance = new TentacleInstance(logger, cancellationToken);
+            await instance.ChangeTentacleVersion(tentacleVersion);
+            await instance.ExecuteTentacleCommand(CommandResultValidation.ZeroExitCode, "create-instance", "--instance", instance.Name, "--config", instance.ConfigurationFile);
             if (withNewCertificate)
             {
-                await instance.ExecuteTentacleCommand(instance.TentacleExe, CommandResultValidation.ZeroExitCode, "new-certificate", "--instance", instance.Name);
+                await instance.ExecuteTentacleCommand(CommandResultValidation.ZeroExitCode, "new-certificate", "--instance", instance.Name);
             }
 
             return instance;
@@ -53,23 +50,33 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     public class TentacleInstance : IDisposable
     {
         readonly TemporaryDirectory home = new();
+        readonly ILogger logger;
         readonly CancellationToken cancellationToken;
+        string tentacleExe = null!;
 
-        internal TentacleInstance(string tentacleExe, CancellationToken cancellationToken)
+        internal TentacleInstance(ILogger logger, CancellationToken cancellationToken)
         {
-            TentacleExe = tentacleExe;
+            this.logger = logger;
             this.cancellationToken = cancellationToken;
         }
 
         public string Name => "Tentacle";
-        public string TentacleExe { get; }
         public string ConfigurationFile => Path.Combine(home.DirectoryPath, "tentacle.config");
         public string DataDirectory => Path.Combine(home.DirectoryPath, "data");
+
+        // Swaps the Tentacle that runs this instance's commands, as installing a different version over it would. Null is the current build.
+        public async Task ChangeTentacleVersion(Version? tentacleVersion)
+            => tentacleExe = tentacleVersion is null
+                ? TentacleExeFinder.FindTentacleExe()
+                : await TentacleFetcher.GetTentacleVersion(Path.GetTempPath(), tentacleVersion, DefaultTentacleRuntime.Value, logger, cancellationToken);
 
         public string CertificateAsStoredInTheConfigurationFile()
             => XDocument.Load(ConfigurationFile).Root!.Elements("set").Single(e => (string?)e.Attribute("key") == TentacleConfiguration.CertificateSettingName).Value;
 
-        public async Task<BufferedCommandResult> ExecuteTentacleCommand(string tentacleExe, CommandResultValidation validation, params string[] arguments)
+        public async Task<string> ShowThumbprint()
+            => (await ExecuteTentacleCommand(CommandResultValidation.ZeroExitCode, "show-thumbprint", "--instance", Name)).StandardOutput.Trim();
+
+        public async Task<BufferedCommandResult> ExecuteTentacleCommand(CommandResultValidation validation, params string[] arguments)
             => await Cli.Wrap(tentacleExe)
                 .WithArguments(arguments)
                 .WithValidation(validation)

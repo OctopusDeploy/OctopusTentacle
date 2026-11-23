@@ -9,7 +9,6 @@ using NUnit.Framework;
 using Octopus.Tentacle.Configuration.Crypto;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.TestAttributes;
-using Octopus.Tentacle.Tests.Integration.Util;
 
 namespace Octopus.Tentacle.Tests.Integration.Configuration
 {
@@ -27,16 +26,17 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
                 .WithTentacleVersion(TentacleVersions.v14_0_4849_LastWithMachineIdConfigurationEncryption)
                 .WithNewCertificate()
                 .Build(Logger, CancellationToken);
-            var thumbprintBeforeUpgrade = await ExecuteShowThumbprintCommand(instance, instance.TentacleExe);
+            var thumbprintBeforeUpgrade = await instance.ShowThumbprint();
             instance.CertificateAsStoredInTheConfigurationFile().Should().NotStartWith(EncryptedWithItsOwnKey, "version 14 encrypts with a key derived from the machine id");
 
             // Act
-            await instance.ExecuteTentacleCommand(TentacleExeFinder.FindTentacleExe(), CommandResultValidation.ZeroExitCode, "upgrade-configuration-encryption", "--instance", instance.Name);
+            await instance.ChangeTentacleVersion(TentacleVersions.Current);
+            await instance.ExecuteTentacleCommand(CommandResultValidation.ZeroExitCode, "upgrade-configuration-encryption", "--instance", instance.Name);
 
             // Assert
             instance.CertificateAsStoredInTheConfigurationFile().Should().StartWith(EncryptedWithItsOwnKey);
             File.Exists(Path.Combine(instance.DataDirectory, instance.Name, "keys", ConfigurationEncryptionKey.KeyFileName)).Should().BeTrue();
-            (await ExecuteShowThumbprintCommand(instance, TentacleExeFinder.FindTentacleExe())).Should().Be(thumbprintBeforeUpgrade, "the upgraded certificate must still decrypt to the same certificate");
+            (await instance.ShowThumbprint()).Should().Be(thumbprintBeforeUpgrade, "the upgraded certificate must still decrypt to the same certificate");
         }
 
         [Test]
@@ -51,7 +51,8 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
             await File.WriteAllTextAsync(instance.DataDirectory, "a file where the data directory should be, so the key directory cannot be created");
 
             // Act
-            var upgrade = await instance.ExecuteTentacleCommand(TentacleExeFinder.FindTentacleExe(), CommandResultValidation.None, "upgrade-configuration-encryption", "--instance", instance.Name);
+            await instance.ChangeTentacleVersion(TentacleVersions.Current);
+            var upgrade = await instance.ExecuteTentacleCommand(CommandResultValidation.None, "upgrade-configuration-encryption", "--instance", instance.Name);
 
             // Assert
             var output = upgrade.StandardOutput + upgrade.StandardError;
@@ -59,9 +60,6 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
             output.Should().Contain(instance.DataDirectory, "the failure should be about creating the key, not something else");
             instance.CertificateAsStoredInTheConfigurationFile().Should().Be(certificateEncryptedByVersion14);
         }
-
-        static async Task<string> ExecuteShowThumbprintCommand(TentacleInstance instance, string tentacleExe)
-            => (await instance.ExecuteTentacleCommand(tentacleExe, CommandResultValidation.ZeroExitCode, "show-thumbprint", "--instance", instance.Name)).StandardOutput.Trim();
     }
 }
 #endif
