@@ -26,7 +26,7 @@ The script runs in four stages, each of which can be skipped:
 |---|---|
 | `deb` | Builds the linux-x64 `.deb` via NUKE (`--target PackDebianPackage`) |
 | `image` | Builds the image with the same `docker-compose.build.yml` command TeamCity runs |
-| `smoke` | Asserts the image's contents and behaviour - base image, .NET runtime dependencies, docker-in-docker, entrypoint guards, labels - and upgrades a configuration written by the previous image ([`test-config-encryption-upgrade.sh`](./docker-linux/test-config-encryption-upgrade.sh)) |
+| `smoke` | Asserts the image's contents and behaviour - base image, .NET runtime dependencies, docker-in-docker, entrypoint guards, labels |
 | `e2e` | Stands up SQL Server and an Octopus Server, then registers a listening and a polling Tentacle built from the fresh image |
 
 ```

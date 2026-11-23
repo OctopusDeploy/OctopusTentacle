@@ -20,6 +20,7 @@ public class TentacleContainerBuilder
     TentacleCommunicationStyle communicationStyle = TentacleCommunicationStyle.Listening;
     string? workerPoolName;
     Dictionary<string, string> credentials = new() { ["ServerApiKey"] = ApiKey };
+    readonly List<string> volumeMounts = new();
 
     public TentacleContainerBuilder(FakeOctopusServer server)
     {
@@ -48,6 +49,12 @@ public class TentacleContainerBuilder
     public TentacleContainerBuilder WithUsernameAndPassword(string username, string password)
     {
         credentials = new Dictionary<string, string> { ["ServerUsername"] = username, ["ServerPassword"] = password };
+        return this;
+    }
+
+    public TentacleContainerBuilder WithVolume(DockerVolume volume, string containerPath)
+    {
+        volumeMounts.Add(volume.MountAt(containerPath));
         return this;
     }
 
@@ -84,6 +91,11 @@ public class TentacleContainerBuilder
             // Docker Desktop provides host.docker.internal; this makes Linux engines provide it too.
             "--add-host", $"{TentacleContainer.DockerHost}:host-gateway"
         };
+
+        foreach (var mount in volumeMounts)
+        {
+            options.AddRange(new[] { "--volume", mount });
+        }
 
         if (communicationStyle == TentacleCommunicationStyle.Listening)
         {
