@@ -15,10 +15,6 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
     [LinuxOrMacTest]
     public class LegacyCiphertextCompatibilityTests
     {
-        const string MachineId = "816490f117f14c7a8fa2697781ed795b";
-        const string GeneratedKeyPath = "/etc/octopus/machinekey";
-        const string GeneratedKeyFileContents = "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=.ZmVkY2JhOTg3NjU0MzIxMA==";
-
         const string CertificateSizedText = "AAcOFRwjKjE4P0ZNVFtiaXB3foWMk5qhqK+2vcTL0tng5+71/AMKERgfJi00O0JJUFdeZWxzeoGIj5adpKuyucDHztXc4+rx+P8GDRQbIikwNz5FTFNaYWhvdn2Ei5KZoKeutbzDytHY3+bt9PsCCRAXHiUsMzpBSE9WXWRrcnmAh46VnKOqsbi/xs3U2+Lp8Pf+BQwTGiEoLzY9REtSWWBnbnV8g4qRmJ+mrbS7wsnQ197l7PP6AQgPFh0kKzI5QEdOVVxjanF4f4aNlJuiqbC3vsXM09rh6O/2/QQLEhkgJy41PENKUVhfZm10e4KJkJeepayzusHIz9bd5Ovy+QAHDhUcIyoxOD9GTVRbYmlwd36FjJOaoaivtr3Ey9LZ4Ofu9fwDChEYHyYt";
 
         [TestCase("FooBar", "yspqcK7xCvd5c+1OSB7kxw==")]
@@ -29,7 +25,10 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         public void WhenAValueWasWrittenWithTheMachineIdKeyThenItStillDecrypts(string plaintext, string legacyCiphertext)
         {
             // Arrange
-            var encryptor = CreateEncryptor(machineId: MachineId, generatedKeyFileContents: null);
+            var fileSystem = Substitute.For<IOctopusFileSystem>();
+            fileSystem.FileExists(LinuxMachineIdKey.FileName).Returns(true);
+            fileSystem.ReadAllLines(LinuxMachineIdKey.FileName).Returns(new[] { "816490f117f14c7a8fa2697781ed795b" });
+            var encryptor = MachineKeyEncryptor.CreateLinuxEncryptor(Substitute.For<ISystemLog>(), fileSystem, ConfigurationEncryptionKey.KeyFilePathFor("Tentacle"), "/etc/octopus/machinekey");
 
             // Act
             var decrypted = encryptor.Decrypt(legacyCiphertext);
@@ -46,31 +45,16 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         public void WhenAValueWasWrittenWithoutAMachineIdThenItStillDecrypts(string plaintext, string legacyCiphertext)
         {
             // Arrange
-            var encryptor = CreateEncryptor(machineId: null, generatedKeyFileContents: GeneratedKeyFileContents);
+            var fileSystem = Substitute.For<IOctopusFileSystem>();
+            fileSystem.FileExists("/etc/octopus/machinekey").Returns(true);
+            fileSystem.ReadAllText("/etc/octopus/machinekey").Returns("MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=.ZmVkY2JhOTg3NjU0MzIxMA==");
+            var encryptor = MachineKeyEncryptor.CreateLinuxEncryptor(Substitute.For<ISystemLog>(), fileSystem, ConfigurationEncryptionKey.KeyFilePathFor("Tentacle"), "/etc/octopus/machinekey");
 
             // Act
             var decrypted = encryptor.Decrypt(legacyCiphertext);
 
             // Assert
             decrypted.Should().Be(plaintext);
-        }
-
-        static IMachineKeyEncryptor CreateEncryptor(string? machineId, string? generatedKeyFileContents)
-        {
-            var fileSystem = Substitute.For<IOctopusFileSystem>();
-            if (machineId != null)
-            {
-                fileSystem.FileExists(LinuxMachineIdKey.FileName).Returns(true);
-                fileSystem.ReadAllLines(LinuxMachineIdKey.FileName).Returns(new[] { machineId });
-            }
-
-            if (generatedKeyFileContents != null)
-            {
-                fileSystem.FileExists(GeneratedKeyPath).Returns(true);
-                fileSystem.ReadAllText(GeneratedKeyPath).Returns(generatedKeyFileContents);
-            }
-
-            return MachineKeyEncryptor.CreateLinuxEncryptor(Substitute.For<ISystemLog>(), fileSystem, ConfigurationEncryptionKey.KeyFilePathFor("Tentacle"), GeneratedKeyPath);
         }
     }
 }
