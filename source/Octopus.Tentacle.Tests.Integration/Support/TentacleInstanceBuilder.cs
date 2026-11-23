@@ -34,8 +34,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         public async Task<TentacleInstance> Build(ILogger logger, CancellationToken cancellationToken)
         {
-            var instance = new TentacleInstance(logger, cancellationToken);
-            await instance.ChangeTentacleVersion(tentacleVersion);
+            var tentacleExe = tentacleVersion is null
+                ? TentacleExeFinder.FindTentacleExe()
+                : await TentacleFetcher.GetTentacleVersion(Path.GetTempPath(), tentacleVersion, DefaultTentacleRuntime.Value, logger, cancellationToken);
+
+            var instance = new TentacleInstance(tentacleExe, cancellationToken);
             await instance.ExecuteTentacleCommand(CommandResultValidation.ZeroExitCode, "create-instance", "--instance", instance.Name, "--config", instance.ConfigurationFile);
             if (withNewCertificate)
             {
@@ -50,13 +53,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     public class TentacleInstance : IDisposable
     {
         readonly TemporaryDirectory home = new();
-        readonly ILogger logger;
         readonly CancellationToken cancellationToken;
-        string tentacleExe = null!;
+        string tentacleExe;
 
-        internal TentacleInstance(ILogger logger, CancellationToken cancellationToken)
+        internal TentacleInstance(string tentacleExe, CancellationToken cancellationToken)
         {
-            this.logger = logger;
+            this.tentacleExe = tentacleExe;
             this.cancellationToken = cancellationToken;
         }
 
@@ -64,11 +66,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public string ConfigurationFile => Path.Combine(home.DirectoryPath, "tentacle.config");
         public string DataDirectory => Path.Combine(home.DirectoryPath, "data");
 
-        // Swaps the Tentacle that runs this instance's commands, as installing a different version over it would. Null is the current build.
-        public async Task ChangeTentacleVersion(Version? tentacleVersion)
-            => tentacleExe = tentacleVersion is null
-                ? TentacleExeFinder.FindTentacleExe()
-                : await TentacleFetcher.GetTentacleVersion(Path.GetTempPath(), tentacleVersion, DefaultTentacleRuntime.Value, logger, cancellationToken);
+        // As installing the latest Tentacle over this instance would.
+        public void UpgradeToLatestTentacle()
+            => tentacleExe = TentacleExeFinder.FindTentacleExe();
 
         public string CertificateAsStoredInTheConfigurationFile()
             => XDocument.Load(ConfigurationFile).Root!.Elements("set").Single(e => (string?)e.Attribute("key") == TentacleConfiguration.CertificateSettingName).Value;

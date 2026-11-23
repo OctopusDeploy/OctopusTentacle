@@ -30,7 +30,7 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
             instance.CertificateAsStoredInTheConfigurationFile().Should().NotStartWith(EncryptedWithItsOwnKey, "version 14 encrypts with a key derived from the machine id");
 
             // Act
-            await instance.ChangeTentacleVersion(TentacleVersions.Current);
+            instance.UpgradeToLatestTentacle();
             await instance.ExecuteTentacleCommand(CommandResultValidation.ZeroExitCode, "upgrade-configuration-encryption", "--instance", instance.Name);
 
             // Assert
@@ -51,7 +51,7 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
             await File.WriteAllTextAsync(instance.DataDirectory, "a file where the data directory should be, so the key directory cannot be created");
 
             // Act
-            await instance.ChangeTentacleVersion(TentacleVersions.Current);
+            instance.UpgradeToLatestTentacle();
             var upgrade = await instance.ExecuteTentacleCommand(CommandResultValidation.None, "upgrade-configuration-encryption", "--instance", instance.Name);
 
             // Assert
