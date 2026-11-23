@@ -33,10 +33,10 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
             var dataDirectory = Path.Combine(root.DirectoryPath, "data");
             var configurationFile = Path.Combine(root.DirectoryPath, "tentacle.config");
             var environment = Environment(root, dataDirectory);
-            var version14 = await Version14();
-            await Run(version14, environment, "create-instance", "--instance", InstanceName, "--config", configurationFile);
-            await Run(version14, environment, "new-certificate", "--instance", InstanceName);
-            var thumbprint = (await Run(version14, environment, "show-thumbprint", "--instance", InstanceName)).StandardOutput.Trim();
+            var version14Tentacle = await GetVersion14Tentacle();
+            await Run(version14Tentacle, environment, "create-instance", "--instance", InstanceName, "--config", configurationFile);
+            await Run(version14Tentacle, environment, "new-certificate", "--instance", InstanceName);
+            var thumbprint = (await Run(version14Tentacle, environment, "show-thumbprint", "--instance", InstanceName)).StandardOutput.Trim();
             RawCertificate(configurationFile).Should().NotStartWith(LinuxMachineKeyEncryptor.Specifier + "$");
 
             // Act
@@ -58,9 +58,9 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
             await File.WriteAllTextAsync(dataDirectoryThatIsAFile, "not a directory");
             var configurationFile = Path.Combine(root.DirectoryPath, "tentacle.config");
             var environment = Environment(root, dataDirectoryThatIsAFile);
-            var version14 = await Version14();
-            await Run(version14, environment, "create-instance", "--instance", InstanceName, "--config", configurationFile);
-            await Run(version14, environment, "new-certificate", "--instance", InstanceName);
+            var version14Tentacle = await GetVersion14Tentacle();
+            await Run(version14Tentacle, environment, "create-instance", "--instance", InstanceName, "--config", configurationFile);
+            await Run(version14Tentacle, environment, "new-certificate", "--instance", InstanceName);
             var version14Certificate = RawCertificate(configurationFile);
 
             // Act
@@ -73,7 +73,7 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
             RawCertificate(configurationFile).Should().Be(version14Certificate);
         }
 
-        Task<string> Version14()
+        Task<string> GetVersion14Tentacle()
             => TentacleFetcher.GetTentacleVersion(Path.GetTempPath(), TentacleVersions.v14_0_4849_LastWithMachineIdConfigurationEncryption, DefaultTentacleRuntime.Value, Logger, CancellationToken);
 
         static (string Name, string Value)[] Environment(TemporaryDirectory root, string dataDirectory)
