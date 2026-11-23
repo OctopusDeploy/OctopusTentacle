@@ -92,9 +92,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         public async Task<TentacleInstance> Build(ILogger logger, CancellationToken cancellationToken)
         {
+            using var download = new TemporaryDirectory();
             var exe = tentacleExe ?? (tentacleVersion is null
                 ? TentacleExeFinder.FindTentacleExe()
-                : await TentacleFetcher.GetTentacleVersion(Path.GetTempPath(), tentacleVersion, DefaultTentacleRuntime.Value, logger, cancellationToken));
+                : await TentacleFetcher.GetTentacleVersion(download.DirectoryPath, tentacleVersion, DefaultTentacleRuntime.Value, logger, cancellationToken));
             var instanceHome = home ?? new TemporaryDirectory();
             var environment = new Dictionary<string, string>();
             if (!useDefaultMachineConfigurationHomeDirectory)
