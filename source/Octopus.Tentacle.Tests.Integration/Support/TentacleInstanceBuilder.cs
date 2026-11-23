@@ -137,26 +137,26 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 environment[environmentVariable.Key] = environmentVariable.Value;
             }
 
-            var instance = new TentacleInstance(instanceHome, exe, name, thumbprint: null, environment, cancellationToken);
+            var instance = new TentacleInstance(instanceHome, exe, name, thumbprint: null, environment);
             if (instance.Name is null)
             {
                 await File.WriteAllTextAsync(instance.ConfigurationFile, "<?xml version='1.0' encoding='UTF-8' ?><octopus-settings></octopus-settings>", cancellationToken);
             }
             else
             {
-                await instance.ExecuteTentacleCommand(CommandResultValidation.ZeroExitCode, "create-instance", "--instance", instance.Name, "--config", instance.ConfigurationFile);
+                await instance.ExecuteTentacleCommand(CommandResultValidation.ZeroExitCode, cancellationToken, "create-instance", "--instance", instance.Name, "--config", instance.ConfigurationFile);
             }
 
             if (certificate != null)
             {
-                await instance.ExecuteTentacleCommandOnTheInstance(CommandResultValidation.ZeroExitCode, "import-certificate", $"--from-file={certificate.Value.PfxPath}");
+                await instance.ExecuteTentacleCommandOnTheInstance(CommandResultValidation.ZeroExitCode, "import-certificate", cancellationToken, $"--from-file={certificate.Value.PfxPath}");
                 return instance.WithThumbprint(certificate.Value.Thumbprint);
             }
 
             if (withNewCertificate)
             {
-                await instance.ExecuteTentacleCommandOnTheInstance(CommandResultValidation.ZeroExitCode, "new-certificate");
-                return instance.WithThumbprint(await instance.ShowThumbprint());
+                await instance.ExecuteTentacleCommandOnTheInstance(CommandResultValidation.ZeroExitCode, "new-certificate", cancellationToken);
+                return instance.WithThumbprint(await instance.ShowThumbprint(cancellationToken));
             }
 
             return instance;
@@ -169,16 +169,14 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         readonly TemporaryDirectory home;
         readonly string tentacleExe;
         readonly IReadOnlyDictionary<string, string> environmentVariables;
-        readonly CancellationToken cancellationToken;
 
-        internal TentacleInstance(TemporaryDirectory home, string tentacleExe, string? name, string? thumbprint, IReadOnlyDictionary<string, string> environmentVariables, CancellationToken cancellationToken)
+        internal TentacleInstance(TemporaryDirectory home, string tentacleExe, string? name, string? thumbprint, IReadOnlyDictionary<string, string> environmentVariables)
         {
             this.home = home;
             this.tentacleExe = tentacleExe;
             Name = name;
             Thumbprint = thumbprint;
             this.environmentVariables = environmentVariables;
-            this.cancellationToken = cancellationToken;
         }
 
         public string? Name { get; }
@@ -192,25 +190,25 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         // The same instance, as if the current Tentacle had been installed over it.
         public TentacleInstance WithCurrentTentacleExe()
-            => new(home, TentacleExeFinder.FindTentacleExe(), Name, Thumbprint, environmentVariables, cancellationToken);
+            => new(home, TentacleExeFinder.FindTentacleExe(), Name, Thumbprint, environmentVariables);
 
         internal TentacleInstance WithThumbprint(string thumbprint)
-            => new(home, tentacleExe, Name, thumbprint, environmentVariables, cancellationToken);
+            => new(home, tentacleExe, Name, thumbprint, environmentVariables);
 
         public string CertificateAsStoredInTheConfigurationFile()
             => XDocument.Load(ConfigurationFile).Root!.Elements("set").Single(e => (string?)e.Attribute("key") == TentacleConfiguration.CertificateSettingName).Value;
 
-        public async Task<string> ShowThumbprint()
-            => (await ExecuteTentacleCommandOnTheInstance(CommandResultValidation.ZeroExitCode, "show-thumbprint")).StandardOutput.Trim();
+        public async Task<string> ShowThumbprint(CancellationToken cancellationToken)
+            => (await ExecuteTentacleCommandOnTheInstance(CommandResultValidation.ZeroExitCode, "show-thumbprint", cancellationToken)).StandardOutput.Trim();
 
-        public async Task<BufferedCommandResult> ExecuteTentacleCommandOnTheInstance(CommandResultValidation validation, string command, params string[] arguments)
-            => await ExecuteTentacleCommand(validation, new[] { command }
+        public async Task<BufferedCommandResult> ExecuteTentacleCommandOnTheInstance(CommandResultValidation validation, string command, CancellationToken cancellationToken, params string[] arguments)
+            => await ExecuteTentacleCommand(validation, cancellationToken, new[] { command }
                 .Concat(arguments)
                 .Concat(Name is null ? new[] { "--config", ConfigurationFile } : new[] { "--instance", Name })
                 .ToArray());
 
         // Older Tentacles share the machine's instance registry, so a command can fail while another test registers an instance.
-        public async Task<BufferedCommandResult> ExecuteTentacleCommand(CommandResultValidation validation, params string[] arguments)
+        public async Task<BufferedCommandResult> ExecuteTentacleCommand(CommandResultValidation validation, CancellationToken cancellationToken, params string[] arguments)
             => await RetryHelper.RetryAsync<BufferedCommandResult, CommandExecutionException>(
                 async () => await Cli.Wrap(tentacleExe)
                     .WithArguments(arguments)

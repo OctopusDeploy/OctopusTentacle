@@ -26,17 +26,17 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
                 .WithTentacleVersion(TentacleVersions.v14_0_4849_LastWithMachineIdConfigurationEncryption)
                 .WithNewCertificate()
                 .Build(Logger, CancellationToken);
-            var thumbprintBeforeUpgrade = await instance.ShowThumbprint();
+            var thumbprintBeforeUpgrade = await instance.ShowThumbprint(CancellationToken);
             instance.CertificateAsStoredInTheConfigurationFile().Should().NotStartWith(EncryptedWithItsOwnKey, "version 14 encrypts with a key derived from the machine id");
 
             // Act
             var upgradedInstance = instance.WithCurrentTentacleExe();
-            await upgradedInstance.ExecuteTentacleCommandOnTheInstance(CommandResultValidation.ZeroExitCode, "upgrade-configuration-encryption");
+            await upgradedInstance.ExecuteTentacleCommandOnTheInstance(CommandResultValidation.ZeroExitCode, "upgrade-configuration-encryption", CancellationToken);
 
             // Assert
             instance.CertificateAsStoredInTheConfigurationFile().Should().StartWith(EncryptedWithItsOwnKey);
             File.Exists(instance.ConfigurationEncryptionKeyFile).Should().BeTrue();
-            (await upgradedInstance.ShowThumbprint()).Should().Be(thumbprintBeforeUpgrade, "the upgraded certificate must still decrypt to the same certificate");
+            (await upgradedInstance.ShowThumbprint(CancellationToken)).Should().Be(thumbprintBeforeUpgrade, "the upgraded certificate must still decrypt to the same certificate");
         }
 
         [Test]
@@ -52,7 +52,7 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
 
             // Act
             var upgradedInstance = instance.WithCurrentTentacleExe();
-            var upgrade = await upgradedInstance.ExecuteTentacleCommandOnTheInstance(CommandResultValidation.None, "upgrade-configuration-encryption");
+            var upgrade = await upgradedInstance.ExecuteTentacleCommandOnTheInstance(CommandResultValidation.None, "upgrade-configuration-encryption", CancellationToken);
 
             // Assert
             var output = upgrade.StandardOutput + upgrade.StandardError;
@@ -74,7 +74,7 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
 
             // Act
             var upgradedInstance = instance.WithCurrentTentacleExe();
-            var upgrade = await upgradedInstance.ExecuteTentacleCommandOnTheInstance(CommandResultValidation.None, "upgrade-configuration-encryption");
+            var upgrade = await upgradedInstance.ExecuteTentacleCommandOnTheInstance(CommandResultValidation.None, "upgrade-configuration-encryption", CancellationToken);
 
             // Assert
             var output = upgrade.StandardOutput + upgrade.StandardError;
@@ -95,7 +95,7 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
             File.Delete(instance.ConfigurationEncryptionKeyFile);
 
             // Act
-            var newCertificate = await instance.ExecuteTentacleCommandOnTheInstance(CommandResultValidation.None, "new-certificate");
+            var newCertificate = await instance.ExecuteTentacleCommandOnTheInstance(CommandResultValidation.None, "new-certificate", CancellationToken);
 
             // Assert
             var output = newCertificate.StandardOutput + newCertificate.StandardError;
@@ -119,7 +119,7 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
 
             // Assert
             runningTentacle.Instance.CertificateAsStoredInTheConfigurationFile().Should().StartWith(EncryptedWithItsOwnKey);
-            (await runningTentacle.Instance.ShowThumbprint()).Should().Be(runningTentacle.Thumbprint, "the upgraded certificate must still decrypt to the same certificate");
+            (await runningTentacle.Instance.ShowThumbprint(CancellationToken)).Should().Be(runningTentacle.Thumbprint, "the upgraded certificate must still decrypt to the same certificate");
         }
 
         [Test]
@@ -133,7 +133,7 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
             File.Delete(instance.ConfigurationEncryptionKeyFile);
 
             // Act
-            var agent = await instance.ExecuteTentacleCommandOnTheInstance(CommandResultValidation.None, "agent");
+            var agent = await instance.ExecuteTentacleCommandOnTheInstance(CommandResultValidation.None, "agent", CancellationToken);
 
             // Assert
             var output = agent.StandardOutput + agent.StandardError;
