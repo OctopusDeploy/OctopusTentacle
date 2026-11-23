@@ -8,13 +8,10 @@ using System.Xml.Linq;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
-using Octopus.Tentacle.Commands;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Crypto;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Core.Diagnostics;
-using Octopus.Tentacle.Internals.Options;
-using Octopus.Tentacle.Startup;
 using Octopus.Tentacle.Tests.Support;
 using Octopus.Tentacle.Tests.Support.TestAttributes;
 using Octopus.Tentacle.Util;
@@ -26,23 +23,6 @@ namespace Octopus.Tentacle.Tests.Configuration
     public class TentacleConfigurationUpgradeTests
     {
         const string Certificate = "MIIC...the certificate...";
-
-        [Test]
-        public void UpgradeConfigurationEncryptionFailsForAConfigurationNotInTheRegistry()
-        {
-            // Arrange
-            using var sandbox = new ConfigurationSandbox();
-            var store = sandbox.CreateStore(sandbox.DefaultKeyFilePath);
-            store.Set<string>(TentacleConfiguration.CertificateSettingName, Certificate, ProtectionLevel.MachineKey);
-            var legacyValue = sandbox.RawCertificate();
-
-            // Act
-            Action start = () => sandbox.StartUpgradeCommand(store, keyFilePath: null, instanceName: null);
-
-            // Assert
-            start.Should().Throw<ControlledFailureException>().WithMessage("*create-instance --instance*");
-            sandbox.RawCertificate().Should().Be(legacyValue);
-        }
 
         [Test]
         public void AValueProtectedWithTheKeyIsNeverRewrittenWithALegacyKey()
@@ -108,14 +88,6 @@ namespace Octopus.Tentacle.Tests.Configuration
 
             public TentacleConfigurationUpgrade CreateUpgrade(XmlFileKeyValueStore store, string? keyFilePath, string? instanceName = "Tentacle")
                 => new(CreateSelector(store, keyFilePath, instanceName), FileSystem, Log);
-
-            public void StartUpgradeCommand(XmlFileKeyValueStore store, string? keyFilePath, string? instanceName = "Tentacle")
-            {
-                var selector = CreateSelector(store, keyFilePath, instanceName);
-                var upgrade = new TentacleConfigurationUpgrade(selector, FileSystem, Log);
-                var command = new UpgradeConfigurationEncryptionCommand(new Lazy<ITentacleConfigurationUpgrade>(() => upgrade), selector, Log, Substitute.For<ILogFileOnlyLogger>());
-                command.Start(new string[0], Substitute.For<ICommandRuntime>(), new OptionSet());
-            }
 
             public string RawCertificate()
                 => XDocument.Load(ConfigurationFile).Root!.Elements("set").Single(e => (string?)e.Attribute("key") == TentacleConfiguration.CertificateSettingName).Value;

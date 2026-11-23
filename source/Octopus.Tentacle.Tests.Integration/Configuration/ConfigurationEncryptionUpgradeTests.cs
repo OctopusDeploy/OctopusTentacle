@@ -31,11 +31,11 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
 
             // Act
             var upgradedInstance = instance.WithCurrentTentacleExe();
-            await upgradedInstance.ExecuteTentacleCommand(CommandResultValidation.ZeroExitCode, "upgrade-configuration-encryption", "--instance", instance.Name);
+            await upgradedInstance.ExecuteTentacleCommandOnTheInstance(CommandResultValidation.ZeroExitCode, "upgrade-configuration-encryption");
 
             // Assert
             instance.CertificateAsStoredInTheConfigurationFile().Should().StartWith(EncryptedWithItsOwnKey);
-            File.Exists(Path.Combine(instance.DataDirectory, instance.Name, "keys", ConfigurationEncryptionKey.KeyFileName)).Should().BeTrue();
+            File.Exists(Path.Combine(instance.DataDirectory, instance.Name!, "keys", ConfigurationEncryptionKey.KeyFileName)).Should().BeTrue();
             (await upgradedInstance.ShowThumbprint()).Should().Be(thumbprintBeforeUpgrade, "the upgraded certificate must still decrypt to the same certificate");
         }
 
@@ -52,12 +52,34 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
 
             // Act
             var upgradedInstance = instance.WithCurrentTentacleExe();
-            var upgrade = await upgradedInstance.ExecuteTentacleCommand(CommandResultValidation.None, "upgrade-configuration-encryption", "--instance", instance.Name);
+            var upgrade = await upgradedInstance.ExecuteTentacleCommandOnTheInstance(CommandResultValidation.None, "upgrade-configuration-encryption");
 
             // Assert
             var output = upgrade.StandardOutput + upgrade.StandardError;
             upgrade.ExitCode.Should().NotBe(0, output);
             output.Should().Contain(instance.DataDirectory, "the failure should be about creating the key, not something else");
+            instance.CertificateAsStoredInTheConfigurationFile().Should().Be(certificateEncryptedByVersion14);
+        }
+
+        [Test]
+        public async Task AnUnnamedVersion14InstanceIsToldToCreateANamedInstanceBecauseItsOwnKeyIsStoredUnderTheInstanceName()
+        {
+            // Arrange
+            using var instance = await new TentacleInstanceBuilder()
+                .WithTentacleVersion(TentacleVersions.v14_0_4849_LastWithMachineIdConfigurationEncryption)
+                .UnnamedInstanceAddressedOnlyByConfig()
+                .WithNewCertificate()
+                .Build(Logger, CancellationToken);
+            var certificateEncryptedByVersion14 = instance.CertificateAsStoredInTheConfigurationFile();
+
+            // Act
+            var upgradedInstance = instance.WithCurrentTentacleExe();
+            var upgrade = await upgradedInstance.ExecuteTentacleCommandOnTheInstance(CommandResultValidation.None, "upgrade-configuration-encryption");
+
+            // Assert
+            var output = upgrade.StandardOutput + upgrade.StandardError;
+            upgrade.ExitCode.Should().NotBe(0, output);
+            output.Should().Contain("create-instance --instance", "the user should be told how to give the configuration a name");
             instance.CertificateAsStoredInTheConfigurationFile().Should().Be(certificateEncryptedByVersion14);
         }
     }
