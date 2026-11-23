@@ -19,7 +19,7 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
         static readonly string EncryptedWithItsOwnKey = LinuxMachineKeyEncryptor.Specifier + "$";
 
         [Test]
-        public async Task AVersion14ConfigurationEncryptedWithTheMachineIdIsUpgradedToItsOwnKey()
+        public async Task WhenTentacleKeyIsEncryptedWithEtcMachineId_AndUpgradeConfigurationEncryptionIsCalled_ThenTheCertificateIsReEncrypted()
         {
             // Arrange
             using var instance = await new TentacleInstanceBuilder()
@@ -40,7 +40,7 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
         }
 
         [Test]
-        public async Task WhenItsOwnKeyCannotBeCreatedThenTheUpgradeFailsAndAVersion14ConfigurationStaysEncryptedWithTheMachineId()
+        public async Task WhenTentacleKeyIsEncryptedWithEtcMachineId_AndTheNewKeyCannotBeCreated_ThenUpgradeConfigurationEncryptionFailsAndTheCertificateIsUnchanged()
         {
             // Arrange
             using var instance = await new TentacleInstanceBuilder()
@@ -62,7 +62,7 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
         }
 
         [Test]
-        public async Task AnUnnamedVersion14InstanceIsToldToCreateANamedInstanceBecauseItsOwnKeyIsStoredUnderTheInstanceName()
+        public async Task WhenTentacleInstanceIsUnnamed_AndUpgradeConfigurationEncryptionIsCalled_ThenItFailsAndSaysToCreateANamedInstance()
         {
             // Arrange
             using var instance = await new TentacleInstanceBuilder()
