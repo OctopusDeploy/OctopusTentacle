@@ -54,9 +54,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         // Builds the instance, so the running Tentacle owns it and deletes it when disposed.
         protected RunningTentacleBuilder(TentacleInstanceBuilder instanceBuilder)
         {
-            this.instanceBuilder = instanceBuilder
-                .WithName(InstanceNameGenerator())
-                .WithCertificate(TestCertificates.TentaclePfxPath, TestCertificates.TentaclePublicThumbprint);
+            this.instanceBuilder = instanceBuilder.WithDefaultsForRunning(InstanceNameGenerator(), TestCertificates.TentaclePfxPath, TestCertificates.TentaclePublicThumbprint);
         }
 
         // Runs an instance the caller built, so the caller owns it.
