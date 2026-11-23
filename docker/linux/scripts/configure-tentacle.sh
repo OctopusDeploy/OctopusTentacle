@@ -16,9 +16,25 @@ internalListeningPort=10933
 mkdir -p $configurationDirectory
 mkdir -p $applicationsDirectory
 
+# Setting ServerThumbprint configures a listening Tentacle that trusts that Octopus Server without registering with it,
+# for when the Tentacle cannot reach the server. The Tentacle is then added in Octopus by hand.
+function isUnregistered() {
+    [[ -n "$ServerThumbprint" ]]
+}
+
+function printThumbprintForManualRegistration() {
+    local thumbprint
+    thumbprint=$(tentacle show-thumbprint --instance "$instanceName")
+    echo "This Tentacle has not registered itself with Octopus Server."
+    echo "Add it in Octopus as a listening Tentacle with thumbprint $thumbprint"
+}
+
 if [ -f "$alreadyConfiguredSemaphore" ]; then
     echo "Octopus Tentacle is already configured. Skipping reconfiguration."
     echo "If you want to force reconfiguration, please delete the file $alreadyConfiguredSemaphore and re-launch the container."
+    if isUnregistered; then
+        printThumbprintForManualRegistration
+    fi
     exit 0
 fi
 
@@ -34,7 +50,39 @@ function getPublicHostName() {
     fi
 }
 
+function validateUnregisteredVariables() {
+    if [[ ! "$ServerThumbprint" =~ ^[0-9A-Fa-f]{40}$ ]]; then
+        echo "The 'ServerThumbprint' environment variable must be the 40 character hexadecimal thumbprint of the Octopus Server's certificate" >&2
+        exit 1
+    fi
+
+    # These only affect registration or polling, so setting them alongside ServerThumbprint is a mistake. Variables
+    # the image gives a default value, such as Space, can't be told apart from ones the user set, so aren't checked.
+    local registrationVariables=(
+        ServerUrl ServerApiKey BearerToken ServerUsername ServerPassword
+        ServerCommsAddress ServerPort PollingConnectionCount AsKubernetesTentacle
+        TargetEnvironment TargetRole TargetWorkerPool TargetName
+        TargetTenant TargetTenantTag TargetTenantedDeploymentParticipation
+        ListeningPort CustomPublicHostName ProxyName
+    )
+    local variable
+    for variable in "${registrationVariables[@]}"; do
+        if [[ -n "${!variable:-}" ]]; then
+            echo "The '$variable' environment variable can't be used with 'ServerThumbprint': a Tentacle configured with 'ServerThumbprint' listens for the Octopus Server and doesn't register with it" >&2
+            exit 1
+        fi
+    done
+
+    echo " - communication mode 'Listening' (Passive), not registered with Octopus Server"
+    echo " - trusted server thumbprint '$ServerThumbprint'"
+}
+
 function validateVariables() {
+    if isUnregistered; then
+        validateUnregisteredVariables
+        return
+    fi
+
     if [[ -z "$ServerApiKey" && -z "$BearerToken" ]]; then
         if [[ -z "$ServerPassword" || -z "$ServerUsername" ]]; then
             echo "Please specify either an API key, a Bearer Token or a username/password with the 'ServerApiKey' or 'ServerUsername'/'ServerPassword' environment variables" >&2
@@ -133,14 +181,23 @@ function configureTentacle() {
 
     echo "Updating trust ..."
     tentacle configure --instance "$instanceName" --reset-trust
+    if isUnregistered; then
+        # Registering trusts the server; without registration, trust the given thumbprint instead.
+        tentacle configure --instance "$instanceName" --trust "$ServerThumbprint"
+    fi
 
     if [[ ! -z "$PollingConnectionCount" ]]; then
         echo "Setting polling connection count ..."
         tentacle configure --instance "$instanceName" --pollingConnectionCount "$PollingConnectionCount"
     fi
 
-    echo "Creating certificate ..."
-    tentacle new-certificate --instance "$instanceName" --if-blank
+    if [[ -n "$TentacleCertificateBase64" ]]; then
+        echo "Importing certificate ..."
+        tentacle import-certificate --instance "$instanceName" --from-base64 "$TentacleCertificateBase64"
+    else
+        echo "Creating certificate ..."
+        tentacle new-certificate --instance "$instanceName" --if-blank
+    fi
 }
 
 function registerTentacle() {
@@ -256,7 +313,11 @@ validateVariables
 echo "==============================================="
 
 configureTentacle
-registerTentacle
+if isUnregistered; then
+    printThumbprintForManualRegistration
+else
+    registerTentacle
+fi
 
 touch $alreadyConfiguredSemaphore
 

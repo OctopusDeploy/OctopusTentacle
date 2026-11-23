@@ -49,7 +49,7 @@ public static class DockerCli
         }
     }
 
-    static readonly string[] SecretVariables = { "ServerApiKey", "BearerToken", "ServerPassword" };
+    static readonly string[] SecretVariables = { "ServerApiKey", "BearerToken", "ServerPassword", "TentacleCertificateBase64" };
 
     static string Redact(string argument)
     {

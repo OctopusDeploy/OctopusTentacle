@@ -30,8 +30,8 @@ public sealed class TentacleContainer : IAsyncDisposable
     /// <summary>How Tentacle containers address the machine running the tests.</summary>
     public const string DockerHost = "host.docker.internal";
 
-    /// <summary>The credentials the image's entrypoint uses to register, which it must not pass on to the agent.</summary>
-    static readonly string[] RegistrationCredentialVariables = { "ServerApiKey", "BearerToken", "ServerUsername", "ServerPassword" };
+    /// <summary>The secrets the image's entrypoint uses to register and configure Tentacle, which it must not pass on to the agent.</summary>
+    static readonly string[] RegistrationCredentialVariables = { "ServerApiKey", "BearerToken", "ServerUsername", "ServerPassword", "TentacleCertificateBase64" };
 
     // Emulating an amd64 image on an arm64 machine makes start-up slow; be generous.
     static readonly TimeSpan RegistrationTimeout = TimeSpan.FromMinutes(5);
@@ -41,8 +41,12 @@ public sealed class TentacleContainer : IAsyncDisposable
     // How often to check the container is still running while waiting on it.
     static readonly TimeSpan ContainerCheckInterval = TimeSpan.FromSeconds(2);
 
+    /// <summary>What configure-tentacle.sh prints when it starts without registering, so the Tentacle can be added by hand.</summary>
+    static readonly Regex ManualRegistrationThumbprint = new("Add it in Octopus as a listening Tentacle with thumbprint (?<thumbprint>[0-9A-Fa-f]{40})");
+
     readonly FakeOctopusServer server;
     RegisteredMachine? registeredMachine;
+    string? unregisteredThumbprint;
     TentacleClient? tentacleClient;
 
     internal TentacleContainer(DockerContainer docker, FakeOctopusServer server, string machineName, TentacleCommunicationStyle communicationStyle)
@@ -60,11 +64,27 @@ public sealed class TentacleContainer : IAsyncDisposable
     public RegisteredMachine RegisteredMachine => registeredMachine ?? throw new InvalidOperationException("The Tentacle has not registered");
     public TentacleClient TentacleClient => tentacleClient ?? throw new InvalidOperationException("The TentacleClient has not been built");
 
+    /// <summary>The Tentacle's thumbprint: the one it registered with, or the one it printed if it did not register.</summary>
+    public string Thumbprint => registeredMachine?.Thumbprint ?? unregisteredThumbprint ?? throw new InvalidOperationException("The Tentacle has not started");
+
     internal async Task Start(Task<RegisteredMachine> registration, CancellationToken cancellationToken)
     {
         registeredMachine = await WaitForRegistration(registration);
         // The agent starts after registration; if it dies straight away, say so rather than fail on a missing port.
         await ThrowIfStopped("after registering");
+        tentacleClient = await BuildTentacleClient(cancellationToken);
+    }
+
+    /// <summary>
+    /// Waits for a Tentacle started with ServerThumbprint to print its thumbprint, which stands in for registering: it
+    /// is what a user would add to Octopus by hand.
+    /// </summary>
+    internal async Task StartUnregistered(CancellationToken cancellationToken)
+    {
+        var match = await WaitForLogMatch(ManualRegistrationThumbprint, RegistrationTimeout);
+        unregisteredThumbprint = match.Groups["thumbprint"].Value;
+        // The agent starts after configuration; if it dies straight away, say so rather than fail on a missing port.
+        await ThrowIfStopped("after configuring");
         tentacleClient = await BuildTentacleClient(cancellationToken);
     }
 
@@ -100,7 +120,7 @@ public sealed class TentacleContainer : IAsyncDisposable
             ? new Uri($"https://localhost:{await Docker.GetPublishedPort(ListeningPort, cancellationToken)}/")
             : new Uri(RegisteredMachine.Uri!);
 
-        return TestServerHalibut.BuildTentacleClient(uri, RegisteredMachine.Thumbprint, server.Halibut, _ => { });
+        return TestServerHalibut.BuildTentacleClient(uri, Thumbprint, server.Halibut, _ => { });
     }
 
     /// <summary>
