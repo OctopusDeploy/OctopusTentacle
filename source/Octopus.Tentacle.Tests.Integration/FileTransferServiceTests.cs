@@ -19,7 +19,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             using var fileToUpload = new RandomTemporaryFileBuilder().Build();
 
-            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateLegacyBuilder().Build(CancellationToken);
+            var clientAndTentacle = await tentacleConfigurationTestCase.CreateLegacyBuilder().Build(CancellationToken);
 
             var dataStream = new DataStream(
                 fileToUpload.File.Length,
@@ -46,7 +46,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             using var fileToDownload = new RandomTemporaryFileBuilder().Build();
 
-            await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateLegacyBuilder().Build(CancellationToken);
+            var clientAndTentacle = await tentacleConfigurationTestCase.CreateLegacyBuilder().Build(CancellationToken);
 
             var downloadedData = await clientAndTentacle.TentacleClient.FileTransferService.DownloadFileAsync(
                 fileToDownload.File.FullName,

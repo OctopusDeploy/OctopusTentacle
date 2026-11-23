@@ -38,6 +38,8 @@ namespace Octopus.Tentacle.Commands
 
         protected override void Start()
         {
+            log.Info("Inside UpdateTrustCommand Start().");
+
             base.Start();
             CheckArgs();
 
@@ -45,6 +47,7 @@ namespace Octopus.Tentacle.Commands
             tentacleConfiguration.Value.UpdateTrustedServerThumbprint(oldThumbprint, newThumbprint);
 
             VoteForRestart();
+            log.Info("Finished UpdateTrustCommand Start().");
         }
     }
 }
