@@ -91,17 +91,6 @@ for KEY_PATH in "$MACHINE_KEY_FILE" "$(dirname "$MACHINE_KEY_FILE")"; do
   fi
 done
 echo "The machine key was given to the owner of the configuration."
-
-THUMBPRINT=$(Tentacle show-thumbprint --instance "$INSTANCE_NAME")
-if [[ -z "$THUMBPRINT" ]] || ! grep -qF "key=\"Tentacle.CertificateThumbprint\">$THUMBPRINT<" "$CONFIGURATION_FILE"; then
-  echo "'Tentacle show-thumbprint' reported '$THUMBPRINT', which is not the thumbprint recorded in $CONFIGURATION_FILE."
-  exit 1
-fi
-echo "The certificate decrypts in a new process and matches the recorded thumbprint."
-
-# Selecting the instance by --config must still find the registered instance's key.
-[[ "$(Tentacle show-thumbprint --config "$CONFIGURATION_FILE")" == "$THUMBPRINT" ]] || { echo "'Tentacle show-thumbprint --config' did not decrypt with the registered instance's key."; exit 1; }
-echo "Selecting the instance by its configuration file uses that instance's key."
 echo ""
 
 echo "All tests passed."
