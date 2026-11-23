@@ -32,20 +32,20 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
             using var root = new TemporaryDirectory();
             var dataDirectory = Path.Combine(root.DirectoryPath, "data");
             var configurationFile = Path.Combine(root.DirectoryPath, "tentacle.config");
-            var environment = Environment(root, dataDirectory);
+            var tentacleDirectories = TentacleDirectoriesIn(root, dataDirectory);
             var version14Tentacle = await GetVersion14Tentacle();
-            await Run(version14Tentacle, environment, "create-instance", "--instance", InstanceName, "--config", configurationFile);
-            await Run(version14Tentacle, environment, "new-certificate", "--instance", InstanceName);
-            var thumbprint = (await Run(version14Tentacle, environment, "show-thumbprint", "--instance", InstanceName)).StandardOutput.Trim();
+            await Run(version14Tentacle, tentacleDirectories, "create-instance", "--instance", InstanceName, "--config", configurationFile);
+            await Run(version14Tentacle, tentacleDirectories, "new-certificate", "--instance", InstanceName);
+            var thumbprint = (await Run(version14Tentacle, tentacleDirectories, "show-thumbprint", "--instance", InstanceName)).StandardOutput.Trim();
             EncryptedCertificateIn(configurationFile).Should().NotStartWith(LinuxMachineKeyEncryptor.Specifier + "$");
 
             // Act
-            await Run(TentacleExeFinder.FindTentacleExe(), environment, "upgrade-configuration-encryption", "--instance", InstanceName);
+            await Run(TentacleExeFinder.FindTentacleExe(), tentacleDirectories, "upgrade-configuration-encryption", "--instance", InstanceName);
 
             // Assert
             EncryptedCertificateIn(configurationFile).Should().StartWith(LinuxMachineKeyEncryptor.Specifier + "$");
             File.Exists(Path.Combine(dataDirectory, InstanceName, "keys", ConfigurationEncryptionKey.KeyFileName)).Should().BeTrue();
-            var upgradedThumbprint = await Run(TentacleExeFinder.FindTentacleExe(), environment, "show-thumbprint", "--instance", InstanceName);
+            var upgradedThumbprint = await Run(TentacleExeFinder.FindTentacleExe(), tentacleDirectories, "show-thumbprint", "--instance", InstanceName);
             upgradedThumbprint.StandardOutput.Trim().Should().Be(thumbprint);
         }
 
@@ -57,14 +57,14 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
             var dataDirectoryThatIsAFile = Path.Combine(root.DirectoryPath, "data");
             await File.WriteAllTextAsync(dataDirectoryThatIsAFile, "not a directory");
             var configurationFile = Path.Combine(root.DirectoryPath, "tentacle.config");
-            var environment = Environment(root, dataDirectoryThatIsAFile);
+            var tentacleDirectories = TentacleDirectoriesIn(root, dataDirectoryThatIsAFile);
             var version14Tentacle = await GetVersion14Tentacle();
-            await Run(version14Tentacle, environment, "create-instance", "--instance", InstanceName, "--config", configurationFile);
-            await Run(version14Tentacle, environment, "new-certificate", "--instance", InstanceName);
+            await Run(version14Tentacle, tentacleDirectories, "create-instance", "--instance", InstanceName, "--config", configurationFile);
+            await Run(version14Tentacle, tentacleDirectories, "new-certificate", "--instance", InstanceName);
             var encryptedByVersion14 = EncryptedCertificateIn(configurationFile);
 
             // Act
-            var upgrade = await Run(TentacleExeFinder.FindTentacleExe(), environment, CommandResultValidation.None, "upgrade-configuration-encryption", "--instance", InstanceName);
+            var upgrade = await Run(TentacleExeFinder.FindTentacleExe(), tentacleDirectories, CommandResultValidation.None, "upgrade-configuration-encryption", "--instance", InstanceName);
 
             // Assert
             var output = upgrade.StandardOutput + upgrade.StandardError;
@@ -76,7 +76,7 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
         Task<string> GetVersion14Tentacle()
             => TentacleFetcher.GetTentacleVersion(Path.GetTempPath(), TentacleVersions.v14_0_4849_LastWithMachineIdConfigurationEncryption, DefaultTentacleRuntime.Value, Logger, CancellationToken);
 
-        static (string Name, string Value)[] Environment(TemporaryDirectory root, string dataDirectory)
+        static (string Name, string Value)[] TentacleDirectoriesIn(TemporaryDirectory root, string dataDirectory)
             => new[]
             {
                 (EnvironmentVariables.TentacleMachineConfigurationHomeDirectory, Path.Combine(root.DirectoryPath, "home")),
@@ -86,14 +86,14 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
         static string EncryptedCertificateIn(string configurationFile)
             => XDocument.Load(configurationFile).Root!.Elements("set").Single(e => (string?)e.Attribute("key") == "Tentacle.Certificate").Value;
 
-        static Task<BufferedCommandResult> Run(string tentacleExe, (string Name, string Value)[] environment, params string[] arguments)
-            => Run(tentacleExe, environment, CommandResultValidation.ZeroExitCode, arguments);
+        static Task<BufferedCommandResult> Run(string tentacleExe, (string Name, string Value)[] tentacleDirectories, params string[] arguments)
+            => Run(tentacleExe, tentacleDirectories, CommandResultValidation.ZeroExitCode, arguments);
 
-        static Task<BufferedCommandResult> Run(string tentacleExe, (string Name, string Value)[] environment, CommandResultValidation validation, params string[] arguments)
+        static Task<BufferedCommandResult> Run(string tentacleExe, (string Name, string Value)[] tentacleDirectories, CommandResultValidation validation, params string[] arguments)
             => Cli.Wrap(tentacleExe)
                 .WithArguments(arguments)
                 .WithValidation(validation)
-                .WithEnvironmentVariables(environment.ToDictionary(x => x.Name, x => (string?)x.Value))
+                .WithEnvironmentVariables(tentacleDirectories.ToDictionary(x => x.Name, x => (string?)x.Value))
                 .ExecuteBufferedAsync();
     }
 }
