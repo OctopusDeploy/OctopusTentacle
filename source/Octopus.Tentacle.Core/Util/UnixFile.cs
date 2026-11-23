@@ -1,10 +1,12 @@
 #if !NETFRAMEWORK
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using Microsoft.Win32.SafeHandles;
 
 namespace Octopus.Tentacle.Core.Util
 {
+    [UnsupportedOSPlatform("windows")]
     public static class UnixFile
     {
         const uint UnchangedGroup = uint.MaxValue;
