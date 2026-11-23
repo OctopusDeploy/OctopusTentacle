@@ -134,6 +134,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         public IRunningTentacleBuilder InstallAsAService()
         {
+            if (givenInstance != null)
+            {
+                throw new NotSupportedException("Running an instance the caller built as a service is not yet supported.");
+            }
+
             installAsService = true;
 
             return this;
