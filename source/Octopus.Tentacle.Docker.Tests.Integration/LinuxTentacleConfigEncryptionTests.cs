@@ -13,6 +13,32 @@ namespace Octopus.Tentacle.Docker.Tests.Integration;
 public class LinuxTentacleConfigEncryptionTests
 {
     [Test]
+    public async Task TheConfigurationIsEncryptedWithAKeyOnlyItsOwnerCanRead()
+    {
+        // Arrange
+        await using var server = await new FakeOctopusServerBuilder().Build();
+        var inspectEncryption = new ExecuteShellScriptCommandBuilder(LoggingUtils.CurrentTestHash(), ScriptIsolationLevel.NoIsolation)
+            .WithScriptBody("""
+                            echo "key permissions $(stat -c %a /var/lib/octopus/tentacle/Tentacle/keys/config-encryption.key)"
+                            echo "encrypted certificates $(grep -cF 'key="Tentacle.Certificate">AESGCM-V1$' /etc/octopus/tentacle.config)"
+                            """)
+            .Build();
+
+        // Act
+        await using var tentacle = await new TentacleContainerBuilder(server).Build();
+        var (result, output) = await tentacle.ExecuteScript(inspectEncryption);
+
+        // Assert
+        result.ExitCode.Should().Be(0, output);
+        output.Should().Contain("key permissions 600");
+        output.Should().Contain("encrypted certificates 1");
+    }
+
+    /// <summary>
+    /// The re-created Tentacle only runs the script if it decrypted its certificate: the client trusts the first
+    /// container's thumbprint.
+    /// </summary>
+    [Test]
     public async Task ARecreatedContainerDecryptsTheConfigurationWithThePersistedKey()
     {
         // Arrange
@@ -29,11 +55,8 @@ public class LinuxTentacleConfigEncryptionTests
             registeredMachine = tentacle.RegisteredMachine;
         }
 
-        var inspectEncryption = new ExecuteShellScriptCommandBuilder(LoggingUtils.CurrentTestHash(), ScriptIsolationLevel.NoIsolation)
-            .WithScriptBody("""
-                            echo "key permissions $(stat -c %a /var/lib/octopus/tentacle/Tentacle/keys/config-encryption.key)"
-                            echo "encrypted certificates $(grep -cF 'key="Tentacle.Certificate">AESGCM-V1$' /etc/octopus/tentacle.config)"
-                            """)
+        var command = new ExecuteShellScriptCommandBuilder(LoggingUtils.CurrentTestHash(), ScriptIsolationLevel.NoIsolation)
+            .WithScriptBody("echo 'running after being re-created'\n")
             .Build();
 
         // Act
@@ -42,12 +65,11 @@ public class LinuxTentacleConfigEncryptionTests
             .WithVolume(data, "/var/lib/octopus/tentacle")
             .WithStartingAlreadyConfiguredTentacle(registeredMachine)
             .Build();
-        var (result, output) = await recreatedTentacle.ExecuteScript(inspectEncryption);
+        var (result, output) = await recreatedTentacle.ExecuteScript(command);
 
         // Assert
         result.ExitCode.Should().Be(0, output);
-        output.Should().Contain("key permissions 600");
-        output.Should().Contain("encrypted certificates 1");
+        output.Should().Contain("running after being re-created");
     }
 
     [Test]
