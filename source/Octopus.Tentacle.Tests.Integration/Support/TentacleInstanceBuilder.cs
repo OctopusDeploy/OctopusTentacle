@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using CliWrap;
 using CliWrap.Buffered;
+using CliWrap.Exceptions;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Crypto;
@@ -183,13 +184,15 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 ? await ExecuteTentacleCommand(validation, command, "--config", ConfigurationFile)
                 : await ExecuteTentacleCommand(validation, command, "--instance", Name);
 
+        // Older Tentacles share the machine's instance registry, so a command can fail while another test registers an instance.
         public async Task<BufferedCommandResult> ExecuteTentacleCommand(CommandResultValidation validation, params string[] arguments)
-            => await Cli.Wrap(tentacleExe)
-                .WithArguments(arguments)
-                .WithValidation(validation)
-                .WithWorkingDirectory(home.DirectoryPath)
-                .WithEnvironmentVariables(environmentVariables)
-                .ExecuteBufferedAsync(cancellationToken);
+            => await RetryHelper.RetryAsync<BufferedCommandResult, CommandExecutionException>(
+                async () => await Cli.Wrap(tentacleExe)
+                    .WithArguments(arguments)
+                    .WithValidation(validation)
+                    .WithWorkingDirectory(home.DirectoryPath)
+                    .WithEnvironmentVariables(environmentVariables)
+                    .ExecuteBufferedAsync(cancellationToken));
 
         public void Dispose() => home.Dispose();
     }
