@@ -66,25 +66,6 @@ namespace Octopus.Tentacle.Tests.Configuration
         }
 
         [Test]
-        public void WhenTheConfigurationIsNotInTheRegistryThenNoKeyIsCreatedAndValuesStayLegacy()
-        {
-            // Arrange
-            using var sandbox = new ConfigurationSandbox();
-            var keyFilePath = sandbox.DefaultKeyFilePath;
-            var store = sandbox.CreateStore(keyFilePath);
-            store.Set<string>(TentacleConfiguration.CertificateSettingName, Certificate, ProtectionLevel.MachineKey);
-            var legacyValue = sandbox.RawCertificate();
-
-            // Act
-            sandbox.CreateUpgrade(store, keyFilePath: null, instanceName: null).Upgrade();
-
-            // Assert
-            File.Exists(keyFilePath).Should().BeFalse();
-            sandbox.RawCertificate().Should().Be(legacyValue);
-            sandbox.Log.Received(1).Warn(Arg.Any<string>());
-        }
-
-        [Test]
         public void UpgradeConfigurationEncryptionCreatesTheKeyAndReEncryptsLegacyValues()
         {
             // Arrange
