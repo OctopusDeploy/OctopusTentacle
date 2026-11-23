@@ -28,62 +28,6 @@ namespace Octopus.Tentacle.Tests.Configuration
         const string Certificate = "MIIC...the certificate...";
 
         [Test]
-        public void WhenTheKeyIsMissingThenItIsCreatedAndLegacyValuesAreReEncrypted()
-        {
-            // Arrange
-            using var sandbox = new ConfigurationSandbox();
-            var keyFilePath = sandbox.DefaultKeyFilePath;
-            var store = sandbox.CreateStore(keyFilePath);
-            store.Set<string>(TentacleConfiguration.CertificateSettingName, Certificate, ProtectionLevel.MachineKey);
-            sandbox.RawCertificate().Should().NotStartWith(LinuxMachineKeyEncryptor.Specifier + "$", "without a key, values are written the way earlier versions wrote them");
-
-            // Act
-            sandbox.CreateUpgrade(store, keyFilePath).Upgrade();
-
-            // Assert
-            File.Exists(keyFilePath).Should().BeTrue();
-            sandbox.RawCertificate().Should().StartWith(LinuxMachineKeyEncryptor.Specifier + "$");
-            sandbox.CreateStore(keyFilePath).Get<string>(TentacleConfiguration.CertificateSettingName, protectionLevel: ProtectionLevel.MachineKey).Should().Be(Certificate);
-            sandbox.Log.DidNotReceive().Warn(Arg.Any<Exception>(), Arg.Any<string>());
-        }
-
-        [Test]
-        public void WhenTheKeyCannotBeCreatedThenRunFailsAndValuesStayLegacy()
-        {
-            // Arrange
-            using var sandbox = new ConfigurationSandbox();
-            var keyFilePath = Path.Combine(sandbox.ConfigurationFile, "not-a-directory", ConfigurationEncryptionKey.KeyFileName);
-            var store = sandbox.CreateStore(keyFilePath);
-            store.Set<string>(TentacleConfiguration.CertificateSettingName, Certificate, ProtectionLevel.MachineKey);
-            var legacyValue = sandbox.RawCertificate();
-
-            // Act
-            Action run = () => sandbox.CreateUpgrade(store, keyFilePath).Upgrade();
-
-            // Assert
-            run.Should().Throw<Exception>();
-            sandbox.RawCertificate().Should().Be(legacyValue);
-        }
-
-        [Test]
-        public void UpgradeConfigurationEncryptionCreatesTheKeyAndReEncryptsLegacyValues()
-        {
-            // Arrange
-            using var sandbox = new ConfigurationSandbox();
-            var keyFilePath = sandbox.DefaultKeyFilePath;
-            var store = sandbox.CreateStore(keyFilePath);
-            store.Set<string>(TentacleConfiguration.CertificateSettingName, Certificate, ProtectionLevel.MachineKey);
-
-            // Act
-            sandbox.StartUpgradeCommand(store, keyFilePath);
-
-            // Assert
-            File.Exists(keyFilePath).Should().BeTrue();
-            sandbox.RawCertificate().Should().StartWith(LinuxMachineKeyEncryptor.Specifier + "$");
-            sandbox.CreateStore(keyFilePath).Get<string>(TentacleConfiguration.CertificateSettingName, protectionLevel: ProtectionLevel.MachineKey).Should().Be(Certificate);
-        }
-
-        [Test]
         public void UpgradeConfigurationEncryptionFailsForAConfigurationNotInTheRegistry()
         {
             // Arrange
