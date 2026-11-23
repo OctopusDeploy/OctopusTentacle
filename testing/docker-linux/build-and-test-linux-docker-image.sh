@@ -411,7 +411,7 @@ if [[ $SKIP_SMOKE -eq 0 ]]; then
     fi
 
     # --- entrypoint scripts ----------------------------------------------
-    for s in configure-and-run.sh configure-tentacle.sh run-tentacle.sh dockerd-entrypoint.sh; do
+    for s in configure-and-run.sh configure-tentacle.sh start-docker-in-docker.sh run-tentacle.sh dockerd-entrypoint.sh; do
         if run_in_image "test -x /scripts/$s" >/dev/null 2>&1; then
             pass "executable: /scripts/$s"
         else

@@ -202,7 +202,8 @@ public class TentacleContainerBuilder
         var environment = new Dictionary<string, string>
         {
             ["ACCEPT_EULA"] = "Y",
-            // Docker-in-Docker needs --privileged; the dind payload is covered by the image smoke tests.
+            // Docker-in-Docker needs --privileged; the dind payload is covered by the image smoke tests, and
+            // LinuxTentacleDockerInDockerTests covers it failing to start.
             ["DISABLE_DIND"] = "Y",
             ["Space"] = FakeOctopusServerBuilder.SpaceName
         };

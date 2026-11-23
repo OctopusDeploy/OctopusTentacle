@@ -46,7 +46,7 @@ It is recommended that you run this using something like docker compose, so that
 ### Environment variables
 
 - **ACCEPT_EULA**: Set to Y to indicate that you accept the EULA.
-- **DISABLE_DIND**: Set to Y to disable Docker-in-Docker (used to run container images).
+- **DISABLE_DIND**: Set to Y to disable Docker-in-Docker (used to run container images). Docker-in-Docker is on by default and needs the container to run with `--privileged`. See [Docker-in-Docker](#docker-in-docker) (Linux only).
 - **ServerApiKey**: The API Key of the Octopus Server the Tentacle should register with.
 - **ServerUsername**: If not using an API key, the user to use when registering the Tentacle with the Octopus Server.
 - **ServerPassword**: If not using an API key, the password to use when registering the Tentacle.
@@ -68,6 +68,23 @@ It is recommended that you run this using something like docker compose, so that
 - **CustomPublicHostName**: If `PublicHostNameConfiguration` is set to `Custom`, the host name that the Octopus Server should use to communicate with the Tentacle.
 - **ServerThumbprint**: The thumbprint of the Octopus Server's certificate. Setting it configures a listening Tentacle that trusts that server and does not register with it. See [Running without registering](#running-without-registering) (Linux only).
 - **TentacleCertificateBase64**: A base64-encoded PFX certificate, without a password, for the Tentacle to use instead of generating its own. This keeps the Tentacle's thumbprint the same if the container is recreated (Linux only).
+
+### Docker-in-Docker
+
+The Linux image runs a Docker daemon inside the container, so deployments can run container images. This needs a privileged container:
+
+```
+docker run --privileged \
+           --publish 10933:10933 \
+           --env ServerApiKey="API-xxx" \
+           --env TargetEnvironment="Test" \
+           --env TargetRole="app-server" \
+           --env ServerUrl="https://octopus.example.com" \
+           --env ACCEPT_EULA="Y" \
+           octopusdeploy/tentacle
+```
+
+The daemon starts before the Tentacle registers. If it can't start, for example because the container isn't privileged, the container exits without registering and logs how to fix it. If your deployments don't run container images, set `DISABLE_DIND=Y` and run the container without `--privileged`.
 
 ### Running without registering
 

@@ -1,15 +1,13 @@
 #!/bin/bash
-set -ux
+# Sourced by configure-and-run.sh, after start-docker-in-docker.sh has started the daemon and set DIND_PID.
+# Not -e: the exit codes of the processes it waits on are handled below.
+set +e -ux
 
 if [[ "$DISABLE_DIND" == "Y" ]]; then
     echo Docker-in-Docker is disabled.
     echo "Starting Tentacle"
     exec tentacle agent --instance Tentacle --noninteractive
 fi
-
-echo "Starting Docker-in-Docker daemon. This requires that this container be run in privileged mode."
-nohup /usr/local/bin/dockerd-entrypoint.sh dockerd &
-DIND_PID=$!
 
 echo "Starting Tentacle"
 tentacle agent --instance Tentacle --noninteractive &
@@ -39,7 +37,8 @@ else
         echo "Terminating Tentacle..."
         kill -s TERM $TENTACLE_PID
         wait $TENTACLE_PID
-        tentacle_exit_code=$?
+        # Exit with the daemon's code, not that of Tentacle stopping, and non-zero so restart policies treat it as a failure.
+        tentacle_exit_code=$(( waited_exit_code == 0 ? 1 : waited_exit_code ))
     else
         echo "Tentacle exited with code $waited_exit_code"
         echo "Terminating Docker-in-Docker..."
