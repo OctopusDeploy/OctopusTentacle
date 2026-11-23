@@ -126,7 +126,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
             if (certificate != null)
             {
-                await instance.ExecuteTentacleCommand(CommandResultValidation.ZeroExitCode, "import-certificate", $"--from-file={certificate.Value.PfxPath}", "--instance", instance.Name!);
+                await instance.ExecuteTentacleCommandOnTheInstance(CommandResultValidation.ZeroExitCode, "import-certificate", $"--from-file={certificate.Value.PfxPath}");
                 return instance.WithThumbprint(certificate.Value.Thumbprint);
             }
 
@@ -180,10 +180,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public async Task<string> ShowThumbprint()
             => (await ExecuteTentacleCommandOnTheInstance(CommandResultValidation.ZeroExitCode, "show-thumbprint")).StandardOutput.Trim();
 
-        public async Task<BufferedCommandResult> ExecuteTentacleCommandOnTheInstance(CommandResultValidation validation, string command)
-            => Name is null
-                ? await ExecuteTentacleCommand(validation, command, "--config", ConfigurationFile)
-                : await ExecuteTentacleCommand(validation, command, "--instance", Name);
+        public async Task<BufferedCommandResult> ExecuteTentacleCommandOnTheInstance(CommandResultValidation validation, string command, params string[] arguments)
+            => await ExecuteTentacleCommand(validation, new[] { command }
+                .Concat(arguments)
+                .Concat(Name is null ? new[] { "--config", ConfigurationFile } : new[] { "--instance", Name })
+                .ToArray());
 
         // Older Tentacles share the machine's instance registry, so a command can fail while another test registers an instance.
         public async Task<BufferedCommandResult> ExecuteTentacleCommand(CommandResultValidation validation, params string[] arguments)
