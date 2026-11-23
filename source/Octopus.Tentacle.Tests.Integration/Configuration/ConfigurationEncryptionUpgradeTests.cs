@@ -108,18 +108,18 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
         public async Task WhenTentacleKeyIsEncryptedWithEtcMachineId_AndTheCurrentTentacleStarts_ThenTheCertificateIsReEncrypted()
         {
             // Arrange
-            using var instance = await new TentacleInstanceBuilder()
+            await using var runningTentacle = await new TentacleInstanceBuilder()
                 .WithTentacleVersion(TentacleVersions.v14_0_4849_LastWithMachineIdConfigurationEncryption)
-                .WithNewCertificate()
+                .RunAsListeningTentacle(TestCertificates.ServerPublicThumbprint)
                 .Build(Logger, CancellationToken);
+            runningTentacle.Instance.CertificateAsStoredInTheConfigurationFile().Should().NotStartWith(EncryptedWithItsOwnKey, "version 14 encrypts with a key derived from the machine id");
 
             // Act
-            await using var runningTentacle = await new ListeningRunningTentacleBuilder(TestCertificates.ServerPublicThumbprint, instance.WithCurrentTentacleExe())
-                .Build(Logger, CancellationToken);
+            await runningTentacle.RestartWithCurrentTentacle(CancellationToken);
 
             // Assert
-            instance.CertificateAsStoredInTheConfigurationFile().Should().StartWith(EncryptedWithItsOwnKey);
-            (await instance.WithCurrentTentacleExe().ShowThumbprint()).Should().Be(instance.Thumbprint, "the upgraded certificate must still decrypt to the same certificate");
+            runningTentacle.Instance.CertificateAsStoredInTheConfigurationFile().Should().StartWith(EncryptedWithItsOwnKey);
+            (await runningTentacle.Instance.ShowThumbprint()).Should().Be(runningTentacle.Thumbprint, "the upgraded certificate must still decrypt to the same certificate");
         }
 
         [Test]
