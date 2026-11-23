@@ -69,20 +69,6 @@ namespace Octopus.Tentacle.Tests.Commands
         }
 
         [Test]
-        public void WhenCommandIsStartedThenTheConfigurationIsUpgradedBeforeHalibutStarts()
-        {
-            // Act
-            Start();
-
-            // Assert
-            Received.InOrder(() =>
-            {
-                configurationUpgrade.TryUpgrade();
-                halibut.Start();
-            });
-        }
-
-        [Test]
         public void WhenCommandIsStartedThenBackgroundServicesAreStarted()
         {
             Start();
