@@ -8,6 +8,7 @@ using CliWrap;
 using CliWrap.Buffered;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Configuration.Crypto;
 using Octopus.Tentacle.Core.Util;
 using Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers;
 using Serilog;
@@ -87,6 +88,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public string? Name { get; }
         public string ConfigurationFile => Path.Combine(home.DirectoryPath, "tentacle.config");
         public string DataDirectory => Path.Combine(home.DirectoryPath, "data");
+        public string ConfigurationEncryptionKeyFile => Path.Combine(DataDirectory, Name!, "keys", ConfigurationEncryptionKey.KeyFileName);
 
         // The same instance, as if the current Tentacle had been installed over it.
         public TentacleInstance WithCurrentTentacleExe()

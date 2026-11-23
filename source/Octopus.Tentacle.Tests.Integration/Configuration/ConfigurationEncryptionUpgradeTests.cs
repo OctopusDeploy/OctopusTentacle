@@ -35,7 +35,7 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
 
             // Assert
             instance.CertificateAsStoredInTheConfigurationFile().Should().StartWith(EncryptedWithItsOwnKey);
-            File.Exists(Path.Combine(instance.DataDirectory, instance.Name!, "keys", ConfigurationEncryptionKey.KeyFileName)).Should().BeTrue();
+            File.Exists(instance.ConfigurationEncryptionKeyFile).Should().BeTrue();
             (await upgradedInstance.ShowThumbprint()).Should().Be(thumbprintBeforeUpgrade, "the upgraded certificate must still decrypt to the same certificate");
         }
 
@@ -81,6 +81,26 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
             upgrade.ExitCode.Should().NotBe(0, output);
             output.Should().Contain("create-instance --instance", "the user should be told how to give the configuration a name");
             instance.CertificateAsStoredInTheConfigurationFile().Should().Be(certificateEncryptedByVersion14);
+        }
+
+        [Test]
+        public async Task WhenTentacleKeyFileIsDeleted_AndANewCertificateIsCreated_ThenItFailsRatherThanFallBackToEtcMachineId()
+        {
+            // Arrange
+            using var instance = await new TentacleInstanceBuilder()
+                .WithNewCertificate()
+                .Build(Logger, CancellationToken);
+            var certificateEncryptedWithTheKey = instance.CertificateAsStoredInTheConfigurationFile();
+            certificateEncryptedWithTheKey.Should().StartWith(EncryptedWithItsOwnKey);
+            File.Delete(instance.ConfigurationEncryptionKeyFile);
+
+            // Act
+            var newCertificate = await instance.ExecuteTentacleCommandOnTheInstance(CommandResultValidation.None, "new-certificate");
+
+            // Assert
+            var output = newCertificate.StandardOutput + newCertificate.StandardError;
+            newCertificate.ExitCode.Should().NotBe(0, output);
+            instance.CertificateAsStoredInTheConfigurationFile().Should().Be(certificateEncryptedWithTheKey);
         }
     }
 }
