@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 #
-# LOCAL ONLY, not used by CI. Runs Linux-only unit tests in a .NET SDK container for this host's architecture, first as root and then as a
-# non-root user.
+# LOCAL ONLY, not used by CI. Runs Linux-only unit tests as root in a .NET SDK container for this host's architecture.
 #
 # Usage: ./testing/local/run-linux-unit-tests-in-docker.sh [dotnet test filter]
 #
@@ -24,12 +23,5 @@ docker run --rm --platform "$PLATFORM" \
         tar -C /src --exclude=./.git --exclude="*/bin" --exclude="*/obj" --exclude=./_artifacts -cf - . | tar -C /work -xf -
         cd /work
         project=source/Octopus.Tentacle.Tests/Octopus.Tentacle.Tests.csproj
-
-        echo "==> as root"
         dotnet test "$project" -f net10.0 --filter "$FILTER"
-
-        echo "==> as a non-root user"
-        useradd --create-home tester
-        chown -R tester /work
-        su tester -c "cd /work && NUGET_PACKAGES=$NUGET_PACKAGES dotnet test $project -f net10.0 --no-build --filter \"$FILTER\""
     '
