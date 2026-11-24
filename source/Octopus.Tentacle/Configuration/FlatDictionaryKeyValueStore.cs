@@ -1,5 +1,4 @@
 using System;
-using System.Security.Cryptography;
 using Newtonsoft.Json;
 using Octopus.Tentacle.Configuration.Crypto;
 using Octopus.Tentacle.Configuration.Instances;
@@ -133,7 +132,7 @@ namespace Octopus.Tentacle.Configuration
             var encrypted = Encryptor.Encrypt(raw);
             if (Encryptor.RequiresReEncryption(encrypted) && Read(name) is string previous && !Encryptor.RequiresReEncryption(previous))
             {
-                throw new CryptographicException($"Unable to update the protected setting '{name}': it is protected with the configuration encryption key, which is not available. Make sure the key file exists and is readable.");
+                throw new ControlledFailureException($"Unable to update the protected setting '{name}': it is protected with the configuration encryption key, which is not available. Make sure the key file exists and is readable.");
             }
             return encrypted;
         }
