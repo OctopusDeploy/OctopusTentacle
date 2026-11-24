@@ -15,6 +15,12 @@ namespace Octopus.Tentacle.Configuration
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
 
+            // Encrypted values are not displayed in show-configuration.
+            if (protectionLevel == ProtectionLevel.MachineKey)
+            {
+                return true;
+            }
+
             if (value == null || value is string s && string.IsNullOrWhiteSpace(s))
             {
                 Write(name, null);
