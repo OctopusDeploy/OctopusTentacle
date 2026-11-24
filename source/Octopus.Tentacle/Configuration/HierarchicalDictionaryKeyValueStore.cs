@@ -25,8 +25,7 @@ namespace Octopus.Tentacle.Configuration
 
             var valueAsObject = (object)value;
 
-            // This store only ever backs `show-configuration` output, which is never read back by Tentacle, so there is
-            // no key it could sensibly be encrypted with. Refuse rather than write a secret somewhere nothing can decrypt.
+            // This store can only be used for reading.
             if (protectionLevel == ProtectionLevel.MachineKey)
                 throw new NotSupportedException($"{GetType().Name} cannot store {nameof(ProtectionLevel.MachineKey)} values; it is only used to display configuration.");
 
