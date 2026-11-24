@@ -19,68 +19,72 @@ namespace Octopus.Tentacle.Configuration
 
         public override TData? Get<TData>(string name, TData? defaultValue = default, ProtectionLevel protectionLevel = ProtectionLevel.None) where TData : default
         {
-            if (name == null) throw new ArgumentNullException(nameof(name));
-
-            string? valueAsString = null;
-            try
+            if (name == null)
             {
-                var data = Read(name);
-                if (data == null)
-                    return defaultValue;
-                valueAsString = data as string;
-                if (valueAsString == null || string.IsNullOrWhiteSpace(valueAsString))
-                    return defaultValue;
-
-                if (protectionLevel == ProtectionLevel.MachineKey)
-                    data = Decrypt(name, valueAsString);
-
-                if (typeof(TData) == typeof(string))
-                    return (TData)data;
-                if (typeof(TData) == typeof(bool)) //bool is tricky - .NET uses 'True', whereas JSON uses 'true' - need to allow both, because UX/legacy
-                    return (TData)(object)bool.Parse((string)data);
-                if (typeof(TData).IsEnum)
-                    return (TData)Enum.Parse(typeof(TData), ((string)data).Trim('"'));
-
-                return JsonConvert.DeserializeObject<TData>((string)data, JsonSerializerSettings);
+                throw new ArgumentNullException(nameof(name));
             }
-            catch (Exception e) when (e is not DecryptionFailedException)
+
+            if (Read(name) is not string valueAsString || string.IsNullOrWhiteSpace(valueAsString))
             {
-                if (protectionLevel == ProtectionLevel.None)
-                    throw new FormatException($"Unable to parse configuration key '{name}' as a '{typeof(TData).Name}'. Value was '{valueAsString}'.", e);
-                throw new FormatException($"Unable to parse configuration key '{name}' as a '{typeof(TData).Name}'.", e);
+                return defaultValue;
             }
+
+            if (protectionLevel == ProtectionLevel.MachineKey)
+            {
+                valueAsString = Decrypt(name, valueAsString);
+            }
+
+            return Parse<TData>(name, valueAsString, protectionLevel);
         }
 
         public (bool foundResult, TData? value) TryGet<TData>(string name, ProtectionLevel protectionLevel = ProtectionLevel.None)
         {
-            if (name == null) throw new ArgumentNullException(nameof(name));
+            if (name == null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
 
-            string? valueAsString = null;
+            if (Read(name) is not string valueAsString || string.IsNullOrWhiteSpace(valueAsString))
+            {
+                return (false, default!);
+            }
+
+            if (protectionLevel == ProtectionLevel.MachineKey)
+            {
+                valueAsString = Decrypt(name, valueAsString);
+            }
+
+            return (true, Parse<TData>(name, valueAsString, protectionLevel));
+        }
+
+        TData? Parse<TData>(string name, string value, ProtectionLevel protectionLevel)
+        {
             try
             {
-                var data = Read(name);
-                if (data == null)
-                    return (false, default!);
-                valueAsString = data as string;
-                if (valueAsString == null || string.IsNullOrWhiteSpace(valueAsString))
-                    return (false, default!);
-
-                if (protectionLevel == ProtectionLevel.MachineKey)
-                    data = Decrypt(name, valueAsString);
-
                 if (typeof(TData) == typeof(string))
-                    return (true, (TData)data);
-                if (typeof(TData) == typeof(bool)) //bool is tricky - .NET uses 'True', whereas JSON uses 'true' - need to allow both, because UX/legacy
-                    return (true, (TData)(object)bool.Parse((string)data));
-                if (typeof(TData).IsEnum)
-                    return (true, (TData)Enum.Parse(typeof(TData), ((string)data).Trim('"')));
+                {
+                    return (TData)(object)value;
+                }
 
-                return (true, JsonConvert.DeserializeObject<TData>((string)data, JsonSerializerSettings));
+                if (typeof(TData) == typeof(bool)) //bool is tricky - .NET uses 'True', whereas JSON uses 'true' - need to allow both, because UX/legacy
+                {
+                    return (TData)(object)bool.Parse(value);
+                }
+
+                if (typeof(TData).IsEnum)
+                {
+                    return (TData)Enum.Parse(typeof(TData), value.Trim('"'));
+                }
+
+                return JsonConvert.DeserializeObject<TData>(value, JsonSerializerSettings);
             }
-            catch (Exception e) when (e is not DecryptionFailedException)
+            catch (Exception e)
             {
                 if (protectionLevel == ProtectionLevel.None)
-                    throw new FormatException($"Unable to parse configuration key '{name}' as a '{typeof(TData).Name}'. Value was '{valueAsString}'.", e);
+                {
+                    throw new FormatException($"Unable to parse configuration key '{name}' as a '{typeof(TData).Name}'. Value was '{value}'.", e);
+                }
+
                 throw new FormatException($"Unable to parse configuration key '{name}' as a '{typeof(TData).Name}'.", e);
             }
         }
@@ -93,15 +97,7 @@ namespace Octopus.Tentacle.Configuration
             }
             catch (Exception e)
             {
-                // The console does not always print inner messages, and this one says how to recover.
-                throw new DecryptionFailedException($"Unable to decrypt the protected configuration setting '{name}'. {e.Message}", e);
-            }
-        }
-
-        class DecryptionFailedException : FormatException
-        {
-            public DecryptionFailedException(string message, Exception inner) : base(message, inner)
-            {
+                throw new ProtectedSettingDecryptionException(name, e);
             }
         }
 
