@@ -25,10 +25,6 @@ namespace Octopus.Tentacle.Configuration
 
             var valueAsObject = (object)value;
 
-            // This store is only used to display configuration.
-            if (protectionLevel == ProtectionLevel.MachineKey)
-                throw new NotSupportedException($"{GetType().Name} cannot store {nameof(ProtectionLevel.MachineKey)} values; it is only used to display configuration.");
-
             Write(name, valueAsObject);
             if (AutoSaveOnSet)
                 return Save();
