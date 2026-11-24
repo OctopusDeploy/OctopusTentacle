@@ -20,7 +20,7 @@ namespace Octopus.Tentacle.Commands
     {
         readonly Lazy<IWritableTentacleConfiguration> configuration;
         readonly Lazy<ICertificateGenerator> certificateGenerator;
-        readonly Lazy<ITentacleConfigurationUpgrade> configurationUpgrade;
+        readonly Lazy<IConfigurationEncryptionUpgrade> configurationUpgrade;
         readonly IOctopusClientInitializer octopusClientInitializer;
         readonly IProxyConfigParser proxyConfig;
         readonly ISystemLog log;
@@ -30,7 +30,7 @@ namespace Octopus.Tentacle.Commands
         public ReplaceCertificateCommand(
             Lazy<IWritableTentacleConfiguration> configuration,
             Lazy<ICertificateGenerator> certificateGenerator,
-            Lazy<ITentacleConfigurationUpgrade> configurationUpgrade,
+            Lazy<IConfigurationEncryptionUpgrade> configurationUpgrade,
             IOctopusClientInitializer octopusClientInitializer,
             IProxyConfigParser proxyConfig,
             ISystemLog log,

@@ -9,12 +9,12 @@ namespace Octopus.Tentacle.Commands
 {
     public class UpgradeConfigurationEncryptionCommand : AbstractStandardCommand
     {
-        readonly Lazy<ITentacleConfigurationUpgrade> configurationUpgrade;
+        readonly Lazy<IConfigurationEncryptionUpgrade> configurationUpgrade;
         readonly IApplicationInstanceSelector instanceSelector;
         readonly ISystemLog log;
 
         public UpgradeConfigurationEncryptionCommand(
-            Lazy<ITentacleConfigurationUpgrade> configurationUpgrade,
+            Lazy<IConfigurationEncryptionUpgrade> configurationUpgrade,
             IApplicationInstanceSelector instanceSelector,
             ISystemLog log,
             ILogFileOnlyLogger logFileOnlyLogger)

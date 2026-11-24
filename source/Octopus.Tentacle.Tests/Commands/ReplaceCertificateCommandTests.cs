@@ -99,7 +99,7 @@ namespace Octopus.Tentacle.Tests.Commands
             => new ReplaceCertificateCommand(
                     new Lazy<IWritableTentacleConfiguration>(() => tentacle.Configuration),
                     new Lazy<ICertificateGenerator>(() => new CertificateGenerator(new NullLog())),
-                    new Lazy<ITentacleConfigurationUpgrade>(() => Substitute.For<ITentacleConfigurationUpgrade>()),
+                    new Lazy<IConfigurationEncryptionUpgrade>(() => Substitute.For<IConfigurationEncryptionUpgrade>()),
                     octopus.ClientInitializer,
                     Substitute.For<IProxyConfigParser>(),
                     Substitute.For<ISystemLog>(),

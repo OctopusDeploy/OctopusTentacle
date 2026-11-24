@@ -17,7 +17,7 @@ namespace Octopus.Tentacle.Startup
         readonly IApplicationInstanceSelector instanceSelector;
         readonly ServiceConfigurationState serviceConfigurationState;
         readonly IServiceConfigurator serviceConfigurator;
-        readonly Lazy<ITentacleConfigurationUpgrade> configurationUpgrade;
+        readonly Lazy<IConfigurationEncryptionUpgrade> configurationUpgrade;
         private readonly ISystemLog log;
         readonly string ServicePasswordEnvVar = "OCTOPUS_SERVICE_PASSWORD";
         readonly string ServiceUsernameEnvVar = "OCTOPUS_SERVICE_USERNAME";
@@ -32,7 +32,7 @@ namespace Octopus.Tentacle.Startup
             IServiceConfigurator serviceConfigurator,
             ISystemLog log,
             ILogFileOnlyLogger logFileOnlyLogger,
-            Lazy<ITentacleConfigurationUpgrade> configurationUpgrade)
+            Lazy<IConfigurationEncryptionUpgrade> configurationUpgrade)
             : base(logFileOnlyLogger)
         {
             this.configurationUpgrade = configurationUpgrade;

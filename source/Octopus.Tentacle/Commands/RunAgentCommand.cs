@@ -27,7 +27,7 @@ namespace Octopus.Tentacle.Commands
         readonly Lazy<IHomeConfiguration> home;
         readonly Lazy<IProxyConfiguration> proxyConfiguration;
         readonly Lazy<IProxyInitializer> proxyInitializer;
-        readonly Lazy<ITentacleConfigurationUpgrade> configurationUpgrade;
+        readonly Lazy<IConfigurationEncryptionUpgrade> configurationUpgrade;
 
         readonly ISleep sleep;
         readonly ISystemLog log;
@@ -53,7 +53,7 @@ namespace Octopus.Tentacle.Commands
             AppVersion appVersion,
             ILogFileOnlyLogger logFileOnlyLogger,
             IEnumerable<Lazy<IBackgroundTask>> backgroundTasks,
-            Lazy<ITentacleConfigurationUpgrade> configurationUpgrade) : base(selector, log, logFileOnlyLogger)
+            Lazy<IConfigurationEncryptionUpgrade> configurationUpgrade) : base(selector, log, logFileOnlyLogger)
         {
             this.halibut = halibut;
             this.configuration = configuration;

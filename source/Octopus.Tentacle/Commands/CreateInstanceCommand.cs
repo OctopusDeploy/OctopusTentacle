@@ -8,12 +8,12 @@ namespace Octopus.Tentacle.Commands
     public class CreateInstanceCommand : AbstractCommand
     {
         readonly IApplicationInstanceManager instanceManager;
-        readonly Lazy<ITentacleConfigurationUpgrade> configurationUpgrade;
+        readonly Lazy<IConfigurationEncryptionUpgrade> configurationUpgrade;
         string instanceName = null!;
         string config = null!;
         string home = null!;
 
-        public CreateInstanceCommand(IApplicationInstanceManager instanceManager, ILogFileOnlyLogger logFileOnlyLogger, Lazy<ITentacleConfigurationUpgrade> configurationUpgrade) : base(logFileOnlyLogger)
+        public CreateInstanceCommand(IApplicationInstanceManager instanceManager, ILogFileOnlyLogger logFileOnlyLogger, Lazy<IConfigurationEncryptionUpgrade> configurationUpgrade) : base(logFileOnlyLogger)
         {
             this.instanceManager = instanceManager;
             this.configurationUpgrade = configurationUpgrade;

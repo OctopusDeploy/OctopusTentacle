@@ -9,7 +9,7 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Configuration
 {
-    public interface ITentacleConfigurationUpgrade
+    public interface IConfigurationEncryptionUpgrade
     {
         // Creates the configuration encryption key if it is missing, and gives it to the configuration's owner when running as root.
         void PrepareKey();
@@ -23,7 +23,7 @@ namespace Octopus.Tentacle.Configuration
     }
 
     // Until Upgrade succeeds, Tentacle keeps working on the keys earlier versions used.
-    public class TentacleConfigurationUpgrade : ITentacleConfigurationUpgrade
+    public class ConfigurationEncryptionUpgrade : IConfigurationEncryptionUpgrade
     {
         public static readonly IReadOnlyList<string> ProtectedSettingNames = new[]
         {
@@ -38,7 +38,7 @@ namespace Octopus.Tentacle.Configuration
         readonly IOctopusFileSystem fileSystem;
         readonly ISystemLog log;
 
-        public TentacleConfigurationUpgrade(IApplicationInstanceSelector instanceSelector, IOctopusFileSystem fileSystem, ISystemLog log)
+        public ConfigurationEncryptionUpgrade(IApplicationInstanceSelector instanceSelector, IOctopusFileSystem fileSystem, ISystemLog log)
         {
             this.instanceSelector = instanceSelector;
             this.fileSystem = fileSystem;
