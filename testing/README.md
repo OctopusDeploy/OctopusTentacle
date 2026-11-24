@@ -42,13 +42,31 @@ The script runs in four stages, each of which can be skipped:
 
 The `e2e` stage needs an Octopus Server licence, because an unlicensed server enforces a limit of 0 targets and no Tentacle can register. Set `OCTOPUS_SERVER_BASE64_LICENSE`, or let the script read a development licence from 1Password when run interactively. Without one, the stage still verifies configuration and server connectivity up to the licence refusal. Pass `--no-1password` anywhere `op` must not run.
 
-## Local only: Linux-only unit tests on macOS or Windows
+## Local only: Linux tests as root on macOS or Windows
 
-**For running on a dev machine only. CI does not use this script.** Tests marked `[LinuxTest]` are skipped on macOS and Windows. [`local/run-linux-unit-tests-in-docker.sh`](./local/run-linux-unit-tests-in-docker.sh) runs them as root in a .NET SDK container for the host's architecture:
+**Local only. CI does not use this script.**
+
+Tests marked `[LinuxTest]` are skipped on macOS and Windows. [`local/run-linux-unit-tests-in-docker.sh`](./local/run-linux-unit-tests-in-docker.sh) runs them as root in a .NET SDK container for the host's architecture.
+
+Run the configuration tests (the default):
 
 ```
-./testing/local/run-linux-unit-tests-in-docker.sh [dotnet test filter]
+./testing/local/run-linux-unit-tests-in-docker.sh
 ```
+
+Run one fixture:
+
+```
+./testing/local/run-linux-unit-tests-in-docker.sh "FullyQualifiedName~ConfigurationFilePermissionsFixture"
+```
+
+Run one test:
+
+```
+./testing/local/run-linux-unit-tests-in-docker.sh "Name=WhenAnEmptyConfigIsCreatedThenOnlyItsOwnerCanReadIt"
+```
+
+The filter is anything `dotnet test --filter` accepts. It only runs `Octopus.Tentacle.Tests` on net10.0, needs Docker running, and copies the repo into the container so your working tree isn't touched.
 
 ## Linux Packages
 
