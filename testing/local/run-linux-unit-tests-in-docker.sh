@@ -3,11 +3,11 @@
 # LOCAL ONLY, not used by CI. Runs Linux-only unit tests in a .NET SDK container for this host's architecture, first as root and then as a
 # non-root user.
 #
-# Usage: ./testing/local-only-run-linux-unit-tests-in-docker.sh [dotnet test filter]
+# Usage: ./testing/local/run-linux-unit-tests-in-docker.sh [dotnet test filter]
 #
 set -euo pipefail
 
-REPO_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+REPO_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 FILTER=${1:-FullyQualifiedName~Octopus.Tentacle.Tests.Configuration}
 case "$(uname -m)" in
     arm64|aarch64) PLATFORM=linux/arm64 ;;
