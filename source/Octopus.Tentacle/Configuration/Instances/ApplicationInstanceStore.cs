@@ -103,7 +103,7 @@ namespace Octopus.Tentacle.Configuration.Instances
             var listFromRegistry = registryApplicationInstanceStore.GetListFromRegistry();
             var listFromFileSystem = new List<ApplicationInstanceRecord>();
             if (fileSystem.DirectoryExists(InstancesFolder))
-                listFromFileSystem = fileSystem.EnumerateFiles(InstancesFolder)
+                listFromFileSystem = fileSystem.EnumerateFiles(InstancesFolder, "*.config")
                     .Select(LoadInstanceConfiguration)
                     .Select(instance => new ApplicationInstanceRecord(instance.Name, instance.ConfigurationFilePath))
                     .ToList();
@@ -198,7 +198,7 @@ namespace Octopus.Tentacle.Configuration.Instances
             var data = JsonConvert.SerializeObject(instance, Formatting.Indented);
             try
             {
-                fileSystem.OverwriteFile(path, data);
+                fileSystem.AtomicOverwriteFile(path, data);
             }
             catch (UnauthorizedAccessException ex)
             {

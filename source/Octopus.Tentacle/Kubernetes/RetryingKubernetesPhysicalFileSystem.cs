@@ -90,6 +90,11 @@ namespace Octopus.Tentacle.Kubernetes
             syncRetryPolicy.Execute(() => inner.OverwriteFile(path, contents, encoding));
         }
 
+        public void AtomicOverwriteFile(string path, string contents)
+        {
+            syncRetryPolicy.Execute(() => inner.AtomicOverwriteFile(path, contents));
+        }
+
         public void CopyFile(string source, string destination, bool overwrite)
         {
             syncRetryPolicy.Execute(() => inner.CopyFile(source, destination, overwrite));
