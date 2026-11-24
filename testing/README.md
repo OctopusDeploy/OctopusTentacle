@@ -54,16 +54,10 @@ Run the configuration tests (the default):
 ./testing/local/run-linux-unit-tests-in-docker.sh
 ```
 
-Run one fixture:
+Run tests matching a filter:
 
 ```
 ./testing/local/run-linux-unit-tests-in-docker.sh "FullyQualifiedName~ConfigurationFilePermissionsFixture"
-```
-
-Run one test:
-
-```
-./testing/local/run-linux-unit-tests-in-docker.sh "Name=WhenAnEmptyConfigIsCreatedThenOnlyItsOwnerCanReadIt"
 ```
 
 The filter is anything `dotnet test --filter` accepts. It only runs `Octopus.Tentacle.Tests` on net10.0, needs Docker running, and copies the repo into the container so your working tree isn't touched.
