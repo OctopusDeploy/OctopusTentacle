@@ -252,40 +252,6 @@ namespace Octopus.Tentacle.Core.Util
             File.WriteAllText(path, contents);
         }
 
-        // Readers see either the old or the new contents, never a partly written file.
-        public void AtomicOverwriteFile(string path, string contents)
-        {
-            var temporaryPath = TemporaryPathBeside(path);
-            try
-            {
-                File.WriteAllText(temporaryPath, contents);
-#if NET
-                File.Move(temporaryPath, path, overwrite: true);
-#else
-                if (File.Exists(path))
-                    File.Replace(temporaryPath, path, null);
-                else
-                    File.Move(temporaryPath, path);
-#endif
-            }
-            finally
-            {
-                DeleteIfExists(temporaryPath);
-            }
-        }
-
-        static void DeleteIfExists(string path)
-        {
-            if (File.Exists(path))
-            {
-                File.Delete(path);
-            }
-        }
-
-        // In the same directory, so it is on the same file system and can be moved or linked into place atomically.
-        static string TemporaryPathBeside(string path)
-            => path + "." + Guid.NewGuid().ToString("N") + ".tmp";
-
 #if NET
         [UnsupportedOSPlatform("windows")]
         public bool AtomicCreateFileWithOnlyUserReadWritePermissions(string path, byte[] contents)
@@ -324,6 +290,17 @@ namespace Octopus.Tentacle.Core.Util
             stream.Flush(flushToDisk: true);
         }
 
+        static void DeleteIfExists(string path)
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
+
+        // In the same directory, so it is on the same file system and can be linked into place atomically.
+        static string TemporaryPathBeside(string path)
+            => path + "." + Guid.NewGuid().ToString("N") + ".tmp";
 #else
         public bool AtomicCreateFileWithOnlyUserReadWritePermissions(string path, byte[] contents)
             => throw new PlatformNotSupportedException(UserOnlyFilesAreUnixOnly);

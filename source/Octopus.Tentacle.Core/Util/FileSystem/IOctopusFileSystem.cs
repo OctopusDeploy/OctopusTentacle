@@ -20,7 +20,6 @@ namespace Octopus.Tentacle.Util
         string ReadFile(string path, bool withRetry = true);
         void OverwriteFile(string path, string contents);
         void OverwriteFile(string path, string contents, Encoding encoding);
-        void AtomicOverwriteFile(string path, string contents);
         void CopyFile(string source, string destination, bool overwrite);
         Stream OpenFile(string path, FileAccess access = FileAccess.ReadWrite, FileShare share = FileShare.Read);
         Stream OpenFile(string path, FileMode mode = FileMode.OpenOrCreate, FileAccess access = FileAccess.ReadWrite, FileShare share = FileShare.Read);

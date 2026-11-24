@@ -33,7 +33,7 @@ namespace Octopus.Tentacle.Tests.Configuration
         {
             registryStore.GetListFromRegistry().Returns(Enumerable.Empty<ApplicationInstanceRecord>());
             fileSystem.DirectoryExists(Arg.Any<string>()).Returns(true);
-            fileSystem.EnumerateFiles(Arg.Any<string>(), Arg.Any<string[]>()).Returns(new List<string> { "file1", "file2" });
+            fileSystem.EnumerateFiles(Arg.Any<string>()).Returns(new List<string> { "file1", "file2" });
             fileSystem.FileExists(Arg.Any<string>()).Returns(true);
             fileSystem.ReadFile(Arg.Is("file1")).Returns("{\"Name\": \"instance1\",\"ConfigurationFilePath\": \"configFilePath1\"}");
             fileSystem.ReadFile(Arg.Is("file2")).Returns("{\"Name\": \"instance2\",\"ConfigurationFilePath\": \"configFilePath2\"}");
@@ -77,7 +77,7 @@ namespace Octopus.Tentacle.Tests.Configuration
                     new ApplicationInstanceRecord("instance2", "registryFilePath2")
                 });
             fileSystem.DirectoryExists(Arg.Any<string>()).Returns(true);
-            fileSystem.EnumerateFiles(Arg.Any<string>(), Arg.Any<string[]>()).Returns(new List<string> { "file1", "file2" });
+            fileSystem.EnumerateFiles(Arg.Any<string>()).Returns(new List<string> { "file1", "file2" });
             fileSystem.FileExists(Arg.Any<string>()).Returns(true);
             fileSystem.ReadFile(Arg.Is("file1")).Returns("{\"Name\": \"instance2\",\"ConfigurationFilePath\": \"fileConfigFilePath2\"}");
             fileSystem.ReadFile(Arg.Is("file2")).Returns("{\"Name\": \"instance3\",\"ConfigurationFilePath\": \"fileConfigFilePath3\"}");
@@ -99,7 +99,7 @@ namespace Octopus.Tentacle.Tests.Configuration
 
             fileSystem.DirectoryExists(Arg.Any<string>()).Returns(true);
             fileSystem.FileExists(Arg.Any<string>()).Returns(true);
-            fileSystem.EnumerateFiles(instanceStore.InstancesFolder, "*.config").Returns(new[] { configFilename});
+            fileSystem.EnumerateFiles(instanceStore.InstancesFolder).Returns(new[] { configFilename});
             fileSystem.ReadFile(Arg.Is(configFilename)).Returns("{\"Name\": \"instance 1\",\"ConfigurationFilePath\": \"fileConfigFilePath2\"}");
 
             var instance = instanceStore.LoadInstanceDetails("instance 1");
@@ -128,7 +128,7 @@ namespace Octopus.Tentacle.Tests.Configuration
 
             instanceStore.MigrateInstance(sourceInstance);
             fileSystem.Received().CreateDirectory(Arg.Any<string>());
-            fileSystem.Received().AtomicOverwriteFile(Arg.Is<string>(x => x.Contains(sourceInstance.InstanceName)), Arg.Is<string>(x => x.Contains(sourceInstance.ConfigurationFilePath)));
+            fileSystem.Received().OverwriteFile(Arg.Is<string>(x => x.Contains(sourceInstance.InstanceName)), Arg.Is<string>(x => x.Contains(sourceInstance.ConfigurationFilePath)));
 
             //we explicitly dont want to delete from the registry here, as we want to allow for customers who try to upgrade and have issues
             //but then rollback the database and install the old version. This would be a nasty thing to deal with in an already bad experience.
