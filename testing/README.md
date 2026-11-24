@@ -42,6 +42,14 @@ The script runs in four stages, each of which can be skipped:
 
 The `e2e` stage needs an Octopus Server licence, because an unlicensed server enforces a limit of 0 targets and no Tentacle can register. Set `OCTOPUS_SERVER_BASE64_LICENSE`, or let the script read a development licence from 1Password when run interactively. Without one, the stage still verifies configuration and server connectivity up to the licence refusal. Pass `--no-1password` anywhere `op` must not run.
 
+## Local only: Linux-only unit tests on macOS or Windows
+
+**For running on a dev machine only. CI does not use this script.** Tests marked `[LinuxTest]` are skipped on macOS and Windows. [`local/run-linux-unit-tests-in-docker.sh`](./local/run-linux-unit-tests-in-docker.sh) runs them in a .NET SDK container for the host's architecture, as root and then as a non-root user:
+
+```
+./testing/local/run-linux-unit-tests-in-docker.sh [dotnet test filter]
+```
+
 ## Linux Packages
 
 Use [`linux-packages/test-packages-on-distros.sh`](./linux-packages/test-packages-on-distros.sh) to run NUKE's `TestLinuxPackages` target locally. That target installs the built `.deb`/`.rpm` on every distribution in the matrix in `build/Build.Tests.cs` and checks the installed Tentacle reports the expected version.
