@@ -12,6 +12,7 @@ using Microsoft.Win32.SafeHandles;
 namespace Octopus.Tentacle.Configuration
 {
     // The config holds protected settings, so only its owner may read it. The service user must therefore own it.
+    // On Windows the equivalent is an ACL limited to SYSTEM, Administrators and the service account.
     static class ConfigurationFilePermissions
     {
 #if NET
@@ -19,7 +20,7 @@ namespace Octopus.Tentacle.Configuration
         const uint UnchangedGroup = uint.MaxValue;
 #endif
 
-        public static void CreateEmpty(IOctopusFileSystem fileSystem, string configurationPath, string contents)
+        public static void CreateEmpty(string configurationPath, string contents)
         {
 #if NET
             if (!OperatingSystem.IsWindows())
@@ -35,14 +36,20 @@ namespace Octopus.Tentacle.Configuration
                 return;
             }
 #endif
-            fileSystem.OverwriteFile(configurationPath, contents);
+            WindowsConfigurationFilePermissions.CreateEmpty(configurationPath, contents);
         }
 
         public static void RestrictToOwner(string? configurationPath, ISystemLog log)
         {
-#if NET
-            if (OperatingSystem.IsWindows() || string.IsNullOrWhiteSpace(configurationPath) || !File.Exists(configurationPath))
+            if (string.IsNullOrWhiteSpace(configurationPath) || !File.Exists(configurationPath))
             {
+                return;
+            }
+
+#if NET
+            if (OperatingSystem.IsWindows())
+            {
+                WindowsConfigurationFilePermissions.RestrictToOwner(configurationPath!, log);
                 return;
             }
 
@@ -59,16 +66,28 @@ namespace Octopus.Tentacle.Configuration
             {
                 log.Warn($"Unable to restrict `{configurationPath}` to its owner, so other users may be able to read it: {ex.Message}");
             }
+#else
+            WindowsConfigurationFilePermissions.RestrictToOwner(configurationPath!, log);
 #endif
         }
 
+        // Without a user name the service keeps its current account, which may rely on the inherited permissions, so the
+        // file is left alone.
         public static void RestrictToServiceUser(string? configurationPath, string? userName, ISystemLog log)
         {
+            if (string.IsNullOrWhiteSpace(configurationPath) || string.IsNullOrWhiteSpace(userName))
+            {
+                return;
+            }
+
 #if NET
-            if (OperatingSystem.IsWindows()
-                || string.IsNullOrWhiteSpace(configurationPath)
-                || string.IsNullOrWhiteSpace(userName)
-                || userName == "root")
+            if (OperatingSystem.IsWindows())
+            {
+                WindowsConfigurationFilePermissions.RestrictToServiceUser(configurationPath!, userName!, log);
+                return;
+            }
+
+            if (userName == "root")
             {
                 return;
             }
@@ -78,6 +97,8 @@ namespace Octopus.Tentacle.Configuration
             {
                 log.Warn($"Unable to restrict `{configurationPath}` to `{userName}`: {error.TrimEnd('.')}. Only the service user should be able to read and write the configuration file, so check its owner and permissions.");
             }
+#else
+            WindowsConfigurationFilePermissions.RestrictToServiceUser(configurationPath!, userName!, log);
 #endif
         }
 

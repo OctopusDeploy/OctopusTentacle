@@ -39,7 +39,7 @@ namespace Octopus.Tentacle.Tests.Configuration
         {
             var configurationFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
 
-            ConfigurationFilePermissions.CreateEmpty(new OctopusPhysicalFileSystem(new InMemoryLog()), configurationFile, "<octopus-settings />");
+            ConfigurationFilePermissions.CreateEmpty(configurationFile, "<octopus-settings />");
 
             File.GetUnixFileMode(configurationFile).Should().Be(ConfigurationFilePermissions.OwnerOnly);
         }

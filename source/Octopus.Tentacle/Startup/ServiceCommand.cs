@@ -100,6 +100,13 @@ namespace Octopus.Tentacle.Startup
             {
                 var currentName = instanceSelector.Current.InstanceName;
                 var thisServiceName = ServiceName.GetWindowsServiceName(applicationName, currentName);
+
+                // Before configuring the service, which may also start it, so the service user can already read the config.
+                if (serviceConfigurationState.Install || serviceConfigurationState.Reconfigure)
+                {
+                    ConfigurationFilePermissions.RestrictToServiceUser(instanceSelector.Current.ConfigurationPath, serviceConfigurationState.Username, log);
+                }
+
                 if (currentName == null)
                 {
                     if (serviceConfigurationState.Install || serviceConfigurationState.Reconfigure)
@@ -119,11 +126,6 @@ namespace Octopus.Tentacle.Startup
                         currentName,
                         serviceDescription,
                         serviceConfigurationState);
-                }
-
-                if (serviceConfigurationState.Install || serviceConfigurationState.Reconfigure)
-                {
-                    ConfigurationFilePermissions.RestrictToServiceUser(instanceSelector.Current.ConfigurationPath, serviceConfigurationState.Username, log);
                 }
             }
         }
