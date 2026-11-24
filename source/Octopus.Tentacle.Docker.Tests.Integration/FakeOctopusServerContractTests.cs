@@ -5,6 +5,7 @@ using Octopus.Client.Operations;
 using Octopus.Tentacle.Commands;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Docker.Tests.Integration.Setup;
+using Octopus.Tentacle.Tests.Integration.Common.FakeOctopus;
 
 namespace Octopus.Tentacle.Docker.Tests.Integration;
 

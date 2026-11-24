@@ -1,6 +1,6 @@
 using Octopus.Tentacle.Tests.Integration.Common.Logging;
 
-namespace Octopus.Tentacle.Docker.Tests.Integration.Setup;
+namespace Octopus.Tentacle.Tests.Integration.Common.FakeOctopus;
 
 /// <summary>
 /// Builds a <see cref="FakeOctopusServer"/> for one test:

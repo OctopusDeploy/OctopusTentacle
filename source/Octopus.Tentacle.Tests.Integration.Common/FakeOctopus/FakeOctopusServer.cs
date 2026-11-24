@@ -11,13 +11,13 @@ using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using NUnit.Framework;
 using Octopus.Client.Extensibility;
 using Octopus.Client.Model;
 using Octopus.Tentacle.CommonTestUtils;
-using Octopus.Tentacle.Tests.Integration.Common;
 using ILogger = Serilog.ILogger;
 
-namespace Octopus.Tentacle.Docker.Tests.Integration.Setup;
+namespace Octopus.Tentacle.Tests.Integration.Common.FakeOctopus;
 
 /// <summary>
 /// A stand-in Octopus Server for one test, built with <see cref="FakeOctopusServerBuilder"/>. It has two parts:

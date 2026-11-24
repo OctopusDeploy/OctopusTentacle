@@ -3,6 +3,7 @@ using Octopus.Tentacle.Client.Scripts.Models.Builders;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Docker.Tests.Integration.Setup;
+using Octopus.Tentacle.Tests.Integration.Common.FakeOctopus;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
 
 namespace Octopus.Tentacle.Docker.Tests.Integration;
