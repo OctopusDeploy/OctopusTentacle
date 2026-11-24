@@ -371,6 +371,25 @@ namespace Octopus.Tentacle.Tests.Integration
             response.ExitCode.Should().Be(-45);
         }
 
+        /// <summary>
+        /// Tentacle stopping while StartScript was creating the script state leaves an empty scriptstate.json. The script
+        /// never started, so a retried StartScript should start it (https://github.com/OctopusDeploy/OctopusTentacle/issues/659).
+        /// </summary>
+        [Test]
+        public async Task StartScriptShouldStartTheScriptWhenAnEarlierAttemptLeftAnEmptyScriptState()
+        {
+            var scriptTicket = new ScriptTicket(Guid.NewGuid().ToString());
+            WriteEmptyScriptState(scriptTicket);
+            var script = GetStartScriptCommandForScriptThatCreatesAFile(scriptTicket);
+
+            var startScriptResponse = await service.StartScriptAsync(script.StartScriptCommand, CancellationToken.None);
+            var (_, finalResponse) = await RunUntilScriptCompletes(script.StartScriptCommand, startScriptResponse);
+
+            finalResponse.State.Should().Be(ProcessState.Complete);
+            finalResponse.ExitCode.Should().Be(0);
+            File.Exists(script.FileScriptWillCreate.FullName).Should().BeTrue();
+        }
+
         [Test]
         public async Task CompleteScriptShouldNotErrorForAnUnknownScriptTicket()
         {
@@ -525,6 +544,12 @@ namespace Octopus.Tentacle.Tests.Integration
                 .Build();
 
             return (startScriptCommand, new FileInfo(filePath));
+        }
+
+        void WriteEmptyScriptState(ScriptTicket scriptTicket)
+        {
+            var workspace = workspaceFactory.GetWorkspace(scriptTicket, WorkspaceReadinessCheck.Skip);
+            File.WriteAllText(workspace.ResolvePath("scriptstate.json"), "");
         }
 
         async Task<(List<ProcessOutput>, ScriptStatusResponseV2)> RunUntilScriptCompletes(StartScriptCommandV2 startScriptCommand, ScriptStatusResponseV2 response)

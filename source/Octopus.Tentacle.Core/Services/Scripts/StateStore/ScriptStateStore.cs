@@ -37,8 +37,22 @@ namespace Octopus.Tentacle.Core.Services.Scripts.StateStore
 
             var state = new ScriptState(DateTimeOffset.UtcNow);
             var serialized = SerializeState(state);
-            using var writer = GetStreamWriter(StateFilePath, FileMode.CreateNew);
-            writer.Write(serialized);
+
+            // Write the state to a temporary file and move it into place, so Tentacle stopping part way through can't
+            // leave the state file empty.
+            var tempFilePath = pathResolver(Guid.NewGuid().ToString());
+            using (var writer = GetStreamWriter(tempFilePath, FileMode.CreateNew))
+            {
+                writer.Write(serialized);
+            }
+
+            // An empty state file is left by a Create from an earlier Tentacle version that was interrupted.
+            if (fileSystem.FileExists(StateFilePath))
+            {
+                fileSystem.DeleteFile(StateFilePath);
+            }
+
+            File.Move(tempFilePath, StateFilePath);
 
             return state;
         }
@@ -93,7 +107,27 @@ namespace Octopus.Tentacle.Core.Services.Scripts.StateStore
 
         bool ExistsNoLock()
         {
-            return fileSystem.FileExists(StateFilePath);
+            // Earlier Tentacle versions created the state file before writing to it, so Tentacle stopping in between left
+            // it empty (https://github.com/OctopusDeploy/OctopusTentacle/issues/659). The script never started then, so
+            // treat an empty file as no state.
+            if (!fileSystem.FileExists(StateFilePath))
+            {
+                return false;
+            }
+
+            // The workspace can be deleted in between, e.g. by a CompleteScript running alongside a status request.
+            try
+            {
+                return fileSystem.GetFileSize(StateFilePath) > 0;
+            }
+            catch (FileNotFoundException)
+            {
+                return false;
+            }
+            catch (DirectoryNotFoundException)
+            {
+                return false;
+            }
         }
 
         ScriptState? DeserializeState(string serialized)

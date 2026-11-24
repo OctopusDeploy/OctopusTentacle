@@ -29,6 +29,20 @@ namespace Octopus.Tentacle.Tests.Scripts
             loaded.Should().BeEquivalentTo(scriptState);
         }
 
+        [Test]
+        public void CreateDoesNotReplaceAnExistingState()
+        {
+            var octopusFileSystem = new OctopusPhysicalFileSystem(new InMemoryLog());
+            using var tmpDir = new TemporaryDirectory(octopusFileSystem);
+            var scriptStateStore = new ScriptStateStore(octopusFileSystem, s => Path.Combine(tmpDir.DirectoryPath, s));
+            var created = scriptStateStore.Create();
+            Directory.GetFiles(tmpDir.DirectoryPath).Should().ContainSingle("Create should not leave temporary files behind");
+
+            scriptStateStore.Invoking(s => s.Create()).Should().Throw<System.InvalidOperationException>();
+
+            scriptStateStore.Load().Should().BeEquivalentTo(created);
+        }
+
         const string OldScriptState = @"{""Created"":""2025-04-09T23:24:03.683243+00:00"",""Started"":""2025-04-09T23:24:03.731068+00:00"",""Completed"":""2025-04-09T23:24:03.731175+00:00"",""State"":2,""ExitCode"":99,""RanToCompletion"":true}";
         
         [Test]
