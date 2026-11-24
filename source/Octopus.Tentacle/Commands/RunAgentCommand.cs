@@ -27,7 +27,7 @@ namespace Octopus.Tentacle.Commands
         readonly Lazy<IHomeConfiguration> home;
         readonly Lazy<IProxyConfiguration> proxyConfiguration;
         readonly Lazy<IProxyInitializer> proxyInitializer;
-        readonly Lazy<IConfigurationEncryptionUpgrade> configurationUpgrade;
+        readonly Lazy<IConfigurationEncryptionUpgrade> configurationEncryptionUpgrade;
 
         readonly ISleep sleep;
         readonly ISystemLog log;
@@ -53,13 +53,13 @@ namespace Octopus.Tentacle.Commands
             AppVersion appVersion,
             ILogFileOnlyLogger logFileOnlyLogger,
             IEnumerable<Lazy<IBackgroundTask>> backgroundTasks,
-            Lazy<IConfigurationEncryptionUpgrade> configurationUpgrade) : base(selector, log, logFileOnlyLogger)
+            Lazy<IConfigurationEncryptionUpgrade> configurationEncryptionUpgrade) : base(selector, log, logFileOnlyLogger)
         {
             this.halibut = halibut;
             this.configuration = configuration;
             this.home = home;
             this.proxyConfiguration = proxyConfiguration;
-            this.configurationUpgrade = configurationUpgrade;
+            this.configurationEncryptionUpgrade = configurationEncryptionUpgrade;
             this.sleep = sleep;
             this.log = log;
             this.selector = selector;
@@ -101,7 +101,7 @@ namespace Octopus.Tentacle.Commands
                 return;
             }
 
-            configurationUpgrade.Value.TryUpgrade();
+            configurationEncryptionUpgrade.Value.TryUpgrade();
 
             var currentPath = typeof(RunAgentCommand).Assembly.FullLocalPath();
             var exePath = PlatformDetection.IsRunningOnWindows

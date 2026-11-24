@@ -8,15 +8,15 @@ namespace Octopus.Tentacle.Commands
     public class CreateInstanceCommand : AbstractCommand
     {
         readonly IApplicationInstanceManager instanceManager;
-        readonly Lazy<IConfigurationEncryptionUpgrade> configurationUpgrade;
+        readonly Lazy<IConfigurationEncryptionUpgrade> configurationEncryptionUpgrade;
         string instanceName = null!;
         string config = null!;
         string home = null!;
 
-        public CreateInstanceCommand(IApplicationInstanceManager instanceManager, ILogFileOnlyLogger logFileOnlyLogger, Lazy<IConfigurationEncryptionUpgrade> configurationUpgrade) : base(logFileOnlyLogger)
+        public CreateInstanceCommand(IApplicationInstanceManager instanceManager, ILogFileOnlyLogger logFileOnlyLogger, Lazy<IConfigurationEncryptionUpgrade> configurationEncryptionUpgrade) : base(logFileOnlyLogger)
         {
             this.instanceManager = instanceManager;
-            this.configurationUpgrade = configurationUpgrade;
+            this.configurationEncryptionUpgrade = configurationEncryptionUpgrade;
             Options.Add("instance=", "Name of the instance to create", v => instanceName = v);
             Options.Add("config=", "Path to configuration file to create", v => config = v);
             Options.Add("home=", "[Optional] Path to the home directory - defaults to the same directory as the config file", v => home = v);
@@ -34,7 +34,7 @@ namespace Octopus.Tentacle.Commands
             }
 
             // The key already exists; this gives it to the owner of a configuration file that was already there.
-            configurationUpgrade.Value.PrepareKey();
+            configurationEncryptionUpgrade.Value.PrepareKey();
         }
     }
 }
