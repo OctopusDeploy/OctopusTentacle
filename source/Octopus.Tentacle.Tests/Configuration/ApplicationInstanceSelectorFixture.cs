@@ -10,6 +10,7 @@ using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Kubernetes.Configuration;
 using Octopus.Tentacle.Kubernetes.Crypto;
+using Octopus.Tentacle.Tests.Support.TestAttributes;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Configuration
@@ -93,11 +94,9 @@ namespace Octopus.Tentacle.Tests.Configuration
         }
         
         [Test]
+        [LinuxOrMacTest]
         public void GivenARegisteredInstanceUsesTheConfiguration_WhenRequestingConfigurationInstance_ThenItUsesThatInstancesKey()
         {
-            if (PlatformDetection.IsRunningOnWindows)
-                Assert.Ignore("Configuration encryption keys are Linux only");
-
             var filePath = "/etc/octopus/tentacle.config";
             var mock = CreateApplicationInstanceSelector(new StartUpConfigFileInstanceRequest(filePath));
             octopusFileSystem.FileExists(filePath).Returns(true);
