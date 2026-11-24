@@ -44,8 +44,11 @@ namespace Octopus.Tentacle.Configuration.Instances
                 LoadCurrentInstance();
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                // Expected when the instance doesn't exist yet, e.g. while creating it, so not a warning. But it can also be
+                // unexpected, and then this is the only record of why logs went to the default log file instead of the instance's.
+                log.Verbose(ex, "Could not load the current instance");
                 return false;
             }
         }
