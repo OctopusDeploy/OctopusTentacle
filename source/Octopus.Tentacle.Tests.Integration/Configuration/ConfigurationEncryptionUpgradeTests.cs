@@ -6,12 +6,15 @@ using CliWrap;
 using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Tentacle.CommonTestUtils;
+using Octopus.Tentacle.CommonTestUtils.Diagnostics;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Configuration.Crypto;
 using Octopus.Tentacle.Tests.Integration.Common;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.TestAttributes;
+using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Integration.Configuration
 {
@@ -167,6 +170,37 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
             agent.ExitCode.Should().NotBe(0, output);
             output.Should().Contain(instance.ConfigurationEncryptionKeyFile, "the certificate cannot be decrypted without its key");
             instance.CertificateAsStoredInTheConfigurationFile().Should().Be(certificateEncryptedWithTheKey);
+        }
+
+        [Test]
+        [RequiresSudoOnLinux]
+        public async Task WhenTentacleRunsAsAUserWhoCannotReadTheKey_ThenItSaysHowToFixThePermissions()
+        {
+            // Arrange
+            using var otherUser = new LinuxTestUserPrincipal("octo-key-reader");
+            // Under /tmp rather than the default location, which is in the runner's home and not traversable by the other user.
+            using var home = new TemporaryDirectory(new OctopusPhysicalFileSystem(new InMemoryLog()), Directory.CreateTempSubdirectory().FullName);
+            using var instance = await new TentacleInstanceBuilder()
+                .WithHomeDirectory(home)
+                .WithNewCertificate()
+                .Build(Logger, CancellationToken);
+            await instance.SudoAllowEveryoneToReadTheHomeDirectory();
+            await instance.SudoMakeTheKeyDirectoryOwnedAndOnlyAccessibleByRoot();
+            try
+            {
+                // Act
+                var showThumbprint = await instance
+                    .ExecuteTentacleCommandOnTheInstanceAsUser(otherUser, CommandResultValidation.None, "show-thumbprint", CancellationToken);
+
+                // Assert
+                var output = showThumbprint.StandardOutput + showThumbprint.StandardError;
+                showThumbprint.ExitCode.Should().NotBe(0, output);
+                output.Should().Contain(instance.ConfigurationEncryptionKeyFile).And.Contain("cannot read it").And.Contain("sudo chown").And.NotContain("does not exist");
+            }
+            finally
+            {
+                await instance.SudoDeleteTheKeyDirectory();
+            }
         }
     }
 }

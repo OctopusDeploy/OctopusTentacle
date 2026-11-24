@@ -13,6 +13,7 @@ using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Crypto;
 using Octopus.Tentacle.Core.Util;
 using Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers;
+using Octopus.Tentacle.Tests.Integration.Util;
 using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
@@ -206,6 +207,40 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 .Concat(arguments)
                 .Concat(Name is null ? new[] { "--config", ConfigurationFile } : new[] { "--instance", Name })
                 .ToArray());
+
+        string KeyDirectory => Path.GetDirectoryName(ConfigurationEncryptionKeyFile)!;
+
+        internal async Task SudoAllowEveryoneToReadTheHomeDirectory()
+            => await Sudo("chmod", "-R", "o+rX", home.DirectoryPath);
+
+        internal async Task SudoMakeTheKeyDirectoryOwnedAndOnlyAccessibleByRoot()
+        {
+            await Sudo("chown", "-R", "root:root", KeyDirectory);
+            await Sudo("chmod", "700", KeyDirectory);
+            await Sudo("chmod", "600", ConfigurationEncryptionKeyFile);
+        }
+
+        // The test runner cannot delete a directory owned by root, so it must be deleted before the home directory is.
+        internal async Task SudoDeleteTheKeyDirectory()
+            => await Sudo("rm", "-rf", KeyDirectory);
+
+        static async Task Sudo(params string[] arguments)
+            => await Cli.Wrap("sudo").WithArguments(arguments).ExecuteBufferedAsync();
+
+        // sudo resets the environment, so the instance's environment is passed through env instead.
+        internal async Task<BufferedCommandResult> ExecuteTentacleCommandOnTheInstanceAsUser(LinuxTestUserPrincipal user, CommandResultValidation validation, string command, CancellationToken cancellationToken, params string[] arguments)
+        {
+            var sudoArguments = new[] { "-u", user.UserName, "env" }
+                .Concat(environmentVariables.Select(e => $"{e.Key}={e.Value}"))
+                .Concat(new[] { tentacleExe, command })
+                .Concat(arguments)
+                .Concat(Name is null ? new[] { "--config", ConfigurationFile } : new[] { "--instance", Name });
+            return await Cli.Wrap("sudo")
+                .WithArguments(sudoArguments)
+                .WithValidation(validation)
+                .WithWorkingDirectory(home.DirectoryPath)
+                .ExecuteBufferedAsync(cancellationToken);
+        }
 
         // Older Tentacles share the machine's instance registry, so a command can fail while another test registers an instance.
         public async Task<BufferedCommandResult> ExecuteTentacleCommand(CommandResultValidation validation, CancellationToken cancellationToken, params string[] arguments)

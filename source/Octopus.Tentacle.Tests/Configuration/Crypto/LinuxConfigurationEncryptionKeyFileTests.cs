@@ -15,6 +15,7 @@ using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Core.Util;
 using Octopus.Tentacle.Tests.Support;
 using Octopus.Tentacle.Tests.Support.TestAttributes;
+using Octopus.Tentacle.Tests.Util;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Configuration.Crypto
@@ -78,36 +79,6 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         }
 
         [Test]
-        public void WhenTheKeyDirectoryCannotBeEnteredThenLoadingSaysHowToFixThePermissions()
-        {
-            if (geteuid() == 0)
-            {
-                Assert.Ignore("Root can enter any directory.");
-            }
-
-            // Arrange
-            var log = Substitute.For<ISystemLog>();
-            var fileSystem = new OctopusPhysicalFileSystem(log);
-            using var directory = new TemporaryDirectory(fileSystem);
-            var keyDirectory = Path.Combine(directory.DirectoryPath, "keys");
-            var keyFilePath = Path.Combine(keyDirectory, ConfigurationEncryptionKey.KeyFileName);
-            new ConfigurationEncryptionKey(log, fileSystem, keyFilePath).CreateIfMissing();
-            File.SetUnixFileMode(keyDirectory, UnixFileMode.None);
-            try
-            {
-                // Act
-                Action load = () => new ConfigurationEncryptionKey(log, fileSystem, keyFilePath).TryLoad();
-
-                // Assert
-                load.Should().Throw<InvalidOperationException>().WithMessage("*exists but the user Tentacle is running as*cannot read it*chown*");
-            }
-            finally
-            {
-                File.SetUnixFileMode(keyDirectory, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
-            }
-        }
-
-        [Test]
         public void WhenRootCreatesTheKeyUnderAHardenedUmaskThenANonRootOwnerCanStillReadIt()
         {
             if (geteuid() != 0)
@@ -120,8 +91,7 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
             var fileSystem = new OctopusPhysicalFileSystem(log);
             // Not created yet, so CreateIfMissing creates every directory down to the key under the hardened umask.
             using var directory = new TemporaryDirectory(fileSystem, Path.Combine(Path.GetTempPath(), "octopus-config-encryption-key-" + Guid.NewGuid()));
-            var user = "octo-key-" + Guid.NewGuid().ToString("N").Substring(0, 8);
-            CreateUser(user).Should().Be(0);
+            using var user = new LinuxTestUserPrincipal("octo-key-" + Guid.NewGuid().ToString("N").Substring(0, 8));
             var instanceKeyFilePath = Path.Combine(directory.DirectoryPath, "keys", "Tentacle", ConfigurationEncryptionKey.KeyFileName);
             var keySource = new ConfigurationEncryptionKey(log, fileSystem, instanceKeyFilePath);
             var previousUmask = umask(Convert.ToUInt32("027", 8));
@@ -129,29 +99,19 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
             {
                 // Act
                 keySource.CreateIfMissing();
-                var owner = uint.Parse(RunAndRead("id", $"-u {user}"));
+                var owner = uint.Parse(RunAndRead("id", $"-u {user.UserName}"));
                 UnixFile.SetOwnerIfRunningAsRoot(owner, keySource.KeyDirectory!);
                 UnixFile.SetOwnerIfRunningAsRoot(owner, instanceKeyFilePath);
 
                 // Assert
-                Run("su", $"-s /bin/sh -c \"cat {instanceKeyFilePath}\" {user}").Should().Be(0, "the owner must be able to traverse the shared directories to its key");
+                Run("su", $"-s /bin/sh -c \"cat {instanceKeyFilePath}\" {user.UserName}").Should().Be(0, "the owner must be able to traverse the shared directories to its key");
                 File.GetUnixFileMode(keySource.KeyDirectory!).Should().Be(UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
             }
             finally
             {
                 umask(previousUmask);
-                DeleteUser(user);
             }
         }
-
-        // Alpine has BusyBox's adduser and deluser rather than useradd and userdel.
-        static bool IsAlpine => File.Exists("/etc/alpine-release");
-
-        static int CreateUser(string user)
-            => IsAlpine ? Run("adduser", $"-D -H {user}") : Run("useradd", $"--no-create-home {user}");
-
-        static int DeleteUser(string user)
-            => IsAlpine ? Run("deluser", user) : Run("userdel", user);
 
         static int Run(string fileName, string arguments)
         {

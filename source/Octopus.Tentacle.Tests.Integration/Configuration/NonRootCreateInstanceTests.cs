@@ -28,7 +28,7 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
         public async Task WhenANonRootUserCannotCreateTheKeyThenTheCommandInTheErrorFixesIt()
         {
             // Arrange
-            var user = new LinuxTestUserPrincipal("octo-key-test");
+            using var user = new LinuxTestUserPrincipal("octo-key-test");
             // Under /tmp rather than the default location, which is in the runner's home and not traversable by the test user.
             using var temporaryDirectory = new TemporaryDirectory(new OctopusPhysicalFileSystem(new InMemoryLog()), Directory.CreateTempSubdirectory().FullName);
             var root = temporaryDirectory.DirectoryPath;
@@ -47,26 +47,19 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
                     $"{EnvironmentVariables.TentacleMachineConfigurationHomeDirectory}={homeDirectory}",
                     TentacleExeFinder.FindTentacleExe(), "create-instance", "--instance", "Tentacle", "--config", configurationFile);
 
-            try
-            {
-                // Act
-                var refused = await CreateInstanceAsUser();
-                Logger.Information("StdOut: {StdOut}, StdErr: {StdErr}", refused.StandardOutput, refused.StandardError);
-                var fix = Regex.Match(refused.StandardOutput + refused.StandardError, "sudo mkdir[^`]*").Value;
-                Logger.Information("Running Fix: {Fix}", fix);
-                await Cli.Wrap("/bin/bash").WithArguments(new[] { "-c", fix }).ExecuteBufferedAsync();
-                var created = await CreateInstanceAsUser();
+            // Act
+            var refused = await CreateInstanceAsUser();
+            Logger.Information("StdOut: {StdOut}, StdErr: {StdErr}", refused.StandardOutput, refused.StandardError);
+            var fix = Regex.Match(refused.StandardOutput + refused.StandardError, "sudo mkdir[^`]*").Value;
+            Logger.Information("Running Fix: {Fix}", fix);
+            await Cli.Wrap("/bin/bash").WithArguments(new[] { "-c", fix }).ExecuteBufferedAsync();
+            var created = await CreateInstanceAsUser();
 
-                // Assert
-                refused.ExitCode.Should().NotBe(0);
-                fix.Should().NotBeEmpty($"the error should say which command fixes it, but it was: {refused.StandardOutput}{refused.StandardError}");
-                created.ExitCode.Should().Be(0, $"running `{fix}` should let the user create the instance, but: {created.StandardOutput}{created.StandardError}");
-                File.Exists(configurationFile).Should().BeTrue();
-            }
-            finally
-            {
-                await Sudo("userdel", "-r", user.UserName);
-            }
+            // Assert
+            refused.ExitCode.Should().NotBe(0);
+            fix.Should().NotBeEmpty($"the error should say which command fixes it, but it was: {refused.StandardOutput}{refused.StandardError}");
+            created.ExitCode.Should().Be(0, $"running `{fix}` should let the user create the instance, but: {created.StandardOutput}{created.StandardError}");
+            File.Exists(configurationFile).Should().BeTrue();
         }
 
         static Task<BufferedCommandResult> Sudo(params string[] arguments)
