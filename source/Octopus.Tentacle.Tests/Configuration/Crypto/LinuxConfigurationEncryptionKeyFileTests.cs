@@ -78,6 +78,36 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         }
 
         [Test]
+        public void WhenTheKeyDirectoryCannotBeEnteredThenLoadingSaysHowToFixThePermissions()
+        {
+            if (geteuid() == 0)
+            {
+                Assert.Ignore("Root can enter any directory.");
+            }
+
+            // Arrange
+            var log = Substitute.For<ISystemLog>();
+            var fileSystem = new OctopusPhysicalFileSystem(log);
+            using var directory = new TemporaryDirectory(fileSystem);
+            var keyDirectory = Path.Combine(directory.DirectoryPath, "keys");
+            var keyFilePath = Path.Combine(keyDirectory, ConfigurationEncryptionKey.KeyFileName);
+            new ConfigurationEncryptionKey(log, fileSystem, keyFilePath).CreateIfMissing();
+            File.SetUnixFileMode(keyDirectory, UnixFileMode.None);
+            try
+            {
+                // Act
+                Action load = () => new ConfigurationEncryptionKey(log, fileSystem, keyFilePath).TryLoad();
+
+                // Assert
+                load.Should().Throw<InvalidOperationException>().WithMessage("*exists but the user Tentacle is running as*cannot read it*chown*");
+            }
+            finally
+            {
+                File.SetUnixFileMode(keyDirectory, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+            }
+        }
+
+        [Test]
         public void WhenRootCreatesTheKeyUnderAHardenedUmaskThenANonRootOwnerCanStillReadIt()
         {
             if (geteuid() != 0)

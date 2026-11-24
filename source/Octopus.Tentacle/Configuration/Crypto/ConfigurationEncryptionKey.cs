@@ -73,12 +73,29 @@ namespace Octopus.Tentacle.Configuration.Crypto
                 return loaded;
             }
 
-            if (KeyFilePath == null || !fileSystem.FileExists(KeyFilePath))
+            if (KeyFilePath == null)
             {
                 return null;
             }
 
-            loaded = LoadFromFile(KeyFilePath);
+            string contents;
+            try
+            {
+                contents = fileSystem.ReadAllText(KeyFilePath);
+            }
+            catch (Exception e) when (e is FileNotFoundException || e is DirectoryNotFoundException)
+            {
+                return null;
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                var user = Environment.UserName;
+                var directory = LinuxDirectoryOf(KeyFilePath);
+                throw new InvalidOperationException($"The configuration encryption key file `{KeyFilePath}` exists but the user Tentacle is running as ({user}) cannot read it. "
+                    + $"It must be owned by and readable only by that user, for example: `sudo chown -R {user} {directory} && sudo chmod 700 {directory} && sudo chmod 600 {KeyFilePath}`.", e);
+            }
+
+            loaded = Parse(KeyFilePath, contents);
             return loaded;
         }
 
@@ -139,21 +156,8 @@ namespace Octopus.Tentacle.Configuration.Crypto
             return key;
         }
 
-        byte[] LoadFromFile(string path)
+        static byte[] Parse(string path, string contents)
         {
-            string contents;
-            try
-            {
-                contents = fileSystem.ReadAllText(path);
-            }
-            catch (UnauthorizedAccessException e)
-            {
-                var user = Environment.UserName;
-                var directory = LinuxDirectoryOf(path);
-                throw new InvalidOperationException($"The configuration encryption key file `{path}` exists but the user Tentacle is running as ({user}) cannot read it. "
-                    + $"It must be owned by and readable only by that user, for example: `sudo chown -R {user} {directory} && sudo chmod 700 {directory} && sudo chmod 600 {path}`.", e);
-            }
-
             try
             {
                 var key = Convert.FromBase64String(contents.Trim());
