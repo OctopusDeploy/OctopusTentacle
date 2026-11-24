@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Octopus.Tentacle.Configuration
 {
@@ -15,11 +16,11 @@ namespace Octopus.Tentacle.Configuration
         public int Interval { get; }
         public string Instances { get; }
 
-        public void WriteTo(DictionaryKeyValueStore outputStore)
+        public IEnumerable<KeyValuePair<string, object?>> DisplaySettings()
         {
-            outputStore.Set("Octopus.Watchdog.Enabled", Enabled);
-            outputStore.Set("Octopus.Watchdog.Interval", Interval);
-            outputStore.Set<string>("Octopus.Watchdog.Instances", Instances);
+            yield return new KeyValuePair<string, object?>("Octopus.Watchdog.Enabled", Enabled);
+            yield return new KeyValuePair<string, object?>("Octopus.Watchdog.Interval", Interval);
+            yield return new KeyValuePair<string, object?>("Octopus.Watchdog.Instances", Instances);
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿#nullable enable
+using System.Collections.Generic;
 using Octopus.Tentacle.Configuration;
 
 namespace Octopus.Tentacle.Tests.Commands
@@ -7,7 +8,7 @@ namespace Octopus.Tentacle.Tests.Commands
     {
         public string ApplicationSpecificHomeDirectory { get; private set; } = string.Empty;
         public string HomeDirectory { get; set; }= string.Empty;
-        public void WriteTo(IWritableKeyValueStore outputStore)
+        public IEnumerable<KeyValuePair<string, object?>> DisplaySettings()
         {
             throw new System.NotImplementedException();
         }

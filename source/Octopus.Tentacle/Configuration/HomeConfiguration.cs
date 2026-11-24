@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Octopus.Tentacle.Configuration.Instances;
 
@@ -27,9 +28,9 @@ namespace Octopus.Tentacle.Configuration
             }
         }
 
-        public void WriteTo(IWritableKeyValueStore outputStore)
+        public IEnumerable<KeyValuePair<string, object?>> DisplaySettings()
         {
-            outputStore.Set(OctopusHomeSettingName, HomeDirectory);
+            yield return new KeyValuePair<string, object?>(OctopusHomeSettingName, HomeDirectory);
         }
 
         string? EnsureRootedPath(string path)
