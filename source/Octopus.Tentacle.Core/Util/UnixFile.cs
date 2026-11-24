@@ -65,7 +65,7 @@ namespace Octopus.Tentacle.Core.Util
         [DllImport("libc", SetLastError = true)]
         static extern int fchown(SafeFileHandle fd, uint owner, uint group);
 
-        // The .NET runtime has no public API for a file's owner; its own stat shim has one struct layout on every libc and architecture.
+        // A private runtime shim, which is safe as Linux builds are self-contained and ship the runtime it belongs to.
         [DllImport("libSystem.Native", SetLastError = true)]
         static extern int SystemNative_Stat(string path, out FileStatus output);
 
