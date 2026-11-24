@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -67,43 +68,50 @@ namespace Octopus.Tentacle.Commands
         {
             base.Start();
 
-            DictionaryKeyValueStore outputFile;
+            var output = new ShowConfigurationOutput();
+            await CollectConfigurationSettings(output);
+            var json = output.ToJson();
 
             if (!string.IsNullOrWhiteSpace(file))
             {
-                outputFile = new JsonHierarchicalFileKeyValueStore(file, fileSystem, autoSaveOnSet: false, isWriteOnly: true);
+                WriteToFile(json);
             }
             else
             {
-                outputFile = new JsonHierarchicalConsoleKeyValueStore();
+                Console.WriteLine(json);
             }
-
-            await CollectConfigurationSettings(outputFile);
-
-            outputFile.Save();
         }
 
-        async Task CollectConfigurationSettings(DictionaryKeyValueStore outputStore)
+        void WriteToFile(string json)
         {
-            homeConfiguration.Value.WriteTo(outputStore);
+            var parentDirectory = Path.GetDirectoryName(file) ?? throw new Exception("Configuration file location must include directory information");
+            fileSystem.EnsureDirectoryExists(parentDirectory);
+            fileSystem.EnsureDiskHasEnoughFreeSpace(file, 1024 * 1024);
+            using var writer = new StreamWriter(fileSystem.OpenFile(file, FileMode.Create));
+            writer.Write(json);
+        }
 
-            tentacleConfiguration.Value.WriteTo(outputStore,
+        async Task CollectConfigurationSettings(ShowConfigurationOutput output)
+        {
+            output.AddRange(homeConfiguration.Value.DisplaySettings());
+
+            output.AddRange(tentacleConfiguration.Value.DisplaySettings(
                 excluding: new [] {
                     TentacleConfiguration.CertificateSettingName,
                     TentacleConfiguration.LastReceivedHandshakeSettingName,
                     TentacleConfiguration.IsRegisteredSettingName
-                });
+                }));
 
-            watchdog.Value.GetConfiguration().WriteTo(outputStore);
+            output.AddRange(watchdog.Value.GetConfiguration().DisplaySettings());
 
             //advanced settings
             if (apiEndpointOptions.IsSupplied)
             {
-                await CollectServerSideConfiguration(outputStore);
+                await CollectServerSideConfiguration(output);
             }
         }
 
-        async Task CollectServerSideConfiguration(IWritableKeyValueStore outputStore)
+        async Task CollectServerSideConfiguration(ShowConfigurationOutput output)
         {
             if (tentacleConfiguration.Value.TentacleCertificate == null)
                 throw new ControlledFailureException("No certificate has been generated for this Tentacle. Unable to display configuration.");
@@ -125,11 +133,11 @@ namespace Octopus.Tentacle.Commands
                             break;
 
                         case 1 when matches.First() is MachineResource machine:
-                            await CollectionServerSideConfigurationFromMachine(outputStore, repository, machine);
+                            await CollectionServerSideConfigurationFromMachine(output, repository, machine);
                             break;
 
                         case 1 when matches.First() is WorkerResource worker:
-                            await CollectionServerSideConfigurationFromWorker(outputStore, repository, worker);
+                            await CollectionServerSideConfigurationFromWorker(output, repository, worker);
                             break;
 
                         default:
@@ -149,44 +157,48 @@ namespace Octopus.Tentacle.Commands
             }
         }
 
-        async Task CollectionServerSideConfigurationFromMachine(IWritableKeyValueStore outputStore, IOctopusSpaceAsyncRepository repository, MachineResource machine)
+        async Task CollectionServerSideConfigurationFromMachine(ShowConfigurationOutput output, IOctopusSpaceAsyncRepository repository, MachineResource machine)
         {
             var environments = await repository.Environments.FindAll(CancellationToken.None);
-            outputStore.Set("Tentacle.Environments", environments.Where(x => machine.EnvironmentIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }));
+            output.Add("Tentacle.Environments", environments.Where(x => machine.EnvironmentIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }));
 
             if (await repository.HasLink("Tenants"))
             {
                 var tenants = await repository.Tenants.FindAll(CancellationToken.None);
-                outputStore.Set("Tentacle.Tenants", tenants.Where(x => machine.TenantIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }));
-                outputStore.Set("Tentacle.TenantTags", machine.TenantTags);
+                output.Add("Tentacle.Tenants", tenants.Where(x => machine.TenantIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }));
+                output.Add("Tentacle.TenantTags", machine.TenantTags);
             }
 
-            outputStore.Set("Tentacle.Roles", machine.Roles);
+            output.Add("Tentacle.Roles", machine.Roles);
             if (machine.MachinePolicyId != null)
             {
                 var machinePolicy = await repository.MachinePolicies.Get(machine.MachinePolicyId, CancellationToken.None);
-                outputStore.Set("Tentacle.MachinePolicy", new { machinePolicy.Id, machinePolicy.Name });
+                output.Add("Tentacle.MachinePolicy", new { machinePolicy.Id, machinePolicy.Name });
             }
 
-            outputStore.Set<string>("Tentacle.DisplayName", machine.Name);
-            if (machine.Endpoint is ListeningTentacleEndpointResource)
-                outputStore.Set<string>("Tentacle.Communication.PublicHostName", ((ListeningTentacleEndpointResource)machine.Endpoint).Uri);
+            output.Add("Tentacle.DisplayName", machine.Name);
+            if (machine.Endpoint is ListeningTentacleEndpointResource listening)
+            {
+                output.Add("Tentacle.Communication.PublicHostName", listening.Uri);
+            }
         }
 
-        async Task CollectionServerSideConfigurationFromWorker(IWritableKeyValueStore outputStore, IOctopusSpaceAsyncRepository repository, WorkerResource machine)
+        async Task CollectionServerSideConfigurationFromWorker(ShowConfigurationOutput output, IOctopusSpaceAsyncRepository repository, WorkerResource machine)
         {
             var workerPools = await repository.WorkerPools.FindAll(CancellationToken.None);
-            outputStore.Set("Tentacle.WorkerPools", workerPools.Where(x => machine.WorkerPoolIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }));
+            output.Add("Tentacle.WorkerPools", workerPools.Where(x => machine.WorkerPoolIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }));
 
             if (machine.MachinePolicyId != null)
             {
                 var machinePolicy = await repository.MachinePolicies.Get(machine.MachinePolicyId, CancellationToken.None);
-                outputStore.Set("Tentacle.MachinePolicy", new { machinePolicy.Id, machinePolicy.Name });
+                output.Add("Tentacle.MachinePolicy", new { machinePolicy.Id, machinePolicy.Name });
             }
 
-            outputStore.Set<string>("Tentacle.DisplayName", machine.Name);
-            if (machine.Endpoint is ListeningTentacleEndpointResource)
-                outputStore.Set<string>("Tentacle.Communication.PublicHostName", ((ListeningTentacleEndpointResource)machine.Endpoint).Uri);
+            output.Add("Tentacle.DisplayName", machine.Name);
+            if (machine.Endpoint is ListeningTentacleEndpointResource listening)
+            {
+                output.Add("Tentacle.Communication.PublicHostName", listening.Uri);
+            }
         }
     }
 }

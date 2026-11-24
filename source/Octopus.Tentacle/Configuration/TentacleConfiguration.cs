@@ -73,25 +73,27 @@ namespace Octopus.Tentacle.Configuration
 
         public int? PollingConnectionCount => settings.Get<int?>(PollingConnectionCountSettingName, null);
 
-        public void WriteTo(IWritableKeyValueStore outputStore, IEnumerable<string> excluding)
+        public IEnumerable<KeyValuePair<string, object?>> DisplaySettings(IEnumerable<string> excluding)
         {
-            excluding = new HashSet<string>(excluding);
-            SetIfNotExcluded(IsRegisteredSettingName, IsRegistered);
-            SetIfNotExcluded(ServicesPortSettingName, ServicesPortNumber);
-            SetIfNotExcluded(ServicesListenIPSettingName, ListenIpAddress);
-            SetIfNotExcluded(ServicesNoListenSettingName, NoListen);
-            SetIfNotExcluded(TrustedServersSettingName, TrustedOctopusServers);
-            SetIfNotExcluded(DeploymentApplicationDirectorySettingName, ApplicationDirectory);
-            SetIfNotExcluded(CertificateSettingName, TentacleCertificate);
-            SetIfNotExcluded(CertificateThumbprintSettingName, TentacleCertificate?.Thumbprint ?? string.Empty);
-            SetIfNotExcluded(LastReceivedHandshakeSettingName, LastReceivedHandshake);
-            SetIfNotExcluded(PollingConnectionCountSettingName, PollingConnectionCount);
+            var excluded = new HashSet<string>(excluding);
+            var settingsToDisplay = new List<KeyValuePair<string, object?>>();
+            AddIfNotExcluded(IsRegisteredSettingName, () => IsRegistered);
+            AddIfNotExcluded(ServicesPortSettingName, () => ServicesPortNumber);
+            AddIfNotExcluded(ServicesListenIPSettingName, () => ListenIpAddress);
+            AddIfNotExcluded(ServicesNoListenSettingName, () => NoListen);
+            AddIfNotExcluded(TrustedServersSettingName, () => TrustedOctopusServers);
+            AddIfNotExcluded(DeploymentApplicationDirectorySettingName, () => ApplicationDirectory);
+            AddIfNotExcluded(CertificateSettingName, () => TentacleCertificate);
+            AddIfNotExcluded(CertificateThumbprintSettingName, () => TentacleCertificate?.Thumbprint ?? string.Empty);
+            AddIfNotExcluded(LastReceivedHandshakeSettingName, () => LastReceivedHandshake);
+            AddIfNotExcluded(PollingConnectionCountSettingName, () => PollingConnectionCount);
+            return settingsToDisplay;
 
-            void SetIfNotExcluded<T>(string settingName, T value)
+            void AddIfNotExcluded(string settingName, Func<object?> value)
             {
-                if (!excluding.Contains(settingName))
+                if (!excluded.Contains(settingName))
                 {
-                    outputStore.Set(settingName, value);
+                    settingsToDisplay.Add(new KeyValuePair<string, object?>(settingName, value()));
                 }
             }
         }

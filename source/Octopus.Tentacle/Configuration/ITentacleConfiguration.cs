@@ -87,7 +87,7 @@ namespace Octopus.Tentacle.Configuration
 
         bool IsRegistered { get; }
 
-        void WriteTo(IWritableKeyValueStore outputStore, IEnumerable<string> excluding);
+        IEnumerable<KeyValuePair<string, object?>> DisplaySettings(IEnumerable<string> excluding);
     }
 
     public interface IWritableTentacleConfiguration : ITentacleConfiguration
