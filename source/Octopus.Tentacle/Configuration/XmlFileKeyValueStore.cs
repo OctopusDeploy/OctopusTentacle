@@ -23,7 +23,10 @@ namespace Octopus.Tentacle.Configuration
 
         public bool ReEncryptIfLegacy(string name)
         {
-            if (name == null) throw new ArgumentNullException(nameof(name));
+            if (name == null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
 
             var stored = Read(name) as string;
             if (stored == null || string.IsNullOrWhiteSpace(stored) || !Encryptor.RequiresReEncryption(stored))

@@ -40,7 +40,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
         public bool RequiresReEncryption(string encrypted)
             => IsLegacyCiphertext(encrypted);
 
-        // Until the configuration upgrade has created the key, values are written the way earlier versions wrote them.
+        // Until the configuration encryption upgrade has created the key, values are written the way earlier versions wrote them.
         public string Encrypt(string raw)
         {
             try
