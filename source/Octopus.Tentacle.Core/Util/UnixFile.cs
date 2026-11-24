@@ -65,7 +65,7 @@ namespace Octopus.Tentacle.Core.Util
         [DllImport("libc", SetLastError = true)]
         static extern int fchown(SafeFileHandle fd, uint owner, uint group);
 
-        // A private runtime shim, which is safe as Linux builds are self-contained and ship the runtime it belongs to.
+        // A private runtime shim: safe as Linux builds ship their own runtime, and test-linux-package.sh catches a layout change.
         [DllImport("libSystem.Native", SetLastError = true)]
         static extern int SystemNative_Stat(string path, out FileStatus output);
 
