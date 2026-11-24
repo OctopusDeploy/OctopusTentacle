@@ -4,6 +4,10 @@
 
   <PropertyGroup>
     <RootNamespace>Octopus.Pipelines.Runner.Gateway</RootNamespace>
+    <IsAotCompatible>true</IsAotCompatible>
+    <IsPackable>true</IsPackable>
+    <!-- AddRunnerGateway binds GatewayOptions from configuration; the source generator makes that trim/AOT safe. -->
+    <EnableConfigurationBindingGenerator>true</EnableConfigurationBindingGenerator>
   </PropertyGroup>
 
   <ItemGroup>

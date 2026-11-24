@@ -1,8 +1,17 @@
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Octopus.Pipelines.Runner.CliSample;
+using Octopus.Pipelines.Runner.Contracts;
 using Octopus.Pipelines.Runner.Core;
 using Octopus.Pipelines.Runner.Core.Logs;
 using Octopus.Pipelines.Runner.Docker;
+using Octopus.Pipelines.Runner.Gateway;
+
+// Runs one command as a pipeline job, through the same gateway as Tentacle and the Kubernetes runner: the CLI plays
+// the Server (CliJobSource) and the runner's GatewayClient reaches it in process, with no network.
 
 const string usage = "usage: Octopus.Pipelines.Runner.CliSample [--image <image>] [--log-root <dir>] -- <command>";
+const int CancelledExitCode = 130;
 
 string? image = null;
 var logRoot = ".runner-logs";
@@ -36,64 +45,81 @@ var root = Path.GetFullPath(logRoot);
 var runId = Guid.NewGuid().ToString("N");
 var jobId = Guid.NewGuid().ToString("N");
 var jobDirectoryPath = Path.Combine(root, "local", "runs", runId, jobId);
-var jobDirectory = new Uri(jobDirectoryPath);
+var logPath = Path.Combine(jobDirectoryPath, JobFiles.Log);
 
+// Warnings and errors only, on stderr: stdout carries the job's output. A job's own failure is printed below as
+// "error: ...", so JobRunner's warning about it would only repeat it.
+using var loggerFactory = new StderrLoggerFactory(
+    LogLevel.Warning,
+    new Dictionary<string, LogLevel> { [typeof(JobRunner).FullName!] = LogLevel.Error });
+
+var clock = TimeProvider.System;
 var dockerOptions = new DockerBackendOptions();
 if (image is not null)
 {
     dockerOptions.JobImage = image;
 }
 
-using var backend = new DockerJobBackend(dockerOptions);
-var logs = new LogStores(new Dictionary<string, ILogStore> { ["file"] = new FileLogStore(root) });
-var runner = new JobRunner(backend, logs, new JobRunnerOptions());
+using var backend = new DockerJobBackend(dockerOptions, clock, loggerFactory.CreateLogger<DockerJobBackend>());
+var jobRunner = new JobRunner(
+    backend,
+    new LogStores(new Dictionary<string, ILogStore> { ["file"] = new FileLogStore(root) }),
+    // Flush often: the terminal echo tails the log file.
+    new JobRunnerOptions { LogFlushInterval = TimeSpan.FromMilliseconds(100) },
+    clock,
+    loggerFactory.CreateLogger<JobRunner>());
 
-using var cts = new CancellationTokenSource();
+var source = new CliJobSource(
+    new ExecuteJobCommand
+    {
+        JobId = jobId,
+        RunId = runId,
+        Command = command,
+        Isolation = Octopus.Pipelines.Runner.Contracts.JobIsolation.Standard,
+        Storage = new JobStorage { DirectoryUri = new Uri(jobDirectoryPath).AbsoluteUri },
+    },
+    heartbeatInterval: TimeSpan.FromSeconds(30));
+
+var outbox = new Outbox();
+var capacitySignal = new CapacitySignal();
+var lifetime = new RunnerLifetime();
+var executor = new GatewayJobExecutor(jobRunner, outbox, capacitySignal, clock, lifetime, loggerFactory.CreateLogger<GatewayJobExecutor>());
+var options = Options.Create(new GatewayOptions { ServerAddress = "in-process", CellId = "local", RunnerId = "cli", MaxConcurrentJobs = 1 });
+using var client = new GatewayClient(
+    executor,
+    outbox,
+    new FixedCapacityProvider(executor, options),
+    capacitySignal,
+    options,
+    loggerFactory.CreateLogger<GatewayClient>(),
+    new InProcessCallInvoker(binder => RunnerGateway.BindService(binder, source)));
+
+// Ctrl+C cancels the job the way stopping Tentacle does; the runner still reports it finished, so wait for that.
 Console.CancelKeyPress += (_, e) =>
 {
     e.Cancel = true;
-    cts.Cancel();
+    lifetime.StopApplication();
 };
 
+await client.StartAsync(CancellationToken.None);
 using var stdout = Console.OpenStandardOutput();
-var result = await runner.RunAsync(new JobSpec(jobId, runId, command), jobDirectory, new StdoutObserver(stdout), cts.Token);
+var echo = LogTail.CopyAsync(logPath, stdout, source.Finished.Task);
+var finished = await source.Finished.Task;
+await echo;
+await client.StopAsync(CancellationToken.None);
 
-if (result.Error is not null)
+if (finished.Error.Length > 0)
 {
-    Console.Error.WriteLine($"error: {result.Error}");
+    Console.Error.WriteLine($"error: {finished.Error}");
 }
 
-var logPath = Path.Combine(jobDirectoryPath, JobFiles.Log);
-Console.Error.WriteLine($"exit={result.ExitCode} log={logPath}");
-return result.Error is not null ? 1 : result.ExitCode;
+Console.Error.WriteLine($"exit={finished.ExitCode} log={logPath}");
+return lifetime.ApplicationStopping.IsCancellationRequested ? CancelledExitCode
+    : finished.Error.Length > 0 ? 1
+    : finished.ExitCode;
 
 static int Usage()
 {
     Console.Error.WriteLine(usage);
     return 2;
-}
-
-// Observers must not throw (see IJobObserver), so a closed stdout, e.g. `| head`, stops the echo, not the job. The
-// job's log still gets every byte.
-sealed class StdoutObserver(Stream stdout) : IJobObserver
-{
-    bool broken;
-
-    public void Output(ReadOnlySpan<byte> data)
-    {
-        if (broken)
-        {
-            return;
-        }
-
-        try
-        {
-            stdout.Write(data);
-            stdout.Flush();
-        }
-        catch (IOException)
-        {
-            broken = true;
-        }
-    }
 }

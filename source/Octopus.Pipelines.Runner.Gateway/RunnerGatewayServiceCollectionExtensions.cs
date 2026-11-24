@@ -1,5 +1,8 @@
+using Grpc.Core;
+using Grpc.Net.Client;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Octopus.Pipelines.Runner.Core;
 
 namespace Octopus.Pipelines.Runner.Gateway;
@@ -36,6 +39,9 @@ public static class RunnerGatewayServiceCollectionExtensions
             services.AddSingleton<ICapacityProvider, FixedCapacityProvider>();
         }
 
+        // The container disposes the channel after the client, when the host shuts down.
+        services.AddSingleton(sp => GatewayChannel.Create(sp.GetRequiredService<IOptions<GatewayOptions>>().Value));
+        services.AddSingleton<CallInvoker>(sp => sp.GetRequiredService<GrpcChannel>().CreateCallInvoker());
         services.AddHostedService<GatewayClient>();
         return services;
     }

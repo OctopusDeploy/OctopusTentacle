@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Grpc.Core;
-using Grpc.Net.Client;
 using Microsoft.Extensions.Options;
 using Octopus.Pipelines.Runner.Contracts;
 
@@ -12,13 +11,18 @@ namespace Octopus.Pipelines.Runner.Gateway;
 /// pulls work over it: the runner asks for jobs when <see cref="ICapacityProvider"/> says it has
 /// room. The runner never listens on a port.
 /// </summary>
+/// <param name="transport">
+/// How calls reach the Server: a <see cref="GatewayChannel"/> on the remote hosts, or an <see cref="InProcessCallInvoker"/>
+/// bound to the CLI's own RunnerGateway service. The caller owns it.
+/// </param>
 public sealed class GatewayClient(
     GatewayJobExecutor executor,
     Outbox outbox,
     ICapacityProvider capacity,
     CapacitySignal capacityChanged,
     IOptions<GatewayOptions> options,
-    ILogger<GatewayClient> logger) : BackgroundService
+    ILogger<GatewayClient> logger,
+    CallInvoker transport) : BackgroundService
 {
     // A message we read from the outbox but failed to send. Sent first on the next connection.
     RunnerMessage? unsent;
@@ -40,11 +44,7 @@ public sealed class GatewayClient(
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var runner = options.Value;
-        using var channel = GrpcChannel.ForAddress(runner.ServerAddress, new GrpcChannelOptions
-        {
-            HttpHandler = GatewayHttpHandler.Create(),
-        });
-        var client = new RunnerGateway.RunnerGatewayClient(channel);
+        var client = new RunnerGateway.RunnerGatewayClient(transport);
         var headers = new Metadata();
         if (!string.IsNullOrEmpty(runner.Token))
         {
@@ -65,8 +65,10 @@ public sealed class GatewayClient(
                 });
                 logger.Log(FailureLevel(++consecutiveFailures), "Server closed the stream");
             }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            catch (Exception ex) when (stoppingToken.IsCancellationRequested
+                                       && ex is OperationCanceledException or RpcException { StatusCode: StatusCode.Cancelled })
             {
+                // Stopping cancels the call, which gRPC reports as a Cancelled RpcException: not a failure.
                 return;
             }
             catch (Exception ex)

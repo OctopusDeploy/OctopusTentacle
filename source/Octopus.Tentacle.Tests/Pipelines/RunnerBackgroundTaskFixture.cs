@@ -106,14 +106,34 @@ namespace Octopus.Tentacle.Tests.Pipelines
         }
 
         [Test]
+        public void LogsAnErrorAndStaysOffWhenTheServerAddressIsInvalid()
+        {
+            var log = Substitute.For<ISystemLog>();
+            // GrpcChannel.ForAddress refuses a wss:// address while Start opens the channel.
+            var task = new RunnerBackgroundTask(PollingConfiguration(), log, () => false, () => false,
+                configureGateway: o => o.ServerAddress = "wss://127.0.0.1:1");
+
+            task.Start();
+
+            log.Received().Error(Arg.Any<Exception>(), "The pipelines runner could not start. Tentacle will keep running without it.");
+            task.Executor.Should().BeNull();
+            task.Stop();
+        }
+
+        [Test]
         public async Task LogsAnErrorWhenTheGatewayLoopFaults()
         {
             var log = Substitute.For<ISystemLog>();
             var loggedFault = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             log.When(l => l.Error(Arg.Any<Exception>(), "Pipelines runner stopped unexpectedly")).Do(_ => loggedFault.TrySetResult(true));
-            // A wss:// address makes GrpcChannel.ForAddress throw inside the gateway loop, after Start has returned.
+            // Nothing listens on port 1, so the first connection fails; a negative backoff then makes the reconnect
+            // delay throw inside the gateway loop, after Start has returned.
             var task = new RunnerBackgroundTask(PollingConfiguration(), log, () => false, () => false,
-                configureGateway: o => o.ServerAddress = "wss://127.0.0.1:1");
+                configureGateway: o =>
+                {
+                    o.ServerAddress = "http://127.0.0.1:1";
+                    o.MaxReconnectBackoff = TimeSpan.FromDays(-1);
+                });
 
             task.Start();
             try

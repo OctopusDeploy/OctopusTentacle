@@ -7,11 +7,16 @@
     <RootNamespace>Octopus.Pipelines.Runner.CliSample</RootNamespace>
     <PublishAot>true</PublishAot>
     <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- The CLI waits on Docker, not on its own code, so smaller beats faster. StackTraceSupport=false would save
+         another ~0.4 MB but strip method names from stack traces in bug reports. -->
+    <OptimizationPreference>Size</OptimizationPreference>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Octopus.Pipelines.Runner.Core\Octopus.Pipelines.Runner.Core.csproj" />
     <ProjectReference Include="..\Octopus.Pipelines.Runner.Docker\Octopus.Pipelines.Runner.Docker.csproj" />
+    <ProjectReference Include="..\Octopus.Pipelines.Runner.Contracts\Octopus.Pipelines.Runner.Contracts.csproj" />
+    <ProjectReference Include="..\Octopus.Pipelines.Runner.Gateway\Octopus.Pipelines.Runner.Gateway.csproj" />
   </ItemGroup>
 
 </Project>

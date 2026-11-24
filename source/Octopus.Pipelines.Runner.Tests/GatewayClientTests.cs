@@ -1,5 +1,7 @@
 using System.Net;
 using System.Net.Sockets;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -12,6 +14,25 @@ namespace Octopus.Pipelines.Runner.Tests;
 
 public sealed class GatewayClientTests
 {
+    [Fact]
+    public async Task AddRunnerGateway_gives_the_client_a_channel_to_the_configured_server()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSingleton<IHostApplicationLifetime, StubLifetime>();
+        services.AddSingleton<IJobBackend>(new ProcessJobBackend(TimeProvider.System));
+        services.AddSingleton<ILogStore>(new FileLogStore(Path.GetTempPath()));
+        var section = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["ServerAddress"] = "http://127.0.0.1:1" })
+            .Build();
+        services.AddRunnerGateway(section);
+
+        await using var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });
+
+        Assert.Single(provider.GetServices<IHostedService>().OfType<GatewayClient>());
+        Assert.Equal("127.0.0.1:1", provider.GetRequiredService<Grpc.Net.Client.GrpcChannel>().Target);
+    }
+
     [Fact]
     public async Task Repeated_connection_failures_warn_once()
     {
@@ -28,7 +49,8 @@ public sealed class GatewayClientTests
             new StubLifetime(),
             NullLogger<GatewayJobExecutor>.Instance);
         var options = Options.Create(new GatewayOptions { ServerAddress = $"http://127.0.0.1:{port}" });
-        var client = new GatewayClient(executor, outbox, new FixedCapacityProvider(executor, options), signal, options, logger)
+        using var channel = GatewayChannel.Create(options.Value);
+        var client = new GatewayClient(executor, outbox, new FixedCapacityProvider(executor, options), signal, options, logger, channel.CreateCallInvoker())
         {
             InitialBackoff = TimeSpan.FromMilliseconds(10),
             MaxJitter = TimeSpan.Zero,
@@ -76,7 +98,8 @@ public sealed class GatewayClientTests
         });
         var delays = new List<TimeSpan>();
         var enoughDelays = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var client = new GatewayClient(executor, outbox, new FixedCapacityProvider(executor, options), signal, options, NullLogger<GatewayClient>.Instance)
+        using var channel = GatewayChannel.Create(options.Value);
+        var client = new GatewayClient(executor, outbox, new FixedCapacityProvider(executor, options), signal, options, NullLogger<GatewayClient>.Instance, channel.CreateCallInvoker())
         {
             InitialBackoff = TimeSpan.FromMilliseconds(10),
             MaxJitter = TimeSpan.Zero,

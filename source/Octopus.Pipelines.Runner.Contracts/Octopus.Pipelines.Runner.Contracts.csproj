@@ -4,6 +4,8 @@
 
   <PropertyGroup>
     <RootNamespace>Octopus.Pipelines.Runner.Contracts</RootNamespace>
+    <IsAotCompatible>true</IsAotCompatible>
+    <IsPackable>true</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,7 +15,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Protobuf Include="Protos\runner_gateway.proto" GrpcServices="Client" />
+    <!--
+      Client and server stubs. Octopus Server hosts RunnerGatewayBase; the CLI does too, in process (Gateway's
+      InProcessCallInvoker). The generated code needs no reflection, so it is trim and Native AOT safe.
+    -->
+    <Protobuf Include="Protos\runner_gateway.proto" GrpcServices="Both" />
   </ItemGroup>
 
 </Project>

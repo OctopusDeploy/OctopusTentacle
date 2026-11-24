@@ -1,5 +1,6 @@
-// Copied from OctopusDeploy/infravnext@e7c2112 TargetScalePoC/src/Poc.Contracts/Protos/runner_gateway.proto.
-// The Server side's copy lives there. Keep the two in step until the contract has a single home.
+// The runner gateway contract, and its only copy. Octopus Server and the runner hosts all use the C# that Grpc.Tools
+// generates from it, shipped in the Octopus.Pipelines.Runner.Contracts package. Never renumber a field; reserve the
+// numbers and names of removed ones.
 syntax = "proto3";
 
 package targetscalepoc.v1;

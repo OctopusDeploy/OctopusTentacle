@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Grpc.Net.Client;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Octopus.Pipelines.Runner.Core;
@@ -87,6 +88,7 @@ namespace Octopus.Tentacle.Pipelines
                 LoggerFactory? loggerFactory = null;
                 DockerJobBackend? ownedBackend = null;
                 HttpLogStore? ownedLogStore = null;
+                GrpcChannel? channel = null;
                 try
                 {
                     var settings = TentacleRunnerSettings.From(configuration, isKubernetesAgent(), isWindows(), out var skipReason);
@@ -123,13 +125,15 @@ namespace Octopus.Tentacle.Pipelines
                     var capacitySignal = new CapacitySignal();
                     var lifetime = new RunnerLifetime();
                     var executor = new GatewayJobExecutor(jobRunner, outbox, capacitySignal, clock, lifetime, loggerFactory.CreateLogger<GatewayJobExecutor>());
+                    channel = GatewayChannel.Create(gatewayOptions);
                     var client = new GatewayClient(
                         executor,
                         outbox,
                         new FixedCapacityProvider(executor, options),
                         capacitySignal,
                         options,
-                        loggerFactory.CreateLogger<GatewayClient>());
+                        loggerFactory.CreateLogger<GatewayClient>(),
+                        channel.CreateCallInvoker());
 
                     client.StartAsync(CancellationToken.None).GetAwaiter().GetResult();
 
@@ -140,12 +144,13 @@ namespace Octopus.Tentacle.Pipelines
                         TaskContinuationOptions.OnlyOnFaulted,
                         TaskScheduler.Default);
 
-                    running = new Running(client, executor, lifetime, loggerFactory, ownedBackend, ownedLogStore);
+                    running = new Running(client, channel, executor, lifetime, loggerFactory, ownedBackend, ownedLogStore);
                     log.Info($"Pipelines runner {settings.RunnerId} started, polling {settings.ServerAddress}");
                 }
                 catch (Exception ex)
                 {
                     log.Error(ex, "The pipelines runner could not start. Tentacle will keep running without it.");
+                    channel?.Dispose();
                     ownedBackend?.Dispose();
                     ownedLogStore?.Dispose();
                     loggerFactory?.Dispose();
@@ -192,6 +197,7 @@ namespace Octopus.Tentacle.Pipelines
                     try
                     {
                         stopping.Client.Dispose();
+                        stopping.Channel.Dispose();
                         stopping.OwnedBackend?.Dispose();
                         stopping.OwnedLogStore?.Dispose();
                         stopping.LoggerFactory.Dispose();
@@ -210,9 +216,10 @@ namespace Octopus.Tentacle.Pipelines
 
         sealed class Running
         {
-            public Running(GatewayClient client, GatewayJobExecutor executor, RunnerLifetime lifetime, LoggerFactory loggerFactory, DockerJobBackend? ownedBackend, HttpLogStore? ownedLogStore)
+            public Running(GatewayClient client, GrpcChannel channel, GatewayJobExecutor executor, RunnerLifetime lifetime, LoggerFactory loggerFactory, DockerJobBackend? ownedBackend, HttpLogStore? ownedLogStore)
             {
                 Client = client;
+                Channel = channel;
                 Executor = executor;
                 Lifetime = lifetime;
                 LoggerFactory = loggerFactory;
@@ -221,6 +228,9 @@ namespace Octopus.Tentacle.Pipelines
             }
 
             public GatewayClient Client { get; }
+
+            /// <summary>The client's connection to the Server, disposed after the client.</summary>
+            public GrpcChannel Channel { get; }
             public GatewayJobExecutor Executor { get; }
             public RunnerLifetime Lifetime { get; }
             public LoggerFactory LoggerFactory { get; }

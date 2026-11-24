@@ -98,12 +98,12 @@ partial class Build
 
     [PublicAPI]
     Target PackPipelinesRunner => _ => _
-        .Description("Packs the NuGet packages for the pipelines runner Core and Docker libraries.")
+        .Description("Packs the NuGet packages the CLI consumes: the pipelines runner Core, Docker, Contracts and Gateway libraries.")
         .Executes(() =>
         {
             (ArtifactsDirectory / "nuget").CreateDirectory();
 
-            foreach (var project in new[] { "Octopus.Pipelines.Runner.Core", "Octopus.Pipelines.Runner.Docker" })
+            foreach (var project in new[] { "Octopus.Pipelines.Runner.Core", "Octopus.Pipelines.Runner.Docker", "Octopus.Pipelines.Runner.Contracts", "Octopus.Pipelines.Runner.Gateway" })
             {
                 DotNetPack(p => p
                     .SetProject(SourceDirectory / project / $"{project}.csproj")
