@@ -39,7 +39,7 @@ namespace Octopus.Tentacle.Tests.Commands
         public IPollingProxyConfiguration PollingProxyConfiguration { get; set; } = null!;
         public bool IsRegistered { get; set; } = false;
         public int? PollingConnectionCount { get; set; }
-        public void WriteTo(IWritableKeyValueStore outputStore, IEnumerable<string> excluding)
+        public IEnumerable<KeyValuePair<string, object?>> DisplaySettings(IEnumerable<string> excluding)
         {
             throw new NotImplementedException();
         }
