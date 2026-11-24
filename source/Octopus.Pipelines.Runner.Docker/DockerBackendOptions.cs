@@ -3,8 +3,11 @@ namespace Octopus.Pipelines.Runner.Docker;
 /// <summary>Settings for <see cref="DockerJobBackend"/>.</summary>
 public sealed class DockerBackendOptions
 {
-    /// <summary>The Docker daemon's socket: <c>unix:///path</c>, or <c>npipe://./pipe/docker_engine</c> on Windows.</summary>
-    public string Endpoint { get; set; } = "unix:///var/run/docker.sock";
+    /// <summary>
+    /// The Docker CLI to run, by name on the PATH or as a full path. Which daemon it talks to is the CLI's own
+    /// choice: <c>DOCKER_HOST</c>, then the current context.
+    /// </summary>
+    public string Executable { get; set; } = "docker";
 
     /// <summary>The image every job runs in. It must provide <c>sh</c>.</summary>
     public string JobImage { get; set; } = "busybox:1.37";

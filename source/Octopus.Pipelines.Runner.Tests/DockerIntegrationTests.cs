@@ -1,16 +1,13 @@
-using System.Net.Sockets;
+using System.Diagnostics;
 using System.Text;
-using System.Text.Json;
 using Octopus.Pipelines.Runner.Core;
 using Octopus.Pipelines.Runner.Docker;
 
 namespace Octopus.Pipelines.Runner.Tests;
 
-/// <summary>Runs real containers on the local Docker daemon; skipped where there isn't one.</summary>
+/// <summary>Runs real containers through the docker CLI; skipped where there is no CLI or no daemon.</summary>
 public sealed class DockerIntegrationTests
 {
-    const string SocketPath = "/var/run/docker.sock";
-
     [Fact]
     public async Task Runs_a_command_and_returns_its_exit_code()
     {
@@ -48,50 +45,75 @@ public sealed class DockerIntegrationTests
 
         var run = backend.RunAsync(job, output, cts.Token);
         await output.WhenStarted.WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
-        Assert.Equal(1, await CountContainersAsync(job.JobId));
+        // Started fires when docker run launches; the container appears a moment later.
+        for (var i = 0; i < 100 && CountContainers(job.JobId) == 0; i++)
+        {
+            await Task.Delay(100, TestContext.Current.CancellationToken);
+        }
+
+        Assert.Equal(1, CountContainers(job.JobId));
         cts.Cancel();
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => run);
-        Assert.Equal(0, await CountContainersAsync(job.JobId));
+        Assert.Equal(0, CountContainers(job.JobId));
+    }
+
+    [Fact]
+    public async Task Leaves_no_container_behind_after_a_job_finishes()
+    {
+        Assert.SkipUnless(DockerAvailable(), "Docker daemon not available");
+        using var backend = new DockerJobBackend(new DockerBackendOptions());
+        var job = NewJob("echo done");
+
+        await backend.RunAsync(job, new RecordingOutput(), TestContext.Current.CancellationToken);
+
+        Assert.Equal(0, CountContainers(job.JobId));
+    }
+
+    [Fact]
+    public async Task Reports_a_container_that_cannot_start()
+    {
+        Assert.SkipUnless(DockerAvailable(), "Docker daemon not available");
+        using var backend = new DockerJobBackend(new DockerBackendOptions { User = "no-such-user" });
+        var job = NewJob("echo never");
+
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() => backend.RunAsync(job, new RecordingOutput(), TestContext.Current.CancellationToken));
+
+        Assert.Contains("no-such-user", error.Message);
+        Assert.Equal(0, CountContainers(job.JobId));
     }
 
     static JobSpec NewJob(string command) => new($"it-{Guid.NewGuid():N}", "integration", command);
 
     static bool DockerAvailable()
     {
-        if (!File.Exists(SocketPath))
-        {
-            return false;
-        }
-
         try
         {
-            using var socket = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
-            socket.Connect(new UnixDomainSocketEndPoint(SocketPath));
-            return true;
+            return Docker("version", "--format", "{{.Server.Version}}").ExitCode == 0;
         }
-        catch (SocketException)
+        catch (System.ComponentModel.Win32Exception)
         {
             return false;
         }
     }
 
-    static async Task<int> CountContainersAsync(string jobId)
+    static int CountContainers(string jobId) =>
+        Docker("ps", "--all", "--quiet", "--filter", $"label=octopus.job-id={jobId}").Stdout
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries).Length;
+
+    static (int ExitCode, string Stdout) Docker(params string[] args)
     {
-        using var handler = new SocketsHttpHandler
+        var startInfo = new ProcessStartInfo("docker") { RedirectStandardOutput = true, RedirectStandardError = true };
+        foreach (var arg in args)
         {
-            ConnectCallback = async (_, cancellationToken) =>
-            {
-                var socket = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
-                await socket.ConnectAsync(new UnixDomainSocketEndPoint(SocketPath), cancellationToken);
-                return new NetworkStream(socket, ownsSocket: true);
-            },
-        };
-        using var http = new HttpClient(handler);
-        var filters = Uri.EscapeDataString($$"""{"label":["octopus.job-id={{jobId}}"]}""");
-        var json = await http.GetStringAsync($"http://docker/v1.44/containers/json?all=1&filters={filters}", TestContext.Current.CancellationToken);
-        using var document = JsonDocument.Parse(json);
-        return document.RootElement.GetArrayLength();
+            startInfo.ArgumentList.Add(arg);
+        }
+
+        using var process = Process.Start(startInfo)!;
+        var stdout = process.StandardOutput.ReadToEnd();
+        process.StandardError.ReadToEnd();
+        process.WaitForExit();
+        return (process.ExitCode, stdout);
     }
 
     sealed class RecordingOutput : IJobOutput

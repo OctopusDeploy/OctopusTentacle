@@ -1,3 +1,6 @@
+using System.Diagnostics;
+using System.Globalization;
+using System.Text;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Octopus.Pipelines.Runner.Core;
@@ -5,22 +8,33 @@ using Octopus.Pipelines.Runner.Core;
 namespace Octopus.Pipelines.Runner.Docker;
 
 /// <summary>
-/// Runs each job in its own locked-down container on a local Docker daemon: no network, read-only root filesystem,
-/// all capabilities dropped, a non-root user and memory/CPU limits. It talks to the Engine API directly over the
-/// daemon's socket, so it has no Docker client dependency and is trim/AOT safe.
+/// Runs each job with <c>docker run --rm</c>: no network, read-only root filesystem, all capabilities dropped, a
+/// non-root user, memory/CPU limits and an init process as PID 1, so the job gets signals. Going through the CLI
+/// means the daemon (<c>DOCKER_HOST</c>, contexts) and registry credentials are resolved the way the user's own
+/// <c>docker</c> commands resolve them.
 /// </summary>
+/// <remarks>
+/// <c>docker run</c> exits 125 when Docker itself fails (an unknown user, a missing image, a daemon error), which is
+/// reported as an error. 126 and 127 mean "can't execute" and "not found" whether Docker or the job's shell says so,
+/// so they're returned as the job's exit code. A job that exits 125 itself is misreported as a Docker failure.
+/// </remarks>
 public sealed class DockerJobBackend(
     DockerBackendOptions options,
     TimeProvider? clock = null,
-    HttpMessageHandler? handler = null,
     ILogger? logger = null) : IJobBackend, IDisposable
 {
+    internal const string JobIdLabel = "octopus.job-id";
+    const string RunIdLabel = "octopus.run-id";
+    const int DockerFailedExitCode = 125;
     const int StopTimeoutSeconds = 5;
     static readonly TimeSpan CleanupTimeout = TimeSpan.FromSeconds(30);
 
-    readonly DockerEngineClient docker = new(options.Endpoint, handler);
+    readonly DockerCli docker = new(options.Executable);
     readonly TimeProvider clock = clock ?? TimeProvider.System;
     readonly ILogger logger = logger ?? NullLogger.Instance;
+
+    /// <summary>How long to wait for docker run to exit once its container is stopped. Internal so tests can shrink it.</summary>
+    internal TimeSpan DrainTimeout { get; init; } = TimeSpan.FromSeconds(5);
 
     public async Task<int> RunAsync(JobSpec job, IJobOutput output, CancellationToken cancellationToken)
     {
@@ -30,95 +44,218 @@ public sealed class DockerJobBackend(
             throw new NotSupportedException("Sandboxed jobs need the Kubernetes backend with Runner:Kubernetes:Sandbox:Enabled.");
         }
 
-        if (!await docker.ImageExistsAsync(options.JobImage, cancellationToken))
+        // Pull first, so a slow pull isn't counted as the job's start, and a failed one isn't a 125 from run.
+        if (!(await docker.RunAsync(["image", "inspect", "--format", "{{.Id}}", options.JobImage], cancellationToken)).Succeeded)
         {
-            await docker.PullImageAsync(options.JobImage, cancellationToken);
+            (await docker.RunAsync(["pull", "--quiet", options.JobImage], cancellationToken)).EnsureSuccess();
         }
 
-        // Not cancellable: abandoning the request mid-flight could leave a container we never learn the ID of.
-        // A cancellation that arrives meanwhile is honoured inside the try, so the container is still removed.
-        string id;
-        using (var create = new CancellationTokenSource(CleanupTimeout))
-        {
-            id = await docker.CreateContainerAsync(CreateRequest(job), create.Token);
-        }
-
-        HttpResponseMessage? attach = null;
-        Task? pump = null;
+        // docker run writes the container's ID here once it has created it: the only handle on the container if the
+        // run has to be stopped, or if the CLI dies before --rm has removed it.
+        var cidFile = Path.Combine(Path.GetTempPath(), $"octopus-pipelines-{Guid.NewGuid():N}.cid");
+        Process? run = null;
+        Task? pumps = null;
+        var exited = false;
         try
         {
             cancellationToken.ThrowIfCancellationRequested();
-            attach = await docker.AttachAsync(id, cancellationToken);
-            await docker.StartAsync(id, cancellationToken);
+            run = docker.Start(RunArgs(job, cidFile));
             output.Started(clock.GetUtcNow());
 
-            // Read only once Started has been reported; anything the job wrote meanwhile waits in the socket.
-            var stream = await attach.Content.ReadAsStreamAsync(cancellationToken);
-            pump = MultiplexedStreamReader.CopyAsync(stream, output, cancellationToken);
+            // stdout and stderr arrive on separate pipes, so they're interleaved at chunk granularity. Docker's own
+            // errors arrive on stderr too, so they end up in the job's log.
+            var gate = new Lock();
+            var stderrTail = new Tail();
+            pumps = Task.WhenAll(
+                PumpAsync(run.StandardOutput.BaseStream, output, gate, null),
+                PumpAsync(run.StandardError.BaseStream, output, gate, stderrTail));
 
-            var exitCode = await docker.WaitAsync(id, cancellationToken);
+            await run.WaitForExitAsync(cancellationToken);
+            exited = true;
 
-            // The stream ends when the container exits; drain it so no output arrives after we return.
-            await pump;
-            return exitCode;
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            // Give the job a moment to exit cleanly. Best effort: the forced removal below kills it regardless.
-            using var cleanup = new CancellationTokenSource(CleanupTimeout);
-            try
+            // The pipes close when the container exits; drain them so no output arrives after we return.
+            await pumps;
+
+            if (run.ExitCode == DockerFailedExitCode)
             {
-                await docker.StopAsync(id, StopTimeoutSeconds, cleanup.Token);
+                throw new InvalidOperationException($"Docker couldn't run the container for job {job.JobId}: {stderrTail.DockerError()}");
             }
-            catch (Exception e) when (e is InvalidOperationException or HttpRequestException or OperationCanceledException)
+
+            return run.ExitCode;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested && run is not null)
+        {
+            // Stop the container rather than kill the CLI: killing docker run leaves the container running. Once
+            // stopped, --rm removes it and docker run exits by itself.
+            if (ReadContainerId(cidFile) is { } id)
             {
+                using var cleanup = new CancellationTokenSource(CleanupTimeout);
+                try
+                {
+                    await docker.RunAsync(["stop", "--time", StopTimeoutSeconds.ToString(CultureInfo.InvariantCulture), id], cleanup.Token);
+                    using var drain = new CancellationTokenSource(DrainTimeout);
+                    await run.WaitForExitAsync(drain.Token);
+                    exited = true;
+                }
+                catch (Exception e) when (e is InvalidOperationException or OperationCanceledException)
+                {
+                }
             }
 
             throw;
         }
         finally
         {
-            attach?.Dispose();
-            if (pump is not null)
+            if (run is not null)
             {
-                // Disposing the attach response ends the pump if it's still running; it never outlives the run.
-                await pump.ContinueWith(static _ => { }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+                // Killing the CLI closes its pipes, which ends the pumps; they never outlive the run.
+                DockerCli.Kill(run);
+                if (pumps is not null)
+                {
+                    await pumps.ContinueWith(static _ => { }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+                }
+
+                run.Dispose();
             }
 
-            // The caller's token may be cancelled; removal must still happen. A failed removal is logged, never
-            // thrown: it must not replace the job's real outcome (its exit code, error or cancellation).
-            using var cleanup = new CancellationTokenSource(CleanupTimeout);
-            try
+            // When docker run exits by itself, --rm has already removed the container, so there's nothing to do.
+            // Otherwise the CLI was killed, and the container may be left behind.
+            if (run is not null && !exited)
             {
-                await docker.RemoveAsync(id, cleanup.Token);
+                await RemoveLeftoversAsync(ReadContainerId(cidFile), job.JobId);
             }
-            catch (Exception e)
-            {
-                logger.LogWarning(e, "Failed to remove container {ContainerId} for job {JobId}", id, job.JobId);
-            }
+
+            TryDelete(cidFile);
         }
     }
 
-    public void Dispose() => docker.Dispose();
-
-    ContainerCreateRequest CreateRequest(JobSpec job) => new()
+    public void Dispose()
     {
-        Image = options.JobImage,
-        Cmd = ["sh", "-c", job.Command],
-        User = options.User,
-        Labels = new()
+    }
+
+    List<string> RunArgs(JobSpec job, string cidFile)
+    {
+        List<string> args =
+        [
+            "run",
+            "--rm",
+            "--init",
+            "--cidfile", cidFile,
+            "--pull", "never",
+            "--network", "none",
+            "--user", options.User,
+            "--memory", options.MemoryLimitBytes.ToString(CultureInfo.InvariantCulture),
+            "--cpus", options.CpuLimit.ToString(CultureInfo.InvariantCulture),
+            "--cap-drop", "ALL",
+            "--security-opt", "no-new-privileges",
+            "--label", $"{JobIdLabel}={job.JobId}",
+            "--label", $"{RunIdLabel}={job.RunId}",
+        ];
+        if (options.ReadOnlyRootFilesystem)
         {
-            ["octopus.job-id"] = job.JobId,
-            ["octopus.run-id"] = job.RunId,
-        },
-        HostConfig = new HostConfig
+            args.Add("--read-only");
+        }
+
+        args.AddRange([options.JobImage, "sh", "-c", job.Command]);
+        return args;
+    }
+
+    /// <summary>Removes the job's container by ID, or by the job's label when docker run never wrote the ID.</summary>
+    async Task RemoveLeftoversAsync(string? id, string jobId)
+    {
+        using var cleanup = new CancellationTokenSource(CleanupTimeout);
+        try
         {
-            NetworkMode = "none",
-            Memory = options.MemoryLimitBytes,
-            NanoCpus = (long)Math.Round(options.CpuLimit * 1_000_000_000),
-            ReadonlyRootfs = options.ReadOnlyRootFilesystem,
-            CapDrop = ["ALL"],
-            SecurityOpt = ["no-new-privileges"],
-        },
-    };
+            IEnumerable<string> ids = id is not null
+                ? [id]
+                : (await docker.RunAsync(["ps", "--all", "--quiet", "--filter", $"label={JobIdLabel}={jobId}"], cleanup.Token)).EnsureSuccess()
+                    .Stdout.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            foreach (var leftover in ids)
+            {
+                var result = await docker.RunAsync(["rm", "--force", leftover], cleanup.Token);
+                if (!result.Succeeded && !result.Stderr.Contains("No such container", StringComparison.OrdinalIgnoreCase))
+                {
+                    result.EnsureSuccess();
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            // Never thrown: it must not replace the job's real outcome (its exit code, error or cancellation).
+            logger.LogWarning(e, "Failed to remove the container for job {JobId}", jobId);
+        }
+    }
+
+    static string? ReadContainerId(string cidFile)
+    {
+        try
+        {
+            return File.ReadAllText(cidFile).Trim() is { Length: > 0 } id ? id : null;
+        }
+        catch (IOException)
+        {
+            return null;
+        }
+    }
+
+    static void TryDelete(string path)
+    {
+        try
+        {
+            File.Delete(path);
+        }
+        catch (IOException)
+        {
+        }
+    }
+
+    static async Task PumpAsync(Stream source, IJobOutput output, Lock gate, Tail? tail)
+    {
+        var buffer = new byte[8192];
+        int read;
+        while ((read = await source.ReadAsync(buffer, CancellationToken.None)) > 0)
+        {
+            lock (gate)
+            {
+                output.Write(buffer.AsSpan(0, read));
+            }
+
+            tail?.Append(buffer.AsSpan(0, read));
+        }
+    }
+
+    /// <summary>The last few KB of stderr, to name Docker's error when docker run exits 125.</summary>
+    sealed class Tail
+    {
+        const int Capacity = 4096;
+        readonly Lock gate = new();
+        byte[] bytes = [];
+
+        public void Append(ReadOnlySpan<byte> data)
+        {
+            lock (gate)
+            {
+                var keep = Math.Min(bytes.Length, Capacity - Math.Min(data.Length, Capacity));
+                var next = new byte[keep + Math.Min(data.Length, Capacity)];
+                bytes.AsSpan(bytes.Length - keep).CopyTo(next);
+                data[^Math.Min(data.Length, Capacity)..].CopyTo(next.AsSpan(keep));
+                bytes = next;
+            }
+        }
+
+        /// <summary>Docker's "docker: …" line if there is one, otherwise the last line of stderr.</summary>
+        public string DockerError()
+        {
+            string text;
+            lock (gate)
+            {
+                text = Encoding.UTF8.GetString(bytes);
+            }
+
+            var lines = text.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            return lines.LastOrDefault(l => l.StartsWith("docker: ", StringComparison.Ordinal))?["docker: ".Length..]
+                ?? lines.LastOrDefault()
+                ?? "docker run exited 125 with no error message";
+        }
+    }
 }

@@ -152,8 +152,8 @@ namespace Octopus.Tentacle.Tests.Pipelines
         [Test]
         public async Task RunsJobsInDockerContainersByDefault()
         {
-            if (!File.Exists("/var/run/docker.sock"))
-                Assert.Ignore("Needs a local Docker daemon at /var/run/docker.sock.");
+            if (!DockerAvailable())
+                Assert.Ignore("Needs the docker CLI and a running Docker daemon.");
 
             var logStore = new InMemoryLogStore();
             var task = NewTask(PollingConfiguration(), Substitute.For<ISystemLog>(), logStore: logStore);
@@ -248,6 +248,27 @@ namespace Octopus.Tentacle.Tests.Pipelines
                 }
 
                 public ValueTask DisposeAsync() => default;
+            }
+        }
+
+        static bool DockerAvailable()
+        {
+            try
+            {
+                using var process = Process.Start(new ProcessStartInfo("docker", "version --format {{.Server.Version}}")
+                {
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false
+                })!;
+                process.StandardOutput.ReadToEnd();
+                process.StandardError.ReadToEnd();
+                process.WaitForExit();
+                return process.ExitCode == 0;
+            }
+            catch (System.ComponentModel.Win32Exception)
+            {
+                return false;
             }
         }
     }
