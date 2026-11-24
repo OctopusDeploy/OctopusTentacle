@@ -14,7 +14,7 @@ namespace Octopus.Tentacle.Tests.Integration.Commands
 {
     [LinuxTest]
     [UnsupportedOSPlatform("windows")]
-    public class ReplaceCertificateCommandTests : IntegrationTest
+    public class LinuxReplaceCertificateEncryptionUpgradeTests : IntegrationTest
     {
         const string MachineName = "replace-certificate-test";
 
