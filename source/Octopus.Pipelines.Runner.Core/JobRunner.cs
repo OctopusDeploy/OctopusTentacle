@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Octopus.Pipelines.Runner.Core.Logs;
+using Octopus.Pipelines.Runner.Core.Steps;
 
 namespace Octopus.Pipelines.Runner.Core;
 
@@ -33,6 +34,7 @@ public sealed class JobRunner(
         string? error = null;
         long logBytes = 0;
         DateTimeOffset? startedAt = null;
+        var steps = new List<StepResult>();
 
         try
         {
@@ -48,7 +50,7 @@ public sealed class JobRunner(
             using var backendCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, log.Faulted);
             try
             {
-                var output = new Output(log, observer, at => startedAt = at);
+                var output = new Output(log, observer, at => startedAt = at, steps);
                 exitCode = await backend.RunAsync(job, output, backendCts.Token);
                 succeeded = exitCode == 0;
             }
@@ -80,10 +82,16 @@ public sealed class JobRunner(
             logger.LogWarning(ex, "Job {JobId} log storage failed", job.JobId);
         }
 
-        return new JobResult(succeeded, exitCode, logBytes, error, startedAt, clock.GetUtcNow());
+        List<StepResult> finishedSteps;
+        lock (steps)
+        {
+            finishedSteps = [.. steps];
+        }
+
+        return new JobResult(succeeded, exitCode, logBytes, error, startedAt, clock.GetUtcNow()) { Steps = finishedSteps };
     }
 
-    sealed class Output(StreamingLogWriter log, IJobObserver? observer, Action<DateTimeOffset> recordStarted) : IJobOutput
+    sealed class Output(StreamingLogWriter log, IJobObserver? observer, Action<DateTimeOffset> recordStarted, List<StepResult> steps) : IJobOutput
     {
         int started;
 
@@ -104,6 +112,16 @@ public sealed class JobRunner(
         {
             log.Write(data);
             observer?.Output(data);
+        }
+
+        public void StepFinished(StepResult result)
+        {
+            lock (steps)
+            {
+                steps.Add(result);
+            }
+
+            observer?.StepFinished(result);
         }
     }
 }

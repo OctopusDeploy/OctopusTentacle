@@ -1,3 +1,5 @@
+using Octopus.Pipelines.Runner.Core.Steps;
+
 namespace Octopus.Pipelines.Runner.Core;
 
 /// <summary>Optional listener for a job's lifecycle while <see cref="JobRunner"/> runs it.</summary>
@@ -25,6 +27,11 @@ public interface IJobObserver
 
     /// <summary>The same raw output bytes that go to the job's log.</summary>
     void Output(ReadOnlySpan<byte> data)
+    {
+    }
+
+    /// <summary>A step finished or was skipped.</summary>
+    void StepFinished(StepResult result)
     {
     }
 }

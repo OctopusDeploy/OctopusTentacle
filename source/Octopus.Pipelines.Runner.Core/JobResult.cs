@@ -1,3 +1,5 @@
+using Octopus.Pipelines.Runner.Core.Steps;
+
 namespace Octopus.Pipelines.Runner.Core;
 
 /// <summary>How a job ended. The job's log is durable by the time a result is returned.</summary>
@@ -8,4 +10,8 @@ public sealed record JobResult(
     long LogBytes,
     string? Error,
     DateTimeOffset? StartedAt,
-    DateTimeOffset CompletedAt);
+    DateTimeOffset CompletedAt)
+{
+    /// <summary>How each step ended, in order; empty for a single-command job.</summary>
+    public IReadOnlyList<StepResult> Steps { get; init; } = [];
+}

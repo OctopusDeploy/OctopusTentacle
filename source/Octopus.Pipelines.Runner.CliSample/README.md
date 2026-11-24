@@ -5,6 +5,8 @@ machine. It references only `Octopus.Pipelines.Runner.Core` and `Octopus.Pipelin
 
 ```
 Octopus.Pipelines.Runner.CliSample [--image <image>] [--log-root <dir>] -- <command>
+Octopus.Pipelines.Runner.CliSample [--image <image>] [--log-root <dir>] --workflow <file> [--job <id>]
+    [--strategy server|run|exec|in-container] [--keep-state]
 ```
 
 Everything after `--` is joined with spaces into the job command. The job's output goes to stdout, the log to
@@ -28,6 +30,31 @@ sealed class StdoutObserver(Stream stdout) : IJobObserver
 {
     public void Output(ReadOnlySpan<byte> data) { stdout.Write(data); stdout.Flush(); }
 }
+```
+
+## Workflows
+
+`--workflow` runs one job of a GitHub Actions workflow file: its `container`, `env` and `run` steps with `id`, `name`,
+`if` and `env`. Steps write outputs to `$GITHUB_OUTPUT` and later steps read them as
+`${{ steps.<id>.outputs.<name> }}`. A step may also set its own `container`, which GitHub Actions doesn't allow on a
+`run` step; it overrides the job's. `workflows/` has three samples: every step in the job's container, a different
+container for the middle step, and a different container for every step.
+
+`--strategy` picks who orchestrates the steps:
+
+| Strategy | Orchestrated by | Containers | Conditions and expressions |
+|---|---|---|---|
+| `server` | the Server (here, the CLI) | one `docker run` per step, each its own job | evaluated by the Server before it sends each step |
+| `run` (default) | the runner | one `docker run` per step | evaluated by the runner |
+| `exec` | the runner | one per image, `docker exec` per step | evaluated by the runner |
+| `in-container` | the containers | one per image, all started at once | compiled to `sh`, evaluated in the container |
+
+Every step gets the job's state directory at `/octopus` (scripts, outputs, and the shared `/octopus/workspace`),
+bind mounted from `<log-root>/state`, so the Docker daemon must be local. `--keep-state` leaves it behind. The
+summary on stderr lists each step's outcome, exit code and outputs.
+
+```
+Octopus.Pipelines.Runner.CliSample --workflow workflows/2-different-middle-container.yml --strategy exec
 ```
 
 ## AOT gate

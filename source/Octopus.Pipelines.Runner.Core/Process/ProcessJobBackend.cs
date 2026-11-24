@@ -13,6 +13,11 @@ public sealed class ProcessJobBackend(TimeProvider clock) : IJobBackend
             throw new NotSupportedException("Sandboxed jobs need the Kubernetes backend with Runner:Kubernetes:Sandbox:Enabled.");
         }
 
+        if (job.Steps.Count > 0)
+        {
+            throw new NotSupportedException("The process backend doesn't run jobs with steps; use the Docker backend.");
+        }
+
         var startInfo = new ProcessStartInfo("sh")
         {
             ArgumentList = { "-c", job.Command },

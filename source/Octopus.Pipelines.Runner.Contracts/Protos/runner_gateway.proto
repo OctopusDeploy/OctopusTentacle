@@ -72,11 +72,29 @@ message Welcome {
 message ExecuteJobCommand {
   string job_id = 1;
   string run_id = 2;
-  // Shell command executed with `sh -c` inside the job container.
+  // Shell command executed with `sh -c` inside the job container. Ignored when the job has steps.
   string command = 3;
   reserved 4;
   JobIsolation isolation = 5;
   JobStorage storage = 6;
+  // The job's steps, run in order. How the runner runs them (a container per step, one per image, or orchestrated
+  // inside the containers) is the runner cell's choice.
+  repeated Step steps = 7;
+}
+
+// A GitHub Actions style `run` step. `run`, `condition` and the `env` values may hold ${{ }} expressions that refer to
+// earlier steps' outputs; the runner resolves them. A Server that orchestrates steps itself resolves them first and
+// sends each step as its own job.
+message Step {
+  string id = 1;
+  string name = 2;
+  // Script executed with `sh -e`. It writes outputs to $GITHUB_OUTPUT as name=value lines.
+  string run = 3;
+  // The step's `if:`. Empty means success().
+  string condition = 4;
+  // The image to run the step in. Empty means the runner's default.
+  string image = 5;
+  map<string, string> env = 6;
 }
 
 // How strongly a job is separated from other jobs on the same node. Every job gets the cell's
@@ -118,4 +136,22 @@ message MarkJobAsFinishedCommand {
   google.protobuf.Timestamp completed_at = 4;
   int64 log_bytes = 5;
   string error = 6;
+  // How each step ended, in order. Empty for a single-command job.
+  repeated StepResult steps = 7;
+}
+
+enum StepOutcome {
+  STEP_OUTCOME_UNSPECIFIED = 0;
+  STEP_OUTCOME_SUCCESS = 1;
+  STEP_OUTCOME_FAILURE = 2;
+  STEP_OUTCOME_SKIPPED = 3;
+}
+
+message StepResult {
+  string id = 1;
+  StepOutcome outcome = 2;
+  // Absent when the step was skipped.
+  optional int32 exit_code = 3;
+  // What the step wrote to $GITHUB_OUTPUT.
+  map<string, string> outputs = 4;
 }

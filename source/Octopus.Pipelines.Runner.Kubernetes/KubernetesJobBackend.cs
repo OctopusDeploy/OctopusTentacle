@@ -24,6 +24,12 @@ public sealed class KubernetesJobBackend(
     public async Task<int> RunAsync(JobSpec job, IJobOutput output, CancellationToken cancellationToken)
     {
         var settings = options.Value;
+        if (job.Steps.Count > 0)
+        {
+            // Running the empty command instead would report the job as succeeded without running a step.
+            throw new NotSupportedException("The Kubernetes backend doesn't run jobs with steps yet.");
+        }
+
         if (job.Sandboxed && !settings.Sandbox.Enabled)
         {
             // Never fall back to a shared kernel for a job that asked for its own.

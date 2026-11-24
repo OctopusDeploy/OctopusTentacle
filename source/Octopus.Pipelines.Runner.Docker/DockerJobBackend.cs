@@ -11,7 +11,7 @@ namespace Octopus.Pipelines.Runner.Docker;
 /// Runs each job with <c>docker run --rm</c>: no network, read-only root filesystem, all capabilities dropped, a
 /// non-root user, memory/CPU limits and an init process as PID 1, so the job gets signals. Going through the CLI
 /// means the daemon (<c>DOCKER_HOST</c>, contexts) and registry credentials are resolved the way the user's own
-/// <c>docker</c> commands resolve them.
+/// <c>docker</c> commands resolve them. A job with steps runs them as <see cref="DockerBackendOptions.StepMode"/> says.
 /// </summary>
 /// <remarks>
 /// <c>docker run</c> exits 125 when Docker itself fails (an unknown user, a missing image, a daemon error), which is
@@ -36,6 +36,12 @@ public sealed class DockerJobBackend(
     /// <summary>How long to wait for docker run to exit once its container is stopped. Internal so tests can shrink it.</summary>
     internal TimeSpan DrainTimeout { get; init; } = TimeSpan.FromSeconds(5);
 
+    internal DockerBackendOptions Options => options;
+
+    internal DockerCli Cli => docker;
+
+    internal ILogger Logger => logger;
+
     public async Task<int> RunAsync(JobSpec job, IJobOutput output, CancellationToken cancellationToken)
     {
         if (job.Sandboxed)
@@ -44,12 +50,72 @@ public sealed class DockerJobBackend(
             throw new NotSupportedException("Sandboxed jobs need the Kubernetes backend with Runner:Kubernetes:Sandbox:Enabled.");
         }
 
-        // Pull first, so a slow pull isn't counted as the job's start, and a failed one isn't a 125 from run.
-        if (!(await docker.RunAsync(["image", "inspect", "--format", "{{.Id}}", options.JobImage], cancellationToken)).Succeeded)
+        if (job.Steps.Count > 0)
         {
-            (await docker.RunAsync(["pull", "--quiet", options.JobImage], cancellationToken)).EnsureSuccess();
+            return await new DockerStepsRun(this, job, output).RunAsync(cancellationToken);
         }
 
+        await EnsureImageAsync(options.JobImage, cancellationToken);
+        return await RunContainerAsync(
+            job,
+            [.. HardeningArgs(job), options.JobImage, "sh", "-c", job.Command],
+            output,
+            new Lock(),
+            () => output.Started(clock.GetUtcNow()),
+            cancellationToken);
+    }
+
+    public void Dispose()
+    {
+    }
+
+    internal DateTimeOffset Now => clock.GetUtcNow();
+
+    /// <summary>Pulls the image unless it's present, so a slow pull isn't counted as the job's start, and a failed one isn't a 125 from run.</summary>
+    internal async Task EnsureImageAsync(string image, CancellationToken cancellationToken)
+    {
+        if (!(await docker.RunAsync(["image", "inspect", "--format", "{{.Id}}", image], cancellationToken)).Succeeded)
+        {
+            (await docker.RunAsync(["pull", "--quiet", image], cancellationToken)).EnsureSuccess();
+        }
+    }
+
+    /// <summary>The lock-down every job container gets, and the labels that find it again.</summary>
+    internal List<string> HardeningArgs(JobSpec job)
+    {
+        List<string> args =
+        [
+            "--pull", "never",
+            "--network", "none",
+            "--user", options.User,
+            "--memory", options.MemoryLimitBytes.ToString(CultureInfo.InvariantCulture),
+            "--cpus", options.CpuLimit.ToString(CultureInfo.InvariantCulture),
+            "--cap-drop", "ALL",
+            "--security-opt", "no-new-privileges",
+            "--label", $"{JobIdLabel}={job.JobId}",
+            "--label", $"{RunIdLabel}={job.RunId}",
+        ];
+        if (options.ReadOnlyRootFilesystem)
+        {
+            args.Add("--read-only");
+        }
+
+        return args;
+    }
+
+    /// <summary>
+    /// Runs one container to completion with <c>docker run --rm --init</c> and the given arguments (hardening, image and
+    /// command), streaming its output under <paramref name="gate"/>, and returns its exit code. Cancelling stops the
+    /// container; it never outlives the call.
+    /// </summary>
+    internal async Task<int> RunContainerAsync(
+        JobSpec job,
+        IReadOnlyList<string> containerArgs,
+        IJobOutput output,
+        Lock gate,
+        Action started,
+        CancellationToken cancellationToken)
+    {
         // docker run writes the container's ID here once it has created it: the only handle on the container if the
         // run has to be stopped, or if the CLI dies before --rm has removed it.
         var cidFile = Path.Combine(Path.GetTempPath(), $"octopus-pipelines-{Guid.NewGuid():N}.cid");
@@ -59,12 +125,11 @@ public sealed class DockerJobBackend(
         try
         {
             cancellationToken.ThrowIfCancellationRequested();
-            run = docker.Start(RunArgs(job, cidFile));
-            output.Started(clock.GetUtcNow());
+            run = docker.Start(["run", "--rm", "--init", "--cidfile", cidFile, .. containerArgs]);
+            started();
 
             // stdout and stderr arrive on separate pipes, so they're interleaved at chunk granularity. Docker's own
             // errors arrive on stderr too, so they end up in the job's log.
-            var gate = new Lock();
             var stderrTail = new Tail();
             pumps = Task.WhenAll(
                 PumpAsync(run.StandardOutput.BaseStream, output, gate, null),
@@ -129,39 +194,22 @@ public sealed class DockerJobBackend(
         }
     }
 
-    public void Dispose()
+    /// <summary>Runs a short-lived CLI command (e.g. <c>docker exec</c>), streaming its output, and returns its exit code.</summary>
+    internal async Task<int> StreamAsync(IReadOnlyList<string> args, IJobOutput output, Lock gate, CancellationToken cancellationToken)
     {
+        using var process = docker.Start(args);
+        using var kill = cancellationToken.Register(static state => DockerCli.Kill((Process)state!), process);
+        var pumps = Task.WhenAll(
+            PumpAsync(process.StandardOutput.BaseStream, output, gate, null),
+            PumpAsync(process.StandardError.BaseStream, output, gate, null));
+        await process.WaitForExitAsync(CancellationToken.None);
+        await pumps;
+        cancellationToken.ThrowIfCancellationRequested();
+        return process.ExitCode;
     }
 
-    List<string> RunArgs(JobSpec job, string cidFile)
-    {
-        List<string> args =
-        [
-            "run",
-            "--rm",
-            "--init",
-            "--cidfile", cidFile,
-            "--pull", "never",
-            "--network", "none",
-            "--user", options.User,
-            "--memory", options.MemoryLimitBytes.ToString(CultureInfo.InvariantCulture),
-            "--cpus", options.CpuLimit.ToString(CultureInfo.InvariantCulture),
-            "--cap-drop", "ALL",
-            "--security-opt", "no-new-privileges",
-            "--label", $"{JobIdLabel}={job.JobId}",
-            "--label", $"{RunIdLabel}={job.RunId}",
-        ];
-        if (options.ReadOnlyRootFilesystem)
-        {
-            args.Add("--read-only");
-        }
-
-        args.AddRange([options.JobImage, "sh", "-c", job.Command]);
-        return args;
-    }
-
-    /// <summary>Removes the job's container by ID, or by the job's label when docker run never wrote the ID.</summary>
-    async Task RemoveLeftoversAsync(string? id, string jobId)
+    /// <summary>Removes the job's containers by ID, or by the job's label when there's no ID.</summary>
+    internal async Task RemoveLeftoversAsync(string? id, string jobId)
     {
         using var cleanup = new CancellationTokenSource(CleanupTimeout);
         try

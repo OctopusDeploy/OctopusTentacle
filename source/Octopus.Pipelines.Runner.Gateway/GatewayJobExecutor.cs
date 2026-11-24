@@ -3,6 +3,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Octopus.Pipelines.Runner.Contracts;
 using Octopus.Pipelines.Runner.Core;
+using Octopus.Pipelines.Runner.Core.Steps;
 using CoreIsolation = Octopus.Pipelines.Runner.Core.JobIsolation;
 using ProtoIsolation = Octopus.Pipelines.Runner.Contracts.JobIsolation;
 
@@ -76,7 +77,10 @@ public sealed class GatewayJobExecutor(
         var result = new JobResult(false, -1, 0, null, null, clock.GetUtcNow());
         try
         {
-            var job = new JobSpec(jobId, assignment.RunId, assignment.Command, ToIsolation(assignment.Isolation));
+            var job = new JobSpec(jobId, assignment.RunId, assignment.Command, ToIsolation(assignment.Isolation))
+            {
+                Steps = assignment.Steps.Select(ToStep).ToArray(),
+            };
             result = await runner.RunAsync(job, new Uri(assignment.Storage.DirectoryUri), new Observer(this, jobId, outbox), lifetime.ApplicationStopping);
         }
         catch (Exception ex)
@@ -87,7 +91,7 @@ public sealed class GatewayJobExecutor(
         }
         finally
         {
-            outbox.MarkJobAsFinished(jobId, result.Succeeded, result.ExitCode, result.CompletedAt, result.LogBytes, result.Error);
+            outbox.MarkJobAsFinished(jobId, result.Succeeded, result.ExitCode, result.CompletedAt, result.LogBytes, result.Error, result.Steps.Select(ToProto));
             starting.TryRemove(jobId, out _);
             inFlight.TryRemove(jobId, out _);
             capacityChanged.Notify();
@@ -110,6 +114,39 @@ public sealed class GatewayJobExecutor(
         ProtoIsolation.Sandboxed => CoreIsolation.Sandboxed,
         _ => CoreIsolation.Standard,
     };
+
+    static StepSpec ToStep(Step step) => new(step.Id, step.Run)
+    {
+        Name = step.Name.Length > 0 ? step.Name : null,
+        If = step.Condition.Length > 0 ? step.Condition : null,
+        Image = step.Image.Length > 0 ? step.Image : null,
+        Env = new Dictionary<string, string>(step.Env),
+    };
+
+    static Contracts.StepResult ToProto(Core.Steps.StepResult result)
+    {
+        var proto = new Contracts.StepResult
+        {
+            Id = result.Id,
+            Outcome = result.Outcome switch
+            {
+                Core.Steps.StepOutcome.Success => Contracts.StepOutcome.Success,
+                Core.Steps.StepOutcome.Failure => Contracts.StepOutcome.Failure,
+                _ => Contracts.StepOutcome.Skipped,
+            },
+        };
+        foreach (var (name, value) in result.Outputs)
+        {
+            proto.Outputs[name] = value;
+        }
+
+        if (result.ExitCode is { } exitCode)
+        {
+            proto.ExitCode = exitCode;
+        }
+
+        return proto;
+    }
 
     void OnWaitingForNode(string jobId)
     {
