@@ -43,7 +43,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
             {
                 throw new InvalidOperationException($"Machine key file at `{path}` is corrupt and cannot be loaded. "
                     + "If this file previously contained a valid key to encrypt data, that data may no longer be retrievable. "
-                    + $"Remove the file `{path}` and allow Octopus to regenerate the key.");
+                    + "Restore it from a backup. " + ConfigurationEncryptionKey.RecoveryWithoutBackup);
             }
         }
     }

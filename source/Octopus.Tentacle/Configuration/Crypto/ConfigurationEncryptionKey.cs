@@ -25,7 +25,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
         const UnixFileMode TraversableByAll = OwnerOnly | UnixFileMode.GroupRead | UnixFileMode.GroupExecute | UnixFileMode.OtherRead | UnixFileMode.OtherExecute;
 #endif
 
-        const string RecoveryWithoutBackup = "If there is no backup, the Tentacle's certificate is lost and it needs a new one: "
+        internal const string RecoveryWithoutBackup = "If there is no backup, the Tentacle's certificate is lost and it needs a new one: "
             + "run `replace-certificate` with an API key. "
             + "This creates a new key and certificate, and updates every deployment target and worker registered with the old certificate to trust it.";
 
