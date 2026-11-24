@@ -29,7 +29,7 @@ namespace Octopus.Tentacle.Tests.Support
             var store = new XmlFileKeyValueStore(fileSystem, configFile, encryptor: TestMachineKeyEncryptor.Current);
 
             var selector = Substitute.For<IApplicationInstanceSelector>();
-            selector.Current.Returns(_ => new ApplicationInstanceConfiguration(null, configFile, store, store));
+            selector.Current.Returns(_ => new ApplicationInstanceConfiguration(null, configFile, store, store, null));
 
             var configuration = new WritableTentacleConfiguration(
                 selector,

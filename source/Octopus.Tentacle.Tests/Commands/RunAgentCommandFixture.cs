@@ -65,7 +65,7 @@ namespace Octopus.Tentacle.Tests.Commands
                 backgroundTasks.Select(bt => new Lazy<IBackgroundTask>(() => bt)).ToList(),
                 new Lazy<IConfigurationEncryptionUpgrade>(() => configurationEncryptionUpgrade));
 
-            selector.Current.Returns(new ApplicationInstanceConfiguration("MyTentacle", null, null, null));
+            selector.Current.Returns(new ApplicationInstanceConfiguration("MyTentacle", null, null, null, null));
         }
 
         [Test]

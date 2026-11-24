@@ -118,7 +118,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration
             ApplicationInstanceConfiguration LoadInstance()
             {
                 var (aggregatedKeyValueStore, writableConfig) = LoadConfigurationStore(configFilePath);
-                return new ApplicationInstanceConfiguration(null, configFilePath, aggregatedKeyValueStore, writableConfig);
+                return new ApplicationInstanceConfiguration(null, configFilePath, aggregatedKeyValueStore, writableConfig, null);
             }
 
             (IKeyValueStore, IWritableKeyValueStore) LoadConfigurationStore(string configurationPath)

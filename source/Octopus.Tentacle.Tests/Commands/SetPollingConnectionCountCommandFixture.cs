@@ -23,7 +23,7 @@ namespace Octopus.Tentacle.Tests.Commands
             tentacleConfiguration = new StubTentacleConfiguration();
             var log = Substitute.For<ISystemLog>();
             var selector = Substitute.For<IApplicationInstanceSelector>();
-            selector.Current.Returns(info => new ApplicationInstanceConfiguration(null, null!, null!, null!));
+            selector.Current.Returns(info => new ApplicationInstanceConfiguration(null, null!, null!, null!, null));
             Command = new SetPollingConnectionCountCommand(
                 new Lazy<IWritableTentacleConfiguration>(() => tentacleConfiguration),
                 selector,

@@ -29,7 +29,7 @@ namespace Octopus.Tentacle.Tests.Commands
             fileSystem = Substitute.For<IOctopusFileSystem>();
             log = Substitute.For<ISystemLog>();
             var selector = Substitute.For<IApplicationInstanceSelector>();
-            selector.Current.Returns(info => new ApplicationInstanceConfiguration(null, null!, null!, null!));
+            selector.Current.Returns(info => new ApplicationInstanceConfiguration(null, null!, null!, null!, null));
             Command = new ConfigureCommand(new Lazy<IWritableTentacleConfiguration>(() => tentacleConfiguration), new Lazy<IWritableHomeConfiguration>(() => new StubHomeConfiguration()), fileSystem, log, selector, Substitute.For<ILogFileOnlyLogger>());
         }
 

@@ -60,7 +60,7 @@ namespace Octopus.Tentacle.Tests.Commands
                 .Returns(Task.FromResult(octopusAsyncClient));
 
             var applicationInstanceSelector = Substitute.For<IApplicationInstanceSelector>();
-            applicationInstanceSelector.Current.Returns(info => new ApplicationInstanceConfiguration(null, null!, null!, null!));
+            applicationInstanceSelector.Current.Returns(info => new ApplicationInstanceConfiguration(null, null!, null!, null!, null));
 
             Command = new RegisterWorkerCommand(new Lazy<IRegisterWorkerOperation>(() => operation),
                 new Lazy<IWritableTentacleConfiguration>(() => configuration),

@@ -8,7 +8,7 @@ namespace Octopus.Tentacle.Configuration.Instances
             string? configurationPath,
             IKeyValueStore? configuration,
             IWritableKeyValueStore? writableConfiguration,
-            string? keyFilePath = null)
+            string? keyFilePath)
         {
             KeyFilePath = keyFilePath;
             InstanceName = instanceName;

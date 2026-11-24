@@ -39,7 +39,7 @@ namespace Octopus.Tentacle.Tests.Commands
             clock = Substitute.For<IClock>();
 
             instanceSelector = Substitute.For<IApplicationInstanceSelector>();
-            instanceSelector.Current.Returns(_ => new ApplicationInstanceConfiguration(null, null!, null!, null!));
+            instanceSelector.Current.Returns(_ => new ApplicationInstanceConfiguration(null, null!, null!, null!, null));
 
             Command = new LivezCommand(
                 new Lazy<IHomeConfiguration>(() => homeConfiguration),

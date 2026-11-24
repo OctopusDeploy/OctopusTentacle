@@ -58,7 +58,7 @@ namespace Octopus.Tentacle.Tests.Commands
             octopusClientInitializer.CreateClient(Arg.Any<ApiEndpointOptions>(), false)
                 .Returns(Task.FromResult(octopusAsyncClient));
             var selector = Substitute.For<IApplicationInstanceSelector>();
-            selector.Current.Returns(info => new ApplicationInstanceConfiguration(null, null!, null!, null!));
+            selector.Current.Returns(info => new ApplicationInstanceConfiguration(null, null!, null!, null!, null));
             Command = new RegisterKubernetesDeploymentTargetCommand(new Lazy<IRegisterKubernetesDeploymentTargetOperation>(() => operation),
                                                  new Lazy<IWritableTentacleConfiguration>(() => configuration),
                                                  log,
