@@ -42,12 +42,12 @@ The script runs in four stages, each of which can be skipped:
 
 The `e2e` stage needs an Octopus Server licence, because an unlicensed server enforces a limit of 0 targets and no Tentacle can register. Set `OCTOPUS_SERVER_BASE64_LICENSE`, or let the script read a development licence from 1Password when run interactively. Without one, the stage still verifies configuration and server connectivity up to the licence refusal. Pass `--no-1password` anywhere `op` must not run.
 
-## Linux-only unit tests
+## Local only: Linux-only unit tests on macOS or Windows
 
-Tests marked `[LinuxTest]` are skipped on macOS and Windows. [`run-linux-unit-tests-in-docker.sh`](./run-linux-unit-tests-in-docker.sh) runs them in a .NET SDK container for the host's architecture, as root and then as a non-root user:
+**For running on a dev machine only. CI does not use this script.** Tests marked `[LinuxTest]` are skipped on macOS and Windows. [`local-only-run-linux-unit-tests-in-docker.sh`](./local-only-run-linux-unit-tests-in-docker.sh) runs them in a .NET SDK container for the host's architecture, as root and then as a non-root user:
 
 ```
-./testing/run-linux-unit-tests-in-docker.sh [dotnet test filter]
+./testing/local-only-run-linux-unit-tests-in-docker.sh [dotnet test filter]
 ```
 
 ## Linux Packages

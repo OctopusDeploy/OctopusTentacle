@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #
-# Runs Linux-only unit tests in a .NET SDK container for this host's architecture, first as root and then as a
+# LOCAL ONLY, not used by CI. Runs Linux-only unit tests in a .NET SDK container for this host's architecture, first as root and then as a
 # non-root user.
 #
-# Usage: ./testing/run-linux-unit-tests-in-docker.sh [dotnet test filter]
+# Usage: ./testing/local-only-run-linux-unit-tests-in-docker.sh [dotnet test filter]
 #
 set -euo pipefail
 
