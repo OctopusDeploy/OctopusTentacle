@@ -75,6 +75,7 @@ namespace Octopus.Tentacle.Configuration
             }
 
             var (key, store) = prepared.Value;
+            // Verify the key loads, to prevent falling back to less secure legacy encryption keys.
             key.Load();
             foreach (var name in ProtectedSettingNames)
             {
