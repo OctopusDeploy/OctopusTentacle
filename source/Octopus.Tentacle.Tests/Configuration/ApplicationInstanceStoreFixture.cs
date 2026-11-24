@@ -107,6 +107,30 @@ namespace Octopus.Tentacle.Tests.Configuration
             instance.ConfigurationFilePath.Should().Be("fileConfigFilePath2");
         }
 
+        /// <summary>
+        /// Loading an instance reads every instance's file, so another instance being created or deleted at the same time
+        /// must not stop it loading (https://github.com/OctopusDeploy/OctopusTentacle/issues/739).
+        /// </summary>
+        [TestCase(null, TestName = "GetInstance_ShouldIgnoreAnotherInstanceDeletedWhileListing")]
+        [TestCase("{\"Name\": \"instance 2\",\"Configur", TestName = "GetInstance_ShouldIgnoreAnotherInstanceWithAPartlyWrittenFile")]
+        public void GetInstance_ShouldIgnoreAnotherInstanceThatCannotBeRead(string? otherInstanceContents)
+        {
+            var configFilename = Path.Combine(instanceStore.InstancesFolder, "instance-1.config");
+            var otherConfigFilename = Path.Combine(instanceStore.InstancesFolder, "instance-2.config");
+
+            fileSystem.DirectoryExists(Arg.Any<string>()).Returns(true);
+            fileSystem.EnumerateFiles(instanceStore.InstancesFolder).Returns(new[] { configFilename, otherConfigFilename });
+            fileSystem.FileExists(configFilename).Returns(true);
+            fileSystem.ReadFile(Arg.Is(configFilename)).Returns("{\"Name\": \"instance 1\",\"ConfigurationFilePath\": \"configFilePath1\"}");
+            fileSystem.FileExists(otherConfigFilename).Returns(otherInstanceContents != null);
+            fileSystem.ReadFile(Arg.Is(otherConfigFilename)).Returns(otherInstanceContents);
+
+            var instance = instanceStore.LoadInstanceDetails("instance 1");
+
+            instance.InstanceName.Should().Be("instance 1");
+            instance.ConfigurationFilePath.Should().Be("configFilePath1");
+        }
+
         [Test]
         public void GetInstance_ShouldReturnNullIfNoneFound()
         {
