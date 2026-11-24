@@ -13,45 +13,27 @@ using NUnit.Framework;
 using Octopus.Tentacle.Configuration.Crypto;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Core.Util;
+using Octopus.Tentacle.Tests.Support;
 using Octopus.Tentacle.Tests.Support.TestAttributes;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Configuration.Crypto
 {
-    [TestFixture]
     [LinuxTest]
     [SupportedOSPlatform("linux")]
-    public class LinuxConfigurationFileSecurityFixture
+    public class LinuxConfigurationEncryptionKeyFileTests
     {
         const UnixFileMode OwnerReadWrite = UnixFileMode.UserRead | UnixFileMode.UserWrite;
-
-        string directory;
-        string keyFilePath;
-        ISystemLog log;
-        OctopusPhysicalFileSystem fileSystem;
-
-        [SetUp]
-        public void SetUp()
-        {
-            directory = Path.Combine(Path.GetTempPath(), "octopus-config-encryption-key-" + Guid.NewGuid());
-            keyFilePath = Path.Combine(directory, ConfigurationEncryptionKey.KeyFileName);
-            log = Substitute.For<ISystemLog>();
-            fileSystem = new OctopusPhysicalFileSystem(log);
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-            if (Directory.Exists(directory))
-            {
-                Directory.Delete(directory, recursive: true);
-            }
-        }
 
         [Test]
         public void WhenTheKeyIsCreatedThenOnlyItsOwnerCanReadIt()
         {
             // Arrange
+            var log = Substitute.For<ISystemLog>();
+            var fileSystem = new OctopusPhysicalFileSystem(log);
+            using var directory = new TemporaryDirectory(fileSystem);
+            var keyDirectory = Path.Combine(directory.DirectoryPath, "keys");
+            var keyFilePath = Path.Combine(keyDirectory, ConfigurationEncryptionKey.KeyFileName);
             var keySource = new ConfigurationEncryptionKey(log, fileSystem, keyFilePath);
 
             // Act
@@ -62,13 +44,17 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
             File.Exists(keyFilePath).Should().BeTrue("the directory is created on demand, as it always was");
             File.GetUnixFileMode(keyFilePath).Should().Be(OwnerReadWrite);
             File.ReadAllText(keyFilePath).Should().Be(Convert.ToBase64String(key));
-            Directory.GetFiles(directory).Should().ContainSingle("the temporary file the key is written to first is not left behind");
+            Directory.GetFiles(keyDirectory).Should().ContainSingle("the temporary file the key is written to first is not left behind");
         }
 
         [Test]
         public async Task WhenManyProcessesCreateTheKeyAtOnceThenTheyAllGetTheSameKey()
         {
             // Arrange
+            var log = Substitute.For<ISystemLog>();
+            using var directory = new TemporaryDirectory(new OctopusPhysicalFileSystem(log));
+            var keyDirectory = Path.Combine(directory.DirectoryPath, "keys");
+            var keyFilePath = Path.Combine(keyDirectory, ConfigurationEncryptionKey.KeyFileName);
             const int racers = 32;
             using var start = new ManualResetEventSlim(false);
             var loads = Enumerable.Range(0, racers)
@@ -88,7 +74,7 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
             // Assert
             var onDisk = Convert.FromBase64String(File.ReadAllText(keyFilePath));
             keys.Should().AllSatisfy(k => k.Should().Equal(onDisk));
-            Directory.GetFiles(directory).Should().ContainSingle("no racer's temporary file is left behind");
+            Directory.GetFiles(keyDirectory).Should().ContainSingle("no racer's temporary file is left behind");
         }
 
         [Test]
@@ -100,9 +86,13 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
             }
 
             // Arrange
+            var log = Substitute.For<ISystemLog>();
+            var fileSystem = new OctopusPhysicalFileSystem(log);
+            // Not created yet, so CreateIfMissing creates every directory down to the key under the hardened umask.
+            using var directory = new TemporaryDirectory(fileSystem, Path.Combine(Path.GetTempPath(), "octopus-config-encryption-key-" + Guid.NewGuid()));
             var user = "octo-key-" + Guid.NewGuid().ToString("N").Substring(0, 8);
             CreateUser(user).Should().Be(0);
-            var instanceKeyFilePath = Path.Combine(directory, "keys", "Tentacle", ConfigurationEncryptionKey.KeyFileName);
+            var instanceKeyFilePath = Path.Combine(directory.DirectoryPath, "keys", "Tentacle", ConfigurationEncryptionKey.KeyFileName);
             var keySource = new ConfigurationEncryptionKey(log, fileSystem, instanceKeyFilePath);
             var previousUmask = umask(Convert.ToUInt32("027", 8));
             try
