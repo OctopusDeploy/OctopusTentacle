@@ -10,7 +10,9 @@ namespace Octopus.Tentacle.Core.Util
     public static class UnixFile
     {
         const uint UnchangedGroup = uint.MaxValue;
+        const int NotPermittedError = 1;
         const int FileExistsError = 17;
+        const int NotSupportedError = 95;
 
         // Unlike rename(2), link(2) never replaces an existing file.
         public static bool TryLinkWithoutReplacing(string existingPath, string newPath)
@@ -20,9 +22,54 @@ namespace Octopus.Tentacle.Core.Util
                 return true;
             }
 
-            return Marshal.GetLastPInvokeError() == FileExistsError
-                ? false
+            var error = Marshal.GetLastPInvokeError();
+            if (error == FileExistsError)
+            {
+                return false;
+            }
+
+            return error == NotPermittedError || error == NotSupportedError
+                ? TryCopyWithoutReplacing(existingPath, newPath)
                 : throw new IOException($"Unable to create `{newPath}`: {Marshal.GetLastPInvokeErrorMessage()}");
+        }
+
+        // For file systems without hard links, such as SMB shares. Another process may briefly see the new file empty.
+        static bool TryCopyWithoutReplacing(string existingPath, string newPath)
+        {
+            var options = new FileStreamOptions
+            {
+                Mode = FileMode.CreateNew,
+                Access = FileAccess.Write,
+                Share = FileShare.None,
+                UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite
+            };
+
+            FileStream destination;
+            try
+            {
+                destination = new FileStream(newPath, options);
+            }
+            catch (IOException) when (File.Exists(newPath))
+            {
+                return false;
+            }
+
+            try
+            {
+                using (destination)
+                {
+                    using var source = File.OpenRead(existingPath);
+                    source.CopyTo(destination);
+                    destination.Flush(flushToDisk: true);
+                }
+
+                return true;
+            }
+            catch
+            {
+                File.Delete(newPath);
+                throw;
+            }
         }
 
         public static uint OwnerOf(string path)

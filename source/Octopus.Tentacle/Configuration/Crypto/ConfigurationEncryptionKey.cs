@@ -4,6 +4,7 @@ using System.IO;
 using System.Runtime.Versioning;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Core.Util;
 using Octopus.Tentacle.Util;
@@ -19,6 +20,8 @@ namespace Octopus.Tentacle.Configuration.Crypto
         public const string DefaultInstancesDataDirectory = "/var/lib/octopus/tentacle";
 
         const int KeySizeInBytes = 32;
+        const int EmptyKeyReadAttempts = 20;
+        const int EmptyKeyReadDelayMilliseconds = 50;
 
 #if NET
         const UnixFileMode OwnerOnly = UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute;
@@ -62,7 +65,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
         }
 
         public byte[] Load()
-            => TryLoad() ?? throw new InvalidOperationException(KeyFilePath == null
+            => TryLoad() ?? throw new ConfigurationEncryptionKeyException(KeyFilePath == null
                 ? "The configuration encryption key for this configuration is not available. Register the configuration with `create-instance --instance <name>`."
                 : $"The configuration encryption key file `{KeyFilePath}` does not exist, so the values it protected cannot be decrypted. Restore it from a backup. " + RecoveryWithoutBackup);
 
@@ -81,7 +84,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
             string contents;
             try
             {
-                contents = fileSystem.ReadAllText(KeyFilePath);
+                contents = ReadAllTextWaitingForContent(KeyFilePath);
             }
             catch (Exception e) when (e is FileNotFoundException || e is DirectoryNotFoundException)
             {
@@ -91,7 +94,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
             {
                 var user = Environment.UserName;
                 var directory = LinuxDirectoryOf(KeyFilePath);
-                throw new InvalidOperationException($"The configuration encryption key file `{KeyFilePath}` exists but the user Tentacle is running as ({user}) cannot read it. "
+                throw new ConfigurationEncryptionKeyException($"The configuration encryption key file `{KeyFilePath}` exists but the user Tentacle is running as ({user}) cannot read it. "
                     + $"It must be owned by and readable only by that user, for example: `sudo chown -R {user} {directory} && sudo chmod 700 {directory} && sudo chmod 600 {KeyFilePath}`.", e);
             }
 
@@ -122,6 +125,19 @@ namespace Octopus.Tentacle.Configuration.Crypto
             }
 
             log.Info($"Generated a new configuration encryption key at `{path}`. Back it up with the configuration file it protects: the configuration cannot be decrypted without it.");
+        }
+
+        // Without hard links the key file is created in place, so a racing process can see it before it is written.
+        string ReadAllTextWaitingForContent(string path)
+        {
+            var contents = fileSystem.ReadAllText(path);
+            for (var attempt = 0; attempt < EmptyKeyReadAttempts && string.IsNullOrWhiteSpace(contents); attempt++)
+            {
+                Thread.Sleep(EmptyKeyReadDelayMilliseconds);
+                contents = fileSystem.ReadAllText(path);
+            }
+
+            return contents;
         }
 
         // Ancestors are shared by every instance's service user, so they must stay traversable whatever the umask.
@@ -170,7 +186,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
             {
             }
 
-            throw new InvalidOperationException($"The configuration encryption key file `{path}` is corrupt: it must hold a base64-encoded {KeySizeInBytes * 8}-bit key. "
+            throw new ConfigurationEncryptionKeyException($"The configuration encryption key file `{path}` is corrupt: it must hold a base64-encoded {KeySizeInBytes * 8}-bit key. "
                 + "Restore it from a backup; values encrypted with a lost key cannot be recovered. " + RecoveryWithoutBackup);
         }
 
