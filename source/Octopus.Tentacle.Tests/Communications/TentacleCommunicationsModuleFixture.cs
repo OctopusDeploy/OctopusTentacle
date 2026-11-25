@@ -76,6 +76,39 @@ namespace Octopus.Tentacle.Tests.Communications
             }
         } 
 
+        [Test]
+        [NonParallelizable]
+        public void HalibutTcpNoDelayShouldBeEnabledByDefault()
+        {
+            Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleUseTcpNoDelay, "");
+
+            var container = BuildContainer();
+
+            var halibutRuntime = container.Resolve<HalibutRuntime>();
+
+            halibutRuntime.TimeoutsAndLimits.TcpNoDelay.Should().BeTrue();
+        }
+
+        [Test]
+        [NonParallelizable]
+        public void HalibutTcpNoDelayCanBeDisabledWithAnEnvironmentVariable()
+        {
+            try
+            {
+                Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleUseTcpNoDelay, "False");
+
+                var container = BuildContainer();
+
+                var halibutRuntime = container.Resolve<HalibutRuntime>();
+
+                halibutRuntime.TimeoutsAndLimits.TcpNoDelay.Should().BeFalse();
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleUseTcpNoDelay, "");
+            }
+        }
+
         static IContainer BuildContainer()
         {
             var builder = new ContainerBuilder();
