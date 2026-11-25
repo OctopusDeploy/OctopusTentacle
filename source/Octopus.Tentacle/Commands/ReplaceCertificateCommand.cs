@@ -20,7 +20,6 @@ namespace Octopus.Tentacle.Commands
     {
         readonly Lazy<IWritableTentacleConfiguration> configuration;
         readonly Lazy<ICertificateGenerator> certificateGenerator;
-        readonly Lazy<IConfigurationEncryptionUpgrade> configurationEncryptionUpgrade;
         readonly IOctopusClientInitializer octopusClientInitializer;
         readonly IProxyConfigParser proxyConfig;
         readonly ISystemLog log;
@@ -30,7 +29,6 @@ namespace Octopus.Tentacle.Commands
         public ReplaceCertificateCommand(
             Lazy<IWritableTentacleConfiguration> configuration,
             Lazy<ICertificateGenerator> certificateGenerator,
-            Lazy<IConfigurationEncryptionUpgrade> configurationEncryptionUpgrade,
             IOctopusClientInitializer octopusClientInitializer,
             IProxyConfigParser proxyConfig,
             ISystemLog log,
@@ -40,7 +38,6 @@ namespace Octopus.Tentacle.Commands
         {
             this.configuration = configuration;
             this.certificateGenerator = certificateGenerator;
-            this.configurationEncryptionUpgrade = configurationEncryptionUpgrade;
             this.octopusClientInitializer = octopusClientInitializer;
             this.proxyConfig = proxyConfig;
             this.log = log;
@@ -74,8 +71,6 @@ namespace Octopus.Tentacle.Commands
 
             if (!keepCurrentCertificate)
             {
-                // Creates a fresh configuration encryption key if it was lost, so the new certificate can be saved.
-                configurationEncryptionUpgrade.Value.PrepareKey();
                 var certificate = certificateGenerator.Value.GenerateNew(CertificateExpectations.TentacleCertificateFullName);
                 config.ImportCertificate(certificate);
                 log.Info($"Replaced certificate {oldThumbprint} with {certificate.Thumbprint}. If this does not complete, re-run this command with --apply-current-cert-to-tentacles-with-thumbprint {oldThumbprint}");

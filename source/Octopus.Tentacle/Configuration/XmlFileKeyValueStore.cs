@@ -21,6 +21,9 @@ namespace Octopus.Tentacle.Configuration
             this.configurationFile = fileSystem.GetFullPath(configurationFile);
         }
 
+        public bool IsEncryptedWithCurrentKey(string name)
+            => Read(name) is string stored && !string.IsNullOrWhiteSpace(stored) && !Encryptor.RequiresReEncryption(stored);
+
         public bool ReEncryptIfLegacy(string name)
         {
             if (name == null)

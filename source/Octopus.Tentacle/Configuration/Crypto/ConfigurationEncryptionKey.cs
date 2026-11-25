@@ -28,9 +28,8 @@ namespace Octopus.Tentacle.Configuration.Crypto
         const UnixFileMode TraversableByAll = OwnerOnly | UnixFileMode.GroupRead | UnixFileMode.GroupExecute | UnixFileMode.OtherRead | UnixFileMode.OtherExecute;
 #endif
 
-        internal const string RecoveryWithoutBackup = "If there is no backup, the Tentacle's certificate is lost and it needs a new one: "
-            + "run `replace-certificate` with an API key. "
-            + "This creates a new key and certificate, and updates every deployment target and worker registered with the old certificate to trust it.";
+        internal const string RecoveryWithoutBackup = "If there is no backup, run `reset-configuration-encryption` to create a new key, "
+            + "then `replace-certificate` with an API key to give the Tentacle a new certificate.";
 
         static string InstancesDataDirectory
             => Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleInstancesDataDirectory) is { Length: > 0 } directory ? directory : DefaultInstancesDataDirectory;
