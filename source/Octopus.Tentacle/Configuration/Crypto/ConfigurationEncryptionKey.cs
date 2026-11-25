@@ -4,7 +4,6 @@ using System.IO;
 using System.Runtime.Versioning;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Core.Util;
 using Octopus.Tentacle.Util;
@@ -20,8 +19,6 @@ namespace Octopus.Tentacle.Configuration.Crypto
         public const string DefaultInstancesDataDirectory = "/var/lib/octopus/tentacle";
 
         const int KeySizeInBytes = 32;
-        const int EmptyKeyReadAttempts = 20;
-        const int EmptyKeyReadDelayMilliseconds = 50;
 
 #if NET
         const UnixFileMode OwnerOnly = UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute;
@@ -83,7 +80,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
             string contents;
             try
             {
-                contents = ReadAllTextWaitingForContent(KeyFilePath);
+                contents = fileSystem.ReadAllText(KeyFilePath);
             }
             catch (Exception e) when (e is FileNotFoundException || e is DirectoryNotFoundException)
             {
@@ -116,27 +113,13 @@ namespace Octopus.Tentacle.Configuration.Crypto
 
             CreateKeyDirectory(KeyDirectory!);
 
-            // Several instances starting at once after an upgrade must all end up with the same key.
-            if (!fileSystem.AtomicCreateFileWithOnlyUserReadWritePermissions(path, Encoding.ASCII.GetBytes(raw)))
+            if (!fileSystem.TryAtomicCreateFileWithOnlyUserReadWritePermissions(path, Encoding.ASCII.GetBytes(raw)))
             {
                 log.Verbose($"Another process created the configuration encryption key `{path}` first; using its key.");
                 return;
             }
 
             log.Info($"Generated a new configuration encryption key at `{path}`. Back it up with the configuration file it protects: the configuration cannot be decrypted without it.");
-        }
-
-        // Without hard links the key file is created in place, so a racing process can see it before it is written.
-        string ReadAllTextWaitingForContent(string path)
-        {
-            var contents = fileSystem.ReadAllText(path);
-            for (var attempt = 0; attempt < EmptyKeyReadAttempts && string.IsNullOrWhiteSpace(contents); attempt++)
-            {
-                Thread.Sleep(EmptyKeyReadDelayMilliseconds);
-                contents = fileSystem.ReadAllText(path);
-            }
-
-            return contents;
         }
 
         // Ancestors are shared by every instance's service user, so they must stay traversable whatever the umask.

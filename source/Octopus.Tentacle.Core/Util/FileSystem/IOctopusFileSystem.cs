@@ -48,7 +48,7 @@ namespace Octopus.Tentacle.Util
 #if NET
         [UnsupportedOSPlatform("windows")]
 #endif
-        bool AtomicCreateFileWithOnlyUserReadWritePermissions(string filePath, byte[] contents);
+        bool TryAtomicCreateFileWithOnlyUserReadWritePermissions(string filePath, byte[] contents);
 
         string ReadAllText(string scriptFile);
         string[] ReadAllLines(string scriptFile);

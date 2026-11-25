@@ -254,7 +254,7 @@ namespace Octopus.Tentacle.Core.Util
 
 #if NET
         [UnsupportedOSPlatform("windows")]
-        public bool AtomicCreateFileWithOnlyUserReadWritePermissions(string path, byte[] contents)
+        public bool TryAtomicCreateFileWithOnlyUserReadWritePermissions(string path, byte[] contents)
         {
             if (OperatingSystem.IsWindows())
             {
@@ -265,8 +265,12 @@ namespace Octopus.Tentacle.Core.Util
             try
             {
                 CreateFileWithUserReadWriteAccessOnly(temporaryPath, contents);
-                // Unlike File.Move, link(2) is atomic about not replacing: two racing processes cannot each keep their own file.
-                return UnixFile.TryLinkWithoutReplacing(temporaryPath, path);
+                File.Move(temporaryPath, path);
+                return true;
+            }
+            catch (IOException) when (File.Exists(path))
+            {
+                return false;
             }
             finally
             {
@@ -298,11 +302,11 @@ namespace Octopus.Tentacle.Core.Util
             }
         }
 
-        // In the same directory, so it is on the same file system and can be linked into place atomically.
+        // In the same directory, so it is on the same file system and is renamed rather than copied.
         static string TemporaryPathBeside(string path)
             => path + "." + Guid.NewGuid().ToString("N") + ".tmp";
 #else
-        public bool AtomicCreateFileWithOnlyUserReadWritePermissions(string path, byte[] contents)
+        public bool TryAtomicCreateFileWithOnlyUserReadWritePermissions(string path, byte[] contents)
             => throw new PlatformNotSupportedException(UserOnlyFilesAreUnixOnly);
 #endif
 

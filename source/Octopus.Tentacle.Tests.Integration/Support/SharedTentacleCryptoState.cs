@@ -95,7 +95,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             aes.GenerateKey();
             var contents = Convert.ToBase64String(aes.Key) + "." + Convert.ToBase64String(aes.IV);
             fileSystem.EnsureDirectoryExists(Path.GetDirectoryName(path)!);
-            fileSystem.AtomicCreateFileWithOnlyUserReadWritePermissions(path, Encoding.ASCII.GetBytes(contents));
+            fileSystem.TryAtomicCreateFileWithOnlyUserReadWritePermissions(path, Encoding.ASCII.GetBytes(contents));
         }
 
         // A Tentacle only reuses the stored certificate when it comes back with its private key.

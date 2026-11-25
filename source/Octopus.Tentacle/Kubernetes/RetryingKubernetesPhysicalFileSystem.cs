@@ -143,9 +143,9 @@ namespace Octopus.Tentacle.Kubernetes
 #if NET
         [UnsupportedOSPlatform("windows")]
 #endif
-        public bool AtomicCreateFileWithOnlyUserReadWritePermissions(string filePath, byte[] contents)
+        public bool TryAtomicCreateFileWithOnlyUserReadWritePermissions(string filePath, byte[] contents)
         {
-            return syncRetryPolicy.Execute(() => inner.AtomicCreateFileWithOnlyUserReadWritePermissions(filePath, contents));
+            return syncRetryPolicy.Execute(() => inner.TryAtomicCreateFileWithOnlyUserReadWritePermissions(filePath, contents));
         }
 
         public string ReadAllText(string scriptFile)
