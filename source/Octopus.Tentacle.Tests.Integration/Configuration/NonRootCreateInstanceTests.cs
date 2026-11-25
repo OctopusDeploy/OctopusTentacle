@@ -25,7 +25,7 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
     {
         [Test]
         [RequiresSudoOnLinux]
-        public async Task WhenANonRootUserCannotCreateTheKeyThenTheCommandInTheErrorFixesIt()
+        public async Task WhenANonRootUserCreatesAnIntance_AndCannotCreateTheKey_ThenRunningTheCommandInTheErrorFixesTheIssue()
         {
             // Arrange
             using var user = new LinuxTestUserPrincipal("octo-key-test");
