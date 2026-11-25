@@ -153,7 +153,7 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
         }
 
         [Test]
-        public async Task WhenTentacleKeyFileIsDeleted_AndTheCurrentTentacleStarts_ThenTheCertificateIsLeftUntouched()
+        public async Task WhenTentacleKeyFileIsDeleted_AndTheCurrentTentacleStarts_ThenTheUserIsToldTheKeyIsMissing()
         {
             // Arrange
             using var instance = await new TentacleInstanceBuilder()
