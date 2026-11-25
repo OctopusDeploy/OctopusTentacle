@@ -43,9 +43,9 @@ namespace Octopus.Tentacle.Configuration.Crypto
         // Until the configuration encryption upgrade has created the key, values are written the way earlier versions wrote them.
         public string Encrypt(string raw)
         {
+            var currentKey = configurationKey.TryLoad();
             try
             {
-                var currentKey = configurationKey.TryLoad();
                 return currentKey == null ? EncryptLegacy(raw) : EncryptCurrent(currentKey, raw);
             }
             catch (Exception e)
