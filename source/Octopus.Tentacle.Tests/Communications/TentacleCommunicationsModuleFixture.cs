@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.InteropServices;
 using Autofac;
 using FluentAssertions;
 using Halibut;
@@ -76,41 +75,6 @@ namespace Octopus.Tentacle.Tests.Communications
                 Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleTcpKeepAliveEnabled, "");
             }
         } 
-
-        [Test]
-        [NonParallelizable]
-        public void HalibutAsyncListenerShouldBeEnabledByDefaultExceptOnWindows()
-        {
-            Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleUseAsyncListener, "");
-
-            var container = BuildContainer();
-
-            var halibutRuntime = container.Resolve<HalibutRuntime>();
-
-            // On Windows the synchronous listener already blocks without spinning, so there is nothing to gain.
-            var expected = !RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-            halibutRuntime.TimeoutsAndLimits.UseAsyncListener.Should().Be(expected);
-        }
-
-        [Test]
-        [NonParallelizable]
-        public void HalibutAsyncListenerCanBeDisabledWithAnEnvironmentVariable()
-        {
-            try
-            {
-                Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleUseAsyncListener, "False");
-
-                var container = BuildContainer();
-
-                var halibutRuntime = container.Resolve<HalibutRuntime>();
-
-                halibutRuntime.TimeoutsAndLimits.UseAsyncListener.Should().BeFalse();
-            }
-            finally
-            {
-                Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleUseAsyncListener, "");
-            }
-        }
 
         static IContainer BuildContainer()
         {

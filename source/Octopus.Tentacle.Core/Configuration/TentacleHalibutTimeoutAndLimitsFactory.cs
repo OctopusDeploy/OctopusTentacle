@@ -1,7 +1,6 @@
 using System;
 using Halibut.Diagnostics;
 using Octopus.Tentacle.Core.Util;
-using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Core.Configuration
 {
@@ -29,9 +28,8 @@ namespace Octopus.Tentacle.Core.Configuration
                 
             if (!bool.TryParse(Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleUseAsyncListener), out var useAsyncListener))
             {
-                // Default to enabled except on Windows. Elsewhere the synchronous listener spin waits for connections,
-                // while on Windows it already blocks without spinning, so there is nothing to gain.
-                useAsyncListener = !PlatformDetection.IsRunningOnWindows;
+                // Default to enabled if the environment variable is not provided
+                useAsyncListener = true;
             }
 
             var halibutTimeoutsAndLimits = HalibutTimeoutsAndLimits.RecommendedValues();
