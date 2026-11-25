@@ -22,8 +22,8 @@ namespace Octopus.Tentacle.Core.Configuration
                 
             if (!bool.TryParse(Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleUseTcpNoDelay), out var useTcpNoDelay))
             {
-                // Default to disabled
-                useTcpNoDelay = false;
+                // Default to enabled if the environment variable is not provided
+                useTcpNoDelay = true;
             }
                 
             if (!bool.TryParse(Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleUseAsyncListener), out var useAsyncListener))

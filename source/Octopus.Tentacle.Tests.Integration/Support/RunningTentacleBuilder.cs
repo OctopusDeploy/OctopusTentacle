@@ -46,7 +46,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         {
             var env = new Dictionary<string, string>();
             // Dog food our new setting.
-            env[EnvironmentVariables.TentacleUseTcpNoDelay] = "true";
             env[EnvironmentVariables.TentacleUseAsyncListener] = "true";
             return env;
         }
