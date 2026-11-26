@@ -1,13 +1,17 @@
 version: '3'
 services:
 
+    # Builds one architecture (amd64 unless BUILD_ARCH says otherwise).
+    # The published multi-architecture image is built by the BuildAndPushLinuxTentacleContainerImage NUKE target.
     octopusdeploy-tentacle-linux:
+        platform: "linux/${BUILD_ARCH:-amd64}"
         build:
             context: .
             dockerfile: ./docker/linux/Dockerfile
             args:
                 BUILD_DATE: ${BUILD_DATE:?err}
                 BUILD_NUMBER: ${BUILD_NUMBER:?err}
+                TARGETARCH: ${BUILD_ARCH:-amd64}
         image: docker.packages.octopushq.com/octopusdeploy/tentacle:${BUILD_NUMBER?err}-linux
 
     octopusdeploy-kubernetes-agent-tentacle-linux:

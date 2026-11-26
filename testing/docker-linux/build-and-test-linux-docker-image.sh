@@ -6,11 +6,13 @@
 # end to end, the same way TeamCity does:
 #
 #   TeamFireAndMotion_OctopusTentacle_TentacleVLatest
-#     -> Build: Tentacle (Linux)      (produces _artifacts/deb/tentacle_<ver>_amd64.deb)
-#     -> Build: Linux Docker image    (docker-compose -f docker-compose.build.yml build ...)
+#     -> Build: Tentacle (Linux)      (produces _artifacts/docker/tentacle_<ver>_linux-<arch>.deb)
+#     -> Build: Linux Docker image    (builds docker/linux/Dockerfile for amd64 and arm64)
+#
+# It tests one architecture per run, chosen with --platform.
 #
 # Stages:
-#   1. deb    - build the linux-x64 .deb via NUKE (--target PackDebianPackage)
+#   1. deb    - build the .deb for that architecture via NUKE (--target PackDebianPackage)
 #   2. image  - build docker/linux/Dockerfile via docker-compose.build.yml
 #   3. smoke  - assert the image's contents and behaviour
 #   4. e2e    - stand up a real Octopus Server and point a listening and a
@@ -39,7 +41,10 @@
 #
 # Usage: ./testing/docker-linux/build-and-test-linux-docker-image.sh [options]
 #        (runs from anywhere; it resolves the repo root itself)
-#   --skip-deb     Reuse the newest existing _artifacts/deb/tentacle_*_amd64.deb
+#   --platform P   The image's platform: linux/amd64 (the default) or linux/arm64.
+#                  The SQL Server and Octopus Server containers in stage 4 always
+#                  run as linux/amd64, as they have no arm64 images.
+#   --skip-deb     Reuse the newest existing _artifacts/docker/tentacle_*_linux-<arch>.deb
 #   --skip-image   Reuse the already-built image for the resolved BUILD_NUMBER
 #   --skip-smoke   Skip the image smoke tests
 #   --skip-e2e     Skip the Octopus Server registration test
@@ -51,7 +56,7 @@
 set -euo pipefail
 
 # This script lives in testing/docker-linux/, but every path below (./build.sh,
-# _artifacts/deb, docker-compose.build.yml, docker/linux/Dockerfile) is relative
+# _artifacts/docker, docker-compose.build.yml, docker/linux/Dockerfile) is relative
 # to the repo root, so resolve that and work from there.
 REPO_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 cd "$REPO_DIR"
@@ -64,6 +69,7 @@ SKIP_SMOKE=0
 SKIP_E2E=0
 KEEP=0
 NO_1PASSWORD=0
+PLATFORM="linux/amd64"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -73,6 +79,10 @@ while [[ $# -gt 0 ]]; do
         --skip-e2e) SKIP_E2E=1 ;;
         --keep) KEEP=1 ;;
         --no-1password) NO_1PASSWORD=1 ;;
+        --platform)
+            [[ $# -ge 2 ]] || { echo "--platform needs a value: linux/amd64 or linux/arm64" >&2; exit 2; }
+            PLATFORM="$2"
+            shift ;;
         # Print the header comment block, minus the shebang, as the help text.
         -h|--help)
             awk 'NR>1 { if (/^#/) { sub(/^# ?/, ""); print } else { exit } }' "${BASH_SOURCE[0]}"
@@ -134,16 +144,30 @@ assert_equals() {
 # Host platform
 ###############################################################################
 
-# The .deb we build (and therefore the image) is amd64. On an arm64 host
-# (Apple Silicon) Docker would otherwise default to arm64 and the `apt install`
-# of the .deb would fail, so pin the platform for every build and run.
-PLATFORM="linux/amd64"
+# The image is built and run for --platform, whatever the host is, so that the
+# .deb's architecture always matches the image's. When they differ from the host,
+# Docker runs them under emulation.
+case "$PLATFORM" in
+    linux/amd64) ARCH=amd64; RUNTIME_ID=linux-x64 ;;
+    linux/arm64) ARCH=arm64; RUNTIME_ID=linux-arm64 ;;
+    *) die "unsupported --platform '$PLATFORM': use linux/amd64 or linux/arm64" ;;
+esac
 export DOCKER_DEFAULT_PLATFORM="$PLATFORM"
+
+# SQL Server and Octopus Server only publish amd64 images, so stage 4 always runs
+# them as amd64, under emulation on an arm64 host.
+SERVER_PLATFORM="linux/amd64"
+
 # Suppress Docker Scout hints, which are written to stderr and look like errors.
 export DOCKER_CLI_HINTS=false
 
-if [[ "$(uname -m)" == "arm64" || "$(uname -m)" == "aarch64" ]]; then
-    info "Host is $(uname -m); building and running everything as $PLATFORM under emulation."
+case "$(uname -m)" in
+    x86_64|amd64) HOST_ARCH=amd64 ;;
+    arm64|aarch64) HOST_ARCH=arm64 ;;
+    *) HOST_ARCH=$(uname -m) ;;
+esac
+if [[ "$HOST_ARCH" != "$ARCH" ]]; then
+    info "Host is $(uname -m); building and running the image as $PLATFORM under emulation."
 fi
 
 command -v docker >/dev/null || die "docker is not on PATH"
@@ -154,22 +178,22 @@ docker info >/dev/null 2>&1 || die "the Docker daemon is not running"
 ###############################################################################
 
 find_deb() {
-    # Newest tentacle_*_amd64.deb, or empty if there are none.
+    # Newest tentacle_*_linux-<arch>.deb, or empty if there are none.
     #
     # The trailing `|| true` is what makes "or empty" true: with no match the
     # glob is passed through literally, `ls` fails, and under `set -o pipefail`
     # the caller's `DEB_PATH=$(find_deb)` would abort the script before it could
     # reach the `die` that explains what is missing.
-    ls -t _artifacts/deb/tentacle_*_amd64.deb 2>/dev/null | head -1 || true
+    ls -t _artifacts/docker/tentacle_*_linux-"${ARCH}".deb 2>/dev/null | head -1 || true
 }
 
 if [[ $SKIP_DEB -eq 1 ]]; then
     step "Stage 1/4: .deb (skipped, reusing existing)"
     DEB_PATH=$(find_deb)
-    [[ -n "$DEB_PATH" ]] || die "--skip-deb was given but no _artifacts/deb/tentacle_*_amd64.deb exists"
+    [[ -n "$DEB_PATH" ]] || die "--skip-deb was given but no _artifacts/docker/tentacle_*_linux-${ARCH}.deb exists"
 else
-    step "Stage 1/4: building the linux-x64 .deb via NUKE"
-    info "This runs 'PackDebianPackage', which cross-compiles Tentacle for linux-x64"
+    step "Stage 1/4: building the $RUNTIME_ID .deb via NUKE"
+    info "This runs 'PackDebianPackage', which cross-compiles Tentacle for $RUNTIME_ID"
     info "and packages it inside the tool-linux-packages container. Takes a few minutes."
 
     # NUKE resolves every [ParameterFromPasswordStore] at start-up, which shells out
@@ -177,18 +201,18 @@ else
     # 'op' call hangs when it cannot prompt interactively, so opt out.
     export OCTOPUS__Tests__SecretManagerEnabled=False
 
-    # Only linux-x64 is needed for docker/linux/Dockerfile; building every runtime
-    # ID would take far longer for no benefit.
-    ./build.sh --target PackDebianPackage --runtime-ids linux-x64
+    # Only this platform's runtime ID is needed for docker/linux/Dockerfile;
+    # building every runtime ID would take far longer for no benefit.
+    ./build.sh --target PackDebianPackage --runtime-ids "$RUNTIME_ID"
 
     DEB_PATH=$(find_deb)
-    [[ -n "$DEB_PATH" ]] || die "PackDebianPackage finished but no .deb landed in _artifacts/deb/"
+    [[ -n "$DEB_PATH" ]] || die "PackDebianPackage finished but no .deb landed in _artifacts/docker/"
 fi
 
 DEB_FILE=$(basename "$DEB_PATH")
-# tentacle_<BUILD_NUMBER>_amd64.deb
+# tentacle_<BUILD_NUMBER>_linux-<arch>.deb
 BUILD_NUMBER="${DEB_FILE#tentacle_}"
-BUILD_NUMBER="${BUILD_NUMBER%_amd64.deb}"
+BUILD_NUMBER="${BUILD_NUMBER%_linux-${ARCH}.deb}"
 [[ -n "$BUILD_NUMBER" ]] || die "could not derive BUILD_NUMBER from $DEB_FILE"
 
 # A local NUKE build appends '-<yyyyMMddHHmmss>' to FullSemVer for the package
@@ -212,7 +236,7 @@ IMAGE="docker.packages.octopushq.com/octopusdeploy/tentacle:${BUILD_NUMBER}-linu
 BUILD_DATE=$(date +%Y-%m-%dT%H:%M:%S%z)
 
 export BUILD_NUMBER BUILD_DATE
-export BUILD_ARCH=amd64
+export BUILD_ARCH="$ARCH"
 
 if [[ $SKIP_IMAGE -eq 1 ]]; then
     step "Stage 2/4: image (skipped, reusing existing)"
@@ -834,7 +858,7 @@ if [[ $SKIP_E2E -eq 0 ]]; then
 
     # --- SQL Server -------------------------------------------------------
     info "Starting SQL Server..."
-    docker run -d --name "$E2E_SQL" --platform "$PLATFORM" --network "$E2E_NET" \
+    docker run -d --name "$E2E_SQL" --platform "$SERVER_PLATFORM" --network "$E2E_NET" \
         --env-file "$E2E_ENV_SQL" \
         -e ACCEPT_EULA=Y \
         -e MSSQL_PID=Express \
@@ -851,7 +875,7 @@ if [[ $SKIP_E2E -eq 0 ]]; then
     # --- Octopus Server ---------------------------------------------------
     info "Starting Octopus Server (this takes several minutes on first run)..."
 
-    docker run -d --name "$E2E_SERVER" --platform "$PLATFORM" --network "$E2E_NET" \
+    docker run -d --name "$E2E_SERVER" --platform "$SERVER_PLATFORM" --network "$E2E_NET" \
         --env-file "$E2E_ENV_SERVER" \
         -e ACCEPT_EULA=Y \
         -e "ADMIN_USERNAME=${OCTOPUS_USER}" \

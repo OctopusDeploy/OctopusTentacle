@@ -27,8 +27,10 @@
         "BuildAll",
         "BuildAndLoadLocalDebugKubernetesTentacleContainerImage",
         "BuildAndLoadLocallyKubernetesTentacleContainerImage",
+        "BuildAndLoadLocallyLinuxTentacleContainerImage",
         "BuildAndPushForMicrok8sKubernetesTentacleContainerImage",
         "BuildAndPushKubernetesTentacleContainerImage",
+        "BuildAndPushLinuxTentacleContainerImage",
         "BuildLinux",
         "BuildOsx",
         "BuildSoftwareBillOfMaterials",
@@ -197,7 +199,7 @@
         },
         "TentacleLinuxDockerImage": {
           "type": "string",
-          "description": "The Linux Tentacle image for TestLinuxDockerImage to test. Defaults to the tag docker-compose.build.yml gives the image for this version"
+          "description": "The Linux Tentacle image for TestLinuxDockerImage to test. If not given, the tests use the TentacleDockerTests_ImageAndTag or TentacleDockerTests_ImageTag environment variable"
         },
         "TestFilter": {
           "type": "string"
