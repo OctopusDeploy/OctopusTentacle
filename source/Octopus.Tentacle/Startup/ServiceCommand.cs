@@ -113,7 +113,7 @@ namespace Octopus.Tentacle.Startup
                     && !string.IsNullOrWhiteSpace(configurationPath)
                     && !string.IsNullOrWhiteSpace(userName))
                 {
-                    configurationFilePermissions.RestrictToServiceUser(configurationPath, userName);
+                    configurationFilePermissions.RestrictToServiceUser(configurationPath!, userName!);
                 }
 
                 if (currentName == null)
