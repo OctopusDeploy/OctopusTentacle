@@ -10,9 +10,16 @@ if { is_persisted /etc/octopus || is_file_persisted /etc/octopus/tentacle.config
     exit 1
 fi
 
+# Docker-in-Docker starts before Tentacle is configured, so a container that can't run it stops before registering.
+# It is sourced, as are the scripts after it, so that run-tentacle.sh can watch the daemon: only the shell that started
+# a process can wait on it.
+if [[ "$DISABLE_DIND" != "Y" ]]; then
+    source /scripts/start-docker-in-docker.sh
+fi
+
 /scripts/configure-tentacle.sh
 
 # Clear sensitive env variables that should not be inherited by the tentacle process or any forked child processes
  unset ServerApiKey BearerToken ServerUsername ServerPassword TentacleCertificateBase64
 
-exec /scripts/run-tentacle.sh
+source /scripts/run-tentacle.sh
