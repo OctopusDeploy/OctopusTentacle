@@ -16,12 +16,19 @@ namespace Octopus.Tentacle.Configuration
 #if NET
     [SupportedOSPlatform("windows")]
 #endif
-    static class WindowsConfigurationFilePermissions
+    class WindowsConfigurationFilePermissions : IConfigurationFilePermissions
     {
         static readonly SecurityIdentifier LocalSystem = new(WellKnownSidType.LocalSystemSid, null);
         static readonly SecurityIdentifier Administrators = new(WellKnownSidType.BuiltinAdministratorsSid, null);
 
-        public static void CreateEmpty(string configurationPath, string contents)
+        readonly ISystemLog log;
+
+        public WindowsConfigurationFilePermissions(ISystemLog log)
+        {
+            this.log = log;
+        }
+
+        public void CreateRestrictedToCurrentUser(string configurationPath, string contents)
         {
             var security = new FileSecurity();
             Restrict(security);
@@ -36,10 +43,17 @@ namespace Octopus.Tentacle.Configuration
             writer.Write(contents);
         }
 
-        // Runs as the account Tentacle runs as, so it can't lock that account out. An ACL that no longer inherits from
-        // its folder has already been restricted, by Tentacle or by an administrator, so it is left alone.
-        public static void RestrictToOwner(string configurationPath, ISystemLog log)
+        // The agent runs as the service account, so granting the current user access keeps the service account's
+        // access. Entries set on the file itself, such as the service account granted access by `service --install`,
+        // are kept too. An ACL that no longer inherits from its folder has already been restricted, by Tentacle or by
+        // an administrator, so it is left alone.
+        public void RestrictToCurrentUser(string configurationPath)
         {
+            if (!File.Exists(configurationPath))
+            {
+                return;
+            }
+
             try
             {
                 var file = new FileInfo(configurationPath);
@@ -59,8 +73,7 @@ namespace Octopus.Tentacle.Configuration
             }
         }
 
-        // Grants the service account access before the service is started with it, so it can read the restricted file.
-        public static void RestrictToServiceUser(string configurationPath, string userName, ISystemLog log)
+        public void RestrictToServiceUser(string configurationPath, string userName)
         {
             try
             {
