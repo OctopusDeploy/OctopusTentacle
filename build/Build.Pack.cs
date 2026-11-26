@@ -216,6 +216,29 @@ partial class Build
         });
 
     [PublicAPI]
+    Target BuildAndPushLinuxTentacleContainerImage => _ => _
+        .Description("Builds the Linux Tentacle container image for every DockerPlatform, and pushes it as <version>-linux and <version>")
+        .Executes(() =>
+        {
+            BuildLinuxTentacleContainerImage(push: true, DockerPlatform);
+        });
+
+    [PublicAPI]
+    Target BuildAndLoadLocallyLinuxTentacleContainerImage => _ => _
+        .Description("Builds the Linux Tentacle container image for one platform, and loads it into the local Docker. Uses the host's architecture unless DockerPlatform names a single platform.")
+        .OnlyWhenStatic(() => IsLocalBuild)
+        .DependsOn(PackDebianPackage)
+        .Executes(() =>
+        {
+            // Docker can only load one platform's image, so fall back to the host's architecture when DockerPlatform names several.
+            var platform = DockerPlatform.Contains(',')
+                ? RuntimeInformation.OSArchitecture == Architecture.Arm64 ? "linux/arm64" : "linux/amd64"
+                : DockerPlatform;
+
+            BuildLinuxTentacleContainerImage(push: false, platform);
+        });
+
+    [PublicAPI]
     Target PackRedHatPackage => _ => _
         .Description("TODO: Move .rpm creation into this task")
         .DependsOn(PackLinuxPackagesLegacy);
@@ -768,6 +791,54 @@ partial class Build
 
             return settings;
         });
+    }
+
+    void BuildLinuxTentacleContainerImage(bool push, string platform)
+    {
+        const string repository = "docker.packages.octopushq.com/octopusdeploy/tentacle";
+
+        // <version> is the tag Octopus publishes to Docker Hub. It used to be a manifest list made by a separate TeamCity build.
+        var tags = push
+            ? new[] { $"{repository}:{FullSemVer}-linux", $"{repository}:{FullSemVer}" }
+            : new[] { $"{repository}:{FullSemVer}-linux" };
+
+        // Docker's default buildx builder can't build an image for several platforms, so create a temporary one
+        // unless a builder was given.
+        var builder = DockerBuildxBuilder;
+        var createTemporaryBuilder = builder is null && platform.Contains(',');
+        if (createTemporaryBuilder)
+        {
+            builder = $"tentacle-linux-image-{Guid.NewGuid():N}";
+            ProcessTasks.StartProcess("docker", $"buildx create --name {builder} --driver docker-container").AssertZeroExitCode();
+        }
+
+        try
+        {
+            DockerTasks.DockerBuildxBuild(settings =>
+            {
+                if (builder is not null)
+                {
+                    settings = settings.SetBuilder(builder);
+                }
+
+                return settings
+                    .AddBuildArg($"BUILD_NUMBER={FullSemVer}", $"BUILD_DATE={DateTime.UtcNow:O}")
+                    .SetPlatform(platform)
+                    .SetTag(tags)
+                    .SetFile("./docker/linux/Dockerfile")
+                    .SetPath(RootDirectory)
+                    .SetPull(true)
+                    .SetPush(push)
+                    .SetLoad(!push);
+            });
+        }
+        finally
+        {
+            if (createTemporaryBuilder)
+            {
+                ProcessTasks.StartProcess("docker", $"buildx rm --force {builder}").AssertZeroExitCode();
+            }
+        }
     }
 
     void CopyDebianPackageToDockerFolder(string runtimeId)

@@ -44,9 +44,12 @@ COPY docker/linux/scripts/dockerd-entrypoint.sh /usr/local/bin/
 RUN /install-scripts/install-docker.sh
 
 # Install Tentacle
-COPY _artifacts/deb/tentacle_${BUILD_NUMBER}_amd64.deb /tmp/
+# BuildKit sets TARGETARCH (amd64 or arm64) for each platform being built.
+# PackDebianPackage copies each architecture's package to _artifacts/docker/ under this name.
+ARG TARGETARCH
+COPY _artifacts/docker/tentacle_${BUILD_NUMBER}_linux-${TARGETARCH}.deb /tmp/tentacle.deb
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends ./tentacle_${BUILD_NUMBER}_amd64.deb && \
+    apt-get install -y --no-install-recommends ./tentacle.deb && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
     ln -s /opt/octopus/tentacle/Tentacle /usr/bin/tentacle
