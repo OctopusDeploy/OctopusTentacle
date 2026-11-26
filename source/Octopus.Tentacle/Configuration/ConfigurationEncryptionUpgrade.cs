@@ -32,8 +32,6 @@ namespace Octopus.Tentacle.Configuration
             PollingProxyConfiguration.ProxyPasswordSettingName
         };
 
-        const string StillOnLegacyKeys = "so the configuration is still protected by the key earlier versions used. Tentacle will keep working and try again the next time it starts.";
-
         readonly IApplicationInstanceSelector instanceSelector;
         readonly IOctopusFileSystem fileSystem;
         readonly ISystemLog log;
@@ -62,7 +60,7 @@ namespace Octopus.Tentacle.Configuration
             }
             catch (Exception e)
             {
-                log.Warn(e, $"{failure}, {StillOnLegacyKeys}");
+                log.Warn(e, $"{failure}, so the configuration is still protected by the key earlier versions used. Tentacle will keep working and try again the next time it starts.");
             }
         }
 
