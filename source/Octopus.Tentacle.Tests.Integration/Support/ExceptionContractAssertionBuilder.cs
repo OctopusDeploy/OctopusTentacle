@@ -27,6 +27,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                         return new ExceptionContract(typeof(HalibutClientException), new[]
                         {
                             $"An error occurred when sending a request to '{clientAndTentacle.ServiceEndPoint}/', before the request could begin: Transport endpoint is not connected",
+                            $"An error occurred when sending a request to '{clientAndTentacle.ServiceEndPoint}/', before the request could begin: The operation is not allowed on non-connected sockets.",
                             $"An error occurred when sending a request to '{clientAndTentacle.ServiceEndPoint}/', before the request could begin: Connection refused",
                             $"An error occurred when sending a request to '{clientAndTentacle.ServiceEndPoint}/', before the request could begin: Broken pipe",
                             $"An error occurred when sending a request to '{clientAndTentacle.ServiceEndPoint}/', before the request could begin: Received an unexpected EOF or 0 bytes from the transport stream",
@@ -57,6 +58,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                         return new ExceptionContract(typeof(HalibutClientException), new[]
                         {
                             "Transport endpoint is not connected",
+                            "The operation is not allowed on non-connected sockets.",
                             "Connection refused",
                             "Broken pipe",
                             "Received an unexpected EOF or 0 bytes from the transport stream",

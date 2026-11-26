@@ -145,7 +145,7 @@ function setupPollingTentacle {
     machinetype=1
     servercommsport=10943
 
-    read -p "Where would you like Tentacle to store log files? ($logpath):" inputlogpath
+    read -p "Where would you like Tentacle to store configuration, logs, and working files? ($logpath):" inputlogpath
     logpath=$(assignNonEmptyValue "$inputlogpath" $logpath)
     
     read -p "Where would you like Tentacle to install applications to? ($applicationpath):" inputapplicationpath
