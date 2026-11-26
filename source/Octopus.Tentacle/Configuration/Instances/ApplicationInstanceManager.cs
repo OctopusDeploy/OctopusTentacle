@@ -71,7 +71,7 @@ namespace Octopus.Tentacle.Configuration.Instances
                 var user = Environment.UserName;
                 var directory = key.KeyDirectory;
                 throw new ControlledFailureException($"Unable to create the configuration encryption key `{keyFilePath}` for the instance `{instanceName}`, so the instance was not created: {e.Message} "
-                    + $"Run this command as root, or give the user ({user}) access to the directory, for example: `sudo mkdir -p {directory} && sudo chown -R {user} {directory} && sudo chmod 700 {directory}`.", e);
+                    + $"Run this command as root, or give the user ({user}) access to the directory, for example: `sudo sh -c 'umask 022 && mkdir -p {directory} && chown {user} {directory} && chmod 700 {directory}'`.", e);
             }
         }
 

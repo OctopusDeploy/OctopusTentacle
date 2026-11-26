@@ -91,7 +91,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
                 var user = Environment.UserName;
                 var directory = LinuxDirectoryOf(KeyFilePath);
                 throw new ConfigurationEncryptionKeyException($"The configuration encryption key file `{KeyFilePath}` exists but the user Tentacle is running as ({user}) cannot read it. "
-                    + $"It must be owned by and readable only by that user, for example: `sudo chown -R {user} {directory} && sudo chmod 700 {directory} && sudo chmod 600 {KeyFilePath}`.", e);
+                    + $"It must be owned by and readable only by that user, and every parent directory must be traversable by that user, for example: `sudo chown -R {user} {directory} && sudo chmod 700 {directory} && sudo chmod 600 {KeyFilePath}`.", e);
             }
 
             loaded = Parse(KeyFilePath, contents);

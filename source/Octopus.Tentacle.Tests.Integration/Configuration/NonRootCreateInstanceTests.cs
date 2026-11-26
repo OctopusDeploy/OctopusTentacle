@@ -25,7 +25,7 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
     {
         [Test]
         [RequiresSudoOnLinux]
-        public async Task WhenANonRootUserCreatesAnIntance_AndCannotCreateTheKey_ThenRunningTheCommandInTheErrorFixesTheIssue()
+        public async Task WhenANonRootUserCreatesAnIntance_AndCannotCreateTheKey_ThenRunningTheCommandInTheErrorUnderAHardenedUmaskFixesTheIssue()
         {
             // Arrange
             using var user = new LinuxTestUserPrincipal("octo-key-test");
@@ -50,9 +50,11 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
             // Act
             var refused = await CreateInstanceAsUser();
             Logger.Information("StdOut: {StdOut}, StdErr: {StdErr}", refused.StandardOutput, refused.StandardError);
-            var fix = Regex.Match(refused.StandardOutput + refused.StandardError, "sudo mkdir[^`]*").Value;
+            var fix = Regex.Match(refused.StandardOutput + refused.StandardError, "`(sudo [^`]*)`").Groups[1].Value;
             Logger.Information("Running Fix: {Fix}", fix);
-            await Cli.Wrap("/bin/bash").WithArguments(new[] { "-c", fix }).ExecuteBufferedAsync();
+            // sudo normally applies its own umask, so wrap it to behave like a hardened host where root's umask is 027.
+            const string sudoWithHardenedUmask = "sudo() { command sudo sh -c 'umask 027 && exec \"$@\"' sh \"$@\"; }";
+            await Cli.Wrap("/bin/bash").WithArguments(new[] { "-c", $"{sudoWithHardenedUmask}; {fix}" }).ExecuteBufferedAsync();
             var created = await CreateInstanceAsUser();
 
             // Assert
