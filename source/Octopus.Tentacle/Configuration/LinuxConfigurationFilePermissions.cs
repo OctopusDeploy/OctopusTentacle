@@ -1,45 +1,43 @@
-using System;
-using System.IO;
-using Octopus.Tentacle.Core.Diagnostics;
-using Octopus.Tentacle.Util;
 #if NET
+using System;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.Versioning;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Core.Util;
-#endif
 
 namespace Octopus.Tentacle.Configuration
 {
-    // The config holds protected settings, so only its owner may read it. The service user must therefore own it.
-    static class ConfigurationFilePermissions
+    // Only the file's owner may read it, so the service user must own it.
+    [UnsupportedOSPlatform("windows")]
+    class LinuxConfigurationFilePermissions : IConfigurationFilePermissions
     {
-#if NET
         public const UnixFileMode OwnerOnly = UnixFileMode.UserRead | UnixFileMode.UserWrite;
-#endif
 
-        public static void CreateEmpty(IOctopusFileSystem fileSystem, string configurationPath, string contents)
+        readonly ISystemLog log;
+
+        public LinuxConfigurationFilePermissions(ISystemLog log)
         {
-#if NET
-            if (!OperatingSystem.IsWindows())
-            {
-                using var stream = new FileStream(configurationPath, new FileStreamOptions
-                {
-                    Mode = FileMode.CreateNew,
-                    Access = FileAccess.Write,
-                    UnixCreateMode = OwnerOnly
-                });
-                using var writer = new StreamWriter(stream);
-                writer.Write(contents);
-                return;
-            }
-#endif
-            fileSystem.OverwriteFile(configurationPath, contents);
+            this.log = log;
         }
 
-        public static void RestrictToOwner(string? configurationPath, ISystemLog log)
+        public void CreateRestrictedToCurrentUser(string configurationPath, string contents)
         {
-#if NET
-            if (OperatingSystem.IsWindows() || string.IsNullOrWhiteSpace(configurationPath) || !File.Exists(configurationPath))
+            // The mode is applied as the file is created, so it is never readable by other users.
+            using var stream = new FileStream(configurationPath, new FileStreamOptions
+            {
+                Mode = FileMode.CreateNew,
+                Access = FileAccess.Write,
+                UnixCreateMode = OwnerOnly
+            });
+            using var writer = new StreamWriter(stream);
+            writer.Write(contents);
+        }
+
+        // The agent runs as the service user, which owns the file.
+        public void RestrictToCurrentUser(string configurationPath)
+        {
+            if (!File.Exists(configurationPath))
             {
                 return;
             }
@@ -57,16 +55,11 @@ namespace Octopus.Tentacle.Configuration
             {
                 log.Warn($"Unable to restrict `{configurationPath}` to its owner, so other users may be able to read it: {ex.Message}");
             }
-#endif
         }
 
-        public static void RestrictToServiceUser(string? configurationPath, string? userName, ISystemLog log)
+        public void RestrictToServiceUser(string configurationPath, string userName)
         {
-#if NET
-            if (OperatingSystem.IsWindows()
-                || string.IsNullOrWhiteSpace(configurationPath)
-                || string.IsNullOrWhiteSpace(userName)
-                || userName == "root")
+            if (userName == "root")
             {
                 return;
             }
@@ -76,11 +69,8 @@ namespace Octopus.Tentacle.Configuration
             {
                 log.Warn($"Unable to restrict `{configurationPath}` to `{userName}`: {error.TrimEnd('.')}. Only the service user should be able to read and write the configuration file, so check its owner and permissions.");
             }
-#endif
         }
 
-#if NET
-        [UnsupportedOSPlatform("windows")]
         static string? TryRestrictToServiceUser(string configurationPath, string userName)
         {
             try
@@ -129,6 +119,6 @@ namespace Octopus.Tentacle.Configuration
                 return null;
             }
         }
-#endif
     }
 }
+#endif

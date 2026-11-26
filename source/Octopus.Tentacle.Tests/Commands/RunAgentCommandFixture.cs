@@ -63,6 +63,7 @@ namespace Octopus.Tentacle.Tests.Commands
                 new AppVersion(GetType().Assembly),
                 Substitute.For<ILogFileOnlyLogger>(),
                 backgroundTasks.Select(bt => new Lazy<IBackgroundTask>(() => bt)).ToList(),
+                Substitute.For<IConfigurationFilePermissions>(),
                 new Lazy<IConfigurationEncryptionUpgrade>(() => configurationEncryptionUpgrade));
 
             selector.Current.Returns(new ApplicationInstanceConfiguration("MyTentacle", null, null, null, null));

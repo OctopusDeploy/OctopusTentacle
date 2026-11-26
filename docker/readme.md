@@ -41,7 +41,7 @@ docker run --publish 10931:10933 `
 ```
 
 
-It is recommended that you run this using something like docker compose, so that it sets up and handles networking for you. Please see the [`docker-compose.yml` file in the Octopus Tentacle](https://github.com/OctopusDeploy/OctopusTentacle/blob/main/docker-compose.yml) repo for an example. Otherwise, use `docker network` so that the containers can talk to each other.
+It is recommended that you run this using something like docker compose, so that it sets up and handles networking for you. Otherwise, use `docker network` so that the containers can talk to each other.
 
 ### Environment variables
 

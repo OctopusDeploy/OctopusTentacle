@@ -17,7 +17,7 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
     [LinuxTest]
     [NonParallelizable]
     [UnsupportedOSPlatform("windows")]
-    public class ConfigurationFilePermissionsTests
+    public class LinuxConfigurationFilePermissionsTests
     {
         [Test]
         [RequiresSudoOnLinux]
@@ -28,10 +28,10 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
             File.SetUnixFileMode(configurationFile, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.GroupRead | UnixFileMode.OtherRead);
             var log = new InMemoryLog();
 
-            ConfigurationFilePermissions.RestrictToServiceUser(configurationFile, user.UserName, log);
+            new LinuxConfigurationFilePermissions(log).RestrictToServiceUser(configurationFile, user.UserName);
 
             log.GetLog().Should().NotContain("Unable to restrict");
-            File.GetUnixFileMode(configurationFile).Should().Be(ConfigurationFilePermissions.OwnerOnly);
+            File.GetUnixFileMode(configurationFile).Should().Be(LinuxConfigurationFilePermissions.OwnerOnly);
             var owner = await new CommandLineInvocation("/bin/bash", $"-c \"stat -c '%U' {configurationFile}\"").ExecuteCommandAsync();
             owner.Infos.Single().Should().Be(user.UserName);
         }

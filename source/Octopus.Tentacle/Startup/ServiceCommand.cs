@@ -17,6 +17,7 @@ namespace Octopus.Tentacle.Startup
         readonly IApplicationInstanceSelector instanceSelector;
         readonly ServiceConfigurationState serviceConfigurationState;
         readonly IServiceConfigurator serviceConfigurator;
+        readonly IConfigurationFilePermissions configurationFilePermissions;
         readonly Lazy<IConfigurationEncryptionUpgrade> configurationEncryptionUpgrade;
         private readonly ISystemLog log;
         readonly string ServicePasswordEnvVar = "OCTOPUS_SERVICE_PASSWORD";
@@ -32,6 +33,7 @@ namespace Octopus.Tentacle.Startup
             IServiceConfigurator serviceConfigurator,
             ISystemLog log,
             ILogFileOnlyLogger logFileOnlyLogger,
+            IConfigurationFilePermissions configurationFilePermissions,
             Lazy<IConfigurationEncryptionUpgrade> configurationEncryptionUpgrade)
             : base(logFileOnlyLogger)
         {
@@ -42,6 +44,7 @@ namespace Octopus.Tentacle.Startup
             this.serviceDescription = serviceDescription;
             this.assemblyContainingService = assemblyContainingService;
             this.serviceConfigurator = serviceConfigurator;
+            this.configurationFilePermissions = configurationFilePermissions;
             this.log = log;
 
             serviceConfigurationState = new ServiceConfigurationState
@@ -103,6 +106,25 @@ namespace Octopus.Tentacle.Startup
             {
                 var currentName = instanceSelector.Current.InstanceName;
                 var thisServiceName = ServiceName.GetWindowsServiceName(applicationName, currentName);
+
+                // Before configuring the service, which may also start it, so the service user can already read the config.
+                // Without a user name the service keeps its current account, which may rely on the inherited
+                // permissions, so the file is left alone.
+                var configurationPath = instanceSelector.Current.ConfigurationPath;
+                var userName = serviceConfigurationState.Username;
+                if ((serviceConfigurationState.Install || serviceConfigurationState.Reconfigure)
+                    && !string.IsNullOrWhiteSpace(configurationPath)
+                    && !string.IsNullOrWhiteSpace(userName))
+                {
+                    configurationFilePermissions.RestrictToServiceUser(configurationPath!, userName!);
+                }
+
+                // A non-root service cannot create its key under /var/lib/octopus, so it is created here while running as root.
+                if (serviceConfigurationState.Install || serviceConfigurationState.Reconfigure)
+                {
+                    configurationEncryptionUpgrade.Value.TryPrepareKey();
+                }
+
                 if (currentName == null)
                 {
                     if (serviceConfigurationState.Install || serviceConfigurationState.Reconfigure)
@@ -122,14 +144,6 @@ namespace Octopus.Tentacle.Startup
                         currentName,
                         serviceDescription,
                         serviceConfigurationState);
-                }
-
-                if (serviceConfigurationState.Install || serviceConfigurationState.Reconfigure)
-                {
-                    ConfigurationFilePermissions.RestrictToServiceUser(instanceSelector.Current.ConfigurationPath, serviceConfigurationState.Username, log);
-
-                    // A non-root service cannot create its key under /var/lib/octopus, so it is created here while running as root.
-                    configurationEncryptionUpgrade.Value.TryPrepareKey();
                 }
             }
         }

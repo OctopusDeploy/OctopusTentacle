@@ -6,14 +6,12 @@ using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Tests.Support;
-using Octopus.Tentacle.Tests.Support.TestAttributes;
-using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Configuration
 {
-    [LinuxOrMacTest]
+    [Platform(Exclude = "Win", Reason = "Unix file modes only")]
     [UnsupportedOSPlatform("windows")]
-    public class ConfigurationFilePermissionsTests
+    public class LinuxConfigurationFilePermissionsTests
     {
         [Test]
         public void WhenAWorldReadableConfigIsRestrictedThenOnlyItsOwnerCanReadIt()
@@ -21,9 +19,9 @@ namespace Octopus.Tentacle.Tests.Configuration
             var configurationFile = Path.GetTempFileName();
             File.SetUnixFileMode(configurationFile, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.GroupRead | UnixFileMode.OtherRead);
 
-            ConfigurationFilePermissions.RestrictToOwner(configurationFile, new InMemoryLog());
+            new LinuxConfigurationFilePermissions(new InMemoryLog()).RestrictToCurrentUser(configurationFile);
 
-            File.GetUnixFileMode(configurationFile).Should().Be(ConfigurationFilePermissions.OwnerOnly);
+            File.GetUnixFileMode(configurationFile).Should().Be(LinuxConfigurationFilePermissions.OwnerOnly);
         }
 
         [Test]
@@ -31,9 +29,9 @@ namespace Octopus.Tentacle.Tests.Configuration
         {
             var configurationFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
 
-            ConfigurationFilePermissions.CreateEmpty(new OctopusPhysicalFileSystem(new InMemoryLog()), configurationFile, "<octopus-settings />");
+            new LinuxConfigurationFilePermissions(new InMemoryLog()).CreateRestrictedToCurrentUser(configurationFile, "<octopus-settings />");
 
-            File.GetUnixFileMode(configurationFile).Should().Be(ConfigurationFilePermissions.OwnerOnly);
+            File.GetUnixFileMode(configurationFile).Should().Be(LinuxConfigurationFilePermissions.OwnerOnly);
         }
 
         [Test]
@@ -44,7 +42,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             File.CreateSymbolicLink(configurationFile, target);
             var log = new InMemoryLog();
 
-            ConfigurationFilePermissions.RestrictToServiceUser(configurationFile, "nobody", log);
+            new LinuxConfigurationFilePermissions(log).RestrictToServiceUser(configurationFile, "nobody");
 
             log.GetLog().Should().Contain("symbolic link");
         }

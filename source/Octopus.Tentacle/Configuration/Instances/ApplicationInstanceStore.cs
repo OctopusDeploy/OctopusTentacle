@@ -104,7 +104,8 @@ namespace Octopus.Tentacle.Configuration.Instances
             var listFromFileSystem = new List<ApplicationInstanceRecord>();
             if (fileSystem.DirectoryExists(InstancesFolder))
                 listFromFileSystem = fileSystem.EnumerateFiles(InstancesFolder)
-                    .Select(LoadInstanceConfiguration)
+                    .Select(TryLoadListedInstanceConfiguration)
+                    .WhereNotNull()
                     .Select(instance => new ApplicationInstanceRecord(instance.Name, instance.ConfigurationFilePath))
                     .ToList();
 
@@ -212,12 +213,28 @@ namespace Octopus.Tentacle.Configuration.Instances
 
         internal string InstancesFolder => Path.Combine(machineConfigurationHomeDirectory, applicationName.ToString(), "Instances");
 
-        Instance LoadInstanceConfiguration(string path)
+        /// <summary>
+        /// Another instance can be created or deleted while the instances are listed, leaving its file gone or only partly
+        /// written. Skip it rather than fail, or every instance on the machine would fail to load at that moment
+        /// (https://github.com/OctopusDeploy/OctopusTentacle/issues/739).
+        /// </summary>
+        Instance? TryLoadListedInstanceConfiguration(string path)
         {
-            var result = TryLoadInstanceConfiguration(path);
-            if (result == null)
-                throw new ArgumentException($"Could not load instance at path {path}");
-            return result;
+            try
+            {
+                var instance = TryLoadInstanceConfiguration(path);
+                if (instance == null)
+                {
+                    log.Warn($"Skipping the instance at {path}: the file is missing or empty. It may be being created or deleted.");
+                }
+
+                return instance;
+            }
+            catch (Exception ex) when (ex is IOException or JsonException)
+            {
+                log.Warn($"Skipping the instance at {path}: it could not be read. It may be being created or deleted. {ex.Message}");
+                return null;
+            }
         }
 
         Instance? TryLoadInstanceConfiguration(string path)

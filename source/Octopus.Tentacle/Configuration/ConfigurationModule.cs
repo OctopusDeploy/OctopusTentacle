@@ -43,6 +43,8 @@ namespace Octopus.Tentacle.Configuration
                 builder.RegisterType<LinuxServiceConfigurator>().As<IServiceConfigurator>();
             }
 
+            RegisterConfigurationFilePermissions(builder);
+
             builder.RegisterType<EnvironmentVariableReader>().As<IEnvironmentVariableReader>();
 
             builder.RegisterType<ApplicationInstanceStore>()
@@ -107,6 +109,19 @@ namespace Octopus.Tentacle.Configuration
             RegisterWatchdog(builder);
         }
 
+        // Checks the OS with OperatingSystem, which the platform compatibility analyzer understands.
+        internal static void RegisterConfigurationFilePermissions(ContainerBuilder builder)
+        {
+#if NET
+            if (!OperatingSystem.IsWindows())
+            {
+                builder.RegisterType<LinuxConfigurationFilePermissions>().As<IConfigurationFilePermissions>();
+                return;
+            }
+#endif
+            builder.RegisterType<WindowsConfigurationFilePermissions>().As<IConfigurationFilePermissions>();
+        }
+
         void RegisterWatchdog(ContainerBuilder builder)
         {
             if (PlatformDetection.IsRunningOnWindows)
@@ -141,6 +156,7 @@ namespace Octopus.Tentacle.Configuration
             builder.RegisterType<WindowsRegistryApplicationInstanceStore>()
                 .As<IRegistryApplicationInstanceStore>();
             builder.RegisterType<WindowsServiceConfigurator>().As<IServiceConfigurator>();
+            ConfigurationModule.RegisterConfigurationFilePermissions(builder);
 
             builder.RegisterType<ApplicationInstanceStore>()
                 .As<IApplicationInstanceStore>();

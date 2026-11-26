@@ -35,6 +35,7 @@ namespace Octopus.Tentacle.Commands
         readonly IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker;
         readonly AppVersion appVersion;
         readonly IEnumerable<Lazy<IBackgroundTask>> backgroundTasks;
+        readonly IConfigurationFilePermissions configurationFilePermissions;
         int wait;
         bool halibutHasStarted;
 
@@ -53,6 +54,7 @@ namespace Octopus.Tentacle.Commands
             AppVersion appVersion,
             ILogFileOnlyLogger logFileOnlyLogger,
             IEnumerable<Lazy<IBackgroundTask>> backgroundTasks,
+            IConfigurationFilePermissions configurationFilePermissions,
             Lazy<IConfigurationEncryptionUpgrade> configurationEncryptionUpgrade) : base(selector, log, logFileOnlyLogger)
         {
             this.halibut = halibut;
@@ -67,6 +69,7 @@ namespace Octopus.Tentacle.Commands
             this.windowsLocalAdminRightsChecker = windowsLocalAdminRightsChecker;
             this.appVersion = appVersion;
             this.backgroundTasks = backgroundTasks;
+            this.configurationFilePermissions = configurationFilePermissions;
 
             Options.Add("wait=", "Delay (ms) before starting", arg => wait = int.Parse(arg));
             Options.Add("console", "Don't attempt to run as a service, even if the user is non-interactive", v =>
@@ -130,7 +133,11 @@ namespace Octopus.Tentacle.Commands
             Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleProxyPort, proxyConfiguration.Value.CustomProxyPort.ToString());
 
             LogWarningIfNotRunningAsAdministrator();
-            ConfigurationFilePermissions.RestrictToOwner(selector.Current.ConfigurationPath, log);
+            var configurationPath = selector.Current.ConfigurationPath;
+            if (!string.IsNullOrWhiteSpace(configurationPath))
+            {
+                configurationFilePermissions.RestrictToCurrentUser(configurationPath!);
+            }
 
             proxyInitializer.Value.InitializeProxy();
 
