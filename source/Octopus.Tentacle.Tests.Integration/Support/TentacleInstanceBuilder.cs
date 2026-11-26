@@ -249,9 +249,15 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 .ExecuteBufferedAsync(cancellationToken);
         }
 
-        internal async Task<BufferedCommandResult> ExecuteTentacleCommandOnTheInstanceAsRootWithUmask(string umask, CommandResultValidation validation, string command, CancellationToken cancellationToken, params string[] arguments)
+        internal async Task<BufferedCommandResult> ExecuteTentacleCommandOnTheInstanceAsRoot(CommandResultValidation validation, string command, CancellationToken cancellationToken, params string[] arguments)
+            => await ExecuteAsRoot(new[] { "env" }, validation, command, cancellationToken, arguments);
+
+        internal async Task<BufferedCommandResult> ExecuteTentacleCommandOnTheInstanceAsRootWithUmask(string umask, CommandResultValidation validation, string command, CancellationToken cancellationToken)
+            => await ExecuteAsRoot(new[] { "sh", "-c", $"umask {umask} && exec \"$@\"", "sh", "env" }, validation, command, cancellationToken);
+
+        async Task<BufferedCommandResult> ExecuteAsRoot(string[] launcher, CommandResultValidation validation, string command, CancellationToken cancellationToken, params string[] arguments)
         {
-            var sudoArguments = new[] { "sh", "-c", $"umask {umask} && exec \"$@\"", "sh", "env" }
+            var sudoArguments = launcher
                 .Concat(environmentVariables.Select(e => $"{e.Key}={e.Value}"))
                 .Concat(new[] { tentacleExe, command })
                 .Concat(arguments)

@@ -223,7 +223,7 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
             try
             {
                 // Act
-                await instance.ExecuteTentacleCommandOnTheInstanceAsRootWithUmask("022", CommandResultValidation.ZeroExitCode, "service", CancellationToken, "--install", "--username", serviceUser.UserName);
+                await instance.ExecuteTentacleCommandOnTheInstanceAsRoot(CommandResultValidation.ZeroExitCode, "service", CancellationToken, "--install", "--username", serviceUser.UserName);
 
                 // Assert
                 var showThumbprint = await instance
@@ -233,7 +233,7 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
             }
             finally
             {
-                await instance.ExecuteTentacleCommandOnTheInstanceAsRootWithUmask("022", CommandResultValidation.None, "service", CancellationToken, "--uninstall");
+                await instance.ExecuteTentacleCommandOnTheInstanceAsRoot(CommandResultValidation.None, "service", CancellationToken, "--uninstall");
                 await instance.SudoDeleteTheDataDirectory();
             }
         }
