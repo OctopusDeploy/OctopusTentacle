@@ -42,11 +42,11 @@ The script runs in four stages, each of which can be skipped:
 
 The `e2e` stage needs an Octopus Server licence, because an unlicensed server enforces a limit of 0 targets and no Tentacle can register. Set `OCTOPUS_SERVER_BASE64_LICENSE`, or let the script read a development licence from 1Password when run interactively. Without one, the stage still verifies configuration and server connectivity up to the licence refusal. Pass `--no-1password` anywhere `op` must not run.
 
-## Local only: Linux tests as root on macOS or Windows
+## Local only: Linux tests on macOS or Windows
 
 **Local only. CI does not use this script.**
 
-Tests marked `[LinuxTest]` are skipped on macOS and Windows. [`local/run-linux-unit-tests-in-docker.sh`](./local/run-linux-unit-tests-in-docker.sh) runs them as root in a .NET SDK container for the host's architecture.
+Tests marked `[LinuxTest]` are skipped on macOS and Windows. [`local/run-linux-unit-tests-in-docker.sh`](./local/run-linux-unit-tests-in-docker.sh) runs them in a .NET SDK container for the host's architecture, with systemd running so tests that install a service work.
 
 Run the configuration tests (the default):
 
@@ -57,10 +57,10 @@ Run the configuration tests (the default):
 Run tests matching a filter:
 
 ```
-./testing/local/run-linux-unit-tests-in-docker.sh "FullyQualifiedName~ConfigurationFilePermissionsFixture"
+./testing/local/run-linux-unit-tests-in-docker.sh "FullyQualifiedName~LinuxConfigurationFilePermissionsTests"
 ```
 
-The filter is anything `dotnet test --filter` accepts. It only runs `Octopus.Tentacle.Tests` on net10.0, needs Docker running, and copies the repo into the container so your working tree isn't touched.
+The filter is anything `dotnet test --filter` accepts, and is applied to both `Octopus.Tentacle.Tests` and `Octopus.Tentacle.Tests.Integration` on net10.0. Unit tests run as root; integration tests run as a non-root user with passwordless sudo, as `[RequiresSudoOnLinux]` tests expect. It needs Docker running, starts the container privileged so systemd can boot, and copies the repo into the container so your working tree isn't touched.
 
 ## Linux Packages
 
