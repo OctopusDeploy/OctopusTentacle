@@ -7,6 +7,7 @@ using NUnit.Framework;
 using Octopus.Tentacle.Configuration.Crypto;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Tests.Support;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Configuration.Crypto
 {
@@ -25,6 +26,25 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
             encrypted.Should().MatchRegex(@"^AESGCM-V1\$[A-Za-z0-9+/=]{16}\$[A-Za-z0-9+/=]{24}\$[A-Za-z0-9+/=]+$");
             encryptor.RequiresReEncryption(encrypted).Should().BeFalse();
             encryptor.Decrypt(encrypted).Should().Be("FooBar");
+        }
+
+        [Test]
+        public void WhenAValueWasWrittenInTheV1FormatThenItStillDecrypts()
+        {
+            // Arrange
+            const string keyFilePath = "/etc/octopus/config-encryption.key";
+            const string storedValue = "AESGCM-V1$AAECAwQFBgcICQoL$I7lSH4DKt1wvmL7GctHp4w==$N8FyaLaSAa3/Jbd7LnnhTfS/81zQCC8dWwKWpTtJc8tscsGQ3OA=";
+            var fileSystem = Substitute.For<IOctopusFileSystem>();
+            fileSystem.FileExists(keyFilePath).Returns(true);
+            fileSystem.ReadAllText(keyFilePath).Returns("AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=");
+            var key = new ConfigurationEncryptionKey(Substitute.For<ISystemLog>(), fileSystem, keyFilePath);
+            var encryptor = new LinuxMachineKeyEncryptor(Substitute.For<ISystemLog>(), key, Array.Empty<ICryptoKeyNixSource>());
+
+            // Act
+            var decrypted = encryptor.Decrypt(storedValue);
+
+            // Assert
+            decrypted.Should().Be("pässwörd 🐙 with spaces & symbols!");
         }
 
         [Test]
