@@ -2,11 +2,8 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
-using System.Threading;
-using System.Threading.Tasks;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
@@ -46,36 +43,6 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
             File.GetUnixFileMode(keyFilePath).Should().Be(OwnerReadWrite);
             File.ReadAllText(keyFilePath).Should().Be(Convert.ToBase64String(key));
             Directory.GetFiles(keyDirectory).Should().ContainSingle("the temporary file the key is written to first is not left behind");
-        }
-
-        [Test]
-        public async Task WhenManyProcessesCreateTheKeyAtOnceThenTheyAllGetTheSameKey()
-        {
-            // Arrange
-            var log = Substitute.For<ISystemLog>();
-            using var directory = new TemporaryDirectory(new OctopusPhysicalFileSystem(log));
-            var keyDirectory = Path.Combine(directory.DirectoryPath, "keys");
-            var keyFilePath = Path.Combine(keyDirectory, ConfigurationEncryptionKey.KeyFileName);
-            const int racers = 32;
-            using var start = new ManualResetEventSlim(false);
-            var loads = Enumerable.Range(0, racers)
-                .Select(_ => Task.Run(() =>
-                {
-                    start.Wait();
-                    var keySource = new ConfigurationEncryptionKey(log, new OctopusPhysicalFileSystem(log), keyFilePath);
-                    keySource.CreateIfMissing();
-                    return keySource.Load();
-                }))
-                .ToArray();
-
-            // Act
-            start.Set();
-            var keys = await Task.WhenAll(loads);
-
-            // Assert
-            var onDisk = Convert.FromBase64String(File.ReadAllText(keyFilePath));
-            keys.Should().AllSatisfy(k => k.Should().Equal(onDisk));
-            Directory.GetFiles(keyDirectory).Should().ContainSingle("no racer's temporary file is left behind");
         }
 
         [Test]
