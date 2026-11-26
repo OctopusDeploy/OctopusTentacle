@@ -249,11 +249,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 .ExecuteBufferedAsync(cancellationToken);
         }
 
-        internal async Task<BufferedCommandResult> ExecuteTentacleCommandOnTheInstanceAsRootWithUmask(string umask, CommandResultValidation validation, string command, CancellationToken cancellationToken)
+        internal async Task<BufferedCommandResult> ExecuteTentacleCommandOnTheInstanceAsRootWithUmask(string umask, CommandResultValidation validation, string command, CancellationToken cancellationToken, params string[] arguments)
         {
             var sudoArguments = new[] { "sh", "-c", $"umask {umask} && exec \"$@\"", "sh", "env" }
                 .Concat(environmentVariables.Select(e => $"{e.Key}={e.Value}"))
                 .Concat(new[] { tentacleExe, command })
+                .Concat(arguments)
                 .Concat(Name is null ? new[] { "--config", ConfigurationFile } : new[] { "--instance", Name });
             return await Cli.Wrap("sudo")
                 .WithArguments(sudoArguments)

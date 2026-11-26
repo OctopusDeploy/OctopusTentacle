@@ -207,6 +207,39 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
 
         [Test]
         [RequiresSudoOnLinux]
+        [NonParallelizable]
+        public async Task WhenRootInstallsTheServiceForAnotherUser_ThenThatUserCanReadItsKey()
+        {
+            // Arrange
+            using var serviceUser = new LinuxTestUserPrincipal("octo-install-svc");
+            // Under /tmp rather than the default location, which is in the runner's home and not traversable by the service user.
+            using var home = new TemporaryDirectory(new OctopusPhysicalFileSystem(new InMemoryLog()), Directory.CreateTempSubdirectory().FullName);
+            // Opened before building, so the key is still created readable only by its owner.
+            File.SetUnixFileMode(home.DirectoryPath, File.GetUnixFileMode(home.DirectoryPath) | UnixFileMode.OtherRead | UnixFileMode.OtherExecute);
+            using var instance = await new TentacleInstanceBuilder()
+                .WithHomeDirectory(home)
+                .WithNewCertificate()
+                .Build(Logger, CancellationToken);
+            try
+            {
+                // Act
+                await instance.ExecuteTentacleCommandOnTheInstanceAsRootWithUmask("022", CommandResultValidation.ZeroExitCode, "service", CancellationToken, "--install", "--username", serviceUser.UserName);
+
+                // Assert
+                var showThumbprint = await instance
+                    .ExecuteTentacleCommandOnTheInstanceAsUser(serviceUser, CommandResultValidation.None, "show-thumbprint", CancellationToken);
+                showThumbprint.ExitCode.Should().Be(0, showThumbprint.StandardOutput + showThumbprint.StandardError);
+                showThumbprint.StandardOutput.Should().Contain(instance.Thumbprint);
+            }
+            finally
+            {
+                await instance.ExecuteTentacleCommandOnTheInstanceAsRootWithUmask("022", CommandResultValidation.None, "service", CancellationToken, "--uninstall");
+                await instance.SudoDeleteTheDataDirectory();
+            }
+        }
+
+        [Test]
+        [RequiresSudoOnLinux]
         public async Task WhenTentacleRunsAsAUserWhoCannotReadTheKey_ThenItSaysHowToFixThePermissions()
         {
             // Arrange
