@@ -1,18 +1,14 @@
 ﻿#if !NETFRAMEWORK
 using System;
-using System.Diagnostics;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
 using Octopus.Tentacle.Configuration.Crypto;
 using Octopus.Tentacle.Core.Diagnostics;
-using Octopus.Tentacle.Core.Util;
 using Octopus.Tentacle.Tests.Support;
 using Octopus.Tentacle.Tests.Support.TestAttributes;
-using Octopus.Tentacle.Tests.Util;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Configuration.Crypto
@@ -44,62 +40,6 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
             File.ReadAllText(keyFilePath).Should().Be(Convert.ToBase64String(key));
             Directory.GetFiles(keyDirectory).Should().ContainSingle("the temporary file the key is written to first is not left behind");
         }
-
-        [Test]
-        public void WhenRootCreatesTheKeyUnderAHardenedUmaskThenANonRootOwnerCanStillReadIt()
-        {
-            if (geteuid() != 0)
-            {
-                Assert.Ignore("Creating a key for another user needs root.");
-            }
-
-            // Arrange
-            var log = Substitute.For<ISystemLog>();
-            var fileSystem = new OctopusPhysicalFileSystem(log);
-            // Not created yet, so CreateIfMissing creates every directory down to the key under the hardened umask.
-            using var directory = new TemporaryDirectory(fileSystem, Path.Combine(Path.GetTempPath(), "octopus-config-encryption-key-" + Guid.NewGuid()));
-            using var user = new LinuxTestUserPrincipal("octo-key-" + Guid.NewGuid().ToString("N").Substring(0, 8));
-            var instanceKeyFilePath = Path.Combine(directory.DirectoryPath, "keys", "Tentacle", ConfigurationEncryptionKey.KeyFileName);
-            var keySource = new ConfigurationEncryptionKey(log, fileSystem, instanceKeyFilePath);
-            var previousUmask = umask(Convert.ToUInt32("027", 8));
-            try
-            {
-                // Act
-                keySource.CreateIfMissing();
-                var owner = uint.Parse(RunAndRead("id", $"-u {user.UserName}"));
-                UnixFile.SetOwnerIfRunningAsRoot(owner, keySource.KeyDirectory!);
-                UnixFile.SetOwnerIfRunningAsRoot(owner, instanceKeyFilePath);
-
-                // Assert
-                Run("su", $"-s /bin/sh -c \"cat {instanceKeyFilePath}\" {user.UserName}").Should().Be(0, "the owner must be able to traverse the shared directories to its key");
-                File.GetUnixFileMode(keySource.KeyDirectory!).Should().Be(UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
-            }
-            finally
-            {
-                umask(previousUmask);
-            }
-        }
-
-        static int Run(string fileName, string arguments)
-        {
-            using var process = Process.Start(fileName, arguments);
-            process.WaitForExit();
-            return process.ExitCode;
-        }
-
-        static string RunAndRead(string fileName, string arguments)
-        {
-            using var process = Process.Start(new ProcessStartInfo(fileName, arguments) { RedirectStandardOutput = true })!;
-            var output = process.StandardOutput.ReadToEnd().Trim();
-            process.WaitForExit();
-            return output;
-        }
-
-        [DllImport("libc")]
-        static extern uint geteuid();
-
-        [DllImport("libc")]
-        static extern uint umask(uint mask);
     }
 }
 #endif

@@ -224,6 +224,13 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         internal async Task SudoDeleteTheKeyDirectory()
             => await Sudo("rm", "-rf", KeyDirectory);
 
+        internal async Task SudoGiveTheConfigurationFileTo(LinuxTestUserPrincipal user)
+            => await Sudo("chown", user.UserName, ConfigurationFile);
+
+        // Root owns everything a root Tentacle creates in the data directory, so it must be deleted before the home directory is.
+        internal async Task SudoDeleteTheDataDirectory()
+            => await Sudo("rm", "-rf", DataDirectory);
+
         static async Task Sudo(params string[] arguments)
             => await Cli.Wrap("sudo").WithArguments(arguments).ExecuteBufferedAsync();
 
@@ -234,6 +241,19 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 .Concat(environmentVariables.Select(e => $"{e.Key}={e.Value}"))
                 .Concat(new[] { tentacleExe, command })
                 .Concat(arguments)
+                .Concat(Name is null ? new[] { "--config", ConfigurationFile } : new[] { "--instance", Name });
+            return await Cli.Wrap("sudo")
+                .WithArguments(sudoArguments)
+                .WithValidation(validation)
+                .WithWorkingDirectory(home.DirectoryPath)
+                .ExecuteBufferedAsync(cancellationToken);
+        }
+
+        internal async Task<BufferedCommandResult> ExecuteTentacleCommandOnTheInstanceAsRootWithUmask(string umask, CommandResultValidation validation, string command, CancellationToken cancellationToken)
+        {
+            var sudoArguments = new[] { "sh", "-c", $"umask {umask} && exec \"$@\"", "sh", "env" }
+                .Concat(environmentVariables.Select(e => $"{e.Key}={e.Value}"))
+                .Concat(new[] { tentacleExe, command })
                 .Concat(Name is null ? new[] { "--config", ConfigurationFile } : new[] { "--instance", Name });
             return await Cli.Wrap("sudo")
                 .WithArguments(sudoArguments)

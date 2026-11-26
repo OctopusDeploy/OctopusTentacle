@@ -174,6 +174,39 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
 
         [Test]
         [RequiresSudoOnLinux]
+        public async Task WhenRootUpgradesUnderAHardenedUmask_ThenTheServiceUserCanStillReadItsKey()
+        {
+            // Arrange
+            using var serviceUser = new LinuxTestUserPrincipal("octo-umask-svc");
+            // Under /tmp rather than the default location, which is in the runner's home and not traversable by the service user.
+            using var home = new TemporaryDirectory(new OctopusPhysicalFileSystem(new InMemoryLog()), Directory.CreateTempSubdirectory().FullName);
+            using var instance = await new TentacleInstanceBuilder()
+                .WithTentacleVersion(TentacleVersions.v14_0_4849_LastWithMachineIdConfigurationEncryption)
+                .WithHomeDirectory(home)
+                .WithNewCertificate()
+                .Build(Logger, CancellationToken);
+            await instance.SudoAllowEveryoneToReadTheHomeDirectory();
+            await instance.SudoGiveTheConfigurationFileTo(serviceUser);
+            var upgradedInstance = instance.WithCurrentTentacleExe();
+            try
+            {
+                // Act
+                await upgradedInstance.ExecuteTentacleCommandOnTheInstanceAsRootWithUmask("027", CommandResultValidation.ZeroExitCode, "upgrade-configuration-encryption", CancellationToken);
+
+                // Assert
+                var showThumbprint = await upgradedInstance
+                    .ExecuteTentacleCommandOnTheInstanceAsUser(serviceUser, CommandResultValidation.None, "show-thumbprint", CancellationToken);
+                showThumbprint.ExitCode.Should().Be(0, showThumbprint.StandardOutput + showThumbprint.StandardError);
+                showThumbprint.StandardOutput.Should().Contain(instance.Thumbprint);
+            }
+            finally
+            {
+                await instance.SudoDeleteTheDataDirectory();
+            }
+        }
+
+        [Test]
+        [RequiresSudoOnLinux]
         public async Task WhenTentacleRunsAsAUserWhoCannotReadTheKey_ThenItSaysHowToFixThePermissions()
         {
             // Arrange
