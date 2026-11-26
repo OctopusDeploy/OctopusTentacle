@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
+using Octopus.Tentacle.Configuration.Crypto;
 using Octopus.Tentacle.Core.Diagnostics;
+using Octopus.Tentacle.Core.Util;
 using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Util;
 
@@ -42,6 +44,7 @@ namespace Octopus.Tentacle.Configuration.Instances
         public void CreateInstance(string instanceName, string configurationFile, string? homeDirectory = null)
         {
             (configurationFile, homeDirectory) = ValidateConfigDirectory(configurationFile, homeDirectory);
+            EnsureConfigurationEncryptionKeyExists(instanceName);
             EnsureConfigurationFileExists(configurationFile, homeDirectory);
             RegisterInstanceInIndex(instanceName, configurationFile);
             WriteHomeDirectory(homeDirectory);
@@ -50,6 +53,29 @@ namespace Octopus.Tentacle.Configuration.Instances
         public void DeleteInstance(string instanceName)
         {
             instanceStore.DeleteInstance(instanceName);
+        }
+
+        // Created before anything else, so that a failure leaves no half-made instance behind.
+        void EnsureConfigurationEncryptionKeyExists(string instanceName)
+        {
+            if (PlatformDetection.IsRunningOnWindows || KubernetesSupportDetection.IsRunningAsKubernetesAgent || startUpInstanceRequest is StartUpDynamicInstanceRequest)
+            {
+                return;
+            }
+
+            var keyFilePath = ConfigurationEncryptionKey.KeyFilePathFor(instanceName);
+            var key = new ConfigurationEncryptionKey(log, fileSystem, keyFilePath);
+            try
+            {
+                key.CreateIfMissing();
+            }
+            catch (Exception e)
+            {
+                var user = Environment.UserName;
+                var directory = key.KeyDirectory;
+                throw new ControlledFailureException($"Unable to create the configuration encryption key `{keyFilePath}` for the instance `{instanceName}`, so the instance was not created: {e.Message} "
+                    + $"Run this command as root, or give the user ({user}) access to the directory, for example: `sudo mkdir -p {directory} && sudo chown -R {user} {directory} && sudo chmod 700 {directory}`.", e);
+            }
         }
 
         void RegisterInstanceInIndex(string instanceName, string configurationFile)

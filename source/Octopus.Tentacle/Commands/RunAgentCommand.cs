@@ -27,6 +27,7 @@ namespace Octopus.Tentacle.Commands
         readonly Lazy<IHomeConfiguration> home;
         readonly Lazy<IProxyConfiguration> proxyConfiguration;
         readonly Lazy<IProxyInitializer> proxyInitializer;
+        readonly Lazy<IConfigurationEncryptionUpgrade> configurationEncryptionUpgrade;
 
         readonly ISleep sleep;
         readonly ISystemLog log;
@@ -53,12 +54,14 @@ namespace Octopus.Tentacle.Commands
             AppVersion appVersion,
             ILogFileOnlyLogger logFileOnlyLogger,
             IEnumerable<Lazy<IBackgroundTask>> backgroundTasks,
-            IConfigurationFilePermissions configurationFilePermissions) : base(selector, log, logFileOnlyLogger)
+            IConfigurationFilePermissions configurationFilePermissions,
+            Lazy<IConfigurationEncryptionUpgrade> configurationEncryptionUpgrade) : base(selector, log, logFileOnlyLogger)
         {
             this.halibut = halibut;
             this.configuration = configuration;
             this.home = home;
             this.proxyConfiguration = proxyConfiguration;
+            this.configurationEncryptionUpgrade = configurationEncryptionUpgrade;
             this.sleep = sleep;
             this.log = log;
             this.selector = selector;
@@ -100,6 +103,8 @@ namespace Octopus.Tentacle.Commands
                 log.Error($"The owner of the x509stores is not the current user, please change ownership of the x509stores directory or run with sudo. Details: {cx.Message}");
                 return;
             }
+
+            configurationEncryptionUpgrade.Value.TryUpgrade();
 
             var currentPath = typeof(RunAgentCommand).Assembly.FullLocalPath();
             var exePath = PlatformDetection.IsRunningOnWindows

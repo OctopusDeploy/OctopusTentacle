@@ -27,6 +27,7 @@ namespace Octopus.Tentacle.Core.Util
         public const string TentacleTcpKeepAliveEnabled = "TentacleTcpKeepAliveEnabled";
         public const string TentacleEnableDataStreamLengthChecks = "TentacleEnableDataStreamLengthChecks";
         public const string TentacleMachineConfigurationHomeDirectory = "TentacleMachineConfigurationHomeDirectory";
+        public const string TentacleInstancesDataDirectory = "TentacleInstancesDataDirectory";
         public const string TentaclePollingConnectionCount = "TentaclePollingConnectionCount";
         public const string TentaclePowerShellStartupTimeout = "TentaclePowerShellStartupTimeout";
         public const string NfsWatchdogDirectory = "watchdog_directory";

@@ -7,8 +7,10 @@ namespace Octopus.Tentacle.Configuration.Instances
             string? instanceName,
             string? configurationPath,
             IKeyValueStore? configuration,
-            IWritableKeyValueStore? writableConfiguration)
+            IWritableKeyValueStore? writableConfiguration,
+            string? keyFilePath)
         {
+            KeyFilePath = keyFilePath;
             InstanceName = instanceName;
             ConfigurationPath = configurationPath;
             Configuration = configuration;
@@ -17,6 +19,9 @@ namespace Octopus.Tentacle.Configuration.Instances
 
         public string? ConfigurationPath { get;  }
         public string? InstanceName { get;  }
+
+        // The Linux configuration encryption key, or null when the instance has none.
+        public string? KeyFilePath { get; }
 
         public IKeyValueStore? Configuration { get; }
 

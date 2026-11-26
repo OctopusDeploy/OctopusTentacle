@@ -44,6 +44,9 @@ namespace Octopus.Tentacle.Kubernetes.Crypto
             return Encoding.UTF8.GetString(asd);
         }
 
+        public bool RequiresReEncryption(string encrypted)
+            => false;
+
         [MemberNotNull(nameof(key), nameof(iv))]
         void EnsureMachineKeyAndIvLoaded()
         {

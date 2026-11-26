@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.Versioning;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -137,6 +138,14 @@ namespace Octopus.Tentacle.Kubernetes
         public void WriteAllText(string filePath, string contents)
         {
             syncRetryPolicy.Execute(() => inner.WriteAllText(filePath, contents));
+        }
+
+#if NET
+        [UnsupportedOSPlatform("windows")]
+#endif
+        public bool TryAtomicCreateFileWithOnlyUserReadWritePermissions(string filePath, byte[] contents)
+        {
+            return syncRetryPolicy.Execute(() => inner.TryAtomicCreateFileWithOnlyUserReadWritePermissions(filePath, contents));
         }
 
         public string ReadAllText(string scriptFile)

@@ -28,6 +28,8 @@ public class TentacleContainerBuilder
     string? serverThumbprint;
     string? certificateBase64;
     readonly Dictionary<string, string> extraEnvironment = new();
+    readonly List<string> volumeMounts = new();
+    RegisteredMachine? alreadyRegistered;
 
     public TentacleContainerBuilder(FakeOctopusServer server)
     {
@@ -83,6 +85,22 @@ public class TentacleContainerBuilder
         return this;
     }
 
+    public TentacleContainerBuilder WithVolume(DockerVolume volume, string containerPath)
+    {
+        volumeMounts.Add(volume.MountAt(containerPath));
+        return this;
+    }
+
+    /// <summary>
+    /// Starts on volumes a previous container configured, so it skips registration. The TentacleClient trusts the
+    /// previous registration's thumbprint.
+    /// </summary>
+    public TentacleContainerBuilder WithStartingAlreadyConfiguredTentacle(RegisteredMachine registeredMachine)
+    {
+        alreadyRegistered = registeredMachine;
+        return this;
+    }
+
     public async Task<TentacleContainer> Build()
     {
         if (serverThumbprint is not null && communicationStyle == TentacleCommunicationStyle.Polling)
@@ -97,7 +115,9 @@ public class TentacleContainerBuilder
         var image = TentacleImage.Resolve();
         TestContext.Out.WriteLine($"Testing {image} as a {communicationStyle} Tentacle named {machineName}{(serverThumbprint is null ? "" : " that does not register")}");
 
-        var registration = serverThumbprint is null ? server.WaitForRegistration(FakeOctopusServerBuilder.SpaceName, machineName) : null;
+        var registration = serverThumbprint is not null ? null
+            : alreadyRegistered is not null ? Task.FromResult(alreadyRegistered)
+            : server.WaitForRegistration(FakeOctopusServerBuilder.SpaceName, machineName);
 
         var docker = await DockerContainer.Run(image, machineName, RunOptions(machineName), cancellationToken);
         var tentacle = new TentacleContainer(docker, server, machineName, communicationStyle);
@@ -157,6 +177,11 @@ public class TentacleContainerBuilder
             // Docker Desktop provides host.docker.internal; this makes Linux engines provide it too.
             "--add-host", $"{TentacleContainer.DockerHost}:host-gateway"
         };
+
+        foreach (var mount in volumeMounts)
+        {
+            options.AddRange(new[] { "--volume", mount });
+        }
 
         if (communicationStyle == TentacleCommunicationStyle.Listening)
         {

@@ -1,49 +1,29 @@
-﻿using System;
+﻿using System.Collections.Generic;
+using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Diagnostics;
-using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Configuration.Crypto
 {
-    public class MachineKeyEncryptor : IMachineKeyEncryptor
+    public static class MachineKeyEncryptor
     {
-        public static readonly IMachineKeyEncryptor Current;
+        static readonly ISystemLog Log = new SystemLog();
 
-        static MachineKeyEncryptor()
-        {
-            if (PlatformDetection.IsRunningOnWindows)
-            {
-                Current = new WindowsMachineKeyEncryptor();
-            }
-            else
-            {
-                Current = LinuxEncryptor();
-            }
-        }
+        public static IMachineKeyEncryptor ForKeyFile(IOctopusFileSystem fileSystem, string? keyFilePath)
+            => PlatformDetection.IsRunningOnWindows
+                ? new WindowsMachineKeyEncryptor()
+                : CreateLinuxEncryptor(Log, fileSystem, keyFilePath, LinuxGeneratedMachineKey.LegacyKeyFilePathForThisHost);
 
-        static IMachineKeyEncryptor LinuxEncryptor()
+        internal static IMachineKeyEncryptor CreateLinuxEncryptor(ISystemLog log, IOctopusFileSystem fileSystem, string? keyFilePath, string legacyGeneratedKeyFilePath)
         {
-            var log = new SystemLog();
-            var filesystem = new OctopusPhysicalFileSystem(log);
-            // Sources to find the crypto IV+Key. We want to enforce trying to use the machine-key
-            // first but still fallback to the existing Octopus generated one if that doesnt work.
-            var keySources = new ICryptoKeyNixSource[]
+            // The keys earlier versions used, in the order they tried them. Only read, never created or changed.
+            var legacyKeySources = new List<ICryptoKeyNixSource>
             {
-                new LinuxMachineIdKey(filesystem),
-                new LinuxGeneratedMachineKey(log, filesystem)
+                new LinuxMachineIdKey(fileSystem),
+                new LinuxGeneratedMachineKey(fileSystem, legacyGeneratedKeyFilePath)
             };
 
-            return new LinuxMachineKeyEncryptor(log, keySources);
+            return new LinuxMachineKeyEncryptor(log, new ConfigurationEncryptionKey(log, fileSystem, keyFilePath), legacyKeySources);
         }
-
-        MachineKeyEncryptor()
-        {
-        }
-
-        public string Encrypt(string raw)
-            => Current.Encrypt(raw);
-
-        public string Decrypt(string encrypted)
-            => Current.Decrypt(encrypted);
     }
 }

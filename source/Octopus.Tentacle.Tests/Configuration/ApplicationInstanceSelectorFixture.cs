@@ -10,6 +10,7 @@ using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Kubernetes.Configuration;
 using Octopus.Tentacle.Kubernetes.Crypto;
+using Octopus.Tentacle.Tests.Support.TestAttributes;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Configuration
@@ -92,6 +93,23 @@ namespace Octopus.Tentacle.Tests.Configuration
             mock.Current.ConfigurationPath.Should().Be(filePath);
         }
         
+        [Test]
+        [LinuxOrMacTest]
+        public void GivenARegisteredInstanceUsesTheConfiguration_WhenRequestingConfigurationInstance_ThenItUsesThatInstancesKey()
+        {
+            var filePath = "/etc/octopus/tentacle.config";
+            var mock = CreateApplicationInstanceSelector(new StartUpConfigFileInstanceRequest(filePath));
+            octopusFileSystem.FileExists(filePath).Returns(true);
+            octopusFileSystem.GetFullPath(Arg.Any<string>()).Returns(c => c.Arg<string>());
+            applicationInstanceStore.ListInstances().Returns(new[]
+            {
+                new ApplicationInstanceRecord("Other", "/etc/octopus/other.config"),
+                new ApplicationInstanceRecord("Registered", filePath)
+            });
+
+            mock.Current.KeyFilePath.Should().Be(ConfigurationEncryptionKey.KeyFilePathFor("Registered"));
+        }
+
         [Test]
         public void GivenConfigurationInstanceDoesNotExists_WhenRequestingConfigurationInstance_ThenThrows()
         {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Versioning;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,6 +16,7 @@ namespace Octopus.Tentacle.Core.Util
     public class CorePhysicalFileSystem : IOctopusFileSystem
     {
         const long FiveHundredMegabytes = 500 * 1024 * 1024;
+        const string UserOnlyFilesAreUnixOnly = "Creating a file that only its owner can read and write is only supported on Linux and macOS.";
 
         public CorePhysicalFileSystem(ISystemLog log, bool isRunningAsKubernetesAgent)
         {
@@ -249,6 +251,64 @@ namespace Octopus.Tentacle.Core.Util
         {
             File.WriteAllText(path, contents);
         }
+
+#if NET
+        [UnsupportedOSPlatform("windows")]
+        public bool TryAtomicCreateFileWithOnlyUserReadWritePermissions(string path, byte[] contents)
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                throw new PlatformNotSupportedException(UserOnlyFilesAreUnixOnly);
+            }
+
+            var temporaryPath = TemporaryPathBeside(path);
+            try
+            {
+                CreateFileWithUserReadWriteAccessOnly(temporaryPath, contents);
+                File.Move(temporaryPath, path);
+                return true;
+            }
+            catch (IOException) when (File.Exists(path))
+            {
+                return false;
+            }
+            finally
+            {
+                DeleteIfExists(temporaryPath);
+            }
+        }
+
+        [UnsupportedOSPlatform("windows")]
+        static void CreateFileWithUserReadWriteAccessOnly(string path, byte[] contents)
+        {
+            var options = new FileStreamOptions
+            {
+                Mode = FileMode.CreateNew,
+                Access = FileAccess.Write,
+                Share = FileShare.None,
+                UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite
+            };
+
+            using var stream = new FileStream(path, options);
+            stream.Write(contents, 0, contents.Length);
+            stream.Flush(flushToDisk: true);
+        }
+
+        static void DeleteIfExists(string path)
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
+
+        // In the same directory, so it is on the same file system and is renamed rather than copied.
+        static string TemporaryPathBeside(string path)
+            => path + "." + Guid.NewGuid().ToString("N") + ".tmp";
+#else
+        public bool TryAtomicCreateFileWithOnlyUserReadWritePermissions(string path, byte[] contents)
+            => throw new PlatformNotSupportedException(UserOnlyFilesAreUnixOnly);
+#endif
 
         public void EnsureDirectoryExists(string directoryPath)
         {

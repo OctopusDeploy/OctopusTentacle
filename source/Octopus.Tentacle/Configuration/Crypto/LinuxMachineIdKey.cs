@@ -28,7 +28,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
         {
             return (GetMachineId(), Iv);
         }
-            
+
         byte[] GetMachineId()
         {
             if (!fileSystem.FileExists(FileName))

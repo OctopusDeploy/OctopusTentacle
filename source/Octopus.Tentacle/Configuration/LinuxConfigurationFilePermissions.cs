@@ -2,10 +2,9 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
-using Microsoft.Win32.SafeHandles;
 using Octopus.Tentacle.Core.Diagnostics;
+using Octopus.Tentacle.Core.Util;
 
 namespace Octopus.Tentacle.Configuration
 {
@@ -14,7 +13,6 @@ namespace Octopus.Tentacle.Configuration
     class LinuxConfigurationFilePermissions : IConfigurationFilePermissions
     {
         public const UnixFileMode OwnerOnly = UnixFileMode.UserRead | UnixFileMode.UserWrite;
-        const uint UnchangedGroup = uint.MaxValue;
 
         readonly ISystemLog log;
 
@@ -90,9 +88,8 @@ namespace Octopus.Tentacle.Configuration
 
                 using var stream = new FileStream(configurationPath, FileMode.Open, FileAccess.Read);
                 File.SetUnixFileMode(stream.SafeFileHandle, OwnerOnly);
-                return fchown(stream.SafeFileHandle, userId.Value, UnchangedGroup) == 0
-                    ? null
-                    : Marshal.GetLastPInvokeErrorMessage();
+                UnixFile.GiveTo(stream.SafeFileHandle, userId.Value);
+                return null;
             }
             catch (Exception ex)
             {
@@ -122,9 +119,6 @@ namespace Octopus.Tentacle.Configuration
                 return null;
             }
         }
-
-        [DllImport("libc", SetLastError = true)]
-        static extern int fchown(SafeFileHandle fd, uint owner, uint group);
     }
 }
 #endif

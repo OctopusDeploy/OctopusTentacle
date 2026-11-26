@@ -26,10 +26,10 @@ namespace Octopus.Tentacle.Tests.Support
             var directory = new TemporaryDirectory(fileSystem);
             var configFile = Path.Combine(directory.DirectoryPath, "Tentacle.config");
             File.WriteAllText(configFile, $"<?xml version=\"1.0\" encoding=\"utf-8\"?><octopus-settings>{settings}</octopus-settings>");
-            var store = new XmlFileKeyValueStore(fileSystem, configFile);
+            var store = new XmlFileKeyValueStore(fileSystem, configFile, encryptor: TestMachineKeyEncryptor.Current);
 
             var selector = Substitute.For<IApplicationInstanceSelector>();
-            selector.Current.Returns(_ => new ApplicationInstanceConfiguration(null, configFile, store, store));
+            selector.Current.Returns(_ => new ApplicationInstanceConfiguration(null, configFile, store, store, null));
 
             var configuration = new WritableTentacleConfiguration(
                 selector,

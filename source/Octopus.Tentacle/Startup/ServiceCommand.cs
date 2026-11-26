@@ -18,6 +18,7 @@ namespace Octopus.Tentacle.Startup
         readonly ServiceConfigurationState serviceConfigurationState;
         readonly IServiceConfigurator serviceConfigurator;
         readonly IConfigurationFilePermissions configurationFilePermissions;
+        readonly Lazy<IConfigurationEncryptionUpgrade> configurationEncryptionUpgrade;
         private readonly ISystemLog log;
         readonly string ServicePasswordEnvVar = "OCTOPUS_SERVICE_PASSWORD";
         readonly string ServiceUsernameEnvVar = "OCTOPUS_SERVICE_USERNAME";
@@ -32,9 +33,11 @@ namespace Octopus.Tentacle.Startup
             IServiceConfigurator serviceConfigurator,
             ISystemLog log,
             ILogFileOnlyLogger logFileOnlyLogger,
-            IConfigurationFilePermissions configurationFilePermissions)
+            IConfigurationFilePermissions configurationFilePermissions,
+            Lazy<IConfigurationEncryptionUpgrade> configurationEncryptionUpgrade)
             : base(logFileOnlyLogger)
         {
+            this.configurationEncryptionUpgrade = configurationEncryptionUpgrade;
             this.applicationName = applicationName;
             this.instanceLocator = instanceLocator;
             this.instanceSelector = instanceSelector;
@@ -114,6 +117,12 @@ namespace Octopus.Tentacle.Startup
                     && !string.IsNullOrWhiteSpace(userName))
                 {
                     configurationFilePermissions.RestrictToServiceUser(configurationPath!, userName!);
+                }
+
+                // A non-root service cannot create its key under /var/lib/octopus, so it is created here while running as root.
+                if (serviceConfigurationState.Install || serviceConfigurationState.Reconfigure)
+                {
+                    configurationEncryptionUpgrade.Value.TryPrepareKey();
                 }
 
                 if (currentName == null)

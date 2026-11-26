@@ -23,7 +23,7 @@ namespace Octopus.Tentacle.Tests.Integration.Configuration
         [RequiresSudoOnLinux]
         public async Task WhenRestrictedToTheServiceUserThenOnlyThatUserOwnsAndCanReadTheConfig()
         {
-            var user = new LinuxTestUserPrincipal("octo-config-perm-test");
+            using var user = new LinuxTestUserPrincipal("octo-config-perm-test");
             var configurationFile = Path.GetTempFileName();
             File.SetUnixFileMode(configurationFile, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.GroupRead | UnixFileMode.OtherRead);
             var log = new InMemoryLog();

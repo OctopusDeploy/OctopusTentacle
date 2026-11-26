@@ -29,6 +29,7 @@ namespace Octopus.Tentacle.Tests.Commands
         IHomeConfiguration home = null!;
         IApplicationInstanceSelector selector = null!;
         IBackgroundTask[] backgroundTasks = null!;
+        IConfigurationEncryptionUpgrade configurationEncryptionUpgrade = null!;
 
         [SetUp]
         public override void SetUp()
@@ -41,6 +42,7 @@ namespace Octopus.Tentacle.Tests.Commands
             tentacleConfiguration.TentacleCertificate.Returns(certificate);
             home = Substitute.For<IHomeConfiguration>();
             sleep = Substitute.For<ISleep>();
+            configurationEncryptionUpgrade = Substitute.For<IConfigurationEncryptionUpgrade>();
 
             backgroundTasks = new[]
             {
@@ -61,9 +63,10 @@ namespace Octopus.Tentacle.Tests.Commands
                 new AppVersion(GetType().Assembly),
                 Substitute.For<ILogFileOnlyLogger>(),
                 backgroundTasks.Select(bt => new Lazy<IBackgroundTask>(() => bt)).ToList(),
-                Substitute.For<IConfigurationFilePermissions>());
+                Substitute.For<IConfigurationFilePermissions>(),
+                new Lazy<IConfigurationEncryptionUpgrade>(() => configurationEncryptionUpgrade));
 
-            selector.Current.Returns(new ApplicationInstanceConfiguration("MyTentacle", null, null, null));
+            selector.Current.Returns(new ApplicationInstanceConfiguration("MyTentacle", null, null, null, null));
         }
 
         [Test]

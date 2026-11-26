@@ -118,6 +118,17 @@ The certificate includes its private key, so treat it as a secret. Pass it with 
 `ServerThumbprint` can't be combined with settings that only apply to registering or polling, such as `ServerUrl`, the credentials, `ServerCommsAddress`, `ServerPort` or the `Target*` variables; the container exits with an error if any are set.
 
 
+### Volumes
+
+Mount these to keep the Tentacle's identity when the container is re-created:
+
+| Path | Contains |
+| --- | --- |
+| `/etc/octopus` | Configuration, including the certificate |
+| `/var/lib/octopus/tentacle` | Keys that encrypt the configuration of every instance |
+
+Mount both or neither: the configuration can't be decrypted without its key. Configuration persisted by an earlier image can't be upgraded; start on new volumes.
+
 ### Ports
 
 - **10933**: Port Tentacle will be listening on.

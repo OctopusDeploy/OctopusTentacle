@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Octopus.Tentacle.Configuration.Crypto;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Kubernetes;
 using Octopus.Tentacle.Kubernetes.Configuration;
@@ -74,12 +75,46 @@ namespace Octopus.Tentacle.Configuration.Instances
         {
             var appInstance = LocateApplicationPrimaryConfiguration();
 
-            var (aggregatedKeyValueStore, writableConfig) = LoadConfigurationStore(appInstance);
+            var keyFilePath = KeyFilePathFor(appInstance);
 
-            return new ApplicationInstanceConfiguration(appInstance.instanceName, appInstance.configurationpath, aggregatedKeyValueStore, writableConfig);
+            var (aggregatedKeyValueStore, writableConfig) = LoadConfigurationStore(appInstance, keyFilePath);
+
+            return new ApplicationInstanceConfiguration(appInstance.instanceName, appInstance.configurationpath, aggregatedKeyValueStore, writableConfig, keyFilePath);
         }
 
-        (IKeyValueStore, IWritableKeyValueStore) LoadConfigurationStore((string? instanceName, string? configurationpath) appInstance)
+        string? KeyFilePathFor((string? instanceName, string? configurationpath) appInstance)
+        {
+            if (PlatformDetection.IsRunningOnWindows)
+            {
+                return null;
+            }
+
+            var name = appInstance.instanceName ?? RegisteredInstanceNameFor(appInstance.configurationpath);
+            return name == null ? null : ConfigurationEncryptionKey.KeyFilePathFor(name);
+        }
+
+        string? RegisteredInstanceNameFor(string? configurationPath)
+        {
+            if (configurationPath == null)
+            {
+                return null;
+            }
+
+            try
+            {
+                var fullPath = fileSystem.GetFullPath(configurationPath);
+                return applicationInstanceStore.ListInstances()
+                    .FirstOrDefault(i => string.Equals(fileSystem.GetFullPath(i.ConfigurationFilePath), fullPath, StringComparison.Ordinal))
+                    ?.InstanceName;
+            }
+            catch (Exception e)
+            {
+                log.Verbose(e, "Could not read the instance registry, treating the configuration as unregistered");
+                return null;
+            }
+        }
+
+        (IKeyValueStore, IWritableKeyValueStore) LoadConfigurationStore((string? instanceName, string? configurationpath) appInstance, string? keyFilePath)
         {
             if (appInstance is { instanceName: not null, configurationpath: null } &&
                 KubernetesSupportDetection.IsRunningAsKubernetesAgent)
@@ -92,7 +127,7 @@ namespace Octopus.Tentacle.Configuration.Instances
             EnsureConfigurationExists(appInstance.instanceName, appInstance.configurationpath);
 
             log.Verbose($"Loading configuration from {appInstance.configurationpath}");
-            var writable = new XmlFileKeyValueStore(fileSystem, appInstance.configurationpath!);
+            var writable = new XmlFileKeyValueStore(fileSystem, appInstance.configurationpath!, MachineKeyEncryptor.ForKeyFile(fileSystem, keyFilePath));
             return (ContributeAdditionalConfiguration(writable), writable);
         }
 

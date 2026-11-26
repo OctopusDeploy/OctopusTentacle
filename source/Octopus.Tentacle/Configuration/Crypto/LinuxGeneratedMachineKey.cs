@@ -1,65 +1,50 @@
 using System;
 using System.IO;
-using System.Security.Cryptography;
-using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Core.Util;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Configuration.Crypto
 {
-    public class LinuxGeneratedMachineKey: ICryptoKeyNixSource
+    // The key file earlier versions generated on first use, as base64(key).base64(iv). It is only read, to decrypt what they wrote.
+    public class LinuxGeneratedMachineKey : ICryptoKeyNixSource
     {
-        readonly ISystemLog log;
+        public const string LegacyKeyFileName = "machinekey";
+
+        public const string LegacyKeyFilePath = "/etc/octopus/" + LegacyKeyFileName;
+
         readonly IOctopusFileSystem fileSystem;
+        readonly string path;
 
-        static string FileName =>
-            KubernetesSupportDetection.IsRunningAsKubernetesAgent
-                //if we are running in K8S, we want to save the machine key to the home directory, which is likely on a network drives
-                ? Path.Combine(Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleHome)!, "machinekey")
-                : "/etc/octopus/machinekey";
-
-        public LinuxGeneratedMachineKey(ISystemLog log, IOctopusFileSystem fileSystem)
+        public LinuxGeneratedMachineKey(IOctopusFileSystem fileSystem, string path)
         {
-            this.log = log;
             this.fileSystem = fileSystem;
+            this.path = path;
         }
 
-        void Generate()
-        {
-            log.Verbose("Machine key file does not yet exist. Generating key file that will be used to encrypt data on this machine");
-            var aes = Aes.Create();
-            aes.GenerateIV();
-            aes.GenerateKey();
-            var raw = Convert.ToBase64String(aes.Key) + "." + Convert.ToBase64String(aes.IV);
-
-            if (!fileSystem.FileExists(Path.GetDirectoryName(FileName)!))
-                fileSystem.CreateDirectory(Path.GetDirectoryName(FileName)!);
-
-            fileSystem.WriteAllText(FileName, raw);
-        }
-
-        (byte[] Key, byte[] IV) LoadFromFile()
-        {
-            try
-            {
-                var content = fileSystem.ReadAllText(FileName).Split('.');
-                var key = Convert.FromBase64String(content[0]);
-                var iv = Convert.FromBase64String(content[1]);
-                return (key, iv);
-            }
-            catch (Exception ex) when (ex is FormatException || ex is IndexOutOfRangeException)
-            {
-                throw new InvalidOperationException($"Machine key file at `{FileName}` is corrupt and cannot be loaded. "
-                    + $"If this file previously contained a valid key to encrypt data, that data may no longer be retrievable."
-                    + $"Remove the file `{FileName}` and allow Octopus to regenerate the key.");
-            }
-        }
+        public static string LegacyKeyFilePathForThisHost
+            => KubernetesSupportDetection.IsRunningAsKubernetesAgent
+                //if we are running in K8S, the machine key is in the home directory, which is likely on a network drive
+                ? Path.Combine(Environment.GetEnvironmentVariable(EnvironmentVariables.TentacleHome)!, LegacyKeyFileName)
+                : LegacyKeyFilePath;
 
         public (byte[] Key, byte[] IV) Load()
         {
-            if (!fileSystem.FileExists(FileName))
-                Generate();
-            return LoadFromFile();
+            if (!fileSystem.FileExists(path))
+            {
+                throw new InvalidOperationException($"There is no machine key file at `{path}`.");
+            }
+
+            try
+            {
+                var content = fileSystem.ReadAllText(path).Split('.');
+                return (Convert.FromBase64String(content[0]), Convert.FromBase64String(content[1]));
+            }
+            catch (Exception ex) when (ex is FormatException || ex is IndexOutOfRangeException)
+            {
+                throw new InvalidOperationException($"Machine key file at `{path}` is corrupt and cannot be loaded. "
+                    + "If this file previously contained a valid key to encrypt data, that data may no longer be retrievable. "
+                    + "Restore it from a backup. " + ConfigurationEncryptionKey.RecoveryWithoutBackup);
+            }
         }
     }
 }

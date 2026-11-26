@@ -2,14 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using CliWrap;
 using CliWrap.Buffered;
 using CliWrap.Exceptions;
 using Octopus.Tentacle.CommonTestUtils;
+using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Configuration.Crypto;
 using Octopus.Tentacle.Core.Util;
 using Octopus.Tentacle.Tests.Integration.Support.TentacleFetchers;
+using Octopus.Tentacle.Tests.Integration.Util;
 using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
@@ -120,7 +124,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 ? TentacleExeFinder.FindTentacleExe()
                 : await TentacleFetcher.GetTentacleVersion(download.DirectoryPath, tentacleVersion, DefaultTentacleRuntime.Value, logger, cancellationToken));
             var instanceHome = home ?? new TemporaryDirectory();
-            var environment = new Dictionary<string, string>();
+            var environment = new Dictionary<string, string>
+            {
+                [EnvironmentVariables.TentacleInstancesDataDirectory] = Path.Combine(instanceHome.DirectoryPath, "data")
+            };
             if (!useDefaultMachineConfigurationHomeDirectory)
             {
                 environment[EnvironmentVariables.TentacleMachineConfigurationHomeDirectory] = Path.Combine(instanceHome.DirectoryPath, "Octopus", "Tentacle", "Instances");
@@ -179,6 +186,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         internal string TentacleExe => tentacleExe;
         internal IReadOnlyDictionary<string, string> EnvironmentVariables => environmentVariables;
         public string ConfigurationFile => Path.Combine(home.DirectoryPath, (Name ?? "Tentacle") + ".cfg");
+        public string DataDirectory => Path.Combine(home.DirectoryPath, "data");
+        public string ConfigurationEncryptionKeyFile => Path.Combine(DataDirectory, Name!, "keys", ConfigurationEncryptionKey.KeyFileName);
 
         // The same instance, as if the current Tentacle had been installed over it.
         public TentacleInstance WithCurrentTentacleExe()
@@ -186,6 +195,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         internal TentacleInstance WithThumbprint(string thumbprint)
             => new(home, tentacleExe, Name, thumbprint, environmentVariables);
+
+        public string CertificateAsStoredInTheConfigurationFile()
+            => XDocument.Load(ConfigurationFile).Root!.Elements("set").Single(e => (string?)e.Attribute("key") == TentacleConfiguration.CertificateSettingName).Value;
 
         public async Task<string> ShowThumbprint(CancellationToken cancellationToken)
             => (await ExecuteTentacleCommandOnTheInstance(CommandResultValidation.ZeroExitCode, "show-thumbprint", cancellationToken)).StandardOutput.Trim();
@@ -195,6 +207,67 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 .Concat(arguments)
                 .Concat(Name is null ? new[] { "--config", ConfigurationFile } : new[] { "--instance", Name })
                 .ToArray());
+
+        string KeyDirectory => Path.GetDirectoryName(ConfigurationEncryptionKeyFile)!;
+
+        internal async Task SudoAllowEveryoneToReadTheHomeDirectory()
+            => await Sudo("chmod", "-R", "o+rX", home.DirectoryPath);
+
+        internal async Task SudoMakeTheKeyDirectoryOwnedAndOnlyAccessibleByRoot()
+        {
+            await Sudo("chown", "-R", "root:root", KeyDirectory);
+            await Sudo("chmod", "700", KeyDirectory);
+            await Sudo("chmod", "600", ConfigurationEncryptionKeyFile);
+        }
+
+        // The test runner cannot delete a directory owned by root, so it must be deleted before the home directory is.
+        internal async Task SudoDeleteTheKeyDirectory()
+            => await Sudo("rm", "-rf", KeyDirectory);
+
+        internal async Task SudoGiveTheConfigurationFileTo(LinuxTestUserPrincipal user)
+            => await Sudo("chown", user.UserName, ConfigurationFile);
+
+        // Root owns everything a root Tentacle creates in the data directory, so it must be deleted before the home directory is.
+        internal async Task SudoDeleteTheDataDirectory()
+            => await Sudo("rm", "-rf", DataDirectory);
+
+        static async Task Sudo(params string[] arguments)
+            => await Cli.Wrap("sudo").WithArguments(arguments).ExecuteBufferedAsync();
+
+        // sudo resets the environment, so the instance's environment is passed through env instead.
+        internal async Task<BufferedCommandResult> ExecuteTentacleCommandOnTheInstanceAsUser(LinuxTestUserPrincipal user, CommandResultValidation validation, string command, CancellationToken cancellationToken, params string[] arguments)
+        {
+            var sudoArguments = new[] { "-u", user.UserName, "env" }
+                .Concat(environmentVariables.Select(e => $"{e.Key}={e.Value}"))
+                .Concat(new[] { tentacleExe, command })
+                .Concat(arguments)
+                .Concat(Name is null ? new[] { "--config", ConfigurationFile } : new[] { "--instance", Name });
+            return await Cli.Wrap("sudo")
+                .WithArguments(sudoArguments)
+                .WithValidation(validation)
+                .WithWorkingDirectory(home.DirectoryPath)
+                .ExecuteBufferedAsync(cancellationToken);
+        }
+
+        internal async Task<BufferedCommandResult> ExecuteTentacleCommandOnTheInstanceAsRoot(CommandResultValidation validation, string command, CancellationToken cancellationToken, params string[] arguments)
+            => await ExecuteAsRoot(new[] { "env" }, validation, command, cancellationToken, arguments);
+
+        internal async Task<BufferedCommandResult> ExecuteTentacleCommandOnTheInstanceAsRootWithUmask(string umask, CommandResultValidation validation, string command, CancellationToken cancellationToken)
+            => await ExecuteAsRoot(new[] { "sh", "-c", $"umask {umask} && exec \"$@\"", "sh", "env" }, validation, command, cancellationToken);
+
+        async Task<BufferedCommandResult> ExecuteAsRoot(string[] launcher, CommandResultValidation validation, string command, CancellationToken cancellationToken, params string[] arguments)
+        {
+            var sudoArguments = launcher
+                .Concat(environmentVariables.Select(e => $"{e.Key}={e.Value}"))
+                .Concat(new[] { tentacleExe, command })
+                .Concat(arguments)
+                .Concat(Name is null ? new[] { "--config", ConfigurationFile } : new[] { "--instance", Name });
+            return await Cli.Wrap("sudo")
+                .WithArguments(sudoArguments)
+                .WithValidation(validation)
+                .WithWorkingDirectory(home.DirectoryPath)
+                .ExecuteBufferedAsync(cancellationToken);
+        }
 
         // Older Tentacles share the machine's instance registry, so a command can fail while another test registers an instance.
         public async Task<BufferedCommandResult> ExecuteTentacleCommand(CommandResultValidation validation, CancellationToken cancellationToken, params string[] arguments)
