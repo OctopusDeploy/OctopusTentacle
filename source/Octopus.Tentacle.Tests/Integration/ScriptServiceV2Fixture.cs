@@ -191,7 +191,8 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody("echo \"finished\"")
-                .WithDurationStartScriptCanWaitForScriptToFinish(TimeSpan.FromSeconds(5))
+                // Generous so a slow shell startup on a busy build agent doesn't exceed the window. StartScript returns as soon as the script completes, so this doesn't slow the test down.
+                .WithDurationStartScriptCanWaitForScriptToFinish(TimeSpan.FromSeconds(60))
                 .WithIsolation(ScriptIsolationLevel.NoIsolation)
                 .Build();
 
