@@ -1,6 +1,6 @@
 # Scenario 1: every step runs in the job's container.
 # generate writes an output, decide reads it and writes another, deploy runs only if decide said so.
-# Each step prints the container it ran in, and whether it can see the file generate left in /tmp.
+# Each step prints the container it ran in; generate leaves a file in the shared workspace for the others.
 name: same-container
 on: workflow_dispatch
 
@@ -15,8 +15,8 @@ jobs:
         name: Generate version
         run: |
           echo "container $(hostname): $(grep -s ^PRETTY_NAME= /etc/os-release | cut -d'"' -f2)"
-          touch /tmp/from-generate
-          echo "version=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
+          echo "built by generate" > release.txt
+          echo "version=$RELEASE_VERSION" >> "$OCTOPUS_OUTPUT"
           echo "version is $RELEASE_VERSION"
 
       - id: decide
@@ -25,18 +25,18 @@ jobs:
           VERSION: ${{ steps.generate.outputs.version }}
         run: |
           echo "container $(hostname): $(grep -s ^PRETTY_NAME= /etc/os-release | cut -d'"' -f2)"
-          if [ -e /tmp/from-generate ]; then echo "/tmp still has generate's file"; else echo "/tmp is fresh"; fi
+          echo "workspace has: $(cat release.txt)"
           case "$VERSION" in
             0.*) deploy=false ;;
             *)   deploy=true ;;
           esac
-          echo "deploy=$deploy" >> "$GITHUB_OUTPUT"
+          echo "deploy=$deploy" >> "$OCTOPUS_OUTPUT"
           {
             echo "notes<<EOF"
             echo "Release $VERSION"
             echo "deploy: $deploy"
             echo "EOF"
-          } >> "$GITHUB_OUTPUT"
+          } >> "$OCTOPUS_OUTPUT"
           echo "deploy is $deploy"
 
       - id: deploy
@@ -47,6 +47,6 @@ jobs:
           NOTES: ${{ steps.decide.outputs.notes }}
         run: |
           echo "container $(hostname): $(grep -s ^PRETTY_NAME= /etc/os-release | cut -d'"' -f2)"
-          if [ -e /tmp/from-generate ]; then echo "/tmp still has generate's file"; else echo "/tmp is fresh"; fi
+          echo "workspace has: $(cat release.txt)"
           echo "deploying ${{ steps.generate.outputs.version }}"
           printf '%s\n' "$NOTES"

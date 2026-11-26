@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\Octopus.Pipelines.Runner.props" />
+
+  <!-- What the job runner and the step runner share: the step input and result documents, expressions, the output
+       file format and secret masking. No dependencies, so the step runner stays small. -->
+  <PropertyGroup>
+    <RootNamespace>Octopus.Pipelines.Runner.Steps</RootNamespace>
+    <IsAotCompatible>true</IsAotCompatible>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Octopus.Pipelines.Runner.Tests" />
+  </ItemGroup>
+
+</Project>

@@ -13,8 +13,8 @@ jobs:
         container: debian:bookworm-slim
         run: |
           echo "container $(hostname): $(grep -s ^PRETTY_NAME= /etc/os-release | cut -d'"' -f2)"
-          touch /tmp/from-generate
-          echo "version=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
+          echo "built by generate" > release.txt
+          echo "version=$RELEASE_VERSION" >> "$OCTOPUS_OUTPUT"
           echo "version is $RELEASE_VERSION"
 
       - id: decide
@@ -24,12 +24,12 @@ jobs:
           VERSION: ${{ steps.generate.outputs.version }}
         run: |
           echo "container $(hostname): $(python3 --version)"
-          if [ -e /tmp/from-generate ]; then echo "/tmp still has generate's file"; else echo "/tmp is fresh"; fi
+          echo "workspace has: $(cat release.txt)"
           python3 - <<'PY'
           import os
           major = int(os.environ["VERSION"].split(".")[0])
           deploy = "true" if major >= 1 else "false"
-          with open(os.environ["GITHUB_OUTPUT"], "a") as out:
+          with open(os.environ["OCTOPUS_OUTPUT"], "a") as out:
               out.write(f"deploy={deploy}\n")
               out.write(f"notes<<EOF\nRelease {os.environ['VERSION']}\ndeploy: {deploy}\nEOF\n")
           print(f"deploy is {deploy}")
@@ -44,6 +44,6 @@ jobs:
           NOTES: ${{ steps.decide.outputs.notes }}
         run: |
           echo "container $(hostname): $(grep -s ^PRETTY_NAME= /etc/os-release | cut -d'"' -f2)"
-          if [ -e /tmp/from-generate ]; then echo "/tmp still has generate's file"; else echo "/tmp is fresh"; fi
+          echo "workspace has: $(cat release.txt)"
           echo "deploying ${{ steps.generate.outputs.version }}"
           printf '%s\n' "$NOTES"

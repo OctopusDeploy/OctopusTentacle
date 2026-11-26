@@ -1,11 +1,11 @@
 using System.Globalization;
 using System.Text;
 
-namespace Octopus.Pipelines.Runner.Core.Steps;
+namespace Octopus.Pipelines.Runner.Steps;
 
 /// <summary>
-/// A subset of GitHub Actions expressions: string, number and boolean literals, <c>steps.&lt;id&gt;.outputs.&lt;name&gt;</c>
-/// and <c>steps.&lt;id&gt;.outcome</c>/<c>.conclusion</c>, <c>== != &amp;&amp; || !</c>, parentheses, and the
+/// A subset of GitHub Actions expressions: string, number and boolean literals, the <c>steps</c>, <c>job</c>,
+/// <c>env</c> and <c>secrets</c> contexts (see <see cref="ExpressionContext"/>), <c>== != &amp;&amp; || !</c>, parentheses, and the
 /// <c>success() failure() always() cancelled() contains() startsWith() endsWith()</c> functions.
 /// </summary>
 public abstract record Expr
@@ -63,30 +63,37 @@ public abstract record Expr
     public sealed record Call(string Name, IReadOnlyList<Expr> Args) : Expr;
 }
 
-/// <summary>What an expression can see: the steps that have finished so far.</summary>
-public sealed class StepsContext
+/// <summary>
+/// What an expression can see, from a <see cref="StepContext"/>: <c>steps.&lt;id&gt;.outputs.&lt;name&gt;</c>,
+/// <c>steps.&lt;id&gt;.outcome</c> and <c>.conclusion</c>, <c>job.status</c>, <c>env.&lt;name&gt;</c> and
+/// <c>secrets.&lt;name&gt;</c>. Names are case-insensitive, as in GitHub Actions; anything else is null.
+/// </summary>
+public sealed class ExpressionContext(StepContext context)
 {
-    readonly Dictionary<string, StepResult> results = new(StringComparer.OrdinalIgnoreCase);
+    readonly Dictionary<string, StepContextStep> steps = new(context.Steps, StringComparer.OrdinalIgnoreCase);
+    readonly Dictionary<string, string> env = new(context.Env, StringComparer.OrdinalIgnoreCase);
+    readonly Dictionary<string, string> secrets = new(context.Secrets, StringComparer.OrdinalIgnoreCase);
 
-    public bool AnyFailed { get; private set; }
-
-    public void Add(StepResult result)
-    {
-        results[result.Id] = result;
-        AnyFailed |= result.Outcome == StepOutcome.Failure;
-    }
+    public bool JobFailed => context.Job.Status == JobStatus.Failure;
 
     public object? Lookup(IReadOnlyList<string> path)
     {
-        if (path.Count < 3 || !path[0].Equals("steps", StringComparison.OrdinalIgnoreCase) || !results.TryGetValue(path[1], out var step))
+        if (path.Count < 2)
         {
             return null;
         }
 
-        return path[2].ToLowerInvariant() switch
+        return path[0].ToLowerInvariant() switch
         {
-            "outputs" when path.Count == 4 => step.Outputs.TryGetValue(path[3], out var value) ? value : null,
-            "outcome" or "conclusion" when path.Count == 3 => step.Outcome.ToString().ToLowerInvariant(),
+            "steps" when path.Count >= 3 && steps.TryGetValue(path[1], out var step) => path[2].ToLowerInvariant() switch
+            {
+                "outputs" when path.Count == 4 => step.Outputs.FirstOrDefault(o => o.Key.Equals(path[3], StringComparison.OrdinalIgnoreCase)).Value,
+                "outcome" or "conclusion" when path.Count == 3 => step.Outcome.ToString().ToLowerInvariant(),
+                _ => null,
+            },
+            "job" when path.Count == 2 && path[1].Equals("status", StringComparison.OrdinalIgnoreCase) => context.Job.Status,
+            "env" when path.Count == 2 => env.GetValueOrDefault(path[1]),
+            "secrets" when path.Count == 2 => secrets.GetValueOrDefault(path[1]),
             _ => null,
         };
     }
@@ -95,9 +102,9 @@ public sealed class StepsContext
 /// <summary>Evaluates expressions on the orchestrator, the way the GitHub Actions runner does.</summary>
 public static class ExprEvaluator
 {
-    public static bool IsTrue(Expr expr, StepsContext context) => Truthy(Evaluate(expr, context));
+    public static bool IsTrue(Expr expr, ExpressionContext context) => Truthy(Evaluate(expr, context));
 
-    public static object? Evaluate(Expr expr, StepsContext context) => expr switch
+    public static object? Evaluate(Expr expr, ExpressionContext context) => expr switch
     {
         Expr.Literal l => l.Value,
         Expr.Ref r => context.Lookup(r.Path),
@@ -111,7 +118,7 @@ public static class ExprEvaluator
     };
 
     /// <summary>Replaces each <c>${{ }}</c> in <paramref name="template"/> with its value.</summary>
-    public static string Interpolate(string template, StepsContext context) =>
+    public static string Interpolate(string template, ExpressionContext context) =>
         ExprTemplate.Render(template, literal => literal, expr => ToText(Evaluate(expr, context)));
 
     public static string ToText(object? value) => value switch
@@ -122,13 +129,13 @@ public static class ExprEvaluator
         _ => value.ToString() ?? "",
     };
 
-    static object? Call(Expr.Call call, StepsContext context)
+    static object? Call(Expr.Call call, ExpressionContext context)
     {
         string Arg(int i) => ToText(Evaluate(call.Args[i], context));
         return call.Name switch
         {
-            "success" => !context.AnyFailed,
-            "failure" => context.AnyFailed,
+            "success" => !context.JobFailed,
+            "failure" => context.JobFailed,
             "always" => true,
             "cancelled" => false,
             "contains" => Arg(0).Contains(Arg(1), StringComparison.OrdinalIgnoreCase),

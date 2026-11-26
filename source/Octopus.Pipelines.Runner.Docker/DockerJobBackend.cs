@@ -4,6 +4,7 @@ using System.Text;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Octopus.Pipelines.Runner.Core;
+using Octopus.Pipelines.Runner.Core.Steps;
 
 namespace Octopus.Pipelines.Runner.Docker;
 
@@ -11,7 +12,8 @@ namespace Octopus.Pipelines.Runner.Docker;
 /// Runs each job with <c>docker run --rm</c>: no network, read-only root filesystem, all capabilities dropped, a
 /// non-root user, memory/CPU limits and an init process as PID 1, so the job gets signals. Going through the CLI
 /// means the daemon (<c>DOCKER_HOST</c>, contexts) and registry credentials are resolved the way the user's own
-/// <c>docker</c> commands resolve them. A job with steps runs them as <see cref="DockerBackendOptions.StepMode"/> says.
+/// <c>docker</c> commands resolve them. A job with steps runs each step in its own container, with the step runner as
+/// its entry point (see <see cref="DockerStepEnvironment"/>).
 /// </summary>
 /// <remarks>
 /// <c>docker run</c> exits 125 when Docker itself fails (an unknown user, a missing image, a daemon error), which is
@@ -52,7 +54,7 @@ public sealed class DockerJobBackend(
 
         if (job.Steps.Count > 0)
         {
-            return await new DockerStepsRun(this, job, output).RunAsync(cancellationToken);
+            return await new StepsOrchestrator(new DockerStepEnvironment(this), clock).RunAsync(job, output, cancellationToken);
         }
 
         await EnsureImageAsync(options.JobImage, cancellationToken);
@@ -81,12 +83,12 @@ public sealed class DockerJobBackend(
     }
 
     /// <summary>The lock-down every job container gets, and the labels that find it again.</summary>
-    internal List<string> HardeningArgs(JobSpec job)
+    internal List<string> HardeningArgs(JobSpec job, string network = "none")
     {
         List<string> args =
         [
             "--pull", "never",
-            "--network", "none",
+            "--network", network,
             "--user", options.User,
             "--memory", options.MemoryLimitBytes.ToString(CultureInfo.InvariantCulture),
             "--cpus", options.CpuLimit.ToString(CultureInfo.InvariantCulture),

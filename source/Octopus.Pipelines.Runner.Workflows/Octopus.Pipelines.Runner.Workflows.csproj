@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\Octopus.Pipelines.Runner.props" />
+
+  <!-- Reads jobs from GitHub Actions style workflow files, for the CLI sample and the end-to-end tests. In the real
+       system the Server owns workflows and sends the runner jobs; this stands in for it. -->
+  <PropertyGroup>
+    <RootNamespace>Octopus.Pipelines.Runner.Workflows</RootNamespace>
+    <IsAotCompatible>true</IsAotCompatible>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="YamlDotNet" Version="16.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Octopus.Pipelines.Runner.Core\Octopus.Pipelines.Runner.Core.csproj" />
+  </ItemGroup>
+
+</Project>

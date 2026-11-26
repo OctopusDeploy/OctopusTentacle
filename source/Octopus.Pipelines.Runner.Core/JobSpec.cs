@@ -15,6 +15,15 @@ public sealed record JobSpec(string JobId, string RunId, string Command, JobIsol
 
     /// <summary>The job's steps, run in order, or empty for a single-command job.</summary>
     public IReadOnlyList<StepSpec> Steps { get; init; } = [];
+
+    /// <summary>The job's environment: every step gets it, and expressions see it as <c>env</c>.</summary>
+    public IReadOnlyDictionary<string, string> Env { get; init; } = new Dictionary<string, string>();
+
+    /// <summary>The job's secrets, as <c>secrets</c> in expressions. Masked in every step's log.</summary>
+    public IReadOnlyDictionary<string, string> Secrets { get; init; } = new Dictionary<string, string>();
+
+    /// <summary>Containers that run alongside every step, reachable by name.</summary>
+    public IReadOnlyList<ServiceSpec> Services { get; init; } = [];
 }
 
 /// <summary>Callbacks a backend uses while a job runs.</summary>

@@ -80,6 +80,9 @@ public sealed class GatewayJobExecutor(
             var job = new JobSpec(jobId, assignment.RunId, assignment.Command, ToIsolation(assignment.Isolation))
             {
                 Steps = assignment.Steps.Select(ToStep).ToArray(),
+                Env = new Dictionary<string, string>(assignment.Env),
+                Secrets = new Dictionary<string, string>(assignment.Secrets),
+                Services = assignment.Services.Select(s => new ServiceSpec(s.Name, s.Image) { Env = new Dictionary<string, string>(s.Env) }).ToArray(),
             };
             result = await runner.RunAsync(job, new Uri(assignment.Storage.DirectoryUri), new Observer(this, jobId, outbox), lifetime.ApplicationStopping);
         }
@@ -120,6 +123,8 @@ public sealed class GatewayJobExecutor(
         Name = step.Name.Length > 0 ? step.Name : null,
         If = step.Condition.Length > 0 ? step.Condition : null,
         Image = step.Image.Length > 0 ? step.Image : null,
+        Shell = step.Shell.Length > 0 ? step.Shell : null,
+        Timeout = step.TimeoutSeconds > 0 ? TimeSpan.FromSeconds(step.TimeoutSeconds) : null,
         Env = new Dictionary<string, string>(step.Env),
     };
 
@@ -128,6 +133,7 @@ public sealed class GatewayJobExecutor(
         var proto = new Contracts.StepResult
         {
             Id = result.Id,
+            Error = result.Error ?? "",
             Outcome = result.Outcome switch
             {
                 Core.Steps.StepOutcome.Success => Contracts.StepOutcome.Success,

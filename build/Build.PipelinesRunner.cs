@@ -97,6 +97,55 @@ partial class Build
         });
 
     [PublicAPI]
+    Target PublishPipelinesStepRunner => _ => _
+        .Description("Publishes the statically linked step runner for the host's architecture, fails on any trim/AOT warning, and checks it starts in musl and glibc images.")
+        .Executes(() =>
+        {
+            const string project = "Octopus.Pipelines.Runner.StepRunner";
+            var rid = PipelinesRunnerAotRuntimeIdentifier();
+            var output = ArtifactsDirectory / "pipelines-step-runner" / rid;
+
+            DotNetClean(p => p
+                .SetProject(SourceDirectory / project)
+                .SetConfiguration("Release")
+                .SetRuntime(rid));
+
+            var publishOutput = DotNetPublish(p => p
+                .SetProject(SourceDirectory / project)
+                .SetConfiguration("Release")
+                .SetRuntime(rid)
+                .SetOutput(output));
+
+            var warnings = publishOutput
+                .Select(o => o.Text)
+                .Where(t => Regex.IsMatch(t, "warning (IL|AOT)"))
+                .Distinct()
+                .OrderBy(t => t, StringComparer.Ordinal)
+                .ToList();
+            if (warnings.Count > 0)
+                throw new Exception("Publish produced trim/AOT warnings:" + Environment.NewLine + string.Join(Environment.NewLine, warnings));
+
+            var binary = output / "octopus-step-runner";
+            Log.Information("Step runner: {Binary} ({Size} bytes)", binary, new FileInfo(binary).Length);
+
+            // Statically linked, so the same file runs whatever the image's C library. Without OCTOPUS_RESULT it
+            // exits 3 with a message, which is enough to show it started.
+            foreach (var image in new[] { "alpine:3.20", "debian:bookworm-slim" })
+            {
+                var startInfo = new ProcessStartInfo("docker") { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false };
+                foreach (var arg in new[] { "run", "--rm", "--network", "none", "--volume", $"{binary}:/octopus-step-runner:ro", "--entrypoint", "/octopus-step-runner", image })
+                    startInfo.ArgumentList.Add(arg);
+
+                using var process = Process.Start(startInfo) ?? throw new Exception("Could not start docker");
+                var stderr = process.StandardError.ReadToEnd();
+                process.WaitForExit();
+                if (process.ExitCode != 3 || !stderr.Contains("OCTOPUS_RESULT isn't set"))
+                    throw new Exception($"The step runner didn't start in {image}: exit {process.ExitCode}: {stderr}");
+                Log.Information("OK: the step runner starts in {Image}", image);
+            }
+        });
+
+    [PublicAPI]
     Target PackPipelinesRunner => _ => _
         .Description("Packs the NuGet packages the CLI consumes: the pipelines runner Core, Docker, Contracts and Gateway libraries.")
         .Executes(() =>

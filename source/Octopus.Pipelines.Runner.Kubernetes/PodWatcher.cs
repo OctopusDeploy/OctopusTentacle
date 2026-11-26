@@ -116,6 +116,22 @@ public sealed class PodTracker
             PlacementChanged?.Invoke(now);
         }
 
+        // A step pod's init container installs the step runner; if it can't, the job container never starts.
+        foreach (var init in pod.Status?.InitContainerStatuses ?? [])
+        {
+            if (init.State?.Waiting is { Reason: "ErrImagePull" or "ImagePullBackOff" or "InvalidImageName" or "CreateContainerConfigError" } initWaiting)
+            {
+                Fail($"Init container {init.Name}: {initWaiting.Reason}: {initWaiting.Message}");
+                return;
+            }
+
+            if (init.State?.Terminated is { ExitCode: not 0 } initFailed)
+            {
+                Fail($"Init container {init.Name} exited {initFailed.ExitCode}: {initFailed.Reason} {initFailed.Message}".Trim());
+                return;
+            }
+        }
+
         var status = pod.Status?.ContainerStatuses?.FirstOrDefault(c => c.Name == PodWatcher.ContainerName);
         if (status?.State?.Running is { } running)
         {

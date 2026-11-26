@@ -8,8 +8,7 @@ using Octopus.Pipelines.Runner.Core.Logs;
 using Octopus.Pipelines.Runner.Core.Steps;
 using Octopus.Pipelines.Runner.Docker;
 using Octopus.Pipelines.Runner.Gateway;
-using StepResult = Octopus.Pipelines.Runner.Contracts.StepResult;
-using StepOutcome = Octopus.Pipelines.Runner.Contracts.StepOutcome;
+using Octopus.Pipelines.Runner.Workflows;
 
 // Runs one command, or one job of a workflow file, through the same gateway as Tentacle and the Kubernetes runner: the
 // CLI plays the Server (CliJobSource) and the runner's GatewayClient reaches it in process, with no network.
@@ -17,7 +16,7 @@ using StepOutcome = Octopus.Pipelines.Runner.Contracts.StepOutcome;
 const string usage = """
     usage: Octopus.Pipelines.Runner.CliSample [--image <image>] [--log-root <dir>] -- <command>
            Octopus.Pipelines.Runner.CliSample [--image <image>] [--log-root <dir>] --workflow <file> [--job <id>]
-               [--strategy server|run|exec|in-container] [--keep-state]
+               [--secret <name>=<value>]... [--step-runner <path>] [--keep-state]
     """;
 const int CancelledExitCode = 130;
 
@@ -26,7 +25,8 @@ var logRoot = ".runner-logs";
 string? command = null;
 string? workflowPath = null;
 string? jobName = null;
-var strategy = "run";
+var secrets = new Dictionary<string, string>();
+var stepRunner = Environment.GetEnvironmentVariable("OCTOPUS_STEP_RUNNER") ?? Path.Combine(AppContext.BaseDirectory, "octopus-step-runner");
 var keepState = false;
 
 for (var i = 0; i < args.Length; i++)
@@ -49,8 +49,12 @@ for (var i = 0; i < args.Length; i++)
         case "--job" when i + 1 < args.Length:
             jobName = args[++i];
             break;
-        case "--strategy" when i + 1 < args.Length && args[i + 1] is "server" or "run" or "exec" or "in-container":
-            strategy = args[++i];
+        case "--secret" when i + 1 < args.Length && args[i + 1].IndexOf('=') > 0:
+            var secret = args[++i];
+            secrets[secret[..secret.IndexOf('=')]] = secret[(secret.IndexOf('=') + 1)..];
+            break;
+        case "--step-runner" when i + 1 < args.Length:
+            stepRunner = args[++i];
             break;
         case "--keep-state":
             keepState = true;
@@ -72,7 +76,7 @@ if (workflowPath is not null)
     {
         workflow = WorkflowFile.Load(workflowPath, jobName);
     }
-    catch (Exception e) when (e is FormatException or IOException or YamlDotNet.Core.YamlException)
+    catch (Exception e) when (e is FormatException or IOException)
     {
         Console.Error.WriteLine($"error: {e.Message}");
         return 2;
@@ -91,13 +95,7 @@ using var loggerFactory = new StderrLoggerFactory(
 var clock = TimeProvider.System;
 var dockerOptions = new DockerBackendOptions
 {
-    // The runner cell's choice of how to run a job's steps. With the server strategy every job has one step.
-    StepMode = strategy switch
-    {
-        "exec" => DockerStepMode.Exec,
-        "in-container" => DockerStepMode.InContainer,
-        _ => DockerStepMode.Run,
-    },
+    StepRunnerPath = stepRunner,
     StateRoot = Path.Combine(root, "state"),
     KeepState = keepState,
 };
@@ -141,108 +139,52 @@ var stopwatch = Stopwatch.StartNew();
 await client.StartAsync(CancellationToken.None);
 using var stdout = Console.OpenStandardOutput();
 
-List<MarkJobAsFinishedCommand> jobs = [];
+var job = new ExecuteJobCommand
+{
+    JobId = Guid.NewGuid().ToString("N"),
+    RunId = runId,
+    Isolation = Octopus.Pipelines.Runner.Contracts.JobIsolation.Standard,
+};
 if (workflow is null)
 {
-    jobs.Add(await RunJobAsync(new ExecuteJobCommand { Command = command }));
-}
-else if (strategy == "server")
-{
-    await OrchestrateOnServerAsync(workflow);
+    job.Command = command;
 }
 else
 {
-    // The runner gets the whole job, expressions and all, and orchestrates its steps as its backend sees fit.
-    var job = new ExecuteJobCommand();
     job.Steps.AddRange(workflow.Steps.Select(ToProto));
-    jobs.Add(await RunJobAsync(job));
+    job.Env.Add(workflow.Env.ToDictionary());
+    job.Secrets.Add(secrets);
+    job.Services.AddRange(workflow.Services.Select(s => new Service { Name = s.Name, Image = s.Image, Env = { s.Env.ToDictionary() } }));
 }
+
+var jobDirectory = Path.Combine(root, "local", "runs", runId, job.JobId);
+job.Storage = new JobStorage { DirectoryUri = new Uri(jobDirectory).AbsoluteUri };
+var finishedTask = source.RunAsync(job);
+await LogTail.CopyAsync(Path.Combine(jobDirectory, JobFiles.Log), stdout, finishedTask);
+var finished = await finishedTask;
 
 await client.StopAsync(CancellationToken.None);
-var elapsed = stopwatch.Elapsed;
 
-var error = jobs.Select(j => j.Error).FirstOrDefault(e => e.Length > 0);
-if (error is not null)
+if (finished.Error.Length > 0)
 {
-    Console.Error.WriteLine($"error: {error}");
+    Console.Error.WriteLine($"error: {finished.Error}");
 }
 
-var steps = jobs.SelectMany(j => j.Steps).ToArray();
 if (workflow is not null)
 {
-    Console.Error.WriteLine($"strategy={strategy} jobs={jobs.Count} elapsed={elapsed.TotalMilliseconds:F0}ms");
-    foreach (var step in steps)
+    Console.Error.WriteLine($"elapsed={stopwatch.Elapsed.TotalMilliseconds:F0}ms");
+    foreach (var step in finished.Steps)
     {
         var outputs = string.Join(' ', step.Outputs.Select(o => $"{o.Key}={o.Value.Replace("\n", "\\n")}"));
-        Console.Error.WriteLine($"  {step.Id,-8} {step.Outcome.ToString().ToLowerInvariant(),-8} exit={(step.HasExitCode ? step.ExitCode : "-"),-3} {outputs}");
+        var error = step.Error.Length > 0 ? $" error=\"{step.Error}\"" : "";
+        Console.Error.WriteLine($"  {step.Id,-8} {step.Outcome.ToString().ToLowerInvariant(),-8} exit={(step.HasExitCode ? step.ExitCode : "-"),-3} {outputs}{error}");
     }
 }
 
-var exitCode = jobs.Select(j => j.ExitCode).FirstOrDefault(c => c != 0);
-Console.Error.WriteLine($"exit={exitCode} logs={Path.Combine(root, "local", "runs", runId)}");
+Console.Error.WriteLine($"exit={finished.ExitCode} log={Path.Combine(jobDirectory, JobFiles.Log)}");
 return lifetime.ApplicationStopping.IsCancellationRequested ? CancelledExitCode
-    : error is not null ? 1
-    : exitCode;
-
-// The Server orchestrates: it evaluates each step's condition and expressions against the outputs earlier steps
-// reported, and sends each step that should run to a runner as its own single-step job. The runner sees no expressions.
-async Task OrchestrateOnServerAsync(WorkflowJob job)
-{
-    var context = new StepsContext();
-    foreach (var step in job.Steps)
-    {
-        if (lifetime.ApplicationStopping.IsCancellationRequested)
-        {
-            return;
-        }
-
-        if (!ExprEvaluator.IsTrue(Expr.ParseCondition(step.If), context))
-        {
-            WriteOut($"==> {step.Id}: {step.DisplayName} skipped (by the server)\n");
-            var skipped = Octopus.Pipelines.Runner.Core.Steps.StepResult.Skipped(step.Id);
-            context.Add(skipped);
-            jobs.Add(new MarkJobAsFinishedCommand { Steps = { new StepResult { Id = step.Id, Outcome = StepOutcome.Skipped } } });
-            continue;
-        }
-
-        var resolved = step with
-        {
-            Run = ExprEvaluator.Interpolate(step.Run, context),
-            If = null,
-            Env = step.Env.ToDictionary(e => e.Key, e => ExprEvaluator.Interpolate(e.Value, context)),
-        };
-        var assignment = new ExecuteJobCommand();
-        assignment.Steps.Add(ToProto(resolved));
-        var finished = await RunJobAsync(assignment);
-        jobs.Add(finished);
-
-        var result = finished.Steps.SingleOrDefault();
-        context.Add(new Octopus.Pipelines.Runner.Core.Steps.StepResult(
-            step.Id,
-            result?.Outcome == StepOutcome.Success ? Octopus.Pipelines.Runner.Core.Steps.StepOutcome.Success : Octopus.Pipelines.Runner.Core.Steps.StepOutcome.Failure,
-            result?.ExitCode,
-            result?.Outputs.ToDictionary() ?? []));
-    }
-}
-
-async Task<MarkJobAsFinishedCommand> RunJobAsync(ExecuteJobCommand job)
-{
-    job.JobId = Guid.NewGuid().ToString("N");
-    job.RunId = runId;
-    job.Isolation = Octopus.Pipelines.Runner.Contracts.JobIsolation.Standard;
-    var jobDirectory = Path.Combine(root, "local", "runs", runId, job.JobId);
-    job.Storage = new JobStorage { DirectoryUri = new Uri(jobDirectory).AbsoluteUri };
-
-    var finished = source.RunAsync(job);
-    await LogTail.CopyAsync(Path.Combine(jobDirectory, JobFiles.Log), stdout, finished);
-    return await finished;
-}
-
-void WriteOut(string text)
-{
-    stdout.Write(System.Text.Encoding.UTF8.GetBytes(text));
-    stdout.Flush();
-}
+    : finished.Error.Length > 0 ? 1
+    : finished.ExitCode;
 
 static Step ToProto(StepSpec step)
 {
@@ -253,12 +195,10 @@ static Step ToProto(StepSpec step)
         Run = step.Run,
         Condition = step.If ?? "",
         Image = step.Image ?? "",
+        Shell = step.Shell ?? "",
+        TimeoutSeconds = step.Timeout is { } timeout ? (int)Math.Ceiling(timeout.TotalSeconds) : 0,
     };
-    foreach (var (name, value) in step.Env)
-    {
-        proto.Env[name] = value;
-    }
-
+    proto.Env.Add(step.Env.ToDictionary());
     return proto;
 }
 

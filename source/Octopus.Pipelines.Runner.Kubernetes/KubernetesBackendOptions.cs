@@ -44,6 +44,35 @@ public sealed class KubernetesBackendOptions
     /// only allows that long to start, so a pod that starts later can lose log access before it reaches its maximum runtime.
     /// </remarks>
     public TimeSpan PodStartTimeout { get; set; } = TimeSpan.FromMinutes(15);
+
+    /// <summary>How jobs with steps run: a pod per step, on storage shared with the runner.</summary>
+    public StepsOptions Steps { get; set; } = new();
+}
+
+/// <summary>
+/// Jobs with steps run one pod per step. Each pod mounts the job's directory on shared storage at <c>/octopus</c>
+/// (the workspace, and the step's input, output and result), and the runner reads and writes the same directory at
+/// <see cref="LocalPath"/>. Set exactly one of <see cref="ClaimName"/> and <see cref="HostPath"/>.
+/// </summary>
+public sealed class StepsOptions
+{
+    /// <summary>An image whose <c>/step-runner</c> is the static step runner; an init container copies it into each step pod.</summary>
+    public string StepRunnerImage { get; set; } = "octopus/pipelines-step-runner:dev";
+
+    /// <summary>A ReadWriteMany PersistentVolumeClaim, also mounted into the runner's pod at <see cref="LocalPath"/>.</summary>
+    public string? ClaimName { get; set; }
+
+    /// <summary>
+    /// A directory on the node, for single-node development clusters (kind) only: Pod Security "restricted" forbids
+    /// it. The runner must see the same directory at <see cref="LocalPath"/>.
+    /// </summary>
+    public string? HostPath { get; set; }
+
+    /// <summary>Where the runner sees the shared storage. Each job gets <c>octopus-job-&lt;job&gt;</c> under it.</summary>
+    public string LocalPath { get; set; } = "/octopus-shared";
+
+    /// <summary>Leaves each job's directory behind when it finishes, for looking at what the steps wrote.</summary>
+    public bool KeepState { get; set; }
 }
 
 /// <summary>

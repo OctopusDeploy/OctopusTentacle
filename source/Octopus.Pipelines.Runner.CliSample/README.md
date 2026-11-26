@@ -6,7 +6,7 @@ machine. It references only `Octopus.Pipelines.Runner.Core` and `Octopus.Pipelin
 ```
 Octopus.Pipelines.Runner.CliSample [--image <image>] [--log-root <dir>] -- <command>
 Octopus.Pipelines.Runner.CliSample [--image <image>] [--log-root <dir>] --workflow <file> [--job <id>]
-    [--strategy server|run|exec|in-container] [--keep-state]
+    [--secret <name>=<value>]... [--step-runner <path>] [--keep-state]
 ```
 
 Everything after `--` is joined with spaces into the job command. The job's output goes to stdout, the log to
@@ -34,28 +34,29 @@ sealed class StdoutObserver(Stream stdout) : IJobObserver
 
 ## Workflows
 
-`--workflow` runs one job of a GitHub Actions workflow file: its `container`, `env` and `run` steps with `id`, `name`,
-`if` and `env`. Steps write outputs to `$GITHUB_OUTPUT` and later steps read them as
-`${{ steps.<id>.outputs.<name> }}`. A step may also set its own `container`, which GitHub Actions doesn't allow on a
-`run` step; it overrides the job's. `workflows/` has three samples: every step in the job's container, a different
-container for the middle step, and a different container for every step.
+`--workflow` runs one job of a GitHub Actions workflow file: its `container`, `env`, `services` and `run` steps with
+`id`, `name`, `if`, `env`, `shell` and `timeout-minutes`. A step may also set its own `container`, which GitHub
+Actions doesn't allow on a `run` step; it overrides the job's. `workflows/` has three samples: every step in the
+job's container, a different container for the middle step, and a different container for every step.
 
-`--strategy` picks who orchestrates the steps:
+Steps run one at a time, each in its own `docker run --rm`, with the step runner (`Octopus.Pipelines.Runner.StepRunner`)
+bind mounted as the container's entry point. The step runner reads `$OCTOPUS_INPUT` (the step and the context so
+far), decides from the step's `if` whether it runs, resolves its `${{ }}` expressions, runs the script with bash if
+the image has it (else sh) in `$OCTOPUS_WORKSPACE`, masks secrets in its output, and writes a result with the
+step's outcome and the outputs it wrote to `$OCTOPUS_OUTPUT` (also `$GITHUB_OUTPUT`). The job's directory, at
+`<log-root>/state`, is the shared storage: the Docker daemon must be local. `--keep-state` leaves it behind.
 
-| Strategy | Orchestrated by | Containers | Conditions and expressions |
-|---|---|---|---|
-| `server` | the Server (here, the CLI) | one `docker run` per step, each its own job | evaluated by the Server before it sends each step |
-| `run` (default) | the runner | one `docker run` per step | evaluated by the runner |
-| `exec` | the runner | one per image, `docker exec` per step | evaluated by the runner |
-| `in-container` | the containers | one per image, all started at once | compiled to `sh`, evaluated in the container |
-
-Every step gets the job's state directory at `/octopus` (scripts, outputs, and the shared `/octopus/workspace`),
-bind mounted from `<log-root>/state`, so the Docker daemon must be local. `--keep-state` leaves it behind. The
-summary on stderr lists each step's outcome, exit code and outputs.
+The step runner must be the statically linked build: `./build.sh --target PublishPipelinesStepRunner` writes it to
+`_artifacts/pipelines-step-runner/<rid>/octopus-step-runner`. Pass it with `--step-runner` or `OCTOPUS_STEP_RUNNER`;
+by default the CLI looks next to itself.
 
 ```
-Octopus.Pipelines.Runner.CliSample --workflow workflows/2-different-middle-container.yml --strategy exec
+Octopus.Pipelines.Runner.CliSample --workflow workflows/3-different-containers.yml \
+    --step-runner _artifacts/pipelines-step-runner/linux-arm64/octopus-step-runner --secret DEPLOY_TOKEN=abc
 ```
+
+The summary on stderr lists each step's outcome, exit code and outputs; outputs that contain a secret stay inside
+the job and aren't listed.
 
 ## AOT gate
 

@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Octopus.Pipelines.Runner.Core;
+using Octopus.Pipelines.Runner.Core.Steps;
 using Octopus.Pipelines.Runner.Gateway;
 using k8s;
 using k8s.Autorest;
@@ -24,19 +25,30 @@ public sealed class KubernetesJobBackend(
     public async Task<int> RunAsync(JobSpec job, IJobOutput output, CancellationToken cancellationToken)
     {
         var settings = options.Value;
-        if (job.Steps.Count > 0)
-        {
-            // Running the empty command instead would report the job as succeeded without running a step.
-            throw new NotSupportedException("The Kubernetes backend doesn't run jobs with steps yet.");
-        }
-
         if (job.Sandboxed && !settings.Sandbox.Enabled)
         {
             // Never fall back to a shared kernel for a job that asked for its own.
             throw new InvalidOperationException("This runner cell has no sandbox node pool (Runner:Kubernetes:Sandbox:Enabled is false).");
         }
 
+        if (job.Steps.Count > 0)
+        {
+            var environment = new KubernetesStepEnvironment(client, this, options.Value, gateway.Value, logger);
+            return await new StepsOrchestrator(environment).RunAsync(job, output, cancellationToken);
+        }
+
         var podName = $"job-{job.JobId}";
+        return await RunPodAsync(BuildPod(podName, job, settings, gateway.Value), output, cancellationToken);
+    }
+
+    /// <summary>
+    /// Creates the pod, reports when its job container starts, streams that container's log, and returns its exit code.
+    /// The pod is deleted afterwards, however the call ends.
+    /// </summary>
+    internal async Task<int> RunPodAsync(V1Pod pod, IJobOutput output, CancellationToken cancellationToken)
+    {
+        var settings = options.Value;
+        var podName = pod.Metadata.Name;
         var tracker = watcher.Track(podName);
         tracker.PlacementChanged = waiting =>
         {
@@ -54,7 +66,7 @@ public sealed class KubernetesJobBackend(
             await createThrottle.WaitAsync(cancellationToken);
             try
             {
-                await client.CoreV1.CreateNamespacedPodAsync(BuildPod(podName, job, options.Value, gateway.Value), settings.Namespace, cancellationToken: cancellationToken);
+                await client.CoreV1.CreateNamespacedPodAsync(pod, settings.Namespace, cancellationToken: cancellationToken);
             }
             finally
             {
@@ -85,7 +97,7 @@ public sealed class KubernetesJobBackend(
         }
     }
 
-    async Task DeleteAsync(string podName, string ns)
+    internal async Task DeleteAsync(string podName, string ns)
     {
         try
         {

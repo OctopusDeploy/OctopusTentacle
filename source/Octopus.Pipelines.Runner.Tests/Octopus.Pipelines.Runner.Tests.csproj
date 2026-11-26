@@ -28,6 +28,14 @@
     <ProjectReference Include="..\Octopus.Pipelines.Runner.Kubernetes.Host\Octopus.Pipelines.Runner.Kubernetes.Host.csproj" />
     <ProjectReference Include="..\Octopus.Pipelines.Runner.Logs.AzureBlob\Octopus.Pipelines.Runner.Logs.AzureBlob.csproj" />
     <ProjectReference Include="..\Octopus.Pipelines.Runner.Logs.Http\Octopus.Pipelines.Runner.Logs.Http.csproj" />
+    <ProjectReference Include="..\Octopus.Pipelines.Runner.Steps\Octopus.Pipelines.Runner.Steps.csproj" />
+    <ProjectReference Include="..\Octopus.Pipelines.Runner.StepRunner\Octopus.Pipelines.Runner.StepRunner.csproj" />
+    <ProjectReference Include="..\Octopus.Pipelines.Runner.Workflows\Octopus.Pipelines.Runner.Workflows.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The end-to-end tests run the CLI sample's workflows. -->
+    <None Include="..\Octopus.Pipelines.Runner.CliSample\workflows\*.yml" LinkBase="workflows" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

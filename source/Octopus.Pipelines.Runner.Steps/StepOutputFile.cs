@@ -1,7 +1,7 @@
-namespace Octopus.Pipelines.Runner.Core.Steps;
+namespace Octopus.Pipelines.Runner.Steps;
 
 /// <summary>
-/// Reads the <c>$GITHUB_OUTPUT</c> file format: <c>name=value</c> lines, and <c>name&lt;&lt;DELIMITER</c> ... <c>DELIMITER</c>
+/// Reads the <c>$OCTOPUS_OUTPUT</c> file format (the same as GitHub Actions' <c>$GITHUB_OUTPUT</c>): <c>name=value</c> lines, and <c>name&lt;&lt;DELIMITER</c> ... <c>DELIMITER</c>
 /// blocks for multi-line values. A name written twice keeps its last value.
 /// </summary>
 public static class StepOutputFile
@@ -44,21 +44,4 @@ public static class StepOutputFile
 
         return outputs;
     }
-
-    /// <summary>
-    /// The same parser as a POSIX shell function, <c>__out &lt;file&gt; &lt;name&gt;</c>, matching names case-insensitively, for
-    /// orchestrating steps inside a container. Uses only <c>awk</c>, which busybox, Alpine and Debian images all have.
-    /// </summary>
-    public const string ShellFunction = """
-        __out() {
-          [ -f "$1" ] || return 0
-          awk -v k="$2" '
-            BEGIN { k = tolower(k) }
-            d != "" { if ($0 == d) { if (tolower(n) == k) v = b; d = ""; next } b = (s ? b "\n" : "") $0; s = 1; next }
-            { i = index($0, "<<"); j = index($0, "=")
-              if (i > 1 && (j == 0 || i < j)) { n = substr($0, 1, i - 1); d = substr($0, i + 2); b = ""; s = 0; next }
-              if (j > 1 && tolower(substr($0, 1, j - 1)) == k) v = substr($0, j + 1) }
-            END { printf "%s", v }' "$1"
-        }
-        """;
 }

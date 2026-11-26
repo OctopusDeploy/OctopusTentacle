@@ -77,24 +77,40 @@ message ExecuteJobCommand {
   reserved 4;
   JobIsolation isolation = 5;
   JobStorage storage = 6;
-  // The job's steps, run in order. How the runner runs them (a container per step, one per image, or orchestrated
-  // inside the containers) is the runner cell's choice.
+  // The job's steps, run one at a time, each in its own container with the step runner as its entry point.
   repeated Step steps = 7;
+  // Every step's environment, and the `env` context of its expressions.
+  map<string, string> env = 8;
+  // The `secrets` context. The step runner masks every value in the job's log.
+  map<string, string> secrets = 9;
+  // Containers that run alongside every step, reachable from the steps by name.
+  repeated Service services = 10;
 }
 
-// A GitHub Actions style `run` step. `run`, `condition` and the `env` values may hold ${{ }} expressions that refer to
-// earlier steps' outputs; the runner resolves them. A Server that orchestrates steps itself resolves them first and
-// sends each step as its own job.
+// A GitHub Actions style `run` step. `run`, `name`, `condition` and the `env` values may hold ${{ }} expressions,
+// which the step runner resolves inside the step's container.
 message Step {
   string id = 1;
   string name = 2;
-  // Script executed with `sh -e`. It writes outputs to $GITHUB_OUTPUT as name=value lines.
+  // The script. It writes outputs to $OCTOPUS_OUTPUT as name=value lines. The image's entrypoint doesn't run.
   string run = 3;
   // The step's `if:`. Empty means success().
   string condition = 4;
   // The image to run the step in. Empty means the runner's default.
   string image = 5;
   map<string, string> env = 6;
+  // As GitHub Actions' `shell:`. Empty means bash if the image has it, otherwise sh.
+  string shell = 7;
+  // How long the step may run before the runner stops it and fails it. 0 means no limit.
+  int32 timeout_seconds = 8;
+}
+
+message Service {
+  // The host name steps reach the service by.
+  string name = 1;
+  // Runs with its own entrypoint and command.
+  string image = 2;
+  map<string, string> env = 3;
 }
 
 // How strongly a job is separated from other jobs on the same node. Every job gets the cell's
@@ -152,6 +168,8 @@ message StepResult {
   StepOutcome outcome = 2;
   // Absent when the step was skipped.
   optional int32 exit_code = 3;
-  // What the step wrote to $GITHUB_OUTPUT.
+  // What the step wrote to $OCTOPUS_OUTPUT, less any output that contains a secret.
   map<string, string> outputs = 4;
+  // Why the step failed other than by its script's exit code, e.g. a timeout.
+  string error = 5;
 }

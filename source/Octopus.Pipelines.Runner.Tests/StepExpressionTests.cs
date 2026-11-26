@@ -1,21 +1,27 @@
-using System.Diagnostics;
-using Octopus.Pipelines.Runner.Core.Steps;
+using Octopus.Pipelines.Runner.Steps;
 
 namespace Octopus.Pipelines.Runner.Tests;
 
 public sealed class StepExpressionTests
 {
-    static StepsContext Context()
+    static StepContext Context(string status = JobStatus.Success) => new()
     {
-        var context = new StepsContext();
-        context.Add(new StepResult("generate", StepOutcome.Success, 0, new Dictionary<string, string> { ["version"] = "1.4.0", ["Empty"] = "" }));
-        context.Add(new StepResult("decide", StepOutcome.Success, 0, new Dictionary<string, string> { ["deploy"] = "true" }));
-        return context;
-    }
+        Job = new StepContextJob { Status = status },
+        Env = new Dictionary<string, string> { ["RELEASE_VERSION"] = "1.4.0" },
+        Secrets = new Dictionary<string, string> { ["TOKEN"] = "s3cr3t" },
+        Steps = new Dictionary<string, StepContextStep>
+        {
+            ["generate"] = new() { Outcome = StepRunOutcome.Success, Outputs = new Dictionary<string, string> { ["version"] = "1.4.0", ["Empty"] = "" } },
+            ["decide"] = new() { Outcome = StepRunOutcome.Success, Outputs = new Dictionary<string, string> { ["deploy"] = "true" } },
+        },
+    };
+
+    static bool IsTrue(string? condition, StepContext? context = null) =>
+        ExprEvaluator.IsTrue(Expr.ParseCondition(condition), new ExpressionContext(context ?? Context()));
 
     [Theory]
     [InlineData("steps.decide.outputs.deploy == 'true'", true)]
-    [InlineData("steps.decide.outputs.deploy == 'TRUE'", true)]
+    [InlineData("steps.DECIDE.outputs.DEPLOY == 'TRUE'", true)]
     [InlineData("steps.decide.outputs.deploy != 'true'", false)]
     [InlineData("${{ steps.decide.outputs.deploy == 'true' }}", true)]
     [InlineData("steps.generate.outputs.missing == ''", true)]
@@ -23,30 +29,35 @@ public sealed class StepExpressionTests
     [InlineData("steps.generate.outputs.version", true)]
     [InlineData("steps.generate.outcome == 'success'", true)]
     [InlineData("!(steps.generate.outputs.empty)", true)]
+    [InlineData("env.release_version == '1.4.0'", true)]
+    [InlineData("secrets.TOKEN == 's3cr3t'", true)]
+    [InlineData("job.status == 'success'", true)]
     [InlineData("startsWith(steps.generate.outputs.version, '1.') && contains('abc', 'B')", true)]
     [InlineData("steps.decide.outputs.deploy == 'false' || steps.generate.outputs.version == '1.4.0'", true)]
+    [InlineData("'1' == 1.0", true)]
     [InlineData("failure()", false)]
     [InlineData("always()", true)]
     [InlineData(null, true)]
-    public void Evaluates_conditions(string? condition, bool expected) =>
-        Assert.Equal(expected, ExprEvaluator.IsTrue(Expr.ParseCondition(condition), Context()));
+    public void Evaluates_conditions(string? condition, bool expected) => Assert.Equal(expected, IsTrue(condition));
 
     [Fact]
-    public void A_condition_without_a_status_function_only_runs_after_success()
+    public void A_condition_without_a_status_function_only_runs_while_the_job_is_succeeding()
     {
-        var context = Context();
-        context.Add(new StepResult("broken", StepOutcome.Failure, 1, new Dictionary<string, string>()));
+        var failed = Context(JobStatus.Failure);
 
-        Assert.False(ExprEvaluator.IsTrue(Expr.ParseCondition("steps.decide.outputs.deploy == 'true'"), context));
-        Assert.True(ExprEvaluator.IsTrue(Expr.ParseCondition("always() && steps.decide.outputs.deploy == 'true'"), context));
-        Assert.True(ExprEvaluator.IsTrue(Expr.ParseCondition("failure()"), context));
+        Assert.False(IsTrue("steps.decide.outputs.deploy == 'true'", failed));
+        Assert.False(IsTrue(null, failed));
+        Assert.True(IsTrue("always() && steps.decide.outputs.deploy == 'true'", failed));
+        Assert.True(IsTrue("failure()", failed));
     }
 
     [Fact]
     public void Interpolates_expressions_into_text() =>
         Assert.Equal(
             "v=1.4.0 deploy=true missing= lit='}}'",
-            ExprEvaluator.Interpolate("v=${{ steps.generate.outputs.version }} deploy=${{steps.decide.outputs.deploy}} missing=${{ steps.x.outputs.y }} lit=${{ '''}}''' }}", Context()));
+            ExprEvaluator.Interpolate(
+                "v=${{ steps.generate.outputs.version }} deploy=${{steps.decide.outputs.deploy}} missing=${{ steps.x.outputs.y }} lit=${{ '''}}''' }}",
+                new ExpressionContext(Context())));
 
     [Theory]
     [InlineData("steps.")]
@@ -70,78 +81,43 @@ public sealed class StepExpressionTests
     public void Rejects_an_unclosed_multiline_output() =>
         Assert.Throws<FormatException>(() => StepOutputFile.Parse("notes<<EOF\nline 1\n"));
 
-    [Theory]
-    [InlineData("steps.decide.outputs.deploy == 'true'", true)]
-    [InlineData("steps.decide.outputs.DEPLOY == 'True'", true)]
-    [InlineData("steps.decide.outputs.deploy != 'true'", false)]
-    [InlineData("steps.generate.outputs.notes == 'line 1\nline=2'", true)]
-    [InlineData("steps.generate.outputs.missing", false)]
-    [InlineData("steps.generate.outcome == 'success' && !failure()", true)]
-    [InlineData("startsWith(steps.generate.outputs.version, '1.') || false", true)]
-    [InlineData("endsWith(steps.generate.outputs.version, '.1')", false)]
-    [InlineData(null, true)]
-    public void Compiled_shell_conditions_agree_with_the_evaluator(string? condition, bool expected)
+    [Fact]
+    public void Round_trips_the_step_documents()
     {
-        using var state = ShellState.Create();
-        var compiler = new ShellExprCompiler(state.Root, ["generate", "decide"]);
+        var input = new StepInput { Step = new StepDefinition { Id = "deploy", If = "always()", Run = "echo hi" }, Context = Context() };
+        var result = new StepRunResult { StepId = "deploy", Outcome = StepRunOutcome.Skipped };
 
-        var (exitCode, _) = state.Run(compiler, $"if {compiler.Condition(Expr.ParseCondition(condition))}; then exit 0; else exit 1; fi");
+        var json = StepJsonContext.Write(input);
 
-        Assert.Equal(expected, exitCode == 0);
+        Assert.Contains("\"outcome\": \"success\"", json);
+        Assert.Equal("deploy", StepJsonContext.ReadInput(json).Step.Id);
+        Assert.Equal("1.4.0", StepJsonContext.ReadInput(json).Context.Steps["generate"].Outputs["version"]);
+        Assert.Equal(StepRunOutcome.Skipped, StepJsonContext.ReadResult(StepJsonContext.Write(result)).Outcome);
+        Assert.DoesNotContain("exitCode", StepJsonContext.Write(result));
     }
 
     [Fact]
-    public void Compiled_shell_success_turns_false_once_a_step_has_failed()
+    public void Masks_secrets_their_lines_and_their_encodings()
     {
-        using var state = ShellState.Create();
-        File.WriteAllText(Path.Combine(state.Root, "failed"), "");
-        var compiler = new ShellExprCompiler(state.Root, ["generate", "decide"]);
+        var masker = new SecretMasker();
+        masker.Add("pa\"ss");
+        masker.Add("line one\nline two");
+        masker.Add("x");
 
-        Assert.Equal(1, state.Run(compiler, $"{compiler.Condition(Expr.ParseCondition("steps.decide.outputs.deploy == 'true'"))}").ExitCode);
-        Assert.Equal(0, state.Run(compiler, $"{compiler.Condition(Expr.ParseCondition("failure()"))}").ExitCode);
+        Assert.Equal("token=*** json=\"***\" b64=***", masker.Apply("token=pa\"ss json=\"pa\\\"ss\" b64=cGEic3M="));
+        Assert.Equal("first: ***, second: ***", masker.Apply("first: line one, second: line two"));
+        Assert.Equal("e***it", masker.Apply("exit"));
+        Assert.True(masker.Contains("a line two b"));
+        Assert.False(masker.Contains("nothing here"));
     }
 
     [Fact]
-    public void Compiled_shell_words_keep_values_intact()
+    public void Ignores_empty_secrets()
     {
-        using var state = ShellState.Create();
-        var compiler = new ShellExprCompiler(state.Root, ["generate", "decide"]);
+        var masker = new SecretMasker();
+        masker.Add("");
 
-        var (_, stdout) = state.Run(compiler, $"printf '%s|' {compiler.Word("v=${{ steps.generate.outputs.version }} $HOME `x` \"q\"")} {compiler.Word("${{ steps.generate.outputs.notes }}")}");
-
-        Assert.Equal("v=1.4.0 $HOME `x` \"q\"|line 1\nline=2|", stdout);
-    }
-
-    /// <summary>A state directory with the outputs of two finished steps, and a way to run compiled shell against it.</summary>
-    sealed class ShellState : IDisposable
-    {
-        ShellState(string root) => Root = root;
-
-        public string Root { get; }
-
-        public static ShellState Create()
-        {
-            Assert.SkipWhen(OperatingSystem.IsWindows(), "Needs a POSIX shell.");
-            var root = Directory.CreateTempSubdirectory("steps-").FullName;
-            Directory.CreateDirectory(Path.Combine(root, "steps", "0"));
-            Directory.CreateDirectory(Path.Combine(root, "steps", "1"));
-            File.WriteAllText(Path.Combine(root, "steps", "0", "output"), "version=1.4.0\nnotes<<EOF\nline 1\nline=2\nEOF\n");
-            File.WriteAllText(Path.Combine(root, "steps", "0", "outcome"), "success\n");
-            File.WriteAllText(Path.Combine(root, "steps", "1", "output"), "deploy=true\n");
-            File.WriteAllText(Path.Combine(root, "steps", "1", "outcome"), "success\n");
-            return new ShellState(root);
-        }
-
-        public (int ExitCode, string Stdout) Run(ShellExprCompiler compiler, string script)
-        {
-            var path = Path.Combine(Root, "test.sh");
-            File.WriteAllText(path, compiler.Library + script + "\n");
-            using var process = Process.Start(new ProcessStartInfo("sh", [path]) { RedirectStandardOutput = true })!;
-            var stdout = process.StandardOutput.ReadToEnd();
-            process.WaitForExit();
-            return (process.ExitCode, stdout);
-        }
-
-        public void Dispose() => Directory.Delete(Root, recursive: true);
+        Assert.True(masker.IsEmpty);
+        Assert.Equal("text", masker.Apply("text"));
     }
 }

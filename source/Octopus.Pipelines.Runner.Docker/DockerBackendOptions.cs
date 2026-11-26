@@ -22,35 +22,19 @@ public sealed class DockerBackendOptions
 
     public bool ReadOnlyRootFilesystem { get; set; } = true;
 
-    /// <summary>How a job with steps is run. See <see cref="DockerStepMode"/>.</summary>
-    public DockerStepMode StepMode { get; set; } = DockerStepMode.Run;
+    /// <summary>
+    /// The statically linked step runner executable, bind mounted into every step's container as its entry point.
+    /// Needed for jobs with steps.
+    /// </summary>
+    public string? StepRunnerPath { get; set; }
 
     /// <summary>
-    /// Where a job with steps keeps its scripts, outputs and workspace, as <c>&lt;root&gt;/octopus-job-&lt;job&gt;</c>, bind
-    /// mounted into its containers at <c>/octopus</c>. The daemon must see the same path, so a remote daemon won't do.
-    /// Defaults to the system temp directory.
+    /// Where a job with steps keeps its workspace, inputs, outputs and results, as <c>&lt;root&gt;/octopus-job-&lt;job&gt;</c>,
+    /// bind mounted into each step's container at <c>/octopus</c>. The daemon must see the same path, so a remote
+    /// daemon won't do. Defaults to the system temp directory.
     /// </summary>
     public string? StateRoot { get; set; }
 
     /// <summary>Leaves the job's state directory behind when it finishes, for looking at what the steps wrote.</summary>
     public bool KeepState { get; set; }
-}
-
-/// <summary>Where a job's steps are orchestrated, and how many containers they get.</summary>
-public enum DockerStepMode
-{
-    /// <summary>The runner orchestrates, starting a fresh <c>docker run --rm</c> for every step.</summary>
-    Run,
-
-    /// <summary>
-    /// The runner orchestrates, starting one long-lived container per image and running each step in it with
-    /// <c>docker exec</c>, as the GitHub Actions runner does for a job container.
-    /// </summary>
-    Exec,
-
-    /// <summary>
-    /// The steps orchestrate themselves: the runner starts one container per image, all at once, and a shell driver in
-    /// each waits for the step before its own, evaluates its condition and runs it, the way Tekton runs a task's steps.
-    /// </summary>
-    InContainer,
 }

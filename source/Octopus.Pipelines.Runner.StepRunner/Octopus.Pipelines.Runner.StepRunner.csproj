@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\Octopus.Pipelines.Runner.props" />
+
+  <!-- The step runner: the entry point of every step's container. Published as one statically linked Native AOT
+       executable, so the same file runs in glibc, musl and distroless images, and needs nothing from the image but
+       the shell a step's script asks for. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Octopus.Pipelines.Runner.StepRunner</RootNamespace>
+    <AssemblyName>octopus-step-runner</AssemblyName>
+    <PublishAot>true</PublishAot>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <OptimizationPreference>Size</OptimizationPreference>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <!-- Linking glibc statically leaves out only what the step runner doesn't use (name services, dlopen). -->
+  <PropertyGroup Condition="$(RuntimeIdentifier.StartsWith('linux'))">
+    <StaticExecutable>true</StaticExecutable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Octopus.Pipelines.Runner.Steps\Octopus.Pipelines.Runner.Steps.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Octopus.Pipelines.Runner.Tests" />
+  </ItemGroup>
+
+</Project>

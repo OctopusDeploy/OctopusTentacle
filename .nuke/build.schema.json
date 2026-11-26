@@ -60,6 +60,7 @@
         "PackWindows",
         "PackWindowsInstallers",
         "PackWindowsZips",
+        "PublishPipelinesStepRunner",
         "Restore",
         "TestIntegration",
         "TestLinux",
