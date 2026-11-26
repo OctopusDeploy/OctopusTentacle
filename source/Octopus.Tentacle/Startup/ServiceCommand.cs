@@ -17,6 +17,7 @@ namespace Octopus.Tentacle.Startup
         readonly IApplicationInstanceSelector instanceSelector;
         readonly ServiceConfigurationState serviceConfigurationState;
         readonly IServiceConfigurator serviceConfigurator;
+        readonly IConfigurationFilePermissions configurationFilePermissions;
         private readonly ISystemLog log;
         readonly string ServicePasswordEnvVar = "OCTOPUS_SERVICE_PASSWORD";
         readonly string ServiceUsernameEnvVar = "OCTOPUS_SERVICE_USERNAME";
@@ -30,7 +31,8 @@ namespace Octopus.Tentacle.Startup
             Assembly assemblyContainingService,
             IServiceConfigurator serviceConfigurator,
             ISystemLog log,
-            ILogFileOnlyLogger logFileOnlyLogger)
+            ILogFileOnlyLogger logFileOnlyLogger,
+            IConfigurationFilePermissions configurationFilePermissions)
             : base(logFileOnlyLogger)
         {
             this.applicationName = applicationName;
@@ -39,6 +41,7 @@ namespace Octopus.Tentacle.Startup
             this.serviceDescription = serviceDescription;
             this.assemblyContainingService = assemblyContainingService;
             this.serviceConfigurator = serviceConfigurator;
+            this.configurationFilePermissions = configurationFilePermissions;
             this.log = log;
 
             serviceConfigurationState = new ServiceConfigurationState
@@ -100,6 +103,19 @@ namespace Octopus.Tentacle.Startup
             {
                 var currentName = instanceSelector.Current.InstanceName;
                 var thisServiceName = ServiceName.GetWindowsServiceName(applicationName, currentName);
+
+                // Before configuring the service, which may also start it, so the service user can already read the config.
+                // Without a user name the service keeps its current account, which may rely on the inherited
+                // permissions, so the file is left alone.
+                var configurationPath = instanceSelector.Current.ConfigurationPath;
+                var userName = serviceConfigurationState.Username;
+                if ((serviceConfigurationState.Install || serviceConfigurationState.Reconfigure)
+                    && !string.IsNullOrWhiteSpace(configurationPath)
+                    && !string.IsNullOrWhiteSpace(userName))
+                {
+                    configurationFilePermissions.RestrictToServiceUser(configurationPath!, userName!);
+                }
+
                 if (currentName == null)
                 {
                     if (serviceConfigurationState.Install || serviceConfigurationState.Reconfigure)
@@ -119,11 +135,6 @@ namespace Octopus.Tentacle.Startup
                         currentName,
                         serviceDescription,
                         serviceConfigurationState);
-                }
-
-                if (serviceConfigurationState.Install || serviceConfigurationState.Reconfigure)
-                {
-                    ConfigurationFilePermissions.RestrictToServiceUser(instanceSelector.Current.ConfigurationPath, serviceConfigurationState.Username, log);
                 }
             }
         }

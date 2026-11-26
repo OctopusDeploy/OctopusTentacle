@@ -14,6 +14,7 @@ namespace Octopus.Tentacle.Configuration.Instances
         readonly Lazy<IWritableHomeConfiguration> homeConfiguration;
         readonly ApplicationName applicationName;
         readonly StartUpInstanceRequest startUpInstanceRequest;
+        readonly IConfigurationFilePermissions configurationFilePermissions;
 
         public ApplicationInstanceManager(
             ApplicationName applicationName,
@@ -21,7 +22,8 @@ namespace Octopus.Tentacle.Configuration.Instances
             IOctopusFileSystem fileSystem,
             ISystemLog log,
             IApplicationInstanceStore instanceStore,
-            Lazy<IWritableHomeConfiguration> homeConfiguration)
+            Lazy<IWritableHomeConfiguration> homeConfiguration,
+            IConfigurationFilePermissions configurationFilePermissions)
         {
             this.applicationName = applicationName;
             this.startUpInstanceRequest = startUpInstanceRequest;
@@ -29,6 +31,7 @@ namespace Octopus.Tentacle.Configuration.Instances
             this.log = log;
             this.instanceStore = instanceStore;
             this.homeConfiguration = homeConfiguration;
+            this.configurationFilePermissions = configurationFilePermissions;
         }
 
         public void CreateDefaultInstance(string configurationFile, string? homeDirectory = null)
@@ -76,7 +79,7 @@ namespace Octopus.Tentacle.Configuration.Instances
             if (!fileSystem.FileExists(configurationFile))
             {
                 log.Info("Creating empty configuration file: " + configurationFile);
-                ConfigurationFilePermissions.CreateEmpty(fileSystem, configurationFile, @"<?xml version='1.0' encoding='UTF-8' ?><octopus-settings></octopus-settings>");
+                configurationFilePermissions.CreateRestrictedToCurrentUser(configurationFile, @"<?xml version='1.0' encoding='UTF-8' ?><octopus-settings></octopus-settings>");
             }
             else
             {
