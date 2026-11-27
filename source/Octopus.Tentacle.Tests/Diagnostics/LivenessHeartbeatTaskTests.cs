@@ -11,44 +11,18 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Diagnostics
 {
-    [TestFixture]
-    public class LivenessHeartbeatTaskFixture
+    public class LivenessHeartbeatTaskTests
     {
-        string homeDirectory = null!;
-        string heartbeatPath = null!;
-        OctopusPhysicalFileSystem fileSystem = null!;
-
-        [SetUp]
-        public void SetUp()
-        {
-            fileSystem = new OctopusPhysicalFileSystem(Substitute.For<ISystemLog>());
-            homeDirectory = fileSystem.CreateTemporaryDirectory();
-            heartbeatPath = Path.Combine(homeDirectory, LivenessHeartbeatTask.HeartbeatFileName);
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-            try
-            {
-                if (Directory.Exists(homeDirectory))
-                    Directory.Delete(homeDirectory, recursive: true);
-            }
-            catch
-            {
-                // best effort cleanup
-            }
-        }
-
         [Test]
         public void Touches_Heartbeat_File_On_First_Tick()
         {
-            var task = CreateTask(TimeSpan.FromMilliseconds(50));
+            using var home = new HeartbeatHome();
+            var task = home.CreateTask(TimeSpan.FromMilliseconds(50));
 
             task.Start();
             try
             {
-                WaitUntil(() => File.Exists(heartbeatPath), timeout: TimeSpan.FromSeconds(2))
+                WaitUntil(() => File.Exists(home.HeartbeatPath), timeout: TimeSpan.FromSeconds(2))
                     .Should().BeTrue("the heartbeat file should be created on the first tick");
             }
             finally
@@ -60,16 +34,17 @@ namespace Octopus.Tentacle.Tests.Diagnostics
         [Test]
         public void Refreshes_Heartbeat_File_Mtime_On_Subsequent_Ticks()
         {
-            var task = CreateTask(TimeSpan.FromMilliseconds(50));
+            using var home = new HeartbeatHome();
+            var task = home.CreateTask(TimeSpan.FromMilliseconds(50));
 
             task.Start();
             try
             {
-                WaitUntil(() => File.Exists(heartbeatPath), TimeSpan.FromSeconds(2))
+                WaitUntil(() => File.Exists(home.HeartbeatPath), TimeSpan.FromSeconds(2))
                     .Should().BeTrue();
-                var firstMtime = File.GetLastWriteTimeUtc(heartbeatPath);
+                var firstMtime = File.GetLastWriteTimeUtc(home.HeartbeatPath);
 
-                WaitUntil(() => File.GetLastWriteTimeUtc(heartbeatPath) > firstMtime, TimeSpan.FromSeconds(2))
+                WaitUntil(() => File.GetLastWriteTimeUtc(home.HeartbeatPath) > firstMtime, TimeSpan.FromSeconds(2))
                     .Should().BeTrue("a subsequent tick should refresh the mtime");
             }
             finally
@@ -81,8 +56,9 @@ namespace Octopus.Tentacle.Tests.Diagnostics
         [Test]
         public void Survives_Io_Errors_And_Logs_A_Warning()
         {
+            using var home = new HeartbeatHome();
             var log = Substitute.For<ISystemLog>();
-            var unwritableHome = Path.Combine(homeDirectory, "does", "not", "exist");
+            var unwritableHome = Path.Combine(home.HomeDirectory, "does", "not", "exist");
             var homeConfig = Substitute.For<IHomeConfiguration>();
             homeConfig.HomeDirectory.Returns(unwritableHome);
 
@@ -124,11 +100,37 @@ namespace Octopus.Tentacle.Tests.Diagnostics
             }
         }
 
-        LivenessHeartbeatTask CreateTask(TimeSpan tickInterval)
+        class HeartbeatHome : IDisposable
         {
-            var homeConfig = Substitute.For<IHomeConfiguration>();
-            homeConfig.HomeDirectory.Returns(homeDirectory);
-            return new LivenessHeartbeatTask(homeConfig, Substitute.For<ISystemLog>(), tickInterval);
+            public HeartbeatHome()
+            {
+                var fileSystem = new OctopusPhysicalFileSystem(Substitute.For<ISystemLog>());
+                HomeDirectory = fileSystem.CreateTemporaryDirectory();
+                HeartbeatPath = Path.Combine(HomeDirectory, LivenessHeartbeatTask.HeartbeatFileName);
+            }
+
+            public string HomeDirectory { get; }
+            public string HeartbeatPath { get; }
+
+            public LivenessHeartbeatTask CreateTask(TimeSpan tickInterval)
+            {
+                var homeConfig = Substitute.For<IHomeConfiguration>();
+                homeConfig.HomeDirectory.Returns(HomeDirectory);
+                return new LivenessHeartbeatTask(homeConfig, Substitute.For<ISystemLog>(), tickInterval);
+            }
+
+            public void Dispose()
+            {
+                try
+                {
+                    if (Directory.Exists(HomeDirectory))
+                        Directory.Delete(HomeDirectory, recursive: true);
+                }
+                catch
+                {
+                    // best effort cleanup
+                }
+            }
         }
 
         static bool WaitUntil(Func<bool> condition, TimeSpan timeout)
