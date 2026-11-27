@@ -8,35 +8,16 @@ using Octopus.Client;
 using Octopus.Client.Model;
 using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Commands;
-using Octopus.Tentacle.Commands.OptionSets;
-using Octopus.Tentacle.Configuration;
-using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Startup;
+using Octopus.Tentacle.Tests.Commands.Support;
 using Octopus.Tentacle.Tests.Support;
 
 namespace Octopus.Tentacle.Tests.Commands
 {
-    [TestFixture]
-    public class DeregisterWorkerCommandFixture : CommandFixture<DeregisterWorkerCommand>
+    public class DeregisterWorkerCommandTests
     {
-        ISystemLog log;
-        IProxyConfigParser proxyConfig;
-        IOctopusSpaceAsyncRepository asyncRepository;
-        IApplicationInstanceSelector selector;
-
-        [SetUp]
-        public override void SetUp()
-        {
-            base.SetUp();
-            asyncRepository = Substitute.For<IOctopusSpaceAsyncRepository>();
-            proxyConfig = Substitute.For<IProxyConfigParser>();
-            log = Substitute.For<ISystemLog>();
-            selector = Substitute.For<IApplicationInstanceSelector>();
-            selector.Current.Returns(new ApplicationInstanceConfiguration("my-instance", "myconfig.config", Substitute.For<IKeyValueStore>(), Substitute.For<IWritableKeyValueStore>(), null));
-        }
-
         [Test]
         public async Task ShouldNotContinueIfMultipleMatchesButAllowMultipleIsNotSupplied()
         {
@@ -48,13 +29,8 @@ namespace Octopus.Tentacle.Tests.Commands
                 TrustedOctopusThumbprints = new List<string> { "NON-MATCHING-THUMBPRINT" },
                 TentacleCertificate = new CertificateGenerator(new NullLog()).GenerateNew($"CN={Guid.NewGuid()}")
             };
-            Command = new DeregisterWorkerCommand(new Lazy<ITentacleConfiguration>(() => configuration),
-                log,
-                selector,
-                proxyConfig,
-                Substitute.For<IOctopusClientInitializer>(),
-                new SpaceRepositoryFactory(),
-                Substitute.For<ILogFileOnlyLogger>());
+            var command = CommandBuilder.DeregisterWorker(configuration);
+            var asyncRepository = Substitute.For<IOctopusSpaceAsyncRepository>();
 
             var matchingMachines = new List<WorkerResource>
             {
@@ -64,7 +40,7 @@ namespace Octopus.Tentacle.Tests.Commands
             asyncRepository.Workers.FindByThumbprint(Arg.Any<string>())
                 .ReturnsForAnyArgs(matchingMachines.AsTask());
 
-            Func<Task> exec = () => Command.Deregister(asyncRepository);
+            Func<Task> exec = () => command.Deregister(asyncRepository);
             await exec.Should().ThrowAsync<ControlledFailureException>().WithMessage(DeregisterWorkerCommand.MultipleMatchErrorMsg);
         }
 
@@ -77,14 +53,9 @@ namespace Octopus.Tentacle.Tests.Commands
                 TrustedOctopusThumbprints = new List<string> { "NON-MATCHING-THUMBPRINT" },
                 TentacleCertificate = new CertificateGenerator(new NullLog()).GenerateNew($"CN={Guid.NewGuid()}")
             };
-
-            Command = new DeregisterWorkerCommand(new Lazy<ITentacleConfiguration>(() => configuration),
-                log,
-                selector,
-                proxyConfig,
-                Substitute.For<IOctopusClientInitializer>(),
-                new SpaceRepositoryFactory(),
-                Substitute.For<ILogFileOnlyLogger>());
+            var log = Substitute.For<ISystemLog>();
+            var command = CommandBuilder.DeregisterWorker(configuration, log);
+            var asyncRepository = Substitute.For<IOctopusSpaceAsyncRepository>();
 
             asyncRepository.Certificates.GetOctopusCertificate()
                 .ReturnsForAnyArgs(new CertificateConfigurationResource { Thumbprint = expectedThumbPrint }.AsTask());
@@ -97,7 +68,7 @@ namespace Octopus.Tentacle.Tests.Commands
             asyncRepository.Workers.FindByThumbprint(Arg.Any<string>())
                 .ReturnsForAnyArgs(matchingMachines.AsTask());
 
-            await Command.Deregister(asyncRepository);
+            await command.Deregister(asyncRepository);
 
             log.Received().Info($"Deleting worker '{machineName}' from the Octopus Server...");
         }
@@ -111,14 +82,9 @@ namespace Octopus.Tentacle.Tests.Commands
                 TrustedOctopusThumbprints = new List<string> { expectedThumbPrint },
                 TentacleCertificate = new CertificateGenerator(new NullLog()).GenerateNew($"CN={Guid.NewGuid()}")
             };
-
-            Command = new DeregisterWorkerCommand(new Lazy<ITentacleConfiguration>(() => configuration),
-                log,
-                selector,
-                proxyConfig,
-                Substitute.For<IOctopusClientInitializer>(),
-                new SpaceRepositoryFactory(),
-                Substitute.For<ILogFileOnlyLogger>());
+            var log = Substitute.For<ISystemLog>();
+            var command = CommandBuilder.DeregisterWorker(configuration, log);
+            var asyncRepository = Substitute.For<IOctopusSpaceAsyncRepository>();
 
             asyncRepository.Certificates.GetOctopusCertificate()
                 .ReturnsForAnyArgs(new CertificateConfigurationResource { Thumbprint = expectedThumbPrint }.AsTask());
@@ -131,7 +97,7 @@ namespace Octopus.Tentacle.Tests.Commands
             asyncRepository.Workers.FindByThumbprint(Arg.Any<string>())
                 .ReturnsForAnyArgs(matchingMachines.AsTask());
 
-            await Command.Deregister(asyncRepository);
+            await command.Deregister(asyncRepository);
 
             log.Received().Info($"Deleting worker '{machineName}' from the Octopus Server...");
             log.Received().Info(DeregisterWorkerCommand.DeregistrationSuccessMsg);

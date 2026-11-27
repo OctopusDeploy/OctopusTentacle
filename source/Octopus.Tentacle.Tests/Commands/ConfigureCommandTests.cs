@@ -4,53 +4,41 @@ using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
 using Octopus.Client.Model;
-using Octopus.Tentacle.Commands;
-using Octopus.Tentacle.Configuration;
-using Octopus.Tentacle.Configuration.Instances;
-using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Startup;
+using Octopus.Tentacle.Tests.Commands.Support;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Commands
 {
-    [TestFixture]
-    public class ConfigureCommandFixture : CommandFixture<ConfigureCommand>
+    public class ConfigureCommandTests
     {
-        StubTentacleConfiguration tentacleConfiguration;
-        IOctopusFileSystem fileSystem;
-        ISystemLog log;
-
-        [SetUp]
-        public override void SetUp()
-        {
-            base.SetUp();
-
-            tentacleConfiguration = new StubTentacleConfiguration();
-            fileSystem = Substitute.For<IOctopusFileSystem>();
-            log = Substitute.For<ISystemLog>();
-            var selector = Substitute.For<IApplicationInstanceSelector>();
-            selector.Current.Returns(info => new ApplicationInstanceConfiguration(null, null!, null!, null!, null));
-            Command = new ConfigureCommand(new Lazy<IWritableTentacleConfiguration>(() => tentacleConfiguration), new Lazy<IWritableHomeConfiguration>(() => new StubHomeConfiguration()), fileSystem, log, selector, Substitute.For<ILogFileOnlyLogger>());
-        }
-
         [Test]
         public void ShouldSetPort()
         {
-            Start("--port=90210");
+            var tentacleConfiguration = new StubTentacleConfiguration();
+            var command = CommandBuilder.Configure(tentacleConfiguration);
+
+            command.StartWith("--port=90210");
             Assert.That(tentacleConfiguration.ServicesPortNumber, Is.EqualTo(90210));
         }
 
         [Test]
         public void ShouldSetPollingConnectionCount()
         {
-            Start("--pollingConnectionCount=7");
+            var tentacleConfiguration = new StubTentacleConfiguration();
+            var command = CommandBuilder.Configure(tentacleConfiguration);
+
+            command.StartWith("--pollingConnectionCount=7");
             tentacleConfiguration.PollingConnectionCount.Should().Be(7);
         }
 
         [Test]
         public void ShouldRejectAPollingConnectionCountLessThanOne()
         {
-            Action start = () => Start("--pollingConnectionCount=0");
+            var tentacleConfiguration = new StubTentacleConfiguration();
+            var command = CommandBuilder.Configure(tentacleConfiguration);
+
+            Action start = () => command.StartWith("--pollingConnectionCount=0");
             start.Should().Throw<ControlledFailureException>();
             tentacleConfiguration.PollingConnectionCount.Should().BeNull();
         }
@@ -58,7 +46,10 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void ShouldRejectAPollingConnectionCountThatIsNotANumber()
         {
-            Action start = () => Start("--pollingConnectionCount=notanumber");
+            var tentacleConfiguration = new StubTentacleConfiguration();
+            var command = CommandBuilder.Configure(tentacleConfiguration);
+
+            Action start = () => command.StartWith("--pollingConnectionCount=notanumber");
             start.Should().Throw<ControlledFailureException>().WithMessage("*not a valid whole number*");
             tentacleConfiguration.PollingConnectionCount.Should().BeNull();
         }
@@ -66,46 +57,62 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void ShouldSetApplicationDirectory()
         {
+            var tentacleConfiguration = new StubTentacleConfiguration();
+            var fileSystem = Substitute.For<IOctopusFileSystem>();
             fileSystem.GetFullPath(Arg.Any<string>()).Returns("C:\\Apps");
-            Start("--appdir=Apps");
+            var command = CommandBuilder.Configure(tentacleConfiguration, fileSystem);
+
+            command.StartWith("--appdir=Apps");
             Assert.That(tentacleConfiguration.ApplicationDirectory, Is.EqualTo("C:\\Apps"));
         }
 
         [Test]
         public void ShouldResetTrust()
         {
-            tentacleConfiguration.TrustedOctopusThumbprints = new[] { "ABC123", "DEF456" };
-            Start("--reset-trust");
+            var tentacleConfiguration = new StubTentacleConfiguration { TrustedOctopusThumbprints = new[] { "ABC123", "DEF456" } };
+            var command = CommandBuilder.Configure(tentacleConfiguration);
+
+            command.StartWith("--reset-trust");
             CollectionAssert.AreEqual(tentacleConfiguration.TrustedOctopusThumbprints, new string[0]);
         }
 
         [Test]
         public void ShouldAddAndRemoveTrust()
         {
-            tentacleConfiguration.TrustedOctopusThumbprints = new[] { "ABC123", "DEF456" };
-            Start("--trust=GHI789", "--remove-trust=ABC123");
+            var tentacleConfiguration = new StubTentacleConfiguration { TrustedOctopusThumbprints = new[] { "ABC123", "DEF456" } };
+            var command = CommandBuilder.Configure(tentacleConfiguration);
+
+            command.StartWith("--trust=GHI789", "--remove-trust=ABC123");
             CollectionAssert.AreEqual(tentacleConfiguration.TrustedOctopusThumbprints, new[] { "DEF456", "GHI789" });
         }
 
         [Test]
         public void ShouldSetCommunicationStyleToPassiveByDefault()
         {
-            Start("--trust=GHI789");
+            var tentacleConfiguration = new StubTentacleConfiguration();
+            var command = CommandBuilder.Configure(tentacleConfiguration);
+
+            command.StartWith("--trust=GHI789");
             tentacleConfiguration.TrustedOctopusServers.First().CommunicationStyle.Should().Be(CommunicationStyle.TentaclePassive);
         }
 
         [Test]
         public void ShouldSetCommunicationStyleToPassiveIfNoListenIsFalse()
         {
-            Start("--noListen=false", "--trust=GHI789");
+            var tentacleConfiguration = new StubTentacleConfiguration();
+            var command = CommandBuilder.Configure(tentacleConfiguration);
+
+            command.StartWith("--noListen=false", "--trust=GHI789");
             tentacleConfiguration.TrustedOctopusServers.First().CommunicationStyle.Should().Be(CommunicationStyle.TentaclePassive);
         }
-
 
         [Test]
         public void ShouldSetCommunicationStyleToActiveIfNoListenIsTrue()
         {
-            Start("--noListen=true", "--trust=GHI789");
+            var tentacleConfiguration = new StubTentacleConfiguration();
+            var command = CommandBuilder.Configure(tentacleConfiguration);
+
+            command.StartWith("--noListen=true", "--trust=GHI789");
             tentacleConfiguration.TrustedOctopusServers.First().CommunicationStyle.Should().Be(CommunicationStyle.TentacleActive);
         }
     }
