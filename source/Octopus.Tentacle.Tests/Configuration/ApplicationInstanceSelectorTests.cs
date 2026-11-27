@@ -15,24 +15,14 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Configuration
 {
-    [TestFixture]
-    public class ApplicationInstanceSelectorFixture
+    public class ApplicationInstanceSelectorTests
     {
-        IApplicationInstanceStore applicationInstanceStore = Substitute.For<IApplicationInstanceStore>();
-        IOctopusFileSystem octopusFileSystem = Substitute.For<IOctopusFileSystem>();
-
-        [SetUp]
-        public void Setup()
-        {
-            applicationInstanceStore = Substitute.For<IApplicationInstanceStore>();
-            octopusFileSystem = Substitute.For<IOctopusFileSystem>();
-        }
-
         [Test]
         public void GivenNoInstanceAvailable_ThenCurrentThrows()
         {
-            var mock = CreateApplicationInstanceSelector();
-            SetupMissingStoredInstances();
+            var arrange = new Arrangement();
+            var mock = arrange.CreateSelector();
+            arrange.SetupMissingStoredInstances();
             
             Assert.Throws<ControlledFailureException>(() => { var x = mock.Current;  });
         }
@@ -40,8 +30,9 @@ namespace Octopus.Tentacle.Tests.Configuration
         [Test]
         public void GivenNoInstanceAvailable_ThenCanLoadCurrentInstanceIsFalse()
         {
-            var mock = CreateApplicationInstanceSelector();
-            SetupMissingStoredInstances();
+            var arrange = new Arrangement();
+            var mock = arrange.CreateSelector();
+            arrange.SetupMissingStoredInstances();
                 
             mock.CanLoadCurrentInstance().Should().BeFalse();
         }
@@ -49,9 +40,10 @@ namespace Octopus.Tentacle.Tests.Configuration
         [Test]
         public void GivenNamedInstanceExists_WhenRequestingThatInstance_ThenCurrentReturnsThatInstance()
         {
+            var arrange = new Arrangement();
             var name = Guid.NewGuid().ToString();
-            var mock = CreateApplicationInstanceSelector(new StartUpRegistryInstanceRequest(name));
-            var configPath = SetupAvailableStoredInstance(name);
+            var mock = arrange.CreateSelector(new StartUpRegistryInstanceRequest(name));
+            var configPath = arrange.SetupAvailableStoredInstance(name);
 
             mock.Current.InstanceName.Should().Be(name);
             mock.Current.ConfigurationPath.Should().Be(configPath);
@@ -60,10 +52,11 @@ namespace Octopus.Tentacle.Tests.Configuration
         [Test]
         public void GivenNamedInstanceExists_WhenConfigurationIsMissing_ThenCurrentThrowsException()
         {
+            var arrange = new Arrangement();
             var name = Guid.NewGuid().ToString();
-            var mock = CreateApplicationInstanceSelector(new StartUpRegistryInstanceRequest(name));
-            var configPath = SetupAvailableStoredInstance(name);
-            octopusFileSystem.FileExists(configPath).Returns(false);
+            var mock = arrange.CreateSelector(new StartUpRegistryInstanceRequest(name));
+            var configPath = arrange.SetupAvailableStoredInstance(name);
+            arrange.FileSystem.FileExists(configPath).Returns(false);
 
             Assert.Throws<ControlledFailureException>(() =>
             {
@@ -74,9 +67,10 @@ namespace Octopus.Tentacle.Tests.Configuration
         [Test]
         public void GivenMultipleNamedInstanceExists_WhenRequestingDefaultInstance_ThenCurrentReturnsDefaultInstance()
         {
-            var mock = CreateApplicationInstanceSelector(new StartUpDynamicInstanceRequest());
-             SetupAvailableStoredInstance("NAMED");
-            var configPath = SetupAvailableStoredInstance(null);
+            var arrange = new Arrangement();
+            var mock = arrange.CreateSelector(new StartUpDynamicInstanceRequest());
+             arrange.SetupAvailableStoredInstance("NAMED");
+            var configPath = arrange.SetupAvailableStoredInstance(null);
 
             mock.Current.ConfigurationPath.Should().Be(configPath);
         }
@@ -84,10 +78,11 @@ namespace Octopus.Tentacle.Tests.Configuration
         [Test]
         public void GivenConfigurationInstanceExists_WhenRequestingConfigurationInstance_ThenCurrentReturnsConfigurationInstance()
         {
+            var arrange = new Arrangement();
             var filePath = "FILE.txt";
-            var mock = CreateApplicationInstanceSelector(new StartUpConfigFileInstanceRequest(filePath));
+            var mock = arrange.CreateSelector(new StartUpConfigFileInstanceRequest(filePath));
 
-            octopusFileSystem.FileExists(filePath).Returns(true);
+            arrange.FileSystem.FileExists(filePath).Returns(true);
             
             mock.Current.InstanceName.Should().BeNull();
             mock.Current.ConfigurationPath.Should().Be(filePath);
@@ -97,11 +92,12 @@ namespace Octopus.Tentacle.Tests.Configuration
         [LinuxOrMacTest]
         public void GivenARegisteredInstanceUsesTheConfiguration_WhenRequestingConfigurationInstance_ThenItUsesThatInstancesKey()
         {
+            var arrange = new Arrangement();
             var filePath = "/etc/octopus/tentacle.config";
-            var mock = CreateApplicationInstanceSelector(new StartUpConfigFileInstanceRequest(filePath));
-            octopusFileSystem.FileExists(filePath).Returns(true);
-            octopusFileSystem.GetFullPath(Arg.Any<string>()).Returns(c => c.Arg<string>());
-            applicationInstanceStore.ListInstances().Returns(new[]
+            var mock = arrange.CreateSelector(new StartUpConfigFileInstanceRequest(filePath));
+            arrange.FileSystem.FileExists(filePath).Returns(true);
+            arrange.FileSystem.GetFullPath(Arg.Any<string>()).Returns(c => c.Arg<string>());
+            arrange.Store.ListInstances().Returns(new[]
             {
                 new ApplicationInstanceRecord("Other", "/etc/octopus/other.config"),
                 new ApplicationInstanceRecord("Registered", filePath)
@@ -113,9 +109,10 @@ namespace Octopus.Tentacle.Tests.Configuration
         [Test]
         public void GivenConfigurationInstanceDoesNotExists_WhenRequestingConfigurationInstance_ThenThrows()
         {
+            var arrange = new Arrangement();
             var filePath = "FILE.txt";
-            var mock = CreateApplicationInstanceSelector(new StartUpConfigFileInstanceRequest(filePath));
-            octopusFileSystem.FileExists(filePath).Returns(false);
+            var mock = arrange.CreateSelector(new StartUpConfigFileInstanceRequest(filePath));
+            arrange.FileSystem.FileExists(filePath).Returns(false);
             
             Assert.Throws<ControlledFailureException>(() => { var x = mock.Current;  });
         }
@@ -123,11 +120,12 @@ namespace Octopus.Tentacle.Tests.Configuration
         [Test]
         public void GivenCWDConfigExists_WhenRequestingDynamicInstance_ThenCurrentReturnsCWDDefaultConfig()
         {
+            var arrange = new Arrangement();
             var filePath = "FULLPATH";
             var defaultConfig = $"{ApplicationName.Tentacle}.config";
-            var mock = CreateApplicationInstanceSelector(new StartUpDynamicInstanceRequest());
-            octopusFileSystem.GetFullPath(defaultConfig).Returns(filePath);
-            octopusFileSystem.FileExists(filePath).Returns(true);
+            var mock = arrange.CreateSelector(new StartUpDynamicInstanceRequest());
+            arrange.FileSystem.GetFullPath(defaultConfig).Returns(filePath);
+            arrange.FileSystem.FileExists(filePath).Returns(true);
             
             mock.Current.InstanceName.Should().BeNull();
             mock.Current.ConfigurationPath.Should().Be("FULLPATH");
@@ -137,13 +135,14 @@ namespace Octopus.Tentacle.Tests.Configuration
         [Test]
         public void GivenCWDConfigAndDefaultInstanceExists_WhenRequestingDynamicInstance_ThenCurrentReturnsCWDDefaultConfig()
         {
+            var arrange = new Arrangement();
             var filePath = "FULLPATH";
             var defaultConfig = $"{ApplicationName.Tentacle}.config";
-            var mock = CreateApplicationInstanceSelector(new StartUpDynamicInstanceRequest());
-            SetupAvailableStoredInstance(null);
+            var mock = arrange.CreateSelector(new StartUpDynamicInstanceRequest());
+            arrange.SetupAvailableStoredInstance(null);
             
-            octopusFileSystem.GetFullPath(defaultConfig).Returns(filePath);
-            octopusFileSystem.FileExists(filePath).Returns(true);
+            arrange.FileSystem.GetFullPath(defaultConfig).Returns(filePath);
+            arrange.FileSystem.FileExists(filePath).Returns(true);
             
             
             mock.Current.InstanceName.Should().BeNull();
@@ -153,13 +152,14 @@ namespace Octopus.Tentacle.Tests.Configuration
         [Test]
         public void GivenContributingVariableSourceExists_ThenOverridingVariableIsAvailableInConfiguration()
         {
+            var arrange = new Arrangement();
             var mockContributor = Substitute.For<IApplicationConfigurationContributor>();
             var mockKeyValueStore = Substitute.For<IAggregatableKeyValueStore>();
             mockKeyValueStore.TryGet<string>("FOO", Arg.Any<ProtectionLevel>()).Returns(info => (true, "BAR"));
             mockContributor.LoadContributedConfiguration().Returns(mockKeyValueStore);
                 
-            var mock = CreateApplicationInstanceSelector(additionalConfigurations: new []  { mockContributor });
-            SetupAvailableStoredInstance(null);
+            var mock = arrange.CreateSelector(additionalConfigurations: new []  { mockContributor });
+            arrange.SetupAvailableStoredInstance(null);
             
             mock.Current.Configuration.Get<string>("FOO").Should().Be("BAR");
         }
@@ -167,13 +167,14 @@ namespace Octopus.Tentacle.Tests.Configuration
         [Test]
         public void GivenMultipleContributingVariableSources_ThenPrioritySetsRetrievalOrder()
         {
+            var arrange = new Arrangement();
             var contributor1 = SetupMockContributor(1,"FOO", "PRIORITY_1");
             var contributor2 = SetupMockContributor(2,"FOO", "PRIORITY_2");
             var contributor3 = SetupMockContributor(3,"FOO", "PRIORITY_3");
             var unorderedContributors = new[] { contributor2, contributor1, contributor3 };
             
-            var mock = CreateApplicationInstanceSelector(additionalConfigurations: unorderedContributors);
-            SetupAvailableStoredInstance(null);
+            var mock = arrange.CreateSelector(additionalConfigurations: unorderedContributors);
+            arrange.SetupAvailableStoredInstance(null);
             
             mock.Current.Configuration.Get<string>("FOO").Should().Be("PRIORITY_1");
         }
@@ -188,31 +189,37 @@ namespace Octopus.Tentacle.Tests.Configuration
             return mockContributor;
         }
 
-        void SetupMissingStoredInstances(string? instanceName = null)
+        class Arrangement
         {
-            applicationInstanceStore.LoadInstanceDetails(instanceName).Throws(new ControlledFailureException(""));
-        }
+            public IApplicationInstanceStore Store { get; } = Substitute.For<IApplicationInstanceStore>();
+            public IOctopusFileSystem FileSystem { get; } = Substitute.For<IOctopusFileSystem>();
 
-        string SetupAvailableStoredInstance(string instanceName)
-        {
-            var configPath = Guid.NewGuid().ToString();
-            var record = new ApplicationInstanceRecord(instanceName, configPath);
-            applicationInstanceStore.LoadInstanceDetails(instanceName).Returns(record);
-            octopusFileSystem.FileExists(configPath).Returns(true);
-            return configPath;
-        }
+            public void SetupMissingStoredInstances(string? instanceName = null)
+            {
+                Store.LoadInstanceDetails(instanceName).Throws(new ControlledFailureException(""));
+            }
 
-        ApplicationInstanceSelector CreateApplicationInstanceSelector(StartUpInstanceRequest? instanceRequest = null,
-            IApplicationConfigurationContributor[]? additionalConfigurations = null)
-        {
-            var log = Substitute.For<ISystemLog>();
-            return new ApplicationInstanceSelector(ApplicationName.Tentacle,
-                applicationInstanceStore,
-                instanceRequest ?? new StartUpDynamicInstanceRequest(),
-                additionalConfigurations ?? new IApplicationConfigurationContributor[0],
-                new Lazy<ConfigMapKeyValueStore>(() => new ConfigMapKeyValueStore(Substitute.For<IKubernetesConfigMapService>(), Substitute.For<IKubernetesMachineKeyEncryptor>())),
-                octopusFileSystem,
-                log);
+            public string SetupAvailableStoredInstance(string instanceName)
+            {
+                var configPath = Guid.NewGuid().ToString();
+                var record = new ApplicationInstanceRecord(instanceName, configPath);
+                Store.LoadInstanceDetails(instanceName).Returns(record);
+                FileSystem.FileExists(configPath).Returns(true);
+                return configPath;
+            }
+
+            public ApplicationInstanceSelector CreateSelector(StartUpInstanceRequest? instanceRequest = null,
+                IApplicationConfigurationContributor[]? additionalConfigurations = null)
+            {
+                var log = Substitute.For<ISystemLog>();
+                return new ApplicationInstanceSelector(ApplicationName.Tentacle,
+                    Store,
+                    instanceRequest ?? new StartUpDynamicInstanceRequest(),
+                    additionalConfigurations ?? new IApplicationConfigurationContributor[0],
+                    new Lazy<ConfigMapKeyValueStore>(() => new ConfigMapKeyValueStore(Substitute.For<IKubernetesConfigMapService>(), Substitute.For<IKubernetesMachineKeyEncryptor>())),
+                    FileSystem,
+                    log);
+            }
         }
     }
 }
