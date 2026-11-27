@@ -64,13 +64,19 @@ namespace Octopus.Tentacle.Tests.Configuration
         [Test]
         public void ReturnsNiceExceptionOnInvalidData()
         {
-            var reloadedSettings = new KeyValueStoreBuilder()
-                .From(KeyValueStoreSource.ReloadedFromFile)
-                .With<string>("Int.Setting", "NotAnInt")
-                .With<string>("Bool.Setting", "NotABool")
-                .With<string>("Encrypted.Int.Setting", "NotAnInt", ProtectionLevel.MachineKey)
-                .With<string>("Encrypted.Bool.Setting", "NotABool", ProtectionLevel.MachineKey)
-                .Build();
+            var configurationFile = Path.GetTempFileName();
+            var fileSystem = new OctopusPhysicalFileSystem(Substitute.For<ISystemLog>());
+            fileSystem.OverwriteFile(configurationFile, @"<?xml version='1.0' encoding='UTF-8' ?><octopus-settings></octopus-settings>");
+
+            var settings = new XmlFileKeyValueStore(fileSystem, configurationFile, encryptor: TestMachineKeyEncryptor.Current);
+            settings.Set<string>("Int.Setting", "NotAnInt");
+            settings.Set<string>("Bool.Setting", "NotABool");
+            settings.Set<string>("Encrypted.Int.Setting", "NotAnInt", ProtectionLevel.MachineKey);
+            settings.Set<string>("Encrypted.Bool.Setting", "NotABool", ProtectionLevel.MachineKey);
+
+            settings.Save();
+
+            var reloadedSettings = new XmlFileKeyValueStore(fileSystem, configurationFile, encryptor: TestMachineKeyEncryptor.Current);
 
             reloadedSettings.Invoking(x => x.Get("Int.Setting", 1))
                 .Should()
@@ -90,87 +96,252 @@ namespace Octopus.Tentacle.Tests.Configuration
                 .WithMessage("Unable to parse configuration key 'Encrypted.Bool.Setting' as a 'Boolean'.");
         }
 
-        [Test]
-        public void ReadsBooleanValue([Values] KeyValueStoreSource source, [Values] ProtectionLevel protectionLevel)
+        [TestCase(KeyValueStoreSource.InMemory)]
+        [TestCase(KeyValueStoreSource.ReloadedFromFile)]
+        [TestCase(KeyValueStoreSource.WrittenByOldImplementation)]
+        public void ReadsBooleanValue(KeyValueStoreSource source)
         {
-            var store = new KeyValueStoreBuilder().From(source).With("setting", true, protectionLevel).Build();
+            var reloadedSettings = StoreWithAllSettings(source);
 
-            store.Get("setting", false, protectionLevel).Should().BeTrue();
+            reloadedSettings.Get("group1.setting1", false).Should().BeTrue();
         }
 
-        [Test]
-        public void ReadsIntValue([Values] KeyValueStoreSource source, [Values] ProtectionLevel protectionLevel)
+        [TestCase(KeyValueStoreSource.InMemory)]
+        [TestCase(KeyValueStoreSource.ReloadedFromFile)]
+        [TestCase(KeyValueStoreSource.WrittenByOldImplementation)]
+        public void ReadsIntValue(KeyValueStoreSource source)
         {
-            var store = new KeyValueStoreBuilder().From(source).With("setting", 123, protectionLevel).Build();
+            var reloadedSettings = StoreWithAllSettings(source);
 
-            store.Get("setting", 1, protectionLevel).Should().Be(123);
+            reloadedSettings.Get("group1.setting2", 1).Should().Be(123);
         }
 
-        [Test]
-        public void ReadsStringValue([Values] KeyValueStoreSource source, [Values] ProtectionLevel protectionLevel)
+        [TestCase(KeyValueStoreSource.InMemory)]
+        [TestCase(KeyValueStoreSource.ReloadedFromFile)]
+        [TestCase(KeyValueStoreSource.WrittenByOldImplementation)]
+        public void ReadsStringValue(KeyValueStoreSource source)
         {
-            var store = new KeyValueStoreBuilder().From(source).With<string>("setting", "a string", protectionLevel).Build();
+            var reloadedSettings = StoreWithAllSettings(source);
 
-            store.Get("setting", "", protectionLevel).Should().Be("a string");
+            reloadedSettings.Get("group2.setting3", "").Should().Be("a string");
         }
 
-        [Test]
-        public void ReadsNestedObjectValue([Values] KeyValueStoreSource source, [Values] ProtectionLevel protectionLevel)
+        [TestCase(KeyValueStoreSource.InMemory)]
+        [TestCase(KeyValueStoreSource.ReloadedFromFile)]
+        [TestCase(KeyValueStoreSource.WrittenByOldImplementation)]
+        public void ReadsNestedObjectValue(KeyValueStoreSource source)
         {
-            var value = new MyObject
+            var reloadedSettings = StoreWithAllSettings(source);
+
+            var nestedObject = reloadedSettings.Get<MyObject>("group3.setting4");
+            nestedObject.IntField.Should().Be(10);
+            nestedObject.BooleanField.Should().BeTrue();
+            nestedObject.EnumField.Should().Be(SomeEnum.SomeOtherEnumValue);
+            nestedObject.ArrayField.Length.Should().Be(3);
+            nestedObject.ArrayField[0].Id.Should().Be(1);
+            nestedObject.ArrayField[1].Id.Should().Be(2);
+            nestedObject.ArrayField[2].Id.Should().Be(3);
+        }
+
+        [TestCase(KeyValueStoreSource.InMemory)]
+        [TestCase(KeyValueStoreSource.ReloadedFromFile)]
+        [TestCase(KeyValueStoreSource.WrittenByOldImplementation)]
+        public void ReadsNullStringValue(KeyValueStoreSource source)
+        {
+            var reloadedSettings = StoreWithAllSettings(source);
+
+            reloadedSettings.Get<string>("group4.setting5").Should().Be(null);
+        }
+
+        [TestCase(KeyValueStoreSource.InMemory)]
+        [TestCase(KeyValueStoreSource.ReloadedFromFile)]
+        [TestCase(KeyValueStoreSource.WrittenByOldImplementation)]
+        public void ReadsNullObjectValue(KeyValueStoreSource source)
+        {
+            var reloadedSettings = StoreWithAllSettings(source);
+
+            reloadedSettings.Get<MyObject>("group4.setting6").Should().Be(null);
+        }
+
+        [TestCase(KeyValueStoreSource.InMemory)]
+        [TestCase(KeyValueStoreSource.ReloadedFromFile)]
+        [TestCase(KeyValueStoreSource.WrittenByOldImplementation)]
+        public void ReadsEncryptedBooleanValue(KeyValueStoreSource source)
+        {
+            var reloadedSettings = StoreWithAllSettings(source);
+
+            reloadedSettings.Get("group5.setting1", false, ProtectionLevel.MachineKey).Should().BeTrue();
+        }
+
+        [TestCase(KeyValueStoreSource.InMemory)]
+        [TestCase(KeyValueStoreSource.ReloadedFromFile)]
+        [TestCase(KeyValueStoreSource.WrittenByOldImplementation)]
+        public void ReadsEncryptedIntValue(KeyValueStoreSource source)
+        {
+            var reloadedSettings = StoreWithAllSettings(source);
+
+            reloadedSettings.Get("group5.setting2", 1, ProtectionLevel.MachineKey).Should().Be(123);
+        }
+
+        [TestCase(KeyValueStoreSource.InMemory)]
+        [TestCase(KeyValueStoreSource.ReloadedFromFile)]
+        [TestCase(KeyValueStoreSource.WrittenByOldImplementation)]
+        public void ReadsEncryptedStringValue(KeyValueStoreSource source)
+        {
+            var reloadedSettings = StoreWithAllSettings(source);
+
+            reloadedSettings.Get("group5.setting3", "", ProtectionLevel.MachineKey).Should().Be("a string");
+        }
+
+        [TestCase(KeyValueStoreSource.InMemory)]
+        [TestCase(KeyValueStoreSource.ReloadedFromFile)]
+        [TestCase(KeyValueStoreSource.WrittenByOldImplementation)]
+        public void ReadsEncryptedNestedObjectValue(KeyValueStoreSource source)
+        {
+            var reloadedSettings = StoreWithAllSettings(source);
+
+            var nestedObject = reloadedSettings.Get<MyObject>("group5.setting4", null, ProtectionLevel.MachineKey);
+            nestedObject.IntField.Should().Be(10);
+            nestedObject.BooleanField.Should().BeTrue();
+            nestedObject.EnumField.Should().Be(SomeEnum.SomeOtherEnumValue);
+            nestedObject.ArrayField.Length.Should().Be(3);
+            nestedObject.ArrayField[0].Id.Should().Be(1);
+            nestedObject.ArrayField[1].Id.Should().Be(2);
+            nestedObject.ArrayField[2].Id.Should().Be(3);
+        }
+
+        [TestCase(KeyValueStoreSource.InMemory)]
+        [TestCase(KeyValueStoreSource.ReloadedFromFile)]
+        [TestCase(KeyValueStoreSource.WrittenByOldImplementation)]
+        public void ReadsEncryptedNullStringValue(KeyValueStoreSource source)
+        {
+            var reloadedSettings = StoreWithAllSettings(source);
+
+            reloadedSettings.Get<string>("group5.setting5", null, ProtectionLevel.MachineKey).Should().Be(null);
+        }
+
+        [TestCase(KeyValueStoreSource.InMemory)]
+        [TestCase(KeyValueStoreSource.ReloadedFromFile)]
+        [TestCase(KeyValueStoreSource.WrittenByOldImplementation)]
+        public void ReadsEncryptedNullObjectValue(KeyValueStoreSource source)
+        {
+            var reloadedSettings = StoreWithAllSettings(source);
+
+            reloadedSettings.Get<MyObject>("group5.setting6", null, ProtectionLevel.MachineKey).Should().Be(null);
+        }
+
+        [TestCase(KeyValueStoreSource.InMemory)]
+        [TestCase(KeyValueStoreSource.ReloadedFromFile)]
+        public void ReadsEncryptedByteArrayValue(KeyValueStoreSource source)
+        {
+            var encryptedValue = RandomBytes();
+            var reloadedSettings = StoreWithAllSettings(source, encryptedValue);
+
+            reloadedSettings.Get<byte[]>("secretthing").Should().BeEquivalentTo(encryptedValue);
+        }
+
+        [TestCase(KeyValueStoreSource.InMemory)]
+        [TestCase(KeyValueStoreSource.ReloadedFromFile)]
+        public void ReadsMachineEncryptedByteArrayValue(KeyValueStoreSource source)
+        {
+            var encryptedValue = RandomBytes();
+            var reloadedSettings = StoreWithAllSettings(source, encryptedValue);
+
+            reloadedSettings.Get<byte[]>("secretmachinething", null, ProtectionLevel.MachineKey).Should().BeEquivalentTo(encryptedValue);
+        }
+
+        [TestCase(KeyValueStoreSource.InMemory)]
+        [TestCase(KeyValueStoreSource.ReloadedFromFile)]
+        public void ReadsEnumValue(KeyValueStoreSource source)
+        {
+            var reloadedSettings = StoreWithAllSettings(source);
+
+            reloadedSettings.Get<SomeEnum>("group4.setting7").Should().Be(SomeEnum.SomeOtherEnumValue);
+        }
+
+        [TestCase(KeyValueStoreSource.InMemory)]
+        [TestCase(KeyValueStoreSource.ReloadedFromFile)]
+        public void ReadsNullableEnumValue(KeyValueStoreSource source)
+        {
+            var reloadedSettings = StoreWithAllSettings(source);
+
+            reloadedSettings.Get<SomeEnum?>("group4.setting8").Should().BeNull();
+        }
+
+        [TestCase(KeyValueStoreSource.InMemory)]
+        [TestCase(KeyValueStoreSource.ReloadedFromFile)]
+        public void ReadsEncryptedEnumValue(KeyValueStoreSource source)
+        {
+            var reloadedSettings = StoreWithAllSettings(source);
+
+            reloadedSettings.Get("group5.setting7", SomeEnum.SomeEnumValue, ProtectionLevel.MachineKey).Should().Be(SomeEnum.SomeOtherEnumValue);
+        }
+
+        [TestCase(KeyValueStoreSource.InMemory)]
+        [TestCase(KeyValueStoreSource.ReloadedFromFile)]
+        public void ReadsEncryptedNullableEnumValue(KeyValueStoreSource source)
+        {
+            var reloadedSettings = StoreWithAllSettings(source);
+
+            reloadedSettings.Get<SomeEnum?>("group5.setting8", null, ProtectionLevel.MachineKey).Should().BeNull();
+        }
+
+        static IKeyValueStore StoreWithAllSettings(KeyValueStoreSource source, byte[] encryptedValue = null)
+        {
+            var configurationObject = new MyObject
             {
                 IntField = 10,
                 BooleanField = true,
                 EnumField = SomeEnum.SomeOtherEnumValue,
-                ArrayField = new[] { new MyNestedObject { Id = 1 }, new MyNestedObject { Id = 2 }, new MyNestedObject { Id = 3 } }
+                ArrayField = new[]
+                {
+                    new MyNestedObject { Id = 1 },
+                    new MyNestedObject { Id = 2 },
+                    new MyNestedObject { Id = 3 }
+                }
             };
-            var store = new KeyValueStoreBuilder().From(source).With("setting", value, protectionLevel).Build();
 
-            store.Get<MyObject>("setting", null, protectionLevel).Should().BeEquivalentTo(value);
+            var builder = new KeyValueStoreBuilder()
+                .From(source)
+                .With("group1.setting2", 123)
+                .With("group1.setting1", true)
+                .With<string>("group2.setting3", "a string")
+                .With("group3.setting4", configurationObject)
+                .With<string>("group4.setting5", null)
+                .With<MyObject>("group4.setting6", null)
+                .With("group4.setting7", SomeEnum.SomeOtherEnumValue)
+                .With("group5.setting2", 123, ProtectionLevel.MachineKey)
+                .With("group5.setting1", true, ProtectionLevel.MachineKey)
+                .With<string>("group5.setting3", "a string", ProtectionLevel.MachineKey)
+                .With("group5.setting4", configurationObject, ProtectionLevel.MachineKey)
+                .With<string>("group5.setting5", null, ProtectionLevel.MachineKey)
+                .With<MyObject>("group5.setting6", null, ProtectionLevel.MachineKey);
+
+            // The old implementation did not support these types.
+            if (source != KeyValueStoreSource.WrittenByOldImplementation)
+            {
+                builder
+                    .With<SomeEnum?>("group4.setting8", null)
+                    .With("group5.setting7", SomeEnum.SomeOtherEnumValue, ProtectionLevel.MachineKey)
+                    .With<SomeEnum?>("group5.setting8", null, ProtectionLevel.MachineKey);
+            }
+
+            if (encryptedValue != null)
+            {
+                builder
+                    .With("secretthing", encryptedValue)
+                    .With("secretmachinething", encryptedValue, ProtectionLevel.MachineKey);
+            }
+
+            return builder.Build();
         }
 
-        [Test]
-        public void ReadsNullStringValue([Values] KeyValueStoreSource source, [Values] ProtectionLevel protectionLevel)
+        static byte[] RandomBytes()
         {
-            var store = new KeyValueStoreBuilder().From(source).With<string>("setting", null, protectionLevel).Build();
-
-            store.Get<string>("setting", null, protectionLevel).Should().BeNull();
-        }
-
-        [Test]
-        public void ReadsNullObjectValue([Values] KeyValueStoreSource source, [Values] ProtectionLevel protectionLevel)
-        {
-            var store = new KeyValueStoreBuilder().From(source).With<MyObject>("setting", null, protectionLevel).Build();
-
-            store.Get<MyObject>("setting", null, protectionLevel).Should().BeNull();
-        }
-
-        // The old implementation did not support enums or byte arrays.
-        [Test]
-        public void ReadsEnumValue([Values(KeyValueStoreSource.InMemory, KeyValueStoreSource.ReloadedFromFile)] KeyValueStoreSource source, [Values] ProtectionLevel protectionLevel)
-        {
-            var store = new KeyValueStoreBuilder().From(source).With("setting", SomeEnum.SomeOtherEnumValue, protectionLevel).Build();
-
-            store.Get("setting", SomeEnum.SomeEnumValue, protectionLevel).Should().Be(SomeEnum.SomeOtherEnumValue);
-        }
-
-        [Test]
-        public void ReadsNullableEnumValue([Values(KeyValueStoreSource.InMemory, KeyValueStoreSource.ReloadedFromFile)] KeyValueStoreSource source, [Values] ProtectionLevel protectionLevel)
-        {
-            var store = new KeyValueStoreBuilder().From(source).With<SomeEnum?>("setting", null, protectionLevel).Build();
-
-            store.Get<SomeEnum?>("setting", null, protectionLevel).Should().BeNull();
-        }
-
-        [Test]
-        public void ReadsByteArrayValue([Values(KeyValueStoreSource.InMemory, KeyValueStoreSource.ReloadedFromFile)] KeyValueStoreSource source, [Values] ProtectionLevel protectionLevel)
-        {
-            var value = new byte[16];
-            using (var random = RandomNumberGenerator.Create())
-                random.GetBytes(value);
-            var store = new KeyValueStoreBuilder().From(source).With("setting", value, protectionLevel).Build();
-
-            store.Get<byte[]>("setting", null, protectionLevel).Should().BeEquivalentTo(value);
+            var bytes = new byte[16];
+            using var random = RandomNumberGenerator.Create();
+            random.GetBytes(bytes);
+            return bytes;
         }
     }
 }
