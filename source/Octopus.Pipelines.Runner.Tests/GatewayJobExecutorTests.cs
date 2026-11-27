@@ -147,7 +147,7 @@ public sealed class GatewayJobExecutorTests : IDisposable
 
     GatewayJobExecutor CreateExecutor(ILogStore? store = null) => new(
         new JobRunner(
-            new ProcessJobBackend(TimeProvider.System),
+            new ShellJobBackend(TimeProvider.System),
             store ?? new FileLogStore(root),
             new JobRunnerOptions { LogFlushInterval = TimeSpan.FromMilliseconds(50) }),
         outbox,

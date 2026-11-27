@@ -1,9 +1,13 @@
 using System.Diagnostics;
+using Octopus.Pipelines.Runner.Core;
 
-namespace Octopus.Pipelines.Runner.Core;
+namespace Octopus.Pipelines.Runner.Tests;
 
-/// <summary>Runs jobs as local processes. Only for local development; it gives no isolation.</summary>
-public sealed class ProcessJobBackend(TimeProvider clock) : IJobBackend
+/// <summary>
+/// A test double that runs a job's command as a local <c>sh -c</c> process, so gateway and job runner tests can run
+/// real jobs without Docker or a cluster. Not a backend: it gives no isolation.
+/// </summary>
+sealed class ShellJobBackend(TimeProvider clock) : IJobBackend
 {
     public async Task<int> RunAsync(JobSpec job, IJobOutput output, CancellationToken cancellationToken)
     {
@@ -11,11 +15,6 @@ public sealed class ProcessJobBackend(TimeProvider clock) : IJobBackend
         {
             // Never run a job that asked for a sandbox without one.
             throw new NotSupportedException("Sandboxed jobs need the Kubernetes backend with Runner:Kubernetes:Sandbox:Enabled.");
-        }
-
-        if (job.Steps.Count > 0)
-        {
-            throw new NotSupportedException("The process backend doesn't run jobs with steps; use the Docker backend.");
         }
 
         var startInfo = new ProcessStartInfo("sh")

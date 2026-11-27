@@ -88,7 +88,7 @@ public sealed class InProcessGatewayTests
         var outbox = new Outbox();
         var signal = new CapacitySignal();
         var executor = new GatewayJobExecutor(
-            new JobRunner(new ProcessJobBackend(TimeProvider.System), logs, new JobRunnerOptions()),
+            new JobRunner(new ShellJobBackend(TimeProvider.System), logs, new JobRunnerOptions()),
             outbox,
             signal,
             TimeProvider.System,

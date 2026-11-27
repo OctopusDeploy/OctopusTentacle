@@ -6,7 +6,7 @@ using Octopus.Pipelines.Runner.Core.Logs;
 
 namespace Octopus.Pipelines.Runner.Tests;
 
-/// <summary>Composes the AKS host's services without running it, and checks what each backend can write to.</summary>
+/// <summary>Composes the AKS host's services without running it, and checks where it can write job logs.</summary>
 public sealed class HostCompositionTests
 {
     static ServiceProvider ComposeFrom(Dictionary<string, string?> settings) => Compose(new ConfigurationBuilder().AddInMemoryCollection(settings).Build());
@@ -23,33 +23,11 @@ public sealed class HostCompositionTests
     }
 
     [Fact]
-    public async Task Kubernetes_backend_refuses_file_log_targets()
+    public async Task Refuses_file_log_targets()
     {
-        using var provider = ComposeFrom(new() { ["Runner:Backend"] = "Kubernetes" });
+        using var provider = ComposeFrom(new());
         var store = provider.GetRequiredService<ILogStore>();
 
         await Assert.ThrowsAsync<NotSupportedException>(() => store.CreateAsync(new Uri("file:///tmp/x"), "job.log", CancellationToken.None));
-    }
-
-    [Fact]
-    public async Task Process_backend_accepts_file_targets_under_the_log_root()
-    {
-        var root = Path.Combine(Path.GetTempPath(), "hostcomposition-" + Guid.NewGuid().ToString("N"));
-        try
-        {
-            using var provider = ComposeFrom(new() { ["Runner:Backend"] = "Process", ["Runner:LogRoot"] = root });
-            var store = provider.GetRequiredService<ILogStore>();
-
-            await using var log = await store.CreateAsync(new Uri(Path.Combine(root, "job-1")), "job.log", CancellationToken.None);
-
-            Assert.True(File.Exists(Path.Combine(root, "job-1", "job.log")));
-        }
-        finally
-        {
-            if (Directory.Exists(root))
-            {
-                Directory.Delete(root, recursive: true);
-            }
-        }
     }
 }

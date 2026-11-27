@@ -1,21 +1,10 @@
 namespace Octopus.Pipelines.Runner.Kubernetes.Host;
 
-public enum JobBackendKind
-{
-    /// <summary>Runs each job as a bare pod in the cell's AKS cluster.</summary>
-    Kubernetes,
-
-    /// <summary>Runs each job as a local <c>sh -c</c> process. For local development without a cluster.</summary>
-    Process,
-}
-
 /// <summary>
-/// The host's half of the <c>Runner</c> section. The gateway's half (server address, capacity) is
-/// <see cref="Gateway.GatewayOptions"/>, bound from the same section.
+/// The <c>Runner</c> configuration section. The gateway binds it as <see cref="Gateway.GatewayOptions"/> (server address,
+/// capacity), and the Kubernetes backend binds its <c>Kubernetes</c> subsection.
 /// </summary>
-public sealed class RunnerOptions
+public static class RunnerOptions
 {
     public const string Section = "Runner";
-
-    public JobBackendKind Backend { get; set; } = JobBackendKind.Kubernetes;
 }

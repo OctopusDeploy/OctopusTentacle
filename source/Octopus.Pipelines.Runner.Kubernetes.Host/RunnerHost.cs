@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Octopus.Pipelines.Runner.Core;
 using Octopus.Pipelines.Runner.Core.Logs;
 using Octopus.Pipelines.Runner.Gateway;
 using Octopus.Pipelines.Runner.Kubernetes;
@@ -14,30 +13,12 @@ internal static class RunnerHost
     internal static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
         var runnerSection = configuration.GetSection(RunnerOptions.Section);
-        services.Configure<RunnerOptions>(runnerSection);
         services.AddSingleton(TimeProvider.System);
         services.AddRunnerGateway(runnerSection);
 
-        var backend = runnerSection.GetValue(nameof(RunnerOptions.Backend), JobBackendKind.Kubernetes);
-        var logStores = new Dictionary<string, ILogStore>
-        {
-            ["https"] = new AzureBlobLogStore(),
-        };
-        switch (backend)
-        {
-            case JobBackendKind.Kubernetes:
-                services.AddKubernetesBackend(runnerSection.GetSection("Kubernetes"));
-                break;
-            case JobBackendKind.Process:
-                services.AddSingleton<IJobBackend, ProcessJobBackend>();
-                // Only the Process backend (local development) writes job logs to local disk.
-                // Runner:LogRoot should point at the local Server's storage cell; without it, logs go to a temp folder.
-                var logRoot = runnerSection["LogRoot"]
-                    ?? Path.Combine(Path.GetTempPath(), "octopus-pipelines-runner-local", "storage-cell");
-                logStores["file"] = new FileLogStore(logRoot);
-                break;
-        }
+        services.AddKubernetesBackend(runnerSection.GetSection("Kubernetes"));
 
-        services.AddSingleton<ILogStore>(new LogStores(logStores));
+        // Job logs only go to the storage cell's blob containers, never to the runner's own disk.
+        services.AddSingleton<ILogStore>(new LogStores(new Dictionary<string, ILogStore> { ["https"] = new AzureBlobLogStore() }));
     }
 }

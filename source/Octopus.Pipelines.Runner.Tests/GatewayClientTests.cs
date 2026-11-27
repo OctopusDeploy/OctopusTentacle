@@ -20,7 +20,7 @@ public sealed class GatewayClientTests
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddSingleton<IHostApplicationLifetime, StubLifetime>();
-        services.AddSingleton<IJobBackend>(new ProcessJobBackend(TimeProvider.System));
+        services.AddSingleton<IJobBackend>(new ShellJobBackend(TimeProvider.System));
         services.AddSingleton<ILogStore>(new FileLogStore(Path.GetTempPath()));
         var section = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?> { ["ServerAddress"] = "http://127.0.0.1:1" })
@@ -42,7 +42,7 @@ public sealed class GatewayClientTests
         var signal = new CapacitySignal();
         var root = Path.Combine(Path.GetTempPath(), "tspoc-gateway-client-tests", Guid.NewGuid().ToString("N"));
         var executor = new GatewayJobExecutor(
-            new JobRunner(new ProcessJobBackend(TimeProvider.System), new FileLogStore(root), new JobRunnerOptions()),
+            new JobRunner(new ShellJobBackend(TimeProvider.System), new FileLogStore(root), new JobRunnerOptions()),
             outbox,
             signal,
             TimeProvider.System,
@@ -85,7 +85,7 @@ public sealed class GatewayClientTests
         var signal = new CapacitySignal();
         var root = Path.Combine(Path.GetTempPath(), "tspoc-gateway-client-tests", Guid.NewGuid().ToString("N"));
         var executor = new GatewayJobExecutor(
-            new JobRunner(new ProcessJobBackend(TimeProvider.System), new FileLogStore(root), new JobRunnerOptions()),
+            new JobRunner(new ShellJobBackend(TimeProvider.System), new FileLogStore(root), new JobRunnerOptions()),
             outbox,
             signal,
             TimeProvider.System,

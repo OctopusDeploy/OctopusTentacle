@@ -126,9 +126,9 @@ public sealed class JobRunnerTests
     {
         var store = new MemoryLogStore { AppendFails = () => new LogStorageException("expired", permanent: true) };
         var observer = new PidObserver();
-        var runner = new JobRunner(new ProcessJobBackend(TimeProvider.System), store, new JobRunnerOptions { LogFlushInterval = TimeSpan.FromMilliseconds(20) });
+        var runner = new JobRunner(new ShellJobBackend(TimeProvider.System), store, new JobRunnerOptions { LogFlushInterval = TimeSpan.FromMilliseconds(20) });
 
-        var result = await runner.RunAsync(Job with { Command = ProcessJobBackendTests.SleepingChild }, Directory, observer, TestContext.Current.CancellationToken)
+        var result = await runner.RunAsync(Job with { Command = ShellJobBackendTests.SleepingChild }, Directory, observer, TestContext.Current.CancellationToken)
             .WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
 
         Assert.False(result.Succeeded);

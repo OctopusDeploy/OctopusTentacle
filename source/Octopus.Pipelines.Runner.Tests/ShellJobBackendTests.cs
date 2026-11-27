@@ -4,7 +4,7 @@ using Octopus.Pipelines.Runner.Core;
 
 namespace Octopus.Pipelines.Runner.Tests;
 
-public sealed class ProcessJobBackendTests
+public sealed class ShellJobBackendTests
 {
     // The shell starts a child and prints its PID, so the test can tell whether the whole tree was killed.
     internal const string SleepingChild = "sleep 30 & echo $!; wait";
@@ -14,7 +14,7 @@ public sealed class ProcessJobBackendTests
     {
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
         var output = new PidOutput();
-        var backend = new ProcessJobBackend(TimeProvider.System);
+        var backend = new ShellJobBackend(TimeProvider.System);
 
         var run = backend.RunAsync(new JobSpec("job", "run", SleepingChild), output, cts.Token);
         var pid = await output.Pid.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
