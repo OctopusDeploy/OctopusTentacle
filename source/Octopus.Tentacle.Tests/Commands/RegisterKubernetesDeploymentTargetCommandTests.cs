@@ -28,8 +28,8 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void ShouldRegisterListeningTentacle()
         {
-            var registration = new RegistrationSubstitutes<IRegisterKubernetesDeploymentTargetOperation>("3.0");
-            var command = CommandBuilder.RegisterKubernetesDeploymentTarget(registration);
+            var registration = new Registration("3.0");
+            var command = CreateCommand(registration);
 
             command.StartWith("--env=Development",
                   "--server=http://localhost",
@@ -72,8 +72,8 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void ShouldRegisterPollingTentacle()
         {
-            var registration = new RegistrationSubstitutes<IRegisterKubernetesDeploymentTargetOperation>("3.0");
-            var command = CommandBuilder.RegisterKubernetesDeploymentTarget(registration);
+            var registration = new Registration("3.0");
+            var command = CreateCommand(registration);
 
             AssertPollingTentacleRegistered(registration, command, "https://localhost:10943/", "--server-comms-port=10943");
         }
@@ -81,8 +81,8 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void ShouldRegisterPollingTentacleOverDefaultPort()
         {
-            var registration = new RegistrationSubstitutes<IRegisterKubernetesDeploymentTargetOperation>("3.0");
-            var command = CommandBuilder.RegisterKubernetesDeploymentTarget(registration);
+            var registration = new Registration("3.0");
+            var command = CreateCommand(registration);
 
             AssertPollingTentacleRegistered(registration, command, "https://localhost:10943/");
         }
@@ -90,8 +90,8 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void ShouldRegisterPollingTentacleOverCustomCommsPort()
         {
-            var registration = new RegistrationSubstitutes<IRegisterKubernetesDeploymentTargetOperation>("3.0");
-            var command = CommandBuilder.RegisterKubernetesDeploymentTarget(registration);
+            var registration = new Registration("3.0");
+            var command = CreateCommand(registration);
 
             AssertPollingTentacleRegistered(registration, command, "https://localhost:123/", "--server-comms-port=123");
         }
@@ -99,8 +99,8 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void ShouldRegisterPollingTentacleOverCustomCommsAddressAndServerCommsPort()
         {
-            var registration = new RegistrationSubstitutes<IRegisterKubernetesDeploymentTargetOperation>("3.0");
-            var command = CommandBuilder.RegisterKubernetesDeploymentTarget(registration);
+            var registration = new Registration("3.0");
+            var command = CreateCommand(registration);
 
             AssertPollingTentacleRegistered(registration, command, 
                 "https://polling.localhost:456/",
@@ -111,8 +111,8 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void ShouldRegisterPollingTentacleOverCustomCommsAddressWithPort()
         {
-            var registration = new RegistrationSubstitutes<IRegisterKubernetesDeploymentTargetOperation>("3.0");
-            var command = CommandBuilder.RegisterKubernetesDeploymentTarget(registration);
+            var registration = new Registration("3.0");
+            var command = CreateCommand(registration);
 
             AssertPollingTentacleRegistered(registration, command, 
                 "https://polling.localhost:123/",
@@ -122,15 +122,15 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void ShouldRegisterPollingTentacleOverCustomCommsAddressWithDefaultHttpsPort()
         {
-            var registration = new RegistrationSubstitutes<IRegisterKubernetesDeploymentTargetOperation>("3.0");
-            var command = CommandBuilder.RegisterKubernetesDeploymentTarget(registration);
+            var registration = new Registration("3.0");
+            var command = CreateCommand(registration);
 
             AssertPollingTentacleRegistered(registration, command, 
                 "https://polling.localhost/",
                 "--server-comms-address=https://polling.localhost/");
         }
 
-        static void AssertPollingTentacleRegistered(RegistrationSubstitutes<IRegisterKubernetesDeploymentTargetOperation> registration, ICommand command, string expectedServerAddress, params string[] additionalArgs)
+        static void AssertPollingTentacleRegistered(Registration registration, ICommand command, string expectedServerAddress, params string[] additionalArgs)
         {
             var args = new []
             {
@@ -180,8 +180,8 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void ShouldReuseSubscriptionIdForPollingTentacleIfReRegistering()
         {
-            var registration = new RegistrationSubstitutes<IRegisterKubernetesDeploymentTargetOperation>("3.0");
-            var command = CommandBuilder.RegisterKubernetesDeploymentTarget(registration);
+            var registration = new Registration("3.0");
+            var command = CreateCommand(registration);
 
             var subscriptionId = "poll://xz6h25sh28shx52/";
             var octopusServerConfiguration = new OctopusServerConfiguration(registration.ServerThumbprint)
@@ -216,8 +216,8 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void DoesntReuseSubscriptionIdForPollingTentacleIfNewRegistration()
         {
-            var registration = new RegistrationSubstitutes<IRegisterKubernetesDeploymentTargetOperation>("3.0");
-            var command = CommandBuilder.RegisterKubernetesDeploymentTarget(registration);
+            var registration = new Registration("3.0");
+            var command = CreateCommand(registration);
 
             var subscriptionId = "poll://xz6h25sh28shx52/";
             var octopusServerConfiguration = new OctopusServerConfiguration(registration.ServerThumbprint)
@@ -252,8 +252,8 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void ShouldRegisterPollingTentacleWithCustomServerSubscriptionId()
         {
-            var registration = new RegistrationSubstitutes<IRegisterKubernetesDeploymentTargetOperation>("3.0");
-            var command = CommandBuilder.RegisterKubernetesDeploymentTarget(registration);
+            var registration = new Registration("3.0");
+            var command = CreateCommand(registration);
 
             var subscriptionId = "poll://xz6h25sh28shx52/";
 
@@ -283,8 +283,8 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void ShouldThrowExceptionWhenCustomServerSubscriptionIdDoesNotHaveCorrectScheme()
         {
-            var registration = new RegistrationSubstitutes<IRegisterKubernetesDeploymentTargetOperation>("3.0");
-            var command = CommandBuilder.RegisterKubernetesDeploymentTarget(registration);
+            var registration = new Registration("3.0");
+            var command = CreateCommand(registration);
 
             var ex = Assert.Throws<ControlledFailureException>(() => 
             command.StartWith("--env=Development",
@@ -303,8 +303,8 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void ShouldDoNothingWhenWorkerIsAlreadyRegistered()
         {
-            var registration = new RegistrationSubstitutes<IRegisterKubernetesDeploymentTargetOperation>("3.0");
-            var command = CommandBuilder.RegisterKubernetesDeploymentTarget(registration);
+            var registration = new Registration("3.0");
+            var command = CreateCommand(registration);
 
             registration.Configuration.IsRegistered.Returns(true);
             
@@ -323,6 +323,68 @@ namespace Octopus.Tentacle.Tests.Commands
             
             registration.Operation.DidNotReceive().ExecuteAsync(Arg.Any<IOctopusSpaceAsyncRepository>());
             registration.Configuration.DidNotReceive().AddOrUpdateTrustedOctopusServer(Arg.Any<OctopusServerConfiguration>());
+        }
+
+        static RegisterKubernetesDeploymentTargetCommand CreateCommand(Registration registration)
+        {
+            return new RegisterKubernetesDeploymentTargetCommand(new Lazy<IRegisterKubernetesDeploymentTargetOperation>(() => registration.Operation),
+                new Lazy<IWritableTentacleConfiguration>(() => registration.Configuration),
+                registration.Log,
+                UnnamedInstanceSelector(),
+                new Lazy<IOctopusServerChecker>(() => registration.ServerChecker),
+                new ProxyConfigParser(),
+                registration.ClientInitializer,
+                new SpaceRepositoryFactory(),
+                Substitute.For<ILogFileOnlyLogger>(),
+                Substitute.For<IServerCertificateTrustConfirmation>());
+        }
+
+        class Registration
+        {
+            public Registration(string serverVersion)
+            {
+                ServerThumbprint = Guid.NewGuid().ToString();
+                Configuration = Substitute.For<IWritableTentacleConfiguration>();
+                Operation = Substitute.For<IRegisterKubernetesDeploymentTargetOperation>();
+                ServerChecker = Substitute.For<IOctopusServerChecker>();
+                Log = Substitute.For<ISystemLog>();
+                ClientInitializer = Substitute.For<IOctopusClientInitializer>();
+                var octopusAsyncClient = Substitute.For<IOctopusAsyncClient>();
+
+                Repository = Substitute.For<IOctopusAsyncRepository>();
+                Repository.Client.Returns(octopusAsyncClient);
+                Repository.LoadRootDocument(Arg.Any<CancellationToken>()).Returns(Task.FromResult(new RootResource { Version = serverVersion }));
+                octopusAsyncClient.Repository.Returns(Repository);
+                octopusAsyncClient.ForSystem().Returns(Repository);
+                octopusAsyncClient.ForSpace(Arg.Any<SpaceResource>()).Returns(Repository);
+
+                var certificateConfigurationRepository = Substitute.For<ICertificateConfigurationRepository>();
+                var certificateConfigurationResource = new CertificateConfigurationResource { Thumbprint = ServerThumbprint };
+                certificateConfigurationRepository.GetOctopusCertificate().Returns(Task.FromResult(certificateConfigurationResource));
+                Repository.CertificateConfiguration.Returns(certificateConfigurationRepository);
+                ClientInitializer.CreateClient(Arg.Any<ApiEndpointOptions>(), false)
+                    .Returns(Task.FromResult(octopusAsyncClient));
+
+                Configuration.ServicesPortNumber.Returns(90210);
+                Certificate = new CertificateGenerator(new NullLog()).GenerateNew("CN=Hello");
+                Configuration.TentacleCertificate.Returns(Certificate);
+            }
+
+            public string ServerThumbprint { get; }
+            public IWritableTentacleConfiguration Configuration { get; }
+            public IRegisterKubernetesDeploymentTargetOperation Operation { get; }
+            public IOctopusServerChecker ServerChecker { get; }
+            public ISystemLog Log { get; }
+            public IOctopusClientInitializer ClientInitializer { get; }
+            public IOctopusAsyncRepository Repository { get; }
+            public X509Certificate2 Certificate { get; }
+        }
+
+        static IApplicationInstanceSelector UnnamedInstanceSelector()
+        {
+            var selector = Substitute.For<IApplicationInstanceSelector>();
+            selector.Current.Returns(_ => new ApplicationInstanceConfiguration(null, null!, null!, null!, null));
+            return selector;
         }
     }
 }

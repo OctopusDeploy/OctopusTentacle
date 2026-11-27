@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using NSubstitute;
 using NUnit.Framework;
+using Newtonsoft.Json;
+using Octopus.Tentacle.Commands;
 using Octopus.Tentacle.Configuration.Instances;
-using Octopus.Tentacle.Tests.Commands.Support;
+using Octopus.Tentacle.Startup;
 
 namespace Octopus.Tentacle.Tests.Commands
 {
@@ -12,7 +14,7 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void CommandShouldReturnJsonIfRequested()
         {
-            var command = CommandBuilder.ListInstances();
+            var command = CreateCommand();
 
             command.Format = "json";
             var json = command.GetOutput(new List<ApplicationInstanceRecord> { new ApplicationInstanceRecord("MyInstance", "MyConfigPath") });
@@ -26,11 +28,16 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void CommandShouldReturnTextIfRequested()
         {
-            var command = CommandBuilder.ListInstances();
+            var command = CreateCommand();
 
             command.Format = "text";
             var result = command.GetOutput(new List<ApplicationInstanceRecord> { new ApplicationInstanceRecord("MyInstance", "MyConfigPath") });
             Assert.That(result, Is.EqualTo("Instance 'MyInstance' uses configuration 'MyConfigPath'." + Environment.NewLine));
+        }
+
+        static ListInstancesCommand CreateCommand()
+        {
+            return new ListInstancesCommand(Substitute.For<IApplicationInstanceStore>(), Substitute.For<ILogFileOnlyLogger>());
         }
     }
 }

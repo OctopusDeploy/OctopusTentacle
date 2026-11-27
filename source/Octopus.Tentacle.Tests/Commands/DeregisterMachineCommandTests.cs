@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -8,10 +8,12 @@ using Octopus.Client;
 using Octopus.Client.Model;
 using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Commands;
+using Octopus.Tentacle.Commands.OptionSets;
+using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Startup;
-using Octopus.Tentacle.Tests.Commands.Support;
 using Octopus.Tentacle.Tests.Support;
 
 namespace Octopus.Tentacle.Tests.Commands
@@ -29,7 +31,7 @@ namespace Octopus.Tentacle.Tests.Commands
                 TrustedOctopusThumbprints = new List<string> { "NON-MATCHING-THUMBPRINT" },
                 TentacleCertificate = new CertificateGenerator(new NullLog()).GenerateNew($"CN={Guid.NewGuid()}")
             };
-            var command = CommandBuilder.DeregisterMachine(configuration);
+            var command = CreateCommand(configuration);
             var asyncRepository = Substitute.For<IOctopusSpaceAsyncRepository>();
 
             var matchingMachines = new List<MachineResource>
@@ -54,7 +56,7 @@ namespace Octopus.Tentacle.Tests.Commands
                 TentacleCertificate = new CertificateGenerator(new NullLog()).GenerateNew($"CN={Guid.NewGuid()}")
             };
             var log = Substitute.For<ISystemLog>();
-            var command = CommandBuilder.DeregisterMachine(configuration, log);
+            var command = CreateCommand(configuration, log);
             var asyncRepository = Substitute.For<IOctopusSpaceAsyncRepository>();
 
             asyncRepository.Certificates.GetOctopusCertificate()
@@ -83,7 +85,7 @@ namespace Octopus.Tentacle.Tests.Commands
                 TentacleCertificate = new CertificateGenerator(new NullLog()).GenerateNew($"CN={Guid.NewGuid()}")
             };
             var log = Substitute.For<ISystemLog>();
-            var command = CommandBuilder.DeregisterMachine(configuration, log);
+            var command = CreateCommand(configuration, log);
             var asyncRepository = Substitute.For<IOctopusSpaceAsyncRepository>();
 
             asyncRepository.Certificates.GetOctopusCertificate()
@@ -101,6 +103,24 @@ namespace Octopus.Tentacle.Tests.Commands
 
             log.Received().Info($"Deleting machine '{machineName}' from the Octopus Server...");
             log.Received().Info(DeregisterMachineCommand.DeregistrationSuccessMsg);
+        }
+
+        static DeregisterMachineCommand CreateCommand(ITentacleConfiguration configuration, ISystemLog? log = null)
+        {
+            return new DeregisterMachineCommand(new Lazy<ITentacleConfiguration>(() => configuration),
+                log ?? Substitute.For<ISystemLog>(),
+                NamedInstanceSelector(),
+                Substitute.For<IProxyConfigParser>(),
+                Substitute.For<IOctopusClientInitializer>(),
+                new SpaceRepositoryFactory(),
+                Substitute.For<ILogFileOnlyLogger>());
+        }
+
+        static IApplicationInstanceSelector NamedInstanceSelector()
+        {
+            var selector = Substitute.For<IApplicationInstanceSelector>();
+            selector.Current.Returns(new ApplicationInstanceConfiguration("my-instance", "myconfig.config", Substitute.For<IKeyValueStore>(), Substitute.For<IWritableKeyValueStore>(), null));
+            return selector;
         }
     }
 }

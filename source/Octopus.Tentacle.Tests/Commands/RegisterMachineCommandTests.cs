@@ -34,8 +34,8 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void ShouldRegisterListeningTentacle()
         {
-            var registration = new RegistrationSubstitutes<IRegisterMachineOperation>("3.0");
-            var command = CommandBuilder.RegisterMachine(registration, OperatorWhoTrusts());
+            var registration = new Registration("3.0");
+            var command = CreateCommand(registration, OperatorWhoTrusts());
 
             command.StartWith("--env=Development",
                   "--server=http://localhost",
@@ -75,8 +75,8 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void ShouldRegisterPollingTentacle()
         {
-            var registration = new RegistrationSubstitutes<IRegisterMachineOperation>("3.0");
-            var command = CommandBuilder.RegisterMachine(registration, OperatorWhoTrusts());
+            var registration = new Registration("3.0");
+            var command = CreateCommand(registration, OperatorWhoTrusts());
 
             AssertPollingTentacleRegistered(registration, command, "https://localhost:10943/", "--server-comms-port=10943");
         }
@@ -84,8 +84,8 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void ShouldRegisterPollingTentacleOverDefaultPort()
         {
-            var registration = new RegistrationSubstitutes<IRegisterMachineOperation>("3.0");
-            var command = CommandBuilder.RegisterMachine(registration, OperatorWhoTrusts());
+            var registration = new Registration("3.0");
+            var command = CreateCommand(registration, OperatorWhoTrusts());
 
             AssertPollingTentacleRegistered(registration, command, "https://localhost:10943/");
         }
@@ -93,8 +93,8 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void ShouldRegisterPollingTentacleOverCustomCommsPort()
         {
-            var registration = new RegistrationSubstitutes<IRegisterMachineOperation>("3.0");
-            var command = CommandBuilder.RegisterMachine(registration, OperatorWhoTrusts());
+            var registration = new Registration("3.0");
+            var command = CreateCommand(registration, OperatorWhoTrusts());
 
             AssertPollingTentacleRegistered(registration, command, "https://localhost:123/", "--server-comms-port=123");
         }
@@ -102,8 +102,8 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void ShouldRegisterPollingTentacleOverCustomCommsAddressAndServerCommsPort()
         {
-            var registration = new RegistrationSubstitutes<IRegisterMachineOperation>("3.0");
-            var command = CommandBuilder.RegisterMachine(registration, OperatorWhoTrusts());
+            var registration = new Registration("3.0");
+            var command = CreateCommand(registration, OperatorWhoTrusts());
 
             AssertPollingTentacleRegistered(registration, command, 
                 "https://polling.localhost:456/",
@@ -114,8 +114,8 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void ShouldRegisterPollingTentacleOverCustomCommsAddressWithPort()
         {
-            var registration = new RegistrationSubstitutes<IRegisterMachineOperation>("3.0");
-            var command = CommandBuilder.RegisterMachine(registration, OperatorWhoTrusts());
+            var registration = new Registration("3.0");
+            var command = CreateCommand(registration, OperatorWhoTrusts());
 
             AssertPollingTentacleRegistered(registration, command, 
                 "https://polling.localhost:123/",
@@ -125,8 +125,8 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void ShouldRegisterPollingTentacleOverCustomCommsAddressWithDefaultHttpsPort()
         {
-            var registration = new RegistrationSubstitutes<IRegisterMachineOperation>("3.0");
-            var command = CommandBuilder.RegisterMachine(registration, OperatorWhoTrusts());
+            var registration = new Registration("3.0");
+            var command = CreateCommand(registration, OperatorWhoTrusts());
 
             AssertPollingTentacleRegistered(registration, command, 
                 "https://polling.localhost/",
@@ -136,8 +136,8 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void ShouldDefaultPollingConnectionCountToOneWhenRegisteringAPollingTentacle()
         {
-            var registration = new RegistrationSubstitutes<IRegisterMachineOperation>("3.0");
-            var command = CommandBuilder.RegisterMachine(registration, OperatorWhoTrusts());
+            var registration = new Registration("3.0");
+            var command = CreateCommand(registration, OperatorWhoTrusts());
 
             AssertPollingTentacleRegistered(registration, command, "https://localhost:10943/");
             registration.Configuration.Received().SetPollingConnectionCount(1);
@@ -146,8 +146,8 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void ShouldNotSetPollingConnectionCountWhenRegisteringAListeningTentacle()
         {
-            var registration = new RegistrationSubstitutes<IRegisterMachineOperation>("3.0");
-            var command = CommandBuilder.RegisterMachine(registration, OperatorWhoTrusts());
+            var registration = new Registration("3.0");
+            var command = CreateCommand(registration, OperatorWhoTrusts());
 
             command.StartWith("--env=Development",
                 "--server=http://localhost",
@@ -160,7 +160,7 @@ namespace Octopus.Tentacle.Tests.Commands
             registration.Configuration.DidNotReceive().SetPollingConnectionCount(Arg.Any<int>());
         }
 
-        static void AssertPollingTentacleRegistered(RegistrationSubstitutes<IRegisterMachineOperation> registration, ICommand command, string expectedServerAddress, params string[] additionalArgs)
+        static void AssertPollingTentacleRegistered(Registration registration, ICommand command, string expectedServerAddress, params string[] additionalArgs)
         {
             var args = new []
             {
@@ -208,9 +208,9 @@ namespace Octopus.Tentacle.Tests.Commands
         [WindowsTest]
         public void ShouldTrustAWebSocketServerWhoseCertificateValidates()
         {
-            var registration = new RegistrationSubstitutes<IRegisterMachineOperation>("3.0");
+            var registration = new Registration("3.0");
             var trustPrompt = OperatorWhoTrusts();
-            var command = CommandBuilder.RegisterMachine(registration, trustPrompt);
+            var command = CreateCommand(registration, trustPrompt);
 
             StartWebSocketRegistration(registration, command, SslPolicyErrors.None);
 
@@ -225,9 +225,9 @@ namespace Octopus.Tentacle.Tests.Commands
         [WindowsTest]
         public void ShouldNotTrustAWebSocketServerWhoseCertificateFailsValidationWhenTheOperatorDeclines()
         {
-            var registration = new RegistrationSubstitutes<IRegisterMachineOperation>("3.0");
+            var registration = new Registration("3.0");
             var trustPrompt = OperatorWhoTrusts();
-            var command = CommandBuilder.RegisterMachine(registration, trustPrompt);
+            var command = CreateCommand(registration, trustPrompt);
 
             trustPrompt.Confirm(Arg.Any<string>(), Arg.Any<string>()).Returns(false);
 
@@ -241,9 +241,9 @@ namespace Octopus.Tentacle.Tests.Commands
         [WindowsTest]
         public void ShouldNotTrustAWebSocketServerWhoseCertificateFailsValidationWhenNobodyCanBeAsked()
         {
-            var registration = new RegistrationSubstitutes<IRegisterMachineOperation>("3.0");
+            var registration = new Registration("3.0");
             var trustPrompt = OperatorWhoTrusts();
-            var command = CommandBuilder.RegisterMachine(registration, trustPrompt);
+            var command = CreateCommand(registration, trustPrompt);
 
             trustPrompt.CanPrompt.Returns(false);
 
@@ -256,9 +256,9 @@ namespace Octopus.Tentacle.Tests.Commands
         [WindowsTest]
         public void ShouldTrustAWebSocketServerWhoseCertificateFailsValidationWhenItsThumbprintWasSuppliedUpFront()
         {
-            var registration = new RegistrationSubstitutes<IRegisterMachineOperation>("3.0");
+            var registration = new Registration("3.0");
             var trustPrompt = OperatorWhoTrusts();
-            var command = CommandBuilder.RegisterMachine(registration, trustPrompt);
+            var command = CreateCommand(registration, trustPrompt);
 
             StartWebSocketRegistration(registration, command, SslPolicyErrors.RemoteCertificateChainErrors,
                 $"--server-web-socket-thumbprint={WebSocketSslThumbprint}");
@@ -273,8 +273,8 @@ namespace Octopus.Tentacle.Tests.Commands
         [WindowsTest]
         public void ShouldNotTrustAWebSocketServerWhoseCertificateDoesNotMatchTheSuppliedThumbprint()
         {
-            var registration = new RegistrationSubstitutes<IRegisterMachineOperation>("3.0");
-            var command = CommandBuilder.RegisterMachine(registration, OperatorWhoTrusts());
+            var registration = new Registration("3.0");
+            var command = CreateCommand(registration, OperatorWhoTrusts());
 
             Assert.Throws<ControlledFailureException>(() => StartWebSocketRegistration(registration, command, SslPolicyErrors.None,
                 "--server-web-socket-thumbprint=0123456789ABCDEF0123456789ABCDEF01234567"));
@@ -285,8 +285,8 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void ShouldRejectAServerWebSocketThumbprintWithoutAServerWebSocketAddress()
         {
-            var registration = new RegistrationSubstitutes<IRegisterMachineOperation>("3.0");
-            var command = CommandBuilder.RegisterMachine(registration, OperatorWhoTrusts());
+            var registration = new Registration("3.0");
+            var command = CreateCommand(registration, OperatorWhoTrusts());
 
             var ex = Assert.Throws<ControlledFailureException>(() => command.StartWith("--env=Development",
                 "--server=http://localhost",
@@ -303,8 +303,8 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void ShouldReuseSubscriptionIdForPollingTentacleIfReRegistering()
         {
-            var registration = new RegistrationSubstitutes<IRegisterMachineOperation>("3.0");
-            var command = CommandBuilder.RegisterMachine(registration, OperatorWhoTrusts());
+            var registration = new Registration("3.0");
+            var command = CreateCommand(registration, OperatorWhoTrusts());
 
             var subscriptionId = "poll://xz6h25sh28shx52/";
             var octopusServerConfiguration = new OctopusServerConfiguration(registration.ServerThumbprint)
@@ -339,8 +339,8 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void DoesntReuseSubscriptionIdForPollingTentacleIfNewRegistration()
         {
-            var registration = new RegistrationSubstitutes<IRegisterMachineOperation>("3.0");
-            var command = CommandBuilder.RegisterMachine(registration, OperatorWhoTrusts());
+            var registration = new Registration("3.0");
+            var command = CreateCommand(registration, OperatorWhoTrusts());
 
             var subscriptionId = "poll://xz6h25sh28shx52/";
             var octopusServerConfiguration = new OctopusServerConfiguration(registration.ServerThumbprint)
@@ -375,8 +375,8 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void ShouldRegisterPollingTentacleWithCustomServerSubscriptionId()
         {
-            var registration = new RegistrationSubstitutes<IRegisterMachineOperation>("3.0");
-            var command = CommandBuilder.RegisterMachine(registration, OperatorWhoTrusts());
+            var registration = new Registration("3.0");
+            var command = CreateCommand(registration, OperatorWhoTrusts());
 
             var subscriptionId = "poll://xz6h25sh28shx52/";
 
@@ -406,8 +406,8 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void ShouldThrowExceptionWhenCustomServerSubscriptionIdDoesNotHaveCorrectScheme()
         {
-            var registration = new RegistrationSubstitutes<IRegisterMachineOperation>("3.0");
-            var command = CommandBuilder.RegisterMachine(registration, OperatorWhoTrusts());
+            var registration = new Registration("3.0");
+            var command = CreateCommand(registration, OperatorWhoTrusts());
 
             var ex = Assert.Throws<ControlledFailureException>(() => 
             command.StartWith("--env=Development",
@@ -423,7 +423,7 @@ namespace Octopus.Tentacle.Tests.Commands
             ex.Message.Should().Be("The ServerSubscriptionId must start with poll://");
         }
         
-        static void StartWebSocketRegistration(RegistrationSubstitutes<IRegisterMachineOperation> registration, ICommand command, SslPolicyErrors certificateErrors, params string[] additionalArgs)
+        static void StartWebSocketRegistration(Registration registration, ICommand command, SslPolicyErrors certificateErrors, params string[] additionalArgs)
         {
             registration.ServerChecker.CheckServerCommunicationsIsOpen(Arg.Any<Uri>(), Arg.Any<IWebProxy>())
                 .Returns(new OctopusServerCommunicationsCheckResult(WebSocketSslThumbprint, certificateErrors));
@@ -449,6 +449,68 @@ namespace Octopus.Tentacle.Tests.Commands
             trustPrompt.CanPrompt.Returns(true);
             trustPrompt.Confirm(Arg.Any<string>(), Arg.Any<string>()).Returns(true);
             return trustPrompt;
+        }
+
+        static RegisterMachineCommand CreateCommand(Registration registration, IPrompt trustPrompt)
+        {
+            return new RegisterMachineCommand(new Lazy<IRegisterMachineOperation>(() => registration.Operation),
+                new Lazy<IWritableTentacleConfiguration>(() => registration.Configuration),
+                registration.Log,
+                UnnamedInstanceSelector(),
+                new Lazy<IOctopusServerChecker>(() => registration.ServerChecker),
+                new ProxyConfigParser(),
+                registration.ClientInitializer,
+                new SpaceRepositoryFactory(),
+                Substitute.For<ILogFileOnlyLogger>(),
+                new ServerCertificateTrustConfirmation(registration.Log, trustPrompt));
+        }
+
+        class Registration
+        {
+            public Registration(string serverVersion)
+            {
+                ServerThumbprint = Guid.NewGuid().ToString();
+                Configuration = Substitute.For<IWritableTentacleConfiguration>();
+                Operation = Substitute.For<IRegisterMachineOperation>();
+                ServerChecker = Substitute.For<IOctopusServerChecker>();
+                Log = Substitute.For<ISystemLog>();
+                ClientInitializer = Substitute.For<IOctopusClientInitializer>();
+                var octopusAsyncClient = Substitute.For<IOctopusAsyncClient>();
+
+                Repository = Substitute.For<IOctopusAsyncRepository>();
+                Repository.Client.Returns(octopusAsyncClient);
+                Repository.LoadRootDocument(Arg.Any<CancellationToken>()).Returns(Task.FromResult(new RootResource { Version = serverVersion }));
+                octopusAsyncClient.Repository.Returns(Repository);
+                octopusAsyncClient.ForSystem().Returns(Repository);
+                octopusAsyncClient.ForSpace(Arg.Any<SpaceResource>()).Returns(Repository);
+
+                var certificateConfigurationRepository = Substitute.For<ICertificateConfigurationRepository>();
+                var certificateConfigurationResource = new CertificateConfigurationResource { Thumbprint = ServerThumbprint };
+                certificateConfigurationRepository.GetOctopusCertificate().Returns(Task.FromResult(certificateConfigurationResource));
+                Repository.CertificateConfiguration.Returns(certificateConfigurationRepository);
+                ClientInitializer.CreateClient(Arg.Any<ApiEndpointOptions>(), false)
+                    .Returns(Task.FromResult(octopusAsyncClient));
+
+                Configuration.ServicesPortNumber.Returns(90210);
+                Certificate = new CertificateGenerator(new NullLog()).GenerateNew("CN=Hello");
+                Configuration.TentacleCertificate.Returns(Certificate);
+            }
+
+            public string ServerThumbprint { get; }
+            public IWritableTentacleConfiguration Configuration { get; }
+            public IRegisterMachineOperation Operation { get; }
+            public IOctopusServerChecker ServerChecker { get; }
+            public ISystemLog Log { get; }
+            public IOctopusClientInitializer ClientInitializer { get; }
+            public IOctopusAsyncRepository Repository { get; }
+            public X509Certificate2 Certificate { get; }
+        }
+
+        static IApplicationInstanceSelector UnnamedInstanceSelector()
+        {
+            var selector = Substitute.For<IApplicationInstanceSelector>();
+            selector.Current.Returns(_ => new ApplicationInstanceConfiguration(null, null!, null!, null!, null));
+            return selector;
         }
     }
 }

@@ -4,6 +4,8 @@ using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
 using Octopus.Tentacle.Commands;
+using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Startup;
@@ -21,7 +23,7 @@ namespace Octopus.Tentacle.Tests.Commands
         {
             using var homeDirectory = NewHomeDirectory();
             var clock = Substitute.For<IClock>();
-            var command = CommandBuilder.Livez(homeDirectory.DirectoryPath, clock);
+            var command = CreateCommand(homeDirectory.DirectoryPath, clock);
 
             var now = new DateTime(2026, 5, 26, 12, 0, 0, DateTimeKind.Utc);
             WriteHeartbeatWithMtime(homeDirectory, now);
@@ -37,7 +39,7 @@ namespace Octopus.Tentacle.Tests.Commands
         {
             using var homeDirectory = NewHomeDirectory();
             var clock = Substitute.For<IClock>();
-            var command = CommandBuilder.Livez(homeDirectory.DirectoryPath, clock);
+            var command = CreateCommand(homeDirectory.DirectoryPath, clock);
 
             var now = new DateTime(2026, 5, 26, 12, 0, 0, DateTimeKind.Utc);
             WriteHeartbeatWithMtime(homeDirectory, now);
@@ -54,7 +56,7 @@ namespace Octopus.Tentacle.Tests.Commands
         {
             using var homeDirectory = NewHomeDirectory();
             var clock = Substitute.For<IClock>();
-            var command = CommandBuilder.Livez(homeDirectory.DirectoryPath, clock);
+            var command = CreateCommand(homeDirectory.DirectoryPath, clock);
 
             clock.GetUtcTime().Returns(DateTimeOffset.UtcNow);
 
@@ -69,7 +71,7 @@ namespace Octopus.Tentacle.Tests.Commands
         {
             using var homeDirectory = NewHomeDirectory();
             var clock = Substitute.For<IClock>();
-            var command = CommandBuilder.Livez(homeDirectory.DirectoryPath, clock);
+            var command = CreateCommand(homeDirectory.DirectoryPath, clock);
 
             var now = new DateTime(2026, 5, 26, 12, 0, 0, DateTimeKind.Utc);
             WriteHeartbeatWithMtime(homeDirectory, now);
@@ -85,7 +87,7 @@ namespace Octopus.Tentacle.Tests.Commands
         {
             using var homeDirectory = NewHomeDirectory();
             var clock = Substitute.For<IClock>();
-            var command = CommandBuilder.Livez(homeDirectory.DirectoryPath, clock);
+            var command = CreateCommand(homeDirectory.DirectoryPath, clock);
 
             var now = new DateTime(2026, 5, 26, 12, 0, 0, DateTimeKind.Utc);
             WriteHeartbeatWithMtime(homeDirectory, now);
@@ -102,7 +104,7 @@ namespace Octopus.Tentacle.Tests.Commands
         {
             using var homeDirectory = NewHomeDirectory();
             var clock = Substitute.For<IClock>();
-            var command = CommandBuilder.Livez(homeDirectory.DirectoryPath, clock);
+            var command = CreateCommand(homeDirectory.DirectoryPath, clock);
 
             var now = new DateTime(2026, 5, 26, 12, 0, 0, DateTimeKind.Utc);
             WriteHeartbeatWithMtime(homeDirectory, now);
@@ -124,6 +126,25 @@ namespace Octopus.Tentacle.Tests.Commands
             var heartbeatPath = Path.Combine(homeDirectory.DirectoryPath, LivenessHeartbeatTask.HeartbeatFileName);
             File.WriteAllBytes(heartbeatPath, Array.Empty<byte>());
             File.SetLastWriteTimeUtc(heartbeatPath, mtimeUtc);
+        }
+
+        static LivezCommand CreateCommand(string homeDirectory, IClock clock)
+        {
+            var homeConfiguration = Substitute.For<IHomeConfiguration>();
+            homeConfiguration.HomeDirectory.Returns(homeDirectory);
+
+            return new LivezCommand(new Lazy<IHomeConfiguration>(() => homeConfiguration),
+                clock,
+                UnnamedInstanceSelector(),
+                Substitute.For<ISystemLog>(),
+                Substitute.For<ILogFileOnlyLogger>());
+        }
+
+        static IApplicationInstanceSelector UnnamedInstanceSelector()
+        {
+            var selector = Substitute.For<IApplicationInstanceSelector>();
+            selector.Current.Returns(_ => new ApplicationInstanceConfiguration(null, null!, null!, null!, null));
+            return selector;
         }
     }
 }

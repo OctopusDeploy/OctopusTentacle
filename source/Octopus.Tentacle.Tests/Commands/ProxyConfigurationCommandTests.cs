@@ -1,9 +1,10 @@
-﻿using System;
+using System;
 using System.IO;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Core.Diagnostics;
 using Octopus.Tentacle.Startup;
 using Octopus.Tentacle.Tests.Commands.Support;
@@ -25,7 +26,7 @@ namespace Octopus.Tentacle.Tests.Commands
             const string expectedPassword = "do or do not, there is no try";
             const int expectedProxyPort = 8888;
 
-            var command = CommandBuilder.ProxyConfiguration(config);
+            var command = CreateCommand(config);
 
             EnableACustomProxy();
             config.Value.UseDefaultProxy.Should().BeFalse(because: "we're using a custom proxy now");
@@ -59,7 +60,7 @@ namespace Octopus.Tentacle.Tests.Commands
             var octopusFileSystem = new OctopusPhysicalFileSystem(Substitute.For<ISystemLog>());
             using var homeDirectory = new TemporaryDirectory(octopusFileSystem);
             var config = NewProxyConfiguration(octopusFileSystem, homeDirectory);
-            var command = CommandBuilder.ProxyConfiguration(config);
+            var command = CreateCommand(config);
 
             EnableTheDefaultProxy(command);
 
@@ -74,7 +75,7 @@ namespace Octopus.Tentacle.Tests.Commands
             var octopusFileSystem = new OctopusPhysicalFileSystem(Substitute.For<ISystemLog>());
             using var homeDirectory = new TemporaryDirectory(octopusFileSystem);
             var config = NewProxyConfiguration(octopusFileSystem, homeDirectory);
-            var command = CommandBuilder.ProxyConfiguration(config);
+            var command = CreateCommand(config);
 
             EnableAnIncorrectlySuppliedProxyHost();
 
@@ -102,6 +103,18 @@ namespace Octopus.Tentacle.Tests.Commands
                 "</octopus-settings>");
 
             return new Lazy<IWritableProxyConfiguration>(() => new WritableProxyConfiguration(new XmlFileKeyValueStore(octopusFileSystem, configFile, encryptor: TestMachineKeyEncryptor.Current)));
+        }
+
+        static ProxyConfigurationCommand CreateCommand(Lazy<IWritableProxyConfiguration> configuration)
+        {
+            return new ProxyConfigurationCommand(configuration, UnnamedInstanceSelector(), Substitute.For<ISystemLog>(), Substitute.For<ILogFileOnlyLogger>());
+        }
+
+        static IApplicationInstanceSelector UnnamedInstanceSelector()
+        {
+            var selector = Substitute.For<IApplicationInstanceSelector>();
+            selector.Current.Returns(_ => new ApplicationInstanceConfiguration(null, null!, null!, null!, null));
+            return selector;
         }
     }
 }
