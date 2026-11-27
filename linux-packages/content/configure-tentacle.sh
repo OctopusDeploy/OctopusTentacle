@@ -193,7 +193,7 @@ function setupPollingTentacle {
     read -p "What name would you like to register this Tentacle with? ($displayname): " displaynameinput
     displayname=$(assignNonEmptyValue "$displaynameinput" $displayname)
 
-    $doesconnecttosamedomain=1
+    doesconnecttosamedomain=1
     read -p 'Is the comms port on the same domain as the Octopus Server : 1) Yes or 2) No (default 1): ' doesconnecttosamedomain
 
     
