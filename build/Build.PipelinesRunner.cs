@@ -16,6 +16,15 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
 partial class Build
 {
     const string PipelinesRunnerCliSample = "Octopus.Pipelines.Runner.CliSample";
+    const string PipelinesStepRunnerFileName = "octopus-step-runner";
+
+    [Parameter("The Linux runtime ids to publish the step runner for, e.g. linux-x64 linux-arm64. Defaults to the host's. " +
+        "Native AOT needs a cross toolchain to publish for another architecture.")]
+    readonly string[] PipelinesStepRunnerRuntimeIds = [];
+
+    [Parameter("A directory of prebuilt step runners, as <dir>/<rid>/octopus-step-runner, e.g. built on another architecture's agent. " +
+        "Tentacle's build looks here first. Keep it outside _artifacts, which Clean empties.")]
+    readonly AbsolutePath? PipelinesStepRunnerDirectory;
 
     [PublicAPI]
     Target TestPipelinesRunner => _ => _
@@ -98,61 +107,116 @@ partial class Build
 
     [PublicAPI]
     Target PublishPipelinesStepRunner => _ => _
-        .Description("Publishes the statically linked step runner for the host's architecture, fails on any trim/AOT warning, and checks it starts in musl and glibc images.")
+        .Description("Publishes the statically linked step runner to _artifacts/pipelines-step-runner/<rid>, fails on any trim/AOT warning, and checks the host's build starts in musl and glibc images.")
         .Executes(() =>
         {
-            const string project = "Octopus.Pipelines.Runner.StepRunner";
-            var rid = PipelinesRunnerAotRuntimeIdentifier();
-            var output = ArtifactsDirectory / "pipelines-step-runner" / rid;
-
-            DotNetClean(p => p
-                .SetProject(SourceDirectory / project)
-                .SetConfiguration("Release")
-                .SetRuntime(rid));
-
-            var publishOutput = DotNetPublish(p => p
-                .SetProject(SourceDirectory / project)
-                .SetConfiguration("Release")
-                .SetRuntime(rid)
-                .SetOutput(output));
-
-            var warnings = publishOutput
-                .Select(o => o.Text)
-                .Where(t => Regex.IsMatch(t, "warning (IL|AOT)"))
-                .Distinct()
-                .OrderBy(t => t, StringComparer.Ordinal)
-                .ToList();
-            if (warnings.Count > 0)
-                throw new Exception("Publish produced trim/AOT warnings:" + Environment.NewLine + string.Join(Environment.NewLine, warnings));
-
-            var binary = output / "octopus-step-runner";
-            Log.Information("Step runner: {Binary} ({Size} bytes)", binary, new FileInfo(binary).Length);
-
-            // Statically linked, so the same file runs whatever the image's C library. Without OCTOPUS_RESULT it
-            // exits 3 with a message, which is enough to show it started.
-            foreach (var image in new[] { "alpine:3.20", "debian:bookworm-slim" })
-            {
-                var startInfo = new ProcessStartInfo("docker") { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false };
-                foreach (var arg in new[] { "run", "--rm", "--network", "none", "--volume", $"{binary}:/octopus-step-runner:ro", "--entrypoint", "/octopus-step-runner", image })
-                    startInfo.ArgumentList.Add(arg);
-
-                using var process = Process.Start(startInfo) ?? throw new Exception("Could not start docker");
-                var stderr = process.StandardError.ReadToEnd();
-                process.WaitForExit();
-                if (process.ExitCode != 3 || !stderr.Contains("OCTOPUS_RESULT isn't set"))
-                    throw new Exception($"The step runner didn't start in {image}: exit {process.ExitCode}: {stderr}");
-                Log.Information("OK: the step runner starts in {Image}", image);
-            }
+            var hostRid = PipelinesRunnerAotRuntimeIdentifier();
+            foreach (var rid in PipelinesStepRunnerRuntimeIds.Length > 0 ? PipelinesStepRunnerRuntimeIds : [hostRid])
+                PublishPipelinesStepRunnerFor(rid, smokeTest: rid == hostRid);
         });
+
+    void PublishPipelinesStepRunnerFor(string rid, bool smokeTest)
+    {
+        const string project = "Octopus.Pipelines.Runner.StepRunner";
+        var output = PublishedStepRunnerDirectory / rid;
+
+        DotNetClean(p => p
+            .SetProject(SourceDirectory / project)
+            .SetConfiguration("Release")
+            .SetRuntime(rid));
+
+        var publishOutput = DotNetPublish(p => p
+            .SetProject(SourceDirectory / project)
+            .SetConfiguration("Release")
+            .SetRuntime(rid)
+            .SetOutput(output));
+
+        var warnings = publishOutput
+            .Select(o => o.Text)
+            .Where(t => Regex.IsMatch(t, "warning (IL|AOT)"))
+            .Distinct()
+            .OrderBy(t => t, StringComparer.Ordinal)
+            .ToList();
+        if (warnings.Count > 0)
+            throw new Exception("Publish produced trim/AOT warnings:" + Environment.NewLine + string.Join(Environment.NewLine, warnings));
+
+        var binary = output / PipelinesStepRunnerFileName;
+        Log.Information("Step runner: {Binary} ({Size} bytes)", binary, new FileInfo(binary).Length);
+        if (!smokeTest)
+            return;
+
+        // Statically linked, so the same file runs whatever the image's C library. Without OCTOPUS_RESULT it
+        // exits 3 with a message, which is enough to show it started.
+        foreach (var image in new[] { "alpine:3.20", "debian:bookworm-slim" })
+        {
+            var startInfo = new ProcessStartInfo("docker") { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false };
+            foreach (var arg in new[] { "run", "--rm", "--network", "none", "--volume", $"{binary}:/octopus-step-runner:ro", "--entrypoint", "/octopus-step-runner", image })
+                startInfo.ArgumentList.Add(arg);
+
+            using var process = Process.Start(startInfo) ?? throw new Exception("Could not start docker");
+            var stderr = process.StandardError.ReadToEnd();
+            process.WaitForExit();
+            if (process.ExitCode != 3 || !stderr.Contains("OCTOPUS_RESULT isn't set"))
+                throw new Exception($"The step runner didn't start in {image}: exit {process.ExitCode}: {stderr}");
+            Log.Information("OK: the step runner starts in {Image}", image);
+        }
+    }
+
+    AbsolutePath PublishedStepRunnerDirectory => ArtifactsDirectory / "pipelines-step-runner";
+
+    /// <summary>
+    /// Copies the step runner into a Tentacle publish directory, next to the Tentacle executable, where the pipelines
+    /// runner looks for it. Steps run in Linux containers on the Docker daemon, whose architecture matches the host's,
+    /// even on macOS (Docker Desktop's VM), so every package gets the Linux build for its own architecture.
+    /// </summary>
+    void IncludePipelinesStepRunner(string framework, string runtimeId)
+    {
+        var stepRunnerRid = runtimeId switch
+        {
+            "linux-x64" or "linux-musl-x64" or "osx-x64" => "linux-x64",
+            "linux-arm64" or "osx-arm64" => "linux-arm64",
+            _ => null,
+        };
+        if (stepRunnerRid is null)
+        {
+            Log.Information("Tentacle {RuntimeId} doesn't get the step runner: no build for its architecture", runtimeId);
+            return;
+        }
+
+        var source = new[] { PipelinesStepRunnerDirectory, PublishedStepRunnerDirectory }
+            .OfType<AbsolutePath>()
+            .Select(directory => directory / stepRunnerRid / PipelinesStepRunnerFileName)
+            .FirstOrDefault(path => path.FileExists());
+        if (source is null && OperatingSystem.IsLinux() && PipelinesRunnerAotRuntimeIdentifier() == stepRunnerRid)
+        {
+            PublishPipelinesStepRunnerFor(stepRunnerRid, smokeTest: false);
+            source = PublishedStepRunnerDirectory / stepRunnerRid / PipelinesStepRunnerFileName;
+        }
+
+        if (source is null)
+        {
+            // Not fatal: the runner still runs single-command jobs, and fails jobs with steps with a clear error.
+            Log.Warning("Tentacle {RuntimeId} ships without the step runner: there's no {StepRunnerRid} build, and this host can't publish one. " +
+                "Pass --pipelines-step-runner-directory with one built on a {StepRunnerRid} agent", runtimeId, stepRunnerRid, stepRunnerRid);
+            return;
+        }
+
+        var destination = BuildDirectory / "Tentacle" / framework / runtimeId / PipelinesStepRunnerFileName;
+        source.Copy(destination, ExistsPolicy.FileOverwrite);
+        if (!OperatingSystem.IsWindows())
+            File.SetUnixFileMode(destination, (UnixFileMode)0b111_101_101);
+        Log.Information("Tentacle {RuntimeId} includes the {StepRunnerRid} step runner", runtimeId, stepRunnerRid);
+    }
 
     [PublicAPI]
     Target PackPipelinesRunner => _ => _
-        .Description("Packs the NuGet packages the CLI consumes: the pipelines runner Core, Docker, Contracts and Gateway libraries.")
+        .Description("Packs the NuGet packages the CLI consumes: the pipelines runner Steps, Core, Docker, Contracts and Gateway libraries.")
         .Executes(() =>
         {
             (ArtifactsDirectory / "nuget").CreateDirectory();
 
-            foreach (var project in new[] { "Octopus.Pipelines.Runner.Core", "Octopus.Pipelines.Runner.Docker", "Octopus.Pipelines.Runner.Contracts", "Octopus.Pipelines.Runner.Gateway" })
+            // Steps is a dependency of Core; without it a consumer of Core can't restore.
+            foreach (var project in new[] { "Octopus.Pipelines.Runner.Steps", "Octopus.Pipelines.Runner.Core", "Octopus.Pipelines.Runner.Docker", "Octopus.Pipelines.Runner.Contracts", "Octopus.Pipelines.Runner.Gateway" })
             {
                 DotNetPack(p => p
                     .SetProject(SourceDirectory / project / $"{project}.csproj")

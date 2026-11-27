@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Net.Client;
@@ -210,9 +211,23 @@ namespace Octopus.Tentacle.Pipelines
             }
         }
 
-        /// <summary>Jobs run in containers on the local Docker daemon, with the backend's default image and limits.</summary>
+        /// <summary>
+        /// Jobs run in containers on the local Docker daemon, with the backend's default image and limits. Jobs with steps
+        /// need the step runner the build puts next to Tentacle; without it they fail with an error saying so.
+        /// </summary>
         internal static DockerJobBackend CreateDefaultBackend(TimeProvider clock, ILoggerFactory loggerFactory)
-            => new DockerJobBackend(new DockerBackendOptions(), clock, logger: loggerFactory.CreateLogger<DockerJobBackend>());
+            => new DockerJobBackend(
+                new DockerBackendOptions { StepRunnerPath = BundledStepRunnerPath() },
+                clock,
+                logger: loggerFactory.CreateLogger<DockerJobBackend>());
+
+        internal const string StepRunnerFileName = "octopus-step-runner";
+
+        internal static string? BundledStepRunnerPath(string? directory = null)
+        {
+            var path = Path.Combine(directory ?? AppContext.BaseDirectory, StepRunnerFileName);
+            return File.Exists(path) ? path : null;
+        }
 
         sealed class Running
         {

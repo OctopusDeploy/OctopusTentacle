@@ -58,6 +58,25 @@ namespace Octopus.Tentacle.Tests.Pipelines
             => new RunnerBackgroundTask(configuration, log, () => false, () => false, stopTimeout, backend, logStore);
 
         [Test]
+        public void FindsTheStepRunnerTheBuildPutsNextToTentacle()
+        {
+            var directory = Directory.CreateTempSubdirectory("tentacle-").FullName;
+            try
+            {
+                RunnerBackgroundTask.BundledStepRunnerPath(directory).Should().BeNull("jobs with steps fail with a clear error without it");
+
+                var stepRunner = Path.Combine(directory, RunnerBackgroundTask.StepRunnerFileName);
+                File.WriteAllText(stepRunner, "");
+
+                RunnerBackgroundTask.BundledStepRunnerPath(directory).Should().Be(stepRunner);
+            }
+            finally
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+
+        [Test]
         public void StartDoesNothingWhenSettingsSaySkip()
         {
             var log = Substitute.For<ISystemLog>();

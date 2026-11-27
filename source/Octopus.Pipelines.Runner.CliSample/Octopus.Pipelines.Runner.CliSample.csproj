@@ -6,6 +6,8 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>Octopus.Pipelines.Runner.CliSample</RootNamespace>
     <PublishAot>true</PublishAot>
+    <!-- Not part of Tentacle's per-runtime builds; published for one runtime at a time. -->
+    <RuntimeIdentifiers></RuntimeIdentifiers>
     <InvariantGlobalization>true</InvariantGlobalization>
     <!-- The CLI waits on Docker, not on its own code, so smaller beats faster. StackTraceSupport=false would save
          another ~0.4 MB but strip method names from stack traces in bug reports. -->

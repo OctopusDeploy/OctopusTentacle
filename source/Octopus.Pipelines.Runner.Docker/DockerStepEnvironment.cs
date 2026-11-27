@@ -15,10 +15,7 @@ sealed class DockerStepEnvironment(DockerJobBackend backend) : IStepEnvironment
     public async Task<IStepSession> StartAsync(JobSpec job, IJobOutput output, CancellationToken cancellationToken)
     {
         var options = backend.Options;
-        var stepRunner = options.StepRunnerPath is { } path && File.Exists(path)
-            ? Path.GetFullPath(path)
-            : throw new InvalidOperationException(
-                $"The Docker backend needs the step runner executable for jobs with steps; StepRunnerPath is '{options.StepRunnerPath}'.");
+        var stepRunner = backend.StageStepRunner();
 
         // Pull everything first, so a slow pull isn't counted against a step's timeout.
         foreach (var image in job.Steps.Select(s => s.Image ?? options.JobImage).Concat(job.Services.Select(s => s.Image)).Distinct())
@@ -26,7 +23,7 @@ sealed class DockerStepEnvironment(DockerJobBackend backend) : IStepEnvironment
             await backend.EnsureImageAsync(image, cancellationToken);
         }
 
-        var directory = Path.Combine(Path.GetFullPath(options.StateRoot ?? Path.GetTempPath()), $"octopus-job-{job.JobId}");
+        var directory = Path.Combine(backend.StateRoot, $"octopus-job-{job.JobId}");
         SharedStorage.CreateDirectory(directory);
         SharedStorage.CreateDirectory(Path.Combine(directory, StepLayout.WorkspaceDirectory));
         SharedStorage.CreateDirectory(Path.Combine(directory, "steps"));

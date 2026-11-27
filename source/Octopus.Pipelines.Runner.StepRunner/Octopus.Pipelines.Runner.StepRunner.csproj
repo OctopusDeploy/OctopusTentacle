@@ -10,6 +10,8 @@
     <RootNamespace>Octopus.Pipelines.Runner.StepRunner</RootNamespace>
     <AssemblyName>octopus-step-runner</AssemblyName>
     <PublishAot>true</PublishAot>
+    <!-- Not part of Tentacle's per-runtime builds; published for one runtime at a time. -->
+    <RuntimeIdentifiers></RuntimeIdentifiers>
     <InvariantGlobalization>true</InvariantGlobalization>
     <OptimizationPreference>Size</OptimizationPreference>
     <IsPackable>false</IsPackable>

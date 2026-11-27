@@ -73,6 +73,45 @@ public sealed class DockerJobBackend(
 
     internal DateTimeOffset Now => clock.GetUtcNow();
 
+    readonly Lock stageGate = new();
+
+    /// <summary>Where jobs with steps keep their state, and where the step runner is staged.</summary>
+    internal string StateRoot => Path.GetFullPath(options.StateRoot ?? Path.GetTempPath());
+
+    /// <summary>
+    /// Copies the step runner into <see cref="StateRoot"/>, once per version, and returns the copy's path. Steps mount
+    /// the copy rather than <see cref="DockerBackendOptions.StepRunnerPath"/> itself: Docker Desktop only mounts
+    /// directories it shares (the temp directory is one, an install directory may not be), and replacing the original
+    /// (an upgrade) doesn't touch a running step.
+    /// </summary>
+    internal string StageStepRunner()
+    {
+        var source = options.StepRunnerPath is { } path && File.Exists(path)
+            ? new FileInfo(path)
+            : throw new InvalidOperationException(
+                $"The Docker backend needs the step runner executable for jobs with steps; StepRunnerPath is '{options.StepRunnerPath}'.");
+        var version = $"{source.Length:x}-{source.LastWriteTimeUtc.Ticks:x}";
+        var destination = Path.Combine(StateRoot, "octopus-step-runner", version, Steps.StepLayout.StepRunnerFileName);
+        lock (stageGate)
+        {
+            if (!File.Exists(destination))
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+                // Another runner sharing the state root may stage the same version at the same time: rename into place.
+                var temporary = $"{destination}.{Guid.NewGuid():N}.tmp";
+                source.CopyTo(temporary);
+                if (!OperatingSystem.IsWindows())
+                {
+                    File.SetUnixFileMode(temporary, (UnixFileMode)0b111_101_101);
+                }
+
+                File.Move(temporary, destination, overwrite: true);
+            }
+        }
+
+        return destination;
+    }
+
     /// <summary>Pulls the image unless it's present, so a slow pull isn't counted as the job's start, and a failed one isn't a 125 from run.</summary>
     internal async Task EnsureImageAsync(string image, CancellationToken cancellationToken)
     {
