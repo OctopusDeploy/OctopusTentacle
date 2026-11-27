@@ -12,25 +12,20 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Configuration
 {
-    [TestFixture]
-    public class ApplicationInstanceStoreFixture
+    public class ApplicationInstanceStoreTests
     {
-        IRegistryApplicationInstanceStore registryStore;
-        IOctopusFileSystem fileSystem;
-        ApplicationInstanceStore instanceStore;
-
-        [SetUp]
-        public void Setup()
+        static (IRegistryApplicationInstanceStore registryStore, IOctopusFileSystem fileSystem, ApplicationInstanceStore instanceStore) CreateStore()
         {
-            registryStore = Substitute.For<IRegistryApplicationInstanceStore>();
-            fileSystem = Substitute.For<IOctopusFileSystem>();
-            var log = Substitute.For<ISystemLog>();
-            instanceStore = new ApplicationInstanceStore(ApplicationName.Tentacle, log, fileSystem, registryStore);
+            var registryStore = Substitute.For<IRegistryApplicationInstanceStore>();
+            var fileSystem = Substitute.For<IOctopusFileSystem>();
+            var instanceStore = new ApplicationInstanceStore(ApplicationName.Tentacle, Substitute.For<ISystemLog>(), fileSystem, registryStore);
+            return (registryStore, fileSystem, instanceStore);
         }
 
         [Test]
         public void ListInstance_NoRegistryEntries_ShouldListFromFileSystem()
         {
+            var (registryStore, fileSystem, instanceStore) = CreateStore();
             registryStore.GetListFromRegistry().Returns(Enumerable.Empty<ApplicationInstanceRecord>());
             fileSystem.DirectoryExists(Arg.Any<string>()).Returns(true);
             fileSystem.EnumerateFiles(Arg.Any<string>()).Returns(new List<string> { "file1", "file2" });
@@ -50,6 +45,7 @@ namespace Octopus.Tentacle.Tests.Configuration
         [Test]
         public void ListInstance_NoFileSystem_ShouldListRegistry()
         {
+            var (registryStore, fileSystem, instanceStore) = CreateStore();
             registryStore.GetListFromRegistry()
                 .Returns(new List<ApplicationInstanceRecord>
                 {
@@ -70,6 +66,7 @@ namespace Octopus.Tentacle.Tests.Configuration
         [Test]
         public void ListInstance_ShouldPreferFileSystemEntries()
         {
+            var (registryStore, fileSystem, instanceStore) = CreateStore();
             registryStore.GetListFromRegistry()
                 .Returns(new List<ApplicationInstanceRecord>
                 {
@@ -95,6 +92,7 @@ namespace Octopus.Tentacle.Tests.Configuration
         [Test]
         public void GetInstance_ShouldPreferFileSystemEntries()
         {
+            var (registryStore, fileSystem, instanceStore) = CreateStore();
             var configFilename = Path.Combine(instanceStore.InstancesFolder, "instance-1.config");
 
             fileSystem.DirectoryExists(Arg.Any<string>()).Returns(true);
@@ -115,6 +113,7 @@ namespace Octopus.Tentacle.Tests.Configuration
         [TestCase("{\"Name\": \"instance 2\",\"Configur", TestName = "GetInstance_ShouldIgnoreAnotherInstanceWithAPartlyWrittenFile")]
         public void GetInstance_ShouldIgnoreAnotherInstanceThatCannotBeRead(string? otherInstanceContents)
         {
+            var (registryStore, fileSystem, instanceStore) = CreateStore();
             var configFilename = Path.Combine(instanceStore.InstancesFolder, "instance-1.config");
             var otherConfigFilename = Path.Combine(instanceStore.InstancesFolder, "instance-2.config");
 
@@ -134,6 +133,7 @@ namespace Octopus.Tentacle.Tests.Configuration
         [Test]
         public void GetInstance_ShouldReturnNullIfNoneFound()
         {
+            var (registryStore, fileSystem, instanceStore) = CreateStore();
             registryStore.GetListFromRegistry()
                 .Returns(new List<ApplicationInstanceRecord>
                 {
@@ -147,6 +147,7 @@ namespace Octopus.Tentacle.Tests.Configuration
         [Test]
         public void MigrateInstance()
         {
+            var (registryStore, fileSystem, instanceStore) = CreateStore();
             var sourceInstance = new ApplicationInstanceRecord("instance1", "configFilePath");
             registryStore.GetInstanceFromRegistry(Arg.Is("instance1")).Returns(sourceInstance);
 
@@ -162,6 +163,7 @@ namespace Octopus.Tentacle.Tests.Configuration
         [Test]
         public void DeleteInstance_WhenUnauthorizedAccessException_ShowsNiceErrorMessage()
         {
+            var (registryStore, fileSystem, instanceStore) = CreateStore();
             fileSystem
                 .When(x => x.DeleteFile(Arg.Any<string>()))
                 .Do(x => throw new UnauthorizedAccessException("fake exception"));
@@ -172,6 +174,7 @@ namespace Octopus.Tentacle.Tests.Configuration
         [Test]
         public void DeleteInstance_DeletesFromRegistry()
         {
+            var (registryStore, fileSystem, instanceStore) = CreateStore();
             var sourceInstance = new ApplicationInstanceRecord("instance1", "configFilePath");
             registryStore.GetInstanceFromRegistry(Arg.Is("instance1")).Returns(sourceInstance);
 
