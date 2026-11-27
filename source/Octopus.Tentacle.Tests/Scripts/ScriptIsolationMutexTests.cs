@@ -9,26 +9,16 @@ using Octopus.Tentacle.Tests.Support;
 
 namespace Octopus.Tentacle.Tests.Scripts
 {
-    [TestFixture]
-    public class ScriptIsolationMutexFixture
+    public class ScriptIsolationMutexTests
     {
-        [TestFixture]
-        public class TaskLockFixture
+        public class TaskLockTests
         {
-            CancellationToken oneSecondCancellationToken;
-
-            [SetUp]
-            public void SetUp()
-            {
-                oneSecondCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(1)).Token;
-            }
-
             [Test]
             public void MessagesWhenBlockedDueToAWriteLockAreCorrect()
             {
                 var taskLock = new ScriptIsolationMutex.TaskLock();
-                var lock1 = taskLock.TryEnterWriteLock("ServerTask-1", oneSecondCancellationToken);
-                var lock2 = taskLock.TryEnterWriteLock("ServerTask-2", oneSecondCancellationToken);
+                var lock1 = taskLock.TryEnterWriteLock("ServerTask-1", OneSecondCancellationToken());
+                var lock2 = taskLock.TryEnterWriteLock("ServerTask-2", OneSecondCancellationToken());
                 lock1.Acquired.Should().BeTrue("Should have got a write lock on a brand new mutex");
                 lock2.Acquired.Should().BeFalse("Should not have got a write lock when there was already a write lock");
 
@@ -43,8 +33,8 @@ namespace Octopus.Tentacle.Tests.Scripts
             public void MessagesWhenBlockedDueToAReadLockAreCorrect()
             {
                 var taskLock = new ScriptIsolationMutex.TaskLock();
-                var lock1 = taskLock.TryEnterReadLock("ServerTask-1", oneSecondCancellationToken);
-                var lock2 = taskLock.TryEnterWriteLock("ServerTask-2", oneSecondCancellationToken);
+                var lock1 = taskLock.TryEnterReadLock("ServerTask-1", OneSecondCancellationToken());
+                var lock2 = taskLock.TryEnterWriteLock("ServerTask-2", OneSecondCancellationToken());
                 lock1.Acquired.Should().BeTrue("Should have got a read lock on a brand new mutex");
                 lock2.Acquired.Should().BeFalse("Should not have got a write lock when there was already a read lock");
 
@@ -59,9 +49,9 @@ namespace Octopus.Tentacle.Tests.Scripts
             public void MessagesWhenBlockedDueToTwoReadLocksAreCorrect()
             {
                 var taskLock = new ScriptIsolationMutex.TaskLock();
-                var lock1 = taskLock.TryEnterReadLock("ServerTask-1", oneSecondCancellationToken);
-                var lock2 = taskLock.TryEnterReadLock("ServerTask-2", oneSecondCancellationToken);
-                var lock3 = taskLock.TryEnterWriteLock("ServerTask-3", oneSecondCancellationToken);
+                var lock1 = taskLock.TryEnterReadLock("ServerTask-1", OneSecondCancellationToken());
+                var lock2 = taskLock.TryEnterReadLock("ServerTask-2", OneSecondCancellationToken());
+                var lock3 = taskLock.TryEnterWriteLock("ServerTask-3", OneSecondCancellationToken());
                 lock1.Acquired.Should().BeTrue("Should have got a read lock on a brand new mutex");
                 lock2.Acquired.Should().BeTrue("Should have got a second read lock");
                 lock3.Acquired.Should().BeFalse("Should not have got a write lock when there was already 2 read locks");
@@ -78,10 +68,10 @@ namespace Octopus.Tentacle.Tests.Scripts
             public void MessagesWhenBlockedDueToMultipleReadLocksAreCorrect()
             {
                 var taskLock = new ScriptIsolationMutex.TaskLock();
-                var lock1 = taskLock.TryEnterReadLock("ServerTask-1", oneSecondCancellationToken);
-                var lock2 = taskLock.TryEnterReadLock("ServerTask-2", oneSecondCancellationToken);
-                var lock3 = taskLock.TryEnterReadLock("ServerTask-3", oneSecondCancellationToken);
-                var lock4 = taskLock.TryEnterWriteLock("ServerTask-4", oneSecondCancellationToken);
+                var lock1 = taskLock.TryEnterReadLock("ServerTask-1", OneSecondCancellationToken());
+                var lock2 = taskLock.TryEnterReadLock("ServerTask-2", OneSecondCancellationToken());
+                var lock3 = taskLock.TryEnterReadLock("ServerTask-3", OneSecondCancellationToken());
+                var lock4 = taskLock.TryEnterWriteLock("ServerTask-4", OneSecondCancellationToken());
                 lock1.Acquired.Should().BeTrue("Should have got a read lock on a brand new mutex");
                 lock2.Acquired.Should().BeTrue("Should have got a second read lock");
                 lock3.Acquired.Should().BeTrue("Should have got a third read lock");
@@ -100,8 +90,8 @@ namespace Octopus.Tentacle.Tests.Scripts
             public void ReportsWhenMultipleLocksTakenAndReleasedBySameTaskAreCorrect()
             {
                 var taskLock = new ScriptIsolationMutex.TaskLock();
-                var lock1 = taskLock.TryEnterReadLock("ServerTask-1", oneSecondCancellationToken);
-                var lock2 = taskLock.TryEnterReadLock("ServerTask-1", oneSecondCancellationToken);
+                var lock1 = taskLock.TryEnterReadLock("ServerTask-1", OneSecondCancellationToken());
+                var lock2 = taskLock.TryEnterReadLock("ServerTask-1", OneSecondCancellationToken());
 
                 taskLock.RemoveLock("ServerTask-1");
                 taskLock.Report().Should().Be("\"ServerTask-1\" (has a read lock)");
@@ -150,6 +140,8 @@ namespace Octopus.Tentacle.Tests.Scripts
                 using var lock1 = AcquireNamedLock(scriptIsolationMutex, "Lock 1");
                 using var lock2 = AcquireNamedLock(scriptIsolationMutex, "Lock 2");
             }
+
+            static CancellationToken OneSecondCancellationToken() => new CancellationTokenSource(TimeSpan.FromSeconds(1)).Token;
 
             static IDisposable AcquireNamedLock(ScriptIsolationMutex scriptIsolationMutex, string name) => scriptIsolationMutex.Acquire(ScriptIsolationLevel.FullIsolation,
                 TimeSpan.FromSeconds(1),
