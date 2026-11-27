@@ -46,8 +46,11 @@ public sealed class JobRunner(
                 logger);
 
             // A log that can't be stored fails the job promptly: cancel the backend through a token that
-            // also fires on the writer's fault.
-            using var backendCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, log.Faulted);
+            // also fires on the writer's fault. A single-command job is stopped by a cancellation request too; a job
+            // with steps handles one itself, so its always() steps still run.
+            using var backendCts = job.Steps.Count == 0
+                ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, log.Faulted, job.Cancellation.Requested)
+                : CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, log.Faulted);
             try
             {
                 var output = new Output(log, observer, at => startedAt = at, steps);
@@ -57,6 +60,10 @@ public sealed class JobRunner(
             catch (OperationCanceledException) when (log.Faulted.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
             {
                 // Stopped because the log failed; CompleteAsync below throws the log storage error.
+            }
+            catch (OperationCanceledException) when (job.Cancellation.IsRequested && !cancellationToken.IsCancellationRequested)
+            {
+                // Stopped because the Server cancelled the job.
             }
             catch (Exception ex) when (ex is not OperationCanceledException || !backendCts.IsCancellationRequested)
             {
@@ -88,7 +95,10 @@ public sealed class JobRunner(
             finishedSteps = [.. steps];
         }
 
-        return new JobResult(succeeded, exitCode, logBytes, error, startedAt, clock.GetUtcNow()) { Steps = finishedSteps };
+        var result = new JobResult(succeeded, exitCode, logBytes, error, startedAt, clock.GetUtcNow()) { Steps = finishedSteps };
+        return job.Cancellation.IsRequested && error is null
+            ? result with { Succeeded = false, Error = job.Cancellation.Reason, Outcome = JobOutcome.Cancelled }
+            : result;
     }
 
     sealed class Output(StreamingLogWriter log, IJobObserver? observer, Action<DateTimeOffset> recordStarted, List<StepResult> steps) : IJobOutput

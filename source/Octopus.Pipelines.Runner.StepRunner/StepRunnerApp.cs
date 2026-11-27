@@ -8,8 +8,9 @@ using Octopus.Pipelines.Runner.Steps;
 namespace Octopus.Pipelines.Runner.StepRunner;
 
 /// <summary>
-/// Runs one step: decides from its condition whether it runs, resolves its expressions, runs its script with masked
-/// output, and writes a <see cref="StepRunResult"/> to <c>OCTOPUS_RESULT</c>.
+/// Runs one step: reads its payload and the earlier steps' results, decides from its condition whether it runs,
+/// resolves its expressions, runs its script with masked output, and writes a <see cref="StepRunResult"/> to
+/// <c>OCTOPUS_RESULT</c>. The job runner stops a step by creating the <c>OCTOPUS_CANCEL</c> file.
 /// </summary>
 /// <remarks>
 /// Exits 0 whenever it wrote a result, whatever happened to the step, so the job runner can tell "the step failed"
@@ -18,35 +19,47 @@ namespace Octopus.Pipelines.Runner.StepRunner;
 sealed class StepRunnerApp(IDictionary environment, Stream stdout, TimeProvider clock)
 {
     const int NoResultExitCode = 3;
+    static readonly TimeSpan CancelPollInterval = TimeSpan.FromMilliseconds(200);
 
     readonly SecretMasker masker = new();
     readonly List<string> addedMasks = [];
     readonly Lock writeGate = new();
+    string stepId = "";
 
     public async Task<int> RunAsync(CancellationToken cancellationToken)
     {
         if (Variable(StepEnvironment.Result) is not { } resultPath)
         {
-            await Console.Error.WriteLineAsync($"{StepEnvironment.Result} isn't set: the step runner only runs as a step's entry point.");
+            await Console.Error.WriteLineAsync($"{StepEnvironment.Result} isn't set: run the step runner as `octopus-step-runner run {StepEnvironment.Result}=<path> ...`.");
             return NoResultExitCode;
         }
+
+        // The job runner's way to stop the step: it creates the cancel file. A signal does the same.
+        using var stop = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        var watching = WatchForCancelAsync(stop);
 
         var startedAt = clock.GetUtcNow();
         StepRunResult result;
         try
         {
-            result = await RunStepAsync(cancellationToken);
+            result = await RunStepAsync(stop.Token);
         }
         catch (Exception e) when (e is IOException or JsonException or UnauthorizedAccessException or InvalidDataException)
         {
             WriteLine($"Error: {e.Message}");
             result = new StepRunResult { Outcome = StepRunOutcome.Failure, Error = e.Message };
         }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        catch (OperationCanceledException) when (stop.IsCancellationRequested)
         {
-            result = new StepRunResult { Outcome = StepRunOutcome.Failure, Error = "The step was cancelled." };
+            result = Stopped(new StepRunResult());
+        }
+        finally
+        {
+            await stop.CancelAsync();
+            await watching;
         }
 
+        result.Id = stepId;
         result.StartedAt ??= startedAt;
         result.FinishedAt = clock.GetUtcNow();
         result.Masks = addedMasks;
@@ -65,29 +78,58 @@ sealed class StepRunnerApp(IDictionary environment, Stream stdout, TimeProvider 
         }
     }
 
+    async Task WatchForCancelAsync(CancellationTokenSource stop)
+    {
+        if (Variable(StepEnvironment.Cancel) is not { } cancelPath)
+        {
+            return;
+        }
+
+        try
+        {
+            while (!stop.IsCancellationRequested)
+            {
+                if (File.Exists(cancelPath))
+                {
+                    await stop.CancelAsync();
+                    return;
+                }
+
+                await Task.Delay(CancelPollInterval, clock, stop.Token);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+    }
+
     async Task<StepRunResult> RunStepAsync(CancellationToken cancellationToken)
     {
         var inputPath = Variable(StepEnvironment.Input) ?? throw new InvalidDataException($"{StepEnvironment.Input} isn't set.");
-        var input = StepJsonContext.ReadInput(await File.ReadAllTextAsync(inputPath, cancellationToken));
-        if (input.Version != StepInput.CurrentVersion)
+        var payload = StepJsonContext.ReadPayload(await File.ReadAllTextAsync(inputPath, cancellationToken));
+        stepId = payload.Id;
+        if (payload.Version != StepPayload.CurrentVersion)
         {
-            throw new InvalidDataException($"The step input is version {input.Version}; this step runner reads version {StepInput.CurrentVersion}.");
+            throw new InvalidDataException($"The step's payload is version {payload.Version}; this step runner reads version {StepPayload.CurrentVersion}.");
         }
 
-        var step = input.Step;
-        foreach (var secret in input.Context.Secrets.Values.Concat(input.Context.Masks))
+        var earlier = Variable(StepEnvironment.Results) is { } resultsPath && File.Exists(resultsPath)
+            ? StepJsonContext.ReadResults(await File.ReadAllTextAsync(resultsPath, cancellationToken))
+            : [];
+        var stepContext = StepContext.For(payload, earlier, Variable(StepEnvironment.JobStatus) ?? JobStatus.Success);
+        foreach (var secret in stepContext.Secrets.Values.Concat(stepContext.Masks))
         {
             masker.Add(secret);
         }
 
-        var failed = new StepRunResult { StepId = step.Id, Outcome = StepRunOutcome.Failure };
-        var context = new ExpressionContext(input.Context);
+        var failed = new StepRunResult { Outcome = StepRunOutcome.Failure };
+        var context = new ExpressionContext(stepContext);
         string title;
         bool runs;
         try
         {
-            title = step.Name is { } name ? ExprEvaluator.Interpolate(name, context) : step.Id;
-            runs = ExprEvaluator.IsTrue(Expr.ParseCondition(step.If), context);
+            title = payload.Name is { } name ? ExprEvaluator.Interpolate(name, context) : payload.Id;
+            runs = ExprEvaluator.IsTrue(Expr.ParseCondition(payload.If), context);
         }
         catch (Exception e) when (e is FormatException or NotSupportedException)
         {
@@ -96,20 +138,20 @@ sealed class StepRunnerApp(IDictionary environment, Stream stdout, TimeProvider 
 
         if (!runs)
         {
-            WriteLine($"==> {step.Id}: {title} skipped");
-            return new StepRunResult { StepId = step.Id, Outcome = StepRunOutcome.Skipped };
+            WriteLine($"==> {payload.Id}: {title} skipped");
+            return new StepRunResult { Outcome = StepRunOutcome.Skipped };
         }
 
-        WriteLine($"==> {step.Id}: {title}{(step.Image is { } image ? $" [{image}]" : "")}");
+        WriteLine($"==> {payload.Id}: {title}");
         Dictionary<string, string> env;
         string script;
         Shell shell;
         try
         {
-            env = step.Env.ToDictionary(e => e.Key, e => ExprEvaluator.Interpolate(e.Value, context));
+            env = payload.Env.ToDictionary(e => e.Key, e => ExprEvaluator.Interpolate(e.Value, context));
             // As GitHub Actions does: the value lands in the script verbatim. Pass untrusted values through env.
-            script = ExprEvaluator.Interpolate(step.Run, context);
-            shell = Shell.Resolve(step.Shell, Variable("PATH"));
+            script = ExprEvaluator.Interpolate(payload.Run, context);
+            shell = Shell.Resolve(payload.Shell, Variable("PATH"));
         }
         catch (Exception e) when (e is FormatException or NotSupportedException)
         {
@@ -124,7 +166,7 @@ sealed class StepRunnerApp(IDictionary environment, Stream stdout, TimeProvider 
         {
             var startInfo = shell.StartInfo(scriptPath);
             startInfo.WorkingDirectory = workspace ?? Environment.CurrentDirectory;
-            Prepare(startInfo.Environment, input.Context.Env, env, outputPath, workspace);
+            Prepare(startInfo.Environment, env, outputPath, workspace);
 
             int exitCode;
             try
@@ -136,18 +178,20 @@ sealed class StepRunnerApp(IDictionary environment, Stream stdout, TimeProvider 
                 return Fail(failed, $"Couldn't run '{startInfo.FileName}': {e.Message}. The step's image needs it.");
             }
 
-            if (exitCode != 0)
+            var result = new StepRunResult
+            {
+                Outcome = exitCode == 0 ? StepRunOutcome.Success : StepRunOutcome.Failure,
+                ExitCode = exitCode,
+            };
+            if (cancellationToken.IsCancellationRequested)
+            {
+                Stopped(result);
+            }
+            else if (exitCode != 0)
             {
                 WriteLine($"Process completed with exit code {exitCode}.");
             }
 
-            var result = new StepRunResult
-            {
-                StepId = step.Id,
-                Outcome = exitCode == 0 && !cancellationToken.IsCancellationRequested ? StepRunOutcome.Success : StepRunOutcome.Failure,
-                ExitCode = exitCode,
-                Error = cancellationToken.IsCancellationRequested ? "The step was cancelled." : null,
-            };
             return ReadOutputs(result, outputPath);
         }
         finally
@@ -156,23 +200,31 @@ sealed class StepRunnerApp(IDictionary environment, Stream stdout, TimeProvider 
         }
     }
 
-    /// <summary>The script's environment: the container's, then the job's, then the step's, then the step files.</summary>
-    static void Prepare(
-        IDictionary<string, string?> target,
-        Dictionary<string, string> job,
-        Dictionary<string, string> step,
-        string? outputPath,
-        string? workspace)
+    StepRunResult Stopped(StepRunResult result)
     {
-        // The input holds every secret, and the result is the step runner's to write.
-        target.Remove(StepEnvironment.Input);
-        target.Remove(StepEnvironment.Result);
-        foreach (var (name, value) in job.Concat(step))
+        WriteLine("The step was stopped.");
+        result.Outcome = StepRunOutcome.Cancelled;
+        result.Error = "The step was stopped before it finished.";
+        return result;
+    }
+
+    /// <summary>
+    /// The script's environment: the container's, then the step's, then the step files. The step runner's own
+    /// variables (the payload, results and result paths) aren't passed on: the payload holds every secret.
+    /// </summary>
+    static void Prepare(IDictionary<string, string?> target, Dictionary<string, string> step, string? outputPath, string? workspace)
+    {
+        foreach (var name in new[] { StepEnvironment.Input, StepEnvironment.Result, StepEnvironment.Results, StepEnvironment.Cancel, StepEnvironment.JobStatus })
+        {
+            target.Remove(name);
+        }
+
+        foreach (var (name, value) in step)
         {
             target[name] = value;
         }
 
-        // Set explicitly, after the step's env, so a step can't point them somewhere else.
+        // Set after the step's env, so a step can't point them somewhere else.
         if (outputPath is not null)
         {
             target[StepEnvironment.Output] = outputPath;
@@ -285,6 +337,8 @@ sealed class StepRunnerApp(IDictionary environment, Stream stdout, TimeProvider 
             return Fail(result, $"Output '{tooBig}' is larger than {StepEnvironment.MaxOutputBytes / 1024 / 1024} MB.");
         }
 
+        // As GitHub Actions does for job outputs: later steps can use these, but they don't leave the job.
+        result.WithheldOutputs = result.Outputs.Where(o => masker.Contains(o.Value)).Select(o => o.Key).ToList();
         return result;
     }
 

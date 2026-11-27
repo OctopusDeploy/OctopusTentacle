@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Octopus.Pipelines.Runner.Contracts;
+using JobOutcome = Octopus.Pipelines.Runner.Contracts.JobOutcome;
 using Octopus.Pipelines.Runner.Core;
 using Octopus.Pipelines.Runner.Core.Logs;
 using Octopus.Pipelines.Runner.Gateway;
@@ -32,12 +33,36 @@ public sealed class InProcessGatewayTests
         await gateway.Client.StopAsync(TestContext.Current.CancellationToken);
 
         // After the job the runner asks for more work, which can race MarkJobAsFinished: only this much is ordered.
-        Assert.Equal(["Hello", "AllocateNextJob", "JobStarted"], server.Received.Take(3));
+        Assert.Equal(["Hello", "AllocateNextJob", "JobStarted"], server.ReceivedSoFar.Take(3));
         Assert.Equal("job-1", finished.JobId);
         Assert.Equal(JobOutcome.Failed, finished.Outcome);
         Assert.Equal(3, finished.ExitCode);
         Assert.Equal(3, finished.LogBytes);
         Assert.Equal("hi\n", await File.ReadAllTextAsync(Path.Combine(directory, JobFiles.Log), TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task Cancels_a_running_job_when_the_server_asks()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "pipelines-inprocess-tests", Guid.NewGuid().ToString("N"));
+        var server = new OneJobServer(new ExecuteJobCommand
+        {
+            JobId = "job-1",
+            RunId = "run-1",
+            Command = "echo started; sleep 30",
+            Storage = new JobStorage { DirectoryUri = new Uri(Path.Combine(root, "job-1")).AbsoluteUri },
+        })
+        {
+            CancelOnStart = true,
+        };
+        using var gateway = Gateway(server, new FileLogStore(root), NullLogger<GatewayClient>.Instance);
+
+        await gateway.Client.StartAsync(TestContext.Current.CancellationToken);
+        var finished = await server.Finished.Task.WaitAsync(TimeSpan.FromSeconds(20), TestContext.Current.CancellationToken);
+        await gateway.Client.StopAsync(TestContext.Current.CancellationToken);
+
+        Assert.Equal(JobOutcome.Cancelled, finished.Outcome);
+        Assert.Equal("", finished.Error);
     }
 
     [Fact]
@@ -116,7 +141,21 @@ public sealed class InProcessGatewayTests
     {
         int handedOut;
 
-        public List<string> Received { get; } = [];
+        readonly List<string> received = [];
+
+        /// <summary>Sends a CancelJobCommand as soon as the job starts.</summary>
+        public bool CancelOnStart { get; init; }
+
+        public IReadOnlyList<string> ReceivedSoFar
+        {
+            get
+            {
+                lock (received)
+                {
+                    return [.. received];
+                }
+            }
+        }
 
         public TaskCompletionSource Connected { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -126,9 +165,9 @@ public sealed class InProcessGatewayTests
         {
             await foreach (var message in requestStream.ReadAllAsync(context.CancellationToken))
             {
-                lock (Received)
+                lock (received)
                 {
-                    Received.Add(message.BodyCase.ToString());
+                    received.Add(message.BodyCase.ToString());
                 }
 
                 switch (message.BodyCase)
@@ -139,6 +178,9 @@ public sealed class InProcessGatewayTests
                         break;
                     case RunnerMessage.BodyOneofCase.AllocateNextJob when job is not null && Interlocked.Exchange(ref handedOut, 1) == 0:
                         await responseStream.WriteAsync(new ServerMessage { ExecuteJob = job });
+                        break;
+                    case RunnerMessage.BodyOneofCase.JobStarted when CancelOnStart:
+                        await responseStream.WriteAsync(new ServerMessage { CancelJob = new CancelJobCommand { JobId = message.JobStarted.JobId } });
                         break;
                     case RunnerMessage.BodyOneofCase.MarkJobAsFinished:
                         Finished.TrySetResult(message.MarkJobAsFinished);

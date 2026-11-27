@@ -23,18 +23,15 @@ public sealed class DockerBackendOptions
     public bool ReadOnlyRootFilesystem { get; set; } = true;
 
     /// <summary>
-    /// The statically linked step runner executable, bind mounted into every step's container as its entry point.
-    /// Needed for jobs with steps.
-    /// </summary>
-    public string? StepRunnerPath { get; set; }
-
-    /// <summary>
-    /// Where a job with steps keeps its workspace, inputs, outputs and results, as <c>&lt;root&gt;/octopus-job-&lt;job&gt;</c>,
-    /// bind mounted into each step's container at <c>/octopus</c>. The daemon must see the same path, so a remote
+    /// Where a job with steps keeps its workspace, payloads, outputs, results and step runners, as
+    /// <c>&lt;root&gt;/octopus-job-&lt;job&gt;</c>, bind mounted into its containers. The daemon must see the same path, so a remote
     /// daemon won't do. Defaults to the system temp directory.
     /// </summary>
     public string? StateRoot { get; set; }
 
     /// <summary>Leaves the job's state directory behind when it finishes, for looking at what the steps wrote.</summary>
     public bool KeepState { get; set; }
+
+    /// <summary>How long a service's readiness command may keep failing before the job errors.</summary>
+    public TimeSpan ServiceReadyTimeout { get; set; } = TimeSpan.FromMinutes(2);
 }

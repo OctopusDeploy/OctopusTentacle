@@ -9,6 +9,7 @@ using JetBrains.Annotations;
 using Nuke.Common;
 using Nuke.Common.CI.TeamCity;
 using Nuke.Common.IO;
+using Nuke.Common.Tools.Docker;
 using Nuke.Common.Tools.DotNet;
 using Serilog;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
@@ -21,10 +22,6 @@ partial class Build
     [Parameter("The Linux runtime ids to publish the step runner for, e.g. linux-x64 linux-arm64. Defaults to the host's. " +
         "Native AOT needs a cross toolchain to publish for another architecture.")]
     readonly string[] PipelinesStepRunnerRuntimeIds = [];
-
-    [Parameter("A directory of prebuilt step runners, as <dir>/<rid>/octopus-step-runner, e.g. built on another architecture's agent. " +
-        "Tentacle's build looks here first. Keep it outside _artifacts, which Clean empties.")]
-    readonly AbsolutePath? PipelinesStepRunnerDirectory;
 
     [PublicAPI]
     Target TestPipelinesRunner => _ => _
@@ -107,7 +104,7 @@ partial class Build
 
     [PublicAPI]
     Target PublishPipelinesStepRunner => _ => _
-        .Description("Publishes the statically linked step runner to _artifacts/pipelines-step-runner/<rid>, fails on any trim/AOT warning, and checks the host's build starts in musl and glibc images.")
+        .Description("Publishes the statically linked step runner to _artifacts/pipelines-step-runner/<rid>, fails on any trim/AOT warning, checks the host's build starts in musl and glibc images, and builds it into the step runner image octopus/pipelines-step-runner:dev.")
         .Executes(() =>
         {
             var hostRid = PipelinesRunnerAotRuntimeIdentifier();
@@ -160,53 +157,16 @@ partial class Build
                 throw new Exception($"The step runner didn't start in {image}: exit {process.ExitCode}: {stderr}");
             Log.Information("OK: the step runner starts in {Image}", image);
         }
+
+        // The image steps name as their step runner image: nothing but the step runner, at /step-runner.
+        (SourceDirectory / project / "Dockerfile").Copy(output / "Dockerfile", ExistsPolicy.FileOverwrite);
+        DockerTasks.DockerBuild(settings => settings
+            .SetPath(output)
+            .SetTag($"octopus/pipelines-step-runner:dev", $"octopus/pipelines-step-runner:{FullSemVer}"));
+        Log.Information("OK: built octopus/pipelines-step-runner:dev and :{Version}", FullSemVer);
     }
 
     AbsolutePath PublishedStepRunnerDirectory => ArtifactsDirectory / "pipelines-step-runner";
-
-    /// <summary>
-    /// Copies the step runner into a Tentacle publish directory, next to the Tentacle executable, where the pipelines
-    /// runner looks for it. Steps run in Linux containers on the Docker daemon, whose architecture matches the host's,
-    /// even on macOS (Docker Desktop's VM), so every package gets the Linux build for its own architecture.
-    /// </summary>
-    void IncludePipelinesStepRunner(string framework, string runtimeId)
-    {
-        var stepRunnerRid = runtimeId switch
-        {
-            "linux-x64" or "linux-musl-x64" or "osx-x64" => "linux-x64",
-            "linux-arm64" or "osx-arm64" => "linux-arm64",
-            _ => null,
-        };
-        if (stepRunnerRid is null)
-        {
-            Log.Information("Tentacle {RuntimeId} doesn't get the step runner: no build for its architecture", runtimeId);
-            return;
-        }
-
-        var source = new[] { PipelinesStepRunnerDirectory, PublishedStepRunnerDirectory }
-            .OfType<AbsolutePath>()
-            .Select(directory => directory / stepRunnerRid / PipelinesStepRunnerFileName)
-            .FirstOrDefault(path => path.FileExists());
-        if (source is null && OperatingSystem.IsLinux() && PipelinesRunnerAotRuntimeIdentifier() == stepRunnerRid)
-        {
-            PublishPipelinesStepRunnerFor(stepRunnerRid, smokeTest: false);
-            source = PublishedStepRunnerDirectory / stepRunnerRid / PipelinesStepRunnerFileName;
-        }
-
-        if (source is null)
-        {
-            // Not fatal: the runner still runs single-command jobs, and fails jobs with steps with a clear error.
-            Log.Warning("Tentacle {RuntimeId} ships without the step runner: there's no {StepRunnerRid} build, and this host can't publish one. " +
-                "Pass --pipelines-step-runner-directory with one built on a {StepRunnerRid} agent", runtimeId, stepRunnerRid, stepRunnerRid);
-            return;
-        }
-
-        var destination = BuildDirectory / "Tentacle" / framework / runtimeId / PipelinesStepRunnerFileName;
-        source.Copy(destination, ExistsPolicy.FileOverwrite);
-        if (!OperatingSystem.IsWindows())
-            File.SetUnixFileMode(destination, (UnixFileMode)0b111_101_101);
-        Log.Information("Tentacle {RuntimeId} includes the {StepRunnerRid} step runner", runtimeId, stepRunnerRid);
-    }
 
     [PublicAPI]
     Target PackPipelinesRunner => _ => _

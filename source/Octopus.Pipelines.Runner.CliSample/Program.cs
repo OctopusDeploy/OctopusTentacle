@@ -9,6 +9,8 @@ using Octopus.Pipelines.Runner.Core.Steps;
 using Octopus.Pipelines.Runner.Docker;
 using Octopus.Pipelines.Runner.Gateway;
 using Octopus.Pipelines.Runner.Workflows;
+using JobOutcome = Octopus.Pipelines.Runner.Contracts.JobOutcome;
+using RegistryCredential = Octopus.Pipelines.Runner.Contracts.RegistryCredential;
 
 // Runs one command, or one job of a workflow file, through the same gateway as Tentacle and the Kubernetes runner: the
 // CLI plays the Server (CliJobSource) and the runner's GatewayClient reaches it in process, with no network.
@@ -16,7 +18,7 @@ using Octopus.Pipelines.Runner.Workflows;
 const string usage = """
     usage: Octopus.Pipelines.Runner.CliSample [--image <image>] [--log-root <dir>] -- <command>
            Octopus.Pipelines.Runner.CliSample [--image <image>] [--log-root <dir>] --workflow <file> [--job <id>]
-               [--secret <name>=<value>]... [--step-runner <path>] [--keep-state]
+               [--secret <name>=<value>]... [--step-runner-image <image>] [--keep-state]
     """;
 const int CancelledExitCode = 130;
 
@@ -26,7 +28,7 @@ string? command = null;
 string? workflowPath = null;
 string? jobName = null;
 var secrets = new Dictionary<string, string>();
-var stepRunner = Environment.GetEnvironmentVariable("OCTOPUS_STEP_RUNNER") ?? Path.Combine(AppContext.BaseDirectory, "octopus-step-runner");
+var stepRunnerImage = "octopus/pipelines-step-runner:dev";
 var keepState = false;
 
 for (var i = 0; i < args.Length; i++)
@@ -53,8 +55,8 @@ for (var i = 0; i < args.Length; i++)
             var secret = args[++i];
             secrets[secret[..secret.IndexOf('=')]] = secret[(secret.IndexOf('=') + 1)..];
             break;
-        case "--step-runner" when i + 1 < args.Length:
-            stepRunner = args[++i];
+        case "--step-runner-image" when i + 1 < args.Length:
+            stepRunnerImage = args[++i];
             break;
         case "--keep-state":
             keepState = true;
@@ -95,7 +97,6 @@ using var loggerFactory = new StderrLoggerFactory(
 var clock = TimeProvider.System;
 var dockerOptions = new DockerBackendOptions
 {
-    StepRunnerPath = stepRunner,
     StateRoot = Path.Combine(root, "state"),
     KeepState = keepState,
 };
@@ -128,13 +129,6 @@ using var client = new GatewayClient(
     loggerFactory.CreateLogger<GatewayClient>(),
     new InProcessCallInvoker(binder => RunnerGateway.BindService(binder, source)));
 
-// Ctrl+C cancels the job the way stopping Tentacle does; the runner still reports it finished, so wait for that.
-Console.CancelKeyPress += (_, e) =>
-{
-    e.Cancel = true;
-    lifetime.StopApplication();
-};
-
 var stopwatch = Stopwatch.StartNew();
 await client.StartAsync(CancellationToken.None);
 using var stdout = Console.OpenStandardOutput();
@@ -151,11 +145,31 @@ if (workflow is null)
 }
 else
 {
-    job.Steps.AddRange(workflow.Steps.Select(ToProto));
-    job.Env.Add(workflow.Env.ToDictionary());
-    job.Secrets.Add(secrets);
-    job.Services.AddRange(workflow.Services.Select(s => new Service { Name = s.Name, Image = s.Image, Env = { s.Env.ToDictionary() } }));
+    // The CLI plays the Server: it turns each step into the payload the step runner reads, and the runner passes it on.
+    job.Steps.AddRange(workflow.ToSteps(stepRunnerImage, secrets).Select(ToProto));
+    job.Image = workflow.Image ?? "";
+    job.TimeoutSeconds = workflow.Timeout is { } timeout ? (int)Math.Ceiling(timeout.TotalSeconds) : 0;
+    job.Services.AddRange(workflow.Services.Select(s => new Service
+    {
+        Name = s.Name,
+        Image = s.Image,
+        Env = { s.Env.ToDictionary() },
+        ReadinessCommand = { s.ReadinessCommand },
+    }));
+    job.RegistryCredentials.AddRange(workflow.RegistryCredentials.Select(c => new RegistryCredential { Registry = c.Registry, Username = c.Username, Password = c.Password }));
 }
+
+// Ctrl+C asks the runner to cancel the job, as a user would through the Server: the running step stops, and steps that
+// run after a cancellation (always()) still run. A second Ctrl+C forces it to stop at once. The runner still reports
+// the job finished, so wait for that.
+var interrupts = 0;
+Console.CancelKeyPress += (_, e) =>
+{
+    e.Cancel = true;
+    var force = Interlocked.Increment(ref interrupts) > 1;
+    Console.Error.WriteLine(force ? "Forcing the job to stop..." : "Cancelling the job (Ctrl+C again to force)...");
+    _ = source.CancelAsync(job.JobId, force);
+};
 
 var jobDirectory = Path.Combine(root, "local", "runs", runId, job.JobId);
 job.Storage = new JobStorage { DirectoryUri = new Uri(jobDirectory).AbsoluteUri };
@@ -172,8 +186,9 @@ if (finished.Error.Length > 0)
 
 if (workflow is not null)
 {
-    Console.Error.WriteLine($"elapsed={stopwatch.Elapsed.TotalMilliseconds:F0}ms");
-    foreach (var step in finished.Steps)
+    // From the StepFinishedEvents the runner sent as each step finished.
+    Console.Error.WriteLine($"outcome={finished.Outcome.ToString().ToLowerInvariant()} elapsed={stopwatch.Elapsed.TotalMilliseconds:F0}ms");
+    foreach (var step in source.StepEvents.Select(e => e.Result))
     {
         var outputs = string.Join(' ', step.Outputs.Select(o => $"{o.Key}={o.Value.Replace("\n", "\\n")}"));
         var error = step.Error.Length > 0 ? $" error=\"{step.Error}\"" : "";
@@ -182,25 +197,18 @@ if (workflow is not null)
 }
 
 Console.Error.WriteLine($"exit={finished.ExitCode} log={Path.Combine(jobDirectory, JobFiles.Log)}");
-return lifetime.ApplicationStopping.IsCancellationRequested ? CancelledExitCode
-    : finished.Error.Length > 0 ? 1
+return finished.Outcome == JobOutcome.Cancelled ? CancelledExitCode
+    : finished.Outcome == JobOutcome.Errored ? 1
     : finished.ExitCode;
 
-static Step ToProto(StepSpec step)
+static Step ToProto(StepSpec step) => new()
 {
-    var proto = new Step
-    {
-        Id = step.Id,
-        Name = step.Name ?? "",
-        Run = step.Run,
-        Condition = step.If ?? "",
-        Image = step.Image ?? "",
-        Shell = step.Shell ?? "",
-        TimeoutSeconds = step.Timeout is { } timeout ? (int)Math.Ceiling(timeout.TotalSeconds) : 0,
-    };
-    proto.Env.Add(step.Env.ToDictionary());
-    return proto;
-}
+    Id = step.Id,
+    StepRunnerImage = step.StepRunnerImage,
+    Payload = step.Payload,
+    Image = step.Image ?? "",
+    TimeoutSeconds = step.Timeout is { } timeout ? (int)Math.Ceiling(timeout.TotalSeconds) : 0,
+};
 
 static int Usage()
 {

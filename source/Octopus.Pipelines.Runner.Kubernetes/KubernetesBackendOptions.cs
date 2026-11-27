@@ -50,15 +50,12 @@ public sealed class KubernetesBackendOptions
 }
 
 /// <summary>
-/// Jobs with steps run one pod per step. Each pod mounts the job's directory on shared storage at <c>/octopus</c>
-/// (the workspace, and the step's input, output and result), and the runner reads and writes the same directory at
+/// Jobs with steps run in one pod per image, with steps run through the exec API. Each pod mounts the job's directory on
+/// shared storage (the workspace, and each step's payload, output and result), and the runner reads and writes it at
 /// <see cref="LocalPath"/>. Set exactly one of <see cref="ClaimName"/> and <see cref="HostPath"/>.
 /// </summary>
 public sealed class StepsOptions
 {
-    /// <summary>An image whose <c>/step-runner</c> is the static step runner; an init container copies it into each step pod.</summary>
-    public string StepRunnerImage { get; set; } = "octopus/pipelines-step-runner:dev";
-
     /// <summary>A ReadWriteMany PersistentVolumeClaim, also mounted into the runner's pod at <see cref="LocalPath"/>.</summary>
     public string? ClaimName { get; set; }
 
@@ -73,6 +70,9 @@ public sealed class StepsOptions
 
     /// <summary>Leaves each job's directory behind when it finishes, for looking at what the steps wrote.</summary>
     public bool KeepState { get; set; }
+
+    /// <summary>How long a service's readiness command may keep failing before the job errors.</summary>
+    public TimeSpan ServiceReadyTimeout { get; set; } = TimeSpan.FromMinutes(2);
 }
 
 /// <summary>

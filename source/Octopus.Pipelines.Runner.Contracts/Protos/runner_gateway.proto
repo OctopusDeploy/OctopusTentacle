@@ -28,6 +28,7 @@ message RunnerMessage {
     MarkJobAsFinishedCommand mark_job_as_finished = 3;
     Heartbeat heartbeat = 4;
     AllocateNextJobCommand allocate_next_job = 5;
+    StepFinishedEvent step_finished = 6;
   }
 }
 
@@ -36,6 +37,7 @@ message ServerMessage {
     Welcome welcome = 1;
     ExecuteJobCommand execute_job = 2;
     Heartbeat heartbeat = 3;
+    CancelJobCommand cancel_job = 5;
   }
   reserved 4;
 }
@@ -77,32 +79,38 @@ message ExecuteJobCommand {
   reserved 4;
   JobIsolation isolation = 5;
   JobStorage storage = 6;
-  // The job's steps, run one at a time, each in its own container with the step runner as its entry point.
+  // The job's steps, run one at a time. Each runs, by exec, in a container kept for its image: steps that share an
+  // image share a container, and the container is removed after the last step that needs it.
   repeated Step steps = 7;
-  // Every step's environment, and the `env` context of its expressions.
-  map<string, string> env = 8;
-  // The `secrets` context. The step runner masks every value in the job's log.
-  map<string, string> secrets = 9;
+  // Were the job's env and secrets. They're in each step's payload now.
+  reserved 8, 9;
+  reserved "env", "secrets";
   // Containers that run alongside every step, reachable from the steps by name.
   repeated Service services = 10;
+  // The image of steps that don't name one. Empty means the runner's default.
+  string image = 11;
+  // Credentials for the private registries the job's images come from.
+  repeated RegistryCredential registry_credentials = 12;
+  // How long the whole job may run before it's cancelled. 0 means no limit.
+  int32 timeout_seconds = 13;
 }
 
-// A GitHub Actions style `run` step. `run`, `name`, `condition` and the `env` values may hold ${{ }} expressions,
-// which the step runner resolves inside the step's container.
+// A step. The runner reads only what it needs to run it; what the step does is in `payload`, which the runner passes
+// to the step runner untouched. The Server picks a step runner version that reads the payload it sends.
 message Step {
+  // Unique within the job. Results are reported under it.
   string id = 1;
-  string name = 2;
-  // The script. It writes outputs to $OCTOPUS_OUTPUT as name=value lines. The image's entrypoint doesn't run.
-  string run = 3;
-  // The step's `if:`. Empty means success().
-  string condition = 4;
-  // The image to run the step in. Empty means the runner's default.
+  // Were the step's name, script, condition, env and shell. They're in `payload` now.
+  reserved 2, 3, 4, 6, 7;
+  reserved "name", "run", "condition", "env", "shell";
+  // The image to run the step in. Empty means the job's.
   string image = 5;
-  map<string, string> env = 6;
-  // As GitHub Actions' `shell:`. Empty means bash if the image has it, otherwise sh.
-  string shell = 7;
   // How long the step may run before the runner stops it and fails it. 0 means no limit.
   int32 timeout_seconds = 8;
+  // The image the step runner comes from: its /step-runner is extracted and run in the step's container.
+  string step_runner_image = 9;
+  // For the step runner only.
+  string payload = 10;
 }
 
 message Service {
@@ -111,6 +119,23 @@ message Service {
   // Runs with its own entrypoint and command.
   string image = 2;
   map<string, string> env = 3;
+  // A command run in the service's container until it succeeds; steps start after that. Empty means "once running".
+  repeated string readiness_command = 4;
+}
+
+message RegistryCredential {
+  // e.g. ghcr.io, or docker.io for Docker Hub.
+  string registry = 1;
+  string username = 2;
+  string password = 3;
+}
+
+// Stops a running job. The running step is stopped, and later steps run only if their conditions allow it after a
+// cancellation (e.g. always()), as in GitHub Actions. `force` stops everything at once. Ignored for a job the runner
+// isn't running.
+message CancelJobCommand {
+  string job_id = 1;
+  bool force = 2;
 }
 
 // How strongly a job is separated from other jobs on the same node. Every job gets the cell's
@@ -143,6 +168,10 @@ enum JobOutcome {
   JOB_OUTCOME_UNSPECIFIED = 0;
   JOB_OUTCOME_SUCCEEDED = 1;
   JOB_OUTCOME_FAILED = 2;
+  // Stopped by a CancelJobCommand or the job's timeout.
+  JOB_OUTCOME_CANCELLED = 3;
+  // The runner couldn't run the job, e.g. an image couldn't be pulled; `error` says why.
+  JOB_OUTCOME_ERRORED = 4;
 }
 
 message MarkJobAsFinishedCommand {
@@ -161,6 +190,8 @@ enum StepOutcome {
   STEP_OUTCOME_SUCCESS = 1;
   STEP_OUTCOME_FAILURE = 2;
   STEP_OUTCOME_SKIPPED = 3;
+  // Stopped before it finished, by a timeout or a cancellation.
+  STEP_OUTCOME_CANCELLED = 4;
 }
 
 message StepResult {
@@ -172,4 +203,12 @@ message StepResult {
   map<string, string> outputs = 4;
   // Why the step failed other than by its script's exit code, e.g. a timeout.
   string error = 5;
+  google.protobuf.Timestamp started_at = 6;
+  google.protobuf.Timestamp finished_at = 7;
+}
+
+// Sent as each step finishes, before the job's MarkJobAsFinishedCommand.
+message StepFinishedEvent {
+  string job_id = 1;
+  StepResult result = 2;
 }

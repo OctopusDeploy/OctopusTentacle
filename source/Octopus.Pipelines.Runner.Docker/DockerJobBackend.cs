@@ -12,8 +12,8 @@ namespace Octopus.Pipelines.Runner.Docker;
 /// Runs each job with <c>docker run --rm</c>: no network, read-only root filesystem, all capabilities dropped, a
 /// non-root user, memory/CPU limits and an init process as PID 1, so the job gets signals. Going through the CLI
 /// means the daemon (<c>DOCKER_HOST</c>, contexts) and registry credentials are resolved the way the user's own
-/// <c>docker</c> commands resolve them. A job with steps runs each step in its own container, with the step runner as
-/// its entry point (see <see cref="DockerStepEnvironment"/>).
+/// <c>docker</c> commands resolve them. A job with steps runs them by <c>docker exec</c> in a container kept per image
+/// (see <see cref="DockerStepEnvironment"/>).
 /// </summary>
 /// <remarks>
 /// <c>docker run</c> exits 125 when Docker itself fails (an unknown user, a missing image, a daemon error), which is
@@ -73,51 +73,19 @@ public sealed class DockerJobBackend(
 
     internal DateTimeOffset Now => clock.GetUtcNow();
 
-    readonly Lock stageGate = new();
-
     /// <summary>Where jobs with steps keep their state, and where the step runner is staged.</summary>
     internal string StateRoot => Path.GetFullPath(options.StateRoot ?? Path.GetTempPath());
 
     /// <summary>
-    /// Copies the step runner into <see cref="StateRoot"/>, once per version, and returns the copy's path. Steps mount
-    /// the copy rather than <see cref="DockerBackendOptions.StepRunnerPath"/> itself: Docker Desktop only mounts
-    /// directories it shares (the temp directory is one, an install directory may not be), and replacing the original
-    /// (an upgrade) doesn't touch a running step.
+    /// Pulls the image unless it's present, so a slow pull isn't counted as the job's start, and a failed one isn't a
+    /// 125 from run. <paramref name="dockerConfig"/> is a CLI config directory with the job's registry credentials.
     /// </summary>
-    internal string StageStepRunner()
-    {
-        var source = options.StepRunnerPath is { } path && File.Exists(path)
-            ? new FileInfo(path)
-            : throw new InvalidOperationException(
-                $"The Docker backend needs the step runner executable for jobs with steps; StepRunnerPath is '{options.StepRunnerPath}'.");
-        var version = $"{source.Length:x}-{source.LastWriteTimeUtc.Ticks:x}";
-        var destination = Path.Combine(StateRoot, "octopus-step-runner", version, Steps.StepLayout.StepRunnerFileName);
-        lock (stageGate)
-        {
-            if (!File.Exists(destination))
-            {
-                Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
-                // Another runner sharing the state root may stage the same version at the same time: rename into place.
-                var temporary = $"{destination}.{Guid.NewGuid():N}.tmp";
-                source.CopyTo(temporary);
-                if (!OperatingSystem.IsWindows())
-                {
-                    File.SetUnixFileMode(temporary, (UnixFileMode)0b111_101_101);
-                }
-
-                File.Move(temporary, destination, overwrite: true);
-            }
-        }
-
-        return destination;
-    }
-
-    /// <summary>Pulls the image unless it's present, so a slow pull isn't counted as the job's start, and a failed one isn't a 125 from run.</summary>
-    internal async Task EnsureImageAsync(string image, CancellationToken cancellationToken)
+    internal async Task EnsureImageAsync(string image, CancellationToken cancellationToken, string? dockerConfig = null)
     {
         if (!(await docker.RunAsync(["image", "inspect", "--format", "{{.Id}}", image], cancellationToken)).Succeeded)
         {
-            (await docker.RunAsync(["pull", "--quiet", image], cancellationToken)).EnsureSuccess();
+            string[] config = dockerConfig is null ? [] : ["--config", dockerConfig];
+            (await docker.RunAsync([.. config, "pull", "--quiet", image], cancellationToken)).EnsureSuccess();
         }
     }
 

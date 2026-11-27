@@ -74,7 +74,12 @@ public sealed class ExpressionContext(StepContext context)
     readonly Dictionary<string, string> env = new(context.Env, StringComparer.OrdinalIgnoreCase);
     readonly Dictionary<string, string> secrets = new(context.Secrets, StringComparer.OrdinalIgnoreCase);
 
-    public bool JobFailed => context.Job.Status == JobStatus.Failure;
+    /// <summary>As GitHub Actions' <c>failure()</c>: an earlier step failed.</summary>
+    public bool AnyStepFailed => context.Job.Status == JobStatus.Failure
+        || context.Steps.Values.Any(s => s.Outcome == StepRunOutcome.Failure);
+
+    /// <summary>As GitHub Actions' <c>cancelled()</c>: the job was cancelled.</summary>
+    public bool Cancelled => context.Job.Status == JobStatus.Cancelled;
 
     public object? Lookup(IReadOnlyList<string> path)
     {
@@ -134,10 +139,10 @@ public static class ExprEvaluator
         string Arg(int i) => ToText(Evaluate(call.Args[i], context));
         return call.Name switch
         {
-            "success" => !context.JobFailed,
-            "failure" => context.JobFailed,
+            "success" => !context.AnyStepFailed && !context.Cancelled,
+            "failure" => context.AnyStepFailed,
             "always" => true,
-            "cancelled" => false,
+            "cancelled" => context.Cancelled,
             "contains" => Arg(0).Contains(Arg(1), StringComparison.OrdinalIgnoreCase),
             "startswith" => Arg(0).StartsWith(Arg(1), StringComparison.OrdinalIgnoreCase),
             "endswith" => Arg(0).EndsWith(Arg(1), StringComparison.OrdinalIgnoreCase),

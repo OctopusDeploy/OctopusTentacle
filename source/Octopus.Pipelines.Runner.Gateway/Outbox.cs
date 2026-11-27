@@ -23,9 +23,12 @@ public sealed class Outbox
             JobStarted = new JobStartedEvent { JobId = jobId, StartedAt = Timestamp.FromDateTimeOffset(startedAt) },
         });
 
+    public void StepFinished(string jobId, StepResult result) =>
+        channel.Writer.TryWrite(new RunnerMessage { StepFinished = new StepFinishedEvent { JobId = jobId, Result = result } });
+
     public void MarkJobAsFinished(
         string jobId,
-        bool succeeded,
+        JobOutcome outcome,
         int exitCode,
         DateTimeOffset completedAt,
         long logBytes,
@@ -35,7 +38,7 @@ public sealed class Outbox
         var finished = new MarkJobAsFinishedCommand
         {
             JobId = jobId,
-            Outcome = succeeded ? JobOutcome.Succeeded : JobOutcome.Failed,
+            Outcome = outcome,
             ExitCode = exitCode,
             CompletedAt = Timestamp.FromDateTimeOffset(completedAt),
             LogBytes = logBytes,

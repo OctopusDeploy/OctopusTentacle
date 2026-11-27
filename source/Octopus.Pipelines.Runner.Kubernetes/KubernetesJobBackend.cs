@@ -41,6 +41,22 @@ public sealed class KubernetesJobBackend(
         return await RunPodAsync(BuildPod(podName, job, settings, gateway.Value), output, cancellationToken);
     }
 
+    internal PodWatcher Watcher => watcher;
+
+    /// <summary>Creates a pod, at most <see cref="KubernetesBackendOptions.MaxParallelPodCreates"/> at a time.</summary>
+    internal async Task CreatePodAsync(V1Pod pod, CancellationToken cancellationToken)
+    {
+        await createThrottle.WaitAsync(cancellationToken);
+        try
+        {
+            await client.CoreV1.CreateNamespacedPodAsync(pod, options.Value.Namespace, cancellationToken: cancellationToken);
+        }
+        finally
+        {
+            createThrottle.Release();
+        }
+    }
+
     /// <summary>
     /// Creates the pod, reports when its job container starts, streams that container's log, and returns its exit code.
     /// The pod is deleted afterwards, however the call ends.
@@ -63,15 +79,7 @@ public sealed class KubernetesJobBackend(
         };
         try
         {
-            await createThrottle.WaitAsync(cancellationToken);
-            try
-            {
-                await client.CoreV1.CreateNamespacedPodAsync(pod, settings.Namespace, cancellationToken: cancellationToken);
-            }
-            finally
-            {
-                createThrottle.Release();
-            }
+            await CreatePodAsync(pod, cancellationToken);
 
             var startedAt = await tracker.Started.WaitAsync(settings.PodStartTimeout, cancellationToken);
             output.Started(startedAt);

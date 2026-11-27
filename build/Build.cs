@@ -195,7 +195,6 @@ partial class Build : NukeBuild
                     .ForEach(runtimeId =>
                     {
                         RunBuildFor(NetCore, runtimeId);
-                        IncludePipelinesStepRunner(NetCore, runtimeId);
                     });
 
                 versionInfoFile.Dispose();
@@ -214,7 +213,6 @@ partial class Build : NukeBuild
                     .ForEach(runtimeId =>
                     {
                         RunBuildFor(NetCore, runtimeId);
-                        IncludePipelinesStepRunner(NetCore, runtimeId);
                     });
 
                 versionInfoFile.Dispose();

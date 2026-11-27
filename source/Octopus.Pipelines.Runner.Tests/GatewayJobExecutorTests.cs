@@ -2,6 +2,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Octopus.Pipelines.Runner.Contracts;
+using JobOutcome = Octopus.Pipelines.Runner.Contracts.JobOutcome;
 using Octopus.Pipelines.Runner.Core;
 using Octopus.Pipelines.Runner.Core.Logs;
 using Octopus.Pipelines.Runner.Gateway;
@@ -95,7 +96,8 @@ public sealed class GatewayJobExecutorTests : IDisposable
 
         var completed = (await NextAsync()).MarkJobAsFinished;
 
-        Assert.Equal(JobOutcome.Failed, completed.Outcome);
+        // The runner couldn't run it at all: a platform error, not a failing job.
+        Assert.Equal(JobOutcome.Errored, completed.Outcome);
         Assert.Contains("Sandboxed jobs need the Kubernetes backend", completed.Error);
         Assert.False(File.Exists("ran"));
     }

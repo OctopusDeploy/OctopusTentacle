@@ -84,16 +84,41 @@ public sealed class StepExpressionTests
     [Fact]
     public void Round_trips_the_step_documents()
     {
-        var input = new StepInput { Step = new StepDefinition { Id = "deploy", If = "always()", Run = "echo hi" }, Context = Context() };
-        var result = new StepRunResult { StepId = "deploy", Outcome = StepRunOutcome.Skipped };
+        var payload = new StepPayload { Id = "deploy", If = "always()", Run = "echo hi" };
+        var results = new StepRunResult { Id = "deploy", Outcome = StepRunOutcome.Skipped, WithheldOutputs = ["token"] };
 
-        var json = StepJsonContext.Write(input);
+        var line = StepJsonContext.Write(results);
 
-        Assert.Contains("\"outcome\": \"success\"", json);
-        Assert.Equal("deploy", StepJsonContext.ReadInput(json).Step.Id);
-        Assert.Equal("1.4.0", StepJsonContext.ReadInput(json).Context.Steps["generate"].Outputs["version"]);
-        Assert.Equal(StepRunOutcome.Skipped, StepJsonContext.ReadResult(StepJsonContext.Write(result)).Outcome);
-        Assert.DoesNotContain("exitCode", StepJsonContext.Write(result));
+        Assert.Equal("deploy", StepJsonContext.ReadPayload(StepJsonContext.Write(payload)).Id);
+        Assert.DoesNotContain('\n', line);
+        Assert.Contains("\"outcome\":\"skipped\"", line);
+        Assert.DoesNotContain("exitCode", line);
+        Assert.Equal(["deploy", "deploy"], StepJsonContext.ReadResults(line + "\n" + line + "\n").Select(r => r.Id));
+        Assert.Equal(["token"], StepJsonContext.ReadResult(line).WithheldOutputs);
+    }
+
+    [Fact]
+    public void Treats_a_cancelled_job_as_neither_succeeding_nor_failing()
+    {
+        var cancelled = Context(JobStatus.Cancelled);
+
+        Assert.True(IsTrue("cancelled()", cancelled));
+        Assert.False(IsTrue("success()", cancelled));
+        Assert.False(IsTrue("failure()", cancelled));
+        Assert.False(IsTrue(null, cancelled));
+        Assert.True(IsTrue("always()", cancelled));
+        Assert.False(IsTrue("cancelled()"));
+    }
+
+    [Fact]
+    public void Builds_the_context_from_the_payload_and_the_earlier_results()
+    {
+        var payload = new StepPayload { Env = new Dictionary<string, string> { ["A"] = "1" }, Secrets = new Dictionary<string, string> { ["S"] = "x" } };
+        var context = StepContext.For(payload, [new StepRunResult { Id = "one", Outcome = StepRunOutcome.Failure, Masks = ["m"] }], JobStatus.Success);
+        var expressions = new ExpressionContext(context);
+
+        Assert.True(ExprEvaluator.IsTrue(Expr.Parse("failure() && env.A == '1' && secrets.S == 'x' && steps.one.outcome == 'failure'"), expressions));
+        Assert.Equal(["m"], context.Masks);
     }
 
     [Fact]

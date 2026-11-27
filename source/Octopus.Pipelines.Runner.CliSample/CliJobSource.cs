@@ -15,6 +15,14 @@ sealed class CliJobSource(TimeSpan heartbeatInterval) : RunnerGateway.RunnerGate
 {
     readonly Channel<ExecuteJobCommand> queue = Channel.CreateUnbounded<ExecuteJobCommand>();
     readonly ConcurrentDictionary<string, TaskCompletionSource<MarkJobAsFinishedCommand>> finished = new();
+    Func<ServerMessage, Task>? write;
+
+    /// <summary>The StepFinishedEvents the runner sent, in order.</summary>
+    public ConcurrentQueue<StepFinishedEvent> StepEvents { get; } = new();
+
+    /// <summary>Asks the runner to cancel a job, as a user would; <paramref name="force"/> stops it at once.</summary>
+    public Task CancelAsync(string jobId, bool force) =>
+        write?.Invoke(new ServerMessage { CancelJob = new CancelJobCommand { JobId = jobId, Force = force } }) ?? Task.CompletedTask;
 
     /// <summary>Queues a job; completes when the runner reports it finished, by which time its log is durable.</summary>
     public Task<MarkJobAsFinishedCommand> RunAsync(ExecuteJobCommand job)
@@ -43,6 +51,7 @@ sealed class CliJobSource(TimeSpan heartbeatInterval) : RunnerGateway.RunnerGate
         }
 
         using var stop = CancellationTokenSource.CreateLinkedTokenSource(context.CancellationToken);
+        write = WriteAsync;
 
         // Like the Server, keep the stream busy: the runner reconnects if it hears nothing for a while.
         var heartbeats = Task.Run(async () =>
@@ -78,6 +87,9 @@ sealed class CliJobSource(TimeSpan heartbeatInterval) : RunnerGateway.RunnerGate
                     case RunnerMessage.BodyOneofCase.AllocateNextJob when message.AllocateNextJob.Count > 0:
                         requested.Release(message.AllocateNextJob.Count);
                         break;
+                    case RunnerMessage.BodyOneofCase.StepFinished:
+                        StepEvents.Enqueue(message.StepFinished);
+                        break;
                     case RunnerMessage.BodyOneofCase.MarkJobAsFinished:
                         if (finished.TryRemove(message.MarkJobAsFinished.JobId, out var done))
                         {
@@ -90,6 +102,7 @@ sealed class CliJobSource(TimeSpan heartbeatInterval) : RunnerGateway.RunnerGate
         }
         finally
         {
+            write = null;
             await stop.CancelAsync();
             foreach (var task in new[] { heartbeats, dispatcher })
             {

@@ -133,6 +133,9 @@ public sealed class GatewayClient(
                     case ServerMessage.BodyOneofCase.Heartbeat:
                         outbox.Heartbeat(DateTimeOffset.UtcNow);
                         break;
+                    case ServerMessage.BodyOneofCase.CancelJob:
+                        executor.Cancel(message.CancelJob.JobId, message.CancelJob.Force);
+                        break;
                 }
             }
         }

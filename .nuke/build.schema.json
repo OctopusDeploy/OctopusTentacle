@@ -181,10 +181,6 @@
           "type": "string",
           "description": "Branch name for OctoVersion to use to calculate the version number. Can be set via the environment variable OCTOVERSION_CurrentBranch"
         },
-        "PipelinesStepRunnerDirectory": {
-          "type": "string",
-          "description": "A directory of prebuilt step runners, as <dir>/<rid>/octopus-step-runner, e.g. built on another architecture's agent. Tentacle's build looks here first. Keep it outside _artifacts, which Clean empties"
-        },
         "PipelinesStepRunnerRuntimeIds": {
           "type": "array",
           "description": "The Linux runtime ids to publish the step runner for, e.g. linux-x64 linux-arm64. Defaults to the host's. Native AOT needs a cross toolchain to publish for another architecture",

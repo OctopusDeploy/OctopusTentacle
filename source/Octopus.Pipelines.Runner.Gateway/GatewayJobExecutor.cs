@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using Google.Protobuf.WellKnownTypes;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Octopus.Pipelines.Runner.Contracts;
@@ -19,6 +20,9 @@ public sealed class GatewayJobExecutor(
     ILogger<GatewayJobExecutor> logger)
 {
     readonly ConcurrentDictionary<string, Task> inFlight = new();
+
+    /// <summary>The cancellation handle of each job that's running, for <see cref="Cancel"/>.</summary>
+    readonly ConcurrentDictionary<string, JobCancellation> cancellations = new();
 
     /// <summary>Jobs in flight that haven't started yet.</summary>
     readonly ConcurrentDictionary<string, StartingJob> starting = new();
@@ -59,6 +63,23 @@ public sealed class GatewayJobExecutor(
         }
     }
 
+    /// <summary>
+    /// Asks a running job to stop: its running step is stopped, and later steps run only if their conditions allow it
+    /// after a cancellation. <paramref name="force"/> stops everything at once. Returns false for a job this runner
+    /// isn't running, e.g. one that has already finished.
+    /// </summary>
+    public bool Cancel(string jobId, bool force)
+    {
+        if (!cancellations.TryGetValue(jobId, out var cancellation))
+        {
+            return false;
+        }
+
+        logger.LogInformation("Cancelling job {JobId}{Force}", jobId, force ? " (forced)" : "");
+        cancellation.Request(force);
+        return true;
+    }
+
     /// <summary>Waits for in-flight jobs to finish, e.g. while draining the cell.</summary>
     public Task WhenAllCompleted() => Task.WhenAll(inFlight.Values);
 
@@ -75,14 +96,22 @@ public sealed class GatewayJobExecutor(
 
         var jobId = assignment.JobId;
         var result = new JobResult(false, -1, 0, null, null, clock.GetUtcNow());
+        using var cancellation = new JobCancellation();
+        cancellations[jobId] = cancellation;
         try
         {
             var job = new JobSpec(jobId, assignment.RunId, assignment.Command, ToIsolation(assignment.Isolation))
             {
                 Steps = assignment.Steps.Select(ToStep).ToArray(),
-                Env = new Dictionary<string, string>(assignment.Env),
-                Secrets = new Dictionary<string, string>(assignment.Secrets),
-                Services = assignment.Services.Select(s => new ServiceSpec(s.Name, s.Image) { Env = new Dictionary<string, string>(s.Env) }).ToArray(),
+                Image = assignment.Image.Length > 0 ? assignment.Image : null,
+                Services = assignment.Services.Select(s => new ServiceSpec(s.Name, s.Image)
+                {
+                    Env = new Dictionary<string, string>(s.Env),
+                    ReadinessCommand = s.ReadinessCommand.ToArray(),
+                }).ToArray(),
+                RegistryCredentials = assignment.RegistryCredentials.Select(c => new Core.Steps.RegistryCredential(c.Registry, c.Username, c.Password)).ToArray(),
+                Timeout = assignment.TimeoutSeconds > 0 ? TimeSpan.FromSeconds(assignment.TimeoutSeconds) : null,
+                Cancellation = cancellation,
             };
             result = await runner.RunAsync(job, new Uri(assignment.Storage.DirectoryUri), new Observer(this, jobId, outbox), lifetime.ApplicationStopping);
         }
@@ -94,7 +123,8 @@ public sealed class GatewayJobExecutor(
         }
         finally
         {
-            outbox.MarkJobAsFinished(jobId, result.Succeeded, result.ExitCode, result.CompletedAt, result.LogBytes, result.Error, result.Steps.Select(ToProto));
+            cancellations.TryRemove(jobId, out _);
+            outbox.MarkJobAsFinished(jobId, ToProto(result.Outcome), result.ExitCode, result.CompletedAt, result.LogBytes, result.Error, result.Steps.Select(ToProto));
             starting.TryRemove(jobId, out _);
             inFlight.TryRemove(jobId, out _);
             capacityChanged.Notify();
@@ -118,14 +148,18 @@ public sealed class GatewayJobExecutor(
         _ => CoreIsolation.Standard,
     };
 
-    static StepSpec ToStep(Step step) => new(step.Id, step.Run)
+    static StepSpec ToStep(Step step) => new(step.Id, step.StepRunnerImage, step.Payload)
     {
-        Name = step.Name.Length > 0 ? step.Name : null,
-        If = step.Condition.Length > 0 ? step.Condition : null,
         Image = step.Image.Length > 0 ? step.Image : null,
-        Shell = step.Shell.Length > 0 ? step.Shell : null,
         Timeout = step.TimeoutSeconds > 0 ? TimeSpan.FromSeconds(step.TimeoutSeconds) : null,
-        Env = new Dictionary<string, string>(step.Env),
+    };
+
+    static Contracts.JobOutcome ToProto(Core.JobOutcome outcome) => outcome switch
+    {
+        Core.JobOutcome.Succeeded => Contracts.JobOutcome.Succeeded,
+        Core.JobOutcome.Failed => Contracts.JobOutcome.Failed,
+        Core.JobOutcome.Cancelled => Contracts.JobOutcome.Cancelled,
+        _ => Contracts.JobOutcome.Errored,
     };
 
     static Contracts.StepResult ToProto(Core.Steps.StepResult result)
@@ -138,8 +172,11 @@ public sealed class GatewayJobExecutor(
             {
                 Core.Steps.StepOutcome.Success => Contracts.StepOutcome.Success,
                 Core.Steps.StepOutcome.Failure => Contracts.StepOutcome.Failure,
+                Core.Steps.StepOutcome.Cancelled => Contracts.StepOutcome.Cancelled,
                 _ => Contracts.StepOutcome.Skipped,
             },
+            StartedAt = result.StartedAt is { } started ? Timestamp.FromDateTimeOffset(started) : null,
+            FinishedAt = result.FinishedAt is { } finished ? Timestamp.FromDateTimeOffset(finished) : null,
         };
         foreach (var (name, value) in result.Outputs)
         {
@@ -222,5 +259,7 @@ public sealed class GatewayJobExecutor(
         public void WaitingForNode() => owner.OnWaitingForNode(jobId);
 
         public void Placed() => owner.OnPlaced(jobId);
+
+        public void StepFinished(Core.Steps.StepResult result) => outbox.StepFinished(jobId, ToProto(result));
     }
 }
