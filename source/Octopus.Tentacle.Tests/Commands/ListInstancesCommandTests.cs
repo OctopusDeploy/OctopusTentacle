@@ -1,30 +1,23 @@
 using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
 using NSubstitute;
 using NUnit.Framework;
+using Newtonsoft.Json;
 using Octopus.Tentacle.Commands;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Startup;
 
 namespace Octopus.Tentacle.Tests.Commands
 {
-    [TestFixture]
-    public class ListInstancesCommandFixture : CommandFixture<ListInstancesCommand>
+    public class ListInstancesCommandTests
     {
-        [SetUp]
-        public override void SetUp()
-        {
-            base.SetUp();
-
-            Command = new ListInstancesCommand(Substitute.For<IApplicationInstanceStore>(), Substitute.For<ILogFileOnlyLogger>());
-        }
-
         [Test]
         public void CommandShouldReturnJsonIfRequested()
         {
-            Command.Format = "json";
-            var json = Command.GetOutput(new List<ApplicationInstanceRecord> { new ApplicationInstanceRecord("MyInstance", "MyConfigPath") });
+            var command = CreateCommand();
+
+            command.Format = "json";
+            var json = command.GetOutput(new List<ApplicationInstanceRecord> { new ApplicationInstanceRecord("MyInstance", "MyConfigPath") });
             var definition = new[] { new { InstanceName = "", ConfigurationFilePath = "" } };
             var reconstituted = JsonConvert.DeserializeAnonymousType(json, definition);
             Assert.That(reconstituted!.Length, Is.EqualTo(1));
@@ -35,9 +28,16 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void CommandShouldReturnTextIfRequested()
         {
-            Command.Format = "text";
-            var result = Command.GetOutput(new List<ApplicationInstanceRecord> { new ApplicationInstanceRecord("MyInstance", "MyConfigPath") });
+            var command = CreateCommand();
+
+            command.Format = "text";
+            var result = command.GetOutput(new List<ApplicationInstanceRecord> { new ApplicationInstanceRecord("MyInstance", "MyConfigPath") });
             Assert.That(result, Is.EqualTo("Instance 'MyInstance' uses configuration 'MyConfigPath'." + Environment.NewLine));
+        }
+
+        static ListInstancesCommand CreateCommand()
+        {
+            return new ListInstancesCommand(Substitute.For<IApplicationInstanceStore>(), Substitute.For<ILogFileOnlyLogger>());
         }
     }
 }
