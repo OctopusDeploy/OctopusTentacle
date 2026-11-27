@@ -31,7 +31,7 @@ namespace Octopus.Tentacle.Tests.Configuration
         public MyNestedObject[] ArrayField { get; set; }
     }
 
-    class XmlFileKeyValueStoreTests
+    class XmlFileKeyValueStoreFixture
     {
         [Test]
         public void WritesSortedXmlUsingCorrectTypes()
