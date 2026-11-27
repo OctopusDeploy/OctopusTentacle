@@ -5,26 +5,20 @@ using Octopus.Tentacle.Configuration.Proxy;
 
 namespace Octopus.Tentacle.Tests.Configuration.Proxy
 {
-    public class ProxyPasswordMaskValuesProviderFixture
+    public class ProxyPasswordMaskValuesProviderTests
     {
-        ProxyPasswordMaskValuesProvider sut;
-
-        [SetUp]
-        public void SetUp()
-        {
-            sut = new ProxyPasswordMaskValuesProvider();
-        }
-
         [TestCase("")]
         [TestCase(null)]
         public void GetProxyPasswordMaskValues_NullOrEmpty_EmptyList(string password)
         {
+            var sut = new ProxyPasswordMaskValuesProvider();
             sut.GetProxyPasswordMaskValues(password).Should().BeEmpty();
         }
         
         [Test]
         public void GetProxyPasswordMaskValues_NoSpecialCharacters_JustPassword()
         {
+            var sut = new ProxyPasswordMaskValuesProvider();
             string password = "Some-sTAr";
             sut.GetProxyPasswordMaskValues(password).Should().BeEquivalentTo(new []
             {
@@ -35,6 +29,7 @@ namespace Octopus.Tentacle.Tests.Configuration.Proxy
         [Test]
         public void GetProxyPasswordMaskValues_HasSpecialCharacters_EncodedWithBothCases()
         {
+            var sut = new ProxyPasswordMaskValuesProvider();
             string password = "Some@sT:r/";
             sut.GetProxyPasswordMaskValues(password).Should().BeEquivalentTo(new []
             {
@@ -47,6 +42,7 @@ namespace Octopus.Tentacle.Tests.Configuration.Proxy
         [Test]
         public void GetProxyPasswordMaskValues_HasSpecialCharactersWithHexCharactersFollowing_HexCharacterCasingPreserved()
         {
+            var sut = new ProxyPasswordMaskValuesProvider();
             string password = "Some@sT:Ar/";
             sut.GetProxyPasswordMaskValues(password).Should().BeEquivalentTo(new []
             {
