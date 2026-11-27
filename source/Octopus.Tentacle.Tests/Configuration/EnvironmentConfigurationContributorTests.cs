@@ -12,26 +12,16 @@ using Octopus.Tentacle.Tests.Util;
 
 namespace Octopus.Tentacle.Tests.Configuration
 {
-    [TestFixture]
-    public class EnvironmentConfigurationContributorFixture
+    public class EnvironmentConfigurationContributorTests
     {
-        IEnvironmentVariableReader reader = null!;
-        IMapEnvironmentValuesToConfigItems mapper = null!;
-        [SetUp]
-        public void Setup()
-        {
-            
-            reader = Substitute.For<IEnvironmentVariableReader>();
-            mapper = Substitute.For<IMapEnvironmentValuesToConfigItems>();
-        }
-        
         [Test]
         public void LoadsExpectedResultsForSupportedVariables()
         {
+            var reader = Substitute.For<IEnvironmentVariableReader>();
+            var mapper = MapperSupporting("OCTOPUS_HOME", "Foo");
             reader.Get("OCTOPUS_HOME").Returns(".");
             reader.Get("Foo").Returns((string?)null);
-            SetSupportedEnvironmentVariables("OCTOPUS_HOME", "Foo");
-            
+
             var results = EnvironmentConfigurationContributor.LoadFromEnvironment(Substitute.For<ILogFileOnlyLogger>(), reader, mapper);
             results.Count.Should().Be(2, "a value for all supported variables is returned, even if it is set to null");
             results!["OCTOPUS_HOME"].Should().Be(".", "values should be able to contain an equals sign");
@@ -41,7 +31,8 @@ namespace Octopus.Tentacle.Tests.Configuration
         [Test]
         public void IsNotConfiguredWhenEnvFileIsEmpty()
         {
-            mapper.SupportedEnvironmentVariables.Returns(new HashSet<EnvironmentVariable>());
+            var reader = Substitute.For<IEnvironmentVariableReader>();
+            var mapper = MapperSupporting();
             var subject = new EnvironmentConfigurationContributor(Substitute.For<ILogFileOnlyLogger>(), mapper, reader);
             subject.LoadContributedConfiguration().Should().BeNull("there isn't an instance when there is no config");
         }
@@ -49,8 +40,9 @@ namespace Octopus.Tentacle.Tests.Configuration
         [Test]
         public void IsIgnoredIfSpecialFlagNotPresent()
         {
+            var reader = Substitute.For<IEnvironmentVariableReader>();
+            var mapper = MapperSupporting("OCTOPUS_HOME");
             reader.Get("OCTOPUS_HOME").Returns(".");
-            SetSupportedEnvironmentVariables("OCTOPUS_HOME");
 
             var subject = new EnvironmentConfigurationContributor(Substitute.For<ILogFileOnlyLogger>(), mapper, reader);
             subject.LoadContributedConfiguration().Should().BeNull();
@@ -61,8 +53,9 @@ namespace Octopus.Tentacle.Tests.Configuration
         {
             using (new TemporaryEnvironmentVariable(ApplicationConfigurationContributionFlag.ContributeSettingsFlag, "true"))
             {
+                var reader = Substitute.For<IEnvironmentVariableReader>();
+                var mapper = MapperSupporting("OCTOPUS_HOME");
                 reader.Get("OCTOPUS_HOME").Returns(".");
-                SetSupportedEnvironmentVariables("OCTOPUS_HOME");
 
                 var subject = new EnvironmentConfigurationContributor(Substitute.For<ILogFileOnlyLogger>(), mapper, reader);
                 subject.LoadContributedConfiguration().Should().NotBeNull("there is an instance when there is a complete config");
@@ -70,10 +63,11 @@ namespace Octopus.Tentacle.Tests.Configuration
             }
         }
         
-        void SetSupportedEnvironmentVariables(params string[] environmentVariableName)
+        static IMapEnvironmentValuesToConfigItems MapperSupporting(params string[] environmentVariableNames)
         {
-            var hashSet = new HashSet<EnvironmentVariable>(environmentVariableName.Select(c =>  EnvironmentVariable.PlaintText(c)));
-            mapper.SupportedEnvironmentVariables.Returns(hashSet);
+            var mapper = Substitute.For<IMapEnvironmentValuesToConfigItems>();
+            mapper.SupportedEnvironmentVariables.Returns(new HashSet<EnvironmentVariable>(environmentVariableNames.Select(EnvironmentVariable.PlaintText)));
+            return mapper;
         }
     }
 }
