@@ -24,7 +24,7 @@
 
   <ItemGroup>
         <PackageReference Include="CliWrap" Version="3.10.5" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />                       
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.12.0" />                       
         <PackageReference Include="NetCoreStack.DispatchProxyAsync" Version="2.2.0" />
         <PackageReference Include="NSubstitute" Version="6.2.0" />
         <PackageReference Include="FluentAssertions" Version="7.2.2" />
