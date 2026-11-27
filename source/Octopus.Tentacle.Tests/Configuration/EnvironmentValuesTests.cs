@@ -10,20 +10,15 @@ using Octopus.Tentacle.Startup;
 
 namespace Octopus.Tentacle.Tests.Configuration
 {
-    [TestFixture]
-    public class EnvironmentValuesFixture
+    public class EnvironmentValuesTests
     {
-        MapsTentacleEnvironmentValuesToConfigItems mapper = null!;
-
-        [SetUp]
-        public void SetUp()
-        {
-            mapper = new MapsTentacleEnvironmentValuesToConfigItems(Substitute.For<ILogFileOnlyLogger>());
-        }
+        static MapsTentacleEnvironmentValuesToConfigItems CreateMapper()
+            => new(Substitute.For<ILogFileOnlyLogger>());
 
         [Test]
         public void HomeDirectoryCanBeMapped()
         {
+            var mapper = CreateMapper();
             mapper.SetEnvironmentValues(new Dictionary<string, string?> { { "OCTOPUS_HOME", @"c:\MyHome" }});
             var result = mapper.GetConfigurationValue("Octopus.Home");
             result.Should().Be(@"c:\MyHome", because: "Values provided by Shared are mapped");
@@ -32,6 +27,7 @@ namespace Octopus.Tentacle.Tests.Configuration
         [Test]
         public void ValueCanBeMappedDirectly()
         {
+            var mapper = CreateMapper();
             mapper.SetEnvironmentValues(new Dictionary<string, string?> { { MapsTentacleEnvironmentValuesToConfigItems.ProxyHost.Name, "Data Source=.;Initial Catalog=OctopusDeploy-master;Trusted_connection=true" }});
             var result = mapper.GetConfigurationValue(PollingProxyConfiguration.ProxyHostSettingName);
             result.Should().Be("Data Source=.;Initial Catalog=OctopusDeploy-master;Trusted_connection=true", because: "Raw SQL connection string gets passed directly through");
