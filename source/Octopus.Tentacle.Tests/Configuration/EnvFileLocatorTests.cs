@@ -9,23 +9,12 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Configuration
 {
-    [TestFixture]
-    public class EnvFileLocatorFixture
+    public class EnvFileLocatorTests
     {
-        IOctopusFileSystem fileSystem;
-        ILogFileOnlyLogger log;
-
-        [SetUp]
-        public void SetUp()
-        {
-            fileSystem = Substitute.For<IOctopusFileSystem>();
-            log = Substitute.For<ILogFileOnlyLogger>();
-        }
-
         [Test]
         public void ReturnsNullWhenFileCannotBeFound()
         {
-            var subject = new EnvFileLocator(fileSystem, log);
+            var subject = CreateSubject(Substitute.For<IOctopusFileSystem>());
             var envFile = subject.LocateEnvFile();
 
             envFile.Should().BeNull();
@@ -39,7 +28,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             var envPath = Path.Combine(testAssemblyLocation, ".env");
             fileSystem.FileExists(envPath).Returns(true);
 
-            var subject = new EnvFileLocator(fileSystem, log);
+            var subject = CreateSubject(fileSystem);
 
             var envFile = subject.LocateEnvFile();
             envFile.Should().Be(envPath, "the .env file is discoverable from the working directory");
@@ -53,7 +42,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             var envPath = Path.Combine(GetParentPath(testAssemblyLocation), ".env");
             fileSystem.FileExists(Arg.Any<string>()).Returns(c => (string)c.Args()[0] == envPath);
 
-            var subject = new EnvFileLocator(fileSystem, log);
+            var subject = CreateSubject(fileSystem);
 
             var envFile = subject.LocateEnvFile();
             envFile.Should().Be(envPath, "the .env file is discoverable up the directory tree");
@@ -67,11 +56,14 @@ namespace Octopus.Tentacle.Tests.Configuration
             var envPath = Path.Combine(Directory.GetDirectoryRoot(testAssemblyLocation), ".env");
             fileSystem.FileExists(Arg.Any<string>()).Returns(c => (string)c.Args()[0] == envPath);
 
-            var subject = new EnvFileLocator(fileSystem, log);
+            var subject = CreateSubject(fileSystem);
 
             var envFile = subject.LocateEnvFile();
             envFile.Should().Be(envPath, "the .env file is discoverable at the root of the directory tree");
         }
+
+        static EnvFileLocator CreateSubject(IOctopusFileSystem fileSystem)
+            => new(fileSystem, Substitute.For<ILogFileOnlyLogger>());
 
         string GetParentPath(string path)
         {
