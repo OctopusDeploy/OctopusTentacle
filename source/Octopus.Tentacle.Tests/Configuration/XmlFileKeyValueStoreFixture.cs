@@ -31,8 +31,11 @@ namespace Octopus.Tentacle.Tests.Configuration
         public MyNestedObject[] ArrayField { get; set; }
     }
 
-    class XmlFileKeyValueStoreFixture
+    class XmlFileKeyValueStoreTests
     {
+        static readonly KeyValueStoreSource[] AllSources = (KeyValueStoreSource[])Enum.GetValues(typeof(KeyValueStoreSource));
+        static readonly KeyValueStoreSource[] CurrentImplementationSources = { KeyValueStoreSource.InMemory, KeyValueStoreSource.ReloadedFromFile };
+
         [Test]
         public void WritesSortedXmlUsingCorrectTypes()
         {
@@ -96,9 +99,7 @@ namespace Octopus.Tentacle.Tests.Configuration
                 .WithMessage("Unable to parse configuration key 'Encrypted.Bool.Setting' as a 'Boolean'.");
         }
 
-        [TestCase(KeyValueStoreSource.InMemory)]
-        [TestCase(KeyValueStoreSource.ReloadedFromFile)]
-        [TestCase(KeyValueStoreSource.WrittenByOldImplementation)]
+        [TestCaseSource(nameof(AllSources))]
         public void ReadsBooleanValue(KeyValueStoreSource source)
         {
             var reloadedSettings = StoreWithAllSettings(source);
@@ -106,9 +107,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             reloadedSettings.Get("group1.setting1", false).Should().BeTrue();
         }
 
-        [TestCase(KeyValueStoreSource.InMemory)]
-        [TestCase(KeyValueStoreSource.ReloadedFromFile)]
-        [TestCase(KeyValueStoreSource.WrittenByOldImplementation)]
+        [TestCaseSource(nameof(AllSources))]
         public void ReadsIntValue(KeyValueStoreSource source)
         {
             var reloadedSettings = StoreWithAllSettings(source);
@@ -116,9 +115,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             reloadedSettings.Get("group1.setting2", 1).Should().Be(123);
         }
 
-        [TestCase(KeyValueStoreSource.InMemory)]
-        [TestCase(KeyValueStoreSource.ReloadedFromFile)]
-        [TestCase(KeyValueStoreSource.WrittenByOldImplementation)]
+        [TestCaseSource(nameof(AllSources))]
         public void ReadsStringValue(KeyValueStoreSource source)
         {
             var reloadedSettings = StoreWithAllSettings(source);
@@ -126,9 +123,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             reloadedSettings.Get("group2.setting3", "").Should().Be("a string");
         }
 
-        [TestCase(KeyValueStoreSource.InMemory)]
-        [TestCase(KeyValueStoreSource.ReloadedFromFile)]
-        [TestCase(KeyValueStoreSource.WrittenByOldImplementation)]
+        [TestCaseSource(nameof(AllSources))]
         public void ReadsNestedObjectValue(KeyValueStoreSource source)
         {
             var reloadedSettings = StoreWithAllSettings(source);
@@ -143,9 +138,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             nestedObject.ArrayField[2].Id.Should().Be(3);
         }
 
-        [TestCase(KeyValueStoreSource.InMemory)]
-        [TestCase(KeyValueStoreSource.ReloadedFromFile)]
-        [TestCase(KeyValueStoreSource.WrittenByOldImplementation)]
+        [TestCaseSource(nameof(AllSources))]
         public void ReadsNullStringValue(KeyValueStoreSource source)
         {
             var reloadedSettings = StoreWithAllSettings(source);
@@ -153,9 +146,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             reloadedSettings.Get<string>("group4.setting5").Should().Be(null);
         }
 
-        [TestCase(KeyValueStoreSource.InMemory)]
-        [TestCase(KeyValueStoreSource.ReloadedFromFile)]
-        [TestCase(KeyValueStoreSource.WrittenByOldImplementation)]
+        [TestCaseSource(nameof(AllSources))]
         public void ReadsNullObjectValue(KeyValueStoreSource source)
         {
             var reloadedSettings = StoreWithAllSettings(source);
@@ -163,9 +154,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             reloadedSettings.Get<MyObject>("group4.setting6").Should().Be(null);
         }
 
-        [TestCase(KeyValueStoreSource.InMemory)]
-        [TestCase(KeyValueStoreSource.ReloadedFromFile)]
-        [TestCase(KeyValueStoreSource.WrittenByOldImplementation)]
+        [TestCaseSource(nameof(AllSources))]
         public void ReadsEncryptedBooleanValue(KeyValueStoreSource source)
         {
             var reloadedSettings = StoreWithAllSettings(source);
@@ -173,9 +162,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             reloadedSettings.Get("group5.setting1", false, ProtectionLevel.MachineKey).Should().BeTrue();
         }
 
-        [TestCase(KeyValueStoreSource.InMemory)]
-        [TestCase(KeyValueStoreSource.ReloadedFromFile)]
-        [TestCase(KeyValueStoreSource.WrittenByOldImplementation)]
+        [TestCaseSource(nameof(AllSources))]
         public void ReadsEncryptedIntValue(KeyValueStoreSource source)
         {
             var reloadedSettings = StoreWithAllSettings(source);
@@ -183,9 +170,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             reloadedSettings.Get("group5.setting2", 1, ProtectionLevel.MachineKey).Should().Be(123);
         }
 
-        [TestCase(KeyValueStoreSource.InMemory)]
-        [TestCase(KeyValueStoreSource.ReloadedFromFile)]
-        [TestCase(KeyValueStoreSource.WrittenByOldImplementation)]
+        [TestCaseSource(nameof(AllSources))]
         public void ReadsEncryptedStringValue(KeyValueStoreSource source)
         {
             var reloadedSettings = StoreWithAllSettings(source);
@@ -193,9 +178,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             reloadedSettings.Get("group5.setting3", "", ProtectionLevel.MachineKey).Should().Be("a string");
         }
 
-        [TestCase(KeyValueStoreSource.InMemory)]
-        [TestCase(KeyValueStoreSource.ReloadedFromFile)]
-        [TestCase(KeyValueStoreSource.WrittenByOldImplementation)]
+        [TestCaseSource(nameof(AllSources))]
         public void ReadsEncryptedNestedObjectValue(KeyValueStoreSource source)
         {
             var reloadedSettings = StoreWithAllSettings(source);
@@ -210,9 +193,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             nestedObject.ArrayField[2].Id.Should().Be(3);
         }
 
-        [TestCase(KeyValueStoreSource.InMemory)]
-        [TestCase(KeyValueStoreSource.ReloadedFromFile)]
-        [TestCase(KeyValueStoreSource.WrittenByOldImplementation)]
+        [TestCaseSource(nameof(AllSources))]
         public void ReadsEncryptedNullStringValue(KeyValueStoreSource source)
         {
             var reloadedSettings = StoreWithAllSettings(source);
@@ -220,9 +201,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             reloadedSettings.Get<string>("group5.setting5", null, ProtectionLevel.MachineKey).Should().Be(null);
         }
 
-        [TestCase(KeyValueStoreSource.InMemory)]
-        [TestCase(KeyValueStoreSource.ReloadedFromFile)]
-        [TestCase(KeyValueStoreSource.WrittenByOldImplementation)]
+        [TestCaseSource(nameof(AllSources))]
         public void ReadsEncryptedNullObjectValue(KeyValueStoreSource source)
         {
             var reloadedSettings = StoreWithAllSettings(source);
@@ -230,8 +209,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             reloadedSettings.Get<MyObject>("group5.setting6", null, ProtectionLevel.MachineKey).Should().Be(null);
         }
 
-        [TestCase(KeyValueStoreSource.InMemory)]
-        [TestCase(KeyValueStoreSource.ReloadedFromFile)]
+        [TestCaseSource(nameof(CurrentImplementationSources))]
         public void ReadsEncryptedByteArrayValue(KeyValueStoreSource source)
         {
             var encryptedValue = RandomBytes();
@@ -240,8 +218,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             reloadedSettings.Get<byte[]>("secretthing").Should().BeEquivalentTo(encryptedValue);
         }
 
-        [TestCase(KeyValueStoreSource.InMemory)]
-        [TestCase(KeyValueStoreSource.ReloadedFromFile)]
+        [TestCaseSource(nameof(CurrentImplementationSources))]
         public void ReadsMachineEncryptedByteArrayValue(KeyValueStoreSource source)
         {
             var encryptedValue = RandomBytes();
@@ -250,8 +227,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             reloadedSettings.Get<byte[]>("secretmachinething", null, ProtectionLevel.MachineKey).Should().BeEquivalentTo(encryptedValue);
         }
 
-        [TestCase(KeyValueStoreSource.InMemory)]
-        [TestCase(KeyValueStoreSource.ReloadedFromFile)]
+        [TestCaseSource(nameof(CurrentImplementationSources))]
         public void ReadsEnumValue(KeyValueStoreSource source)
         {
             var reloadedSettings = StoreWithAllSettings(source);
@@ -259,8 +235,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             reloadedSettings.Get<SomeEnum>("group4.setting7").Should().Be(SomeEnum.SomeOtherEnumValue);
         }
 
-        [TestCase(KeyValueStoreSource.InMemory)]
-        [TestCase(KeyValueStoreSource.ReloadedFromFile)]
+        [TestCaseSource(nameof(CurrentImplementationSources))]
         public void ReadsNullableEnumValue(KeyValueStoreSource source)
         {
             var reloadedSettings = StoreWithAllSettings(source);
@@ -268,8 +243,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             reloadedSettings.Get<SomeEnum?>("group4.setting8").Should().BeNull();
         }
 
-        [TestCase(KeyValueStoreSource.InMemory)]
-        [TestCase(KeyValueStoreSource.ReloadedFromFile)]
+        [TestCaseSource(nameof(CurrentImplementationSources))]
         public void ReadsEncryptedEnumValue(KeyValueStoreSource source)
         {
             var reloadedSettings = StoreWithAllSettings(source);
@@ -277,8 +251,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             reloadedSettings.Get("group5.setting7", SomeEnum.SomeEnumValue, ProtectionLevel.MachineKey).Should().Be(SomeEnum.SomeOtherEnumValue);
         }
 
-        [TestCase(KeyValueStoreSource.InMemory)]
-        [TestCase(KeyValueStoreSource.ReloadedFromFile)]
+        [TestCaseSource(nameof(CurrentImplementationSources))]
         public void ReadsEncryptedNullableEnumValue(KeyValueStoreSource source)
         {
             var reloadedSettings = StoreWithAllSettings(source);
